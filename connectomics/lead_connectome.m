@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 14-Sep-2018 10:06:24
+% Last Modified by GUIDE v2.5 17-Apr-2019 19:57:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -880,3 +880,32 @@ function checkregdmri_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of checkregdmri
+
+
+
+function fiber_count_Callback(hObject, eventdata, handles)
+% hObject    handle to fiber_count (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of fiber_count as text
+%        str2double(get(hObject,'String')) returns contents of fiber_count as a double
+fiber_count=str2double(get(hObject,'String'));
+if (isempty(fiber_count))
+    set(handles.fiber_count,'String','20000')
+else
+    set(handles.fiber_count,'String',fiber_count)
+end
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function fiber_count_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to fiber_count (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
