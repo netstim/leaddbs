@@ -42,7 +42,7 @@ R = P(:,diag(S)'>tol) * Qs(diag(S)'>tol,:)';
 ornt = nan(size(affine,2)-1,2);
 for in_ax=1:size(affine,2)-1
     col = R(:,in_ax);
-    if ~allclose(col ,0)
+    if ~ea_allclose(col ,0)
         out_ax = find(abs(col) == max(abs(col)));
         ornt(in_ax,1) = out_ax;
         assert(col(out_ax) ~= 0);
