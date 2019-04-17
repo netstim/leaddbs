@@ -215,7 +215,6 @@ function updateDiscFibers(resultfig, discfiberID, showfibersset, pospredthreshol
 
 discfibersname = ['discfibers', discfiberID];
 cbfigname = ['cbfig', discfiberID];
-discfiberscontrolname = ['discfiberscontrol', discfiberID];
 
 % Hidden/Unhidden fibers
 discfibers = getappdata(resultfig, discfibersname);
@@ -226,7 +225,7 @@ if strcmp(showfibersset, 'none')
     if isvalid(cbfig)
         set(cbfig, 'Visible', 'off');
     end
-elseif getappdata(resultfig, ['discfiberwashidden',discfiberID]) && ...
+elseif ~isempty(getappdata(resultfig, ['discfiberwashidden',discfiberID])) && getappdata(resultfig, ['discfiberwashidden',discfiberID]) && ...
        strcmp(getappdata(resultfig, ['showfiberssetNewValue',discfiberID]), getappdata(resultfig, ['showfiberssetOldValue',discfiberID]))
     arrayfun(@(f) set(f, 'Visible', 'on'), discfibers);
     if isvalid(cbfig)

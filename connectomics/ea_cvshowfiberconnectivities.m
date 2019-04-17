@@ -360,6 +360,10 @@ end
 % plot fibers that do connect to seed:
 for side=1:length(options.sides)
     if ~isempty(connectingfibs{side})
+        % Remove single point
+        single = cellfun(@(x) all(size(x)==[1,3]),connectingfibs{side});
+        connectingfibs{side}(single)=[];
+
         fibmax=length(connectingfibs{side});
 
         if fibmax>options.prefs.d3.maxfibers % if too many fibers are selected, reduce amount of them.
