@@ -18,6 +18,7 @@ disp('Loading FTR-File...');
 [header, ~]=ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
 
 if ~exist('specs','var') % Use MNI T1 as reference space by default.
+    disp('Header from MNI t1.nii ...');
     nii=ea_load_nii([ea_space,'t1.nii']);
     specs.origin=[0,0,0];
     specs.dim=size(nii.img);
@@ -25,6 +26,7 @@ if ~exist('specs','var') % Use MNI T1 as reference space by default.
     specs.affine=nii.mat;
     header.pad2=['RAS', char(0)];
 elseif ischar(specs) && exist(specs, 'file') % Use the specified nifti as reference space.
+    disp(['Header from ',specs,' ...']);
     nii=ea_load_nii(specs);
     specs=struct;
     specs.origin=[0,0,0];
