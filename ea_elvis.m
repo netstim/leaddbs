@@ -455,7 +455,8 @@ axis vis3d
 axis equal
 set(resultfig,'Name',figtitle);
 set(0,'CurrentFigure',resultfig);
-view(142,13.6)
+
+
 try
     set(gca,'cameraviewanglemode','manual');
 end

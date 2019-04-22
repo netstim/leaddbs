@@ -295,6 +295,9 @@ function ftmethod_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from ftmethod
 
 
+set(handles.fiber_count,'Visible',ea_bool2onoff(get(hObject,'Value')==2));
+set(handles.fiber_count_txt,'Visible',ea_bool2onoff(get(hObject,'Value')==2));
+
 % --- Executes during object creation, after setting all properties.
 function ftmethod_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to ftmethod (see GCBO)
