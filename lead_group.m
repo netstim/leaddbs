@@ -1099,10 +1099,11 @@ function moveptupbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 whichmoved=get(handles.patientlist,'Value');
-if length(whichmoved)>1; return; end % more than one selected..
-if whichmoved==1 % first entry anyways
+
+if whichmoved(1)==1 % first entry anyways
     return
 end
+
 ix=1:length(M.patient.list);
 ix(whichmoved)=ix(whichmoved)-1;
 ix(whichmoved-1)=ix(whichmoved-1)+1;
@@ -1117,8 +1118,8 @@ try
     M=rmfield(M,'elstruct');
 end
 setappdata(gcf,'M',M);
-set(handles.patientlist,'Value',whichmoved-1);
 
+set(handles.patientlist,'Value',whichmoved-1);
 ea_refresh_lg(handles);
 
 
@@ -1130,10 +1131,11 @@ function moveptdownbutton_Callback(hObject, eventdata, handles)
 
 M=getappdata(gcf,'M');
 whichmoved=get(handles.patientlist,'Value');
-if length(whichmoved)>1; return; end % more than one selected..
-if whichmoved==length(M.patient.list) % last entry anyways
+
+if whichmoved(end)==length(M.patient.list) % last entry anyways
     return
 end
+
 ix=1:length(M.patient.list);
 ix(whichmoved)=ix(whichmoved)+1;
 ix(whichmoved+1)=ix(whichmoved+1)-1;
@@ -1148,8 +1150,8 @@ try
     M=rmfield(M,'elstruct');
 end
 setappdata(gcf,'M',M);
-set(handles.patientlist,'Value',whichmoved+1);
 
+set(handles.patientlist,'Value',whichmoved+1);
 ea_refresh_lg(handles);
 
 
