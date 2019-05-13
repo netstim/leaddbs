@@ -1111,11 +1111,17 @@ ix(whichmoved-1)=ix(whichmoved-1)+1;
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
 M.ui.listselect=whichmoved-1;
+for c=1:length(M.clinical.vars)
+    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+end
 try
-    M=rmfield(M,'stats');
+    M.S = M.S(ix);
 end
 try
     M=rmfield(M,'elstruct');
+end
+try
+    M=rmfield(M,'stats');
 end
 setappdata(gcf,'M',M);
 
@@ -1143,11 +1149,17 @@ ix(whichmoved+1)=ix(whichmoved+1)-1;
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
 M.ui.listselect=whichmoved+1;
+for c=1:length(M.clinical.vars)
+    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+end
 try
-    M=rmfield(M,'stats');
+    M.S = M.S(ix);
 end
 try
     M=rmfield(M,'elstruct');
+end
+try
+    M=rmfield(M,'stats');
 end
 setappdata(gcf,'M',M);
 
