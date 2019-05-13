@@ -1092,9 +1092,9 @@ setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
 
-% --- Executes on button press in moveptdownbutton.
-function moveptdownbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to moveptdownbutton (see GCBO)
+% --- Executes on button press in moveptupbutton.
+function moveptupbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to moveptupbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
@@ -1109,6 +1109,7 @@ ix(whichmoved-1)=ix(whichmoved-1)+1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
+M.ui.listselect=whichmoved-1;
 try
     M=rmfield(M,'stats');
 end
@@ -1120,9 +1121,10 @@ set(handles.patientlist,'Value',whichmoved-1);
 
 ea_refresh_lg(handles);
 
-% --- Executes on button press in moveptupbutton.
-function moveptupbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to moveptupbutton (see GCBO)
+
+% --- Executes on button press in moveptdownbutton.
+function moveptdownbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to moveptdownbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -1138,6 +1140,7 @@ ix(whichmoved+1)=ix(whichmoved+1)-1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
+M.ui.listselect=whichmoved+1;
 try
     M=rmfield(M,'stats');
 end
@@ -1148,6 +1151,7 @@ setappdata(gcf,'M',M);
 set(handles.patientlist,'Value',whichmoved+1);
 
 ea_refresh_lg(handles);
+
 
 % --- Executes on button press in calculatebutton.
 function calculatebutton_Callback(hObject, eventdata, handles)
