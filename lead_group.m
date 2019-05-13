@@ -1092,62 +1092,80 @@ setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
 
-% --- Executes on button press in moveptdownbutton.
-function moveptdownbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to moveptdownbutton (see GCBO)
+% --- Executes on button press in moveptupbutton.
+function moveptupbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to moveptupbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 whichmoved=get(handles.patientlist,'Value');
-if length(whichmoved)>1; return; end % more than one selected..
-if whichmoved==1 % first entry anyways
+
+if whichmoved(1)==1 % first entry anyways
     return
 end
+
 ix=1:length(M.patient.list);
 ix(whichmoved)=ix(whichmoved)-1;
 ix(whichmoved-1)=ix(whichmoved-1)+1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
+M.ui.listselect=whichmoved-1;
+for c=1:length(M.clinical.vars)
+    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+end
 try
-    M=rmfield(M,'stats');
+    M.S = M.S(ix);
 end
 try
     M=rmfield(M,'elstruct');
 end
+try
+    M=rmfield(M,'stats');
+end
 setappdata(gcf,'M',M);
-set(handles.patientlist,'Value',whichmoved-1);
 
+set(handles.patientlist,'Value',whichmoved-1);
 ea_refresh_lg(handles);
 
-% --- Executes on button press in moveptupbutton.
-function moveptupbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to moveptupbutton (see GCBO)
+
+% --- Executes on button press in moveptdownbutton.
+function moveptdownbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to moveptdownbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 M=getappdata(gcf,'M');
 whichmoved=get(handles.patientlist,'Value');
-if length(whichmoved)>1; return; end % more than one selected..
-if whichmoved==length(M.patient.list) % last entry anyways
+
+if whichmoved(end)==length(M.patient.list) % last entry anyways
     return
 end
+
 ix=1:length(M.patient.list);
 ix(whichmoved)=ix(whichmoved)+1;
 ix(whichmoved+1)=ix(whichmoved+1)-1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
+M.ui.listselect=whichmoved+1;
+for c=1:length(M.clinical.vars)
+    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+end
 try
-    M=rmfield(M,'stats');
+    M.S = M.S(ix);
 end
 try
     M=rmfield(M,'elstruct');
 end
+try
+    M=rmfield(M,'stats');
+end
 setappdata(gcf,'M',M);
-set(handles.patientlist,'Value',whichmoved+1);
 
+set(handles.patientlist,'Value',whichmoved+1);
 ea_refresh_lg(handles);
+
 
 % --- Executes on button press in calculatebutton.
 function calculatebutton_Callback(hObject, eventdata, handles)
@@ -2052,34 +2070,28 @@ assignin('base','stats',stats);
 % perform correlations:
 if size(stats.corrcl,2)==1 % one value per patient
 
-        if ~isempty(stats.fccorr.both)
-            %ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
-            ea_corrplot([stats.corrcl,stats.fccorr.nboth],'FC_BH',stats.fc_labels,handles);
-        end
-%         if ~isempty(stats.fccorr.right)
-%             %ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-%             ea_corrplot([stats.corrcl,stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-%         end
-%         if ~isempty(stats.fccorr.left)
-%             %ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-%             ea_corrplot([stats.corrcl,stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-%         end
+    if ~isempty(stats.fccorr.both)
+        ea_corrplot(stats.corrcl,stats.fccorr.nboth,{'FC_BH',stats.fc_labels(:)});
+    end
+    if ~isempty(stats.fccorr.right)
+        ea_corrplot(stats.corrcl,stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
+    end
+    if ~isempty(stats.fccorr.left)
+        ea_corrplot(stats.corrcl,stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
+    end
 
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
 
-        if ~isempty(stats.fccorr.both)
-            %ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'Fibercounts, both hemispheres',stats.fc_labels);
-            ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'FC_BH',stats.fc_labels,handles);
-        end
-    %     if ~isempty(stats.fccorr.right)
-    %         %ea_corrplot([stats.corrcl(:,1),stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-    %         ea_corrplot([stats.corrcl(:,1),stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-    %     end
-    %     if ~isempty(stats.fccorr.left)
-    %         %ea_corrplot([stats.corrcl(:,2),stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-    %         ea_corrplot([stats.corrcl(:,2),stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-    %     end
-    %
+    if ~isempty(stats.fccorr.both)
+        ea_corrplot(stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left],{'FC_BH',stats.fc_labels(:)});
+    end
+    if ~isempty(stats.fccorr.right)
+        ea_corrplot(stats.corrcl(:,1),stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
+    end
+    if ~isempty(stats.fccorr.left)
+        ea_corrplot(stats.corrcl(:,2),stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
+    end
+
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
