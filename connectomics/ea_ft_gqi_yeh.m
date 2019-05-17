@@ -37,27 +37,24 @@ if ~exist([options.root,options.patientname,filesep,'ttrackingmask.nii'],'file')
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
-if ismac
-    dsistudio = [basedir,'mac',filesep, 'dsi_studio.app',filesep,'Contents',filesep,'MacOS',filesep,'dsi_studio'];
-elseif isunix
-    ea_libs_helper([basedir, 'linux']);
-    dsistudio = [basedir, 'linux', filesep, 'dsi_studio'];
-elseif ispc
-    dsistudio = ea_path_helper([basedir, 'win', filesep, 'dsi_studio.exe']);
+if ispc
+    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.exe']);
+else
+    DSISTUDIO = [basedir, 'dsi_studio.', computer('arch')];
 end
 
 % build .fib.gz file
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 if ~exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')
     disp('Estimating ODF / preparing GQI...');
-    ea_prepare_fib_gqi(dsistudio,btable,1.2,options);
+    ea_prepare_fib_gqi(DSISTUDIO,btable,1.2,options);
 
     disp('Done.');
 else
     disp('.fib.gz file found, no need to rebuild.');
 end
 
-trkcmd=[dsistudio,' --action=trk --source=',ea_path_helper([options.root,options.patientname,filesep,ftrbase,'.fib.gz']),...
+trkcmd=[DSISTUDIO,' --action=trk --source=',ea_path_helper([options.root,options.patientname,filesep,ftrbase,'.fib.gz']),...
     ' --method=0',...
     ' --seed=',ea_path_helper([options.root,options.patientname,filesep,'ttrackingmask.nii']),...
     ' --fiber_count=', options.fiber_count,...
@@ -128,7 +125,7 @@ fprintf('\nGenerating trk in b0 space...\n');
 ea_b0ftr2trk([options.root,options.patientname,filesep,ftrbase,'.mat'], [options.root,options.patientname,filesep,options.prefs.b0])
 
 
-function ea_prepare_fib_gqi(dsistudio,btable,mean_diffusion_distance_ratio,options)
+function ea_prepare_fib_gqi(DSISTUDIO,btable,mean_diffusion_distance_ratio,options)
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 
 if exist([options.root,options.patientname,filesep,ftrbase,'.fib.gz'],'file')
@@ -139,7 +136,7 @@ end
 % try the DSI-studio way (faster):
 
 % source images
-cmd=[dsistudio,' --action=src --source=',ea_path_helper([options.root,options.patientname,filesep,options.prefs.dti]),...
+cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([options.root,options.patientname,filesep,options.prefs.dti]),...
     ' --bval=',ea_path_helper([options.root,options.patientname,filesep,options.prefs.bval])...
     ' --bvec=',ea_path_helper([options.root,options.patientname,filesep,options.prefs.bvec])...
     ' --output=',ea_path_helper([options.root,options.patientname,filesep,'dti.src.gz'])];
@@ -151,7 +148,7 @@ if err
 end
 
 % create .fib file
-cmd=[dsistudio,' --action=rec --source=',ea_path_helper([options.root,options.patientname,filesep,'dti.src.gz']),...
+cmd=[DSISTUDIO,' --action=rec --source=',ea_path_helper([options.root,options.patientname,filesep,'dti.src.gz']),...
     ' --mask=',ea_path_helper([options.root,options.patientname,filesep,'ttrackingmask.nii'])...
     ' --method=4',...
     ' --param0=1.25'];
