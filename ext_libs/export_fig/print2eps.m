@@ -96,6 +96,10 @@ function print2eps(name, fig, export_options, varargin)
 % 14/11/17: Workaround for issue #211: dashed/dotted lines in 3D axes appear solid
 % 15/11/17: Updated issue #211: only set SortMethod='ChildOrder' in HG2, and when it looks the same onscreen; support multiple figure axes
 % 18/11/17: Fixed issue #225: transparent/translucent dashed/dotted lines appear solid in EPS/PDF
+% 24/03/18: Fixed issue #239: black title meshes with temporary black background figure bgcolor, causing bad cropping
+% 21/03/19: Improvement for issue #258: missing fonts in output EPS/PDF (still *NOT* fully solved)
+% 21/03/19: Fixed issues #166,#251: Arial font is no longer replaced with Helvetica but rather treated as a non-standard user font
+% 14/05/19: Made Helvetica the top default font-swap, replacing Courier
 %}
 
     options = {'-loose'};
@@ -165,9 +169,9 @@ function print2eps(name, fig, export_options, varargin)
         f(f==' ') = [];
         switch f
             case {'times', 'timesnewroman', 'times-roman'}
-                fontsl{a} = 'times-roman';
-            case {'arial', 'helvetica'}
-                fontsl{a} = 'helvetica';
+                fontsl{a} = 'times';
+            %case {'arial', 'helvetica'}  % issues #166, #251
+            %    fontsl{a} = 'helvetica';
             case {'newcenturyschoolbook', 'newcenturyschlbk'}
                 fontsl{a} = 'newcenturyschlbk';
             otherwise
@@ -177,8 +181,13 @@ function print2eps(name, fig, export_options, varargin)
 
     % Determine the font swap table
     if fontswap
-        matlab_fonts = {'Helvetica', 'Times-Roman', 'Palatino', 'Bookman', 'Helvetica-Narrow', 'Symbol', ...
-                        'AvantGarde', 'NewCenturySchlbk', 'Courier', 'ZapfChancery', 'ZapfDingbats'};
+        % Issue #258: Rearrange standard fonts list based on decending "problematicness"
+        % The issue is still *NOT* fully solved because I cannot figure out how to force
+        % the EPS postscript engine to look for the user's font on disk
+        % Also see: https://stat.ethz.ch/pipermail/r-help/2005-January/064374.html
+        matlab_fonts = {'Helvetica', 'Times', 'Courier', 'Symbol', 'ZapfDingbats', ...
+                        'Palatino', 'Bookman', 'ZapfChancery', 'AvantGarde', ...
+                        'NewCenturySchlbk', 'Helvetica-Narrow'};
         matlab_fontsl = lower(matlab_fonts);
         require_swap = find(~ismember(fontslu, matlab_fontsl));
         unused_fonts = find(~ismember(matlab_fontsl, fontslu));
@@ -448,8 +457,14 @@ function print2eps(name, fig, export_options, varargin)
             else
                 fontName(fontName==' ') = char(font_space);
             end
+
+            % Replace all instances of the standard Matlab fonts with the original user's font names
             %fstrm = regexprep(fstrm, [font_swap{1,a} '-?[a-zA-Z]*\>'], fontName);
-            fstrm = regexprep(fstrm, font_swap{2,a}, fontName);
+            %fstrm = regexprep(fstrm, [font_swap{2,a} '([ \n])'], [fontName '$1']);
+            %fstrm = regexprep(fstrm, font_swap{2,a}, fontName);  % also replace -Bold, -Italic, -BoldItalic
+
+            % Times-Roman's Bold/Italic fontnames don't include '-Roman'
+            fstrm = regexprep(fstrm, [font_swap{2,a} '(\-Roman)?'], fontName);
         end
     end
 
@@ -479,10 +494,30 @@ function print2eps(name, fig, export_options, varargin)
         aa = fstrm(s+19:e-3); % dimensions bb - STEP1
         pagebb_matlab = cell2mat(textscan(aa,'%f32%f32%f32%f32'));  % dimensions bb - STEP2
 
+        % 1b. Fix issue #239: black title meshes with temporary black background figure bgcolor, causing bad cropping
+        hTitles = [];
+        if isequal(get(fig,'Color'),'none')
+            hAxes = findall(fig,'type','axes');
+            for idx = 1 : numel(hAxes)
+                hAx = hAxes(idx);
+                try
+                    hTitle = hAx.Title;
+                    oldColor = hTitle.Color;
+                    if all(oldColor < 5*eps) || (ischar(oldColor) && lower(oldColor(1))=='k')
+                        hTitles(end+1) = hTitle; %#ok<AGROW>
+                        hTitle.Color = [0,0,.01];
+                    end
+                catch
+                end
+            end
+        end
+
         % 2. Create a bitmap image and use crop_borders to create the relative
         %    bb with respect to the PageBoundingBox
         [A, bcol] = print2array(fig, 1, renderer);
         [aa, aa, aa, bb_rel] = crop_borders(A, bcol, bb_padding, crop_amounts); %#ok<ASGLU>
+
+        try set(hTitles,'Color','k'); catch, end
 
         % 3. Calculate the new Bounding Box
         pagew = pagebb_matlab(3)-pagebb_matlab(1);
@@ -567,7 +602,7 @@ function [StoredColors, fstrm, foundFlags] = eps_maintainAlpha(fig, fstrm, Store
                     oldStr = sprintf(['\n' colorID ' RC\n']);  % ...1 LJ\n (removed to fix issue #225)
                     newStr = sprintf(['\n' origRGB ' RC\n' origAlpha ' .setopacityalpha true\n']);
                 end
-                foundFlags(objIdx) = ~isempty(strfind(fstrm, oldStr));
+                foundFlags(objIdx) = ~isempty(strfind(fstrm, oldStr)); %#ok<STREMP>
                 fstrm = strrep(fstrm, oldStr, newStr);
 
                 %Restore the figure object's original color
