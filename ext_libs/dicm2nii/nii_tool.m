@@ -317,6 +317,7 @@ elseif strcmpi(cmd, 'save')
     end
     if isempty(fext), fext = '.nii'; end % default single .nii file
     fname = fullfile(pth, fname); % without file ext
+    if nargout, varargout{1} = []; end
     isNii = strcmpi(fext, '.nii'); % will use .img/.hdr if not .nii
     
     % Deal with NIfTI version and sizeof_hdr
@@ -883,7 +884,8 @@ if isempty(cmd)
         if isempty(pth), pth = pwd; end
     else
         pth = getenv('TMP');
-        if isempty(pth), pth = '/tmp'; end
+        if isempty(pth), pth = getenv('TMPDIR'); end
+        if isempty(pth), pth = '/tmp'; end % last resort
     end
     uid = @()sprintf('_%s_%03x', datestr(now, 'yymmddHHMMSSfff'), randi(999));
 end

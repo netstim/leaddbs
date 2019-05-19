@@ -1,5 +1,5 @@
 
-# DICOM to NIfTI conversion, DICOM and NIfTI tools, NIfTI visualization (version 2018.08.08)
+# DICOM to NIfTI conversion, DICOM and NIfTI tools, NIfTI visualization (version 2019.02.14)
 
 # dicm2nii
 Convert DICOM into NIfTI. It can also convert PAR/XML/REC, HEAD/BRIK, MGZ and BrainVoyager files into NIfTI.
@@ -20,7 +20,7 @@ Perform slice timing correction on a NIfTI.
 Transform a NIfTI into different resolution, or into a template space.
 
 # dicm_hdr, dicm_img, dicm_dict
-Read DICOM header and image, independent of Image Processing Toolbox. 
+Read DICOM header and image, independent of Matlab Image Processing Toolbox. 
 
 # rename_dicm, sort_dicm, anonymize_dicm
 DICOM tools performing the tasks as indicated by the name.
