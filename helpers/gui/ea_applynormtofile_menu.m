@@ -40,9 +40,11 @@ if ~exist('fname','var') || isempty(fname)
             defaultPath = fileparts(uipatdir{1});
         end
     end
-
-    [fis, path] = uigetfile({'*.nii';'*.nii.gz'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
-
+    if ismac % macs file open dlg doesnt seem to support .nii/.nii.gz handling from matlab.
+        [fis, path] = uigetfile({'*'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
+    else
+        [fis, path] = uigetfile({'*.nii' 'NIfTI';'*.nii.gz' 'Compressed NIfTI'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
+    end
     if ~ischar(fis) && ~iscell(fis)
         if ~fis
             return
