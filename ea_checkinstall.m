@@ -236,16 +236,16 @@ else
     end
 
     if success
-        disp(['Extracting ',assetname,'...'])
+        disp(['Installing ',assetname,'...'])
         [loc,~,ext] = fileparts(destination);
         if strcmp(ext,'.gz')
             gunzip(destination, loc);
+            ea_delete(destination);
         elseif strcmp(ext,'.zip')
             unzip(destination, loc);
+            ea_delete(destination);
         end
     end
-
-    ea_delete(destination);
 end
 
 
