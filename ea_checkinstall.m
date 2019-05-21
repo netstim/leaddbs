@@ -13,6 +13,7 @@ switch cmd
                  'Install development version of Lead'
                  '2009b Nonlinear Flip Transform'
                  '7T Cardiac Gated FLASH MRI (Backdrop visualization)'
+                 '7T Ex Vivo 100um Brain Atlas (Backdrop visualization)'
                  'Structural group connectome 20 subjects Gibbs-tracker (Horn 2013)'
                  'Structural group connectome 169 NKI subjects Gibbs-tracker (Horn 2016)'
                  'Structural group connectome 32 Adult Diffusion HCP subjects GQI (Horn 2017)'
@@ -23,6 +24,7 @@ switch cmd
                   'hotfix'
                   'nlinflip'
                   '7tcgflash'
+                  '7tev100um'
                   'groupconnectome2013'
                   'groupconnectome2016'
                   'groupconnectome2017'
@@ -88,6 +90,29 @@ switch cmd
             fclose(fid);
         else
             disp('7T Cardiac Gated FLASH MRI (Backdrop visualization) is installed.')
+        end
+    case '7tev100um'
+        checkf=[ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.mat'];
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
+        if checkonly
+            success=~force;
+            return;
+        end
+        if force==-1
+            success=-1;
+            return;
+        end
+
+        if ~exist(checkf,'file') || force
+            ea_mkdir([ea_space,'backdrops']);
+            success=ea_downloadasset('7tev100um',...
+                [ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.mat'],...
+                '7tev100um');
+            fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt'],'a');
+            fprintf(fid,'%s %s\n','7T_100um_Edlow_2019.mat','7T_Ex_Vivo_100um_Brain_Atlas_(Edlow_2019)');
+            fclose(fid);
+        else
+            disp('7T Ex Vivo 100um Brain Atlas (Backdrop visualization) is installed.')
         end
     case 'bigbrain'
         checkf=[ea_space,'bigbrain_2015_100um_bb.nii'];
