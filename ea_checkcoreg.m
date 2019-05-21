@@ -254,6 +254,7 @@ else % normal anatomical 2 anatomical registration
     set(handles.anchormod,'String',ea_stripex(anchor));
 
 end
+
 set(handles.imgfn,'Visible','on');
 set(handles.imgfn,'String',checkfig);
 set(handles.imgfn,'TooltipString',checkfig);
@@ -304,6 +305,7 @@ for fi=1:length(presentfiles)
     end
 end
 
+
 function presentfiles=ea_getall_coregcheck(options)
 directory=[options.root,options.patientname,filesep];
 [options,presentfiles]=ea_assignpretra(options);
@@ -329,7 +331,6 @@ if exist([directory,options.prefs.fa2anat],'file')
 end
 
 % now check if those are already approved (then don't show again):
-
 todel=[];
 for pf=1:length(presentfiles)
     if ea_coreglocked(options,presentfiles{pf})
@@ -396,7 +397,6 @@ for fi=2:length(anatspresent)
     ea_delete([options.root,options.patientname,filesep,'gl',anatspresent{fi}]);
 end
 
-
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
         options.normalize.method=getappdata(handles.leadfigure,'normmethod');
@@ -438,7 +438,6 @@ switch ea_stripex(currvol)
             substitute=get(handles.substitute,'Value');
             [~,pf]=ea_assignpretra(options);
             useasanchor=pf{substitute};
-
 
             % in following line correct that useasanchor is the *moving*
             % image (since we're going from anchor to rest/b0.
@@ -484,25 +483,20 @@ ea_chirp(options);
 ea_busyaction('off',handles.leadfigure,'coreg');
 set(handles.leadfigure, 'Name', title);
 
+
 function ea_cleandownstream(options,directory,thisrest)
-
-
-% cleanup /templates/labelings (these need to be recalculated):
-
-% do not use ea_delete here since it doesn't support
-% wildcards!
-delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
+% cleanup /templates/labelings (these need to be recalculated)
+ea_delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
 parcdirs=dir([directory,'connectomics',filesep]);
-%             % cleanup /connectomics results (these need to be recalculated):
+% cleanup /connectomics results (these need to be recalculated):
 for pd=1:length(parcdirs)
-    % do not use ea_delete here since it doesn't support
-    % wildcards!
     if ~strcmp(parcdirs(pd).name(1),'.')
-        delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*.*']);
+        ea_delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*.*']);
     end
 end
+
 stimdirs=dir([directory,'stimulations',filesep]);
-%             % cleanup /connectomics results (these need to be recalculated):
+% cleanup /connectomics results (these need to be recalculated):
 for pd=1:length(stimdirs)
     if ~strcmp(stimdirs(pd).name(1),'.')
         connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
@@ -513,13 +507,12 @@ for pd=1:length(stimdirs)
                     rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
                 end
 
-                % do not use ea_delete here since it doesn't support
-                % wildcards!
-                delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
+                ea_delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
             end
         end
     end
 end
+
 
 function ext=ea_matext(method)
 
@@ -535,6 +528,7 @@ switch upper(method)
     case 'BRAINSFIT'
         ext='brainsfit.h5';
 end
+
 
 function ea_dumpspecificmethod(handles,method)
 options=getappdata(handles.leadfigure,'options');
@@ -707,7 +701,6 @@ switch ea_stripex(currvol)
         end
 
         ea_show_coregistration(options);
-
 end
 
 
@@ -744,6 +737,7 @@ save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 if strcmp(computer('arch'),'maci64')
     system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripex(currvol),'.nii'])]);
 end
+
 switch ea_stripex(currvol)
     case ea_stripex(options.prefs.gprenii)
 
@@ -761,11 +755,10 @@ switch ea_stripex(currvol)
         end
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 end
+
 if ~isempty(b0restanchor{activevolume})
     thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
-
     ea_cleandownstream(options,directory,thisrest)
-
 end
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
@@ -778,6 +771,7 @@ if activevolume==length(presentfiles)
 else
     activevolume=activevolume+1;
 end
+
 setappdata(handles.leadfigure,'activevolume',activevolume);
 ea_mrcview(handles);
 try
@@ -858,7 +852,6 @@ presentfiles=getappdata(handles.leadfigure,'presentfiles');
 directory=getappdata(handles.leadfigure,'directory');
 
 ea_checkstructures(options);
-
 
 
 % --- Executes on button press in openpatientdir.
