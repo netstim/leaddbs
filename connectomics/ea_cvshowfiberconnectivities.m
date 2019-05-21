@@ -57,9 +57,9 @@ if ~options.savefibers.load
     if strcmp(thresh,'auto')
         switch mode
             case 'vat'
-        thresh=round(numtotalfibs/20000);
+                thresh=round(numtotalfibs/20000);
             case 'mat'
-             thresh=round(numtotalfibs/5000);
+                thresh=round(numtotalfibs/5000);
         end
     else
         thresh=round(str2double(thresh));

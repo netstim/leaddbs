@@ -503,19 +503,19 @@ switch side
 end
 vatgrad = vatgrad(side);
 save(vatfvname,'vatfv','vatgrad','vatvolume');
+
 %% new vta.nii save, filled and eroded/dilated by 3 voxels.
 Vvat.img=imfill(Vvat.img,'holes');
 SE = strel('sphere',3);
 Vvat.img = imerode(Vvat.img,SE);
 Vvat.img = imdilate(Vvat.img,SE);
 ea_write_nii(Vvat);
+
 %% old vta.nii which lead to slight systematic shifts
 % Vvat.img=surf2vol(vatfv.vertices,vatfv.faces,gv{1},gv{2},gv{3});
 % Vvat.img=imfill(Vvat.img,'holes');
 % Vvat.fname = [Vvat.fname(1:end-4) '_old.nii'];
 % ea_write_nii(Vvat);
-
-
 
 % define function outputs
 varargout{1}=vatfv;

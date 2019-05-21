@@ -279,7 +279,7 @@ if ~isempty(transform)
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
-            otherwise % atual FALLBACK
+            otherwise % actual FALLBACK
                 % If no transformmethod is supplied, do a just-in-time
                 % spm_coreg here as fallback, since linear transformation
                 % is not computational expensive anyway, the transformation
