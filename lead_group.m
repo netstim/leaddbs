@@ -1044,7 +1044,7 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         ptcnt=ptcnt+1;
 
     end
-    vc_labels{end+1}=[ea_stripex(M.stats(pt).ea_stats.atlases.names{vi}),': ',vtavsefield,' impact'];
+    vc_labels{end+1}=[ea_stripext(M.stats(pt).ea_stats.atlases.names{vi}),': ',vtavsefield,' impact'];
 
     ptcnt=1;
     vicnt=vicnt+1;
@@ -1786,7 +1786,7 @@ switch choice
     case 'No, abort.'
         return
     case {'Yes, sure!','Yes and copy localizations/VTAs please.'}
-        
+
         M=getappdata(gcf,'M');
         ea_dispercent(0,'Detaching group file');
         for pt=1:length(M.patient.list)
@@ -1801,16 +1801,14 @@ switch choice
                 copyfile([M.patient.list{pt},filesep,'ea_reconstruction.mat'],[odir,'ea_reconstruction.mat']);
                 copyfile([M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid],[odir,'stimulations',filesep,'gs_',M.guid]);
             end
-            
-            
-            
+
             M.patient.list{pt}=ptname;
-            
+
             ea_dispercent(pt/length(M.patient.list));
         end
         ea_dispercent(1,'end');
         M.ui.detached=1;
-        
+
 end
 
 setappdata(gcf,'M',M);

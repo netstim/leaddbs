@@ -19,7 +19,7 @@ for atl=1:length(atlasnames)
     end
     load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
     for side=1:2
-        
+
         for mesh=showwhat
             cfv(cnt).vertices=atlases.fv{mesh,side}.vertices;
             cfv(cnt).faces=atlases.fv{mesh,side}.faces;
@@ -45,7 +45,7 @@ if any(size(cfv(1).facevertexcdata)==1) % convert from indexed to rgb colors.
         cfv(entry).facevertexcdata=jetlist(cfv(entry).facevertexcdata,:);
     end
     %fv(f).facevertexcdata=
-    
+
 end
 
 
@@ -69,6 +69,6 @@ plywrite(ofn,cfv.faces,cfv.vertices,cfv.facevertexcdata)
 
 
 function showwhat=resolveviews(structures,atlases)
-atlasnames=ea_stripex(atlases.names);
+atlasnames=ea_stripext(atlases.names);
 showwhat=find(ismember(atlasnames,structures));
 

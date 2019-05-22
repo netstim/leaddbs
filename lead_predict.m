@@ -78,9 +78,9 @@ ea_updatemodpopups(mdl,sf,handles)
 
 pmodels=dir([ea_getearoot,'predict',filesep,'ea_predict_*.m']);
 for pmod=1:length(pmodels)
-    specs=feval(ea_stripex(pmodels(pmod).name),'specs');
+    specs=feval(ea_stripext(pmodels(pmod).name),'specs');
     pmods{pmod}=specs.modelname;
-    pmodsm{pmod}=ea_stripex(pmodels(pmod).name);
+    pmodsm{pmod}=ea_stripext(pmodels(pmod).name);
     pmodspecs{pmod}=specs;
 end
 set(handles.predictionmodel,'String',pmods);

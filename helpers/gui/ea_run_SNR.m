@@ -54,9 +54,9 @@ for fi=1:length(presentfiles)
     c2signal=thisanat.img.*(c2mask.img>0.5); c2snr=ea_nanmean(c2signal(~(c2signal(:)==0)))/noise;
     c3signal=thisanat.img.*(c3mask.img>0.5); c3snr=ea_nanmean(c3signal(~(c3signal(:)==0)))/noise;
 
-    res.(ea_stripex(presentfiles{fi})).c1snr=c1snr;
-    res.(ea_stripex(presentfiles{fi})).c2snr=c2snr;
-    res.(ea_stripex(presentfiles{fi})).c3snr=c3snr;
+    res.(ea_stripext(presentfiles{fi})).c1snr=c1snr;
+    res.(ea_stripext(presentfiles{fi})).c2snr=c2snr;
+    res.(ea_stripext(presentfiles{fi})).c3snr=c3snr;
 end
 
 

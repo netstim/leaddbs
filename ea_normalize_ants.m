@@ -79,7 +79,7 @@ for anatf=1:length(anatpresent)
     from{cnt}=[directory,bprfx,anatpresent{anatf}];
 
         weights(cnt)=1.25;
-   
+
     cnt=cnt+1;
 end
 
@@ -97,7 +97,7 @@ if exist([directory,'segmentations'],'dir')
                 end
             end
         end
-    end 
+    end
 end
 
 if exist([directory,'fiducials'],'dir')
@@ -113,7 +113,7 @@ if exist([directory,'fiducials'],'dir')
                 end
             end
         end
-    end 
+    end
 end
 
 
@@ -231,7 +231,7 @@ end
 function templatetouse=ea_det_to(anatfile,spacedef)
 
 anatfile=strrep(anatfile,'anat_','');
-anatfile=ea_stripex(anatfile);
+anatfile=ea_stripext(anatfile);
 
 for avtpl=1:length(spacedef.templates)
     thistemp=spacedef.templates{avtpl};

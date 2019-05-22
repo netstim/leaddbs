@@ -814,11 +814,11 @@ if ~isempty(uuid)
     % unapprove normalization since should be redone:
     directory=[options.root,options.patientname,filesep];
     approved=load([directory,'ea_coreg_approved.mat']);
-    approved.(ea_stripex(options.prefs.gprenii))=0;
+    approved.(ea_stripext(options.prefs.gprenii))=0;
     save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
     if strcmp(computer('arch'),'maci64')
-        system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripex(options.prefs.gprenii),'.nii'])]);
+        system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(options.prefs.gprenii),'.nii'])]);
     end
 
     %% add methods dump:
