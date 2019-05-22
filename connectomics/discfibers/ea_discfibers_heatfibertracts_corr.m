@@ -23,7 +23,6 @@ fibsval=zeros(size(fibsin,1),length(patselection)); % 5th column will add up val
 
 % now color fibsin based on predictive value of improvement
 ea_dispt('');
-
 ea_dispercent(0,'Iterating ROI');
 fibunique=unique(fibsin(:,4))';
 for roi=1:length(patselection)

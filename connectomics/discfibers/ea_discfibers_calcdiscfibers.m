@@ -14,8 +14,8 @@ statmetric = discfiberssetting.statmetric;
 
 % protocol selection to be able to check if same analysis has been run
 % before.
-%opts.percent=connthreshold; % need not protocol anymore, is now dynamic
-%option.
+% opts.percent=connthreshold; % need not protocol anymore, is now dynamic
+% option.
 opts.patientselection=M.ui.listselect;
 opts.regressor=I;
 opts.connectome=M.ui.connectomename;
