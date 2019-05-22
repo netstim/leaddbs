@@ -69,7 +69,20 @@ switch cmd
             disp('2009b asym LR flip transform is installed.')
         end
     case '7tcgflash'
-        checkf=[ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'];
+        if exist([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'])
+            movefile([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'], ...
+                     [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat']);
+
+            fid = fopen([ea_space,'backdrops',filesep,'backdrops.txt'], 'r');
+            text = fread(fid, inf, '*char')';
+            fclose(fid);
+            text = strrep(text, '7T_Flash_Horn_2018.mat', '7T_Flash_Horn_2019.mat');
+            fid = fopen([ea_space,'backdrops',filesep,'backdrops.txt'], 'w');
+            fwrite(fid, text);
+            fclose(fid);
+        end
+
+        checkf=[ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
             success=~force;
@@ -83,10 +96,10 @@ switch cmd
         if ~exist(checkf,'file') || force
             ea_mkdir([ea_space,'backdrops']);
             success=ea_downloadasset('7tcgflash',...
-                [ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'],...
+                [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat'],...
                 '7tcgflash');
             fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt'],'a');
-            fprintf(fid,'%s %s\n','7T_Flash_Horn_2018.mat','7T_Cardiac_Gated_Flash_MRI_(Horn_2019)');
+            fprintf(fid,'%s %s\n','7T_Flash_Horn_2019.mat','7T_Cardiac_Gated_Flash_MRI_(Horn_2019)');
             fclose(fid);
         else
             disp('7T Cardiac Gated FLASH MRI (Backdrop visualization) is installed.')
