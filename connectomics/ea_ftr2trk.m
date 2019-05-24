@@ -25,7 +25,9 @@ if ~exist('specs','var') % Use MNI T1 as reference space by default.
     specs.vox=nii.voxsize;
     specs.affine=nii.mat;
     header.pad2=['RAS', char(0)];
-elseif ischar(specs) && exist(specs, 'file') % Use the specified nifti as reference space.
+elseif isstruct(specs)
+    header.pad2=[ea_aff2axcodes(specs.affine), char(0)];
+else % Use the specified nifti as reference space.
     disp(['Header from ',specs,' ...']);
     nii=ea_load_nii(specs);
     specs=struct;
@@ -33,8 +35,6 @@ elseif ischar(specs) && exist(specs, 'file') % Use the specified nifti as refere
     specs.dim=size(nii.img);
     specs.vox=nii.voxsize;
     specs.affine=nii.mat;
-    header.pad2=[ea_aff2axcodes(specs.affine), char(0)];
-else
     header.pad2=[ea_aff2axcodes(specs.affine), char(0)];
 end
 
