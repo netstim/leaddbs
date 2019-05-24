@@ -153,13 +153,11 @@ ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'.mat
 ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'_vox.mat'],wfibsvox_mni,idx,'vox',mniaffine);
 
 %% create normalized trackvis version
-try
-    fprintf('\nExporting normalized fibers to TrackVis...\n');
+fprintf('\nExporting normalized fibers to TrackVis...\n');
 
-    [~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-    ea_ftr2trk([directory,'connectomes',filesep,'dMRI',filesep,ftrfname],refnorm); % export normalized ftr to .trk
-    disp('Done.');
-end
+[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
+ea_ftr2trk([directory,'connectomes',filesep,'dMRI',filesep,ftrfname]); % export normalized ftr to .trk
+disp('Done.');
 
 %% add methods dump:
 cits={
