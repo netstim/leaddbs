@@ -25,14 +25,6 @@ if ~exist([directory,'r',options.prefs.rest],'file')
 
     disp('Realignment of rs-fMRI data...');
     filetimepts = ea_appendVolNum([directory,options.prefs.rest], 1:signallength);
-%     matlabbatch{1}.spm.spatial.realign.estimate.data = {filetimepts};
-%     matlabbatch{1}.spm.spatial.realign.estimate.eoptions.quality = 1;
-%     matlabbatch{1}.spm.spatial.realign.estimate.eoptions.sep = 4;
-%     matlabbatch{1}.spm.spatial.realign.estimate.eoptions.fwhm = 5;
-%     matlabbatch{1}.spm.spatial.realign.estimate.eoptions.rtm = 1;
-%     matlabbatch{1}.spm.spatial.realign.estimate.eoptions.interp = 2;
-%     matlabbatch{1}.spm.spatial.realign.estimate.eoptions.wrap = [0 0 0];
-%     matlabbatch{1}.spm.spatial.realign.estimate.eoptions.weight = '';
     matlabbatch{1}.spm.spatial.realign.estwrite.data = {filetimepts};
     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.quality = 1;
     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.sep = 4;
@@ -71,7 +63,6 @@ else
     overwrite = 0;
 end
 
-
 anatfname=ea_stripext(options.prefs.prenii_unnormalized);
 refname=['r',ea_stripext([options.prefs.rest])];
 reference=['mean',options.prefs.rest]; % okay here to not use the hd version of the image since this is about the csf/wm masks.
@@ -81,7 +72,7 @@ reference=['mean',options.prefs.rest]; % okay here to not use the hd version of 
 coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
 fn=fieldnames(coregmethodsused);
 for field=1:length(fn)
-    if ~isempty(strfind(fn{field},ea_stripext(options.prefs.rest)));
+    if ~isempty(strfind(fn{field},ea_stripext(options.prefs.rest)))
         if ~isempty(coregmethodsused.(fn{field}))
             disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
             options.coregmr.method=coregmethodsused.(fn{field});
@@ -127,8 +118,6 @@ ea_apply_coregistration([directory,'mean',options.prefs.rest], ...
     transform, 'linear');
 
 % segmented anat images registered to mean rest image
-
-
 for i=1:3
     ea_apply_coregistration([directory,'mean',options.prefs.rest], ...
         [directory,'c',num2str(i),options.prefs.prenii_unnormalized], ...
@@ -145,13 +134,12 @@ directory=[options.root,options.patientname,filesep];
 
 filetimepts = ea_appendVolNum([directory,'r',options.prefs.rest], 1:signallength);
 if ~exist([directory,'sr',options.prefs.rest],'file')
-matlabbatch{1}.spm.spatial.smooth.data = filetimepts;
-matlabbatch{1}.spm.spatial.smooth.fwhm = [6 6 6];
-matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-matlabbatch{1}.spm.spatial.smooth.im = 0;
-matlabbatch{1}.spm.spatial.smooth.prefix = 's';
-jobs{1}=matlabbatch;
-spm_jobman('run',jobs);
-clear jobs matlabbatch
+    matlabbatch{1}.spm.spatial.smooth.data = filetimepts;
+    matlabbatch{1}.spm.spatial.smooth.fwhm = [6 6 6];
+    matlabbatch{1}.spm.spatial.smooth.dtype = 0;
+    matlabbatch{1}.spm.spatial.smooth.im = 0;
+    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
+    jobs{1}=matlabbatch;
+    spm_jobman('run',jobs);
+    clear jobs matlabbatch
 end
-
