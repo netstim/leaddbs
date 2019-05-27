@@ -391,14 +391,14 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
 currvol=presentfiles{activevolume};
 
-ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
-[options,anatspresent]=ea_assignpretra(options);
-for fi=2:length(anatspresent)
-    ea_delete([options.root,options.patientname,filesep,'gl',anatspresent{fi}]);
-end
-
 switch ea_stripext(currvol)
     case ea_stripext(options.prefs.gprenii)
+        ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
+        [options,anatspresent]=ea_assignpretra(options);
+        for fi=2:length(anatspresent)
+            ea_delete([options.root,options.patientname,filesep,'gl',anatspresent{fi}]);
+        end
+
         options.normalize.method=getappdata(handles.leadfigure,'normmethod');
         options.normalize.method=options.normalize.method{get(handles.coregmrpopup,'Value')};
         options.normalize.methodn=get(handles.coregmrpopup,'Value');
@@ -429,7 +429,8 @@ switch ea_stripext(currvol)
     otherwise % MR
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
-        if ~isempty(b0restanchor{activevolume})
+        if ~isempty(b0restanchor{activevolume})  % b0 or rest files
+
             thisrest=strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
 
             ea_delete([directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)]);
@@ -443,17 +444,17 @@ switch ea_stripext(currvol)
             % image (since we're going from anchor to rest/b0.
             ea_coreg2images(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
             if ~isequal([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
-                    [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)]);
+                    [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)])
                 movefile([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
                     [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)]);
             end
             if ~isequal([directory,ea_stripext(useasanchor),'2',ea_stripext(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
-                    [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
+                    [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)])
                 movefile([directory,ea_stripext(useasanchor),'2',ea_stripext(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
                     [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
             end
             ea_cleandownstream(options,directory,thisrest);
-        else
+        else  % other images
             ea_backuprestore([directory,presentfiles{activevolume}]);
             ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         end
@@ -484,10 +485,11 @@ ea_busyaction('off',handles.leadfigure,'coreg');
 set(handles.leadfigure, 'Name', title);
 
 
-function ea_cleandownstream(options,directory,thisrest)
+function ea_cleandownstream(directory, thisrest)
 % cleanup /templates/labelings (these need to be recalculated)
 ea_delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
 parcdirs=dir([directory,'connectomics',filesep]);
+
 % cleanup /connectomics results (these need to be recalculated):
 for pd=1:length(parcdirs)
     if ~strcmp(parcdirs(pd).name(1),'.')
