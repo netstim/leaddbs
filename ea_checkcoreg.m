@@ -486,6 +486,10 @@ set(handles.leadfigure, 'Name', title);
 
 
 function ea_cleandownstream(directory, thisrest)
+% cleanup fibertracking mask
+ea_delete([directory,'trackingmask.nii']);
+ea_delete([directory,'ttrackingmask.nii']);
+
 % cleanup /templates/labelings (these need to be recalculated)
 ea_delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
 parcdirs=dir([directory,'connectomics',filesep]);
