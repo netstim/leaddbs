@@ -62,5 +62,5 @@ if any(flipped)
     movefile(fullfile(directory,['b0',ftrname,'.trk']), fullfile(directory,[ftrname,'.trk']))
 else
     disp('Start FTR to TRK conversion...');
-    ea_ftr2trk(fullfile(directory,ftrfile), specs);
+    ea_ftr2trk(fullfile(directory,[ftrname,'.mat']), specs);
 end
