@@ -1,37 +1,37 @@
 function [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile,type)
 if ~exist('type','var')
-    type=nan;
+    type = nan;
 end
 
 if ~strcmp(cfile(end-3:end),'.mat')
-    [fibers,idx]=ea_trk2ftr(cfile,type);
-    [cpa,cfn]=fileparts(cfile);
+    [fibers,idx] = ea_trk2ftr(cfile,type);
+    [cpa,cfn] = fileparts(cfile);
     ea_savefibertracts(fullfile(cpa,[cfn,'.mat']),fibers,idx,'mm');
-    [pth,fn,~]=fileparts(cfile);
-    cfile=fullfile(pth,[fn,'.mat']);
+    [pth,fn,~] = fileparts(cfile);
+    cfile = fullfile(pth,[fn,'.mat']);
 end
 
-fibinfo=load(cfile);
+fibinfo = load(cfile);
 if ~isfield(fibinfo,'ea_fibformat')
     ea_convertfibs2newformat(fibinfo,cfile);
-    fibinfo=load(cfile);
+    fibinfo = load(cfile);
 end
-fibers=fibinfo.fibers;
-idx=fibinfo.idx;
+fibers = fibinfo.fibers;
+idx = fibinfo.idx;
 if nargout>2
     try
-        voxmm=fibinfo.voxmm;
+        voxmm = fibinfo.voxmm;
     catch
         if any(min(fibers)<0)
-            voxmm='mm';
+            voxmm = 'mm';
         else % assume voxel
             voxmm = 'vox';
         end
     end
     try
-        mat=fibinfo.mat;
+        mat = fibinfo.mat;
     catch
-        mat=[];
+        mat = [];
     end
 end
 
