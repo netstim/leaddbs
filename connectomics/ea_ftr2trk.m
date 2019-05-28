@@ -7,41 +7,42 @@ function ea_ftr2trk(ftrfile, specs)
 if isempty(directory)
     directory = '.';
 end
+
 if isempty(ext)
     ftrfile = [ftrfile, '.mat'];
 end
 
 disp('Loading FTR-File...');
-[fibs,idx,voxmm,mat]=ea_loadfibertracts(ftrfile);
+[fibs, idx, voxmm, mat] = ea_loadfibertracts(ftrfile);
 
 %% set header
-[header, ~]=ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
+header = ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
 
 if ~exist('specs','var') % Use MNI T1 as reference space by default.
     disp('Header from MNI t1.nii ...');
-    nii=ea_load_nii([ea_space,'t1.nii']);
-    specs.origin=[0,0,0];
-    specs.dim=size(nii.img);
-    specs.vox=nii.voxsize;
-    specs.affine=nii.mat;
-    header.pad2=['RAS', char(0)];
+    nii = ea_load_nii([ea_space,'t1.nii']);
+    specs.origin = [0,0,0];
+    specs.dim = size(nii.img);
+    specs.vox = nii.voxsize;
+    specs.affine = nii.mat;
+    header.pad2 = ['RAS', char(0)];
 elseif isstruct(specs)
-    header.pad2=[ea_aff2axcodes(specs.affine), char(0)];
+    header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
 else % Use the specified nifti as reference space.
     disp(['Header from ',specs,' ...']);
-    nii=ea_load_nii(specs);
-    specs=struct;
-    specs.origin=[0,0,0];
-    specs.dim=size(nii.img);
-    specs.vox=nii.voxsize;
-    specs.affine=nii.mat;
-    header.pad2=[ea_aff2axcodes(specs.affine), char(0)];
+    nii = ea_load_nii(specs);
+    specs = struct;
+    specs.origin = [0,0,0];
+    specs.dim = size(nii.img);
+    specs.vox = nii.voxsize;
+    specs.affine = nii.mat;
+    header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
 end
 
 if strcmp(voxmm,'vox')
     if ~isempty(mat)
         if isempty(specs.affine)
-            specs.affine=mat;
+            specs.affine = mat;
         else
             if ~isequal(mat,specs.affine)
                 ea_error('Affine matrix of Fibertracts and image do not match');
@@ -56,51 +57,51 @@ if det(specs.affine) < 0
 end
 specs = ea_aff2hdr(specs.affine, specs);
 
-header.dim=specs.dim;
-header.voxel_size=specs.voxel_size;
-header.vox_to_ras = specs.affine;
-header.image_orientation_patient=specs.image_orientation_patient;
-header.origin=[0 0 0]; % as doc says, trackvis will always use 0 0 0 as origin.
+header.dim = specs.dim;
+header.voxel_size = specs.voxel_size;
+header.vox_to_ras  =  specs.affine;
+header.image_orientation_patient = specs.image_orientation_patient;
+header.origin = [0 0 0]; % as doc says, trackvis will always use 0 0 0 as origin.
 
-header.n_scalars=0;
-header.scalar_name=char(repmat(' ',10,20));
-header.n_properties=0;
-header.property_name=char(repmat(' ',10,20));
-header.reserved=char(repmat(' ',444,1));
-header.invert_x=0;
-header.invert_y=0;
-header.invert_z=0;
-header.swap_xy=0;
-header.swap_yz=0;
-header.swap_zx=0;
-header.n_count=length(idx);% header.invert_x=1;
-header.version=2;
-header.hdr_size=1000;
+header.n_scalars = 0;
+header.scalar_name = char(repmat(' ',10,20));
+header.n_properties = 0;
+header.property_name = char(repmat(' ',10,20));
+header.reserved = char(repmat(' ',444,1));
+header.invert_x = 0;
+header.invert_y = 0;
+header.invert_z = 0;
+header.swap_xy = 0;
+header.swap_yz = 0;
+header.swap_zx = 0;
+header.n_count = length(idx);% header.invert_x = 1;
+header.version = 2;
+header.hdr_size = 1000;
 
 %% convert data
 disp('Constructing data...');
-tracks=struct('nPoints',nan,'matrix',nan);
-offset=1;
+tracks = struct('nPoints',nan,'matrix',nan);
+offset = 1;
 for track_number=1:length(idx)
-    tracks(1,track_number).nPoints=idx(track_number);
-    tracks(1,track_number).matrix=fibs(offset:offset+idx(track_number)-1,1:3);
-    offset=offset+idx(track_number);
+    tracks(1,track_number).nPoints = idx(track_number);
+    tracks(1,track_number).matrix = fibs(offset:offset+idx(track_number)-1,1:3);
+    offset = offset+idx(track_number);
 end
 
 if strcmp(voxmm,'mm') % have to retranspose to vox
     disp('mm to vox conversion...');
     for i=1:length(tracks)
-        tracks(i).matrix=[tracks(i).matrix,ones(size(tracks(i).matrix,1),1)]';
-        tracks(i).matrix=specs.affine\tracks(i).matrix;
-        tracks(i).matrix=tracks(i).matrix(1:3,:)';
+        tracks(i).matrix = [tracks(i).matrix,ones(size(tracks(i).matrix,1),1)]';
+        tracks(i).matrix = specs.affine\tracks(i).matrix;
+        tracks(i).matrix = tracks(i).matrix(1:3,:)';
     end
 end
 
 for i = 1:length(tracks)
     try
-        tracks(i).matrix=bsxfun(@times, tracks(i).matrix,header.voxel_size);
+        tracks(i).matrix = bsxfun(@times, tracks(i).matrix,header.voxel_size);
     catch
-        tracks(i).matrix=bsxfun(@times, tracks(i).matrix',header.voxel_size);
+        tracks(i).matrix = bsxfun(@times, tracks(i).matrix',header.voxel_size);
     end
 end
 
