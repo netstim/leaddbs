@@ -26,7 +26,6 @@ if ~exist('specs','var') % Use MNI T1 as reference space by default.
     nii = spm_vol([ea_space,'t1.nii']);
     specs.origin = [0,0,0];
     specs.dim = nii.dim;
-    specs.vox = nii.voxsize;
     specs.affine = nii.mat;
     header.pad2 = ['RAS', char(0)];
 elseif isstruct(specs)
@@ -38,7 +37,6 @@ else % Use the specified nifti as reference space.
     specs = struct;
     specs.origin = [0,0,0];
     specs.dim = nii.dim;
-    specs.vox = nii.voxsize;
     specs.affine = nii.mat;
     header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
 end
