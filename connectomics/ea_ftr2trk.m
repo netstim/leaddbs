@@ -41,18 +41,6 @@ else % Use the specified nifti as reference space.
     header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
 end
 
-if strcmp(voxmm,'vox')
-    if ~isempty(mat)
-        if isempty(specs.affine)
-            specs.affine = mat;
-        else
-            if ~isequal(mat,specs.affine)
-                ea_error('Affine matrix of Fibertracts and image do not match');
-            end
-        end
-    end
-end
-
 % check if x-axis of the affine matrix is negative, flip it if so
 if det(specs.affine) < 0
     specs.affine = diag([-1 1 1 1])*specs.affine;
