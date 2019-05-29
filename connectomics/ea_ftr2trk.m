@@ -26,9 +26,11 @@ if ~exist('specs','var') % Use MNI T1 as reference space by default.
     nii = spm_vol([ea_space,'t1.nii']);
     specs.origin = [0,0,0];
     specs.dim = nii.dim;
-    specs.affine = nii.mat;
+    specs.affine = ea_get_affine([ea_space,'t1.nii'], 0);
     header.pad2 = ['RAS', char(0)];
 elseif isstruct(specs)
+    % Suppose that the affine matrix is from SPM
+    specs.affine(:,4) = specs.affine(:,4) + sum(specs.affine(:,1:3),2);
     header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
 else % Use the specified nifti as reference space.
     disp(['Header from ',specs,' ...']);
@@ -37,7 +39,7 @@ else % Use the specified nifti as reference space.
     specs = struct;
     specs.origin = [0,0,0];
     specs.dim = nii.dim;
-    specs.affine = nii.mat;
+    specs.affine = ea_get_affine(refimage, 0);
     header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
 end
 
