@@ -127,7 +127,7 @@ save([options.root,options.patientname,filesep,ftrbase,'.mat'],'-struct','ftr','
 disp('Done.');
 
 fprintf('\nGenerating trk in b0 space...\n');
-ea_b0ftr2trk([options.root,options.patientname,filesep,ftrbase,'.mat'], [options.root,options.patientname,filesep,options.prefs.b0])
+ea_ftr2trk([options.root,options.patientname,filesep,ftrbase,'.mat'], [options.root,options.patientname,filesep,options.prefs.b0])
 
 
 function ea_prepare_fib_gqi(DSISTUDIO,btable,mean_diffusion_distance_ratio,options)
