@@ -80,14 +80,17 @@ b0=spm_vol([options.root,options.patientname,filesep,options.prefs.b0]);
 % indexing.
 if b0.mat(1)>0  % 'R' is positive x-axis
     % flip x
+    disp('Flip positive X-axis to R...');
     fibers(:,1)=b0.dim(1)-fibers(:,1);
 end
 if b0.mat(6)>0  % 'A' is positive y-axis
     %flip y
+    disp('Flip positive Y-axis to A...');
     fibers(:,2)=b0.dim(2)-fibers(:,2);
 end
 if b0.mat(11)<0  % 'I' is positive z-axis
     %flip z
+    disp('Flip positive Z-axis to I...');
     fibers(:,3)=b0.dim(3)-fibers(:,3);
 end
 
