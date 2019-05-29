@@ -74,17 +74,19 @@ clear fibinfo
 fibers=fibers';
 b0=spm_vol([options.root,options.patientname,filesep,options.prefs.b0]);
 
-% Default orientation in dsi_studio and trackvis is LPS, flip the
-% coordinate when needed.
-if b0.mat(1)>0
+% Default orientation in DSI-Studio and TrackVis is LPS. Flip the
+% coordinates to make the orientation in the MAT file inline with b0 image.
+% The coordinates are also changed from ZERO-BASED indexing to ONE-BASED
+% indexing.
+if b0.mat(1)>0  % 'R' is positive x-axis
     % flip x
     fibers(:,1)=b0.dim(1)-fibers(:,1);
 end
-if b0.mat(6)>0
+if b0.mat(6)>0  % 'A' is positive y-axis
     %flip y
     fibers(:,2)=b0.dim(2)-fibers(:,2);
 end
-if b0.mat(11)<0
+if b0.mat(11)<0  % 'I' is positive z-axis
     %flip z
     fibers(:,3)=b0.dim(3)-fibers(:,3);
 end
