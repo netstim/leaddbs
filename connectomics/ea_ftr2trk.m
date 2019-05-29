@@ -153,7 +153,20 @@ catch
 end
 
 if version == 2
-    trk_hdr.vox_to_ras = affine;
+    vox_to_ras = affine;
+    % Check orientation
+    % Voxel coordinates are in LPS orientation. Adapt the affine matrix if
+    % it's in RAI orientation.
+    if vox_to_ras(1) > 0
+        vox_to_ras(1,:) = vox_to_ras(1,:) * -1;
+    end
+    if vox_to_ras(6) > 0
+        vox_to_ras(2,:) = vox_to_ras(2,:) * -1;
+    end
+    if vox_to_ras(11) < 0
+        vox_to_ras(3,:) = vox_to_ras(3,:) * -1;
+    end
+    trk_hdr.vox_to_ras = vox_to_ras;
 end
 
 if set_order
