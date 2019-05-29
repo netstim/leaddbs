@@ -43,15 +43,11 @@ else % Use the specified nifti as reference space.
     header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
 end
 
-% check if x-axis of the affine matrix is negative, flip it if so
-if det(specs.affine) < 0
-    specs.affine = diag([-1 1 1 1])*specs.affine;
-end
-specs = ea_aff2hdr(specs.affine, specs);
+specs = ea_aff2hdr(specs.affine, specs, 1);
 
 header.dim = specs.dim;
 header.voxel_size = specs.voxel_size;
-header.vox_to_ras  =  specs.affine;
+header.vox_to_ras  =  specs.vox_to_ras;
 header.image_orientation_patient = specs.image_orientation_patient;
 header.origin = [0 0 0]; % as doc says, trackvis will always use 0 0 0 as origin.
 
