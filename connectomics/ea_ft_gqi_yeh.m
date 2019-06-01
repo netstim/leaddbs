@@ -131,6 +131,7 @@ ea_ftr2trk([directory,ftrbase,'.mat'], [directory,options.prefs.b0])
 
 
 function ea_prepare_fib_gqi(DSISTUDIO,btable,mean_diffusion_distance_ratio,options)
+directory=[options.root,options.patientname,filesep];
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 
 if exist([directory,ftrbase,'.fib.gz'],'file')
