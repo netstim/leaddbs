@@ -9,10 +9,12 @@ if nargin < 2
     type = 'SPM';
 end
 
+hdr = ea_fslhd(nii, 'x');
+
 switch type
     case {'spm', 'SPM', 1, '1'}  % SPM type, one-based
-        affine = spm_get_space(nii);
+        affine = hdr.sto_xyz_matrix;
+        affine(:,4) = affine(:,4) - sum(affine(:,1:3),2);
     case {0, '0'}  % other types, zero-based
-        affine = spm_get_space(nii);
-        affine(:,4) = affine(:,4) + sum(affine(:,1:3),2);
+        affine = hdr.sto_xyz_matrix;
 end
