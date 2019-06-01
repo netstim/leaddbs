@@ -135,9 +135,9 @@ if nargin == 2
         XYZ_dest_mm = varargin{1};
         dest = src;
         XYZ_dest_vx = spm_get_space(dest) \ XYZ_dest_mm;
-        XYZ_dest_vx=XYZ_dest_vx(1:3,:);
+        XYZ_dest_vx = XYZ_dest_vx(1:3,:);
     end
-    XYZ_dest_mm=XYZ_dest_mm(1:3,:);
+    XYZ_dest_mm = XYZ_dest_mm(1:3,:);
     transform = []; % finish mapping, set to empty
 end
 
@@ -235,7 +235,9 @@ if ~isempty(transform)
                 end
 
                 % vox to mm, ANTs takes mm coords as input
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                % use zero-based indexing
+                XYZ_src_mm = ea_get_affine(src,0)*XYZ_src_vx;
+                adapt0base = 1;
 
                 % RAS to LPS, ANTs (ITK) use LPS coords
                 XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
@@ -268,9 +270,10 @@ if ~isempty(transform)
                 match = dir([transform, '_flirt*.mat']);
                 transform = [directory, filesep, match(end).name];
 
-                % vox to mm, use img2imgcoord to do mm coords
-                % transformation
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                % vox to mm, img2imgcoord takes mm coords as input
+                % use zero-based indexing
+                XYZ_src_mm = ea_get_affine(src,0)*XYZ_src_vx;
+                adapt0base = 1;
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
@@ -322,8 +325,9 @@ if ~isempty(transform)
                 end
 
                 % vox to mm, ANTs takes mm coords as input
-                V=ea_open_vol(src); % .gz support, dont use spm_get_space here.
-                XYZ_src_mm = V.mat*XYZ_src_vx;
+                % use zero-based indexing
+                XYZ_src_mm = ea_get_affine(src,0)*XYZ_src_vx;
+                adapt0base = 1;
 
                 % RAS to LPS, ANTs (ITK) use LPS coords
                 XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
@@ -350,9 +354,10 @@ if ~isempty(transform)
                     inversemap = 1;
                 end
 
-                % vox to mm, use img2imgcoord to do mm coords
-                % transformation
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                % vox to mm, img2imgcoord takes mm coords as input
+                % use zero-based indexing
+                XYZ_src_mm = ea_get_affine(src,0)*XYZ_src_vx;
+                adapt0base = 1;
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
@@ -400,7 +405,9 @@ if ~isempty(transform)
                 end
 
                 % vox to mm, ANTs takes mm coords as input
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                % use zero-based indexing
+                XYZ_src_mm = ea_get_affine(src,0)*XYZ_src_vx;
+                adapt0base = 1;
 
                 % RAS to LPS, ANTs (ITK) use LPS coords
                 XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
@@ -418,9 +425,10 @@ if ~isempty(transform)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
             case {'FSL', 'FNIRT'} % FSL (ea_fnirt) used
-                % vox to mm, use img2imgcoord to do mm coords
-                % transformation
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                % vox to mm, img2imgcoord takes mm coords as input
+                % use zero-based indexing
+                XYZ_src_mm = ea_get_affine(src,0)*XYZ_src_vx;
+                adapt0base = 1;
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
@@ -437,10 +445,14 @@ if ~isempty(transform)
         error(['Unsupported transformation file:\n', transform])
     end
 
-    % Optional output from dest vx coords
+    % Optional output dest vx coords
     if nargout == 2
         if nargin >= 4 % dest image specified
-            XYZ_dest_vx = spm_get_space(dest) \ XYZ_dest_mm;
+            if exist('adapt0base', 'var') && adapt0base==1
+                XYZ_dest_vx = ea_get_affine(dest, 0) \ XYZ_dest_mm;
+            else
+                XYZ_dest_vx = ea_get_affine(dest) \ XYZ_dest_mm;
+            end
 
         elseif ~isempty(regexp(transform, 'sn\.mat$', 'once')) % transform is SPM DCT file
             sn = load(transform, 'VF');
