@@ -15,8 +15,10 @@ end
 disp('Loading FTR-File...');
 [fibs, idx, voxmm] = ea_loadfibertracts(ftrfile);
 
-% Convert to ZERO-BASED indexing
-fibs = fibs(:,1:3) - 1;
+% Convert ONE-BASED indexing to ZERO-BASED indexing
+if strcmp(voxmm,'vox')
+    fibs = fibs(:,1:3) - 1;
+end
 
 %% set header
 header = ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
