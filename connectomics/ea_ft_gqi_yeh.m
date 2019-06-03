@@ -66,12 +66,13 @@ if err
 end
 
 % now store tract in lead-dbs format
-ea_dispercent(0,'Converting fibers');
-fibinfo=load([directory,ftrbase,'.mat']);
-fibers=fibinfo.tracts;
-idx=fibinfo.length';
+disp('Converting fibers...');
+fibinfo = load([directory,ftrbase,'.mat']);
+fibers = fibinfo.tracts';
+idx = fibinfo.length';
+idxv = cell2mat(arrayfun(@(x, y) ones(x,1)*y, idx, (1:numel(idx))', 'Uni', 0));
+fibers = [fibers,idxv];
 clear fibinfo
-fibers=fibers';
 b0=spm_vol([directory,options.prefs.b0]);
 
 % Default orientation in DSI-Studio and TrackVis is LPS. Flip the
@@ -79,21 +80,21 @@ b0=spm_vol([directory,options.prefs.b0]);
 if b0.mat(1)>0  % 'R' is positive x-axis
     % flip x
     disp('Flip positive X-axis to R...');
-    fibers(:,1)=b0.dim(1)-1-fibers(:,1);
+    fibers(:,1) = b0.dim(1)-1-fibers(:,1);
 end
 if b0.mat(6)>0  % 'A' is positive y-axis
     %flip y
     disp('Flip positive Y-axis to A...');
-    fibers(:,2)=b0.dim(2)-1-fibers(:,2);
+    fibers(:,2) = b0.dim(2)-1-fibers(:,2);
 end
 if b0.mat(11)<0  % 'I' is positive z-axis
     %flip z
     disp('Flip positive Z-axis to I...');
-    fibers(:,3)=b0.dim(3)-1-fibers(:,3);
+    fibers(:,3) = b0.dim(3)-1-fibers(:,3);
 end
 
 % Change ZERO-BASED indexing to ONE-BASED indexing.
-fibers = fibers + 1;
+fibers(:,1:3) = fibers(:,1:3) + 1;
 
 if vizz
     figure
@@ -105,24 +106,11 @@ if vizz
     plot3(xx,yy,zz,'g.')
 end
 
-clear length
-idxv=zeros(size(fibers,1),1);
-lid=1; cnt=1;
-for id=idx'
-    ea_dispercent(cnt/length(idx));
-    idxv(lid:lid+id-1)=cnt;
-    lid=lid+id;
-    cnt=cnt+1;
-end
-ea_dispercent(1,'end');
-
-fibers=[fibers,idxv];
-
-ftr.fourindex=1;
-ftr.ea_fibformat='1.0';
-ftr.fibers=fibers;
-ftr.idx=idx;
-ftr.voxmm='vox';
+ftr.fourindex = 1;
+ftr.ea_fibformat = '1.0';
+ftr.fibers = fibers;
+ftr.idx = idx;
+ftr.voxmm = 'vox';
 disp('Saving fibers...');
 save([directory,ftrbase,'.mat'],'-struct','ftr','-v7.3');
 disp('Done.');
