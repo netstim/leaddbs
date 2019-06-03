@@ -52,8 +52,8 @@ fwrite(fid, header.version, 'int');
 fwrite(fid, header.hdr_size, 'int');
 
 % Check orientation
-[tmp ix] = max(abs(header.image_orientation_patient(1:3)));
-[tmp iy] = max(abs(header.image_orientation_patient(4:6)));
+[~, ix] = max(abs(header.image_orientation_patient(1:3)));
+[~, iy] = max(abs(header.image_orientation_patient(4:6)));
 iz = 1:3;
 iz([ix iy]) = [];
 
