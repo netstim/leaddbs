@@ -245,8 +245,6 @@ options.expstatvat.do=0;
 options.fiberthresh=10;
 options.writeoutstats=1;
 
-try options.fiber_count = get(handles.fiber_count,'String'); end
-
 options.colormap=parula(64); % default colormap, use this explicitly rather than 'colormap' to avoid popup window.
 try % not working when calling from lead_anatomy
     options.dolc=get(handles.include_lead_connectome_subroutine,'Value');
