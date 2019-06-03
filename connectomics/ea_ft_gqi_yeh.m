@@ -76,23 +76,24 @@ b0=spm_vol([directory,options.prefs.b0]);
 
 % Default orientation in DSI-Studio and TrackVis is LPS. Flip the
 % coordinates to make the orientation in the MAT file inline with b0 image.
-% The coordinates are also changed from ZERO-BASED indexing to ONE-BASED
-% indexing.
 if b0.mat(1)>0  % 'R' is positive x-axis
     % flip x
     disp('Flip positive X-axis to R...');
-    fibers(:,1)=b0.dim(1)-fibers(:,1);
+    fibers(:,1)=b0.dim(1)-1-fibers(:,1);
 end
 if b0.mat(6)>0  % 'A' is positive y-axis
     %flip y
     disp('Flip positive Y-axis to A...');
-    fibers(:,2)=b0.dim(2)-fibers(:,2);
+    fibers(:,2)=b0.dim(2)-1-fibers(:,2);
 end
 if b0.mat(11)<0  % 'I' is positive z-axis
     %flip z
     disp('Flip positive Z-axis to I...');
-    fibers(:,3)=b0.dim(3)-fibers(:,3);
+    fibers(:,3)=b0.dim(3)-1-fibers(:,3);
 end
+
+% Change ZERO-BASED indexing to ONE-BASED indexing.
+fibers = fibers + 1;
 
 if vizz
     figure
