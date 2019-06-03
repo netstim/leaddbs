@@ -263,7 +263,7 @@ for source=S.sources
         end
 
         potential = ea_apply_dbs(vol,ix,voltix,unipolar,constvol,wmboundary); % output in V. 4 indexes insulating material.
-        %      save('results','mesh','vol','ix','voltix','unipolar','constvol','wmboundary','potential3v','potential3ma','gradient3v','gradient3ma');
+        % save('results','mesh','vol','ix','voltix','unipolar','constvol','wmboundary','potential3v','potential3ma','gradient3v','gradient3ma');
 
         voltix=voltix(:,1); % get rid of index column
         if vizz
@@ -282,7 +282,7 @@ for source=S.sources
         elec_tet_ix = sub2ind(size(mesh.pnt),vertcat(ix,ix,ix),vertcat(ones(length(ix),1),ones(length(ix),1).*2,ones(length(ix),1).*3));
         elec_tet_ix = find(sum(ismember(mesh.tet,elec_tet_ix),2)==4);
 
-%         gradient{source}(elec_tet_ix,:) = repmat(max(gradient{source}),[length(elec_tet_ix),1]); %assign maximum efield value
+        % gradient{source}(elec_tet_ix,:) = repmat(max(gradient{source}),[length(elec_tet_ix),1]); %assign maximum efield value
         tmp = sort(abs(gradient{source}),'descend');
         gradient{source}(elec_tet_ix,:) = repmat(mean(tmp(1:ceil(length(tmp(:,1))*0.001),:)),[length(elec_tet_ix),1]); % choose mean of highest 0.1% as new efield value
         clear tmp
@@ -1059,7 +1059,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
         end
 
         if strcmp(sens.balance.current, 'planar')
-            if isfield(sens, 'type') && ~isempty(strfind(sens.type, '_planar'))
+            if isfield(sens, 'type') && contains(sens.type, '_planar')
                 % remove the planar postfox from the sensor type
                 sens.type = sens.type(1:(end-7));
             end
@@ -1847,9 +1847,9 @@ if isequal(hastrials, 'yes')
     okflag = isfield(data, 'trial');
     if ~okflag && isfield(data, 'dimord')
         % instead look in the dimord for rpt or subj
-        okflag = ~isempty(strfind(data.dimord, 'rpt')) || ...
-            ~isempty(strfind(data.dimord, 'rpttap')) || ...
-            ~isempty(strfind(data.dimord, 'subj'));
+        okflag = contains(data.dimord, 'rpt') || ...
+            contains(data.dimord, 'rpttap') || ...
+            contains(data.dimord, 'subj');
     end
     if ~okflag
         error('This function requires data with a ''trial'' field');
@@ -8692,7 +8692,7 @@ if ~isfield(data, 'dimord')
         fn = fieldnames(data);
         sel = true(size(fn));
         for i=1:length(fn)
-            sel(i) = ~isempty(strfind(fn{i}, 'dimord'));
+            sel(i) = contains(fn{i}, 'dimord');
         end
         df = fn(sel);
 
@@ -8885,7 +8885,7 @@ iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(dat
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
 issource       =  isfield(data, 'pos');
 isdip          =  isfield(data, 'dip');
-ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
+ismvar         =  isfield(data, 'dimord') && contains(data.dimord, 'lag');
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
 ischan         = ea_check_chan(data);
 issegmentation = ea_check_segmentation(data);
@@ -8893,7 +8893,7 @@ isparcellation = ea_check_parcellation(data);
 
 if ~isfreq
     % this applies to a freq structure from 2003 up to early 2006
-    isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && ~isempty(strfind(data.dimord, 'frq'));
+    isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && contains(data.dimord, 'frq');
 end
 
 % check if it is a spike structure

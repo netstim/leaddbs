@@ -50,7 +50,7 @@ for k = 1:nFile
     s = hh{k};
     if isempty(s) || any(~isfield(s, flds(1:3))) || ~isfield(s, 'PixelData') ...
             || (isstruct(s.PixelData) && s.PixelData.Bytes<1)
-        if ~isempty(errStr{k}) % && isempty(strfind(errInfo, errStr{k}))
+        if ~isempty(errStr{k}) % && ~contains(errInfo, errStr{k})
             errInfo = sprintf('%s\n%s\n', errInfo, errStr{k});
         end
         continue; % skip the file
@@ -390,7 +390,7 @@ end
 %% Subfunction: return true if keyword is in s.ImageType
 function tf = isType(s, keyword)
 typ = tryGetField(s, 'ImageType', '');
-tf = ~isempty(strfind(typ, keyword)); %#ok<*STREMP>
+tf = contains(typ, keyword); %#ok<*STREMP>
 
 
 %% Write error info to a file in case user ignores Command Window output

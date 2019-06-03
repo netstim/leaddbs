@@ -16,6 +16,6 @@ end
 
 env = getenv(envname);
 
-if isempty(strfind(env, libpath))
+if ~contains(env, libpath)
     setenv(envname, [libpath, ';', env]);
 end
