@@ -281,12 +281,12 @@ for source=S.sources
         % gradient{source}(elec_tet_ix,:) = new_value;
         elec_tet_ix = sub2ind(size(mesh.pnt),vertcat(ix,ix,ix),vertcat(ones(length(ix),1),ones(length(ix),1).*2,ones(length(ix),1).*3));
         elec_tet_ix = find(sum(ismember(mesh.tet,elec_tet_ix),2)==4);
-        
-%         gradient{source}(elec_tet_ix,:) = repmat(max(gradient{source}),[length(elec_tet_ix),1]); %assign maximum efield value        
+
+%         gradient{source}(elec_tet_ix,:) = repmat(max(gradient{source}),[length(elec_tet_ix),1]); %assign maximum efield value
         tmp = sort(abs(gradient{source}),'descend');
-        gradient{source}(elec_tet_ix,:) = repmat(mean(tmp(1:ceil(length(tmp(:,1))*0.001),:)),[length(elec_tet_ix),1]); % choose mean of highest 0.1% as new efield value 
+        gradient{source}(elec_tet_ix,:) = repmat(mean(tmp(1:ceil(length(tmp(:,1))*0.001),:)),[length(elec_tet_ix),1]); % choose mean of highest 0.1% as new efield value
         clear tmp
-        
+
     else % empty source..
         gradient{source}=zeros(size(vol.tet,1),3);
     end
@@ -3537,7 +3537,7 @@ switch style
     case 'probabilistic'
 
         % convert from a cumulative to an exclusive representation
-        contains = false(length(fn));
+        within = false(length(fn));
         if length(fn)>4
             % test for each tissue whether it is overlapping with or contained in each other tissue
             warning('more than 4 tissue types, this may take a while');
@@ -3554,14 +3554,14 @@ switch style
                     continue
                 end
                 segj = segmentation.(fn{j})>0;
-                contains(i,j) = all(segj(segi(:))); % segi is fully contained in segj
-                if i~=j && contains(i,j)
+                within(i,j) = all(segj(segi(:))); % segi is fully contained in segj
+                if i~=j && within(i,j)
                     fprintf('the %s is fully contained in the %s, removing it from the %s\n', fn{i}, fn{j}, fn{j});
                     segmentation.(fn{j})(segi) = 0;
                 end
             end
         end
-        clear segi segj contains
+        clear segi segj within
 
     otherwise
         error('unsupported style "%s"', style);

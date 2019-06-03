@@ -2305,7 +2305,7 @@ switch style
   case 'probabilistic'
 
     % convert from a cumulative to an exclusive representation
-    contains = false(length(fn));
+    within = false(length(fn));
     if length(fn)>4
       % test for each tissue whether it is overlapping with or contained in each other tissue
       warning('more than 4 tissue types, this may take a while');
@@ -2322,14 +2322,14 @@ switch style
           continue
         end
         segj = segmentation.(fn{j})>0;
-        contains(i,j) = all(segj(segi(:))); % segi is fully contained in segj
-        if i~=j && contains(i,j)
+        within(i,j) = all(segj(segi(:))); % segi is fully contained in segj
+        if i~=j && within(i,j)
           fprintf('the %s is fully contained in the %s, removing it from the %s\n', fn{i}, fn{j}, fn{j});
           segmentation.(fn{j})(segi) = 0;
         end
       end
     end
-    clear segi segj contains
+    clear segi segj within
 
   otherwise
     error('unsupported style "%s"', style);
