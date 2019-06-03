@@ -93,4 +93,6 @@ end
 % AllXYZ=AllXYZSel; % now that connected fibers were selected, replace with selected VTAs only to avoid confusion.
 XYZmm = XYZmmSel;
 nii = niiSel;
-valsmm = valsmm(patselection);
+if ~isempty(valsmm)
+    valsmm = valsmm(patselection);
+end
