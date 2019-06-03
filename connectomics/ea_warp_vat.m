@@ -2,7 +2,7 @@ function ea_warp_vat(b0rest, options, handles)
 directory=[options.root,options.patientname,filesep];
 
 if strcmp(b0rest,'rest') % processing rest files
-    b0rest=ea_stripex(options.prefs.rest);
+    b0rest=ea_stripext(options.prefs.rest);
 end
 
 stims=get(handles.vatseed,'String');

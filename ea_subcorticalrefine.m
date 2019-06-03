@@ -111,10 +111,6 @@ if isfield(options,'autobrainshift') && options.autobrainshift
 end
 
 
-function fn=ea_stripex(fn)
-[~,fn]=fileparts(fn);
-
-
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_subcorticalrefine_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);

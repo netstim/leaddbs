@@ -9,28 +9,22 @@ function varargout=ea_genvat_modeldti(varargin)
 % given side.
 
 if nargin==4
-coords=varargin{1};
-stimparams=varargin{2};
-side=varargin{3};
-options=varargin{4};
-elseif nargin==1
+    coords=varargin{1};
+    stimparams=varargin{2};
+    side=varargin{3};
+    options=varargin{4};
+    elseif nargin==1
 
-if ischar(varargin{1}) % return name of method.
-    varargout{1}='Model DTI';
-    return
+    if ischar(varargin{1}) % return name of method.
+        varargout{1}='Model DTI';
+        return
+    end
 end
-end
-
-
-
-
 
 %% build DTD (if needed)
 if ~exist([options.root,options.patientname,filesep,options.prefs.DTD],'file')
-ea_prepare_dti(options);
+    ea_prepare_dti(options);
 end
-
-
 
 if ~exist([options.root,options.patientname,filesep,'vat_resources',filesep,'trackmask_b0.mat'],'file')
 disp('Building Mask in native DTI-space at electrode positions.');
@@ -79,9 +73,7 @@ switch spm('ver')
         clear jobs matlabbatch
 
         movefile([options.root,options.patientname,filesep,'vat_resources',filesep,'swtrackmask_mni.nii'],[options.root,options.patientname,filesep,'vat_resources',filesep,'trackmask_pre.nii']);
-
 end
-
 
 copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'tmp.nii']);
 
@@ -103,9 +95,7 @@ clear matlabbatch jobs
 
 movefile([options.root,options.patientname,filesep,'vat_resources',filesep,'rtrackmask_pre.nii'],[options.root,options.patientname,filesep,'vat_resources',filesep,'trackmask_b0.nii']);
 
-
 % convert to maskstruct
-
 matlabbatch{1}.impexp_NiftiMrStruct.nifti2roistruct.srcimgs = {[options.root,options.patientname,filesep,'vat_resources',filesep,'trackmask_b0.nii']};
 matlabbatch{1}.impexp_NiftiMrStruct.nifti2roistruct.thresh = [0.1 Inf];
 matlabbatch{1}.impexp_NiftiMrStruct.nifti2roistruct.nfval = false;
@@ -123,7 +113,6 @@ delete([options.root,options.patientname,filesep,'vat_resources',filesep,'trackm
 delete([options.root,options.patientname,filesep,'vat_resources',filesep,'trackmask_b0.nii']);
 disp('Done building mask.');
 end
-
 
 %% track DTI
 if ~exist([options.root,options.patientname,filesep,'vat_resources',filesep,'leadfield_FTR.mat'],'file')
@@ -144,38 +133,12 @@ if ~exist([options.root,options.patientname,filesep,'vat_resources',filesep,'lea
     disp('Done fibertracking.');
 end
 
-
 keyboard
 %% generate headmodel from DTI fibers
 
 %% generate leadfield:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 %% old maedler code
-
-
 
 [xx,yy,zz]=psphere(100);
 
@@ -184,7 +147,6 @@ try
         clear stimparams
     end
 end
-
     radius=repmat(1.5,options.elspec.numel,1); % some default setting.
     %try % if stimparams are set.
     for con=1:length(stimparams(1,side).U)
@@ -197,12 +159,9 @@ end
             yy*radius(con)+coords{side}(con,2);...
             zz*radius(con)+coords{side}(con,3)]';
     end
-
-
 varargout{1}=VAT;
 varargout{2}=radius;
 varargout{3}=volume;
-
 
 
 function r=maedler12_eq3(U,Im)
@@ -216,13 +175,10 @@ k1=-1.0473;
 k3=0.2786;
 k4=0.0009856;
 
-
 r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)...
     /...
     (2*k3);
 end
-
-
 
 
 function [x,y,z,avgr] = psphere(n,rad)
@@ -276,7 +232,6 @@ function [x,y,z,avgr] = psphere(n,rad)
 % You may freely distribute this code. I only ask that you give credit
 % where credit is due.
 %
-
 
 %Since rand produces number from 0 to 1, subtract off -0.5 so that
 %the points are centered about (0,0,0).
@@ -354,14 +309,12 @@ while not_done
 
     end
 
-
     %Check convergence
     diff = abs(rm_new - rm_old);
 
     not_done = any(diff(:) > 0.01);
 
     rm_old = rm_new;
-
 end %while
 
 %Find the smallest distance between neighboring points. To do this
@@ -374,7 +327,3 @@ avgr = min(tmp(indices));
 
 %Turn back on the default warning state.
 warning backtrace
-
-
-
-

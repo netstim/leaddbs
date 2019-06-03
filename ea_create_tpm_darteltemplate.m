@@ -16,7 +16,10 @@ load([ea_space,'ea_space_def.mat']);
 if ~exist([ea_space,'dartel'], 'dir')
     mkdir([ea_space,'dartel']);
 end
+
+% TPM Lorio Draganski to be kept in 'templates' folder since will be used to generate TPM in each space.
 tpmfile=[ea_getearoot,'templates',filesep,'TPM_Lorio_Draganski.nii'];
+
 rebuildtpm=1;
 if isfield(spacedef,'tpm')
 
@@ -49,7 +52,7 @@ if rebuildtpm
     end
 
     for tpspectr=1:tpmnum
-        matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).tpm = {[tpmfile,',',num2str(tpspectr)]}; % This is correct ? TPM Lorio Draganski to be kept in /templates folder since will be used to generate TPM in each space.
+        matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).tpm = {[tpmfile,',',num2str(tpspectr)]};
         matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).ngaus = 1;
         matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).native = [1 0];
         matlabbatch{1}.spm.spatial.preproc.tissue(tpspectr).warped = [0 0];

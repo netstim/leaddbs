@@ -1,6 +1,6 @@
 function [tmat,postopct] = ea_getrawct2preniimat(options,inverse)
-% Gets the transformation from options.prefs.rawctnii_unnormalized to 
-% options.prefs.prenii_unnormalized and extracts the transformation matrix 
+% Gets the transformation from options.prefs.rawctnii_unnormalized to
+% options.prefs.prenii_unnormalized and extracts the transformation matrix
 %
 % Returns: transformation matrix in LPI- (= RAS+)
 %
@@ -27,9 +27,9 @@ switch options.prefs.reco.mancoruse
         switch coregct_method_applied{end}
             case {'ea_coregctmri_ants','ea_coregctmri_ants_refine'}
                 if inverse
-                    antsmts=dir([directory,ea_stripex(options.prefs.prenii_unnormalized),'2',ea_stripex(options.prefs.rawctnii_unnormalized),'_ants*','.mat']);
+                    antsmts=dir([directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_ants*','.mat']);
                 else
-                    antsmts=dir([directory,ea_stripex(options.prefs.rawctnii_unnormalized),'2',ea_stripex(options.prefs.prenii_unnormalized),'_ants*','.mat']);
+                    antsmts=dir([directory,ea_stripext(options.prefs.rawctnii_unnormalized),'2',ea_stripext(options.prefs.prenii_unnormalized),'_ants*','.mat']);
                 end
                 t=load([directory,antsmts(end).name]);
                 % The affine field name in tfields{1} differs depending on the ants call, its often
@@ -42,11 +42,11 @@ switch options.prefs.reco.mancoruse
                 tmat=ea_antsmat2mat(t.(tfields{1}),t.(tfields{2}));
             case 'ea_coregctmri_brainsfit'
                 if inverse
-                    reg2org.fixed = h5read([directory,ea_stripex(options.prefs.rawctnii_unnormalized),'2',ea_stripex(options.prefs.prenii_unnormalized),'_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformFixedParameters');
-                    reg2org.AffineTransform_float_3_3 = h5read([directory ea_stripex(options.prefs.rawctnii_unnormalized),'2',ea_stripex(options.prefs.prenii_unnormalized),'_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformParameters');
+                    reg2org.fixed = h5read([directory,ea_stripext(options.prefs.rawctnii_unnormalized),'2',ea_stripext(options.prefs.prenii_unnormalized),'_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformFixedParameters');
+                    reg2org.AffineTransform_float_3_3 = h5read([directory ea_stripext(options.prefs.rawctnii_unnormalized),'2',ea_stripext(options.prefs.prenii_unnormalized),'_brainsfit_Inverse.h5'],'/TransformGroup/0/TranformParameters');
                 else
-                    reg2org.fixed = h5read([directory,ea_stripex(options.prefs.rawctnii_unnormalized),'2',ea_stripex(options.prefs.prenii_unnormalized),'_brainsfit.h5'],'/TransformGroup/0/TranformFixedParameters');
-                    reg2org.AffineTransform_float_3_3 = h5read([directory ea_stripex(options.prefs.rawctnii_unnormalized),'2',ea_stripex(options.prefs.prenii_unnormalized),'_brainsfit.h5'],'/TransformGroup/0/TranformParameters');
+                    reg2org.fixed = h5read([directory,ea_stripext(options.prefs.rawctnii_unnormalized),'2',ea_stripext(options.prefs.prenii_unnormalized),'_brainsfit.h5'],'/TransformGroup/0/TranformFixedParameters');
+                    reg2org.AffineTransform_float_3_3 = h5read([directory ea_stripext(options.prefs.rawctnii_unnormalized),'2',ea_stripext(options.prefs.prenii_unnormalized),'_brainsfit.h5'],'/TransformGroup/0/TranformParameters');
                 end
                 tmat = ea_antsmat2mat(reg2org.AffineTransform_float_3_3,reg2org.fixed);
             case 'ea_coregctmri_fsl'

@@ -8,7 +8,7 @@ else
 end
 
 allroilist=cat(2,roilist{:});
-%tree=KDTreeSearcher(fibers(:,1:3));
+% tree=KDTreeSearcher(fibers(:,1:3));
 % load in all ROI
 
 cnt=1;
@@ -91,5 +91,8 @@ if size(fibsin,2)>4
 end
 
 % AllXYZ=AllXYZSel; % now that connected fibers were selected, replace with selected VTAs only to avoid confusion.
-XYZmm=XYZmmSel;
-nii=niiSel;
+XYZmm = XYZmmSel;
+nii = niiSel;
+if ~isempty(valsmm)
+    valsmm = valsmm(patselection);
+end

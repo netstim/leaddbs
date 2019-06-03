@@ -37,9 +37,9 @@ end
 % apply inverse to b0 to gen checkreg:
 coregmethod=options.coregmr.method;
 T=load([directory,'ea_coregmrmethod_applied.mat']);
-if isfield(T,['b0_',ea_stripex(options.prefs.prenii_unnormalized)])
-    coregmethod=T.(['b0_',ea_stripex(options.prefs.prenii_unnormalized)]);
+if isfield(T,['b0_',ea_stripext(options.prefs.prenii_unnormalized)])
+    coregmethod=T.(['b0_',ea_stripext(options.prefs.prenii_unnormalized)]);
 end
-ea_apply_coregistration([directory,options.prefs.b0],[directory,options.prefs.prenii_unnormalized],[directory,ea_stripex(options.prefs.b0),'_',options.prefs.prenii_unnormalized],coregmethod);
+ea_apply_coregistration([directory,options.prefs.b0],[directory,options.prefs.prenii_unnormalized],[directory,ea_stripext(options.prefs.b0),'_',options.prefs.prenii_unnormalized],coregmethod);
 
 

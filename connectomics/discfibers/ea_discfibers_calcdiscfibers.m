@@ -14,8 +14,8 @@ statmetric = discfiberssetting.statmetric;
 
 % protocol selection to be able to check if same analysis has been run
 % before.
-%opts.percent=connthreshold; % need not protocol anymore, is now dynamic
-%option.
+% opts.percent=connthreshold; % need not protocol anymore, is now dynamic
+% option.
 opts.patientselection=M.ui.listselect;
 opts.regressor=I;
 opts.connectome=M.ui.connectomename;
@@ -28,6 +28,7 @@ if M.ui.mirrorsides
 else
     msuffix='';
 end
+
 switch statmetric
     case 1 % ttests
         savesuffix='_ttests';
@@ -35,7 +36,7 @@ switch statmetric
         savesuffix='_spearmansrho';
 end
 
-[reforce,connectomechanged,reformat]=ea_discfibers_checkpresence(M,opts); % only static opts need to be equal.
+[reforce,connectomechanged]=ea_discfibers_checkpresence(M,opts); % only static opts need to be equal.
 if reforce
     allroilist=cell(length(M.patient.list),2);
     switch statmetric
@@ -79,14 +80,3 @@ else
     load([M.ui.groupdir,'correlative_fibertracts_fibsval',msuffix,savesuffix,'.mat']);
     load([M.ui.groupdir,'correlative_fibertracts',msuffix,savesuffix,'.mat']);
 end
-
-
-function str=pointtodash(str)
-str=strrep(str,'.','-');
-
-
-function str=stripblanks(str)
-str=strrep(str,'(','');
-str=strrep(str,')','');
-str=strrep(str,' ','');
-

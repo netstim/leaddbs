@@ -57,7 +57,7 @@ directory=[options.root,options.patientname,filesep];
 
 % 'new segment' options.prefs.prenii_unnormalized
 if ~exist([directory,'trackingmask.nii'],'file');
-ea_gentrackingmask(options,0)
+    ea_gentrackingmask(options,0)
 end
 
 

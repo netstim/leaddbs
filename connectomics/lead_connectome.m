@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 17-Apr-2019 19:57:19
+% Last Modified by GUIDE v2.5 03-Jun-2019 10:59:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -294,9 +294,15 @@ function ftmethod_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns ftmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ftmethod
 
+ftmethods = get(hObject, 'String');
+if strcmp(ftmethods{get(hObject,'Value')}, 'Generalized Q-Sampling (Yeh et al. 2010)')
+    set(handles.fiber_count, 'Visible', 'on');
+    set(handles.fiber_count_txt, 'Visible', 'on');
+else
+    set(handles.fiber_count, 'Visible', 'off');
+    set(handles.fiber_count_txt, 'Visible', 'off');
+end
 
-set(handles.fiber_count,'Visible',ea_bool2onoff(get(hObject,'Value')==2));
-set(handles.fiber_count_txt,'Visible',ea_bool2onoff(get(hObject,'Value')==2));
 
 % --- Executes during object creation, after setting all properties.
 function ftmethod_CreateFcn(hObject, eventdata, handles)
@@ -426,6 +432,16 @@ try set(handles.compute_CM_struc,'Value',lc.struc.compute_CM); end
 
 try set(handles.compute_GM_struc,'Value',lc.struc.compute_GM); end
 try set(handles.ftmethod,'Value',lc.struc.ft.methodn); end
+
+if strcmp(lc.struc.ft.method, 'ea_ft_gqi_yeh')
+    try set(handles.fiber_count, 'Visible', 'on'); end
+    try set(handles.fiber_count_txt, 'Visible', 'on'); end
+else
+    try set(handles.fiber_count, 'Visible', 'off'); end
+    try set(handles.fiber_count_txt, 'Visible', 'off'); end
+end
+
+try set(handles.fiber_count, 'String', num2str(lc.struc.ft.dsistudio.fiber_count)); end
 
 try set(handles.normalize_fibers,'Value',lc.struc.ft.normalize); end
 try set(handles.perf_ft,'Value',lc.struc.ft.do); end
@@ -885,7 +901,6 @@ function checkregdmri_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of checkregdmri
 
 
-
 function fiber_count_Callback(hObject, eventdata, handles)
 % hObject    handle to fiber_count (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -893,13 +908,7 @@ function fiber_count_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of fiber_count as text
 %        str2double(get(hObject,'String')) returns contents of fiber_count as a double
-fiber_count=str2double(get(hObject,'String'));
-if (isempty(fiber_count))
-    set(handles.fiber_count,'String','20000')
-else
-    set(handles.fiber_count,'String',fiber_count)
-end
-guidata(hObject, handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function fiber_count_CreateFcn(hObject, eventdata, handles)
@@ -912,3 +921,15 @@ function fiber_count_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes when user attempts to close leadfigure.
+function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to leadfigure (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+
+ea_savelcopts(handles);
+delete(hObject);

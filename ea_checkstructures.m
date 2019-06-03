@@ -22,7 +22,7 @@ function varargout = ea_checkstructures(varargin)
 
 % Edit the above text to modify the response to help ea_checkstructures
 
-% Last Modified by GUIDE v2.5 30-Jan-2019 09:35:53
+% Last Modified by GUIDE v2.5 21-May-2019 11:39:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -58,15 +58,7 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-
-
-
-
-
-
-
 % add atlases contextmenu
-
 options=varargin{1};
 set(handles.checkstructures,'Name',['Check registration of specific structures: ',options.patientname]);
 options.atlasset = 'DISTAL Minimal (Ewert 2017)'; % Force atlas to Distal for checkstructures (so it does not matter which atlas is set in the lead DBS window)
@@ -91,7 +83,7 @@ for atl=1:length(atlases)
     end
     atlmenu{atl}=uimenu('Parent',c,'Label',atlases{atl});
     clear a
-    
+
     a=load([ea_space(options,'atlases'),atlases{atl},filesep,'atlas_index.mat'],'structures');
     if isempty(fieldnames(a)) % old format
         disp(['Re-indexing ',atlases{atl},'...']);
@@ -113,16 +105,16 @@ end
 warning('on');
 axes(handles.tra);
 imshow(zeros(10,10,3));
-axis equal
-axis off
+axis equal;
+axis off;
 axes(handles.cor);
 imshow(zeros(10,10,3));
-axis equal
-axis off
+axis equal;
+axis off;
 axes(handles.sag);
 imshow(zeros(10,10,3));
-axis equal
-axis off
+axis equal;
+axis off;
 drawnow
 % add preop acquisitions to popup
 cellentr=cell(0);
@@ -183,6 +175,7 @@ h.Parent.Label='DISTAL Minimal (Ewert 2017)';
 h.Label='STN';
 ea_setnewatlas(h,[],options,handles)
 
+
 function ea_preset_gpi(handles)
 set(handles.stn,'Value',0); set(handles.gpi,'Value',1);
 gpimods={'FGATIR','IR','T1','PD','QSM'};
@@ -205,6 +198,7 @@ h.Parent.Label='DISTAL Minimal (Ewert 2017)';
 h.Label='GPi';
 ea_setnewatlas(h,[],options,handles)
 
+
 function ea_setnewbackdrop(handles,dontupdate)
 modality=get(handles.anat_select,'String');
 modality=modality{get(handles.anat_select,'Value')};
@@ -213,6 +207,7 @@ if ~exist('dontupdate','var')
     options=getappdata(handles.checkstructures,'options');
     ea_updateviews(options,handles,1:3)
 end
+
 
 function ea_setnewhemisphere(handles,dontupdate)
 hemisphere=get(handles.rh,'Value');
@@ -226,6 +221,7 @@ if ~exist('dontupdate','var')
     ea_updateviews(options,handles,3)
 end
 
+
 function ea_setnewatlas(h,gf,options,handles,dontupdate)
 if isempty(h)
     h=getappdata(handles.checkstructures,'h');
@@ -236,7 +232,6 @@ ea_setprefs('checkreg.default',[h.Parent.Label,'@',h.Label]);
 options.atlasset=h.Parent.Label;
 load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 if strcmp(h.Label,'ALL')
-    
     fv=atlases.fv;
     pixdim=atlases.pixdim;
     xyz=[];
@@ -246,7 +241,6 @@ if strcmp(h.Label,'ALL')
         end
     end
     pixdim=pixdim{1};
-    
 else
     [~,six]=ismember(h.Label,ea_rmext(atlases.names));
     fv=atlases.fv(six,:);
@@ -265,8 +259,6 @@ else
     end
 end
 
-
-
 mz=mean(xyz);
 vmz=abs(max(xyz)-min(xyz));
 hemisphere=getappdata(handles.checkstructures,'hemisphere');
@@ -277,7 +269,6 @@ elseif hemisphere==2
 end
 mzsag=mean(xyz);
 vmzsag=abs(max(xyz)-min(xyz));
-
 
 setappdata(handles.checkstructures,'h',h);
 setappdata(handles.checkstructures,'fv',fv);
@@ -292,6 +283,7 @@ if ~exist('dontupdate','var')
     ea_updateviews(options,handles,1:3)
 end
 
+
 function ea_updateviews(options,handles,cortrasag)
 fv=getappdata(handles.checkstructures,'fv');
 atlases=getappdata(handles.checkstructures,'atlases');
@@ -300,7 +292,6 @@ mz=getappdata(handles.checkstructures,'mz');
 mzsag=getappdata(handles.checkstructures,'mzsag');
 vmz=getappdata(handles.checkstructures,'vmz');
 vmzsag=getappdata(handles.checkstructures,'vmzsag');
-
 
 h=getappdata(handles.checkstructures,'h');
 views={'tra','cor','sag'};
@@ -326,7 +317,7 @@ for cts=cortrasag
         options.d2.showstructures={h.Label};
     end
     modality=getappdata(handles.checkstructures,'modality');
-    
+
     [Vtra,Vcor,Vsag]=ea_assignbackdrop(['Patient Pre-OP (',modality,')'],options,'Patient');
     Vs={Vtra,Vcor,Vsag};
     options.sides=1;
@@ -351,13 +342,11 @@ for cts=cortrasag
     voxdepth=Vs{1}.mat\[options.d2.depth,1]';
     voxz=voxdepth(ea_view2coord(cts));
     him=image(img);
-    
+
     hold on
     set(handles.(views{cts}),'ButtonDownFcn', @(h,e) ea_getmouse(handles.(views{cts}),handles,[voxz,ea_view2coord(cts),cts],'Color',[1,1,0.6],'linewidth',2));
+    set(handles.(views{cts}),'xtick',[],'ytick',[],'xlabel',[],'ylabel',[]);
     set(him, 'HitTest', 'off');
-    %    axis off % this somehow destroys UI functionality. Solve
-    %    later.
-    
 end
 
 
@@ -382,6 +371,7 @@ switch view
         coord=1;
 end
 
+
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_checkstructures_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -402,6 +392,7 @@ if get(hObject,'Value')
     ea_preset_stn(handles);
 end
 
+
 % --- Executes on button press in gpi.
 function gpi_Callback(hObject, eventdata, handles)
 % hObject    handle to gpi (see GCBO)
@@ -410,6 +401,7 @@ function gpi_Callback(hObject, eventdata, handles)
 if get(hObject,'Value')
     ea_preset_gpi(handles);
 end
+
 
 % --- Executes on button press in otherstructures.
 function otherstructures_Callback(hObject, eventdata, handles)
@@ -423,6 +415,7 @@ CurPos = get(0, 'PointerLocation');
 figPos = get(gcf,'Position');
 handles.otherstructures.UIContextMenu.Position = CurPos - figPos(1:2);
 handles.otherstructures.UIContextMenu.Visible='on';
+
 
 % --- Executes on selection change in anat_select.
 function anat_select_Callback(hObject, eventdata, handles)
@@ -485,6 +478,7 @@ setappdata(handles.checkstructures,'offset',[get(handles.sagslide,'Value'),get(h
 options=getappdata(handles.checkstructures,'options');
 ea_updateviews(options,handles,2);
 
+
 % --- Executes during object creation, after setting all properties.
 function corslide_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to corslide (see GCBO)
@@ -508,6 +502,7 @@ function sagslide_Callback(hObject, eventdata, handles)
 setappdata(handles.checkstructures,'offset',[get(handles.sagslide,'Value'),get(handles.corslide,'Value'),get(handles.traslide,'Value')]);
 options=getappdata(handles.checkstructures,'options');
 ea_updateviews(options,handles,3);
+
 
 % --- Executes during object creation, after setting all properties.
 function sagslide_CreateFcn(hObject, eventdata, handles)
@@ -572,7 +567,6 @@ end
 %linefiducial(:,1)=thisbb.imgdim(1)-linefiducial(:,1);
 [planedim,onedim,secdim]=ea_getdims(fiducialview,1);
 
-
 linefiducial(:,secdim)=thisbb.imgdim(1)-linefiducial(:,secdim);
 expmm=zeros(size(linefiducial));
 expmm(:,planedim)=thisbb.mm{planedim}(1); % all entries should be equal.
@@ -585,7 +579,6 @@ expmm(:,secdim)=linefiducial(:,secdim)./thisbb.imgdim(2)... % scale from 0 to 1
     *diff([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)])... % scale from 0 to fov size in mm
     +smallestentry([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)]); % shift to correct bb
 
-
 clinefiducial(:,secdim)=thisbb.imgdim(1)-clinefiducial(:,secdim);
 cexpmm=zeros(size(clinefiducial));
 cexpmm(:,planedim)=thisbb.mm{planedim}(1); % all entries should be equal.
@@ -597,7 +590,6 @@ cexpmm(:,onedim)=clinefiducial(:,onedim)./thisbb.imgdim(1)... % scale from 0 to 
 cexpmm(:,secdim)=clinefiducial(:,secdim)./thisbb.imgdim(2)... % scale from 0 to 1
     *diff([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)])... % scale from 0 to fov size in mm
     +smallestentry([thisbb.mm{secdim}(1),thisbb.mm{secdim}(end)]); % shift to correct bb
-
 
 uuid=getappdata(handles.checkstructures,'fidguiid');
 if isempty(uuid)
@@ -646,6 +638,7 @@ else % fiducials based on left-click free hand drawings
     setappdata(handles.checkstructures,'allcexpmm',allcexpmm);
     setappdata(handles.checkstructures,'allexpmm',allexpmm);
 end
+
 ea_csremovedrawings(handles);
 %ea_updateviews(options,handles,1:3)
 ea_busyaction('off',handles.checkstructures,'normcheckstructures');
@@ -656,10 +649,10 @@ set(handles.cor,'ButtonDownFcn', funs{2});
 set(handles.sag,'ButtonDownFcn', funs{3});
 
 
-
 function v=smallestentry(ay)
 ay=sort(ay,'ascend');
 v=ay(1);
+
 
 % --- Executes on button press in discardfiducial.
 function discardfiducial_Callback(hObject, eventdata, handles)
@@ -674,6 +667,7 @@ set(handles.tra,'ButtonDownFcn', funs{1});
 set(handles.cor,'ButtonDownFcn', funs{2});
 set(handles.sag,'ButtonDownFcn', funs{3});
 
+
 % --- Executes when user attempts to close checkstructures.
 function checkstructures_CloseRequestFcn(hObject, eventdata, handles)
 % hObject    handle to checkstructures (see GCBO)
@@ -683,29 +677,27 @@ function checkstructures_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 uuid=getappdata(handles.checkstructures,'fidguiid'); % uuid only used for freehandfiducials (not for twopoint fiducials)
 if ~isempty(uuid)
-    
-    
     disp('Adding corrections to fiducial markers...');
     disp('Remember that changes only take effect if you rerun ANTs-based normalization!');
-    
+
     options=getappdata(handles.checkstructures,'options');
     cexpmm=getappdata(handles.checkstructures,'allcexpmm');
     expmm=getappdata(handles.checkstructures,'allexpmm');
-    
-    
+
     tp_cexpmm=getappdata(handles.checkstructures,'tp_allcexpmm');
     tp_expmm=getappdata(handles.checkstructures,'tp_allexpmm');
     delete(hObject);
+
     directory=[options.root,options.patientname,filesep];
     ea_mkdir([directory,'fiducials']);
     ea_mkdir([directory,'fiducials',filesep,'native']);
     ea_mkdir([directory,'fiducials',filesep,ea_getspace]);
-    options=ea_assignpretra(options);
 
+    options=ea_assignpretra(options);
     if ~isempty(cexpmm)
         % export this mapping in template space:
-        
-        
+
+
         if ~exist([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'],'file')
             nii=ea_load_nii([ea_space,'t1.nii']);
             nii.fname=[directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'];
@@ -716,17 +708,17 @@ if ~isempty(uuid)
         end
         atlvx=nii.mat\[cexpmm,ones(size(cexpmm,1),1)]';
         atlvx=round(atlvx(1:3,:))';
-        
+
         nii.img(sub2ind(size(nii.img),(atlvx(:,1)),(atlvx(:,2)),(atlvx(:,3))))=1;
-        
+
         ea_write_nii(nii);
-        
-        
+
+
         % now project fids back to native space and export mapping there:
         expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
         [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
-        
-        
+
+
         if ~exist([directory,'fiducials',filesep,'native',filesep,uuid,'.nii'],'file')
             nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
             nii.fname=[directory,'fiducials',filesep,'native',filesep,uuid,'.nii'];
@@ -738,10 +730,7 @@ if ~isempty(uuid)
         subcvx=round(subcvx(1:3,:))';
         nii.img(sub2ind(size(nii.img),(subcvx(:,1)),(subcvx(:,2)),(subcvx(:,3))))=1;
         ea_write_nii(nii);
-        
-        
-        
-        
+
         for pttemp=1:2
             switch pttemp
                 case 1 % native
@@ -769,16 +758,16 @@ if ~isempty(uuid)
         for pointpair=1:size(tp_cexpmm,1)
             % define in template:
             tps_uuid{pointpair}=ea_generate_uuid;
-            
+
             ea_spherical_roi([directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'],tp_cexpmm(pointpair,:),2,0,[ea_space,spacedef.templates{1},'.nii']);
             tfis{pointpair}=[directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'];
-            
+
             % define in pt:
             ea_spherical_roi([directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'],tp_expmm(pointpair,:),2,0,[directory,options.prefs.prenii_unnormalized]);
             pfis{pointpair}=[directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'];
         end
-        
-        
+
+
         if length(tfis)>1
             fguid=ea_generate_uuid;
             clear matlabbatch
@@ -798,7 +787,7 @@ if ~isempty(uuid)
             smoothgzip(pathn,[filenn,'.nii']);
         end
         ea_delete(tfis);
-        
+
         if length(pfis)>1
                         clear matlabbatch
             matlabbatch{1}.spm.util.imcalc.input = pfis';
@@ -817,21 +806,21 @@ if ~isempty(uuid)
             smoothgzip(pathn,[filenn,'.nii']);
         end
         ea_delete(pfis);
-        
-        
+
+
     end
     disp('Done.');
-    
+
     % unapprove normalization since should be redone:
     directory=[options.root,options.patientname,filesep];
     approved=load([directory,'ea_coreg_approved.mat']);
-    approved.(ea_stripex(options.prefs.gprenii))=0;
+    approved.(ea_stripext(options.prefs.gprenii))=0;
     save([directory,'ea_coreg_approved.mat'],'-struct','approved');
-    
+
     if strcmp(computer('arch'),'maci64')
-        system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripex(options.prefs.gprenii),'.nii'])]);
+        system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(options.prefs.gprenii),'.nii'])]);
     end
-    
+
     %% add methods dump:
     cits={
         'Horn, A., & Kuehn, A. A. (2015). Lead-DBS: a toolbox for deep brain stimulation electrode localizations and visualizations. NeuroImage, 107, 127?135. http://doi.org/10.1016/j.neuroimage.2014.12.002'
@@ -839,7 +828,6 @@ if ~isempty(uuid)
         };
     ea_methods(options,['Fit to atlas structures was manually corrected using a custom-built tool implemented in Lead-DBS (www.lead-dbs.org; Horn & Kuehn 2015; Horn & Li et al. 2018).'],...
         cits);
-    
 else
     delete(hObject);
 end
