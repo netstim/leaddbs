@@ -14,6 +14,7 @@ switch cmd
                  '2009b Nonlinear Flip Transform'
                  '7T Cardiac Gated FLASH MRI (Backdrop visualization)'
                  '7T Ex Vivo 100um Brain Atlas (Backdrop visualization)'
+                 'Macroscale Human Connectome Atlas (Yeh 2018)'
                  'Structural group connectome 20 subjects Gibbs-tracker (Horn 2013)'
                  'Structural group connectome 169 NKI subjects Gibbs-tracker (Horn 2016)'
                  'Structural group connectome 32 Adult Diffusion HCP subjects GQI (Horn 2017)'
@@ -25,6 +26,7 @@ switch cmd
                   'nlinflip'
                   '7tcgflash'
                   '7tev100um'
+                  'macroscalehc'
                   'groupconnectome2013'
                   'groupconnectome2016'
                   'groupconnectome2017'
@@ -126,6 +128,25 @@ switch cmd
             fclose(fid);
         else
             disp('7T Ex Vivo 100um Brain Atlas (Backdrop visualization) is installed.')
+        end
+    case 'macroscalehc'
+        checkf=[ea_space,'atlases',filesep,'Macroscale Human Connectome Atlas (Yeh 2018)',filesep,'atlas_index.mat'];
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
+        if checkonly
+            success=~force;
+            return;
+        end
+        if force==-1
+            success=-1;
+            return;
+        end
+
+        if ~exist(checkf,'file') || force
+            success=ea_downloadasset('Macroscale Human Connectome Atlas',...
+                [ea_space,'atlases',filesep,'Macroscale_Human_Connectome_Atlas_Yeh_2018.zip'],...
+                'macroscalehc');
+        else
+            disp('Macroscale Human Connectome Atlas is installed.')
         end
     case 'bigbrain'
         checkf=[ea_space,'bigbrain_2015_100um_bb.nii'];
