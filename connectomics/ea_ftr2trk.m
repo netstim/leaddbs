@@ -17,7 +17,7 @@ disp('Loading FTR-File...');
 
 % Convert ONE-BASED indexing to ZERO-BASED indexing
 if strcmp(voxmm,'vox')
-    fibs = fibs(:,1:3) - 1;
+    fibs(:,1:3) = fibs(:,1:3) - 1;
 end
 
 %% set header
