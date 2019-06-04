@@ -94,6 +94,7 @@ end
                                    options.coregmr.method);
 wfibsvox_anat = wfibsvox_anat';
 ea_savefibertracts([directory,ftrfname,'_anat.mat'],wfibsvox_anat,idx,'vox');
+fprintf('\nGenerating trk in anat space...\n');
 ea_ftr2trk([directory,ftrfname,'_anat.mat'],refanat);
 
 % plot fibers in anat space
