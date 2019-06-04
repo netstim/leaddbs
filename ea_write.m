@@ -52,17 +52,6 @@ if options.d3.write
             zoom(3);
         end
     end
-    ea_view;
-
-    try
-        prefs = ea_prefs;
-        v = prefs.machine.view;
-        togglestates = prefs.machine.togglestates;
-        %ea_defaultview_transition(v,togglestates);
-        ea_defaultview(v,togglestates);
-    catch
-        view(142,13.6)
-    end
 
     % save scene as matlab figure
     % try % if path is not defined, don't save.

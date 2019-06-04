@@ -462,6 +462,16 @@ if ~strcmp(options.d3.verbose,'off')
     opensliceviewer([],[],resultfig,options);
 end
 
+try
+    prefs = ea_prefs;
+    v = prefs.machine.view;
+    togglestates = prefs.machine.togglestates;
+    %ea_defaultview_transition(v,togglestates);
+    ea_defaultview(v,togglestates);
+catch
+    view(142,13.6)
+end
+
 if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
     try
         % store json in figure file
