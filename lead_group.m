@@ -558,6 +558,7 @@ try % zoom on coordinates.
 catch
     zoom(3);
 end
+
 % show VAT-mapping
 if options.expstatvat.do % export to nifti volume
     pobj.plotFigureH=resultfig;

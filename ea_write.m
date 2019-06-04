@@ -64,16 +64,15 @@ if options.d3.write
         view(142,13.6)
     end
 
-
     % save scene as matlab figure
-%     try % if path is not defined, don't save.
-%         savefig(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig'],'compact');
-%     end
-%     figure2xhtml([options.root,options.patientname,filesep,'eAuto_scene'],resultfig);
+    % try % if path is not defined, don't save.
+    %     savefig(resultfig,[options.root,options.patientname,filesep,'LEAD_scene.fig'],'compact');
+    % end
+    % figure2xhtml([options.root,options.patientname,filesep,'eAuto_scene'],resultfig);
 
     if options.d3.autoserver
-       ea_export_server([],[],options);
-       close(resultfig);
+        ea_export_server([],[],options);
+        close(resultfig);
     end
 end
 
