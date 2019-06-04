@@ -436,7 +436,7 @@ end
 % add default view buttons
 uipushtool(ht, 'CData',ea_get_icn('defaultviewsave'),...
     'TooltipString', 'Save current view as default',...
-    'ClickedCallback',@save_defaultview_callback);
+    'ClickedCallback',@save_currentview_callback);
 uipushtool(ht, 'CData',ea_get_icn('defaultviewset'),...
     'TooltipString', 'Display default view',...
     'ClickedCallback',@set_defaultview_callback);
@@ -516,14 +516,14 @@ delete(gcf)
 
 % default view buttons callback
 
-function save_defaultview_callback(source,eventdata)
+function save_currentview_callback(source,eventdata)
 % call ea_defaultview so current view is saved
 ea_defaultview()
 
 function set_defaultview_callback(source,eventdata)
 % get stored default view preferences and call ea_defaultview
 prefs = ea_prefs;
-v = prefs.machine.v;
+v = prefs.machine.view;
 togglestates = prefs.machine.togglestates;
 %ea_defaultview_transition(v,togglestates);
 ea_defaultview(v,togglestates);
