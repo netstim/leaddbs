@@ -57,7 +57,7 @@ if ~exist([directory, 'mean', options.prefs.rest], 'file')
     ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
 end
 
-if isfield(options, 'overwriteapproved') && options.overwriteapproved == 1
+if isfield(options, 'overwriteapproved') && options.overwriteapproved
     overwrite = 1;
 else
     overwrite = 0;
