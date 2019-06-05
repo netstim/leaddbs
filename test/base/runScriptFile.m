@@ -17,23 +17,28 @@ function result = runScriptFile(fileName)
 %                - `.Error`: Error message received from a failed or skipped test
 %
 % .. Author:   - Thomas Pfau Jan 2018.
+%
+% NOTE:
+%    this function has been adapted from
+%    https://github.com/opencobra/cobratoolbox/blob/master/test/runScriptFile.m
+%    [b58da0c]
 
 global CBT_MISSING_REQUIREMENTS_ERROR_ID
 
-COBRA_TESTSUITE_TESTFILE = fileName;
+LEADDBS_TESTSUITE_TESTFILE = fileName;
 
 % get the timinig (and hope these values are not overwritten.
-COBRA_TESTSUITE_STARTTIME = clock();
+LEADDBS_TESTSUITE_STARTTIME = clock();
 
 try
     % run the file
     executefile(fileName);
 catch ME
     % vatch errors and interpret them
-    clearvars -except ME COBRA_TESTSUITE_STARTTIME COBRA_TESTSUITE_TESTFILE CBT_MISSING_REQUIREMENTS_ERROR_ID
-    scriptTime = etime(clock(), COBRA_TESTSUITE_STARTTIME);
+    clearvars -except ME LEADDBS_TESTSUITE_STARTTIME LEADDBS_TESTSUITE_TESTFILE CBT_MISSING_REQUIREMENTS_ERROR_ID
+    scriptTime = etime(clock(), LEADDBS_TESTSUITE_STARTTIME);
     result = struct('status', 'failed', 'failed', true, 'passed', false, 'skipped', false, 'fileName', ...
-                    COBRA_TESTSUITE_TESTFILE, 'time', scriptTime, 'statusMessage', 'fail', 'Error', ME);
+                    LEADDBS_TESTSUITE_TESTFILE, 'time', scriptTime, 'statusMessage', 'fail', 'Error', ME);
     if strcmp(ME.identifier, CBT_MISSING_REQUIREMENTS_ERROR_ID)
         % requirement missing, so the test was skipped.
         result.status = 'skipped';
@@ -50,10 +55,10 @@ catch ME
 end
 
 % get the timinig.
-scriptTime = etime(clock(), COBRA_TESTSUITE_STARTTIME);
+scriptTime = etime(clock(), LEADDBS_TESTSUITE_STARTTIME);
 
 result = struct('status', 'passed', 'failed', false, 'passed', true, 'skipped', false, 'fileName', ...
-                COBRA_TESTSUITE_TESTFILE, 'time', scriptTime, 'statusMessage', 'success', 'Error', MException('', ''));
+                LEADDBS_TESTSUITE_TESTFILE, 'time', scriptTime, 'statusMessage', 'success', 'Error', MException('', ''));
 
 end
 
