@@ -9,6 +9,11 @@ function value = getGlobalValue(globalName)
 %
 % OUTPUT:
 %    value:         The value of the requested global variable
+%
+% NOTE:
+%    this function has been uploaded from
+%    https://github.com/opencobra/cobratoolbox/blob/master/src/base/utilities/getGlobalValue.m
+%    [e6b4efd]
 
     eval(['global ' globalName]);
     eval(['value = ' globalName ';']);
