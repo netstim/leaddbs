@@ -107,5 +107,5 @@ try
 catch
     ea_error(['Cannot open file for writing at ',pth,'.']);
 end
-fprintf(fid,'%f,%f,%f,0\n',input'); %transpose needed for 'fprintf': matrix column to file row
+fprintf(fid,'%.15f, %.15f, %.15f, 0\n',input'); %transpose needed for 'fprintf': matrix column to file row
 fclose(fid);

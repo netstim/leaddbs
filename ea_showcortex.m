@@ -46,7 +46,7 @@ nm=nm(logical(nmind)); % select which shall be performed.
 
 % switch between patient and template cortex
 slicecontroldata = getappdata(gcf);
-if nm==1 && ~isempty(strfind(slicecontroldata.templateused,'Patient'))
+if nm==1 && contains(slicecontroldata.templateused,'Patient')
     nm = 0;
 end
 
@@ -54,7 +54,7 @@ end
 % mcr = '';
 
 for nativemni=nm % switch between native and mni space.
-    
+
     switch nativemni
         case 0 % patient cortex in mni space in future release
             % root=[options.root,options.patientname,filesep];
@@ -84,9 +84,9 @@ for nativemni=nm % switch between native and mni space.
 end
 
 % Check if CortexHiRes.mat and CortexLowRes_*.mat already exists
-files = dir(adir); 
+files = dir(adir);
 files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
-files = files(~[files.isdir]); 
+files = files(~[files.isdir]);
 files = {files(contains({files.name},'Cortex')).name};
 
     % % Use this to choose which file to load:
@@ -148,7 +148,7 @@ files = dir(adir); files = {files(~cellfun(@(x) isempty(regexp(x, 'annot', 'once
 atlas = files{~cellfun(@(x) isempty(regexp(x, ['annot_',options.prefs.d3.cortex_defaultatlas,'.mat'], 'match')), files)};
 if ~isempty(files) && ~isempty(atlas)
     load(fullfile(adir,atlas));
-    
+
     for side = 1:2
         % Choose gyri
         structures{side}={};
@@ -164,7 +164,7 @@ if ~isempty(files) && ~isempty(atlas)
         annot(side).cdat = get(cortexH{side},'FaceVertexCData');
         structidx = arrayfun(@(x) find(annot(side).label==annot(side).colortable.table(x,5)),[labelidx{:}],'uni',0);
         labels = cell2mat(arrayfun(@(x) find(x==annot(side).label),annot(side).colortable.table(:,5),'uni',0));
-        
+
         for i = 1:size(annot(side).colortable.table,1)
             colorindex = structidx{i};
             visindex=setdiff(labels,colorindex);

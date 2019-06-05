@@ -404,7 +404,6 @@ rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb'),...
     'OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},...
     'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
 
-
 % Initialize HD-Export button
 dumpscreenshotbutton=uipushtool(ht,'CData',ea_get_icn('dump'),...
     'TooltipString','Dump Screenshot','ClickedCallback',{@dump_screenshot,resultfig,options});
@@ -416,7 +415,6 @@ dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth'),...
     'ClickedCallback',{@ea_export_depth_of_field,resultfig});
 
 % Initialize Video-Export button
-
 videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video'),...
     'TooltipString','Save video','ClickedCallback',{@export_video,options});
 
@@ -436,12 +434,10 @@ end
 % add default view buttons
 uipushtool(ht, 'CData',ea_get_icn('defaultviewsave'),...
     'TooltipString', 'Save current view as default',...
-    'ClickedCallback',@save_defaultview_callback);
+    'ClickedCallback',@save_currentview_callback);
 uipushtool(ht, 'CData',ea_get_icn('defaultviewset'),...
     'TooltipString', 'Display default view',...
     'ClickedCallback',@set_defaultview_callback);
-
-
 
 hold off
 
@@ -456,7 +452,6 @@ axis equal
 set(resultfig,'Name',figtitle);
 set(0,'CurrentFigure',resultfig);
 
-
 try
     set(gca,'cameraviewanglemode','manual');
 end
@@ -466,6 +461,17 @@ set(gca,'clipping','off');
 if ~strcmp(options.d3.verbose,'off')
     opensliceviewer([],[],resultfig,options);
 end
+
+try
+    prefs = ea_prefs;
+    v = prefs.machine.view;
+    togglestates = prefs.machine.togglestates;
+    %ea_defaultview_transition(v,togglestates);
+    ea_defaultview(v,togglestates);
+catch
+    view(142,13.6)
+end
+
 if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
     try
         % store json in figure file
@@ -476,9 +482,10 @@ if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for later
         ea_export_server([],[],options);
     end
 end
+
 setappdata(resultfig, 'options', options);
 setappdata(resultfig,'elstruct',elstruct);
-ea_figmenu(resultfig,'add')
+ea_figmenu(resultfig,'add');
 
 
 function opensliceviewer(hobj,ev,resultfig,options)
@@ -515,22 +522,22 @@ delete(gcf)
 
 
 % default view buttons callback
-
-function save_defaultview_callback(source,eventdata)
+function save_currentview_callback(source,eventdata)
 % call ea_defaultview so current view is saved
 ea_defaultview()
+
 
 function set_defaultview_callback(source,eventdata)
 % get stored default view preferences and call ea_defaultview
 prefs = ea_prefs;
-v = prefs.machine.v;
+v = prefs.machine.view;
 togglestates = prefs.machine.togglestates;
 %ea_defaultview_transition(v,togglestates);
 ea_defaultview(v,togglestates);
 
-function export_video(hobj,ev,options)
 
-%% Set up recording parameters (optional), and record
+function export_video(hobj,ev,options)
+% Set up recording parameters (optional), and record
 [FileName,PathName] = uiputfile('LEAD_Scene.mp4','Save file name for video');
 ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.video.opts);
 

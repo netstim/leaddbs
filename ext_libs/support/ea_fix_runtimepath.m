@@ -1,5 +1,5 @@
 function ea_fix_runtimepath
-% In some installation, MATLAB run-time library path might be missing in 
+% In some installation, MATLAB run-time library path might be missing in
 % the environment variable. This function will fix it when needed.
 % The path is neccesary to run some binaries.
 
@@ -19,7 +19,7 @@ end
 env = getenv(envname);
 
 for i=1:length(runtimePath)
-    if isempty(strfind(env, runtimePath{i}))
+    if ~contains(env, runtimePath{i})
         env = [env, ';', runtimePath{i}];
     end
 end

@@ -14,9 +14,9 @@ set(0,'CurrentFigure',resultfig);
 
 if nargin == 0
     % save current view and togglesates
-    ea_setprefs('v',ea_view)
+    ea_setprefs('view',ea_view)
     ea_setprefs('togglestates',getappdata(resultfig,'togglestates'))
-    
+
 elseif nargin == 2
     % set preferences specified in vararg in
     % togglestates

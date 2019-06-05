@@ -82,7 +82,7 @@ try
             elspec.contact_color=0.3;
             elspec.tip_diameter=1.3;
             elspec.tip_color=0.7;
-            elspec.tip_length=1.3;
+            elspec.tip_length=1.1;
             elspec.contact_spacing=0.5;
             elspec.numel=8;
             elspec.tipiscontact=0;

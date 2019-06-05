@@ -31,8 +31,8 @@ if strcmp(xmlarg, '-x')
     cmdout = regexprep(cmdout, '= ''', '= ');
     cmdout = regexprep(cmdout(1:end-1), '''\n', '\n');
 else
-    cmdout  = strrep(cmdout(1:end-1), 'size of header', 'size_of_header');
-    cmdout  = strrep(cmdout, 'xyz:', 'xyz_');
+    cmdout  = strrep(cmdout(1:end-1), 'size of header', 'sizeof_header');
+    cmdout  = strrep(cmdout, 'xyz:', 'xyz');
     cmdout = regexprep(cmdout, '[\t]+', ' = ');
 end
 
