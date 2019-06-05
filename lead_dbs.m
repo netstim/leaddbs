@@ -56,7 +56,7 @@ function lead_dbs_OpeningFcn(hObject, eventdata, handles, varargin)
 earoot=ea_getearoot;
 
 % add recent patients...
-ea_initrecentpatients(handles);
+ea_initrecentpatients(handles, 'patients');
 
 set(handles.vizspacepopup,'String',{[ea_sub2space(ea_getspace), ' Space'];'Native Patient Space'});
 
@@ -1125,7 +1125,7 @@ function recentpts_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
 ea_busyaction('on',handles.leadfigure,'dbs');
-ea_rcpatientscallback(handles);
+ea_rcpatientscallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'dbs');
 
 % --- Executes during object creation, after setting all properties.

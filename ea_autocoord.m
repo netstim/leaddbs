@@ -216,40 +216,38 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
        ea_checkstructures(options); 
     end
 
-if options.ecog.extractsurface.do
-   switch options.ecog.extractsurface.method
-       case 1 % CAT 12
-           hastb=ea_hastoolbox('cat');
-           if ~hastb
-               ea_error('CAT12 needs to be installed to the SPM toolbox directory');
-           end
-           ea_cat_seg(options);
-       case 2 % FS
-           hastb=ea_hastoolbox('freesurfer');
+    if options.ecog.extractsurface.do
+       switch options.ecog.extractsurface.method
+           case 1 % CAT 12
+               hastb=ea_hastoolbox('cat');
+               if ~hastb
+                   ea_error('CAT12 needs to be installed to the SPM toolbox directory');
+               end
+               ea_cat_seg(options);
+           case 2 % FS
+               hastb=ea_hastoolbox('freesurfer');
 
-           if ~hastb
-               ea_error('Freesurfer needs to be installed and connected to Lead-DBS');
-           end
-           hastb=ea_hastoolbox('fsl');
-           if ~hastb
-               ea_error('FSL needs to be installed and connected to Lead-DBS');
-           end
+               if ~hastb
+                   ea_error('Freesurfer needs to be installed and connected to Lead-DBS');
+               end
+               hastb=ea_hastoolbox('fsl');
+               if ~hastb
+                   ea_error('FSL needs to be installed and connected to Lead-DBS');
+               end
 
-           options.prefs=ea_prefs;
-           [options,presentfiles]=ea_assignpretra(options);
-           setenv('SUBJECTS_DIR',[options.root,options.patientname,filesep]);
-           if exist([options.root,options.patientname,filesep,'fs'],'dir')
-               rmdir([options.root,options.patientname,filesep,'fs'],'s');
-           end
-           system([options.prefs.fspath,filesep,'bin',filesep,...
-               'recon-all',...
-               ' -subjid fs',...
-               ' -i ',[options.root,options.patientname,filesep,presentfiles{1}],...
-               ' -all']);
-
-   end
-
-end
+               options.prefs=ea_prefs;
+               [options,presentfiles]=ea_assignpretra(options);
+               setenv('SUBJECTS_DIR',[options.root,options.patientname,filesep]);
+               if exist([options.root,options.patientname,filesep,'fs'],'dir')
+                   rmdir([options.root,options.patientname,filesep,'fs'],'s');
+               end
+               system([options.prefs.fspath,filesep,'bin',filesep,...
+                   'recon-all',...
+                   ' -subjid fs',...
+                   ' -i ',[options.root,options.patientname,filesep,presentfiles{1}],...
+                   ' -all']);
+       end
+    end
 
     if options.doreconstruction
         wasnative=options.native;
@@ -317,7 +315,6 @@ end
     else
         ea_write(options)
     end
-
 else
     ea_write(options)
 end

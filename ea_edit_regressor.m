@@ -126,7 +126,7 @@ if ~isempty(reg)
    end
 end
 set(handles.variabletype, 'Value', 2);
-set(handles.datatable,'ColumnName',{'Right','Left'});
+set(handles.datatable,'ColumnName',{'Right Hem.','Left Hem.'});
 try
 reg=reg(1:size(reg,1),1:2);
 catch

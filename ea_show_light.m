@@ -5,7 +5,8 @@ function ea_show_light(resultfig,viz)
 if nargin<2
     viz=1;
 end
-        set(0,'CurrentFigure',resultfig); 
+
+set(0,'CurrentFigure',resultfig);
 cam_lamp=camlight('headlight'); % not modifiable, infinite light.
 %set(cam_lamp,'Color',[1,1,1]);
 ceiling_lamp=light('Position',[0 0 100]); % not modifiable, infinite light.

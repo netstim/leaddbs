@@ -2,7 +2,7 @@ function ea_warp_parcellation(reference,options)
 directory=[options.root,options.patientname,filesep];
 
 % Regenerate the template or not
-if isfield(options, 'overwriteapproved') && options.overwriteapproved == 1
+if isfield(options, 'overwriteapproved') && options.overwriteapproved
     overwrite = 1;
 else
     overwrite = 0;
@@ -11,7 +11,7 @@ end
 if ~exist([directory,'templates',filesep,'labeling',filesep, ...
         'w',options.lc.general.parcellation,'.nii'],'file') ...
         || overwrite
-    
+
     %% warp atlas into pre_tra-space:
     if ~exist([directory,'templates'],'dir')
         mkdir([directory,'templates']);
@@ -19,7 +19,7 @@ if ~exist([directory,'templates',filesep,'labeling',filesep, ...
     if ~exist([directory,'templates',filesep,'labeling'],'dir')
         mkdir([directory,'templates',filesep,'labeling']);
     end
-    
+
     whichnormmethod=ea_whichnormmethod([directory]);
     switch whichnormmethod
         case ea_getantsnormfuns
@@ -32,14 +32,14 @@ if ~exist([directory,'templates',filesep,'labeling',filesep, ...
                 {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']}, ...
                 {[directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},...
                 1,'','',useinterp);
-            
+
         case ea_getfslnormfuns
-            
+
             ea_fsl_apply_normalization(options, ...
                 {[ea_space(options,'labeling'),options.lc.general.parcellation,'.nii']}, ...
                 {[directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii']},...
                 1,'','','nn');
-            
+
         otherwise
             switch spm('ver')
                 case 'SPM8'
@@ -76,20 +76,20 @@ if strcmp(reference, ['r', options.prefs.rest])
         end
         ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],0);
     end
-    
+
 end
 
 if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
         options.lc.general.parcellation,'.nii'],'file') ...
         || overwrite
-    
+
     % for this pair of approved coregistations, find out which method to use -
     % irrespective of the current selection in coregmethod.
-    
+
     coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
     fn=fieldnames(coregmethodsused);
     for field=1:length(fn)
-        if ~isempty(strfind(fn{field},refname))
+        if contains(fn{field},refname)
             if ~isempty(coregmethodsused.(fn{field}))
                 disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
                 options.coregmr.method=coregmethodsused.(fn{field});
@@ -97,20 +97,20 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
             break
         end
     end
-    
+
     % Disable Hybrid coregistration
     coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
     options.coregmr.method = coregmethod;
-    
+
     % Check if the corresponding transform already exists
     xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
     transform = ea_regexpdir(directory, xfm, 0);
-    
+
     if numel(transform) == 0 || overwrite
         if numel(transform) == 0
             warning('Transformation not found! Running coregistration now!');
         end
-        
+
         transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
             [directory,reference],...
             [directory,refname,'_',options.prefs.prenii_unnormalized],...
@@ -128,12 +128,12 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
         end
         transform = transform{end};
     end
-    
+
     ea_apply_coregistration([directory,reference], ...
         [directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'], ...
         [directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation,'.nii'], ...
         transform, 'label');
-    
+
     ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation],...
         [directory,refname],...
         [directory,'checkreg',filesep,options.lc.general.parcellation,'2',refname,'.png']);

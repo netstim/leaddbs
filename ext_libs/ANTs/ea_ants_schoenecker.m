@@ -39,7 +39,7 @@ else
 end
 
 if slabsupport
-    disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},'is a whole-brain acquisition)...']);
+    disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
 
     for mov=1:length(movingimage)
         mnii=ea_load_nii(movingimage{mov});

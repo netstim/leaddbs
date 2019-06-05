@@ -10,14 +10,7 @@ directory=[options.root,options.patientname,filesep];
 try
 	if ~exist([directory,ftrfname,'.trk'],'file')
         fprintf('\nExporting unnormalized fibers to TrackVis...\n');
-        dnii=ea_load_nii([directory,options.prefs.b0]);
-
-        specs.origin=[0,0,0];
-        specs.dim=size(dnii.img);
-        specs.vox=dnii.voxsize;
-        specs.affine=dnii.mat;
-
-        ea_ftr2trk(ftrfname,directory,specs); % export normalized ftr to .trk
+        ea_b0ftr2trk([directory,ftrfname,'.mat'],[directory,options.prefs.b0]);
         disp('Done.');
 	end
 end
@@ -100,6 +93,9 @@ end
                                    refanat, ...
                                    options.coregmr.method);
 wfibsvox_anat = wfibsvox_anat';
+ea_savefibertracts([directory,ftrfname,'_anat.mat'],wfibsvox_anat,idx,'vox');
+fprintf('\nGenerating trk in anat space...\n');
+ea_ftr2trk([directory,ftrfname,'_anat.mat'],refanat);
 
 % plot fibers in anat space
 if vizz
@@ -160,19 +156,11 @@ ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'.mat
 ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'_vox.mat'],wfibsvox_mni,idx,'vox',mniaffine);
 
 %% create normalized trackvis version
-try
-    fprintf('\nExporting normalized fibers to TrackVis...\n');
-    dnii=ea_load_nii(refnorm);
+fprintf('\nExporting normalized fibers to TrackVis...\n');
 
-    specs.origin=[0,0,0];
-    specs.dim=size(dnii.img);
-    specs.vox=dnii.voxsize;
-    specs.affine=dnii.mat;
-
-    [~,ftrfname]=fileparts(options.prefs.FTR_normalized);
-    ea_ftr2trk(ftrfname,[directory,'connectomes',filesep,'dMRI',filesep],specs); % export normalized ftr to .trk
-    disp('Done.');
-end
+[~,ftrfname]=fileparts(options.prefs.FTR_normalized);
+ea_ftr2trk([directory,'connectomes',filesep,'dMRI',filesep,ftrfname]); % export normalized ftr to .trk
+disp('Done.');
 
 %% add methods dump:
 cits={

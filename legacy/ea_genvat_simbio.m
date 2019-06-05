@@ -1264,7 +1264,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
         end
 
         if strcmp(sens.balance.current, 'planar')
-            if isfield(sens, 'type') && ~isempty(strfind(sens.type, '_planar'))
+            if isfield(sens, 'type') && contains(sens.type, '_planar')
                 % remove the planar postfox from the sensor type
                 sens.type = sens.type(1:(end-7));
             end
@@ -2342,9 +2342,9 @@ if isequal(hastrials, 'yes')
     okflag = isfield(data, 'trial');
     if ~okflag && isfield(data, 'dimord')
         % instead look in the dimord for rpt or subj
-        okflag = ~isempty(strfind(data.dimord, 'rpt')) || ...
-            ~isempty(strfind(data.dimord, 'rpttap')) || ...
-            ~isempty(strfind(data.dimord, 'subj'));
+        okflag = contains(data.dimord, 'rpt') || ...
+            contains(data.dimord, 'rpttap') || ...
+            contains(data.dimord, 'subj');
     end
     if ~okflag
         error('This function requires data with a ''trial'' field');
@@ -4411,7 +4411,7 @@ switch style
     case 'probabilistic'
 
         % convert from a cumulative to an exclusive representation
-        contains = false(length(fn));
+        within = false(length(fn));
         if length(fn)>4
             % test for each tissue whether it is overlapping with or contained in each other tissue
             warning('more than 4 tissue types, this may take a while');
@@ -4428,14 +4428,14 @@ switch style
                     continue
                 end
                 segj = segmentation.(fn{j})>0;
-                contains(i,j) = all(segj(segi(:))); % segi is fully contained in segj
-                if i~=j && contains(i,j)
+                within(i,j) = all(segj(segi(:))); % segi is fully contained in segj
+                if i~=j && within(i,j)
                     fprintf('the %s is fully contained in the %s, removing it from the %s\n', fn{i}, fn{j}, fn{j});
                     segmentation.(fn{j})(segi) = 0;
                 end
             end
         end
-        clear segi segj contains
+        clear segi segj within
 
     otherwise
         error('unsupported style "%s"', style);
@@ -9914,7 +9914,7 @@ if ~isfield(data, 'dimord')
         fn = fieldnames(data);
         sel = true(size(fn));
         for i=1:length(fn)
-            sel(i) = ~isempty(strfind(fn{i}, 'dimord'));
+            sel(i) = contains(fn{i}, 'dimord');
         end
         df = fn(sel);
 
@@ -10107,7 +10107,7 @@ iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(dat
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
 issource       =  isfield(data, 'pos');
 isdip          =  isfield(data, 'dip');
-ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
+ismvar         =  isfield(data, 'dimord') && contains(data.dimord, 'lag');
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
 ischan         = ea_check_chan(data);
 issegmentation = ea_check_segmentation(data);
@@ -10115,7 +10115,7 @@ isparcellation = ea_check_parcellation(data);
 
 if ~isfreq
     % this applies to a freq structure from 2003 up to early 2006
-    isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && ~isempty(strfind(data.dimord, 'frq'));
+    isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && contains(data.dimord, 'frq');
 end
 
 % check if it is a spike structure

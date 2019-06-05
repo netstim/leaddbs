@@ -10,3 +10,8 @@ delete(arrhandles{arr});
 end
 
 
+tp_plots=getappdata(handles.checkstructures,'tp_plots');
+for plt=1:length(tp_plots)
+delete(tp_plots{plt});
+end
+

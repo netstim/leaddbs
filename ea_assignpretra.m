@@ -14,7 +14,7 @@ pfcell = {presfiles.name}';
 
 % order the anatomical images in accordance with 'prefs.prenii_order'
 prenii_order = cellfun(@(x) strrep(options.prefs.prenii_searchstring,'*',x), options.prefs.prenii_order, 'UniformOutput', 0);
-[~,idx] = ismember(ea_stripex(prenii_order), ea_stripex(pfcell));
+[~,idx] = ismember(ea_stripext(prenii_order), ea_stripext(pfcell));
 presentfiles = pfcell([nonzeros(idx)',setdiff(1:numel(pfcell),nonzeros(idx))]);
 
 options.primarytemplate = 't1'; % default T1.

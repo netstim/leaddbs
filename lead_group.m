@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 15-Nov-2018 15:46:47
+% Last Modified by GUIDE v2.5 16-Mar-2019 14:19:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,6 +51,9 @@ function lead_group_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_group (see VARARGIN)
+
+% add recent groups...
+ea_initrecentpatients(handles, 'groups');
 
 % Choose default command line output for lead_group
 handles.output = hObject;
@@ -411,13 +414,15 @@ options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),fil
 
 options.expstatvat.do=M.ui.statvat;
 options.native=0;
+
 try
     options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 catch
     warning('Localizations seem not properly defined.');
 end
+
 options.elmodel=M.elstruct(1).elmodel;
- options=ea_resolve_elspec(options);
+options=ea_resolve_elspec(options);
 options.prefs=ea_prefs(options.patientname);
 options.d3.verbose='on';
 
@@ -553,6 +558,7 @@ try % zoom on coordinates.
 catch
     zoom(3);
 end
+
 % show VAT-mapping
 if options.expstatvat.do % export to nifti volume
     pobj.plotFigureH=resultfig;
@@ -560,14 +566,15 @@ if options.expstatvat.do % export to nifti volume
 
     pobj.openedit=1;
     hshid=ea_datahash(M.ui.listselect);
-    ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_mean_',hshid,'.nii'],pobj);
+    ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_T_nthresh_',hshid,'.nii'],pobj);
 end
 
 if get(handles.showdiscfibers,'Value') % show discriminative fibers
     M.ui.connectomename=get(handles.fiberspopup,'String');
     M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
     discfiberssetting = options.prefs.machine.lg.discfibers;
-    ea_showdiscfibers(M,discfiberssetting,resultfig);
+    fibsweighted=ea_discfibers_calcdiscfibers(M,discfiberssetting);
+    ea_discfibers_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted);
     set(0, 'CurrentFigure', resultfig);
 end
 
@@ -585,7 +592,7 @@ stats=preparedataanalysis_vta(handles);
 
 
 assignin('base','stats',stats);
-
+M=getappdata(handles.leadfigure,'M');
 
 % perform correlations:
 
@@ -598,9 +605,11 @@ if size(stats.corrcl,2)==1 % one value per patient
     if ~isempty(stats.vicorr.both)
         %ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
         %ea_corrplot([stats.corrcl,stats.vicorr.nboth],'VI_BH',stats.vc_labels,handles);
-        description='VI_BH';
-        [R_upd,p_upd,R,p,f]=ea_corrplot_gen([stats.corrcl,stats.vicorr.nboth],description,stats.vc_labels,[],[],'permutation');
-        axis square
+        description='Normalized Volume Impacts, both hemispheres';
+        [h,R,p]=ea_corrplot(stats.corrcl,stats.vicorr.nboth,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
+        description='Volume Impacts, both hemispheres';
+        [h,R,p]=ea_corrplot(stats.corrcl,stats.vicorr.both,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
+
         odir=get(handles.groupdir_choosebox,'String');
         [~,fn]=fileparts(stats.vc_labels{1+1});
         if strcmp(fn(end-3:end),'.nii')
@@ -624,8 +633,8 @@ elseif size(stats.corrcl,2)==2 % one value per hemisphere
     try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
     if ~isempty(stats.vicorr.both)
 
-        %ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],'Volume Intersections, both hemispheres',stats.vc_labels);
-        ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],[{'VI_BH'},stats.vc_labels]);
+        ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],[{'Volume Impacts, both hemispheres'},stats.vc_labels]);
+        ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],[{'Normalized Volume Impacts'},stats.vc_labels]);
     end
     %     if ~isempty(stats.vicorr.right)
     %         %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
@@ -906,13 +915,13 @@ end
 
 
 if ~isempty(stats.vicorr.nboth)
-    ea_ttest(stats.vicorr.nboth(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),stats.vicorr.both(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),'Normalized Volume Intersections, both hemispheres',stats.vc_labels);
+    ea_ttest(stats.vicorr.nboth(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),stats.vicorr.nboth(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),'Normalized Volume Intersections, both hemispheres',stats.vc_labels);
 end
 if ~isempty(stats.vicorr.nright)
-    ea_ttest(stats.vicorr.nright(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),stats.vicorr.right(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),'Normalized Volume Intersections, right hemisphere',stats.vc_labels);
+    ea_ttest(stats.vicorr.nright(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),stats.vicorr.nright(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),'Normalized Volume Intersections, right hemisphere',stats.vc_labels);
 end
 if ~isempty(stats.vicorr.nleft)
-    ea_ttest(stats.vicorr.nleft(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),'Normalized Volume Intersections, left hemisphere',stats.vc_labels);
+    ea_ttest(stats.vicorr.nleft(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),stats.vicorr.nleft(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),'Normalized Volume Intersections, left hemisphere',stats.vc_labels);
 end
 
 
@@ -996,6 +1005,14 @@ vicorr_right=zeros(howmanypts,howmanyvis); vicorr_left=zeros(howmanypts,howmanyv
 nvicorr_right=zeros(howmanypts,howmanyvis); nvicorr_left=zeros(howmanypts,howmanyvis); nvicorr_both=zeros(howmanypts,howmanyvis);
 vc_labels={};
 
+switch get(handles.VTAvsEfield,'value')
+    case 1 % VTA
+        vtavsefield='vat';
+    case 2 % Efield
+        vtavsefield='efield';
+end
+
+
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
     for pt=get(handles.patientlist,'Value')
         S.label=['gs_',M.guid];
@@ -1005,15 +1022,15 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         for side=1:size(M.stats(pt).ea_stats.stimulation(usewhichstim).vat,1)
             for vat=1
                 if side==1 % right hemisphere
-                    vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
-                    nvicorr_right(ptcnt,vicnt)=nvicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
+                    vicorr_right(ptcnt,vicnt)=vicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).AtlasIntersection(vi);
+                    nvicorr_right(ptcnt,vicnt)=nvicorr_right(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).nAtlasIntersection(vi);
 
                     elseif side==2 % left hemisphere
-                    vicorr_left(ptcnt,vicnt)=vicorr_left(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
-                    nvicorr_left(ptcnt,vicnt)=nvicorr_left(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
+                    vicorr_left(ptcnt,vicnt)=vicorr_left(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).AtlasIntersection(vi);
+                    nvicorr_left(ptcnt,vicnt)=nvicorr_left(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).nAtlasIntersection(vi);
                 end
-                vicorr_both(ptcnt,vicnt)=vicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).AtlasIntersection(vi);
-                nvicorr_both(ptcnt,vicnt)=nvicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).vat(side,vat).nAtlasIntersection(vi);
+                vicorr_both(ptcnt,vicnt)=vicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).AtlasIntersection(vi);
+                nvicorr_both(ptcnt,vicnt)=nvicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).nAtlasIntersection(vi);
 
             end
         end
@@ -1028,7 +1045,7 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         ptcnt=ptcnt+1;
 
     end
-    vc_labels{end+1}=M.stats(pt).ea_stats.atlases.names{vi};
+    vc_labels{end+1}=[ea_stripext(M.stats(pt).ea_stats.atlases.names{vi}),': ',vtavsefield,' impact'];
 
     ptcnt=1;
     vicnt=vicnt+1;
@@ -1076,62 +1093,80 @@ setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
 
-% --- Executes on button press in moveptdownbutton.
-function moveptdownbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to moveptdownbutton (see GCBO)
+% --- Executes on button press in moveptupbutton.
+function moveptupbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to moveptupbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 whichmoved=get(handles.patientlist,'Value');
-if length(whichmoved)>1; return; end % more than one selected..
-if whichmoved==1 % first entry anyways
+
+if whichmoved(1)==1 % first entry anyways
     return
 end
+
 ix=1:length(M.patient.list);
 ix(whichmoved)=ix(whichmoved)-1;
 ix(whichmoved-1)=ix(whichmoved-1)+1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
+M.ui.listselect=whichmoved-1;
+for c=1:length(M.clinical.vars)
+    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+end
 try
-    M=rmfield(M,'stats');
+    M.S = M.S(ix);
 end
 try
     M=rmfield(M,'elstruct');
 end
+try
+    M=rmfield(M,'stats');
+end
 setappdata(gcf,'M',M);
-set(handles.patientlist,'Value',whichmoved-1);
 
+set(handles.patientlist,'Value',whichmoved-1);
 ea_refresh_lg(handles);
 
-% --- Executes on button press in moveptupbutton.
-function moveptupbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to moveptupbutton (see GCBO)
+
+% --- Executes on button press in moveptdownbutton.
+function moveptdownbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to moveptdownbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 M=getappdata(gcf,'M');
 whichmoved=get(handles.patientlist,'Value');
-if length(whichmoved)>1; return; end % more than one selected..
-if whichmoved==length(M.patient.list) % last entry anyways
+
+if whichmoved(end)==length(M.patient.list) % last entry anyways
     return
 end
+
 ix=1:length(M.patient.list);
 ix(whichmoved)=ix(whichmoved)+1;
 ix(whichmoved+1)=ix(whichmoved+1)-1;
 
 M.patient.list=M.patient.list(ix);
 M.patient.group=M.patient.group(ix);
+M.ui.listselect=whichmoved+1;
+for c=1:length(M.clinical.vars)
+    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+end
 try
-    M=rmfield(M,'stats');
+    M.S = M.S(ix);
 end
 try
     M=rmfield(M,'elstruct');
 end
+try
+    M=rmfield(M,'stats');
+end
 setappdata(gcf,'M',M);
-set(handles.patientlist,'Value',whichmoved+1);
 
+set(handles.patientlist,'Value',whichmoved+1);
 ea_refresh_lg(handles);
+
 
 % --- Executes on button press in calculatebutton.
 function calculatebutton_Callback(hObject, eventdata, handles)
@@ -1168,7 +1203,7 @@ for pt=selection
 
     % own fileparts to support windows/mac/linux slashes even if they come
     % from a different OS.
-    if isempty(strfind(M.patient.list{pt},'/'))
+    if ~contains(M.patient.list{pt},'/')
         lookfor='\';
     else
         lookfor='/';
@@ -1502,31 +1537,10 @@ groupdir = uigetdir;
 if ~groupdir % user pressed cancel
     return
 end
-
-ea_busyaction('on',handles.leadfigure,'group');
-
 groupdir = [groupdir, filesep];
-M = ea_initializeM;
-M.ui.groupdir = groupdir;
 
-set(handles.groupdir_choosebox, 'String', groupdir);
-set(handles.groupdir_choosebox, 'TooltipString', groupdir);
+ea_load_group(handles,groupdir);
 
-try % if file already exists, load it (and overwrite M).
-    load([groupdir, 'LEAD_groupanalysis.mat']);
-catch % if not, store it saving M.
-    save([groupdir, 'LEAD_groupanalysis.mat'], 'M', '-v7.3');
-end
-
-setappdata(handles.leadfigure, 'M', M);
-try
-    setappdata(handles.leadfigure, 'S', M.S);
-    setappdata(handles.leadfigure, 'vatmodel', M.S(1).model);
-end
-
-ea_busyaction('off', handles.leadfigure, 'group');
-
-ea_refresh_lg(handles);
 
 
 % --- Executes on button press in opensubgui.
@@ -1767,26 +1781,33 @@ function detachbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 choice = questdlg('Would you really like to detach the group data from the single-patient data? This means that changes to single-patient reconstructions will not be updated into the group analysis anymore. This should only be done once all patients have been finally localized and an analysis needs to be fixed (e.g. after publication or when working in collaborations). Please be aware that this step cannot be undone!', ...
     'Detach Group data from single patient data...', ...
-    'No, abort.','Yes, sure!','No, abort.');
+    'No, abort.','Yes, sure!','Yes and copy localizations/VTAs please.','No, abort.');
 % Handle response
 switch choice
     case 'No, abort.'
         return
-    case 'Yes, sure!'
+    case {'Yes, sure!','Yes and copy localizations/VTAs please.'}
 
         M=getappdata(gcf,'M');
-
+        ea_dispercent(0,'Detaching group file');
         for pt=1:length(M.patient.list)
-
             slashes=strfind(M.patient.list{pt},'/');
             if isempty(slashes)
                 slashes=strfind(M.patient.list{pt},'\');
             end
             ptname=M.patient.list{pt}(max(slashes)+1:end);
+            if strcmp('Yes and copy localizations/VTAs please.',choice)
+                odir=[M.ui.groupdir,ptname,filesep];
+                ea_mkdir([odir,'stimulations']);
+                copyfile([M.patient.list{pt},filesep,'ea_reconstruction.mat'],[odir,'ea_reconstruction.mat']);
+                copyfile([M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid],[odir,'stimulations',filesep,'gs_',M.guid]);
+            end
 
             M.patient.list{pt}=ptname;
 
+            ea_dispercent(pt/length(M.patient.list));
         end
+        ea_dispercent(1,'end');
         M.ui.detached=1;
 
 end
@@ -2048,34 +2069,28 @@ assignin('base','stats',stats);
 % perform correlations:
 if size(stats.corrcl,2)==1 % one value per patient
 
-        if ~isempty(stats.fccorr.both)
-            %ea_corrplot([stats.corrcl,stats.fccorr.both],'Fibercounts, both hemispheres',stats.fc_labels);
-            ea_corrplot([stats.corrcl,stats.fccorr.nboth],'FC_BH',stats.fc_labels,handles);
-        end
-%         if ~isempty(stats.fccorr.right)
-%             %ea_corrplot([stats.corrcl,stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-%             ea_corrplot([stats.corrcl,stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-%         end
-%         if ~isempty(stats.fccorr.left)
-%             %ea_corrplot([stats.corrcl,stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-%             ea_corrplot([stats.corrcl,stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-%         end
+    if ~isempty(stats.fccorr.both)
+        ea_corrplot(stats.corrcl,stats.fccorr.nboth,{'FC_BH',stats.fc_labels(:)});
+    end
+    if ~isempty(stats.fccorr.right)
+        ea_corrplot(stats.corrcl,stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
+    end
+    if ~isempty(stats.fccorr.left)
+        ea_corrplot(stats.corrcl,stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
+    end
 
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
 
-        if ~isempty(stats.fccorr.both)
-            %ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'Fibercounts, both hemispheres',stats.fc_labels);
-            ea_corrplot([stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left]],'FC_BH',stats.fc_labels,handles);
-        end
-    %     if ~isempty(stats.fccorr.right)
-    %         %ea_corrplot([stats.corrcl(:,1),stats.fccorr.right],'Fibercounts, right hemisphere',stats.fc_labels);
-    %         ea_corrplot([stats.corrcl(:,1),stats.fccorr.nright],'FC_RH',stats.fc_labels,handles);
-    %     end
-    %     if ~isempty(stats.fccorr.left)
-    %         %ea_corrplot([stats.corrcl(:,2),stats.fccorr.left],'Fibercounts, left hemisphere',stats.fc_labels);
-    %         ea_corrplot([stats.corrcl(:,2),stats.fccorr.nleft],'FC_LH',stats.fc_labels,handles);
-    %     end
-    %
+    if ~isempty(stats.fccorr.both)
+        ea_corrplot(stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left],{'FC_BH',stats.fc_labels(:)});
+    end
+    if ~isempty(stats.fccorr.right)
+        ea_corrplot(stats.corrcl(:,1),stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
+    end
+    if ~isempty(stats.fccorr.left)
+        ea_corrplot(stats.corrcl(:,2),stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
+    end
+
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
@@ -2096,4 +2111,54 @@ function discfiberssettingpush_Callback(hObject, eventdata, handles)
 % hObject    handle to discfiberssettingpush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_discfiberssetting;
+ea_discfibers_setting;
+
+
+% --- Executes on selection change in recentpts.
+function recentpts_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+ea_busyaction('on',handles.leadfigure,'group');
+ea_rcpatientscallback(handles, 'groups');
+ea_busyaction('off',handles.leadfigure,'group');
+
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpts
+
+
+% --- Executes during object creation, after setting all properties.
+function recentpts_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in VTAvsEfield.
+function VTAvsEfield_Callback(hObject, eventdata, handles)
+% hObject    handle to VTAvsEfield (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns VTAvsEfield contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from VTAvsEfield
+
+
+% --- Executes during object creation, after setting all properties.
+function VTAvsEfield_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to VTAvsEfield (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

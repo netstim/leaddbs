@@ -85,18 +85,18 @@ options.prefs.n_rest = numel(restfiles);
 b0restanchor=cell(length(presentfiles),1);
 for irest = 1:options.prefs.n_rest
     % set filenames for this iteration
-    if exist([directory,'r',ea_stripex(restfiles(irest).name),'_',anchor],'file')
-        if ~ea_coreglocked(options,['r',ea_stripex(restfiles(irest).name),'_',anchor])
-            presentfiles=[presentfiles;{['r',ea_stripex(restfiles(irest).name),'_',anchor]}];
+    if exist([directory,'r',ea_stripext(restfiles(irest).name),'_',anchor],'file')
+        if ~ea_coreglocked(options,['r',ea_stripext(restfiles(irest).name),'_',anchor])
+            presentfiles=[presentfiles;{['r',ea_stripext(restfiles(irest).name),'_',anchor]}];
             b0restanchor{length(presentfiles)} = ['mean',restfiles(irest).name];
         end
     end
 end
 
 % add b0:
-if exist([directory,ea_stripex(options.prefs.b0),'_',anchor],'file')
-    if ~ea_coreglocked(options,[directory,ea_stripex(options.prefs.b0),'_',anchor])
-        presentfiles=[presentfiles;{[ea_stripex(options.prefs.b0),'_',anchor]}];
+if exist([directory,ea_stripext(options.prefs.b0),'_',anchor],'file')
+    if ~ea_coreglocked(options,[directory,ea_stripext(options.prefs.b0),'_',anchor])
+        presentfiles=[presentfiles;{[ea_stripext(options.prefs.b0),'_',anchor]}];
         b0restanchor{length(presentfiles)} = [options.prefs.b0];
     end
 end
@@ -161,8 +161,8 @@ if strcmp(currvol,'brainshift')
     close(handles.leadfigure);
     return
 end
-switch ea_stripex(currvol)
-    case ea_stripex(options.prefs.gprenii)
+switch ea_stripext(currvol)
+    case ea_stripext(options.prefs.gprenii)
         handles.checkatl.Visible='on';
         [options] = ea_assignpretra(options);
         anchor=[ea_space,options.primarytemplate,'.nii'];
@@ -210,8 +210,8 @@ switch ea_stripex(currvol)
                         method='';
                     else
                         method=load([directory,'ea_coregmrmethod_applied.mat']);
-                        if isfield(method,ea_stripex(currvol)) % specific method used for this modality
-                            method=method.(ea_stripex(currvol));
+                        if isfield(method,ea_stripext(currvol)) % specific method used for this modality
+                            method=method.(ea_stripext(currvol));
                         else
                             if isfield(method,'coregmr_method_applied')
                                 if iscell(method.coregmr_method_applied)
@@ -233,7 +233,7 @@ end
 
 if ~exist([directory,'ea_coreg_approved.mat'],'file') % init
     for vol=1:length(presentfiles)
-        approved.(ea_stripex(presentfiles{vol}))=0;
+        approved.(ea_stripext(presentfiles{vol}))=0;
     end
     save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 else
@@ -245,33 +245,34 @@ setappdata(handles.leadfigure,'method',method);
 if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 registration
     set(handles.substitute,'Visible','on');
     set(handles.substitute,'String',ea_getsubstitutes(options));
-    checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(b0restanchor{activevolume}),'mean','r'),'_',method,'.png'];
-    set(handles.anchormod,'String',ea_stripex(b0restanchor{activevolume}));
+    checkfig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(b0restanchor{activevolume}),'mean','r'),'_',method,'.png'];
+    set(handles.anchormod,'String',ea_stripext(b0restanchor{activevolume}));
 
 else % normal anatomical 2 anatomical registration
     set(handles.substitute,'Visible','off');
-    checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',ea_stripex(anchor),'_',method,'.png'];
-    set(handles.anchormod,'String',ea_stripex(anchor));
+    checkfig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',ea_stripext(anchor),'_',method,'.png'];
+    set(handles.anchormod,'String',ea_stripext(anchor));
 
 end
+
 set(handles.imgfn,'Visible','on');
 set(handles.imgfn,'String',checkfig);
 set(handles.imgfn,'TooltipString',checkfig);
-switch ea_stripex(currvol)
-    case ea_stripex(options.prefs.gprenii)
+switch ea_stripext(currvol)
+    case ea_stripext(options.prefs.gprenii)
         options=ea_assignpretra(options);
         anchorpath=[ea_space,options.primarytemplate];
     otherwise
         if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 registration
-            anchorpath=[directory,ea_stripex(b0restanchor{activevolume})];
+            anchorpath=[directory,ea_stripext(b0restanchor{activevolume})];
         else
-            anchorpath=[directory,ea_stripex(anchor)];
+            anchorpath=[directory,ea_stripext(anchor)];
         end
 end
 
 if ~exist(checkfig,'file')
 
-    ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
+    ea_gencheckregpair([directory,ea_stripext(currvol)],anchorpath,checkfig);
 
     if ~exist(checkfig,'file')
         checkfig=fullfile(ea_getearoot,'helpers','gui','coreg_msg.png');
@@ -290,7 +291,7 @@ axis off
 axis equal
 
 % textfields:
-set(handles.depvolume,'String',[ea_stripex(currvol),'.nii']);
+set(handles.depvolume,'String',[ea_stripext(currvol),'.nii']);
 
 
 function [pretras]=ea_getsubstitutes(options)
@@ -303,6 +304,7 @@ for fi=1:length(presentfiles)
         pretras{fi}=['Substitute moving file with ',presentfiles{fi}];
     end
 end
+
 
 function presentfiles=ea_getall_coregcheck(options)
 directory=[options.root,options.patientname,filesep];
@@ -329,7 +331,6 @@ if exist([directory,options.prefs.fa2anat],'file')
 end
 
 % now check if those are already approved (then don't show again):
-
 todel=[];
 for pf=1:length(presentfiles)
     if ea_coreglocked(options,presentfiles{pf})
@@ -390,15 +391,14 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
 currvol=presentfiles{activevolume};
 
-ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
-[options,anatspresent]=ea_assignpretra(options);
-for fi=2:length(anatspresent)
-    ea_delete([options.root,options.patientname,filesep,'gl',anatspresent{fi}]);
-end
+switch ea_stripext(currvol)
+    case ea_stripext(options.prefs.gprenii)
+        ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
+        [options,anatspresent]=ea_assignpretra(options);
+        for fi=2:length(anatspresent)
+            ea_delete([options.root,options.patientname,filesep,'gl',anatspresent{fi}]);
+        end
 
-
-switch ea_stripex(currvol)
-    case ea_stripex(options.prefs.gprenii)
         options.normalize.method=getappdata(handles.leadfigure,'normmethod');
         options.normalize.method=options.normalize.method{get(handles.coregmrpopup,'Value')};
         options.normalize.methodn=get(handles.coregmrpopup,'Value');
@@ -409,7 +409,7 @@ switch ea_stripex(currvol)
             ea_tonemapct_file(options,'mni');
         end
 
-    case ea_stripex(['tp_',options.prefs.ctnii_coregistered]) % CT
+    case ea_stripext(['tp_',options.prefs.ctnii_coregistered]) % CT
         options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
         options.coregct.method=options.coregct.method{get(handles.coregmrpopup,'Value')};
         options.coregct.methodn=get(handles.coregmrpopup,'Value');
@@ -419,7 +419,7 @@ switch ea_stripex(currvol)
         ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
         ea_gencoregcheckfigs(options); % generate checkreg figures
 
-    case ea_stripex(options.prefs.fa2anat) % FA
+    case ea_stripext(options.prefs.fa2anat) % FA
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
         ea_backuprestore([directory,options.prefs.fa]);
@@ -429,32 +429,32 @@ switch ea_stripex(currvol)
     otherwise % MR
         options.coregmr.method=get(handles.coregmrpopup,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
-        if ~isempty(b0restanchor{activevolume})
-            thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
+        if ~isempty(b0restanchor{activevolume})  % b0 or rest files
 
-            ea_delete([directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
-            ea_delete([directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
+            thisrest=strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
+
+            ea_delete([directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)]);
+            ea_delete([directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
 
             substitute=get(handles.substitute,'Value');
             [~,pf]=ea_assignpretra(options);
             useasanchor=pf{substitute};
 
-
             % in following line correct that useasanchor is the *moving*
             % image (since we're going from anchor to rest/b0.
             ea_coreg2images(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
-            if ~isequal([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
-                    [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
-                movefile([directory,ea_stripex(b0restanchor{activevolume}),'2',ea_stripex(useasanchor),'_',ea_matext(options.coregmr.method)],...
-                    [directory,thisrest,'2',ea_stripex(anchor),'_',ea_matext(options.coregmr.method)]);
+            if ~isequal([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
+                    [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)])
+                movefile([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
+                    [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)]);
             end
-            if ~isequal([directory,ea_stripex(useasanchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
-                    [directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
-                movefile([directory,ea_stripex(useasanchor),'2',ea_stripex(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
-                    [directory,ea_stripex(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
+            if ~isequal([directory,ea_stripext(useasanchor),'2',ea_stripext(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
+                    [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)])
+                movefile([directory,ea_stripext(useasanchor),'2',ea_stripext(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
+                    [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
             end
             ea_cleandownstream(options,directory,thisrest);
-        else
+        else  % other images
             ea_backuprestore([directory,presentfiles{activevolume}]);
             ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         end
@@ -470,12 +470,12 @@ if ~isempty(b0restanchor{activevolume})
    anchor=b0restanchor{activevolume};
 end
 
-checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'mean','r'),'_',method,'.png'];
+checkfig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(anchor),'mean','r'),'_',method,'.png'];
 
-ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
+ea_gencheckregpair([directory,ea_stripext(currvol)],anchorpath,checkfig);
 % now disapprove again since this new computation hasn't been approved yet.
 approved=load([directory,'ea_coreg_approved.mat']);
-approved.(ea_stripex(currvol))=0;
+approved.(ea_stripext(currvol))=0;
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
 ea_mrcview(handles)
@@ -484,49 +484,48 @@ ea_chirp(options);
 ea_busyaction('off',handles.leadfigure,'coreg');
 set(handles.leadfigure, 'Name', title);
 
-function ea_cleandownstream(options,directory,thisrest)
 
+function ea_cleandownstream(directory, thisrest)
+% cleanup fibertracking mask
+ea_delete([directory,'trackingmask.nii']);
+ea_delete([directory,'ttrackingmask.nii']);
 
-% cleanup /templates/labelings (these need to be recalculated):
-
-% do not use ea_delete here since it doesn't support
-% wildcards!
-delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
+% cleanup /templates/labelings (these need to be recalculated)
+ea_delete([directory,'templates',filesep,'labeling',filesep,thisrest,'*.nii']);
 parcdirs=dir([directory,'connectomics',filesep]);
-%             % cleanup /connectomics results (these need to be recalculated):
+
+% cleanup /connectomics results (these need to be recalculated):
 for pd=1:length(parcdirs)
-    % do not use ea_delete here since it doesn't support
-    % wildcards!
     if ~strcmp(parcdirs(pd).name(1),'.')
-        delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*.*']);
+        ea_delete([directory,'connectomics',filesep,parcdirs(pd).name,filesep,thisrest(2:end),'*.*']);
     end
 end
+
 stimdirs=dir([directory,'stimulations',filesep]);
-%             % cleanup /connectomics results (these need to be recalculated):
+% cleanup /connectomics results (these need to be recalculated):
 for pd=1:length(stimdirs)
     if ~strcmp(stimdirs(pd).name(1),'.')
         connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
         for connfolder=1:length(connfolders)
             if ~strcmp(connfolders(connfolder).name(1),'.')
 
-                if connfolders(connfolder).isdir && ~isempty(strfind(connfolders(connfolder).name,thisrest(2:end)))
+                if connfolders(connfolder).isdir && contains(connfolders(connfolder).name,thisrest(2:end))
                     rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
                 end
 
-                % do not use ea_delete here since it doesn't support
-                % wildcards!
-                delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
+                ea_delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
             end
         end
     end
 end
+
 
 function ext=ea_matext(method)
 
 switch upper(method)
     case 'SPM'
         ext='spm.mat';
-    case {'FSL FLIRT'}
+    case 'FSL FLIRT'
         ext='flirt1.mat';
     case 'FSL BBR'
         ext='flirtbbr.mat';
@@ -535,6 +534,7 @@ switch upper(method)
     case 'BRAINSFIT'
         ext='brainsfit.h5';
 end
+
 
 function ea_dumpspecificmethod(handles,method)
 options=getappdata(handles.leadfigure,'options');
@@ -548,7 +548,7 @@ try
 catch
     m=struct;
 end
-m.(ea_stripex(presentfiles{activevolume}))=method;
+m.(ea_stripext(presentfiles{activevolume}))=method;
 save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 
 
@@ -565,43 +565,43 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
 currvol=presentfiles{activevolume};
 
-switch ea_stripex(currvol)
-    case ea_stripex(options.prefs.gprenii)
-    case ea_stripex(['tp_',options.prefs.ctnii_coregistered])
+switch ea_stripext(currvol)
+    case ea_stripext(options.prefs.gprenii)
+    case ea_stripext(['tp_',options.prefs.ctnii_coregistered])
     otherwise % make sure method gets logged for specific volume.
         method=getappdata(handles.leadfigure,'method');
         if exist([directory,'ea_coregmrmethod_applied.mat'],'file')
             m=load([directory,'ea_coregmrmethod_applied.mat']);
         end
-        m.(ea_stripex(currvol))=method;
+        m.(ea_stripext(currvol))=method;
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 end
 
 approved=load([directory,'ea_coreg_approved.mat']);
 try
-    wasapprovedalready=approved.(ea_stripex(currvol));
+    wasapprovedalready=approved.(ea_stripext(currvol));
 catch
     wasapprovedalready=0;
 end
-approved.(ea_stripex(currvol))=1;
-if strcmp(ea_stripex(currvol),ea_stripex(options.prefs.gprenii))
+approved.(ea_stripext(currvol))=1;
+if strcmp(ea_stripext(currvol),ea_stripext(options.prefs.gprenii))
     [options,preniis]=ea_assignpretra(options); % get all preop versions
     allcoreg=1; % check if all preniis are already approved
     for pn=2:length(preniis)
-        if ~approved.(ea_stripex(preniis{pn}))
+        if ~approved.(ea_stripext(preniis{pn}))
             allcoreg=0;
         end
     end
     if allcoreg
-        approved.(ea_stripex(currvol))=2; % set to permanent approved =2 normalization. This will not be overriden no matter what (as long is override flag is not set).
+        approved.(ea_stripext(currvol))=2; % set to permanent approved =2 normalization. This will not be overriden no matter what (as long is override flag is not set).
     else
         ea_warning('You approved normalization before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
     end
 else
-    if isfield(approved,ea_stripex(options.prefs.gprenii))
+    if isfield(approved,ea_stripext(options.prefs.gprenii))
         [~,preopfiles]=ea_assignpretra(options);
-        if ismember([ea_stripex(currvol),'.nii'],preopfiles)
-            if approved.(ea_stripex(options.prefs.gprenii))==2
+        if ismember([ea_stripext(currvol),'.nii'],preopfiles)
+            if approved.(ea_stripext(options.prefs.gprenii))==2
                 % now in this situation we had the normalization approved before
                 % all coregistrations were approved. This could lead to suboptimal
                 % normalizations *only* if a multispectral protocol is used. Thus
@@ -619,7 +619,7 @@ end
 
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 if strcmp(computer('arch'),'maci64')
-    system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripex(currvol),'.nii'])]);
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(currvol),'.nii'])]);
 end
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
@@ -688,8 +688,8 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
 
 currvol=presentfiles{activevolume};
-switch ea_stripex(currvol)
-    case ea_stripex(options.prefs.gprenii)
+switch ea_stripext(currvol)
+    case ea_stripext(options.prefs.gprenii)
         ea_show_normalization(options);
     otherwise
         presentfiles=getappdata(handles.leadfigure,'presentfiles');
@@ -707,7 +707,6 @@ switch ea_stripex(currvol)
         end
 
         ea_show_coregistration(options);
-
 end
 
 
@@ -739,15 +738,16 @@ currvol=presentfiles{activevolume};
 
 approved=load([directory,'ea_coreg_approved.mat']);
 
-approved.(ea_stripex(currvol))=0;
+approved.(ea_stripext(currvol))=0;
 save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 if strcmp(computer('arch'),'maci64')
-    system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripex(currvol),'.nii'])]);
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(currvol),'.nii'])]);
 end
-switch ea_stripex(currvol)
-    case ea_stripex(options.prefs.gprenii)
 
-    case ea_stripex(['tp_',options.prefs.ctnii_coregistered])
+switch ea_stripext(currvol)
+    case ea_stripext(options.prefs.gprenii)
+
+    case ea_stripext(['tp_',options.prefs.ctnii_coregistered])
 
     otherwise % make sure method gets unlogged for specific volume.
         method=getappdata(handles.leadfigure,'method');
@@ -756,16 +756,15 @@ switch ea_stripex(currvol)
         else
             m=struct;
         end
-        if isfield(m,ea_stripex(currvol))
-            m=rmfield(m,ea_stripex(currvol));
+        if isfield(m,ea_stripext(currvol))
+            m=rmfield(m,ea_stripext(currvol));
         end
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 end
+
 if ~isempty(b0restanchor{activevolume})
-    thisrest=strrep(ea_stripex(b0restanchor{activevolume}),'mean','r');
-
+    thisrest=strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
     ea_cleandownstream(options,directory,thisrest)
-
 end
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');
@@ -778,6 +777,7 @@ if activevolume==length(presentfiles)
 else
     activevolume=activevolume+1;
 end
+
 setappdata(handles.leadfigure,'activevolume',activevolume);
 ea_mrcview(handles);
 try
@@ -827,11 +827,11 @@ anchorpath=getappdata(handles.leadfigure,'anchorpath');
 method=getappdata(handles.leadfigure,'method');
 
 anchor=getappdata(handles.leadfigure,'anchor');
-switch ea_stripex(currvol)
-    case ea_stripex(options.prefs.gprenii)
+switch ea_stripext(currvol)
+    case ea_stripext(options.prefs.gprenii)
         options=ea_assignpretra(options);
         anchor=[ea_space,options.primarytemplate,'.nii'];
-    case ea_stripex(['tp_',options.prefs.ctnii_coregistered]) % make sure tp matches rpostop_ct.
+    case ea_stripext(['tp_',options.prefs.ctnii_coregistered]) % make sure tp matches rpostop_ct.
         ea_tonemapct_file(options,'native');
 end
 b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
@@ -839,9 +839,9 @@ if ~isempty(b0restanchor{activevolume})
    anchor=b0restanchor{activevolume};
 end
 
-checkfig=[directory,'checkreg',filesep,ea_stripex(currvol),'2',strrep(ea_stripex(anchor),'mean','r'),'_',method,'.png'];
+checkfig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(anchor),'mean','r'),'_',method,'.png'];
 ea_delete(checkfig);
-ea_gencheckregpair([directory,ea_stripex(currvol)],anchorpath,checkfig);
+ea_gencheckregpair([directory,ea_stripext(currvol)],anchorpath,checkfig);
 ea_mrcview(handles); % refresh
 title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
@@ -858,7 +858,6 @@ presentfiles=getappdata(handles.leadfigure,'presentfiles');
 directory=getappdata(handles.leadfigure,'directory');
 
 ea_checkstructures(options);
-
 
 
 % --- Executes on button press in openpatientdir.

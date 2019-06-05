@@ -57,9 +57,9 @@ if ~options.savefibers.load
     if strcmp(thresh,'auto')
         switch mode
             case 'vat'
-        thresh=round(numtotalfibs/20000);
+                thresh=round(numtotalfibs/20000);
             case 'mat'
-             thresh=round(numtotalfibs/5000);
+                thresh=round(numtotalfibs/5000);
         end
     else
         thresh=round(str2double(thresh));
@@ -118,7 +118,7 @@ if ~options.savefibers.load
     cnt=1;
     selectedfibs = cell(1, length(seed));
     for side=1:length(seed)
-        in=ea_intriangulation(seed_fv{side}.vertices,seed_fv{side}.faces,fibers);
+        in=inpolyhedron(seed_fv{side}, fibers, 'flipnormals', true); % massive speed up compared to ea_intriangulation (approx. factor 10?)
 %         [in,D]=knnsearch(seed_fv{side}.vertices,fibers);
 %         in=D<2;
         selectedfibs{side}=unique(idxv(in));
@@ -360,6 +360,10 @@ end
 % plot fibers that do connect to seed:
 for side=1:length(options.sides)
     if ~isempty(connectingfibs{side})
+        % Remove single point
+        single = cellfun(@(x) all(size(x)==[1,3]),connectingfibs{side});
+        connectingfibs{side}(single)=[];
+
         fibmax=length(connectingfibs{side});
 
         if fibmax>options.prefs.d3.maxfibers % if too many fibers are selected, reduce amount of them.

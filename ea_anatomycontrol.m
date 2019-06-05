@@ -84,8 +84,6 @@ if isempty(ht)
     setappdata(handles.acontrolfig,'toolbar',ht);
 end
 
-
-
 spacedef=ea_getspacedef;
 if isfield(spacedef,'guidef')
     set(handles.xval,'String',num2str(spacedef.guidef.xyzdef(1)));
@@ -148,9 +146,7 @@ end
 pos=get(hObject,'position');
 set(hObject,'position',[0,0,pos(3),pos(4)]);
 refreshresultfig(handles)
-view(142,13.6)
 set(handles.acontrolfig,'Visible',options.d3.verbose); % set invisible if called from lead group
-
 
 
 % --- Outputs from this function are returned to the command line.

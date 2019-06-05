@@ -15,7 +15,7 @@ if isempty(uipatdir)
 end
 
 if exist('handles','var')
-    ea_load_pts(handles,uipatdir);
+    ea_load_pts(handles,uipatdir,'patients');
 
     if isfield(handles,'atlassetpopup') % not present in connectome mapper
         atlasset=get(handles.atlassetpopup,'String');

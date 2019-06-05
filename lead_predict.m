@@ -64,7 +64,7 @@ set(handles.leadfigure,'name','Lead Predict','color','w');
 %setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
 
 % add recent patients...
-ea_initrecentpatients(handles);
+ea_initrecentpatients(handles, 'patients');
 
 ea_processguiargs(handles,varargin)
 
@@ -78,9 +78,9 @@ ea_updatemodpopups(mdl,sf,handles)
 
 pmodels=dir([ea_getearoot,'predict',filesep,'ea_predict_*.m']);
 for pmod=1:length(pmodels)
-    specs=feval(ea_stripex(pmodels(pmod).name),'specs');
+    specs=feval(ea_stripext(pmodels(pmod).name),'specs');
     pmods{pmod}=specs.modelname;
-    pmodsm{pmod}=ea_stripex(pmodels(pmod).name);
+    pmodsm{pmod}=ea_stripext(pmodels(pmod).name);
     pmodspecs{pmod}=specs;
 end
 set(handles.predictionmodel,'String',pmods);
@@ -425,7 +425,7 @@ function recentpts_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from recentpts
 ea_busyaction('on',handles.leadfigure,'predict');
-ea_rcpatientscallback(handles);
+ea_rcpatientscallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'predict');
 
 

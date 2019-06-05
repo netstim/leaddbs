@@ -40,9 +40,11 @@ if ~exist('fname','var') || isempty(fname)
             defaultPath = fileparts(uipatdir{1});
         end
     end
-
-    [fis, path] = uigetfile({'*.nii';'*.nii.gz'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
-
+    if ismac % macs file open dlg doesnt seem to support .nii/.nii.gz handling from matlab.
+        [fis, path] = uigetfile({'*'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
+    else
+        [fis, path] = uigetfile({'*.nii' 'NIfTI';'*.nii.gz' 'Compressed NIfTI'}, 'Choose files to apply deformation to...', defaultPath, 'Multiselect', 'on');
+    end
     if ~ischar(fis) && ~iscell(fis)
         if ~fis
             return
@@ -84,9 +86,6 @@ if useinverse % from template space to [untouched] achor space
             from{fi} = [path, fis{fi}];
         end
 
-        
-        
-        
         ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp);
 
         if untouchedanchor % map from anchor to untouched anchor
@@ -102,7 +101,7 @@ if useinverse % from template space to [untouched] achor space
                 fused=untouchedanchorImage;
                 fused.img(:)=zscore(fused.img(:));
                 fused.img=fused.img+overlay.img;
-                fused.img=ea_minmax(fused.img);
+                fused.img=ea_rescale(fused.img);
                 fused.img=fused.img*255;
                 fused.dt=[2,0];
                 [natpath,natfn,natext]=fileparts(untouchedanchorImage.fname);
@@ -177,7 +176,6 @@ else % from [untouched] achor space to template space
     else
         refim=ea_niigz([ea_space,options.primarytemplate]);
     end
-        
-    
+
     ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp, refim);
 end

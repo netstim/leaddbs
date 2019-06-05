@@ -69,5 +69,3 @@ delete(fibhandle);
 %dafv=reducepatch(afv,0.2,'fast');
 
 fibhandle=patch('Faces',afv.faces,'Vertices',afv.vertices,'FaceVertexCData',afv.facevertexcdata,'EdgeColor','none','FaceAlpha',fiberalpha,'CDataMapping','direct','FaceColor','flat');
-
-ea_dispercent(1,'end');

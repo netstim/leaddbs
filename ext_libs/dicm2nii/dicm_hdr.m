@@ -146,7 +146,6 @@ if ~isDicm % may be PAR/HEAD/BV file
         if strcmpi(ext, '.PAR')
             [s, info] = philips_par(fname);
         elseif strcmpi(ext, '.xml')
-            % [s, info] = philips_par(fname);
             [s, info] = philips_xml(fname);
         elseif strcmpi(ext, '.HEAD') % || strcmpi(ext, '.BRIK')
             [s, info] = afni_head(fname);
@@ -156,14 +155,10 @@ if ~isDicm % may be PAR/HEAD/BV file
             [s, info] = bv_file(fname);
         else
             info = ['Unknown file type: ' fname];
-            return;
         end
     catch me
         info = me.message;
-        return;
     end
-    if ~isempty(s), return; end
-    if isempty(info), info = ['Not dicom file: ' fname]; end
     return; 
 end
 
@@ -190,7 +185,13 @@ for nb = [0 2e6 20e6 fSize] % if not enough, read more till all read
     b8 = [b8 fread(fid, nb, 'uint8=>uint8')']; %#ok
     i = strfind(char(b8), tg);
     i = i(mod(i,2)==1); % must be odd number
+    if isempty(i) && feof(fid)
+        tg = char([00 86 32 0]); % SpectroscopyData, VR = 'OF'
+        if p.be, tg = tg([2 1 4 3]); end
+        i = strfind(char(b8), tg); i = i(mod(i,2)==1);
+    end
     for k = i(end:-1:1) % last is likely real PixelData
+        if p.expl, p.VR = char(b8(k+(4:5))); end
         p.iPixelData = k + p.expl*4 + 7; % s.PixelData.Start: 0-based
         if numel(b8)<p.iPixelData, b8 = [b8 fread(fid, 12, '*uint8')']; end %#ok
         p.bytes = ch2int32(b8(p.iPixelData+(-3:0)), p.be);
@@ -222,8 +223,10 @@ if toSearch % search each tag if header is short and not many tags asked
         if ~isempty(i)
             i = i(1) + 4 + p.expl*2; % Manufacturer should be the earliest one
             [n, nvr] = val_len('LO', b8(i+(0:5)), p.expl, p.be); i = i + nvr;
-            dat = deblank(bc(i+(0:n-1)));
-            [p, dict] = updateVendor(p, dat);
+            if i+n<p.iPixelData
+                dat = deblank(bc(i+(0:n-1)));
+                [p, dict] = updateVendor(p, dat);
+            end
         end
     end
     
@@ -235,7 +238,7 @@ if toSearch % search each tag if header is short and not many tags asked
     if ~isempty(i)
         i = i(1) + 4 + p.expl*2; % take 1st
         [n, nvr] = val_len('IS', b8(i+(0:5)), p.expl, p.be); i = i + nvr;
-        p.nFrames = str2double(bc(i+(0:n-1)));
+        if i+n<p.iPixelData, p.nFrames = str2double(bc(i+(0:n-1))); end
     end
     
     for k = 1:numel(p.dict.tag)
@@ -247,7 +250,7 @@ if toSearch % search each tag if header is short and not many tags asked
         i = strfind(bc, tg);
         i = i(mod(i,2)==1);
         if isempty(i), continue; % no this tag, next
-        elseif isfield(p, 'nFrames') && numel(i)==p.nFrames, i = i(1);
+        elseif isfield(p, 'nFrames') && mod(numel(i), p.nFrames)<2, i = i(1);
         % elseif strcmp('SeriesInstanceUID', p.dict.name{k}), i = i(end);
         elseif numel(i)>1 % +1 tags found, add vr to try again if expl
             if hasVR
@@ -268,9 +271,8 @@ if toSearch % search each tag if header is short and not many tags asked
             vr = p.dict.vr{k};
         end
         [n, nvr] = val_len(vr, b8(i+(0:5)), hasVR, swap); i = i+nvr;
-        if n==0, continue; end % dont assign empty tag
+        if n<1 || mod(n,2) || i+n-1>p.iPixelData, continue; end % skip this tag
 
-        if i+n-1>p.iPixelData, break; end
         [dat, info] = read_val(b8(i+(0:n-1)), vr, swap);
         if ~isempty(info), toSearch = false; break; end % re-do in regular way
         if ~isempty(dat), s.(p.dict.name{k}) = dat; end
@@ -304,6 +306,7 @@ end
 if p.iPixelData < fSize+1
     s.PixelData.Start = p.iPixelData;
     s.PixelData.Bytes = p.bytes;
+    if isfield(p, 'VR'), s.PixelData.Format = vr2fmt(p.VR); end
 end
 
 if isfield(s, 'CSAImageHeaderInfo') % Siemens CSA image header
@@ -386,9 +389,9 @@ else
 end
 % if group==33
 %     fprintf('\t''%04X'' ''%04X'' ''%s'' ''%s'' ', group, elmnt, vr, name);
-%     if numel(dat)>99, fprintf('''Long''');
+%     if numel(dat)>99, fprintf('''%s ...''', dat(1:9));
 %     elseif ischar(dat), fprintf('''%s''', dat);
-%     elseif isnumeric(dat), fprintf(''''); fprintf('%g ', dat); fprintf('''');
+%     elseif isnumeric(dat), fprintf('%g ', dat);
 %     else, fprintf('''SQ''');
 %     end
 %     fprintf('\n');
@@ -421,7 +424,8 @@ while i<nEnd % loop through multi Item under the SQ
         if ischar(p.iFrames) % 'all' frames
             if j==1 && ~isnan(p.nFrames), rst.FrameStart = nan(1, p.nFrames); end
             rst.FrameStart(j) = i-9;
-        elseif j==1, i0 = i-8; % always read 1st frame, save i0 in case of re-do
+        elseif j==1 % always read 1st frame, save i0 in case of re-do
+            i0 = i-8; rst.FrameStart = i-9;
         elseif j==2 % always read 2nd frame, and find start ind for all frames
             if isnan(p.nFrames) || isempty(tag1) % 1st frame has no asked tag
                 p.iFrames = 'all'; rst = []; j = 0; i = i0; % re-do the SQ
@@ -529,6 +533,8 @@ function fmt = vr2fmt(vr)
         case 'FL', fmt = 'single';
         case 'AT', fmt = 'uint16';
         case 'OW', fmt = 'uint16';
+        case 'OF', fmt = 'single';
+        case 'OD', fmt = 'double';
         case 'UN', fmt = 'uint8';
         otherwise, fmt = '';
     end
@@ -726,9 +732,6 @@ ch = regexp(str, '.*?(?=IMAGE INFORMATION DEFINITION)', 'match', 'once');
 V = regexpi(ch, 'image export tool\s*(V[\d\.]+)', 'tokens', 'once');
 if isempty(V), err = 'Not PAR file'; s = []; return; end
 V = V{1};
-% Fix V4 bug: based on Chris observation. Only those in table are 1:3
-% The ugly hard-coded order is the simple solution
-if strcmpi(V, 'V4'), ax_order = 1:3; else, ax_order = [3 1 2]; end
 s.SoftwareVersion = [V '\PAR'];
 s.PatientName = par_attr(ch, 'Patient name', 0);
 s.StudyDescription = par_attr(ch, 'Examination name', 0);
@@ -755,11 +758,6 @@ s.RepetitionTime = par_attr(ch, 'Repetition time');
 s.WaterFatShift = par_attr(ch, 'Water Fat shift');
 s.EPIFactor = par_attr(ch, 'EPI factor');
 % s.DynamicSeries = par_key(ch, 'Dynamic scan'); % 0 or 1
-isDTI = par_attr(ch, 'Diffusion')>0;
-if isDTI
-    s.ImageType = [s.ImageType '\DIFFUSION\'];
-    s.DiffusionEchoTime = par_attr(ch, 'Diffusion echo time'); % ms
-end
 
 % Get list of para meaning for the table, and col index of each para
 i1 = regexpi(str, 'IMAGE INFORMATION DEFINITION', 'once');
@@ -805,21 +803,26 @@ s.NumberOfTemporalPositions = s.NumberOfFrames/nSL;
 iVol = (0:s.NumberOfTemporalPositions-1)*nSL + 1; % already XYZT
 fld = 'ComplexImageComponent';
 typ = {'MAGNITUDE' 'REAL' 'IMAGINARY' 'PHASE'};
-imgType = para(iVol, colIndex('image_type_mr')); % 0:3
+imgType = para(iVol, colIndex('image_type_mr'));
 imgType(imgType==16) = 0;
 imgType(imgType==17) = 3;
 imgType(imgType==18) = 1;
-imgType(imgType>3)   = 0; % unknown treated as magnitude
+ind = imgType + 1;
+a = unique(imgType(imgType>3)); % unknown type
+for i = 1:numel(a)
+    ind(imgType==a(i)) = i+4;
+    typ{i+4} = sprintf('image_type%g', a(i));
+end
 if numel(iVol) == 1
-    s.ComplexImageComponent = typ{imgType(1)+1};
-elseif any(diff(imgType) ~= 0) % more than 1 type of image
+    s.ComplexImageComponent = typ{ind(1)};
+elseif any(diff(ind) ~= 0) % more than 1 type of image
     s.(fld) = 'MIXED';
-    s.Volumes.(fld) = typ(imgType+1); % one for each vol
+    s.Volumes.(fld) = typ(ind); % one for each vol
     s.Volumes.RescaleIntercept = para(iVol, colIndex('rescale intercept'));
     s.Volumes.RescaleSlope = para(iVol, colIndex('rescale slope'));
     s.Volumes.MRScaleSlope = para(iVol, colIndex('scale slope'));
 else
-    s.ComplexImageComponent = typ(imgType(1)+1); % cellstr
+    s.ComplexImageComponent = typ(ind(1)); % cellstr
 end
 
 % These columns should be the same for nifti-convertible images: 
@@ -862,6 +865,7 @@ else
 end
 s.Columns = res(1);
 s.Rows = res(2);
+if gap < 0, gap = 0; end 
 s.SpacingBetweenSlices = gap + s.SliceThickness;
 a = par_val('pixel spacing');
 s.PixelSpacing = a(:);
@@ -873,11 +877,6 @@ s.EchoTime = s.EchoTimes(1);
 s.FlipAngle = par_val('image_flip_angle');
 s.CardiacTriggerDelayTimes = par_val('trigger_time', iVol);
 % s.TimeOfAcquisition = par_val('dyn_scan_begin_time', 1:s.NumberOfFrames);
-if isDTI
-    s.B_value = par_val('diffusion_b_factor', iVol);
-    a = par_val('diffusion', iVol);
-    if ~isempty(a), s.bvec_original = a(:, ax_order); end
-end
 
 posMid = par_attr(ch, 'Off Centre midslice'); % (ap,fh,rl) [mm]
 posMid = posMid([3 1 2]); % better precision than those in the table
@@ -909,13 +908,25 @@ if ~isempty(a)
 end
 
 s.ImageOrientationPatient = R(1:6)';
-R = R * diag([s.PixelSpacing; s.SpacingBetweenSlices; 1]);
+R = R * diag([s.PixelSpacing([2 1]); s.SpacingBetweenSlices; 1]);
 R(:,4) = posMid; % 4th col is mid slice center position
 
-a = par_val('image offcentre');
-s.SliceLocation = a(ax_order(iOri)); % center loc for 1st slice
+a = par_val('image offcentre', [1 nSL]);
+% Take axis with largest 'image offcentre' range as slice axis. This can be
+% wrong in theory, but the fix based on PAR version do not work
+[~, ind] = max(max(a)-min(a));
+if ind==iOri, ax_order = 1:3; else, ax_order = [3 1 2]; end
+s.SliceLocation = a(1, ax_order(iOri)); % center loc for 1st slice
 if sign(R(iOri,3)) ~= sign(posMid(iOri)-s.SliceLocation)
     R(:,3) = -R(:,3);
+end
+
+if par_attr(ch, 'Diffusion')>0 % DTI
+    s.ImageType = [s.ImageType '\DIFFUSION\'];
+    s.DiffusionEchoTime = par_attr(ch, 'Diffusion echo time'); % ms
+    s.B_value = par_val('diffusion_b_factor', iVol);
+    a = par_val('diffusion', iVol);
+    if ~isempty(a), s.bvec_original = a(:, ax_order); end
 end
 
 R(:,4) = R * [-([s.Columns s.Rows nSL]-1)/2 1]'; % vol center to corner of 1st
@@ -975,11 +986,11 @@ foo = afni_key('BRICK_TYPES');
 if any(diff(foo)~=0), err = 'Inconsistent DataType'; s = []; return; end
 foo = foo(1);
 if foo == 0
-    s.BitsAllocated =  8; s.PixelData.Format = '*uint8';
+    bpp =  8; s.PixelData.Format = '*uint8';
 elseif foo == 1
-    s.BitsAllocated = 16; s.PixelData.Format = '*int16';
+    bpp = 16; s.PixelData.Format = '*int16';
 elseif foo == 3
-    s.BitsAllocated = 32; s.PixelData.Format = '*single';
+    bpp = 32; s.PixelData.Format = '*single';
 else
     error('Unsupported BRICK_TYPES: %g', foo);
 end
@@ -1025,10 +1036,10 @@ R = reshape(R, [4 3])';
 s.ImagePositionPatient = R(:,4); % afni_key('ORIGIN') can be wrong
 s.LastFile.ImagePositionPatient = R * [0 0 dim(3)-1 1]'; % last slice
 R = R(1:3, 1:3);
-R = R ./ (ones(3,1) * sqrt(sum(R.^2)));
+R = bsxfun(@rdivide, R, sqrt(sum(R.^2)));
 s.ImageOrientationPatient = R(1:6)';
 foo = afni_key('DELTA');
-s.PixelSpacing = abs(foo(1:2));
+s.PixelSpacing = abs(foo([2 1]));
 % s.SpacingBetweenSlices = foo(3);
 s.SliceThickness = abs(foo(3));
 foo = afni_key('BRICK_STATS');
@@ -1055,7 +1066,7 @@ s.NumberOfTemporalPositions = dim(4);
 s.Manufacturer = '';
 s.Filename = strrep(fname, '.HEAD', '.BRIK');
 s.PixelData.Start = 0; % make it work for dicm_img.m
-s.PixelData.Bytes = prod(dim(1:4)) * s.BitsAllocated / 8;
+s.PixelData.Bytes = prod(dim(1:4)) * bpp / 8;
 
     % subfunction: return value specified by key in afni header str
     function val = afni_key(key)
@@ -1147,7 +1158,7 @@ pos = [bv.Slice1CenterX bv.Slice1CenterY bv.Slice1CenterZ
 
 if strcmpi(fType, 'vmr')
     s.SpacingBetweenSlices = s.SliceThickness + bv.GapThickness;
-    s.PixelSpacing = [bv.VoxResX bv.VoxResY]';
+    s.PixelSpacing = [bv.VoxResX bv.VoxResY]'; % order correct?
     if ~isempty(bv.VMRData16)
         nSL = bv.DimZ;
         s.PixelData = bv.VMRData16; % no padded zeros
@@ -1171,7 +1182,7 @@ if strcmpi(fType, 'vmr')
     s.MRAcquisitionType = '3D'; % for dicm2nii to re-orient
 elseif strcmpi(fType, 'fmr') || strcmpi(fType, 'dmr')
     s.SpacingBetweenSlices = s.SliceThickness + bv.SliceGap;
-    s.PixelSpacing = [bv.InplaneResolutionX bv.InplaneResolutionY]';
+    s.PixelSpacing = [bv.InplaneResolutionX bv.InplaneResolutionY]'; % order?
     nSL = bv.NrOfSlices;
     s.LocationsInAcquisition = nSL;
     s.NumberOfTemporalPositions = bv.NrOfVolumes;
@@ -1240,20 +1251,12 @@ else
     return;
 end
 
-pos = pos - R(:,1:2) * diag(s.PixelSpacing) * [s.Columns s.Rows]'/2 * [1 1];
+pos = pos - R(:,1:2) * diag(s.PixelSpacing([2 1])) * [s.Columns s.Rows]'/2 * [1 1];
 s.ImagePositionPatient = pos(:,1);
 s.LastFile.ImagePositionPatient = pos(:,2);
 
 % Following make dicm2nii happy
 s.SeriesInstanceUID = sprintf('%s_%03x', datestr(now, 'yymmddHHMMSSfff'), randi(999));
-c = class(s.PixelData);
-if strcmp(c, 'double') %#ok
-    s.BitsAllocated = 64;
-elseif strcmp(c, 'single') %#ok
-    s.BitsAllocated = 32;
-else
-    s.BitsAllocated = str2double(c(isstrprop(c, 'digit')));
-end
 end
 
 %% subfunction: read Freesurfer mgh or mgz file, return dicm info dicm_hdr.
@@ -1289,7 +1292,7 @@ if have_ras % 3+9+3=15 single
     c = fread(fid, 3, 'single'); % center xyz
     
     R(1:2,:) = -R(1:2,:); c(1:2) = -c(1:2); % RAS to dicom LPS
-    s.PixelSpacing = pixdim(1:2);
+    s.PixelSpacing = pixdim([2 1]);
     s.SliceThickness = pixdim(3);
     s.ImageOrientationPatient = R(1:6)';
     R = R * diag(pixdim);
@@ -1300,13 +1303,13 @@ else
 end
 
 switch typ
-    case 0, bpp = 1; fmt = 'uint8';     % MRI_UCHAR
-    case 1, bpp = 4; fmt = 'int32';     % MRI_INT
-    case 2, bpp = 4; fmt = 'int32';     % MRI_LONG
-    case 3, bpp = 4; fmt = 'single';    % MRI_FLOAT
-    case 4, bpp = 2; fmt = 'int16';     % MRI_SHORT
-%     case 5, bpp = 1; fmt = 'uint8';     % MRI_BITMAP *3?
-%     case 6, bpp = 1; fmt = 'uint8';     % MRI_TENSOR *5?
+    case 0, fmt = 'uint8';     % MRI_UCHAR
+    case 1, fmt = 'int32';     % MRI_INT
+    case 2, fmt = 'int32';     % MRI_LONG
+    case 3, fmt = 'single';    % MRI_FLOAT
+    case 4, fmt = 'int16';     % MRI_SHORT
+%     case 5, fmt = 'uint8';     % MRI_BITMAP *3?
+%     case 6, fmt = 'uint8';     % MRI_TENSOR *5?
     otherwise 
         err = sprintf('Unknown datatype: %s', fname); 
         s = []; return;
@@ -1318,7 +1321,6 @@ if numel(img) ~= nv
     err = ['Not enough data in file: ' fname];
     s = []; return;
 end
-s.BitsAllocated = bpp * 8; % for dicm_img
 
 flds = {'RepetitionTime' 'FlipAngle' 'EchoTime' 'InversionTime'};
 parms4 = fread(fid, 4, 'single');
@@ -1479,7 +1481,7 @@ if iPhase == (iOri==1)+1, a = 'ROW'; else, a = 'COL'; end
 s.InPlanePhaseEncodingDirection = a;
 
 s.ImageOrientationPatient = R(1:6)';
-R = R * diag([s.PixelSpacing; s.SpacingBetweenSlices; 1]);
+R = R * diag([s.PixelSpacing([2 1]); s.SpacingBetweenSlices; 1]);
 R(:,4) = [xml_attr(ch1, 'Off Center RL', 1)
           xml_attr(ch1, 'Off Center AP', 1)
           xml_attr(ch1, 'Off Center FH', 1)]; % vol center for now  

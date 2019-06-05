@@ -1,0 +1,1 @@
+HCP842_tractography FreeSurferDKT FreeSurferSeg HCP-MMP AAL2 ATAG_basal_ganglia Cerebellum-SUIT

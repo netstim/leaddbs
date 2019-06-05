@@ -141,20 +141,20 @@ for peer=1:length(peerfolders)
         delete(ea_niigz([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'.nii'])); % we only need the warp
         delete([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'InverseComposite.h5']); % we dont need the inverse warp
 
-    % Now export composite transform from MNI -> Peer -> Subject
+        % Now export composite transform from MNI -> Peer -> Subject
 
+        antsdir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
         if ispc
-            sufx='.exe';
+            applyTransforms = ea_path_helper([antsdir, 'antsApplyTransforms.exe']);
         else
-            sufx=computer('arch');
+            applyTransforms = [antsdir, 'antsApplyTransforms.', computer('arch')];
         end
 
-        antsApply=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep,'antsApplyTransforms.',sufx];
         prenii=ea_niigz([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
-        icmd=[antsApply,' -r ',ea_path_helper(prenii),...
-            ' -t ',ea_path_helper([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5']),...
-            ' -t ',ea_path_helper([peerfolders{peer},filesep,'glanatInverseComposite.h5']),...
-            ' -o [',ea_path_helper([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz']),',1]'];
+        icmd=[applyTransforms,' -r ',ea_path_helper(prenii),...
+              ' -t ',ea_path_helper([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'Composite.h5']),...
+              ' -t ',ea_path_helper([peerfolders{peer},filesep,'glanatInverseComposite.h5']),...
+              ' -o [',ea_path_helper([subdirec,'MAGeT',filesep,'warpreceives',filesep,poptions.patientname,'2sub.nii.gz']),',1]'];
         if ~ispc
             system(['bash -c "', icmd, '"']);
         else
@@ -272,8 +272,7 @@ else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
 
-
-cmd=[applyTransforms];
+cmd = applyTransforms;
 refim=[ea_space(options),options.primarytemplate,'.nii'];
 % add transforms:
 for t=1:length(transforms)
@@ -282,12 +281,10 @@ for t=1:length(transforms)
     tr=[' -r ',refim,...
         ' -t [',ea_path_helper([pth1,filesep,fn1,ext1]),',0]',...
         ' -t [',ea_path_helper([pth2,filesep,fn2,ext2]),',0]'];
-    cmd=[cmd,tr];
+    cmd = [cmd,tr];
 end
 
 % add output:
-cmd=[cmd,' -o [compositeDisplacementField.h5,1]'];
+cmd=[cmd, ' -o [compositeDisplacementField.h5,1]'];
 
 system(cmd)
-
-

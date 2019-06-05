@@ -5,8 +5,7 @@ if nargin < 2
     margin = 5;	% add margin to the calculated bounding box, unit in voxel
 end
 
-nii = load_untouch_nii(image);
-img = uint8(nii.img);
+img = uint8(spm_read_vols(spm_vol(image)));
 
 th = ea_otsuthresh(img);
 

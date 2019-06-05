@@ -57,7 +57,7 @@ directory=[options.root,options.patientname,filesep];
 
 % 'new segment' options.prefs.prenii_unnormalized
 if ~exist([directory,'trackingmask.nii'],'file');
-ea_gentrackingmask(options,0)
+    ea_gentrackingmask(options,0)
 end
 
 
@@ -87,9 +87,12 @@ matlabbatch{1}.dtijobs.tracking.GTtrack_accum.temp = 0.1;
 spm_jobman('run',{matlabbatch});
 clear matlabbatch;
 
-
 % ftr=fiberGT_tool('createEFTR',10^7,10,0.1);
 % ftrstruct_write(ftr,[directory,options.prefs.FTR_unnormalized]);
+
+%% export .trk copy for trackvis visualization
+ea_b0ftr2trk([directory,options.prefs.FTR_unnormalized],[directory,options.prefs.b0]); % export unnormalized ftr to .trk
+disp('Done.');
 
 %% add methods dump:
 cits={
@@ -98,17 +101,3 @@ cits={
     };
 ea_methods(options,['A whole-brain fiber-set was estimated based using the Gibbs'' tracking approach (Reisert 2011) using standard parameters.',...
     ' This was done within a white-matter mask that was estimated on the anatomical scan using the Unified Segmentation approach (Ashburner 2005) as implemented in ',spm('ver'),' and linearly co-registered to the b0-weighted series.'],cits);
-
-
-
-%% export .trk copy for trackvis visualization
-dnii=ea_load_nii([directory,options.prefs.b0]);
-niisize=size(dnii.img); % get dimensions of reference template.
-specs.origin=[0,0,0];
-specs.dim=niisize;
-specs.affine=dnii.mat;
-
-[~,ftrfname]=fileparts(options.prefs.FTR_unnormalized);
-ea_ftr2trk(ftrfname,directory,specs); % export normalized ftr to .trk
-disp('Done.');
-lead dbs

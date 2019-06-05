@@ -34,7 +34,7 @@ end
 
 resultfig=figure('name', [options.patientname,': Electrode-Scene'],...
     'color', 'k', 'numbertitle', 'off',...
-    'CloseRequestFcn', @closesattelites, 'visible', options.d3.verbose,...
+    'CloseRequestFcn', @closesatellites, 'visible', options.d3.verbose,...
     'KeyPressFcn', @ea_keypress, 'KeyReleaseFcn', @ea_keyrelease);
 setappdata(resultfig,'options',options);
 set(resultfig,'toolbar','none');
@@ -330,7 +330,7 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
 if options.d3.writeatlases
     atlases = ea_showatlas(resultfig,elstruct,options);
 
-    if ~strcmp(options.d3.verbose,'off')
+    if ~strcmp(options.d3.verbose,'off') && ~atlases.discfibersonly
         ea_openatlascontrol([],[],atlases,resultfig,options);
     end
 
@@ -382,27 +382,27 @@ end
 %% End of patient's part.
 
 % Initialize a draggable lightbulb
+set(0,'CurrentFigure',resultfig);
 hold on
 ea_show_light(resultfig,1);
 % set(lightbulb, 'Visible', 'off');
 
 lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb'),...
-    'TooltipString','Lightbulb',...
+    'TooltipString','Camera Lightbulb',...
     'OnCallback',{@objvisible,getappdata(resultfig,'cam_lamp')},...
     'OffCallback',{@objinvisible,getappdata(resultfig,'cam_lamp')},'State','on');
 clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb'),...
-    'TooltipString','Lightbulb',...
+    'TooltipString','Ceiling Lightbulb',...
     'OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},...
     'OffCallback',{@objinvisible,getappdata(resultfig,'ceiling_lamp')},'State','on');
 llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb'),...
-    'TooltipString','Lightbulb',...
+    'TooltipString','Left Lightbulb',...
     'OnCallback',{@objvisible,getappdata(resultfig,'left_lamp')},...
     'OffCallback',{@objinvisible,getappdata(resultfig,'left_lamp')},'State','on');
 rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb'),...
-    'TooltipString','Lightbulb',...
+    'TooltipString','Right Lightbulb',...
     'OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},...
     'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
-
 
 % Initialize HD-Export button
 dumpscreenshotbutton=uipushtool(ht,'CData',ea_get_icn('dump'),...
@@ -415,7 +415,6 @@ dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth'),...
     'ClickedCallback',{@ea_export_depth_of_field,resultfig});
 
 % Initialize Video-Export button
-
 videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video'),...
     'TooltipString','Save video','ClickedCallback',{@export_video,options});
 
@@ -432,6 +431,14 @@ end
 %     'TooltipString','Export to Server',...
 %     'ClickedCallback',{@ea_export_server,options});
 
+% add default view buttons
+uipushtool(ht, 'CData',ea_get_icn('defaultviewsave'),...
+    'TooltipString', 'Save current view as default',...
+    'ClickedCallback',@save_currentview_callback);
+uipushtool(ht, 'CData',ea_get_icn('defaultviewset'),...
+    'TooltipString', 'Display default view',...
+    'ClickedCallback',@set_defaultview_callback);
+
 hold off
 
 set(0,'CurrentFigure',resultfig);
@@ -444,7 +451,7 @@ axis vis3d
 axis equal
 set(resultfig,'Name',figtitle);
 set(0,'CurrentFigure',resultfig);
-view(142,13.6)
+
 try
     set(gca,'cameraviewanglemode','manual');
 end
@@ -454,6 +461,17 @@ set(gca,'clipping','off');
 if ~strcmp(options.d3.verbose,'off')
     opensliceviewer([],[],resultfig,options);
 end
+
+try
+    prefs = ea_prefs;
+    v = prefs.machine.view;
+    togglestates = prefs.machine.togglestates;
+    %ea_defaultview_transition(v,togglestates);
+    ea_defaultview(v,togglestates);
+catch
+    view(142,13.6)
+end
+
 if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
     try
         % store json in figure file
@@ -464,9 +482,10 @@ if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for later
         ea_export_server([],[],options);
     end
 end
+
 setappdata(resultfig, 'options', options);
 setappdata(resultfig,'elstruct',elstruct);
-ea_figmenu(resultfig,'add')
+ea_figmenu(resultfig,'add');
 
 
 function opensliceviewer(hobj,ev,resultfig,options)
@@ -496,53 +515,29 @@ setappdata(resultfig,'awin',awin);
 try WinOnTop(awin,true); end
 
 
-function closesattelites(src,evnt)
-stimwin=getappdata(gcf,'stimwin');
-try
-    close(stimwin)
-end
-
-awin=getappdata(gcf,'awin');
-try
-    close(awin)
-end
-
-aswin=getappdata(gcf,'aswin');
-try
-
-    close(aswin)
-end
-conwin=getappdata(gcf,'conwin');
-try
-    close(conwin)
-end
-
-mercontrolfig = getappdata(gcf, 'mercontrolfig');
-try
-    close(mercontrolfig)
-end
-
-trajcontrolfig=getappdata(gcf,'trajcontrolfig');
-try
-    close(trajcontrolfig)
-end
-
-cbfig=getappdata(gcf,'cbfig');
-try
-    close(cbfig)
-end
-
-discfiberscontrol=getappdata(gcf,'discfiberscontrol');
-try
-    close(discfiberscontrol)
-end
-
+function closesatellites(src,evnt)
+% Close all valid satellite windows
+structfun(@(f) isa(f, 'matlab.ui.Figure') && isvalid(f) && close(f), getappdata(gcf));
 delete(gcf)
 
 
-function export_video(hobj,ev,options)
+% default view buttons callback
+function save_currentview_callback(source,eventdata)
+% call ea_defaultview so current view is saved
+ea_defaultview()
 
-%% Set up recording parameters (optional), and record
+
+function set_defaultview_callback(source,eventdata)
+% get stored default view preferences and call ea_defaultview
+prefs = ea_prefs;
+v = prefs.machine.view;
+togglestates = prefs.machine.togglestates;
+%ea_defaultview_transition(v,togglestates);
+ea_defaultview(v,togglestates);
+
+
+function export_video(hobj,ev,options)
+% Set up recording parameters (optional), and record
 [FileName,PathName] = uiputfile('LEAD_Scene.mp4','Save file name for video');
 ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.video.opts);
 

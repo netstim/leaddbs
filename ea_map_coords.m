@@ -128,16 +128,16 @@ end
 % srcvx to/from srcmm only
 if nargin == 2
     if nargout == 1
-        XYZ_dest_mm = spm_get_space(src) * XYZ_src_vx;
+        XYZ_dest_mm = ea_get_affine(src) * XYZ_src_vx;
     elseif nargout == 2
         % if input coords are actually in world space, then output the
         % voxel space
         XYZ_dest_mm = varargin{1};
         dest = src;
-        XYZ_dest_vx = spm_get_space(dest) \ XYZ_dest_mm;
-        XYZ_dest_vx=XYZ_dest_vx(1:3,:);
+        XYZ_dest_vx = ea_get_affine(dest) \ XYZ_dest_mm;
+        XYZ_dest_vx = XYZ_dest_vx(1:3,:);
     end
-    XYZ_dest_mm=XYZ_dest_mm(1:3,:);
+    XYZ_dest_mm = XYZ_dest_mm(1:3,:);
     transform = []; % finish mapping, set to empty
 end
 
@@ -151,7 +151,7 @@ if ~isempty(transform)
             XYZ_dest_mm = transform * XYZ_src_vx;
 
         elseif size(transform,1) == 1 % 1*N return value from spm_coreg(dest, src) suppplied
-            XYZ_dest_mm = spm_matrix(transform(:)')\spm_get_space(src)*XYZ_src_vx;
+            XYZ_dest_mm = spm_matrix(transform(:)')\ea_get_affine(src)*XYZ_src_vx;
 
         else
             error('Improper or unsuported transform specified!');
@@ -188,7 +188,7 @@ if ~isempty(transform)
                 transform = load(transform);
                 varname = fieldnames(transform);
                 transform = transform.(varname{1});
-                XYZ_dest_mm = spm_matrix(transform(:)')\spm_get_space(src)*XYZ_src_vx;
+                XYZ_dest_mm = spm_matrix(transform(:)')\ea_get_affine(src)*XYZ_src_vx;
 
             case {'SPM'} % Registration done by SPM (ea_spm_coreg)
                 % fuzzy match, transform can be specified as XX2XX_spm.mat
@@ -235,7 +235,7 @@ if ~isempty(transform)
                 end
 
                 % vox to mm, ANTs takes mm coords as input
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
 
                 % RAS to LPS, ANTs (ITK) use LPS coords
                 XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
@@ -268,9 +268,8 @@ if ~isempty(transform)
                 match = dir([transform, '_flirt*.mat']);
                 transform = [directory, filesep, match(end).name];
 
-                % vox to mm, use img2imgcoord to do mm coords
-                % transformation
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                % vox to mm, img2imgcoord takes mm coords as input
+                XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
@@ -279,14 +278,14 @@ if ~isempty(transform)
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
-            otherwise % atual FALLBACK
+            otherwise % actual FALLBACK
                 % If no transformmethod is supplied, do a just-in-time
                 % spm_coreg here as fallback, since linear transformation
                 % is not computational expensive anyway, the transformation
                 % will be saved as {$src}2{$dest}.mat
                 fprintf('\nTransformation method not found!\nFallback to spm_coreg...\n');
                 x = spm_coreg(dest, src);
-                XYZ_dest_mm = spm_matrix(x(:)')\spm_get_space(src)*XYZ_src_vx;
+                XYZ_dest_mm = spm_matrix(x(:)')\ea_get_affine(src)*XYZ_src_vx;
 
                 directory = fileparts(src);
                 if isempty(directory)
@@ -315,15 +314,14 @@ if ~isempty(transform)
         switch transformmethod
 
             case ea_getantsnormfuns % ANTs (ea_ants_nolinear) used in LEAD
-                if ~isempty(strfind(transform, 'y_ea_inv_normparams.nii'))
+                if contains(transform, 'y_ea_inv_normparams.nii')
                     useinverse = 1;
                 else
                     useinverse = 0;
                 end
 
                 % vox to mm, ANTs takes mm coords as input
-                V=ea_open_vol(src); % .gz support, dont use spm_get_space here.
-                XYZ_src_mm = V.mat*XYZ_src_vx;
+                XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
 
                 % RAS to LPS, ANTs (ITK) use LPS coords
                 XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
@@ -344,15 +342,14 @@ if ~isempty(transform)
                 % if 'y_ea_inv_normparams.nii' is specified, it means
                 % mapping from src coords to dest coords, i.e., NOT the
                 % inverse mapping (from dest coords to src coords).
-                if ~isempty(strfind(transform, 'y_ea_inv_normparams.nii'))
+                if contains(transform, 'y_ea_inv_normparams.nii')
                     inversemap = 0;
                 else
                     inversemap = 1;
                 end
 
-                % vox to mm, use img2imgcoord to do mm coords
-                % transformation
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                % vox to mm, img2imgcoord takes mm coords as input
+                XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
@@ -400,7 +397,7 @@ if ~isempty(transform)
                 end
 
                 % vox to mm, ANTs takes mm coords as input
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
 
                 % RAS to LPS, ANTs (ITK) use LPS coords
                 XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
@@ -418,9 +415,8 @@ if ~isempty(transform)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
             case {'FSL', 'FNIRT'} % FSL (ea_fnirt) used
-                % vox to mm, use img2imgcoord to do mm coords
-                % transformation
-                XYZ_src_mm = spm_get_space(src)*XYZ_src_vx;
+                % vox to mm, img2imgcoord takes mm coords as input
+                XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
@@ -440,7 +436,7 @@ if ~isempty(transform)
     % Optional output from dest vx coords
     if nargout == 2
         if nargin >= 4 % dest image specified
-            XYZ_dest_vx = spm_get_space(dest) \ XYZ_dest_mm;
+            XYZ_dest_vx = ea_get_affine(dest) \ XYZ_dest_mm;
 
         elseif ~isempty(regexp(transform, 'sn\.mat$', 'once')) % transform is SPM DCT file
             sn = load(transform, 'VF');
@@ -504,5 +500,3 @@ dest_mm = [spm_sample_vol(deform(1,:),src_vx(1,:),src_vx(2,:),src_vx(3,:),1);...
 if size(src_vx,1) == 4
     dest_mm = [dest_mm; src_vx(4,:)];
 end
-
-

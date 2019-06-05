@@ -34,12 +34,12 @@ for pt=[0,allpts] % iterate through patients, leaving out one each time. In firs
     
     
     %% 2. now compare that R-map with the left-out patient's connectivity
-    
-    thisPatConn=ea_load_nii(patConnectivityFiles{pt});
-    thisRmap=ea_load_nii(['Rmaps',filesep,'R_',sprintf('%02.0f',pt),'.nii']);
-
-    RegressorHat(pt)=corr(thisPatConn.img(ea_getmask(usemask),thisRmap.img(ea_getmask(usemask))),'rows','pairwise','type',corrtype); % estimate of how similar this patient's connectivity is to the "optimal" connectivity profile denoted by the R-map (that is based on all patients except this particular one).
-    
+    if pt>0
+        thisPatConn=ea_load_nii(patConnectivityFiles{pt});
+        thisRmap=ea_load_nii(['Rmaps',filesep,'R_',sprintf('%02.0f',pt),'.nii']);
+        
+        RegressorHat(pt)=corr(thisPatConn.img(ea_getmask(usemask),thisRmap.img(ea_getmask(usemask))),'rows','pairwise','type',corrtype); % estimate of how similar this patient's connectivity is to the "optimal" connectivity profile denoted by the R-map (that is based on all patients except this particular one).
+    end
 end
 
 %% 3. show correlation between similarities to "optimal" connectivity and empirical improvement

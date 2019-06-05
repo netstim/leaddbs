@@ -15,7 +15,7 @@ for i=1:numel(object)
         delete(object{i});
     elseif exist(object{i}, 'dir') == 7
         rmdir(object{i},'s');
-    elseif ~isempty(strfind(object{i}, '*')) && ~isempty(dir(object{i}))
+    elseif contains(object{i}, '*') && ~isempty(dir(object{i}))
         contents = dir(object{i});
         for c=1:length(contents)
             fd = [contents(c).folder, filesep, contents(c).name];

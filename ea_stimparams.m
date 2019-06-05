@@ -1688,7 +1688,7 @@ else
         end
         setappdata(resultfig,'stimparams',stimparams(1,:));
         setappdata(resultfig,'curS',S(1))
-        options.writeoutstats = 0;
+        options.writeoutstats = 1;
         ea_showfibres_volume(resultfig,options);
     else
         disp('VAT, cannot be visualized please recalculate')

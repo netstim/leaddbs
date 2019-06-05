@@ -152,9 +152,6 @@ try set(handles.mirrorsides,'Value',M.ui.mirrorsides); end
 try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
 
-connectomenames=get(handles.fiberspopup,'String');
-try    set(handles.fiberspopup,'Value',ismember(M.ui.connectomename,connectomenames));  end
-
 if ~isfield(M.ui,'atlassetpopup')
     M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
 end
@@ -170,6 +167,9 @@ if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
         try set(handles.fiberspopup,'Value',length(fiberspopup)); end
     else
         try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
+    end
+    try
+    M.ui.connectomename = fiberspopup{M.ui.fiberspopup};
     end
 end
 
@@ -224,6 +224,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             try
                 [options.root,options.patientname]=fileparts(M.patient.list{pt});
                 options.root=[options.root,filesep];
+                options = ea_resolve_elspec(options);
                 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
                     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
 

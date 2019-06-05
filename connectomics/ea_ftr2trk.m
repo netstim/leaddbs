@@ -1,296 +1,105 @@
-function ea_ftr2trk(ftrfilename,directory,specs)
+function ea_ftr2trk(ftrfile, specs)
 % export FTR matrix to TrackVis trk format
+%
+% specs can also be the path of the nifti file which defines the space.
 
-if directory(end) ~= filesep
-    directory = [directory, filesep];
+[directory, ftrname, ext] = fileparts(ftrfile);
+if isempty(directory)
+    directory = '.';
 end
 
-if ischar(ftrfilename)
-    disp('Loading FTR-File...');
-    [fibs,idx,voxmm,mat]=ea_loadfibertracts([directory,ftrfilename,'.mat']);
-else % direct ftr import
-    ea_error('Direct FTR import not supported at present.');
-    fibs=ftrfilename{1};
-    ftrfilename{1}=[];
+if isempty(ext)
+    ftrfile = [ftrfile, '.mat'];
 end
 
-if ~exist('specs','var')
-    dnii=ea_load_nii([ea_space,'t1.nii']);
-    specs.origin=[0,0,0];
-    specs.dim=size(dnii.img);
-    specs.vox=dnii.voxsize;
-    specs.affine=dnii.mat;
+disp('Loading FTR-File...');
+[fibs, idx, voxmm] = ea_loadfibertracts(ftrfile);
+
+% Convert ONE-BASED indexing to ZERO-BASED indexing
+if strcmp(voxmm,'vox')
+    fibs(:,1:3) = fibs(:,1:3) - 1;
 end
 
 %% set header
-[header, ~]=ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
-if strcmp(voxmm,'vox')
-    if ~isempty(mat)
-        if isempty(specs.affine)
-            specs.affine=mat;
-        else
-            if ~isequal(mat,specs.affine)
-                ea_error('Affine matrix of Fibertracts and image do not match');
-            end
-        end
-    end
+header = ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
+
+if ~exist('specs','var') % Use MNI T1 as reference space by default.
+    disp('Header from MNI t1.nii ...');
+    nii = spm_vol([ea_space,'t1.nii']);
+    specs.origin = [0,0,0];
+    specs.dim = nii.dim;
+    specs.affine = ea_get_affine([ea_space,'t1.nii'], 0);
+    header.pad2 = ['RAS', char(0)];
+elseif isstruct(specs)
+    % Suppose that the affine matrix is from SPM
+    specs.affine(:,4) = specs.affine(:,4) + sum(specs.affine(:,1:3),2);
+    header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
+else % Use the specified nifti as reference space.
+    disp(['Header from ',specs,' ...']);
+    refimage = specs;
+    nii = spm_vol(refimage);
+    specs = struct;
+    specs.origin = [0,0,0];
+    specs.dim = nii.dim;
+    specs.affine = ea_get_affine(refimage, 0);
+    header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
 end
 
-% check if x-axis of the affine matrix is negative, flip it if so
-if det(specs.affine) < 0
-    specs.affine = diag([-1 1 1 1])*specs.affine;
-end
-specs = ea_aff2hdr(specs.affine, specs);
+specs = ea_aff2hdr(specs.affine, specs, 1);
 
-header.dim=specs.dim;
-header.voxel_size=specs.voxel_size;
-header.vox_to_ras = specs.affine;
-header.image_orientation_patient=specs.image_orientation_patient;
-header.origin=[0 0 0]; % as doc says, trackvis will always use 0 0 0 as origin.
+header.dim = specs.dim;
+header.voxel_size = specs.voxel_size;
+header.vox_to_ras  =  specs.vox_to_ras;
+header.image_orientation_patient = specs.image_orientation_patient;
+header.origin = [0 0 0]; % as doc says, trackvis will always use 0 0 0 as origin.
 
-header.n_scalars=0;
-header.scalar_name=char(repmat(' ',10,20));
-header.n_properties=0;
-header.property_name=char(repmat(' ',10,20));
-header.reserved=char(repmat(' ',444,1));
-header.invert_x=0;
-header.invert_y=0;
-header.invert_z=0;
-header.swap_xy=0;
-header.swap_yz=0;
-header.swap_zx=0;
-header.n_count=length(idx);% header.invert_x=1;
-header.version=2;
-header.hdr_size=1000;
+header.n_scalars = 0;
+header.scalar_name = char(repmat(' ',10,20));
+header.n_properties = 0;
+header.property_name = char(repmat(' ',10,20));
+header.reserved = char(repmat(' ',444,1));
+header.invert_x = 0;
+header.invert_y = 0;
+header.invert_z = 0;
+header.swap_xy = 0;
+header.swap_yz = 0;
+header.swap_zx = 0;
+header.n_count = length(idx);% header.invert_x = 1;
+header.version = 2;
+header.hdr_size = 1000;
 
 %% convert data
 disp('Constructing data...');
-tracks=struct('nPoints',nan,'matrix',nan);
-offset=1;
+tracks = struct('nPoints',nan,'matrix',nan);
+offset = 1;
 for track_number=1:length(idx)
-    tracks(1,track_number).nPoints=idx(track_number);
-    tracks(1,track_number).matrix=fibs(offset:offset+idx(track_number)-1,1:3);
-    offset=offset+idx(track_number);
+    tracks(1,track_number).nPoints = idx(track_number);
+    tracks(1,track_number).matrix = fibs(offset:offset+idx(track_number)-1,1:3);
+    offset = offset+idx(track_number);
 end
 
 if strcmp(voxmm,'mm') % have to retranspose to vox
     disp('mm to vox conversion...');
     for i=1:length(tracks)
-        tracks(i).matrix=[tracks(i).matrix,ones(size(tracks(i).matrix,1),1)]';
-        tracks(i).matrix=specs.affine\tracks(i).matrix;
-        tracks(i).matrix=tracks(i).matrix(1:3,:)';
+        tracks(i).matrix = [tracks(i).matrix,ones(size(tracks(i).matrix,1),1)]';
+        tracks(i).matrix = specs.affine\tracks(i).matrix;
+        tracks(i).matrix = tracks(i).matrix(1:3,:)';
     end
 end
 
 for i = 1:length(tracks)
     try
-        tracks(i).matrix=bsxfun(@times, tracks(i).matrix,header.voxel_size);
+        tracks(i).matrix = bsxfun(@times, tracks(i).matrix,header.voxel_size);
     catch
-        tracks(i).matrix=bsxfun(@times, tracks(i).matrix',header.voxel_size);
+        tracks(i).matrix = bsxfun(@times, tracks(i).matrix',header.voxel_size);
     end
 end
 
 %% write .trk file
 disp('Writing trk file...');
-if ischar(ftrfilename)
-    ea_trk_write(header,tracks,[directory,ftrfilename,'.trk']);
-else
-    ea_trk_write(header,tracks,[directory,ftrfilename{2},'.trk']);
-end
+ea_trk_write(header,tracks,[directory,filesep,ftrname,'.trk']);
 
 disp('Conversion finished.');
-
-
-function [header,tracks] = ea_trk_read(filePath)
-%TRK_READ - Load TrackVis .trk files
-%TrackVis displays and saves .trk files in LPS orientation. After import, this
-%function attempts to reorient the fibers to match the orientation of the
-%original volume data.
-%
-% Syntax: [header,tracks] = trk_read(filePath)
-%
-% Inputs:
-%    filePath - Full path to .trk file [char]
-%
-% Outputs:
-%    header - Header information from .trk file [struc]
-%    tracks - Track data structure array [1 x nTracks]
-%      nPoints - # of points in each streamline
-%      matrix  - XYZ coordinates and associated scalars [nPoints x 3+nScalars]
-%      props   - Properties of the whole tract (ex: length)
-%
-% Example:
-%    exDir           = '/path/to/along-tract-stats/example';
-%    subDir          = fullfile(exDir, 'subject1');
-%    trkPath         = fullfile(subDir, 'CST_L.trk');
-%    [header tracks] = trk_read(trkPath);
-%
-% Other m-files required: none
-% Subfunctions: get_header
-% MAT-files required: none
-%
-% See also: http://www.trackvis.org/docs/?subsect=fileformat
-%           http://github.com/johncolby/along-tract-stats/wiki/orientation
-
-% Author: John Colby (johncolby@ucla.edu)
-% UCLA Developmental Cognitive Neuroimaging Group (Sowell Lab)
-% Mar 2010
-
-% Parse in header
-fid    = fopen(filePath, 'r');
-header = get_header(fid);
-
-% Check for byte order
-if header.hdr_size~=1000
-    fclose(fid);
-    fid    = fopen(filePath, 'r', 'b'); % Big endian for old PPCs
-    header = get_header(fid);
-end
-
-if header.hdr_size~=1000, ea_error('FTR-Header length is wrong'), end
-
-% Check orientation
-[~, ix] = max(abs(header.image_orientation_patient(1:3)));
-[~, iy] = max(abs(header.image_orientation_patient(4:6)));
-iz = 1:3;
-iz([ix iy]) = [];
-
-% Parse in body
-tracks(header.n_count).nPoints = 0;
-
-for iTrk = 1:header.n_count
-    tracks(iTrk).nPoints = fread(fid, 1, 'int');
-    tracks(iTrk).matrix  = fread(fid, [3+header.n_scalars, tracks(iTrk).nPoints], 'float')';
-    if header.n_properties
-        tracks(iTrk).props = fread(fid, header.n_properties, 'float');
-    end
-
-    % Modify orientation of tracks (always LPS) to match orientation of volume
-    header.dim        = header.dim([ix iy iz]);
-    header.voxel_size = header.voxel_size([ix iy iz]);
-    coords = tracks(iTrk).matrix(:,1:3);
-    coords = coords(:,[ix iy iz]);
-    if header.image_orientation_patient(ix) < 0
-        coords(:,ix) = header.dim(ix)*header.voxel_size(ix) - coords(:,ix);
-    end
-    if header.image_orientation_patient(3+iy) < 0
-        coords(:,iy) = header.dim(iy)*header.voxel_size(iy) - coords(:,iy);
-    end
-    tracks(iTrk).matrix(:,1:3) = coords;
-end
-
-fclose(fid);
-
-
-function header = get_header(fid)
-
-header.id_string                 = fread(fid, 6, '*char')';
-header.dim                       = fread(fid, 3, 'short')';
-header.voxel_size                = fread(fid, 3, 'float')';
-header.origin                    = fread(fid, 3, 'float')';
-header.n_scalars                 = fread(fid, 1, 'short')';
-header.scalar_name               = fread(fid, [20,10], '*char')';
-header.n_properties              = fread(fid, 1, 'short')';
-header.property_name             = fread(fid, [20,10], '*char')';
-header.vox_to_ras                = fread(fid, [4,4], 'float')';
-header.reserved                  = fread(fid, 444, '*char');
-header.voxel_order               = fread(fid, 4, '*char')';
-header.pad2                      = fread(fid, 4, '*char')';
-header.image_orientation_patient = fread(fid, 6, 'float')';
-header.pad1                      = fread(fid, 2, '*char')';
-header.invert_x                  = fread(fid, 1, 'uchar');
-header.invert_y                  = fread(fid, 1, 'uchar');
-header.invert_z                  = fread(fid, 1, 'uchar');
-header.swap_xy                   = fread(fid, 1, 'uchar');
-header.swap_yz                   = fread(fid, 1, 'uchar');
-header.swap_zx                   = fread(fid, 1, 'uchar');
-header.n_count                   = fread(fid, 1, 'int')';
-header.version                   = fread(fid, 1, 'int')';
-header.hdr_size                  = fread(fid, 1, 'int')';
-
-
-function ea_trk_write(header,tracks,savePath)
-%TRK_WRITE - Write TrackVis .trk files
-%
-% Syntax: trk_write(header,tracks,savePath)
-%
-% Inputs:
-%    header   - Header information for .trk file [struc]
-%    tracks   - Track data struc array [1 x nTracks]
-%      nPoints  - # of points in each track
-%      matrix   - XYZ coordinates and associated scalars [nPoints x 3+nScalars]
-%      props    - Properties of the whole tract
-%    savePath - Path where .trk file will be saved [char]
-%
-% Output files:
-%    Saves .trk file to disk at location given by 'savePath'.
-%
-% Other m-files required: none
-% Subfunctions: none
-% MAT-files required: none
-%
-% See also: TRK_READ
-
-% Author: John Colby (johncolby@ucla.edu)
-% UCLA Developmental Cognitive Neuroimaging Group (Sowell Lab)
-% Apr 2010
-
-fid = fopen(savePath, 'w');
-
-% Write header
-fwrite(fid, header.id_string, '*char');
-fwrite(fid, header.dim, 'short');
-fwrite(fid, header.voxel_size, 'float');
-fwrite(fid, header.origin, 'float');
-fwrite(fid, header.n_scalars , 'short');
-fwrite(fid, header.scalar_name', '*char');
-fwrite(fid, header.n_properties, 'short');
-fwrite(fid, header.property_name', '*char');
-fwrite(fid, header.vox_to_ras', 'float');
-fwrite(fid, header.reserved, '*char');
-fwrite(fid, header.voxel_order, '*char');
-fwrite(fid, header.pad2, '*char');
-fwrite(fid, header.image_orientation_patient, 'float');
-fwrite(fid, header.pad1, '*char');
-fwrite(fid, header.invert_x, 'uchar');
-fwrite(fid, header.invert_y, 'uchar');
-fwrite(fid, header.invert_z, 'uchar');
-fwrite(fid, header.swap_xy, 'uchar');
-fwrite(fid, header.swap_yz, 'uchar');
-fwrite(fid, header.swap_zx, 'uchar');
-fwrite(fid, header.n_count, 'int');
-fwrite(fid, header.version, 'int');
-fwrite(fid, header.hdr_size, 'int');
-
-% Check orientation
-[tmp ix] = max(abs(header.image_orientation_patient(1:3)));
-[tmp iy] = max(abs(header.image_orientation_patient(4:6)));
-iz = 1:3;
-iz([ix iy]) = [];
-
-% Write body
-for iTrk = 1:header.n_count
-    % Modify orientation back to LPS for display in TrackVis
-    header.dim        = header.dim([ix iy iz]);
-    header.voxel_size = header.voxel_size([ix iy iz]);
-    coords = tracks(iTrk).matrix(:,1:3);
-    coords = coords(:,[ix iy iz]);
-    if header.image_orientation_patient(ix) < 0
-        coords(:,ix) = header.dim(ix)*header.voxel_size(ix) - coords(:,ix);
-    end
-    if header.image_orientation_patient(3+iy) < 0
-        coords(:,iy) = header.dim(iy)*header.voxel_size(iy) - coords(:,iy);
-    end
-    tracks(iTrk).matrix(:,1:3) = coords;
-
-    fwrite(fid, tracks(iTrk).nPoints, 'int');
-    fwrite(fid, tracks(iTrk).matrix', 'float');
-    if header.n_properties
-        fwrite(fid, tracks(iTrk).props, 'float');
-    end
-end
-
-fclose(fid);
 
 
 function trk_hdr = ea_aff2hdr(affine, trk_hdr, pos_vox, set_order)
@@ -334,11 +143,23 @@ catch
 end
 
 if version == 2
-    trk_hdr.vox_to_ras = affine;
+    vox_to_ras = affine;
+    % Check orientation
+    % Adapt the affine matrix if it's not in RAS orientation.
+    if vox_to_ras(1) < 0
+        vox_to_ras(1,:) = vox_to_ras(1,:) * -1;
+    end
+    if vox_to_ras(6) < 0
+        vox_to_ras(2,:) = vox_to_ras(2,:) * -1;
+    end
+    if vox_to_ras(11) < 0
+        vox_to_ras(3,:) = vox_to_ras(3,:) * -1;
+    end
+    trk_hdr.vox_to_ras = vox_to_ras;
 end
 
 if set_order
-    trk_hdr.voxel_order = aff2axcodes(affine);
+    trk_hdr.voxel_order = ea_aff2axcodes(affine);
 end
 
 % affine to go from DICOM LPS to MNI RAS space
@@ -369,17 +190,3 @@ assert(ea_allclose(R*R',eye(3)), 'non-orthogonal R matrix')
 trk_hdr.origin = trans;
 trk_hdr.voxel_size = zooms;
 trk_hdr.image_orientation_patient = reshape(R(:,1:2),1,[]);
-
-
-function close = ea_allclose(a, b, rtol, atol)
-% Determine if two arrays are element-wise equal within a tolerance.
-
-if nargin < 3
-    rtol = 1e-05;
-end
-if nargin < 4
-    atol = 1e-08;
-end
-
-close = all( abs(a(:)-b(:)) <= atol+rtol*abs(b(:)) );
-

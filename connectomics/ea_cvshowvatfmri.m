@@ -24,7 +24,7 @@ else
 end
 
 parcs=get(handles.labelpopup,'String');
-tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,ea_stripex(options.prefs.rest),'_tc']);
+tc=load([directory,'connectomics',filesep,parcs{get(handles.labelpopup,'Value')},filesep,ea_stripext(options.prefs.rest),'_tc']);
 fn=fieldnames(tc);
 tc=eval(['tc.',fn{1},';']);
 tc=[vat_tc,tc];

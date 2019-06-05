@@ -13,6 +13,8 @@ switch cmd
                  'Install development version of Lead'
                  '2009b Nonlinear Flip Transform'
                  '7T Cardiac Gated FLASH MRI (Backdrop visualization)'
+                 '7T Ex Vivo 100um Brain Atlas (Backdrop visualization)'
+                 'Macroscale Human Connectome Atlas (Yeh 2018)'
                  'Structural group connectome 20 subjects Gibbs-tracker (Horn 2013)'
                  'Structural group connectome 169 NKI subjects Gibbs-tracker (Horn 2016)'
                  'Structural group connectome 32 Adult Diffusion HCP subjects GQI (Horn 2017)'
@@ -23,6 +25,8 @@ switch cmd
                   'hotfix'
                   'nlinflip'
                   '7tcgflash'
+                  '7tev100um'
+                  'macroscalehc'
                   'groupconnectome2013'
                   'groupconnectome2016'
                   'groupconnectome2017'
@@ -67,7 +71,20 @@ switch cmd
             disp('2009b asym LR flip transform is installed.')
         end
     case '7tcgflash'
-        checkf=[ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'];
+        if exist([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'])
+            movefile([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'], ...
+                     [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat']);
+
+            fid = fopen([ea_space,'backdrops',filesep,'backdrops.txt'], 'r');
+            text = fread(fid, inf, '*char')';
+            fclose(fid);
+            text = strrep(text, '7T_Flash_Horn_2018.mat', '7T_Flash_Horn_2019.mat');
+            fid = fopen([ea_space,'backdrops',filesep,'backdrops.txt'], 'w');
+            fwrite(fid, text);
+            fclose(fid);
+        end
+
+        checkf=[ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
             success=~force;
@@ -80,14 +97,56 @@ switch cmd
 
         if ~exist(checkf,'file') || force
             ea_mkdir([ea_space,'backdrops']);
-            success=ea_downloadasset('7tcgflash',...
-                [ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.zip'],...
+            success=ea_downloadasset('7T Cardiac Gated Flash MRI',...
+                [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat'],...
                 '7tcgflash');
             fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt'],'a');
-            fprintf(fid,'%s %s\n','7T_Flash_Horn_2018.mat','7T_Cardiac_Gated_Flash_MRI_(Horn_2019)');
+            fprintf(fid,'%s %s\n','7T_Flash_Horn_2019.mat','7T_Cardiac_Gated_Flash_MRI_(Horn_2019)');
             fclose(fid);
         else
             disp('7T Cardiac Gated FLASH MRI (Backdrop visualization) is installed.')
+        end
+    case '7tev100um'
+        checkf=[ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.mat'];
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
+        if checkonly
+            success=~force;
+            return;
+        end
+        if force==-1
+            success=-1;
+            return;
+        end
+
+        if ~exist(checkf,'file') || force
+            ea_mkdir([ea_space,'backdrops']);
+            success=ea_downloadasset('7T Ex Vivo 100um Brain Atlas',...
+                [ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.mat'],...
+                '7tev100um');
+            fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt'],'a');
+            fprintf(fid,'%s %s\n','7T_100um_Edlow_2019.mat','7T_Ex_Vivo_100um_Brain_Atlas_(Edlow_2019)');
+            fclose(fid);
+        else
+            disp('7T Ex Vivo 100um Brain Atlas (Backdrop visualization) is installed.')
+        end
+    case 'macroscalehc'
+        checkf=[ea_space,'atlases',filesep,'Macroscale Human Connectome Atlas (Yeh 2018)',filesep,'atlas_index.mat'];
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
+        if checkonly
+            success=~force;
+            return;
+        end
+        if force==-1
+            success=-1;
+            return;
+        end
+
+        if ~exist(checkf,'file') || force
+            success=ea_downloadasset('Macroscale Human Connectome Atlas',...
+                [ea_space,'atlases',filesep,'Macroscale_Human_Connectome_Atlas_Yeh_2018.zip'],...
+                'macroscalehc');
+        else
+            disp('Macroscale Human Connectome Atlas is installed.')
         end
     case 'bigbrain'
         checkf=[ea_space,'bigbrain_2015_100um_bb.nii'];
@@ -106,7 +165,7 @@ switch cmd
                 [ea_space,'bigbrain_2015_100um_bb.nii.gz'],...
                 'bigbrain');
         else
-            %disp('BigBrain is installed.')
+            disp('BigBrain is installed.')
         end
     case 'groupconnectome2013'
         checkf=[ea_getconnectomebase('dmri'),'Groupconnectome (Horn 2013) full',filesep,'data.mat'];
@@ -121,11 +180,11 @@ switch cmd
         end
 
         if ~exist(checkf,'file') || force
-            success=ea_downloadasset('structural group connectome (Horn 2013)',...
+            success=ea_downloadasset('Structural Group Connectome (Horn 2013)',...
                 [ea_getconnectomebase('dmri'),'groupconnectome2013.zip'],...
                 'group2013');
         else
-            disp('Group Connectome (Horn 2013) is installed.')
+            disp('Structural Group Connectome (Horn 2013) is installed.')
         end
     case 'groupconnectome2016'
         checkf=[ea_getconnectomebase('dmri'),'Gibbsconnectome_169 (Horn 2016)',filesep,'data.mat'];
@@ -140,11 +199,11 @@ switch cmd
         end
 
         if ~exist(checkf,'file') || force
-            success=ea_downloadasset('structural group connectome (Horn 2016)',...
+            success=ea_downloadasset('Structural Group Connectome (Horn 2016)',...
                 [ea_getconnectomebase('dmri'),'groupconnectome2016.zip'],...
                 'group2016');
         else
-            disp('Group Connectome (Horn 2016) is installed.')
+            disp('Structural Group Connectome (Horn 2016) is installed.')
         end
     case 'groupconnectome2017'
         checkf=[ea_getconnectomebase('dmri'),'HCP_MGH_30fold_groupconnectome (Horn 2017)',filesep,'data.mat'];
@@ -159,11 +218,11 @@ switch cmd
         end
 
         if ~exist(checkf,'file') || force
-            success=ea_downloadasset('structural group connectome (Horn 2017)',...
+            success=ea_downloadasset('Structural Group Connectome (Horn 2017)',...
                 [ea_getconnectomebase('dmri'),'groupconnectome2017.zip'],...
                 'group2017');
         else
-            disp('Group Connectome (Horn 2017) is installed.')
+            disp('Structural Group Connectome (Horn 2017) is installed.')
         end
     case 'groupconnectome_ppmi2017'
         checkf=[ea_getconnectomebase('dmri'),'PPMI_90 (Ewert 2017)',filesep,'data.mat'];
@@ -178,11 +237,11 @@ switch cmd
         end
 
         if ~exist(checkf,'file') || force
-            success=ea_downloadasset('structural group connectome (Ewert 2017)',...
+            success=ea_downloadasset('Structural Group Connectome (Ewert 2017)',...
                 [ea_getconnectomebase('dmri'),'groupconnectome_ppmi2017.zip'],...
                 'group2017_ppmi');
         else
-            disp('Group Connectome (Ewert 2017) is installed.')
+            disp('Structural Group Connectome (Ewert 2017) is installed.')
         end
     case 'fgroupconnectome_ppmi2017'
         checkf=[ea_getconnectomebase('fmri'),'PPMI 74_15 (Horn 2017)',filesep,'dataset_info.mat'];
@@ -197,7 +256,7 @@ switch cmd
         end
 
         if ~exist(checkf,'file') || force
-            success=ea_downloadasset('functional group connectome (Horn 2017)',...
+            success=ea_downloadasset('Functional Group Connectome (Horn 2017)',...
                 [ea_getconnectomebase('fmri'),'fgroupconnectome_ppmi2017.zip'],...
                 'fgroup2017_ppmi');
         else
@@ -236,16 +295,16 @@ else
     end
 
     if success
-        disp(['Extracting ',assetname,'...'])
+        disp(['Installing ',assetname,'...'])
         [loc,~,ext] = fileparts(destination);
         if strcmp(ext,'.gz')
             gunzip(destination, loc);
+            ea_delete(destination);
         elseif strcmp(ext,'.zip')
             unzip(destination, loc);
+            ea_delete(destination);
         end
     end
-
-    ea_delete(destination);
 end
 
 

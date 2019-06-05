@@ -46,6 +46,6 @@ ea_coreg2images(options,[directory,'scrf',filesep,'movim.nii'],[directory,'scrf'
 %movefile([directory,'scrf',filesep,'movim.nii'],[directory,'scrf',filesep,'scrfmovim.nii']);
 movefile([directory,'scrf',filesep,'raw_movim.nii'],[directory,'scrf',filesep,'movim.nii']);
 
-movefile([directory,'scrf',filesep,'movim2',ea_stripex(options.prefs.prenii_unnormalized),'_ants1.mat'],[directory,'scrf',filesep,'scrf_instore.mat']);
-delete([directory,'scrf',filesep,ea_stripex(options.prefs.prenii_unnormalized),'2movim','_ants1.mat']);
+movefile([directory,'scrf',filesep,'movim2',ea_stripext(options.prefs.prenii_unnormalized),'_ants1.mat'],[directory,'scrf',filesep,'scrf_instore.mat']);
+delete([directory,'scrf',filesep,ea_stripext(options.prefs.prenii_unnormalized),'2movim','_ants1.mat']);
 ea_refreshscrf(options,handles,directory);

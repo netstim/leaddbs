@@ -31,3 +31,7 @@ lc.struc.ft.method=lc.struc.ft.method{get(handles.ftmethod,'Value')};
 lc.struc.ft.methodn=get(handles.ftmethod,'Value');
 lc.struc.ft.do=get(handles.perf_ft,'Value');
 lc.struc.ft.normalize=get(handles.normalize_fibers,'Value');
+
+if strcmp(get(handles.fiber_count,'Visible'), 'on')
+    lc.struc.ft.dsistudio.fiber_count = str2double(get(handles.fiber_count,'String'));
+end

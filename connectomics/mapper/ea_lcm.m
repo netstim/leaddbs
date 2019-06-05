@@ -15,7 +15,7 @@ if options.lcm.struc.do
     elseif strcmp(options.lcm.seeddef,'parcellation')
         options=ea_resolveparcseeds(options,'dMRI');
     end
-    
+
     ea_lcm_struc(options);
 end
 
@@ -34,7 +34,7 @@ if options.lcm.func.do
     elseif strcmp(options.lcm.seeddef,'parcellation')
         options=ea_resolveparcseeds(options,'fMRI');
     end
-    
+
     % check if patient specific connectome used:
     patientspecific=0;
     try
@@ -42,7 +42,7 @@ if options.lcm.func.do
             patientspecific=1;
         end
     end
-    
+
     if ~patientspecific
         ea_lcm_func(options);
     else % need to supply each patient on its own since each uses different connectome.
@@ -88,15 +88,15 @@ switch modality
             0,[],fullfile(tmp,[uuid,'.nii']),0);
         options.lcm.seeds={fullfile(tmp,[uuid,'.nii'])};
         options.lcm.odir=ea_getoutputfolder(options.lcm.seeds,options.lcm.func.connectome);
-        
+
     case 'dMRI'
         tmp=ea_getleadtempdir;
         uuid=ea_generate_uuid;
-        
+
         [pth,fn,ext]=fileparts(options.lcm.seeds{1});
         switch ext
             case {'.nii','.gz'}
-                parctxt=fullfile(pth,[ea_stripex(fn),'.txt']);
+                parctxt=fullfile(pth,[ea_stripext(fn),'.txt']);
             case '.txt'
                 options.lcm.seeds{1}=fullfile(pth,[fn,'.nii']);
                 parctxt=fullfile(pth,[fn,'.txt']);
@@ -112,7 +112,7 @@ switch modality
             gunzip(fullfile(tmp,[uuid,ext]));
             delete(fullfile(tmp,[uuid,ext]));
         end
-        
+
         parc=ea_load_nii(fullfile(tmp,[uuid,'.nii']));
         parc.img=round(parc.img);
         cnt=1;
@@ -129,7 +129,7 @@ end
 
 
 % % load in txt
-% fid=fopen(fullfile(fileparts(options.lcm.seeds{1}),[ea_stripex(ea_stripex(options.lcm.seeds{1})),'.txt']),'r');
+% fid=fopen(fullfile(fileparts(options.lcm.seeds{1}),[ea_stripext(ea_stripext(options.lcm.seeds{1})),'.txt']),'r');
 % A=textscan(fid,'%f %s\n');
 % idx=A{1};
 
@@ -141,7 +141,7 @@ suffices={'binary','efield','efield_gauss'};
 
 [~,dowhich]=ismember(options.prefs.lcm.vatseed,suffices);
 for suffix=dowhich
-    
+
     switch suffices{suffix}
         case 'binary'
             addstr='';
@@ -158,14 +158,14 @@ for suffix=dowhich
     else
         keepthisone=0;
     end
-    
+
     % prepare for dMRI
     switch modality
         case 'dMRI'
             seeds=cell(0);
             for pt=1:length(options.uivatdirs)
                 vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
-                
+
                 if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
                     cnt=1;
                     for side=1:2
@@ -175,7 +175,7 @@ for suffix=dowhich
                             case 2
                                 sidec='left';
                         end
-                        
+
                         if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                             copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                             warning('off');
@@ -186,9 +186,9 @@ for suffix=dowhich
                             cnt=cnt+1;
                         end
                     end
-                    
+
                     Cnii=nii(1);
-                    
+
                     for n=2:length(nii)
                         Cnii.img=Cnii.img+nii(n).img;
                     end
@@ -196,7 +196,7 @@ for suffix=dowhich
                     ea_write_nii(Cnii);
                     ea_crop_nii(Cnii.fname);
                     delete([vatdir,'tmp_*']);
-                    
+
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
                 end
@@ -206,12 +206,13 @@ for suffix=dowhich
             end
         case 'fMRI'
             % prepare for fMRI
-            if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file');
-                seeds=cell(0);
-                nativeprefix='';
-                for pt=1:length(options.uivatdirs)
-                    vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
-                    
+            seeds=cell(0);
+            nativeprefix='';
+            for pt=1:length(options.uivatdirs)
+                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
+
+                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file')
+
                     cnt=1;
                     for side=1:2
                         switch side
@@ -220,14 +221,14 @@ for suffix=dowhich
                             case 2
                                 sidec='left';
                         end
-                        
+
                         if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                             copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                             tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                             tnii.dt=[16,0];
                             ea_write_nii(tnii);
                             cname=options.lcm.func.connectome;
-                            
+
                             if ismember('>',cname)
                                 delim=strfind(cname,'>');
                                 subset=cname(delim+1:end);
@@ -251,9 +252,9 @@ for suffix=dowhich
                                 end
                             end
                             cnt=cnt+1;
-                            
+
                         end
-                        
+
                     end
                     Cnii=nii(1);
                     for n=2:length(nii)
@@ -262,7 +263,7 @@ for suffix=dowhich
                     Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                     ea_write_nii(Cnii);
                     delete([vatdir,'tmp_*']);
-                    
+
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
                 end
@@ -270,6 +271,7 @@ for suffix=dowhich
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end
             end
+
     end
 end
 
@@ -327,7 +329,7 @@ options.coregmr.method = coregmethod;
 coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
 fn=fieldnames(coregmethodsused);
 for field=1:length(fn)
-    if ~isempty(strfind(fn{field},refname))
+    if contains(fn{field},refname)
         disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
         options.coregmr.method=coregmethodsused.(fn{field});
         break

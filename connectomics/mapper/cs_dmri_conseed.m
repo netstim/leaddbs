@@ -322,18 +322,15 @@ C = reshape(N(j),size(A)) ;
 function ftr=track_seed_gqi(cfile,seedfile)
 
 basedir = [ea_getearoot, 'ext_libs',filesep,'dsi_studio',filesep];
-if ismac
-    dsistudio = [basedir,'mac',filesep, 'dsi_studio.app',filesep,'Contents',filesep,'MacOS',filesep,'dsi_studio'];
-elseif isunix
-    ea_libs_helper([basedir, 'linux']);
-    dsistudio = [basedir, 'linux',filesep,'dsi_studio'];
-elseif ispc
-    dsistudio = ea_path_helper([basedir, 'win',filesep,'dsi_studio.exe']);
+if ispc
+    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.exe']);
+else
+    DSISTUDIO = [basedir, 'dsi_studio.', computer('arch')];
 end
 
 [pth,fn]=fileparts(seedfile);
 
-cmd=[dsistudio,' --action=trk --source=',ea_path_helper(cfile),...
+cmd=[DSISTUDIO,' --action=trk --source=',ea_path_helper(cfile),...
     ' --method=0',...
     ' --seed=',ea_path_helper(seedfile),...
     ' --seed_count=10000',...

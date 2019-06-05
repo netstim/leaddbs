@@ -28,7 +28,7 @@ if options.lc.struc.compute_CM
         mkdir(expfolder);
     end
     if ~exist([expfolder,'DTI_CM.mat'],'file') || ...
-       (isfield(options, 'overwriteapproved') && options.overwriteapproved==1)
+       (isfield(options, 'overwriteapproved') && options.overwriteapproved)
         if ~exist([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'file') % fibertracking has not been performed.
             warning('Fibertracking has not been done yet. Will do so before estimating structural connectivity matrix.');
             ea_perform_ft_proxy(options);
@@ -77,8 +77,8 @@ if options.lc.func.compute_CM
         options.prefs.gmtc=strcat(name,'_tc.mat'); % extracted timecourses of resting state fMRI data
 
         % create connectivity matrix for each rs-fMRI file
-        if ~ea_coreglocked(options,['r',ea_stripex(options.prefs.rest),'_',ea_stripex(presentfiles{1})]) || ...
-                ~exist([expfolder,ea_stripex(options.prefs.rest),'_fMRI_CM.mat'],'file');
+        if ~ea_coreglocked(options,['r',ea_stripext(options.prefs.rest),'_',ea_stripext(presentfiles{1})]) || ...
+                ~exist([expfolder,ea_stripext(options.prefs.rest),'_fMRI_CM.mat'],'file');
             disp(['Creating connectivity matrix for rs-fMRI file #',num2str(irest),': ',options.prefs.rest]);
             [fMRI_CM, gmtc]=ea_createCM_fmri(options);
             cm=ea_export_CM_png(fMRI_CM,['fMRI Connectivity matrix for ',name],options);
