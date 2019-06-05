@@ -28,7 +28,7 @@ if options.lc.struc.compute_CM
         mkdir(expfolder);
     end
     if ~exist([expfolder,'DTI_CM.mat'],'file') || ...
-       (isfield(options, 'overwriteapproved') && options.overwriteapproved==1)
+       (isfield(options, 'overwriteapproved') && options.overwriteapproved)
         if ~exist([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'file') % fibertracking has not been performed.
             warning('Fibertracking has not been done yet. Will do so before estimating structural connectivity matrix.');
             ea_perform_ft_proxy(options);

@@ -2,7 +2,7 @@ function ea_warp_parcellation(reference,options)
 directory=[options.root,options.patientname,filesep];
 
 % Regenerate the template or not
-if isfield(options, 'overwriteapproved') && options.overwriteapproved == 1
+if isfield(options, 'overwriteapproved') && options.overwriteapproved
     overwrite = 1;
 else
     overwrite = 0;

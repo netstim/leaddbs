@@ -32,7 +32,8 @@ btable=[bvals;bvecs];
 
 % build white matter mask
 
-if ~exist([directory,'ttrackingmask.nii'],'file');
+if ~exist([directory,'ttrackingmask.nii'],'file') || ...
+    isfield(options, 'overwriteapproved') && options.overwriteapproved
     ea_gentrackingmask(options,1)
 end
 
