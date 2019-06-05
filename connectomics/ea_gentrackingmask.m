@@ -9,6 +9,8 @@ if exist([directory,'ea_coreg_approved.mat'], 'file')
     isapproved = load([directory,'ea_coreg_approved.mat']);
     if isfield(isapproved, b0_anat)
         isapproved = isapproved.(b0_anat);
+    else
+        isapproved = 0;
     end
 else
     isapproved = 0;
