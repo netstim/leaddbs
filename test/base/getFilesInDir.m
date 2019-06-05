@@ -43,6 +43,11 @@ function files = getFilesInDir(varargin)
 %
 %    % get only the gitIgnored files in the current folder
 %    files = getFilesInDir('type', 'ignored');
+%
+% NOTE:
+%    this function has been uploaded from
+%    https://github.com/opencobra/cobratoolbox/blob/master/src/base/install/getFilesInDir.m
+%    [cdb2478]
 
 persistent COBRAIgnored
 
