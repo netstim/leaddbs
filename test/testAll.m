@@ -36,7 +36,14 @@ else
 end
 
 % include the root folder and all subfolders.
-addpath(genpath([pwd filesep 'test']));
+%addpath(genpath(LEADDBSDIR));
+if ~isempty(strfind(getenv('HOME'), 'jenkins'))
+    SPM12DIR = [getenv('ARTENOLIS_SOFT_PATH') filesep 'tools' filesep 'spm12'];
+    addpath(genpath(SPM12DIR));
+
+    % remove compat functions
+    rmpath(genpath([SPM12DIR filesep 'external' filesep 'fieldtrip' filesep 'compat']));
+end
 
 if launchTestSuite
     if ~isempty(getenv('MOCOV_PATH')) && ~isempty(getenv('JSONLAB_PATH'))
@@ -124,7 +131,7 @@ if launchTestSuite
 
         % set the new badge
         if ~isempty(strfind(getenv('HOME'), 'jenkins'))
-            coverageBadgePath = [getenv('ARTENOLIS_DATA_PATH') filesep 'PaCER' filesep 'codegrade' filesep];
+            coverageBadgePath = [getenv('ARTENOLIS_DATA_PATH') filesep 'LEADDBS' filesep 'codegrade' filesep];
             system(['cp ' coverageBadgePath 'codegrade-', grade, '.svg '  coverageBadgePath 'codegrade.svg']);
         end
     end
