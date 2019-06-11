@@ -36,7 +36,7 @@ else
 end
 
 % include the root folder and all subfolders.
-%addpath(genpath(LEADDBSDIR));
+addpath(genpath(LEADDBSDIR));
 if ~isempty(strfind(getenv('HOME'), 'jenkins'))
     SPM12DIR = [getenv('ARTENOLIS_SOFT_PATH') filesep 'tools' filesep 'spm12'];
     addpath(genpath(SPM12DIR));
@@ -50,12 +50,11 @@ if launchTestSuite
         addpath(genpath(getenv('MOCOV_PATH')))
         addpath(genpath(getenv('JSONLAB_PATH')))
         COVERAGE = true;
-        fprintf('MoCov and JsonLab are on path, coverage will be computed.\n')
+        fprintf('\nMoCov and JsonLab are on path, coverage will be computed.\n')
     else
+        fprintf('MoCov and JsonLab are on not path, coverage will not be computed.\n')
         COVERAGE = false;
     end
-
-    lead
 
     % change to the test folder
     currentDir = cd([LEADDBSDIR filesep 'test']);
