@@ -3,7 +3,7 @@ function ea_atlas2labeling(atlasname,spacefile)
 
 copyfile([ea_space([],'atlases'),atlasname],[ea_space([],'atlases'),atlasname,'_copy']);
 if ~exist('spacefile','var')
-spacefile=[ea_space,'t2.nii'];
+    spacefile=[ea_space,'t2.nii'];
 end
 
 copybase=[ea_space([],'atlases'),atlasname,'_copy',filesep];
@@ -21,7 +21,11 @@ for subf=1:length(subfs)
             append='';
     end
 
-   system(['gunzip ',subbase,'*.nii.gz']);
+   gzfiles = ea_regexpdir(subbase,'.*\.nii\.gz',0);
+   if ~isempty(gzfiles)
+       gunzip(gzfiles);
+       ea_delete(gzfiles);
+   end
 
    nuclei=dir([subbase,'*.nii']);
 
@@ -54,14 +58,3 @@ end
 fclose(f);
 
 rmdir([ea_space([],'atlases'),atlasname,'_copy'],'s')
-
-
-
-
-
-
-
-
-
-
-
