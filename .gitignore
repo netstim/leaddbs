@@ -19,6 +19,7 @@ release/
 tmp/
 lead_standalone/
 connectomes/
+coverage_html/
 
 # dev only
 ea_make_release.m
