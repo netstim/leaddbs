@@ -50,9 +50,11 @@ if launchTestSuite
         addpath(genpath(getenv('MOCOV_PATH')))
         addpath(genpath(getenv('JSONLAB_PATH')))
         COVERAGE = true;
-        fprintf('\nMoCov and JsonLab are on path, coverage will be computed.\n')
+        fprintf('\nMoCov and JsonLab are on path, coverage will be computed.\n');
     else
-        fprintf('MoCov and JsonLab are on not path, coverage will not be computed.\n')
+        if ~isempty(strfind(getenv('HOME'), 'jenkins'))
+             fprintf('\nMoCov and JsonLab are on path, coverage will not be computed.\n');
+        end
         COVERAGE = false;
     end
 
@@ -61,6 +63,9 @@ if launchTestSuite
     testDirContent = getFilesInDir('type', 'all');  % Get all currently present files in the folder.
     testDirPath = pwd;
     cd(currentDir);
+
+    % launch the startup script
+    % lead
 
     % define a success exit code
     exit_code = 0;
