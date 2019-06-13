@@ -2,13 +2,14 @@ function [trimpath, basename, ext, vol] = ea_niifileparts(niifile)
 % Return nifti file path and name without .nii/.nii.gz extension.
 % Useful for FSL tools.
 % For example, input '/PATH/TO/image.nii.gz,1' will return 
-% ['/PATH/TO/image', 'image', 'nii.gz', ',1']
+% ['/PATH/TO/image', 'image', '.nii.gz', ',1']
 
 % TP - fixing bug:
 % on Windows PC, paths are encapsulated in double quotes (see
 % ea_path_helper.m). The regexp fails since end of line does not occur
 % after extension. My solution is not very elegant - perhaps there is a
 % better fix.
+
 is_quote = 0;
 if ispc
     if niifile(1) == '"'
