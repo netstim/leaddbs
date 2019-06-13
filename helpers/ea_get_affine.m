@@ -9,7 +9,10 @@ if nargin < 2
     type = 'SPM';
 end
 
-hdr = ea_fslhd(nii);
+% Remove volume index used in SPM (',1' in '/PATH/TO/image.nii.gz,1')
+[fpath, ~, fext] = ea_niifileparts(nii);
+
+hdr = ea_fslhd([fpath, fext]);
 
 if hdr.sform_code ~= 0 % Prefer sform
     affine = [hdr.sto_xyz1; hdr.sto_xyz2; hdr.sto_xyz3; hdr.sto_xyz4];
