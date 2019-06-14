@@ -1,4 +1,4 @@
-function v=ea_view(varargin);
+function v=ea_view(varargin)
 % query and store views
 if nargin
     v=varargin{1};
