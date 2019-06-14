@@ -1,8 +1,8 @@
 function ea_setplanes(xx,yy,zz,options)
 
 H = findall(0,'type','figure');
-resultfig = H(~cellfun(@isempty,strfind({H(:).Name},{'Electrode-Scene'})));
-resultfig=resultfig(1); % take the first if there are many.
+resultfig = H(contains({H(:).Name},{'Electrode-Scene'}));
+resultfig = resultfig(1); % take the first if there are many.
 togglestates=getappdata(resultfig,'togglestates');
 setXYZ=[xx,yy,zz];
 togglestates.xyztoggles=~isnan(setXYZ);
