@@ -14,6 +14,4 @@ if ~exist('options','var')
 end
 setappdata(resultfig,'togglestates',togglestates);
 
-ea_anatomyslices(gcf,...
-    togglestates,...
-    options,[]);
+ea_anatomyslices(resultfig, togglestates, options, []);
