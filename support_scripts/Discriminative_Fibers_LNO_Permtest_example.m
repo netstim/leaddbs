@@ -5,11 +5,12 @@ prefs=ea_prefs;
 
 %% static part - usually no need to edit - can edit it by configuring lead group file correctly and closing it.
 discfiberssetting = prefs.machine.lg.discfibers;
+discfiberssetting.statmetric=1;
+
 [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_calcdiscfibers(M,discfiberssetting);
 
-
 %% flexible part - how to set up prediction - example is leave one cohort out crossvalidation:
-Nperm=1000; % run as many as Nperm permutations
+Nperm=5000; % run as many as Nperm permutations
 allpts=1:length(M.patient.list);
 I=M.clinical.vars{M.ui.clinicallist};
 nfibsval=fibsval; nfibsval(nfibsval==0)=nan; % only used in spearmans correlations
@@ -28,34 +29,34 @@ for perm=1:Nperm+1
     clear Ihat
     switch discfiberssetting.statmetric
         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-            optsval=fibsval(:,allpts); % all other patients connections to each fibertract
             if perm>1
                 Iperm=I(randperm(length(I)));
             else % use real empirical set in first run
                 Iperm=I;
             end
-            allvals=repmat(Iperm(allpts)',size(optsval,1),1); % improvement values (taken from Lead group file or specified in line 12).
+            allvals=repmat(Iperm(allpts)',size(fibsval,1),1); % improvement values (taken from Lead group file or specified in line 12).
             
             fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
-            fibsimpval(~logical(optsval))=nan; % Delete all unconnected values
+            fibsimpval(~logical(fibsval))=nan; % Delete all unconnected values
             nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
-            nfibsimpval(logical(optsval))=nan; % Delete all connected values
-            [~,~,~,Model]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
+            nfibsimpval(logical(fibsval))=nan; % Delete all connected values
+            [~,p,~,Model]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
             Model.tstat(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
             for pt=allpts
                 thisptval=fibsval(:,pt); % this patients connections to each fibertract (1 = connected, 0 = unconnected) 
                 Ihat(pt)=ea_nansum(Model.tstat'.*thisptval); % I hat is the estimate of improvements (not scaled to real improvements)
             end
-        case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
+        case 2 % spearmans correlations, efields - see Irmen et al. 2019 TBP
             Model=corr(nfibsval(:,allpts)',I(allpts),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
             for pt=allpts
                 Ihat(pt)=ea_nansum(Model.*nfibsval(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
             end
     end
     
-    R0(perm)=corr(Iperm,Ihat','type','Spearman');
-    ea_dispercent(pt/length(allpts));
+    R0(perm)=corr(Iperm,Ihat','type','Spearman','rows','pairwise');
+    ea_dispercent(perm/Nperm);
 end
+ea_dispercent(1,'end');
 
 R1=R0(1); % real correlation value when using empirical values
 R0=R0(2:end); % 1-by-Nperm set of R values
@@ -67,16 +68,19 @@ p95=R0(round(0.05*Nperm));
 v=ea_searchclosest(R0,R1);
 
 pperm=v/Nperm;
-disp('Permuted p = ',num2str(pperm),'.');
+disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
 
-figure;
-hist(R0,rand(Nperm/5));
+h1=figure;
+histogram(R0,round(Nperm/5),'FaceColor',[0.1,0.4,0.6],'EdgeColor',[0.1,0.4,0.6],'EdgeAlpha',0);
+hold on
+plot([R1,R1],[0,20],'Color',[0.6,0.2,0.3]);
+text(R1,10,{'Unpermuted prediction \rightarrow',['p = ',sprintf('%0.2f',pperm)]},'Color',[0.6,0.2,0.3],'HorizontalAlignment','right');
+saveas(h1,'my_result_permutation_test.png');
 
-ea_dispercent(1,'end');
 
 
-h=ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman');
-saveas(h,'my_result.png');
+h2=ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman',M.patient.group);
+saveas(h2,'my_result.png');
 
 
 
