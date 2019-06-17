@@ -24,9 +24,11 @@ if discfiberssetting.statmetric==1
     fibsval(sum(fibsval,2)>round((1-discthresh)*size(fibsval,2)),:)=0;
 end
 
+Ihat = zeros(Nperm+1,length(I));
+R0 = zeros(Nperm+1,1);
+
 ea_dispercent(0,'Permutation testing');
 for perm=1:Nperm+1
-    clear Ihat
     switch discfiberssetting.statmetric
         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
             if perm>1
@@ -44,16 +46,16 @@ for perm=1:Nperm+1
             Model.tstat(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
             for pt=allpts
                 thisptval=fibsval(:,pt); % this patients connections to each fibertract (1 = connected, 0 = unconnected) 
-                Ihat(pt)=ea_nansum(Model.tstat'.*thisptval); % I hat is the estimate of improvements (not scaled to real improvements)
+                Ihat(perm,pt)=ea_nansum(Model.tstat'.*thisptval); % I hat is the estimate of improvements (not scaled to real improvements)
             end
         case 2 % spearmans correlations, efields - see Irmen et al. 2019 TBP
             Model=corr(nfibsval(:,allpts)',I(allpts),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
             for pt=allpts
-                Ihat(pt)=ea_nansum(Model.*nfibsval(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
+                Ihat(perm,pt)=ea_nansum(Model.*nfibsval(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
             end
     end
     
-    R0(perm)=corr(Iperm,Ihat','type','Spearman','rows','pairwise');
+    R0(perm)=corr(Iperm,Ihat(perm,:)','type','Spearman','rows','pairwise');
     ea_dispercent(perm/Nperm);
 end
 ea_dispercent(1,'end');
@@ -79,7 +81,7 @@ saveas(h1,'my_result_permutation_test.png');
 
 
 
-h2=ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman',M.patient.group);
+h2=ea_corrplot(I,Ihat(1,:)',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'Spearman',M.patient.group);
 saveas(h2,'my_result.png');
 
 
