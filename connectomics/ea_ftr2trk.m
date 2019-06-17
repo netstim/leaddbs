@@ -25,9 +25,9 @@ header = ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
 
 if ~exist('specs','var') % Use MNI T1 as reference space by default.
     disp('Header from MNI t1.nii ...');
-    nii = spm_vol([ea_space,'t1.nii']);
+    refhdr = ea_fslhd([ea_space,'t1.nii']);
     specs.origin = [0,0,0];
-    specs.dim = nii.dim;
+    specs.dim = [refhdr.dim1, refhdr.dim2, refhdr.dim3];
     specs.affine = ea_get_affine([ea_space,'t1.nii'], 0);
     header.pad2 = ['RAS', char(0)];
 elseif isstruct(specs)
@@ -37,10 +37,10 @@ elseif isstruct(specs)
 else % Use the specified nifti as reference space.
     disp(['Header from ',specs,' ...']);
     refimage = specs;
-    nii = spm_vol(refimage);
+    refhdr = ea_fslhd(refimage);
     specs = struct;
     specs.origin = [0,0,0];
-    specs.dim = nii.dim;
+    specs.dim = [refhdr.dim1, refhdr.dim2, refhdr.dim3];
     specs.affine = ea_get_affine(refimage, 0);
     header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
 end
