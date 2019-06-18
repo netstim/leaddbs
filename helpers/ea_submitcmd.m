@@ -1,7 +1,7 @@
-function [status, cmdout] = ea_submitcmd(cmd)
+function status = ea_submitcmd(cmd)
 
 if ~ispc
-    [status, cmdout] = system(['bash -c "', cmd, '"']);
+    status = system(['bash -c "', cmd, '"']);
 else
-    [status, cmdout] = system(cmd);
+    status = system(cmd);
 end
