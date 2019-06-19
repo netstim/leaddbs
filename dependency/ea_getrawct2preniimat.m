@@ -25,7 +25,7 @@ switch options.prefs.reco.mancoruse
         postopct=[directory,options.prefs.rawctnii_unnormalized];
 
         switch coregct_method_applied{end}
-            case {'ea_coregctmri_ants','ea_coregctmri_ants_refine'}
+            case {'ea_coregctmri_ants','ea_coregctmri_ants_refine', 'ea_coregctmri_itksnap'}
                 if inverse
                     antsmts=dir([directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_ants*','.mat']);
                 else
