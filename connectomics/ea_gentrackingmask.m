@@ -104,4 +104,4 @@ end
 
 % Transform anat to b0 to generate checkreg image:
 ea_apply_coregistration([directory,options.prefs.b0], [directory,options.prefs.prenii_unnormalized], ...
-                        [b0_anat,'.nii'], strrep(options.coregmr.method, 'Hybrid SPM & ', ''));
+                        [directory,b0_anat,'.nii'], strrep(options.coregmr.method, 'Hybrid SPM & ', ''));
