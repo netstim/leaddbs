@@ -1,12 +1,23 @@
 function varargout=ea_coregctmri_itksnap(options)
 % This function uses ITK-SNAP to register postop-CT to preop-MR.
+% It launches the graphical userinterface of ITK-SNAP, where means for
+% manual as well as for automatic registration are provided.
+%
+% In though registration cases (e.g. differen coverage + strong head tilt
+% in one case) a quick manual pre-alignment could be done and an automatic
+% registration from this initial configuration started. 
+%
+% The resuplting transformation matrix has to be saved to a file
+% "postop_ct2anat_t1_ants1.txt" in the current subjects folder. The leadbs
+% script will wait for this file to appear and automatically continue 
+% processing afterwards
 % __________________________________________________________________________________
 % Copyright (C) 2019 University of Luxembourg, Interventional Neuroscience
 % Group
 % Andreas Husch
 
 if ischar(options) % return name of method (e.g. used in the GUI)
-    varargout{1}='ITK-SNAP (ANTs compatible ITK transform file)'; %TODO make sure matlab finds the path
+    varargout{1}='ITK-SNAP (GUI based manual/automatic)'; %TODO make sure matlab finds the path
     varargout{2}={'SPM8','SPM12'}; % check this
     varargout{3}=['nan'];
     return
@@ -42,8 +53,6 @@ end
 
 %% Save ITK .txt also as ANTS .mat
 disp('Generating .mat version of transform to be re-read by LeadDBS for internal use later...');
-%tmat = readITKTxtTfm([options.root,options.patientname,filesep,'postop_ct2anat_t1_ants1.txt']);
-%save([options.root,options.patientname,filesep,'postop_ct2anat_t1_ants1.mat'], '-struct', 'tmat');
 ea_convertANTsITKTransforms([options.root,options.patientname,filesep,'postop_ct2anat_t1_ants1.txt'], ...
     [options.root,options.patientname,filesep,'postop_ct2anat_t1_ants1.mat']);
 ea_convertANTsITKTransforms([options.root,options.patientname,filesep,'postop_ct2anat_t1_ants1.txt'], ...
@@ -56,6 +65,3 @@ ea_apply_coregistration([options.root,options.patientname,filesep,options.prefs.
     [options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],...
     [options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
 disp('Coregistration done.');
-
-
-
