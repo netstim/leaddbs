@@ -1,16 +1,10 @@
-function varargout=ea_coregctmri_itksnap(options)
-% This function uses ITK-SNAP to register postop-CT to preop-MR.
-% It launches the graphical userinterface of ITK-SNAP, where means for
-% manual as well as for automatic registration are provided.
+function varargout=ea_coregctmri_itksnap_greedy(options)
+% This function uses ITK-SNAPs greedy binary to do an automatic very fast
+% rigid registration between post-op CT and MRI.
 %
-% In though registration cases (e.g. differen coverage + strong head tilt
-% in one case) a quick manual pre-alignment could be done and an automatic
-% registration from this initial configuration started. 
-%
-% The resuplting transformation matrix has to be saved to a file
-% "postop_ct2anat_t1_ants1.txt" in the current subjects folder. The leadbs
-% script will wait for this file to appear and automatically continue 
-% processing afterwards.
+% Some exhaustive search for a good initial configuration is carried out
+% before optimsation thus it should perform robust also on heavily tilted
+% data (up to 90 degree tilt).
 %
 % The transformation is stored in ITK .txt format and converted to the
 % newer ITK .mat format used by ANTs. Thus all further operations can
@@ -21,36 +15,40 @@ function varargout=ea_coregctmri_itksnap(options)
 % Andreas Husch
 
 if ischar(options) % return name of method (e.g. used in the GUI)
-    varargout{1}='ITK-SNAP (GUI based manual/automatic)'; %TODO make sure matlab finds the path
+    varargout{1}='ITK-SNAP greedy (automatic)'; %TODO make sure matlab finds the path
     varargout{2}={'SPM8','SPM12'}; % check this
     varargout{3}=['nan'];
     return
 end
 
-disp('Opening ITK-SNAP for coregistration of postop CT to preop MRI...')
-disp('Make sure to save transformation file as "postop_ct2anat_t1_ants1.txt"! Process will continue afer transformation file exists.');
-
+disp('Running ITK-SNAP greedy rigid registration...');
 %% Get itksnap binary (should be in path by following ITKSNAP / Help / Install Comand Line Tools)
 if ispc
-    itksnap = 'itksnap.exe';
+    greedy = 'greedy.exe';
 else
-    itksnap = '/usr/local/bin/itksnap';
+    greedy = '/usr/local/bin/greedy';
 end
 
-cmd = [itksnap ' ' ...
-    '-g "' options.root,options.patientname,filesep,options.prefs.prenii_unnormalized '" ' ...
-    '-o "' options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized '" ' ...
-    '--cwd "' options.root,options.patientname,filesep '"'];
+cmd = [greedy ' '...
+   '-d 3 '...
+   '-a -dof 6 '...
+   'search 100 90 5 '...
+   '-m NMI '...
+   '-i ' options.root,options.patientname,filesep,options.prefs.prenii_unnormalized ' ' ...
+   options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized ...
+   '-o postop_ct2anat_t1_ants1.txt -n 100x50x10'];
+   
+   
 
 try
     if ~ispc
-        system(['bash -c ''' cmd ''' &']); % running in background (&) is key to avoid crash!
+        system(['bash -c ''' cmd '''']); % running in background (&) is key to avoid crash!
     else
         system(cmd);
     end
-    while ~exist([options.root,options.patientname,filesep,'postop_ct2anat_t1_ants1.txt'], 'file')
-        pause(2); % semi busy waiting ... ;-)
-    end
+  %  while ~exist([options.root,options.patientname,filesep,'postop_ct2anat_t1_ants1.txt'], 'file')
+   %     pause(2); % semi busy waiting ... ;-)
+   % end
 catch
     warning('Could not run ITK-SNAP successfully! Make sure itksnap is available in your path (Launch ITK-SNAP and see in Help / Install Command Line Tools)');
 end
