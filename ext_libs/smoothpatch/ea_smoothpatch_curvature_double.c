@@ -33,8 +33,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
    
     /* Number of vertices */
     const mwSize *VertexDims;
-    int VertexN=0;
-    int VertexNA[1]={0};    
+    mwSize VertexN=0;
+    mwSize VertexNA[1]={0};    
     
     /* 1D Index  */
     int index0, index1, index2;
