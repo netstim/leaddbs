@@ -34,20 +34,30 @@ else
     msuffix='';
 end
 
-% visualize:
+% Reformat fibers
 if reformat
-    fibidx=unique(fibsweighted(:,4));
-    fibcell=cell(length(fibidx),1);
-    vals=zeros(length(fibidx),1);
-    cnt=1;
-    ea_dispercent(0,'reformatting fibers');
-    for fib=fibidx'
-        fibcell{cnt}=fibsweighted(fibsweighted(:,4)==fib,1:3);
-        vals(cnt)=mean(fibsweighted(fibsweighted(:,4)==fib,5));
-        cnt=cnt+1;
-        ea_dispercent(cnt/length(fibidx));
+    disp('Reformatting fibers...');
+    if(all(diff(fibsweighted(:,4))>=0)) % Fiber indices should be monotonic, reformat using fast method
+        [~,fibiaxfirst]=unique(fibsweighted(:,4),'first');
+        [~,fibiaxlast]=unique(fibsweighted(:,4),'last');
+        fiblen = fibiaxlast - fibiaxfirst + 1;
+        fibcell = mat2cell(fibsweighted(:,1:3),fiblen);
+        vals = mat2cell(fibsweighted(:,5),fiblen);
+        vals = cellfun(@mean, vals);
+    else % Fall back to old method if fiber indices are not monotonic
+        fibidx=unique(fibsweighted(:,4));
+        fibcell=cell(length(fibidx),1);
+        vals=zeros(length(fibidx),1);
+        cnt=1;
+        ea_dispercent(0,'reformatting fibers');
+        for fib=fibidx'
+            fibcell{cnt}=fibsweighted(fibsweighted(:,4)==fib,1:3);
+            vals(cnt)=mean(fibsweighted(fibsweighted(:,4)==fib,5));
+            cnt=cnt+1;
+            ea_dispercent(cnt/length(fibidx));
+        end
+        ea_dispercent(1,'end');
     end
-    ea_dispercent(1,'end');
     save([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,savesuffix,'.mat'],'fibcell','vals','opts','-v7.3');
 else
     load([M.ui.groupdir,'correlative_fibertracts_reformatted',msuffix,savesuffix,'.mat']);
