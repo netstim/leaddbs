@@ -22,10 +22,10 @@ else
 end
 
 cmd = [applyTransforms ...
-    ' -t ' inputFile ' -o Linear[' outputFile ', ' num2str(invert) ']' ];
+    ' -t "' inputFile '" -o Linear["' outputFile '", ' num2str(invert) ']' ];
 
 if ~ispc
-    system(['bash -c "', cmd, '"']);
+    system(['bash -c ''', cmd, '''']);
 else
     system(cmd);
 end
