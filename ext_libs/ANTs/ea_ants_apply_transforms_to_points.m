@@ -75,7 +75,7 @@ uuid=ea_generate_uuid;
 
 cmd = [applyTransformsToPoints, ...
     ' --dimensionality 3' ...   % dimensionality
-    ' --precision 1' ...    % double precision
+    ' --precision 0' ...    % single precision
     ' --input ', ea_path_helper([directory,'tmpin_',uuid,'.csv']) ...  % input csv file with x,y,z,t (at least) as the column header
     ' --output ', ea_path_helper([directory,'tmpout_',uuid,'.csv']) ...    % warped output csv file
     tstring];
@@ -95,7 +95,7 @@ delete([directory,'tmpin_',uuid,'.csv']);
 
 function coord=ea_readcsv(pth)
 fid=fopen(pth);
-C=textscan(fid,'%f %f %f %f','commentStyle', '#','delimiter', ',','Headerlines',1);
+C=textscan(fid,'%f32 %f32 %f32 %f32','commentStyle', '#','delimiter', ',','Headerlines',1);
 fclose(fid);
 coord=cell2mat(C(1:3));
 
