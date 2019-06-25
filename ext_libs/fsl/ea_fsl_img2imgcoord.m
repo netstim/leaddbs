@@ -59,7 +59,7 @@ if ~ischar(incoords)
     uuid=ea_generate_uuid;
     directory = [fileparts(ea_niifileparts(src)), filesep];
     fid=fopen([directory,'tmpin_',uuid,'.csv'],'w');
-    fprintf(fid,'%.15f %.15f %.15f\n', incoords'); % transpose needed for 'fprintf': matrix column to file row.
+    fprintf(fid,'%.9f %.9f %.9f\n', incoords'); % transpose needed for 'fprintf': matrix column to file row.
     fclose(fid);
     incoords = [directory,'tmpin_',uuid,'.csv'];
 end
@@ -74,7 +74,7 @@ else
 end
 
 if status == 0
-    outcoords = cell2mat(textscan(cmdout, '%f %f %f', 'HeaderLines', 1));
+    outcoords = cell2mat(textscan(cmdout, '%f32 %f32 %f32', 'HeaderLines', 1));
 else
     error(['Coords mapping failed:\n', cmdout]);
 end
