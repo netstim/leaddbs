@@ -429,9 +429,10 @@ try set(handles.TR,'String',num2str(lc.func.prefs.TR)); end
 
 % structural options:
 try set(handles.compute_CM_struc,'Value',lc.struc.compute_CM); end
-
 try set(handles.compute_GM_struc,'Value',lc.struc.compute_GM); end
-try set(handles.ftmethod,'Value',lc.struc.ft.methodn); end
+ftmethods = getappdata(handles.leadfigure, 'ftmethod');
+methodn = find(ismember(ftmethods,lc.struc.ft.method));
+try set(handles.ftmethod,'Value',methodn); end
 
 if strcmp(lc.struc.ft.method, 'ea_ft_gqi_yeh')
     try set(handles.fiber_count, 'Visible', 'on'); end
