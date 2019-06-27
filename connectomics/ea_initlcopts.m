@@ -24,7 +24,7 @@ else
     lc.struc.compute_CM=0;
     lc.struc.compute_GM=0;
     lc.struc.ft.do=0;
-    ftmethods=getappdata(h,'ftmethod');
+    ftmethods=getappdata(h,'ftmethods');
     if isempty(varargin{1})
         close(h)
     end

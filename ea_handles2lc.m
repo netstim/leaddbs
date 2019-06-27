@@ -1,8 +1,6 @@
 function lc=ea_handles2lc(handles)
 
-
 % General settings
-
 lc.general.parcellation=getappdata(gcf,'parcellation');
 lc.general.parcellation=lc.general.parcellation{get(handles.parcellation,'Value')};
 lc.general.parcellationn=get(handles.parcellation,'Value');
@@ -26,8 +24,8 @@ lc.func.prefs.TR=str2double(get(handles.TR,'String'));
 % structural options:
 lc.struc.compute_CM=get(handles.compute_CM_struc,'Value');
 lc.struc.compute_GM=get(handles.compute_GM_struc,'Value');
-lc.struc.ft.method=getappdata(gcf,'ftmethod');
-lc.struc.ft.method=lc.struc.ft.method{get(handles.ftmethod,'Value')};
+ftmethods=getappdata(gcf,'ftmethods');
+lc.struc.ft.method=ftmethods{get(handles.ftmethod,'Value')};
 lc.struc.ft.methodn=get(handles.ftmethod,'Value');
 lc.struc.ft.do=get(handles.perf_ft,'Value');
 lc.struc.ft.normalize=get(handles.normalize_fibers,'Value');

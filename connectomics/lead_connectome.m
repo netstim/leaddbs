@@ -75,7 +75,7 @@ set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 % add ft methods to menu
 cnt=1;
 ndir=dir([earoot,'connectomics',filesep,'ea_ft_*.m']);
-ftmethod=cell(0);
+ftmethods=cell(0);
 fdc=cell(0);
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
@@ -83,12 +83,12 @@ for nd=length(ndir):-1:1
         [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
         if ismember(spm('ver'),spmvers)
             fdc{cnt}=thisndc;
-            ftmethod{cnt}=methodf;
+            ftmethods{cnt}=methodf;
             cnt=cnt+1;
         end
     end
 end
-setappdata(gcf,'ftmethod',ftmethod);
+setappdata(gcf,'ftmethods',ftmethods);
 set(handles.ftmethod,'String',fdc);
 
 % add normmethods to menu
@@ -430,8 +430,8 @@ try set(handles.TR,'String',num2str(lc.func.prefs.TR)); end
 % structural options:
 try set(handles.compute_CM_struc,'Value',lc.struc.compute_CM); end
 try set(handles.compute_GM_struc,'Value',lc.struc.compute_GM); end
-ftmethods = getappdata(handles.leadfigure, 'ftmethod');
-methodn = find(ismember(ftmethods,lc.struc.ft.method));
+ftmethods = getappdata(handles.leadfigure, 'ftmethods');
+methodn = find(ismember(ftmethods, lc.struc.ft.method));
 try set(handles.ftmethod,'Value',methodn); end
 
 if strcmp(lc.struc.ft.method, 'ea_ft_gqi_yeh')
