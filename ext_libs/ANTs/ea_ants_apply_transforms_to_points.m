@@ -46,7 +46,7 @@ else
         else
             error('Transformation file not found! Please rerun normalization.');
         end
-        
+
     else
         if exist([directory,glprebase,'Composite',ea_getantstransformext(directory)],'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite',ea_getantstransformext(directory)]),',0]'];
@@ -95,7 +95,7 @@ delete([directory,'tmpin_',uuid,'.csv']);
 
 function coord=ea_readcsv(pth)
 fid=fopen(pth);
-C=textscan(fid,'%f32 %f32 %f32 %f32','commentStyle', '#','delimiter', ',','Headerlines',1);
+C=textscan(fid,'%f %f %f %f','commentStyle', '#','delimiter', ',','Headerlines',1);
 fclose(fid);
 coord=cell2mat(C(1:3));
 

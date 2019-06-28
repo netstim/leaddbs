@@ -74,7 +74,7 @@ else
 end
 
 if status == 0
-    outcoords = cell2mat(textscan(cmdout, '%f32 %f32 %f32', 'HeaderLines', 1));
+    outcoords = cell2mat(textscan(cmdout, '%f %f %f', 'HeaderLines', 1));
 else
     error(['Coords mapping failed:\n', cmdout]);
 end
