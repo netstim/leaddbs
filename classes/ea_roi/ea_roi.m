@@ -158,7 +158,9 @@ if ismember(evtnm,{'all','threshold','smooth','hullsimplify'}) % need to recalc 
     obj.fv.vertices=[obj.fv.vertices;fvc.vertices];
     
     if obj.smooth
-        obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
+                obj.sfv=obj.fv;
+
+        %obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
     else
         obj.sfv=obj.fv;
     end
