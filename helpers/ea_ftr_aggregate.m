@@ -15,7 +15,6 @@ function [fibers, idx] = ea_ftr_aggregate(ftrFiles, outputFile, sel, type)
 
 fibers = [];
 idx = [];
-offset = 0;
 
 for i=1:length(ftrFiles)
     fprintf('Aggregating fibers from %d/%d FTR files...\n', i, length(ftrFiles));
@@ -32,12 +31,13 @@ for i=1:length(ftrFiles)
         end
         [ftr.fibers, ftr.idx] = ea_ftr_sample(ftrFiles{i}, sel, type);
     end
-    
-    ftr.fibers(:,4) = ftr.fibers(:,4) + offset;
+
     fibers = [fibers;ftr.fibers];
     idx = [idx;ftr.idx]; 
-    offset = offset + numel(idx);
 end
+
+% Reset fibers(:, 4)
+fibers(:, 4) = repelem(1:numel(idx), idx);
 
 % Use other meta info from the first FTR file
 ftr = load(ftrFiles{1});
