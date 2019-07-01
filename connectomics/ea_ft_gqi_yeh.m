@@ -76,8 +76,7 @@ disp('Converting fibers...');
 fibinfo = load([directory,ftrbase,'.mat']);
 fibers = fibinfo.tracts';
 idx = fibinfo.length';
-idxv = cell2mat(arrayfun(@(x, y) ones(x,1)*y, idx, (1:numel(idx))', 'Uni', 0));
-fibers = [fibers,idxv];
+fibers = [fibers, repelem(1:numel(idx), idx)'];
 clear fibinfo
 b0=spm_vol([directory,options.prefs.b0]);
 

@@ -254,7 +254,7 @@ fib_copy.idx=fibidx;
 if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete all other fibers).
     for roi=1:length(connect.rois) % check connectivities
         in=inhull(thisset,connect.xyz{roi})';
-        idxv = cell2mat(arrayfun(@(x, y) ones(x,1)*y, fibidx, (1:numel(fibidx))', 'Uni', 0));
+        idxv = repelem(1:numel(fibidx), fibidx)';
         selectedfibs{roi}=unique(idxv(in));
     end
     selectedfibs=unique(cell2mat(selectedfibs(:)));
