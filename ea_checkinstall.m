@@ -17,8 +17,8 @@ switch cmd
                  'Macroscale Human Connectome Atlas (Yeh 2018)'
                  'Structural group connectome 20 subjects Gibbs-tracker (Horn 2013)'
                  'Structural group connectome 169 NKI subjects Gibbs-tracker (Horn 2016)'
-                 'Structural group connectome 32 Adult Diffusion HCP subjects GQI (Horn 2017)'
-                 'Structural group connectome 90 PPMI PD-patients GQI (Ewert 2017)'
+                 'Structural group connectome 32 Adult Diffusion HCP subjects GQI v1.1 (Horn 2017)'
+                 'Structural group connectome 85 PPMI PD-patients GQI v1.1 (Irmen 2019)'
                  'Functional group connectome 74 PPMI PD-patients, 15 controls (Horn 2017)'};
 
         commands={'leaddata'
