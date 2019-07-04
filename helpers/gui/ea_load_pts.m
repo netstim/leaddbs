@@ -11,7 +11,7 @@ end
 
 if length(uipatdir)>1
     set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
-    set(handles.patdir_choosebox,'TooltipString',ea_strjoin(uipatdir,', '));
+    set(handles.patdir_choosebox,'TooltipString',ea_strjoin(uipatdir,'\n'));
 else
     set(handles.patdir_choosebox,'String',uipatdir{1});
     set(handles.patdir_choosebox,'TooltipString',uipatdir{1});
