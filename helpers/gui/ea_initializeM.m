@@ -28,6 +28,7 @@ M.ui.elmodelselect=1;
 M.ui.detached=0;
 M.ui.normregpopup=1;
 M.ui.colorpointcloudcheck=0;
+M.ui.mirrorsides=0;
 M.ui.lc.graphmetric=1;
 M.ui.lc.normalization=1;
 M.ui.lc.smooth=1;
