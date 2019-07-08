@@ -59,7 +59,7 @@ image(im);
 axes(handles.logoaxes);
 axis off;
 axis equal;
-set(handles.leadfigure,'name','Lead-Connectome Mapper','color','w');
+set(handles.leadfigure,'name','Lead Connectome Mapper','color','w');
 % homedir=ea_gethome;
 %setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
 
