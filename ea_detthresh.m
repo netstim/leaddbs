@@ -15,7 +15,7 @@ function thresh=ea_detthresh(atlases,atlas,img)
 %    thresh:
 %
 % .. AUTHOR:
-%       - Andreas Husch, Original file
+%       - Andreas Horn, Original file
 %       - Daniel Duarte, Documentation
 
 if isfield(atlases,'threshold')
