@@ -10,7 +10,7 @@ function ea_compat_pt(uipatdir)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 for pt=1:length(uipatdir)
