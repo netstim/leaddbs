@@ -9,7 +9,7 @@ function ea_apply_normalization(options)
 %    options:
 %
 % .. AUTHOR:
-%       - Andreas Husch, Original file
+%       - Andreas Horn, Original file
 %       - Daniel Duarte, Documentation
 
 directory=[options.root,options.patientname,filesep];
