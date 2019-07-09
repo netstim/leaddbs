@@ -6,15 +6,15 @@ function stats=ea_centroid(bw)
 %
 %    stats=ea_centroid(bw)
 %
-% INPUTS:
+% INPUT:
 %    bw:
 %
-% OUTPUTS:
+% OUTPUT:
 %    stats:
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 [xx,yy]=find(bw);
