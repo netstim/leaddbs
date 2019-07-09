@@ -10,7 +10,7 @@ function ea_compute_scrf(handles)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 options=getappdata(handles.scrf,'options');
