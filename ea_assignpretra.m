@@ -15,7 +15,7 @@ function [options, presentfiles] = ea_assignpretra(options,allowgz)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 if ~exist('allowgz','var')
