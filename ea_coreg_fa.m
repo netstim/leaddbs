@@ -11,7 +11,7 @@ function ea_coreg_fa(options,usebrainmask)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 directory=[options.root,options.patientname,filesep];
