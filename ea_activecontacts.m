@@ -13,7 +13,7 @@ function S = ea_activecontacts(S)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 for pt=1:length(S)
