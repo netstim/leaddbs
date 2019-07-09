@@ -12,7 +12,7 @@ function ea_gencheckregpair_deep(moving,fixed,outfn)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
