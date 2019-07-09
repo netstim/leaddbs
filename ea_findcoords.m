@@ -1,5 +1,25 @@
 function coords=ea_findcoords(goodz,trajectory,trajvector,dist,correction,options)
-
+%
+%
+% USAGE:
+%
+%    coords = ea_findcoords(goodz,trajectory,trajvector,dist,correction,options)
+%
+% INPUTS:
+%    goodz:
+%    trajectory:
+%    trejvector:
+%    dist:
+%    correction:
+%    options:
+%
+% OUTPUT:
+%    coords:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 trajectory=ea_genhdtrajectory(trajectory,options);
 
