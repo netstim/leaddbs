@@ -1,4 +1,20 @@
 function ea_addrecentpatient(handles,uipatdir,patsub,chosenix)
+% 
+%
+% USAGE:
+%
+%    ea_addrecentpatient(handles,uipatdir,patsub,chosenix)
+%
+% INPUT:
+%    handles:
+%    uipatdir:
+%    patsub:
+%    chosenix:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 earoot=ea_getearoot;          
 
