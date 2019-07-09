@@ -1,8 +1,16 @@
 function ea_apply_normalization(options)
 % Wrapper to apply normalization to the unnormalized files.
-% __________________________________________________________________________________
-% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
-% Andreas Horn
+%
+% USAGE:
+%
+%    ea_apply_normalization(options)
+%
+% INPUT:
+%    options:
+%
+% .. AUTHOR:
+%       - Andreas Husch, Original file
+%       - Daniel Duarte, Documentation
 
 directory=[options.root,options.patientname,filesep];
 whichnormmethod=ea_whichnormmethod(directory);
