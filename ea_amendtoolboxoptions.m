@@ -13,7 +13,7 @@ function options=ea_amendtoolboxoptions(options)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 if ~isfield(options,'lc') % might be predefined from an exported script..
