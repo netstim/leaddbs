@@ -15,7 +15,7 @@ function slicebw=ea_centralcomponent(slicebw,mask,options)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 %% determine mask center:
