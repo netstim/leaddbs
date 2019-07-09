@@ -11,7 +11,7 @@ function ea_checkforwardinv(options,forwardinv)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 switch forwardinv
