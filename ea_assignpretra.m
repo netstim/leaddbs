@@ -1,4 +1,22 @@
 function [options, presentfiles] = ea_assignpretra(options,allowgz)
+% 
+%
+% USAGE:
+%
+%    [options, presentfiles] = ea_assignpretra(options,allowgz)
+%
+% INPUTS:
+%    options:
+%    allowgz:
+%
+% OUTPUTS:
+%    options:
+%    presentfiles:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 if ~exist('allowgz','var')
     allowgz=0;
