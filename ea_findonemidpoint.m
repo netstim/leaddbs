@@ -11,7 +11,7 @@ function [numidpoint,greyobj,options]=ea_findonemidpoint(slicebw,estpoint,mask,o
 %    mask:
 %    options:
 %
-% OUTPUT:
+% OUTPUTS:
 %    numipoint:
 %    greyonj:
 %    options:
