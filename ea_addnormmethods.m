@@ -1,4 +1,19 @@
 function ea_addnormmethods(handles,options,handlestring)
+% 
+%
+% USAGE:
+%
+%    ea_addnormmethods(handles,options,handlestring)
+%
+% INPUT:
+%    handles:           
+%    options:           
+%    handlestring:      
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 if ~exist('handlestring','var')
     handlestring='normmethod';
