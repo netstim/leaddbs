@@ -1,5 +1,19 @@
 function ea_addtsmask(options,both)
-% creates refining basal ganglia masks in subject directory
+% Creates refining basal ganglia masks in subject directory
+%
+% USAGE:
+%
+%    ea_addtsmask(options,both)
+%
+% INPUT:
+%    options:
+%    both:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
+
 if ~exist('both','var')
     both=0;
 end
