@@ -13,7 +13,7 @@ function ea_addrecentpatient(handles,uipatdir,patsub,chosenix)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 earoot=ea_getearoot;          
