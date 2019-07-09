@@ -18,7 +18,7 @@ function coords=ea_findcoords(goodz,trajectory,trajvector,dist,correction,option
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 trajectory=ea_genhdtrajectory(trajectory,options);
