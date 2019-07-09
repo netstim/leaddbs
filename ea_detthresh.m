@@ -1,9 +1,22 @@
 function thresh=ea_detthresh(atlases,atlas,img)
-% function that will return the threshold according to user settings for a
+% Function that will return the threshold according to user settings for a
 % specific atlas.
-% __________________________________________________________________________________
-% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
-% Andreas Horn
+%
+% USAGE:
+%
+%    thresh = ea_detthresh(atlases,atlas,img)
+%
+% INPUTS:
+%    atlases:
+%    atlas:
+%    img:
+%
+% OUTPUT:
+%    thresh:
+%
+% .. AUTHOR:
+%       - Andreas Husch, Original file
+%       - Daniel Duarte, Documentation
 
 if isfield(atlases,'threshold')
     switch atlases.threshold.type
