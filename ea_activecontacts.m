@@ -1,4 +1,20 @@
 function S = ea_activecontacts(S)
+% 
+%
+% USAGE:
+%
+%    S = ea_activecontacts(S)
+%
+% INPUT:
+%    S:     
+%
+% OUTPUTS:
+%    S:     
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 for pt=1:length(S)
     for side=1:2
