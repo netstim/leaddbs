@@ -1,4 +1,22 @@
 function afv=ea_concatfv(fv,usecork,reduce)
+% 
+%
+% USAGE:
+%
+%    afv=ea_concatfv(fv,usecork,reduce)
+%
+% INPUTS:
+%    fv:
+%    usecork:
+%    reduce:
+%
+% OUTPUT:
+%    afv:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 if ~exist('reduce','var')
     reduce=0;
