@@ -2,6 +2,24 @@ function ea_apply_normalization_tofile(options,from,to,directory,useinverse,inte
 % this function applies lead-dbs normalizations to nifti files.
 % currently just used to generate patient specific atlases,i.e., from MNI
 % space to native space
+%
+% USAGE:
+%
+%    ea_apply_normalization_tofile(options,from,to,directory,useinverse,interp,refim)
+%
+% INPUT:
+%    options:
+%    from:
+%    directory:
+%    useinverse:
+%    interp:
+%    refim:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
+
 if ~strcmp(directory(end),filesep)
    directory=[directory,filesep];
 end
