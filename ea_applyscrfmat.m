@@ -1,4 +1,22 @@
 function scrf=ea_applyscrfmat(mat,native,sides)
+% 
+%
+% USAGE:
+%
+%    scrf=ea_applyscrfmat(mat,native,sides)
+%
+% INPUTS:
+%    mat:
+%    native:
+%    sides:
+%
+% OUTPUT:
+%    scrf:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 scrf=native;
 
