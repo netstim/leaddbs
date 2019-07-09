@@ -1,5 +1,5 @@
 function ea_anatpreprocess(fpth)
-% Preprocess of anat image
+% Preprocess of anat image.
 % Currently includes: reorientation & cropping and bias field correction
 %
 % USAGE:
@@ -11,7 +11,7 @@ function ea_anatpreprocess(fpth)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 % Cropping and reorientation
