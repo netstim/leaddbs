@@ -1,4 +1,20 @@
 function options=ea_amendtoolboxoptions(options)
+%
+%
+% USAGE:
+%
+%    options=ea_amendtoolboxoptions(options)
+%
+% INPUT:
+%    options:
+%
+% OUTPUT:
+%    options:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 if ~isfield(options,'lc') % might be predefined from an exported script..
     try
