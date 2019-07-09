@@ -1,4 +1,18 @@
 function ea_checkforwardinv(options,forwardinv)
+%
+%
+% USAGE:
+%
+%    ea_checkforwardinv(options,forwardinv)
+%
+% INPUTS:
+%    options:
+%    forwardinv:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 switch forwardinv
     case 'forward'
