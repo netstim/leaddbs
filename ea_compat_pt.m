@@ -1,4 +1,17 @@
 function ea_compat_pt(uipatdir)
+% 
+%
+% USAGE:
+%
+%    ea_compat_pt(uipatdir)
+%
+% INPUT:
+%    uipatdir:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 for pt=1:length(uipatdir)
     directory=[uipatdir{pt},filesep];
