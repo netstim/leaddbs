@@ -13,7 +13,7 @@ function res=checktrajectsanity(trajvector)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 load('trajvectors');
