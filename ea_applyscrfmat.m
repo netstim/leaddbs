@@ -15,7 +15,7 @@ function scrf=ea_applyscrfmat(mat,native,sides)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 scrf=native;
