@@ -11,7 +11,7 @@ function ea_checkfiles(options)
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
-%       - Ning Fey, Original file
+%       - Ningfei Li, Original file
 %       - Daniel Duarte, Documentation
 
 if strcmp(options.prefs.patientdir,'Choose Patient Directory')
