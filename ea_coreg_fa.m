@@ -1,4 +1,18 @@
 function ea_coreg_fa(options,usebrainmask)
+% 
+%
+% USAGE:
+%
+%    ea_coreg_fa(options,usebrainmask)
+%
+% INPUTS:
+%    options:
+%    usebrainmask:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ning Fey, Original file
+%       - Daniel Duarte, Documentation
 
 directory=[options.root,options.patientname,filesep];
 % check for presence of FA map
