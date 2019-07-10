@@ -1,4 +1,20 @@
 function peerfolders=ea_getmagetpeers(options)
+% 
+%
+% USAGE:
+%
+%    peerfolders = ea_getmagetpeers(options)
+%
+% INPUTS:
+%    options:
+%
+% OUTPUTS:
+%    peerfolders:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ningfei Li, Original file
+%       - Daniel Duarte, Documentation
 
 switch options.prefs.machine.normsettings.maget_peerset
     case 'Peers from selected cohort'
