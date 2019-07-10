@@ -71,7 +71,7 @@ switch cmd
             disp('2009b asym LR flip transform is installed.')
         end
     case '7tcgflash'
-        if exist([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'])
+        if exist([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'], 'file')
             movefile([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'], ...
                      [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat']);
 
@@ -100,6 +100,8 @@ switch cmd
             success=ea_downloadasset('7T Cardiac Gated Flash MRI',...
                 [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat'],...
                 '7tcgflash');
+            m = matfile([ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat'],'Writable',true);
+            m.fname = [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.nii'];
             fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt'],'a');
             fprintf(fid,'%s %s\n','7T_Flash_Horn_2019.mat','7T_Cardiac_Gated_Flash_MRI_(Horn_2019)');
             fclose(fid);
@@ -123,6 +125,8 @@ switch cmd
             success=ea_downloadasset('7T Ex Vivo 100um Brain Atlas',...
                 [ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.mat'],...
                 '7tev100um');
+            m = matfile([ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.mat'],'Writable',true);
+            m.fname = [ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.nii'];
             fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt'],'a');
             fprintf(fid,'%s %s\n','7T_100um_Edlow_2019.mat','7T_Ex_Vivo_100um_Brain_Atlas_(Edlow_2019)');
             fclose(fid);
