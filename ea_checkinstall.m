@@ -17,8 +17,8 @@ switch cmd
                  'Macroscale Human Connectome Atlas (Yeh 2018)'
                  'Structural group connectome 20 subjects Gibbs-tracker (Horn 2013)'
                  'Structural group connectome 169 NKI subjects Gibbs-tracker (Horn 2016)'
-                 'Structural group connectome 32 Adult Diffusion HCP subjects GQI (Horn 2017)'
-                 'Structural group connectome 90 PPMI PD-patients GQI (Ewert 2017)'
+                 'Structural group connectome 32 Adult Diffusion HCP subjects GQI v1.1 (Horn 2017)'
+                 'Structural group connectome 85 PPMI PD-patients GQI v1.1 (Ewert 2017)'
                  'Functional group connectome 74 PPMI PD-patients, 15 controls (Horn 2017)'};
 
         commands={'leaddata'
@@ -206,7 +206,7 @@ switch cmd
             disp('Structural Group Connectome (Horn 2016) is installed.')
         end
     case 'groupconnectome2017'
-        checkf=[ea_getconnectomebase('dmri'),'HCP_MGH_30fold_groupconnectome (Horn 2017)',filesep,'data.mat'];
+        checkf=[ea_getconnectomebase('dmri'),'HCP_MGH_32fold_groupconnectome (Horn 2017)',filesep,'data.mat'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
             success=~force;
@@ -225,7 +225,7 @@ switch cmd
             disp('Structural Group Connectome (Horn 2017) is installed.')
         end
     case 'groupconnectome_ppmi2017'
-        checkf=[ea_getconnectomebase('dmri'),'PPMI_90 (Ewert 2017)',filesep,'data.mat'];
+        checkf=[ea_getconnectomebase('dmri'),'PPMI_85 (Ewert 2017)',filesep,'data.mat'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
             success=~force;
