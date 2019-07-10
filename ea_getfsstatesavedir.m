@@ -1,6 +1,28 @@
 function [savedir]=ea_getfsstatesavedir(directory,vsname,fibersfile,seedfile,targetsfile,thresh,mode)
-% helper function to save fiber states
-% called from ea_cvshowvatdmri.m
+% Helper function to save fiber states.
+% Called from ea_cvshowvatdmri.m
+%
+% USAGE:
+%
+%    [savedir] = ea_getfsstatesavedir(directory,vsname,fibersfile,seedfile,targetsfile,thresh,mode)
+%
+% INPUTS:
+%    directory:
+%    vsname:
+%    fibersfile:
+%    seedfile:
+%    targetsfile:
+%    thresh:
+%    mode:
+%
+% OUTPUTS:
+%    savedir:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ningfei Li, Original file
+%       - Daniel Duarte, Documentation
+
 
 [~,fibersname,~] = fileparts(fileparts(fibersfile));
 
