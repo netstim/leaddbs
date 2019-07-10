@@ -1,5 +1,19 @@
 function ea_gencheckregpair(moving,fixed,outfn)
-% function that uses FSLs SLICER tool to create a checkreg figure.
+% Function that uses FSLs SLICER tool to create a checkreg figure.
+%
+% USAGE:
+%
+%    ea_gencheckregpair(moving,fixed,outfn)
+%
+% INPUTS:
+%    moving:
+%    fixed:
+%    outfn:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ningfei Li, Original file
+%       - Daniel Duarte, Documentation
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
 if ispc
