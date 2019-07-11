@@ -1,4 +1,20 @@
 function slicebw=ea_largestcomponent(slicebw)
+%
+% 
+% USAGE:
+%
+%    slicebw = ea_largestcomponent(slicebw)
+%
+% INPUTS:
+%    slicebw:
+%
+% OUTPUT:
+%    slicebw:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ningfei Li, Original file
+%       - Daniel Duarte, Documentation
 
 stats=conncomp(slicebw);
 
