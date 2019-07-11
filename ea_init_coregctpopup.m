@@ -1,4 +1,19 @@
 function ea_init_coregctpopup(handles,options,handlestring)
+% 
+%
+% USAGE:
+%
+%    [options, presentfiles] = ea_assignpretra(options,allowgz)
+%
+% INPUTS:
+%    handles:
+%    options:
+%    handlestring:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ningfei Li, Original file
+%       - Daniel Duarte, Documentation
 
 if ~exist('handlestring','var')
     handlestring='coregctmethod';
@@ -15,7 +30,7 @@ for nd=length(ndir):-1:1
             cdc{cnt}=thisndc;
             coregctmethod{cnt}=methodf;
             if strcmp(cdc{cnt},eval([options.prefs.ctcoreg.default,'(','''prompt''',')']))
-                defentry=cnt;
+                defentry=cnt;q
             end
             cnt=cnt+1;
         end
