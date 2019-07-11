@@ -1,4 +1,19 @@
 function ea_initrecentpatients(handles,patsub)
+% 
+%
+% USAGE:
+%
+%    ea_initrecentpatients(handles,patsub)
+%
+% INPUTS:
+%    handles:
+%    patsub:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ningfei Li, Original file
+%       - Daniel Duarte, Documentation
+
 if ~exist('patsub','var')
     patsub='patients';
 end
