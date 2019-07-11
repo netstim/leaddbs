@@ -1,4 +1,19 @@
 function ea_init_coregmrpopup(handles,refine)
+% 
+%
+% USAGE:
+%
+%    ea_init_coregmrpopup(handles,refine)
+%
+% INPUTS:
+%    handles:
+%    refine:
+%
+% .. AUTHOR:
+%       - Andreas Horn, Original file
+%       - Ningfei Li, Original file
+%       - Daniel Duarte, Documentation
+
 if ~exist('refine','var')
     refine=0;
 end
