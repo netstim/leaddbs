@@ -67,8 +67,9 @@ if auto
 end
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
-
-if ea_headmodel_changed(options,side,S,elstruct)
+hmchanged=ea_headmodel_changed(options,side,S,elstruct); % can only use this test once.
+assignin('caller','hmchanged',hmchanged);
+    if hmchanged
     disp('No suitable headmodel found, rebuilding. This may take a while...');
 
     %load('empirical_testdata'); % will produce data taken from lead dbs: 'coords','stimparams','side','options'

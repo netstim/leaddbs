@@ -1,4 +1,4 @@
-function [PL]=ea_showfibres_volume(resultfig,options)
+function [PL]=ea_showfibres_volume(resultfig,options,hmchanged)
 % This function shows fiber-connectivity from a volume defined by a nx3
 % point-list (volume). If stimparams.showconnectivities is set, connected
 % areas to the volume are also visualized. To do so, the function uses
@@ -22,20 +22,24 @@ for side=1:length(stimparams)
     VAT{side}=stimparams(side).VAT;
 end
 
+if ~exist('hmchanged','var')
+    hmchanged=1;
+end
+
 %-----------------------------begin changes----------------
 
 load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 
 %poptions=options;
 %[poptions.root,poptions.patientname]=fileparts(options.patient_list{options.expstatvat.pt});
-if isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,getappdata(resultfig,'elstruct'),S,0))
-    options.writeoutstats=0;
-end
+
+
 %--------------------------------end changes---------------------------------
 
 
+
 % clean downstreamfiles if necessary
-if ~isequal(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,getappdata(resultfig,'elstruct'),S,0))
+if hmchanged
     
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_left.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_right.nii'));
