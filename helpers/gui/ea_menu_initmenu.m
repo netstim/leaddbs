@@ -9,7 +9,7 @@ if isempty(menuprobe)
     pp= uimenu('Label','Preferences');
     uimenu(pp,'Label','Edit Preferences File...','Callback',{@ea_editprefs},'Accelerator','P');
     uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
-    
+
     p_c=uimenu(pp,'Label','Play sound on completed tasks.','Callback',{@ea_toggle_chirp});
     prefs=ea_prefs;
     if prefs.machine.chirp
@@ -17,7 +17,7 @@ if isempty(menuprobe)
     else
         p_c.Checked='off';
     end
-    
+
     m_c=uimenu(pp,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
     prefs=ea_prefs;
     if prefs.machine.methods_show
@@ -25,12 +25,12 @@ if isempty(menuprobe)
     else
         m_c.Checked='off';
     end
-    
-    
+
+
     if ismember('checkregfigs',cmd)
         cr=uimenu(f,'Label','Checkreg');
         uimenu(cr,'Label','Generate Checkreg figures','Callback',{@ea_gencheckreg,handles});
-        
+
         uimenu(cr,'Label','Aggregate all checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'allcheckreg'});
         uimenu(cr,'Label','Aggregate most recent normalization checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'normcheckreg'});
     end
@@ -39,18 +39,18 @@ if isempty(menuprobe)
        uimenu(cr,'Label','Check for outliers in localizations','Callback',{@ea_checkoutliers,handles});
        uimenu(cr,'Label','Rebase root directory of patient folders...','Callback',{@ea_rebasegrouppts,handles});
     end
-    
+
     if ismember('acpc',cmd)
         uimenu(f,'Label','Convert ACPC/MNI coordinates (Horn 2017)','Callback',{@ea_acpcquery,handles.leadfigure});
     end
-    
+
     normf=uimenu(f,'Label','Normalization');
     uimenu(normf,'Label','Add fiducial helper(s)...','Callback',{@ea_addfiducialhelper,handles},'Accelerator','F')
     uimenu(normf,'Label','Flatten fiducial helpers for selected patients','Callback',{@ea_flattenfiducialhelpers,handles})
     uimenu(normf,'Label','Delete fiducial helpers for selected patients','Callback',{@ea_deletefiducialhelpers,handles})
-    
+
     uimenu(f,'Label','Show processing report','Callback',{@ea_showprocessreport,handles},'Accelerator','R');
-    
+
     uimenu(f,'Label','Fuse volumes','Callback',{@ea_waveletfusion,handles});
 
     uimenu(f,'Label','Clean folders from unnecessary/legacy files','Callback',{@ea_cleanlegacy,handles});
@@ -58,14 +58,14 @@ if isempty(menuprobe)
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
     uimenu(f,'Label','Deface basefiles for selected subjects','Callback',{@ea_run_deface,handles});
 
-    
+
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
         uimenu(dbs,'Label','Recalculate DBS reconstruction in template space','Callback',{@ea_recalc_reco,handles});
     end
 
     if ismember('surfice',cmd)
-       si=uimenu(f,'Label','Surfice'); 
+       si=uimenu(f,'Label','Surfice');
         uimenu(si,'Label','Visualize DBS-scene in Surfice (template space)','Callback',{@ea_elvis_surfice,handles,0},'Accelerator','V');
         uimenu(si,'Label','Visualize Atlas set in Surfice (template space)','Callback',{@ea_atlvis_surfice,handles,0});
         %uimenu(si,'Label','Visualize DBS-scene in Surfice (native space)','Callback',{@ea_elvis_surfice,handles,1});
@@ -79,7 +79,7 @@ if isempty(menuprobe)
         uimenu(simco,'Label','Left hemisphere views','Callback',{@ea_surfice_heatmap_menu,handles,2,1});
         uimenu(simco,'Label','Bilateral views','Callback',{@ea_surfice_heatmap_menu,handles,[1,2],1});
     end
-    
+
     if ismember('export',cmd)
         e = uimenu(f,'Label','Export');
         uimenu(e,'Label','Export .PDF files for selected patient(s)','Callback',{@ea_exportpat,'PDF',handles},'Accelerator','E');
@@ -117,7 +117,7 @@ if isempty(menuprobe)
             uimenu(f,'Label','Export DICOM of Chariteatlas in untouched anchor space...','Callback',{@ea_applynormtofile_menu,handles,1,1,1,1,[ea_space,'chariteatlas.nii']});
         end
     end
-    
+
     if ismember('cluster',cmd)
         ea_menu_addsubmit(handles);
     end
@@ -140,17 +140,16 @@ if isempty(menuprobe)
     g = uimenu('Label','Install');
     [list,commands]=ea_checkinstall('list');
     for l=1:length(list)
-        
-       insit(l)=uimenu(g,'Label',[list{l}],'Callback',{@ea_menuinstall,commands{l}});
-       if ea_checkinstall(commands{l},1)
-           insit(l).Checked='on';
+        insit(l)=uimenu(g,'Label',[list{l}],'Callback',{@ea_menuinstall,commands{l}});
+        if ea_checkinstall(commands{l},1)
+        	insit(l).Checked='on';
         else
             insit(l).Checked='off';
         end
     end
 
     % mark that menu has already been installed.
-        setappdata(handles.leadfigure,'menuprobe',1);
+	setappdata(handles.leadfigure,'menuprobe',1);
 end
 
 
