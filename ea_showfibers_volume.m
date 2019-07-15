@@ -1,4 +1,4 @@
-function [PL]=ea_showfibres_volume(resultfig,options,hmchanged)
+function [PL]=ea_showfibers_volume(resultfig,options,hmchanged)
 % This function shows fiber-connectivity from a volume defined by a nx3
 % point-list (volume). If stimparams.showconnectivities is set, connected
 % areas to the volume are also visualized. To do so, the function uses
@@ -40,30 +40,30 @@ load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 
 % clean downstreamfiles if necessary
 if hmchanged
-    
+
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_left.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_right.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_right.nii'));    
-    
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_right.nii'));
+
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_left.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_right.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_right.nii'));  
-    
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_right.nii'));
+
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_gauss_left.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_gauss_right.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_gauss_left.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_gauss_right.nii'));
-    
+
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_dMRI.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_dMRI_l.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_dMRI_r.nii'));
-    
+
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_fMRI.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_fMRI_l.nii'));
     ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_fMRI_r.nii'));
-    
+
 end
 
 
@@ -227,7 +227,7 @@ for side=1:length(options.sides)
 
                     if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
                         clear thisatl
-                        
+
                         try % for midline or combined atlases, only the right side atlas is used.
                             if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
                                 thisatl=atlases.XYZ{atlas,1}.mm;
@@ -246,10 +246,10 @@ for side=1:length(options.sides)
 
 
                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(vatfv.vertices,vatfv.faces,thisatl))*tpv;
-                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);                            
-                            
+                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
+
                             % now also add efield overlap:
-                            
+
                             Vefield=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,...
                                 S.label,filesep,'vat_efield_',sidec]));
                             atlasvoxels=Vefield.mat\[thisatl,ones(length(thisatl),1)]';
@@ -258,7 +258,7 @@ for side=1:length(options.sides)
                             ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
                                 mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1))./...
                             sum(Vefield.img(:));
-                            
+
                     else % no voltage on this vat, simply set vi to zero.
                         ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
                         ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
