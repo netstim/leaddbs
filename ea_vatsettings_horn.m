@@ -73,7 +73,7 @@ function ea_fillpresetpopups(handles)
 
 condv={'Conductivity Presets:',nan,nan
     'General Heuristic (e.g. Buzsaki 2006)',0.33,0.14
-    'Frequency Adapted (cf. itis.ethz.ch)',0.0915,0.059};
+    'Frequency Adapted (80 kHz cf. itis.ethz.ch)',0.132,0.0804};
 set(handles.condpresets,'String',condv(:,1));
 setappdata(handles.condpresets,'data',condv);
 
