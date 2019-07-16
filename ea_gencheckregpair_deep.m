@@ -6,14 +6,9 @@ function ea_gencheckregpair_deep(moving,fixed,outfn)
 %    ea_gencheckregpair_deep(moving,fixed,outfn)
 %
 % INPUTS:
-%    moving:
-%    fixed:
-%    outfn:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
+%    moving:    registered moving image
+%    fixed:     fixed image
+%    outfn:     png file as a combination of the above two (fixed image shown as wireframe overlay)
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
 if ispc
