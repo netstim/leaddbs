@@ -192,7 +192,17 @@ synsmoothingssigmas = apref.smoothingsigmas.syn;
 if options.prefs.machine.normsettings.ants_skullstripped
     fixedmask=ea_path_helper([ea_space,'brainmask.nii.gz']);
 else
-    fixedmask='NULL';
+    if exist(ea_niigz([outputdir,filesep,'mask_template.nii']),'file')
+        fixedmask=ea_niigz([outputdir,filesep,'mask_template.nii']);
+    else
+        fixedmask='NULL';
+    end
+end
+
+if exist(ea_niigz([outputdir,filesep,'mask_anatomy.nii']),'file')
+    movingmask=ea_niigz([outputdir,filesep,'mask_anatomy.nii']);
+else
+    movingmask='NULL';
 end
 
 
@@ -200,7 +210,7 @@ rigidstage = [' --transform Rigid[0.25]' ... % bit faster gradient step (see htt
     ' --convergence ', rigidconvergence, ...
     ' --shrink-factors ', rigidshrinkfactors, ...
     ' --smoothing-sigmas ', rigidsmoothingssigmas, ...
-    ' --masks [',fixedmask,',NULL]'];
+    ' --masks [',fixedmask,',',movingmask,']'];
 
 for fi = 1:length(fixedimage)
         rigidstage = [rigidstage,...
@@ -211,7 +221,7 @@ affinestage = [' --transform Affine[0.15]'... % bit faster gradient step (see ht
     ' --convergence ', affineconvergence, ...
     ' --shrink-factors ', affineshrinkfactors ...
     ' --smoothing-sigmas ', affinesmoothingssigmas, ...
-    ' --masks [',fixedmask,',NULL]'];
+    ' --masks [',fixedmask,',',movingmask,']'];
 
 for fi = 1:length(fixedimage)
     affinestage = [affinestage,...
@@ -222,7 +232,7 @@ synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
     ' --convergence ', synconvergence, ...
     ' --shrink-factors ', synshrinkfactors ...
     ' --smoothing-sigmas ', synsmoothingssigmas, ...
-    ' --masks [',fixedmask,',NULL]'];
+    ' --masks [',fixedmask,',',movingmask,']'];
 
 
 for fi = 1:length(fixedimage)
