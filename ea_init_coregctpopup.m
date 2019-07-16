@@ -30,7 +30,7 @@ for nd=length(ndir):-1:1
             cdc{cnt}=thisndc;
             coregctmethod{cnt}=methodf;
             if strcmp(cdc{cnt},eval([options.prefs.ctcoreg.default,'(','''prompt''',')']))
-                defentry=cnt;q
+                defentry=cnt;
             end
             cnt=cnt+1;
         end
