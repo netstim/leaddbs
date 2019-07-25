@@ -156,7 +156,7 @@ if ismember(evtnm,{'all','threshold','smooth','hullsimplify'}) % need to recalc 
     fvc=isocaps(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
     obj.fv.faces=[obj.fv.faces;fvc.faces+size(obj.fv.vertices,1)];
     obj.fv.vertices=[obj.fv.vertices;fvc.vertices];
-    
+
     if obj.smooth
         obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
     else
@@ -177,27 +177,34 @@ if ismember(evtnm,{'all','threshold','smooth','hullsimplify'}) % need to recalc 
             obj.sfv=reducepatch(obj.sfv,simplify);
         end
     end
-    if obj.binary
-        obj.cdat=abs(repmat(atlasc,length(obj.sfv.vertices),1) ... % C-Data for surface
-            +randn(length(obj.sfv.vertices),1)*2)';
-    else
-        obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
-    end
+    
+             jetlist=parula;
+
+     if obj.binary
+         obj.cdat=abs(repmat(atlasc,length(obj.sfv.vertices),1) ... % C-Data for surface
+             +randn(length(obj.sfv.vertices),1)*2)';
+     else
+
+         obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
+         obj.cdat=round((ea_contrast(obj.cdat).*63)+1);
+         obj.cdat=jetlist(obj.cdat,:);
+     end
     
     
 end
 
-jetlist=jet;
 
 co=ones(1,1,3);
 co(1,1,:)=obj.color;
 atlasc=double(rgb2ind(co,jetlist));
 
+
+
 % show atlas.
 set(0,'CurrentFigure',obj.plotFigureH);
 set(obj.patchH,...
-    {'Faces','Vertices','CData','FaceColor','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
-    {obj.sfv.faces,obj.sfv.vertices,obj.cdat,obj.color,obj.alpha,'none','phong',obj.visible});
+    {'Faces','Vertices','FaceVertexCData','FaceColor','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
+    {obj.sfv.faces,obj.sfv.vertices,obj.cdat,'interp',obj.alpha,'none','phong',obj.visible});
 
 % add toggle button:
 set(obj.toggleH,...
