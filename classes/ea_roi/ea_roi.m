@@ -9,6 +9,7 @@ classdef ea_roi < handle
         nii % nifti loaded
         threshold % threshold to visualize
         color % color of patch
+        usesolidcolor=1 % whether to use isocolors or a solid manually defined color
         alpha=0.7 % alpha of patch
         fv % faces and vertices of patch
         sfv % smoothed version
@@ -114,6 +115,8 @@ classdef ea_roi < handle
                 @changeevent);
             addlistener(obj,'color','PostSet',...
                 @changeevent);
+            addlistener(obj,'usesolidcolor','PostSet',...
+                @changeevent);
             addlistener(obj,'threshold','PostSet',...
                 @changeevent);
             addlistener(obj,'smooth','PostSet',...
@@ -143,7 +146,7 @@ function obj=update_roi(obj,evtnm) % update ROI
 if ~exist('evtnm','var')
     evtnm='all';
 end
-if ismember(evtnm,{'all','threshold','smooth','hullsimplify'}) % need to recalc fv here:
+if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) % need to recalc fv here:
     bb=[0,0,0;size(obj.nii.img)];
     bb=map_coords_proxy(bb,obj.nii);
     gv=cell(3,1);
@@ -177,34 +180,43 @@ if ismember(evtnm,{'all','threshold','smooth','hullsimplify'}) % need to recalc 
             obj.sfv=reducepatch(obj.sfv,simplify);
         end
     end
+    jetlist=ea_redblue;
     
-             jetlist=parula;
-
-     if obj.binary
-         obj.cdat=abs(repmat(atlasc,length(obj.sfv.vertices),1) ... % C-Data for surface
-             +randn(length(obj.sfv.vertices),1)*2)';
-     else
-
-         obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
-         obj.cdat=round((ea_contrast(obj.cdat).*63)+1);
-         obj.cdat=jetlist(obj.cdat,:);
-     end
-    
-    
+    if obj.binary || obj.usesolidcolor
+        obj.cdat=abs(repmat(obj.color,length(obj.sfv.vertices),1) ... % C-Data for surface
+            +randn(length(obj.sfv.vertices),1)*2)';
+    else
+        
+        obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
+        obj.cdat=round((ea_contrast(obj.cdat).*63)+1);
+        obj.cdat=jetlist(obj.cdat,:);
+    end
 end
 
 
-co=ones(1,1,3);
-co(1,1,:)=obj.color;
-atlasc=double(rgb2ind(co,jetlist));
+
+
+%co=ones(1,1,3);
+%co(1,1,:)=obj.color;
+%atlasc=double(rgb2ind(co,jetlist));
 
 
 
 % show atlas.
 set(0,'CurrentFigure',obj.plotFigureH);
+
 set(obj.patchH,...
-    {'Faces','Vertices','FaceVertexCData','FaceColor','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
-    {obj.sfv.faces,obj.sfv.vertices,obj.cdat,'interp',obj.alpha,'none','phong',obj.visible});
+    {'Faces','Vertices','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
+    {obj.sfv.faces,obj.sfv.vertices,obj.alpha,'none','phong',obj.visible});
+if obj.binary || obj.usesolidcolor
+    set(obj.patchH,...
+        {'FaceColor'},...
+        {obj.color});
+else
+    set(obj.patchH,...
+        {'FaceVertexCData','FaceColor'},...
+        {obj.cdat,'interp'});
+end
 
 % add toggle button:
 set(obj.toggleH,...
