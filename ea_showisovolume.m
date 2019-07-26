@@ -12,7 +12,7 @@ setappdata(resultfig,'isobar',isobar);
 end
 hold on
 
-jetlist=othercolor('BuOr_12');
+jetlist=ea_redblue;
 % jetlist=jet;
 
 if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
@@ -99,29 +99,28 @@ for side=1:length(options.sides)
         nc=squeeze(ind2rgb(round(nc),jet));
         isopatch(side,1)=patch(fv{side},'FaceVertexCData',nc,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
 
-        jetlist=jet;
         ea_spec_atlas(isopatch(side,1),'isovolume',jet,1);
-    end
-    
-    % export isovolume manually here:
-    res=length(Vol);
-    chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
-    switch side
-        case 1
-            lr='right';
-        case 2
-            lr='left';
-    end
-    nii=ea_open_vol([ea_space,'bb.nii']);
-    nii.mat=mldivide([(chun1);(chun2);(chun3);ones(1,res)]',[xvec(chun1);yvec(chun2);zvec(chun3);ones(1,res)]')';
-    nii.img=permute(Vol,[2,1,3]);
-    nii.voxsize=ea_detvoxsize(nii.mat);
-    nii.dim=size(Vol);
-    nii=rmfield(nii,'private');
-    nii.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',lr,'.nii'];
-    ea_write_nii(nii);
-    patchbutton(side)=uitoggletool(isobar,'CData',ea_get_icn('isovolume'),'TooltipString',options.d3.isomatrix_name,'OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
+        
+        % export isovolume manually here:
+        res=length(Vol);
+        chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
+        switch side
+            case 1
+                lr='right';
+            case 2
+                lr='left';
+        end
+        nii=ea_open_vol([ea_space,'bb.nii']);
+        nii.mat=mldivide([(chun1);(chun2);(chun3);ones(1,res)]',[xvec(chun1);yvec(chun2);zvec(chun3);ones(1,res)]')';
+        nii.img=permute(Vol,[2,1,3]);
+        nii.voxsize=ea_detvoxsize(nii.mat);
+        nii.dim=size(Vol);
+        nii=rmfield(nii,'private');
+        nii.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',lr,'.nii'];
+        ea_write_nii(nii);
+        patchbutton(side)=uitoggletool(isobar,'CData',ea_get_icn('isovolume'),'TooltipString',options.d3.isomatrix_name,'OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
 
+    end
 end
 
 

@@ -21,7 +21,7 @@ if ~isfield(elstruct,'activecontacts')
     elstruct.activecontacts{2}=zeros(elspec.numel,1);
 end
 if ~isfield(options.d3,'pntcmap')
-    jetlist=parula;
+    jetlist=ea_redblue;
 else
     jetlist=options.d3.pntcmap;
 end
