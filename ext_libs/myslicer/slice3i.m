@@ -42,7 +42,8 @@ end
 if ~exist('controlhandles','var')
     controlhandles='';
 end
-    h = update_slice(vol, I2X, slicedim, sliceidx, h,controlhandles,resultfig);
+
+h = update_slice(vol, I2X, slicedim, sliceidx, h, controlhandles, resultfig);
     
 % set up gui
 gui.handle = h;
@@ -50,7 +51,7 @@ gui.vol = vol;
 gui.I2X = I2X;
 gui.slicedim = slicedim;
 gui.sliceidx = sliceidx;
-set(gui.handle,'ButtonDownFcn',{@startmovit,controlhandles,resultfig});
+set(gui.handle,'ButtonDownFcn',{@startmovit, controlhandles, resultfig});
 set(h,'UserData',gui);
 
 
@@ -76,10 +77,9 @@ function movit(src,evnt,controlhandles,resultfig)
 gui = get(get(gcf,'UserData'),'UserData');
 % Some safetymeasures
 try
-if isequal(gui.startray,[])
-    return
-end
-catch
+    if isequal(gui.startray,[])
+        return
+    end
 end
 
 % Do "smart" positioning of the markers...
@@ -101,7 +101,7 @@ slicediff = alphanow-alphastart;
 
 gui.sliceidx = gui.startidx+slicediff;
 gui.sliceidx = min(max(1,gui.sliceidx),size(gui.vol,gui.slicedim));
-update_slice(gui.vol, gui.I2X, gui.slicedim, gui.sliceidx, gui.handle,controlhandles,resultfig);
+update_slice(gui.vol, gui.I2X, gui.slicedim, gui.sliceidx, gui.handle, controlhandles, resultfig);
 drawnow;
 
 % Store gui object
@@ -120,25 +120,25 @@ set(get(gcf,'UserData'),'UserData',gui);
 set(gcf,'UserData',[]);
 drawnow;
 
-function h = update_slice(vol, I2X, slicedim, sliceidx, handle,controlhandles,resultfig)
+
+function h = update_slice(vol, I2X, slicedim, sliceidx, handle, controlhandles, resultfig)
 
 if ndims(vol) == 3         %Scalar mode
 elseif ndims(vol) == 4     %RGB mode
 else
-  error('Only scalar and RGB images supported')
+	error('Only scalar and RGB images supported')
 end
 
 % Create the slice
 if slicedim == 3 % k
-  ij2xyz = I2X(:,[1 2]);
-  ij2xyz(:,3) = I2X*[0 0 sliceidx 1]';
-  if round(sliceidx)<1
-      sliceidx=1;
-  elseif round(sliceidx)>size(vol,3)
-      sliceidx=size(vol,3);
-  end
-  sliceim = squeeze(vol(:,:,round(sliceidx),:));
-
+    ij2xyz = I2X(:,[1 2]);
+    ij2xyz(:,3) = I2X*[0 0 sliceidx 1]';
+    if round(sliceidx)<1
+    	sliceidx=1;
+    elseif round(sliceidx)>size(vol,3)
+    	sliceidx=size(vol,3);
+    end
+    sliceim = squeeze(vol(:,:,round(sliceidx),:));
 elseif slicedim == 2 % j
   ij2xyz = I2X(:,[1 3]);
   ij2xyz(:,3) = I2X*[0 sliceidx 0 1]';
@@ -148,7 +148,6 @@ elseif slicedim == 2 % j
       sliceidx=size(vol,2);
   end
   sliceim = squeeze(vol(:,round(sliceidx),:,:));
-
 elseif slicedim == 1 % i
   ij2xyz = I2X(:,[2 3]);
   ij2xyz(:,3) = I2X*[sliceidx 0 0 1]';
@@ -158,7 +157,6 @@ elseif slicedim == 1 % i
       sliceidx=size(vol,1);
   end
   sliceim = squeeze(vol(round(sliceidx),:,:,:));
-
 else
     error('Slicedim should be 1, 2 or 3')
 end
@@ -176,7 +174,7 @@ resdivs=1; % could increase to 2 but would render a bit slow.
 if length(size(sliceim))==2
     sliceim=ea_contrast(sliceim,c,o)*64;
 else
-        sliceim=uint8(ea_contrast(single(sliceim),c,o)*255);
+	sliceim=uint8(ea_contrast(single(sliceim),c,o)*255);
 end
 if size(sliceim,3)==1
     sliceim=interp2(sliceim,resdivs);
@@ -184,36 +182,31 @@ else
    resdivs=0;
 end
 
-
 ij2xyz(:,1:2)=ij2xyz(:,1:2)/(2^resdivs);
 try ea_update_anatomycontrol(sliceidx,slicedim,I2X,controlhandles); end
 if isempty(handle)
-  h = image3(sliceim,ij2xyz);
+	h = image3(sliceim,ij2xyz);
 else
-  h = image3(sliceim,ij2xyz,handle);
+	h = image3(sliceim,ij2xyz,handle);
 end
-
-
 
 
 function ea_update_anatomycontrol(sliceidx,slicedim,mat,controlhandles)
 
-        slicecoord=[ones(4,1)];
-        slicecoord(slicedim)=sliceidx;
-        slicecoord=mat*slicecoord;
-        switch slicedim
-            case 1
-                slicehdl='xval';
-            case 2
-                slicehdl='yval';
-            case 3
-                slicehdl='zval';
-        end
-        
-        if get(controlhandles.slicepopup,'Value')==1
-            set(controlhandles.(slicehdl),'String',sprintf('%1.1f',slicecoord(slicedim)));
-        elseif get(controlhandles.slicepopup,'Value')==2
-            set(controlhandles.(slicehdl),'String',sprintf('%1.0f',sliceidx));
-        end
+slicecoord=[ones(4,1)];
+slicecoord(slicedim)=sliceidx;
+slicecoord=mat*slicecoord;
+switch slicedim
+    case 1
+        slicehdl='xval';
+    case 2
+        slicehdl='yval';
+    case 3
+        slicehdl='zval';
+end
 
-
+if get(controlhandles.slicepopup,'Value')==1
+    set(controlhandles.(slicehdl),'String',sprintf('%1.1f',slicecoord(slicedim)));
+elseif get(controlhandles.slicepopup,'Value')==2
+    set(controlhandles.(slicehdl),'String',sprintf('%1.0f',sliceidx));
+end

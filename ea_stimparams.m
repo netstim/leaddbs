@@ -963,7 +963,12 @@ clear PL
 for group=flix
     setappdata(resultfig,'stimparams',stimparams(group,:));
     setappdata(resultfig,'curS',S(group));
-    ea_showfibres_volume(resultfig,options);
+
+    if ~exist('hmchanged','var')
+        hmchanged=1;
+    end
+    ea_showfibers_volume(resultfig,options,hmchanged);
+
     %copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
     try
         copyfile([options.root,options.patientname,filesep,'ea_pm.nii'],[options.root,options.patientname,filesep,'ea_pm_group_',num2str(group),'.nii']);
@@ -1689,7 +1694,7 @@ else
         setappdata(resultfig,'stimparams',stimparams(1,:));
         setappdata(resultfig,'curS',S(1))
         options.writeoutstats = 1;
-        ea_showfibres_volume(resultfig,options);
+        ea_showfibers_volume(resultfig,options);
     else
         disp('VAT, cannot be visualized please recalculate')
     end

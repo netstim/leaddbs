@@ -301,7 +301,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             if ~isfield(M,'stats')
                 % if no stats  present yet, return.
                 setappdata(handles.leadfigure,'M',M);
-                set(handles.leadfigure,'name','Lead-Group Analysis');
+                set(handles.leadfigure,'name','Lead Group Analysis');
                 break
             end
 

@@ -21,8 +21,8 @@ if exist([M.ui.groupdir,'correlative_fibertracts',msuffix,savesuffix,'.mat'],'fi
     end
 end
 
-if exist([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'file') % check if base connectome changed.
-    d=load([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'opts');
+if exist([M.ui.groupdir,'connected_fibers',msuffix,savesuffix,'.mat'],'file') % check if base connectome changed.
+    d=load([M.ui.groupdir,'connected_fibers',msuffix,savesuffix,'.mat'],'opts');
     if isequaln(d.opts.connectome,opts.connectome)
         connectomechanged=0;
     end

@@ -93,7 +93,7 @@ end
                                    refanat, ...
                                    options.coregmr.method);
 wfibsvox_anat = wfibsvox_anat';
-ea_savefibertracts([directory,ftrfname,'_anat.mat'],wfibsvox_anat,idx,'vox');
+ea_savefibertracts([directory,ftrfname,'_anat.mat'],[wfibsvox_anat,fibers(:,4)],idx,'vox');
 fprintf('\nGenerating trk in anat space...\n');
 ea_ftr2trk([directory,ftrfname,'_anat.mat'],refanat);
 
@@ -146,14 +146,12 @@ if vizz
 end
 
 %% export fibers
-wfibsmm_mni=[wfibsmm_mni,fibers(:,4)];
-wfibsvox_mni=[wfibsvox_mni,fibers(:,4)];
 [~,ftrbase]=fileparts(options.prefs.FTR_normalized);
 if ~exist([directory,'connectomes',filesep,'dMRI'],'file')
     mkdir([directory,'connectomes',filesep,'dMRI']);
 end
-ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'.mat'],wfibsmm_mni,idx,'mm');
-ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'_vox.mat'],wfibsvox_mni,idx,'vox',mniaffine);
+ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'.mat'],[wfibsmm_mni,fibers(:,4)],idx,'mm');
+ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'_vox.mat'],[wfibsvox_mni,fibers(:,4)],idx,'vox');
 
 %% create normalized trackvis version
 fprintf('\nExporting normalized fibers to TrackVis...\n');

@@ -16,6 +16,6 @@ script:
 after_success:
 
     # submit coverage report
-    #- if [[ "$MATLAB_VER" == "R2018b" && "$ARCH" == "Linux" ]]; then
-    #  bash <(curl -s https://codecov.io/bash) -f "!*.lst";
-    #  fi
+    - if [[ "$MATLAB_VER" == "R2018b" && "$ARCH" == "Linux" ]]; then
+      bash <(curl -s https://codecov.io/bash) -f "!*.lst";
+      fi

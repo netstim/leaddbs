@@ -9,13 +9,15 @@ if exist([directory,'ea_coreg_approved.mat'], 'file')
     isapproved = load([directory,'ea_coreg_approved.mat']);
     if isfield(isapproved, b0_anat)
         isapproved = isapproved.(b0_anat);
+    else
+        isapproved = 0;
     end
 else
     isapproved = 0;
 end
 
 if ~isapproved
-    fprintf(['\nCoregistration from b0 to anat not approved!\n', ...
+    fprintf(['\nCoregistration between b0 and anat not done or not approved yet!\n', ...
              'Will do the coregistration using the method chosen from GUI.\n\n'])
     if exist([directory,'ea_coregmrmethod_applied.mat'], 'file')
         coregmrmethod = load([directory,'ea_coregmrmethod_applied.mat']);
@@ -46,11 +48,17 @@ else
             end
             options.coregmr.method = coregmrmethod.(b0_anat);
         else % 'ea_coregmrmethod_applied.mat' found but method not set, redo coreg use method from GUI
+            fprintf(['\nThe coregistration between b0 and anat has been approved.\n', ...
+                     'But it is not clear which method has been used.\n', ...
+                     'Will redo the coregistration using the method chosen from GUI.\n\n']);
             coregmrmethod.(b0_anat) = options.coregmr.method;
             save([directory,'ea_coregmrmethod_applied.mat'],'-struct','coregmrmethod');
             docoreg = 1;
         end
     else % 'ea_coregmrmethod_applied.mat' not found, redo coreg use method from GUI
+        fprintf(['\nThe coregistration between b0 and anat has been approved.\n', ...
+                 'But it is not clear which method has been used.\n', ...
+                 'Will redo the coregistration using the method chosen from GUI.\n\n']);
         coregmrmethod.(b0_anat) = options.coregmr.method;
         save([directory,'ea_coregmrmethod_applied.mat'],'-struct','coregmrmethod');
         docoreg = 1;
@@ -96,4 +104,4 @@ end
 
 % Transform anat to b0 to generate checkreg image:
 ea_apply_coregistration([directory,options.prefs.b0], [directory,options.prefs.prenii_unnormalized], ...
-                        [b0_anat,'.nii'], strrep(options.coregmr.method, 'Hybrid SPM & ', ''));
+                        [directory,b0_anat,'.nii'], strrep(options.coregmr.method, 'Hybrid SPM & ', ''));

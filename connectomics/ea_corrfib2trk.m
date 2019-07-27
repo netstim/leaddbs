@@ -34,7 +34,7 @@ end
 fibcell = fibcell(selInd);
 
 % Construct fibers for trk conversion
-idx = cellfun(@length, fibcell);
+idx = cellfun(@(x) size(x,1), fibcell);
 fibers = zeros(sum(idx), 4);
 fibers(:, 1:3) = cell2mat(fibcell);
 fibInd = repelem((1:length(idx))', idx);

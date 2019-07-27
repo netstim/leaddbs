@@ -17,8 +17,8 @@ switch cmd
                  'Macroscale Human Connectome Atlas (Yeh 2018)'
                  'Structural group connectome 20 subjects Gibbs-tracker (Horn 2013)'
                  'Structural group connectome 169 NKI subjects Gibbs-tracker (Horn 2016)'
-                 'Structural group connectome 32 Adult Diffusion HCP subjects GQI (Horn 2017)'
-                 'Structural group connectome 90 PPMI PD-patients GQI (Ewert 2017)'
+                 'Structural group connectome 32 Adult Diffusion HCP subjects GQI v1.1 (Horn 2017)'
+                 'Structural group connectome 85 PPMI PD-patients GQI v1.1 (Ewert 2017)'
                  'Functional group connectome 74 PPMI PD-patients, 15 controls (Horn 2017)'};
 
         commands={'leaddata'
@@ -71,7 +71,7 @@ switch cmd
             disp('2009b asym LR flip transform is installed.')
         end
     case '7tcgflash'
-        if exist([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'])
+        if exist([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'], 'file')
             movefile([ea_space,'backdrops',filesep,'7T_Flash_Horn_2018.mat'], ...
                      [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat']);
 
@@ -100,6 +100,8 @@ switch cmd
             success=ea_downloadasset('7T Cardiac Gated Flash MRI',...
                 [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat'],...
                 '7tcgflash');
+            m = matfile([ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.mat'],'Writable',true);
+            m.fname = [ea_space,'backdrops',filesep,'7T_Flash_Horn_2019.nii'];
             fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt'],'a');
             fprintf(fid,'%s %s\n','7T_Flash_Horn_2019.mat','7T_Cardiac_Gated_Flash_MRI_(Horn_2019)');
             fclose(fid);
@@ -123,6 +125,8 @@ switch cmd
             success=ea_downloadasset('7T Ex Vivo 100um Brain Atlas',...
                 [ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.mat'],...
                 '7tev100um');
+            m = matfile([ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.mat'],'Writable',true);
+            m.fname = [ea_space,'backdrops',filesep,'7T_100um_Edlow_2019.nii'];
             fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt'],'a');
             fprintf(fid,'%s %s\n','7T_100um_Edlow_2019.mat','7T_Ex_Vivo_100um_Brain_Atlas_(Edlow_2019)');
             fclose(fid);
@@ -206,7 +210,7 @@ switch cmd
             disp('Structural Group Connectome (Horn 2016) is installed.')
         end
     case 'groupconnectome2017'
-        checkf=[ea_getconnectomebase('dmri'),'HCP_MGH_30fold_groupconnectome (Horn 2017)',filesep,'data.mat'];
+        checkf=[ea_getconnectomebase('dmri'),'HCP_MGH_32fold_groupconnectome (Horn 2017)',filesep,'data.mat'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
             success=~force;
@@ -225,7 +229,7 @@ switch cmd
             disp('Structural Group Connectome (Horn 2017) is installed.')
         end
     case 'groupconnectome_ppmi2017'
-        checkf=[ea_getconnectomebase('dmri'),'PPMI_90 (Ewert 2017)',filesep,'data.mat'];
+        checkf=[ea_getconnectomebase('dmri'),'PPMI_85 (Ewert 2017)',filesep,'data.mat'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
             success=~force;

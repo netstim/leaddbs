@@ -29,8 +29,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
    
     /* Number of vertices */
     const mwSize *VertexDims;
-    int VertexN=0;
-    int VertexNA[1]={0};    
+    mwSize VertexN=0;
+    mwSize VertexNA[1]={0};    
     
     /* Point Update temporary storage */
     double Ux, Uy, Uz;

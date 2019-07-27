@@ -33,7 +33,7 @@ for group=unique(M.patient.group)'
             fibsimpval(~logical(optsval))=nan; % Delete all unconnected values
             nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
             nfibsimpval(logical(optsval))=nan; % Delete all connected values
-            [~,~,~,Model]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
+            [~,p,~,Model]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
             Model.tstat(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
             for pt=find(M.patient.group==group)
                 thisptval=fibsval(:,pt); % this patients connections to each fibertract (1 = connected, 0 = unconnected) 
@@ -52,7 +52,7 @@ loginx=zeros(size(Ihat)); loginx(allpts)=1;
 Ihat(~loginx)=nan; % make sure info of not included patients are not used
 
 
-h=ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman');
+h=ea_corrplot(I,Ihat',{'Disc. Fiber prediction LOOCV','Empirical','Predicted'},'permutation_spearman',M.patient.group);
 saveas(h,'my_result.png');
 
 

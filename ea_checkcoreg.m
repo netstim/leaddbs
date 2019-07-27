@@ -453,7 +453,7 @@ switch ea_stripext(currvol)
                 movefile([directory,ea_stripext(useasanchor),'2',ea_stripext(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
                     [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
             end
-            ea_cleandownstream(options,directory,thisrest);
+            ea_cleandownstream(directory,thisrest);
         else  % other images
             ea_backuprestore([directory,presentfiles{activevolume}]);
             ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
@@ -764,7 +764,7 @@ end
 
 if ~isempty(b0restanchor{activevolume})
     thisrest=strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
-    ea_cleandownstream(options,directory,thisrest)
+    ea_cleandownstream(directory,thisrest)
 end
 
 presentfiles=getappdata(handles.leadfigure,'presentfiles');

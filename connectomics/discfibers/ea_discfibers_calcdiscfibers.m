@@ -57,13 +57,13 @@ if reforce
             allroilist(sub,:)=ea_genflippedjointnii([M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat',suffix,'_right.nii'],[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat',suffix,'_left.nii'],statmetric==1);
         end
     end
-    if ~exist([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'file')
+    if ~exist([M.ui.groupdir,'connected_fibers',msuffix,savesuffix,'.mat'],'file')
         cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename,filesep,'data.mat'];
     else
         if connectomechanged
             cfile=[ea_getconnectomebase('dMRI'),M.ui.connectomename,filesep,'data.mat'];
         else
-            cfile=[M.ui.groupdir,'connected_fibers',msuffix,'.mat'];
+            cfile=[M.ui.groupdir,'connected_fibers',msuffix,savesuffix,'.mat'];
         end
     end
     switch statmetric
@@ -72,11 +72,11 @@ if reforce
         case 2 % spearmans R
             [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},M.ui.listselect,{I},efieldthresh);
     end
-    save([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'fibsin','opts','-v7.3');
+    save([M.ui.groupdir,'connected_fibers',msuffix,savesuffix,'.mat'],'fibsin','opts','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts_fibsval',msuffix,savesuffix,'.mat'],'fibsval','iaix','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts',msuffix,savesuffix,'.mat'],'fibsweighted','opts','-v7.3');
 else
-    load([M.ui.groupdir,'connected_fibers',msuffix,'.mat'],'fibsin','opts');
+    load([M.ui.groupdir,'connected_fibers',msuffix,savesuffix,'.mat'],'fibsin','opts');
     load([M.ui.groupdir,'correlative_fibertracts_fibsval',msuffix,savesuffix,'.mat']);
     load([M.ui.groupdir,'correlative_fibertracts',msuffix,savesuffix,'.mat']);
 end

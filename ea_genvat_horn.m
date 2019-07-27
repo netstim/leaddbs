@@ -60,8 +60,12 @@ setappdata(resultfig,'elstruct',elstruct);
     else
         elstruct.stretchfactor=0.5;
     end
-
-    if ea_headmodel_changed(options,side,elstruct)
+    
+    
+    
+    hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test once.
+    assignin('caller','hmchanged',hmchanged);
+    if hmchanged
         ea_dispt('Headmodel needs to be re-calculated. This may take a while...');
 
         load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);

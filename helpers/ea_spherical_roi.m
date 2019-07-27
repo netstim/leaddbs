@@ -47,6 +47,7 @@ for a=1:size(mni,1)
     Vol.img(Vol.img~=1)=0;
     Vol.dt =[16,0];
     Vol.fname=fname;
+    Vol.img=Vol.img(1:Vol.dim(1),1:Vol.dim(2),1:Vol.dim(3));
     ea_write_nii(Vol);
 end
 

@@ -151,7 +151,7 @@ function nii = ea_load_untouch_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_i
 
    %  Read the dataset header
    %
-   [nii.hdr,nii.filetype,nii.fileprefix,nii.machine] = load_nii_hdr(filename);
+   [nii.hdr,nii.filetype,nii.fileprefix,nii.machine] = ea_load_nii_hdr(filename);
 
    if nii.filetype == 0
       nii.hdr = load_untouch0_nii_hdr(nii.fileprefix,nii.machine);

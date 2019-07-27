@@ -82,7 +82,7 @@ im=imread([earoot,'icons',filesep,'logo_lead_anatomy.png']);
 image(im);
 axis off;
 axis equal;
-set(handles.leadfigure,'name','Lead-Anatomy','color','w');
+set(handles.leadfigure,'name','Lead Anatomy','color','w');
 
 ea_init_coregmrpopup(handles);
 

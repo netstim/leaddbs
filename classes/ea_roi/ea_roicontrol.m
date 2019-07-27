@@ -22,7 +22,7 @@ function varargout = ea_roicontrol(varargin)
 
 % Edit the above text to modify the response to help ea_roicontrol
 
-% Last Modified by GUIDE v2.5 26-Sep-2017 17:22:15
+% Last Modified by GUIDE v2.5 26-Jul-2019 12:43:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -196,3 +196,14 @@ obj.visible='on';
     case 0
    obj.visible='off';
 end
+
+
+% --- Executes on button press in solidcolor.
+function solidcolor_Callback(hObject, eventdata, handles)
+% hObject    handle to solidcolor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of solidcolor
+obj=getappdata(handles.roicontrol,'obj');
+obj.usesolidcolor=get(hObject,'Value');

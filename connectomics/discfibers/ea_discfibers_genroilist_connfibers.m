@@ -12,15 +12,15 @@ allroilist=cat(2,roilist{:});
 % load in all ROI
 
 cnt=1;
-XYZmm = cell(length(allroilist), 1);
-nii = cell(length(allroilist), 2);
+XYZmm = cell(size(allroilist,1), 1);
+nii = cell(size(allroilist,1), 2);
 if strcmp(mode, 'binary')
     valsmm = [];
 else
-    valsmm = cell(length(allroilist), 1);
+    valsmm = cell(size(allroilist,1), 1);
 end
 ea_dispercent(0,'Aggregating ROI');
-for roi=1:length(allroilist)
+for roi=1:size(allroilist,1)
     if size(allroilist,2)==2 % left and right entered separately, combine.
         nii{roi,1}=ea_load_nii(allroilist{roi,1});
 
@@ -74,7 +74,7 @@ for roi=1:length(allroilist)
         cnt=cnt+1;
     end
 
-    ea_dispercent(roi/length(allroilist));
+    ea_dispercent(roi/size(allroilist,1));
 end
 ea_dispercent(1,'end');
 ea_dispt('Selecting connected fibers');

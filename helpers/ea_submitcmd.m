@@ -1,7 +1,7 @@
-function err=ea_submitcmd(cmd)
+function status = ea_submitcmd(cmd)
 
 if ~ispc
-    err=system(['bash -c "', cmd, '"']);
+    status = system(['bash -c "', cmd, '"']);
 else
-    err=system(cmd);
+    status = system(cmd);
 end

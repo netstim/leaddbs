@@ -114,7 +114,7 @@ end
 try
     if get(controlhandles.slicepopup,'Value')==1
 
-        togglestates.xyzmm=[togglestates.xyzmm';1];
+        togglestates.xyzmm=[togglestates.xyzmm,1]';
 
         try
             xyzv= V{1}.mat \ togglestates.xyzmm;
@@ -132,7 +132,7 @@ try
 
     end
 catch % direct call from script.
-    xyzv = V{1}.mat \ [togglestates.xyzmm,1]';
+    xyzv = round(V{1}.mat \ [togglestates.xyzmm,1]');
 end
 
 % balance the contrast

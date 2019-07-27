@@ -46,7 +46,7 @@ else
         else
             error('Transformation file not found! Please rerun normalization.');
         end
-        
+
     else
         if exist([directory,glprebase,'Composite',ea_getantstransformext(directory)],'file')
             tstring=[' -t [',ea_path_helper([directory,glprebase,istr,'Composite',ea_getantstransformext(directory)]),',0]'];
@@ -75,7 +75,7 @@ uuid=ea_generate_uuid;
 
 cmd = [applyTransformsToPoints, ...
     ' --dimensionality 3' ...   % dimensionality
-    ' --precision 1' ...    % double precision
+    ' --precision 0' ...    % single precision
     ' --input ', ea_path_helper([directory,'tmpin_',uuid,'.csv']) ...  % input csv file with x,y,z,t (at least) as the column header
     ' --output ', ea_path_helper([directory,'tmpout_',uuid,'.csv']) ...    % warped output csv file
     tstring];
@@ -107,5 +107,5 @@ try
 catch
     ea_error(['Cannot open file for writing at ',pth,'.']);
 end
-fprintf(fid,'%.15f, %.15f, %.15f, 0\n',input'); %transpose needed for 'fprintf': matrix column to file row
+fprintf(fid,'%.9f, %.9f, %.9f, 0\n',input'); % transpose needed for 'fprintf': matrix column to file row
 fclose(fid);
