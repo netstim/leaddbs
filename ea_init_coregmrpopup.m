@@ -1,18 +1,13 @@
 function ea_init_coregmrpopup(handles,refine)
-% 
+% Initializes MR coregistration methods popupmenu.
 %
 % USAGE:
 %
 %    ea_init_coregmrpopup(handles,refine)
 %
 % INPUTS:
-%    handles:
-%    refine:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
+%    handles:       LEAD GUI handle
+%    refine:        deprecated
 
 if ~exist('refine','var')
     refine=0;
