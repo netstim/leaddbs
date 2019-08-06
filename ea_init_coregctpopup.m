@@ -1,19 +1,14 @@
 function ea_init_coregctpopup(handles,options,handlestring)
-% 
+% Initializes CT coregistration methods popupmenu.
 %
 % USAGE:
 %
-%    [options, presentfiles] = ea_assignpretra(options,allowgz)
+%    ea_init_coregctpopup(handles,options,handlestring)
 %
 % INPUTS:
-%    handles:
-%    options:
-%    handlestring:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
+%    handles:           LEAD GUI handle
+%    options:           deprecated
+%    handlestring:      
 
 if ~exist('handlestring','var')
     handlestring='coregctmethod';
