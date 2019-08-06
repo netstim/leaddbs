@@ -1,19 +1,14 @@
 function ea_hyperlink_label(label, url, position)
-% 
+% Creates a clickable hyperlink label
 %
 % USAGE:
 %
 %    ea_hyperlink_label(label, url, position)
 %
 % INPUTS:
-%    label:
-%    url:
-%    position:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
+%    label:         label text
+%    url:           linked URL
+%    position:      position of the label
 
 labelStr = ['<html><a href="">' label '</a></html>'];
 jLabel = javaObjectEDT('javax.swing.JLabel', labelStr);
