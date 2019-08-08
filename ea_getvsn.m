@@ -49,6 +49,9 @@ switch com
         end
 end
 
+if isdeployed
+    version = [version ' Standalone'];
+end
 
 % rough version history: (see git repo for details)
 %
