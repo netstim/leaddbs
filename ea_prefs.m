@@ -18,12 +18,12 @@ dmachine = load([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat']);
 % check user prefs
 home = ea_gethome;
 
-if isdeployed
-    disp(['Running Lead-DBS in compiled mode, CTFROOT=', ea_getearoot, '; HOME=', home, '.']);
-end
+% if isdeployed
+%     disp(['Running Lead-DBS in compiled mode, CTFROOT=', ea_getearoot, '; HOME=', home, '.']);
+% end
 
-if ~exist([home, '.ea_prefs.m'], 'file')
-    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default.m'], [home, '.ea_prefs.m'], 'f');
+if ~exist([home, '.ea_prefs', ea_prefsext], 'file')
+    copyfile([ea_getearoot, 'common', filesep, 'ea_prefs_default', ea_prefsext], [home, '.ea_prefs', ea_prefsext], 'f');
 end
 
 if ~exist([home, '.ea_prefs.mat'], 'file')
@@ -32,17 +32,24 @@ end
 
 % load user prefs
 try
-    % file name starting with '.' is not a valid function/script name, so
-    % copy it to a temp file and then run it.
-    tempPrefs = ['ea_prefs_', strrep(ea_generate_uuid, '-', '_')];
-    copyfile([home, '.ea_prefs.m'], [ea_getearoot, tempPrefs, '.m'])
-    uprefs = feval(tempPrefs, patientname);
-    delete([ea_getearoot, tempPrefs, '.m']);
-    umachine = load([home, '.ea_prefs.mat']);
+    if ~isdeployed
+        % file name starting with '.' is not a valid function/script name, so
+        % copy it to a temp file and then run it.
+        tempPrefs = ['ea_prefs_', strrep(ea_generate_uuid, '-', '_')];
+        copyfile([home, '.ea_prefs.m'], [ea_getearoot, tempPrefs, '.m']);
+        uprefs = feval(tempPrefs, patientname);
+        delete([ea_getearoot, tempPrefs, '.m']);
+        umachine = load([home, '.ea_prefs.mat']);
+    else
+        fid = fopen([home,'.ea_prefs.json'],'rt');
+        uprefs = jsondecode(fread(fid,'*char')'); fclose(fid);
+        umachine = load([home, '.ea_prefs.mat']);
+    end
 catch
     warning('User preferences file could not be read. Please set write permissions to Lead-DBS install directory accordingly.');
     return
 end
+
 
 % combine default prefs and user prefs
 prefs = combinestructs(dprefs, uprefs);

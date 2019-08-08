@@ -11,6 +11,6 @@ if ~strcmp(home(end), filesep)
 end
 
 if isdeployed
-   mkdir([ctfroot, filesep, 'home', filesep]);
    home = [ctfroot, filesep, 'home', filesep];
+   if ~exist(home, 'dir'), mkdir(home); end
 end

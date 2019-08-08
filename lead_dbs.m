@@ -123,6 +123,16 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+% Disable buttons for standalone app
+if isdeployed
+    set(handles.exportcode,'Enable','off');
+    h = findall(hObject, 'Type', 'uimenu');
+    set(findobj(h,'Label','Submit'),'Enable','off');
+    set(findobj(h,'Label','Open in...'),'Enable','off');
+    set(findobj(h,'Label','Install development version of Lead'),'Enable','off');
+    set(findobj(h,'Label','Install development version of Lead'),'Checked','off');
+end
+
 % UIWAIT makes lead_dbs wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 

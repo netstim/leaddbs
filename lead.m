@@ -69,7 +69,7 @@ if ~isdeployed
         end
     end
 else
-    fprintf(1, '%s\n', ctfroot);
+    %fprintf(1, '%s\n', ctfroot);
 end
 
 ea_compat_data;
@@ -148,6 +148,13 @@ ea_setbuttonbackdrop(handles.startgroup,[earoot,'icons',filesep,'logo_lead_group
 ea_setbuttonbackdrop(handles.startanatomy,[earoot,'icons',filesep,'logo_lead_anatomy_small.png']);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
+% Disable buttons for standalone app
+if isdeployed
+    set(handles.startconnectome,'Enable','off')
+    set(handles.startgroup,'Enable','off')
+    set(handles.startanatomy,'Enable','off')
+end
+
 % UIWAIT makes lead wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
@@ -167,7 +174,9 @@ function varargout = lead_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-
+if isvalid(hObject) && nargout
+    varargout{1} = hObject;
+end
 
 % --- Executes on button press in startdbs.
 function startdbs_Callback(hObject, eventdata, handles)

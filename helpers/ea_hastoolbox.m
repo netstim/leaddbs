@@ -20,7 +20,7 @@ switch cmd
             end
             if exist(fullfile(pth,'bin','recon-all'),'file')
                 success=1;
-                ea_injectprefstring(['prefs.fspath=''',pth,filesep,''';']);
+                ea_injectprefstring('fspath',[pth,filesep]);
             end
             options.prefs=ea_prefs;
         end
@@ -53,7 +53,7 @@ switch cmd
             end
             if exist(fullfile(pth,'bin',filesep,'fsl'),'file')
                 success=1;
-                ea_injectprefstring(['prefs.fsldir=''',pth,filesep,''';']);
+                ea_injectprefstring('fsldir',[pth,filesep]);
             end
             options.prefs=ea_prefs;
         end
@@ -77,7 +77,7 @@ switch cmd
                 return
             end
                 success=1;
-                ea_injectprefstring(['prefs.slicer.dir=''',fullfile(pth,fn),''';']);
+                ea_injectprefstring('slicer','dir',fullfile(pth,fn));
             options.prefs=ea_prefs;
         end
         success=1;
@@ -92,7 +92,7 @@ function checkfsstandard % check if standard installations exist.
 
 if ismac
     if exist(fullfile('/Applications','freesurfer','bin','recon-all'),'file')
-       ea_injectprefstring(['prefs.fspath=''','/Applications/freesurfer',filesep,''';']);
+       ea_injectprefstring('fspath',['/Applications/freesurfer',filesep]);
     end
 end
         
@@ -103,7 +103,7 @@ function checkslicerstandard % check if standard installations exist.
 
 if ismac
     if exist(fullfile('/Applications','Slicer.app'),'file')
-       ea_injectprefstring(['prefs.slicer.dir=''',fullfile('/Applications','Slicer.app'),''';']);
+       ea_injectprefstring('slicer','dir',fullfile('/Applications','Slicer.app'));
     end
 end
         
