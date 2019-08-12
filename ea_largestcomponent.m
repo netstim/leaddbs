@@ -10,11 +10,6 @@ function slicebw=ea_largestcomponent(slicebw)
 %
 % OUTPUT:
 %    slicebw:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
 
 stats=conncomp(slicebw);
 
