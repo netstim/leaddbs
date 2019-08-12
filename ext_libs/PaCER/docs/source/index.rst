@@ -1,6 +1,6 @@
 .. _index:
 
-.. image:: _static/img/logo_pacer.png
+.. image:: _static/img/logo_icon.png
    :align: center
    :width: 160px
 
