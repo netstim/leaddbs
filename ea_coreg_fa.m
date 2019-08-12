@@ -9,11 +9,6 @@ function ea_coreg_fa(options,usebrainmask)
 % INPUTS:
 %    options:           LeadDBS options
 %    usebrainmask:      bool, masking the coregistered image or not
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
 
 directory=[options.root,options.patientname,filesep];
 % check for presence of FA map
