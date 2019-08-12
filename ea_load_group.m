@@ -8,11 +8,6 @@ function ea_load_group(handles,groupdir)
 % INPUTS:
 %    handles:
 %    groupdir:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
 
 ea_busyaction('on',handles.leadfigure,'group');
 
