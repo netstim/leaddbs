@@ -4,5 +4,5 @@
 Functions
 ---------
 
-.. automodule:: src.functions
+.. automodule:: src
    :members:
