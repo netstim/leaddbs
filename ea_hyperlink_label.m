@@ -1,20 +1,4 @@
 function ea_hyperlink_label(label, url, position)
-% 
-%
-% USAGE:
-%
-%    ea_hyperlink_label(label, url, position)
-%
-% INPUTS:
-%    label:
-%    url:
-%    position:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
-
 labelStr = ['<html><a href="">' label '</a></html>'];
 jLabel = javaObjectEDT('javax.swing.JLabel', labelStr);
 [hjLabel,~] = javacomponent(jLabel, position, gcf);
