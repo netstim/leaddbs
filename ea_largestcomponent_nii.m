@@ -9,11 +9,6 @@ function ea_largestcomponent_nii(fname,cnum)
 % INPUTS:
 %    fname:
 %    cnum:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
 
 nii=ea_load_nii(fname);
 nii.img(isnan(nii.img))=0;
