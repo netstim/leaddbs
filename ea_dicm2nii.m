@@ -6,7 +6,7 @@ function ea_dicm2nii(indir,outdir)
 %    ea_dicm2nii(indir,outdir)
 %
 % INPUTS:
-%    indir: DICOM folder
-%    outdir: output folder for NIfTI files
+%    indir:     DICOM folder
+%    outdir:    output folder for NIfTI files
 
 dicm2nii(indir, outdir, 0)
