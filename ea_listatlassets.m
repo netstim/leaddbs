@@ -10,11 +10,6 @@ function ea_listatlassets(options,handles,mninative,oldatlas)
 %    handles:
 %    mninative:
 %    oldatlas:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
 
 % mninative==1: MNI space, ==2: native space
 
