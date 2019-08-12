@@ -1,18 +1,19 @@
 function thresh=ea_detthresh(atlases,atlas,img)
 % Function that will return the threshold according to user settings for a
-% specific atlas.
+% specific region in the atlas.
 %
 % USAGE:
 %
 %    thresh = ea_detthresh(atlases,atlas,img)
 %
 % INPUTS:
-%    atlases:
-%    atlas:
-%    img:
+%    atlases:       structure loaded from 'atlas_index.mat' under atlas folder
+%    atlas:         index of query region (needed when the threshold preset is a vector)
+%    img:           3D image data of the query region, used to determine the real 
+%                   threshold in case of relative threshold used
 %
 % OUTPUT:
-%    thresh:
+%    thresh:        threshold to be applied to the region defined in the atlas
 %
 % .. AUTHOR:
 %       - Andreas Horn, Original file
