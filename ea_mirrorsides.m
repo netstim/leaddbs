@@ -5,16 +5,11 @@ function elstruct=ea_mirrorsides(elstruct)
 %
 %    elstruct = ea_mirrorsides(elstruct)
 %
-% INPUTS:
+% INPUT:
 %    elstruct:
 %
 % OUTPUT:
 %    elstruct:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
 
 if isstruct(elstruct) % proper elstruct
     dim=length(elstruct);
