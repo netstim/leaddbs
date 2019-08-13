@@ -10,11 +10,6 @@ function vatfv = ea_niiVAT2fvVAT(nii)
 %
 % OUTPUT:
 %    vatfv
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
 
 start = nii.mat * [1;1;1;1];
 niisize = size(nii.img);
