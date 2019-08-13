@@ -9,11 +9,6 @@ function ea_magetcheck_norm_peers(options,peerfolders)
 % INPUTS:
 %    options:
 %    peerfolder:
-%
-% .. AUTHOR:
-%       - Andreas Horn, Original file
-%       - Ningfei Li, Original file
-%       - Daniel Duarte, Documentation
 
 for peer=1:length(peerfolders)
     poptions=options;
