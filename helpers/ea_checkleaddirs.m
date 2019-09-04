@@ -2,9 +2,11 @@ function ea_checkleaddirs
 prefs=ea_prefs('');
 
 if ~exist(prefs.lc.datadir,'file');
-    try mkdir(prefs.lc.datadir); end
-    if ~exist(prefs.lc.datadir,'file')
-        warning('Connectome data directory could not be established. Please set prefs.lc.data dir folder to a valid directory in preferences.');
+    if ~(isdeployed && ~isfield(prefs,'firstrun')) % dont enter first time in deployed app
+        try mkdir(prefs.lc.datadir); end
+        if ~exist(prefs.lc.datadir,'file')
+            warning('Connectome data directory could not be established. Please set prefs.lc.data dir folder to a valid directory in preferences.');
+        end
     end
 end
 if ~isempty(prefs.ltx.pdfconverter)

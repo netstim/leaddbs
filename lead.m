@@ -149,11 +149,11 @@ ea_setbuttonbackdrop(handles.startanatomy,[earoot,'icons',filesep,'logo_lead_ana
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 % Disable buttons for standalone app
-if isdeployed
-    set(handles.startconnectome,'Enable','off')
-    set(handles.startgroup,'Enable','off')
-    set(handles.startanatomy,'Enable','off')
-end
+% if isdeployed
+%     set(handles.startconnectome,'Enable','off')
+%     set(handles.startgroup,'Enable','off')
+%     set(handles.startanatomy,'Enable','off')
+% end
 
 % UIWAIT makes lead wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
