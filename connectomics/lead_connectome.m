@@ -146,6 +146,11 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+% Disable buttons for standalone app
+if isdeployed
+    set(handles.exportcode,'Enable','off');
+end
+
 % UIWAIT makes leadfigure wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
 
