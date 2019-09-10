@@ -43,5 +43,6 @@ Thumbs.db
 !segjob*.mat
 !ea_prefs_default.mat
 !ext_libs/support/libstdc++.so.6
+!common/ea_prefs_default.json
 
 /slicer.py
