@@ -1,4 +1,4 @@
-function ea_make_standalone(outdir)
+  function ea_make_standalone(outdir)
 % Under development
 %
 % Compile Lead-DBS as a standalone executable using the MATLAB compiler

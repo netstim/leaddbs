@@ -83,7 +83,7 @@ ea_checkspm;
 ea_checkleaddirs;
 
 % check for commands first
-if nargin>3
+if nargin == 4
     switch lower(varargin{1})
         case {'dbs', '-d', 'd'}
             lead_dbs;
@@ -130,7 +130,10 @@ if nargin>3
             delete(handles.leadfigure)
             return
     end
-
+elseif nargin > 4
+    ea_command_line_run(varargin{:})
+    delete(handles.leadfigure)
+    return            
 end
 
 set(handles.leadfigure,'name','Welcome to the Lead Neuroimaging Suite');
