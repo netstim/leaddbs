@@ -57,17 +57,19 @@ uibjs.slide3dtog=uitoggletool(ht, 'CData', ea_get_icn('quiver'),...
 uibjs.magnifyplus=uitoggletool(ht,'CData',ea_get_icn('magnplus'),...
     'TooltipString', 'Zoom In', 'OnCallback', {@ea_zoomin,'on'},...
     'OffCallback', {@ea_zoomin,'off'}, 'State', 'off');
-uibjs.magnifyminus=uitoggletool(ht, 'CData', ea_get_icn('magnminus'),...
-    'TooltipString', 'Zoom Out', 'OnCallback', {@ea_zoomout,'on'},...
-    'OffCallback', {@ea_zoomout,'off'}, 'State', 'off');
+% uibjs.magnifyminus=uitoggletool(ht, 'CData', ea_get_icn('magnminus'),...
+%     'TooltipString', 'Zoom Out', 'OnCallback', {@ea_zoomout,'on'},...
+%     'OffCallback', {@ea_zoomout,'off'}, 'State', 'off');
 uibjs.handtog=uitoggletool(ht, 'CData', ea_get_icn('hand'),...
     'TooltipString', 'Pan Scene', 'OnCallback', {@ea_pan,'on'},...
     'OffCallback', {@ea_pan,'off'}, 'State', 'off');
 setappdata(resultfig,'uibjs',uibjs);
 
-h = rotate3d;
-h.RotateStyle = 'orbit';
-h.Enable = 'on';
+% h = rotate3d;
+% h.RotateStyle = 'orbit';
+% h.Enable = 'on';
+
+cameratoolbar(gcf,'SetMode','orbit');
 
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract',...
@@ -466,7 +468,6 @@ try
     prefs = ea_prefs;
     v = prefs.machine.view;
     togglestates = prefs.machine.togglestates;
-    %ea_defaultview_transition(v,togglestates);
     ea_defaultview(v,togglestates);
 catch
     view(142,13.6)
@@ -532,7 +533,7 @@ function set_defaultview_callback(source,eventdata)
 prefs = ea_prefs;
 v = prefs.machine.view;
 togglestates = prefs.machine.togglestates;
-%ea_defaultview_transition(v,togglestates);
+ea_defaultview_transition(v,togglestates);
 ea_defaultview(v,togglestates);
 
 
