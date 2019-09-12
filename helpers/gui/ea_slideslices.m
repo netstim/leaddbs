@@ -1,12 +1,6 @@
 function ea_slideslices(h,~,cmd)
 
-%h = rotate3d;
-%h.Enable = 'off';
-% if strcmp(cmd,'on')
-%     ea_distogpan;
-%     ea_distogrotate;
-%     ea_distogzoomout;
-%     ea_distogzoomin;
-% end
-
-cameratoolbar(gcf,'SetMode','nomode');
+hfig = h.Parent.Parent;
+set(hfig,'WindowButtonDownFcn', []); % reset button down function
+ax = findobj(hfig.Children,'Type','axes');
+set(findobj(ax.Children,'Type','surface'),'HitTest','on'); % enable click actions on surfaces (image slices)
