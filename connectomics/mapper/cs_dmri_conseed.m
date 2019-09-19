@@ -98,7 +98,7 @@ switch cmd
                 end
                 ids=rangesearch(tree,XYZmm,maxdist,'distance','chebychev');
                 % select fibers for each ix
-                ea_dispercent(0, ['Iterating voxels (', num2str(s), '/', num2str(length(sfile)), ')']);
+                ea_dispercent(0, ['Iterating seeds (', num2str(s), '/', num2str(length(sfile)), ')']);
                 ixdim=length(ixvals);
                 fiberstrength=zeros(size(fidx,1),1); % in this var we will store a mean value for each fiber (not fiber segment) traversing through seed
                 fiberstrengthn=zeros(size(fidx,1),1); % counting variable to average strengths
@@ -249,7 +249,7 @@ switch cmd
                         case 'pmatrix'
                             oix=1:length(sfile);
                             oix([sxx,syy])=[];
-                            mask=fiberstrength(:,sxx)>0.*fiberstrength(:,syy)>0.*~(fiberstrength(:,oix)>0);
+                            mask=logical((fiberstrength(:,sxx)>0).*(fiberstrength(:,syy)>0).*(~(any(fiberstrength(:,oix)>0,2))));
                     end
                     mat(sxx,syy)=sum(fiberstrength(mask,sxx)+fiberstrength(mask,syy))/2;
 

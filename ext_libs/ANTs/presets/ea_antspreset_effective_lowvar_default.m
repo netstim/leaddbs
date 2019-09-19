@@ -23,7 +23,7 @@ switch normsettings.ants_strategy
         apref.antsmode='SyN';
         apref.antsmode_suffix='[0.3,4,3]';
         
-        apref.convergence.syn='[1000x500x250x0,1e-6,7]'; % SyN convergence params
+        apref.convergence.syn='[1000x500x500x0,1e-7,7]'; % SyN convergence params
         apref.convergence.scrf='[200x50x10x0,1e-6,7]'; % SyN subcortical focus stage convergence params
         apref.smoothingsigmas.syn='4x3x1x1vox'; % SyN Smoothing sigmas
         apref.smoothingsigmas.scrf='2x2x1x1vox'; % SyN subcortical focus stage smoothing sigmas

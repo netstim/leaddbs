@@ -211,7 +211,7 @@ if length(filename) > 2 & strcmp(filename(end-2:end), '.gz')
 end
 
 % Read the dataset header
-[nii.hdr,nii.filetype,nii.fileprefix,nii.machine] = load_nii_hdr(filename);
+[nii.hdr,nii.filetype,nii.fileprefix,nii.machine] = ea_load_nii_hdr(filename);
 
 % Read the header extension
 % nii.ext = load_nii_ext(filename);
