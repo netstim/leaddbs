@@ -11,6 +11,15 @@ figLastPoint = []; % global variable to store previous cursor position
 
 set(hfig, 'WindowButtonDownFcn', @down_fcn);
 set(hfig, 'WindowButtonUpFcn', @up_fcn);
+set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
+
+    function [] = zoom_fcn(hfig, evt)
+        if evt.VerticalScrollCount > 0
+            camzoom(1 + evt.VerticalScrollCount / 10)
+        else
+            camzoom(1 / (1 + abs(evt.VerticalScrollCount) / 10))
+        end
+    end
 
 
     function [] = down_fcn(hfig, evt)
@@ -22,9 +31,9 @@ set(hfig, 'WindowButtonUpFcn', @up_fcn);
         switch clickType
             case 'normal'
                 setptr(gcf, 'rotate');
-            case 'extend'
-                setptr(gcf, 'hand');
             case 'alt'
+                setptr(gcf, 'hand');
+            case 'extend'
                 setptr(gcf, 'glass');
             case 'open'
                 try
@@ -58,9 +67,9 @@ set(hfig, 'WindowButtonUpFcn', @up_fcn);
             switch clickType
                 case 'normal'
                     orbitPangca(deltaPix, 'o');
-                case 'extend'
-                    dollygca(deltaPix);
                 case 'alt'
+                    dollygca(deltaPix);
+                case 'extend'
                     zoomgca(deltaPix);
             end
             
