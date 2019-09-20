@@ -1,5 +1,6 @@
 function ea_rotate(h,~,cmd)
 
+ea_distogslide;
 % get figure and axes
 hfig = h.Parent.Parent;
 ax = findobj(hfig.Children,'Type','axes');
