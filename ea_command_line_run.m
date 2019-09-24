@@ -4,17 +4,17 @@ function [] = ea_command_line_run(varargin)
 % the specified command is executed via ea_run without a UI.
 %
 % For example, to run Segment normalization:
-% lead dbs /path/to/patient/directory -normalize_checkbox -normmethod 2
+% lead dbs -normalize_checkbox -normmethod 2 /path/to/patient/directory
 
 
 switch varargin{1}
-    case 'dbs'
+    case {'dbs', '-d', 'd'}
         h = lead_dbs;
-    case 'connectome'
+    case {'connectome', 'conn', '-c', 'c'}
         h = lead_connectome;
 end
 
-set(h, 'Visible', 'off'); pause(1);
+set(h, 'Visible', 'off'); drawnow;
 handles = guihandles(h);
 
 dirs = {};
@@ -22,14 +22,21 @@ dirs = {};
 for i = 2:nargin
     switch varargin{i}(1) % first character of str
         case filesep % directory
-            dirs{end+1} = varargin{i};
-        case '-' % option
-            if i+1 <= nargin && varargin{i+1}(1) ~= '-' % check if the option is set with value
-                set(handles.(varargin{i}(2:end)),'Value',str2double(varargin{i+1}));
-                i = i+1;
+            patient_dir = varargin{i};
+            if isfolder(patient_dir)
+                dirs{end+1} = patient_dir;
             else
-                set(handles.(varargin{i}(2:end)),'Value',1); % set default option to 1
-            end     
+                error([patient_dir ' is not a folder'])
+            end
+        case '-' % option
+            opt = varargin{i}(2:end);
+            if isfield(handles, opt)
+                set(handles.(opt),'Value',1); % set default option to 1
+            else
+                error(['Unrecognized field: ' opt])
+            end
+        otherwise
+            set(handles.(opt),'Value',str2double(varargin{i}));
     end
 end
 
@@ -51,5 +58,5 @@ machine.methods_show = umachine.machine.methods_show;
 save([ea_gethome, '.ea_prefs.mat'],'machine');
 
 
-set(h, 'Visible', 'on'); pause(1); % make gui visible so that close request function is executed
+set(h, 'Visible', 'on'); drawnow; % make gui visible so that close request function is executed
 close(h)
