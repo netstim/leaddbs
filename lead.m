@@ -138,7 +138,7 @@ elseif nargin == 5 && strcmp(varargin{2},'execute')
     close(hObject)
     delete(handles.leadfigure)
     return
-else
+elseif nargin > 5
     ea_command_line_run(varargin{:})
     delete(handles.leadfigure)
     return            
