@@ -130,7 +130,7 @@ if nargin == 4
             delete(handles.leadfigure)
             return
     end
-elseif nargin == 5 && strcmp(varargin{2},'execute')
+elseif nargin == 5 && strcmp(varargin{1},'execute')
     set(hObject,'Visible','off'); drawnow;
     load(varargin{2}, 'options');
     ea_run('run',options);
