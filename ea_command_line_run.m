@@ -10,8 +10,10 @@ function [] = ea_command_line_run(varargin)
 switch varargin{1}
     case {'dbs', '-d', 'd'}
         h = lead_dbs;
+        leadprod = 'dbs';
     case {'connectome', 'conn', '-c', 'c'}
         h = lead_connectome;
+        leadprod = 'connectome';
 end
 
 set(h, 'Visible', 'off'); drawnow;
@@ -42,7 +44,7 @@ end
 
 options = ea_handles2options(handles);
 options.uipatdirs = dirs;
-options.leadprod = varargin{1};
+options.leadprod = leadprod;
 
 % dont show pop up methods
 umachine = load([ea_gethome, '.ea_prefs.mat']); 
