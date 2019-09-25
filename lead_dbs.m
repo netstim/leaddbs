@@ -125,7 +125,7 @@ guidata(hObject, handles);
 
 % Disable buttons for standalone app
 if isdeployed
-    set(handles.exportcode,'Enable','off');
+    %set(handles.exportcode,'Enable','off');
     set(handles.updatebutn,'Enable','off');
     %h = findall(hObject, 'Type', 'uimenu');
     %set(findobj(h,'Label','Submit'),'Enable','off');
