@@ -130,9 +130,10 @@ if nargin == 4
             delete(handles.leadfigure)
             return
     end
-elseif nargin == 5 && strcmp(varargin{1},'execute')
+elseif nargin == 5 && strcmp(varargin{1}, 'execute') % execute options specified in .json file
     set(hObject,'Visible','off'); drawnow;
-    load(varargin{2}, 'options');
+    fid = fopen(varargin{2},'r');
+    options = jsondecode(fread(fid,'*char')'); fclose(fid);
     ea_run('run',options);
     set(hObject,'Visible','on'); drawnow;
     close(hObject)
