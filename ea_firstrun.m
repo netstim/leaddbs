@@ -53,11 +53,16 @@ if ~isfield(options.prefs,'firstrun') % first run.
         'We hope that you enjoy using the Lead-DBS toolbox. \n \n',...
         'Any suggestions are more than welcome (andreas.horn@charite.de). \n'
         ]);
-
-    copyfile([ea_getearoot,'common',filesep,'ea_prefs_default.m'],[ea_gethome,'.ea_prefs.m'], 'f');
-    fid = fopen([ea_gethome,'.ea_prefs.m'],'a');
-    fprintf(fid, '\n\nprefs.firstrun=''off'';\n');
-    fclose(fid);
+    
+    
+    if isdeployed % init .json file. This file has preferences that depend on directories
+        fid = fopen([ea_getearoot,'common',filesep,'ea_prefs_default.json'],'wt');
+        fwrite(fid, jsonencode(ea_prefs_default('')), 'char'); fclose(fid);
+    end
+        
+    copyfile([ea_getearoot,'common',filesep,'ea_prefs_default', ea_prefsext],[ea_gethome,'.ea_prefs', ea_prefsext], 'f');
+    
+    ea_injectprefstring('firstrun','off');
 
     % check dataset isntallation
     if ~exist([ea_space,'bb.nii'], 'file')
