@@ -347,15 +347,18 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 % Contruct colormap
                 colormap gray
-                map=ea_redblue(1024);
-                fibcolorInd=tvalsRescale*(size(map,1)/2-0.5);
-                fibcolorInd=fibcolorInd+(size(map,1)/2+0.5);
+                fibcmap=ea_redblue(1024);
+                setappdata(resultfig, ['fibcmap',discfiberID], fibcmap);
+
+                fibcolorInd=tvalsRescale*(size(fibcmap,1)/2-0.5);
+                fibcolorInd=fibcolorInd+(size(fibcmap,1)/2+0.5);
 
                 % Set alphas of fibers with light color to 0
                 colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
-                negUpperBound=ceil(size(map,1)/2*colorbarThreshold);
-                poslowerBound=floor((size(map,1)-size(map,1)/2*colorbarThreshold));
+                negUpperBound=ceil(size(fibcmap,1)/2*colorbarThreshold);
+                poslowerBound=floor((size(fibcmap,1)-size(fibcmap,1)/2*colorbarThreshold));
                 alphas=zeros(size(fibcolorInd,1),1);
+
                 switch showfibersset
                     case 'positive'
                         alphas(round(fibcolorInd)>=poslowerBound) = 1;
@@ -383,7 +386,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 [h.EdgeColor]=nones{:};
 
                 % Calulate fiber colors
-                colors=map(round(fibcolorInd),:);
+                colors=fibcmap(round(fibcolorInd),:);
                 fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
 
                 % Set fiber colors and alphas
@@ -395,20 +398,20 @@ for nativemni=nm % switch between native and mni space atlases.
                 % cbvals=tvalsRescale(logical(alphas));
                 switch showfibersset
                     case 'positive'
-                        cbmap = map(ceil(length(map)/2+0.5):end,:);
-                        tick = [poslowerBound, length(map)] - floor(length(map)/2) ;
+                        cbmap = fibcmap(ceil(length(fibcmap)/2+0.5):end,:);
+                        tick = [poslowerBound, length(fibcmap)] - floor(length(fibcmap)/2) ;
                         poscbvals = sort(cbvals(cbvals>0));
                         ticklabel = [poscbvals(1), poscbvals(end)];
                         ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
                     case 'negative'
-                        cbmap = map(1:floor(length(map)/2-0.5),:);
+                        cbmap = fibcmap(1:floor(length(fibcmap)/2-0.5),:);
                         tick = [1, negUpperBound];
                         negcbvals = sort(cbvals(cbvals<0));
                         ticklabel = [negcbvals(1), negcbvals(end)];
                         ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
                     case 'both'
-                        cbmap = map;
-                        tick = [1, negUpperBound, poslowerBound, length(map)];
+                        cbmap = fibcmap;
+                        tick = [1, negUpperBound, poslowerBound, length(fibcmap)];
                         poscbvals = sort(cbvals(cbvals>0));
                         negcbvals = sort(cbvals(cbvals<0));
                         ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
