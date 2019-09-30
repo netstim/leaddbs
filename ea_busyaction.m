@@ -119,7 +119,7 @@ try
                 spinner.setPaintsWhenStopped(true);  % default = false
                 spinner.useWhiteDots(false);         % default = false (true is good for dark backgrounds)
             end
-            javacomponent(spinner.getComponent, pos, fighandle);
+            ea_javacomponent(spinner.getComponent, pos, fighandle);
             spinner.setBusyText('Busy');
             spinner.start;
 
@@ -164,7 +164,7 @@ try
             spinner.stop;
             spinner.setBusyText('Idle');
             spinner.getComponent.setBackground(java.awt.Color(0,0,0));
-            [hjObj, hContainer] = javacomponent(spinner.getComponent, pos, fighandle);
+            [hjObj, hContainer] = ea_javacomponent(spinner.getComponent, pos, fighandle);
             delete(hContainer);
             spinner.getComponent.setVisible(false)
             setappdata(fighandle,'spinner',[]);

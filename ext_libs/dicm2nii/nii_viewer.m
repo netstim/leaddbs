@@ -375,7 +375,7 @@ h.setToolTipText(['<html>Select image to show/modify its display ' ...
 jScroll = com.mathworks.mwswing.MJScrollPane(h);
 width = h.getPreferredScrollableViewportSize.getWidth;
 width = max(60, min(width+20, pos(3)-408)); % 20 pixels for vertical scrollbar
-[~, hs.scroll] = javacomponent(jScroll, [2 4 width 60], hs.panel);
+[~, hs.scroll] = ea_javacomponent(jScroll, [2 4 width 60], hs.panel);
 hCB = handle(h.getCheckBoxListSelectionModel, 'CallbackProperties');
 hCB.ValueChangedCallback = cb('toggle'); % check/uncheck
 hs.files = javaObjectEDT(h); % trick to avoid java error by Yair
@@ -1854,7 +1854,7 @@ function h = java_spinner(pos, val, parent, callback, fmt, helpTxt)
 mdl = javax.swing.SpinnerNumberModel(val(1), val(2), val(3), val(4));
 % jSpinner = javax.swing.JSpinner(mdl);
 jSpinner = com.mathworks.mwswing.MJSpinner(mdl);
-h = javacomponent(jSpinner, pos, parent);
+h = ea_javacomponent(jSpinner, pos, parent);
 set(h, 'StateChangedCallback', callback, 'ToolTipText', helpTxt);
 jEditor = javaObject('javax.swing.JSpinner$NumberEditor', h, fmt);
 h.setEditor(jEditor);

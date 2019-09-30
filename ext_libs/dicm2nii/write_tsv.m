@@ -18,7 +18,7 @@ if exist(tsvfile,'file') && ~isempty(T) % append to already existing tsvfile
     ind = find(strcmp(table2cell(T(:,1)),id),1);
     if isempty(ind)
         ind = size(T,1)+1;
-        T.(T.Properties.VariableNames{1}){end+1,1} = char(string(id));
+        T.(T.Properties.VariableNames{1}){end+1,1} = char(id);
     end
     
     for ii=1:2:length(varargin)
@@ -40,7 +40,7 @@ if exist(tsvfile,'file') && ~isempty(T) % append to already existing tsvfile
 
 else % write new tsvfile
     T=table;
-    T(end+1,:) = {char(string(id)), varargin{2:2:end}};
+    T(end+1,:) = {char(id), varargin{2:2:end}};
     if isempty(inputname(1))
         idName = 'id';
     else

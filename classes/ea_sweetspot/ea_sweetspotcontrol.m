@@ -79,7 +79,7 @@ if ~obj.binary
     % threshold
     jSlider{1} = javax.swing.JSlider(0,100);
     threshLabelPos = get(handles.thresholdLabel, 'Position');
-    javacomponent(jSlider{1},[threshLabelPos(1)-6,threshLabelPos(2)-45,200,45]);
+    ea_javacomponent(jSlider{1},[threshLabelPos(1)-6,threshLabelPos(2)-45,200,45]);
     set(jSlider{1}, 'Value', threshold2slider(obj),...
         'Background',java.awt.Color(1,1,1),...
         'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
@@ -100,7 +100,7 @@ end
 set(0,'CurrentFigure',handles.roicontrol);
 jSlider{2} = javax.swing.JSlider(0,100);
 alphaLabelPos = get(handles.alphaLabel, 'Position');
-javacomponent(jSlider{2},[alphaLabelPos(1)-6,alphaLabelPos(2)-45,200,45]);
+ea_javacomponent(jSlider{2},[alphaLabelPos(1)-6,alphaLabelPos(2)-45,200,45]);
 set(jSlider{2}, 'Value', obj.alpha*100,...
     'Background',java.awt.Color(1,1,1),...
     'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
@@ -113,7 +113,7 @@ set(hjSlider{2}, 'StateChangedCallback', {@sliderAlphaChangeTxt,obj,handles});  
 set(0,'CurrentFigure',handles.roicontrol);
 jSlider{3} = javax.swing.JSlider(0,100);
 smoothLabelPos = get(handles.smoothLabel, 'Position');
-javacomponent(jSlider{3},[smoothLabelPos(1)-6,smoothLabelPos(2)-45,200,45]);
+ea_javacomponent(jSlider{3},[smoothLabelPos(1)-6,smoothLabelPos(2)-45,200,45]);
 set(jSlider{3}, 'Value', round(obj.smooth*2),...
     'Background',java.awt.Color(1,1,1),...
     'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
@@ -131,7 +131,7 @@ for f=size(obj.nii.X,1):-1:1
 	set(0,'CurrentFigure',handles.roicontrol);
 	jSlider{cnt} = javax.swing.JSlider(0,100);
     factorLabelPos = get(factorLabels(f), 'Position');
-    javacomponent(jSlider{cnt},[factorLabelPos(1)-6,factorLabelPos(2)-45,325,45]);
+    ea_javacomponent(jSlider{cnt},[factorLabelPos(1)-6,factorLabelPos(2)-45,325,45]);
     set(jSlider{cnt}, 'Value', 100/length(obj.nii.factors),...
         'Background',java.awt.Color(1,1,1),...
         'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks

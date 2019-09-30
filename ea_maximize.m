@@ -16,6 +16,6 @@ if nargin < 1
     hFig = gcf;
 end
 % drawnow % Required to avoid Java errors
-% jFig = get(handle(hFig), 'JavaFrame'); 
+% jFig = ea_getJavaFrame(handle(hFig));
 % jFig.setMaximized(true);
 set(hFig, 'Units','normalized','OuterPosition',[0 0 1 1]);

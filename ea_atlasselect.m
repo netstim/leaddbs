@@ -259,7 +259,7 @@ if height<100
     height=100;
 end
 
-[jComp,hc] = javacomponent(jScrollPane,[10,5,285,height],handles.atlasselect);
+[jComp,hc] = ea_javacomponent(jScrollPane,[10,5,285,height],handles.atlasselect);
 setappdata(handles.atlasselect,'uitree',jComp);
 
 ea_busyaction('del',handles.atlasselect,'atlcontrol');

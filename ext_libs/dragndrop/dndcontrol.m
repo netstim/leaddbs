@@ -207,7 +207,7 @@ classdef (CaseInsensitiveProperties) dndcontrol < handle
             jScrollPane.setVerticalScrollBarPolicy(jScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
             % Add Scrollpane to figure
-            [~,hContainer] = javacomponent(jScrollPane,[],hFig);
+            [~,hContainer] = ea_javacomponent(jScrollPane,[],hFig);
             set(hContainer,'Units','normalized','Position',[0 0 1 1]);
 
             % Create dndcontrol for the JTextArea object
