@@ -306,9 +306,11 @@ function [imageData, alpha] = export_fig(varargin) %#ok<*STRCL1>
     elseif isempty(fig)
         error('No figure found');
     else
-        oldWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
-        try jf = get(handle(ancestor(fig,'figure')),'JavaFrame'); catch, jf=1; end
-        warning(oldWarn);
+        try
+            jf = ea_getJavaFrame(handle(ancestor(fig,'figure')));
+        catch
+            jf=1;
+        end
         if isempty(jf)
             error('Figures created using the uifigure command or App Designer are not supported by export_fig. See <a href="https://github.com/altmany/export_fig/issues/261">issue #261</a> for details.');
         end
