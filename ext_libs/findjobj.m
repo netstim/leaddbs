@@ -221,6 +221,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                             if isempty(jFig), error('dummy');  end
                         catch
                             warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+                            warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
                             jFig = get(get(hFig,'JavaFrame'),'FigurePanelContainer');
                         end
                         pos = [];
@@ -471,6 +472,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         catch
             try
                 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+                warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
                 jFrame = get(hFig,'JavaFrame');
                 jFigPanel = get(jFrame,'FigurePanelContainer');
                 jRootPane = jFigPanel;
@@ -482,6 +484,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         try
             % If invalid RootPane - try another method...
             warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+            warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
             jFrame = get(hFig,'JavaFrame');
             jAxisComponent = get(jFrame,'AxisComponent');
             jRootPane = jAxisComponent.getParent.getParent.getRootPane;
@@ -1268,6 +1271,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                 jTreeFig.setIcon(figIcon);
             catch
                 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+                warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
                 jTreeFig = get(hTreeFig,'JavaFrame');
                 jTreeFig.setFigureIcon(figIcon);
             end
@@ -3376,6 +3380,7 @@ function jControl = findjobj_fast(hControl, jContainer)
     try jControl = hControl.Table; return, catch, end  % fast bail-out for old uitables
     try jControl = hControl.JavaFrame.getGUIDEView; return, catch, end  % bail-out for HG2 matlab.ui.container.Panel
     oldWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+    oldWarn1 = warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');
     if nargin < 2 || isempty(jContainer)
         % Use a HG2 matlab.ui.container.Panel jContainer if the control's parent is a uipanel
         try
@@ -3392,6 +3397,7 @@ function jControl = findjobj_fast(hControl, jContainer)
         jf = get(hFig, 'JavaFrame');
         jContainer = jf.getFigurePanelContainer.getComponent(0);
     end
+    warning(oldWarn1);
     warning(oldWarn);
     jControl = [];
     counter = 100;
