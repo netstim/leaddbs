@@ -10,6 +10,10 @@ set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
 try % if file already exists, load it (and overwrite M).
     load([groupdir, 'LEAD_groupanalysis.mat']);
+    if ~isfield(M.ui, 'mirrorsides')
+        % Fix missing 'mirrorsides' field for old analysis
+        M.ui.mirrorsides = get(handles.mirrorsides,'Value');
+    end
 catch % if not, store it saving M.
     save([groupdir, 'LEAD_groupanalysis.mat'], 'M', '-v7.3');
 end
