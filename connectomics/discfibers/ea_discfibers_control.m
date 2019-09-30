@@ -77,7 +77,7 @@ set(handles.showfiberssetpanel, 'SelectionChangedFcn', {@showfiberssetChanged, h
 %% threshold slider:
 jSlider{1} = javax.swing.JSlider(0,100);
 posthreshLabelPos = get(handles.posthresholdLabel, 'Position');
-javacomponent(jSlider{1},[posthreshLabelPos(1)-6,posthreshLabelPos(2)-45,320,45]);
+ea_javacomponent(jSlider{1},[posthreshLabelPos(1)-6,posthreshLabelPos(2)-45,320,45]);
 set(jSlider{1}, 'Name', 'posthresholdSlider', 'Value', pospredthreshold,...
     'Background', java.awt.Color(1,1,1),...
     'MajorTickSpacing', 0.1, 'PaintLabels',true);
@@ -88,7 +88,7 @@ set(hjSlider{1}, 'StateChangedCallback', {@sliderThresholdChangeTxt, handles});
 
 jSlider{2} = javax.swing.JSlider(0,100);
 negthreshLabelPos = get(handles.negthresholdLabel, 'Position');
-javacomponent(jSlider{2},[negthreshLabelPos(1)-6,negthreshLabelPos(2)-45,320,45]);
+ea_javacomponent(jSlider{2},[negthreshLabelPos(1)-6,negthreshLabelPos(2)-45,320,45]);
 set(jSlider{2}, 'Name', 'negthresholdSlider', 'Value', negpredthreshold,...
     'Background', java.awt.Color(1,1,1),...
     'MajorTickSpacing', 0.1, 'PaintLabels',true);

@@ -26,7 +26,7 @@ for side=1:length(options.sides)
     cnt=1;
     for sub=1:length(elstruct)
         for cont=1:size(options.d3.isomatrix{1},2)
-            if ~isnan(options.d3.isomatrix{side}(sub,cont));
+            if ~isnan(options.d3.isomatrix{side}(sub,cont))
                 if ~shifthalfup
                     X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
                     Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);

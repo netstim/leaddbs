@@ -2179,7 +2179,7 @@ uicontrol('Style', 'Pushbutton', 'Position', [6 235 112 24], ...
     'TooltipString', str, 'Callback', cb('srcDir'));
 
 jSrc = javaObjectEDT('javax.swing.JTextField');
-hs.src = javacomponent(jSrc, [118 234 294 24], fh);
+hs.src = ea_javacomponent(jSrc, [118 234 294 24], fh);
 hs.src.FocusLostCallback = cb('set_src');
 hs.src.Text = getpf('src', pwd);
 % hs.src.ActionPerformedCallback = cb('set_src'); % fire when pressing ENTER
@@ -2192,7 +2192,7 @@ uicontrol('Style', 'Pushbutton', 'Position', [6 199 112 24], ...
     'FontSize', fSz, 'String', 'Result folder', 'Background', clrButton, ...
     'TooltipString', 'Browse result folder', 'Callback', cb('dstDialog'));
 jDst = javaObjectEDT('javax.swing.JTextField');
-hs.dst = javacomponent(jDst, [118 198 294 24], fh);
+hs.dst = ea_javacomponent(jDst, [118 198 294 24], fh);
 hs.dst.FocusLostCallback = cb('set_dst');
 hs.dst.Text = getpf('dst', pwd);
 hs.dst.ToolTipText = ['<html>This is the result folder name. You can<br>' ...
