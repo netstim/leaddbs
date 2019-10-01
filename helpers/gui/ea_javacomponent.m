@@ -1,6 +1,6 @@
-function ea_javacomponent(varargin)
+function varargout = ea_javacomponent(varargin)
 % Warpper for javacomponent, warning disabled
 
 warnState = warning('off', 'MATLAB:ui:javacomponent:FunctionToBeRemoved');
-javacomponent(varargin{:});
+[varargout{1:nargout}] = javacomponent(varargin{:});
 warning(warnState);
