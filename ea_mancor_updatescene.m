@@ -69,13 +69,13 @@ for side=options.sides
         tempvec = markers(side).y - markers(side).head;
         tempvec(3) = 0;
         tempvec = tempvec ./ norm(tempvec);
-        initialrotation = rad2deg(atan2(norm(cross([0 1 0],tempvec)),dot([0 1 0],tempvec)));        
+        initialrotation = rad2deg(atan2(norm(cross([0 1 0],tempvec)),dot([0 1 0],tempvec)));
         if markers(side).y(1) > markers(side).head(1)
             initialrotation = - initialrotation;
-        end        
+        end
         rotation{side} = initialrotation;
-        setappdata(gcf,'rotation',rotation);        
-    elseif manually_corrected == 0 && isempty(rotation{side})        
+        setappdata(gcf,'rotation',rotation);
+    elseif manually_corrected == 0 && isempty(rotation{side})
         rotation{side} = 0;
         setappdata(gcf,'rotation',rotation);
     end
@@ -85,17 +85,17 @@ for side=options.elside
     rotation=getappdata(gcf,'rotation');
     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
     normtrajvector2 = normtrajvector;
-    
+
     yvec(1) = -cos(0) * sin(ea_deg2rad(rotation{side})); % [0 1 0] rotated by rotation
     yvec(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
     yvec(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
-    
+
     xvec = cross(yvec,[0 0 1]); % [1 0 0] rotated by rotation
-    
+
     xvec = xvec - (dot(xvec,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;     % x is projected down the trajectory
     xvec = xvec ./ norm(xvec);
     yvec = -cross(xvec,normtrajvector);
-    
+
 %     markers(side).x = markers(side).head + xvec;
 %     markers(side).y = markers(side).head + yvec;
     markers(side).x = markers(side).head + (xvec * (options.elspec.lead_diameter/2));
@@ -172,7 +172,7 @@ try delete(captions); end
 % Plot spacing distance info text and correct inhomogeneous spacings.
 %emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
 clear emp_eldist
-if strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)')  || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')          
+if strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)')  || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
     for side=options.sides
         coords_temp{side}(1,:) = coords_mm{side}(1,:);
         coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
@@ -202,7 +202,7 @@ if isempty(elplot) % first time plot electrode contacts
         elplot(cnt)=plot3(coords_mm{options.elside}(el,1),coords_mm{options.elside}(el,2),coords_mm{options.elside}(el,3),'O','MarkerEdgeColor',[0.9 0.9 0.9],'MarkerFaceColor','none','MarkerSize',25);
         cnt=cnt+1;
     end
-    
+
     setappdata(mcfig,'elplot',elplot);
     setappdata(mcfig,'mplot',mplot);
 else % update coordinates in elplot & mplot:
@@ -215,7 +215,7 @@ else % update coordinates in elplot & mplot:
     set(mplot(2,1),'YData',markers(options.elside).tail(2));
     set(mplot(2,1),'ZData',markers(options.elside).tail(3));
     set(mplot(2,1),'visible',ea_bool2onoff(options.visible));
-    
+
     for el=1:size(coords_mm{options.elside},1)
         set(elplot(cnt),'XData',coords_mm{options.elside}(el,1));
         set(elplot(cnt),'YData',coords_mm{options.elside}(el,2));
@@ -272,7 +272,7 @@ for doxx=0:1
     meantrajectory=genhd_inside(trajectory{options.elside});
     clear imat
     % sample plane left and right from meantrajectory
-    
+
     if doxx
         Vcor=getV(mcfig,'Vcor',options);
         if options.xray
@@ -302,30 +302,30 @@ for doxx=0:1
             imat=ea_resample_planes(Vsag,meantrajectory',sample_width,doxx,0.2);
         end
     end
-    
-    colormap gray
-    
+
+    colormap(gray(64))
+
     if doxx % span surface in x direction
         spanvector=[sample_width,0,0];
     else % span surface in y direction
         spanvector=[0,sample_width,0];
     end
-    
+
     boundingbox=[meantrajectory(1,:)-spanvector;...
         meantrajectory(1,:)+spanvector;...
         meantrajectory(end,:)-spanvector;...
         meantrajectory(end,:)+spanvector];
-    
-    
+
+
     xx=[boundingbox(1,1),boundingbox(2,1);boundingbox(3,1),boundingbox(4,1)];
     yy=[boundingbox(1,2),boundingbox(2,2);boundingbox(3,2),boundingbox(4,2)];
     zz=[boundingbox(1,3),boundingbox(2,3);boundingbox(3,3),boundingbox(4,3)];
-    
+
     alphamap=imat;
     alphamap(:)=0.9;
-    
+
     if ~getappdata(mcfig,'planecset') % initially and once set contrast based on image data.
-        
+
         if options.modality==1 % MR
         elseif options.modality==2 % CT
             lthresh=800; % initial guesses for CT
@@ -335,7 +335,7 @@ for doxx=0:1
                     timat=imat;
                     timat(timat<lthresh)=0;
                     timat(timat>uthresh)=0;
-                    
+
                     nomi=ea_nmi(round(imat),round(timat));
                     if nomi>0.9
                         break
@@ -349,20 +349,20 @@ for doxx=0:1
                 end
             end
             % disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
-            
-            
+
+
         end
         caxis([0,1]);
         setappdata(mcfig,'planecset',1);
     end
-    
+
     imat=ea_contrast(imat,contrast+options.xray*0.1,offset-options.xray*0.3);
-    
+
     planes(planecnt)=surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'alphadata',alphamap,'FaceAlpha', 'texturemap','FaceColor','texturemap','EdgeColor','none','alphadatamapping','none');
-    
+
     planecnt=planecnt+1;
     if ~doxx
-        
+
         captions(1)=text(midpt(1),... % x
             midpt(2)+10,... % y
             midpt(3)+10,... % z
@@ -382,7 +382,7 @@ for doxx=0:1
         setappdata(mcfig,'captions',captions);
         set(captions(:),'visible',ea_bool2onoff(options.visible));
     else
-        
+
     end
 end
 
@@ -417,7 +417,7 @@ for subpl=getsuplots(1)
             end
             tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
             tvecs=tvecs(1:3,:);
-            Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,res);  
+            Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,res);
             %iXr(:,:,cnt)=ea_sample_slice(Vtra,'tra',wsize,'vox',mrks,subpl);
             cnt=cnt+1;
         end
@@ -431,7 +431,7 @@ for subpl=getsuplots(1)
             end
             tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
             tvecs=tvecs(1:3,:);
-            Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,res);  
+            Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,res);
             %iXr(:,:,cnt)=ea_sample_slice(Vtra,'tra',wsize,'vox',mrks,subpl);
             cnt=cnt+1;
         end
@@ -446,8 +446,8 @@ for subpl=getsuplots(1)
 %         tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
 %         tvecs=tvecs(1:3,:);
 %         slice=ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
-%         
-%         
+%
+%
 %         otraj=zeros(41,3); icnt=1;
 %         for i=-wsize:0.5:wsize
 %             otraj(icnt,:)=[mks(subpl,:)+yvec_unrot*i]';
@@ -456,7 +456,7 @@ for subpl=getsuplots(1)
         %tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
         %tvecs=tvecs(1:3,:);
         %slice=slice+ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
-        
+
         slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     end
     slice=ea_contrast(slice,contrast,offset);
@@ -475,7 +475,7 @@ for subpl=getsuplots(1)
     catch
         imagesc(slice);
     end
-    
+
     hold on
     if subpl==1
         viewtext(1)=text(0.5,1.05,sprintf(['DORSAL VIEW']),'Color','w','BackgroundColor','k','HorizontalAlignment','center','Units','Normalized');
@@ -489,7 +489,7 @@ for subpl=getsuplots(1)
             fc='g';
         end
     end
-    
+
     warnStruct = warning('off','MATLAB:hg:willberemoved');
     axstar=plot((wsize+1)*2,(wsize+1)*2,'*','MarkerSize',15,'MarkerEdgeColor',fc,'LineWidth',2,'LineSmoothing','on');
     set(axstar,'visible',ea_bool2onoff(options.visible));
@@ -507,7 +507,7 @@ if isempty(legplot)
     elax=subplot(3,6,[1,7,13]); % left electrode plot
     axis off
     load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname])
-    
+
     % visualize
     cnt=1;
     X=eye(4);
@@ -526,7 +526,7 @@ if isempty(legplot)
         ea_specsurf(elrender{side}(cnt),options.elspec.contact_color,0.5);
         cnt=cnt+1;
     end
-    
+
     plot3(electrode.head_position(1),electrode.head_position(2),electrode.head_position(3),'*r','MarkerSize',15)
     plot3(electrode.tail_position(1),electrode.tail_position(2),electrode.tail_position(3),'*g','MarkerSize',15)
     axis([-2,2,-2,2,0,16])
@@ -534,7 +534,7 @@ if isempty(legplot)
     axis manual
     axis equal
     view(0,0);
-    
+
     %light('Position',[0 -5 10]);
     text(0,0,14,options.elmodel,'color','w');
     setappdata(mcfig,'legplot',1);
@@ -616,7 +616,7 @@ end
 switch options.modality
     case 1 % MR
         V=getappdata(mcfig,[ID,addon]);
-        
+
         if isempty(V)
             flags.interp=4;
             flags.wrap=[0,0,0];
@@ -676,7 +676,7 @@ if options.xray
 end
 linecols=hsv2rgb(linecols);
 col=linecols(options.elside,:);
- 
+
 
 function ea_view(hobj,ev,commnd)
 switch commnd

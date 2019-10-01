@@ -1,6 +1,4 @@
 function resultfig=ea_mnifigure(atlasname)
-
-
 options=getoptslocal;
 if exist('atlasname','var')
     options.atlasset=atlasname;
@@ -12,10 +10,9 @@ options.leadprod='dbs';
 options.d3.elrendering=1;
 options.d3.exportBB=0;
 resultfig=ea_elvis(options);
-colormap gray
+colormap(gray(64))
 hold on
-            ea_zoomcenter(resultfig.CurrentAxes, [0,0,0], 3);
-
+ea_zoomcenter(resultfig.CurrentAxes, [0,0,0], 3);
 
 
 function options=getoptslocal
