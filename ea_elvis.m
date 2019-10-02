@@ -358,7 +358,7 @@ if options.d3.writeatlases
         end
     end
 else
-    colormap(gray)
+    colormap(gray(64))
 end
 
 % Show isomatrix data
