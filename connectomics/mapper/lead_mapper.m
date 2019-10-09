@@ -284,9 +284,9 @@ function command_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from command
 if strcmp(handles.command.String{handles.command.Value}, 'Connectivity matrix') ...
     && handles.dofunctional.Value == 1
-    handles.exportgmtc.Visible = 1;
+    handles.exportgmtc.Visible = 'on';
 else
-    handles.exportgmtc.Visible = 0;
+    handles.exportgmtc.Visible = 'off';
 end
 
 
@@ -312,9 +312,9 @@ function dofunctional_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of dofunctional
 if handles.dofunctional.Value == 1 ...
    && strcmp(handles.command.String{handles.command.Value}, 'Connectivity matrix')
-    handles.exportgmtc.Visible = 1;
+    handles.exportgmtc.Visible = 'on';
 else
-    handles.exportgmtc.Visible = 0;
+    handles.exportgmtc.Visible = 'off';
 end
 
 
