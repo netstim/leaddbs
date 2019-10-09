@@ -22,7 +22,7 @@ function varargout = lead_mapper(varargin)
 
 % Edit the above text to modify the response to help lead_mapper
 
-% Last Modified by GUIDE v2.5 11-Dec-2017 14:53:40
+% Last Modified by GUIDE v2.5 09-Oct-2019 11:08:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -282,6 +282,12 @@ function command_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns command contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from command
+if strcmp(handles.command.String{handles.command.Value}, 'Connectivity matrix') ...
+    && handles.dofunctional.Value == 1
+    handles.exportgmtc.Visible = 1;
+else
+    handles.exportgmtc.Visible = 0;
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -304,6 +310,12 @@ function dofunctional_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of dofunctional
+if handles.dofunctional.Value == 1 ...
+   && strcmp(handles.command.String{handles.command.Value}, 'Connectivity matrix')
+    handles.exportgmtc.Visible = 1;
+else
+    handles.exportgmtc.Visible = 0;
+end
 
 
 % --- Executes on selection change in fmripopup.
@@ -463,3 +475,12 @@ function openpatientdir_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_openpatdir(handles);
+
+
+% --- Executes on button press in exportgmtc.
+function exportgmtc_Callback(hObject, eventdata, handles)
+% hObject    handle to exportgmtc (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of exportgmtc

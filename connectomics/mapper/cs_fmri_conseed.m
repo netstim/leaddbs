@@ -1,4 +1,4 @@
-function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
+function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,exportgmtc)
 
 tic
 
@@ -101,7 +101,7 @@ for s=1:size(sfile,1)
             oseedfname=seed{s,lr}.fname;
 
             try
-            seed{s,lr}=ea_conformseedtofmri(dataset,seed{s,lr});
+                seed{s,lr}=ea_conformseedtofmri(dataset,seed{s,lr});
             catch
                 keyboard
             end
@@ -119,7 +119,7 @@ for s=1:size(sfile,1)
 
         sweights(abs(sweights)<0.0001)=0;
         sweights=double(sweights);
-        
+
         try
             options=evalin('caller','options');
         end
@@ -138,7 +138,7 @@ for s=1:size(sfile,1)
 end
 
 numseed=s;
-try 
+try
     options=evalin('caller','options');
 end
 if exist('options','var')
@@ -385,11 +385,16 @@ for mcfi=usesubjects % iterate across subjects
                             rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(rs.gmtc,2))],1); % seed time course
                     else % volume seed
                         try
-                        stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
+                            stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
                         catch
                             keyboard
                         end
                     end
+                end
+
+                if exportgmtc
+                    tmp.gmtc = stc;
+                    save([outputfolder,addp,'gmtc_',dataset.vol.subIDs{mcfi}{1},'_run',num2str(run,'%02d'),'.mat'],'-struct','tmp','-v7.3');
                 end
 
                 switch cmd
