@@ -82,10 +82,10 @@ end
 disp('Converting fibers...');
 fibinfo = load([directory,ftrbase,'.mat']);
 fibers = fibinfo.tracts';
-idx = fibinfo.length';
+idx = double(fibinfo.length)';
 fibers = [fibers, repelem(1:numel(idx), idx)'];
 clear fibinfo
-b0=spm_vol([directory,options.prefs.b0]);
+b0 = spm_vol([directory,options.prefs.b0]);
 
 % Default orientation in DSI-Studio and TrackVis is LPS. Flip the
 % coordinates to make the orientation in the MAT file inline with b0 image.
