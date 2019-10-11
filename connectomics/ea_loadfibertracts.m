@@ -21,7 +21,7 @@ idx = fibinfo.idx;
 if isfield(fibinfo,'vals')
     vals=fibinfo.vals;
 else
-    vals=ones(length(idx),1);
+    vals=ones(size(idx));
 end
 if nargout>2
     try

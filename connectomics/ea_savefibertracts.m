@@ -12,7 +12,7 @@ end
 if exist('vals','var')
     ftr.vals=vals;
 else
-    ftr.vals=ones(length(ftr.idx,1));
+    ftr.vals=ones(size(ftr.idx));
 end
 fprintf('\nSaving fibers: %s.mat...\n',fn);
 save(fullfile(pth,[fn,'.mat']),'-struct','ftr','-v7.3');
