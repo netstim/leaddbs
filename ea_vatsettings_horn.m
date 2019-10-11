@@ -79,6 +79,7 @@ setappdata(handles.condpresets,'data',condv);
 
 
 etv={'E-Field Threshold Presets:',nan
+    'Approximation by D [um] and PW [us] (Proverbio & Husch 2019)',nan
     'General Heuristic (e.g. Hemm 2005. Vasques 2009, Astrom 2009, Horn 2017)',0.2
     'Heuristic GPI (e.g. Hemm 2005, Vasques 2009)',0.2
     'Heuristic STN (Maedler 2012, Astrom 2014)',0.19
@@ -209,11 +210,24 @@ function ethreshpresets_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from ethreshpresets
 
 data=getappdata(hObject,'data');
-if isnan(data{get(hObject,'Value'),2})
-    return
-else
-    set(handles.ethresh,'String',num2str(data{get(hObject,'Value'),2}));
+thresh=data{get(hObject,'Value'),2};
+if isnan(thresh)
+    if(strcmp(data{get(hObject,'Value'),1}, ...
+            'Approximation by D [um] and PW [us] (Proverbio & Husch 2019)'))
+        % Prompt an input dialog
+        prompt = {'Enter D [um]:','Enter PW [us]:'};
+        dlgtitle = 'Please specify fiber diamter D and pulse width PW';
+        dims = [1 35];
+        definput = {'3.5','60'};
+        values = inputdlg(prompt,dlgtitle,dims,definput);   
+        load activation_model_3v.mat;
+        thresh = activation_model_3v(str2num(values{2}),str2num(values{1})); % get approximation
+    else
+        return
+    end
 end
+set(handles.ethresh,'String',num2str(thresh));
+
 set(hObject,'value',1);
 
 % --- Executes during object creation, after setting all properties.
