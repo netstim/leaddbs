@@ -215,13 +215,17 @@ if isnan(thresh)
     if(strcmp(data{get(hObject,'Value'),1}, ...
             'Approximation by D [um] and PW [us] (Proverbio & Husch 2019)'))
         % Prompt an input dialog
-        prompt = {'Enter D [um]:','Enter PW [us]:'};
-        dlgtitle = 'Please specify fiber diamter D and pulse width PW';
-        dims = [1 35];
-        definput = {'3.5','60'};
-        values = inputdlg(prompt,dlgtitle,dims,definput);   
-        load activation_model_3v.mat;
-        thresh = activation_model_3v(str2num(values{2}),str2num(values{1})); % get approximation
+%         prompt = {'Enter D [um]:','Enter PW [us]:'};
+%         dlgtitle = 'Specify fiber diamter D and pulse width PW';
+%         dims = [1 60];
+%         definput = {'3.5','60'};
+%         values = inputdlg(prompt,dlgtitle,dims,definput);   
+%         load activation_model_3v.mat;
+%         thresh = activation_model_3v(str2num(values{2}),str2num(values{1})); % get approximation
+        f = approxonGui;    
+        uiwait(f); % setting thresh
+        thresh = getappdata(f, 'thresh');
+        close(f);
     else
         return
     end
