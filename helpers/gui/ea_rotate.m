@@ -1,12 +1,10 @@
 function ea_rotate(h,~,cmd)
 
-h = rotate3d;
-h.RotateStyle = 'orbit';
-h.Enable = cmd;
-
-if strcmp(cmd,'on')
-    ea_distogzoomin;
-    ea_distogzoomout;
-    ea_distogpan;
-    ea_distogslide;
-end
+ea_distogslide;
+% get figure and axes
+hfig = h.Parent.Parent;
+ax = findobj(hfig.Children,'Type','axes');
+% disable cliuck actions on surfaces (image slices)
+set(findobj(ax.Children,'Type','surface'),'HitTest','off'); 
+% set cam opts to the mouse
+ea_mouse_camera(hfig);
