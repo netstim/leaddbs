@@ -263,7 +263,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             axis off
             view(-180,90)
             hold on
-            colormap(gray(64))
+            colormap(gray)
             caxis manual
             caxis(cscale2)
             scatter(center_marker(1),center_marker(2),'o','r');
@@ -280,7 +280,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             axis off
             view(-180,90)
             hold on
-            colormap(gray(64))
+            colormap(gray)
             caxis manual
             caxis(cscale2)
             scatter(center_dir1(1),center_dir1(2),'o','r');
@@ -297,7 +297,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             axis equal
             axis off
             hold on
-            colormap(gray(64))
+            colormap(gray)
             caxis manual
             caxis(cscale2)
             scatter(center_dir2(2),center_dir2(2),'o','r');
@@ -415,7 +415,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             view(-180,-90)
             axis equal
             axis off
-            colormap(gray(64))
+            colormap(gray)
             caxis manual
             caxis(cscale)
             scatter(center_marker(1),center_marker(2),'o','g')
@@ -565,7 +565,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         view(-180,-90)
         axis equal
         axis off
-        colormap(gray(64))
+        colormap(gray)
         caxis manual
         caxis(cscale)
         scatter(ax1,center_marker(1),center_marker(2),'o','g')
@@ -600,7 +600,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         view(-180,-90)
         axis equal
         axis off
-        colormap(gray(64))
+        colormap(gray)
         caxis manual
         caxis(cscale)
         scatter(ax4,center_dir1(1),center_dir1(2),'o','g')
@@ -641,7 +641,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         view(-180,-90)
         axis equal
         axis off
-        colormap(gray(64))
+        colormap(gray)
         caxis manual
         caxis(cscale)
         scatter(ax7,center_dir2(1),center_dir2(2),'o','g')

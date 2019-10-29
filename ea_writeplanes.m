@@ -98,7 +98,7 @@ for side=1:length(options.sides)
 
             % Show MR-volume
             set(0,'CurrentFigure',cuts)
-            colormap(gray(64))
+            colormap(gray)
             try
                 custom_cmap=evalin('base','custom_cmap');
                 colormap(custom_cmap);
@@ -251,8 +251,8 @@ for side=1:length(options.sides)
 
                 % ##
 
-                slice=round(slice.*63)+1; % set min max to boundaries 1-64.
-                slice(slice<1)=1; slice(slice>64)=64;
+                slice=round(slice.*(length(gray)-1))+1; % set min max to boundaries 1-length(gray).
+                slice(slice<1)=1; slice(slice>length(gray))=length(gray);
 
                 slicer=slice; sliceg=slice; sliceb=slice;
                 slicer(~isnan(slicer))=jetlist(slicer(~isnan(slicer)),1);

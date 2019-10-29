@@ -10,7 +10,7 @@ options.leadprod='dbs';
 options.d3.elrendering=1;
 options.d3.exportBB=0;
 resultfig=ea_elvis(options);
-colormap(gray(64))
+colormap(gray)
 hold on
 ea_zoomcenter(resultfig.CurrentAxes, [0,0,0], 3);
 

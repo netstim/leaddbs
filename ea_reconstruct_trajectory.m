@@ -17,7 +17,7 @@ slice=zeros(size(tra_nii.img,2),size(tra_nii.img,1));
 masknii=tra_nii;
 
 if options.verbose>1
-    colormap(gray(64));
+    colormap(gray);
 end
 endcount=0;
 nanflag=0;
@@ -57,7 +57,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             set(0, 'CurrentFigure', mn);    % set current figure explicitly
             set(mn, 'CurrentAxes', ax);    % set current axes explicitly
             imagesc(slice);
-            colormap(gray(64));
+            colormap(gray);
             hold on
             cof = imshow(colormask);
             set(cof, 'AlphaData', mask*0.3);
@@ -206,7 +206,7 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
         ea_setfocus(progressfig);
         subplot(3,3,1);
         imagesc(slice);
-        colormap(gray(64));
+        colormap(gray);
         axis off square;
     end
 

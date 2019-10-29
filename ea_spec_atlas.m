@@ -32,10 +32,10 @@ set(atls, 'LineWidth',0.1);
 if ~setinterpol
     fc=get(atls,'FaceColor');
     set(atls, 'EdgeColor',fc/1.2);
-    colormap(gray(64))
+    colormap(gray)
 else
     set(atls,'FaceColor','interp');
-    colormap(gray(64))
+    colormap(gray)
 end
 len=get(atls,'CData');
 
