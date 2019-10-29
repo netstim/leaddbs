@@ -175,7 +175,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
                 plot3(rmarkers(side).tail(1),rmarkers(side).tail(2)-0.01,rmarkers(side).tail(3),'^','MarkerEdgeColor','g','MarkerSize',20);
             end
             surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'FaceColor','texturemap','EdgeColor','none');
-            colormap(gray(64));
+            colormap(gray);
             hold off;
             axis tight;
             axis off;
@@ -190,7 +190,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             hold off;
             axis tight;
             axis off;
-            colormap(gray(64));
+            colormap(gray);
 
             p(3) = subplot(2,2,4);
             imagesc(head_slice);
@@ -199,7 +199,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             hold off;
             axis tight;
             axis off;
-            colormap(gray(64));
+            colormap(gray);
 
             set(hf,'PaperUnits','inches','PaperPosition',[0 0 4 4], 'InvertHardCopy', 'off');
             print(hf, [options.root, options.patientname, filesep, 'Electrode_', num2str(side), '.jpg'], '-djpeg75', '-r300');
@@ -321,7 +321,7 @@ function [cx, cy] = find_centre(slice, pidx, pidy, elheight, is_debug) % elheigh
             clf;
             hold on;
             imagesc(crop);
-            colormap(gray(64));
+            colormap(gray);
             plot(xs, ys, '.','MarkerEdgeColor','r','MarkerSize',5);
             plot(mx, my, '.','MarkerEdgeColor','g','MarkerSize',30);
             hold off;

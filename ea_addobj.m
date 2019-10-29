@@ -62,7 +62,7 @@ weights=nii.img(nzeros);
 cmweights=weights;
 cmweights=cmweights-min(cmweights);
 cmweights=cmweights/max(cmweights);
-cmweights=(cmweights*63)+1; % normalize to colormap
+cmweights=(cmweights*(length(gray)-1))+1; % normalize to colormap
 cmweights=squeeze(ind2rgb(round(cmweights),jet));
 
 [nzX,nzY,nzZ]=ind2sub(size(nii.img),nzeros);

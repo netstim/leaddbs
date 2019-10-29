@@ -355,7 +355,7 @@ if options.d3.writeatlases
         end
     end
 else
-    colormap(gray(64))
+    colormap(gray)
 end
 
 % Show isomatrix data
@@ -485,7 +485,7 @@ ea_figmenu(resultfig,'add');
 
 % set mouse camera opts
 ax = findobj(resultfig.Children,'Type','axes');
-set(findobj(ax.Children,'Type','surface'),'HitTest','off'); 
+set(findobj(ax.Children,'Type','surface'),'HitTest','off');
 ea_mouse_camera(resultfig);
 
 
