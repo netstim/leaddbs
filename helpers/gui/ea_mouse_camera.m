@@ -8,6 +8,9 @@ function [] = ea_mouse_camera(hfig)
 
 
 figLastPoint = []; % global variable to store previous cursor position
+zoomFactor = 10;
+panFactor = 2;
+orbitFactor = 7;
 
 set(hfig, 'WindowButtonDownFcn', @down_fcn);
 set(hfig, 'WindowButtonUpFcn', @up_fcn);
@@ -15,9 +18,9 @@ set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
 
     function [] = zoom_fcn(hfig, evt)
         if evt.VerticalScrollCount > 0
-            camzoom(1 + evt.VerticalScrollCount / 10)
+            camzoom(1 + evt.VerticalScrollCount / zoomFactor)
         else
-            camzoom(1 / (1 + abs(evt.VerticalScrollCount) / 10))
+            camzoom(1 / (1 + abs(evt.VerticalScrollCount) / zoomFactor))
         end
     end
 
@@ -66,9 +69,9 @@ set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
             
             switch clickType
                 case 'normal'
-                    orbitPangca(deltaPix, 'o');
+                    orbitPangca(deltaPix/orbitFactor, 'o');
                 case 'alt'
-                    dollygca(deltaPix);
+                    dollygca(deltaPix/panFactor);
                 case 'extend'
                     zoomgca(deltaPix);
             end
