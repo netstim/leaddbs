@@ -1536,7 +1536,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         globalPanel = JPanel(BorderLayout);
         globalPanel.add(hsplitPane, BorderLayout.CENTER);
         globalPanel.add(lowerPanel, BorderLayout.SOUTH);
-        [obj, hcontainer] = javacomponent(globalPanel, [0,0,pos(3:4)], hTreeFig);
+        [obj, hcontainer] = ea_javacomponent(globalPanel, [0,0,pos(3:4)], hTreeFig);
         set(hcontainer,'units','normalized');
         drawnow;
         hsplitPane.setDividerLocation(hsplitPaneLocation);  % this only works after the JSplitPane is displayed...
