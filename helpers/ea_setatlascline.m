@@ -30,10 +30,10 @@ expvx(:,2)=(contour(2,:)-smallestentry([thisbb.mm{secdim}(1),thisbb.mm{secdim}(e
 hold on
 expvx(:,2)=thisbb.imgdim(2)-expvx(:,2);
 
-[idx]=knnsearch(expvx,drawline);
+%[idx]=knnsearch(expvx,drawline);
+idx = ea_near_line(expvx,drawline);
 
-
-for pt=1:size(drawline,1)
+for pt=round(linspace(1,size(drawline,1),size(drawline,1)/7))
 arrhandles{pt}=ea_plot_arrow(drawline(pt,1),drawline(pt,2),expvx(idx(pt),1),expvx(idx(pt),2),'linewidth',2,'headwidth',0.25,'headheight',0.33,'color',[0.5 0.5 0.5],'facecolor',[0.5 0.5 0.5],'edgecolor',[0.5,0.5,0.5]);
 end
 
