@@ -243,7 +243,7 @@ synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
 
 
 for fi = 1:length(fixedimage)
-    if weights(fi)>4 % fiducial or segmentation
+    if weights(fi)>=3 % fiducial or segmentation
         synstage = [synstage,...
             ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
     else
@@ -263,7 +263,7 @@ if slabspresent
     movingimage = [movingimage,slabmovingimage];
 
     for fi = 1:length(fixedimage)
-        if weights(fi)>4 % fiducial or segmentation
+        if weights(fi)>=3 % fiducial or segmentation
             slabstage = [slabstage,...
                 ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
         else
@@ -293,7 +293,7 @@ if  options.prefs.machine.normsettings.ants_scrf
         ' --use-estimate-learning-rate-once ', ...
         ' --masks [',ea_path_helper([ea_space([],'subcortical'),'secondstepmask','.nii']),',',movingmask,']'];
     for fi = 1:length(fixedimage)
-        if weights(fi)>4 % fiducial or segmentation
+        if weights(fi)>=3 % fiducial or segmentation
             synmaskstage = [synmaskstage,...
                 ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
         else
