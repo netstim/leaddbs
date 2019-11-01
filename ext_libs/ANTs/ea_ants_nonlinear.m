@@ -143,7 +143,8 @@ apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), optio
 ccnsettg=options.prefs.machine.normsettings;
 ccnsettg.ants_metric='Global Correlation';
 ccpref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), ccnsettg); 
-
+ccpref.metric='MeanSquares';
+ccpref.metricsuffix='';
 
 directory = fileparts(movingimage{end});
 if isempty(directory)
@@ -244,7 +245,7 @@ synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
 for fi = 1:length(fixedimage)
     if weights(fi)>4 % fiducial or segmentation
         synstage = [synstage,...
-            ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+            ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
     else
         synstage = [synstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
@@ -264,7 +265,7 @@ if slabspresent
     for fi = 1:length(fixedimage)
         if weights(fi)>4 % fiducial or segmentation
             slabstage = [slabstage,...
-                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
         else
             slabstage = [slabstage,...
                 ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
@@ -294,7 +295,7 @@ if  options.prefs.machine.normsettings.ants_scrf
     for fi = 1:length(fixedimage)
         if weights(fi)>4 % fiducial or segmentation
             synmaskstage = [synmaskstage,...
-                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
         else
             synmaskstage = [synmaskstage,...
                 ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
