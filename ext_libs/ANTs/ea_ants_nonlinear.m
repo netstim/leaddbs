@@ -139,6 +139,12 @@ end
 % Load preset parameter set
 apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), options.prefs.machine.normsettings);
 
+% use fixed global correlations for fiducial helpers or segmentations
+ccnsettg=options.prefs.machine.normsettings;
+ccnsettg.ants_metric='Global Correlation';
+ccpref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), ccnsettg); 
+
+
 directory = fileparts(movingimage{end});
 if isempty(directory)
     directory = ['.', filesep];
@@ -236,10 +242,14 @@ synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
 
 
 for fi = 1:length(fixedimage)
-    synstage = [synstage,...
-        ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+    if weights(fi)>4 % fiducial or segmentation
+        synstage = [synstage,...
+            ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+    else
+        synstage = [synstage,...
+            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+    end
 end
-
 % add slab stage
 if slabspresent
     slabstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
@@ -252,8 +262,13 @@ if slabspresent
     movingimage = [movingimage,slabmovingimage];
 
     for fi = 1:length(fixedimage)
-        slabstage = [slabstage,...
-            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+        if weights(fi)>4 % fiducial or segmentation
+            slabstage = [slabstage,...
+                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+        else
+            slabstage = [slabstage,...
+                ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+        end
     end
 else
     slabstage = '';
@@ -277,8 +292,13 @@ if  options.prefs.machine.normsettings.ants_scrf
         ' --use-estimate-learning-rate-once ', ...
         ' --masks [',ea_path_helper([ea_space([],'subcortical'),'secondstepmask','.nii']),',',movingmask,']'];
     for fi = 1:length(fixedimage)
-        synmaskstage = [synmaskstage,...
-            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+        if weights(fi)>4 % fiducial or segmentation
+            synmaskstage = [synmaskstage,...
+                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+        else
+            synmaskstage = [synmaskstage,...
+                ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+        end
     end
     
     
