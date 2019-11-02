@@ -93,7 +93,7 @@ if exist([directory,'segmentations'],'dir')
                     disp(['Including segmentations/',segs(seg).name,' for segment based assistance (weight = 3).']);
                     from=[{[directory,'segmentations',filesep,segs(seg).name]},from]; % append to front (since last one is convergence critical)
                     to=[{ea_niigz([ea_space,'segmentations',filesep,segs(seg).name])},to];
-                    weights=[3,weights]; % set weight to 3 - DO NOT CHANGE THIS VALUE BELOW 3. IF VALUE IS CHANGED, SEGMENTATIONS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
+                    weights=[5,weights]; % set weight to 5 - DO NOT CHANGE THIS VALUE BELOW 3. IF VALUE IS CHANGED, SEGMENTATIONS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
                 end
             end
         end
@@ -109,7 +109,7 @@ if exist([directory,'fiducials'],'dir')
                     disp(['Including fiducials/',segs(seg).name,' for fiducial based assistance (weight = 5).']);
                     from=[{[directory,'fiducials',filesep,'native',filesep,segs(seg).name]},from]; % append to front (since last one is convergence critical)
                     to=[{ea_niigz([directory,'fiducials',filesep,ea_getspace,filesep,segs(seg).name])},to];
-                    weights=[5,weights]; % set weight to 3 - DO NOT CHANGE THIS VALUE BELOW 3. IF VALUE IS CHANGED, FIDUCIALS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
+                    weights=[5,weights]; % set weight to 5 - DO NOT CHANGE THIS VALUE BELOW 3. IF VALUE IS CHANGED, FIDUCIALS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
                 end
             end
         end
