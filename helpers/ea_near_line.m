@@ -35,6 +35,7 @@ for i=0:blocks(end) % iterate over contours
         Dglobal = Dlocal; % save new minimum
         out = knnsearch(X,subX(idx{idmin},:)); % get the indexes in original X array
         mid = min(idx0); % save mid index for later
+        aux = idmin; % save array index
     end
     
 end
@@ -52,7 +53,7 @@ else
     out = flip(out);
 end
 
-if out(end) ~= knnsearch(X,Y(end,:))
+if aux == 2 && out(end) ~= knnsearch(X,Y(end,:))
     out = [out(1:mid); flip(out(mid+1:end))];
 end
 
