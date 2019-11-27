@@ -115,6 +115,7 @@ cd(options.uipatdirs{1})
 
 if exist('run','var') && run
 
+options.dolc = 0;
 options.ecog.extractsurface.do = 1;
 options.ecog.extractsurface.method = 1;
 options.endtolerance = 10;
