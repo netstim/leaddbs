@@ -10,16 +10,11 @@ function ea_dicom_import(options)
 
 outdir = [options.root, options.patientname, filesep];
 
-if isfield(options.dicomimp,'method') && strcmp(options.dicomimp.method,'BIDS nifti import (experimental)')
-disp('Importing BIDS folder')
-
-if ~exist('derivatives','dir')
-    mkdir derivatives
-end
-    keyboard
-    preopmri = dir('anat/*.nii.gz');
-
-    
+if isfield(options.dicomimp,'method') && options.dicomimp.method == 4
+    disp('Importing BIDS folder...')
+    bids_subject_folder = options.uipatdirs{1};
+    options=ea_read_bids(options,bids_subject_folder);
+    delete(fullfile(bids_subject_folder,'ea_ui.mat'))
 else
 disp('Importing DICOM files...');
 
@@ -54,18 +49,16 @@ end
 
 if isfield(options.dicomimp,'method')
     switch options.dicomimp.method
-        case 1 % BIDS import
-
-        case 2 % dcm2niix
+        case 1 % dcm2niix
             ea_dcm2niix(indir, outdir);
             ea_methods(options, ['DICOM images were converted to the '...
                 'NIfTI file format using dcm2niix (see https://github.com/rordenlab/dcm2niix).']);
-        case 3 % dicm2nii
+        case 2 % dicm2nii
             ea_dicm2nii(indir, outdir);
             ea_delete([outdir, 'dcmHeaders.mat']);
             ea_methods(options, ['DICOM images were converted to the '...
                 'NIfTI file format using dicm2nii (see https://github.com/xiangruili/dicm2nii).']);
-        case 4 % SPM
+        case 3 % SPM
             ea_spm_dicom_import(indir, outdir);
             ea_methods(options, ['DICOM images were converted to the '...
                 'NIfTI file format using SPM.']);

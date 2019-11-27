@@ -42,8 +42,11 @@ prefs.gcornii='glpostop_cor.nii';
 prefs.gsagnii='glpostop_sag.nii';
 prefs.gctnii='glpostop_ct.nii';
 
-
 prefs.tp_gctnii=['tp_',prefs.gctnii];
+
+%% BIDS settings
+prefs.bids_session_postop = 'ses-postDBS';
+prefs.bids_session_preop = 'ses-preDBS';
 
 %% Misc:
 prefs.tonemap='heuristic'; % set to 'albada' to change to datadriven mode
