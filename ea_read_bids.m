@@ -75,7 +75,7 @@ lead2bids_lookup = ...
     'b0'                            preop_folder    ['dwi' filesep '*b0.nii.gz']
     'fa'                            preop_folder    ['dwi' filesep '*fa.nii.gz']
     'fa2anat'                       preop_folder    ['dwi' filesep '*fa2anat.nii.gz']
-    'dti'                           preop_folder    ['dwi' filesep '*dwi.nii.gz']};
+    'dti'                           preop_folder    ['dwi' filesep '*diff.nii.gz']};
 
 for a =1 :size(lead2bids_lookup,1)
     for b = 1:length(lead2bids_lookup{a,2})
@@ -84,24 +84,25 @@ for a =1 :size(lead2bids_lookup,1)
         
         for c=1:length(files)
             if c==1
-                outname = fullfile(options.prefs.patientdir,[options.prefs.(lead2bids_lookup{a,1})(1:end-4) '.nii.gz']);
+                outname = fullfile(derivatives_folder,[options.prefs.(lead2bids_lookup{a,1})(1:end-4) '.nii.gz']);
             else
-                outname = fullfile(options.prefs.patientdir,[options.prefs.(lead2bids_lookup{a,1})(1:end-4) '_' num2str(c-1) '.nii.gz']);
+                outname = fullfile(derivatives_folder,[options.prefs.(lead2bids_lookup{a,1})(1:end-4) '_' num2str(c-1) '.nii.gz']);
                 warning(['More than 1 file for ' lead2bids_lookup{a,1} ' found!'])
             end
             
-             copyfile(fullfile(files(c).folder,files(c).name),fullfile(options.prefs.patientdir,[options.prefs.(lead2bids_lookup{a,1})(1:end-4) '.nii.gz']));
-             gunzip(outname)
+             copyfile(fullfile(files(c).folder,files(c).name),outname);
+             
+             gunzip(outname,derivatives_folder)
              delete(outname)
     
             if strcmp(lead2bids_lookup{a,1},'dti')
                 if exist(fullfile(files(c).folder,[files(c).name(1:end-7) '.bval']),'file')
-                    movefile(fullfile(files(c).folder,[files(c).name(1:end-7) '.bval']),fullfile(options.prefs.patientdir,[options.prefs.(lead2bids_lookup{a,1})(1:end-4) '.bval']));
+                    copyfile(fullfile(files(c).folder,[files(c).name(1:end-7) '.bval']),fullfile(options.prefs.patientdir,[options.prefs.(lead2bids_lookup{a,1})(1:end-4) '.bval']));
                 else
                     warning('No .bval file found for dMRI image.');
                 end
                 if exist(fullfile(files(c).folder,[files(c).name(1:end-7) '.bvec']),'file')
-                    movefile(fullfile(files(c).folder,[files(c).name(1:end-7) '.bvec']),fullfile(options.prefs.patientdir,[options.prefs.(lead2bids_lookup{a,1})(1:end-4) '.bvec']));
+                    copyfile(fullfile(files(c).folder,[files(c).name(1:end-7) '.bvec']),fullfile(options.prefs.patientdir,[options.prefs.(lead2bids_lookup{a,1})(1:end-4) '.bvec']));
                 else
                     warning('No .bvec file found for dMRI image.');
                 end
@@ -113,13 +114,9 @@ end
 cd(options.uipatdirs{1})
 
 if exist('run','var') && run
-%     options.normalize.do = true;
-%     options.normalize.check = false;
-%     options.coregmr.do = 1;
-%     options.coregct.do = true;
-%     options.scrf.do = 1;
 
-
+options.ecog.extractsurface.do = 1;
+options.ecog.extractsurface.method = 1;
 options.endtolerance = 10;
 options.sprungwert = 4;
 options.refinesteps = 0;
