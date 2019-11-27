@@ -10,6 +10,17 @@ function ea_dicom_import(options)
 
 outdir = [options.root, options.patientname, filesep];
 
+if isfield(options.dicomimp,'method') && strcmp(options.dicomimp.method,'BIDS nifti import (experimental)')
+disp('Importing BIDS folder')
+
+if ~exist('derivatives','dir')
+    mkdir derivatives
+end
+    keyboard
+    preopmri = dir('anat/*.nii.gz');
+
+    
+else
 disp('Importing DICOM files...');
 
 % check DICOM folder/zipfile under subject folder, can be named as:
@@ -86,4 +97,6 @@ fclean = unique(regexprep(fclean, '(_Crop_1|_Tilt_1)', ''));
 
 for f=1:length(fclean)
     ea_delete(fclean{f});
+end
+
 end
