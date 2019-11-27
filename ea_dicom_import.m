@@ -54,16 +54,18 @@ end
 
 if isfield(options.dicomimp,'method')
     switch options.dicomimp.method
-        case 1 % dcm2niix
+        case 1 % BIDS import
+
+        case 2 % dcm2niix
             ea_dcm2niix(indir, outdir);
             ea_methods(options, ['DICOM images were converted to the '...
                 'NIfTI file format using dcm2niix (see https://github.com/rordenlab/dcm2niix).']);
-        case 2 % dicm2nii
+        case 3 % dicm2nii
             ea_dicm2nii(indir, outdir);
             ea_delete([outdir, 'dcmHeaders.mat']);
             ea_methods(options, ['DICOM images were converted to the '...
                 'NIfTI file format using dicm2nii (see https://github.com/xiangruili/dicm2nii).']);
-        case 3 % SPM
+        case 4 % SPM
             ea_spm_dicom_import(indir, outdir);
             ea_methods(options, ['DICOM images were converted to the '...
                 'NIfTI file format using SPM.']);
