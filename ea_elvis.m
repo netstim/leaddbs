@@ -36,7 +36,13 @@ resultfig=figure('name', [options.patientname,': Electrode-Scene'],...
     'color', 'k', 'numbertitle', 'off',...
     'CloseRequestFcn', @closesatellites, 'visible', options.d3.verbose,...
     'KeyPressFcn', @ea_keypress, 'KeyReleaseFcn', @ea_keyrelease);
+
 setappdata(resultfig,'options',options);
+
+ea_bind_dragndrop(resultfig, ...
+    @(obj,evt) DropFcn(obj,evt,resultfig), ...
+    @(obj,evt) DropFcn(obj,evt,resultfig));
+
 set(resultfig,'toolbar','none');
 ssz=get(0,'Screensize');
 ssz(1:2)=ssz(1:2)+50;
@@ -64,7 +70,6 @@ uibjs.slide3dtog=uitoggletool(ht, 'CData', ea_get_icn('quiver'),...
 %     'TooltipString', 'Pan Scene', 'OnCallback', {@ea_pan,'on'},...
 %     'OffCallback', {@ea_pan,'off'}, 'State', 'off');
 setappdata(resultfig,'uibjs',uibjs);
-
 
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract',...
@@ -487,6 +492,31 @@ ea_figmenu(resultfig,'add');
 ax = findobj(resultfig.Children,'Type','axes');
 set(findobj(ax.Children,'Type','surface'),'HitTest','off');
 ea_mouse_camera(resultfig);
+
+
+% --- Drag and drop callback to load patdir.
+function DropFcn(~, event, resultfig)
+
+switch event.DropType
+    case 'file'
+        objects = event.Data;
+    case 'string'
+        objects = {event.Data};
+end
+
+nonexist = cellfun(@(x) ~exist(x, 'file'), objects);
+if any(nonexist)
+    fprintf('\nExcluded non-existent/invalid folder:\n');
+    cellfun(@disp, objects(nonexist));
+    fprintf('\n');
+    objects(nonexist) = [];
+end
+
+options = getappdata(resultfig,'options');
+
+if ~isempty(objects)
+    ea_addobj([], [], resultfig, objects, options);
+end
 
 
 function opensliceviewer(hobj,ev,resultfig,options)

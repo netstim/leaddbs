@@ -1,45 +1,63 @@
-function ea_addobj(ht,obj,resultfig,type,options)
+function ea_addobj(src, evt, resultfig, obj, options)
 
-addht=getappdata(resultfig,'addht');
+addht = getappdata(resultfig,'addht');
 if isempty(addht)
-    addht=uitoolbar(resultfig);
-    setappdata(resultfig,'addht',addht);
+    addht = uitoolbar(resultfig);
+    setappdata(resultfig, 'addht', addht);
 end
 
-switch type
-    case 'tract'
-        % open dialog
-        [fina,pana]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-        if isempty(fina) % user pressed cancel.
-            return
+if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
+    if all(cellfun(@numel, regexp(obj, '(\.mat|\.trk)$', 'match', 'once')))
+        for i=1:length(obj)
+            addfibertract(obj{i}, resultfig, addht, [], 0, options);
         end
-        if iscell(fina)
-            for fi=1:length(fina)
-                addfibertract([pana,fina{fi}],resultfig,addht,[],0,options);
-            end
-        else
-            if ~fina % user pressed cancel
+    elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once')))
+        pobj.plotFigureH = resultfig;
+        pobj.htH = addht;
+        for i=1:length(obj)
+            % addroi(obj{i}, resultfig, addht, options);
+            pobj.color = ea_uisetcolor;
+            ea_roi(obj{i}, pobj);
+        end
+    else
+        warndlg('Unsupported file(s) found!');
+    end
+else  % uigetfile, 'obj' is the type of the files to be selected
+    switch obj
+        case 'tract'
+            % open dialog
+            [fina,pana]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            if isempty(fina) % user pressed cancel.
                 return
             end
-            addfibertract([pana,fina],resultfig,addht,[],0,options);
-        end
-    case 'roi' % atlas
-        % open dialog
-        [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-        if iscell(fina) % multiple files
-            for fi=1:length(fina)
-                addroi([pana,fina{fi}],resultfig,addht,options);
+            if iscell(fina)
+                for fi=1:length(fina)
+                    addfibertract([pana,fina{fi}],resultfig,addht,[],0,options);
+                end
+            else
+                if ~fina % user pressed cancel
+                    return
+                end
+                addfibertract([pana,fina],resultfig,addht,[],0,options);
             end
-        else
-            if ~fina % user pressed cancel.
-                return
+        case 'roi' % atlas
+            % open dialog
+            [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            if iscell(fina) % multiple files
+                for fi=1:length(fina)
+                    addroi([pana,fina{fi}],resultfig,addht,options);
+                end
+            else
+                if ~fina % user pressed cancel.
+                    return
+                end
+                addroi([pana,fina],resultfig,addht,options);
             end
-            addroi([pana,fina],resultfig,addht,options);
-        end
-    case 'tractmap'
-        [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
-        [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
-        addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,options)
+        case 'tractmap'
+            [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
+            [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
+            addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,options)
+    end
 end
 
 axis fill
