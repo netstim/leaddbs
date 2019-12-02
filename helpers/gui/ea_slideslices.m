@@ -1,8 +1,17 @@
 function ea_slideslices(h,~,cmd)
 
-ea_distogrotate;
-hfig = h.Parent.Parent;
-set(hfig,'WindowButtonDownFcn', []); % reset button down function
-ax = findobj(hfig.Children,'Type','axes');
+% update toggle state
+uibjs=getappdata(gcf,'uibjs');
+set(uibjs.slide3dtog,'State','on');
+set(uibjs.rotate3dtog,'State','off');
+if strcmp(cmd,'off')
+    return
+end
 
-set(findobj(ax.Children,'Type','surface'),'HitTest',cmd); % enable/disable click actions on surfaces (image slices)
+% reset button down function
+hfig = h.Parent.Parent;
+set(hfig,'WindowButtonDownFcn', []);
+
+% enable click actions on surfaces (image slices)
+ax = findobj(hfig.Children,'Type','axes');
+set(findobj(ax.Children,'Type','surface'),'HitTest','on'); 
