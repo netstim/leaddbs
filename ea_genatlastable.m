@@ -149,9 +149,9 @@ if checkrebuild(atlases,options,root,mifix)
                 colorc=colornames(1);
                 colorc=rgb(colorc);
                 if isfield(structure, 'img') % volumetric atlas
-                    % if options.prefs.hullsmooth
-                    %     nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-                    % end
+                     if options.prefs.hullsmooth
+                         structure.img = smooth3(structure.img,'gaussian',options.prefs.hullsmooth);
+                     end
 
                     [xx,yy,zz]=ind2sub(size(structure.img),find(structure.img>0)); % find 3D-points that have correct value.
                     vv=structure.img(structure.img(:)>0);
@@ -375,6 +375,7 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     end
 
     if wasgzip
+        gzip(fname);
         delete(fname); % since gunzip makes a copy of the zipped file.
     end
 elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
@@ -530,8 +531,8 @@ for atl=1:length(atlnames)
     clear matlabbatch
 
     if wasgzip
-        gzip(atlname); % since gunzip makes a copy of the zipped file.
-        delete(atlname);
+        gzip(atlname); 
+        delete(atlname); % since gunzip makes a copy of the zipped file.
     end
 end
 
