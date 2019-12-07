@@ -33,7 +33,15 @@ if nargin>6
     end
 end
 
-R=corr(regressor,X,'type',corrtype,'rows','pairwise');
+
+switch lower(corrtype)
+    case {'skippedpearson','skipped_pearson','robust','robustpearson','robust_pearson','skipped'}
+        R=ea_skipped_correlation(regressor,X,'pearson');
+    case {'skippedspearman','skipped_spearman','robustspearman','robust_spearman'}
+        R=ea_skipped_correlation(regressor,X,'spearman');
+    otherwise
+        R=corr(regressor,X,'type',corrtype,'rows','pairwise');
+end
 ea_exportmap(n,R,varargin{1:5});
 
 if exist('Rperm','var') % permutation test
