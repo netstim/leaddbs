@@ -673,8 +673,8 @@ oldlocas = vat.pos;
 
 % Assign tip of electrode as origin
 org = elstruct.trajectory{1,side}(1,:);
-tra = elstruct.trajectory{1,side} - org;
-pos = vat.pos - org;
+tra = elstruct.trajectory{1,side} - repmat(org,size(elstruct.trajectory{1,side},1),1);
+pos = vat.pos - repmat(org,size(vat.pos,1),1);
 
 % Rotate coordinate system so that y-axis aligns with electrode
 elvec = (tra(end,:))';
@@ -699,7 +699,7 @@ end
 r_pos = R*pos';
 
 cr_pos = r_pos(:,r_pos(2,:)>0); % Determine all points at electrode level
-fact = (vecnorm(cr_pos([1 3],:),2)-elspec.lead_diameter/2)./vecnorm(cr_pos([1 3],:),2); % Determine shifting factors
+fact = (ea_vecnorm(cr_pos([1 3],:),2)-elspec.lead_diameter/2)./ea_vecnorm(cr_pos([1 3],:),2); % Determine shifting factors
 cr_pos([1 3],:) = cr_pos([1 3],:).*fact;
 cr_pos(:,fact<0) = nan;
 
@@ -728,7 +728,7 @@ vat.ET(artpts) = [];
 
 oldlocas(artpts,:) = [];
 
-moved = vecnorm(vat.pos-oldlocas',2);
+moved = ea_vecnorm(vat.pos-oldlocas',2);
 moved(moved<0.2) = [];
 moved = abs(moved-elspec.lead_diameter/2);
 
