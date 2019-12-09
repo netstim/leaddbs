@@ -329,7 +329,7 @@ options.coregmr.method = coregmethod;
 coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
 fn=fieldnames(coregmethodsused);
 for field=1:length(fn)
-    if contains(fn{field},refname)
+    if ea_contains(fn{field},refname)
         disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
         options.coregmr.method=coregmethodsused.(fn{field});
         break

@@ -46,7 +46,7 @@ nm=nm(logical(nmind)); % select which shall be performed.
 
 % switch between patient and template cortex
 slicecontroldata = getappdata(gcf);
-if nm==1 && contains(slicecontroldata.templateused,'Patient')
+if nm==1 && ea_contains(slicecontroldata.templateused,'Patient')
     nm = 0;
 end
 
@@ -87,7 +87,7 @@ end
 files = dir(adir);
 files = files(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {files.name}));
 files = files(~[files.isdir]);
-files = {files(contains({files.name},'Cortex')).name};
+files = {files(ea_contains({files.name},'Cortex')).name};
 
     % % Use this to choose which file to load:
     % if size(files,2)>=2
