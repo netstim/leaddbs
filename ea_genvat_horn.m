@@ -703,12 +703,6 @@ fact = (ea_vecnorm(cr_pos([1 3],:),2)-elspec.lead_diameter/2)./ea_vecnorm(cr_pos
 cr_pos([1 3],:) = cr_pos([1 3],:).*fact;
 cr_pos(:,fact<0) = nan;
 
-size('r_pos')
-size(r_pos)
-size('r_pos(:,r_pos(2,:)>0)')
-size(r_pos(:,r_pos(2,:)>0))
-size('cr_pos')
-size(cr_pos)
 r_pos(:,r_pos(2,:)>0) = cr_pos;
 artpts = find(isnan(r_pos(1,:)));
 
