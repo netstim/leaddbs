@@ -60,7 +60,11 @@ set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
         % from matlab's CameraToolBarManager.m
         
         currpt = get(hfig,'CurrentPoint');
-        pt = matlab.graphics.interaction.internal.getPointInPixels(hfig,currpt(1:2));
+        try
+            pt = matlab.graphics.interaction.internal.getPointInPixels(hfig,currpt(1:2));
+        catch % old matlab version
+            pt = currpt;
+        end
         if isempty(figLastPoint)
             figLastPoint = pt;
         end
