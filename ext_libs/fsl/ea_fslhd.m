@@ -36,7 +36,7 @@ else
     cmdout = regexprep(cmdout, '[\t]+', ' = ');
 end
 
-cmdout = cellfun(@(x) strsplit(x, ' = '), strsplit(cmdout, newline), 'Uni', 0)';
+cmdout = cellfun(@(x) strsplit(x, ' = '), strsplit(cmdout, ea_newline), 'Uni', 0)';
 
 % Construct header
 header = struct;
