@@ -154,7 +154,7 @@ set(h, 'Visible', 'on')
     end % redrawDemo
 
 %-------------------------------------------------------------------------%
-    function onListSelection( src, ~ )
+    function onListSelection( ~, ~ )
         % User selected a demo from the list - update "data" and refresh
         %data.SelectedDemo = get( src, 'Value' );
         redrawDemo();
