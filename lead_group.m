@@ -1203,7 +1203,7 @@ for pt=selection
 
     % own fileparts to support windows/mac/linux slashes even if they come
     % from a different OS.
-    if ~contains(M.patient.list{pt},'/')
+    if ~ea_contains(M.patient.list{pt},'/')
         lookfor='\';
     else
         lookfor='/';

@@ -16,6 +16,6 @@ end
 
 env = getenv(envname);
 
-if ~contains(env, libpath)
+if ~ea_contains(env, libpath)
     setenv(envname, [libpath, ';', env]);
 end

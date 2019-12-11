@@ -1503,7 +1503,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
     end
 
     if strcmp(sens.balance.current, 'planar')
-      if isfield(sens, 'type') && contains(sens.type, '_planar')
+      if isfield(sens, 'type') && ea_contains(sens.type, '_planar')
         % remove the planar postfox from the sensor type
         sens.type = sens.type(1:(end-7));
       end
@@ -7967,7 +7967,7 @@ if ~isfield(data, 'dimord')
     fn = fieldnames(data);
     sel = true(size(fn));
     for i=1:length(fn)
-      sel(i) = contains(fn{i}, 'dimord');
+      sel(i) = ea_contains(fn{i}, 'dimord');
     end
     df = fn(sel);
 

@@ -159,16 +159,16 @@ lfs = dir([fsdir,filesep,'label']); % label_files
     
 annot_DKT(1).atlas = 'Desikan-Killiany';
 annot_DKT(2).atlas = 'Desikan-Killiany';
-annot_DKT(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.annot')).name]; %'label/lh.aparc.annot';     label_files(~cellfun(@isempty,strfind({label_files.name},'rh.aparc.DKT'))).name
-annot_DKT(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.annot')).name]; %'label/lh.aparc.annot';
+annot_DKT(1).filename  = ['label/',lfs(ea_contains({lfs.name},'rh.aparc.annot')).name]; %'label/lh.aparc.annot';     label_files(~cellfun(@isempty,strfind({label_files.name},'rh.aparc.DKT'))).name
+annot_DKT(2).filename  = ['label/',lfs(ea_contains({lfs.name},'lh.aparc.annot')).name]; %'label/lh.aparc.annot';
 annot_DKTaseg(1).atlas = 'Desikan-Killiany + Aseg';
 annot_DKTaseg(2).atlas = 'Desikan-Killiany + Aseg';
-annot_DKTaseg(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.DKT')).name]; %'label/rh.aparc.DKTatlas.annot';
-annot_DKTaseg(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.DKT')).name]; %'label/lh.aparc.DKTatlas.annot';
+annot_DKTaseg(1).filename  = ['label/',lfs(ea_contains({lfs.name},'rh.aparc.DKT')).name]; %'label/rh.aparc.DKTatlas.annot';
+annot_DKTaseg(2).filename  = ['label/',lfs(ea_contains({lfs.name},'lh.aparc.DKT')).name]; %'label/lh.aparc.DKTatlas.annot';
 annot_a2009(1).atlas = 'Destrieux';
 annot_a2009(2).atlas = 'Destrieux';
-annot_a2009(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.a2009')).name]; %'label/rh.aparc.a2009s.annot';
-annot_a2009(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.a2009')).name]; %'label/lh.aparc.a2009s.annot';
+annot_a2009(1).filename  = ['label/',lfs(ea_contains({lfs.name},'rh.aparc.a2009')).name]; %'label/rh.aparc.a2009s.annot';
+annot_a2009(2).filename  = ['label/',lfs(ea_contains({lfs.name},'lh.aparc.a2009')).name]; %'label/lh.aparc.a2009s.annot';
 
 % Read Annotation Files
 % external/freesurfer/read_annotation.m
