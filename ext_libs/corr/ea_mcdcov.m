@@ -1379,13 +1379,13 @@ function [dis,mahsort]=mahal2(score,sca,part,fine,final,k,obsingroup)
 % covariance matrix and zero mean. sca contains the squareroot of the diagonal elements.
 
 if ~part | final
-    [dis,ind]=sort(ea_mahalanobis(score,zeros(size(score,2),1),'cov',sca.^2));
+    [dis,ind]=sort(ea_mahalanobis_cov(score,sca.^2));
     mahsort=ind;
 elseif fine
-    [dis,ind]=sort(ea_mahalanobis(score,zeros(size(score,2),1),'cov',sca.^2));
+    [dis,ind]=sort(ea_mahalanobis_cov(score,sca.^2));
     mahsort=obsingroup{end}(ind);
 else
-    [dis,ind]=sort(ea_mahalanobis(score,zeros(size(score,2),1),'cov',sca.^2));
+    [dis,ind]=sort(ea_mahalanobis_cov(score,sca.^2));
     mahsort=obsingroup{k}(ind);
 end
 
