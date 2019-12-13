@@ -757,9 +757,9 @@ while final~=2
                         P=bP{i};
                         L = bL{i};
                         if bobj(i)==0
-                            [dis,sortdist]=sort(abs(sum((data-repmat(meanvct,n,1))'.*repmat(coeff,1,n))));
+                            [dis,sortdist]=sort(abs(sum((data-meanvct)'.*repmat(coeff,1,n))));
                         else
-                            [dis,sortdist]=mahal2((data-repmat(meanvct,n,1))*P,sqrt(L),part,fine,final,k,obsingroup);
+                            [dis,sortdist]=mahal2((data-meanvct)*P,sqrt(L),part,fine,final,k,obsingroup);
                         end
                     else
                         break
@@ -770,7 +770,7 @@ while final~=2
                         P=bP1{k,i};
                         L=bL1{k,i};
                         if bobj1(k,i)==0
-                            [dis,ind]=sort(abs(sum((data(obsingroup{end},:)-repmat(meanvct,minigr,1))'.*repmat(coeff1(:,k),1,minigr))));
+                            [dis,ind]=sort(abs(sum((data(obsingroup{end},:)-meanvct)'.*repmat(coeff1(:,k),1,minigr))));
                             sortdist=obsingroup{end}(ind);
                             if dis(adjh) < 1e-8
                                 if found==0
@@ -783,7 +783,7 @@ while final~=2
                                 ns=1;
                             end
                         else
-                            [dis,sortdist]=mahal2((data(obsingroup{end},:)-repmat(meanvct,minigr,1))*P,sqrt(L),part,fine,final,k,obsingroup);
+                            [dis,sortdist]=mahal2((data(obsingroup{end},:)-meanvct)*P,sqrt(L),part,fine,final,k,obsingroup);
                         end
                     else
                         break;
@@ -841,9 +841,9 @@ while final~=2
                         eigvct=P(:,r);
                        
                         if ~part
-                            dist=abs(sum((data-repmat(meanvct,n,1))'.*repmat(eigvct,1,n)));
+                            dist=abs(sum((data-meanvct)'.*repmat(eigvct,1,n)));
                         else
-                            dist=abs(sum((data(obsingroup{k},:)-repmat(meanvct,group(k),1))'.*repmat(eigvct,1,group(k))));
+                            dist=abs(sum((data(obsingroup{k},:)-meanvct)'.*repmat(eigvct,1,group(k))));
                         end
 
                         obsinplane=find(dist < 1e-8);
@@ -901,9 +901,9 @@ while final~=2
 
                     if ~ns
                         if ~part
-                            [dis,sortdist] = mahal2((data - repmat(meanvct,n,1))*P,sqrt(L),part,fine,final,k,obsingroup);
+                            [dis,sortdist] = mahal2((data - meanvct)*P,sqrt(L),part,fine,final,k,obsingroup);
                         else
-                            [dis,sortdist] = mahal2((data(obsingroup{k},:) - repmat(meanvct,group(k),1))*P,sqrt(L),part,fine,final,k,obsingroup);
+                            [dis,sortdist] = mahal2((data(obsingroup{k},:) - meanvct)*P,sqrt(L),part,fine,final,k,obsingroup);
                         end
                     end
                 end
@@ -924,14 +924,14 @@ while final~=2
                         % The observations correponding to the adjh smallest mahalanobis
                         % distances determine the subset for the next iteration.
                         if ~part
-                            [dis2,sortdist] = mahal2((data - repmat(meanvct,n,1))*P,sqrt(L),part,fine,final,k,obsingroup);
+                            [dis2,sortdist] = mahal2((data - meanvct)*P,sqrt(L),part,fine,final,k,obsingroup);
                         else
                             if final
-                                [dis2,sortdist] = mahal2((data - repmat(meanvct,n,1))*P,sqrt(L),part,fine,final,k,obsingroup);
+                                [dis2,sortdist] = mahal2((data - meanvct)*P,sqrt(L),part,fine,final,k,obsingroup);
                             elseif fine
-                                [dis2,sortdist] = mahal2((data(obsingroup{end},:) - repmat(meanvct,minigr,1))*P,sqrt(L),part,fine,final,k,obsingroup);
+                                [dis2,sortdist] = mahal2((data(obsingroup{end},:) - meanvct)*P,sqrt(L),part,fine,final,k,obsingroup);
                             else
-                                [dis2,sortdist] = mahal2((data(obsingroup{k},:) - repmat(meanvct,group(k),1))*P,sqrt(L),part,fine,final,k,obsingroup);
+                                [dis2,sortdist] = mahal2((data(obsingroup{k},:) - meanvct)*P,sqrt(L),part,fine,final,k,obsingroup);
                             end
                         end
                         % Creation of a H-subset.
@@ -981,7 +981,7 @@ while final~=2
                                 return
                             elseif found==0
                                 eigvct = V(:,1);
-                                dist=abs(sum((data-repmat(meanvct,n,1))'.*repmat(eigvct,1,n)));
+                                dist=abs(sum((data-meanvct)'.*repmat(eigvct,1,n)));
                                 obsinplane=find(dist<1e-8);
                                 count=length(obsinplane);
                                 if count >= h
@@ -1002,11 +1002,11 @@ while final~=2
                                 found=1;
                                 if ~fine
                                     coeff1(:,k)=eigvct;
-                                    dist=abs(sum((data(obsingroup{k},:)-repmat(meanvct,group(k),1))'.*repmat(eigvct,1,group(k))));
+                                    dist=abs(sum((data(obsingroup{k},:)-meanvct)'.*repmat(eigvct,1,group(k))));
                                     inplane(k)=length(dist(dist<1e-8));
                                 else
                                     coeff=eigvct;
-                                    dist=abs(sum((data(obsingroup{end},:)-repmat(meanvct,minigr,1))'.*repmat(eigvct,1,minigr)));
+                                    dist=abs(sum((data(obsingroup{end},:)-meanvct)'.*repmat(eigvct,1,minigr)));
                                     inplane=length(dist(dist<1e-8));
                                 end
                                 break;

@@ -19,7 +19,7 @@ if n==1
     error('The sample size is 1. No SVD can be performed.')
 end
 cX=mean(x);
-centerX=x-repmat(cX,n,1); 
+centerX=x-cX; 
 [U,S,loadings]=svd(centerX./sqrt(n-1),0); 
 eigenvalues=diag(S).^2;
 tol = max([n p])*eigenvalues(1)*eps;
