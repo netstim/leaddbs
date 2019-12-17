@@ -38,7 +38,7 @@ switch lower(corrtype)
     case {'skippedpearson','skipped_pearson','robustpearson','robust_pearson','skipped'}
         R=nan(1,size(X,2));
         R(mask)=ea_skipped_correlation(regressor,X(:,mask),'pearson');
-    case {'skippedspearman','skipped_spearman','robust','robust_spearman'}
+    case {'skippedspearman','skipped_spearman','robust','robust_spearman','robustspearman'}
         R=nan(1,size(X,2));
         R(mask)=ea_skipped_correlation(regressor,X(:,mask),'spearman');
     otherwise
