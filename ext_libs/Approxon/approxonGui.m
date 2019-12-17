@@ -1,7 +1,7 @@
 function h = approxonGui()
 
 gui = createInterface();
-gui.model = load('activation_model_3v.mat'); % loads PW, D, T for 3V 
+gui.model = load('logLinMod.mat'); % loads PW, D, T for 3V 
 
 % Now update the GUI with the current data
 redrawDemo();
@@ -119,7 +119,7 @@ set(h, 'Visible', 'on')
         assignin('base','PW', gui.PW);   % thats an ugly hack to get our values back, but anyway.. 
         assignin('base', 'D', gui.D);
         
-        gui.thresh = str2double(sprintf('%3.2f',  gui.model.activation_model_3v(gui.PW,gui.D)));
+        gui.thresh = str2double(sprintf('%3.2f',  gui.model.logLinMod(gui.PW,gui.D)));
         gui.TxtT.String = num2str( gui.thresh);
         delete(gui.pointHandle);
         setappdata(gui.Window, 'thresh', gui.thresh);
