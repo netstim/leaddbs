@@ -40,7 +40,7 @@ pointHandle = plot3(60,3.5,logLinMod(60,3.5), 'o', 'MarkerSize', 20, ....
 %vd = plot3(60,7.5,0.064, '*r', 'Parent', ax); % validation data point
 
 
-title('Axonal E-Field Activation Threshold for (PW,D) at 3V', 'Parent', ax);
+title('Axonal E-Field Activation Threshold for (PW,D)', 'Parent', ax);
 
 % Label axes
 xlabel( 'PW [\mus]', 'Interpreter', 'Tex', 'Parent', ax);
@@ -51,7 +51,7 @@ view(ax, 157.2, 26.3 );
 caxis(ax, [0.0369 2])
 
 
-legend( [hs; hd ; pointHandle; hc], 'Model', 'Data (Aström et al.)', 'Choosen Parameters', 'Proposed General Heuristics of 0.2V/mm', 'Location', 'NorthEast', 'Interpreter', 'none' );
+legend( [hs; hd ; pointHandle; hc], 'Model', ' Data (\r{A}str\"om et al. 2015)', 'Choosen Parameters', 'Proposed General Heuristics of 0.2V/mm', 'Location', 'NorthEast', 'Interpreter', 'LaTex' );
 
 ax.Color = 'w';
 ax.XTick = 30:30:270;
