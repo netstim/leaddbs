@@ -7,8 +7,8 @@ function pointHandle = plotModelAndGeneralHeuristic(ax)
 load('astrom_table3_3v.mat'); %#ok<LOAD> % loads PW, D, T for 3V 
 %[activation_model_3v, gof] =  fitModel(PW, D, T); %#ok<ASGLU>
 %load('activation_model_3v.mat'); %#ok<LOAD>
-load('logLinMod.mat'); % workaround for people without curve fitting toolbox
-
+params = load('logLinModParams.mat'); % workaround for people without curve fitting toolbox
+logLinMod = @(x,y)( exp(params.a*log(x) + params.b*log(y) + params.c));
 %% Hightlight 0.2V contour in 3D 
 if(nargin < 1)
     fig = figure(); %#ok<NASGU>
