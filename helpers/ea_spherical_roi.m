@@ -4,11 +4,8 @@ if ~exist('crop','var')
 end
 if exist('template','var')
     Vol=ea_load_nii(template);
-    
-    
 else
     Vol=ea_load_nii([ea_space,'t1.nii']);
-    
 end
 Vol.img(:)=nan;
 voxmm = Vol.voxsize;
@@ -32,7 +29,7 @@ for a=1:size(mni,1)
     ziz=squeeze(zz(1,1,:)+round(XYZ(3)-2*r/voxmm(1)));
     
     try
-    Vol.img(xix,yiy,ziz)=S;
+        Vol.img(xix,yiy,ziz)=S;
     catch % negative indices.
         for xxx=1:length(xix)
             for yyy=1:length(yiy)

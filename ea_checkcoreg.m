@@ -509,7 +509,7 @@ for pd=1:length(stimdirs)
         for connfolder=1:length(connfolders)
             if ~strcmp(connfolders(connfolder).name(1),'.')
 
-                if connfolders(connfolder).isdir && contains(connfolders(connfolder).name,thisrest(2:end))
+                if connfolders(connfolder).isdir && ea_contains(connfolders(connfolder).name,thisrest(2:end))
                     rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
                 end
 

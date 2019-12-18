@@ -204,6 +204,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         end
         options.normcoreg='normalize';
         ea_checkcoreg(options);
+        drawnow; % this prevents the figure from changing the name with multiple subjects
         e=evalin('base', 'checkregempty');
         evalin('base',' clear checkregempty');
         if e && ~ea_coreglocked(options,'brainshift') ...

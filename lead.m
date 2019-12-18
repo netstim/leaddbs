@@ -89,6 +89,11 @@ if nargin == 4
             lead_dbs;
             delete(handles.leadfigure)
             return
+        case {'demo'}
+            lead_dbs;
+            lead_demo;
+            delete(handles.leadfigure)
+            return
         case {'group', '-g', 'g'}
             lead_group;
             delete(handles.leadfigure)
@@ -105,6 +110,11 @@ if nargin == 4
             lead_mapper;
             delete(handles.leadfigure)
             return
+        case {'napper'}
+            try % easter egg
+                load('ea_napper.mat');
+                sound(A,fs);
+            end
         case {'or', '-o', 'o'}
             lead_or;
             delete(handles.leadfigure)

@@ -274,7 +274,7 @@ else
     tvalsRescale(tvals<0) = ea_rescale(tvals(tvals<0), [-1 0]);
 
     % Contruct colormap
-    colormap(gray(64))
+    colormap(gray)
     if ~exist('fibcmap', 'var')
         fibcmap = ea_redblue(1024);
     end

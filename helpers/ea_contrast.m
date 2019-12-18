@@ -14,7 +14,7 @@ if sum(slice(:)~=0)
     slice(slice(:)~=0)=contrast*ea_nanzscore_sampled(slice(slice(:)~=0),15000);
 end
 
-if ispositive; % only positive values
+if ispositive % only positive values
     slice(slice(:)==0)=ea_nanmin(slice(:));
 end
 

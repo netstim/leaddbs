@@ -30,11 +30,20 @@ expvx(:,2)=(contour(2,:)-smallestentry([thisbb.mm{secdim}(1),thisbb.mm{secdim}(e
 hold on
 expvx(:,2)=thisbb.imgdim(2)-expvx(:,2);
 
-[idx]=knnsearch(expvx,drawline);
+%[idx]=knnsearch(expvx,drawline);
+idx = ea_near_line(expvx,drawline);
 
 
-for pt=1:size(drawline,1)
-arrhandles{pt}=ea_plot_arrow(drawline(pt,1),drawline(pt,2),expvx(idx(pt),1),expvx(idx(pt),2),'linewidth',2,'headwidth',0.25,'headheight',0.33,'color',[0.5 0.5 0.5],'facecolor',[0.5 0.5 0.5],'edgecolor',[0.5,0.5,0.5]);
+drawline_cum_length = cumsum(sqrt(sum(diff(drawline).^2,2))); % calculate length that each point adds to the total line
+
+minarrow = min(5,size(drawline,1)); % minimum number of arrows
+
+drawline_sample = linspace(drawline_cum_length(1), drawline_cum_length(end), max(minarrow,round(drawline_cum_length(end)/12))); % get equally distant positions
+pt = knnsearch(drawline_cum_length, drawline_sample'); % get drawline index
+expvx_sample = idx(round(linspace(1,length(idx),length(drawline_sample)))); % sample atlas line with same ammount of pts
+
+for i = 1:length(drawline_sample) 
+    arrhandles{i}=ea_plot_arrow(drawline(pt(i),1),drawline(pt(i),2),expvx(expvx_sample(i),1),expvx(expvx_sample(i),2),'linewidth',2,'headwidth',0.25,'headheight',0.33,'color',[0.2 0.8 0.8],'facecolor',[0.2 0.8 0.8],'edgecolor',[0.2 0.8 0.8]);
 end
 
 

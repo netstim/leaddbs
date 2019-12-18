@@ -36,7 +36,13 @@ resultfig=figure('name', [options.patientname,': Electrode-Scene'],...
     'color', 'k', 'numbertitle', 'off',...
     'CloseRequestFcn', @closesatellites, 'visible', options.d3.verbose,...
     'KeyPressFcn', @ea_keypress, 'KeyReleaseFcn', @ea_keyrelease);
+
 setappdata(resultfig,'options',options);
+
+ea_bind_dragndrop(resultfig, ...
+    @(obj,evt) DropFcn(obj,evt,resultfig), ...
+    @(obj,evt) DropFcn(obj,evt,resultfig));
+
 set(resultfig,'toolbar','none');
 ssz=get(0,'Screensize');
 ssz(1:2)=ssz(1:2)+50;
@@ -49,25 +55,21 @@ setappdata(resultfig,'ht',ht);
 
 % add custom rotator:
 uibjs.rotate3dtog=uitoggletool(ht, 'CData', ea_get_icn('rotate'),...
-    'TooltipString', 'Rotate 3D', 'OnCallback', {@ea_rotate,'on'},...
+    'TooltipString', 'Rotate - Pan - Zoom', 'OnCallback', {@ea_rotate,'on'},...
     'OffCallback', {@ea_rotate,'off'}, 'State', 'on');
 uibjs.slide3dtog=uitoggletool(ht, 'CData', ea_get_icn('quiver'),...
     'TooltipString', 'Slide Slices', 'OnCallback', {@ea_slideslices,'on'},...
     'OffCallback', {@ea_slideslices,'off'}, 'State', 'off');
-uibjs.magnifyplus=uitoggletool(ht,'CData',ea_get_icn('magnplus'),...
-    'TooltipString', 'Zoom In', 'OnCallback', {@ea_zoomin,'on'},...
-    'OffCallback', {@ea_zoomin,'off'}, 'State', 'off');
-uibjs.magnifyminus=uitoggletool(ht, 'CData', ea_get_icn('magnminus'),...
-    'TooltipString', 'Zoom Out', 'OnCallback', {@ea_zoomout,'on'},...
-    'OffCallback', {@ea_zoomout,'off'}, 'State', 'off');
-uibjs.handtog=uitoggletool(ht, 'CData', ea_get_icn('hand'),...
-    'TooltipString', 'Pan Scene', 'OnCallback', {@ea_pan,'on'},...
-    'OffCallback', {@ea_pan,'off'}, 'State', 'off');
+% uibjs.magnifyplus=uitoggletool(ht,'CData',ea_get_icn('magnplus'),...
+%     'TooltipString', 'Zoom In', 'OnCallback', {@ea_zoomin,'on'},...
+%     'OffCallback', {@ea_zoomin,'off'}, 'State', 'off');
+% uibjs.magnifyminus=uitoggletool(ht, 'CData', ea_get_icn('magnminus'),...
+%     'TooltipString', 'Zoom Out', 'OnCallback', {@ea_zoomout,'on'},...
+%     'OffCallback', {@ea_zoomout,'off'}, 'State', 'off');
+% uibjs.handtog=uitoggletool(ht, 'CData', ea_get_icn('hand'),...
+%     'TooltipString', 'Pan Scene', 'OnCallback', {@ea_pan,'on'},...
+%     'OffCallback', {@ea_pan,'off'}, 'State', 'off');
 setappdata(resultfig,'uibjs',uibjs);
-
-h = rotate3d;
-h.RotateStyle = 'orbit';
-h.Enable = 'on';
 
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract',...
@@ -358,7 +360,7 @@ if options.d3.writeatlases
         end
     end
 else
-    colormap(gray(64))
+    colormap(gray)
 end
 
 % Show isomatrix data
@@ -433,7 +435,7 @@ end
 
 % add default view buttons
 uipushtool(ht, 'CData',ea_get_icn('defaultviewsave'),...
-    'TooltipString', 'Save current view as default',...
+    'TooltipString', 'Save current view as default.',...
     'ClickedCallback',@save_currentview_callback);
 uipushtool(ht, 'CData',ea_get_icn('defaultviewset'),...
     'TooltipString', 'Display default view',...
@@ -466,7 +468,6 @@ try
     prefs = ea_prefs;
     v = prefs.machine.view;
     togglestates = prefs.machine.togglestates;
-    %ea_defaultview_transition(v,togglestates);
     ea_defaultview(v,togglestates);
 catch
     view(142,13.6)
@@ -486,6 +487,36 @@ end
 setappdata(resultfig, 'options', options);
 setappdata(resultfig,'elstruct',elstruct);
 ea_figmenu(resultfig,'add');
+
+% set mouse camera opts
+ax = findobj(resultfig.Children,'Type','axes');
+set(findobj(ax.Children,'Type','surface'),'HitTest','off');
+ea_mouse_camera(resultfig);
+
+
+% --- Drag and drop callback to load patdir.
+function DropFcn(~, event, resultfig)
+
+switch event.DropType
+    case 'file'
+        objects = event.Data;
+    case 'string'
+        objects = {event.Data};
+end
+
+nonexist = cellfun(@(x) ~exist(x, 'file'), objects);
+if any(nonexist)
+    fprintf('\nExcluded non-existent/invalid folder:\n');
+    cellfun(@disp, objects(nonexist));
+    fprintf('\n');
+    objects(nonexist) = [];
+end
+
+options = getappdata(resultfig,'options');
+
+if ~isempty(objects)
+    ea_addobj([], [], resultfig, objects, options);
+end
 
 
 function opensliceviewer(hobj,ev,resultfig,options)
@@ -532,7 +563,7 @@ function set_defaultview_callback(source,eventdata)
 prefs = ea_prefs;
 v = prefs.machine.view;
 togglestates = prefs.machine.togglestates;
-%ea_defaultview_transition(v,togglestates);
+ea_defaultview_transition(v,togglestates);
 ea_defaultview(v,togglestates);
 
 

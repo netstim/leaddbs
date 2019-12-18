@@ -303,7 +303,7 @@ for doxx=0:1
         end
     end
 
-    colormap(gray(64))
+    colormap(gray)
 
     if doxx % span surface in x direction
         spanvector=[sample_width,0,0];

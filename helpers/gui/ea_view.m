@@ -23,7 +23,7 @@ else
     v.campos=campos;
 end
 
-set(0,'CurrentFigure',resultfig)
-allAxes = findall(resultfig,'type','axes');
-set(resultfig,'CurrentAxes',allAxes(1));
-ea_zoomcenter(resultfig.CurrentAxes, v.camtarget);
+% set(0,'CurrentFigure',resultfig)
+% allAxes = findall(resultfig,'type','axes');
+% set(resultfig,'CurrentAxes',allAxes(1));
+% ea_zoomcenter(resultfig.CurrentAxes, v.camtarget);
