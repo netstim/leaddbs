@@ -43,15 +43,16 @@ pointHandle = plot3(60,3.5,logLinMod(60,3.5), 'o', 'MarkerSize', 20, ....
 title('Axonal E-Field Activation Threshold for (PW,D)', 'Parent', ax);
 
 % Label axes
-xlabel( 'PW [\mus]', 'Interpreter', 'Tex', 'Parent', ax);
-ylabel( 'D [\mum]', 'Interpreter', 'Tex', 'Parent', ax);
-zlabel( 'T [V/mm]', 'Interpreter', 'Tex', 'Parent', ax);
+xlabel( 'PW [$\mu s$]', 'Interpreter', 'LaTex', 'Parent', ax);
+ylabel( 'D [$\mu m$]', 'Interpreter', 'LaTex', 'Parent', ax);
+zlabel( 'T [$V / mm$]', 'Interpreter', 'LaTex', 'Parent', ax);
 grid(ax, 'on');
 view(ax, 157.2, 26.3 );
 caxis(ax, [0.0369 2])
 
 
-legend( [hs; hd ; pointHandle; hc], 'Model', 'Data (\r{A}str\"om et al. 2015)', 'Choosen Parameters', 'Proposed General Heuristics of 0.2V/mm', 'Location', 'NorthEast', 'Interpreter', 'LaTex' );
+legend( [hs; hd ; pointHandle; hc], 'Model', 'Data (\r{A}str\"om et al. 2015)', 'Choosen Parameters', 'Proposed General Heuristics of 0.2V/mm', ...
+    'Location', 'NorthEast', 'Interpreter', 'LaTex' );
 
 ax.Color = 'w';
 ax.XTick = 30:30:270;
