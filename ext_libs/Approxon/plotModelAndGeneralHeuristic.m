@@ -13,8 +13,6 @@ logLinMod = @(x,y)( exp(params.a*log(x) + params.b*log(y) + params.c));
 if(nargin < 1)
     fig = figure(); %#ok<NASGU>
     ax = axis();
-else
-    fig = gcf(); %#ok<NASGU>
 end
 axes(ax);
 %h = plot(activation_model_3v, [PW, D], T ,'Xlim', [10 240], 'YLim', [1 8], 'Parent', ax);
