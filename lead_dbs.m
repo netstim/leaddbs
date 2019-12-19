@@ -192,6 +192,9 @@ options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 
 options.leadprod = 'dbs';
 
+setappdata(handles.leadfigure,'handles',handles);
+options.leadfigure=handles.leadfigure;
+
 ea_run('run',options);
 
 ea_busyaction('off', handles.leadfigure, 'dbs');

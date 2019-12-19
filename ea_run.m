@@ -84,7 +84,7 @@ else
                 % set patient specific options
                 options.root = [fileparts(uipatdirs{pat}),filesep];
                 [~, options.patientname] = fileparts(uipatdirs{pat});
-
+                options.pat=pat;
                 % run main function
                 if length(uipatdirs) > 1 % multi mode. Dont stop at errors.
                     try

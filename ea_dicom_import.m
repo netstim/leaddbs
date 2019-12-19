@@ -10,9 +10,28 @@ function ea_dicom_import(options)
 
 if isfield(options.dicomimp,'method') && options.dicomimp.method == 4
     disp('Importing BIDS folder...')
-    bids_subject_folder = options.uipatdirs{1};
+    bids_subject_folder = [options.root,options.patientname];
     ea_read_bids(options,bids_subject_folder);
     ea_delete(fullfile(bids_subject_folder,'ea_ui.mat'));
+    
+    if options.pat==length(options.uipatdirs) % last patient, finish up
+        
+        for pt=1:length(options.uipatdirs)
+            
+            [pth,fn]=fileparts(options.uipatdirs{pt});
+            options.uipatdirs{pt}=fullfile(pth,'derivatives','leaddbs',fn);
+            assignin('caller','options',options);
+            
+        end
+        handles=getappdata(options.leadfigure,'handles');
+        
+        
+        ea_load_pts(handles,options.uipatdirs,'patients')
+        
+        options.root=[fullfile(options.root,'derivatives','leaddbs'),filesep];
+        assignin('caller','options',options);
+    end
+
 else
     disp('Importing DICOM files...');
 
