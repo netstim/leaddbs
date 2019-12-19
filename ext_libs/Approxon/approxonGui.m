@@ -1,7 +1,8 @@
 function h = approxonGui()
 
 gui = createInterface();
-gui.model = load('activation_model_3v.mat'); % loads PW, D, T for 3V 
+params = load('logLinModParams.mat'); % loads PW, D, T for 3V 
+gui.model = @(x,y)( exp(params.a*log(x) + params.b*log(y) + params.c));
 
 % Now update the GUI with the current data
 redrawDemo();
@@ -77,7 +78,7 @@ set(h, 'Visible', 'on')
         
         uicontrol( 'Style', 'text', ...
             'Parent', controlLayout, ...
-            'String', 'Est. Threshold:');
+            'String', 'Est. Thresh.[V/mm]:');
                 
         gui.TxtT = uicontrol( 'Style', 'edit', ...
             'BackgroundColor', [0.5 0.5 0.5], ...
@@ -119,13 +120,14 @@ set(h, 'Visible', 'on')
         assignin('base','PW', gui.PW);   % thats an ugly hack to get our values back, but anyway.. 
         assignin('base', 'D', gui.D);
         
-        gui.thresh = str2double(sprintf('%3.2f',  gui.model.activation_model_3v(gui.PW,gui.D)));
+        gui.thresh = str2double(sprintf('%3.2f',  gui.model(gui.PW,gui.D)));
         gui.TxtT.String = num2str( gui.thresh);
         delete(gui.pointHandle);
         setappdata(gui.Window, 'thresh', gui.thresh);
 
         gui.pointHandle = plot3(gui.PW,gui.D,gui.thresh, 'o', 'MarkerSize', 20, ....
-         'MarkerEdgeColor', 'w', 'MarkerFaceColor', 'r', 'Parent', gui.ViewAxes, 'DisplayName', 'Choosen Parameters'); %#ok<NASGU> %
+         'MarkerEdgeColor', 'w', 'MarkerFaceColor', 'r', 'Parent', gui.ViewAxes, ...
+         'DisplayName', 'Choosen Parameters'); %#ok<NASGU> %
 
 %         % Some demos create their own figure. Others don't.
 %         fcnName = data.DemoFunctions{data.SelectedDemo};
