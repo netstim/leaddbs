@@ -44,6 +44,29 @@ switch lower(corrtype)
     case {'bend'}
         R=nan(1,size(X,2));
         R(mask)=ea_bendcorr(regressor,X(:,mask));
+    case {'circular'}
+        R=nan(1,size(X,2));
+        R(mask)=ea_circcorr(regressor,X(:,mask));
+    case {'stable'}
+        R=nan(1,size(X,2));
+        rob_r=R;
+        T=R;
+        sig_T=R;
+        
+        % run stable R
+        [R(mask),rob_r(mask),T(mask),sig_T(mask)]=ea_stablecorr(regressor,X(:,mask)); 
+        
+%         % already export additional maps since these are special for stable:
+%         params=varargin(1:5);
+%         [pth,fn,ext]=fileparts(params{3});
+%         params{3}=fullfile(pth,[fn,'_robavg',ext]);
+%         ea_exportmap(n,rob_r,params{:});
+%         
+%         params{3}=fullfile(pth,[fn,'_T',ext]);
+%         ea_exportmap(n,T,params{:});
+%         
+%         params{3}=fullfile(pth,[fn,'_sig_T',ext]);
+%         ea_exportmap(n,sig_T,params{:});
     otherwise
         R=corr(regressor,X,'type',corrtype,'rows','pairwise');
 end
