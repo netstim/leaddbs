@@ -25,6 +25,7 @@ lc.func.prefs.TR=str2double(get(handles.TR,'String'));
 lc.struc.compute_CM=get(handles.compute_CM_struc,'Value');
 lc.struc.compute_GM=get(handles.compute_GM_struc,'Value');
 ftmethods=getappdata(gcf,'ftmethods');
+lc.struc.ft.upsample=get(handles.expansionfactor,'Value');
 lc.struc.ft.method=ftmethods{get(handles.ftmethod,'Value')};
 lc.struc.ft.methodn=get(handles.ftmethod,'Value');
 lc.struc.ft.do=get(handles.perf_ft,'Value');

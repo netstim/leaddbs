@@ -9,8 +9,10 @@ if ischar(options) % return name of method.
     return
 end
 
+
 directory=[options.root,options.patientname,filesep];
-ea_prepare_dti(options)
+
+redo=ea_prepare_dti(options);
 
 vizz=0;
 
@@ -32,7 +34,7 @@ btable=[bvals;bvecs];
 
 % build white matter mask
 if ~exist([directory,'ttrackingmask.nii'],'file') || ...
-    isfield(options, 'overwriteapproved') && options.overwriteapproved
+    (isfield(options, 'overwriteapproved') && options.overwriteapproved) || redo
     ea_gentrackingmask(options,1)
 end
 
@@ -45,9 +47,9 @@ end
 
 % build .fib.gz file
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
-if ~exist([directory,ftrbase,'.fib.gz'],'file')
+if ~exist([directory,ftrbase,'.fib.gz'],'file') || redo
     disp('Estimating ODF / preparing GQI...');
-    ea_prepare_fib_gqi(DSISTUDIO,btable,1.2,options);
+    ea_prepare_fib_gqi(DSISTUDIO,btable,1.2,options,redo);
 
     disp('Done.');
 else
@@ -77,6 +79,9 @@ err=ea_submitcmd(trkcmd);
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
+
+
+
 
 % now store tract in lead-dbs format
 disp('Converting fibers...');
@@ -120,8 +125,13 @@ end
 
 ftr.fourindex = 1;
 ftr.ea_fibformat = '1.0';
-ftr.fibers = fibers;
 ftr.idx = idx;
+
+
+fibers=ea_resolve_usfibers(options,fibers); % this also pops the raw (uninterpolated dti.nii and b0.nii files).
+
+ftr.fibers = fibers;
+
 ftr.voxmm = 'vox';
 disp('Saving fibers...');
 save([directory,ftrbase,'.mat'],'-struct','ftr','-v7.3');
@@ -131,11 +141,11 @@ fprintf('\nGenerating trk in b0 space...\n');
 ea_ftr2trk([directory,ftrbase,'.mat'], [directory,options.prefs.b0])
 
 
-function ea_prepare_fib_gqi(DSISTUDIO,btable,mean_diffusion_distance_ratio,options)
+function ea_prepare_fib_gqi(DSISTUDIO,btable,mean_diffusion_distance_ratio,options,redo)
 directory=[options.root,options.patientname,filesep];
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 
-if exist([directory,ftrbase,'.fib.gz'],'file')
+if exist([directory,ftrbase,'.fib.gz'],'file') && (~redo)
    disp('.fib.gz file already present, no need to rebuild.');
    return
 end
@@ -193,6 +203,8 @@ cits={
 ea_methods(options,['A whole-brain fiber-set was estimated based using the Generalized q-sampling imaging (GQI) approach (Yeh 2010) as implemented in DSI-Studio (http://dsi-studio.labsolver.org).',...
     ' GQI is a model-free method that calculates the orientational distribution of the density of diffusing water.',...
     ' Fibers were sampled within a white-matter mask that was estimated using the anatomical acquisition by applying the Unified Segmentation approach (Ashburner 2005) as implemented in ',spm('ver'),'. This mask was linearly co-registered to the b0-weighted series.'],cits);
+
+
 
 
 
