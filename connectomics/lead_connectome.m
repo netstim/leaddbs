@@ -88,6 +88,7 @@ for nd=length(ndir):-1:1
         end
     end
 end
+
 setappdata(gcf,'ftmethods',ftmethods);
 set(handles.ftmethod,'String',fdc);
 
@@ -434,6 +435,9 @@ try set(handles.compute_GM_struc,'Value',lc.struc.compute_GM); end
 ftmethods = getappdata(handles.leadfigure, 'ftmethods');
 methodn = find(ismember(ftmethods, lc.struc.ft.method));
 try set(handles.ftmethod,'Value',methodn); end
+if methodn>length(get(handles.ftmethod,'String'))
+    set(handles.ftmethod,'Value',1);
+end
 
 if strcmp(lc.struc.ft.method, 'ea_ft_gqi_yeh')
     try set(handles.fiber_count, 'Visible', 'on'); end
