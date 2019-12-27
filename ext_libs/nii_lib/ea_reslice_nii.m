@@ -57,7 +57,7 @@
 %
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
-function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, method, img_idx, preferredForm,usespm)
+function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, interp, img_idx, preferredForm,usespmfsl)
 
 if ~exist('old_fn','var') || ~exist('new_fn','var')
     error('Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], [method], [img_idx])');
@@ -67,8 +67,8 @@ if ~exist('verbose','var') || isempty(verbose)
     verbose = 1;
 end
 
-if ~exist('method','var') || isempty(method)
-    method = 1;
+if ~exist('method','var') || isempty(interp)
+    interp = 1;
 end
 
 if ~exist('img_idx','var') || isempty(img_idx)
@@ -80,10 +80,10 @@ if ~exist('preferredForm','var') || isempty(preferredForm)
 end
 
 if ~exist('usespm','var')
-    usespm=0;
+    usespmfsl=0;
 end
 
-if usespm
+if usespmfsl==1 % SPM
     V = spm_vol(old_fn);
     for i=1:numel(V)
         bb        = spm_get_bbox(V(i));
@@ -92,11 +92,27 @@ if usespm
         VV(1).dim = ceil(VV(1).mat \ [bb(2,:) 1]' - 0.1)';
         VV(1).dim = VV(1).dim(1:3);
         VV(1).fname=new_fn;
-        spm_reslice(VV,struct('mean',false,'which',1,'interp',method,'mask',true)); % 1 for linear
+        ea_spm_reslice(VV,struct('mean',false,'which',2,'interp',interp,'mask',false)); % 1 for bspline 1st order
     end
-
+    
     [pth,fn,ext]=fileparts(old_fn);
     movefile(fullfile(pth,['r',fn,ext]),new_fn);
+elseif usespmfsl==2 % FSL
+    basedir=[fullfile(ea_getearoot,'ext_libs','fsl'),filesep];
+    if ispc
+        FLIRT = ea_path_helper([basedir, 'flirt.exe']);
+    else
+        FLIRT = [basedir, 'flirt.', computer('arch')];
+    end
+    flirtcmd=[FLIRT,' -in ',old_fn,' -ref ',old_fn,' -out ',new_fn,' -nosearch -applyisoxfm ',num2str(mean(voxel_size)),' -interp ',ea_fslinterps(interp)];
+    setenv('FSLOUTPUTTYPE','NIFTI');
+    if ~ispc
+        system(['bash -c "', flirtcmd, '"']);
+        system(['bash -c "', convertxfmcmd, '"']);
+    else
+        system(flirtcmd);
+        system(convertxfmcmd);
+    end
 else
     nii = load_nii_no_xform(old_fn, img_idx, 0, preferredForm);
 
@@ -118,10 +134,10 @@ else
 
     if nii.hdr.dime.dim(5) > 1
         for i = 1:nii.hdr.dime.dim(5)
-            [img(:,:,:,i) M] = ea_affine(nii.img(:,:,:,i), old_M, voxel_size, verbose, bg, method);
+            [img(:,:,:,i) M] = ea_affine(nii.img(:,:,:,i), old_M, voxel_size, verbose, bg, interp);
         end
     else
-        [img M] = ea_affine(nii.img, old_M, voxel_size, verbose, bg, method);
+        [img M] = ea_affine(nii.img, old_M, voxel_size, verbose, bg, interp);
     end
 
     new_dim = size(img);
@@ -140,6 +156,24 @@ else
     nii.hdr.hist.new_affine = M;
 
     save_nii(nii, new_fn);
+end
+
+
+function intpstring=ea_fslinterps(interp)
+
+if ischar(interp)
+    intpstring=interp;
+    return
+end
+switch interp
+    case 0
+        intpstring='nearestneighbour';
+    case 1
+        intpstring='trilinear';
+    case 2
+        intpstring='sinc';
+    case 3
+        intpstring='spline';
 end
 
 
