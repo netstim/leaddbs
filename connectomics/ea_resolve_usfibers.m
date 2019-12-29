@@ -1,6 +1,6 @@
 function fibers=ea_resolve_usfibers(options,fibers)
 
-if options.lc.struc.ft.upsample>1
+if options.lc.struc.ft.upsample.factor>1 && options.lc.struc.ft.upsample.how==0
     Vb0upsampled=ea_open_vol([options.root,options.patientname,filesep,options.prefs.b0]);
     % get fibers to mm
     tempfib=[fibers(:,1:3)';ones(1,size(fibers,1))]; % vox in upsampled space

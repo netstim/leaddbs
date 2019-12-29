@@ -56,6 +56,12 @@ else
     disp('.fib.gz file found, no need to rebuild.');
 end
 
+if options.lc.struc.ft.upsample.how==1 % do upsampling, using DSI studio's builtin method
+    
+end
+    
+
+
 trkcmd=[DSISTUDIO,' --action=trk',...
     ' --method=0',...
     ' --source=',ea_path_helper([directory,ftrbase,'.fib.gz']),...
@@ -75,12 +81,11 @@ trkcmd=[DSISTUDIO,' --action=trk',...
     ' --tip_iteration=0',...
     ' --turning_angle=0'];
 
+
 err=ea_submitcmd(trkcmd);
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
-
-
 
 
 % now store tract in lead-dbs format
@@ -153,17 +158,28 @@ end
 % try the DSI-studio way (faster):
 
 % source images
+ea_delete([directory,'dti.src.gz']);
 cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([directory,options.prefs.dti]),...
     ' --bval=',ea_path_helper([directory,options.prefs.bval])...
     ' --bvec=',ea_path_helper([directory,options.prefs.bvec])...
-    ' --up_sampling=0',...
     ' --sort_b_table=0',...
     ' --output=',ea_path_helper([directory,'dti.src.gz'])];
+
+if options.lc.struc.ft.upsample.how==1 % internal upsampling used
+    cmd=[cmd,...
+        ' --up_sampling=',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample)))];
+        %% add methods dump:
+    cits={
+        'Dyrby, T. B., Lundell, H., Burke, M. W., Reislev, N. L., Paulson, O. B., Ptito, M., & Siebner, H. R. (2013). Interpolation of diffusion weighted imaging datasets. NeuroImage, 103(C), 1?12. http://doi.org/10.1016/j.neuroimage.2014.09.005'
+        'Yeh, F.-C., Wedeen, V. J., & Tseng, W.-Y. I. (2010). Generalized q-Sampling Imaging. IEEE Transactions on Medical Imaging, 29(9), 1626?1635. http://doi.org/10.1109/TMI.2010.2045126'
+        };
+    ea_methods(options,['Raw diffusion data was upsampled using bspline-interpolation with a factor of ',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample))),' following the concept described in Dyrby et al. 2014 as implemented in DSI Studio (http://dsi-studio.labsolver.org/; Yeh et al. 2010).'],cits);
+end
 
 err=ea_submitcmd(cmd);
 
 if err
-    warning(['Sourcing from command line with dsi_studio failed (error code=',num2str(err),').']);
+    ea_error(['Sourcing from command line with dsi_studio failed (error code=',num2str(err),').']);
 end
 
 % create .fib file
@@ -291,6 +307,13 @@ res.dimension = dim;
 res.odf_faces=odf_faces;
 res.odf_vertices=odf_vertices;
 
+function ofactor=factor2dsistudiofactor(factor)
+switch factor
+    case 2
+        ofactor=1; % DSI studio codes upsampling factor of 2 with 1
+    case 4
+        ofactor=3; % DSI studio codes upsampling factor of 4 with 3
+end
 
 function p = ea_find_peak(odf,odf_faces)
 is_peak = odf;

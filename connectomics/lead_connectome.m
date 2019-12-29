@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 25-Dec-2019 15:23:57
+% Last Modified by GUIDE v2.5 29-Dec-2019 14:35:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -296,14 +296,28 @@ function ftmethod_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns ftmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ftmethod
 
-ftmethods = get(hObject, 'String');
-if strcmp(ftmethods{get(hObject,'Value')}, 'Generalized Q-Sampling (Yeh et al. 2010)')
+ftmethod=get(handles.ftmethod,'String');
+ftmethod=ftmethod{get(handles.ftmethod,'Value')};
+[gqiUItxt]=eval(['ea_ft_gqi_yeh','(','''prompt''',')']);
+
+if strcmp(ftmethod, gqiUItxt)
     set(handles.fiber_count, 'Visible', 'on');
     set(handles.fiber_count_txt, 'Visible', 'on');
+    
+    if ismember(get(handles.upsamplingfactor,'value'),[3,5])
+        set(handles.use_internal_upsampling,'enable','on');
+    else
+        set(handles.use_internal_upsampling,'enable','off');
+        set(handles.use_internal_upsampling,'Value',0);
+    end
+    
 else
+    set(handles.use_internal_upsampling,'enable','off');
+    set(handles.use_internal_upsampling,'Value',0);
     set(handles.fiber_count, 'Visible', 'off');
     set(handles.fiber_count_txt, 'Visible', 'off');
 end
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -941,19 +955,30 @@ ea_savelcopts(handles);
 delete(hObject);
 
 
-% --- Executes on selection change in expansionfactor.
-function expansionfactor_Callback(hObject, eventdata, handles)
-% hObject    handle to expansionfactor (see GCBO)
+% --- Executes on selection change in upsamplingfactor.
+function upsamplingfactor_Callback(hObject, eventdata, handles)
+% hObject    handle to upsamplingfactor (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns expansionfactor contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from expansionfactor
+% Hints: contents = cellstr(get(hObject,'String')) returns upsamplingfactor contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from upsamplingfactor
+
+ftmethod=get(handles.ftmethod,'String');
+ftmethod=ftmethod{get(handles.ftmethod,'Value')};
+[gqiUItxt]=eval(['ea_ft_gqi_yeh','(','''prompt''',')']);
+
+if ismember(get(hObject,'value'),[3,5]) && strcmp(gqiUItxt,ftmethod)
+    set(handles.use_internal_upsampling,'enable','on');
+else
+    set(handles.use_internal_upsampling,'enable','off');
+    set(handles.use_internal_upsampling,'Value',0);
+end
 
 
 % --- Executes during object creation, after setting all properties.
-function expansionfactor_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to expansionfactor (see GCBO)
+function upsamplingfactor_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to upsamplingfactor (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -962,3 +987,12 @@ function expansionfactor_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in use_internal_upsampling.
+function use_internal_upsampling_Callback(hObject, eventdata, handles)
+% hObject    handle to use_internal_upsampling (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of use_internal_upsampling
