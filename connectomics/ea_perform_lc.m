@@ -11,6 +11,7 @@ disp('*** Performing structural parts of LEAD-Connectome...');
 
 if options.lc.struc.ft.do
     ea_perform_ft_proxy(options);
+
 end
 
 % normalize fibers

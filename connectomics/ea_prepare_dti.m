@@ -1,4 +1,4 @@
-function redo=ea_prepare_dti(options)
+function [redo,ft_upsampling_applied]=ea_prepare_dti(options)
 % general DTI preprocessing goes here
 
 directory=[options.root,options.patientname,filesep];
@@ -39,21 +39,21 @@ else
 end
 ft_upsampling_applied.usfactor=usfactor;
 ft_upsampling_applied.how=options.lc.struc.ft.upsample.how;
-save([directory,'ea_ftupsampling_applied.mat'],'-struct','ft_upsampling_applied');
 
+if exist([options.root,options.patientname,filesep,ea_stripext(options.prefs.dti)],'file')
+    movefile([options.root,options.patientname,filesep,ea_stripext(options.prefs.dti)],...
+        [options.root,options.patientname,filesep,options.prefs.dti]);
+    redo=1; % apparently prior run crashed - redo to be safe.
+end
+if exist([options.root,options.patientname,filesep,ea_stripext(options.prefs.b0)],'file')
+    movefile([options.root,options.patientname,filesep,ea_stripext(options.prefs.b0)],...
+        [options.root,options.patientname,filesep,options.prefs.b0]);
+    redo=1; % apparently prior run crashed - redo to be safe.
+end
 
 if usfactor>1 && options.lc.struc.ft.upsample.how==0 % in house method
     % stash dti / b0 files:
-    if exist([options.root,options.patientname,filesep,ea_stripext(options.prefs.dti)],'file')
-        movefile([options.root,options.patientname,filesep,ea_stripext(options.prefs.dti)],...
-            [options.root,options.patientname,filesep,options.prefs.dti]);
-        redo=1; % apparently prior run crashed - redo to be safe.
-    end
-    if exist([options.root,options.patientname,filesep,ea_stripext(options.prefs.b0)],'file')
-        movefile([options.root,options.patientname,filesep,ea_stripext(options.prefs.b0)],...
-            [options.root,options.patientname,filesep,options.prefs.b0]);
-        redo=1; % apparently prior run crashed - redo to be safe.
-    end
+    
     copyfile([options.root,options.patientname,filesep,options.prefs.dti],...
         [options.root,options.patientname,filesep,ea_stripext(options.prefs.dti)]);
     copyfile([options.root,options.patientname,filesep,options.prefs.b0],...
