@@ -35,7 +35,7 @@ btable=[bvals;bvecs];
 % build white matter mask
 if ~exist([directory,'ttrackingmask.nii'],'file') || ...
     (isfield(options, 'overwriteapproved') && options.overwriteapproved) || redo
-    ea_gentrackingmask(options,1)
+    ea_gentrackingmask_brainmask(options,1)
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
@@ -43,6 +43,13 @@ if ispc
     DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.exe']);
 else
     DSISTUDIO = [basedir, 'dsi_studio.', computer('arch')];
+end
+
+if options.lc.struc.ft.upsample.how==1 % internal upsampling used
+    ea_roi2txt([directory,'ttrackingmask.nii'],[directory,'ttrackingmask.txt'],ea_resolve_usfactor(options.lc.struc.ft.upsample))
+    maskext='.txt';
+else
+    maskext='.nii';
 end
 
 % build .fib.gz file
@@ -56,25 +63,22 @@ else
     disp('.fib.gz file found, no need to rebuild.');
 end
 
-if options.lc.struc.ft.upsample.how==1 % do upsampling, using DSI studio's builtin method
-    
-end
     
 
 
 trkcmd=[DSISTUDIO,' --action=trk',...
     ' --method=0',...
     ' --source=',ea_path_helper([directory,ftrbase,'.fib.gz']),...
-    ' --seed=',ea_path_helper([directory,'ttrackingmask.nii']),...
+    ' --seed=',ea_path_helper([directory,'ttrackingmask',maskext]),...
     ' --fiber_count=', num2str(options.lc.struc.ft.dsistudio.fiber_count),...
     ' --output=',ea_path_helper([directory,ftrbase,'.mat']),...
     ' --dt_threshold=0.2',...
     ' --fa_threshold=0.1',...
-    ' --initial_dir=0',...
+    ' --initial_dir=2',...
     ' --interpolation=0',...
     ' --max_length=300.0',...
     ' --min_length=30.0',...
-    ' --random_seed=0',...
+    ' --random_seed=1',...
     ' --seed_plan=0',...
     ' --smoothing=0',...
     ' --step_size=0',...
@@ -168,12 +172,18 @@ cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([directory,options.prefs
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used
     cmd=[cmd,...
         ' --up_sampling=',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample)))];
-        %% add methods dump:
+    
+    %% add methods dump:
+    
     cits={
         'Dyrby, T. B., Lundell, H., Burke, M. W., Reislev, N. L., Paulson, O. B., Ptito, M., & Siebner, H. R. (2013). Interpolation of diffusion weighted imaging datasets. NeuroImage, 103(C), 1?12. http://doi.org/10.1016/j.neuroimage.2014.09.005'
         'Yeh, F.-C., Wedeen, V. J., & Tseng, W.-Y. I. (2010). Generalized q-Sampling Imaging. IEEE Transactions on Medical Imaging, 29(9), 1626?1635. http://doi.org/10.1109/TMI.2010.2045126'
         };
     ea_methods(options,['Raw diffusion data was upsampled using bspline-interpolation with a factor of ',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample))),' following the concept described in Dyrby et al. 2014 as implemented in DSI Studio (http://dsi-studio.labsolver.org/; Yeh et al. 2010).'],cits);
+    
+    maskext='.txt';
+else
+    maskext='.nii';
 end
 
 err=ea_submitcmd(cmd);
@@ -184,14 +194,19 @@ end
 
 % create .fib file
 cmd=[DSISTUDIO,' --action=rec --source=',ea_path_helper([directory,'dti.src.gz']),...
-    ' --mask=',ea_path_helper([directory,'ttrackingmask.nii'])...
+    ' --mask=',ea_path_helper([directory,'ttrackingmask',maskext])...
     ' --method=4',...
-    ' --param0=1.25'];
+    ' --param0=1.25',...
+    ' --num_fiber=10',...
+    ' --decomposition=1',...
+    ' --param3=0.05',...
+    ' --param4=10',...
+    ' --odf_order=8'];
 
 err=ea_submitcmd(cmd);
-delete([directory,'dti.src.gz']);
+ea_delete([directory,'dti.src.gz']);
 if err
-    warning(['Reconstruction from command line with dsi_studio failed (error code=',num2str(err),').']);
+    ea_error(['Reconstruction from command line with dsi_studio failed (error code=',num2str(err),').']);
 end
 
 di=dir([directory,'dti.src.gz*.fib.gz']);
@@ -199,6 +214,10 @@ if length(di)>1
     ea_error('Too many .fib.gz files present in folder. Please delete older files');
 end
 movefile([directory,di(1).name],[directory,ftrbase,'.fib.gz']);
+
+
+
+
 
 if ~exist([directory,ftrbase,'.fib.gz'],'file')
     disp('Reconstruction from command line failed. Reattempting inside Matlab.');

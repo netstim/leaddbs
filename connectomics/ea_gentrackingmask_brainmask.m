@@ -1,7 +1,13 @@
-function ea_gentrackingmask(options,threshold)
+function ea_gentrackingmask_brainmask(options,threshold)
 directory=[options.root,options.patientname,filesep];
 
-ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+%ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+copyfile([ea_space,'brainmask.nii.gz'],[directory,'brainmask.nii.gz']);
+gunzip([directory,'brainmask.nii.gz']);
+ea_delete([directory,'brainmask.nii.gz']);
+ea_apply_normalization_tofile(options, {[directory,'brainmask.nii']}, {[directory,'wbrainmask.nii']}, directory, 1, 0);
+
+ea_delete([directory,'brainmask.nii']);
 
 b0_anat = [ea_stripext(options.prefs.b0),'_',ea_stripext(options.prefs.prenii_unnormalized)];
 
@@ -66,20 +72,12 @@ else
 end
 
 if docoreg
-    copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
-    copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
-    spm_smooth([directory,'cc2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],[8 8 8]);
-    tt=ea_load_nii([directory,'cc2',options.prefs.prenii_unnormalized]);
-    tt.img=tt.img>0.1;
-    ea_write_nii(tt);
-    ea_conformspaceto([directory,'c',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],1,[],[],0);
-    ea_backuprestore([directory,'c',options.prefs.prenii_unnormalized]);
-
+    copyfile([directory,'wbrainmask.nii'],[directory,'wcbrainmask.nii']);
     affinefile = ea_coreg2images(options, ...
-        [directory,'c',options.prefs.prenii_unnormalized], ... % moving
+        [directory,options.prefs.prenii_unnormalized], ... % moving
         [directory,options.prefs.b0], ... % fix
         [directory,'c',options.prefs.prenii_unnormalized], ... % out
-        {[directory,'cc2',options.prefs.prenii_unnormalized]}, ... % other
+        {[directory,'wcbrainmask.nii']}, ... % other
         1); % writeout transform
 
     % Rename saved transform for further use: canat2b0*.mat to anat2b0*.mat,
@@ -91,16 +89,18 @@ if docoreg
         end
     end
 
-    movefile([directory,'cc2',options.prefs.prenii_unnormalized],[directory,'trackingmask.nii']);
+    movefile([directory,'wcbrainmask.nii'],[directory,'trackingmask.nii']);
     delete([directory,'c',options.prefs.prenii_unnormalized]);
 else
     % Reuse approved coregistration
-    copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
-    spm_smooth([directory,'cc2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],[6 6 6]);
-
-    ea_apply_coregistration([directory,options.prefs.b0], [directory,'cc2',options.prefs.prenii_unnormalized], ...
-                            [directory,'trackingmask.nii'], transform);
+    copyfile([directory,'wbrainmask.nii'],[directory,'wcbrainmask.nii']);
+    %    spm_smooth([directory,'cc2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],[6 6 6]);
+    
+    ea_apply_coregistration([directory,options.prefs.b0], [directory,'wcbrainmask.nii'], ...
+        [directory,'trackingmask.nii'], transform);
 end
+ea_delete([directory,'wcbrainmask.nii']);
+ea_delete([directory,'wbrainmask.nii']);
 
 tr=ea_load_nii([options.root,options.patientname,filesep,'trackingmask.nii']);
 if threshold

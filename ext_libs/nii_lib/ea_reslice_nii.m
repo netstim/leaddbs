@@ -79,7 +79,7 @@ if ~exist('preferredForm','var') || isempty(preferredForm)
     preferredForm= 's';				% Jeff
 end
 
-if ~exist('usespm','var')
+if ~exist('usespmfsl','var')
     usespmfsl=0;
 end
 
