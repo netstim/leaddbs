@@ -91,7 +91,7 @@ if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
 
-
+ea_delete([directory,'ttrackingmask.txt']);
 % now store tract in lead-dbs format
 disp('Converting fibers...');
 fibinfo = load([directory,ftrbase,'.mat']);
