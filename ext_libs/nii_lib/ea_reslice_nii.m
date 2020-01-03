@@ -92,7 +92,8 @@ if usespmfsl==1 % SPM
         VV(1).dim = ceil(VV(1).mat \ [bb(2,:) 1]' - 0.1)';
         VV(1).dim = VV(1).dim(1:3);
         VV(1).fname=new_fn;
-        ea_spm_reslice(VV,struct('mean',false,'which',2,'interp',interp,'mask',false)); % 1 for bspline 1st order
+        spm_reslice(VV,struct('mean',false,'which',1,'interp',interp,'mask',true)); % 1 for linear
+        %ea_spm_reslice(VV,struct('mean',false,'which',2,'interp',interp,'mask',false)); % 1 for bspline 1st order
     end
     
     [pth,fn,ext]=fileparts(old_fn);
