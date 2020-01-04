@@ -91,7 +91,7 @@ if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
 
-ea_delete([directory,'ttrackingmask.txt']);
+%ea_delete([directory,'ttrackingmask.txt']);
 % now store tract in lead-dbs format
 disp('Converting fibers...');
 fibinfo = load([directory,ftrbase,'.mat']);
@@ -161,7 +161,7 @@ end
 % try the DSI-studio way (faster):
 
 % source images
-ea_delete([directory,'dti.src.gz']);
+%ea_delete([directory,'dti.src.gz']);
 cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([directory,options.prefs.dti]),...
     ' --bval=',ea_path_helper([directory,options.prefs.bval])...
     ' --bvec=',ea_path_helper([directory,options.prefs.bvec])...
@@ -200,7 +200,7 @@ cmd=[DSISTUDIO,' --action=rec --source=',ea_path_helper([directory,'dti.src.gz']
     ' --odf_order=8'];
 
 err=ea_submitcmd(cmd);
-ea_delete([directory,'dti.src.gz']);
+%ea_delete([directory,'dti.src.gz']);
 if err
     ea_error(['Reconstruction from command line with dsi_studio failed (error code=',num2str(err),').']);
 end
