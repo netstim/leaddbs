@@ -17,6 +17,6 @@ for sess=1:length(sessions)
 end
 
 ea_save_untouch_nii(allnii,output);
-save([directory,'rest_sessvec.mat','sessvec']);
+save([directory,'rest_sessvec.mat'],'sessvec');
 
 
