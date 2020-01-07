@@ -126,45 +126,56 @@ for atlasset=1:length(asc)
 
     load([atlroot,'atlas_index.mat'])
     for atlas=1:length(atlases.names)
-        [~,~,ext]=fileparts(atlases.names{atlas});
-        if strcmp(ext,'.gz')
-            wasgzip=1;
-        else
-            wasgzip=0;
-        end
+        
+        [~,~,ext] = fileparts(atlases.names{atlas});
+        
+        switch ext
+            case {'.nii', '.gz'}
+                wasgzip = strcmp(ext,'.gz');
+        
+                switch atlases.types(atlas)
+                    case 1 % right hemispheric atlas.
+                        nii{1}=[atlroot,'rh',filesep,atlases.names{atlas}];
+                    case 2 % left hemispheric atlas.
+                        nii{1}=[atlroot,'lh',filesep,atlases.names{atlas}];
+                    case 3 % both-sides atlas composed of 2 files.
+                        nii{1}=[atlroot,'lh',filesep,atlases.names{atlas}];
+                        nii{2}=[atlroot,'rh',filesep,atlases.names{atlas}];
+                    case 4 % mixed atlas (one file with both sides information).
+                        nii{1}=[atlroot,'mixed',filesep,atlases.names{atlas}];
 
-        switch atlases.types(atlas)
-            case 1 % right hemispheric atlas.
-                nii{1}=[atlroot,'rh',filesep,atlases.names{atlas}];
-            case 2 % left hemispheric atlas.
-                nii{1}=[atlroot,'lh',filesep,atlases.names{atlas}];
-            case 3 % both-sides atlas composed of 2 files.
-                nii{1}=[atlroot,'lh',filesep,atlases.names{atlas}];
-                nii{2}=[atlroot,'rh',filesep,atlases.names{atlas}];
-            case 4 % mixed atlas (one file with both sides information).
-                nii{1}=[atlroot,'mixed',filesep,atlases.names{atlas}];
-
-            case 5 % midline atlas (one file with both sides information.
-                nii{1}=[atlroot,'midline',filesep,atlases.names{atlas}];
-        end
-
-        for n=1:length(nii)
-            if wasgzip
-                if ~strcmp(nii{n}(end-2:end),'.gz')
-                    gunzip([nii{n},'.gz']);
-                else
-                    gunzip([nii{n}]);
+                    case 5 % midline atlas (one file with both sides information.
+                        nii{1}=[atlroot,'midline',filesep,atlases.names{atlas}];
                 end
-                nii{n}=strrep(nii{n},'.gz','');
-            end
-            from{1}=nii{n}; to{1}=nii{n};
-            directory=[ea_space,fromspace,filesep];
-            options.prefs=ea_prefs('');
-            ea_apply_normalization_tofile(options,from,to,directory,0,1);
-            if wasgzip
-                gzip(nii{n});
-                delete(nii{n});
-            end
+
+                for n=1:length(nii)
+                    if wasgzip
+                        if ~strcmp(nii{n}(end-2:end),'.gz')
+                            gunzip([nii{n},'.gz']);
+                        else
+                            gunzip([nii{n}]);
+                        end
+                        nii{n}=strrep(nii{n},'.gz','');
+                    end
+                    from{1}=nii{n}; to{1}=nii{n};
+                    directory=[ea_space,fromspace,filesep];
+                    options.prefs=ea_prefs('');
+                    ea_apply_normalization_tofile(options,from,to,directory,0,1);
+                    if wasgzip
+                        gzip(nii{n});
+                        delete(nii{n});
+                    end
+                end
+        
+            case '.mat'
+                atlas_full_dir = dir(fullfile(atlroot,'*',atlases.names{atlas}));
+                for n = 1:length(atlas_full_dir)
+                    atl_name = fullfile(atlas_full_dir(n).folder,atlas_full_dir(n).name);
+                    atl_load = load(atl_name);
+                    atl_load.fibers(:,1:3) = ea_ants_apply_transforms_to_points(directory, atl_load.fibers(:,1:3), 0);
+                    save(atl_name, '-struct', 'atl_load');
+                end
+        
         end
 
     end
