@@ -673,8 +673,8 @@ oldlocas = vat.pos;
 
 % Assign tip of electrode as origin
 org = elstruct.trajectory{1,side}(1,:);
-tra = elstruct.trajectory{1,side} - repmat(org,size(elstruct.trajectory{1,side},1),1);
-pos = vat.pos - repmat(org,size(vat.pos,1),1);
+tra = elstruct.trajectory{1,side} - org;
+pos = vat.pos - org;
 
 % Rotate coordinate system so that y-axis aligns with electrode
 elvec = (tra(end,:))';
@@ -699,7 +699,7 @@ end
 r_pos = R*pos';
 
 cr_pos = r_pos(:,r_pos(2,:)>0); % Determine all points at electrode level
-fact = (ea_vecnorm(cr_pos([1 3],:),2)-elspec.lead_diameter/2)./ea_vecnorm(cr_pos([1 3],:),2); % Determine shifting factors
+fact = (vecnorm(cr_pos([1 3],:),2)-elspec.lead_diameter/2)./vecnorm(cr_pos([1 3],:),2); % Determine shifting factors
 cr_pos([1 3],:) = cr_pos([1 3],:).*fact;
 cr_pos(:,fact<0) = nan;
 
@@ -728,7 +728,7 @@ vat.ET(artpts) = [];
 
 oldlocas(artpts,:) = [];
 
-moved = ea_vecnorm(vat.pos-oldlocas',2);
+moved = vecnorm(vat.pos-oldlocas',2);
 moved(moved<0.2) = [];
 moved = abs(moved-elspec.lead_diameter/2);
 
@@ -1148,7 +1148,7 @@ while isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~strcmp(se
         end
 
         if strcmp(sens.balance.current, 'planar')
-            if isfield(sens, 'type') && ea_contains(sens.type, '_planar')
+            if isfield(sens, 'type') && contains(sens.type, '_planar')
                 % remove the planar postfox from the sensor type
                 sens.type = sens.type(1:(end-7));
             end
@@ -1936,9 +1936,9 @@ if isequal(hastrials, 'yes')
     okflag = isfield(data, 'trial');
     if ~okflag && isfield(data, 'dimord')
         % instead look in the dimord for rpt or subj
-        okflag = ea_contains(data.dimord, 'rpt') || ...
-            ea_contains(data.dimord, 'rpttap') || ...
-            ea_contains(data.dimord, 'subj');
+        okflag = contains(data.dimord, 'rpt') || ...
+            contains(data.dimord, 'rpttap') || ...
+            contains(data.dimord, 'subj');
     end
     if ~okflag
         error('This function requires data with a ''trial'' field');
@@ -8781,7 +8781,7 @@ if ~isfield(data, 'dimord')
         fn = fieldnames(data);
         sel = true(size(fn));
         for i=1:length(fn)
-            sel(i) = ea_contains(fn{i}, 'dimord');
+            sel(i) = contains(fn{i}, 'dimord');
         end
         df = fn(sel);
 
@@ -8974,7 +8974,7 @@ iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(dat
 isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
 issource       =  isfield(data, 'pos');
 isdip          =  isfield(data, 'dip');
-ismvar         =  isfield(data, 'dimord') && ea_contains(data.dimord, 'lag');
+ismvar         =  isfield(data, 'dimord') && contains(data.dimord, 'lag');
 isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
 ischan         = ea_check_chan(data);
 issegmentation = ea_check_segmentation(data);
@@ -8982,7 +8982,7 @@ isparcellation = ea_check_parcellation(data);
 
 if ~isfreq
     % this applies to a freq structure from 2003 up to early 2006
-    isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && ea_contains(data.dimord, 'frq');
+    isfreq = all(isfield(data, {'foi', 'label', 'dimord'})) && contains(data.dimord, 'frq');
 end
 
 % check if it is a spike structure

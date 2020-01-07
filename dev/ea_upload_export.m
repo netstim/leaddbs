@@ -41,10 +41,25 @@ pw = usercredentials{2};
 
 
 % Obtain token
-response = webwrite(prefs.tbase.authUrl,'username',user,'password',pw,'client_id',prefs.tbase.clientId,'client_secret',prefs.tbase.clientSecret,'grant_type','password');
+% response = webwrite(prefs.tbase.authUrl,'username',user,'password',pw,'client_id',prefs.tbase.clientId,'client_secret',prefs.tbase.clientSecret,'grant_type','password');
+% token = ['Bearer ' response.access_token];
+o = weboptions('CertificateFilename',prefs.tbase.certificateFile);
+response = webwrite(prefs.tbase.authUrl,'username',user,'password',pw,'client_id',prefs.tbase.clientId,'client_secret',prefs.tbase.clientSecret,'grant_type','password',o);
 token = ['Bearer ' response.access_token];
 
 % Send request
+uploadUrl = prefs.tbase.endpoint + patientPseudonym;
+fp = FileProvider(filePath);
+
+formProvider = MultipartFormProvider("file",fp);
+headerFields = HeaderField('Authorization', token,'Content-Type','multipart/form-data');
+options = matlab.net.http.HTTPOptions('ConnectTimeout',20,'CertificateFilename',prefs.tbase.certificateFile);
+req = RequestMessage('post',headerFields,formProvider);
+response = req.send(uploadUrl,options);
+
+% Send request
+%{ 
+
 uploadUrl = prefs.tbase.endpoint + patientPseudonym;
 fp = FileProvider(filePath);
 formProvider = MultipartFormProvider("file",fp);
@@ -52,3 +67,4 @@ headerFields = HeaderField('Authorization', token,'Content-Type','multipart/form
 options = matlab.net.http.HTTPOptions('ConnectTimeout',20);
 req = RequestMessage('post',headerFields,formProvider);
 response = req.send(uploadUrl,options);
+%}
