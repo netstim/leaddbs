@@ -17,7 +17,9 @@ prenii_order = cellfun(@(x) strrep(options.prefs.prenii_searchstring,'*',x), opt
 [~,idx] = ismember(ea_stripext(prenii_order), ea_stripext(pfcell));
 presentfiles = pfcell([nonzeros(idx)',setdiff(1:numel(pfcell),nonzeros(idx))]);
 
-options.primarytemplate = 't1'; % default T1.
+load([ea_space,'ea_space_def.mat']);
+
+options.primarytemplate = spacedef.templates{1}; % default T1.
 
 if isempty(presentfiles)
     warning(['No anatomy information found! Please put either ', ...
@@ -35,5 +37,18 @@ options.prefs.prenii_unnormalized = presentfiles{1};
 
 % determine primary template
 if any(idx)
-    options.primarytemplate = options.prefs.prenii_order{find(idx,1)};
+    which=options.prefs.prenii_order(find(idx,1));
+    for t=1:size(spacedef.norm_mapping,1)
+       if ismember(which,spacedef.norm_mapping{t,1})
+           break
+       end
+    end
+    if t==size(spacedef.norm_mapping,1) && (~ismember(which,spacedef.norm_mapping{t,1})) % didnt find corresponding template
+        options.primarytemplate=spacedef.norm_mapping{t,2};
+    else
+    options.primarytemplate = spacedef.misfit_template;
+    end
+    if iscell(options.primarytemplate)
+        options.primarytemplate=options.primarytemplate{1};
+    end
 end
