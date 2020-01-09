@@ -767,11 +767,11 @@ if ~isempty(uuid)
             % define in template:
             tps_uuid{pointpair}=ea_generate_uuid;
 
-            ea_spherical_roi([directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'],tp_cexpmm(pointpair,:),2,0,[ea_space,spacedef.templates{1},'.nii']);
+            ea_spherical_roi([directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'],tp_cexpmm(pointpair,:),ea_species_adjustsize(2),0,[ea_space,spacedef.templates{1},'.nii']);
             tfis{pointpair}=[directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'];
 
             % define in pt:
-            ea_spherical_roi([directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'],tp_expmm(pointpair,:),2,0,[directory,options.prefs.prenii_unnormalized]);
+            ea_spherical_roi([directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'],tp_expmm(pointpair,:),ea_species_adjustsize(2),0,[directory,options.prefs.prenii_unnormalized]);
             pfis{pointpair}=[directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'];
         end
 
@@ -842,8 +842,9 @@ end
 
 
 function smoothgzip(pathn,filen)
+kernel=ea_species_adjustsize(2);
 matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
-matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+matlabbatch{1}.spm.spatial.smooth.fwhm = [kernel kernel kernel];
 matlabbatch{1}.spm.spatial.smooth.dtype = 512;
 matlabbatch{1}.spm.spatial.smooth.im = 0;
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
