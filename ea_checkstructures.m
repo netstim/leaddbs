@@ -137,17 +137,25 @@ modality=modality{get(handles.anat_select,'Value')};
 setappdata(handles.checkstructures,'modality',modality);
 options.prefs=ea_prefs(options.patientname);
 setappdata(handles.checkstructures,'options',options);
-
-switch(options.prefs.machine.checkreg.default)
-    case 'DISTAL Minimal (Ewert 2017)@STN'
-        ea_preset_stn(handles)
-    case 'DISTAL Minimal (Ewert 2017)@GPi'
-        ea_preset_gpi(handles)
-    otherwise
-        parts=ea_strsplit(options.prefs.machine.checkreg.default,'@');
-        h.Parent.Label=parts{1};
-        h.Label=parts{2};
-        ea_setnewatlas(h,[],options,handles);
+try
+    switch(options.prefs.machine.checkreg.default)
+        case 'DISTAL Minimal (Ewert 2017)@STN'
+            ea_preset_stn(handles)
+        case 'DISTAL Minimal (Ewert 2017)@GPi'
+            ea_preset_gpi(handles)
+        otherwise
+            parts=ea_strsplit(options.prefs.machine.checkreg.default,'@');
+            h.Parent.Label=parts{1};
+            h.Label=parts{2};
+            ea_setnewatlas(h,[],options,handles);
+    end
+catch % default (e.g. when changing to a different space
+    sd=load([ea_space,'ea_space_def.mat']);
+    defaultnucleus=sd.spacedef.defaultnucleus;
+    parts=ea_strsplit(defaultnucleus,'@');
+    h.Parent.Label=parts{1};
+    h.Label=parts{2};
+    ea_setnewatlas(h,[],options,handles);
 end
 
 % UIWAIT makes ea_checkstructures wait for user response (see UIRESUME)
