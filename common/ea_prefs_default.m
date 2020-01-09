@@ -13,6 +13,9 @@ end
 %% adjust to user
 prefs.dev.profile='user';
 
+%% adjust to species
+prefs.species='human';
+
 %% general settings:
 prefs.pp.do=0; % use parallel processing if available.
 prefs.pp.csize=4; % specify how many clusters to recruit.
