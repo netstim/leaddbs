@@ -102,7 +102,9 @@ for column = 1:p
     end
     
     try
+        flag = nan(n,1);
         flag = sum(cell2mat(record),2); % if any point is flagged
+        
     catch ME  % this can happen to have an empty cell so loop
         flag = nan(n,size(record,2));
         index = 1;
@@ -116,8 +118,11 @@ for column = 1:p
         flag = sum(flag,2);
     end
             
-    if ~(sum(flag)==0)
+    if sum(flag)==0
+        outid{column}=[];
+    else
         flag=(flag>=1);
+        outid{column}=vec(flag);
     end
     keep=vec(~flag);
     
@@ -125,15 +130,17 @@ for column = 1:p
         a = x(keep,column);
         b = y(keep,column);
         
-        xrank = tiedrank(a,0); yrank = tiedrank(b,0);
         switch lower(type)
             case 'pearson'
                 r(column) = sum(detrend(a,'constant').*detrend(b,'constant')) ./ ...
                     (sum(detrend(a,'constant').^2).*sum(detrend(b,'constant').^2)).^(1/2);
             case 'spearman'
+                xrank = tiedrank(a,0); yrank = tiedrank(b,0);
                 r(column) = sum(detrend(xrank,'constant').*detrend(yrank,'constant')) ./ ...
                     (sum(detrend(xrank,'constant').^2).*sum(detrend(yrank,'constant').^2)).^(1/2);
         end
+   
+        %disp(num2str(r(column)));
         ea_dispercent(column/p);
 end
 ea_dispercent(1,'end');
