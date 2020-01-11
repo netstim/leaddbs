@@ -227,7 +227,11 @@ for mcfi=usesubjects % iterate across subjects
                             Rw=nan(length(sweightidx{s}),pixdim);
 
                             if ~exist('db','var')
-                                db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
+                                try
+                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,dataset.vol.matfilename]);
+                                catch
+                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
+                                end
                             end
 
                             cnt=1;
