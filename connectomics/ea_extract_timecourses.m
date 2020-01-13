@@ -49,8 +49,6 @@ TR=options.lc.func.prefs.TR;
 save([directory,'TR.mat'],'TR');
 
 
-
-
 %% Extract timecourses of specified ROI
 ea_dispercent(0,'Extracting time courses');
 for i=1:signallength
@@ -164,9 +162,9 @@ GlobTimecourse=zeros(signallength,1);
 for tmpt = 1:signallength
     OneTimePoint=alltc(:,:,:,tmpt);
     try
-    GlobTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(globmap(:))));
-    WMTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
-    CSFTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec3map(:))));
+        GlobTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(globmap(:))));
+        WMTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec2map(:))));
+        CSFTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(ec3map(:))));
     catch
         keyboard
     end
@@ -188,9 +186,6 @@ X1(:,4)=rp_rest(1:signallength,3);
 X1(:,5)=rp_rest(1:signallength,4);
 X1(:,6)=rp_rest(1:signallength,5);
 X1(:,7)=rp_rest(1:signallength,6);
-X1(:,7)=WMTimecourse;
-X1(:,7)=CSFTimecourse;
-%X1(:,7)=GlobTimecourse;
 
 if multsess
     % regress sessions from movement parameters
@@ -199,7 +194,7 @@ if multsess
         if ~any(isnan(beta_hat))
             X1(:,mov)=squeeze(X1(:,mov))-X0*beta_hat;
         else
-            warning('Regression of WM-/CSF-Signals could not be performed.');
+            warning('Regression of motion parameters could not be performed.');
         end
     end
 end
@@ -218,7 +213,7 @@ for voxx=1:size(interpol_tc,1)
     if ~any(isnan(beta_hat))
         interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X1*beta_hat;
     else
-        warning('Regression of WM-/CSF-Signals could not be performed.');
+        warning('Regression of motion parameters could not be performed.');
     end
 end
 
@@ -230,19 +225,15 @@ if vizz
 end
 
 X2(:,1)=ones(signallength,1);
-if options.prefs.lc.func.regress_wmcsf
-    X2(:,2)=WMTimecourse;
-    X2(:,3)=CSFTimecourse;
-end
-if options.prefs.lc.func.regress_global
-    X2(:,4)=GlobTimecourse;
-end
+X2(:,2)=WMTimecourse;
+X2(:,3)=CSFTimecourse;
+% X2(:,4)=GlobTimecourse;
 
 % actual regression of cleaned X2 (WM/Global) from time courses:
 X2reg=(X2'*X2)\X2';
 for voxx=1:size(interpol_tc,1)
 
-    beta_hat        = X2reg*squeeze(interpol_tc(voxx,:))';
+    beta_hat = X2reg*squeeze(interpol_tc(voxx,:))';
     if ~any(isnan(beta_hat))
         interpol_tc(voxx,:)=squeeze(interpol_tc(voxx,:))'-X2*beta_hat;
     else
@@ -257,7 +248,8 @@ if vizz
     subplot(3,2,pcnt)
     pcnt=pcnt+1;
     plot(interpol_tc(round(1:size(interpol_tc,1)/1000:size(interpol_tc,1)),:)');
-    title('Time series (cleaned from global/csf/wm).');
+    title('Time series (cleaned from wm&csf).');
+    % title('Time series (cleaned from wm&csf&global).');
 end
 
 %% Bandpass filtering
@@ -332,9 +324,6 @@ for c=double(atlas_lgnd{1}')
     gmtc(:,cnt)=nanmean(interpol_tc(voxelmask.vals==c,:),1);
     cnt=cnt+1;
 end
-
-
-
 
 
 %% add methods dump:
