@@ -33,6 +33,7 @@ classdef ea_trajectory < handle
         togglestates % show/hide states of primitive toggle button
         toggledefault % which part to show by activating toggletool if none is shown
         pt=1 % used for patient index count in lead group.
+        planningappearance='line' % can be set to 'electrode' to show 3D electrode instead
     end
 
     methods
@@ -175,6 +176,7 @@ classdef ea_trajectory < handle
             addlistener(obj, 'target', 'PostSet', @ea_trajectory.changeevent);
             addlistener(obj, 'planRelative', 'PostSet', @ea_trajectory.changeevent);
             addlistener(obj, 'colorMacroContacts', 'PostSet', @ea_trajectory.changeevent);
+            addlistener(obj, 'planningappearance', 'PostSet', @ea_trajectory.changeevent);
 
             if (exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit) || ~exist('pobj','var')
                 obj.controlH = ea_trajectorycontrol(obj);
@@ -195,7 +197,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         evtnm='all';
     end
     set(0,'CurrentFigure',obj.plotFigureH);
-    if ismember(evtnm,{'all','target','reco','planRelative','hasPlanning','showMicro','relateMicro'}) % need to redraw planning fiducials:
+    if ismember(evtnm,{'all','target','reco','planRelative','hasPlanning','showMicro','relateMicro','planningappearance'}) % need to redraw planning fiducials:
         % planning fiducial
         if obj.showPlanning
             coords=ea_convertfiducials(obj,[obj.target.target;obj.target.entry]);
@@ -204,7 +206,37 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                 traj(:,dim)=linspace(ent(dim),tgt(dim),10);
             end
             delete(obj.patchPlanning);
-            [obj.patchPlanning, fv] = ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
+            switch obj.planningappearance
+                case 'line'
+                    [obj.patchPlanning, fv] = ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
+                case 'electrode'
+                    
+                    markers.head=tgt;
+                    traj=(ent-tgt)./norm(ent-tgt);
+                    markers.tail=tgt+(6*traj);
+                    
+                    
+                    
+                    options.prefs=ea_prefs;
+                    options.elmodel='Medtronic 3389';
+                    options=ea_resolve_elspec(options);
+                    
+                    normtrajvector=(markers.tail-markers.head)./norm(markers.tail-markers.head);
+                    orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
+                    markers.x=markers.head+orth(:,1)';
+                    markers.y=markers.head+orth(:,2)'; % corresponding points in reality
+                    
+                    [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options);
+                    elstruct(1).coords_mm=coords_mm;
+                    elstruct(1).coords_mm=ea_resolvecoords(markers,options);
+                    elstruct(1).trajectory=trajectory;
+                    elstruct(1).name='';
+                    elstruct(1).markers=markers;
+                    options=ea_defaultoptions(options);
+                    options.sides=1;
+                    options.colorMacroContacts=[];
+                    obj.patchPlanning=ea_showelectrode(obj.plotFigureH,elstruct,1,options);
+            end
         end
 
         if obj.showMicro

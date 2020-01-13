@@ -22,7 +22,7 @@ function varargout = ea_trajectorycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_trajectorycontrol
 
-% Last Modified by GUIDE v2.5 12-Nov-2017 17:50:06
+% Last Modified by GUIDE v2.5 13-Jan-2020 20:32:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -639,3 +639,32 @@ delete(hObject);
 
 ea_save_trajectory(obj);
 
+
+% --- Executes on selection change in planningappearance.
+function planningappearance_Callback(hObject, eventdata, handles)
+% hObject    handle to planningappearance (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns planningappearance contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from planningappearance
+obj=getappdata(handles.trajectorycontrol,'obj');
+switch get(hObject,'value')
+    case 1
+        obj.planningappearance='line';
+    case 2
+        obj.planningappearance='electrode';
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function planningappearance_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to planningappearance (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
