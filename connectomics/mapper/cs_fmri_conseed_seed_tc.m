@@ -174,40 +174,34 @@ for s=1:numseed
     lhfX{s}=nan(10242,numsub);
 end
 ea_dispercent(0,'Iterating through subjects');
-
-scnt=1;
-for mcfi=usesubjects % iterate across subjects
-    howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
+for sub=1:numsub % iterate across subjects
+    howmanyruns=ea_cs_dethowmanyruns(dataset,usesubjects(sub));
     r=cell(howmanyruns,1);
     for run=1:howmanyruns % load data
-        r{run}=load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}],'gmtc');
+        r{run}=load([dfoldvol,dataset.vol.subIDs{usesubjects(sub)}{run+1}],'gmtc');
         r{run}.gmtc=single(r{run}.gmtc);
         if isfield(dataset,'surf') && prefs.lcm.includesurf
             if ~exist('ls','var')
                 % include surface:
-                r{run}.ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
-                r{run}.rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
+                r{run}.ls=load([dfoldsurf,dataset.surf.l.subIDs{usesubjects(sub)}{run+1}]);
+                r{run}.rs=load([dfoldsurf,dataset.surf.r.subIDs{usesubjects(sub)}{run+1}]);
                 r{run}.ls.gmtc=single(r{run}.ls.gmtc); r{run}.rs.gmtc=single(r{run}.rs.gmtc);
             end
         end
     end
 
-    parfor s=1:numseed
+    for s=1:numseed
         thiscorr=zeros(length(omaskidx),howmanyruns);
         if isfield(dataset,'surf') && prefs.lcm.includesurf
             lsthiscorr=zeros(10242,howmanyruns);
             rsthiscorr=zeros(10242,howmanyruns);
         end
         for run=1:howmanyruns
-            thiscorr=zeros(length(omaskidx),howmanyruns);
-            
             if size(sfile(s,:),2)>1 % dealing with surface seed
                 stc=mean([r{run}.ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(r{run}.ls.gmtc,2));...
                     r{run}.rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(r{run}.ls.gmtc,2))],1); % seed time course
             else % volume seed
-                
                 stc=mean(r{run}.gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(r{run}.gmtc,2)),1); % seed time course
-                
             end
             thiscorr(:,run)=corr(stc',r{run}.gmtc(maskuseidx,:)','type','Pearson');
             if isfield(dataset,'surf') && prefs.lcm.includesurf
@@ -216,21 +210,21 @@ for mcfi=usesubjects % iterate across subjects
                 rsthiscorr(:,run)=corr(stc',r{run}.rs.gmtc','type','Pearson');
             end
         end
-        fX{s}(:,scnt)=mean(thiscorr,2);
+        fX{s}(:,sub)=mean(thiscorr,2);
         if isfield(dataset,'surf') && prefs.lcm.includesurf
-            lhfX{s}(:,scnt)=mean(lsthiscorr,2);
-            rhfX{s}(:,scnt)=mean(rsthiscorr,2);
+            lhfX{s}(:,sub)=mean(lsthiscorr,2);
+            rhfX{s}(:,sub)=mean(rsthiscorr,2);
         end
         if writeoutsinglefiles
             if isfield(dataset,'surf') && prefs.lcm.includesurf
-                writeoutsinglefiles(dataset,outputfolder,seedfn,s,mcfi,thiscorr,omaskidx,lsthiscorr,rsthiscorr)
+                writeoutsinglefiles(dataset,outputfolder,seedfn,s,usesubjects(sub),thiscorr,omaskidx,lsthiscorr,rsthiscorr)
             else
-                writeoutsinglefiles(dataset,outputfolder,seedfn,s,mcfi,thiscorr,omaskidx)
+                writeoutsinglefiles(dataset,outputfolder,seedfn,s,usesubjects(sub),thiscorr,omaskidx)
             end
         end
     end
-    ea_dispercent(scnt/numsub);
-    scnt=scnt+1;
+
+    ea_dispercent(sub/numsub);
 end
 ea_dispercent(1,'end');
 
