@@ -1,13 +1,4 @@
-function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,exportgmtc)
-% This is the original fmri conseed script that supported all commands, datasets
-% and options. As of 01/2020 the file is not used by lead mapper anymore
-% but was replaced by multiple subcommands cs_fmri_conseed_seed_tc,
-% cs_fmri_conseed_matrix, cs_fmri_conseed_pseed, cs_fmri_conseed_pmap and
-% cs_fmri_conseed_matrix which make it easier to adapt changes for each
-% command type or dataset. The present file is still kept as a reference.
-% Since all of the aforementioned new commands have the exact same
-% interface, this original file should probably remain to work.
-% 2020 AH
+function cs_fmri_conseed_pseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,exportgmtc)
 
 tic
 
@@ -189,64 +180,24 @@ end
 
 % init vars:
 
-switch cmd
-    case {'seed','pseed'}
         for s=1:numseed
             fX{s}=nan(length(omaskidx),numsub);
             rh.fX{s}=nan(10242,numsub);
             lh.fX{s}=nan(10242,numsub);
         end
 
-    case 'pmap'
-
-        for s=1:numseed-1
-            fX{s}=nan(length(omaskidx),numsub);
-        end
-    otherwise
-        fX=nan(((numseed^2)-numseed)/2,numsub);
-end
-
-switch cmd
-    case 'matrix'
-        addp='';
-    case 'pmatrix'
-        addp='p';
-end
 
 ea_dispercent(0,'Iterating through subjects');
 
 scnt=1;
 for mcfi=usesubjects % iterate across subjects
     howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
-    switch cmd
-
-        case {'seed','pseed'}
-
             for s=1:numseed
-
                 thiscorr=zeros(length(omaskidx),howmanyruns);
-
                 for run=1:howmanyruns
                     switch dataset.type
                         case 'fMRI_matrix'
-                            if strcmp(cmd,'pseed')
                                 ea_error('Cannot run partial seed on fMRI Matrix dataset.');
-                            end
-
-                            Rw=nan(length(sweightidx{s}),pixdim);
-
-                            if ~exist('db','var')
-                                db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
-                            end
-
-                            cnt=1;
-                            for ix=sweightidx{s}'
-                                %    testnii.img(outidx)=mat(entry,:); % R
-                                Rw(cnt,:)=db.X(sweightidx{s}(cnt),:);
-                                cnt=cnt+1;
-                            end
-                            Rw=mean(Rw,1);
-                            Rw=Rw/(2^15);
                         case 'fMRI_timecourses'
                             if ~exist('gmtc','var')
                                 load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}],'gmtc')
@@ -259,19 +210,7 @@ for mcfi=usesubjects % iterate across subjects
                                     rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
                                     ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
                                 end
-                            end
-
-                            switch cmd % build up seed tc for present subject
-                                case 'seed'
-                                    if size(sfile(s,:),2)>1 % dealing with surface seed
-                                        stc=mean([ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(ls.gmtc,2));...
-                                            rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(ls.gmtc,2))],1); % seed time course
-                                    else % volume seed
-
-                                        stc=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
-
-                                    end
-                                case 'pseed'
+                            end            
                                     clear stc
                                     for subseed=1:numseed
                                         if size(sfile(subseed,:),2)>1 % dealing with surface seed
@@ -284,7 +223,7 @@ for mcfi=usesubjects % iterate across subjects
                                     os=1:numseed; os(s)=[]; % remaining seeds
                                     [~,~,stc]=regress(stc(:,s),addone(stc(:,os))); % regress out other time series from current one
                                     stc=stc';
-                            end
+                            
                             thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
                             if isfield(dataset,'surf') && prefs.lcm.includesurf
                                 % include surface:
@@ -329,110 +268,12 @@ for mcfi=usesubjects % iterate across subjects
                 end
             end
 
-        case 'pmap'
-
-            targetix=sweightidx{1};
-            clear stc
-            thiscorr=cell(numseed-1,1);
-            for s=1:numseed-1
-                thiscorr{s}=zeros(length(omaskidx),howmanyruns);
-            end
-            for run=1:howmanyruns
-                for s=2:numseed
-                    switch dataset.type
-                        case 'fMRI_matrix'
-
-                            ea_error('Pmap not supported with use of fMRI_Matrix (yet).');
-
-                        case 'fMRI_timecourses'
-                            load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
-                            gmtc=single(gmtc);
-                            stc(:,s-1)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)));
-                    end
-                end
-                % now we have all seeds, need to iterate across voxels of
-                % target to get pmap values
-
-                for s=1:size(stc,2)
-                    seedstc=stc(:,s);
-                    otherstc=stc;
-                    otherstc(:,s)=[];
-
-                    targtc=gmtc(targetix,:);
-                    thiscorr{s}(targetix,run)=partialcorr(targtc',seedstc,otherstc);
-
-                end
-            end
-
-
-            for s=1:size(stc,2)
-                fX{s}(:,scnt)=mean(thiscorr{s},2);
-                if writeoutsinglefiles
-                    ccmap=dataset.vol.space;
-                    ccmap.dt=[16 0];
-                    ccmap.img=single(ccmap.img);
-                    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_pmap.nii'];
-                    ccmap.img(omaskidx)=fX{s}(:,scnt);
-                    spm_write_vol(ccmap,ccmap.img);
-                end
-            end
-
-        otherwise
-            clear stc
-            for run=1:howmanyruns
-                load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
-                gmtc=single(gmtc);
-
-                if size(sfile(s,:),2)>1
-                    % include surface:
-                    ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
-                    rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
-                    ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
-                end
-                for s=1:numseed
-                    if size(sfile(s,:),2)>1 % dealing with surface seed
-                        stc(s,:)=mean([ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(ls.gmtc,2));...
-                            rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(rs.gmtc,2))],1); % seed time course
-                    else % volume seed
-                        try
-                            stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
-                        catch
-                            keyboard
-                        end
-                    end
-                end
-
-                if exportgmtc
-                    tmp.gmtc = stc;
-                    save([outputfolder,addp,'gmtc_',dataset.vol.subIDs{mcfi}{1},'_run',num2str(run,'%02d'),'.mat'],'-struct','tmp','-v7.3');
-                end
-
-                switch cmd
-                    case 'matrix'
-                        X=corrcoef(stc');
-
-                    case 'pmatrix'
-                        X=partialcorr(stc');
-                end
-                thiscorr(:,run)=X(:);
-
-            end
-            thiscorr=mean(thiscorr,2);
-            X(:)=thiscorr;
-            fX(:,scnt)=X(logical(triu(ones(numseed),1)));
-
-            if writeoutsinglefiles
-                save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
-            end
-    end
+        
     ea_dispercent(scnt/numsub);
     scnt=scnt+1;
 end
 ea_dispercent(1,'end');
-ispmap=strcmp(cmd,'pmap');
-if ispmap
-    seedfn(1)=[]; % delete first seed filename (which is target).
-end
+
 switch dataset.type
     case 'fMRI_matrix'
         switch cmd
@@ -455,8 +296,6 @@ switch dataset.type
         end
 
     case 'fMRI_timecourses'
-        switch cmd
-            case {'seed','pmap','pseed'}
                 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
                    if owasempty
                        outputfolder=ea_getoutputfolder({sfile{s}},ocname);
@@ -618,43 +457,6 @@ switch dataset.type
                         end
                     end
                 end
-
-            otherwise
-
-                % export mean
-                M=nanmean(fX');
-                X=zeros(numseed);
-                X(logical(triu(ones(numseed),1)))=M;
-                X=X+X';
-                X(logical(eye(length(X))))=1;
-                save([outputfolder,cmd,'_corrMx_AvgR.mat'],'X','-v7.3');
-
-                % export variance
-                M=nanvar(fX');
-                X=zeros(numseed);
-                X(logical(triu(ones(numseed),1)))=M;
-                X=X+X';
-                X(logical(eye(length(X))))=1;
-                save([outputfolder,cmd,'_corrMx_VarR.mat'],'X','-v7.3');
-
-                % fisher-transform:
-                fX=atanh(fX);
-                M=nanmean(fX');
-                X=zeros(numseed);
-                X(logical(triu(ones(numseed),1)))=M;
-                X=X+X';
-                X(logical(eye(length(X))))=1;
-                save([outputfolder,cmd,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
-
-                % export T
-                [~,~,~,tstat]=ttest(fX');
-                X=zeros(numseed);
-                X(logical(triu(ones(numseed),1)))=tstat.tstat;
-                X=X+X';
-                X(logical(eye(length(X))))=1;
-                save([outputfolder,cmd,'_corrMx_T.mat'],'X','-v7.3');
-
-        end
 end
 
 toc
