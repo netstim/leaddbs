@@ -62,9 +62,9 @@ if usfactor>1 && options.lc.struc.ft.upsample.how==0 % in house method
     V=ea_open_vol([options.root,options.patientname,filesep,options.prefs.dti]);
     
     ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.dti],...
-        [options.root,options.patientname,filesep,options.prefs.dti],V.voxsize./usfactor,0,0,1,[],[],1);
+        [options.root,options.patientname,filesep,options.prefs.dti],V.voxsize./usfactor,0,0,1,[],[],3);
     ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.b0],...
-        [options.root,options.patientname,filesep,options.prefs.b0],V.voxsize./usfactor,0,0,1,[],[],1);
+        [options.root,options.patientname,filesep,options.prefs.b0],V.voxsize./usfactor,0,0,1,[],[],3);
 
     
     % unfortunately for now need to check for nan / inf again.. this is
