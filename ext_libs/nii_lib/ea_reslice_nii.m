@@ -114,6 +114,9 @@ elseif usespmfsl==2 % FSL
         system(flirtcmd);
         system(convertxfmcmd);
     end
+    
+elseif usespmfsl==3 % ANTs    
+    ea_resample_image_by_spacing(old_fn,voxel_size,1,bg,interp,new_fn);
 else
     nii = load_nii_no_xform(old_fn, img_idx, 0, preferredForm);
 
