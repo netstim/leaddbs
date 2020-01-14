@@ -85,7 +85,9 @@ if docoreg
     [~, anat] = ea_niifileparts(options.prefs.prenii_unnormalized);
     if ~isempty(affinefile)
         for i = 1:numel(affinefile)
-            movefile(affinefile{i}, strrep(affinefile{i}, ['c',anat], anat));
+            if ~strcmp(affinefile{i},strrep(affinefile{i}, ['c',anat], anat))
+                movefile(affinefile{i}, strrep(affinefile{i}, ['c',anat], anat));
+            end
         end
     end
 

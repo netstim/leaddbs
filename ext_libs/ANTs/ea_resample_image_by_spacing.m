@@ -37,12 +37,12 @@ addvox = num2str(addvox);
 nninterp = num2str(nninterp);
 dimension = num2str(dimension);
 switch dimension
-    case 3
+    case '3'
         spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3))];
-    case 4
-        try
+    case '4'
+        if length(spacing)==4
             spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' ', num2str(spacing(4))];
-        catch
+        else
             spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' 15'];
         end
 end
