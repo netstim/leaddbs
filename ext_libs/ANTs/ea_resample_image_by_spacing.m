@@ -42,8 +42,9 @@ switch dimension
     case '4'
         if length(spacing)==4
             spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' ', num2str(spacing(4))];
-        else
-            spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' 1'];
+        else % keep the same as original
+            V=ea_open_vol(inputimage);
+            spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' ',num2str(V.private.timing.tspace)];
         end
 end
 basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
