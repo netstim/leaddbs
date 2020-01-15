@@ -116,7 +116,7 @@ elseif usespmfsl==2 % FSL
     end
     
 elseif usespmfsl==3 % ANTs    
-    ea_resample_image_by_spacing(old_fn,voxel_size,0,bg,interp,new_fn);
+    ea_resample_image_by_spacing(old_fn,voxel_size,0,bg,~interp,new_fn); % ~interp because 0 = linear and 1 = nn in ANTs.
 else
     nii = load_nii_no_xform(old_fn, img_idx, 0, preferredForm);
 
