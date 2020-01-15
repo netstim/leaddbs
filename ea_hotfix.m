@@ -22,11 +22,11 @@ if hotfix
         end
         disp('Downloading updated code...');
         try
-            webopts=weboptions('Timeout',5);
+            webopts=weboptions('Timeout',Inf);
             websave([earoot,'tmp',filesep,'hotfix.zip'],updurl,'id','hotfix',webopts);
         catch
             try
-                urlwrite([updurl,'?id=hotfix'],[earoot,'tmp',filesep,'hotfix.zip'],'Timeout',5);
+                urlwrite([updurl,'?id=hotfix'],[earoot,'tmp',filesep,'hotfix.zip'],'Timeout',Inf);
             catch
                 info='Download error! Please retry later.';
                 disp(info);
