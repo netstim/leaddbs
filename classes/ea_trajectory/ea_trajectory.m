@@ -4,6 +4,8 @@ classdef ea_trajectory < handle
 
     properties (SetObservable)
         elstruct % reconstruction of electrodes as handled by ea_elvis
+        plan2elstruct % reconstruction (pseudo) of stereotactical plan
+        plan2elstruct_model='Medtronic 3389' % electrode model of pseudo reconstruction of stereotactical plan
         elpatch % handle to macroelectrode patch
         eltype % indexes 1 for electrode contacts in elpatch
         ellabel % handle to electrode label
@@ -33,7 +35,7 @@ classdef ea_trajectory < handle
         togglestates % show/hide states of primitive toggle button
         toggledefault % which part to show by activating toggletool if none is shown
         pt=1 % used for patient index count in lead group.
-        planningappearance='line' % can be set to 'electrode' to show 3D electrode instead
+        planningAppearance='line' % can be set to 'electrode' to show 3D electrode instead
     end
 
     methods
@@ -176,7 +178,8 @@ classdef ea_trajectory < handle
             addlistener(obj, 'target', 'PostSet', @ea_trajectory.changeevent);
             addlistener(obj, 'planRelative', 'PostSet', @ea_trajectory.changeevent);
             addlistener(obj, 'colorMacroContacts', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'planningappearance', 'PostSet', @ea_trajectory.changeevent);
+            addlistener(obj, 'planningAppearance', 'PostSet', @ea_trajectory.changeevent);
+            addlistener(obj, 'plan2elstruct_model', 'PostSet', @ea_trajectory.changeevent);
 
             if (exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit) || ~exist('pobj','var')
                 obj.controlH = ea_trajectorycontrol(obj);
@@ -197,7 +200,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         evtnm='all';
     end
     set(0,'CurrentFigure',obj.plotFigureH);
-    if ismember(evtnm,{'all','target','reco','planRelative','hasPlanning','showMicro','relateMicro','planningappearance'}) % need to redraw planning fiducials:
+    if ismember(evtnm,{'all','target','reco','planRelative','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model'}) % need to redraw planning fiducials:
         % planning fiducial
         if obj.showPlanning
             coords=ea_convertfiducials(obj,[obj.target.target;obj.target.entry]);
@@ -206,36 +209,37 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                 traj(:,dim)=linspace(ent(dim),tgt(dim),10);
             end
             delete(obj.patchPlanning);
-            switch obj.planningappearance
+            
+            % estimate pseudo-reconstruction (plan2elstruct):
+            markers.head=tgt;
+            
+            options=obj.options;
+            options.elmodel=obj.plan2elstruct_model;
+            options=ea_resolve_elspec(options);
+            intraj=(ent-tgt)./norm(ent-tgt);
+            markers.tail=tgt+((3*options.elspec.eldist)*intraj);
+
+            normtrajvector=(markers.tail-markers.head)./norm(markers.tail-markers.head);
+            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
+            markers.x=markers.head+orth(:,1)';
+            markers.y=markers.head+orth(:,2)'; % corresponding points in reality
+            [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options);
+            obj.plan2elstruct(1).coords_mm=coords_mm;
+            obj.plan2elstruct(1).coords_mm=ea_resolvecoords(markers,options);
+            obj.plan2elstruct(1).trajectory=trajectory;
+            obj.plan2elstruct(1).name='';
+            obj.plan2elstruct(1).markers=markers;
+            
+            
+            switch obj.planningAppearance
                 case 'line'
                     [obj.patchPlanning, fv] = ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
                 case 'electrode'
-                    
-                    markers.head=tgt;
-                    traj=(ent-tgt)./norm(ent-tgt);
-                    markers.tail=tgt+(6*traj);
-                    
-                    
-                    
-                    options.prefs=ea_prefs;
-                    options.elmodel='Medtronic 3389';
-                    options=ea_resolve_elspec(options);
-                    
-                    normtrajvector=(markers.tail-markers.head)./norm(markers.tail-markers.head);
-                    orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-                    markers.x=markers.head+orth(:,1)';
-                    markers.y=markers.head+orth(:,2)'; % corresponding points in reality
-                    
-                    [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options);
-                    elstruct(1).coords_mm=coords_mm;
-                    elstruct(1).coords_mm=ea_resolvecoords(markers,options);
-                    elstruct(1).trajectory=trajectory;
-                    elstruct(1).name='';
-                    elstruct(1).markers=markers;
+
                     options=ea_defaultoptions(options);
                     options.sides=1;
                     options.colorMacroContacts=[];
-                    obj.patchPlanning=ea_showelectrode(obj.plotFigureH,elstruct,1,options);
+                    obj.patchPlanning=ea_showelectrode(obj.plotFigureH,obj.plan2elstruct,1,options);
             end
         end
 
