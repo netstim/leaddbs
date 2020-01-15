@@ -251,6 +251,23 @@ if checkrebuild(atlases,options,root,mifix)
                             keyboard
                         end
                     end
+                    
+                    if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
+                        % get to 700 faces
+                        simplify=700/length(fv.faces);
+                        if simplify < 1 % skip volumes with fewer than 700 faces
+                            fv=reducepatch(fv,simplify);
+                        end
+                    else
+                        if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
+                            fv=reducepatch(fv,options.prefs.hullsimplify);
+                        elseif options.prefs.hullsimplify>1
+                            simplify=options.prefs.hullsimplify/length(fv.faces);
+                            fv=reducepatch(fv,simplify);
+                        end
+                    end
+                    
+                    
                     try % works > ML 2015:
                         tr=triangulation(fv.faces,fv.vertices);
                         normals{atlas,side} = vertexNormal(tr);
