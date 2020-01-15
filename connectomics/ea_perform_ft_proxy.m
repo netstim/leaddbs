@@ -17,4 +17,11 @@ else
     ft_method_applied{1}=options.lc.struc.ft.method;
 end
 ft_method_applied=options.lc.struc.ft.method;
-save([options.root,options.patientname,filesep,'ea_ftmethod_applied'],'ft_method_applied');
+directory=[options.root,options.patientname,filesep];
+
+save([directory,'ea_ftmethod_applied'],'ft_method_applied');
+
+usfactor=ea_resolve_usfactor(options.lc.struc.ft.upsample);
+ft_upsampling_applied.usfactor=usfactor;
+ft_upsampling_applied.how=options.lc.struc.ft.upsample.how;
+save([directory,'ea_ftupsampling_applied.mat'],'-struct','ft_upsampling_applied');

@@ -24,16 +24,28 @@ if ~exist('outputimage', 'var')
 end
 
 if ~exist('dimension', 'var')
-    dimension = 3;
+    V=ea_open_vol(inputimage);
+    if V.volnum>1
+        dimension = 4;
+    else
+        dimension = 3;
+    end
 end
 
 dosmooth = num2str(dosmooth);
 addvox = num2str(addvox);
 nninterp = num2str(nninterp);
 dimension = num2str(dimension);
-
-spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3))];
-
+switch dimension
+    case '3'
+        spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3))];
+    case '4'
+        if length(spacing)==4
+            spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' ', num2str(spacing(4))];
+        else
+            spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' 1'];
+        end
+end
 basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
 if ispc
     ResampleImageBySpacing = ea_path_helper([basedir, 'ResampleImageBySpacing.exe']);
