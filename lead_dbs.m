@@ -72,7 +72,6 @@ end
 
 options.prefs=ea_prefs('');
 
-
 ea_init_coregmrpopup(handles,1);
 ea_init_coregctpopup(handles,options);
 

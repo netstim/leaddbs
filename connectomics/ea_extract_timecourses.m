@@ -338,6 +338,7 @@ ea_methods(options,['Resting-state fMRI data was preprocessed following the pipe
     num2str(options.prefs.lc.func.bplowcutoff),' Hz). No spatial smoothing was applied.'],...
     cits);
 
+
 function sl=ea_detsiglength(fname)
 V=spm_vol(fname);
 sl=length(V);

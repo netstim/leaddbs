@@ -5,8 +5,7 @@ function vox=ea_mm2vox(mm, transform)
 if ischar(transform)
     transform = spm_get_space(transform);
 end
-    
-transform = inv(transform);
-vox = [mm, ones(size(mm,1),1)] * transform';
+
+vox = [mm, ones(size(mm,1),1)] / transform';
 vox(:,4) = [];
 % vox = round(vox);
