@@ -34,6 +34,12 @@ for i = 2:nargin
             opt = varargin{i}(2:end);
             if isfield(handles, opt)
                 set(handles.(opt),'Value',1); % set default option to 1
+            elseif strcmp(opt,'process')
+                % run basic lead dbs pipeline with defaults
+                handles.coreg_checkbox.Value = 1;
+                handles.normalize_checkbox.Value = 1;
+                handles.scrf.Value = 1;
+                handles.doreconstruction_checkbox.Value = 1;
             else
                 error(['Unrecognized field: ' opt])
             end
