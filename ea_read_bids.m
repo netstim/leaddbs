@@ -33,7 +33,7 @@ preop_folder = dir([bids_subject_folder filesep options.prefs.bids_session_preop
 if ~isempty(preop_folder)
     preop_folder = strcat([bids_subject_folder filesep],{preop_folder([preop_folder(:).isdir]).name}');
 else 
-    preop_folder = bids_subject_folder;
+    preop_folder = {bids_subject_folder};
 end
 
 
@@ -41,7 +41,7 @@ postop_folder = dir([bids_subject_folder filesep options.prefs.bids_session_post
 if ~isempty(postop_folder)
     postop_folder = strcat([bids_subject_folder filesep],{postop_folder([postop_folder(:).isdir]).name}');
 else 
-    postop_folder = bids_subject_folder;
+    postop_folder = {bids_subject_folder};
 end
 
 
