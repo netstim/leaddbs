@@ -121,10 +121,15 @@ for atlasset=1:length(asc)
         rmdir([ea_space,fromspace,filesep,asc{atlasset}],'s');
         continue
     end
+    
+    % for .mat case
+    src = fullfile(ea_space,fromspace,'anat_t1.nii');
+    invt = fullfile(ea_space,fromspace,'y_ea_inv_normparams.nii');
+    srcV = ea_open_vol(src);
 
     atlroot=[ea_space,fromspace,filesep,asc{atlasset},filesep];
-
     load([atlroot,'atlas_index.mat'])
+    
     for atlas=1:length(atlases.names)
         
         [~,~,ext] = fileparts(atlases.names{atlas});
@@ -172,7 +177,10 @@ for atlasset=1:length(asc)
                 for n = 1:length(atlas_full_dir)
                     atl_name = fullfile(atlas_full_dir(n).folder,atlas_full_dir(n).name);
                     atl_load = load(atl_name);
-                    atl_load.fibers(:,1:3) = ea_ants_apply_transforms_to_points(directory, atl_load.fibers(:,1:3), 0);
+                    fibs_mm = [atl_load.fibers(:,1:3)'; ones(1,size(atl_load.fibers,1))];
+                    fibs_vox = srcV.mat \ fibs_mm;
+                    XYZ_dest_mm = ea_map_coords(fibs_vox, src, invt);
+                    atl_load.fibers(:,1:3) = XYZ_dest_mm';
                     save(atl_name, '-struct', 'atl_load');
                 end
         
