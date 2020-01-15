@@ -43,7 +43,7 @@ switch dimension
         if length(spacing)==4
             spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' ', num2str(spacing(4))];
         else
-            spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' 15'];
+            spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3)), ' 1'];
         end
 end
 basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];

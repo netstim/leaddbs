@@ -81,7 +81,7 @@ if usfactor>1 && options.lc.struc.ft.upsample.how==0 % in house method
     cits={
         'Dyrby, T. B., Lundell, H., Burke, M. W., Reislev, N. L., Paulson, O. B., Ptito, M., & Siebner, H. R. (2013). Interpolation of diffusion weighted imaging datasets. NeuroImage, 103(C), 1?12. http://doi.org/10.1016/j.neuroimage.2014.09.005'
         };
-    ea_methods(options,['Raw diffusion data was upsampled using bspline-interpolation with a factor of ',num2str(usfactor),' following the concept described in Dyrby et al. 2014.'],cits);
+    ea_methods(options,['Raw diffusion data was upsampled with a factor of ',num2str(usfactor),' following the concept described in Dyrby et al. 2014.'],cits);
 end
 
 
