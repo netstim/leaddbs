@@ -5,10 +5,10 @@ disp('This could take a while...');
 downloadurl = 'http://www.lead-dbs.org/release/download.php';
     destination=[ea_space,'../data_download.zip'];
     try
-        webopts=weboptions('Timeout',5);
+        webopts=weboptions('Timeout',Inf);
         websave(destination,downloadurl,'id',ea_getspace,webopts);
     catch
-        urlwrite([downloadurl,'?id=',ea_getspace],destination,'Timeout',5);
+        urlwrite([downloadurl,'?id=',ea_getspace],destination,'Timeout',Inf);
     end
 disp('Download done. Will now continue building/unpacking space.');
 
