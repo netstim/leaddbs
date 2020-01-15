@@ -63,9 +63,9 @@ guidata(hObject, handles);
 
 % add backdrops
 try
-options=varargin{1};
+    options = varargin{1};
 catch
-    options.prefs=ea_prefs('');
+    options.prefs = ea_prefs('');
 end
 backdrops=ea_assignbackdrop('list',options);
 
