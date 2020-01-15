@@ -48,26 +48,6 @@ end
 M.ui.groupdir = get(handles.groupdir_choosebox,'String');
 
 disp('Refreshing selections on VI / FC Lists...');
-% refresh selections on VI and FC Lists:
-try
-    vlist = get(handles.vilist,'String');
-    if max(M.ui.volumeintersections) > length(vlist) || ...
-        (ischar(vlist) && strcmp(vlist, 'subcortical_regions'))
-        set(handles.vilist,'Value',1);
-    else
-        set(handles.vilist,'Value',M.ui.volumeintersections);
-    end
-end
-
-try
-    fclist = get(handles.fclist,'String');
-    if M.ui.fibercounts > length(fclist) || ...
-        (ischar(fclist) && strcmp(fclist, 'whole-brain_regions'))
-        set(handles.fclist,'Value',1);
-    else
-        set(handles.fclist,'Value',M.ui.fibercounts);
-    end
-end
 
 M.groups.group=unique(M.patient.group); % STN, GPi, Thalamus, cZi
 %groupcolors=squeeze(ind2rgb(round([1:9]*(64/9)),jet));
@@ -282,7 +262,10 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 % if no stats  present yet, return.
                 setappdata(handles.leadfigure,'M',M);
                 set(handles.leadfigure,'name','Lead Group Analysis');
+                set(handles.explorestats, 'Enable', 'off');
                 break
+            else
+                set(handles.explorestats, 'Enable', 'on');
             end
 
             priorvilist=M.vilist;
@@ -342,14 +325,6 @@ if ~isempty(M.patient.list)
     t.Format='uuuMMddHHmmss';
     M.ui.lastupdated=str2double(char(t));
     setappdata(handles.leadfigure,'M',M);
-end
-% refresh UI
-if ~isempty(M.vilist)
-    set(handles.vilist,'String',M.vilist);
-end
-
-if ~isempty(M.fclist)
-    set(handles.fclist,'String',M.fclist);
 end
 
 disp('Done.');
