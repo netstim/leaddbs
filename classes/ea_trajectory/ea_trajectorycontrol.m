@@ -22,7 +22,7 @@ function varargout = ea_trajectorycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_trajectorycontrol
 
-% Last Modified by GUIDE v2.5 12-Nov-2017 17:50:06
+% Last Modified by GUIDE v2.5 15-Jan-2020 17:13:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,12 +63,31 @@ guidata(hObject, handles);
 movegui(hObject,'northwest');
 
 
+
 setappdata(handles.trajectorycontrol,'chandles',handles);
 obj=varargin{1};
+% add menu:
+f = uimenu('Label','Tools');
+uimenu(f,'Label','Export Plan as Reconstruction...','Callback',{@ea_plan2reconstruction,obj},'Accelerator','E');
+
+set(handles.electrode_model_plan,'String',ea_resolve_elspec);
+
 setappdata(obj.plotFigureH,'trajcontrolfig',handles.trajectorycontrol);
 setappdata(handles.trajectorycontrol,'obj',obj);
 set(handles.trajectorycontrol,'name','Edit Trajectory');
 ea_synctrajectoryhandles(handles,obj)
+
+
+function ea_plan2reconstruction(~,~,obj)
+[FileName,PathName] = uiputfile('ea_reconstruction.mat','Choose destination of ea_reconstruction.mat');
+
+if ~strcmp(FileName,'ea_reconstruction.mat')
+    ea_warning('Files that are named differently than ea_reconstruction.mat will not be recognized by Lead-DBS.');
+end
+elstruct=obj.plan2elstruct;
+options=obj.options;
+[options.root,options.patientname]=fileparts(PathName);
+ea_save_reconstruction(elstruct(1).coords_mm,elstruct(1).trajectory,elstruct(1).markers,obj.plan2elstruct_model,1,options,FileName);
 
 function ea_synctrajectoryhandles(handles,obj)
 % set handles to match obj
@@ -125,6 +144,19 @@ set(handles.targetX,'enable',onoff); set(handles.targetY,'enable',onoff); set(ha
 set(handles.entryX,'enable',onoff); set(handles.entryY,'enable',onoff); set(handles.entryZ,'enable',onoff);
 set(handles.space,'enable',onoff);
 set(handles.color,'enable',onoff);
+switch obj.planningAppearance
+    case 'line'
+        set(handles.planningappearance,'Value',1);
+        set(handles.electrode_model_plan,'Enable','off');
+    case 'electrode'
+        set(handles.planningappearance,'Value',2);
+        set(handles.electrode_model_plan,'Enable','on');
+end
+
+string_list = get(handles.electrode_model_plan,'String');
+[~,whichentry]=ismember(obj.plan2elstruct_model,string_list);
+set(handles.electrode_model_plan,'Value',whichentry);
+
 
 if ~(get(handles.showPlanning,'Value')) || ~ea_bool2onoff(get(handles.showPlanning,'enable')) || get(handles.space,'Value')>1
     onoff='off';
@@ -402,9 +434,9 @@ function space_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns space contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from space
 
-    obj=getappdata(handles.trajectorycontrol,'obj');
-    obj.planRelative(5)=get(handles.space,'Value');
-
+obj=getappdata(handles.trajectorycontrol,'obj');
+obj.planRelative(5)=get(handles.space,'Value');
+ea_synctrajectoryhandles(handles,obj);
 
 % --- Executes during object creation, after setting all properties.
 function space_CreateFcn(hObject, eventdata, handles)
@@ -535,24 +567,24 @@ obj.showMacro=get(hObject,'Value');
 obj.togglestates(2)=get(handles.showMacro,'Value');
 ea_synctrajectoryhandles(handles,obj);
 
-% --- Executes on selection change in electrode_model_popup.
-function electrode_model_popup_Callback(hObject, eventdata, handles)
-% hObject    handle to electrode_model_popup (see GCBO)
+% --- Executes on selection change in plan_electrode_model.
+function plan_electrode_model_Callback(hObject, eventdata, handles)
+% hObject    handle to plan_electrode_model (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns electrode_model_popup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from electrode_model_popup
+% Hints: contents = cellstr(get(hObject,'String')) returns plan_electrode_model contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from plan_electrode_model
 obj=getappdata(handles.trajectorycontrol,'obj');
-    options.elmodeln = get(handles.electrode_model_popup,'Value');
-    string_list = get(handles.electrode_model_popup,'String');
+    options.elmodeln = get(handles.plan_electrode_model,'Value');
+    string_list = get(handles.plan_electrode_model,'String');
     obj.elmodel=string_list{options.elmodeln};
 ea_synctrajectoryhandles(handles,obj);
 
 
 % --- Executes during object creation, after setting all properties.
-function electrode_model_popup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to electrode_model_popup (see GCBO)
+function plan_electrode_model_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to plan_electrode_model (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -639,3 +671,87 @@ delete(hObject);
 
 ea_save_trajectory(obj);
 
+
+% --- Executes on selection change in planningappearance.
+function planningappearance_Callback(hObject, eventdata, handles)
+% hObject    handle to planningappearance (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns planningappearance contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from planningappearance
+obj=getappdata(handles.trajectorycontrol,'obj');
+switch get(hObject,'value')
+    case 1
+        obj.planningAppearance='line';
+    case 2
+        obj.planningAppearance='electrode';
+end
+ea_synctrajectoryhandles(handles,obj);
+
+
+% --- Executes during object creation, after setting all properties.
+function planningappearance_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to planningappearance (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in electrode_model_popup.
+function electrode_model_popup_Callback(hObject, eventdata, handles)
+% hObject    handle to electrode_model_popup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns electrode_model_popup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from electrode_model_popup
+obj=getappdata(handles.trajectorycontrol,'obj');
+    options.elmodeln = get(handles.electrode_model_popup,'Value');
+    string_list = get(handles.electrode_model_popup,'String');
+    obj.elmodel=string_list{options.elmodeln};
+ea_synctrajectoryhandles(handles,obj);
+
+% --- Executes during object creation, after setting all properties.
+function electrode_model_popup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to electrode_model_popup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in electrode_model_plan.
+function electrode_model_plan_Callback(hObject, eventdata, handles)
+% hObject    handle to electrode_model_plan (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns electrode_model_plan contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from electrode_model_plan
+obj=getappdata(handles.trajectorycontrol,'obj');
+    options.elmodeln = get(handles.electrode_model_plan,'Value');
+    string_list = get(handles.electrode_model_plan,'String');
+    obj.plan2elstruct_model=string_list{options.elmodeln};
+ea_synctrajectoryhandles(handles,obj);
+
+% --- Executes during object creation, after setting all properties.
+function electrode_model_plan_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to electrode_model_plan (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
