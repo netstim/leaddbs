@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 16-Mar-2019 14:19:45
+% Last Modified by GUIDE v2.5 14-Jan-2020 10:51:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -97,9 +97,6 @@ end
 
 setappdata(handles.leadfigure,'genvatfunctions',genvatfunctions);
 setappdata(handles.leadfigure,'vatfunctionnames',ndc);
-
-% get electrode model specs and place in popup
-set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
 
 % set background image
 set(gcf,'color','w');
@@ -426,11 +423,11 @@ options=ea_resolve_elspec(options);
 options.prefs=ea_prefs(options.patientname);
 options.d3.verbose='on';
 
-options.d3.elrendering=M.ui.elrendering;
 options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
 options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
 options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
-options.d3.mirrorsides=get(handles.mirrorsides,'Value');
+options.d3.elrendering=M.ui.elrendering;
+options.d3.mirrorsides=M.ui.mirrorsides;
 try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
 
@@ -539,8 +536,8 @@ for pt=1:length(ptidx)
     M.elstruct(ptidx(pt)).pt=ptidx(pt);
 end
 
-whichelmodel=get(handles.elmodelselect,'String');
-whichelmodel=whichelmodel{get(handles.elmodelselect,'Value')};
+elmodels = [{'Patient specified'},ea_resolve_elspec];
+whichelmodel = elmodels{M.ui.elmodelselect};
 % account for electrode model specified in lead group
 if ~strcmp(whichelmodel,'Patient specified')
     arcell=repmat({whichelmodel},length(ptidx),1);
@@ -569,7 +566,7 @@ if options.expstatvat.do % export to nifti volume
     ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_T_nthresh_',hshid,'.nii'],pobj);
 end
 
-if get(handles.showdiscfibers,'Value') % show discriminative fibers
+if get(M.ui.showdiscfibers,'Value') % show discriminative fibers
     M.ui.connectomename=get(handles.fiberspopup,'String');
     M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
     discfiberssetting = options.prefs.machine.lg.discfibers;
@@ -771,13 +768,12 @@ function fclist_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns fclist contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from fclist
 M=getappdata(gcf,'M');
-
-
 M.ui.fibercounts=get(handles.fclist,'Value');
 
 % store model and refresh UI
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
+
 
 % --- Executes during object creation, after setting all properties.
 function fclist_CreateFcn(hObject, eventdata, handles)
@@ -1617,37 +1613,6 @@ setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
 
-
-% --- Executes on selection change in elrenderingpopup.
-function elrenderingpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to elrenderingpopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns elrenderingpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from elrenderingpopup
-
-M=getappdata(gcf,'M');
-M.ui.elrendering=get(handles.elrenderingpopup,'Value');
-
-
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-% --- Executes during object creation, after setting all properties.
-function elrenderingpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to elrenderingpopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on button press in showpassivecontcheck.
 function showpassivecontcheck_Callback(hObject, eventdata, handles)
 % hObject    handle to showpassivecontcheck (see GCBO)
@@ -1693,34 +1658,6 @@ setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
 
-% --- Executes on selection change in isovscloudpopup.
-function isovscloudpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to isovscloudpopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns isovscloudpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from isovscloudpopup
-M=getappdata(gcf,'M');
-M.ui.isovscloudpopup=get(handles.isovscloudpopup,'Value');
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-% --- Executes during object creation, after setting all properties.
-function isovscloudpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to isovscloudpopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-
 % --- Executes on button press in statvatcheck.
 function statvatcheck_Callback(hObject, eventdata, handles)
 % hObject    handle to statvatcheck (see GCBO)
@@ -1746,32 +1683,6 @@ M=getappdata(gcf,'M');
 
 M.ui.mer=get(handles.mercheck,'Value');
 setappdata(gcf,'M',M);
-
-
-% --- Executes on selection change in elmodelselect.
-function elmodelselect_Callback(hObject, eventdata, handles)
-% hObject    handle to elmodelselect (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns elmodelselect contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from elmodelselect
-M=getappdata(gcf,'M');
-M.ui.elmodelselect=get(handles.elmodelselect,'Value');
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-% --- Executes during object creation, after setting all properties.
-function elmodelselect_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to elmodelselect (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on button press in detachbutton.
@@ -1815,18 +1726,6 @@ end
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
-
-% --- Executes on button press in colorpointcloudcheck.
-function colorpointcloudcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to colorpointcloudcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of colorpointcloudcheck
-M=getappdata(gcf,'M');
-M.ui.colorpointcloudcheck=get(handles.colorpointcloudcheck,'Value');
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
 
 % --- Executes on selection change in normregpopup.
 function normregpopup_Callback(hObject, eventdata, handles)
@@ -2021,21 +1920,6 @@ options.native=0;
 ea_spec2dwrite(options);
 
 
-% --- Executes on button press in mirrorsides.
-function mirrorsides_Callback(hObject, eventdata, handles)
-% hObject    handle to mirrorsides (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of mirrorsides
-
-M=getappdata(gcf,'M');
-M.ui.mirrorsides=get(handles.mirrorsides,'Value');
-
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
 % --- Executes on button press in ttestbutton_ft.
 function ttestbutton_ft_Callback(hObject, eventdata, handles)
 % hObject    handle to ttestbutton_ft (see GCBO)
@@ -2162,3 +2046,12 @@ function VTAvsEfield_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in specify3doptions.
+function specify3doptions_Callback(hObject, eventdata, handles)
+% hObject    handle to specify3doptions (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+ea_lg_3dsetting(handles.leadfigure)

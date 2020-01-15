@@ -275,6 +275,7 @@ options.prefs.machine.d2.con_color = [0 0 0];
 options.prefs.machine.d2.lab_overlay = 0;
 options.prefs.machine.d2.bbsize = 10;
 options.prefs.machine.d2.backdrop = 'Patient Pre-OP';
+options.prefs.machine.d2.fid_overlay = 1;
 options.prefs.machine.space = 'MNI_ICBM_2009b_NLIN_ASYM';
 options.prefs.machine.lc.general.parcellation = 'AICHA reordered (Joliot 2015)';
 options.prefs.machine.lc.general.parcellationn = 2;
