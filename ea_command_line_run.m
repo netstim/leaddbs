@@ -46,8 +46,11 @@ for i = 2:nargin
             elseif strcmp(opt,'process')
                 % run basic lead dbs pipeline with defaults
                 handles.coreg_checkbox.Value = 1;
+                handles.coregmrpopup.Value = 1;
                 handles.normalize_checkbox.Value = 1;
+                handles.normmethod.Value = 9;
                 handles.scrf.Value = 1;
+                handles.scrfmask.Value = 2;
                 handles.doreconstruction_checkbox.Value = 1;
                 handles.reconmethod.Value = 3;
                 tryBIDS = true;
