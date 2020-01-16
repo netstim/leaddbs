@@ -564,7 +564,7 @@ if options.expstatvat.do % export to nifti volume
     ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_T_nthresh_',hshid,'.nii'],pobj);
 end
 
-if get(M.ui.showdiscfibers,'Value') % show discriminative fibers
+if M.ui.showdiscfibers % show discriminative fibers
     M.ui.connectomename=get(handles.fiberspopup,'String');
     M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
     discfiberssetting = options.prefs.machine.lg.discfibers;
