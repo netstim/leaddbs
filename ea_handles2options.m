@@ -14,9 +14,9 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 
 options.earoot = ea_getearoot;
 try % not working when calling from lead_anatomy
-    options.dicomimp.do=get(handles.dicomcheck,'Value');
+    % options.dicomimp.do=get(handles.dicomcheck,'Value');
     options.assignnii=get(handles.assignnii,'Value');
-    options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
+    % options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
     options.normalize.settings=getappdata(handles.normsettings,'settings');
 catch
     options.dicomimp.do=0;
@@ -68,9 +68,9 @@ try
 end
 
 try
+    % options.coregmr.do=get(handles.coreg_checkbox,'Value');
     options.coregmr.method=get(handles.coregmrpopup,'String');
     options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
-    options.coregmr.do=get(handles.coreg_checkbox,'Value');
 catch
     options.coregmr.do=0;
     options.coregmr.method='';
@@ -78,7 +78,7 @@ end
 
 try % not working when calling from lead_connectome
     % coreg CT
-    options.coregct.do=(get(handles.coreg_checkbox,'Value') == get(handles.coreg_checkbox,'Max'));
+    % options.coregct.do=(get(handles.coreg_checkbox,'Value') == get(handles.coreg_checkbox,'Max'));
     options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
     options.coregct.method=options.coregct.method{get(handles.coregctmethod,'Value')};
     options.coregct.methodn=get(handles.coregctmethod,'Value');
@@ -95,22 +95,18 @@ end
 
 options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback.
 
-%sidelog=[get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max'),get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max')];
-%sidepos=[1,2];
-
-%options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
 try
     options.sides=ea_assignsides(handles);
 catch
     options.sides=1:2;
 end
 try
-    options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
+    % options.doreconstruction=(get(handles.doreconstruction_checkbox,'Value') == get(handles.doreconstruction_checkbox,'Max'));
     if strcmp(get(handles.maskwindow_txt,'String'),'auto')
         options.maskwindow=10; % initialize at 10
         options.automask=1; % set automask flag
     else
-        options.maskwindow=str2num(get(handles.maskwindow_txt,'String')); % size of the window that follows the trajectory
+        options.maskwindow=str2double(get(handles.maskwindow_txt,'String')); % size of the window that follows the trajectory
         options.automask=0; % unset automask flag
     end
 catch

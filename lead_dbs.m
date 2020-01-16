@@ -516,8 +516,6 @@ function normalize_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normalize_checkbox
-
-
 ea_storeui(handles);
 
 
