@@ -328,6 +328,11 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
 %     'TooltipString','Cortical Reconstruction Visualization',...
 %     'ClickedCallback',{@opencortelsviewer,resultfig,options});
 
+% set defaultview
+prefs = ea_prefs;
+v = prefs.machine.view;
+ea_view(v);
+
 % Show atlas data
 if options.d3.writeatlases
     atlases = ea_showatlas(resultfig,elstruct,options);
@@ -465,12 +470,8 @@ if ~strcmp(options.d3.verbose,'off')
 end
 
 try
-    prefs = ea_prefs;
-    v = prefs.machine.view;
     togglestates = prefs.machine.togglestates;
     ea_defaultview(v,togglestates);
-catch
-    view(142,13.6)
 end
 
 if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
