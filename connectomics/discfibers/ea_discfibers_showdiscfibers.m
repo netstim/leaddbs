@@ -115,9 +115,9 @@ tvalsRescale = tvals;
 tvalsRescale(tvals>0)=ea_rescale(tvals(tvals>0), [0 1]);
 tvalsRescale(tvals<0)=ea_rescale(tvals(tvals<0), [-1 0]);
 
-% Contruct colormap
-colormap(gray)
-fibcmap=ea_redblue(1024);
+% Contruct default blue to red colormap
+colormap(gray);
+fibcmap = ea_colorgradient(1024, [0,0,1], [1,1,1], [1,0,0]);
 setappdata(resultfig, ['fibcmap',discfiberID], fibcmap);
 
 fibcolorInd=tvalsRescale*(size(fibcmap,1)/2-0.5);

@@ -346,8 +346,8 @@ for nativemni=nm % switch between native and mni space atlases.
                 tvalsRescale(tvals<0)=ea_rescale(tvals(tvals<0), [-1 0]);
 
                 % Contruct colormap
-                colormap(gray)
-                fibcmap=ea_redblue(1024);
+                colormap(gray);
+                fibcmap = ea_colorgradient(1024, [0,0,1], [1,1,1], [1,0,0]);
                 setappdata(resultfig, ['fibcmap',discfiberID], fibcmap);
 
                 fibcolorInd=tvalsRescale*(size(fibcmap,1)/2-0.5);
