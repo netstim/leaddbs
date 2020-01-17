@@ -276,7 +276,8 @@ else
     % Contruct colormap
     colormap(gray)
     if ~exist('fibcmap', 'var')
-        fibcmap = ea_redblue(1024);
+        % default blue to red colormap
+        fibcmap = ea_colorgradient(1024, [0,0,1], [1,1,1], [1,0,0]);
     end
     fibcolorInd = tvalsRescale*(size(fibcmap,1)/2-0.5);
     fibcolorInd = fibcolorInd+(size(fibcmap,1)/2+0.5);

@@ -179,7 +179,7 @@ if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) %
             obj.sfv=reducepatch(obj.sfv,simplify);
         end
     end
-    jetlist=ea_redblue;
+    jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]); % default blue to red colormap
 
     if obj.binary || obj.usesolidcolor
         obj.cdat=abs(repmat(obj.color,length(obj.sfv.vertices),1) ... % C-Data for surface
