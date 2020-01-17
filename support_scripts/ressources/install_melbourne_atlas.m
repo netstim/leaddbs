@@ -20,11 +20,11 @@ mkdir([outdir,filesep,'lh']); mkdir([outdir,filesep,'rh']);
 for s=1:4
     copyfile(fullfile(base,['Tian_Subcortex_S',num2str(s),'_3T_label.txt']),...
         fullfile(ea_space,'labeling',['Tian_Subcortex_S',num2str(s),'_3T.txt']));
-    
+
     copyfile(fullfile(base,['Tian_Subcortex_S',num2str(s),'_3T.nii']),...
         fullfile(ea_space,'labeling',['Tian_Subcortex_S',num2str(s),'_3T.nii']))
-    
-    
+
+
     fid=fopen(fullfile(ea_space,'labeling',['Tian_Subcortex_S',num2str(s),'_3T.txt']),'r');
     A=textscan(fid,'%s\n');
     A=A{1};
@@ -41,11 +41,11 @@ for s=1:4
     % format. See
     % https://netstim.gitbook.io/leaddbs/installation/acquiring_and_setting_atlases#what-is-the-difference-between-a-labeling-and-an-atlas-in-lead-dbs
     % for more info.
-    
+
     ea_labeling2atlas(['Tian_Subcortex_S',num2str(s),'_3T']);
     delete(fullfile(ea_space,'labeling',['Tian_Subcortex_S',num2str(s),'_3T.txt']));
     delete(fullfile(ea_space,'labeling',['Tian_Subcortex_S',num2str(s),'_3T.nii']));
-    
+
     % Aggregate all scales into one atlas:
     d=dir(fullfile(ea_space,'atlases',['Tian_Subcortex_S',num2str(s),'_3T'],'lh','*.nii'));
     for fi=1:length(d)
@@ -53,15 +53,15 @@ for s=1:4
             fullfile(outdir,'lh',d(fi).name));
         copyfile(fullfile(ea_space,'atlases',['Tian_Subcortex_S',num2str(s),'_3T'],'rh',d(fi).name),...
             fullfile(outdir,'rh',d(fi).name));
-        
+
         gzip(fullfile(outdir,'lh',d(fi).name));
         delete(fullfile(outdir,'lh',d(fi).name));
         gzip(fullfile(outdir,'rh',d(fi).name));
         delete(fullfile(outdir,'rh',d(fi).name));
-        
+
         Sstruc{s}{fi}=[d(fi).name,'.gz'];
     end
-    
+
     % Afterwards single-scale atlases can be deleted again.
     rmdir(fullfile(ea_space,'atlases',['Tian_Subcortex_S',num2str(s),'_3T']),'s');
 end
@@ -92,7 +92,7 @@ for s=1:4
     atlases.presets(s).default='absolute';
 end
 
-atlases.colormap=ea_redblue;
+atlases.colormap = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]); % default blue to red colormap
 atlases.defaultset=1;
 atlases.tissuetypes;
 atlases.labelnames{1}='Labels';

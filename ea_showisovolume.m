@@ -12,7 +12,8 @@ setappdata(resultfig,'isobar',isobar);
 end
 hold on
 
-jetlist=ea_redblue;
+% default blue to red colormap
+jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
 % jetlist=jet;
 
 if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
