@@ -5,9 +5,9 @@ function ea_options2handles(options,handles)
 set(handles.dicomcheck,'Value',options.dicomimp.do);
 set(handles.normalize_checkbox,'Value',options.normalize.do);
 if options.normalize.methodn>length(handles.normmethod,'String')
-    set(handles.normmethod,'Value',1);
+set(handles.normmethod,'Value',1);
 else
-    set(handles.normmethod,'Value',options.normalize.methodn);
+set(handles.normmethod,'Value',options.normalize.methodn);
 end
 set(handles.normcheck,'Value',options.normalize.check);
 
@@ -25,7 +25,7 @@ set(handles.MRCT,'Value',options.modality);
 if ismember(1,options.sides)
     set(handles.right_checkbox,'Value',1);
 else
-    set(handles.right_checkbox,'Value',0);
+        set(handles.right_checkbox,'Value',0);
 end
 if ismember(2,options.sides)
     set(handles.left_checkbox,'Value',1);
