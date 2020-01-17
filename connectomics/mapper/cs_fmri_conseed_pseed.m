@@ -210,7 +210,7 @@ for mcfi=usesubjects % iterate across subjects
                                     rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
                                     ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
                                 end
-                            end            
+                            end
                                     clear stc
                                     for subseed=1:numseed
                                         if size(sfile(subseed,:),2)>1 % dealing with surface seed
@@ -223,7 +223,7 @@ for mcfi=usesubjects % iterate across subjects
                                     os=1:numseed; os(s)=[]; % remaining seeds
                                     [~,~,stc]=regress(stc(:,s),addone(stc(:,os))); % regress out other time series from current one
                                     stc=stc';
-                            
+
                             thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
                             if isfield(dataset,'surf') && prefs.lcm.includesurf
                                 % include surface:
@@ -268,7 +268,7 @@ for mcfi=usesubjects % iterate across subjects
                 end
             end
 
-        
+
     ea_dispercent(scnt/numsub);
     scnt=scnt+1;
 end
@@ -330,7 +330,7 @@ switch dataset.type
                         delete(mmap.fname);
                     end
 
-                    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
+                    if isfield(dataset,'surf') && prefs.lcm.includesurf
                         % lh surf
                         lM=ea_nanmean(lh.fX{s}');
                         lmmap=dataset.surf.l.space;
@@ -362,7 +362,7 @@ switch dataset.type
 
                     % fisher-transform:
                     fX{s}=atanh(fX{s});
-                    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
+                    if isfield(dataset,'surf') && prefs.lcm.includesurf
                         lh.fX{s}=atanh(lh.fX{s});
                         rh.fX{s}=atanh(rh.fX{s});
                     end
@@ -380,7 +380,7 @@ switch dataset.type
                         gzip(mmap.fname);
                         delete(mmap.fname);
                     end
-                    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
+                    if isfield(dataset,'surf') && prefs.lcm.includesurf
                         % lh surf
                         lM=nanmean(lh.fX{s}');
                         lmmap=dataset.surf.l.space;
@@ -427,7 +427,7 @@ switch dataset.type
                         delete(tmap.fname);
                     end
 
-                    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
+                    if isfield(dataset,'surf') && prefs.lcm.includesurf
                         % lh surf
                         [~,~,~,ltstat]=ttest(lh.fX{s}');
                         lmmap=dataset.surf.l.space;

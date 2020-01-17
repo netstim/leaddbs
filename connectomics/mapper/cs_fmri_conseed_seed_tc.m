@@ -263,7 +263,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         delete(mmap.fname);
     end
     
-    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
+    if isfield(dataset,'surf') && prefs.lcm.includesurf
         % lh surf
         lM=ea_nanmean(lhfX{s}');
         lmmap=dataset.surf.l.space;
@@ -295,7 +295,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     
     % fisher-transform:
     fX{s}=atanh(fX{s});
-    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
+    if isfield(dataset,'surf') && prefs.lcm.includesurf
         lhfX{s}=atanh(lhfX{s});
         rhfX{s}=atanh(rhfX{s});
     end
@@ -313,7 +313,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         gzip(mmap.fname);
         delete(mmap.fname);
     end
-    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
+    if isfield(dataset,'surf') && prefs.lcm.includesurf
         % lh surf
         lM=nanmean(lhfX{s}');
         lmmap=dataset.surf.l.space;
@@ -360,7 +360,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         delete(tmap.fname);
     end
     
-    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
+    if isfield(dataset,'surf') && prefs.lcm.includesurf
         % lh surf
         [~,~,~,ltstat]=ttest(lhfX{s}');
         lmmap=dataset.surf.l.space;

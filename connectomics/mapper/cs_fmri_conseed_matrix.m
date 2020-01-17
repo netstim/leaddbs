@@ -184,13 +184,13 @@ ea_dispercent(0,'Iterating through subjects');
 scnt=1;
 for mcfi=usesubjects % iterate across subjects
     howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
-    
-    
+
+
     clear stc
     for run=1:howmanyruns
         load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}],'gmtc')
         gmtc=single(gmtc);
-        
+
         if size(sfile(s,:),2)>1
             % include surface:
             ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
@@ -209,38 +209,34 @@ for mcfi=usesubjects % iterate across subjects
                 end
             end
         end
-        
+
         if exportgmtc
             tmp.gmtc = stc;
             save([outputfolder,addp,'gmtc_',dataset.vol.subIDs{mcfi}{1},'_run',num2str(run,'%02d'),'.mat'],'-struct','tmp','-v7.3');
         end
-        
+
         switch cmd
             case 'matrix'
                 X=corrcoef(stc');
-                
+
             case 'pmatrix'
                 X=partialcorr(stc');
         end
         thiscorr(:,run)=X(:);
-        
+
     end
     thiscorr=mean(thiscorr,2);
     X(:)=thiscorr;
     fX(:,scnt)=X(logical(triu(ones(numseed),1)));
-    
+
     if writeoutsinglefiles
         save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
     end
-    
+
     ea_dispercent(scnt/numsub);
     scnt=scnt+1;
 end
 ea_dispercent(1,'end');
-ispmap=strcmp(cmd,'pmap');
-if ispmap
-    seedfn(1)=[]; % delete first seed filename (which is target).
-end
 switch dataset.type
     case 'fMRI_matrix'
                 ea_error(['Command ',cmd,' in combination with an fMRI-matrix not (yet) supported.']);
