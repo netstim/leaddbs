@@ -9,8 +9,8 @@ end
 
 directory = [options.root,options.patientname,filesep];
 stimname = cell(0);
-if exist([directory,'stimulations'],'dir')
-    stimdir = dir([directory,'stimulations']);
+if exist([directory,'stimulations',filesep,ea_nt(options)],'dir')
+    stimdir = dir([directory,'stimulations',filesep,ea_nt(options)]);
     [~, ind] = sort([stimdir(:).datenum], 'descend'); % show the latest modified first
     stimdir = stimdir(ind);
     stimname = {stimdir(cell2mat({stimdir.isdir})).name};

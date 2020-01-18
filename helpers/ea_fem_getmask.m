@@ -6,6 +6,7 @@ try
         case 0 % template space
             nii=ea_load_nii(ea_niigz([ea_space(options,'atlases'),options.atlasset,filesep,'gm_mask.nii.gz']));
         case 1 % native space
+            ea_ptspecific_atl(options); % make sure atlas has been warped.
             nii=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz']));
     end
 catch

@@ -88,7 +88,7 @@ switch ea_whichnormmethod(directory)
                     matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
                     matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
-                    matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.interp = interp;
                     matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
                     matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0.5 0.5 0.5];
                     matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
@@ -113,7 +113,7 @@ switch ea_whichnormmethod(directory)
                     matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
                     matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
-                    matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
+                    matlabbatch{1}.spm.util.defs.out{1}.pull.interp = interp;
                     matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
                     matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0.5 0.5 0.5];
                     matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';

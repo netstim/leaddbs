@@ -47,7 +47,6 @@ end
 
 resultfig=getappdata(lgfigure,'resultfig');
 elstruct=getappdata(resultfig,'elstruct');
-options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
@@ -78,32 +77,36 @@ setappdata(resultfig,'elstruct',elstruct);
         mesh.tissue=[];
         mesh.tissuelabel={'gray','white','contacts','insulation'};
         % add gm to mesh
-        switch options.prefs.vat.gm
-            case 'atlas'
-                for atlas=1:numel(atlases.fv)
-                    if isempty(atlases.fv{atlas}) || (atlases.tissuetypes~=1)
-                        continue
+        if options.prefs.machine.vatsettings.horn_useatlas
+            switch options.prefs.vat.gm
+                case 'atlas'
+                    for atlas=1:numel(atlases.fv)
+                        if isempty(atlases.fv{atlas}) || (atlases.tissuetypes~=1)
+                            continue
+                        end
+                        fv(cnt)=atlases.fv{atlas};
+                        
+                        ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+                        %tissuetype(cnt)=1;
+                        cnt=cnt+1;
                     end
-                    fv(cnt)=atlases.fv{atlas};
-
-                    ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
-                    %tissuetype(cnt)=1;
-                    cnt=cnt+1;
-                end
-            case 'tpm'
-                c1=ea_load_nii([ea_space(options),'TPM.nii,1']);
-%                 voxnbcyl=c1.mat\[nbcyl,ones(length(nbcyl),1)]';
-%                 voxnbcyl=voxnbcyl(1:3,:)';
-%                 cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
-%                 cyl=imfill(cyl,'holes');
-%
-%                 cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
-%                 c1.img=c1.img.*permute(cyl,[2,1,3]);
-                fv=isosurface(c1.img,0.5,'noshare');
-                fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
-                fv.vertices=fv.vertices(1:3,:)';
-            case 'mask'
-                fv=ea_fem_getmask(options);
+                case 'tpm'
+                    c1=ea_load_nii([ea_space(options),'TPM.nii,1']);
+                    %                 voxnbcyl=c1.mat\[nbcyl,ones(length(nbcyl),1)]';
+                    %                 voxnbcyl=voxnbcyl(1:3,:)';
+                    %                 cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
+                    %                 cyl=imfill(cyl,'holes');
+                    %
+                    %                 cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
+                    %                 c1.img=c1.img.*permute(cyl,[2,1,3]);
+                    fv=isosurface(c1.img,0.5,'noshare');
+                    fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
+                    fv.vertices=fv.vertices(1:3,:)';
+                case 'mask'
+                    fv=ea_fem_getmask(options);
+            end
+        else
+            fv=[];
         end
 
 
@@ -120,7 +123,11 @@ setappdata(resultfig,'elstruct',elstruct);
         end
 
         % replace wmboundary:
+        try
         tess = mesh.tet(:,1:4);
+        catch
+            keyboard
+        end
         tess = sort(tess,2);
 
         % all faces
@@ -179,16 +186,16 @@ setappdata(resultfig,'elstruct',elstruct);
             mesh.pnt=mesh.pnt*1000; % in meter
             mesh.unit='mm';
         end
-        if ~exist([options.root,options.patientname,filesep,'headmodel',filesep],'dir')
-           mkdir([options.root,options.patientname,filesep,'headmodel',filesep]);
+        if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)],'dir')
+           mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
         end
-        save([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
+        save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
         ea_save_hmprotocol(options,side,elstruct,1);
 
     else
         % simply load vol.
         ea_dispt('Loading headmodel...');
-        load([options.root,options.patientname,filesep,'headmodel',filesep,'headmodel',num2str(side),'.mat']);
+        load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat']);
         activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
 
     end
@@ -348,6 +355,18 @@ setappdata(resultfig,'vatgrad',vatgrad);
 % mesh-connection and setting difference of voltage to these points.
 
 vat.pos=midpts;
+
+% transform to template if necessary:
+if options.native==1 && options.orignative==0 % case if we are visualizing in MNI but want to calc VTA in native space -> now transform back to MNI
+    c=vat.pos';
+    V=ea_open_vol([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
+    c=V.mat\[c;ones(1,size(c,2))];
+    vat.pos=ea_map_coords(c, ...
+        [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized], ...
+        [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
+        '');
+    options.native=options.orignative; % go back to template space
+end
 %plot3(midpts(:,1),midpts(:,2),midpts(:,3),'g.');
 
 ngrad=sqrt(sum(gradient'.^2,1));
@@ -396,8 +415,8 @@ Vvat.dim=[res,res,res];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations']);
+if ~exist([options.root,options.patientname,filesep,'stimulations',ea_nt(options)],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations',ea_nt(options)]);
 end
 
 ea_dispt('Filling data with values from interpolant...');
@@ -444,21 +463,21 @@ S.volume(side)=vatvolume;
 ea_dispt('Writing files...');
 
 % determine stimulation name:
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,stimname],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
+if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname]);
 end
 
 switch side
     case 1
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.nii'];
         Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_right.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_right.nii'];
+        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_right.nii'];
+        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_gauss_right.nii'];
     case 2
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.nii'];
         Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_left.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_left.nii'];
+        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_left.nii'];
+        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_gauss_left.nii'];
 end
 %save(stimfile,'S');
 ea_savestimulation(S,options);
@@ -502,9 +521,9 @@ end
 % visualization
 switch side
     case 1
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.mat'];
+        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.mat'];
     case 2
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.mat'];
+        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.mat'];
 end
 vatgrad = vatgrad(side);
 save(vatfvname,'vatfv','vatgrad','vatvolume');
@@ -583,14 +602,14 @@ protocol.version=1.1;
 protocol.vatsettings=options.prefs.machine.vatsettings;
 
 if sv % save protocol to disk
-    save([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat'],'protocol');
+    save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'hmprotocol',num2str(side),'.mat'],'protocol');
 end
 
 
 function protocol=ea_load_hmprotocol(options,side)
 % function that loads protocol
 try
-    load([options.root,options.patientname,filesep,'headmodel',filesep,'hmprotocol',num2str(side),'.mat']);
+    load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'hmprotocol',num2str(side),'.mat']);
 catch
     protocol=struct; % default for errors or if not present
 end

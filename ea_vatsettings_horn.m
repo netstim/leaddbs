@@ -22,7 +22,7 @@ function varargout = ea_vatsettings_horn(varargin)
 
 % Edit the above text to modify the response to help ea_vatsettings_horn
 
-% Last Modified by GUIDE v2.5 08-Sep-2017 10:51:02
+% Last Modified by GUIDE v2.5 18-Jan-2020 14:57:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,6 +65,12 @@ prefs=ea_prefs('');
 set(handles.condgm,'String',num2str(prefs.machine.vatsettings.horn_cgm));
 set(handles.condwm,'String',num2str(prefs.machine.vatsettings.horn_cwm));
 set(handles.ethresh,'String',num2str(prefs.machine.vatsettings.horn_ethresh));
+set(handles.useatlas,'Value',prefs.machine.vatsettings.horn_useatlas);
+ea_refreshgmwm(handles);
+options=ea_defaultoptions;
+options.prefs.atlases.default=prefs.machine.vatsettings.horn_atlasset;
+ea_listatlassets(options,handles,1);
+
 
 ea_fillpresetpopups(handles);
 
@@ -171,7 +177,9 @@ vatsettings=prefs.machine.vatsettings;
 vatsettings.horn_cgm=str2double(get(handles.condgm,'String'));
 vatsettings.horn_cwm=str2double(get(handles.condwm,'String'));
 vatsettings.horn_ethresh=str2double(get(handles.ethresh,'String'));
-
+vatsettings.horn_useatlas=get(handles.useatlas,'Value');
+vatsettings.horn_atlasset=get(handles.atlassetpopup,'String');
+vatsettings.horn_atlasset=vatsettings.horn_atlasset{get(handles.atlassetpopup,'Value')};
 ea_setprefs('vatsettings',vatsettings);
 
 delete(handles.setfig);
@@ -249,17 +257,17 @@ end
 
 
 function condgm_Callback(hObject, eventdata, handles)
-% hObject    handle to condgm (see GCBO)
+% hObject    handle to condgm_txt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of condgm as text
-%        str2double(get(hObject,'String')) returns contents of condgm as a double
+% Hints: get(hObject,'String') returns contents of condgm_txt as text
+%        str2double(get(hObject,'String')) returns contents of condgm_txt as a double
 
 
 % --- Executes during object creation, after setting all properties.
 function condgm_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to condgm (see GCBO)
+% hObject    handle to condgm_txt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -304,21 +312,70 @@ end
 
 
 function condwm_Callback(hObject, eventdata, handles)
-% hObject    handle to condwm (see GCBO)
+% hObject    handle to condwm_txt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of condwm as text
-%        str2double(get(hObject,'String')) returns contents of condwm as a double
+% Hints: get(hObject,'String') returns contents of condwm_txt as text
+%        str2double(get(hObject,'String')) returns contents of condwm_txt as a double
 
 
 % --- Executes during object creation, after setting all properties.
 function condwm_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to condwm (see GCBO)
+% hObject    handle to condwm_txt (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in useatlas.
+function useatlas_Callback(hObject, eventdata, handles)
+% hObject    handle to useatlas (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of useatlas
+ea_refreshgmwm(handles);
+
+function ea_refreshgmwm(handles)
+switch get(handles.useatlas,'Value')
+    case 1
+        set(handles.condgm_txt,'visible','on');
+        set(handles.condgm,'visible','on');
+        set(handles.smgm_txt,'visible','on');
+        set(handles.atlassetpopup,'visible','on');
+        set(handles.condwm_txt,'string','Conductivity, WM:');
+    case 0
+        set(handles.condgm_txt,'visible','off');
+        set(handles.condgm,'visible','off');
+        set(handles.smgm_txt,'visible','off');
+        set(handles.atlassetpopup,'visible','off');
+        set(handles.condwm_txt,'string','Conductivity:');
+end
+    
+
+% --- Executes on selection change in atlassetpopup.
+function atlassetpopup_Callback(hObject, eventdata, handles)
+% hObject    handle to atlassetpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns atlassetpopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from atlassetpopup
+
+
+% --- Executes during object creation, after setting all properties.
+function atlassetpopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to atlassetpopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
