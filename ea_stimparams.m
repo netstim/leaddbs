@@ -1605,7 +1605,7 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             set(handles.stimlabel,'Value',ix);
             stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimlabel});
 
-            movefile([options.root,options.patientname,filesep,'stimulations',filesep,stimlabel],[options.root,options.patientname,filesep,'stimulations',filesep,stimc{1}]);
+            movefile([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimlabel],[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimc{1}]);
             slabelc=get(handles.stimlabel,'String');
             slabelc{ix}=stimc{1};
             set(handles.stimlabel,'String',slabelc);
@@ -1620,7 +1620,7 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             if strcmp(answ,'No')
                 set(handles.stimlabel,'Value',1);
             else % truly delete Stimulation parameters
-                rmdir([options.root,options.patientname,filesep,'stimulations',filesep,S.label],'s');
+                rmdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label],'s');
                 S=[]; % this will create the prompt to generate a new S.
                 setappdata(handles.stimfig,'S',S);
                 set(handles.stimlabel,'Value',1);

@@ -415,8 +415,8 @@ Vvat.dim=[res,res,res];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations',ea_nt(options)],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',ea_nt(options)]);
+if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)]);
 end
 
 ea_dispt('Filling data with values from interpolant...');

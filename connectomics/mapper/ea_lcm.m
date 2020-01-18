@@ -164,7 +164,7 @@ for suffix=dowhich
         case 'dMRI'
             seeds=cell(0);
             for pt=1:length(options.uivatdirs)
-                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
+                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
 
                 if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
                     cnt=1;
@@ -209,7 +209,7 @@ for suffix=dowhich
             seeds=cell(0);
             nativeprefix='';
             for pt=1:length(options.uivatdirs)
-                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
+                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
 
                 if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file')
 

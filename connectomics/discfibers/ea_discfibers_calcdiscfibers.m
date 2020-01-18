@@ -51,10 +51,10 @@ if reforce
     end
     for sub=1:length(M.patient.list) % all patients - for connected fibers selection
         if ~M.ui.mirrorsides
-            allroilist{sub,1}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat',suffix,'_right.nii'];
-            allroilist{sub,2}=[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat',suffix,'_left.nii'];
+            allroilist{sub,1}=[M.patient.list{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat',suffix,'_right.nii'];
+            allroilist{sub,2}=[M.patient.list{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat',suffix,'_left.nii'];
         else
-            allroilist(sub,:)=ea_genflippedjointnii([M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat',suffix,'_right.nii'],[M.patient.list{sub},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat',suffix,'_left.nii'],statmetric==1);
+            allroilist(sub,:)=ea_genflippedjointnii([M.patient.list{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat',suffix,'_right.nii'],[M.patient.list{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat',suffix,'_left.nii'],statmetric==1);
         end
     end
     if ~exist([M.ui.groupdir,'connected_fibers',msuffix,savesuffix,'.mat'],'file')

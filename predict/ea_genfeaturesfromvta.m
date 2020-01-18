@@ -33,12 +33,12 @@ for pt=1:length(uipatdirs)
     thispt=uipatdirs{pt};
     options=ea_getrootptname(thispt,options);
     coords_mm=ea_load_reconstruction(options);
-    load([thispt,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat']);
+    load([thispt,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_right.mat']);
     for side=1:2
         acnt{side}=mean(coords_mm{side}(logical(S.activecontacts{side}),:),1);
     end
-    strucnii=ea_load_nii([thispt,filesep,'stimulations',filesep,stimname,filesep,'vat_seed_compound_dMRI_',efsx,'struc_seed.nii']);
-    funcnii=ea_load_nii([thispt,filesep,'stimulations',filesep,stimname,filesep,'vat_seed_compound_fMRI_',efsx,'func_seed_AvgR.nii']);
+    strucnii=ea_load_nii([thispt,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_seed_compound_dMRI_',efsx,'struc_seed.nii']);
+    funcnii=ea_load_nii([thispt,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_seed_compound_fMRI_',efsx,'func_seed_AvgR.nii']);
     % assign feature vector X:
     if iscell(allfeatsix)
        for c=1:length(allfeatsix)

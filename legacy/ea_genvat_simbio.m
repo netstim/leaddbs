@@ -503,20 +503,20 @@ Vvat.dim=[100,100,100];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations']);
+if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)]);
 end
 
 % determine stimulation name:
-mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
+mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname]);
 
 switch side
     case 1
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
-        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_right.mat'];
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.nii'];
+        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_right.mat'];
     case 2
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
-        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'stimparameters_left.mat'];
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.nii'];
+        stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_left.mat'];
 end
 save(stimfile,'S');
 %spm_write_vol(Vvat,flipdim(eg,3));

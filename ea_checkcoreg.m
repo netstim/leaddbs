@@ -501,19 +501,22 @@ for pd=1:length(parcdirs)
     end
 end
 
-stimdirs=dir([directory,'stimulations',filesep]);
-% cleanup /connectomics results (these need to be recalculated):
-for pd=1:length(stimdirs)
-    if ~strcmp(stimdirs(pd).name(1),'.')
-        connfolders=dir([directory,'stimulations',filesep,stimdirs(pd).name]);
-        for connfolder=1:length(connfolders)
-            if ~strcmp(connfolders(connfolder).name(1),'.')
-
-                if connfolders(connfolder).isdir && ea_contains(connfolders(connfolder).name,thisrest(2:end))
-                    rmdir([directory,'stimulations',filesep,stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
+for tn=0:1
+    options.native=tn;
+    stimdirs=dir([directory,'stimulations',filesep,ea_nt(options)]);
+    % cleanup /connectomics results (these need to be recalculated):
+    for pd=1:length(stimdirs)
+        if ~strcmp(stimdirs(pd).name(1),'.')
+            connfolders=dir([directory,'stimulations',ea_nt(options),filesep,stimdirs(pd).name]);
+            for connfolder=1:length(connfolders)
+                if ~strcmp(connfolders(connfolder).name(1),'.')
+                    
+                    if connfolders(connfolder).isdir && ea_contains(connfolders(connfolder).name,thisrest(2:end))
+                        rmdir([directory,'stimulations',filesep,ea_nt(options),stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
+                    end
+                    
+                    ea_delete([directory,'stimulations',filesep,ea_nt(options),stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
                 end
-
-                ea_delete([directory,'stimulations',filesep,stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
             end
         end
     end

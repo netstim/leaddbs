@@ -16,7 +16,7 @@ for c=1:length(connectomes)
     connectome=connectomes{c};
     type=types{c};
     for pt=pts
-            fis{pt}=[rootfolder,num2str(pt),filesep,'stimulations',filesep,gs,filesep,connectome,filesep,getfiname(type),'.nii'];
+            fis{pt}=[rootfolder,num2str(pt),filesep,'stimulations',filesep,ea_nt(options),gs,filesep,connectome,filesep,getfiname(type),'.nii'];
     end
     mkdir([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'combined_maps',filesep,type,filesep,connectome]);
     ea_Cmap(fis,improvements,...
