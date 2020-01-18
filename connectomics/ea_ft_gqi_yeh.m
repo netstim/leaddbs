@@ -168,6 +168,9 @@ cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([directory,options.prefs
     ' --sort_b_table=0',...
     ' --output=',ea_path_helper([directory,'dti.src.gz'])];
 
+
+
+
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used
     cmd=[cmd,...
         ' --up_sampling=',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample)))];
@@ -187,8 +190,9 @@ end
 
 err=ea_submitcmd(cmd);
 
-if err
-    ea_error(['Sourcing from command line with dsi_studio failed (error code=',num2str(err),').']);
+if err || ~exist([directory,'dti.src.gz'],'file')
+    ea_warning('DSI studio failed to generate .src file. Using Matlab code instead.');
+    ea_create_dsistudio_src([directory,options.prefs.dti],[directory,'dti.src']);
 end
 
 % create .fib file
@@ -201,28 +205,22 @@ cmd=[DSISTUDIO,' --action=rec --source=',ea_path_helper([directory,'dti.src.gz']
 
 err=ea_submitcmd(cmd);
 ea_delete([directory,'dti.src.gz']);
+
 if err
-    ea_error(['Reconstruction from command line with dsi_studio failed (error code=',num2str(err),').']);
-end
-
-di=dir([directory,'dti.src.gz*.fib.gz']);
-if length(di)>1
-    ea_error('Too many .fib.gz files present in folder. Please delete older files');
-end
-movefile([directory,di(1).name],[directory,ftrbase,'.fib.gz']);
-
-
-
-
-
-if ~exist([directory,ftrbase,'.fib.gz'],'file')
     disp('Reconstruction from command line failed. Reattempting inside Matlab.');
-
     % do it the matlab way
     res=ea_gqi_reco([directory,options.prefs.dti],btable,mean_diffusion_distance_ratio,options);
     save([directory,ftrbase,'.fib'],'-struct','res','-v4');
     gzip([directory,ftrbase,'.fib']);
     ea_delete([directory,ftrbase,'.fib']);
+    ea_error(['Reconstruction from command line with dsi_studio failed (error code=',num2str(err),').']);
+else
+    
+    di=dir([directory,'dti.src.gz*.fib.gz']);
+    if length(di)>1
+        ea_error('Too many .fib.gz files present in folder. Please delete older files');
+    end
+    movefile([directory,di(1).name],[directory,ftrbase,'.fib.gz']);
 end
 
 
@@ -234,8 +232,6 @@ cits={
 ea_methods(options,['A whole-brain fiber-set was estimated based using the Generalized q-sampling imaging (GQI) approach (Yeh 2010) as implemented in DSI-Studio (http://dsi-studio.labsolver.org).',...
     ' GQI is a model-free method that calculates the orientational distribution of the density of diffusing water.',...
     ' Fibers were sampled within a white-matter mask that was estimated using the anatomical acquisition by applying the Unified Segmentation approach (Ashburner 2005) as implemented in ',spm('ver'),'. This mask was linearly co-registered to the b0-weighted series.'],cits);
-
-
 
 
 
@@ -277,7 +273,7 @@ index2 = zeros(dim);
 reco_temp = zeros(dim(1),dim(2),dif);
 plane_size = dim(1)*dim(2);
 
-% GQI reconstruciton matrix A
+% GQI reconstruction matrix A
 l_values = sqrt(b_table(1,:)*0.01506);
 b_vector = b_table(2:4,:).*repmat(l_values,3,1);
 A = sinc(odf_vertices'*b_vector*mean_diffusion_distance_ratio/pi);
@@ -293,9 +289,10 @@ for z = 1:dim(3)
     for x = 1:dim(1)
         for y = 1:dim(2)
             ODF=A*reshape(reco_temp(x,y,:),[],1);
+            ODF=ODF(:);
             p = ea_find_peak(ODF,odf_faces);
             max_dif = max(max_dif,mean(ODF));
-            min_odf = min(ODF);
+            min_odf = min(ODF(:));
             fa0(x,y,z) = ODF(p(1))-min_odf;
             index0(x,y,z) = p(1)-1;
             if length(p) > 1
