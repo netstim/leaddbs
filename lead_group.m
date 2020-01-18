@@ -1007,6 +1007,20 @@ for pt=selection
         catch
             keyboard
         end
+        
+        
+        options.orignative=options.native; % backup
+        options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
+        switch M.S(pt).template
+            case 'warp'
+                options.native=1;
+            case 'direct'
+        end
+        
+        
+        
+        
+        
         setappdata(handles.leadfigure,'resultfig',resultfig);
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
@@ -1019,6 +1033,7 @@ for pt=selection
             end
             stimparams(1,side).volume=volume;
         end
+        options.native=options.orignative; % restore
 
         setappdata(resultfig,'stimparams',stimparams(1,:));
     end

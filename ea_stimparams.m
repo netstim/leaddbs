@@ -966,7 +966,7 @@ for el=1:length(elstruct)
         end
     end
 end
-
+options.native=options.orignative;
 PL=getappdata(resultfig,'PL');
 for group=1:length(PL)
     deletePL(PL(group));

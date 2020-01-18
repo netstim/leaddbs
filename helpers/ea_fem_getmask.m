@@ -7,7 +7,7 @@ try
             nii=ea_load_nii(ea_niigz([ea_space(options,'atlases'),options.prefs.machine.vatsettings.horn_atlasset,filesep,'gm_mask.nii.gz']));
         case 1 % native space
             toptions=options;
-            options.atlasset=prefs.machine.vatsettings.horn_atlasset;
+            toptions.atlasset=options.prefs.machine.vatsettings.horn_atlasset;
             ea_ptspecific_atl(toptions); % make sure atlas has been warped.
             nii=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'atlases',filesep,prefs.machine.vatsettings.horn_atlasset,filesep,'gm_mask.nii.gz']));
     end
