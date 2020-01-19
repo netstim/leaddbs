@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 18-Jan-2020 13:09:07
+% Last Modified by GUIDE v2.5 19-Jan-2020 19:27:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,6 +65,9 @@ setappdata(handles.stimfig,'elstruct',elstruct);
 if options.native
     set(handles.estimateInTemplate,'Visible','off');
 end
+
+
+set(handles.estimateInTemplate,'Value',ea_getprefs('vatsettings.estimateInTemplate'));
 
 if strcmp(options.leadprod, 'group')
     groupmode=1;
@@ -2883,6 +2886,8 @@ else
     set(setstimbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
 
+ea_setprefs('vatsettings.estimateInTemplate',get(handles.estimateInTemplate,'Value'));
+
 close(handles.stimfig);
 
 
@@ -3153,3 +3158,14 @@ function estimateInTemplate_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of estimateInTemplate
+
+
+% --- Executes when user attempts to close stimfig.
+function stimfig_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to stimfig (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+ea_setprefs('vatsettings.estimateInTemplate',get(handles.estimateInTemplate,'Value'));
+delete(hObject);

@@ -124,9 +124,9 @@ setappdata(resultfig,'elstruct',elstruct);
 
         % replace wmboundary:
         try
-        tess = mesh.tet(:,1:4);
+            tess = mesh.tet(:,1:4);
         catch
-            keyboard
+            ea_error('Unfortunately meshing failed. Please try calculating the VTA with a different or without atlas.');
         end
         tess = sort(tess,2);
 
@@ -361,7 +361,7 @@ if options.native==1 && options.orignative==0 % case if we are visualizing in MN
     c=vat.pos';
     V=ea_open_vol([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
     c=V.mat\[c;ones(1,size(c,2))];
-    vat.pos=ea_map_coords(c, ...
+    vat.pos=ea_map_coords(c(1:3,:), ...
         [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized], ...
         [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
         '')';

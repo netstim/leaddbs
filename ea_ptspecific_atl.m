@@ -72,8 +72,11 @@ for atlas=1:length(atlases.names)
 end
 
 load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+options.atl.can=0;
+options.atl.ptnative=1;
 atlases=ea_genatlastable(atlases,[options.root,options.patientname,filesep,'atlases',filesep],options,'');
-atlases=ea_genatlastable(atlases,[options.root,options.patientname,filesep,'atlases',filesep],options,'');
+save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
+
 
 
 function generate_local_tpm(troot,aroot,proot,force,options)

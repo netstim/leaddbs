@@ -980,6 +980,7 @@ for pt=selection
 
 
     options.modality=ea_checkctmrpresent(M.patient.list{pt});
+    volumespresent=1;
     if options.modality(1) % prefer MR
         options.modality=1;
     else
@@ -988,6 +989,7 @@ for pt=selection
         else
             options.modality=1;
             warning(['No MR or CT volumes found in ',M.patient.list{pt},'.']);
+            volumespresent=0;
         end
     end
 
@@ -1009,18 +1011,14 @@ for pt=selection
         end
         
         
-        options.orignative=options.native; % backup
         options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
-        switch M.S(pt).template
-            case 'warp'
-                options.native=1;
-            case 'direct'
+     
+        options.orignative=options.native; % backup
+        options.native=~ea_getprefs('vatsettings.estimateInTemplate'); % see whether VTAs should be directly estimated in template space or not
+        if options.native && ~volumespresent
+            warning(['You chose to process VTAs in native space but patient-data cannot be found for ',M.patient.list{pt},'. Proceeding with VTA calculation directly in template space.']);
+            options.native=0;
         end
-        
-        
-        
-        
-        
         setappdata(handles.leadfigure,'resultfig',resultfig);
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
@@ -1284,7 +1282,7 @@ M=getappdata(gcf,'M');
 options = ea_setopts_local(handles);
 options.leadprod = 'group';
 options.groupid = M.guid;
-
+options.native = 0;
 ea_refresh_lg(handles);
 
 ea_stimparams(M.elstruct, handles.leadfigure, options);
