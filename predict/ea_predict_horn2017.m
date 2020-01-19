@@ -30,10 +30,10 @@ if ismember('dMRI',options.predict.includes)
         % -> run connectome mapper on patient
         run_mapper_vat_local(uivatdirs{pt},stimname,0,options.predict.dMRIcon,1,options.predict.fMRIcon)
     end
-    if ~exist([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii'],'file')
-        ea_dosk([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'vat_seed_compound_dMRI_struc_seed.nii'],modeldata.mask)
+    if ~exist([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii'],'file')
+        ea_dosk([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'vat_seed_compound_dMRI_struc_seed.nii'],modeldata.mask)
     end
-    dMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii']);
+    dMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii']);
 end
 
 if ismember('fMRI',options.predict.includes)
@@ -44,7 +44,7 @@ if ismember('fMRI',options.predict.includes)
         % -> run connectome mapper on patient
         run_mapper_vat_local(uivatdirs{pt},stimname,1,options.predict.dMRIcon,0,options.predict.fMRIcon)
     end
-    fMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,stimname,filesep,strrep(options.predict.fMRIcon,'>','_'),filesep,'vat_seed_compound_fMRI_func_seed_AvgR_Fz.nii']);
+    fMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.fMRIcon,'>','_'),filesep,'vat_seed_compound_fMRI_func_seed_AvgR_Fz.nii']);
 end
 
 % model
@@ -152,7 +152,7 @@ end
 
 cfg.res.updrs3imp=updrshat;
 cfg.res.updrs3err=avgerror;
-load([directory,'stimulations',filesep,stimname,filesep,'stimparameters.mat'])
+load([directory,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters.mat'])
 % cfg.stim=ea_activecontacts(S);
 cfg.stim=S;
 [~,cfg.stim.patientname]=fileparts(fileparts(directory));

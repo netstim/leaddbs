@@ -63,7 +63,7 @@ end
 % check for already processed maps in case of predict module
 if exist('options','var')
     if isfield(options,'predict')
-        stimdir=[directory,'stimulations',filesep,options.predict.stimulation,filesep];
+        stimdir=[directory,'stimulations',filesep,ea_nt(options),options.predict.stimulation,filesep];
         dfo=dir(stimdir);
         for fo=1:length(dfo)
             if dfo(fo).isdir && ~strcmp(dfo(fo).name(1),'.')

@@ -210,12 +210,14 @@ if err
     disp('Reconstruction from command line failed. Reattempting inside Matlab.');
     % do it the matlab way
     res=ea_gqi_reco([directory,options.prefs.dti],btable,mean_diffusion_distance_ratio,options);
+    delete([directory,ftrbase,'.fib']);
     save([directory,ftrbase,'.fib'],'-struct','res','-v4');
+    if ~exist([directory,ftrbase,'.fib'],'file')
+       ea_error(['It seems like the .fib file created for ',directory,' is too large for DSI studio to handle. We are working on a solution..']);
+    end
     gzip([directory,ftrbase,'.fib']);
     ea_delete([directory,ftrbase,'.fib']);
-    ea_error(['Reconstruction from command line with dsi_studio failed (error code=',num2str(err),').']);
 else
-    
     di=dir([directory,'dti.src.gz*.fib.gz']);
     if length(di)>1
         ea_error('Too many .fib.gz files present in folder. Please delete older files');

@@ -169,3 +169,7 @@ if ~isfield(options,'writeoutpm')
     
     options.writeoutpm=1;
 end
+
+if ~isfield(options,'prefs')
+    options.prefs=ea_prefs;
+end

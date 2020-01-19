@@ -4,9 +4,12 @@ function fv=ea_fem_getmask(options)
 try
     switch options.native
         case 0 % template space
-            nii=ea_load_nii(ea_niigz([ea_space(options,'atlases'),options.atlasset,filesep,'gm_mask.nii.gz']));
+            nii=ea_load_nii(ea_niigz([ea_space(options,'atlases'),options.prefs.machine.vatsettings.horn_atlasset,filesep,'gm_mask.nii.gz']));
         case 1 % native space
-            nii=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz']));
+            toptions=options;
+            toptions.atlasset=options.prefs.machine.vatsettings.horn_atlasset;
+            ea_ptspecific_atl(toptions); % make sure atlas has been warped.
+            nii=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'atlases',filesep,options.prefs.machine.vatsettings.horn_atlasset,filesep,'gm_mask.nii.gz']));
     end
 catch
     ea_error('The selected atlas set seems incompatible with this approach.');

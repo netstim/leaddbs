@@ -107,7 +107,7 @@ end
 %     voxnbcyl=voxnbcyl(1:3,:)';
 %     cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
 %     cyl=imfill(cyl,'holes');
-%     
+%
 %     cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
 %     c1.img=c1.img.*permute(cyl,[2,1,3]);
 %     fv=isosurface(c1.img,0.5,'noshare');
@@ -115,46 +115,52 @@ end
 %     fv.vertices=fv.vertices(1:3,:)';
 %     tpmuse=1;
 % else
-    tpmuse=0;
+tpmuse=0;
 % end
-%% load the nucleus surfaces
-nobj=[];
-fobj=[];
-ncount=length(fv);     % the number of nuclei meshes inside fv()
-ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
-
-if ncount==1 && isempty(fv(1).vertices) % no gray matter
-    graymatterpresent=0;
-else
-    graymatterpresent=1;
-for i=1:ncount
-    no=fv(i).vertices;
-    fo=fv(i).faces;
-    [no,fo]=meshresample(no,fo,nucleidecimate); % mesh is too dense, reduce the density by 80%
-    %[no,fo]=meshcheckrepair(no,fo,'meshfix');  % clean topological defects
+if ~isempty(fv) % use atlas to define GM
+    %% load the nucleus surfaces
     
-    %% merge all nuclei
+    nobj=[];
+    fobj=[];
+    ncount=length(fv);     % the number of nuclei meshes inside fv()
+    ISO2MESH_SURFBOOLEAN='cork';   % now intersect the electrode to the nucleus
     
-    if isempty(nobj)
-        nobj=no;
-        fobj=fo;
+    if ncount==1 && isempty(fv(1).vertices) % no gray matter
+        graymatterpresent=0;
     else
-        [nobj,fobj]=surfboolean(no,fo,'resolve',nobj,fobj);
+        graymatterpresent=1;
+        for i=1:ncount
+            no=fv(i).vertices;
+            fo=fv(i).faces;
+            [no,fo]=meshresample(no,fo,nucleidecimate); % mesh is too dense, reduce the density by 80%
+            %[no,fo]=meshcheckrepair(no,fo,'meshfix');  % clean topological defects
+            
+            %% merge all nuclei
+            
+            if isempty(nobj)
+                nobj=no;
+                fobj=fo;
+            else
+                [nobj,fobj]=surfboolean(no,fo,'resolve',nobj,fobj);
+            end
+            %         fobj=[fobj;fo+size(nobj,1)];
+            %         nobj=[nobj;no];
+        end
+        
+        
+        
+        if vizz
+            figure
+            patch('Vertices',nobj,'Faces',fobj,'FaceColor','none');
+            patch('Vertices',node,'Faces',face(:,1:3),'FaceColor','blue');
+        end
     end
-    %         fobj=[fobj;fo+size(nobj,1)];
-    %         nobj=[nobj;no];
+    
+    
+    %% merge the electrode mesh with the nucleus mesh
+else
+    graymatterpresent=0;
 end
-
-
-
-if vizz
-    figure
-    patch('Vertices',nobj,'Faces',fobj,'FaceColor','none');
-    patch('Vertices',node,'Faces',face(:,1:3),'FaceColor','blue');
-end
-end
-
-%% merge the electrode mesh with the nucleus mesh
 
 if graymatterpresent
     [nboth,fboth]=surfboolean(node,face(:,1:3),'resolve',nobj,fobj);
@@ -288,23 +294,23 @@ switch side
         sidec='L';
 end
 wmboundary=[];
-      if vizz
-            h=figure;
-      end
+if vizz
+    h=figure;
+end
 for reg=1:length(centroids)
     % first check if whether contact or insulator
     thiscompsnodes=emesh(emesh(1:end,5)==reg,1:4); % get this components nodes
     Ntc=size(thiscompsnodes,1);
     if Ntc>2500 % take a representative sample if whole points too large.
-       thiscompsnodes=thiscompsnodes(round(linspace(1,Ntc,2500)),:);
+        thiscompsnodes=thiscompsnodes(round(linspace(1,Ntc,2500)),:);
     end
     tetrcents=mean(cat(3,nmesh(thiscompsnodes(:,1),:),nmesh(thiscompsnodes(:,2),:),nmesh(thiscompsnodes(:,3),:),nmesh(thiscompsnodes(:,4),:)),3);
-
+    
     % a - check contacts:
     
     for con=find(eltissuetype==3);
         
-         in=double(ea_intriangulation(elfv(con).vertices,elfv(con).faces,tetrcents));
+        in=double(ea_intriangulation(elfv(con).vertices,elfv(con).faces,tetrcents));
         
         if vizz
             set(h,'name',num2str(mean(in)));
