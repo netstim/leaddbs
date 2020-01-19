@@ -62,6 +62,10 @@ options = varargin{3};
 
 setappdata(handles.stimfig,'elstruct',elstruct);
 
+if options.native
+    set(handles.estimateInTemplate,'Visible','off');
+end
+
 if strcmp(options.leadprod, 'group')
     groupmode=1;
     M=getappdata(resultfig,'M');
@@ -932,8 +936,8 @@ setappdata(handles.stimfig,'options',options);
 S=getappdata(handles.stimfig,'S');
 S=ea_activecontacts(S);
 
-options.orignative=options.native;
 options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
+options.orignative=options.native;
 
 switch get(handles.estimateInTemplate,'Value')
     case 0

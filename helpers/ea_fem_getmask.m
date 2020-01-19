@@ -9,7 +9,7 @@ try
             toptions=options;
             toptions.atlasset=options.prefs.machine.vatsettings.horn_atlasset;
             ea_ptspecific_atl(toptions); % make sure atlas has been warped.
-            nii=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'atlases',filesep,prefs.machine.vatsettings.horn_atlasset,filesep,'gm_mask.nii.gz']));
+            nii=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'atlases',filesep,options.prefs.machine.vatsettings.horn_atlasset,filesep,'gm_mask.nii.gz']));
     end
 catch
     ea_error('The selected atlas set seems incompatible with this approach.');
