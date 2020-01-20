@@ -135,9 +135,9 @@ setappdata(resultfig,'elstruct',elstruct);
 
         % replace wmboundary:
         try
-        tess = mesh.tet(:,1:4);
+            tess = mesh.tet(:,1:4);
         catch
-            keyboard
+            ea_error(['An error occured when building the VTA mesh/headmodel for ',options.patientname,'. Try re-calculating this VTA with a different atlas or with no atlas.']);
         end
         tess = sort(tess,2);
 
