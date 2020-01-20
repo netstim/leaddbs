@@ -46,7 +46,18 @@ end
 %% get electrodes handles // initial parameters:
 
 resultfig=getappdata(lgfigure,'resultfig');
-elstruct=getappdata(resultfig,'elstruct');
+
+% Important to load in reco from a new since we need to decide whether to
+% use native or template coordinates. Even when running in template space,
+% the native coordinates are sometimes used (VTA is then calculated in native space and ported to template). 
+options.loadrecoforviz=1;
+[coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+elstruct(1).coords_mm=coords_mm;
+elstruct(1).coords_mm=ea_resolvecoords(markers,options);
+elstruct(1).trajectory=trajectory;
+elstruct(1).name=options.patientname;
+elstruct(1).markers=markers;
+
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
@@ -332,6 +343,23 @@ indices=unique(indices(2:end-1));
 indices(indices==0)=[];
 indices(indices>length(midpts))=[];
 
+
+
+% transform midpts to template if necessary:
+if options.native==1 && options.orignative==0 % case if we are visualizing in MNI but want to calc VTA in native space -> now transform back to MNI
+    c=midpts';
+    [~,anatpresent]=ea_assignpretra(options);
+    V=ea_open_vol([options.root,options.patientname,filesep,anatpresent{1}]);
+    c=V.mat\[c;ones(1,size(c,2))];
+    midpts=ea_map_coords(c(1:3,:), ...
+        [options.root,options.patientname,filesep,anatpresent{1}], ...
+        [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
+        '')';
+    midpts=midpts(:,1:3);
+    options.native=options.orignative; % go back to template space
+end
+
+
 % define midpoints of quiver field
 vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
 
@@ -347,7 +375,6 @@ gradvis=gradvis.*repmat(nmag_gradvis,1,3);
 gradvis=gradvis./repmat(mag_gradvis,1,3);
 vatgrad(side).qx=gradvis(:,1); vatgrad(side).qy=gradvis(:,2); vatgrad(side).qz=gradvis(:,3);
 
-setappdata(resultfig,'vatgrad',vatgrad);
 %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
 
 
@@ -356,32 +383,32 @@ setappdata(resultfig,'vatgrad',vatgrad);
 
 vat.pos=midpts;
 
-% transform to template if necessary:
-if options.native==1 && options.orignative==0 % case if we are visualizing in MNI but want to calc VTA in native space -> now transform back to MNI
-    c=vat.pos';
-    V=ea_open_vol([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]);
-    c=V.mat\[c;ones(1,size(c,2))];
-    vat.pos=ea_map_coords(c(1:3,:), ...
-        [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized], ...
-        [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
-        '')';
-    options.native=options.orignative; % go back to template space
-end
 %plot3(midpts(:,1),midpts(:,2),midpts(:,3),'g.');
+
+setappdata(resultfig,'vatgrad',vatgrad);
 
 ngrad=sqrt(sum(gradient'.^2,1));
 vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
-vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec);
+%vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec);
 
 ea_dispt('Preparing VAT...');
 
 vat.tET=vat.ET>thresh;
 vat.tpos=vat.pos(vat.tET,:);
+%nvat.tpos=nvat.pos(vat.tET,:);
 outliers=ea_removeoutliers(vat.tpos,mean(dpvx,1),voltix,constvol);
 vat.tpos(outliers,:)=[];
-
+%nvat.tpos(outliers,:)=[];
 if vizz
     figure, plot3(vat.tpos(:,1),vat.tpos(:,2),vat.tpos(:,3),'r.');
+    [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
+    hold on
+    plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'k*');
+     plot3(nvat.tpos(:,1),nvat.tpos(:,2),nvat.tpos(:,3),'m.');
+     toptions=options; toptions.native=1;
+         [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(toptions);
+    plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'g*');
+
 end
 
 % the following will be used for volume 2 isosurf creation as well as
