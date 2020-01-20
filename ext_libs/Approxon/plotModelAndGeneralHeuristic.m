@@ -49,7 +49,7 @@ view(ax, 157.2, 26.3 );
 caxis(ax, [0.0369 2])
 
 
-legend( [hs; hd ; pointHandle; hc], 'Model', 'Data (\r{A}str\"om et al. 2015)', 'Choosen Parameters', 'Proposed General Heuristics of 0.2V/mm', ...
+legend( [hs; hd ; pointHandle; hc], 'Model', 'Data (Astrom et al. 2015)', 'Choosen Parameters', 'Proposed General Heuristics of 0.2V/mm', ...
     'Location', 'NorthEast', 'Interpreter', 'LaTex' );
 
 ax.Color = 'w';
