@@ -3,7 +3,7 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
     if exist([ea_getearoot,'templates',filesep,'mni_hires_t1.nii'],'file');
         try movefile([ea_getearoot,'templates'], [ea_getearoot,'templates_temp']); end
         try mkdir([ea_getearoot,'templates',filesep,'space',filesep]); end
-        
+
         try movefile([ea_getearoot,'templates_temp'],[ea_getearoot,'templates',filesep,'space',filesep,ea_getspace]); end % do not use ea_space in this line since wont be defined and result in error.
         try movefile([ea_getearoot,'atlases'],[ea_space,'atlases']); end
 
@@ -39,6 +39,22 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
 
     if exist([ea_space,'electrode_models'],'dir')
         try movefile( [ea_space,'electrode_models'],[ea_getearoot,'templates']); end
+    end
+
+    % remove square bracket from folder name
+    folders = ea_regexpdir([ea_space, 'atlases'], '\[.*\]/$', 0);
+    for i=1:length(folders)
+        oldfolder = folders{i}(1:end-1);
+        newfolder = regexprep(oldfolder,'(.*) \[(.*)\]', '$1 - $2');
+        movefile(oldfolder, newfolder)
+    end
+
+    % remove square bracket from file name
+    files = ea_regexpdir([ea_space, 'labeling'], '\[.*\]', 0);
+    for i=1:length(files)
+        oldfile = files{i};
+        newfile = regexprep(oldfile,'\[(.*)\]', '- $1');
+        movefile(oldfile, newfile)
     end
 end
 
