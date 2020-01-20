@@ -124,9 +124,9 @@ setappdata(resultfig,'elstruct',elstruct);
 
         % replace wmboundary:
         try
-            tess = mesh.tet(:,1:4);
+        tess = mesh.tet(:,1:4);
         catch
-            ea_error('Unfortunately meshing failed. Please try calculating the VTA with a different or without atlas.');
+            keyboard
         end
         tess = sort(tess,2);
 
