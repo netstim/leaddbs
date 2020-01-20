@@ -125,13 +125,35 @@ cnt=1;
 earoot=[ea_getearoot];
 
 ndir=dir([earoot,'ea_genvat_*.m']);
+if strcmp(options.leadprod, 'group')
+    isdirected=0; % for now allow everything in lead group
+else
+    e=load(fullfile(ea_getearoot,'templates','electrode_models',options.elspec.matfname));
+    directed_funs={'ea_genvat_horn'};
+    if isfield(e.electrode,'isdirected')
+        isdirected=e.electrode.isdirected;
+    else
+        isdirected=0;
+    end
+end
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
-    try
-        [thisndc]=eval([methodf,'(','''prompt''',')']);
-        ndc{cnt}=thisndc;
-        genvatfunctions{cnt}=methodf;
-        cnt=cnt+1;
+    if isdirected
+        if ismember(methodf,directed_funs)
+            try
+                [thisndc]=eval([methodf,'(','''prompt''',')']);
+                ndc{cnt}=thisndc;
+                genvatfunctions{cnt}=methodf;
+                cnt=cnt+1;
+            end
+        end
+    else
+        try
+            [thisndc]=eval([methodf,'(','''prompt''',')']);
+            ndc{cnt}=thisndc;
+            genvatfunctions{cnt}=methodf;
+            cnt=cnt+1;
+        end
     end
 end
 setappdata(gcf,'genvatfunctions',genvatfunctions);
@@ -941,13 +963,14 @@ S=ea_activecontacts(S);
 
 options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
 options.orignative=options.native;
-
-switch get(handles.estimateInTemplate,'Value')
-    case 0
-        S.template='warp';
-        options.native=1;
-    case 1
-        S.template='direct';
+if strcmp('on',get(handles.estimateInTemplate,'Visible')) % only allowed for specific VTA functions
+    switch get(handles.estimateInTemplate,'Value')
+        case 0
+            S.template='warp';
+            options.native=1;
+        case 1
+            S.template='direct';
+    end
 end
 
 setappdata(handles.stimfig,'S',S);
@@ -2080,7 +2103,6 @@ try
 catch
     set(handles.modelselect,'Value',1);
     model=models{1};
-
 end
 
 switch options.elspec.numel
@@ -2099,30 +2121,33 @@ end
 switch model
     case 'SimBio/FieldTrip (see Horn 2017)'
         ea_hide_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','on');
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
     case 'Maedler 2012'
         ea_show_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
         ea_disable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
     case 'Kuncel 2008'
         ea_hide_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
         ea_disable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
     case 'Dembek 2017'
         ea_show_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
 end
-
 S.model=model;
 
 
