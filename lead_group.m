@@ -1025,9 +1025,9 @@ for pt=selection
             setappdata(resultfig,'elspec',options.elspec);
             try
                 [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,M.elstruct(pt).coords_mm,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
-                     catch
-                    msgbox(['Error while creating VTA of ',M.patient.list{pt},'.']);
-                    volume=0;
+            catch
+                msgbox(['Error while creating VTA of ',M.patient.list{pt},'.']);
+                volume=0;
             end
             stimparams(1,side).volume=volume;
         end
