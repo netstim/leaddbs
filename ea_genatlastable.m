@@ -493,7 +493,7 @@ switch atlases.types(atlas)
     case 5 % midline atlas (one file with both sides information.
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
 end
-
+[options] = ea_assignpretra(options);
 for atl=1:length(atlnames)
     atlname=atlnames{atl};
 
