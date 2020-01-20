@@ -129,7 +129,7 @@ setappdata(resultfig,'elstruct',elstruct);
                 success=1;
                 break
             catch
-                Y=Y+randn(4)/1000; % very small jitter on transformation which will be used on electrode.
+                Y=Y+randn(4)/700; % very small jitter on transformation which will be used on electrode.
             end
         end
 
@@ -276,6 +276,7 @@ for source=S.sources
         end
 
         if isempty(ix)
+            rmdir([options.root,options.patientname,filesep,'current_headmodel'],'s'); % the least I can do at this point is to clean up the faulty headmodel.
            ea_error('Something went wrong. Active vertex index not found.');
         end
 
@@ -389,7 +390,14 @@ setappdata(resultfig,'vatgrad',vatgrad);
 
 ngrad=sqrt(sum(gradient'.^2,1));
 vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
-%vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec);
+% reload elstruct to make sure to take correct one (native vs. template)
+[coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+elstruct(1).coords_mm=coords_mm;
+elstruct(1).coords_mm=ea_resolvecoords(markers,options);
+elstruct(1).trajectory=trajectory;
+elstruct(1).name=options.patientname;
+elstruct(1).markers=markers;
+vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec);
 
 ea_dispt('Preparing VAT...');
 
