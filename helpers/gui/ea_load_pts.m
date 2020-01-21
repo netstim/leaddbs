@@ -65,7 +65,7 @@ end
 if isfield(handles,'seeddefpopup')
     for pt=1:length(uipatdir)
     direc=[uipatdir{pt},filesep];
-    stims=ea_dir2cell(dir([direc,'stimulations',filesep,'template']));
+    stims=ea_dir2cell(dir([direc,'stimulations',filesep,ea_getspace]));
     if ~exist('remstims','var')
         remstims=stims;
     else
