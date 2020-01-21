@@ -25,13 +25,15 @@ else
 end
 
 disp(['Connectome dataset: ',cname,'.']);
-    ocname=cname;
+ocname=cname;
+
 if ismember('>',cname)
     delim=strfind(cname,'>');
     subset=cname(delim+1:end);
     cname=cname(1:delim-1);
 end
-prefs=ea_prefs;
+
+prefs = ea_prefs;
 dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
 dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
 
@@ -157,13 +159,10 @@ end
 
 disp([num2str(numseed),' seeds, command = ',cmd,'.']);
 
-
-pixdim=length(dataset.vol.outidx);
-
-numsub=length(dataset.vol.subIDs);
+numSubUse = length(dataset.vol.subIDs);
 
 if ~exist('subset','var') % use all subjects
-    usesubjects=1:numsub;
+    usesubjects = 1:numSubUse;
 else
     for ds=1:length(dataset.subsets)
         if strcmp(subset,dataset.subsets(ds).name)
@@ -171,39 +170,51 @@ else
             break
         end
     end
-    numsub=length(usesubjects);
+    numSubUse = length(usesubjects);
 end
 
+fX=nan(((numseed^2)-numseed)/2,numSubUse);
 
 % init vars:
-
 addp='';
 
-ea_dispercent(0,'Iterating through subjects');
+isSurfAvail = isfield(dataset,'surf');
+includeSurf = prefs.lcm.includesurf;
 
-scnt=1;
-for mcfi=usesubjects % iterate across subjects
+disp('Iterating through subjects...');
+parfor subj = 1:numSubUse % iterate across subjects
+    mcfi = usesubjects(subj);
+    disp(['Subject ', num2str(mcfi, '%04d'),'/',num2str(numSubUse,'%04d'),'...']);
     howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
 
+    subIDVol = dataset.vol.subIDs{mcfi};
+    if isSurfAvail && includeSurf
+        subIDSurfL = dataset.surf.l.subIDs{mcfi};
+        subIDSurfR = dataset.surf.r.subIDs{mcfi};
+    end
 
-    clear stc
+    thiscorr = nan(numseed^2,howmanyruns);
+
     for run=1:howmanyruns
-        load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}],'gmtc')
-        gmtc=single(gmtc);
+        gmtcstruc = load([dfoldvol,subIDVol{run+1}]);
+        gmtc = double(gmtcstruc.gmtc);
 
-        if size(sfile(s,:),2)>1
-            % include surface:
-            ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
-            rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
-            ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
+        if isSurfAvail && includeSurf
+            ls_struc = load([dfoldsurf,subIDSurfL{run+1}]);
+            rs_struc = load([dfoldsurf,subIDSurfR{run+1}]);
+            ls_gmtc = double(ls_struc.gmtc);
+            rs_gmtc = double(rs_struc.gmtc);
         end
+
+        stc = nan(numseed,size(gmtc,2));
+
         for s=1:numseed
             if size(sfile(s,:),2)>1 % dealing with surface seed
-                stc(s,:)=mean([ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(ls.gmtc,2));...
-                    rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(rs.gmtc,2))],1); % seed time course
+                stc(s,:) = mean([ls_gmtc(sweightidx{s,1},:) .* repmat(sweightidxmx{s,1},1,size(ls_gmtc,2));...
+                                 rs_gmtc(sweightidx{s,2},:) .* repmat(sweightidxmx{s,2},1,size(rs_gmtc,2))] ,1); % seed time course
             else % volume seed
                 try
-                    stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
+                    stc(s,:) = mean(gmtc(sweightidx{s},:) .* repmat(sweightidxmx{s},1,size(gmtc,2)), 1); % seed time course
                 catch
                     keyboard
                 end
@@ -211,69 +222,63 @@ for mcfi=usesubjects % iterate across subjects
         end
 
         if exportgmtc
-            tmp.gmtc = stc;
-            save([outputfolder,addp,'gmtc_',dataset.vol.subIDs{mcfi}{1},'_run',num2str(run,'%02d'),'.mat'],'-struct','tmp','-v7.3');
+            mat = matfile([outputfolder,addp,'gmtc_',subIDVol{1},'_run',num2str(run,'%02d'),'.mat'], 'Writable', true);
+            mat.gmtc = stc;
         end
 
         switch cmd
             case 'matrix'
-                X=corrcoef(stc');
-
+                X = corrcoef(stc');
             case 'pmatrix'
-                X=partialcorr(stc');
+                X = partialcorr(stc');
         end
-        thiscorr(:,run)=X(:);
+        thiscorr(:,run) = X(:);
 
     end
-    thiscorr=mean(thiscorr,2);
-    X(:)=thiscorr;
-    fX(:,scnt)=X(logical(triu(ones(numseed),1)));
+
+    thiscorrAvg = mean(thiscorr,2);
+    X(:) = thiscorrAvg;
+    fX(:, subj) = X(logical(triu(ones(numseed),1)));
 
     if writeoutsinglefiles
-        save([outputfolder,addp,'corrMx_',dataset.vol.subIDs{mcfi}{1},'.mat'],'X','-v7.3');
+        mat = matfile([outputfolder,addp,'corrMx_',subIDVol{1},'.mat'], 'Writable', true);
+        mat.X = X;
     end
-
-    ea_dispercent(scnt/numsub);
-    scnt=scnt+1;
 end
-ea_dispercent(1,'end');
-switch dataset.type
-    case 'fMRI_matrix'
-                ea_error(['Command ',cmd,' in combination with an fMRI-matrix not (yet) supported.']);
-    case 'fMRI_timecourses'
-                % export mean
-                M=nanmean(fX');
-                X=zeros(numseed);
-                X(logical(triu(ones(numseed),1)))=M;
-                X=X+X';
-                X(logical(eye(length(X))))=1;
-                save([outputfolder,cmd,'_corrMx_AvgR.mat'],'X','-v7.3');
+disp('Done.');
 
-                % export variance
-                M=nanvar(fX');
-                X=zeros(numseed);
-                X(logical(triu(ones(numseed),1)))=M;
-                X=X+X';
-                X(logical(eye(length(X))))=1;
-                save([outputfolder,cmd,'_corrMx_VarR.mat'],'X','-v7.3');
+% export mean
+M=nanmean(fX');
+X=zeros(numseed);
+X(logical(triu(ones(numseed),1)))=M;
+X=X+X';
+X(logical(eye(length(X))))=1;
+save([outputfolder,cmd,'_corrMx_AvgR.mat'],'X','-v7.3');
 
-                % fisher-transform:
-                fX=atanh(fX);
-                M=nanmean(fX');
-                X=zeros(numseed);
-                X(logical(triu(ones(numseed),1)))=M;
-                X=X+X';
-                X(logical(eye(length(X))))=1;
-                save([outputfolder,cmd,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
+% export variance
+M=nanvar(fX');
+X=zeros(numseed);
+X(logical(triu(ones(numseed),1)))=M;
+X=X+X';
+X(logical(eye(length(X))))=1;
+save([outputfolder,cmd,'_corrMx_VarR.mat'],'X','-v7.3');
 
-                % export T
-                [~,~,~,tstat]=ttest(fX');
-                X=zeros(numseed);
-                X(logical(triu(ones(numseed),1)))=tstat.tstat;
-                X=X+X';
-                X(logical(eye(length(X))))=1;
-                save([outputfolder,cmd,'_corrMx_T.mat'],'X','-v7.3');
-end
+% fisher-transform:
+fX=atanh(fX);
+M=nanmean(fX');
+X=zeros(numseed);
+X(logical(triu(ones(numseed),1)))=M;
+X=X+X';
+X(logical(eye(length(X))))=1;
+save([outputfolder,cmd,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
+
+% export T
+[~,~,~,tstat]=ttest(fX');
+X=zeros(numseed);
+X(logical(triu(ones(numseed),1)))=tstat.tstat;
+X=X+X';
+X(logical(eye(length(X))))=1;
+save([outputfolder,cmd,'_corrMx_T.mat'],'X','-v7.3');
 
 toc
 
@@ -301,8 +306,8 @@ end
 function X=addone(X)
 X=[ones(size(X,1),1),X];
 
-function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
 
+function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
 rightmat=(idx-1)/chunk;
 rightmat=floor(rightmat);
 rightmat=rightmat*chunk;
@@ -312,4 +317,3 @@ end
 
 load([datadir,num2str(rightmat),'.mat']);
 loaded=rightmat;
-
