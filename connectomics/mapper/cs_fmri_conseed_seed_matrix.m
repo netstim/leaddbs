@@ -1,4 +1,4 @@
-function cs_fmri_conseed_seed_matrix(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,exportgmtc)
+function cs_fmri_conseed_seed_matrix(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
 
 tic
 
@@ -149,13 +149,12 @@ end
 
 disp([num2str(numseed),' seeds, command = ',cmd,'.']);
 
-
 pixdim=length(dataset.vol.outidx);
 
-numsub=length(dataset.vol.subIDs);
+numSubUse=length(dataset.vol.subIDs);
 
 if ~exist('subset','var') % use all subjects
-    usesubjects=1:numsub;
+    usesubjects=1:numSubUse;
 else
     for ds=1:length(dataset.subsets)
         if strcmp(subset,dataset.subsets(ds).name)
@@ -163,99 +162,43 @@ else
             break
         end
     end
-    numsub=length(usesubjects);
+    numSubUse=length(usesubjects);
 end
 
-
-% init vars:
-for s=1:numseed
-    fX{s}=nan(length(omaskidx),numsub);
-    rh.fX{s}=nan(10242,numsub);
-    lh.fX{s}=nan(10242,numsub);
+if ~exist('db','var')
+    db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
 end
-ea_dispercent(0,'Iterating through subjects');
 
-scnt=1;
-for mcfi=usesubjects % iterate across subjects
+disp('Iterating through subjects...');
+for subj = 1:numSubUse % iterate across subjects
+    mcfi = usesubjects(subj);
     howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
 
-            for s=1:numseed
+    for s=1:numseed
+        for run=1:howmanyruns
+            Rw=nan(length(sweightidx{s}),pixdim);
 
-                thiscorr=zeros(length(omaskidx),howmanyruns);
-
-                for run=1:howmanyruns
-
-                            Rw=nan(length(sweightidx{s}),pixdim);
-                            
-                            if ~exist('db','var')
-                                db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
-                            end
-                            
-                            cnt=1;
-                            for ix=sweightidx{s}'
-                                %    testnii.img(outidx)=mat(entry,:); % R
-                                Rw(cnt,:)=db.X(sweightidx{s}(cnt),:);
-                                cnt=cnt+1;
-                            end
-                            Rw=mean(Rw,1);
-                            Rw=Rw/(2^15);
-                        
-                    clear gmtc ls rs
-                end
-                fX{s}(:,scnt)=mean(thiscorr,2);
-                if isfield(dataset,'surf') && prefs.lcm.includesurf
-                    lh.fX{s}(:,scnt)=mean(ls.thiscorr,2);
-                    rh.fX{s}(:,scnt)=mean(rs.thiscorr,2);
-                end
-
-                if writeoutsinglefiles && (~strcmp(dataset.type,'fMRI_matrix'))
-                    ccmap=dataset.vol.space;
-                    ccmap.img=single(ccmap.img);
-                    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
-                    ccmap.img(omaskidx)=mean(thiscorr,2);
-                    ccmap.dt=[16,0];
-                    spm_write_vol(ccmap,ccmap.img);
-
-                    % surfs, too:
-
-                    ccmap=dataset.surf.l.space;
-                    ccmap.img=single(ccmap.img);
-                    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr_surf_lh.nii'];
-                    ccmap.img(:,:,:,2:end)=[];
-                    ccmap.img(:)=mean(ls.thiscorr,2);
-                    ccmap.dt=[16,0];
-                    spm_write_vol(ccmap,ccmap.img);
-
-                    ccmap=dataset.surf.r.space;
-                    ccmap.img=single(ccmap.img);
-                    ccmap.img(:,:,:,2:end)=[];
-                    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr_surf_rh.nii'];
-                    ccmap.img(:)=mean(rs.thiscorr,2);
-                    ccmap.dt=[16,0];
-                    spm_write_vol(ccmap,ccmap.img);
-
-                end
+            for ix=1:length(sweightidx{s})
+                Rw(ix,:)=db.X(sweightidx{s}(ix),:);
             end
+            Rw=mean(Rw,1);
+            Rw=Rw/(2^15);
+        end
 
-        
-    ea_dispercent(scnt/numsub);
-    scnt=scnt+1;
+        mmap=dataset.vol.space;
+        mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
+        mmap.dt=[16,0];
+        mmap.img(:)=0;
+        mmap.img=single(mmap.img);
+        mmap.img(omaskidx)=Rw;
+        ea_write_nii(mmap);
+        if usegzip
+            gzip(mmap.fname);
+            delete(mmap.fname);
+        end
+    end
 end
-ea_dispercent(1,'end');
-
-
-mmap=dataset.vol.space;
-mmap.dt=[16,0];
-mmap.img(:)=0;
-mmap.img=single(mmap.img);
-mmap.img(omaskidx)=Rw;
-mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
-ea_write_nii(mmap);
-if usegzip
-    gzip(mmap.fname);
-    delete(mmap.fname);
-end
-
+disp('Done.');
 
 toc
 
@@ -279,19 +222,3 @@ if strcmp(dataset.type,'fMRI_matrix')
 else
     howmanyruns=length(dataset.vol.subIDs{mcfi})-1;
 end
-
-function X=addone(X)
-X=[ones(size(X,1),1),X];
-
-function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
-
-rightmat=(idx-1)/chunk;
-rightmat=floor(rightmat);
-rightmat=rightmat*chunk;
-if rightmat==loaded;
-    return
-end
-
-load([datadir,num2str(rightmat),'.mat']);
-loaded=rightmat;
-

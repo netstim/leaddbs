@@ -261,7 +261,8 @@ for mcfi=usesubjects % iterate across subjects
                                     % include surface:
                                     ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
                                     rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
-                                    ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
+                                    ls.gmtc=single(ls.gmtc);
+                                    rs.gmtc=single(rs.gmtc);
                                 end
                             end
 
