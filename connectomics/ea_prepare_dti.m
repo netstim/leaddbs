@@ -40,43 +40,58 @@ end
 ft_upsampling_applied.usfactor=usfactor;
 ft_upsampling_applied.how=options.lc.struc.ft.upsample.how;
 
+% restore dti
 if exist([options.root,options.patientname,filesep,ea_stripext(options.prefs.dti)],'file')
     movefile([options.root,options.patientname,filesep,ea_stripext(options.prefs.dti)],...
         [options.root,options.patientname,filesep,options.prefs.dti]);
     redo=1; % apparently prior run crashed - redo to be safe.
 end
+% restore b0
 if exist([options.root,options.patientname,filesep,ea_stripext(options.prefs.b0)],'file')
     movefile([options.root,options.patientname,filesep,ea_stripext(options.prefs.b0)],...
         [options.root,options.patientname,filesep,options.prefs.b0]);
     redo=1; % apparently prior run crashed - redo to be safe.
 end
+% restore fa
+if exist([options.root,options.patientname,filesep,ea_stripext(options.prefs.fa)],'file')
+    movefile([options.root,options.patientname,filesep,ea_stripext(options.prefs.b0)],...
+        [options.root,options.patientname,filesep,options.prefs.fa]);
+    redo=1; % apparently prior run crashed - redo to be safe.
+end
 
 if usfactor>1 && options.lc.struc.ft.upsample.how==0 % in house method
-    % stash dti / b0 files:
-    
+    % stash dti, b0 and fa
     copyfile([options.root,options.patientname,filesep,options.prefs.dti],...
         [options.root,options.patientname,filesep,ea_stripext(options.prefs.dti)]);
     copyfile([options.root,options.patientname,filesep,options.prefs.b0],...
         [options.root,options.patientname,filesep,ea_stripext(options.prefs.b0)]);
-    % upsample:
-    V=ea_open_vol([options.root,options.patientname,filesep,options.prefs.dti]);
-    
-    ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.dti],...
-        [options.root,options.patientname,filesep,options.prefs.dti],V.voxsize./usfactor,0,0,1,[],[],3);
-    ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.b0],...
-        [options.root,options.patientname,filesep,options.prefs.b0],V.voxsize./usfactor,0,0,1,[],[],3);
+    copyfile([options.root,options.patientname,filesep,options.prefs.fa],...
+        [options.root,options.patientname,filesep,ea_stripext(options.prefs.fa)]);
 
+    % upsample:
+    hdr = ea_fslhd([options.root,options.patientname,filesep,options.prefs.dti]);
+    newSpacing = [hdr.pixdim1, hdr.pixdim2, hdr.pixdim3]./usfactor;
+
+    ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.dti],...
+        [options.root,options.patientname,filesep,options.prefs.dti],newSpacing,0,0,1,[],[],3);
     
+    ea_exportb0(options);
+    ea_isolate_fa(options);
+
     % unfortunately for now need to check for nan / inf again.. this is
     % pretty heavy on I/O
     nii=ea_load_untouch_nii([options.root,options.patientname,filesep,options.prefs.dti]);
     nii.img(~isfinite(nii.img))=0;
     ea_save_untouch_nii(nii,[options.root,options.patientname,filesep,options.prefs.dti]);
-    
+
     nii=ea_load_untouch_nii([options.root,options.patientname,filesep,options.prefs.b0]);
     nii.img(~isfinite(nii.img))=0;
     ea_save_untouch_nii(nii,[options.root,options.patientname,filesep,options.prefs.b0]);
     
+    nii=ea_load_untouch_nii([options.root,options.patientname,filesep,options.prefs.fa]);
+    nii.img(~isfinite(nii.img))=0;
+    ea_save_untouch_nii(nii,[options.root,options.patientname,filesep,options.prefs.fa]);
+
     %% add methods dump:
     cits={
         'Dyrby, T. B., Lundell, H., Burke, M. W., Reislev, N. L., Paulson, O. B., Ptito, M., & Siebner, H. R. (2013). Interpolation of diffusion weighted imaging datasets. NeuroImage, 103(C), 1?12. http://doi.org/10.1016/j.neuroimage.2014.09.005'
