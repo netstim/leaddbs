@@ -84,7 +84,7 @@ set(handles.statmetric,'Value',discfibers.statmetric);
 if get(handles.statmetric,'Value')>1
     set(handles.connthreshold,'enable','off');
 else
-        set(handles.connthreshold,'enable','on');
+    set(handles.connthreshold,'enable','on');
 end
 
 % UIWAIT makes ea_discfibers_setting wait for user response (see UIRESUME)
