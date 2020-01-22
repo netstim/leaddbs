@@ -1077,8 +1077,10 @@ for pt=selection
     end
 end
 %% processing done here.
-
 ea_refresh_lg(handles);
+
+set(handles.calculatebutton, 'BackgroundColor', [0.93,0.93,0.93]);
+set(handles.explorestats, 'Enable', 'on');
 
 
 % --- Executes on selection change in fiberspopup.
@@ -1090,11 +1092,25 @@ function fiberspopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns fiberspopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from fiberspopup
 M=getappdata(gcf,'M');
+
+if isfield(M.ui, 'connectomename') && ...
+   strcmp(eventdata.Source.String{eventdata.Source.Value}, M.ui.connectomename)
+    connChanged = 0;
+else
+    connChanged = 1;
+end
+
 M.ui.fiberspopup=get(handles.fiberspopup,'Value');
 M.ui.connectomename=get(handles.fiberspopup,'String');
 M.ui.connectomename=M.ui.connectomename{M.ui.fiberspopup};
 setappdata(gcf,'M',M);
+
 ea_refresh_lg(handles);
+
+if connChanged
+    set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
+    set(handles.explorestats, 'Enable', 'off');
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1119,9 +1135,22 @@ function labelpopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns labelpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from labelpopup
 M=getappdata(gcf,'M');
+
+if isfield(M.ui, 'labelpopup') && ...
+   eventdata.Source.Value == M.ui.labelpopup
+    labelChanged = 0;
+else
+    labelChanged = 1;
+end
+
 M.ui.labelpopup=get(handles.labelpopup,'Value');
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
+
+if labelChanged
+    set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
+    set(handles.explorestats, 'Enable', 'off');
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1146,9 +1175,22 @@ function atlassetpopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns atlassetpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from atlassetpopup
 M=getappdata(gcf,'M');
+
+if isfield(M.ui, 'atlassetpopup') && ...
+   eventdata.Source.Value == M.ui.atlassetpopup
+    atlasChanged = 0;
+else
+    atlasChanged = 1;
+end
+
 M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
+
+if atlasChanged
+    set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
+    set(handles.explorestats, 'Enable', 'off');
+end
 
 
 % --- Executes during object creation, after setting all properties.
