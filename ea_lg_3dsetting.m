@@ -131,7 +131,7 @@ set(handles.statmetric,'Value',discfibers.statmetric);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_lg_3dsetting_OutputFcn(hObject, eventdata, handles) 
+function varargout = ea_lg_3dsetting_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -227,7 +227,7 @@ if eventdata.Source.Value ~= M.ui.elmodelselect
         timestamp.Format = 'uuuMMddHHmmss';
         M.ui.lastupdated = str2double(char(timestamp));
         setappdata(leadfigure, 'M', M);
-        
+
         ea_busyaction('off', leadfigure, 'group');
     end
 end

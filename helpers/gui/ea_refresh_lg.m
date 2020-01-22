@@ -262,9 +262,11 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 % if no stats  present yet, return.
                 setappdata(handles.leadfigure,'M',M);
                 set(handles.leadfigure,'name','Lead Group Analysis');
+                set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
                 set(handles.explorestats, 'Enable', 'off');
                 break
             else
+                set(handles.calculatebutton, 'BackgroundColor', [0.93,0.93,0.93]);
                 set(handles.explorestats, 'Enable', 'on');
             end
 
@@ -283,7 +285,6 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             % check and compare with prior atlas intersection list.
 
             if ~isempty(priorvilist) && ~isequal(priorvilist,M.vilist)
-
                 warning('Patient stats are inhomogeneous. Please re-run group analysis (Section Prepare DBS stats).');
             end
 
