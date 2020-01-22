@@ -36,6 +36,8 @@ switch statmetric
         savesuffix='_spearmansrho';
 end
 
+options.native = 0;
+
 [reforce,connectomechanged]=ea_discfibers_checkpresence(M,opts); % only static opts need to be equal.
 if reforce
     allroilist=cell(length(M.patient.list),2);
