@@ -22,7 +22,7 @@ function varargout = ea_vatsettings_horn(varargin)
 
 % Edit the above text to modify the response to help ea_vatsettings_horn
 
-% Last Modified by GUIDE v2.5 18-Jan-2020 14:57:59
+% Last Modified by GUIDE v2.5 22-Jan-2020 08:56:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -71,6 +71,8 @@ options=ea_defaultoptions;
 options.prefs.atlases.default=prefs.machine.vatsettings.horn_atlasset;
 ea_listatlassets(options,handles,1);
 
+
+set(handles.removeElectrode,'Value',ea_getprefs('vatsettings.horn_removeElectrode'));
 
 ea_fillpresetpopups(handles);
 
@@ -380,3 +382,13 @@ function atlassetpopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in removeElectrode.
+function removeElectrode_Callback(hObject, eventdata, handles)
+% hObject    handle to removeElectrode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of removeElectrode
+ea_setprefs('vatsettings.horn_removeElectrode',get(handles.removeElectrode,'Value'));
