@@ -57,7 +57,7 @@
 %
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
-function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, interp, img_idx, preferredForm,usespmfsl)
+function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, interp, img_idx, preferredForm, tool)
 
 if ~exist('old_fn','var') || ~exist('new_fn','var')
     error('Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], [method], [img_idx])');
@@ -79,11 +79,11 @@ if ~exist('preferredForm','var') || isempty(preferredForm)
     preferredForm= 's';				% Jeff
 end
 
-if ~exist('usespmfsl','var')
-    usespmfsl=0;
+if ~exist('tool','var')
+    tool = 0;
 end
 
-if usespmfsl==1 % SPM
+if tool==1 % Use SPM
     V = spm_vol(old_fn);
     for i=1:numel(V)
         bb        = spm_get_bbox(V(i));
@@ -93,12 +93,11 @@ if usespmfsl==1 % SPM
         VV(1).dim = VV(1).dim(1:3);
         VV(1).fname=new_fn;
         spm_reslice(VV,struct('mean',false,'which',1,'interp',interp,'mask',true)); % 1 for linear
-        %ea_spm_reslice(VV,struct('mean',false,'which',2,'interp',interp,'mask',false)); % 1 for bspline 1st order
     end
-    
+
     [pth,fn,ext]=fileparts(old_fn);
     movefile(fullfile(pth,['r',fn,ext]),new_fn);
-elseif usespmfsl==2 % FSL
+elseif tool==2 % Use FSL
     basedir=[fullfile(ea_getearoot,'ext_libs','fsl'),filesep];
     if ispc
         FLIRT = ea_path_helper([basedir, 'flirt.exe']);
@@ -114,8 +113,8 @@ elseif usespmfsl==2 % FSL
         system(flirtcmd);
         system(convertxfmcmd);
     end
-    
-elseif usespmfsl==3 % ANTs    
+
+elseif tool==3 % Use ANTs
     ea_resample_image_by_spacing(old_fn,voxel_size,0,bg,~interp,new_fn); % ~interp because 0 = linear and 1 = nn in ANTs.
 else
     nii = load_nii_no_xform(old_fn, img_idx, 0, preferredForm);
