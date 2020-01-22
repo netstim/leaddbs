@@ -12,23 +12,24 @@ gs='gs_20170903150355'; % specify lead group identity (generic stimulation name)
 connectomes={'HCP_MGH_30fold_groupconnectome (Horn 2017)','GSP 1000 (Yeo 2011)_Full Set (Yeo 2011)','PPMI_90 (Ewert 2017)','PPMI 74_15 (Horn 2017)_Patients'}; % specify which connectomes were run / which ones to import
 types={'dMRI','fMRI','dMRI','fMRI'}; % specify types for each connectome (dMRI/fMRI)
 load modeldata
+options.native = 0;
 for c=1:length(connectomes)
     connectome=connectomes{c};
     type=types{c};
     for pt=pts
-            fis{pt}=[rootfolder,num2str(pt),filesep,'stimulations',filesep,ea_nt(options),gs,filesep,connectome,filesep,getfiname(type),'.nii'];
+        fis{pt}=[rootfolder,num2str(pt),filesep,'stimulations',filesep,ea_nt(options),gs,filesep,connectome,filesep,getfiname(type),'.nii'];
     end
     mkdir([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'combined_maps',filesep,type,filesep,connectome]);
     ea_Cmap(fis,improvements,...
         [ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'combined_maps',filesep,type,filesep,connectome,filesep,type,'_optimal.nii'],...
         modeldata.mask,getsk(type));
-    
+
     if strcmp(type,'dMRI')
         delete([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'combined_maps',filesep,type,filesep,connectome,filesep,'s',type,'_optimal.nii']);
     end
     modelmap=ea_load_nii([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'combined_maps',filesep,type,filesep,connectome,filesep,type,'_optimal.nii']);
     modelvals=modelmap.img(modeldata.mask);
-    
+
     for pt=pts
         if strcmp(type,'dMRI')
             ptmap=ea_load_nii(ea_dosk(fis{pt},modeldata.mask));
@@ -42,9 +43,9 @@ for c=1:length(connectomes)
         ptvals(infs)=[];
         sim(pt)=corr(modelvals,ptvals,'type',getcorrtype(type),'rows','pairwise');
     end
-    
+
     clear fis
-    
+
     % add values to modeldata:
     modeldata.connectomes.(rmbracketspace(connectome)).([type,'sims'])=sim;
     modeldata.updrs3percimprov=improvements;
