@@ -61,8 +61,8 @@ end
 if ~isempty(options) && ~isempty(fieldnames(options))
     directory = [options.root,options.patientname,filesep];
     warpsuffix = ea_getantstransformext(directory);
+    [~,anatpresent]=ea_assignpretra(options);
 end
-[~,anatpresent]=ea_assignpretra(options);
 if nargin == 1
     switch options.modality
         case 1 % MR
