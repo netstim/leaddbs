@@ -22,7 +22,7 @@ function varargout = ea_lg_stats(varargin)
 
 % Edit the above text to modify the response to help ea_lg_stats
 
-% Last Modified by GUIDE v2.5 15-Jan-2020 10:18:49
+% Last Modified by GUIDE v2.5 22-Jan-2020 11:56:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,6 +67,10 @@ set(handles.fclist,'Max',100,'Min',0);
 leadfigure = varargin{1};
 setappdata(handles.lg_stats, 'leadfigure', leadfigure);
 M = getappdata(leadfigure, 'M');
+
+if ~isempty(M.clinical.labels)
+    set(handles.clinicalvars, 'String', M.clinical.labels);
+end
 
 % refresh UI
 if ~isempty(M.vilist)
@@ -418,12 +422,11 @@ vicorr.nleft=nvicorr_left;
 vicorr.nright=nvicorr_right;
 
 % clinical vector:
-clinicallist = leadfigure.findobj('Tag','clinicallist');
-corrcl=M.clinical.vars{get(clinicallist,'Value')};
+corrcl=M.clinical.vars{get(handles.clinicalvars,'Value')};
 corrcl=corrcl(get(patientlist,'Value'),:);
 
-clinstrs=get(clinicallist,'String');
-vc_labels=[clinstrs(get(clinicallist,'Value')),vc_labels]; % add name of clinical vector to labels
+clinstrs = get(handles.clinicalvars,'String');
+vc_labels = [clinstrs(get(handles.clinicalvars,'Value')),vc_labels]; % add name of clinical vector to labels
 
 stats.corrcl=corrcl;
 stats.vicorr=vicorr;
@@ -476,13 +479,35 @@ fccorr.left=fccorr_left;
 fccorr.nleft=nfccorr_left;
 
 % clinical vector:
-clinicallist = leadfigure.findobj('Tag','clinicallist');
-corrcl=M.clinical.vars{get(clinicallist,'Value')};
+corrcl=M.clinical.vars{get(handles.clinicalvars,'Value')};
 corrcl=corrcl(get(patientlist,'Value'),:);
 
-clinstrs=get(clinicallist,'String');
-fc_labels=[clinstrs(get(clinicallist,'Value')),fc_labels]; % add name of clinical vector to labels
+clinstrs = get(handles.clinicalvars,'String');
+fc_labels=[clinstrs(get(handles.clinicalvars,'Value')),fc_labels]; % add name of clinical vector to labels
 
 stats.corrcl=corrcl;
 stats.fccorr=fccorr;
 stats.fc_labels=fc_labels;
+
+
+% --- Executes on selection change in clinicalvars.
+function clinicalvars_Callback(hObject, eventdata, handles)
+% hObject    handle to clinicalvars (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns clinicalvars contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from clinicalvars
+
+
+% --- Executes during object creation, after setting all properties.
+function clinicalvars_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to clinicalvars (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
