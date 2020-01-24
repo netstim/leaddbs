@@ -17,7 +17,7 @@ classdef ea_trajectory < handle
         color=[0.8,0.3,0.2] % color of Planning patch
         colorMacroContacts=[] % optional coloring of macroelectrode contacts
         options % lead-dbs options struct
-        planRelative=[2,1,1,1,1] % First entry: AC=1, MCP=2, PC=3; Second entry: Right=1, Left=2; Third entry: Anterior=1, Posterior=2; Fourth entry: Ventral=1; Dorsal=2; Last entry: ACPC=1, native=2, MNI/Template=3
+        planRelative=[2,1,1,1,1] % First entry: AC=1, MCP=2, PC=3; Second entry: Right=1, Left=2; Third entry: Anterior=1, Posterior=2; Fourth entry: Ventral=1; Dorsal=2; Last entry: ACPC=1, native=2, MNI/Template=3 
         hasPlanning % determines if object has information to show a fiducial
         hasMacro % determines if object has information to show a macroelectrode
         relateMicro='macro' % determines if microelectrodes shown should be related to planning Fiducial ('planning') or Macroelectrodes ('macro')
@@ -36,6 +36,10 @@ classdef ea_trajectory < handle
         toggledefault % which part to show by activating toggletool if none is shown
         pt=1 % used for patient index count in lead group.
         planningAppearance='line' % can be set to 'electrode' to show 3D electrode instead
+    end
+    
+    properties (Access = private)
+        switchedFromSpace=1 % if switching space, this will protocol where from
     end
 
     methods
@@ -200,7 +204,109 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         evtnm='all';
     end
     set(0,'CurrentFigure',obj.plotFigureH);
-    if ismember(evtnm,{'all','target','reco','planRelative','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model'}) % need to redraw planning fiducials:
+    ea_busyaction('on',obj.controlH,'trajectory');
+    if strcmp(evtnm,'planRelative')
+        fromspace=obj.switchedFromSpace;
+        tospace=obj.planRelative(5);
+        obj.switchedFromSpace=obj.planRelative(5);
+        % target
+        tcfg.xmm=obj.target.target(1);
+        tcfg.ymm=obj.target.target(2);
+        tcfg.zmm=obj.target.target(3);
+        tcfg.mapmethod=0;
+        tcfg.acmcpc=obj.planRelative(1);
+        % entry
+        ecfg.xmm=obj.target.entry(1);
+        ecfg.ymm=obj.target.entry(2);
+        ecfg.zmm=obj.target.entry(3);
+        ecfg.mapmethod=0;
+        ecfg.acmcpc=obj.planRelative(1);
+        if fromspace==1 % from ACPC
+            
+            if obj.planRelative(2)==2
+                tcfg.xmm=tcfg.xmm*-1;
+                ecfg.xmm=ecfg.xmm*-1;
+            end
+            if obj.planRelative(3)==2
+                tcfg.ymm=tcfg.ymm*-1;
+                ecfg.ymm=ecfg.ymm*-1;
+            end
+            if obj.planRelative(4)==1
+                tcfg.zmm=tcfg.zmm*-1;
+                ecfg.zmm=ecfg.zmm*-1;
+            end
+        end
+        
+        if fromspace==1 && tospace==3 % ACPC 2 MNI
+            twarped=ea_acpc2mni(tcfg,{[obj.options.root,obj.options.patientname,filesep]});
+            ewarped=ea_acpc2mni(ecfg,{[obj.options.root,obj.options.patientname,filesep]});
+            t.target=twarped.WarpedPointMNI;
+            t.entry=ewarped.WarpedPointMNI;
+        elseif fromspace==1 && tospace==2 % ACPC 2 Native
+            twarped=ea_acpc2mni(tcfg,{[obj.options.root,obj.options.patientname,filesep]});
+            ewarped=ea_acpc2mni(ecfg,{[obj.options.root,obj.options.patientname,filesep]});
+            t.target=twarped.WarpedPointNative;
+            t.entry=ewarped.WarpedPointNative;
+        elseif fromspace==3 && tospace==1 % MNI 2 ACPC
+            twarped=ea_mni2acpc(tcfg,{[obj.options.root,obj.options.patientname,filesep]});
+            ewarped=ea_mni2acpc(ecfg,{[obj.options.root,obj.options.patientname,filesep]});
+            
+            t.target=twarped.WarpedPointACPC;
+            t.entry=ewarped.WarpedPointACPC;
+
+        elseif fromspace==2 && tospace==1 % Native 2 ACPC
+            twarped=ea_native2acpc(tcfg,{[obj.options.root,obj.options.patientname,filesep]});
+            ewarped=ea_native2acpc(ecfg,{[obj.options.root,obj.options.patientname,filesep]});
+            t.target=twarped.WarpedPointACPC;
+            t.entry=ewarped.WarpedPointACPC;
+        elseif fromspace==2 && tospace==3 % Native 2 MNI
+            coords=[obj.target.target;obj.target.entry]';
+            [obj.options,anats]=ea_assignpretra(obj.options);
+            V=ea_open_vol([obj.options.root,obj.options.patientname,filesep,anats{1}]);
+            coords=V.mat\[coords;1,1]; % go to voxel space in nativespace
+            coords=ea_map_coords(coords, ...
+                [obj.options.root,obj.options.patientname,filesep,anats{1}], ...
+                [obj.options.root,obj.options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
+                '');
+            t.target=coords(:,1)';
+            t.entry=coords(:,2)';
+        elseif fromspace==3 && tospace==2 % MNI 2 Native
+            coords=[obj.target.target;obj.target.entry]';
+            [obj.options,anats]=ea_assignpretra(obj.options);
+            V=ea_open_vol([ea_space,obj.options.primarytemplate]);
+            coords=V.mat\[coords;1,1]; % go to voxel space in MNI template
+            src=[obj.options.root,obj.options.patientname,filesep,anats{1}]; % assign src image as primary anat image here.
+            coords=ea_map_coords(coords, [ea_space,obj.options.primarytemplate], [obj.options.root,obj.options.patientname,filesep,'y_ea_normparams.nii'],...
+                src);
+            
+            t.target=coords(:,1)';
+            t.entry=coords(:,2)';
+        else % no change
+            ea_busyaction('off',obj.controlH,'trajectory');
+            return
+        end
+        
+        if tospace==1 % to ACPC
+            if obj.planRelative(2)==2
+                t.target(1)=t.target(1)*-1;
+                t.entry(1)=t.entry(1)*-1;
+            end
+            if obj.planRelative(3)==2
+                t.target(2)=t.target(2)*-1;
+                t.entry(2)=t.entry(2)*-1;
+            end
+            if obj.planRelative(4)==1
+                t.target(3)=t.target(3)*-1;
+                t.entry(3)=t.entry(3)*-1;
+            end
+        end
+        
+        obj.target=t;
+        ea_synctrajectoryhandles(getappdata(obj.controlH,'chandles'),obj); % sync back control figure
+        return
+    end
+    
+    if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model'}) % need to redraw planning fiducials:
         % planning fiducial
         if obj.showPlanning
             coords=ea_convertfiducials(obj,[obj.target.target;obj.target.entry]);
@@ -259,7 +365,9 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     end
 
     if ismember(evtnm,{'showPlanning'}) && obj.hasPlanning
-        obj.patchPlanning.Visible=ea_bool2onoff(obj.showPlanning);
+        for po=1:length({obj.patchPlanning.Visible})
+        obj.patchPlanning(po).Visible=ea_bool2onoff(obj.showPlanning);
+        end
     end
 
     if ismember(evtnm,{'all','elmodel','colorMacroContacts'})
@@ -332,6 +440,8 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         elToogleIcon, elToggleTooltip, elToggleTag,...
         {@ea_trajvisible,'on',obj}, {@ea_trajvisible,'off',obj}, ...
         ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});
+                ea_busyaction('off',obj.controlH,'trajectory');
+
 end
 
 
