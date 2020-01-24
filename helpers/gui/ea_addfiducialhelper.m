@@ -83,13 +83,13 @@ for f=1:length(fid)
     for pt=1:length(uipatdir)        
         % define in template:
         ea_mkdir([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace]);
-        ea_spherical_roi([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace,filesep,uuid{f},'.nii'],fid(f).template,10,0,[ea_space,spacedef.templates{1},'.nii']);
+        ea_spherical_roi([uipatdir{pt},filesep,'fiducials',filesep,ea_getspace,filesep,uuid{f},'.nii'],fid(f).template,ea_species_adjustsize(10),0,[ea_space,spacedef.templates{1},'.nii']);
         tfis{pt}{f}=[uipatdir{pt},filesep,'fiducials',filesep,ea_getspace,filesep,uuid{f},'.nii'];
         %smoothgzip([ea_space,'fiducials'],[uuid{f},'.nii']);
         
         % define in pt:
         ea_mkdir([uipatdir{pt},filesep,'fiducials',filesep,'native']);
-        ea_spherical_roi([uipatdir{pt},filesep,'fiducials',filesep,'native',filesep,uuid{f},'.nii'],fid(f).patient(pt,:),10,0,ptspace{pt});
+        ea_spherical_roi([uipatdir{pt},filesep,'fiducials',filesep,'native',filesep,uuid{f},'.nii'],fid(f).patient(pt,:),ea_species_adjustsize(10),0,ptspace{pt});
         pfis{pt}{f}=[uipatdir{pt},filesep,'fiducials',filesep,'native',filesep,uuid{f},'.nii'];
         %smoothgzip([uipatdir{pt},filesep,'fiducials'],[uuid{f},'.nii']);
     end
@@ -137,8 +137,11 @@ end
 
 
 function smoothgzip(pathn,filen)
+
+kernel=ea_species_adjustsize(8);
+
 matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
-matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
+matlabbatch{1}.spm.spatial.smooth.fwhm = [kernel kernel kernel];
 matlabbatch{1}.spm.spatial.smooth.dtype = 512;
 matlabbatch{1}.spm.spatial.smooth.im = 0;
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
@@ -146,5 +149,6 @@ spm_jobman('run',{matlabbatch});
 movefile(fullfile(pathn,['s',filen]),fullfile(pathn,filen));
 gzip(fullfile(pathn,filen));
 delete(fullfile(pathn,filen));
+
 
 

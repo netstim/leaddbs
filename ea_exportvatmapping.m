@@ -55,11 +55,11 @@ allV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'bb_
 cnt=2;
 for pt=1:length(M.patient.list)
     if M.ui.detached % process locally in lead group directory
-        Vvatr=ea_load_nii([options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii']);
-        Vvatl=ea_load_nii([options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii']);
+        Vvatr=ea_load_nii([options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_right.nii']);
+        Vvatl=ea_load_nii([options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_left.nii']);
     else
-        Vvatr=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_right.nii']);
-        Vvatl=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,'gs_',M.guid,filesep,'vat_left.nii']);
+        Vvatr=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_right.nii']);
+        Vvatl=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_left.nii']);
     end
     Vvatr.img(Vvatr.img==0)=nan;     Vvatl.img(Vvatl.img==0)=nan;
 

@@ -23,3 +23,8 @@ Alternatively, especially in case you wish to modify and contribute to Lead-DBS,
 - Clone the Lead-DBS repository from here.
 - Download the [necessary datafiles](http://www.lead-dbs.org/release/download.php?id=data) using this link and unzip the downloaded folder into the cloned git repository.
 - We’d love to implement your improvements into Lead-DBS – please contact us for direct push access to Github or feel free to add pull-requests to the Lead-DBS repository.
+
+### Getting started
+
+You can run Lead-DBS by typing "lead demo" into the Matlab prompt. This will open up the main GUI and a 3D viewer with an example patient.
+But there's much more to explore. Head over to https://www.lead-dbs.org/ to see a walkthrough tutorial, a manual, some more screenshots and other ressources. There's also a helpline in form of a Slack channel. We would love to hear from you.

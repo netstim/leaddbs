@@ -1,4 +1,13 @@
-function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
+function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,exportgmtc)
+% This is the original fmri conseed script that supported all commands, datasets
+% and options. As of 01/2020 the file is not used by lead mapper anymore
+% but was replaced by multiple subcommands cs_fmri_conseed_seed_tc,
+% cs_fmri_conseed_matrix, cs_fmri_conseed_pseed, cs_fmri_conseed_pmap and
+% cs_fmri_conseed_matrix which make it easier to adapt changes for each
+% command type or dataset. The present file is still kept as a reference.
+% Since all of the aforementioned new commands have the exact same
+% interface, this original file should probably remain to work.
+% 2020 AH
 
 tic
 
@@ -31,7 +40,7 @@ if ismember('>',cname)
     subset=cname(delim+1:end);
     cname=cname(1:delim-1);
 end
-
+prefs=ea_prefs;
 dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
 dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
 
@@ -101,7 +110,7 @@ for s=1:size(sfile,1)
             oseedfname=seed{s,lr}.fname;
 
             try
-            seed{s,lr}=ea_conformseedtofmri(dataset,seed{s,lr});
+                seed{s,lr}=ea_conformseedtofmri(dataset,seed{s,lr});
             catch
                 keyboard
             end
@@ -119,7 +128,7 @@ for s=1:size(sfile,1)
 
         sweights(abs(sweights)<0.0001)=0;
         sweights=double(sweights);
-        
+
         try
             options=evalin('caller','options');
         end
@@ -138,7 +147,7 @@ for s=1:size(sfile,1)
 end
 
 numseed=s;
-try 
+try
     options=evalin('caller','options');
 end
 if exist('options','var')
@@ -227,7 +236,11 @@ for mcfi=usesubjects % iterate across subjects
                             Rw=nan(length(sweightidx{s}),pixdim);
 
                             if ~exist('db','var')
-                                db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
+                                try
+                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,dataset.vol.matfilename]);
+                                catch
+                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
+                                end
                             end
 
                             cnt=1;
@@ -239,18 +252,23 @@ for mcfi=usesubjects % iterate across subjects
                             Rw=mean(Rw,1);
                             Rw=Rw/(2^15);
                         case 'fMRI_timecourses'
-                            load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
-                            if isfield(dataset,'surf')
-                                % include surface:
-                                ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
-                                rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
+                            if ~exist('gmtc','var')
+                                load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}],'gmtc')
+                                gmtc=single(gmtc);
                             end
-                            gmtc=single(gmtc);
+                            if isfield(dataset,'surf') && prefs.lcm.includesurf
+                                if ~exist('ls','var')
+                                    % include surface:
+                                    ls=load([dfoldsurf,dataset.surf.l.subIDs{mcfi}{run+1}]);
+                                    rs=load([dfoldsurf,dataset.surf.r.subIDs{mcfi}{run+1}]);
+                                    ls.gmtc=single(ls.gmtc);
+                                    rs.gmtc=single(rs.gmtc);
+                                end
+                            end
 
                             switch cmd % build up seed tc for present subject
                                 case 'seed'
                                     if size(sfile(s,:),2)>1 % dealing with surface seed
-                                        ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
                                         stc=mean([ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(ls.gmtc,2));...
                                             rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(ls.gmtc,2))],1); % seed time course
                                     else % volume seed
@@ -258,12 +276,10 @@ for mcfi=usesubjects % iterate across subjects
                                         stc=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
 
                                     end
-
                                 case 'pseed'
                                     clear stc
                                     for subseed=1:numseed
                                         if size(sfile(subseed,:),2)>1 % dealing with surface seed
-                                            ls.gmtc=single(ls.gmtc); rs.gmtc=single(rs.gmtc);
                                             stc(:,subseed)=mean([ls.gmtc(sweightidx{subseed,1},:).*repmat(sweightidxmx{subseed,1},1,size(ls.gmtc,2));...
                                                 rs.gmtc(sweightidx{subseed,2},:).*repmat(sweightidxmx{subseed,2},1,size(rs.gmtc,2))],1); % seed time course
                                         else % volume seed
@@ -275,17 +291,16 @@ for mcfi=usesubjects % iterate across subjects
                                     stc=stc';
                             end
                             thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
-                            if isfield(dataset,'surf')
+                            if isfield(dataset,'surf') && prefs.lcm.includesurf
                                 % include surface:
-                                rs.gmtc=single(rs.gmtc);
-                                ls.gmtc=single(ls.gmtc);
                                 ls.thiscorr(:,run)=corr(stc',ls.gmtc','type','Pearson');
                                 rs.thiscorr(:,run)=corr(stc',rs.gmtc','type','Pearson');
                             end
                     end
+                    clear gmtc ls rs
                 end
                 fX{s}(:,scnt)=mean(thiscorr,2);
-                if isfield(dataset,'surf')
+                if isfield(dataset,'surf') && prefs.lcm.includesurf
                     lh.fX{s}(:,scnt)=mean(ls.thiscorr,2);
                     rh.fX{s}(:,scnt)=mean(rs.thiscorr,2);
                 end
@@ -385,11 +400,16 @@ for mcfi=usesubjects % iterate across subjects
                             rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(rs.gmtc,2))],1); % seed time course
                     else % volume seed
                         try
-                        stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
+                            stc(s,:)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)),1); % seed time course
                         catch
                             keyboard
                         end
                     end
+                end
+
+                if exportgmtc
+                    tmp.gmtc = stc;
+                    save([outputfolder,addp,'gmtc_',dataset.vol.subIDs{mcfi}{1},'_run',num2str(run,'%02d'),'.mat'],'-struct','tmp','-v7.3');
                 end
 
                 switch cmd
@@ -476,7 +496,7 @@ switch dataset.type
                         delete(mmap.fname);
                     end
 
-                    if ~ispmap && isfield(dataset,'surf')
+                    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
                         % lh surf
                         lM=ea_nanmean(lh.fX{s}');
                         lmmap=dataset.surf.l.space;
@@ -508,7 +528,7 @@ switch dataset.type
 
                     % fisher-transform:
                     fX{s}=atanh(fX{s});
-                    if ~ispmap && isfield(dataset,'surf')
+                    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
                         lh.fX{s}=atanh(lh.fX{s});
                         rh.fX{s}=atanh(rh.fX{s});
                     end
@@ -526,7 +546,7 @@ switch dataset.type
                         gzip(mmap.fname);
                         delete(mmap.fname);
                     end
-                    if ~ispmap && isfield(dataset,'surf')
+                    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
                         % lh surf
                         lM=nanmean(lh.fX{s}');
                         lmmap=dataset.surf.l.space;
@@ -573,7 +593,7 @@ switch dataset.type
                         delete(tmap.fname);
                     end
 
-                    if ~ispmap && isfield(dataset,'surf')
+                    if ~ispmap && isfield(dataset,'surf') && prefs.lcm.includesurf
                         % lh surf
                         [~,~,~,ltstat]=ttest(lh.fX{s}');
                         lmmap=dataset.surf.l.space;

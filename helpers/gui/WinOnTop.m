@@ -31,7 +31,7 @@ function wasOnTop = WinOnTop( figureHandle, isOnTop )
 % 2013.06.16 - Initial version
 % 2013.06.27 - removed custom "ishandle_scalar" function call
 % 2015.04.17 - adapted for changes in matlab graphics system (since R2014b)
-% 2016.05.21 - another ishg2() checking mechanism 
+% 2016.05.21 - another ishg2() checking mechanism
 % 2016.09.24 - fixed IsOnTop vs isOnTop bug
 
 %% Parse Inputs
@@ -58,7 +58,7 @@ assert(...
             'WinOnTop:FigWrongWindowStyle',...
             '%s','WindowStyle Must be Normal'...
        );
-   
+
 if ~exist('isOnTop','var'); isOnTop=true; end
 
 assert(...
@@ -69,22 +69,18 @@ assert(...
           'WinOnTop:Bad_isOnTop_input',...
           '%s','Provided isOnTop input is neither boolean, nor empty'...
       );
-  
-  
+
+
 %% Pre-checks
 
 error(javachk('swing',mfilename)) % Swing components must be available.
-  
-  
+
+
 %% Action
 
 % Flush the Event Queue of Graphic Objects and Update the Figure Window.
 drawnow expose
-
-warnStruct=warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
-jFrame = get(handle(figureHandle),'JavaFrame');
-warning(warnStruct.state,'MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
-
+jFrame = ea_getJavaFrame(handle(figureHandle));
 drawnow
 
 

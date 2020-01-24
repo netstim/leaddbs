@@ -12,7 +12,8 @@ setappdata(resultfig,'isobar',isobar);
 end
 hold on
 
-jetlist=ea_redblue;
+% default blue to red colormap
+jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
 % jetlist=jet;
 
 if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
@@ -26,7 +27,7 @@ for side=1:length(options.sides)
     cnt=1;
     for sub=1:length(elstruct)
         for cont=1:size(options.d3.isomatrix{1},2)
-            if ~isnan(options.d3.isomatrix{side}(sub,cont));
+            if ~isnan(options.d3.isomatrix{side}(sub,cont))
                 if ~shifthalfup
                     X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
                     Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
@@ -86,13 +87,13 @@ for side=1:length(options.sides)
         C(C<thresh)=nan;
         C=C-ea_nanmin(C(:));
         C=C./ea_nanmax(C(:));
-        C=C.*63;
+        C=C.*(length(gray)-1);
         C(isnan(C))=0;
         C=C+1;
         %C=smooth3(C,'gaussian',[11 11 11]);
         C=C-ea_nanmin(C(:));
         C=C./ea_nanmax(C(:));
-        C=C.*63;
+        C=C.*(length(gray)-1);
         C=C+1;
 
         nc=isocolors(XI,YI,ZI,C,fv{side}.vertices);
@@ -100,7 +101,7 @@ for side=1:length(options.sides)
         isopatch(side,1)=patch(fv{side},'FaceVertexCData',nc,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
 
         ea_spec_atlas(isopatch(side,1),'isovolume',jet,1);
-        
+
         % export isovolume manually here:
         res=length(Vol);
         chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);

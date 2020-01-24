@@ -287,6 +287,7 @@ try
     options.lcm.omask=getappdata(handles.omaskbutton,'omask');
     options.lcm.struc.do=get(handles.dostructural,'Value');
     options.lcm.func.do=get(handles.dofunctional,'Value');
+    options.lcm.func.exportgmtc=get(handles.exportgmtc,'Value');
     options.lcm.cmd=get(handles.command,'Value');
     options.lcm.struc.connectome=get(handles.fiberspopup,'String');
     if iscell(options.lcm.struc.connectome)

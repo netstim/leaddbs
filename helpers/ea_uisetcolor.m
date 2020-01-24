@@ -9,12 +9,12 @@ function color = ea_uisetcolor(varargin)
 % fashion for MATLAB R2016b and later versions on Linux. It can be used
 % until MATLAB fixes the bug in future release.
 %
-% Seems fixed on R2018b (9.5)
+% Seems fixed on R2018b (9.5). Reocurring in R2019b (9.7)...
 
 ver = version;
 ver = str2double(ver(1:3));
 
-if ismac || ispc || ver < 9.1 %|| ver >= 9.5
+if ismac || ispc || ver < 9.1 %|| ver == 9.5
     color = uisetcolor(varargin{:});
 else
     if ver == 9.1   % R2016b

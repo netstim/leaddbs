@@ -137,20 +137,20 @@ uselabelname = 1;
 %     end
 %     for node=1:length(struct_names)
 %         thisstruct=struct_names{node};
-%         
+%
 %         color = annot(s).colortable.table(node,1:3);
 %         color = sprintf('rgb(%d,%d,%d)', color(1),color(2),color(3));
-%         
+%
 %         structlabel = ['<HTML><BODY>' ...
 %             '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
 %             '<FONT color="black">&nbsp;&nbsp;',thisstruct,'</FONT>' ...
 %             '</BODY></HTML>'];
 %         h.sgsub{s}{node}=DefaultCheckBoxNode(structlabel,true);
 %         h.sg{s}.add(h.sgsub{s}{node});
-%        
+%
 %          cortchecks{node}=...
 %             [cortchecks{node},h.sgsub{s}{node}];
-% 
+%
 %     end
 % end
 h.sg{1} = DefaultCheckBoxNode('Hemisphere',true);
@@ -167,10 +167,10 @@ end
 for s=1:2
     for node=1:length(struct_names)
         thisstruct=struct_names{node};
-        
+
         color = annot(s).colortable.table(node,1:3);
         color = sprintf('rgb(%d,%d,%d)', color(1),color(2),color(3));
-        
+
         structlabel = ['<HTML><BODY>' ...
             '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
             '<FONT color="black">&nbsp;&nbsp;',thisstruct,'</FONT>' ...
@@ -180,19 +180,19 @@ for s=1:2
 
     end
 end
-    
+
     ea_cleanpriortree(handles);
-    
+
     % Create a standard MJTree:
     jTree = com.mathworks.mwswing.MJTree(h.sg{1});
-    
+
     % Now present the CheckBoxTree:
     jCheckBoxTree = CheckBoxTree(jTree.getModel);
-    
+
     jScrollPane = com.mathworks.mwswing.MJScrollPane(jCheckBoxTree);
     treeinit=getappdata(handles.cortexselect,'treeinit');
     setappdata(handles.cortexselect,'treeinit',0);
-    
+
     atlN=length(struct_names);
     height=(atlN+1.5)*18;
     norm=360; % max height if full size figure shown.
@@ -202,12 +202,12 @@ end
     if height<100
         height=100;
     end
-    
-    [jComp,hc] = javacomponent(jScrollPane,[10,5,285,height],handles.cortexselect);
+
+    [jComp,hc] = ea_javacomponent(jScrollPane,[10,5,285,height],handles.cortexselect);
     setappdata(handles.cortexselect,'uitree',jComp);
-    
+
     ea_busyaction('del',handles.cortexselect,'atlcontrol');
-    
+
     h.uselabelname = uselabelname;
     h.cortex = cortex;
     h.annot = annot;
@@ -219,7 +219,7 @@ end
     setappdata(handles.cortexselect,'h',h);
     setappdata(handles.cortexselect,'jtree',jCheckBoxTree);
     %sels=ea_storeupdatecortex(jCheckBoxTree,h);
-    
+
     if treeinit
         if handles.alphaslider.Value>length(handles.alphaslider.String)
             handles.alphaslider.Value=1;
@@ -229,19 +229,19 @@ end
         end
         %handles.cortexselect.Position(2)=handles.cortexselect.Position(2)-(450);
         handles.cortexselect.Position(4)=(534-(360-height));
-        
+
         handles.cortstructxt.Position(2)=handles.cortexselect.Position(4)-25;
-        
+
         handles.atlaspopup.Position(2)=handles.cortexselect.Position(4)-75;
         handles.atlasstatic.Position(2)=handles.atlaspopup.Position(2)+28;
-        
+
         handles.togglepopup.Position(2)=handles.cortexselect.Position(4)-120;
         handles.togglestatic.Position(2)=handles.togglepopup.Position(2)+28;
-        
+
         handles.alphaslider.Position(2)=handles.cortexselect.Position(4)-165;
         handles.alphastatic.Position(2)=handles.alphaslider.Position(2)+28;
         handles.alphaedit.Position(2)=handles.alphastatic.Position(2);
-        
+
         set(0,'CurrentFigure',handles.cortexselect);
         axis off
         movegui(handles.cortexselect,'southeast');
@@ -269,29 +269,29 @@ ea_updatecortex(h.options,h.resultfig,1:2,structures,labelidx);
 selstate.structures=structures;
 selstate.labelidx=labelidx;
 setappdata(h.resultfig,'cortsurfs',selstate)
-    
+
 
 function updatematrix = ea_updatematrix(jtree,h)
 
 sels=ea_storeupdatecortex(jtree,h);
 for branch=1:length(sels.branches) % Hemisphere
     for leaf=1:length(sels.leaves{branch}) % Label
-        
+
         % Turn Visibility On
         if strcmp(sels.branches{branch},'mixed') && strcmp(sels.leaves{branch}{leaf},'selected')
             updatematrix{branch}(leaf) = 1;
-            
+
         elseif strcmp(sels.branches{branch},'selected') && strcmp(sels.leaves{branch}{leaf},'selected')
             updatematrix{branch}(leaf) = 1;
-            
+
         % Turn Visibility Off
         elseif strcmp(sels.branches{branch},'mixed') && strcmp(sels.leaves{branch}{leaf},'not selected')
             updatematrix{branch}(leaf) = 0;
-            
+
         elseif strcmp(sels.branches{branch},'not selected')
             updatematrix{branch}(leaf) = 0;
         end
-        
+
     end
 end
 
@@ -390,7 +390,7 @@ options=getappdata(handles.cortexselect,'options');
 %         try
 %             prescell{end+1}=prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}.label;
 %             presetactions{end+1}=prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps};
-% 
+%
 %             %        uimenu(pcmenu, 'Label',prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).togglepopup{ps}.label,'Callback',{@ea_makeselection,handles,prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).togglepopup{ps}});
 %         catch
 %             keyboard

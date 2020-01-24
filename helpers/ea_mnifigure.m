@@ -1,6 +1,4 @@
 function resultfig=ea_mnifigure(atlasname)
-
-
 options=getoptslocal;
 if exist('atlasname','var')
     options.atlasset=atlasname;
@@ -12,10 +10,9 @@ options.leadprod='dbs';
 options.d3.elrendering=1;
 options.d3.exportBB=0;
 resultfig=ea_elvis(options);
-colormap gray
+colormap(gray)
 hold on
-            ea_zoomcenter(resultfig.CurrentAxes, [0,0,0], 3);
-
+ea_zoomcenter(resultfig.CurrentAxes, [0,0,0], 3);
 
 
 function options=getoptslocal
@@ -278,6 +275,7 @@ options.prefs.machine.d2.con_color = [0 0 0];
 options.prefs.machine.d2.lab_overlay = 0;
 options.prefs.machine.d2.bbsize = 10;
 options.prefs.machine.d2.backdrop = 'Patient Pre-OP';
+options.prefs.machine.d2.fid_overlay = 1;
 options.prefs.machine.space = 'MNI_ICBM_2009b_NLIN_ASYM';
 options.prefs.machine.lc.general.parcellation = 'AICHA reordered (Joliot 2015)';
 options.prefs.machine.lc.general.parcellationn = 2;

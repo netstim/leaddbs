@@ -17,7 +17,7 @@ slice=zeros(size(tra_nii.img,2),size(tra_nii.img,1));
 masknii=tra_nii;
 
 if options.verbose>1
-    colormap gray;
+    colormap(gray);
 end
 endcount=0;
 nanflag=0;
@@ -47,7 +47,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             if side==flipside
                 mask=flip(mask,2);
             end
-            
+
             slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
             %slice=fliplr(slice);
             slice(slice==0)=nan;
@@ -57,7 +57,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             set(0, 'CurrentFigure', mn);    % set current figure explicitly
             set(mn, 'CurrentAxes', ax);    % set current axes explicitly
             imagesc(slice);
-            colormap gray;
+            colormap(gray);
             hold on
             cof = imshow(colormask);
             set(cof, 'AlphaData', mask*0.3);
@@ -67,7 +67,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             % reset mask from mouse input
             mask=zeros(size(slice,1),size(slice,2));
             mask(round(Y-10:Y+10),round(X-10:X+10))=1;
-        case 'Auto' 
+        case 'Auto'
             % TP: Similar to manual, but try to detect entry-point using artefact
             crop_n = 100;
             slice=double(tra_nii.img(:,:,startslice))'; % extract the correct slice.
@@ -75,7 +75,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             crop = slice(crop_n:h-crop_n, crop_n:w-crop_n);
             midpt = floor(size(crop,2)/2);
             idx = 1:midpt;
-            if side==flipside                
+            if side==flipside
                 idx = midpt:size(crop,2);
             end
             b = crop(:,idx);
@@ -93,7 +93,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             [~, id] = min(abs(yid-size(crop,1)));
             Y = yid(id) + crop_n;
             X = X + idx(1)-1 + crop_n;
-            
+
             % further refine
             crop_n = 20;
             crop = slice(Y-crop_n:Y+crop_n, X-crop_n:X+crop_n);
@@ -101,7 +101,7 @@ if ~refine % if this is not a refine-run but an initial run, mask of first slice
             [Y2, X2] = ind2sub(size(crop), idx);
             X = round(X + X2 - size(crop,2)/2);
             Y = round(Y + Y2 - size(crop,1)/2);
-            
+
             mask=zeros(h,w);
             mask(round(Y-10:Y+10),round(X-10:X+10))=1;
         otherwise
@@ -206,7 +206,7 @@ for sliceno=2:startslice % sliceno is the counter (how many slices have been pro
         ea_setfocus(progressfig);
         subplot(3,3,1);
         imagesc(slice);
-        colormap gray;
+        colormap(gray);
         axis off square;
     end
 

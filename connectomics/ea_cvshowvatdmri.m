@@ -2,7 +2,8 @@ function ea_cvshowvatdmri(resultfig,directory,handles,selectedparc,options)
 
 % get everything we need to know from handles:
 if isstruct(handles) % called from GUI
-    vatmodality=get(handles.vatmodality,'String'); vatmodality=vatmodality{get(handles.vatmodality,'Value')};
+    vatmodality=get(handles.vatmodality,'String');
+    vatmodality=vatmodality{get(handles.vatmodality,'Value')};
     vs=get(handles.vatseed,'String'); % dont need this below
     vss=get(handles.vatseed,'Value'); % dont need this below
     vsname=vs{vss};

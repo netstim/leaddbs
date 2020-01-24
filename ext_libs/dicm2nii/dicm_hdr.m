@@ -606,10 +606,12 @@ end
 function ch = read_ProtocolDataBlock(ch)
 n = typecast(ch(1:4), 'int32') + 4; % nBytes, zeros may be padded to make 4x
 if ~all(ch(5:6) == [31 139]') || n>numel(ch), return; end % gz signature
-ch = nii_tool('LocalFunc', 'gunzip_mem', ch(5:n))';
-ch = regexp(char(ch), '(\w*)\s+"(.*?)"\n', 'tokens');
-ch = [ch{:}];
-ch = struct(ch{:});
+try % give up in case of error
+    c = nii_tool('LocalFunc', 'gunzip_mem', ch(5:n))';
+    c = regexp(char(c), '(\w*)\s+"(.*?)"\n', 'tokens');
+    c = [c{:}];
+    ch = struct(c{:});
+end
 end
 
 %% subfunction: get fields for multiframe dicom

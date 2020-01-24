@@ -13,21 +13,21 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
 %  has not been implemented. Only working for Medtronic 3387 and 3389
 %  electrodes.
 %
-%  Bits and pieces of code have been copyied from other areas of Lead-DBS. 
-%  There might be a better way to implement what I'm trying to do and 
+%  Bits and pieces of code have been copyied from other areas of Lead-DBS.
+%  There might be a better way to implement what I'm trying to do and
 %  several things are yet to be implemented.
     disp('Refining fiducials by shifting them to local maxima.');
-    
+
     is_debug = 0;
     saveimg = 0;
     can_export = 0;
     sample_width = 10;
-    doxx = 1; % TODO: Try it in the other planes as well??  
-    
-    options.prefs = ea_prefs('');    
+    doxx = 1; % TODO: Try it in the other planes as well??
+
+    options.prefs = ea_prefs('');
     if isfield(options.prefs.reco, 'saveimg')
         saveimg = options.prefs.reco.saveimg;
-    end   
+    end
     if isfield(options.prefs.reco, 'exportfiducials')
         can_export = ischar(options.prefs.reco.exportfiducials);
     end
@@ -39,8 +39,8 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
     end
     options.native = 1; % not sure if correct to do this
     [coords_mm,trajectory,markers,elmodel,~]=ea_load_reconstruction(options);
-    
-    
+
+
     switch options.modality
         case 1 % MR
             disp('ea_refinecoords not implemented yet for MRI. Skipping...');
@@ -48,7 +48,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
         case 2 % CT
             V = spm_vol([options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
     end
-    
+
 
     for side = options.sides(1):options.sides(end)
         options.elside = side;
@@ -73,13 +73,13 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
         % threshold slice to remove background
         b = imat;
         b(b<(max(imat(:))*0.2)) = 0; % 0.2 arbitrarily chosen based on trial and error
-        
+
         % find voxel dimensions in mm
         deltax = (xx(1,2)-xx(1,1))/size(b,2);
         deltay = (yy(2,1)-yy(1,1))/size(b,1);
         deltaz = (zz(2,1)-zz(1,1))/size(b,1);
         delta = (sqrt((yy(2,1)-yy(1,1))^2 + (zz(2,1)-zz(1,1))^2))/size(b,1); % voxel dimension along trajectory
-        
+
         % define inter-electrode distance
         switch options.elmodel % TODO: Set for other electrode models
             case 'Medtronic 3387'
@@ -90,13 +90,13 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
                 disp(['Inter-electrode distance not set for ', options.elmodel, '. Skipping...']);
                 return;
         end
-        
+
         % filter and find first peak (head fiducial marker)
         filtered_max = sgolayfilt(max(b, [], 2), 1, 21);
         if (deltaz < 0) % sometimes the slice is upside down
             filtered_max = flipud(filtered_max);
         end
-        
+
         [~, idy] = findpeaks(filtered_max, 'NPeaks', 1);
         if isempty(idy)
             warning(['Could not find head of electrode. Check trajectory. Skipping side ', num2str(side)]);
@@ -106,31 +106,31 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             idy = size(b,1) - idy;
         end
         pidy = [idy; idy-elgap*3]; % set the tail based on electrode height (FIX: for electrodes with more than 4 contacts)
-        
+
         % define lateral location of fiducial
         [~, idxx] = max(imat, [], 2); % better results obtained when using orignial slice (without threshold)
         idxx = round(mean(idxx));
         pidx = [idxx; idxx];
         % [~, pidx] = max(imat(pidy,:), [], 2); % didn't work very well
-        
+
         % find centre of artefact and add offset accordingly
         [cx, cy] = find_centre(b, pidx, pidy, ceil(abs(1.5/deltax)), is_debug); % 1.5mm electrode height for Medtronic
         cx(isnan(cx)) = 0;
         cy(isnan(cy)) = 0;
         pidx(1) = pidx(1) + cx(1); % only moving head laterally, difficult to locate centre of tail consistently
         pidy = pidy + cy;
-        
+
         % check for errors
         if any(isnan(pidx)) || any(isnan(pidy))
             warning(['Could not find one or more fiducial. Check trajectory. Skipping side ', num2str(side)]);
             continue;
         end
-        
+
         % convert to mm
         [t_head, t_tail] = convert2mm(pidx, pidy, deltax, deltay, deltaz, xx, yy, zz, b);
-        
+
         % refine fiducials using axial slices
-        [ahx, ahy, head_slice, hx, hy] = refine_axial(V, t_head, is_debug); 
+        [ahx, ahy, head_slice, hx, hy] = refine_axial(V, t_head, is_debug);
         [atx, aty, tail_slice, tx, ty] = refine_axial(V, t_tail, is_debug);
         pidx(1) = pidx(1) + ahx;
         pidx(2) = pidx(2) + atx;
@@ -139,8 +139,8 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
 
         % convert to mm
         [head, tail] = convert2mm(pidx, pidy, deltax, deltay, deltaz, xx, yy, zz, b);
-        
-        % apply same offset as head to x and y        
+
+        % apply same offset as head to x and y
         markers(side).x = markers(side).x + head - markers(side).head;
         markers(side).y = markers(side).y + head - markers(side).head;
 
@@ -165,7 +165,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             hf = figure(20+side);
             set(gcf,'Color',[0.1,0.1,0.1]);
             clf(hf);
-            
+
             p(1) = subplot(2,2,[1,3]);
             plot3(head(1), t_head(2)-0.01, head(3),'.','MarkerEdgeColor','r','MarkerSize',20);
             hold on;
@@ -175,14 +175,14 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
                 plot3(rmarkers(side).tail(1),rmarkers(side).tail(2)-0.01,rmarkers(side).tail(3),'^','MarkerEdgeColor','g','MarkerSize',20);
             end
             surface('XData',xx,'YData',yy,'ZData',zz,'CData',imat,'FaceColor','texturemap','EdgeColor','none');
-            colormap gray;
+            colormap(gray);
             hold off;
             axis tight;
             axis off;
             title('Lead-DBS Automated Reconstruction', 'Color', 'w');
             view(0,0);
             text(min(xx(:)), min(yy(:)), min(zz(:))*1.05, [options.patientname, '; Side: ', num2str(side)], 'Color', 'w', 'FontSize', 12);
-            
+
             p(2) = subplot(2,2,2);
             imagesc(tail_slice);
             hold on;
@@ -190,8 +190,8 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             hold off;
             axis tight;
             axis off;
-            colormap gray;
-            
+            colormap(gray);
+
             p(3) = subplot(2,2,4);
             imagesc(head_slice);
             hold on;
@@ -199,21 +199,21 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
             hold off;
             axis tight;
             axis off;
-            colormap gray;
-            
+            colormap(gray);
+
             set(hf,'PaperUnits','inches','PaperPosition',[0 0 4 4], 'InvertHardCopy', 'off');
             print(hf, [options.root, options.patientname, filesep, 'Electrode_', num2str(side), '.jpg'], '-djpeg75', '-r300');
             if ~is_debug
                 close(hf);
             end
         end
-    end % for loop side iteration    
-    
+    end % for loop side iteration
+
     ea_save_reconstruction(coords_mm, trajectory, rmarkers, elmodel, 0, options);
     if can_export
         ea_exportfiducials(options,['ElectrodeFiducials' ,'.', options.prefs.reco.exportfiducials]);
     end
-    
+
 end
 
 function [head, tail] = convert2mm(pidx, pidy, deltax, deltay, deltaz, xx, yy, zz, b)
@@ -228,25 +228,25 @@ function [head, tail] = convert2mm(pidx, pidy, deltax, deltay, deltaz, xx, yy, z
 end
 
 function [ax, ay, crop_slice, cx, cy] = refine_axial(vol, fiducial, is_debug)
-        
+
     scales = spm_imatrix(vol.mat);
     xscale = scales(7)/2; % divide by 2 due to interpolation factor in ea_sample_slice()
     yscale = scales(8)/2;
-    
+
     width = ceil(6/xscale); % mm width
     f_vox = vol.mat\[fiducial, 1]';
     f_vox = f_vox(1:3,:)';
     [slice,~,~,~]=ea_sample_slice(vol,'tra',width,'vox',f_vox,1);
     b = slice;
     b(b<(max(slice(:))*0.2)) = 0;
-    
-    
+
+
     [ys, xs] = find(b);
     mx = median(xs);
     my = median(ys);
     ax = (mx - 2*width);% * xscale;
     ay = (my - 2*width);% * yscale;
-    
+
     [h, w] = size(slice);
     cropx = ceil(4/xscale);
     cropy = ceil(4/yscale);
@@ -269,7 +269,7 @@ function [ax, ay, crop_slice, cx, cy] = refine_axial(vol, fiducial, is_debug)
     crop_slice = slice(D:U, L:R);
     cx = mx - L + 1;
     cy = my - D + 1;
-    
+
     if is_debug
         f = figure(40);
         clf(f);
@@ -321,7 +321,7 @@ function [cx, cy] = find_centre(slice, pidx, pidy, elheight, is_debug) % elheigh
             clf;
             hold on;
             imagesc(crop);
-            colormap gray;
+            colormap(gray);
             plot(xs, ys, '.','MarkerEdgeColor','r','MarkerSize',5);
             plot(mx, my, '.','MarkerEdgeColor','g','MarkerSize',30);
             hold off;

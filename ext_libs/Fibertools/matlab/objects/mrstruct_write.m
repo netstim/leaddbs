@@ -43,7 +43,7 @@ end;
 
 %%%%% save
 if fileStr~=0,
-	save(fileStr,'mrStruct');
+	save(fileStr,'mrStruct', '-v7.3');
 	extensionIndex = findstr(fileStr,'.mat');
 	if isempty(extensionIndex),
        fileStr = sprintf('%s.mat',fileStr);

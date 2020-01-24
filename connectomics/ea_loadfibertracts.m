@@ -1,4 +1,4 @@
-function [fibers,idx,voxmm,mat]=ea_loadfibertracts(cfile,type)
+function [fibers,idx,voxmm,mat,vals]=ea_loadfibertracts(cfile,type)
 if ~exist('type','var')
     type = nan;
 end
@@ -18,6 +18,11 @@ if ~isfield(fibinfo,'ea_fibformat')
 end
 fibers = fibinfo.fibers;
 idx = fibinfo.idx;
+if isfield(fibinfo,'vals')
+    vals=fibinfo.vals;
+else
+    vals=ones(size(idx));
+end
 if nargout>2
     try
         voxmm = fibinfo.voxmm;

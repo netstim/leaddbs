@@ -66,9 +66,9 @@ for p=1:length(parcellation)
             ea_apply_normalization_tofile(options,from,to,directory,0,0);
        end
 
-       movefile(to{1},[ea_space([],'labeling'),parcellation{p},' [imported from ',fromspace,']','.nii']);
+       movefile(to{1},[ea_space([],'labeling'),parcellation{p},' - imported from ',fromspace,'.nii']);
        try
-           movefile([wlabeling,parcellation{p},'.txt'],[ea_space([],'labeling'),parcellation{p},' [imported from ',fromspace,']','.txt']);
+           movefile([wlabeling,parcellation{p},'.txt'],[ea_space([],'labeling'),parcellation{p},' - imported from ',fromspace,'.txt']);
        catch
            warning([wlabeling,parcellation{p},'.txt', ' not present. Labeling folder in source space seems inconsistent. Moving on.']);
        end
@@ -110,7 +110,7 @@ end
 
 
 for atlasset=1:length(asc)
-    if exist([ea_space([],'atlases'),asc{atlasset},' [imported from ',fromspace,']'],'dir')
+    if exist([ea_space([],'atlases'),asc{atlasset},' - imported from ',fromspace],'dir')
         disp([ea_space([],'atlases'),asc{atlasset},' already exists! Skipping...'])
         continue
     else
@@ -122,49 +122,68 @@ for atlasset=1:length(asc)
         continue
     end
 
+    % for .mat case
+    src = fullfile(ea_space,fromspace,'anat_t1.nii');
+    invt = fullfile(ea_space,fromspace,'y_ea_inv_normparams.nii');
+    srcV = ea_open_vol(src);
+
     atlroot=[ea_space,fromspace,filesep,asc{atlasset},filesep];
-
     load([atlroot,'atlas_index.mat'])
+
     for atlas=1:length(atlases.names)
-        [~,~,ext]=fileparts(atlases.names{atlas});
-        if strcmp(ext,'.gz')
-            wasgzip=1;
-        else
-            wasgzip=0;
-        end
 
-        switch atlases.types(atlas)
-            case 1 % right hemispheric atlas.
-                nii{1}=[atlroot,'rh',filesep,atlases.names{atlas}];
-            case 2 % left hemispheric atlas.
-                nii{1}=[atlroot,'lh',filesep,atlases.names{atlas}];
-            case 3 % both-sides atlas composed of 2 files.
-                nii{1}=[atlroot,'lh',filesep,atlases.names{atlas}];
-                nii{2}=[atlroot,'rh',filesep,atlases.names{atlas}];
-            case 4 % mixed atlas (one file with both sides information).
-                nii{1}=[atlroot,'mixed',filesep,atlases.names{atlas}];
+        [~,~,ext] = fileparts(atlases.names{atlas});
 
-            case 5 % midline atlas (one file with both sides information.
-                nii{1}=[atlroot,'midline',filesep,atlases.names{atlas}];
-        end
+        switch ext
+            case {'.nii', '.gz'}
+                wasgzip = strcmp(ext,'.gz');
 
-        for n=1:length(nii)
-            if wasgzip
-                if ~strcmp(nii{n}(end-2:end),'.gz')
-                    gunzip([nii{n},'.gz']);
-                else
-                    gunzip([nii{n}]);
+                switch atlases.types(atlas)
+                    case 1 % right hemispheric atlas.
+                        nii{1}=[atlroot,'rh',filesep,atlases.names{atlas}];
+                    case 2 % left hemispheric atlas.
+                        nii{1}=[atlroot,'lh',filesep,atlases.names{atlas}];
+                    case 3 % both-sides atlas composed of 2 files.
+                        nii{1}=[atlroot,'lh',filesep,atlases.names{atlas}];
+                        nii{2}=[atlroot,'rh',filesep,atlases.names{atlas}];
+                    case 4 % mixed atlas (one file with both sides information).
+                        nii{1}=[atlroot,'mixed',filesep,atlases.names{atlas}];
+
+                    case 5 % midline atlas (one file with both sides information.
+                        nii{1}=[atlroot,'midline',filesep,atlases.names{atlas}];
                 end
-                nii{n}=strrep(nii{n},'.gz','');
-            end
-            from{1}=nii{n}; to{1}=nii{n};
-            directory=[ea_space,fromspace,filesep];
-            options.prefs=ea_prefs('');
-            ea_apply_normalization_tofile(options,from,to,directory,0,1);
-            if wasgzip
-                gzip(nii{n});
-                delete(nii{n});
-            end
+
+                for n=1:length(nii)
+                    if wasgzip
+                        if ~strcmp(nii{n}(end-2:end),'.gz')
+                            gunzip([nii{n},'.gz']);
+                        else
+                            gunzip([nii{n}]);
+                        end
+                        nii{n}=strrep(nii{n},'.gz','');
+                    end
+                    from{1}=nii{n}; to{1}=nii{n};
+                    directory=[ea_space,fromspace,filesep];
+                    options.prefs=ea_prefs('');
+                    ea_apply_normalization_tofile(options,from,to,directory,0,1);
+                    if wasgzip
+                        gzip(nii{n});
+                        delete(nii{n});
+                    end
+                end
+
+            case '.mat'
+                atlas_full_dir = dir(fullfile(atlroot,'*',atlases.names{atlas}));
+                for n = 1:length(atlas_full_dir)
+                    atl_name = fullfile(atlas_full_dir(n).folder,atlas_full_dir(n).name);
+                    atl_load = load(atl_name);
+                    fibs_mm = [atl_load.fibers(:,1:3)'; ones(1,size(atl_load.fibers,1))];
+                    fibs_vox = srcV.mat \ fibs_mm;
+                    XYZ_dest_mm = ea_map_coords(fibs_vox, src, invt);
+                    atl_load.fibers(:,1:3) = XYZ_dest_mm';
+                    save(atl_name, '-struct', 'atl_load');
+                end
+
         end
 
     end
@@ -174,8 +193,8 @@ for atlasset=1:length(asc)
 if ~exist(ea_space([],'atlases'),'dir')
     mkdir(ea_space([],'atlases'));
 end
-    movefile(atlroot,[ea_space([],'atlases'),asc{atlasset},' [imported from ',fromspace,']']);
-    options.atlasset=[asc{atlasset},' [imported from ',fromspace,']'];
+    movefile(atlroot,[ea_space([],'atlases'),asc{atlasset},' - imported from ',fromspace]);
+    options.atlasset=[asc{atlasset},' - imported from ',fromspace];
     ea_genatlastable([],ea_space([],'atlases'),options);
 
 

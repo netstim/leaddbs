@@ -42,8 +42,11 @@ prefs.gcornii='glpostop_cor.nii';
 prefs.gsagnii='glpostop_sag.nii';
 prefs.gctnii='glpostop_ct.nii';
 
-
 prefs.tp_gctnii=['tp_',prefs.gctnii];
+
+%% BIDS settings
+prefs.bids_session_postop = 'ses-postDBS';
+prefs.bids_session_preop = 'ses-preDBS';
 
 %% Misc:
 prefs.tonemap='heuristic'; % set to 'albada' to change to datadriven mode
@@ -67,6 +70,7 @@ prefs.lc.datadir=[ea_getearoot,'connectomes',filesep];
 %% connectome mapper settings:
 prefs.lcm.vatseed='binary'; % set to 'efield_gauss' to use weighted seed of normalized E-field (or 'efield' to use weighted seed of unmodified e-field - not recommended).
 prefs.lcm.chunk=10; % define how many fMRI seeds to handle in the same run. Can be 0 to handle all supplied. Depending on RAM available, 5-20 is a good option.
+prefs.lcm.includesurf=1; % if surface definitions are available for connectomes, include those, too
 
 %% DTI-files:
 prefs.b0='b0.nii';
@@ -202,3 +206,6 @@ prefs.ls.dir=''; % set path to lead server here (for web export)
 prefs.ixi.dir=''; % set path to ixi database here
 prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in folder.
 
+
+%% genetics
+prefs.genetics.dbdir=[ea_space,'genetics',filesep];

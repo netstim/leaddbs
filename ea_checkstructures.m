@@ -137,17 +137,25 @@ modality=modality{get(handles.anat_select,'Value')};
 setappdata(handles.checkstructures,'modality',modality);
 options.prefs=ea_prefs(options.patientname);
 setappdata(handles.checkstructures,'options',options);
-
-switch(options.prefs.machine.checkreg.default)
-    case 'DISTAL Minimal (Ewert 2017)@STN'
-        ea_preset_stn(handles)
-    case 'DISTAL Minimal (Ewert 2017)@GPi'
-        ea_preset_gpi(handles)
-    otherwise
-        parts=ea_strsplit(options.prefs.machine.checkreg.default,'@');
-        h.Parent.Label=parts{1};
-        h.Label=parts{2};
-        ea_setnewatlas(h,[],options,handles);
+try
+    switch(options.prefs.machine.checkreg.default)
+        case 'DISTAL Minimal (Ewert 2017)@STN'
+            ea_preset_stn(handles)
+        case 'DISTAL Minimal (Ewert 2017)@GPi'
+            ea_preset_gpi(handles)
+        otherwise
+            parts=ea_strsplit(options.prefs.machine.checkreg.default,'@');
+            h.Parent.Label=parts{1};
+            h.Label=parts{2};
+            ea_setnewatlas(h,[],options,handles);
+    end
+catch % default (e.g. when changing to a different space
+    sd=load([ea_space,'ea_space_def.mat']);
+    defaultnucleus=sd.spacedef.defaultnucleus;
+    parts=ea_strsplit(defaultnucleus,'@');
+    h.Parent.Label=parts{1};
+    h.Label=parts{2};
+    ea_setnewatlas(h,[],options,handles);
 end
 
 % UIWAIT makes ea_checkstructures wait for user response (see UIRESUME)
@@ -759,11 +767,11 @@ if ~isempty(uuid)
             % define in template:
             tps_uuid{pointpair}=ea_generate_uuid;
 
-            ea_spherical_roi([directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'],tp_cexpmm(pointpair,:),2,0,[ea_space,spacedef.templates{1},'.nii']);
+            ea_spherical_roi([directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'],tp_cexpmm(pointpair,:),ea_species_adjustsize(2),0,[ea_space,spacedef.templates{1},'.nii']);
             tfis{pointpair}=[directory,'fiducials',filesep,ea_getspace,filesep,tps_uuid{pointpair},'.nii'];
 
             % define in pt:
-            ea_spherical_roi([directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'],tp_expmm(pointpair,:),2,0,[directory,options.prefs.prenii_unnormalized]);
+            ea_spherical_roi([directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'],tp_expmm(pointpair,:),ea_species_adjustsize(2),0,[directory,options.prefs.prenii_unnormalized]);
             pfis{pointpair}=[directory,'fiducials',filesep,'native',filesep,tps_uuid{pointpair},'.nii'];
         end
 
@@ -834,8 +842,9 @@ end
 
 
 function smoothgzip(pathn,filen)
+kernel=ea_species_adjustsize(2);
 matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pathn,filen)};
-matlabbatch{1}.spm.spatial.smooth.fwhm = [2 2 2];
+matlabbatch{1}.spm.spatial.smooth.fwhm = [kernel kernel kernel];
 matlabbatch{1}.spm.spatial.smooth.dtype = 512;
 matlabbatch{1}.spm.spatial.smooth.im = 0;
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';

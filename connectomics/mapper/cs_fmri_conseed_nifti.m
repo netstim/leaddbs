@@ -1,4 +1,4 @@
-leadfunction seed_tc=cs_fmri_conseed_nifti(restfile,seedfile,options)
+function seed_tc=cs_fmri_conseed_nifti(restfile,seedfile,options)
 
 directory=[fileparts(restfile),filesep];
 options=ea_getptopts(directory,options);

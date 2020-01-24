@@ -72,7 +72,6 @@ end
 
 options.prefs=ea_prefs('');
 
-
 ea_init_coregmrpopup(handles,1);
 ea_init_coregctpopup(handles,options);
 
@@ -122,6 +121,14 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+% Disable buttons for standalone app
+if isdeployed
+    %set(handles.exportcode,'Enable','off');
+    set(handles.updatebutn,'Enable','off');
+    %h = findall(hObject, 'Type', 'uimenu');
+    %set(findobj(h,'Label','Submit'),'Enable','off');
+end
 
 % UIWAIT makes lead_dbs wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
@@ -183,6 +190,9 @@ options = ea_handles2options(handles);
 options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
 
 options.leadprod = 'dbs';
+
+setappdata(handles.leadfigure,'handles',handles);
+options.leadfigure=handles.leadfigure;
 
 ea_run('run',options);
 
@@ -506,8 +516,6 @@ function normalize_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of normalize_checkbox
-
-
 ea_storeui(handles);
 
 

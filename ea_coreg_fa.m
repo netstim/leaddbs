@@ -1,4 +1,14 @@
 function ea_coreg_fa(options,usebrainmask)
+% Coregister FA image to anatomical anchor image.
+% Will export FA image from DTI if it doesn't exist yet.
+%
+% USAGE:
+%
+%    ea_coreg_fa(options,usebrainmask)
+%
+% INPUTS:
+%    options:           LeadDBS options
+%    usebrainmask:      bool, masking the coregistered image or not
 
 directory=[options.root,options.patientname,filesep];
 % check for presence of FA map

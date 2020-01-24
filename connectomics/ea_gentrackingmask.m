@@ -68,6 +68,10 @@ end
 if docoreg
     copyfile([directory,options.prefs.prenii_unnormalized],[directory,'c',options.prefs.prenii_unnormalized]);
     copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
+    spm_smooth([directory,'cc2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],[8 8 8]);
+    tt=ea_load_nii([directory,'cc2',options.prefs.prenii_unnormalized]);
+    tt.img=tt.img>0.1;
+    ea_write_nii(tt);
     ea_conformspaceto([directory,'c',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],1,[],[],0);
     ea_backuprestore([directory,'c',options.prefs.prenii_unnormalized]);
 
@@ -91,7 +95,10 @@ if docoreg
     delete([directory,'c',options.prefs.prenii_unnormalized]);
 else
     % Reuse approved coregistration
-    ea_apply_coregistration([directory,options.prefs.b0], [directory,'c2',options.prefs.prenii_unnormalized], ...
+    copyfile([directory,'c2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized]);
+    spm_smooth([directory,'cc2',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],[6 6 6]);
+
+    ea_apply_coregistration([directory,options.prefs.b0], [directory,'cc2',options.prefs.prenii_unnormalized], ...
                             [directory,'trackingmask.nii'], transform);
 end
 

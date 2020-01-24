@@ -142,7 +142,31 @@ if ~iscell(target)
         R0 = quat2R(hdr);
         frm = q;
     else
-        error('No matching transformation between source and template.');
+        switch q
+            case 1
+                targetqspace = 'Scanner space';
+            case 2
+                targetqspace = 'Coordinates aligned to another file''s, or to anatomical "truth". ';
+            case 3
+                targetqspace = 'Coordinates aligned to Talairach-Tournoux Atlas';
+            case 4
+                targetqspace = 'MNI 152 normalized coordinates.';
+            otherwise
+                targetqspace = 'Undefined coordinate system';
+        end
+        switch sq(2)
+            case 1
+                sourceqspace = 'Scanner space';
+            case 2
+                sourceqspace = 'Coordinates aligned to another file''s, or to anatomical "truth". ';
+            case 3
+                sourceqspace = 'Coordinates aligned to Talairach-Tournoux Atlas';
+            case 4
+                sourceqspace = 'MNI 152 normalized coordinates.';
+            otherwise
+                sourceqspace = 'Undefined coordinate system';
+        end
+        error(sprintf('%s\ntarget file: %s\nsource file: %s','No matching transformation between source and template:',targetqspace,sourceqspace));
     end
 
     if sq(1) == frm || (sq(1)>2 && frm>2) || sq(2)<1
@@ -156,9 +180,9 @@ d = single(hdr.dim(2:4));
 I = ones([d 4], 'single');
 [I(:,:,:,1), I(:,:,:,2), I(:,:,:,3)] = ndgrid(0:d(1)-1, 0:d(2)-1, 0:d(3)-1);
 I = permute(I, [4 1 2 3]);
-I = reshape(I, [4 prod(d)]);  % template ijk
+I = reshape(I, [4 prod(d,'double')]);  % template ijk
 if exist('warp_img_fsl', 'var')
-    warp_img_fsl = reshape(warp_img_fsl, [prod(d) 3])';
+    warp_img_fsl = reshape(warp_img_fsl, [prod(d,'double') 3])';
     if det(R0(1:3,1:3))<0, warp_img_fsl(1,:) = -warp_img_fsl(1,:); end % correct?
     warp_img_fsl(4,:) = 0;
     I = R \ (R0 * I + warp_img_fsl) + 1; % ijk+1 (fraction) in source
@@ -168,10 +192,6 @@ end
 I = reshape(I(1:3,:)', [d 3]);
 
 V = nii.img; isbin = islogical(V);
-if any(size(V)<2) && ~strcmpi(intrp, 'nearest')
-    intrp = 'nearest';
-    warning('nii_xform:NotEnoughPoints', 'Not enough data. Switch to "nearest".');
-end
 d48 = size(V); % in case of RGB
 d48(numel(d48)+1:4) = 1; d48(1:3) = [];
 if isbin
@@ -184,9 +204,13 @@ else
 end
 if ~isfloat(V), V = single(V); end
 if strcmpi(intrp, 'nearest'), I = round(I); end % needed for edge voxels
-if size(V,1)<2, V(2,:,:) = missVal; end
-if size(V,2)<2, V(:,2,:) = missVal; end
-if size(V,3)<2, V(:,:,2) = missVal; end
+if size(V,1)<2
+    V = repmat(V,[3 1 1 1]); % replicate to help interp
+    I(:,:,:,1) = I(:,:,:,1)+1; % use middle slice
+    I(:,:,:,1) = I(:,:,:,1) + double(I(:,:,:,1)<1.5 | I(:,:,:,1)>2.5)*1e3; % needed for edge voxels
+end
+if size(V,2)<2, V = repmat(V,[1 3 1 1]); I(:,:,:,2) = I(:,:,:,2)+1; I(:,:,:,2) = I(:,:,:,2) + double(I(:,:,:,2)<1.5 | I(:,:,:,2)>2.5)*1e3; end
+if size(V,3)<2, V = repmat(V,[1 1 3 1]); I(:,:,:,3) = I(:,:,:,3)+1; I(:,:,:,3) = I(:,:,:,3) + double(I(:,:,:,3)<1.5 | I(:,:,:,3)>2.5)*1e3; end
 
 try
     F = griddedInterpolant(V(:,:,:,1), intrp, 'none'); % since 2014?

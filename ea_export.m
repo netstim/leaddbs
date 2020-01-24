@@ -5,7 +5,7 @@ function ea_export(options, clusterfunctionname)
 % Copyright (C) 2016 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-[fn, pth] = uiputfile('*.m', 'Specify location for new job file...','lead_job.m');
+[fn, pth] = uiputfile({'*.m';'*.json'}, 'Specify location for new job file...','lead_job');
 if ~fn % user pressed cancel
     return
 end
@@ -16,6 +16,14 @@ try
 end
 
 fID = fopen([pth, fn], 'w');
+
+% export json file if specified
+[~, ~, ext] = fileparts(fn);
+if strcmp(ext, '.json')
+    fwrite(fID, jsonencode(options), 'char'); 
+    fclose(fID);
+    return
+end
 
 % export comments
 fprintf(fID, '%s\n', ['function ', fn(1:end-2)]);
@@ -74,4 +82,6 @@ for e = 1:length(optionsCode)
     fprintf(fID, '%s\n', optionsCode{e});
 end
 
-edit(fullfile(pth, fn));
+if ~isdeployed
+    edit(fullfile(pth, fn));
+end

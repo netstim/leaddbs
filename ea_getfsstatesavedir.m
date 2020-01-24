@@ -13,4 +13,5 @@ end
 
 [~,parcname,~] = fileparts(targetsfile);
 
-savedir = [fullfile(directory,'stimulations',vsname,'connvisfibers',fibersname,parcname,sides,thresh,mode),'/'];
+options.native = 0;
+savedir = [fullfile(directory,'stimulations',ea_nt(options),vsname,'connvisfibers',fibersname,parcname,sides,thresh,mode),filesep];

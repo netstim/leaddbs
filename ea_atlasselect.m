@@ -71,9 +71,9 @@ if ~isfield(options,'native')
     options.native=0;
 end
 
-set(handles.atlasselect,'Visible',options.d3.verbose); % set invisible if called from lead group
+movegui(hObject,'northeast'); drawnow;
 
-movegui(hObject,'northeast');
+set(handles.atlasselect,'Visible',options.d3.verbose); % set invisible if called from lead group
 
 ea_listatlassets(options,handles,options.native);
 
@@ -259,7 +259,7 @@ if height<100
     height=100;
 end
 
-[jComp,hc] = javacomponent(jScrollPane,[10,5,285,height],handles.atlasselect);
+[jComp,hc] = ea_javacomponent(jScrollPane,[10,5,285,height],handles.atlasselect);
 setappdata(handles.atlasselect,'uitree',jComp);
 
 ea_busyaction('del',handles.atlasselect,'atlcontrol');

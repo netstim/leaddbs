@@ -882,6 +882,8 @@ if bids
         'anat','PD';
         'anat','PDmap';
         'dwi' ,'dwi';
+        'func','bold';
+        'func','task-rest_bold';
         'fmap','phasediff';
         'fmap','phase1';
         'fmap','phase2';
@@ -897,8 +899,8 @@ if bids
     for i = 1:nRun
         match = cellfun(@(Mod) strcmp(Mod,T{i,1}),table2cell(ModalityTablePref(:,1)));
         if any(match)
-            T.Type(i) = ModalityTablePref.Type(match);
-            T.Modality(i) = ModalityTablePref.Modality(match);
+            T.Type(i) = ModalityTablePref.Type(find(match,1,'first'));
+            T.Modality(i) = ModalityTablePref.Modality(find(match,1,'first'));
         end
     end
 
@@ -918,7 +920,7 @@ if bids
     else
         hf = uifigure(figargs{:});
     end
-    uimenu(hf,'Text','help','Callback',@(src,evnt) showHelp(valueset))
+    uimenu(hf,'Label','help','Callback',@(src,evnt) showHelp(valueset))
     set(hf,'Name', 'dicm2nii - BIDS Converter', 'NumberTitle', 'off')
 
     % tables
@@ -1151,11 +1153,11 @@ function subj = PatientName(s)
 subj = tryGetField(s, 'PatientName');
 if isempty(subj), subj = tryGetField(s, 'PatientID', 'Anonymous'); end
 
-%% Subfunction: return PatientName
+%% Subfunction: return AcquisitionDate
 function acq = AcquisitionDateField(s)
 acq = tryGetField(s, 'AcquisitionDate');
-if isempty(acq), acq = tryGetField(s, 'SeriesDate', []); end
-if isempty(acq), acq = tryGetField(s, 'StudyDate', []); end
+if isempty(acq), acq = tryGetField(s, 'SeriesDate', ''); end
+if isempty(acq), acq = tryGetField(s, 'StudyDate' , ''); end
 
 %% Subfunction: return SeriesDescription
 function name = ProtocolName(s)
@@ -1644,12 +1646,10 @@ if numel(t)<2, return; end
 t = t - min(t); % it may be relative to 1st slice
 
 t1 = sort(t);
-dur = sum(diff(t1)) / (nSL-1);
-dif = sum(diff(t))  / (nSL-1);
-if dur==0 || (t1(end)>TA), sc = 0; % no useful info, or bad timing MB
+if t1(1)==t1(2) || (t1(end)>TA), sc = 0; % no useful info, or bad timing MB
 elseif t1(1) == t1(2), sc = 0; t1 = unique(t1); % was 7 for MB but error in FS
-elseif abs(dif-dur)<1e-3, sc = 1; % ascending
-elseif abs(dif+dur)<1e-3, sc = 2; % descending
+elseif isequal(t, t1), sc = 1; % ascending
+elseif isequal(t, flip(t1)), sc = 2; % descending
 elseif t(1)<t(3) % ascending interleaved
     if t(1)<t(2), sc = 3; % odd slices first
     else, sc = 5; % Siemens even number of slices
@@ -1839,6 +1839,7 @@ function val = csa_header(s, key)
 val = [];
 fld = 'CSAImageHeaderInfo';
 if isfield(s, fld) && isfield(s.(fld), key), val = s.(fld).(key); return; end
+if isfield(s, key), val = s.(key); return; end % general tag: 2nd choice
 fld = 'CSASeriesHeaderInfo';
 if isfield(s, fld) && isfield(s.(fld), key), val = s.(fld).(key); return; end
 
@@ -2178,7 +2179,7 @@ uicontrol('Style', 'Pushbutton', 'Position', [6 235 112 24], ...
     'TooltipString', str, 'Callback', cb('srcDir'));
 
 jSrc = javaObjectEDT('javax.swing.JTextField');
-hs.src = javacomponent(jSrc, [118 234 294 24], fh);
+hs.src = ea_javacomponent(jSrc, [118 234 294 24], fh);
 hs.src.FocusLostCallback = cb('set_src');
 hs.src.Text = getpf('src', pwd);
 % hs.src.ActionPerformedCallback = cb('set_src'); % fire when pressing ENTER
@@ -2191,7 +2192,7 @@ uicontrol('Style', 'Pushbutton', 'Position', [6 199 112 24], ...
     'FontSize', fSz, 'String', 'Result folder', 'Background', clrButton, ...
     'TooltipString', 'Browse result folder', 'Callback', cb('dstDialog'));
 jDst = javaObjectEDT('javax.swing.JTextField');
-hs.dst = javacomponent(jDst, [118 198 294 24], fh);
+hs.dst = ea_javacomponent(jDst, [118 198 294 24], fh);
 hs.dst.FocusLostCallback = cb('set_dst');
 hs.dst.Text = getpf('dst', pwd);
 hs.dst.ToolTipText = ['<html>This is the result folder name. You can<br>' ...
@@ -3063,7 +3064,7 @@ if exist('flip', 'builtin')
     y = builtin('flip', varargin{:});
 else
     if nargin<2, varargin{2} = find(size(varargin{1})>1, 1); end
-    y = flipdim(varargin); %#ok
+    y = flipdim(varargin{:}); %#ok
 end
 
 %% return all file names in a folder, including in sub-folders

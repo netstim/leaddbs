@@ -69,7 +69,7 @@ if ~isdeployed
         end
     end
 else
-    fprintf(1, '%s\n', ctfroot);
+    %fprintf(1, '%s\n', ctfroot);
 end
 
 ea_compat_data;
@@ -83,10 +83,15 @@ ea_checkspm;
 ea_checkleaddirs;
 
 % check for commands first
-if nargin>3
+if nargin == 4
     switch lower(varargin{1})
         case {'dbs', '-d', 'd'}
             lead_dbs;
+            delete(handles.leadfigure)
+            return
+        case {'demo'}
+            lead_dbs;
+            lead_demo;
             delete(handles.leadfigure)
             return
         case {'group', '-g', 'g'}
@@ -105,6 +110,11 @@ if nargin>3
             lead_mapper;
             delete(handles.leadfigure)
             return
+        case {'napper'}
+            try % easter egg
+                load('ea_napper.mat');
+                sound(A,fs);
+            end
         case {'or', '-o', 'o'}
             lead_or;
             delete(handles.leadfigure)
@@ -130,7 +140,19 @@ if nargin>3
             delete(handles.leadfigure)
             return
     end
-
+elseif nargin == 5 && strcmp(varargin{1}, 'execute') % execute options specified in .json file
+    set(hObject,'Visible','off'); drawnow;
+    fid = fopen(varargin{2},'r');
+    options = jsondecode(fread(fid,'*char')'); fclose(fid);
+    ea_run('run',options);
+    set(hObject,'Visible','on'); drawnow;
+    close(hObject)
+    delete(handles.leadfigure)
+    return
+elseif nargin > 5
+    ea_command_line_run(varargin{:})
+    delete(handles.leadfigure)
+    return            
 end
 
 set(handles.leadfigure,'name','Welcome to the Lead Neuroimaging Suite');
@@ -147,6 +169,13 @@ ea_setbuttonbackdrop(handles.startconnectome,[earoot,'icons',filesep,'logo_lead_
 ea_setbuttonbackdrop(handles.startgroup,[earoot,'icons',filesep,'logo_lead_group_small.png']);
 ea_setbuttonbackdrop(handles.startanatomy,[earoot,'icons',filesep,'logo_lead_anatomy_small.png']);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
+
+% Disable buttons for standalone app
+% if isdeployed
+%     set(handles.startconnectome,'Enable','off')
+%     set(handles.startgroup,'Enable','off')
+%     set(handles.startanatomy,'Enable','off')
+% end
 
 % UIWAIT makes lead wait for user response (see UIRESUME)
 % uiwait(handles.leadfigure);
@@ -167,7 +196,9 @@ function varargout = lead_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-
+if isvalid(hObject) && nargout
+    varargout{1} = hObject;
+end
 
 % --- Executes on button press in startdbs.
 function startdbs_Callback(hObject, eventdata, handles)

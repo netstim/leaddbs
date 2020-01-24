@@ -48,7 +48,7 @@ if nargin == 0
 		set(0,'DefaultFigureCreateFcn',@figmenu)
 		disp('figmenu on')
 	end
-	
+
 elseif nargin == 1
 	% Handle simple string arguments: on, off, add, remove, state.
 	switch arg
@@ -88,7 +88,7 @@ elseif nargin == 1
 		otherwise
 			error('Unknown command option.')
 	end
-	
+
 elseif nargin == 2
 	% figmenu called as CreateFcn or explicitly.
 	if isempty(cmd) || strcmpi(cmd,'add')
@@ -150,12 +150,12 @@ end
 					figs(i).label = sprintf('[Figure %g]',figs(i).handle);
 				end
 			end
-			
+
 			% Determine if figure is a GUI.
 			figs(i).isgui = ~strcmp(get(figs(i).handle,'Menubar'),...
 				'figure');
 		end
-		
+
 		% Build menu items for non-GUI figures.
 		group_threshold = 20;
 		group_size = 10;
@@ -189,7 +189,7 @@ end
 					'Checked',checked)
 			end
 		end
-		
+
 		% Build menu items for GUI figures.
 		if any([figs.isgui])
 			uimenu(h,'Label','GUI Figures','Enable','off',...
@@ -204,7 +204,7 @@ end
 					'Callback',{@raise,figs(i).handle},'Checked',checked)
 			end
 		end
-		
+
 		% Add quick-change menu items.
 		uimenu(h,'Label','Next Figure','Accelerator','K',...
 			'Separator','on','Callback',{@next,this_fig})
@@ -212,7 +212,7 @@ end
 			'Callback',{@previous,this_fig})
 		uimenu(h,'Label','Recall Last Figure','Accelerator','L',...
 			'Callback',@recall_last)
-		
+
 		% Add remaining menu items.
 		uimenu(h,'Label','Maximize Non-GUI Figures','Separator','on',...
 			'Callback',@maximize)
@@ -285,7 +285,7 @@ end
 		these_figs = findobj('Type','figure','Menubar','figure');
 		for i = length(these_figs):-1:1
 			try
-				java_frame = get(handle(these_figs(i)),'JavaFrame');
+				java_frame = ea_getJavaFrame(handle(these_figs(i)));
 				java_frame.setMaximized(true)
 			catch
 			end
@@ -300,7 +300,7 @@ end
 		these_figs = findobj('Type','figure','Menubar','figure');
 		for i = length(these_figs):-1:1
 			try
-				java_frame = get(handle(these_figs(i)),'JavaFrame');
+				java_frame = ea_getJavaFrame(handle(these_figs(i)));
 				java_frame.setMaximized(false)
 			catch
 			end

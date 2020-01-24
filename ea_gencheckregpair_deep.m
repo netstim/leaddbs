@@ -1,5 +1,14 @@
 function ea_gencheckregpair_deep(moving,fixed,outfn)
-% function that uses FSLs SLICER tool to create a checkreg figure.
+% Function that uses FSLs SLICER tool to create a checkreg figure.
+%
+% USAGE:
+%
+%    ea_gencheckregpair_deep(moving,fixed,outfn)
+%
+% INPUTS:
+%    moving:    registered moving image
+%    fixed:     fixed image
+%    outfn:     png file as a combination of the above two (fixed image shown as wireframe overlay)
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
 if ispc

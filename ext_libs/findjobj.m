@@ -221,6 +221,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                             if isempty(jFig), error('dummy');  end
                         catch
                             warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+                            warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
                             jFig = get(get(hFig,'JavaFrame'),'FigurePanelContainer');
                         end
                         pos = [];
@@ -471,6 +472,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         catch
             try
                 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+                warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
                 jFrame = get(hFig,'JavaFrame');
                 jFigPanel = get(jFrame,'FigurePanelContainer');
                 jRootPane = jFigPanel;
@@ -482,6 +484,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         try
             % If invalid RootPane - try another method...
             warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+            warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
             jFrame = get(hFig,'JavaFrame');
             jAxisComponent = get(jFrame,'AxisComponent');
             jRootPane = jAxisComponent.getParent.getParent.getRootPane;
@@ -569,7 +572,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         %if isa(jcontainer,'java.awt.Container')
         try  % try-catch is faster than checking isa(jcontainer,'java.awt.Container')...
             %if jcontainer.getComponentCount,  jcontainer.getComponents,  end
-            if ~nomenu || menuBarFoundFlag || ~contains(class(jcontainer),'FigureMenuBar')
+            if ~nomenu || menuBarFoundFlag || ~ea_contains(class(jcontainer),'FigureMenuBar')
                 lastChildComponent = java.lang.Object;
                 child = 0;
                 while (child < jcontainer.getComponentCount)
@@ -859,7 +862,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             foundIdx = (abs(baseDeltas(:,1)) < 7) & (abs(baseDeltas(:,2)) < 7); % & (minHeight >= 0);
             %fi = find(foundIdx);
             %for componentIdx = 1 : length(fi)
-                %foundIdx(componentIdx) = handles(componentIdx).getBounds.contains(positionFilter);
+                %foundIdx(componentIdx) = handles(componentIdx).getBounds.ea_contains(positionFilter);
 
                 % Search for a point no farther than 7 pixels away (prevents rounding errors)
                 %foundIdx(componentIdx) = handles(componentIdx).getLocationOnScreen.distanceSq(positionFilter) < 50;  % fails for invisible components...
@@ -1268,6 +1271,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                 jTreeFig.setIcon(figIcon);
             catch
                 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+                warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
                 jTreeFig = get(hTreeFig,'JavaFrame');
                 jTreeFig.setFigureIcon(figIcon);
             end
@@ -1532,7 +1536,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         globalPanel = JPanel(BorderLayout);
         globalPanel.add(hsplitPane, BorderLayout.CENTER);
         globalPanel.add(lowerPanel, BorderLayout.SOUTH);
-        [obj, hcontainer] = javacomponent(globalPanel, [0,0,pos(3:4)], hTreeFig);
+        [obj, hcontainer] = ea_javacomponent(globalPanel, [0,0,pos(3:4)], hTreeFig);
         set(hcontainer,'units','normalized');
         drawnow;
         hsplitPane.setDividerLocation(hsplitPaneLocation);  % this only works after the JSplitPane is displayed...
@@ -3282,7 +3286,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             nodeTitleStr = sprintf('<html>Class name: <font color="blue">%s</font><br>Text/title: %s',objClass,objName);
 
             % If the component is invisible, state this in the tooltip
-            if contains(nodeName,'color="gray"')
+            if ea_contains(nodeName,'color="gray"')
                 nodeTitleStr = [nodeTitleStr '<br><font color="gray"><i><b>*** Invisible ***</b></i></font>'];
             end
             nodeTitleStr = [nodeTitleStr '<hr>Right-click for context-menu'];
@@ -3376,6 +3380,7 @@ function jControl = findjobj_fast(hControl, jContainer)
     try jControl = hControl.Table; return, catch, end  % fast bail-out for old uitables
     try jControl = hControl.JavaFrame.getGUIDEView; return, catch, end  % bail-out for HG2 matlab.ui.container.Panel
     oldWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+    oldWarn1 = warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');
     if nargin < 2 || isempty(jContainer)
         % Use a HG2 matlab.ui.container.Panel jContainer if the control's parent is a uipanel
         try
@@ -3392,6 +3397,7 @@ function jControl = findjobj_fast(hControl, jContainer)
         jf = get(hFig, 'JavaFrame');
         jContainer = jf.getFigurePanelContainer.getComponent(0);
     end
+    warning(oldWarn1);
     warning(oldWarn);
     jControl = [];
     counter = 100;

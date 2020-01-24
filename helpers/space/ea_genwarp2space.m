@@ -4,7 +4,7 @@ if strcmp(ea_getspace,fromwhich)
     return
 end
 
-if exist([ea_space,fromwhich],'dir') && exist([ea_space,fromwhich,filesep,'glanatComposite.h5'],'file') % warp exists
+if exist([ea_space,fromwhich],'dir') && exist([ea_space,fromwhich,filesep,'glanatComposite',ea_getantstransformext([ea_space,fromwhich,filesep])],'file') % warp exists
     return
 end
 

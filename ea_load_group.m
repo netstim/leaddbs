@@ -10,6 +10,24 @@ set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
 try % if file already exists, load it (and overwrite M).
     load([groupdir, 'LEAD_groupanalysis.mat']);
+    if ~isfield(M.ui, 'mirrorsides')
+        % Fix missing 'mirrorsides' field for old analysis
+        try
+            currentUISetting = getappdata(handles.leadfigure, 'M');
+            M.ui.mirrorsides = currentUISetting.ui.mirrorsides;
+        catch
+            M.ui.mirrorsides = 0;
+        end
+    end
+    if ~isfield(M.ui, 'showdiscfibers')
+        % Fix missing 'showdiscfibers' field for old analysis
+        try
+            currentUISetting = getappdata(handles.leadfigure, 'M');
+            M.ui.showdiscfibers = currentUISetting.ui.showdiscfibers;
+        catch
+            M.ui.showdiscfibers = 0;
+        end
+    end
 catch % if not, store it saving M.
     save([groupdir, 'LEAD_groupanalysis.mat'], 'M', '-v7.3');
 end
@@ -25,5 +43,3 @@ ea_refresh_lg(handles);
 ea_addrecentpatient(handles,{groupdir},'groups','groups')
 
 ea_busyaction('off', handles.leadfigure, 'group');
-
-end

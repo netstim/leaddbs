@@ -314,7 +314,7 @@ if ~isempty(transform)
         switch transformmethod
 
             case ea_getantsnormfuns % ANTs (ea_ants_nolinear) used in LEAD
-                if contains(transform, 'y_ea_inv_normparams.nii')
+                if ea_contains(transform, 'y_ea_inv_normparams.nii')
                     useinverse = 1;
                 else
                     useinverse = 0;
@@ -342,7 +342,7 @@ if ~isempty(transform)
                 % if 'y_ea_inv_normparams.nii' is specified, it means
                 % mapping from src coords to dest coords, i.e., NOT the
                 % inverse mapping (from dest coords to src coords).
-                if contains(transform, 'y_ea_inv_normparams.nii')
+                if ea_contains(transform, 'y_ea_inv_normparams.nii')
                     inversemap = 0;
                 else
                     inversemap = 1;

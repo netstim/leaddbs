@@ -1,4 +1,14 @@
 function ea_init_coregmrpopup(handles,refine)
+% Initializes MR coregistration methods popupmenu.
+%
+% USAGE:
+%
+%    ea_init_coregmrpopup(handles,refine)
+%
+% INPUTS:
+%    handles:       LEAD GUI handle
+%    refine:        deprecated
+
 if ~exist('refine','var')
     refine=0;
 end

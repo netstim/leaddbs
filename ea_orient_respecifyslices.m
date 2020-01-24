@@ -15,7 +15,7 @@ subplot(3,1,3)
 imagesc(tmp{1}')
 view(-180,90)
 hold on
-colormap gray
+colormap(gray)
 caxis manual
 caxis(cscale)
 axis equal
@@ -26,7 +26,7 @@ subplot(3,1,2)
 imagesc(tmp{2}')
 view(-180,90)
 hold on
-colormap gray
+colormap(gray)
 caxis manual
 caxis(cscale)
 axis equal
@@ -37,7 +37,7 @@ subplot(3,1,1)
 imagesc(tmp{3}')
 view(-180,90)
 hold on
-colormap gray
+colormap(gray)
 caxis manual
 caxis(cscale)
 axis equal

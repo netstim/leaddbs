@@ -143,7 +143,7 @@ h = rotate3d;
 h.RotateStyle = 'orbit';
 h.Enable = 'on';
 
-colormap gray
+colormap(gray)
 set(hObject, 'menubar', 'none' )
 set(hObject, 'toolbar', 'none' )
 warning('off')

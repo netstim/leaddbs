@@ -9,7 +9,7 @@ end
 troot=[options.earoot,'templates',filesep];
 aroot=[ea_space(options,'atlases'),options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];
-if ~exist([proot,'atlases',filesep,options.atlasset],'file') % check rebuild needed
+if ~exist(ea_niigz([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask']),'file') % check rebuild needed
     switch options.prefs.normalize.inverse.warp
         case 'tpm'
             generate_local_tpm(troot,aroot,proot,0,options)
@@ -70,6 +70,13 @@ for atlas=1:length(atlases.names)
         ea_crop_nii(ea_niigz([patlf,atlases.names{atlas}]));
     end
 end
+
+load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
+options.atl.can=0;
+options.atl.ptnative=1;
+atlases=ea_genatlastable(atlases,[options.root,options.patientname,filesep,'atlases',filesep],options,'');
+save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
+
 
 
 function generate_local_tpm(troot,aroot,proot,force,options)

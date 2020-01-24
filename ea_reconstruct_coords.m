@@ -52,12 +52,12 @@ if vizz
    subplot(2,1,1);
    icimat=cat(3,cimat,zeros(31,31,maxi));
    imagesc(squeeze(icimat(15,:,:)));
-   colormap gray
+   colormap(gray)
 
    subplot(2,1,2);
    itemp=cat(3,zeros(31,31,maxi),temp);
    imagesc(squeeze(itemp(15,:,:)));
-   colormap gray
+   colormap(gray)
 
 end
 

@@ -48,26 +48,6 @@ end
 M.ui.groupdir = get(handles.groupdir_choosebox,'String');
 
 disp('Refreshing selections on VI / FC Lists...');
-% refresh selections on VI and FC Lists:
-try
-    vlist = get(handles.vilist,'String');
-    if max(M.ui.volumeintersections) > length(vlist) || ...
-        (ischar(vlist) && strcmp(vlist, 'subcortical_regions'))
-        set(handles.vilist,'Value',1);
-    else
-        set(handles.vilist,'Value',M.ui.volumeintersections);
-    end
-end
-
-try
-    fclist = get(handles.fclist,'String');
-    if M.ui.fibercounts > length(fclist) || ...
-        (ischar(fclist) && strcmp(fclist, 'whole-brain_regions'))
-        set(handles.fclist,'Value',1);
-    else
-        set(handles.fclist,'Value',M.ui.fibercounts);
-    end
-end
 
 M.groups.group=unique(M.patient.group); % STN, GPi, Thalamus, cZi
 %groupcolors=squeeze(ind2rgb(round([1:9]*(64/9)),jet));
@@ -145,11 +125,8 @@ try set(handles.showpassivecontcheck,'Value',M.ui.showpassivecontcheck); end
 try set(handles.highlightactivecontcheck,'Value',M.ui.hlactivecontcheck); end
 try set(handles.showisovolumecheck,'Value',M.ui.showisovolumecheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
-try set(handles.colorpointcloudcheck,'Value',M.ui.colorpointcloudcheck); end
-try set(handles.mirrorsides,'Value',M.ui.mirrorsides); end
 
 % update selectboxes:
-try set(handles.elrenderingpopup,'Value',M.ui.elrendering); end
 try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
 
 if ~isfield(M.ui,'atlassetpopup')
@@ -173,17 +150,7 @@ if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
     end
 end
 
-try set(handles.elmodelselect,'Value',M.ui.elmodelselect); end
 try set(handles.normregpopup,'Value',M.ui.normregpopup); end
-
-% update enable-disable-dependencies:
-try
-    if M.ui.elrendering==3
-        try set(handles.colorpointcloudcheck,'Enable','on'); end
-    else
-        try set(handles.colorpointcloudcheck,'Enable','off'); end
-    end
-end
 
 % hide detachbutton if already detached:
 try
@@ -191,11 +158,6 @@ try
         set(handles.detachbutton,'Visible','off');
     end
 end
-
-t=datetime('now');
-t.Format='uuuMMddHHmmss';
-t=str2double(char(t));
-
 
 if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
     % patient specific part:
@@ -213,7 +175,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 M=rmfield(M,'stimparams');
             end
             % load localization
-            [~,pats{pt}]=fileparts(M.patient.list{pt});
+            [~, patientname] = fileparts(M.patient.list{pt});
 
             M.elstruct(pt).group=M.patient.group(pt);
             M.elstruct(pt).groupcolors=M.groups.color;
@@ -235,9 +197,8 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                             M.elstruct(pt).elmodel='Medtronic 3389'; % use default for older reconstructions that did not store elmodel.
                         end
                     else
-                        elmodels=get(handles.elmodelselect,'String');
-                        M.elstruct(pt).elmodel=elmodels{get(handles.elmodelselect,'Value')};
-
+                        elmodels = [{'Patient specified'},ea_resolve_elspec];
+                        M.elstruct(pt).elmodel = elmodels{M.ui.elmodelselect};
                     end
 
                     % make sure coords_mm is congruent to coded electrode
@@ -251,10 +212,9 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                     M.elstruct(pt).coords_mm=coords_mm;
                     M.elstruct(pt).coords_acpc=coords_acpc;
                     M.elstruct(pt).trajectory=trajectory;
+                    M.elstruct(pt).name = patientname;
 
-                    M.elstruct(pt).name=[pats{pt}];
                     if ~exist('markers','var') % backward compatibility to old recon format
-
                         for side=1:2
                             markers(side).head=coords_mm{side}(1,:);
                             markers(side).tail=coords_mm{side}(4,:);
@@ -271,7 +231,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                     try
                         if ~M.ui.detached
                         M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
-                        warning(['No reconstruction present for ',pats{pt},'. Please check.']);
+                        warning(['No reconstruction present for ',patientname,'. Please check.']);
                         end
                     end
                 end
@@ -302,7 +262,12 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 % if no stats  present yet, return.
                 setappdata(handles.leadfigure,'M',M);
                 set(handles.leadfigure,'name','Lead Group Analysis');
+                set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
+                set(handles.explorestats, 'Enable', 'off');
                 break
+            else
+                set(handles.calculatebutton, 'BackgroundColor', [0.93,0.93,0.93]);
+                set(handles.explorestats, 'Enable', 'on');
             end
 
             priorvilist=M.vilist;
@@ -320,7 +285,6 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             % check and compare with prior atlas intersection list.
 
             if ~isempty(priorvilist) && ~isequal(priorvilist,M.vilist)
-
                 warning('Patient stats are inhomogeneous. Please re-run group analysis (Section Prepare DBS stats).');
             end
 
@@ -358,18 +322,10 @@ end
 % store everything in Model
 disp('Storing everything in model...');
 if ~isempty(M.patient.list)
-t=datetime('now');
-t.Format='uuuMMddHHmmss';
-M.ui.lastupdated=str2double(char(t));
-setappdata(handles.leadfigure,'M',M);
-end
-% refresh UI
-if ~isempty(M.vilist)
-    set(handles.vilist,'String',M.vilist);
-end
-
-if ~isempty(M.fclist)
-    set(handles.fclist,'String',M.fclist);
+    t=datetime('now');
+    t.Format='uuuMMddHHmmss';
+    M.ui.lastupdated=str2double(char(t));
+    setappdata(handles.leadfigure,'M',M);
 end
 
 disp('Done.');

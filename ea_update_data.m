@@ -35,11 +35,11 @@ if ~exist([earoot,'tmp'],'dir')
 end
 
 try
-    webopts=weboptions('Timeout',5);
+    webopts=weboptions('Timeout',Inf);
     websave([earoot,'tmp',filesep,'updates.zip'],updurl,'id',id,webopts);
 catch
     try
-        urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',5);
+        urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',Inf);
     catch
         info='Download error! Please retry later.';
         disp(info);

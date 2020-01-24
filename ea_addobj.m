@@ -1,51 +1,69 @@
-function ea_addobj(ht,obj,resultfig,type,options)
+function ea_addobj(src, evt, resultfig, obj, options)
 
-addht=getappdata(resultfig,'addht');
+addht = getappdata(resultfig,'addht');
 if isempty(addht)
-    addht=uitoolbar(resultfig);
-    setappdata(resultfig,'addht',addht);
+    addht = uitoolbar(resultfig);
+    setappdata(resultfig, 'addht', addht);
 end
 
-switch type
-    case 'tract'
-        % open dialog
-        [fina,pana]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-        if isempty(fina) % user pressed cancel.
-            return
+if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
+    if all(cellfun(@numel, regexp(obj, '(\.mat|\.trk)$', 'match', 'once')))
+        for i=1:length(obj)
+            addfibertract(obj{i}, resultfig, addht, [], 0, options);
         end
-        if iscell(fina)
-            for fi=1:length(fina)
-                addfibertract([pana,fina{fi}],resultfig,addht,fina{fi},[],0,options);
-            end
-        else
-            if ~fina % user pressed cancel
+    elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once')))
+        pobj.plotFigureH = resultfig;
+        pobj.htH = addht;
+        for i=1:length(obj)
+            % addroi(obj{i}, resultfig, addht, options);
+            pobj.color = ea_uisetcolor;
+            ea_roi(obj{i}, pobj);
+        end
+    else
+        warndlg('Unsupported file(s) found!');
+    end
+else  % uigetfile, 'obj' is the type of the files to be selected
+    switch obj
+        case 'tract'
+            % open dialog
+            [fina,pana]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            if isempty(fina) % user pressed cancel.
                 return
             end
-            addfibertract([pana,fina],resultfig,addht,fina,[],0,options);
-        end
-    case 'roi' % atlas
-        % open dialog
-        [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-        if iscell(fina) % multiple files
-            for fi=1:length(fina)
-                addroi([pana,fina{fi}],resultfig,addht,fina{fi},options);
+            if iscell(fina)
+                for fi=1:length(fina)
+                    addfibertract([pana,fina{fi}],resultfig,addht,[],0,options);
+                end
+            else
+                if ~fina % user pressed cancel
+                    return
+                end
+                addfibertract([pana,fina],resultfig,addht,[],0,options);
             end
-        else
-            if ~fina % user pressed cancel.
-                return
+        case 'roi' % atlas
+            % open dialog
+            [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            if iscell(fina) % multiple files
+                for fi=1:length(fina)
+                    addroi([pana,fina{fi}],resultfig,addht,options);
+                end
+            else
+                if ~fina % user pressed cancel.
+                    return
+                end
+                addroi([pana,fina],resultfig,addht,options);
             end
-            addroi([pana,fina],resultfig,addht,fina,options);
-        end
-    case 'tractmap'
-        [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
-        [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
-        addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,tfina,rfina,options)
+        case 'tractmap'
+            [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
+            [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
+            addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,options)
+    end
 end
 
 axis fill
 
 
-function addtractweighted(tract,weight,resultfig,addht,tfina,rfina,options)
+function addtractweighted(tract,weight,resultfig,addht,options)
 
 disp('Loading fibertracts...');
 [fibers,idx,voxmm,mat]=ea_loadfibertracts(tract);
@@ -62,7 +80,7 @@ weights=nii.img(nzeros);
 cmweights=weights;
 cmweights=cmweights-min(cmweights);
 cmweights=cmweights/max(cmweights);
-cmweights=(cmweights*63)+1; % normalize to colormap
+cmweights=(cmweights*(length(gray)-1))+1; % normalize to colormap
 cmweights=squeeze(ind2rgb(round(cmweights),jet));
 
 [nzX,nzY,nzZ]=ind2sub(size(nii.img),nzeros);
@@ -109,6 +127,8 @@ fv=ea_concatfv(fv);
 addobjr=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.3);
 
 % add toggle button:
+[~, tfina] = fileparts(tract);
+[~, rfina] = fileparts(weight);
 addbutn=uitoggletool(addht,'CData',ea_get_icn('fiber'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
 %storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
 drawnow
@@ -116,8 +136,7 @@ drawnow
 disp('Done.');
 
 
-
-function addroi(addobj,resultfig,addht,fina,options)
+function addroi(addobj,resultfig,addht,options)
 
 % set cdata
 c = ea_uisetcolor;
@@ -203,13 +222,13 @@ addobjr=patch(fv,'CData',cdat,'FaceColor',c,'facealpha',0.7,'EdgeColor','none','
 %ea_spec_atlas(addobjr,'',jetlist,1);
 
 % add toggle button:
-
+[~, fina] = fileparts(addobj);
 addbutn=uitoggletool(addht,'CData',ea_get_icn('atlas',c),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
 storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
 drawnow
 
 
-function addfibertract(addobj,resultfig,addht,fina,connect,ft,options)
+function addfibertract(addobj,resultfig,addht,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
     if strfind(addobj,'.mat')
         load(addobj);
@@ -296,6 +315,7 @@ addobjr=ea_showfiber(thisset,fibidx,c);
 
 axis fill
 
+[~, fina] = fileparts(addobj);
 addbutn=uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
 storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
 

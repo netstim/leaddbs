@@ -164,7 +164,7 @@ for suffix=dowhich
         case 'dMRI'
             seeds=cell(0);
             for pt=1:length(options.uivatdirs)
-                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
+                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
 
                 if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
                     cnt=1;
@@ -209,7 +209,7 @@ for suffix=dowhich
             seeds=cell(0);
             nativeprefix='';
             for pt=1:length(options.uivatdirs)
-                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,options.lcm.seeds,filesep];
+                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
 
                 if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file')
 
@@ -329,7 +329,7 @@ options.coregmr.method = coregmethod;
 coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
 fn=fieldnames(coregmethodsused);
 for field=1:length(fn)
-    if contains(fn{field},refname)
+    if ea_contains(fn{field},refname)
         disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
         options.coregmr.method=coregmethodsused.(fn{field});
         break
