@@ -57,15 +57,32 @@ switch obj.planningAppearance
     case 'line'
         set(handles.planningappearance,'Value',1);
         set(handles.electrode_model_plan,'Enable','off');
+        set(handles.electrode_relative_plan,'Enable','off');
     case 'electrode'
         set(handles.planningappearance,'Value',2);
         set(handles.electrode_model_plan,'Enable','on');
+        set(handles.electrode_relative_plan,'Enable','on');
 end
 
 string_list = get(handles.electrode_model_plan,'String');
 [~,whichentry]=ismember(obj.plan2elstruct_model,string_list);
 set(handles.electrode_model_plan,'Value',whichentry);
 
+
+options.elmodel=obj.plan2elstruct_model;
+options=ea_resolve_elspec(options);
+if obj.electrodeRelativeToPlan>length(options.elspec.etagenames{obj.side})
+    obj.electrodeRelativeToPlan=length(options.elspec.etagenames{obj.side});
+elseif obj.electrodeRelativeToPlan==0 && options.elspec.tipiscontact
+    obj.electrodeRelativeToPlan=1;
+end
+entrystring=options.elspec.etagenames{obj.side};
+if ~options.elspec.tipiscontact
+   entrystring=[{'Center of tip'},entrystring]; 
+end
+set(handles.electrode_relative_plan,'String',entrystring);
+
+set(handles.electrode_relative_plan,'Value',obj.electrodeRelativeToPlan+double(~options.elspec.tipiscontact));
 
 if ~(get(handles.showPlanning,'Value')) || ~ea_bool2onoff(get(handles.showPlanning,'enable')) || get(handles.space,'Value')>1
     onoff='off';

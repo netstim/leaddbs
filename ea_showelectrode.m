@@ -1,13 +1,24 @@
-function [elrender,ellabel,eltype]=ea_showelectrode(resultfig,elstruct,pt,options)
+function [elrender,ellabel,eltype]=ea_showelectrode(obj,cmd,options)
 % This function renders the electrode as defined by options.elspec and
 % coords_mm.
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+switch cmd
+    case 'dbs'
+        resultfig=obj.plotFigureH;
+        elstruct=obj.elstruct;
+        pt=obj.pt;
+    case 'plan'
+        resultfig=obj.plotFigureH;
+        elstruct=obj.plan2elstruct;
+        pt=1;
+end
+
+
 coords_mm=elstruct.coords_mm;
 trajectory=elstruct.trajectory;
-
 
 if ~isfield(elstruct,'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
     elspec=options.elspec;
@@ -107,12 +118,15 @@ for side=options.sides
                         usecolor=elspec.lead_color;
                 end
             else
-                if isfield(elstruct,'group')
-
-                    usecolor=elstruct.groupcolors(elstruct.group,:);
-
-                else
-                    usecolor=elspec.lead_color;
+                switch cmd
+                    case 'dbs'
+                        if isfield(elstruct,'group')
+                            usecolor=elstruct.groupcolors(elstruct.group,:);
+                        else
+                            usecolor=elspec.lead_color;
+                        end
+                    case 'plan'
+                        usecolor=obj.color;
                 end
             end
             specsurf(elrender(cnt),usecolor,aData);

@@ -22,7 +22,7 @@ function varargout = ea_trajectorycontrol(varargin)
 
 % Edit the above text to modify the response to help ea_trajectorycontrol
 
-% Last Modified by GUIDE v2.5 15-Jan-2020 17:13:07
+% Last Modified by GUIDE v2.5 26-Jan-2020 12:09:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -87,7 +87,7 @@ h=uimenu(f,'Label','Common DBS targets');
 ho=uimenu(h,'Label','Horn et al. 2017 NeuroImage, ACPC Coordinates');
 ho1=uimenu(ho,'Label','STN, Parkinson''s Disease, Active Contacts (Caire 2013)');
 uimenu(ho1,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Caire2013_lh',handles,obj});
-uimenu(ho1,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Caire2013_lh',handles,obj});
+uimenu(ho1,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Caire2013_rh',handles,obj});
 
 ho2=uimenu(ho,'Label','GPi, Dystonia, Active Contacts All Leads (Starr 2016)');
 uimenu(ho2,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Starr2016_lh',handles,obj});
@@ -95,23 +95,23 @@ uimenu(ho2,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Starr20
 
 ho3=uimenu(ho,'Label','GPi, Dystonia, Active Contacts Top Responders (Starr 2016)');
 uimenu(ho3,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Starr2016tr_lh',handles,obj});
-uimenu(ho3,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Starr2016tr_lh',handles,obj});
+uimenu(ho3,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Starr2016tr_rh',handles,obj});
 
 ho4=uimenu(ho,'Label','VIM, Essential Tremor, Active Contacts (Papavassiliou 2004)');
 uimenu(ho4,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Papavassiliou2004_lh',handles,obj});
-uimenu(ho4,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Papavassiliou2004_lh',handles,obj});
+uimenu(ho4,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Papavassiliou2004_rh',handles,obj});
 
 ho5=uimenu(ho,'Label','SCC, Depression, Standard Contacts (Hamani 2009)');
 uimenu(ho5,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Hamani2009_lh',handles,obj});
-uimenu(ho5,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Hamani2009_rh',handles,obj});
+uimenu(ho5,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Hamani2009_rh',handles,obj});
 
 ho6=uimenu(ho,'Label','SCC, Depression, Active Contacts (Hamani 2009)');
 uimenu(ho6,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Hamani2009ac_lh',handles,obj});
-uimenu(ho6,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Hamani2009ac_rh',handles,obj});
+uimenu(ho6,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Hamani2009ac_rh',handles,obj});
 
 ho7=uimenu(ho,'Label','ALIC, OCD, Tip (Nuttin 2003), Target (Anderson 2003)');
 uimenu(ho7,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Nuttin2003_lh',handles,obj});
-uimenu(ho7,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Nuttin2003_lh',handles,obj});
+uimenu(ho7,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Nuttin2003_rh',handles,obj});
 
 ho8=uimenu(ho,'Label','NAc, OCD, Target Coordinates (Franzini 2010)');
 uimenu(ho8,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Franzini2010_lh',handles,obj});
@@ -122,8 +122,8 @@ uimenu(ho9,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Müller20
 uimenu(ho9,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Müller2009_rh',handles,obj});
 
 ho10=uimenu(ho,'Label','CM/Pv/VOI, Tourette''s Syndrome, Target Coordinates (Ackermans 2011)');
-uimenu(ho10,'Label','CM/Pv/VOI, Tourette''s Syndrome, Target Coordinates (Ackermans 2011)','Callback',{@ea_getlittarget_horn,'Ackermans2011_lh',handles,obj});
-uimenu(ho10,'Label','CM/Pv/VOI, Tourette''s Syndrome, Target Coordinates (Ackermans 2011)','Callback',{@ea_getlittarget_horn,'Ackermans2011_rh',handles,obj});
+uimenu(ho10,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Ackermans2011_lh',handles,obj});
+uimenu(ho10,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Ackermans2011_rh',handles,obj});
 
 ho11=uimenu(ho,'Label','Fornix, Alzheimer''s Disease, Target Coordinates (Ponce 2015)');
 uimenu(ho11,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Ponce2015_lh',handles,obj});
@@ -131,13 +131,13 @@ uimenu(ho11,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Ponce2
 
 ho12=uimenu(ho,'Label','Fornix, Alzheimer''s Disease, Active Contacts (Ponce 2015)');
 uimenu(ho12,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn,'Ponce2015ac_lh',handles,obj});
-uimenu(ho12,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Ponce2015ac_lh',handles,obj});
+uimenu(ho12,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn,'Ponce2015ac_rh',handles,obj});
 
 % Horn et al. MNI based:
 ho_mni=uimenu(h,'Label','Horn et al. 2017 NeuroImage, MNI Coordinates');
 ho1_mni=uimenu(ho_mni,'Label','STN, Parkinson''s Disease, Active Contacts (Caire 2013)');
 uimenu(ho1_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Caire2013_lh',handles,obj});
-uimenu(ho1_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Caire2013_lh',handles,obj});
+uimenu(ho1_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Caire2013_rh',handles,obj});
 
 ho2_mni=uimenu(ho_mni,'Label','GPi, Dystonia, Active Contacts All Leads (Starr 2016)');
 uimenu(ho2_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Starr2016_lh',handles,obj});
@@ -145,23 +145,23 @@ uimenu(ho2_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,
 
 ho3_mni=uimenu(ho_mni,'Label','GPi, Dystonia, Active Contacts Top Responders (Starr 2016)');
 uimenu(ho3_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Starr2016tr_lh',handles,obj});
-uimenu(ho3_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Starr2016tr_lh',handles,obj});
+uimenu(ho3_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Starr2016tr_rh',handles,obj});
 
 ho4_mni=uimenu(ho_mni,'Label','VIM, Essential Tremor, Active Contacts (Papavassiliou 2004)');
 uimenu(ho4_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Papavassiliou2004_lh',handles,obj});
-uimenu(ho4_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Papavassiliou2004_lh',handles,obj});
+uimenu(ho4_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Papavassiliou2004_rh',handles,obj});
 
 ho5_mni=uimenu(ho_mni,'Label','SCC, Depression, Standard Contacts (Hamani 2009)');
 uimenu(ho5_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Hamani2009_lh',handles,obj});
-uimenu(ho5_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Hamani2009_rh',handles,obj});
+uimenu(ho5_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Hamani2009_rh',handles,obj});
 
 ho6_mni=uimenu(ho_mni,'Label','SCC, Depression, Active Contacts (Hamani 2009)');
 uimenu(ho6_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Hamani2009ac_lh',handles,obj});
-uimenu(ho6_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Hamani2009ac_rh',handles,obj});
+uimenu(ho6_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Hamani2009ac_rh',handles,obj});
 
 ho7_mni=uimenu(ho_mni,'Label','ALIC, OCD, Tip (Nuttin 2003), Target (Anderson 2003)');
 uimenu(ho7_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Nuttin2003_lh',handles,obj});
-uimenu(ho7_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Nuttin2003_lh',handles,obj});
+uimenu(ho7_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Nuttin2003_rh',handles,obj});
 
 ho8_mni=uimenu(ho_mni,'Label','NAc, OCD, Target Coordinates (Franzini 2010)');
 uimenu(ho8_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Franzini2010_lh',handles,obj});
@@ -172,8 +172,8 @@ uimenu(ho9_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'
 uimenu(ho9_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Müller2009_rh',handles,obj});
 
 ho10_mni=uimenu(ho_mni,'Label','CM/Pv/VOI, Tourette''s Syndrome, Target Coordinates (Ackermans 2011)');
-uimenu(ho10_mni,'Label','CM/Pv/VOI, Tourette''s Syndrome, Target Coordinates (Ackermans 2011)','Callback',{@ea_getlittarget_horn_mni,'Ackermans2011_lh',handles,obj});
-uimenu(ho10_mni,'Label','CM/Pv/VOI, Tourette''s Syndrome, Target Coordinates (Ackermans 2011)','Callback',{@ea_getlittarget_horn_mni,'Ackermans2011_rh',handles,obj});
+uimenu(ho10_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Ackermans2011_lh',handles,obj});
+uimenu(ho10_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Ackermans2011_rh',handles,obj});
 
 ho11_mni=uimenu(ho_mni,'Label','Fornix, Alzheimer''s Disease, Target Coordinates (Ponce 2015)');
 uimenu(ho11_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Ponce2015_lh',handles,obj});
@@ -181,7 +181,7 @@ uimenu(ho11_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni
 
 ho12_mni=uimenu(ho_mni,'Label','Fornix, Alzheimer''s Disease, Active Contacts (Ponce 2015)');
 uimenu(ho12_mni,'Label','Left Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Ponce2015ac_lh',handles,obj});
-uimenu(ho12_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Ponce2015ac_lh',handles,obj});
+uimenu(ho12_mni,'Label','Right Hemisphere','Callback',{@ea_getlittarget_horn_mni,'Ponce2015ac_rh',handles,obj});
 
 % Hoeflich et al. MNI based
 hoe=uimenu(h,'Label','Höflich et al. 2010 NeuroImage');
@@ -207,11 +207,11 @@ uimenu(hoe5,'Label','Right Hemisphere','Callback',{@ea_getlittarget_hoeflich,'NA
 
 hoe6=uimenu(hoe,'Label','Thalamus, GTS, (Ackermans 2011, Bajwa 2007, Houeto 2005, Kaido 2011, Maciunas 2007, Marceglia 2010, Savica 2012, Servello 2008, Vandewalle 1999/2003, Vernaleken 2009)');
 uimenu(hoe6,'Label','Left Hemisphere','Callback',{@ea_getlittarget_hoeflich,'Thalamus_GTS_lh',handles,obj});
-uimenu(hoe6,'Label','Left Hemisphere','Callback',{@ea_getlittarget_hoeflich,'Thalamus_GTS_rh',handles,obj});
+uimenu(hoe6,'Label','Right Hemisphere','Callback',{@ea_getlittarget_hoeflich,'Thalamus_GTS_rh',handles,obj});
 
 hoe7=uimenu(hoe,'Label','GPi, GTS, (Dehning 2008, Diederich 2005, Dueck 2009, Martinez-Fernandez 2011)');
 uimenu(hoe7,'Label','Left Hemisphere','Callback',{@ea_getlittarget_hoeflich,'GPi_GTS_lh',handles,obj});
-uimenu(hoe7,'Label','Left Hemisphere','Callback',{@ea_getlittarget_hoeflich,'GPi_GTS_rh',handles,obj});
+uimenu(hoe7,'Label','Right Hemisphere','Callback',{@ea_getlittarget_hoeflich,'GPi_GTS_rh',handles,obj});
 
 
 
@@ -442,7 +442,7 @@ switch code
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
 end
-set(handles.space,'value',1);
+set(handles.space,'value',3);
 set(handles.right,'value',1); set(handles.left,'value',0);
 set(handles.anterior,'value',1); set(handles.posterior,'value',0);
 set(handles.ventral,'value',1); set(handles.dorsal,'value',0);
@@ -1103,6 +1103,37 @@ ea_synctrajectoryhandles(handles,obj);
 % --- Executes during object creation, after setting all properties.
 function electrode_model_plan_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to electrode_model_plan (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in electrode_relative_plan.
+function electrode_relative_plan_Callback(hObject, eventdata, handles)
+% hObject    handle to electrode_relative_plan (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns electrode_relative_plan contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from electrode_relative_plan
+obj=getappdata(handles.trajectorycontrol,'obj');
+toptions.elmodel=obj.plan2elstruct_model;
+toptions=ea_resolve_elspec(toptions);
+if toptions.elspec.tipiscontact % tip should be coded as 0, contacts as 1,2,3...
+    obj.electrodeRelativeToPlan = get(handles.electrode_relative_plan,'Value');
+else
+    obj.electrodeRelativeToPlan = get(handles.electrode_relative_plan,'Value')-1;
+end
+ea_synctrajectoryhandles(handles,obj);
+
+% --- Executes during object creation, after setting all properties.
+function electrode_relative_plan_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to electrode_relative_plan (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
