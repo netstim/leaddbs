@@ -6,12 +6,12 @@ if isstruct(handles) % called from GUI
     vatmodality=vatmodality{get(handles.vatmodality,'Value')};
     vs=get(handles.vatseed,'String'); % dont need this below
     vss=get(handles.vatseed,'Value'); % dont need this below
-    vsname=vs{vss};
+    vsname=[ea_nt(options),vs{vss}];
     [usevat,dimensionality,~,sides]=ea_checkvatselection(handles);
     thresh=get(handles.vatthresh,'String');
 elseif iscell(handles) % called from lead_group
     vatmodality=handles{1};
-    vsname=[handles{2},'_',options.groupid];
+    vsname=[ea_nt(options),handles{2},'_',options.groupid];
     thresh='auto';
     usevat={'right','left'};
     dimensionality=2; % how many ROI.
