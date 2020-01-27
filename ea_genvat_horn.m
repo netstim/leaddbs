@@ -49,7 +49,7 @@ resultfig=getappdata(lgfigure,'resultfig');
 
 % Important to load in reco from a new since we need to decide whether to
 % use native or template coordinates. Even when running in template space,
-% the native coordinates are sometimes used (VTA is then calculated in native space and ported to template). 
+% the native coordinates are sometimes used (VTA is then calculated in native space and ported to template).
 options.loadrecoforviz=1;
 [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 elstruct(1).coords_mm=coords_mm;
@@ -70,9 +70,9 @@ setappdata(resultfig,'elstruct',elstruct);
     else
         elstruct.stretchfactor=0.5;
     end
-    
-    
-    
+
+
+
     hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test once.
     assignin('caller','hmchanged',hmchanged);
     if hmchanged
@@ -96,7 +96,7 @@ setappdata(resultfig,'elstruct',elstruct);
                             continue
                         end
                         fv(cnt)=atlases.fv{atlas};
-                        
+
                         ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
                         %tissuetype(cnt)=1;
                         cnt=cnt+1;
@@ -397,7 +397,7 @@ elstruct(1).coords_mm=ea_resolvecoords(markers,options);
 elstruct(1).trajectory=trajectory;
 elstruct(1).name=options.patientname;
 elstruct(1).markers=markers;
-if options.prefs.machine.vatsettings_horn_removeElectrode
+if options.prefs.machine.vatsettings.horn_removeElectrode
     vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec);
 end
 ea_dispt('Preparing VAT...');
