@@ -71,12 +71,16 @@ set(handles.electrode_model_plan,'Value',whichentry);
 
 options.elmodel=obj.plan2elstruct_model;
 options=ea_resolve_elspec(options);
-if obj.electrodeRelativeToPlan>length(options.elspec.etagenames{obj.side})
-    obj.electrodeRelativeToPlan=length(options.elspec.etagenames{obj.side});
+useside=obj.side;
+if useside>2
+    useside=1;
+end
+if obj.electrodeRelativeToPlan>length(options.elspec.etagenames{useside})
+    obj.electrodeRelativeToPlan=length(options.elspec.etagenames{useside});
 elseif obj.electrodeRelativeToPlan==0 && options.elspec.tipiscontact
     obj.electrodeRelativeToPlan=1;
 end
-entrystring=options.elspec.etagenames{obj.side};
+entrystring=options.elspec.etagenames{useside};
 if ~options.elspec.tipiscontact
    entrystring=[{'Center of tip'},entrystring]; 
 end

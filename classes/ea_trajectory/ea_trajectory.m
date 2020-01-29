@@ -75,8 +75,16 @@ classdef ea_trajectory < handle
                 obj.hasPlanning=1;
                 obj.hasMacro=0;
             else % determine if fiducial and macro information is available
-                obj.hasMacro=~isempty(obj.elstruct);
-                obj.hasPlanning=~isempty(obj.target);
+                try
+                    obj.hasMacro=pobj.hasMacro;
+                catch 
+                    obj.hasMacro=~isempty(obj.elstruct);
+                end
+                try
+                    obj.hasPlanning=pobj.hasPlanning;
+                catch
+                    obj.hasPlanning=~isempty(obj.target);
+                end
                 obj.showMacro=obj.hasMacro;
                 obj.showPlanning=obj.hasPlanning*(~obj.showMacro);
             end
@@ -305,6 +313,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         
         obj.target=t;
         ea_synctrajectoryhandles(getappdata(obj.controlH,'chandles'),obj); % sync back control figure
+        ea_save_electrode(obj);
         return
     end
     
@@ -451,7 +460,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     else
         elToggleTag = ['Patient: ', ptname, ', Planning'];
     end
-
+    ea_save_electrode(obj);
     set(obj.toggleH, {'Parent','CData','TooltipString','Tag','OnCallback','OffCallback','State'},...
         {obj.htH, ...
         elToogleIcon, elToggleTooltip, elToggleTag,...

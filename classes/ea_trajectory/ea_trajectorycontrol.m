@@ -1025,7 +1025,7 @@ function trajectorycontrol_CloseRequestFcn(hObject, eventdata, handles)
 obj=getappdata(handles.trajectorycontrol,'obj');
 delete(hObject);
 
-ea_save_trajectory(obj);
+ea_save_electrode(obj);
 
 
 % --- Executes on selection change in planningappearance.
