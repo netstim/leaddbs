@@ -87,8 +87,8 @@ setappdata(resultfig,'elstruct',elstruct);
         if options.prefs.machine.vatsettings.horn_useatlas
             switch options.prefs.vat.gm
                 case 'atlas'
-                    atlas = options.prefs.machine.vatsettings.horn_atlasset;
-                    load([ea_space(options,'atlases'),atlas,filesep,'atlas_index.mat']);
+                    atlasName = options.prefs.machine.vatsettings.horn_atlasset;
+                    load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
                     if ~isfield(atlases,'tissuetypes')
                         atlases.tissuetypes=ones(length(atlases.names),1);
                     end
