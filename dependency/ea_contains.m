@@ -2,7 +2,7 @@ function rv=ea_contains(str,pattern)
 % Determine if pattern is in string(s).
 %
 % NOTE: This is a work-around for missing `contains()` function in
-% Matlab version prior R1016b. Please note that it is not 100%
+% Matlab version prior R2016b. Please note that it is not 100%
 % compatible with the Matlab `contains()` function, it merely provides
 % basic functionality. Specially, it does not support case-insensitive
 % search and multiple-string patterns.
