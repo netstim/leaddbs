@@ -72,7 +72,7 @@ options.prefs.atlases.default=prefs.machine.vatsettings.horn_atlasset;
 ea_listatlassets(options,handles,1);
 
 
-set(handles.removeElectrode,'Value',ea_getprefs('vatsettings.horn_removeElectrode'));
+set(handles.removeElectrode,'Value',prefs.machine.vatsettings.horn_removeElectrode);
 
 ea_fillpresetpopups(handles);
 
@@ -182,6 +182,7 @@ vatsettings.horn_ethresh=str2double(get(handles.ethresh,'String'));
 vatsettings.horn_useatlas=get(handles.useatlas,'Value');
 vatsettings.horn_atlasset=get(handles.atlassetpopup,'String');
 vatsettings.horn_atlasset=vatsettings.horn_atlasset{get(handles.atlassetpopup,'Value')};
+vatsettings.horn_removeElectrode=get(handles.removeElectrode,'Value');
 ea_setprefs('vatsettings',vatsettings);
 
 delete(handles.setfig);
@@ -229,10 +230,10 @@ if isnan(thresh)
 %         dlgtitle = 'Specify fiber diamter D and pulse width PW';
 %         dims = [1 60];
 %         definput = {'3.5','60'};
-%         values = inputdlg(prompt,dlgtitle,dims,definput);   
+%         values = inputdlg(prompt,dlgtitle,dims,definput);
 %         load activation_model_3v.mat;
 %         thresh = activation_model_3v(str2num(values{2}),str2num(values{1})); % get approximation
-        f = approxonGui;    
+        f = approxonGui;
         uiwait(f); % setting thresh
         thresh = getappdata(f, 'thresh');
         close(f);
@@ -359,7 +360,7 @@ switch get(handles.useatlas,'Value')
         set(handles.atlassetpopup,'visible','off');
         set(handles.condwm_txt,'string','Conductivity:');
 end
-    
+
 
 % --- Executes on selection change in atlassetpopup.
 function atlassetpopup_Callback(hObject, eventdata, handles)
