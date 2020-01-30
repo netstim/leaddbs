@@ -78,10 +78,6 @@ setappdata(resultfig,'elstruct',elstruct);
     if hmchanged
         ea_dispt('Headmodel needs to be re-calculated. This may take a while...');
 
-        load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
-        if ~isfield(atlases,'tissuetypes')
-            atlases.tissuetypes=ones(length(atlases.names),1);
-        end
         cnt=1;
         mesh.tet=[];
         mesh.pnt=[];
@@ -91,6 +87,11 @@ setappdata(resultfig,'elstruct',elstruct);
         if options.prefs.machine.vatsettings.horn_useatlas
             switch options.prefs.vat.gm
                 case 'atlas'
+                    atlas = options.prefs.machine.vatsettings.horn_atlasset;
+                    load([ea_space(options,'atlases'),atlas,filesep,'atlas_index.mat']);
+                    if ~isfield(atlases,'tissuetypes')
+                        atlases.tissuetypes=ones(length(atlases.names),1);
+                    end
                     for atlas=1:numel(atlases.fv)
                         if isempty(atlases.fv{atlas}) || (atlases.tissuetypes~=1)
                             continue
