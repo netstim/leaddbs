@@ -71,7 +71,6 @@ options=ea_defaultoptions;
 options.prefs.atlases.default=prefs.machine.vatsettings.horn_atlasset;
 ea_listatlassets(options,handles,1);
 
-
 set(handles.removeElectrode,'Value',prefs.machine.vatsettings.horn_removeElectrode);
 
 ea_fillpresetpopups(handles);

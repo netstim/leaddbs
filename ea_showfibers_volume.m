@@ -33,10 +33,7 @@ load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 %poptions=options;
 %[poptions.root,poptions.patientname]=fileparts(options.patient_list{options.expstatvat.pt});
 
-
 %--------------------------------end changes---------------------------------
-
-
 
 % clean downstreamfiles if necessary
 if hmchanged
@@ -66,8 +63,6 @@ if hmchanged
 
 end
 
-
-
 %prepare statvat exports once if needed.
 if options.expstatvat.do % export statvat nifti images.
     tV=spm_vol([ea_space(options),'bb.nii']);
@@ -79,7 +74,6 @@ if options.expstatvat.do % export statvat nifti images.
     templatecoords=tV.mat*templatecoords;
     templatecoords=templatecoords(1:3,:)';
 end
-
 
 %set togglebuttons. small flag-variables are being defined in
 %length(sides)xlength(labelatlases) dimensionality for the togglebuttons.
@@ -98,8 +92,6 @@ for but=1:length(togglenames)
 
 end
 clear expand
-
-
 
 load([options.root,options.patientname,filesep,'ea_stats']);
 
@@ -121,9 +113,6 @@ end
 
 [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,S);
 
-
-
-
 if isstruct(VAT{1}.VAT) || isstruct(VAT{2}.VAT) % e.g. simbio model used
     vat=1;
     for side=1:length(options.sides)
@@ -138,7 +127,6 @@ if isstruct(VAT{1}.VAT) || isstruct(VAT{2}.VAT) % e.g. simbio model used
     VAT=nVAT;
 end
 
-
 for side=1:length(options.sides)
     % if options.expstatvat.do;    thisvatnii=cell(length(options.expstatvat.vars),1); end
     switch side
@@ -148,8 +136,6 @@ for side=1:length(options.sides)
             sidec='left';
     end
     for vat=1:length(VAT{side}.VAT)
-
-
         if ~exist('K','var') % e.g. maedler model used
             try
                 K(side).K{vat}=convhulln(VAT{side}.VAT{vat}+randn(size(VAT{side}.VAT{vat}))*0.000001); % create triangulation.
@@ -168,15 +154,11 @@ for side=1:length(options.sides)
         end
 
         % show vat
-
         if ~isempty(K(side).K{vat})
 
             PL.vatsurfs(side,vat)=trisurf(K(side).K{vat},VAT{side}.VAT{vat}(:,1),VAT{side}.VAT{vat}(:,2),VAT{side}.VAT{vat}(:,3),...
                 abs(repmat(60,length(VAT{side}.VAT{vat}),1)...
                 +randn(length(VAT{side}.VAT{vat}),1)*2)');
-
-
-
 
             % the following is some code required for
             % Web/JSON/BrainBrowser-Export.
@@ -189,7 +171,6 @@ for side=1:length(options.sides)
 
             vatgrad=getappdata(resultfig,'vatgrad');
             if ~isempty(vatgrad)
-
                 %             PL.quiv(side)=ea_arrow3([vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]-...
                 %                 1/2*[vatgrad.qx(1:reduc:end),vatgrad.qy(1:reduc:end),vatgrad.qz(1:reduc:end)],...
                 %                 [vatgrad.x(1:reduc:end),vatgrad.y(1:reduc:end),vatgrad.z(1:reduc:end)]+...
@@ -202,8 +183,6 @@ for side=1:length(options.sides)
                     end
                 end
             end
-
-
 
             if options.writeoutstats
                 ea_dispt('Writing out stats...');
@@ -266,48 +245,35 @@ for side=1:length(options.sides)
 
                     end
                 end
-
-                           save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
-
+                save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
             end
         end
-
-
     end
-
 
     try
         vatbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('vat'),'TooltipString','Volume of activated tissue','OnCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,1},'OffCallback',{@objvisible,PL.vatsurfs(side,:),resultfig,'vaton',[],side,0},'State',getstate(vaton(side)));
         quivbutton(side)=uitoggletool(PL.ht,'CData',ea_get_icn('quiver'),'TooltipString','E-field','OnCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,1},'OffCallback',{@objvisible,PL.quiv(side),resultfig,'quivon',[],side,0},'State',getstate(quivon(side)));
     end
-
 end
 
-
-
-
 % correct togglestates
-
-
 for side=1:length(options.sides)
-
     if ~vaton(side)
         try
             objvisible([],[],PL.vatsurfs(side,:),resultfig,'vaton',[],side,0)
         end
     end
-
     if ~quivon(side)
         try
             objvisible([],[],PL.quiv(side),resultfig,'quivon',[],side,0)
         end
     end
-
 end
 
 
 setappdata(resultfig,'PL',PL);
 ea_dispt('');
+
 
 function indcol=detcolor(mat) % determine color based on traversing direction.
 
@@ -318,6 +284,7 @@ rgb=[rgb,rgb(:,end)];
 rgbim=zeros(1,size(rgb,2),3);
 rgbim(1,:,:)=rgb';
 indcol=double(rgb2ind(rgbim,jet));
+
 
 function objvisible(hobj,ev,atls,resultfig,what,la,side,onoff)
 % set visibility
@@ -338,7 +305,6 @@ end
 
 setappdata(resultfig,what,tvalue);
 %disp([atls,'visible clicked']);
-
 
 
 function r=maedler12_eq3(U,Im)
