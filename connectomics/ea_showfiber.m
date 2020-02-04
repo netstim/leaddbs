@@ -14,7 +14,9 @@ if ~(size(fibers,1)==4)
 end
 fibersnew=mat2cell(fibers(1:3,:)',fibidx);
 
-fibersnew=cellfun(@downsample,fibersnew,repmat({5},length(fibersnew),1),'UniformOutput',0);
+fibersnew = cellfun(@(f,len) f(round(linspace(1,len,round(len/5))),:), fibersnew, num2cell(cellfun(@(p) size(p,1), fibersnew)), 'UniformOutput', 0);
+%fibersnew=cellfun(@downsample,fibersnew,repmat({5},length(fibersnew),1),'UniformOutput',0);
+
 k = 1;
 while k <= length(fibersnew)
     if length(fibersnew{k}(:,1)) <= 1

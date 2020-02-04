@@ -41,28 +41,28 @@ load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 % clean downstreamfiles if necessary
 if hmchanged
 
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_right.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_right.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_right.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_right.nii'));
 
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_right.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_right.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_efield_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_efield_right.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_efield_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_efield_right.nii'));
 
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_gauss_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'bihem_vat_efield_gauss_right.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_gauss_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'fl_vat_efield_gauss_right.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_efield_gauss_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_efield_gauss_right.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_efield_gauss_left.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_efield_gauss_right.nii'));
 
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_dMRI.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_dMRI_l.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_dMRI_r.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_dMRI.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_dMRI_l.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_dMRI_r.nii'));
 
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_fMRI.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_fMRI_l.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',S.label,'vat_seed_compound_fMRI_r.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_fMRI.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_fMRI_l.nii'));
+    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_fMRI_r.nii'));
 
 end
 
@@ -249,16 +249,17 @@ for side=1:length(options.sides)
                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
 
                             % now also add efield overlap:
-
-                            Vefield=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,...
-                                S.label,filesep,'vat_efield_',sidec]));
-                            atlasvoxels=Vefield.mat\[thisatl,ones(length(thisatl),1)]';
-                            ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=...
-                                mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1));
-                            ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
-                                mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1))./...
-                            sum(Vefield.img(:));
-
+                            if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
+                                    S.label,filesep,'vat_efield_',sidec]),'file')
+                                Vefield=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
+                                    S.label,filesep,'vat_efield_',sidec]));
+                                atlasvoxels=Vefield.mat\[thisatl,ones(length(thisatl),1)]';
+                                ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=...
+                                    mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1));
+                                ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
+                                    mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1))./...
+                                    sum(Vefield.img(:));
+                            end
                     else % no voltage on this vat, simply set vi to zero.
                         ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
                         ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;

@@ -288,11 +288,11 @@ else
         mkdir(fileparts(destination));
     end
     try
-        webopts=weboptions('Timeout',5);
+        webopts=weboptions('Timeout',Inf);
         websave(destination,downloadurl,'id',id,webopts);
     catch
         try
-            urlwrite([downloadurl,'?id=',id],destination,'Timeout',5);
+            urlwrite([downloadurl,'?id=',id],destination,'Timeout',Inf);
         catch
             success=0;
         end

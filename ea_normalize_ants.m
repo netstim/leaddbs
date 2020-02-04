@@ -247,7 +247,7 @@ for avtpl=1:length(spacedef.templates)
         end
         if ismember(thistemp,thistocell)
             for fromfiles=1:length(thisfromcell)
-                if contains(anatfile,thisfromcell{fromfiles})
+                if ea_contains(anatfile,thisfromcell{fromfiles})
                     templatetouse=thistemp;
                     return
                 end

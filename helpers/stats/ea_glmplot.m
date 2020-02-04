@@ -1,4 +1,4 @@
-function [h,pv,Rsquared,F,mdl]=ea_glmplot(X,y,labels,distribution,group1,group2)
+function [h,pv,Rsquared,F,mdl,bb,dev,allstats]=ea_glmplot(X,y,labels,distribution,group1,group2)
 
 if ~(size(y,2)==1)
     ea_warning('Assuming X and y were switched. Switching variables.');
@@ -45,6 +45,8 @@ else
 end
 
 mdl=fitglm(X,y,'distribution',distribution);
+
+[bb,dev,allstats]=glmfit(X,y,distribution);
 
 yhat=predict(mdl,X);
 g=gramm('x',yhat,'y',y); % data needs to be put in "reversed" for gramm.

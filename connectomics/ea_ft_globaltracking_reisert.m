@@ -49,14 +49,14 @@ end
 
 
 %% build DTD (tensor calculation)
-ea_prepare_dti(options)
-ea_prepare_hardi(options)
+redo=ea_prepare_dti(options);
+ea_prepare_hardi(options,redo)
 
 %% mask for tracking
 directory=[options.root,options.patientname,filesep];
 
 % 'new segment' options.prefs.prenii_unnormalized
-if ~exist([directory,'trackingmask.nii'],'file');
+if ~exist([directory,'trackingmask.nii'],'file') || redo
     ea_gentrackingmask(options,0)
 end
 
@@ -86,6 +86,7 @@ matlabbatch{1}.dtijobs.tracking.GTtrack_accum.temp = 0.1;
 
 spm_jobman('run',{matlabbatch});
 clear matlabbatch;
+
 
 % ftr=fiberGT_tool('createEFTR',10^7,10,0.1);
 % ftrstruct_write(ftr,[directory,options.prefs.FTR_unnormalized]);

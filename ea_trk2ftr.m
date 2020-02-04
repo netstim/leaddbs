@@ -56,7 +56,6 @@ ea_dispercent(1,'end');
 fibers(1:3,:) = fibers(1:3,:)./header.voxel_size';
 
 %% transform fibers to template origin
-%nii=ea_load_nii('/PA/Neuro/_projects/lead/lead_dbs/templates/space/MNI_ICBM_2009b_NLIN_ASYM/atlases/Macroscale Human Connectome Atlas (Yeh 2018)/FMRIB58_FA_1mm.nii.gz')
 if isnan(type)
     answ=questdlg('Please select type of .trk data', 'Choose origin of .trk data', 'DSI Studio / QSDR', 'Normative Connectome / 2009b space', 'Select .nii file', 'DSI Studio / QSDR');
 else

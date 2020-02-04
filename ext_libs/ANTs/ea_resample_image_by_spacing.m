@@ -24,15 +24,21 @@ if ~exist('outputimage', 'var')
 end
 
 if ~exist('dimension', 'var')
-    dimension = 3;
+    hdr = ea_fslhd(inputimage);
+    dimension = hdr.dim0;
+end
+
+if dimension==4 && length(spacing)==3
+    % keep the original time step (pixdim[4])
+    hdr = ea_fslhd(inputimage);
+    spacing = [spacing, hdr.pixdim4];
 end
 
 dosmooth = num2str(dosmooth);
 addvox = num2str(addvox);
 nninterp = num2str(nninterp);
 dimension = num2str(dimension);
-
-spacing = [num2str(spacing(1)), ' ', num2str(spacing(2)), ' ', num2str(spacing(3))];
+spacing = sprintf('% f', spacing);
 
 basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
 if ispc

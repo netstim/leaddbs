@@ -15,12 +15,12 @@ pX=round(pX);
 mod = strrep(mod, 'Patient''s fMRI - ', '');
 options.prefs.rest = [mod, '.nii'];
 
-if ~exist([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat'],'file')
+if ~exist([directory,'stimulations',filesep,ea_nt(options),stim,filesep,'vat_',mod,'.mat'],'file')
     ea_warp_vat('rest', options, handles);
     vat_tc=ea_extract_timecourses_vat(options,handles,usevat,dimensionality);
-    save([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat'],'vat_tc');
+    save([directory,'stimulations',filesep,ea_nt(options),stim,filesep,'vat_',mod,'.mat'],'vat_tc');
 else
-    load([directory,'stimulations',filesep,stim,filesep,'vat_',mod,'.mat']);
+    load([directory,'stimulations',filesep,ea_nt(options),stim,filesep,'vat_',mod,'.mat']);
 end
 
 parcs=get(handles.labelpopup,'String');
@@ -77,7 +77,7 @@ for side = 1:length(options.sides)
         mX(ismember(round(pX),cs))=tseedcon(cs);
     end
 
-    Vvat=spm_vol([directory,'stimulations',filesep,stim,filesep,'vat_',usevat{side},'.nii,1']);
+    Vvat=spm_vol([directory,'stimulations',filesep,ea_nt(options),stim,filesep,'vat_',usevat{side},'.nii,1']);
     Xvat=spm_read_vols(Vvat);
     vatseedsurf{side}=ea_showseedpatch(resultfig,Vvat,Xvat,options);
 

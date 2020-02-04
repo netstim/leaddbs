@@ -149,9 +149,9 @@ if checkrebuild(atlases,options,root,mifix)
                 colorc=colornames(1);
                 colorc=rgb(colorc);
                 if isfield(structure, 'img') % volumetric atlas
-                    % if options.prefs.hullsmooth
-                    %     nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-                    % end
+                     if options.prefs.hullsmooth
+                         structure.img = smooth3(structure.img,'gaussian',options.prefs.hullsmooth);
+                     end
 
                     [xx,yy,zz]=ind2sub(size(structure.img),find(structure.img>0)); % find 3D-points that have correct value.
                     vv=structure.img(structure.img(:)>0);
@@ -251,6 +251,23 @@ if checkrebuild(atlases,options,root,mifix)
                             keyboard
                         end
                     end
+                    
+                    if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
+                        % get to 700 faces
+                        simplify=700/length(fv.faces);
+                        if simplify < 1 % skip volumes with fewer than 700 faces
+                            fv=reducepatch(fv,simplify);
+                        end
+                    else
+                        if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
+                            fv=reducepatch(fv,options.prefs.hullsimplify);
+                        elseif options.prefs.hullsimplify>1
+                            simplify=options.prefs.hullsimplify/length(fv.faces);
+                            fv=reducepatch(fv,simplify);
+                        end
+                    end
+                    
+                    
                     try % works > ML 2015:
                         tr=triangulation(fv.faces,fv.vertices);
                         normals{atlas,side} = vertexNormal(tr);
@@ -375,6 +392,7 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     end
 
     if wasgzip
+        gzip(fname);
         delete(fname); % since gunzip makes a copy of the zipped file.
     end
 elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
@@ -475,7 +493,7 @@ switch atlases.types(atlas)
     case 5 % midline atlas (one file with both sides information.
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
 end
-
+[options] = ea_assignpretra(options);
 for atl=1:length(atlnames)
     atlname=atlnames{atl};
 
@@ -530,8 +548,8 @@ for atl=1:length(atlnames)
     clear matlabbatch
 
     if wasgzip
-        gzip(atlname); % since gunzip makes a copy of the zipped file.
-        delete(atlname);
+        gzip(atlname); 
+        delete(atlname); % since gunzip makes a copy of the zipped file.
     end
 end
 

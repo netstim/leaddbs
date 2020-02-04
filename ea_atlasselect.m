@@ -71,9 +71,9 @@ if ~isfield(options,'native')
     options.native=0;
 end
 
-set(handles.atlasselect,'Visible',options.d3.verbose); % set invisible if called from lead group
+movegui(hObject,'northeast'); drawnow;
 
-movegui(hObject,'northeast');
+set(handles.atlasselect,'Visible',options.d3.verbose); % set invisible if called from lead group
 
 ea_listatlassets(options,handles,options.native);
 

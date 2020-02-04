@@ -9,8 +9,10 @@ if ischar(options) % return name of method.
     return
 end
 
+
 directory=[options.root,options.patientname,filesep];
-ea_prepare_dti(options)
+
+redo=ea_prepare_dti(options);
 
 vizz=0;
 
@@ -32,8 +34,8 @@ btable=[bvals;bvecs];
 
 % build white matter mask
 if ~exist([directory,'ttrackingmask.nii'],'file') || ...
-    isfield(options, 'overwriteapproved') && options.overwriteapproved
-    ea_gentrackingmask(options,1)
+    (isfield(options, 'overwriteapproved') && options.overwriteapproved) || redo
+    ea_gentrackingmask_brainmask(options,1)
 end
 
 basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
@@ -43,41 +45,53 @@ else
     DSISTUDIO = [basedir, 'dsi_studio.', computer('arch')];
 end
 
+if options.lc.struc.ft.upsample.how==1 % internal upsampling used
+    ea_roi2txt([directory,'ttrackingmask.nii'],[directory,'ttrackingmask.txt'],ea_resolve_usfactor(options.lc.struc.ft.upsample))
+    maskext='.txt';
+else
+    maskext='.nii';
+end
+
 % build .fib.gz file
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
-if ~exist([directory,ftrbase,'.fib.gz'],'file')
+if ~exist([directory,ftrbase,'.fib.gz'],'file') || redo
     disp('Estimating ODF / preparing GQI...');
-    ea_prepare_fib_gqi(DSISTUDIO,btable,1.2,options);
+    ea_prepare_fib_gqi(DSISTUDIO,btable,1.2,options,redo);
 
     disp('Done.');
 else
     disp('.fib.gz file found, no need to rebuild.');
 end
 
+    
+
+
 trkcmd=[DSISTUDIO,' --action=trk',...
     ' --method=0',...
     ' --source=',ea_path_helper([directory,ftrbase,'.fib.gz']),...
-    ' --seed=',ea_path_helper([directory,'ttrackingmask.nii']),...
+    ' --seed=',ea_path_helper([directory,'ttrackingmask',maskext]),...
     ' --fiber_count=', num2str(options.lc.struc.ft.dsistudio.fiber_count),...
     ' --output=',ea_path_helper([directory,ftrbase,'.mat']),...
     ' --dt_threshold=0.2',...
-    ' --fa_threshold=0.1',...
+    ' --fa_threshold=0.08',...
     ' --initial_dir=0',...
     ' --interpolation=0',...
     ' --max_length=300.0',...
-    ' --min_length=30.0',...
+    ' --min_length=10.0',...
     ' --random_seed=0',...
     ' --seed_plan=0',...
-    ' --smoothing=0',...
-    ' --step_size=0',...
+    ' --smoothing=0.2',...
+    ' --step_size=0.5',...
     ' --tip_iteration=0',...
-    ' --turning_angle=0'];
+    ' --turning_angle=75'];
+
 
 err=ea_submitcmd(trkcmd);
 if err
     ea_error(['Fibertracking with dsi_studio failed (error code=',num2str(err),').']);
 end
 
+ea_delete([directory,'ttrackingmask.txt']);
 % now store tract in lead-dbs format
 disp('Converting fibers...');
 fibinfo = load([directory,ftrbase,'.mat']);
@@ -105,8 +119,7 @@ if b0.mat(11)<0  % 'I' is positive z-axis
     fibers(:,3) = b0.dim(3)-1-fibers(:,3);
 end
 
-% Change ZERO-BASED indexing to ONE-BASED indexing.
-fibers(:,1:3) = fibers(:,1:3) + 1;
+
 
 if vizz
     figure
@@ -120,8 +133,13 @@ end
 
 ftr.fourindex = 1;
 ftr.ea_fibformat = '1.0';
-ftr.fibers = fibers;
 ftr.idx = idx;
+
+
+fibers=ea_resolve_usfibers(options,fibers); % this also pops the raw (uninterpolated dti.nii and b0.nii files).
+
+ftr.fibers = fibers;
+
 ftr.voxmm = 'vox';
 disp('Saving fibers...');
 save([directory,ftrbase,'.mat'],'-struct','ftr','-v7.3');
@@ -131,11 +149,11 @@ fprintf('\nGenerating trk in b0 space...\n');
 ea_ftr2trk([directory,ftrbase,'.mat'], [directory,options.prefs.b0])
 
 
-function ea_prepare_fib_gqi(DSISTUDIO,btable,mean_diffusion_distance_ratio,options)
+function ea_prepare_fib_gqi(DSISTUDIO,btable,mean_diffusion_distance_ratio,options,redo)
 directory=[options.root,options.patientname,filesep];
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
 
-if exist([directory,ftrbase,'.fib.gz'],'file')
+if exist([directory,ftrbase,'.fib.gz'],'file') && (~redo)
    disp('.fib.gz file already present, no need to rebuild.');
    return
 end
@@ -143,45 +161,68 @@ end
 % try the DSI-studio way (faster):
 
 % source images
+ea_delete([directory,'dti.src.gz']);
 cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([directory,options.prefs.dti]),...
     ' --bval=',ea_path_helper([directory,options.prefs.bval])...
     ' --bvec=',ea_path_helper([directory,options.prefs.bvec])...
-    ' --up_sampling=0',...
     ' --sort_b_table=0',...
     ' --output=',ea_path_helper([directory,'dti.src.gz'])];
 
+
+
+
+if options.lc.struc.ft.upsample.how==1 % internal upsampling used
+    cmd=[cmd,...
+        ' --up_sampling=',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample)))];
+    
+    %% add methods dump:
+    
+    cits={
+        'Dyrby, T. B., Lundell, H., Burke, M. W., Reislev, N. L., Paulson, O. B., Ptito, M., & Siebner, H. R. (2013). Interpolation of diffusion weighted imaging datasets. NeuroImage, 103(C), 1?12. http://doi.org/10.1016/j.neuroimage.2014.09.005'
+        'Yeh, F.-C., Wedeen, V. J., & Tseng, W.-Y. I. (2010). Generalized q-Sampling Imaging. IEEE Transactions on Medical Imaging, 29(9), 1626?1635. http://doi.org/10.1109/TMI.2010.2045126'
+        };
+    ea_methods(options,['Raw diffusion data was upsampled using bspline-interpolation with a factor of ',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample))),' following the concept described in Dyrby et al. 2014 as implemented in DSI Studio (http://dsi-studio.labsolver.org/; Yeh et al. 2010).'],cits);
+    
+    maskext='.txt';
+else
+    maskext='.nii';
+end
+
 err=ea_submitcmd(cmd);
 
-if err
-    warning(['Sourcing from command line with dsi_studio failed (error code=',num2str(err),').']);
+if err || ~exist([directory,'dti.src.gz'],'file')
+    ea_warning('DSI studio failed to generate .src file. Using Matlab code instead.');
+    ea_create_dsistudio_src([directory,options.prefs.dti],[directory,'dti.src']);
 end
 
 % create .fib file
 cmd=[DSISTUDIO,' --action=rec --source=',ea_path_helper([directory,'dti.src.gz']),...
-    ' --mask=',ea_path_helper([directory,'ttrackingmask.nii'])...
+    ' --mask=',ea_path_helper([directory,'ttrackingmask',maskext])...
     ' --method=4',...
-    ' --param0=1.25'];
+    ' --param0=1.25',...
+    ' --num_fiber=5',...
+    ' --odf_order=8'];
 
 err=ea_submitcmd(cmd);
-delete([directory,'dti.src.gz']);
+ea_delete([directory,'dti.src.gz']);
+
 if err
-    warning(['Reconstruction from command line with dsi_studio failed (error code=',num2str(err),').']);
-end
-
-di=dir([directory,'dti.src.gz*.fib.gz']);
-if length(di)>1
-    ea_error('Too many .fib.gz files present in folder. Please delete older files');
-end
-movefile([directory,di(1).name],[directory,ftrbase,'.fib.gz']);
-
-if ~exist([directory,ftrbase,'.fib.gz'],'file')
     disp('Reconstruction from command line failed. Reattempting inside Matlab.');
-
     % do it the matlab way
     res=ea_gqi_reco([directory,options.prefs.dti],btable,mean_diffusion_distance_ratio,options);
+    delete([directory,ftrbase,'.fib']);
     save([directory,ftrbase,'.fib'],'-struct','res','-v4');
+    if ~exist([directory,ftrbase,'.fib'],'file')
+       ea_error(['It seems like the .fib file created for ',directory,' is too large for DSI studio to handle. We are working on a solution..']);
+    end
     gzip([directory,ftrbase,'.fib']);
     ea_delete([directory,ftrbase,'.fib']);
+else
+    di=dir([directory,'dti.src.gz*.fib.gz']);
+    if length(di)>1
+        ea_error('Too many .fib.gz files present in folder. Please delete older files');
+    end
+    movefile([directory,di(1).name],[directory,ftrbase,'.fib.gz']);
 end
 
 
@@ -234,7 +275,7 @@ index2 = zeros(dim);
 reco_temp = zeros(dim(1),dim(2),dif);
 plane_size = dim(1)*dim(2);
 
-% GQI reconstruciton matrix A
+% GQI reconstruction matrix A
 l_values = sqrt(b_table(1,:)*0.01506);
 b_vector = b_table(2:4,:).*repmat(l_values,3,1);
 A = sinc(odf_vertices'*b_vector*mean_diffusion_distance_ratio/pi);
@@ -250,9 +291,10 @@ for z = 1:dim(3)
     for x = 1:dim(1)
         for y = 1:dim(2)
             ODF=A*reshape(reco_temp(x,y,:),[],1);
+            ODF=ODF(:);
             p = ea_find_peak(ODF,odf_faces);
             max_dif = max(max_dif,mean(ODF));
-            min_odf = min(ODF);
+            min_odf = min(ODF(:));
             fa0(x,y,z) = ODF(p(1))-min_odf;
             index0(x,y,z) = p(1)-1;
             if length(p) > 1
@@ -279,6 +321,13 @@ res.dimension = dim;
 res.odf_faces=odf_faces;
 res.odf_vertices=odf_vertices;
 
+function ofactor=factor2dsistudiofactor(factor)
+switch factor
+    case 2
+        ofactor=1; % DSI studio codes upsampling factor of 2 with 1
+    case 4
+        ofactor=3; % DSI studio codes upsampling factor of 4 with 3
+end
 
 function p = ea_find_peak(odf,odf_faces)
 is_peak = odf;

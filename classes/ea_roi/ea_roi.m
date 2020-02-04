@@ -72,16 +72,15 @@ classdef ea_roi < handle
             end
 
             % load nifti
-
             obj.nii=ea_load_nii(obj.niftiFilename);
+            obj.nii.img(obj.nii.img==0) = nan;
             if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
                 obj.binary=1;
             else
-                obj.nii.img(obj.nii.img==0)=nan;
                 obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
                 obj.binary=0;
             end
-            obj.nii.img(isnan(obj.nii.img))=0;
+            obj.nii.img(isnan(obj.nii.img)) = 0;
             options.prefs=ea_prefs;
             obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
             obj.min=ea_nanmin(obj.nii.img(~(obj.nii.img==0)));
@@ -180,7 +179,7 @@ if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) %
             obj.sfv=reducepatch(obj.sfv,simplify);
         end
     end
-    jetlist=ea_redblue;
+    jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]); % default blue to red colormap
 
     if obj.binary || obj.usesolidcolor
         obj.cdat=abs(repmat(obj.color,length(obj.sfv.vertices),1) ... % C-Data for surface
