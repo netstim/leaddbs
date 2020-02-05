@@ -12,6 +12,8 @@
 *.trk
 *.zip
 *.6
+*.pyc
+CMakeLists.txt
 
 gibsconnect*.mat
 fibers/
