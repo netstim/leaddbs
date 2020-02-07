@@ -88,6 +88,11 @@ try
                 pos=[sz(3)-50-2 sz(4)-50-2 50 50];
                 onfigtit='Check registration of specific structures (busy...)';
                 offfigtit='Check registration of specific structures';
+            case 'trajectory'
+                sz=get(fighandle,'Position');
+                pos=[sz(3)-50-2 sz(4)-50-2 50 50];
+                onfigtit='Edit Trajectory (busy...)';
+                offfigtit='Edit Trajectory';
         end
     end
 

@@ -80,24 +80,26 @@ if get(handles.wmatedges,'Value')
 
     pcnt=1;
     ncnt=1;
-    for edge=find(~isnan(tCM))';
+    for edge=find(~isnan(tCM))'
 
         [ii,jj]=ind2sub(size(tCM),edge);
-        if isbipolar
-            if tCM(edge)<0
-                cstr='r';
-                nfv(ncnt)=mArrow3(centr(ii,:),centr(jj,:),'color',cstr,'stemWidth',abs(ntCM(edge))*stemfactor,'tipWidth',abs(ntCM(edge))*tipfactor);
-                ncnt=ncnt+1;
+        if ii~=jj
+            if isbipolar
+                if tCM(edge)<0
+                    cstr='r';
+                    nfv(ncnt)=mArrow3(centr(ii,:),centr(jj,:),'color',cstr,'stemWidth',abs(ntCM(edge))*stemfactor,'tipWidth',abs(ntCM(edge))*tipfactor);
+                    ncnt=ncnt+1;
+                else
+                    cstr='b';
+                    pfv(pcnt)=mArrow3(centr(ii,:),centr(jj,:),'color',cstr,'stemWidth',ntCM(edge)*stemfactor,'tipWidth',ntCM(edge)*tipfactor);
+                    pcnt=pcnt+1;
+                end
             else
                 cstr='b';
+
                 pfv(pcnt)=mArrow3(centr(ii,:),centr(jj,:),'color',cstr,'stemWidth',ntCM(edge)*stemfactor,'tipWidth',ntCM(edge)*tipfactor);
                 pcnt=pcnt+1;
             end
-        else
-            cstr='b';
-
-            pfv(pcnt)=mArrow3(centr(ii,:),centr(jj,:),'color',cstr,'stemWidth',ntCM(edge)*stemfactor,'tipWidth',ntCM(edge)*tipfactor);
-            pcnt=pcnt+1;
         end
     end
 
