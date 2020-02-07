@@ -81,17 +81,19 @@ class EffectTool(object):
   def cursorOff(self):
     """Turn off and save the current cursor so
     the user can see the background image during editing"""
-    self.savedCursor = self.sliceWidget.cursor
-    qt_BlankCursor = 10
-    self.sliceWidget.setCursor(qt.QCursor(qt_BlankCursor))
+    qt.QApplication.setOverrideCursor(qt.QCursor(10))
+    #self.savedCursor = self.sliceWidget.cursor
+    #qt_BlankCursor = 10
+    #self.sliceWidget.setCursor(qt.QCursor(qt_BlankCursor))
 
   def cursorOn(self):
     """Restore the saved cursor if it exists, otherwise
     just restore the default cursor"""
-    if self.savedCursor:
-      self.sliceWidget.setCursor(self.savedCursor)
-    else:
-      self.sliceWidget.unsetCursor()
+    qt.QApplication.setOverrideCursor(qt.QCursor(0))
+    #if self.savedCursor:
+    #  self.sliceWidget.setCursor(self.savedCursor)
+    #else:
+    #  self.sliceWidget.unsetCursor()
 
   def abortEvent(self,event):
     """Set the AbortFlag on the vtkCommand associated

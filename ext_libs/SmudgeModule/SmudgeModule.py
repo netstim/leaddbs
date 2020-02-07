@@ -1,4 +1,4 @@
-import os
+import os, sys
 import unittest
 import vtk, qt, ctk, slicer
 import logging
@@ -6,10 +6,12 @@ import numpy as np
 from subprocess import call
 import shutil
 from math import sqrt
-from Helpers import CircleEffect
-from Helpers.TransformUtil import getTransformRASToIJK
+from Helpers import PointerEffect, WarpEffect
+#sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # somehow needs this to find module
+from Helpers import FunctionsUtil
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
+import glob
 
 #
 # SmudgeModule
@@ -51,12 +53,14 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def setup(self):
     ScriptedLoadableModuleWidget.setup(self)
 
-    # hide reload and test in slicelet mode
-    self.reloadCollapsibleButton.setVisible(not __name__ == "__main__")
+    # hide reload and test in slicelet (when in developer mode)
+    if slicer.util.settingsValue('Developer/DeveloperMode', False, converter=slicer.util.toBool):
+      self.reloadCollapsibleButton.setVisible(not __name__ == "__main__")   
 
     # Init parameter node
     self.parameterNode = SmudgeModuleLogic().getParameterNode()
     self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGuiFromMRML)
+
 
     # Instantiate and connect widgets ...
 
@@ -125,7 +129,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # segmentation selector
     #
     self.segmentationSelector = slicer.qMRMLNodeComboBox()
-    self.segmentationSelector.nodeTypes = ["vtkMRMLSegmentationNode"]
+    self.segmentationSelector.nodeTypes = ["vtkMRMLModelHierarchyNode"]
     self.segmentationSelector.selectNodeUponCreation = False
     self.segmentationSelector.addEnabled = False
     self.segmentationSelector.removeEnabled = False
@@ -165,9 +169,20 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.smudgeButton.setIconSize(smudgePixmap.rect().size())
     self.smudgeButton.setCheckable(True)
     self.smudgeButton.setEnabled(False)
-
+    #self.smudgeButton.setAutoExclusive(True)
     optionsFrame.layout().addWidget(self.smudgeButton)
-    optionsFrame.layout().addWidget(qt.QPushButton("Other"))
+
+    pencilPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','pencilIcon.png')))
+    pencilIcon = qt.QIcon(pencilPixmap)
+    self.snapButton = qt.QPushButton()
+    self.snapButton.setIcon(pencilIcon)
+    self.snapButton.setIconSize(pencilPixmap.rect().size())
+    self.snapButton.setCheckable(True)
+    self.snapButton.setEnabled(False)
+    #self.snapButton.setAutoExclusive(True)
+    optionsFrame.layout().addWidget(self.snapButton)
+
+    #optionsFrame.layout().addWidget(qt.QPushButton("Other"))
     optionsFrame.layout().addWidget(qt.QPushButton("Other"))
     toolsFormLayout.addRow(optionsFrame)
 
@@ -215,14 +230,23 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     
     #
     # Undo Redo
-    #
-   
+    #   
     undoredoFrame = qt.QFrame()
     undoredoFrame.setLayout(qt.QHBoxLayout())
 
-    self.undoButton = qt.QPushButton("<-")
+    undoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','undoIcon.png')))
+    undoIcon = qt.QIcon(undoPixmap)
+    self.undoButton = qt.QPushButton()
+    self.undoButton.setIcon(undoIcon)
+    self.undoButton.setIconSize(undoPixmap.rect().size())
     self.undoButton.setEnabled(False)
-    self.redoButton = qt.QPushButton("->")
+
+    redoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','redoIcon.png')))
+    redoIcon = qt.QIcon(redoPixmap)
+    self.redoButton = qt.QPushButton()
+    self.redoButton.setIcon(redoIcon)
+    self.redoButton.setIconSize(redoPixmap.rect().size())
+    self.redoButton.setEnabled(False)
 
     undoredoFrame.layout().addWidget(self.undoButton)
     undoredoFrame.layout().addWidget(self.redoButton)
@@ -243,11 +267,19 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     #
     # Display
     #
+
+    displayFrame = qt.QFrame()
+    displayFrame.setLayout(qt.QHBoxLayout())
+
     self.layoutComboBox = qt.QComboBox()
     self.layoutComboBox.addItems(['Four Up','Tabbed Slices'])
-    viewFormLayout.addRow("Layout:", self.layoutComboBox)
 
+    self.sliceIntersectionVisibilityCheckBox = qt.QCheckBox('Slice Intersection')
 
+    displayFrame.layout().addWidget(self.layoutComboBox)
+    displayFrame.layout().addWidget(self.sliceIntersectionVisibilityCheckBox)
+
+    viewFormLayout.addRow("Layout:", displayFrame)
 
     #
     # Modality
@@ -255,6 +287,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.modalityComboBox = qt.QComboBox()
     self.modalityComboBox.addItems(['T1','T2'])
     viewFormLayout.addRow("Modality:", self.modalityComboBox)
+    self.modalityComboBox.setEnabled(__name__=="__main__")
 
     #
     # Template
@@ -278,6 +311,10 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Segmentation
     #
 
+    self.segmentationComboBox = qt.QComboBox()
+    self.segmentationComboBox.addItem('Choose Atlas')
+    viewFormLayout.addRow("Atlas:", self.segmentationComboBox)
+
     self.segmentationOutlineSlider = ctk.ctkSliderWidget()
     self.segmentationOutlineSlider.singleStep = 0.1
     self.segmentationOutlineSlider.minimum = 0
@@ -286,13 +323,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.segmentationOutlineSlider.value = 1
     viewFormLayout.addRow("Segmentation Outline:", self.segmentationOutlineSlider)
 
-    self.segmentationFillSlider = ctk.ctkSliderWidget()
-    self.segmentationFillSlider.singleStep = 0.1
-    self.segmentationFillSlider.minimum = 0
-    self.segmentationFillSlider.maximum = 1
-    self.segmentationFillSlider.decimals = 1
-    self.segmentationFillSlider.value = 0.5
-    viewFormLayout.addRow("Segmentation Fill:", self.segmentationFillSlider)
 
     self.segmentationList = qt.QListWidget()
     self.segmentationList.setSelectionMode(qt.QAbstractItemView().ExtendedSelection)
@@ -302,22 +332,40 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.layout.addStretch(1)
 
     #
-    # Save pushbutton
+    # Save Area
     #
 
-    self.saveButton = qt.QPushButton("Save")
-    #self.flattenButton.setEnabled(False)
-    #parametersFormLayout.addRow(self.saveButton)
-    self.layout.addWidget(self.saveButton)
+    saveCollapsibleButton = ctk.ctkCollapsibleButton()
+    saveCollapsibleButton.text = "Save"
+    self.layout.addWidget(saveCollapsibleButton)
+    saveFormLayout = qt.QFormLayout(saveCollapsibleButton)
+
+    saveModeFrame = qt.QFrame()
+    saveModeFrame.setLayout(qt.QHBoxLayout())
+    saveFormLayout.addRow("",saveModeFrame)
+
+    self.overwriteRadioButton = qt.QRadioButton('Overwrite warp field', saveModeFrame)
+    self.overwriteRadioButton.setChecked(True)
+    self.saveDeformedRadioButton = qt.QRadioButton('Save deformed image and use as metric for registration', saveModeFrame)
+
+    saveFormLayout.layout().addWidget(self.overwriteRadioButton)
+    saveFormLayout.layout().addWidget(self.saveDeformedRadioButton)
+
+    self.saveButton = qt.QPushButton("Save and Exit")
+    self.saveButton.setMinimumHeight(30)
+    self.saveButton.setStyleSheet("background-color: green")
+    saveFormLayout.addRow("",self.saveButton)
 
     # connections
     self.smudgeButton.connect('clicked(bool)', self.onSmudgeButton)
+    self.smudgeButton.toggled.connect(self.toogleTools)
+    self.snapButton.connect('clicked(bool)', self.onSnapButton)
+    self.snapButton.toggled.connect(self.toogleTools)
     self.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.exit)
     self.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateMRMLFromGUI)
     self.transformSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.exit)
     self.transformSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateMRMLFromGUI)
     self.affineSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateMRMLFromGUI)
-    #self.segmentationSelector.connect("currentNodeChanged(vtkMRMLNode*)", )
     self.segmentationSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.segmentationNodeChanged)
     self.initializeButton.connect("clicked(bool)", self.onInitializeButton)
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
@@ -329,11 +377,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
 
     self.layoutComboBox.connect('currentIndexChanged(int)', self.onLayoutChanged)
+    self.sliceIntersectionVisibilityCheckBox.connect('stateChanged(int)', self.onSliceIntersectionVisibilityChanged)
     self.modalityComboBox.connect('currentIndexChanged(int)', self.onModalityChanged)
     self.templateSlider.connect('valueChanged(double)', self.updateTemplateView)
     self.warpViewCheckBox.connect('stateChanged(int)', self.onWarpCheckBoxChange)
+    self.segmentationComboBox.connect('currentIndexChanged(int)', self.onSegmentationChanged)
     self.segmentationOutlineSlider.connect('valueChanged(double)', self.updateSegmentationOutline)
-    self.segmentationFillSlider.connect('valueChanged(double)', self.updateSegmentationFill)
     self.segmentationList.itemSelectionChanged.connect(self.segmentationItemChanged)
     self.segmentationList.itemDoubleClicked.connect(self.segmentationDoubleClicked)
 
@@ -350,6 +399,27 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def enter(self):
     pass
+
+  def onSliceIntersectionVisibilityChanged(self, state):
+    viewNodes = slicer.util.getNodesByClass('vtkMRMLSliceCompositeNode')
+    for viewNode in viewNodes:
+      viewNode.SetSliceIntersectionVisibility(state)
+
+
+  def onSegmentationChanged(self,index):
+    if index != 0:
+      MNIPath = self.parameterNode.GetParameter("MNIPath")
+      atlasPath = os.path.join(MNIPath,'atlases',self.segmentationComboBox.itemText(index))
+      segmentationNode = FunctionsUtil.createSegmentationFromAtlas(atlasPath)
+      if segmentationNode:
+        modelID = self.parameterNode.GetParameter("modelID")
+        if modelID != "":
+          modelHierarchyNode = slicer.util.getNode(modelID)
+          modelHierarchyNode.RemoveAllChildrenNodes()
+          segmentationLogic = slicer.modules.segmentations.logic()
+          segmentationLogic.ExportAllSegmentsToModelHierarchy(segmentationNode, modelHierarchyNode)
+          slicer.mrmlScene.RemoveNode(segmentationNode)
+          self.segmentationNodeChanged()
 
   def updateTemplateView(self,value):
     layoutManager = slicer.app.layoutManager()
@@ -407,10 +477,10 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     SmudgeModuleLogic().initialize()
 
   def segmentationDoubleClicked(self,item):
-    segmentationNode = slicer.util.getNode(self.parameterNode.GetParameter("segmentationID"))
+    modelNode = slicer.util.getNode(self.parameterNode.GetParameter("modelID"))
     item.setSelected(1)
-    seg = segmentationNode.GetSegmentation().GetSegment(item.text())
-    pd = seg.GetRepresentation('Closed surface')
+    seg = slicer.util.getNode(item.text())
+    pd = seg.GetPolyData()
     center = vtk.vtkCenterOfMass()
     center.SetInputData(pd)
     center.Update()
@@ -423,21 +493,30 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     slicer.mrmlScene.RemoveNode(markupsNode)
 
   def segmentationItemChanged(self):
-    segmentationNode = slicer.util.getNode(self.parameterNode.GetParameter("segmentationID"))
-    for i in range(segmentationNode.GetSegmentation().GetNumberOfSegments()):
-      segmentationNode.GetDisplayNode().SetSegmentVisibility(self.segmentationList.item(i).text(), self.segmentationList.item(i).isSelected())
+    modelNode = slicer.util.getNode(self.parameterNode.GetParameter("modelID"))
+    col = vtk.vtkCollection()
+    modelNode.GetChildrenModelNodes(col)
+    for i in range(col.GetNumberOfItems()):
+      col.GetItemAsObject(i).GetDisplayNode().SetSliceIntersectionVisibility(self.segmentationList.item(i).isSelected())
+
 
   def updateSegmentationOutline(self,value):
-    segmentationNode = slicer.util.getNode(self.parameterNode.GetParameter("segmentationID"))
-    segmentationNode.GetDisplayNode().SetAllSegmentsOpacity2DOutline(value)
+    modelID = self.parameterNode.GetParameter("modelID")
+    if modelID != "":
+      modelNode = slicer.util.getNode(modelID)
+      col = vtk.vtkCollection()
+      modelNode.GetChildrenModelNodes(col)
+      for i in range(col.GetNumberOfItems()):
+        col.GetItemAsObject(i).GetDisplayNode().SetSliceIntersectionOpacity(value)
 
-  def updateSegmentationFill(self,value):
-    segmentationNode = slicer.util.getNode(self.parameterNode.GetParameter("segmentationID"))
-    segmentationNode.GetDisplayNode().SetAllSegmentsOpacity2DFill(value)
 
   def segmentationNodeChanged(self):
     self.segmentationList.clear()
-    self.updateMRMLFromGUI()
+    self.updateGuiFromMRML()
+    modelID = self.parameterNode.GetParameter("modelID")
+    if modelID != "":
+      self.updateSegmentationOutline(self.segmentationOutlineSlider.value)
+    
     
   def onUndoButton(self):
     SmudgeModuleLogic().undoOperation()
@@ -449,7 +528,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     SmudgeModuleLogic().flattenTransform()
   
   def onSaveButton(self):
-    SmudgeModuleLogic().flattenTransform(overwriteBool=1)
+    SmudgeModuleLogic().flattenTransform(overwriteBool=self.overwriteRadioButton.checked, saveDeformedImage=self.saveDeformedRadioButton.checked)
 
   def updateGuiFromMRML(self, caller="", event=""):
     radius = float(self.parameterNode.GetParameter("radius"))
@@ -461,18 +540,30 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     redoTransformID = self.parameterNode.GetParameter("redoTransformID")
     self.redoButton.setEnabled(not redoTransformID == "")
     if not self.segmentationList.item(0): # empty list
-      segmentationID = self.parameterNode.GetParameter("segmentationID")
-      if segmentationID != "":
-        segmentationNode = slicer.util.getNode(segmentationID)
-        segmentationNode.CreateDefaultDisplayNodes()
-        for i in range(segmentationNode.GetSegmentation().GetNumberOfSegments()):
-          self.segmentationList.addItem(segmentationNode.GetSegmentation().GetNthSegment(i).GetName())
-        segmentationNode.CreateClosedSurfaceRepresentation()
-        segmentationNode.GetDisplayNode().SetAllSegmentsVisibility(0)
-        segmentationNode.GetDisplayNode().SetAllSegmentsVisibility3D(0)
+      # initialize segmentaion
+      modelID = self.parameterNode.GetParameter("modelID")
+      if modelID != "":
+        modelNode = slicer.util.getNode(modelID)
+        childrenCollection = vtk.vtkCollection()
+        modelNode.GetChildrenModelNodes(childrenCollection)
+        #modelNode.CreateDefaultDisplayNodes()
+        for i in range(childrenCollection.GetNumberOfItems()):
+          self.segmentationList.addItem(childrenCollection.GetItemAsObject(i).GetName())
+          childrenCollection.GetItemAsObject(i).GetDisplayNode().SetOpacity(0) # hide from 3d viewer
+    if not self.segmentationComboBox.itemText(1):
+      # initialize combo box
+      MNIPath = self.parameterNode.GetParameter("MNIPath")
+      if MNIPath != "":
+        atlasesPath = os.path.join(MNIPath,'atlases')
+        atlases = sorted(os.listdir(atlasesPath))
+        for atlas in atlases:
+          if len(glob.glob(os.path.join(atlasesPath,atlas,'*','*.nii*')))>0: # check if atlas has nifti files
+            self.segmentationComboBox.addItem(atlas)
     self.smudgeButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
+    self.snapButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
     self.flattenButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
     self.undoButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
+    self.initializeButton.setEnabled(self.inputSelector.currentNode() and self.transformSelector.currentNode() and self.affineSelector.currentNode())
 
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter( "radius", str(self.radiusSlider.value) )
@@ -486,129 +577,39 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.parameterNode.SetParameter( "segmentationID", self.segmentationSelector.currentNode().GetID())
     if self.affineSelector.currentNode():
       self.parameterNode.SetParameter( "affineTransformID", self.affineSelector.currentNode().GetID())
-    self.initializeButton.setEnabled(self.inputSelector.currentNode() and self.transformSelector.currentNode() and self.affineSelector.currentNode())
+        
     
-    
+  def toogleTools(self):
+    WarpEffect.WarpEffectTool.empty()
 
   def onSmudgeButton(self, buttonDown):
     if buttonDown:
+      self.snapButton.setChecked(False)
       SmudgeModuleLogic().smudgeOn()
     else:
       SmudgeModuleLogic().smudgeOff()
+
+  def onSnapButton(self, buttonDown):
+    if buttonDown:
+      self.smudgeButton.setChecked(False)
+      SmudgeModuleLogic().snapOn()
+    else:
+      SmudgeModuleLogic().snapOff()
+    
       
   def exit(self):
     SmudgeModuleLogic().smudgeOff()
-    SmudgeModuleLogic().undoInitialize()    
-    imageID = self.parameterNode.GetParameter("imageID")
-    if imageID != "":
-      imageNode = slicer.util.getNode(imageID)
-      imageNode.SetAndObserveTransformNodeID("")
+    SmudgeModuleLogic().snapOff()
+    SmudgeModuleLogic().undoInitialize()
     self.smudgeButton.setChecked(False)
+    self.snapButton.setChecked(False)
 
   def onSceneStartClose(self, caller, event):
     self.parameterNode.RemoveAllObservers()
     self.exit()
 
-
-#
-# SmudgeEffectTool
-#
-
-class SmudgeEffectTool(CircleEffect.CircleEffectTool):
-
-  # aux variable used to store all instances so they are cleaned later
-  _instances = set()
-
-  def __init__(self,sliceWidget):
-    self.parameterNode = SmudgeModuleLogic().getParameterNode()
-    super(SmudgeEffectTool,self).__init__(sliceWidget)
-
-    self.transformNode = slicer.util.getNode(self.parameterNode.GetParameter("transformID"))
-
-    # transform data
-    self.auxTransformNode = slicer.util.getNode(self.parameterNode.GetParameter("auxTransformID"))
-    self.auxTransformSpacing = self.auxTransformNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0] # Asume isotropic!
-    self.auxTransfromRASToIJK = getTransformRASToIJK(self.auxTransformNode)  
-    self.auxTransformArray = slicer.util.array(self.auxTransformNode.GetID())
-
-    self.previousPoint = [0,0,0]   
-    self.smudging = False
-    # deactivate window level adjust
-    interactorStyle = self.sliceView.sliceViewInteractorStyle()
-    interactorStyle.SetActionEnabled(interactorStyle.AdjustWindowLevelBackground, False)
-
-    self._instances.add(self)
-
-
-  def processEvent(self, caller=None, event=None):
-    super(SmudgeEffectTool,self).processEvent(caller, event)
-
-    if event == 'LeftButtonPressEvent':
-      # get aux transform array in case it has been modified externalyy
-      self.auxTransformArray = slicer.util.array(self.auxTransformNode.GetID())
-      # clean redo transform
-      redoTransformID = self.parameterNode.GetParameter("redoTransformID")
-      if redoTransformID != "":
-        slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("redoTransformID")))
-        self.parameterNode.SetParameter("redoTransformID","")
-      self.smudging = True
-      xy = self.interactor.GetEventPosition()
-      xyToRAS = self.sliceLogic.GetSliceNode().GetXYToRAS()
-      self.previousPoint = xyToRAS.MultiplyDoublePoint( (xy[0], xy[1], 0, 1) )[0:3]
-    elif event == 'LeftButtonReleaseEvent':
-      self.smudging = False
-      self.transformNode.HardenTransform()
-      SmudgeModuleLogic().createEmptyTransform(transformNode=self.auxTransformNode)
-      self.transformNode.SetAndObserveTransformNodeID(self.parameterNode.GetParameter("auxTransformID"))
-      
-    elif event == 'MouseMoveEvent':
-      if self.smudging:
-        # get current IJK coord
-        xy = self.interactor.GetEventPosition()
-        xyToRAS = self.sliceLogic.GetSliceNode().GetXYToRAS()
-        currentPoint = xyToRAS.MultiplyDoublePoint( (xy[0], xy[1], 0, 1) )[0:3]
-        pos_i,pos_j,pos_k,aux = self.auxTransfromRASToIJK.MultiplyDoublePoint(currentPoint + (1,))
-        k,j,i = int(round(pos_k)),int(round(pos_j)),int(round(pos_i))
-        # create a sphere with redius
-        r = int(round(float(self.parameterNode.GetParameter("radius")) / self.auxTransformSpacing))
-        xx, yy, zz = np.mgrid[:2*r+1, :2*r+1, :2*r+1]
-        sphereResult = (xx-r) ** 2 + (yy-r) ** 2 + (zz-r) ** 2
-        sphereResult[r][r][r] = 1 # replace 0 by 1
-        sphereLarge = sphereResult <= (r**2+1) # sphere that the mouse shows
-        sphereSmall = sphereResult <= ((r * (1-float(self.parameterNode.GetParameter("blurr")) / 100.0)) **2 + 1 ) # Blurr amount
-        sphereResult = 1.0 / sphereResult # invert
-        # get value in the edge of the small sphere
-        i1,i2,i3 = np.nonzero(sphereSmall)
-        newMaxValue = sphereResult[i1[0]][i2[0]][i3[0]]
-        # set same value inside the small sphere
-        sphereResult[sphereSmall] = sphereSmall[sphereSmall] * newMaxValue
-        # delete outside values 
-        sphereResult = sphereResult * sphereLarge
-        # set range to [0-1]
-        newMinValue = sphereResult.min()
-        sphereResult = (sphereResult - newMinValue) / (newMaxValue - newMinValue)
-        # set hardness
-        sphereResult = sphereResult * float(self.parameterNode.GetParameter("hardness")) / 100.0
-        # apply to transform array
-        index = slice(k-r,k+r+1), slice(j-r,j+r+1), slice(i-r,i+r+1)
-        self.auxTransformArray[index] += np.stack([(sphereResult) * i for i in (np.array(self.previousPoint) - np.array(currentPoint))],3)
-        # update view
-        self.auxTransformNode.Modified()
-        # update previous point
-        self.previousPoint = currentPoint
-
-  def cleanup(self):
-    interactorStyle = self.sliceView.sliceViewInteractorStyle()
-    interactorStyle.SetActionEnabled(interactorStyle.AdjustWindowLevelBackground, True)
-    super(SmudgeEffectTool,self).cleanup()
-
-  @classmethod
-  def empty(cls):
-    # clean instances and reset
-    for inst in cls._instances:
-      inst.cleanup()
-    cls._instances = set()
   
+
 
 #
 # SmudgeModuleLogic
@@ -633,7 +634,9 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     parameterNode = self.getParameterNode()
     if not bool(int(parameterNode.GetParameter("initialized"))):
       if parameterNode.GetParameter("auxTransformID") == "":
-        self.createEmptyTransform(parameterName="auxTransformID")
+        transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
+        FunctionsUtil.emptyTransform(transformNode)
+        parameterNode.SetParameter("auxTransformID", transformNode.GetID())
       # apply affine transform to image
       affineNode = slicer.util.getNode(parameterNode.GetParameter("affineTransformID"))
       imageNode = slicer.util.getNode(parameterNode.GetParameter("imageID"))
@@ -674,7 +677,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("affineTransformID", "")
     node.SetParameter("imageID", "")
     node.SetParameter("templateID", "")
-    node.SetParameter("segmentationID","")
+    node.SetParameter("modelID","")
     node.SetParameter("radius", "10")
     node.SetParameter("blurr", "40")
     node.SetParameter("hardness", "100")
@@ -689,16 +692,17 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     parameterNode = self.getParameterNode()
     
     if parameterNode.GetParameter("auxTransformID") == "":
-      self.createEmptyTransform(parameterName="auxTransformID")
+      transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
+      FunctionsUtil.emptyTransform(transformNode)
+      parameterNode.SetParameter("auxTransformID", transformNode.GetID())
 
     for color in ['Red','Green','Yellow']:
       sliceWidget = slicer.app.layoutManager().sliceWidget(color)
-      SmudgeEffectTool(sliceWidget)
-
+      WarpEffect.SmudgeEffectTool(parameterNode,sliceWidget)
   
   def smudgeOff(self):
     parameterNode = self.getParameterNode()
-    SmudgeEffectTool.empty()
+    WarpEffect.WarpEffectTool.empty()
     auxTransformID = parameterNode.GetParameter("auxTransformID")
     if auxTransformID != "":
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(auxTransformID))
@@ -707,36 +711,19 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     if redoTransformID != "":
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(redoTransformID))
       parameterNode.SetParameter("redoTransformID", "")
-    
-  def createEmptyTransform(self, transformNode = None, parameterName = ""):
-    # init
-    transformSize = [193,229,193]
-    voxelType=vtk.VTK_FLOAT
-    transformOrigin = [-96.0, -132.0, -78.0]
-    transformSpacing = [1.0, 1.0, 1.0]
-    transformPathections = [[1,0,0], [0,1,0], [0,0,1]]
-    fillVoxelValue = 0
-    # Create an empty image volume, filled with fillVoxelValue
-    imageData = vtk.vtkImageData()
-    imageData.SetDimensions(transformSize)
-    imageData.AllocateScalars(voxelType, 3)
-    imageData.GetPointData().GetScalars().Fill(fillVoxelValue)
-    # Create transform
-    transform = slicer.vtkOrientedGridTransform()
-    transform.SetInterpolationModeToCubic()
-    transform.SetDisplacementGridData(imageData)
-    # Create transform node
-    if not transformNode:
-      transformNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLGridTransformNode")
-      parameterNode = self.getParameterNode()
-      parameterNode.SetParameter(parameterName, transformNode.GetID())
-    transformNode.SetAndObserveTransformFromParent(transform)
-    transformNode.GetTransformFromParent().GetDisplacementGrid().SetOrigin(transformOrigin)
-    transformNode.GetTransformFromParent().GetDisplacementGrid().SetSpacing(transformSpacing)
-    #transformNode.CreateDefaultDisplayNodes()
-    transformNode.CreateDefaultStorageNode()    
 
-  def flattenTransform(self, overwriteBool = 0):
+  def snapOn(self):
+    parameterNode = self.getParameterNode()
+    for color in ['Red','Green','Yellow']:
+      sliceWidget = slicer.app.layoutManager().sliceWidget(color)
+      WarpEffect.SnapEffectTool(parameterNode, sliceWidget)
+  
+  def snapOff(self):
+    WarpEffect.WarpEffectTool.empty()
+    
+  
+
+  def flattenTransform(self, overwriteBool = 0, saveDeformedImage = 0):
     """
     Flat all manual transformations
     """
@@ -755,10 +742,10 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     path,transformFilename = os.path.split(transformNode.GetStorageNode().GetFileName()) # get working dir
     os.mkdir(os.path.join(path,"tmp")) # create temp folder
     
-    if overwriteBool:
+    if overwriteBool or saveDeformedImage:
       transformFullFilename = os.path.join(path,transformFilename)
       backupFile = os.path.join(path,"glanatComposite_backup.nii.gz")
-      if not os.path.isfile(backupFile):
+      if not os.path.isfile(backupFile) and overwriteBool: # buckup transform before overwrite
         shutil.copyfile(transformFullFilename,backupFile)
       command = "-t " + transformFullFilename + " "
     else:
@@ -774,9 +761,9 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     	slicer.util.saveNode(auxTransformNode,fullname)
     	command = "-t " + fullname + " " + command
 
-    self.createEmptyTransform(transformNode=auxTransformNode) # reset aux transform
+    FunctionsUtil.emptyTransform(auxTransformNode) # reset aux transform
 
-    if overwriteBool:
+    if overwriteBool or saveDeformedImage:
       referenceFile = os.path.join(path,"glanat.nii")
     else:
       referenceFile = fullname
@@ -788,6 +775,10 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       os.remove(transformFullFilename)
       shutil.copyfile(outname,transformFullFilename)
       print('Saved!')
+    elif saveDeformedImage:
+      os.mkdir(os.path.join(path,"deformed"))
+      command = parameterNode.GetParameter("atnsApplyTransformsPath") + " -r " + referenceFile + " -i " + os.path.join(path,'anat_t1.nii') + " -t " + outname + " -o " + os.path.join(path,'deformed','anat_t1_deformed.nii')
+      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
     else:
       ls,flatTransformNode = slicer.util.loadTransform(outname, returnNode = True) # load result
       # reset original transform
@@ -804,6 +795,9 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     
     # cleanup
     shutil.rmtree(os.path.join(path,"tmp"))
+
+    if overwriteBool or saveDeformedImage:
+      slicer.util.exit()
 
   def undoOperation(self):
 
@@ -827,13 +821,14 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       transformNode.SetAndObserveTransformNodeID(auxTransformNode.GetID())
       transformNode.HardenTransform()
 
-    self.createEmptyTransform(transformNode=auxTransformNode) # reset aux transform
+    FunctionsUtil.emptyTransform(auxTransformNode) # reset aux transform
 
     # save last op for redo
     redoTransformID = parameterNode.GetParameter("redoTransformID")
     if redoTransformID == "":
-      self.createEmptyTransform(parameterName="redoTransformID")
-      redoTransformID = parameterNode.GetParameter("redoTransformID")
+      redoTransformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
+      FunctionsUtil.emptyTransform(redoTransformNode)
+      parameterNode.SetParameter("redoTransformID", redoTransformNode.GetID())
     redoTransformNode =  slicer.util.getNode(redoTransformID)
     con = vtk.vtkWarpTransform.SafeDownCast(col.GetItemAsObject(col.GetNumberOfItems()-1))
     redoTransformNode.SetAndObserveTransformToParent(con)
@@ -881,18 +876,7 @@ class SmudgeModuleTest(ScriptedLoadableModuleTest):
     module.  For example, if a developer removes a feature that you depend on,
     your test should break so they know that the feature is needed.
     """
-
-    imagePath = '/Users/netstim/Desktop/smudge_test/anat_t1_affine.nii'
-    transformPath = '/Users/netstim/Desktop/smudge_test/glanatComposite_downsampleModified.nii.gz'
-
-    ls,imageNode = slicer.util.loadVolume(imagePath, properties = {'show':True}, returnNode = True)
-    ls,transformNode = slicer.util.loadTransform(transformPath, returnNode = True)
-
-    #node = SmudgeModuleLogic().getParameterNode()
-    #node.SetParameter( "transformID", transformNode.GetID())
-    #node.SetParameter( "imageID", imageNode.GetID())
-
-    #SmudgeModuleLogic().smudgeOn()
+    pass
 
 
 
@@ -946,8 +930,7 @@ if __name__ == "__main__":
 
     MNIPath = os.path.join(leadPath,'templates','space','MNI_ICBM_2009b_NLIN_ASYM')
 
-    from sys import platform
-    if platform == "darwin":
+    if sys.platform == "darwin":
       ext = "maci64"
 
     # TODO: other platforms
@@ -970,6 +953,12 @@ if __name__ == "__main__":
       affineNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
     else:
       ls, affineNode = slicer.util.loadTransform(affinePath, returnNode = True)
+
+    # segmentation to model
+    modelHierarchyNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelHierarchyNode')
+    segmentationLogic = slicer.modules.segmentations.logic()
+    segmentationLogic.ExportAllSegmentsToModelHierarchy(segmentationNode, modelHierarchyNode)
+    slicer.mrmlScene.RemoveNode(segmentationNode)
     
     parameterNode = SmudgeModuleLogic().getParameterNode()
     
@@ -977,7 +966,7 @@ if __name__ == "__main__":
     parameterNode.SetParameter("affineTransformID", affineNode.GetID())
     parameterNode.SetParameter("imageID", imageNode.GetID())
     parameterNode.SetParameter("templateID", templateNode.GetID())
-    parameterNode.SetParameter("segmentationID", segmentationNode.GetID())
+    parameterNode.SetParameter("modelID", modelHierarchyNode.GetID())
     parameterNode.SetParameter("subjectPath", subjectPath)
     parameterNode.SetParameter("MNIPath", MNIPath)
     parameterNode.SetParameter("atnsApplyTransformsPath", atnsApplyTransformsPath)
@@ -991,10 +980,6 @@ if __name__ == "__main__":
     imageNode.GetDisplayNode().AutoWindowLevelOff()
     imageNode.GetDisplayNode().SetWindow(760)
     imageNode.GetDisplayNode().SetLevel(420)
-
-    # Link views
-    #for sliceCompositeNode in slicer.util.getNodesByClass('vtkMRMLSliceCompositeNode'):
-    #  sliceCompositeNode.SetLinkedControl(True)
 
 
 
