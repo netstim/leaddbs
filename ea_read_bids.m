@@ -23,9 +23,9 @@ if ~strcmp(id(1:3), 'sub')
     error('Not a valid BIDS subject folder')
 end
 
-%% Get BIDS session names for preop and postop
-% Note that user's can specify the same folder for both, or even
-% '' for one or both if no session subfolder is used, by modifying
+%% Get BIDS session names - subfolders where preop and postop images are stored
+% Note that users can specify the same folder for both, or even
+% '' for one or both if no session-specific subfolder is used, by modifying
 % their .ea_prefs file.
 if ~isfield(options.prefs,'bids_session_preop') 
     options.prefs.bids_session_preop = 'ses-preDBS';
@@ -91,9 +91,25 @@ if isfield(options.prefs, 'lead2bids_lookup')
                 end
             end
         end
+        
+        % Fixup the extension on the filename regexp, if necessary.
+        pattern = lead2bids_lookup{a, 4};
+        if (length(pattern) > 7)  && (strcmpi(pattern(end-6:end), '.nii.gz'))
+            pattern = pattern(1:end-7);
+        end
+        if (length(pattern) < 9) || (~strcmpi(pattern(end-8:end), '\.nii\.gz'))
+            pattern = [pattern '\.nii\.gz'];
+        end
+        lead2bids_lookup{a, 4} = pattern;
     end
 end
 
+
+
+%% Define auxiliary files to copy
+% The first column is the sequence type from the above table,
+% the second column is a cell array of file extensions (without .)
+% of files to be copied along with the nifti.
 copy_aux_files = {
     'dti'   {'bvec', 'bval'}
 };
@@ -110,21 +126,12 @@ for a = 1:size(lead2bids_lookup, 1)
         ses_folder = {bids_subject_folder};
     end
     
-    % Fixup the extension on the filename regexp, if necessary.
-    pattern = lead2bids_lookup{a, 4};
-    if (length(pattern) > 7)  && (strcmpi(pattern(end-6:end), '.nii.gz'))
-        pattern = pattern(1:end-7);
-    end
-    if (length(pattern) < 9) || (~strcmpi(pattern(end-8:end), '\.nii\.gz'))
-        pattern = [pattern '\.nii\.gz'];
-    end
-    
     % Search all session folders, storing matching files
     files = [];
     for b = 1:length(ses_folder)
         search_dir = fullfile(ses_folder{b}, lead2bids_lookup{a, 3});
         found_nifti = dir(fullfile(search_dir, '*.nii.gz'));
-        match_nifti = regexpi({found_nifti.name}, pattern, 'match', 'once');
+        match_nifti = regexpi({found_nifti.name}, lead2bids_lookup{a, 4}, 'match', 'once');
         match_nifti = found_nifti(~cellfun(@isempty, match_nifti));
         if ~isempty(match_nifti)
             files = [files match_nifti];
