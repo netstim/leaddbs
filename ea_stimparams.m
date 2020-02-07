@@ -66,7 +66,6 @@ if options.native
     set(handles.estimateInTemplate,'Visible','off');
 end
 
-
 set(handles.estimateInTemplate,'Value',ea_getprefs('vatsettings.estimateInTemplate'));
 
 if strcmp(options.leadprod, 'group')
@@ -164,17 +163,12 @@ set(handles.modelselect,'String',ndc);
 %     for side=1:2
 %         for el=1:4
 %             %keyboard
-%
 %             set(eval(['handles.k',num2str(((side-1)*4)+el-1),'u']),'String', num2str(stimparams(side).U(el)));
 %             set(eval(['handles.k',num2str(((side-1)*4)+el-1),'im']),'String',num2str(stimparams(side).Im(el)));
-%
-%
 %         end
 %     end
 %
-%
 %     set(handles.fiberthresh,'String',num2str(stimparams(1).fiberthresh))
-%
 %     set(handles.showfibs,'Value',stimparams(1).showfibers);
 %     set(handles.showconns,'Value',stimparams(1).showconnectivities);
 % end

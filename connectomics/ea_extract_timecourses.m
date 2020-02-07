@@ -50,12 +50,13 @@ save([directory,'TR.mat'],'TR');
 
 
 %% Extract timecourses of specified ROI
-ea_dispercent(0,'Extracting time courses');
-for i=1:signallength
+% ea_dispercent(0,'Extracting time courses');
+parfor i=1:signallength
+    disp(['Extracting time courses: ', num2str(i,'%03d'),'/',num2str(signallength)]);
     interpol_tc(i,:)=spm_sample_vol(V{i},double(voxelmask.locsvx(:,1)),double(voxelmask.locsvx(:,2)),double(voxelmask.locsvx(:,3)),-2);
-    ea_dispercent(i/signallength);
+%     ea_dispercent(i/signallength);
 end
-ea_dispercent(1,'end');
+% ea_dispercent(1,'end');
 interpol_tc=interpol_tc';
 
 disp('Done.');
@@ -159,7 +160,7 @@ ec3map=c3.img; ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
 WMTimecourse=zeros(signallength,1);
 CSFTimecourse=zeros(signallength,1);
 GlobTimecourse=zeros(signallength,1);
-for tmpt = 1:signallength
+parfor tmpt = 1:signallength
     OneTimePoint=alltc(:,:,:,tmpt);
     try
         GlobTimecourse(tmpt)=squeeze(nanmean(OneTimePoint(globmap(:))));
