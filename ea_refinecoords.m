@@ -92,12 +92,12 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
         end
 
         % filter and find first peak (head fiducial marker)
-        filtered_max = sgolayfilt(max(b, [], 2), 1, 21);
+        filtered_max = ea_sgolayfilt(max(b, [], 2), 1, 21);
         if (deltaz < 0) % sometimes the slice is upside down
             filtered_max = flipud(filtered_max);
         end
 
-        [~, idy] = findpeaks(filtered_max, 'NPeaks', 1);
+        [~, idy] = ea_findpeaks(filtered_max, 'NPeaks', 1);
         if isempty(idy)
             warning(['Could not find head of electrode. Check trajectory. Skipping side ', num2str(side)]);
             continue;
