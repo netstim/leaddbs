@@ -52,7 +52,7 @@ if ~exist(derivatives_folder, 'dir')
 end
 
 %% Lookup table to map BIDS names to lead-dbs names.
-% Note that the .nii.gz extension is assumed if not provided.
+% Note that the .nii[.gz] extension is assumed if not provided.
 lead2bids_lookup = {
     % lead_dbs_sequence_name        BIDS_ses    BIDS_subfolder file_search_expression
     'prenii_unnormalized'           ses_preop    'anat'         '.*T2w'
