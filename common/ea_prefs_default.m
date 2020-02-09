@@ -32,6 +32,12 @@ prefs.rawctnii_unnormalized='postop_ct.nii';
 prefs.ctnii_coregistered='rpostop_ct.nii';
 prefs.tp_ctnii_coregistered=['tp_',prefs.ctnii_coregistered];
 
+% A few more that were added specifically for BIDS
+prefs.prenii_unnormalized_t2star = 'anat_t2star.nii';
+prefs.prenii_unnormalized_swi = 'anat_swi.nii';
+prefs.prenii_unnormalized_fgatir = 'anat_fgatir.nii';
+
+
 prefs.preferMRCT = 1; % preference of MR or CT modality for post-op image: 1 for MR, 2 for CT.
 
 prefs.patientdir=patientname;
@@ -47,6 +53,19 @@ prefs.tp_gctnii=['tp_',prefs.gctnii];
 %% BIDS settings
 prefs.bids_session_postop = 'ses-postDBS';
 prefs.bids_session_preop = 'ses-preDBS';
+
+% lead-dbs<-->BIDS mapping
+% Default values are provided in ea_read_bids. Use the table below to 
+% override or append to defaults. The lead_dbs_sequence_name (first col.)
+% must have a corresponding entry in prefs that defines the leaddbs
+% preferred filename for that sequence. e.g., see
+% prefs.prenii_unnormalized_t2star above.
+prefs.lead2bids_lookup = {
+    % lead_dbs_sequence_name        BIDS_ses                    BIDS_subfolder  file_search_expression
+    'prenii_unnormalized_t2star'    prefs.bids_session_preop    'anat'          '.*T2star'
+    'prenii_unnormalized_swi'       prefs.bids_session_preop    'anat'          '.*SWI'
+    'prenii_unnormalized_fgatir'    prefs.bids_session_preop    'anat'          '.*FGATIR'
+};
 
 %% Misc:
 prefs.tonemap='heuristic'; % set to 'albada' to change to datadriven mode
