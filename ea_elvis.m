@@ -176,17 +176,18 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     end
                 end
             end
-            d=load([directory,'ea_reconstruction.mat']);
-            plans=d.reco.electrode(side+1:end);
-            if ~isempty(plans)
-                if isfield(plans,'plan')
-                    for plan=1:length(plans)
-                        pobj=ea_load_electrode(directory,side+plan);
-                        ea_add_trajectory([],[],options,pobj);
+            if ~multiplemode
+                d=load([directory,'ea_reconstruction.mat']);
+                plans=d.reco.electrode(side+1:end);
+                if ~isempty(plans)
+                    if isfield(plans,'plan')
+                        for plan=1:length(plans)
+                            pobj=ea_load_electrode(directory,side+plan);
+                            ea_add_trajectory([],[],options,pobj);
+                        end
                     end
                 end
             end
-
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
                % this part for brainbrowser support.
                vizstruct=struct('faces',[],'vertices',[],'colors',[]);
