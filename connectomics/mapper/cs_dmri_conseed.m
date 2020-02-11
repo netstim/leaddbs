@@ -30,14 +30,10 @@ end
 
 disp(['Command: ',cmd]);
 switch cmd
-    case 'seed'       
-        
-           ea_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
-
+    case 'seed'             
+        ea_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
     case {'matrix', 'pmatrix'}
-
         for s=1:length(sfile)
-
             if strcmp(dfold, 'Patient''s fiber tracts')
                 if strcmp(cname, options.prefs.FTR_normalized) % patient specific fibertracts
                     cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
@@ -174,13 +170,13 @@ function C = countmember(A,B)
 
 error(nargchk(2,2,nargin)) ;
 
-if ~isequal(class(A),class(B)),
+if ~isequal(class(A),class(B))
     error('Both inputs should be the same class.') ;
 end
-if isempty(B),
+if isempty(B)
     C = zeros(size(A)) ;
     return
-elseif isempty(A),
+elseif isempty(A)
     C = [] ;
     return
 end

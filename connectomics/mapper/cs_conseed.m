@@ -2,10 +2,10 @@ function cs_conseed(dofMRI,dodMRI,dfold,sfile,cmd,writeoutsinglefiles,outputfold
 % wrapper for both dmri and fmri to generate seed2map files
 
 if strcmp(outputmask,'.')
-   outputmask=[]; 
+   outputmask=[];
 end
 if ~exist('dmrispace','var')
-   dmrispace='222'; 
+   dmrispace='222';
 end
 if ~isdeployed
     addpath(genpath('/autofs/cluster/nimlab/connectomes/software/lead_dbs'));
@@ -37,7 +37,7 @@ end
 dcname=strrep(dcname,':','>');
 
 if ~strcmp(outputfolder(end),filesep)
-   outputfolder=[outputfolder,filesep]; 
+   outputfolder=[outputfolder,filesep];
 end
 
 % reformat inputs ? everything will be received as a string.

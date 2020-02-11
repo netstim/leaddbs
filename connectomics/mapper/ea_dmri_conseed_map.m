@@ -61,7 +61,7 @@ for s=1:length(sfile)
     for iter=1:Niter
         if iter>1 % bounce iteration
             Vseed=map;
-%            Vseed.img(~(Vseed.img==0))=ea_minmax(Vseed.img(~(Vseed.img==0))); % reset scale from 0-1 % need to think about negatives
+            % Vseed.img(~(Vseed.img==0))=ea_minmax(Vseed.img(~(Vseed.img==0))); % reset scale from 0-1 % need to think about negatives
         else
             Vseed=ea_load_nii(sfile{s});
         end
@@ -159,8 +159,7 @@ for s=1:length(sfile)
         if evalin('base','exist(''SB_SAVE_ITERS'',''var'')')
             copyfile(fullfile(outputfolder,[fn,'_struc_',cmd,'.nii']),fullfile(outputfolder,[fn,'_struc_',cmd,'_',num2str(iter),'.nii']));
         end
-        
-        
+
         if iter>1
            disp(['Similarity to last: ',num2str(corr(map.img(:),Vseed.img(:))),'.']); 
         end
