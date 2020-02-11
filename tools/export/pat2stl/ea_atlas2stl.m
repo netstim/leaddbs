@@ -14,11 +14,12 @@ end
 
 for atl=1:length(atlasnames)
     load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
-    presets=atlases.presets(1).show;
     if ~isempty(target)
         viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']);
         views=viewsets.(target).plyview;
         presets=resolveviews(views(1).structures,atlases);
+    else
+        presets=atlases.presets(1).show;
     end
     for side=1:2
         for i=1:length(presets)
@@ -47,3 +48,8 @@ else
         ea_stlwrite(fname,cfv(i+length(presets)),'FACECOLOR',cfv(i+length(presets)).facevertexcdata);
     end
 end
+
+
+function presets=resolveviews(structures,atlases)
+atlasnames=ea_stripext(atlases.names);
+presets=find(ismember(atlasnames,structures));
