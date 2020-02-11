@@ -1,10 +1,15 @@
-function cfv=ea_atlas2ply(atlasnames,ofn,target)
+function cfv=ea_atlas2ply(atlasnames,ofn,target,outputsinglefile)
+
+if ~iscell(atlasnames)
+    ea_error('Please specify atlas(es) in a cellstring');
+end
 
 if ~exist('target','var')
     target=[];
 end
-if ~iscell(atlasnames)
-    ea_error('Please specify atlas(es) in a cellstring');
+
+if ~exist('outputsinglefile','var')
+    outputsinglefile = 1;
 end
 
 for atl=1:length(atlasnames)
@@ -42,24 +47,34 @@ if any(size(cfv(1).facevertexcdata)==1) % convert from indexed to rgb colors.
     end
 end
 
-
-cfv=ea_concatfv(cfv);
-
 if ~isfield(atlases,'colormap')
     atlases.colormap=jet;
 end
 
-cfv=ea_mapcolvert2ind(cfv,atlases.colormap);
-cfv.faces=[cfv.faces(:,2),cfv.faces(:,1),cfv.faces(:,3)];
-%ea_patch2ply(ofn,cfv.vertices',cfv.faces',cfv.facevertexcdata');
-[pth]=fileparts(ofn);
-if ~exist(pth,'dir')
-    mkdir(pth);
+if outputsinglefile
+    cfv=ea_concatfv(cfv);
+    cfv=ea_mapcolvert2ind(cfv,atlases.colormap);
+    cfv.faces=[cfv.faces(:,2),cfv.faces(:,1),cfv.faces(:,3)];
+    %ea_patch2ply(ofn,cfv.vertices',cfv.faces',cfv.facevertexcdata');
+    [pth]=fileparts(ofn);
+    if ~exist(pth,'dir')
+        mkdir(pth);
+    end
+    plywrite(ofn,cfv.faces,cfv.vertices,cfv.facevertexcdata);
+else
+    for i=1:length(presets)
+        pth = fileparts(ofn);
+        if isempty(pth)
+            pth = '.';
+        end
+        fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Right.ply'];
+        plywrite(fname,cfv(i).faces,cfv(i).vertices,cfv(i).facevertexcdata);
+        fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Left.ply'];
+        plywrite(fname,cfv(i+length(presets)).faces,cfv(i+length(presets)).vertices,cfv(i+length(presets)).facevertexcdata);
+    end
 end
-plywrite(ofn,cfv.faces,cfv.vertices,cfv.facevertexcdata)
 
 
-function showwhat=resolveviews(structures,atlases)
+function presets=resolveviews(structures,atlases)
 atlasnames=ea_stripext(atlases.names);
-showwhat=find(ismember(atlasnames,structures));
-
+presets=find(ismember(atlasnames,structures));
