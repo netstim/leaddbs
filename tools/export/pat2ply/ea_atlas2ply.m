@@ -6,9 +6,8 @@ end
 if ~iscell(atlasnames)
     ea_error('Please specify atlas(es) in a cellstring');
 end
-cnt=1;
-earoot=ea_getearoot;
 
+cnt=1;
 for atl=1:length(atlasnames)
     load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
     showwhat=atlases.presets(1).show;
@@ -17,9 +16,7 @@ for atl=1:length(atlasnames)
         views=viewsets.(target).plyview;
         showwhat=resolveviews(views(1).structures,atlases);
     end
-    load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
     for side=1:2
-
         for mesh=showwhat
             cfv(cnt).vertices=atlases.fv{mesh,side}.vertices;
             cfv(cnt).faces=atlases.fv{mesh,side}.faces;
@@ -44,11 +41,7 @@ if any(size(cfv(1).facevertexcdata)==1) % convert from indexed to rgb colors.
         end
         cfv(entry).facevertexcdata=jetlist(cfv(entry).facevertexcdata,:);
     end
-    %fv(f).facevertexcdata=
-
 end
-
-
 
 
 cfv=ea_concatfv(cfv);
@@ -65,7 +58,6 @@ if ~exist(pth,'dir')
     mkdir(pth);
 end
 plywrite(ofn,cfv.faces,cfv.vertices,cfv.facevertexcdata)
-
 
 
 function showwhat=resolveviews(structures,atlases)
