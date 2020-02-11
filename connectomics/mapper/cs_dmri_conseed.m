@@ -1,25 +1,15 @@
 function cs_dmri_conseed(dfold,cname,sfile,cmd,outputfolder,space,options)
 
-[sfile,roilist]=ea_handleseeds(sfile);
+sfile = ea_handleseeds(sfile);
 
-if isfield(options,'uivatdirs')
-    if ~isempty(options.uivatdirs)
-        outputfolder=[];
-    end
+if isfield(options,'uivatdirs') && ~isempty(options.uivatdirs)
+	outputfolder=[];
 end
 
-owasempty=0;
-if ~exist('outputfolder','var')
-    outputfolder=ea_getoutputfolder(sfile,ocname);
-    owasempty=1;
-else
-    if isempty(outputfolder) % from shell wrapper.
-        outputfolder=ea_getoutputfolder(sfile,cname);
-        owasempty=1;
-    end
-    if ~strcmp(outputfolder(end),filesep)
-        outputfolder=[outputfolder,filesep];
-    end
+if ~exist('outputfolder','var') || isempty(outputfolder)
+    outputfolder = ea_getoutputfolder(sfile,cname);
+elseif ~strcmp(outputfolder(end),filesep)
+    outputfolder = [outputfolder,filesep];
 end
 
 if isdeployed
