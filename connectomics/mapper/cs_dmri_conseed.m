@@ -1,4 +1,4 @@
-function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space,options)
+function cs_dmri_conseed(dfold,cname,sfile,cmd,outputfolder,space,options)
 
 [sfile,roilist]=ea_handleseeds(sfile);
 
@@ -32,7 +32,7 @@ disp(['Command: ',cmd]);
 switch cmd
     case 'seed'       
         
-           ea_dmri_conseed_map(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space,options)
+           ea_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
 
     case {'matrix', 'pmatrix'}
 

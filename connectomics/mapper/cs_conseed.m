@@ -58,7 +58,7 @@ end
 
 if dodMRI
     ndfold=[dfold,filesep];
-    cs_dmri_conseed(dfold,dcname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,dmrispace);
+    cs_dmri_conseed(dfold,dcname,sfile,cmd,outputfolder,dmrispace);
 end
 
 exit
