@@ -42,9 +42,11 @@ else
         if isempty(pth)
             pth = '.';
         end
+
         fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Right.stl'];
         cfv(i)=ea_mapcolvert2face(cfv(i));
         ea_stlwrite(fname,cfv(i),'FACECOLOR',cfv(i).facevertexcdata);
+
         fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Left.stl'];
         cfv(i+length(presets))=ea_mapcolvert2face(cfv(i+length(presets)));
         ea_stlwrite(fname,cfv(i+length(presets)),'FACECOLOR',cfv(i+length(presets)).facevertexcdata);

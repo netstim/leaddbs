@@ -54,7 +54,6 @@ if outputsinglefile
     cfv=ea_concatfv(cfv);
     cfv=ea_mapcolvert2ind(cfv,atlases.colormap);
     cfv.faces=[cfv.faces(:,2),cfv.faces(:,1),cfv.faces(:,3)];
-    %ea_patch2ply(ofn,cfv.vertices',cfv.faces',cfv.facevertexcdata');
     [pth]=fileparts(ofn);
     if ~exist(pth,'dir')
         mkdir(pth);
@@ -66,9 +65,15 @@ else
         if isempty(pth)
             pth = '.';
         end
+
         fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Right.ply'];
+        cfv(i)=ea_mapcolvert2ind(cfv(i),atlases.colormap);
+        cfv(i).faces=[cfv(i).faces(:,2),cfv(i).faces(:,1),cfv(i).faces(:,3)];
         plywrite(fname,cfv(i).faces,cfv(i).vertices,cfv(i).facevertexcdata);
+
         fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Left.ply'];
+        cfv(i+length(presets))=ea_mapcolvert2ind(cfv(i+length(presets)),atlases.colormap);
+        cfv(i+length(presets)).faces=[cfv(i+length(presets)).faces(:,2),cfv(i+length(presets)).faces(:,1),cfv(i+length(presets)).faces(:,3)];
         plywrite(fname,cfv(i+length(presets)).faces,cfv(i+length(presets)).vertices,cfv(i+length(presets)).facevertexcdata);
     end
 end
