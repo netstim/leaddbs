@@ -1,21 +1,6 @@
-function ea_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
-
-owasempty=0;
-if ~exist('outputfolder','var')
-    outputfolder=ea_getoutputfolder(sfile,ocname);
-    owasempty=1;
-else
-    if isempty(outputfolder) % from shell wrapper.
-        outputfolder=ea_getoutputfolder(sfile,cname);
-        owasempty=1;
-    end
-    if ~strcmp(outputfolder(end),filesep)
-        outputfolder=[outputfolder,filesep];
-    end
-end
+function ea_dmri_conseed_map(dfold,cname,sfile,cmd,space,options)
 
 for s=1:length(sfile)
-    
     % okay to check to reload connectome again for each seed in case of
     % using patient-specific connectomes:
     map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
@@ -145,9 +130,7 @@ for s=1:length(sfile)
         end
         
         [~,fn]=fileparts(sfile{s});
-        if owasempty
-            outputfolder=ea_getoutputfolder({sfile{s}},cname);
-        end
+        outputfolder=ea_getoutputfolder({sfile{s}},cname);
         
         if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')
             map.img(~(map.img==0))=ea_normal(map.img(~(map.img==0)));
@@ -165,6 +148,7 @@ for s=1:length(sfile)
         end
     end
 end
+
 
 function D=ea_minmax(D)
 
