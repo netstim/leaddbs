@@ -12,7 +12,6 @@ if ~exist('outputsinglefile','var')
     outputsinglefile = 1;
 end
 
-cnt=1;
 for atl=1:length(atlasnames)
     load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
     presets=atlases.presets(1).show;
@@ -22,14 +21,10 @@ for atl=1:length(atlasnames)
         presets=resolveviews(views(1).structures,atlases);
     end
     for side=1:2
-        for mesh=presets
-            cfv(cnt).vertices=atlases.fv{mesh,side}.vertices;
-            cfv(cnt).faces=atlases.fv{mesh,side}.faces;
-            cfv(cnt).facevertexcdata=repmat(atlases.colors(mesh),size(cfv(cnt).faces,1),1);
-            if isempty(cfv(cnt).facevertexcdata) % fiber atlas
-                cfv(cnt).facevertexcdata=repmat(atlases.colors(mesh),size(cfv(cnt).faces,1),1);
-            end
-            cnt=cnt+1;
+        for i=1:length(presets)
+            cfv(i).vertices=atlases.fv{presets(i),side}.vertices;
+            cfv(i).faces=atlases.fv{presets(i),side}.faces;
+            cfv(i).facevertexcdata=repmat(atlases.colors(presets(i)),size(cfv(i).faces,1),1);
         end
     end
 end
