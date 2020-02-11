@@ -1,13 +1,16 @@
-function cfv=ea_atlas2stl(atlasnames,ofn,target)
-
-if ~exist('target','var')
-    target=[];
-end
+function cfv=ea_atlas2stl(atlasnames,ofn,target,outputsinglefile)
 
 if ~iscell(atlasnames)
     ea_error('Please specify atlas(es) in a cellstring');
 end
 
+if ~exist('target','var')
+    target=[];
+end
+
+if ~exist('outputsinglefile','var')
+    outputsinglefile = 1;
+end
 
 cnt=1;
 for atl=1:length(atlasnames)
@@ -31,7 +34,21 @@ for atl=1:length(atlasnames)
     end
 end
 
-cfv=ea_concatfv(cfv);
-cfv=ea_mapcolvert2face(cfv);
-
-ea_stlwrite(ofn,cfv,'FACECOLOR',cfv.facevertexcdata);
+if outputsinglefile
+    cfv=ea_concatfv(cfv);
+    cfv=ea_mapcolvert2face(cfv);
+    ea_stlwrite(ofn,cfv,'FACECOLOR',cfv.facevertexcdata);
+else
+    for i=1:length(presets)
+        pth = fileparts(ofn);
+        if isempty(pth)
+            pth = '.';
+        end
+        fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Right.stl'];
+        cfv(i)=ea_mapcolvert2face(cfv(i));
+        ea_stlwrite(fname,cfv(i),'FACECOLOR',cfv(i).facevertexcdata);
+        fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Left.stl'];
+        cfv(i+length(presets))=ea_mapcolvert2face(cfv(i+length(presets)));
+        ea_stlwrite(fname,cfv(i+length(presets)),'FACECOLOR',cfv(i+length(presets)).facevertexcdata);
+    end
+end
