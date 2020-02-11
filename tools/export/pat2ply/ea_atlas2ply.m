@@ -12,6 +12,7 @@ if ~exist('outputsinglefile','var')
     outputsinglefile = 1;
 end
 
+cnt = 1;
 for atl=1:length(atlasnames)
     load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
     if ~isempty(target)
@@ -23,12 +24,10 @@ for atl=1:length(atlasnames)
     end
     for side=1:2
         for i=1:length(presets)
-            cfv(i).vertices=atlases.fv{presets(i),side}.vertices;
-            cfv(i).faces=atlases.fv{presets(i),side}.faces;
-            cfv(i).facevertexcdata=repmat(atlases.colors(presets(i)),1,size(cfv(i).vertices,1));
-            if isempty(cfv(i).facevertexcdata) % fiber atlas
-                cfv(i).facevertexcdata=repmat(atlases.colors(presets(i)),size(cfv(i).vertices,1),1);
-            end
+            cfv(cnt).vertices=atlases.fv{presets(i),side}.vertices;
+            cfv(cnt).faces=atlases.fv{presets(i),side}.faces;
+            cfv(cnt).facevertexcdata=repmat(atlases.colors(presets(i)),1,size(cfv(cnt).vertices,1));
+            cnt = cnt + 1;
         end
     end
 end
