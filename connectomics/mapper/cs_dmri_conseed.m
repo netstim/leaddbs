@@ -1,25 +1,15 @@
-function cs_dmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space,options)
+function cs_dmri_conseed(dfold,cname,sfile,cmd,outputfolder,space,options)
 
-[sfile,roilist]=ea_handleseeds(sfile);
+sfile = ea_handleseeds(sfile);
 
-if isfield(options,'uivatdirs')
-    if ~isempty(options.uivatdirs)
-        outputfolder=[];
-    end
+if isfield(options,'uivatdirs') && ~isempty(options.uivatdirs)
+	outputfolder=[];
 end
 
-owasempty=0;
-if ~exist('outputfolder','var')
-    outputfolder=ea_getoutputfolder(sfile,ocname);
-    owasempty=1;
-else
-    if isempty(outputfolder) % from shell wrapper.
-        outputfolder=ea_getoutputfolder(sfile,cname);
-        owasempty=1;
-    end
-    if ~strcmp(outputfolder(end),filesep)
-        outputfolder=[outputfolder,filesep];
-    end
+if ~exist('outputfolder','var') || isempty(outputfolder)
+    outputfolder = ea_getoutputfolder(sfile,cname);
+elseif ~strcmp(outputfolder(end),filesep)
+    outputfolder = [outputfolder,filesep];
 end
 
 if isdeployed
@@ -30,14 +20,10 @@ end
 
 disp(['Command: ',cmd]);
 switch cmd
-    case 'seed'       
-        
-           ea_dmri_conseed_map(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space,options)
-
+    case 'seed'             
+        ea_dmri_conseed_map(dfold,cname,sfile,cmd,space,options)
     case {'matrix', 'pmatrix'}
-
         for s=1:length(sfile)
-
             if strcmp(dfold, 'Patient''s fiber tracts')
                 if strcmp(cname, options.prefs.FTR_normalized) % patient specific fibertracts
                     cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
@@ -174,13 +160,13 @@ function C = countmember(A,B)
 
 error(nargchk(2,2,nargin)) ;
 
-if ~isequal(class(A),class(B)),
+if ~isequal(class(A),class(B))
     error('Both inputs should be the same class.') ;
 end
-if isempty(B),
+if isempty(B)
     C = zeros(size(A)) ;
     return
-elseif isempty(A),
+elseif isempty(A)
     C = [] ;
     return
 end

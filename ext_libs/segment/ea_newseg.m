@@ -43,9 +43,9 @@ else
         end
         if tpm >= 4
             if force==2
-            job.tissue(tpm).native = [1 0];
+                job.tissue(tpm).native = [1 0];
             else
-            job.tissue(tpm).native = [0 0];
+                job.tissue(tpm).native = [0 0];
             end
         end
     end
