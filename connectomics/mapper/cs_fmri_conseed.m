@@ -464,7 +464,7 @@ switch dataset.type
             case {'seed','pmap','pseed'}
                 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
                    if owasempty
-                       outputfolder=ea_getoutputfolder({sfile{s}},ocname);
+                       outputfolder=ea_getoutputfolder(sfile(s),ocname);
                    end
                     % export mean
                     M=ea_nanmean(fX{s}',1);
