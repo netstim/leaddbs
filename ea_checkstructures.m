@@ -868,8 +868,9 @@ if ~isfile(fullfile(subject_path,'glanatComposite.nii.gz'))
     return
 end
 slicer_path = ea_runslicer(options,5);
-module_script = fullfile(ea_getearoot,'ext_libs','SmudgeModule','SmudgeModule.py');
-command = [slicer_path ' --no-main-window --python-script ' module_script ' ' subject_path ' ' ea_getearoot];
+module_path = fullfile(ea_getearoot,'ext_libs','SmudgeModule');
+module_script = fullfile(module_path,'SmudgeModule.py');
+command = [slicer_path ' --no-main-window --additional-module-paths ' module_path ' --python-script ' module_script ' ' subject_path ' ' ea_getearoot];
 system(command);
 
 
