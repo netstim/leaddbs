@@ -142,7 +142,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
       sliceIndex = int(np.nonzero([self.sliceLogic.GetSliceNode().GetName()==name for name in ['Yellow','Green','Red']])[0])
       sliceValue = self.sliceLogic.GetSliceNode().GetSliceToRAS().MultiplyDoublePoint([0,0,0,1])[sliceIndex]
 
-      pointIndex = [i for i in range(pd.GetNumberOfPoints()) if (pd.GetPoint(i)[sliceIndex] > sliceValue-0.2 and pd.GetPoint(i)[sliceIndex] < sliceValue+0.2)]
+      pointIndex = [i for i in range(0,pd.GetNumberOfPoints(),5) if (pd.GetPoint(i)[sliceIndex] > sliceValue-0.2 and pd.GetPoint(i)[sliceIndex] < sliceValue+0.2)]
 
       points = vtk.vtkPoints()
       for i in pointIndex:
@@ -155,11 +155,49 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
       pointsLocator.SetDataSet(pd2)
       pointsLocator.BuildLocator()
 
+      # get closest point of initial and last position
+      #      closestPointId0 = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(0))
+      #      closestPointIdend = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(self.rasPoints.GetNumberOfPoints()-1))
+      #
+      #      # go through points from initial to end in the two possible directions
+      #      points_dir1 = vtk.vtkPoints()
+      #      points_dir1.InsertNextPoint(points.GetPoint(closestPointId0))
+      #      points_dir2 = vtk.vtkPoints()
+      #      points_dir2.InsertNextPoint(points.GetPoint(closestPointId0))
+      #
+      #      idl = vtk.vtkIdList()
+      #      pointsLocator.FindClosestNPoints(3,points.GetPoint(closestPointId0),idl)
+      #
+      #      # closest point is the same one. Append the other two to the other points respectivly
+      #      points_dir1.InsertNextPoint(points.GetPoint(idl.GetId(1)))
+      #      points_dir2.InsertNextPoint(points.GetPoint(idl.GetId(2)))
+      #
+      #      # add points
+      #      lastID = idl.GetId(1)
+      #      IDs = [closestPointId0, idl.GetId(1)]
+      #
+      #      while lastID != closestPointIdend:
+      #        pointsLocator.FindClosestNPoints(3,points.GetPoint(lastID),idl)
+      #        for i in range(1,3):
+      #          if idl.GetId(i) not in IDs:
+      #            IDs.append(idl.GetId(i))
+      #            lastID = idl.GetId(i)
+      #            
+      #
+      #      #print(closestPointId0)
+      #      #print(idl.GetId(0))
+      #      #rint(idl.GetId(1))
+      #      print(points_dir1)
+      #
+      self.markupNode.RemoveAllMarkups()
       for i in range(self.rasPoints.GetNumberOfPoints()):
         closestPointId = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(i))
         self.markupNode.AddFiducialFromArray(points.GetPoint(closestPointId))
 
-    
+      #closestPointId0 = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(0))
+      #closestPointIdend = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(self.rasPoints.GetNumberOfPoints()-1))
+
+      #print(str(closestPointId0) + " " + str(closestPointIdend))
     
       #print(sliceIndex)
 

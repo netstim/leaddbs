@@ -410,17 +410,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if index != 0:
       MNIPath = self.parameterNode.GetParameter("MNIPath")
       atlasPath = os.path.join(MNIPath,'atlases',self.segmentationComboBox.itemText(index))
-      segmentationNode = FunctionsUtil.createSegmentationFromAtlas(atlasPath)
-      if segmentationNode:
-        modelID = self.parameterNode.GetParameter("modelID")
-        if modelID != "":
-          modelHierarchyNode = slicer.util.getNode(modelID)
-          modelHierarchyNode.RemoveAllChildrenNodes()
-          segmentationLogic = slicer.modules.segmentations.logic()
-          segmentationLogic.ExportAllSegmentsToModelHierarchy(segmentationNode, modelHierarchyNode)
-          slicer.mrmlScene.RemoveNode(segmentationNode)
-          self.segmentationNodeChanged()
-
+      modelID = self.parameterNode.GetParameter("modelID")
+      if modelID != "":
+        modelHierarchyNode = slicer.util.getNode(modelID)
+        FunctionsUtil.loadAtlas(atlasPath, modelHierarchyNode)
+        self.segmentationNodeChanged()
+  
   def updateTemplateView(self,value):
     layoutManager = slicer.app.layoutManager()
     for sliceViewName in layoutManager.sliceViewNames():
@@ -517,7 +512,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if modelID != "":
       self.updateSegmentationOutline(self.segmentationOutlineSlider.value)
     
-    
   def onUndoButton(self):
     SmudgeModuleLogic().undoOperation()
 
@@ -557,8 +551,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         atlasesPath = os.path.join(MNIPath,'atlases')
         atlases = sorted(os.listdir(atlasesPath))
         for atlas in atlases:
-          if len(glob.glob(os.path.join(atlasesPath,atlas,'*','*.nii*')))>0: # check if atlas has nifti files
-            self.segmentationComboBox.addItem(atlas)
+          self.segmentationComboBox.addItem(atlas)
     self.smudgeButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
     self.snapButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
     self.flattenButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
@@ -912,7 +905,9 @@ class SmudgeModuleSlicelet(object):
     # add module
     self.widget = SmudgeModuleWidget(self.leftFrame)
     self.widget.setup()
-    self.parent.showMaximized()
+    self.parent.setGeometry(51, 45, 1869, 849)
+    #self.parent.showMaximized()
+    self.parent.show()
 
 
 
@@ -940,10 +935,8 @@ if __name__ == "__main__":
     imagePath = os.path.join(subjectPath,'anat_t1.nii')
     templatePath = os.path.join(MNIPath,'t1.nii')
     transformPath = os.path.join(subjectPath,'glanatComposite.nii.gz')
-    segmentationPath = os.path.join(leadPath,'ext_libs','SmudgeModule','DISTAL Minimal (Ewert 2017).seg.nrrd')
     affinePath = os.path.join(subjectPath,'glanat0GenericAffine_backup.mat')
 
-    ls, segmentationNode = slicer.util.loadSegmentation(segmentationPath, returnNode=True)
     ls, imageNode = slicer.util.loadVolume(imagePath, properties = {'name':'anat_t1', 'show':False}, returnNode = True)
     ls, templateNode = slicer.util.loadVolume(templatePath, properties = {'name':'template_t1', 'show':False}, returnNode = True)
     ls, transformNode = slicer.util.loadTransform(transformPath, returnNode = True)
@@ -954,11 +947,9 @@ if __name__ == "__main__":
     else:
       ls, affineNode = slicer.util.loadTransform(affinePath, returnNode = True)
 
-    # segmentation to model
+    # load model
     modelHierarchyNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelHierarchyNode')
-    segmentationLogic = slicer.modules.segmentations.logic()
-    segmentationLogic.ExportAllSegmentsToModelHierarchy(segmentationNode, modelHierarchyNode)
-    slicer.mrmlScene.RemoveNode(segmentationNode)
+    FunctionsUtil.loadAtlas(os.path.join(MNIPath,'atlases','DISTAL Minimal (Ewert 2017)'), modelHierarchyNode)
     
     parameterNode = SmudgeModuleLogic().getParameterNode()
     
