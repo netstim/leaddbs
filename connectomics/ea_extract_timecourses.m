@@ -226,9 +226,15 @@ if vizz
 end
 
 X2(:,1)=ones(signallength,1);
-X2(:,2)=WMTimecourse;
-X2(:,3)=CSFTimecourse;
-% X2(:,4)=GlobTimecourse;
+
+if options.prefs.lc.func.regress_wmcsf
+    X2(:,2) = WMTimecourse;
+    X2(:,3) = CSFTimecourse;
+end
+
+if options.prefs.lc.func.regress_global
+    X2(:,4) = GlobTimecourse;
+end
 
 % actual regression of cleaned X2 (WM/Global) from time courses:
 X2reg=(X2'*X2)\X2';
