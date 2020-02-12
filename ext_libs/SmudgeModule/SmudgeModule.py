@@ -346,7 +346,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     self.overwriteRadioButton = qt.QRadioButton('Overwrite warp field', saveModeFrame)
     self.overwriteRadioButton.setChecked(True)
-    self.saveDeformedRadioButton = qt.QRadioButton('Save deformed image and use as metric for registration', saveModeFrame)
+    self.saveDeformedRadioButton = qt.QRadioButton('Run normalization to deformed image', saveModeFrame)
 
     saveFormLayout.layout().addWidget(self.overwriteRadioButton)
     saveFormLayout.layout().addWidget(self.saveDeformedRadioButton)
@@ -677,7 +677,8 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("initialized", "0")
     node.SetParameter("subjectPath", "")
     node.SetParameter("MNIPath", "")
-    node.SetParameter("atnsApplyTransformsPath", "")
+    node.SetParameter("antsApplyTransformsPath", "")
+    node.SetParameter("antsRegistrationPath", "")
     return node
 
   def smudgeOn(self):
@@ -745,7 +746,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       command = ""
     
     outname = os.path.join(path,"tmp","out.nii.gz") # flat transform name
-    command = command + "-o [" + outname + ",1]"
+    command = command + "-o [" + outname + ",1] --verbose 1"
 
     for i in range(1,col.GetNumberOfItems()): # save each transform and append name to command
     	con = vtk.vtkWarpTransform.SafeDownCast(col.GetItemAsObject(i))
@@ -761,7 +762,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     else:
       referenceFile = fullname
 
-    command = parameterNode.GetParameter("atnsApplyTransformsPath") + " -r " + referenceFile + " " + command
+    command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + referenceFile + " " + command
     commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
 
     if overwriteBool:
@@ -770,8 +771,34 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       print('Saved!')
     elif saveDeformedImage:
       os.mkdir(os.path.join(path,"deformed"))
-      command = parameterNode.GetParameter("atnsApplyTransformsPath") + " -r " + referenceFile + " -i " + os.path.join(path,'anat_t1.nii') + " -t " + outname + " -o " + os.path.join(path,'deformed','anat_t1_deformed.nii')
-      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
+      # deform subject image
+      deformedPath = os.path.join(path,'deformed','anat_t1_deformed.nii')
+      glCompPath = transformFullFilename #os.path.join(path, 'glanatComposite.nii.gz')
+      command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + referenceFile + " -i " + os.path.join(path,'anat_t1.nii') + " -t " + outname + " -o " + deformedPath
+      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True)
+      # register subject image to deformed
+      command = parameterNode.GetParameter("antsRegistrationPath") + " " + \
+ 	      "--dimensionality 3 " \
+	      "--float 1 " + \
+	      "--output " + os.path.join(path, 'deformed', 'subjectToDeformed') + " " + \
+        "--use-histogram-matching 0 " + \
+	      "--initial-moving-transform " + glCompPath + " " + \
+	      "--transform SyN[0.1,3,0] " + \
+	      "--metric MeanSquares[" + deformedPath + "," + os.path.join(path, 'anat_t1.nii') + ",1,32,Random,0.25] " + \
+	      "--convergence [1000x500x500x0,1e-7,7] " + \
+	      "--shrink-factors 8x4x4x1 " + \
+	      "--smoothing-sigmas 4x3x1x1vox " + \
+	      "--verbose 1"
+      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True)
+      # flatten transforms
+      command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + glCompPath + " -t " + os.path.join(path,'deformed','subjectToDeformed1Warp.nii.gz') + " -t " + glCompPath + " -o [" + glCompPath + ",1] --verbose 1"
+      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True)
+      # inverse
+      glInvCompPath = os.path.join(path, 'glanatInverseComposite.nii.gz')
+      command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + glInvCompPath + " -t " + glInvCompPath + " -t " + os.path.join(path,'deformed','subjectToDeformed1InverseWarp.nii.gz') + " -o [" + glInvCompPath + ",1] --verbose 1"
+      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True)
+      # clear
+      shutil.rmtree(os.path.join(path,"deformed"))
     else:
       ls,flatTransformNode = slicer.util.loadTransform(outname, returnNode = True) # load result
       # reset original transform
@@ -930,7 +957,8 @@ if __name__ == "__main__":
 
     # TODO: other platforms
 
-    atnsApplyTransformsPath = os.path.join(leadPath,'ext_libs','ANTs','antsApplyTransforms.' + ext)
+    antsApplyTransformsPath = os.path.join(leadPath,'ext_libs','ANTs','antsApplyTransforms.' + ext)
+    antsRegistrationPath = os.path.join(leadPath,'ext_libs','ANTs','antsRegistration.' + ext)
 
     imagePath = os.path.join(subjectPath,'anat_t1.nii')
     templatePath = os.path.join(MNIPath,'t1.nii')
@@ -960,7 +988,8 @@ if __name__ == "__main__":
     parameterNode.SetParameter("modelID", modelHierarchyNode.GetID())
     parameterNode.SetParameter("subjectPath", subjectPath)
     parameterNode.SetParameter("MNIPath", MNIPath)
-    parameterNode.SetParameter("atnsApplyTransformsPath", atnsApplyTransformsPath)
+    parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
+    parameterNode.SetParameter("antsRegistrationPath", antsRegistrationPath)
     
     SmudgeModuleLogic().initialize()
     slicer.util.setSliceViewerLayers(background=imageNode, foreground=templateNode)
