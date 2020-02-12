@@ -531,7 +531,7 @@ function ea_initvatlevel(handles,directory,selectedparc,options)
 modlist=ea_genmodlist(directory,selectedparc,options);
 
 %% VATs:
-vdirs=dir([directory,'stimulations']);
+vdirs=dir([directory,'stimulations',filesep,ea_nt(options)]);
 cnt=1;
 vdicell=cell(0);
 for vdir=1:length(vdirs)
@@ -570,7 +570,7 @@ else
 
     %% check if left/right VATs are present
     stimfolder=vdicell{get(handles.vatseed,'Value')};
-    vatdir=dir([directory,'stimulations',filesep,stimfolder,filesep,'*.nii']);
+    vatdir=dir([directory,'stimulations',filesep,ea_nt(options),stimfolder,filesep,'*.nii']);
     for vt=1:length(vatdir)
         vatcell{vt}=vatdir(vt).name;
     end
