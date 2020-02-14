@@ -2,9 +2,7 @@ function [matsurf,labels]=ea_showconnectivitypatch(resultfig,pV,mX,thresh,atlasl
 matsurf=[];
 labels=[];
 
-
 if showregs
-
     tmX=mX>thresh;
 
     options.prefs=ea_prefs('');

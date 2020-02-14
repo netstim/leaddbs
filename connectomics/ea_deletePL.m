@@ -9,11 +9,7 @@ setappdata(resultfig,[mode,'thresh'],'nan');
 
 try
 if verLessThan('matlab','8.5') % ML <2014a support
-    
-    
     for p=1:length(PL)
-        
-        
         if isfield(PL(p),'vatsurfs')
             delete(PL(p).vatsurfs(logical(PL(p).vatsurfs)));
         end

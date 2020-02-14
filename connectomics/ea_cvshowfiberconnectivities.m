@@ -160,6 +160,7 @@ if ~options.savefibers.load
     todelete = cell(1, length(seed));
     howmanyfibs = cell(1, length(seed));
     tareas = cell(1, length(seed));
+    contargets = cell(1, length(seed));
     for side=1:length(seed)
 
         todelete{side}=[];
@@ -237,11 +238,11 @@ if ~options.savefibers.load
             save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
         end
 
-        contargets=round(targets.img);
-        otargets=contargets;
-        contargets(:)=0;
+        contargets{side}=round(targets.img);
+        otargets=contargets{side};
+        contargets{side}(:)=0;
         for target=1:atlength
-            contargets(otargets==target)=howmanyfibs{side}(target);
+            contargets{side}(otargets==target)=howmanyfibs{side}(target);
         end
         %targets.img(targets.img<thresh)=0;
     end
@@ -259,103 +260,63 @@ elseif options.savefibers.load
     load([options.savefibers.dir,'workspace.mat'])
 end
 
+addht = getappdata(resultfig,'addht');
+if isempty(addht)
+    addht = uitoolbar(resultfig);
+    setappdata(resultfig, 'addht', addht);
+else
+    delete(findobj(get(addht, 'Children'), 'Tag', 'seedbtn_right'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'regionbtn_right'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'labelbtn_right'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'seedbtn_left'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'regionbtn_left'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'labelbtn_left'));
+end
+
 for side=1:length(seed)
     % always show seed patch (i.e. VAT)
     PL.matseedsurf{side}=ea_showseedpatch(resultfig,seed{side},seed{side}.img,options);
 
-    [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets,thresh,atlas_lgnd{2},tareas{side},[],showregs,showlabs);
+    [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets{side},thresh,atlas_lgnd{2},tareas{side},[],showregs,showlabs);
+
+    switch side
+        case 1
+            seedtooltip = 'Seed Regions - Right Side';
+            regtooltip = 'Connected Regions - Right Side';
+            labeltooltip = 'Region Labels - Right Side';
+            seedtag = 'seedbtn_right';
+            regtag = 'regionbtn_right';
+            labeltag = 'labelbtn_right';
+        case 2
+            seedtooltip = 'Seed Regions - Left Side';
+            regtooltip = 'Connected Regions - Left Side';
+            labeltooltip = 'Region Labels - Left Side';
+            seedtag = 'seedbtn_left';
+            regtag = 'regionbtn_left';
+            labeltag = 'labelbtn_left';
+    end
+
+    seedbtn=uitoggletool(addht,'CData',ea_get_icn('vat'),...
+                           'TooltipString',seedtooltip,...
+                           'OnCallback',{@matseedsurfvisible,PL.matseedsurf{side}},...
+                           'OffCallback',{@matseedsurfinvisible,PL.matseedsurf{side}},...
+                           'State','on',...
+                           'Tag',seedtag);
+
+    regionbtn=uitoggletool(addht,'CData',ea_get_icn('connectivities'),...
+                           'TooltipString',regtooltip,...
+                           'OnCallback',{@matsurfvisible,PL.matsurf{side}},...
+                           'OffCallback',{@matsurfinvisible,PL.matsurf{side}},...
+                           'State','on',...
+                           'Tag',regtag);
+    labelbtn=uitoggletool(addht,'CData',ea_get_icn('labels'),...
+                           'TooltipString',labeltooltip,...
+                           'OnCallback',{@conlabelvisible,PL.conlabels{side}},...
+                           'OffCallback',{@conlabelinvisible,PL.conlabels{side}},...
+                           'State','on',...
+                           'Tag',labeltag);
 
     clear allcareas conareas
-%     %% now show areas
-%     targets.img=round(targets.img);
-%     %tareas=1:4;
-%     if ~isempty(tareas{side})
-%         for anatarea=1:length(tareas{side})
-%
-%             [xx,yy,zz]=ind2sub(size(targets.img),find(targets.img==tareas{side}(anatarea)));
-%             XYZ=[xx,yy,zz];
-%
-%             XYZ=map_coords_proxy(XYZ,targets);
-%             %XYZ=XYZ';
-%             if options.prefs.lhullmethod==0
-%                 k=convhulln(XYZ);
-%             elseif options.prefs.lhullmethod==1
-%                 k=ea_concavehull(XYZ,1.5);
-%
-%             end
-%
-%             if size(XYZ,1)>1
-%                 [~,centroid]=kmeans(XYZ,1);
-%                 centroid=centroid(1,:);
-%             else
-%                 centroid=XYZ; % only one entry coordinate.
-%             end
-%
-%             if options.prefs.lhullmethod==2 % use isosurface
-%
-%                 bb=[0,0,0;size(targets.img)];
-%
-%                 bb=map_coords_proxy(bb,targets);
-%                 gv=cell(3,1);
-%                 for dim=1:3
-%                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(targets.img,dim));
-%                 end
-%                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-%
-%                 thisatlas=round(targets.img);
-%                 thisatlas(thisatlas~=tareas{side}(anatarea))=0;
-%                 thisatlas(thisatlas==tareas{side}(anatarea))=1;
-%                 if options.prefs.lhullsmooth
-%                     thisatlas = smooth3(thisatlas,'gaussian',options.prefs.lhullsmooth);
-%                 end
-%                 fv=isosurface(X,Y,Z,permute(thisatlas,[2,1,3]),0.3);
-%                 if ischar(options.prefs.lhullsimplify)
-%
-%                     % get to 300 faces
-%                     simplify=300/length(fv.faces);
-%                     fv=reducepatch(fv,simplify);
-%
-%                 else
-%                     if options.prefs.lhullsimplify<1 && options.prefs.lhullsimplify>0
-%                         fv=reducepatch(fv,options.prefs.lhullsimplify);
-%                     end
-%                 end
-%                 % set cdata
-%
-%                 if ~isfield(stimparams,'group')
-%                     cdat=abs(repmat(anatarea*(64/length(tareas{side})),length(fv.vertices),1)... % C-Data for surface
-%                         +randn(length(fv.vertices),1)*2)';
-%                 else % if more than one group is analyzed, coloring info will be off the group color.
-%                     RGB=zeros(1,1,3);
-%
-%                     RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
-%                     RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
-%                     RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
-%
-%                     Rind=double(rgb2ind(RGB,jet));
-%                     cdat=abs(repmat(Rind,length(fv.vertices),1)... % C-Data for surface
-%                         +randn(length(fv.vertices),1)*2)';
-%                 end
-%
-%                 PL.regionsurfs(la,side,anatarea)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-%
-%             else
-%
-%                 PL.regionsurfs(la,side,anatarea)=trisurf(k,XYZ(:,1),XYZ(:,2),XYZ(:,3),...
-%                     abs(repmat(anatarea*(64/length(tareas{side})),length(XYZ),1)...
-%                     +randn(length(XYZ),1)*0.1*length(tareas{side}))');
-%             end
-%
-%             %% shading etc.
-%             colorc=colornames(anatarea);
-%             colorc=rgb(colorc);
-%             ea_spec_atlas(PL.regionsurfs(la,side,anatarea),'labeling',jet,1);
-%
-%             %% put a label to it
-%             thislabel=sub2space(atlas_lgnd{2}{atlas_lgnd{1}==tareas{side}(anatarea)});
-%             PL.conlabels(la,side,anatarea)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline');
-%         end
-%     end
 end
 clear tareas
 
@@ -390,13 +351,6 @@ for side=1:length(options.sides)
             if ~isfield(stimparams,'group')
                 connectingfibs{side}{la,fib}(4:6,:)=detcolor(connectingfibs{side}{la,fib}); % add coloring information to the 4th-6th column.
             else % if more than one group is analyzed, coloring info will be off the group color.
-%                 RGB=zeros(1,1,3);
-%                 RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
-%                 RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
-%                 RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
-%
-%                 connectingfibs{side}{la,fib}(4,:)=rgb2ind(RGB,jet);
-
                 RGB=zeros(1,3);
                 RGB(:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
                 RGB(:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
@@ -461,6 +415,30 @@ end
 
 % plot seed surface:
 setappdata(resultfig,[mode,'PL'],PL);
+
+
+function matseedsurfvisible(hobj, evt, matseedsurf)
+set(matseedsurf, 'Visible', 'on');
+
+
+function matseedsurfinvisible(hobj, evt, matseedsurf)
+set(matseedsurf, 'Visible', 'off');
+
+
+function matsurfvisible(hobj, evt, matsurf)
+set(matsurf, 'Visible', 'on');
+
+
+function matsurfinvisible(hobj, evt, matsurf)
+set(matsurf, 'Visible', 'off');
+
+
+function conlabelvisible(hobj, evt, conlabel)
+set(conlabel, 'Visible', 'on');
+
+
+function conlabelinvisible(hobj, evt, conlabel)
+set(conlabel, 'Visible', 'off');
 
 
 function [fv,volume]=ea_fvseeds(seed,options)
