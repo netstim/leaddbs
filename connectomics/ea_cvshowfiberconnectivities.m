@@ -298,21 +298,21 @@ for side=1:length(seed)
 
     seedbtn=uitoggletool(addht,'CData',ea_get_icn('vat'),...
                            'TooltipString',seedtooltip,...
-                           'OnCallback',{@matseedsurfvisible,PL.matseedsurf{side}},...
-                           'OffCallback',{@matseedsurfinvisible,PL.matseedsurf{side}},...
+                           'OnCallback',{@objvisible,PL.matseedsurf{side}},...
+                           'OffCallback',{@objinvisible,PL.matseedsurf{side}},...
                            'State','on',...
                            'Tag',seedtag);
 
     regionbtn=uitoggletool(addht,'CData',ea_get_icn('connectivities'),...
                            'TooltipString',regtooltip,...
-                           'OnCallback',{@matsurfvisible,PL.matsurf{side}},...
-                           'OffCallback',{@matsurfinvisible,PL.matsurf{side}},...
+                           'OnCallback',{@objvisible,PL.matsurf{side}},...
+                           'OffCallback',{@objinvisible,PL.matsurf{side}},...
                            'State','on',...
                            'Tag',regtag);
     labelbtn=uitoggletool(addht,'CData',ea_get_icn('labels'),...
                            'TooltipString',labeltooltip,...
-                           'OnCallback',{@conlabelvisible,PL.conlabels{side}},...
-                           'OffCallback',{@conlabelinvisible,PL.conlabels{side}},...
+                           'OnCallback',{@objvisible,PL.conlabels{side}},...
+                           'OffCallback',{@objinvisible,PL.conlabels{side}},...
                            'State','on',...
                            'Tag',labeltag);
 
@@ -417,28 +417,12 @@ end
 setappdata(resultfig,[mode,'PL'],PL);
 
 
-function matseedsurfvisible(hobj, evt, matseedsurf)
-set(matseedsurf, 'Visible', 'on');
+function objvisible(hobj, evt, obj)
+set(obj, 'Visible', 'on');
 
 
-function matseedsurfinvisible(hobj, evt, matseedsurf)
-set(matseedsurf, 'Visible', 'off');
-
-
-function matsurfvisible(hobj, evt, matsurf)
-set(matsurf, 'Visible', 'on');
-
-
-function matsurfinvisible(hobj, evt, matsurf)
-set(matsurf, 'Visible', 'off');
-
-
-function conlabelvisible(hobj, evt, conlabel)
-set(conlabel, 'Visible', 'on');
-
-
-function conlabelinvisible(hobj, evt, conlabel)
-set(conlabel, 'Visible', 'off');
+function objinvisible(hobj, evt, obj)
+set(obj, 'Visible', 'off');
 
 
 function [fv,volume]=ea_fvseeds(seed,options)
@@ -467,26 +451,6 @@ try
 catch
     keyboard
 end
-
-
-function objvisible(hobj,ev,atls,resultfig,what,la,side,onoff)
-% set visibility
-try
-    set(atls, 'Visible', getstate(onoff));
-catch
-    keyboard
-end
-% log visibility
-tvalue=getappdata(resultfig,what);
-
-if isempty(la)
-    tvalue(side)=onoff;
-else
-    tvalue(la,side)=onoff;
-end
-
-setappdata(resultfig,what,tvalue);
-%disp([atls,'visible clicked']);
 
 
 function C=rgb(C) % returns rgb values for the colors.
