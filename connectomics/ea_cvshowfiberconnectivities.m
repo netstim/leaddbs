@@ -260,11 +260,61 @@ elseif options.savefibers.load
     load([options.savefibers.dir,'workspace.mat'])
 end
 
+addht = getappdata(resultfig,'addht');
+if isempty(addht)
+    addht = uitoolbar(resultfig);
+    setappdata(resultfig, 'addht', addht);
+else
+    delete(findobj(get(addht, 'Children'), 'Tag', 'seedbtn_right'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'regionbtn_right'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'labelbtn_right'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'seedbtn_left'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'regionbtn_left'));
+    delete(findobj(get(addht, 'Children'), 'Tag', 'labelbtn_left'));
+end
+
 for side=1:length(seed)
     % always show seed patch (i.e. VAT)
     PL.matseedsurf{side}=ea_showseedpatch(resultfig,seed{side},seed{side}.img,options);
 
     [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets{side},thresh,atlas_lgnd{2},tareas{side},[],showregs,showlabs);
+
+    switch side
+        case 1
+            seedtooltip = 'Seed Regions - Right Side';
+            regtooltip = 'Connected Regions - Right Side';
+            labeltooltip = 'Region Labels - Right Side';
+            seedtag = 'seedbtn_right';
+            regtag = 'regionbtn_right';
+            labeltag = 'labelbtn_right';
+        case 2
+            seedtooltip = 'Seed Regions - Left Side';
+            regtooltip = 'Connected Regions - Left Side';
+            labeltooltip = 'Region Labels - Left Side';
+            seedtag = 'seedbtn_left';
+            regtag = 'regionbtn_left';
+            labeltag = 'labelbtn_left';
+    end
+
+    seedbtn=uitoggletool(addht,'CData',ea_get_icn('vat'),...
+                           'TooltipString',seedtooltip,...
+                           'OnCallback',{@matseedsurfvisible,PL.matseedsurf{side}},...
+                           'OffCallback',{@matseedsurfinvisible,PL.matseedsurf{side}},...
+                           'State','on',...
+                           'Tag',seedtag);
+
+    regionbtn=uitoggletool(addht,'CData',ea_get_icn('connectivities'),...
+                           'TooltipString',regtooltip,...
+                           'OnCallback',{@matsurfvisible,PL.matsurf{side}},...
+                           'OffCallback',{@matsurfinvisible,PL.matsurf{side}},...
+                           'State','on',...
+                           'Tag',regtag);
+    labelbtn=uitoggletool(addht,'CData',ea_get_icn('labels'),...
+                           'TooltipString',labeltooltip,...
+                           'OnCallback',{@conlabelvisible,PL.conlabels{side}},...
+                           'OffCallback',{@conlabelinvisible,PL.conlabels{side}},...
+                           'State','on',...
+                           'Tag',labeltag);
 
     clear allcareas conareas
 %     %% now show areas
@@ -462,6 +512,30 @@ end
 
 % plot seed surface:
 setappdata(resultfig,[mode,'PL'],PL);
+
+
+function matseedsurfvisible(hobj, evt, matseedsurf)
+set(matseedsurf, 'Visible', 'on');
+
+
+function matseedsurfinvisible(hobj, evt, matseedsurf)
+set(matseedsurf, 'Visible', 'off');
+
+
+function matsurfvisible(hobj, evt, matsurf)
+set(matsurf, 'Visible', 'on');
+
+
+function matsurfinvisible(hobj, evt, matsurf)
+set(matsurf, 'Visible', 'off');
+
+
+function conlabelvisible(hobj, evt, conlabel)
+set(conlabel, 'Visible', 'on');
+
+
+function conlabelinvisible(hobj, evt, conlabel)
+set(conlabel, 'Visible', 'off');
 
 
 function [fv,volume]=ea_fvseeds(seed,options)
