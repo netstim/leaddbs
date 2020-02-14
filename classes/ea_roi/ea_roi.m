@@ -34,8 +34,6 @@ classdef ea_roi < handle
                 obj.niftiFilename=niftiFilename;
             end
 
-
-
             try
                 obj.name=pobj.name;
             catch

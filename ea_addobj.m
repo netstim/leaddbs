@@ -161,7 +161,6 @@ if ~isempty(xx)
     XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
 end
 
-
 bb=[0,0,0;size(nii.img)];
 
 bb=map_coords_proxy(bb,nii);
