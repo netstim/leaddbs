@@ -294,6 +294,13 @@ for side=1:length(seed)
             seedtag = 'seedbtn_left';
             regtag = 'regionbtn_left';
             labeltag = 'labelbtn_left';
+        otherwise
+            seedtooltip = ['Seed Regions - ', num2str(side)];
+            regtooltip = ['Connected Regions - ', num2str(side)];
+            labeltooltip = ['Region Labels - ', num2str(side)];
+            seedtag = ['seedbtn_', num2str(side)];
+            regtag = ['regionbtn_', num2str(side)];
+            labeltag = ['labelbtn_', num2str(side)];
     end
 
     seedbtn=uitoggletool(addht,'CData',ea_get_icn('vat'),...
@@ -411,6 +418,10 @@ for side=1:length(options.sides)
             case 2
                 fibtooltip = 'Connected Fibers - Left Side';
                 fibtag = 'fibbtn_left';
+            otherwise
+                fibtooltip = ['Connected Fibers - ', num2str(side)];
+                fibtag = ['fibbtn_', num2str(side)];
+
         end
 
         fibbtn=uitoggletool(addht,'CData',ea_get_icn('fibers_vat'),...
