@@ -317,96 +317,6 @@ for side=1:length(seed)
                            'Tag',labeltag);
 
     clear allcareas conareas
-%     %% now show areas
-%     targets.img=round(targets.img);
-%     %tareas=1:4;
-%     if ~isempty(tareas{side})
-%         for anatarea=1:length(tareas{side})
-%
-%             [xx,yy,zz]=ind2sub(size(targets.img),find(targets.img==tareas{side}(anatarea)));
-%             XYZ=[xx,yy,zz];
-%
-%             XYZ=map_coords_proxy(XYZ,targets);
-%             %XYZ=XYZ';
-%             if options.prefs.lhullmethod==0
-%                 k=convhulln(XYZ);
-%             elseif options.prefs.lhullmethod==1
-%                 k=ea_concavehull(XYZ,1.5);
-%
-%             end
-%
-%             if size(XYZ,1)>1
-%                 [~,centroid]=kmeans(XYZ,1);
-%                 centroid=centroid(1,:);
-%             else
-%                 centroid=XYZ; % only one entry coordinate.
-%             end
-%
-%             if options.prefs.lhullmethod==2 % use isosurface
-%
-%                 bb=[0,0,0;size(targets.img)];
-%
-%                 bb=map_coords_proxy(bb,targets);
-%                 gv=cell(3,1);
-%                 for dim=1:3
-%                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(targets.img,dim));
-%                 end
-%                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-%
-%                 thisatlas=round(targets.img);
-%                 thisatlas(thisatlas~=tareas{side}(anatarea))=0;
-%                 thisatlas(thisatlas==tareas{side}(anatarea))=1;
-%                 if options.prefs.lhullsmooth
-%                     thisatlas = smooth3(thisatlas,'gaussian',options.prefs.lhullsmooth);
-%                 end
-%                 fv=isosurface(X,Y,Z,permute(thisatlas,[2,1,3]),0.3);
-%                 if ischar(options.prefs.lhullsimplify)
-%
-%                     % get to 300 faces
-%                     simplify=300/length(fv.faces);
-%                     fv=reducepatch(fv,simplify);
-%
-%                 else
-%                     if options.prefs.lhullsimplify<1 && options.prefs.lhullsimplify>0
-%                         fv=reducepatch(fv,options.prefs.lhullsimplify);
-%                     end
-%                 end
-%                 % set cdata
-%
-%                 if ~isfield(stimparams,'group')
-%                     cdat=abs(repmat(anatarea*(64/length(tareas{side})),length(fv.vertices),1)... % C-Data for surface
-%                         +randn(length(fv.vertices),1)*2)';
-%                 else % if more than one group is analyzed, coloring info will be off the group color.
-%                     RGB=zeros(1,1,3);
-%
-%                     RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
-%                     RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
-%                     RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
-%
-%                     Rind=double(rgb2ind(RGB,jet));
-%                     cdat=abs(repmat(Rind,length(fv.vertices),1)... % C-Data for surface
-%                         +randn(length(fv.vertices),1)*2)';
-%                 end
-%
-%                 PL.regionsurfs(la,side,anatarea)=patch(fv,'CData',cdat,'FaceColor',[0.8 0.8 1.0],'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-%
-%             else
-%
-%                 PL.regionsurfs(la,side,anatarea)=trisurf(k,XYZ(:,1),XYZ(:,2),XYZ(:,3),...
-%                     abs(repmat(anatarea*(64/length(tareas{side})),length(XYZ),1)...
-%                     +randn(length(XYZ),1)*0.1*length(tareas{side}))');
-%             end
-%
-%             %% shading etc.
-%             colorc=colornames(anatarea);
-%             colorc=rgb(colorc);
-%             ea_spec_atlas(PL.regionsurfs(la,side,anatarea),'labeling',jet,1);
-%
-%             %% put a label to it
-%             thislabel=sub2space(atlas_lgnd{2}{atlas_lgnd{1}==tareas{side}(anatarea)});
-%             PL.conlabels(la,side,anatarea)=text(centroid(1),centroid(2),centroid(3),thislabel,'VerticalAlignment','Baseline');
-%         end
-%     end
 end
 clear tareas
 
@@ -441,13 +351,6 @@ for side=1:length(options.sides)
             if ~isfield(stimparams,'group')
                 connectingfibs{side}{la,fib}(4:6,:)=detcolor(connectingfibs{side}{la,fib}); % add coloring information to the 4th-6th column.
             else % if more than one group is analyzed, coloring info will be off the group color.
-%                 RGB=zeros(1,1,3);
-%                 RGB(:,:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
-%                 RGB(:,:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
-%                 RGB(:,:,3)=stimparams(1).groupcolors(stimparams(1).group,3);
-%
-%                 connectingfibs{side}{la,fib}(4,:)=rgb2ind(RGB,jet);
-
                 RGB=zeros(1,3);
                 RGB(:,1)=stimparams(1).groupcolors(stimparams(1).group,1);
                 RGB(:,2)=stimparams(1).groupcolors(stimparams(1).group,2);
