@@ -160,6 +160,7 @@ if ~options.savefibers.load
     todelete = cell(1, length(seed));
     howmanyfibs = cell(1, length(seed));
     tareas = cell(1, length(seed));
+    contargets = cell(1, length(seed));
     for side=1:length(seed)
 
         todelete{side}=[];
@@ -237,11 +238,11 @@ if ~options.savefibers.load
             save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
         end
 
-        contargets=round(targets.img);
-        otargets=contargets;
-        contargets(:)=0;
+        contargets{side}=round(targets.img);
+        otargets=contargets{side};
+        contargets{side}(:)=0;
         for target=1:atlength
-            contargets(otargets==target)=howmanyfibs{side}(target);
+            contargets{side}(otargets==target)=howmanyfibs{side}(target);
         end
         %targets.img(targets.img<thresh)=0;
     end
@@ -263,7 +264,7 @@ for side=1:length(seed)
     % always show seed patch (i.e. VAT)
     PL.matseedsurf{side}=ea_showseedpatch(resultfig,seed{side},seed{side}.img,options);
 
-    [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets,thresh,atlas_lgnd{2},tareas{side},[],showregs,showlabs);
+    [PL.matsurf{side},PL.conlabels{side}]=ea_showconnectivitypatch(resultfig,targets,contargets{side},thresh,atlas_lgnd{2},tareas{side},[],showregs,showlabs);
 
     clear allcareas conareas
 %     %% now show areas
