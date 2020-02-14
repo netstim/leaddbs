@@ -265,12 +265,10 @@ if isempty(addht)
     addht = uitoolbar(resultfig);
     setappdata(resultfig, 'addht', addht);
 else
-    delete(findobj(get(addht, 'Children'), 'Tag', 'seedbtn_right'));
-    delete(findobj(get(addht, 'Children'), 'Tag', 'regionbtn_right'));
-    delete(findobj(get(addht, 'Children'), 'Tag', 'labelbtn_right'));
-    delete(findobj(get(addht, 'Children'), 'Tag', 'seedbtn_left'));
-    delete(findobj(get(addht, 'Children'), 'Tag', 'regionbtn_left'));
-    delete(findobj(get(addht, 'Children'), 'Tag', 'labelbtn_left'));
+    togglebtns = findobj(get(addht, 'Children'), 'Type', 'uitoggletool');
+    toogletags = arrayfun(@(obj) get(obj, 'Tag'), togglebtns, 'Uni', 0);
+    toggleset = startsWith(toogletags, {'seedbtn', 'regionbtn', 'labelbtn', 'fibbtn'});
+    delete(togglebtns(toggleset))
 end
 
 for side=1:length(seed)
