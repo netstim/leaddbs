@@ -1253,7 +1253,7 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
         save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
     catch
         warning('Data could not be saved.');
-        keyboard
+        % keyboard
     end
     disp('Done.');
     ea_busyaction('off',handles.leadfigure,'group');
