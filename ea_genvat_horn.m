@@ -397,7 +397,7 @@ elstruct(1).coords_mm=ea_resolvecoords(markers,options);
 elstruct(1).trajectory=trajectory;
 elstruct(1).name=options.patientname;
 elstruct(1).markers=markers;
-if options.prefs.machine.vatsettings_horn_removeElectrode
+if options.prefs.machine.vatsettings.horn_removeElectrode
     vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec);
 end
 ea_dispt('Preparing VAT...');
