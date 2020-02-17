@@ -143,8 +143,8 @@ switch ea_whichnormmethod(directory)
             end
 
             if wasgz
-                ea_delete([tempdir,fn,'.gz']);
-                ea_delete([tempdir,fn]);
+                ea_delete(from);
+                ea_delete([from{1},'.gz']);
             end
         end
 end
