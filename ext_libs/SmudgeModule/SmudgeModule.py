@@ -12,6 +12,7 @@ from Helpers import FunctionsUtil
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 import glob
+import SimpleITK as sitk
 
 #
 # SmudgeModule
@@ -335,26 +336,10 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Save Area
     #
 
-    saveCollapsibleButton = ctk.ctkCollapsibleButton()
-    saveCollapsibleButton.text = "Save"
-    self.layout.addWidget(saveCollapsibleButton)
-    saveFormLayout = qt.QFormLayout(saveCollapsibleButton)
-
-    saveModeFrame = qt.QFrame()
-    saveModeFrame.setLayout(qt.QHBoxLayout())
-    saveFormLayout.addRow("",saveModeFrame)
-
-    self.overwriteRadioButton = qt.QRadioButton('Overwrite warp field', saveModeFrame)
-    self.overwriteRadioButton.setChecked(True)
-    self.saveDeformedRadioButton = qt.QRadioButton('Run normalization to deformed image', saveModeFrame)
-
-    saveFormLayout.layout().addWidget(self.overwriteRadioButton)
-    saveFormLayout.layout().addWidget(self.saveDeformedRadioButton)
-
     self.saveButton = qt.QPushButton("Save and Exit")
     self.saveButton.setMinimumHeight(30)
     self.saveButton.setStyleSheet("background-color: green")
-    saveFormLayout.addRow("",self.saveButton)
+    self.layout.addWidget(self.saveButton)
 
     # connections
     self.smudgeButton.connect('clicked(bool)', self.onSmudgeButton)
@@ -522,7 +507,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     SmudgeModuleLogic().flattenTransform()
   
   def onSaveButton(self):
-    SmudgeModuleLogic().flattenTransform(overwriteBool=self.overwriteRadioButton.checked, saveDeformedImage=self.saveDeformedRadioButton.checked)
+    SmudgeModuleLogic().applyChanges()
+    slicer.util.exit()
 
   def updateGuiFromMRML(self, caller="", event=""):
     radius = float(self.parameterNode.GetParameter("radius"))
@@ -552,24 +538,24 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         atlases = sorted(os.listdir(atlasesPath))
         for atlas in atlases:
           self.segmentationComboBox.addItem(atlas)
-    self.smudgeButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
-    self.snapButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
-    self.flattenButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
-    self.undoButton.setEnabled(bool(int(self.parameterNode.GetParameter( "initialized"))))
+    self.smudgeButton.setEnabled(bool(int(self.parameterNode.GetParameter("initialized"))))
+    self.snapButton.setEnabled(bool(int(self.parameterNode.GetParameter("initialized"))))
+    self.flattenButton.setEnabled(bool(int(self.parameterNode.GetParameter("initialized"))))
+    self.undoButton.setEnabled(bool(int(self.parameterNode.GetParameter("initialized"))))
     self.initializeButton.setEnabled(self.inputSelector.currentNode() and self.transformSelector.currentNode() and self.affineSelector.currentNode())
 
   def updateMRMLFromGUI(self):
-    self.parameterNode.SetParameter( "radius", str(self.radiusSlider.value) )
-    self.parameterNode.SetParameter( "blurr", str(self.blurrSlider.value) )
-    self.parameterNode.SetParameter( "hardness", str(self.hardnessSlider.value) )
+    self.parameterNode.SetParameter("radius", str(self.radiusSlider.value) )
+    self.parameterNode.SetParameter("blurr", str(self.blurrSlider.value) )
+    self.parameterNode.SetParameter("hardness", str(self.hardnessSlider.value) )
     if self.transformSelector.currentNode():
-      self.parameterNode.SetParameter( "transformID", self.transformSelector.currentNode().GetID())
+      self.parameterNode.SetParameter("transformID", self.transformSelector.currentNode().GetID())
     if self.inputSelector.currentNode():
-      self.parameterNode.SetParameter( "imageID", self.inputSelector.currentNode().GetID())
+      self.parameterNode.SetParameter("imageID", self.inputSelector.currentNode().GetID())
     if self.segmentationSelector.currentNode():
-      self.parameterNode.SetParameter( "segmentationID", self.segmentationSelector.currentNode().GetID())
+      self.parameterNode.SetParameter("segmentationID", self.segmentationSelector.currentNode().GetID())
     if self.affineSelector.currentNode():
-      self.parameterNode.SetParameter( "affineTransformID", self.affineSelector.currentNode().GetID())
+      self.parameterNode.SetParameter("affineTransformID", self.affineSelector.currentNode().GetID())
         
     
   def toogleTools(self):
@@ -626,10 +612,11 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
   def initialize(self):
     parameterNode = self.getParameterNode()
     if not bool(int(parameterNode.GetParameter("initialized"))):
-      if parameterNode.GetParameter("auxTransformID") == "":
-        transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
-        FunctionsUtil.emptyTransform(transformNode)
-        parameterNode.SetParameter("auxTransformID", transformNode.GetID())
+      for auxID in ["auxTransformID"]:
+        if parameterNode.GetParameter(auxID) == "":
+          transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
+          FunctionsUtil.emptyTransform(transformNode)
+          parameterNode.SetParameter(auxID, transformNode.GetID())
       # apply affine transform to image
       affineNode = slicer.util.getNode(parameterNode.GetParameter("affineTransformID"))
       imageNode = slicer.util.getNode(parameterNode.GetParameter("imageID"))
@@ -678,7 +665,6 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("subjectPath", "")
     node.SetParameter("MNIPath", "")
     node.SetParameter("antsApplyTransformsPath", "")
-    node.SetParameter("antsRegistrationPath", "")
     return node
 
   def smudgeOn(self):
@@ -716,8 +702,63 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     WarpEffect.WarpEffectTool.empty()
     
   
+  def applyChanges(self):
 
-  def flattenTransform(self, overwriteBool = 0, saveDeformedImage = 0):
+    tmpFolder, displacementFileName = self.flattenTransform(cleanup=False)
+    inverseDisplacementFileName = self.invertTransform(displacementFileName)
+    self.overwriteTransform(displacementFileName, inverse = False)
+    self.overwriteTransform(inverseDisplacementFileName, inverse = True)
+
+    shutil.rmtree(tmpFolder)
+
+  def overwriteTransform(self, transformFileName, inverse):
+    parameterNode = self.getParameterNode()
+    subjectPath = parameterNode.GetParameter("subjectPath")
+    if not inverse:
+      originalTransformFileName = os.path.join(subjectPath,'glanatComposite.nii.gz')
+      referenceFileName = os.path.join(subjectPath, 'glanat.nii')
+    else:
+      originalTransformFileName = os.path.join(subjectPath, 'glanatInverseComposite.nii.gz')
+      referenceFileName = os.path.join(subjectPath, 'anat_t1.nii')
+    
+    command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + referenceFileName + " "
+
+    if not inverse:
+      command = command + "-t " + transformFileName + " -t " + originalTransformFileName
+    else:
+      command = command + "-t " + originalTransformFileName + " -t " + transformFileName
+
+    command = command + " -o [" + originalTransformFileName + ",1] -v 1"
+
+    # buckup
+    backupFile = os.path.join(subjectPath, "bu_" + str(int(inverse)) + "_composite.nii.gz")
+    if not os.path.isfile(backupFile) and True: # buckup transform before overwrite
+      shutil.copyfile(originalTransformFileName,backupFile)
+
+    commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
+
+
+  def invertTransform(self, transformFileName):
+    reader = sitk.ImageFileReader()
+    reader.SetOutputPixelType(sitk.sitkVectorFloat64)
+    reader.SetFileName(transformFileName)
+    displacementImage = reader.Execute()
+        
+    inverseDisplacement = sitk.InvertDisplacementField(displacementImage,\
+                                                        maximumNumberOfIterations = 20,\
+                                                        maxErrorToleranceThreshold = 0.01,\
+                                                        meanErrorToleranceThreshold = 0.0001,\
+                                                        enforceBoundaryCondition = True)                
+        
+    inverseDisplacementFileName = os.path.join(os.path.dirname(transformFileName), 'inverse.nii.gz')
+    
+    writer = sitk.ImageFileWriter()
+    writer.SetFileName(inverseDisplacementFileName)
+    writer.Execute(inverseDisplacement)
+
+    return inverseDisplacementFileName
+
+  def flattenTransform(self, cleanup=True):
     """
     Flat all manual transformations
     """
@@ -725,7 +766,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     parameterNode = self.getParameterNode()
     transformNode = slicer.util.getNode(parameterNode.GetParameter("transformID"))
     auxTransformNode = slicer.util.getNode(parameterNode.GetParameter("auxTransformID"))  
-    
+
     # get all transforms in a collection
     col = vtk.vtkCollection()
     transformNode.FlattenGeneralTransform(col,transformNode.GetTransformToParent())
@@ -734,72 +775,28 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       return
 
     path,transformFilename = os.path.split(transformNode.GetStorageNode().GetFileName()) # get working dir
-    os.mkdir(os.path.join(path,"tmp")) # create temp folder
-    
-    if overwriteBool or saveDeformedImage:
-      transformFullFilename = os.path.join(path,transformFilename)
-      backupFile = os.path.join(path,"glanatComposite_backup.nii.gz")
-      if not os.path.isfile(backupFile) and overwriteBool: # buckup transform before overwrite
-        shutil.copyfile(transformFullFilename,backupFile)
-      command = "-t " + transformFullFilename + " "
-    else:
-      command = ""
-    
-    outname = os.path.join(path,"tmp","out.nii.gz") # flat transform name
-    command = command + "-o [" + outname + ",1] --verbose 1"
+    tmpFolder = os.path.join(path,"tmp")
+    os.mkdir(tmpFolder) # create temp folder
+
+    command = ""
 
     for i in range(1,col.GetNumberOfItems()): # save each transform and append name to command
-    	con = vtk.vtkWarpTransform.SafeDownCast(col.GetItemAsObject(i))
-    	auxTransformNode.SetAndObserveTransformToParent(con)
-    	fullname = os.path.join(path, "tmp", "test" + str(i) + ".nii.gz")
-    	slicer.util.saveNode(auxTransformNode,fullname)
-    	command = "-t " + fullname + " " + command
+      con = vtk.vtkWarpTransform.SafeDownCast(col.GetItemAsObject(i))
+      auxTransformNode.SetAndObserveTransformToParent(con)
+      fullname = os.path.join(tmpFolder, "layer" + str(i) + ".nii.gz")
+      slicer.util.saveNode(auxTransformNode,fullname)
+      command = "-t " + fullname + " " + command
 
     FunctionsUtil.emptyTransform(auxTransformNode) # reset aux transform
 
-    if overwriteBool or saveDeformedImage:
-      referenceFile = os.path.join(path,"glanat.nii")
-    else:
-      referenceFile = fullname
+    command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + fullname + " " + command
 
-    command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + referenceFile + " " + command
+    outname = os.path.join(tmpFolder, "foreward.nii.gz") # flat transform name
+    command = command + "-o [" + outname + ",1] --verbose 1"
+
     commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
 
-    if overwriteBool:
-      os.remove(transformFullFilename)
-      shutil.copyfile(outname,transformFullFilename)
-      print('Saved!')
-    elif saveDeformedImage:
-      os.mkdir(os.path.join(path,"deformed"))
-      # deform subject image
-      deformedPath = os.path.join(path,'deformed','anat_t1_deformed.nii')
-      glCompPath = transformFullFilename #os.path.join(path, 'glanatComposite.nii.gz')
-      command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + referenceFile + " -i " + os.path.join(path,'anat_t1.nii') + " -t " + outname + " -o " + deformedPath
-      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True)
-      # register subject image to deformed
-      command = parameterNode.GetParameter("antsRegistrationPath") + " " + \
- 	      "--dimensionality 3 " \
-	      "--float 1 " + \
-	      "--output " + os.path.join(path, 'deformed', 'subjectToDeformed') + " " + \
-        "--use-histogram-matching 0 " + \
-	      "--initial-moving-transform " + glCompPath + " " + \
-	      "--transform SyN[0.1,3,0] " + \
-	      "--metric MeanSquares[" + deformedPath + "," + os.path.join(path, 'anat_t1.nii') + ",1,32,Random,0.25] " + \
-	      "--convergence [1000x500x500x0,1e-7,7] " + \
-	      "--shrink-factors 8x4x4x1 " + \
-	      "--smoothing-sigmas 4x3x1x1vox " + \
-	      "--verbose 1"
-      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True)
-      # flatten transforms
-      command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + glCompPath + " -t " + os.path.join(path,'deformed','subjectToDeformed1Warp.nii.gz') + " -t " + glCompPath + " -o [" + glCompPath + ",1] --verbose 1"
-      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True)
-      # inverse
-      glInvCompPath = os.path.join(path, 'glanatInverseComposite.nii.gz')
-      command = parameterNode.GetParameter("antsApplyTransformsPath") + " -r " + glInvCompPath + " -t " + glInvCompPath + " -t " + os.path.join(path,'deformed','subjectToDeformed1InverseWarp.nii.gz') + " -o [" + glInvCompPath + ",1] --verbose 1"
-      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True)
-      # clear
-      shutil.rmtree(os.path.join(path,"deformed"))
-    else:
+    if cleanup:
       ls,flatTransformNode = slicer.util.loadTransform(outname, returnNode = True) # load result
       # reset original transform
       con = vtk.vtkWarpTransform.SafeDownCast(col.GetItemAsObject(0))
@@ -811,13 +808,11 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       slicer.mrmlScene.RemoveNode(flatTransformNode)
       # reset actions
       transformNode.SetAndObserveTransformNodeID(parameterNode.GetParameter("auxTransformID"))
+      shutil.rmtree(tmpFolder)
       print('Flattened!')
+    else:
+      return tmpFolder,outname
     
-    # cleanup
-    shutil.rmtree(os.path.join(path,"tmp"))
-
-    if overwriteBool or saveDeformedImage:
-      slicer.util.exit()
 
   def undoOperation(self):
 
@@ -849,7 +844,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       redoTransformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
       FunctionsUtil.emptyTransform(redoTransformNode)
       parameterNode.SetParameter("redoTransformID", redoTransformNode.GetID())
-    redoTransformNode =  slicer.util.getNode(redoTransformID)
+    redoTransformNode =  slicer.util.getNode(parameterNode.GetParameter("redoTransformID"))
     con = vtk.vtkWarpTransform.SafeDownCast(col.GetItemAsObject(col.GetNumberOfItems()-1))
     redoTransformNode.SetAndObserveTransformToParent(con)
 
@@ -958,7 +953,6 @@ if __name__ == "__main__":
     # TODO: other platforms
 
     antsApplyTransformsPath = os.path.join(leadPath,'ext_libs','ANTs','antsApplyTransforms.' + ext)
-    antsRegistrationPath = os.path.join(leadPath,'ext_libs','ANTs','antsRegistration.' + ext)
 
     imagePath = os.path.join(subjectPath,'anat_t1.nii')
     templatePath = os.path.join(MNIPath,'t1.nii')
@@ -968,16 +962,16 @@ if __name__ == "__main__":
     ls, imageNode = slicer.util.loadVolume(imagePath, properties = {'name':'anat_t1', 'show':False}, returnNode = True)
     ls, templateNode = slicer.util.loadVolume(templatePath, properties = {'name':'template_t1', 'show':False}, returnNode = True)
     ls, transformNode = slicer.util.loadTransform(transformPath, returnNode = True)
-    
+
+    # load model
+    modelHierarchyNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelHierarchyNode')
+    FunctionsUtil.loadAtlas(os.path.join(MNIPath,'atlases','DISTAL Minimal (Ewert 2017)'), modelHierarchyNode)
+
     if not os.path.isfile(affinePath):
       msg=qt.QMessageBox().warning(qt.QWidget(),'','Affine transform not available. The Displayed warp is affine+deformable')
       affineNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
     else:
       ls, affineNode = slicer.util.loadTransform(affinePath, returnNode = True)
-
-    # load model
-    modelHierarchyNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelHierarchyNode')
-    FunctionsUtil.loadAtlas(os.path.join(MNIPath,'atlases','DISTAL Minimal (Ewert 2017)'), modelHierarchyNode)
     
     parameterNode = SmudgeModuleLogic().getParameterNode()
     
@@ -989,7 +983,6 @@ if __name__ == "__main__":
     parameterNode.SetParameter("subjectPath", subjectPath)
     parameterNode.SetParameter("MNIPath", MNIPath)
     parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
-    parameterNode.SetParameter("antsRegistrationPath", antsRegistrationPath)
     
     SmudgeModuleLogic().initialize()
     slicer.util.setSliceViewerLayers(background=imageNode, foreground=templateNode)

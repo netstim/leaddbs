@@ -40,7 +40,7 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     WarpEffectTool.__init__(self)
 
     self.transformNode = slicer.util.getNode(self.parameterNode.GetParameter("transformID"))
-
+    
     # transform data
     self.auxTransformNode = slicer.util.getNode(self.parameterNode.GetParameter("auxTransformID"))
     self.auxTransformSpacing = self.auxTransformNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0] # Asume isotropic!
@@ -71,15 +71,9 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
       self.transformNode.HardenTransform()
       FunctionsUtil.emptyTransform(self.auxTransformNode)
       self.transformNode.SetAndObserveTransformNodeID(self.parameterNode.GetParameter("auxTransformID"))
-      
+
     elif event == 'MouseMoveEvent':
       if self.smudging:
-        # get current IJK coord
-        xy = self.interactor.GetEventPosition()
-        xyToRAS = self.sliceLogic.GetSliceNode().GetXYToRAS()
-        currentPoint = xyToRAS.MultiplyDoublePoint( (xy[0], xy[1], 0, 1) )[0:3]
-        pos_i,pos_j,pos_k,aux = self.auxTransfromRASToIJK.MultiplyDoublePoint(currentPoint + (1,))
-        k,j,i = int(round(pos_k)),int(round(pos_j)),int(round(pos_i))
         # create a sphere with redius
         r = int(round(float(self.parameterNode.GetParameter("radius")) / self.auxTransformSpacing))
         xx, yy, zz = np.mgrid[:2*r+1, :2*r+1, :2*r+1]
@@ -100,9 +94,17 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
         sphereResult = (sphereResult - newMinValue) / (newMaxValue - newMinValue)
         # set hardness
         sphereResult = sphereResult * float(self.parameterNode.GetParameter("hardness")) / 100.0
+        # get current IJK coord
+        xy = self.interactor.GetEventPosition()
+        xyToRAS = self.sliceLogic.GetSliceNode().GetXYToRAS()
+        currentPoint = xyToRAS.MultiplyDoublePoint( (xy[0], xy[1], 0, 1) )[0:3]
+        pos_i,pos_j,pos_k,aux = self.auxTransfromRASToIJK.MultiplyDoublePoint(currentPoint + (1,))
+        k,j,i = int(round(pos_k)),int(round(pos_j)),int(round(pos_i))
+        curr_index = slice(k-r,k+r+1), slice(j-r,j+r+1), slice(i-r,i+r+1)
+
         # apply to transform array
-        index = slice(k-r,k+r+1), slice(j-r,j+r+1), slice(i-r,i+r+1)
-        self.auxTransformArray[index] += np.stack([(sphereResult) * i for i in (np.array(self.previousPoint) - np.array(currentPoint))],3)
+        self.auxTransformArray[curr_index] += np.stack([(sphereResult) * i for i in (np.array(self.previousPoint) - np.array(currentPoint))],3) # original
+
         # update view
         self.auxTransformNode.Modified()
         # update previous point
@@ -130,7 +132,6 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     
   def processEvent(self, caller=None, event=None):
 
-    
   
     if event == 'LeftButtonReleaseEvent':
 
