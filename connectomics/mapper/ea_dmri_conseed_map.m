@@ -1,25 +1,10 @@
-function ea_dmri_conseed_map(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,space,options)
-
-owasempty=0;
-if ~exist('outputfolder','var')
-    outputfolder=ea_getoutputfolder(sfile,ocname);
-    owasempty=1;
-else
-    if isempty(outputfolder) % from shell wrapper.
-        outputfolder=ea_getoutputfolder(sfile,cname);
-        owasempty=1;
-    end
-    if ~strcmp(outputfolder(end),filesep)
-        outputfolder=[outputfolder,filesep];
-    end
-end
+function ea_dmri_conseed_map(dfold,cname,sfile,cmd,space,options)
 
 for s=1:length(sfile)
-    
     % okay to check to reload connectome again for each seed in case of
     % using patient-specific connectomes:
     map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
-    
+
     if strcmp(dfold, 'Patient''s fiber tracts')
         if strcmp(cname, options.prefs.FTR_normalized) % patient specific fibertracts
             cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
@@ -38,7 +23,7 @@ for s=1:length(sfile)
                     ea_error('Structural connectome file supplied in wrong format.');
                 end
             end
-            
+
             redotree=0;
             ctype='mat';
         elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
@@ -50,40 +35,40 @@ for s=1:length(sfile)
             ea_error('Connectome file vanished or not supported!');
         end
     end
-    
+
     mapsz=size(map.img);
-    
+
     Niter=1; % usually run seed only once
     if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')
         Niter=10;
     end
-    
+
     for iter=1:Niter
         if iter>1 % bounce iteration
             Vseed=map;
-%            Vseed.img(~(Vseed.img==0))=ea_minmax(Vseed.img(~(Vseed.img==0))); % reset scale from 0-1 % need to think about negatives
+            % Vseed.img(~(Vseed.img==0))=ea_minmax(Vseed.img(~(Vseed.img==0))); % reset scale from 0-1 % need to think about negatives
         else
             Vseed=ea_load_nii(sfile{s});
         end
         map.img(:)=0;
 
-        
+
         maxdist=mean(abs(Vseed.voxsize))/2;
-        
+
         Vseed.img(isnan(Vseed.img))=0;
-        
+
         ixs=find(Vseed.img);
         % subtract nan values from these
-        
+
         ixvals=Vseed.img(ixs);
         if sum(abs(ixvals-double(logical(ixvals))))<0.0001
             allbinary=1;
         else
             allbinary=0;
         end
-        
+
         if ~allbinary || strcmp(ctype,'mat')
-            
+
             [xx,yy,zz]=ind2sub(size(Vseed.img),ixs);
             XYZvx=[xx,yy,zz,ones(length(xx),1)]';
             clear ixs
@@ -107,33 +92,33 @@ for s=1:length(sfile)
                 fiberstrengthn(fibnos)=fiberstrengthn(fibnos)+1;
                 %end
                 % ea_dispercent(ix/ixdim);
-                
+
             end
             nzz=~(fiberstrength==0);
             fiberstrength(nzz)=fiberstrength(nzz)./fiberstrengthn(nzz); % now each fiber has a strength mediated by the seed.
             ea_dispercent(1,'end');
-            
+
             ea_dispercent(0, ['Iterating fibers (', num2str(s), '/', num2str(length(sfile)), ')']);
             cfibers=find(fiberstrength);
-            
+
             allfibcs = fibers(ismember(fibers(:,4),cfibers), 1:3);
             allfibcs = round(map.mat\[allfibcs, ones(size(allfibcs,1),1)]');
             todel = logical(sum(allfibcs<1,1));
             allfibcs(:, todel) = [];
             topaint = sub2ind(mapsz, allfibcs(1,:), allfibcs(2,:), allfibcs(3,:));
-            
+
             fibInd = fibers(ismember(fibers(:,4),cfibers), 4)';
             fibInd(todel) = [];
             topaint = splitapply(@(x) {unique(x)}, topaint, findgroups(fibInd));
-            
+
             fibInd = repelem(unique(fibInd,'stable'), cellfun(@length, topaint));
             topaint = cell2mat(topaint);
-            
+
             [uniqueImgInd, ~, ic] = unique(topaint);
             fiberStr = accumarray(ic, fiberstrength(fibInd))';
-            
+
             map.img(uniqueImgInd) = map.img(uniqueImgInd) + fiberStr;
-            
+
             ea_dispercent(1,'end');
         else % if all is binary && using a .fib.gz file (i.e. all fibers go through seed already), can be much quicker.
             allfibcs=fibers(:,1:3);
@@ -143,29 +128,27 @@ for s=1:length(sfile)
             c=countmember(utopaint,topaint);
             map.img(utopaint)=c;
         end
-        
+
         [~,fn]=fileparts(sfile{s});
-        if owasempty
-            outputfolder=ea_getoutputfolder({sfile{s}},cname);
-        end
-        
+        outputfolder=ea_getoutputfolder(sfile(s),cname);
+
         if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')
             map.img(~(map.img==0))=ea_normal(map.img(~(map.img==0)));
         end
-        
+
         map.fname=fullfile(outputfolder,[fn,'_struc_',cmd,'.nii']);
         map.dt=[16,0];
         spm_write_vol(map,map.img);
         if evalin('base','exist(''SB_SAVE_ITERS'',''var'')')
             copyfile(fullfile(outputfolder,[fn,'_struc_',cmd,'.nii']),fullfile(outputfolder,[fn,'_struc_',cmd,'_',num2str(iter),'.nii']));
         end
-        
-        
+
         if iter>1
-           disp(['Similarity to last: ',num2str(corr(map.img(:),Vseed.img(:))),'.']); 
+           disp(['Similarity to last: ',num2str(corr(map.img(:),Vseed.img(:))),'.']);
         end
     end
 end
+
 
 function D=ea_minmax(D)
 

@@ -178,6 +178,75 @@ set(handles.stimfig,'position',[51,51,pos(3),pos(4)]);
 
 ea_refreshguisp(handles,options);
 
+if ~strcmp(options.leadprod, 'group')
+    visualizeVAT = 1;
+    if visualizeVAT
+        labels=get(handles.stimlabel,'String');
+        label=labels{get(handles.stimlabel,'Value')};
+        label(strfind(label,' '))='';
+        if exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2 && exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
+            load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+            stimparams(1,1).VAT.VAT = vatfv;
+            stimparams(1,1).volume = vatvolume;
+            vatgradtemp(1) = vatgrad;
+            load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+            stimparams(1,2).VAT.VAT = vatfv;
+            stimparams(1,2).volume = vatvolume;
+            vatgradtemp(2) = vatgrad;
+            vatgrad = vatgradtemp;
+        elseif  exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
+            load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+            stimparams(1,1).VAT.VAT = vatfv;
+            stimparams(1,1).volume = vatvolume;
+        elseif  exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
+            load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+            stimparams(1,1).VAT.VAT = vatfv;
+            stimparams(1,1).volume = vatvolume;
+        else
+            if exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
+                nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+                vatfv = ea_niiVAT2fvVAT(nii);
+    %             vatfv = ea_smoothpatch(vatfv,1,35);
+                stimparams(1,1).VAT.VAT = vatfv;
+                nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
+                vatfv = ea_niiVAT2fvVAT(nii);
+    %             vatfv = ea_smoothpatch(vatfv,1,35);
+                stimparams(1,2).VAT.VAT = vatfv;
+            elseif exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2
+                nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+                vatfv = ea_niiVAT2fvVAT(nii);
+    %             vatfv = ea_smoothpatch(vatfv,1,35);
+                stimparams(1,1).VAT.VAT = vatfv;
+            elseif exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
+                nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
+                vatfv = ea_niiVAT2fvVAT(nii);
+    %             vatfv = ea_smoothpatch(vatfv,1,35);
+                stimparams(1,1).VAT.VAT = vatfv;
+            else
+                visualizeVAT = 0;
+            end
+        end
+
+        if visualizeVAT
+            setappdata(handles.stimfig,'stimparams',stimparams);
+            resultfig = getappdata(handles.stimfig,'resultfig');
+            PL=getappdata(resultfig,'PL');
+            for group=1:length(PL)
+                deletePL(PL(group));
+            end
+            clear PL
+            if exist('vatgrad')
+                setappdata(resultfig,'vatgrad',vatgrad);
+            end
+            setappdata(resultfig,'stimparams',stimparams(1,:));
+            S=ea_loadstimulation(label,options);
+            setappdata(resultfig,'curS',S(1))
+            options.writeoutstats = 1;
+            ea_showfibers_volume(resultfig,options);
+        end
+    end
+end
+
 % Choose default command line output for ea_stimparams
 handles.output = hObject;
 

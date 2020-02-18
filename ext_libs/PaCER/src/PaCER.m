@@ -32,6 +32,8 @@ if(~isempty(args.electrodeType))
    args.contactDetectionMethod = 'contactAreaCenter'; 
 end
 %% Checks
+assert(logical(license('test', 'image_toolbox')), 'It seems this system does not have the Image Processing Toolbox installed. PaCER requires the Image Processing Toolbox to continue.')
+
 if(~isa(niiCT, 'NiftiMod') && ~isa(niiCT, 'NiftiModSPM') )
     disp('First parameter is not a nifti object. Intrepretating as filename and tring to load a nifti file with that name from disk...');
     niiCT = NiftiMod(niiCT);
