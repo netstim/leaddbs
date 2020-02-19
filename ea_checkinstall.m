@@ -298,9 +298,9 @@ else
         end
     end
 
+    [loc,~,ext] = fileparts(destination);
     if success
         disp(['Installing ',assetname,'...'])
-        [loc,~,ext] = fileparts(destination);
         if strcmp(ext,'.gz')
             gunzip(destination, loc);
             ea_delete(destination);
@@ -308,6 +308,9 @@ else
             unzip(destination, loc);
             ea_delete(destination);
         end
+    else
+        fprintf(['\nDownload error! You may try to download the updates manually from:\n',...
+                 '%s\nand then extract it into %s.\n\n'], [downloadurl,'?id=',id], loc);
     end
 end
 
