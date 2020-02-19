@@ -309,8 +309,10 @@ else
             ea_delete(destination);
         end
     else
-        fprintf(['\nDownload error! You may try to download the updates manually from:\n',...
+        fprintf(['\nDownload error! You may try to download the file manually from:\n',...
                  '%s\nand then extract it into %s.\n\n'], [downloadurl,'?id=',id], loc);
+        msgbox('Please check the command window for more information.','Download error!','Error')
+        return
     end
 end
 
