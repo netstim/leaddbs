@@ -71,6 +71,7 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
       self.transformNode.HardenTransform()
       FunctionsUtil.emptyTransform(self.auxTransformNode)
       self.transformNode.SetAndObserveTransformNodeID(self.parameterNode.GetParameter("auxTransformID"))
+      self.parameterNode.SetParameter("currentLayer",str(int(self.parameterNode.GetParameter("currentLayer"))+1))
 
     elif event == 'MouseMoveEvent':
       if self.smudging:

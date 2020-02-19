@@ -212,7 +212,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     toolsFormLayout.addRow("Blurr (%):", self.blurrSlider)
 
     #
-    # blurr
+    # hardness
     #
     self.hardnessSlider = ctk.ctkSliderWidget()
     self.hardnessSlider.singleStep = 1
@@ -222,19 +222,29 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.hardnessSlider.value = float(self.parameterNode.GetParameter("hardness"))
     toolsFormLayout.addRow("Hardness (%):", self.hardnessSlider)
 
-    #
-    # Flatten pb
-    #
 
-    self.flattenButton = qt.QPushButton("Flatten Transform")
-    self.flattenButton.setEnabled(False)
-    toolsFormLayout.addRow(self.flattenButton)
-    
     #
-    # Undo Redo
+    # History Area
+    #
+    historyCollapsibleButton = ctk.ctkCollapsibleButton()
+    historyCollapsibleButton.text = "History"
+    self.layout.addWidget(historyCollapsibleButton)
+
+    historyGridLayout = qt.QGridLayout(historyCollapsibleButton)
+
+    #
+    # Undo Redo Flatten
     #   
     undoredoFrame = qt.QFrame()
-    undoredoFrame.setLayout(qt.QHBoxLayout())
+    undoredoFrame.setLayout(qt.QVBoxLayout())
+
+    flattenPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','flattenIcon.png')))
+    flattenIcon = qt.QIcon(flattenPixmap)
+    self.flattenButton = qt.QPushButton()
+    self.flattenButton.setIcon(flattenIcon)
+    self.flattenButton.setIconSize(flattenPixmap.rect().size())
+    self.flattenButton.setEnabled(False)    
+    self.flattenButton.toolTip = 'Flatten'
 
     undoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','undoIcon.png')))
     undoIcon = qt.QIcon(undoPixmap)
@@ -242,6 +252,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.undoButton.setIcon(undoIcon)
     self.undoButton.setIconSize(undoPixmap.rect().size())
     self.undoButton.setEnabled(False)
+    self.undoButton.toolTip = 'Undo'
 
     redoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','redoIcon.png')))
     redoIcon = qt.QIcon(redoPixmap)
@@ -249,11 +260,24 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.redoButton.setIcon(redoIcon)
     self.redoButton.setIconSize(redoPixmap.rect().size())
     self.redoButton.setEnabled(False)
+    self.redoButton.toolTip = 'Redo'
 
     undoredoFrame.layout().addWidget(self.undoButton)
     undoredoFrame.layout().addWidget(self.redoButton)
+    undoredoFrame.layout().addWidget(self.flattenButton)
     
-    toolsFormLayout.addRow(undoredoFrame)
+    historyGridLayout.addWidget(undoredoFrame,0,0)
+
+    # History Stack
+
+    self.historyList = qt.QListWidget()
+    #wi = qt.QListWidgetItem('a')
+    #wi.setFlags(1)
+    self.historyList.addItem('glanatComposite')
+    self.historyList.setCurrentRow(0)
+
+
+    historyGridLayout.addWidget(self.historyList,0,1)
 
 
     #
@@ -361,6 +385,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.saveButton.connect("clicked(bool)", self.onSaveButton)
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
+    self.historyList.itemSelectionChanged.connect(self.historyItemChanged)
 
     self.layoutComboBox.connect('currentIndexChanged(int)', self.onLayoutChanged)
     self.sliceIntersectionVisibilityCheckBox.connect('stateChanged(int)', self.onSliceIntersectionVisibilityChanged)
@@ -385,6 +410,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def enter(self):
     pass
+
+  def historyItemChanged(self):
+    self.historyList.setCurrentRow(int(self.parameterNode.GetParameter("currentLayer"))) # keep same value
 
   def onSliceIntersectionVisibilityChanged(self, state):
     viewNodes = slicer.util.getNodesByClass('vtkMRMLSliceCompositeNode')
@@ -544,6 +572,18 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.flattenButton.setEnabled(bool(int(self.parameterNode.GetParameter("initialized"))))
     self.undoButton.setEnabled(bool(int(self.parameterNode.GetParameter("initialized"))))
     self.initializeButton.setEnabled(self.inputSelector.currentNode() and self.transformSelector.currentNode() and self.affineSelector.currentNode())
+    # add history layer
+    if self.historyList.model().rowCount()-1 < int(self.parameterNode.GetParameter("currentLayer")):
+      self.historyList.addItem("Transform Layer " + self.parameterNode.GetParameter("currentLayer"))
+    # remove history layers when current layer is -1 (flatten transform)
+    if int(self.parameterNode.GetParameter("currentLayer")) == -1:
+      while self.historyList.model().rowCount() > 1:
+        self.historyList.item(self.historyList.model().rowCount()-1).delete()
+    # set current row as current layer
+    self.historyList.setCurrentRow(int(self.parameterNode.GetParameter("currentLayer")))
+    # remove history layer when undoing more than once
+    if self.historyList.currentRow == self.historyList.model().rowCount()-3:
+      self.historyList.item(self.historyList.model().rowCount()-1).delete()
 
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("radius", str(self.radiusSlider.value) )
@@ -666,6 +706,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("subjectPath", "")
     node.SetParameter("MNIPath", "")
     node.SetParameter("antsApplyTransformsPath", "")
+    node.SetParameter("currentLayer", "0")
     return node
 
   def smudgeOn(self):
@@ -772,7 +813,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     col = vtk.vtkCollection()
     transformNode.FlattenGeneralTransform(col,transformNode.GetTransformToParent())
 
-    if (col.GetNumberOfItems() < 3 and not overwriteBool): # already flat!
+    if int(parameterNode.GetParameter("currentLayer")) == 0: # already flat!
       return
 
     path,transformFilename = os.path.split(transformNode.GetStorageNode().GetFileName()) # get working dir
@@ -810,6 +851,9 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       # reset actions
       transformNode.SetAndObserveTransformNodeID(parameterNode.GetParameter("auxTransformID"))
       shutil.rmtree(tmpFolder)
+      # reset history
+      parameterNode.SetParameter("currentLayer","-1")
+      parameterNode.SetParameter("currentLayer","1")
       print('Flattened!')
     else:
       return tmpFolder,outname
@@ -850,6 +894,8 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     redoTransformNode.SetAndObserveTransformToParent(con)
 
     transformNode.SetAndObserveTransformNodeID(parameterNode.GetParameter("auxTransformID")) 
+
+    parameterNode.SetParameter("currentLayer",str(int(parameterNode.GetParameter("currentLayer"))-1))
   
   def redoOperation(self):
     # Get nodes
@@ -861,6 +907,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     slicer.mrmlScene.RemoveNode(redoTransformNode)
     parameterNode.SetParameter("redoTransformID","")
     transformNode.SetAndObserveTransformNodeID(parameterNode.GetParameter("auxTransformID"))
+    parameterNode.SetParameter("currentLayer",str(int(parameterNode.GetParameter("currentLayer"))+1))
 
 
 class SmudgeModuleTest(ScriptedLoadableModuleTest):
