@@ -14,30 +14,41 @@ class CircleEffectTool(Effect.EffectTool, VTKObservationMixin):
     
     self.rasToXY = vtk.vtkMatrix4x4()
 
-    self.brush = vtk.vtkPolyData()
-    self.createGlyph()
+    self.brush1 = vtk.vtkPolyData()
+    self.brush2 = vtk.vtkPolyData()
 
-    self.mapper = vtk.vtkPolyDataMapper2D()
-    self.mapper.SetInputData(self.brush)
+    self.updateGlyph([],[])
 
-    self.actor = vtk.vtkActor2D()
-    self.actor.GetProperty().SetColor(.7, .7, 0)
-    self.actor.SetMapper(self.mapper)
-    self.actor.VisibilityOff()
-    self.actors.append(self.actor) 
+    self.mapper1 = vtk.vtkPolyDataMapper2D()
+    self.mapper1.SetInputData(self.brush1)
+    self.mapper2 = vtk.vtkPolyDataMapper2D()
+    self.mapper2.SetInputData(self.brush2)
 
-    self.renderer.AddActor2D(self.actor)   
+    self.actor1 = vtk.vtkActor2D()
+    self.actor1.GetProperty().SetColor(.5, .5, 0)
+    self.actor1.SetMapper(self.mapper1)
+    self.actor1.VisibilityOff()
+    self.actor2 = vtk.vtkActor2D()
+    self.actor2.GetProperty().SetColor(.7, .7, 0)
+    self.actor2.SetMapper(self.mapper2)
+    self.actor2.VisibilityOff()
+
+    self.actors.append(self.actor1) 
+    self.actors.append(self.actor2) 
+
+    self.renderer.AddActor2D(self.actor1)   
+    self.renderer.AddActor2D(self.actor2)   
 
     
 
-  def createGlyph(self):
+  def createGlyph(self, polyData, radius):
     """
     create a brush circle of the right radius in XY space
     - assume uniform scaling between XY and RAS which
       is enforced by the view interactors
     """
-    polyData = self.brush
-    radius = float(self.parameterNode.GetParameter("radius"))
+    #polyData = self.brush
+    #radius = float(self.parameterNode.GetParameter("radius"))
 
     sliceNode = self.sliceWidget.sliceLogic().GetSliceNode()
     self.rasToXY.DeepCopy(sliceNode.GetXYToRAS())
@@ -94,13 +105,16 @@ class CircleEffectTool(Effect.EffectTool, VTKObservationMixin):
   def processEvent(self, caller=None, event=None):
     if event == 'MouseMoveEvent':
       xy = self.interactor.GetEventPosition()
-      self.actor.SetPosition(xy)
+      self.actor1.SetPosition(xy)
+      self.actor2.SetPosition(xy)
       self.sliceView.scheduleRender()
     elif event == "EnterEvent":
-      self.createGlyph() # update in case radius changed from slider
-      self.actor.VisibilityOn()
+      self.updateGlyph([],[]) # update in case radius changed from slider
+      self.actor1.VisibilityOn()
+      self.actor2.VisibilityOn()
     elif event == "LeaveEvent":
-      self.actor.VisibilityOff()
+      self.actor1.VisibilityOff()
+      self.actor2.VisibilityOff()
     elif event == 'LeftButtonPressEvent':
       self.cursorOff()
     elif event == 'LeftButtonReleaseEvent':
@@ -113,14 +127,16 @@ class CircleEffectTool(Effect.EffectTool, VTKObservationMixin):
         self.scaleRadius(0.8) 
 
     if caller and caller.IsA('vtkMRMLSliceNode'):
-      self.createGlyph()
+      self.updateGlyph([],[])
 
   def scaleRadius(self,scaleFactor):
     radius = float(self.parameterNode.GetParameter("radius"))
     self.parameterNode.SetParameter( "radius", str(radius * scaleFactor) )
     
   def updateGlyph(self, caller, event):
-    self.createGlyph()
+    r = float(self.parameterNode.GetParameter("radius"))
+    self.createGlyph(self.brush1, r)
+    self.createGlyph(self.brush2, r * (1-float(self.parameterNode.GetParameter("blurr")) / 100.0))
 
   def cleanup(self):
     super(CircleEffectTool,self).cleanup()
