@@ -13,6 +13,7 @@ from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 import glob
 import SimpleITK as sitk
+import h5py # should already be installed
 
 #
 # SmudgeModule
@@ -954,6 +955,34 @@ if __name__ == "__main__":
 
     antsApplyTransformsPath = os.path.join(leadPath,'ext_libs','ANTs','antsApplyTransforms.' + ext)
 
+    # check for old version of transforms
+    if os.path.isfile(os.path.join(subjectPath,'glanatComposite.h5')):
+      # get affine parameters from h5
+      with h5py.File(os.path.join(subjectPath,'glanatComposite.h5'),'r') as f:
+        parameters  = f['TransformGroup/1']['TransformParameters'][()]
+        fixedParameters = f['TransformGroup/1']['TransformFixedParameters'][()]
+      # save parameters to .txt transform
+      tmpTransform = os.path.join(subjectPath,'tmpTransform.txt')
+      file1 = open(tmpTransform,"w") 
+      L = ["#Insight Transform File V1.0\n",\
+      	 "#Transform 0\n",\
+      	 "Transform: AffineTransform_double_3_3\n",\
+      	 "Parameters: {} {} {} {} {} {} {} {} {} {} {} {}\n".format(*parameters),\
+      	 "FixedParameters: {} {} {}\n".format(*fixedParameters)]
+      file1.writelines(L) 
+      file1.close()
+      # load transform and save as a .mat
+      ls, tmpTransformNode = slicer.util.loadTransform(tmpTransform, returnNode = True)
+      slicer.util.saveNode(tmpTransformNode, os.path.join(subjectPath,'glanat0GenericAffine_backup.mat'))
+      slicer.mrmlScene.RemoveNode(tmpTransformNode)
+      os.remove(tmpTransform)
+      # use ants apply transforms to change .h5 ext to .nii.gz
+      for transform,reference in zip(['glanatComposite','glanatInverseComposite'],['glanat','anat_t1']):
+        command = antsApplyTransformsPath + " -r " + os.path.join(subjectPath,reference + '.nii') + " -t " + os.path.join(subjectPath,transform + '.h5') + " -o [" + os.path.join(subjectPath,transform + '.nii.gz') + ",1] -v 1"
+        commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
+        os.remove(os.path.join(subjectPath,transform + '.h5'))
+
+    # load nodes
     imagePath = os.path.join(subjectPath,'anat_t1.nii')
     templatePath = os.path.join(MNIPath,'t1.nii')
     transformPath = os.path.join(subjectPath,'glanatComposite.nii.gz')
