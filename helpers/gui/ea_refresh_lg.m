@@ -82,7 +82,8 @@ options.prefs=ea_prefs('');
 options.earoot=ea_getearoot;
 try
     directory=[M.patient.list{1},filesep];
-    modlist=ea_genmodlist(directory,thisparc,options);
+    [modlist, type] = ea_genmodlist(directory,thisparc,options);
+    modlist = modlist(type==1); % Only keep dMRI connectome
     modlist(strncmp(modlist, 'Patient''s fMRI', length('Patient''s fMRI'))) = [];
     if ~ismember('Patient''s fiber tracts' ,modlist)
         modlist{end+1}='Patient''s fiber tracts';

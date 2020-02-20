@@ -510,11 +510,11 @@ for tn=0:1
             connfolders=dir([directory,'stimulations',ea_nt(options),filesep,stimdirs(pd).name]);
             for connfolder=1:length(connfolders)
                 if ~strcmp(connfolders(connfolder).name(1),'.')
-                    
-                    if connfolders(connfolder).isdir && ea_contains(connfolders(connfolder).name,thisrest(2:end))
+
+                    if connfolders(connfolder).isdir && contains(connfolders(connfolder).name,thisrest(2:end))
                         rmdir([directory,'stimulations',filesep,ea_nt(options),stimdirs(pd).name,filesep,connfolders(connfolder).name],'s');
                     end
-                    
+
                     ea_delete([directory,'stimulations',filesep,ea_nt(options),stimdirs(pd).name,filesep,'*',thisrest(2:end),'*.nii']);
                 end
             end

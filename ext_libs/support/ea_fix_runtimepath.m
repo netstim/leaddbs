@@ -19,7 +19,7 @@ end
 env = getenv(envname);
 
 for i=1:length(runtimePath)
-    if ~ea_contains(env, runtimePath{i})
+    if ~contains(env, runtimePath{i})
         env = [env, ';', runtimePath{i}];
     end
 end

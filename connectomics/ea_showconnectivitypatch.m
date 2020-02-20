@@ -2,9 +2,7 @@ function [matsurf,labels]=ea_showconnectivitypatch(resultfig,pV,mX,thresh,atlasl
 matsurf=[];
 labels=[];
 
-
 if showregs
-
     tmX=mX>thresh;
 
     options.prefs=ea_prefs('');
@@ -34,7 +32,7 @@ if showregs
             fv=reducepatch(fv,simplify);
         end
     end
-    fv=ea_smoothpatch(fv,[],20);
+    try fv=ea_smoothpatch(fv,[],20); end
 
     set(0,'CurrentFigure',resultfig)
     matsurf=patch(fv,'facealpha',0.7,'EdgeColor','none','facelighting','phong','FaceColor','interp');

@@ -876,7 +876,7 @@ for pt=selection
 
     % own fileparts to support windows/mac/linux slashes even if they come
     % from a different OS.
-    if ~ea_contains(M.patient.list{pt},'/')
+    if ~contains(M.patient.list{pt},'/')
         lookfor='\';
     else
         lookfor='/';
@@ -1009,10 +1009,10 @@ for pt=selection
         catch
             keyboard
         end
-        
-        
+
+
         options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
-     
+
         options.orignative=options.native; % backup
         options.native=~ea_getprefs('vatsettings.estimateInTemplate'); % see whether VTAs should be directly estimated in template space or not
         if options.native && ~volumespresent
@@ -1253,7 +1253,7 @@ if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % 
         save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
     catch
         warning('Data could not be saved.');
-        keyboard
+        % keyboard
     end
     disp('Done.');
     ea_busyaction('off',handles.leadfigure,'group');

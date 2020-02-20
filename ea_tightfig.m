@@ -51,7 +51,7 @@ if ~isempty(hcb)
     htx = [htx; [hcb.Label]'];
 end
 if ~isempty(htx)
-    htx(ea_contains({htx.Visible}, 'off')) = [];
+    htx(contains({htx.Visible}, 'off')) = [];
 end
 % Get parents of text objects because the extent is based on the parent
 % position
@@ -112,7 +112,7 @@ for i = 1:numel(hax_ti)
     iszoomed = strcmp(get(hax(i), 'CameraViewAngleMode'), 'manual');
     % test if we are viewing in 2d mode or a 3d view
     is2d = all(bsxfun(@eq, [az,el], views2d), 2);
-    
+
     if iszoomed && ~any(is2d)
         error('TIGHTFIGADV:haszoomed3d', 'Cannot make figures containing zoomed 3D axes tight.')
     end

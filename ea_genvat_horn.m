@@ -49,7 +49,7 @@ resultfig=getappdata(lgfigure,'resultfig');
 
 % Important to load in reco from a new since we need to decide whether to
 % use native or template coordinates. Even when running in template space,
-% the native coordinates are sometimes used (VTA is then calculated in native space and ported to template). 
+% the native coordinates are sometimes used (VTA is then calculated in native space and ported to template).
 options.loadrecoforviz=1;
 [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 elstruct(1).coords_mm=coords_mm;
@@ -62,154 +62,154 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords=acoords{side};
 setappdata(resultfig,'elstruct',elstruct);
+
 % Add stretchfactor to elstruct simply for purpose of checking if headmodel
 % changed. Larger stim amplitudes need larger bounding boxes so
 % stretchfactor must be incorporated here.
-    if max(S.amplitude{side})>4
-        elstruct.stretchfactor=0.75; %(max(S.amplitude{side})/10);
-    else
-        elstruct.stretchfactor=0.5;
-    end
-    
-    
-    
-    hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test once.
-    assignin('caller','hmchanged',hmchanged);
-    if hmchanged
-        ea_dispt('Headmodel needs to be re-calculated. This may take a while...');
+if max(S.amplitude{side})>4
+    elstruct.stretchfactor=0.75; %(max(S.amplitude{side})/10);
+else
+    elstruct.stretchfactor=0.5;
+end
 
-        load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
-        if ~isfield(atlases,'tissuetypes')
-            atlases.tissuetypes=ones(length(atlases.names),1);
-        end
-        cnt=1;
-        mesh.tet=[];
-        mesh.pnt=[];
-        mesh.tissue=[];
-        mesh.tissuelabel={'gray','white','contacts','insulation'};
-        % add gm to mesh
-        if options.prefs.machine.vatsettings.horn_useatlas
-            switch options.prefs.vat.gm
-                case 'atlas'
-                    for atlas=1:numel(atlases.fv)
-                        if isempty(atlases.fv{atlas}) || (atlases.tissuetypes~=1)
-                            continue
-                        end
-                        fv(cnt)=atlases.fv{atlas};
-                        
-                        ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
-                        %tissuetype(cnt)=1;
-                        cnt=cnt+1;
+hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test once.
+assignin('caller','hmchanged',hmchanged);
+if hmchanged
+    ea_dispt('Headmodel needs to be re-calculated. This may take a while...');
+
+    cnt=1;
+    mesh.tet=[];
+    mesh.pnt=[];
+    mesh.tissue=[];
+    mesh.tissuelabel={'gray','white','contacts','insulation'};
+    % add gm to mesh
+    if options.prefs.machine.vatsettings.horn_useatlas
+        switch options.prefs.vat.gm
+            case 'atlas'
+                atlasName = options.prefs.machine.vatsettings.horn_atlasset;
+                load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
+                if ~isfield(atlases,'tissuetypes')
+                    atlases.tissuetypes=ones(length(atlases.names),1);
+                end
+                for atlas=1:numel(atlases.fv)
+                    if isempty(atlases.fv{atlas}) || (atlases.tissuetypes~=1)
+                        continue
                     end
-                case 'tpm'
-                    c1=ea_load_nii([ea_space(options),'TPM.nii,1']);
-                    %                 voxnbcyl=c1.mat\[nbcyl,ones(length(nbcyl),1)]';
-                    %                 voxnbcyl=voxnbcyl(1:3,:)';
-                    %                 cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
-                    %                 cyl=imfill(cyl,'holes');
-                    %
-                    %                 cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
-                    %                 c1.img=c1.img.*permute(cyl,[2,1,3]);
-                    fv=isosurface(c1.img,0.5,'noshare');
-                    fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
-                    fv.vertices=fv.vertices(1:3,:)';
-                case 'mask'
-                    fv=ea_fem_getmask(options);
-            end
-        else
-            fv=[];
+                    fv(cnt)=atlases.fv{atlas};
+
+                    ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
+                    %tissuetype(cnt)=1;
+                    cnt=cnt+1;
+                end
+            case 'tpm'
+                c1=ea_load_nii([ea_space(options),'TPM.nii,1']);
+                %                 voxnbcyl=c1.mat\[nbcyl,ones(length(nbcyl),1)]';
+                %                 voxnbcyl=voxnbcyl(1:3,:)';
+                %                 cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
+                %                 cyl=imfill(cyl,'holes');
+                %
+                %                 cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
+                %                 c1.img=c1.img.*permute(cyl,[2,1,3]);
+                fv=isosurface(c1.img,0.5,'noshare');
+                fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
+                fv.vertices=fv.vertices(1:3,:)';
+            case 'mask'
+                fv=ea_fem_getmask(options);
         end
-
-
-        [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
-        success=0;
-        for attempt=1:3 % allow three attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
-            try
-                [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
-                success=1;
-                break
-            catch
-                Y=Y+randn(4)/700; % very small jitter on transformation which will be used on electrode.
-            end
-        end
-
-        % replace wmboundary:
-        try
-            tess = mesh.tet(:,1:4);
-        catch
-            ea_error(['An error occured when building the VTA mesh/headmodel for ',options.patientname,'. Try re-calculating this VTA with a different atlas or with no atlas.']);
-        end
-        tess = sort(tess,2);
-
-        % all faces
-        faces=[tess(:,[1 2 3]);tess(:,[1 2 4]); ...
-            tess(:,[1 3 4]);tess(:,[2 3 4])];
-
-        % find replicate faces
-        faces = sortrows(faces);
-        k = find(all(diff(faces)==0,2));
-
-        % delete the internal (shared) faces
-        faces([k;k+1],:) = [];
-
-        wmboundary = unique(faces(:))';
-        % end replace.
-
-
-        if vizz
-            figure
-            hold on
-            plot3(mesh.pnt(wmboundary,1),mesh.pnt(wmboundary,2),mesh.pnt(wmboundary,3),'r*');
-            plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'b.');
-        end
-
-        if ~success
-            ea_error('Lead-DBS could not solve the current estimation.');
-        end
-
-        mesh.tissue=tissuetype;
-        meshregions=mesh.tet(:,5);
-        mesh.tet=mesh.tet(:,1:4);
-
-        if useSI
-            mesh.pnt=mesh.pnt/1000; % in meter
-            mesh.unit='m';
-        end
-     %   plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'c.');
-        %% calculate volume conductor
-        ea_dispt('Creating volume conductor...');
-
-        if useSI
-            SIfx=1;
-        else
-            SIfx=1000;
-        end
-
-        try
-            vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[options.prefs.machine.vatsettings.horn_cgm options.prefs.machine.vatsettings.horn_cwm 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-            %vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-        catch % reorder elements so not to be degenerated.
-            tmesh=mesh;
-            tmesh.tet=tmesh.tet(:,[1 2 4 3]);
-            vol=ea_ft_headmodel_simbio(tmesh,'conductivity',SIfx*[options.prefs.machine.vatsettings.horn_cgm options.prefs.machine.vatsettings.horn_cwm 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
-        end
-        if useSI % convert back before saving headmodel
-            mesh.pnt=mesh.pnt*1000; % in meter
-            mesh.unit='mm';
-        end
-        if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)],'dir')
-           mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
-        end
-        save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
-        ea_save_hmprotocol(options,side,elstruct,1);
-
     else
-        % simply load vol.
-        ea_dispt('Loading headmodel...');
-        load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat']);
-        activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
-
+        fv=[];
     end
+
+
+    [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
+    success=0;
+    for attempt=1:3 % allow three attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
+        try
+            [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
+            success=1;
+            break
+        catch
+            Y=Y+randn(4)/700; % very small jitter on transformation which will be used on electrode.
+        end
+    end
+
+    % replace wmboundary:
+    try
+        tess = mesh.tet(:,1:4);
+    catch
+        ea_error(['An error occured when building the VTA mesh/headmodel for ',options.patientname,'. Try re-calculating this VTA with a different atlas or with no atlas.']);
+    end
+    tess = sort(tess,2);
+
+    % all faces
+    faces=[tess(:,[1 2 3]);tess(:,[1 2 4]); ...
+        tess(:,[1 3 4]);tess(:,[2 3 4])];
+
+    % find replicate faces
+    faces = sortrows(faces);
+    k = find(all(diff(faces)==0,2));
+
+    % delete the internal (shared) faces
+    faces([k;k+1],:) = [];
+
+    wmboundary = unique(faces(:))';
+    % end replace.
+
+
+    if vizz
+        figure
+        hold on
+        plot3(mesh.pnt(wmboundary,1),mesh.pnt(wmboundary,2),mesh.pnt(wmboundary,3),'r*');
+        plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'b.');
+    end
+
+    if ~success
+        ea_error('Lead-DBS could not solve the current estimation.');
+    end
+
+    mesh.tissue=tissuetype;
+    meshregions=mesh.tet(:,5);
+    mesh.tet=mesh.tet(:,1:4);
+
+    if useSI
+        mesh.pnt=mesh.pnt/1000; % in meter
+        mesh.unit='m';
+    end
+ %   plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'c.');
+    %% calculate volume conductor
+    ea_dispt('Creating volume conductor...');
+
+    if useSI
+        SIfx=1;
+    else
+        SIfx=1000;
+    end
+
+    try
+        vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[options.prefs.machine.vatsettings.horn_cgm options.prefs.machine.vatsettings.horn_cwm 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+        %vol=ea_ft_headmodel_simbio(mesh,'conductivity',SIfx*[0.0915 0.059 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+    catch % reorder elements so not to be degenerated.
+        tmesh=mesh;
+        tmesh.tet=tmesh.tet(:,[1 2 4 3]);
+        vol=ea_ft_headmodel_simbio(tmesh,'conductivity',SIfx*[options.prefs.machine.vatsettings.horn_cgm options.prefs.machine.vatsettings.horn_cwm 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
+    end
+    if useSI % convert back before saving headmodel
+        mesh.pnt=mesh.pnt*1000; % in meter
+        mesh.unit='mm';
+    end
+    if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)],'dir')
+       mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
+    end
+    save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
+    ea_save_hmprotocol(options,side,elstruct,1);
+
+else
+    % simply load vol.
+    ea_dispt('Loading headmodel...');
+    load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat']);
+    activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
+
+end
 
 switch side
     case 1
@@ -397,7 +397,7 @@ elstruct(1).coords_mm=ea_resolvecoords(markers,options);
 elstruct(1).trajectory=trajectory;
 elstruct(1).name=options.patientname;
 elstruct(1).markers=markers;
-if options.prefs.machine.vatsettings_horn_removeElectrode
+if options.prefs.machine.vatsettings.horn_removeElectrode
     vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec);
 end
 ea_dispt('Preparing VAT...');

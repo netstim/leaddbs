@@ -1,28 +1,59 @@
-function cfv=ea_atlas2stl(atlasnames,ofn)
+function cfv=ea_atlas2stl(atlasnames,ofn,target,outputsinglefile)
 
 if ~iscell(atlasnames)
     ea_error('Please specify atlas(es) in a cellstring');
 end
-cnt=1;
-earoot=ea_getearoot;
+
+if ~exist('target','var')
+    target=[];
+end
+
+if ~exist('outputsinglefile','var')
+    outputsinglefile = 1;
+end
+
+cnt = 1;
 for atl=1:length(atlasnames)
     load([ea_space([],'atlases'),atlasnames{atl},filesep,'atlas_index.mat']);
+    if ~isempty(target)
+        viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']);
+        views=viewsets.(target).plyview;
+        presets=resolveviews(views(1).structures,atlases);
+    else
+        presets=atlases.presets(1).show;
+    end
     for side=1:2
-        for mesh=1:length(atlases.names)
-            cfv(cnt).vertices=atlases.fv{mesh,side}.vertices;
-            cfv(cnt).faces=atlases.fv{mesh,side}.faces;
-            cfv(cnt).facevertexcdata=atlases.cdat{mesh,side}';
-            if isempty(cfv(cnt).facevertexcdata) % fiber atlas
-                cfv(cnt).facevertexcdata=repmat(atlases.colors(mesh),size(cfv(cnt).faces,1),1);
-            end
-
-            cnt=cnt+1;
+        for i=1:length(presets)
+            cfv(cnt).vertices=atlases.fv{presets(i),side}.vertices;
+            cfv(cnt).faces=atlases.fv{presets(i),side}.faces;
+            cfv(cnt).facevertexcdata=repmat(atlases.colors(presets(i)),size(cfv(cnt).faces,1),1);
+            cnt = cnt + 1;
         end
     end
 end
 
-cfv=ea_concatfv(cfv);
+if outputsinglefile
+    cfv=ea_concatfv(cfv);
+    cfv=ea_mapcolvert2face(cfv);
+    ea_stlwrite(ofn,cfv,'FACECOLOR',cfv.facevertexcdata);
+else
+    for i=1:length(presets)
+        pth = fileparts(ofn);
+        if isempty(pth)
+            pth = '.';
+        end
 
-cfv=ea_mapcolvert2face(cfv);
+        fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Right.stl'];
+        cfv(i)=ea_mapcolvert2face(cfv(i));
+        ea_stlwrite(fname,cfv(i),'FACECOLOR',cfv(i).facevertexcdata);
 
-ea_stlwrite(ofn,cfv,'FACECOLOR',cfv.facevertexcdata);
+        fname = [pth, filesep, atlases.labels{1}{presets(i)}, '_Left.stl'];
+        cfv(i+length(presets))=ea_mapcolvert2face(cfv(i+length(presets)));
+        ea_stlwrite(fname,cfv(i+length(presets)),'FACECOLOR',cfv(i+length(presets)).facevertexcdata);
+    end
+end
+
+
+function presets=resolveviews(structures,atlases)
+atlasnames=ea_stripext(atlases.names);
+presets=find(ismember(atlasnames,structures));
