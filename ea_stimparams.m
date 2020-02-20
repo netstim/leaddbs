@@ -1036,6 +1036,7 @@ if strcmp('on',get(handles.estimateInTemplate,'Visible')) % only allowed for spe
     end
 end
 
+ea_savestimulation(S,options);
 setappdata(handles.stimfig,'S',S);
 if isfield(elstruct,'group')
     gcnt=ones(length(elstruct(1).groups),1);
@@ -2225,9 +2226,8 @@ else % Ampere
     ea_show_percent(handles,options,2,'on'); % left hemisphere
 end
 
-setappdata(handles.stimfig,'S',S);
-
 ea_savestimulation(S,options);
+setappdata(handles.stimfig,'S',S);
 
 
 function ea_show_percent(handles,options,side,onoff)
