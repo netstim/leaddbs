@@ -41,7 +41,7 @@ catch
     try
         urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',Inf);
     catch
-        fprintf(['\nDownload error! You may try to download the file manually from:\n',...
+        fprintf(['\nDownload error! You may try to download the update package manually from:\n',...
                  '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=',id]);
         msgbox('Please check the command window for more information.','Download error!','Error')
         return
