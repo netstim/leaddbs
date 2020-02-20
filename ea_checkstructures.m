@@ -860,18 +860,7 @@ function pushbutton6_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-options = getappdata(handles.checkstructures,'options');
-subject_path = fullfile(options.root,options.patientname);
-% check for new outputs
-if ~isfile(fullfile(subject_path,'glanatComposite.nii.gz'))
-    errordlg('Didn''t found .nii.gz composite transform. Re-run subject to generate it.');
-    return
-end
-slicer_path = ea_runslicer(options,5);
-module_path = fullfile(ea_getearoot,'ext_libs','SmudgeModule');
-module_script = fullfile(module_path,'SmudgeModule.py');
-command = [slicer_path ' --no-main-window --additional-module-paths ' module_path ' --python-script ' module_script ' ' subject_path ' ' ea_getearoot];
-system(command);
+
 
 
 

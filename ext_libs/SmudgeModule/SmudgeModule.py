@@ -147,6 +147,20 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     inputsFormLayout.addRow(self.initializeButton)
 
     #
+    # Subject
+    #
+
+    subjectFrame = qt.QFrame()
+    subjectFrame.setLayout(qt.QHBoxLayout())
+    self.subjectNameLabel = qt.QLabel('')
+
+    subjectFrame.layout().addWidget(qt.QLabel('Subject: '))
+    subjectFrame.layout().addWidget(self.subjectNameLabel)
+    subjectFrame.layout().addStretch()
+
+    self.layout.addWidget(subjectFrame)
+
+    #
     # Tools Area
     #
     toolsCollapsibleButton = ctk.ctkCollapsibleButton()
@@ -271,11 +285,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # History Stack
 
     self.historyList = qt.QListWidget()
-    #wi = qt.QListWidgetItem('a')
-    #wi.setFlags(1)
     self.historyList.addItem('glanatComposite')
     self.historyList.setCurrentRow(0)
-
 
     historyGridLayout.addWidget(self.historyList,0,1)
 
@@ -361,7 +372,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Save Area
     #
 
-    self.saveButton = qt.QPushButton("Save and Exit")
+    self.saveButton = qt.QPushButton("Save and Next")
     self.saveButton.setMinimumHeight(30)
     self.saveButton.setStyleSheet("background-color: green")
     self.layout.addWidget(self.saveButton)
@@ -537,7 +548,22 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   
   def onSaveButton(self):
     SmudgeModuleLogic().applyChanges()
-    slicer.util.exit()
+    nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
+    subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
+    if nextSubjectN < len(subjectPaths):
+      self.parameterNode.SetParameter("subjectN", str(nextSubjectN))
+      self.parameterNode.SetParameter("subjectPath", subjectPaths[nextSubjectN])
+      self.exit()
+      #self.parameterNode.RemoveAllObservers()
+      SmudgeModuleLogic().resetSubjectData()
+      #self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGuiFromMRML)
+      # reset history
+      self.parameterNode.SetParameter("currentLayer","-1")
+      self.parameterNode.SetParameter("currentLayer","0")
+      SmudgeModuleLogic().initialize()
+      self.updateGuiFromMRML()
+    else:
+      slicer.util.exit()
 
   def updateGuiFromMRML(self, caller="", event=""):
     radius = float(self.parameterNode.GetParameter("radius"))
@@ -584,20 +610,27 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # remove history layer when undoing more than once
     if self.historyList.currentRow == self.historyList.model().rowCount()-3:
       self.historyList.item(self.historyList.model().rowCount()-1).delete()
+    
+    # subject text
+    subjectN = int(self.parameterNode.GetParameter("subjectN"))
+    subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
+    self.subjectNameLabel.text = os.path.split(subjectPaths[subjectN])[-1]
+    self.saveButton.text = 'Save and Exit' if subjectN == len(subjectPaths)-1 else 'Save and Next'
 
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("radius", str(self.radiusSlider.value) )
     self.parameterNode.SetParameter("blurr", str(self.blurrSlider.value) )
     self.parameterNode.SetParameter("hardness", str(self.hardnessSlider.value) )
-    if self.transformSelector.currentNode():
-      self.parameterNode.SetParameter("transformID", self.transformSelector.currentNode().GetID())
-    if self.inputSelector.currentNode():
-      self.parameterNode.SetParameter("imageID", self.inputSelector.currentNode().GetID())
-    if self.segmentationSelector.currentNode():
-      self.parameterNode.SetParameter("segmentationID", self.segmentationSelector.currentNode().GetID())
-    if self.affineSelector.currentNode():
-      self.parameterNode.SetParameter("affineTransformID", self.affineSelector.currentNode().GetID())
-        
+    if not __name__ == "__main__":
+      if self.transformSelector.currentNode():
+        self.parameterNode.SetParameter("transformID", self.transformSelector.currentNode().GetID())
+      if self.inputSelector.currentNode():
+        self.parameterNode.SetParameter("imageID", self.inputSelector.currentNode().GetID())
+      if self.segmentationSelector.currentNode():
+        self.parameterNode.SetParameter("segmentationID", self.segmentationSelector.currentNode().GetID())
+      if self.affineSelector.currentNode():
+        self.parameterNode.SetParameter("affineTransformID", self.affineSelector.currentNode().GetID())
+      
     
   def toogleTools(self):
     WarpEffect.WarpEffectTool.empty()
@@ -700,10 +733,12 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("templateID", "")
     node.SetParameter("modelID","")
     node.SetParameter("radius", "10")
-    node.SetParameter("blurr", "40")
+    node.SetParameter("blurr", "60")
     node.SetParameter("hardness", "100")
     node.SetParameter("initialized", "0")
     node.SetParameter("subjectPath", "")
+    node.SetParameter("subjectPath", "")
+    node.SetParameter("subjectN", "0")
     node.SetParameter("MNIPath", "")
     node.SetParameter("antsApplyTransformsPath", "")
     node.SetParameter("currentLayer", "0")
@@ -746,6 +781,8 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
   
   def applyChanges(self):
 
+    if int(parameterNode.GetParameter("currentLayer")) == 0: # no changes
+      return
     tmpFolder, displacementFileName = self.flattenTransform(cleanup=False)
     inverseDisplacementFileName = self.invertTransform(displacementFileName)
     self.overwriteTransform(displacementFileName, inverse = False)
@@ -910,6 +947,79 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     parameterNode.SetParameter("currentLayer",str(int(parameterNode.GetParameter("currentLayer"))+1))
 
 
+  def resetSubjectData(self):
+    parameterNode = self.getParameterNode()
+    #parameterNode.RemoveAllObservers()
+    # delete nodes
+    imageID = parameterNode.GetParameter("imageID")
+    transformID = parameterNode.GetParameter("transformID")
+    affineTransformID = parameterNode.GetParameter("affineTransformID")
+
+    removeIDs = [imageID,transformID,affineTransformID] 
+   
+    subjectPath = parameterNode.GetParameter("subjectPath")
+    # check for old version of transforms
+    if os.path.isfile(os.path.join(subjectPath,'glanatComposite.h5')):
+      self.updateTransforms(subjectPath)
+
+    # load nodes
+    imagePath = os.path.join(subjectPath,'anat_t1.nii')
+    transformPath = os.path.join(subjectPath,'glanatComposite.nii.gz')
+    affinePath = os.path.join(subjectPath,'glanat0GenericAffine_backup.mat')
+
+    ls, imageNode = slicer.util.loadVolume(imagePath, properties = {'name':'anat_t1', 'show':False}, returnNode = True)
+    ls, transformNode = slicer.util.loadTransform(transformPath, returnNode = True)
+    if not os.path.isfile(affinePath):
+      msg=qt.QMessageBox().warning(qt.QWidget(),'','Affine transform not available. The Displayed warp is affine+deformable')
+      affineNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
+    else:
+      ls, affineNode = slicer.util.loadTransform(affinePath, returnNode = True)
+
+    # set parameters    
+    parameterNode.SetParameter("transformID", transformNode.GetID())
+    parameterNode.SetParameter("affineTransformID", affineNode.GetID())
+    parameterNode.SetParameter("imageID", imageNode.GetID())
+
+    # init
+    #self.initialize()
+    slicer.util.setSliceViewerLayers(background=imageNode)
+    imageNode.GetDisplayNode().AutoWindowLevelOff()
+    imageNode.GetDisplayNode().SetWindow(760)
+    imageNode.GetDisplayNode().SetLevel(420)
+
+    if int(parameterNode.GetParameter("subjectN")) != 0:
+      for ID in removeIDs:
+        if ID != "":
+          slicer.mrmlScene.RemoveNode(slicer.util.getNode(ID))
+
+
+  def updateTransforms(self,subjectPath):
+    # get affine parameters from h5
+    with h5py.File(os.path.join(subjectPath,'glanatComposite.h5'),'r') as f:
+      parameters  = f['TransformGroup/1']['TransformParameters'][()]
+      fixedParameters = f['TransformGroup/1']['TransformFixedParameters'][()]
+    # save parameters to .txt transform
+    tmpTransform = os.path.join(subjectPath,'tmpTransform.txt')
+    file1 = open(tmpTransform,"w") 
+    L = ["#Insight Transform File V1.0\n",\
+    	 "#Transform 0\n",\
+    	 "Transform: AffineTransform_double_3_3\n",\
+    	 "Parameters: {} {} {} {} {} {} {} {} {} {} {} {}\n".format(*parameters),\
+    	 "FixedParameters: {} {} {}\n".format(*fixedParameters)]
+    file1.writelines(L) 
+    file1.close()
+    # load transform and save as a .mat
+    ls, tmpTransformNode = slicer.util.loadTransform(tmpTransform, returnNode = True)
+    slicer.util.saveNode(tmpTransformNode, os.path.join(subjectPath,'glanat0GenericAffine_backup.mat'))
+    slicer.mrmlScene.RemoveNode(tmpTransformNode)
+    os.remove(tmpTransform)
+    # use ants apply transforms to change .h5 ext to .nii.gz
+    for transform,reference in zip(['glanatComposite','glanatInverseComposite'],['glanat','anat_t1']):
+      command = antsApplyTransformsPath + " -r " + os.path.join(subjectPath,reference + '.nii') + " -t " + os.path.join(subjectPath,transform + '.h5') + " -o [" + os.path.join(subjectPath,transform + '.nii.gz') + ",1] -v 1"
+      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
+      os.remove(os.path.join(subjectPath,transform + '.h5'))
+
+
 class SmudgeModuleTest(ScriptedLoadableModuleTest):
   """
   This is the test case for your scripted module.
@@ -975,6 +1085,7 @@ class SmudgeModuleSlicelet(object):
     # add module
     self.widget = SmudgeModuleWidget(self.leftFrame)
     self.widget.setup()
+
     self.parent.setGeometry(51, 45, 1869, 849)
     #self.parent.showMaximized()
     self.parent.show()
@@ -990,8 +1101,9 @@ if __name__ == "__main__":
 
   # load subject data
   if len(sys.argv) > 1:
-    subjectPath = sys.argv[1]
-    leadPath = sys.argv[2]
+    
+    leadPath = sys.argv[1]
+    subjectPaths = ' '.join(sys.argv[2:])
 
     MNIPath = os.path.join(leadPath,'templates','space','MNI_ICBM_2009b_NLIN_ASYM')
 
@@ -1002,74 +1114,35 @@ if __name__ == "__main__":
 
     antsApplyTransformsPath = os.path.join(leadPath,'ext_libs','ANTs','antsApplyTransforms.' + ext)
 
-    # check for old version of transforms
-    if os.path.isfile(os.path.join(subjectPath,'glanatComposite.h5')):
-      # get affine parameters from h5
-      with h5py.File(os.path.join(subjectPath,'glanatComposite.h5'),'r') as f:
-        parameters  = f['TransformGroup/1']['TransformParameters'][()]
-        fixedParameters = f['TransformGroup/1']['TransformFixedParameters'][()]
-      # save parameters to .txt transform
-      tmpTransform = os.path.join(subjectPath,'tmpTransform.txt')
-      file1 = open(tmpTransform,"w") 
-      L = ["#Insight Transform File V1.0\n",\
-      	 "#Transform 0\n",\
-      	 "Transform: AffineTransform_double_3_3\n",\
-      	 "Parameters: {} {} {} {} {} {} {} {} {} {} {} {}\n".format(*parameters),\
-      	 "FixedParameters: {} {} {}\n".format(*fixedParameters)]
-      file1.writelines(L) 
-      file1.close()
-      # load transform and save as a .mat
-      ls, tmpTransformNode = slicer.util.loadTransform(tmpTransform, returnNode = True)
-      slicer.util.saveNode(tmpTransformNode, os.path.join(subjectPath,'glanat0GenericAffine_backup.mat'))
-      slicer.mrmlScene.RemoveNode(tmpTransformNode)
-      os.remove(tmpTransform)
-      # use ants apply transforms to change .h5 ext to .nii.gz
-      for transform,reference in zip(['glanatComposite','glanatInverseComposite'],['glanat','anat_t1']):
-        command = antsApplyTransformsPath + " -r " + os.path.join(subjectPath,reference + '.nii') + " -t " + os.path.join(subjectPath,transform + '.h5') + " -o [" + os.path.join(subjectPath,transform + '.nii.gz') + ",1] -v 1"
-        commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
-        os.remove(os.path.join(subjectPath,transform + '.h5'))
-
-    # load nodes
-    imagePath = os.path.join(subjectPath,'anat_t1.nii')
+    # template data
     templatePath = os.path.join(MNIPath,'t1.nii')
-    transformPath = os.path.join(subjectPath,'glanatComposite.nii.gz')
-    affinePath = os.path.join(subjectPath,'glanat0GenericAffine_backup.mat')
-
-    ls, imageNode = slicer.util.loadVolume(imagePath, properties = {'name':'anat_t1', 'show':False}, returnNode = True)
     ls, templateNode = slicer.util.loadVolume(templatePath, properties = {'name':'template_t1', 'show':False}, returnNode = True)
-    ls, transformNode = slicer.util.loadTransform(transformPath, returnNode = True)
+    slicer.util.setSliceViewerLayers(foreground=templateNode)
+    templateNode.GetDisplayNode().AutoWindowLevelOff()
+    templateNode.GetDisplayNode().SetWindow(100)
+    templateNode.GetDisplayNode().SetLevel(70)
 
     # load model
     modelHierarchyNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelHierarchyNode')
     FunctionsUtil.loadAtlas(os.path.join(MNIPath,'atlases','DISTAL Minimal (Ewert 2017)'), modelHierarchyNode)
 
-    if not os.path.isfile(affinePath):
-      msg=qt.QMessageBox().warning(qt.QWidget(),'','Affine transform not available. The Displayed warp is affine+deformable')
-      affineNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
-    else:
-      ls, affineNode = slicer.util.loadTransform(affinePath, returnNode = True)
-    
     parameterNode = SmudgeModuleLogic().getParameterNode()
-    
-    parameterNode.SetParameter("transformID", transformNode.GetID())
-    parameterNode.SetParameter("affineTransformID", affineNode.GetID())
-    parameterNode.SetParameter("imageID", imageNode.GetID())
-    parameterNode.SetParameter("templateID", templateNode.GetID())
-    parameterNode.SetParameter("modelID", modelHierarchyNode.GetID())
-    parameterNode.SetParameter("subjectPath", subjectPath)
+
+    parameterNode.SetParameter("subjectPaths", subjectPaths)
+    parameterNode.SetParameter("subjectN", "0")
+    parameterNode.SetParameter("subjectPath", subjectPaths.split(' ')[0])
     parameterNode.SetParameter("MNIPath", MNIPath)
     parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
-    
+    parameterNode.SetParameter("modelID", modelHierarchyNode.GetID())
+    parameterNode.SetParameter("templateID", templateNode.GetID())
+
+    SmudgeModuleLogic().resetSubjectData()
     SmudgeModuleLogic().initialize()
-    slicer.util.setSliceViewerLayers(background=imageNode, foreground=templateNode)
 
-    templateNode.GetDisplayNode().AutoWindowLevelOff()
-    templateNode.GetDisplayNode().SetWindow(100)
-    templateNode.GetDisplayNode().SetLevel(70)
-    imageNode.GetDisplayNode().AutoWindowLevelOff()
-    imageNode.GetDisplayNode().SetWindow(760)
-    imageNode.GetDisplayNode().SetLevel(420)
+    
 
+
+    
 
 
 
