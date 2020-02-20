@@ -1,10 +1,10 @@
 function ea_importfs(varargin)
-% This function imports freesurfer cortical reconstruction files into 
+% This function imports freesurfer cortical reconstruction files into
 % patient directory, and converts .pial files to cortex.mat
 %
 % External Dependencies:
 %       mri_convert (Freesurfer)
-% 
+%
 % Function:
 % 1) Locate freesurfer directory
 % 2) Save cortex.mat to patientdirectory
@@ -13,9 +13,9 @@ function ea_importfs(varargin)
 % Ari Kappel
 
 if isfield(varargin{1},'patdir_choosebox')
-    
+
     handles = varargin{1};
-    
+
     if strcmp(handles.patdir_choosebox.String,'Choose Patient Directory')
         ea_error('Please Choose Patient Directory');
     else
@@ -23,15 +23,15 @@ if isfield(varargin{1},'patdir_choosebox')
         options.patientname = get(handles.patdir_choosebox,'String');
         options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
         options.prefs=ea_prefs(options.patientname);
-        
+
         ptdir = get(handles.patdir_choosebox,'String');
         [~,patientname] = fileparts(get(handles.patdir_choosebox,'String'));
     end
 
 elseif isfield(varargin{1},'uipatdirs')
-    
+
     options = varargin{1};
-    
+
     ptdir = fullfile(options.root,options.patientname);
     patientname = options.patientname;
 
@@ -56,7 +56,7 @@ if size(overwrite,2)>=2
   for f = 1:size(overwrite,2)-1
       tmp = strsplit(files{f+1},'_');
       V{f} = tmp{2}(1:end-4);
-  end 
+  end
 end
 
 if overwrite
@@ -156,19 +156,19 @@ AsegFile = [fsdir '/mri/aseg.mgz'];
     % Notes: need to add ea_libs_helper for Freesurfer compatibility
 
 lfs = dir([fsdir,filesep,'label']); % label_files
-    
+
 annot_DKT(1).atlas = 'Desikan-Killiany';
 annot_DKT(2).atlas = 'Desikan-Killiany';
-annot_DKT(1).filename  = ['label/',lfs(ea_contains({lfs.name},'rh.aparc.annot')).name]; %'label/lh.aparc.annot';     label_files(~cellfun(@isempty,strfind({label_files.name},'rh.aparc.DKT'))).name
-annot_DKT(2).filename  = ['label/',lfs(ea_contains({lfs.name},'lh.aparc.annot')).name]; %'label/lh.aparc.annot';
+annot_DKT(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.annot')).name]; %'label/lh.aparc.annot';     label_files(~cellfun(@isempty,strfind({label_files.name},'rh.aparc.DKT'))).name
+annot_DKT(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.annot')).name]; %'label/lh.aparc.annot';
 annot_DKTaseg(1).atlas = 'Desikan-Killiany + Aseg';
 annot_DKTaseg(2).atlas = 'Desikan-Killiany + Aseg';
-annot_DKTaseg(1).filename  = ['label/',lfs(ea_contains({lfs.name},'rh.aparc.DKT')).name]; %'label/rh.aparc.DKTatlas.annot';
-annot_DKTaseg(2).filename  = ['label/',lfs(ea_contains({lfs.name},'lh.aparc.DKT')).name]; %'label/lh.aparc.DKTatlas.annot';
+annot_DKTaseg(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.DKT')).name]; %'label/rh.aparc.DKTatlas.annot';
+annot_DKTaseg(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.DKT')).name]; %'label/lh.aparc.DKTatlas.annot';
 annot_a2009(1).atlas = 'Destrieux';
 annot_a2009(2).atlas = 'Destrieux';
-annot_a2009(1).filename  = ['label/',lfs(ea_contains({lfs.name},'rh.aparc.a2009')).name]; %'label/rh.aparc.a2009s.annot';
-annot_a2009(2).filename  = ['label/',lfs(ea_contains({lfs.name},'lh.aparc.a2009')).name]; %'label/lh.aparc.a2009s.annot';
+annot_a2009(1).filename  = ['label/',lfs(contains({lfs.name},'rh.aparc.a2009')).name]; %'label/rh.aparc.a2009s.annot';
+annot_a2009(2).filename  = ['label/',lfs(contains({lfs.name},'lh.aparc.a2009')).name]; %'label/lh.aparc.a2009s.annot';
 
 % Read Annotation Files
 % external/freesurfer/read_annotation.m
@@ -189,7 +189,7 @@ save([ptdir '/cortex/annot_a2009.mat'],'annot'); clear annot
 CortexHiRes.patientname = patientname;
 CortexHiRes.ptdir = ptdir;
 CortexHiRes.fsdir = fsdir;
-   
+
 disp('Loading reconstruction...')
 % Read surface files
 [CortexHiRes.raw.Vertices_lh,CortexHiRes.raw.Faces_lh]= read_surf(LhPial); % Reading left side pial surface
@@ -215,7 +215,7 @@ CortexHiRes.Vertices_lh = transformPointsForward(tform,CortexHiRes.raw.Vertices_
 CortexHiRes.Vertices_rh = transformPointsForward(tform,CortexHiRes.raw.Vertices_rh);
 
 % freesurfer starts at 0 for indexing
-CortexHiRes.Faces_lh=CortexHiRes.raw.Faces_lh+1; 
+CortexHiRes.Faces_lh=CortexHiRes.raw.Faces_lh+1;
 CortexHiRes.Faces_rh=CortexHiRes.raw.Faces_rh+1;
 
 % Postop to preop
@@ -226,7 +226,7 @@ if options.prefs.d3.fs.dev
     CortexHiRes.Vertices = transformPointsForward(tform,CortexHiRes.raw.Vertices);
     CortexHiRes.Faces=CortexHiRes.raw.Faces+1;
 
-    
+
     switch CortexHiRes.raw.nativespace
         case 'Postop'
             coregfile = fdir(ptdir,'GenericAffine'); %fdir(ptdir,'2postop');
@@ -244,7 +244,7 @@ if options.prefs.d3.fs.dev
                 CortexHiRes.Vertices_lh = transformPointsInverse(tform, CortexHiRes.Vertices_lh);
                 CortexHiRes.Vertices_rh = transformPointsInverse(tform, CortexHiRes.Vertices_rh);
                 CortexHiRes.Vertices = transformPointsInverse(tform, CortexHiRes.Vertices);
-                
+
                 [CortexHiRes.Vert_mm,CortexHiRes.Vert_vox] = ea_map_coords(CortexHiRes.Vertices','raw_postop_tra.nii',fullfile(ptdir,cell2mat(coregfile)),'anat_t1.nii','ANTS');
             else
                 ea_warning('cannot find corgeistration matrix')
@@ -272,14 +272,14 @@ end
     %% Get Hull under dev
 %     cmd = '/Applications/freesurfer/bin:/Applications/freesurfer/fsfast/bin:/Applications/freesurfer/mni/bin:/Applications/freesurfer/tktools';
 %     ea_libs_helper(cmd,'PATH')
-% 
+%
 %     grayfilename = [fsdir '/mri/ribbon.nii'];
 %     % if ~exist(grayfilename,'file') && exist([fsdir,'/mri/ribbon.mgz'],'file')
 %     %     cmd = sprintf('mri_convert -i %s/mri/ribbon.mgz -o %s/mri/ribbon.nii -it mgz -ot nii',fsdir,fsdir);
 %     %     system(cmd)
 %     % else ~exist(grayfilename,'file') && ~exist([fsdir,'/mri/ribbon.mgz'],'file')
 %     %     ea_warning('Cannot Find mri/ribbon.mgz')
-%     % end    
+%     % end
 %         %disp('running dbs_gethull.......')
 %         %[mask_matrix,mask_indices] = ea_gethull(grayfilename,3,21,.3);
 %         save([ptdir '/cortex/hull.mat'],'mask_matrix','mask_indices')
@@ -291,10 +291,10 @@ DownsampleOption = questdlg(qst,'Import FreeSurfer');
 
 
 if strcmp(DownsampleOption,'Yes')
-    
+
     newNbVertices = inputdlg({'Enter the number of vertices for low resolution cortex surface:'},...
         'Import FreeSurfer folder',1,{'15000'});
-    
+
     if ~isempty(V)
         overwrite = strcmp(V,strcat(newNbVertices,'V'));
         qst = [{'Warning:' },...
@@ -302,38 +302,38 @@ if strcmp(DownsampleOption,'Yes')
             newNbVertices,{'V) for this subject.'}),...
             {['Are you sure you want to overwrite the previous CortexLowRes_' V{overwrite} '.mat?']}];
         response = questdlg(qst,'Import FreeSurfer folder');
-    else 
+    else
         response = [];
     end
     if isempty(V) || ~isempty(response) && ~strcmp(response,{'Cancel'}) && ~strcmp(response,{'No'})
     newNbVertices = str2double(newNbVertices);
     oldNbVertices = size(CortexHiRes.Vertices,1);
-    
+
     if isempty(newNbVertices) || isnan(newNbVertices) || newNbVertices==0
         fprintf('Cortex not resampled, Hi Resolution only %d Vertices',size(CortexHiRes.Vertices,1))
     else
-        
+
         if (newNbVertices >= oldNbVertices)
             sprintf('Cortex> Surface has %d vertices, cannot downsample to %d vertices.', oldNbVertices, newNbVertices);
             return;
         end
-        
+
         nVertHemi = newNbVertices/2;
         CortexLowRes.patientname = CortexHiRes.patientname;
         CortexLowRes.ptdir = CortexHiRes.ptdir;
         CortexLowRes.fsdir = CortexHiRes.fsdir;
-        
+
         fprintf('Downsampling Cortex From %d Vertices to %d Vertices...\n',oldNbVertices,newNbVertices)
         [CortexLowRes.Vertices_lh, CortexLowRes.Faces_lh] = ea_downsamplecortex(CortexHiRes.Vertices_lh, CortexHiRes.Faces_lh, nVertHemi, 'reducepath');
         [CortexLowRes.Vertices_rh, CortexLowRes.Faces_rh] = ea_downsamplecortex(CortexHiRes.Vertices_rh, CortexHiRes.Faces_rh, nVertHemi, 'reducepath');
         [CortexLowRes.Vertices, CortexLowRes.Faces] = ea_downsamplecortex(CortexHiRes.Vertices, CortexHiRes.Faces, newNbVertices, 'reducepath');
-        
+
     end
-      
+
     disp(['Saving to ' fullfile(ptdir,['cortex/CortexLowRes_' num2str(newNbVertices) 'V.mat']) '...'])
     save(fullfile(ptdir,['cortex/CortexLowRes_' num2str(newNbVertices) 'V.mat']),'-struct','CortexLowRes')
     end
-    
+
 elseif strcmp(DownsampleOption,'Cancel')
     return
 
@@ -369,7 +369,7 @@ function files = fdir(Path,exp)
 if isempty(Path) || ~exist('Path','var')
     Path = pwd;
 end
-    
+
 contents = dir(Path);
 contents = contents(cellfun(@(x) isempty(regexp(x, '^\.', 'once')), {contents.name}));
 files = {contents(~[contents.isdir]).name};

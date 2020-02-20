@@ -72,7 +72,7 @@ reference=['mean',options.prefs.rest]; % okay here to not use the hd version of 
 coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
 fn=fieldnames(coregmethodsused);
 for field=1:length(fn)
-    if ea_contains(fn{field},ea_stripext(options.prefs.rest))
+    if contains(fn{field},ea_stripext(options.prefs.rest))
         if ~isempty(coregmethodsused.(fn{field}))
             disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
             options.coregmr.method=coregmethodsused.(fn{field});
