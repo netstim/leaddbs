@@ -5,7 +5,7 @@ updurl = 'http://www.lead-dbs.org/release/download.php';
 
 if nargin
     if strcmp(varargin{1},'full')
-    	id = 'data';
+    	id = 'data_dropbox';
     else
         id = 'updates_data';
     end
@@ -20,7 +20,8 @@ if strcmp(id, 'updates_data')
     if status ~= 200
         info=sprintf(['No data update found!\n',...
                       'Alternatively, you can download the full data zip from:\n', ...
-                      'http://www.lead-dbs.org/release/download.php?id=data']);
+                      'https://www.lead-dbs.org/release/download.php?id=data_dropbox or\n', ...
+                      'https://www.lead-dbs.org/release/download.php?id=data_pcloud']);
         disp(info);
         msgbox(info,'No Update','Help');
         return

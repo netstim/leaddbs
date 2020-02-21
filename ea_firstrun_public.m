@@ -58,17 +58,17 @@ if ~isfield(options.prefs,'firstrun') % first run.
         fid = fopen([ea_getearoot,'common',filesep,'ea_prefs_default.json'],'wt');
         fwrite(fid, jsonencode(ea_prefs_default('')), 'char'); fclose(fid);
     end
-        
+
     copyfile([ea_getearoot,'common',filesep,'ea_prefs_default', ea_prefsext],[ea_gethome,'.ea_prefs', ea_prefsext], 'f');
-    
+
     ea_injectprefstring('firstrun','off');
 
     % check dataset isntallation
     if ~exist([ea_space,'bb.nii'], 'file')
         fprintf(['\nIt seems that you don''t have LEAD dataset installed.\n' ...
                  'You can either install it via ''Install'' --> ''Redownload Data Files'' menu,\n' ...
-                 'or download it from https://www.lead-dbs.org/release/download.php?id=data_pcloud or\n' ...
-                 'https://www.lead-dbs.org/release/download.php?id=data_dropbox and then extract it into LEAD folder.\n\n']);
+                 'or download it from https://www.lead-dbs.org/release/download.php?id=data_dropbox or\n' ...
+                 'https://www.lead-dbs.org/release/download.php?id=data_pcloud and then extract it into LEAD folder.\n\n']);
 
         msg = sprintf(['It seems that you don''t have LEAD dataset installed.\nDo you wish to download it now?\n' ...
                        'Alternatively, please check the command window for more information.']);
