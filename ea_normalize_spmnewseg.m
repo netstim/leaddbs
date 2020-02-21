@@ -31,7 +31,7 @@ if ischar(options) % return name of method.
     return
 end
 
-disp('This Normalization routine uses the advanced TPMs by Lorio 2016. See http://unil.ch/lren/home/menuinst/data--utilities.html');
+fprintf('\nThis Normalization routine uses the advanced TPMs by Lorio 2016.\nSee http://unil.ch/lren/home/menuinst/data--utilities.html\n\n');
 
 directory=[options.root,options.patientname,filesep];
 if isfield(options.prefs, 'tranii_unnormalized')
