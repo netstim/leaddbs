@@ -21,7 +21,7 @@ end
 
 earoot=ea_getearoot;
 
-updurl = 'http://www.lead-dbs.org/release/download.php';
+updurl = 'https://www.lead-dbs.org/release/download.php';
 if update
     try
         if update==1 % full update
@@ -103,13 +103,13 @@ if update
         end
     catch
         info=sprintf(['Failed to update!\n',...
-                      'Alternatively, you can download the latest version from: http://www.lead-dbs.org/release/download.php']);
+                      'Alternatively, you can download the latest version from: https://www.lead-dbs.org/release/download.php']);
         disp(info);
         msgbox(info,'Update','Error');
     end
 else
     info=sprintf(['LEAD aleady up-to-date!\n',...
-                  'Alternatively, you can re-download the latest version from: http://www.lead-dbs.org/release/download.php']);
+                  'Alternatively, you can re-download the latest version from: https://www.lead-dbs.org/release/download.php']);
     disp(info);
     msgbox(info,'Update','Help');
 end

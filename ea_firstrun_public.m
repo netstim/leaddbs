@@ -22,10 +22,10 @@ end
 if ~strcmp(handles.prod,'dbs_connectome')
     try
         webopts=weboptions('Timeout',5);
-        webread('http://www.lead-dbs.org/release/stats.php','id',handles.prod,'ver',['R',version('-release')],webopts);
+        webread('https://www.lead-dbs.org/release/stats.php','id',handles.prod,'ver',['R',version('-release')],webopts);
     catch
         try
-            urlread(['http://www.lead-dbs.org/release/stats.php?id=',handles.prod,'&ver=R', version('-release')],'Timeout',5);
+            urlread(['https://www.lead-dbs.org/release/stats.php?id=',handles.prod,'&ver=R', version('-release')],'Timeout',5);
         catch
         end
     end

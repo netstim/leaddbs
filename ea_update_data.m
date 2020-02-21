@@ -1,7 +1,7 @@
 function ea_update_data(varargin)
 % update lead data
 
-updurl = 'http://www.lead-dbs.org/release/download.php';
+updurl = 'https://www.lead-dbs.org/release/download.php';
 
 if nargin
     if strcmp(varargin{1},'full')

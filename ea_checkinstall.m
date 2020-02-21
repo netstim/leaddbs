@@ -281,7 +281,7 @@ if strcmp(assetname,'Lead Datafiles')
     ea_update_data('full');
     success=1;
 else
-    downloadurl = 'http://www.lead-dbs.org/release/download.php';
+    downloadurl = 'https://www.lead-dbs.org/release/download.php';
     success=1;
     disp(['Downloading ',assetname,'...'])
     if ~exist(fileparts(destination), 'dir')
