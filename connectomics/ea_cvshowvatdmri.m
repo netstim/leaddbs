@@ -38,9 +38,9 @@ end
 
 for side=1:length(usevat)
     try
-        load([directory,'stimulations',filesep,vsname,filesep,'stimparameters.mat']);
+        load([directory,'stimulations',filesep,ea_nt(options),vsname,filesep,'stimparameters.mat']);
     catch
-        ea_error(['Could not find stimulation parameters for ',directory,vsname,'.']);
+        ea_error(['Could not find stimulation parameters for ',directory,ea_nt(options),vsname,'.']);
     end
 end
 
