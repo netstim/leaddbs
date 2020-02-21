@@ -140,7 +140,7 @@ movefile([directory,dfn,'_FTR.mat'],[directory,options.prefs.FTR_unnormalized]);
 delete(findobj('tag','fiberGT_main'))
 
 %% export .trk copy for trackvis visualization
-ea_b0ftr2trk([directory,options.prefs.FTR_unnormalized],[directory,options.prefs.b0]); % export unnormalized ftr to .trk
+ea_ftr2trk([directory,options.prefs.FTR_unnormalized],[directory,options.prefs.b0]); % export unnormalized ftr to .trk
 disp('Done.');
 
 %% add methods dump:

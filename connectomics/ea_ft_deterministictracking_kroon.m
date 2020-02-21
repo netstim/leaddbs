@@ -32,8 +32,6 @@ jobs{1}=matlabbatch;
 spm_jobman('run',jobs);
 clear matlabbatch jobs;
 
-
-
 %% prepare DTI
 Vdti=spm_vol([options.root,options.patientname,filesep,options.prefs.dti]);
 Xdti=spm_read_vols(Vdti);

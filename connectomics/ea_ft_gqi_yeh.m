@@ -9,7 +9,6 @@ if ischar(options) % return name of method.
     return
 end
 
-
 directory=[options.root,options.patientname,filesep];
 
 redo=ea_prepare_dti(options);
@@ -63,9 +62,6 @@ else
     disp('.fib.gz file found, no need to rebuild.');
 end
 
-    
-
-
 trkcmd=[DSISTUDIO,' --action=trk',...
     ' --method=0',...
     ' --source=',ea_path_helper([directory,ftrbase,'.fib.gz']),...
@@ -84,7 +80,6 @@ trkcmd=[DSISTUDIO,' --action=trk',...
     ' --step_size=0.5',...
     ' --tip_iteration=0',...
     ' --turning_angle=75'];
-
 
 err=ea_submitcmd(trkcmd);
 if err
@@ -119,8 +114,6 @@ if b0.mat(11)<0  % 'I' is positive z-axis
     fibers(:,3) = b0.dim(3)-1-fibers(:,3);
 end
 
-
-
 if vizz
     figure
     thresh=700; % set to a good grey value.
@@ -134,7 +127,6 @@ end
 ftr.fourindex = 1;
 ftr.ea_fibformat = '1.0';
 ftr.idx = idx;
-
 
 fibers=ea_resolve_usfibers(options,fibers); % this also pops the raw (uninterpolated dti.nii and b0.nii files).
 
