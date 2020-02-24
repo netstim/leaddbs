@@ -554,9 +554,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.parameterNode.SetParameter("subjectN", str(nextSubjectN))
       self.parameterNode.SetParameter("subjectPath", subjectPaths[nextSubjectN])
       self.exit()
-      #self.parameterNode.RemoveAllObservers()
       SmudgeModuleLogic().resetSubjectData()
-      #self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGuiFromMRML)
       # reset history
       self.parameterNode.SetParameter("currentLayer","-1")
       self.parameterNode.SetParameter("currentLayer","0")
@@ -981,7 +979,6 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     parameterNode.SetParameter("imageID", imageNode.GetID())
 
     # init
-    #self.initialize()
     slicer.util.setSliceViewerLayers(background=imageNode)
     imageNode.GetDisplayNode().AutoWindowLevelOff()
     imageNode.GetDisplayNode().SetWindow(760)
