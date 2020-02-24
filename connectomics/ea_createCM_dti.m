@@ -16,6 +16,7 @@ Vatl=ea_load_nii([directory,'templates',filesep,'labeling',filesep,'b0w',options
 %% get fiber definition
 disp('Loading FTR-File.');
 [fibs,idx]=ea_loadfibertracts([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized]);
+fibs = double(fibs);
 
 %% create CM
 disp('Initializing structural CM.');
