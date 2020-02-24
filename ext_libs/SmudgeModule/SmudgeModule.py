@@ -811,7 +811,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
 
     # buckup
     backupFile = os.path.join(subjectPath, "bu_" + str(int(inverse)) + "_composite.nii.gz")
-    if not os.path.isfile(backupFile) and True: # buckup transform before overwrite
+    if not os.path.isfile(backupFile) and False: # buckup transform before overwrite
       shutil.copyfile(originalTransformFileName,backupFile)
 
     commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
@@ -859,7 +859,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
 
     command = ""
 
-    for i in range(1,col.GetNumberOfItems()): # save each transform and append name to command
+    for i in range(1,int(parameterNode.GetParameter("currentLayer"))+1): # save each transform and append name to command
       con = vtk.vtkWarpTransform.SafeDownCast(col.GetItemAsObject(i))
       auxTransformNode.SetAndObserveTransformToParent(con)
       fullname = os.path.join(tmpFolder, "layer" + str(i) + ".nii.gz")
@@ -996,8 +996,12 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
   def updateTransforms(self,subjectPath):
     # get affine parameters from h5
     with h5py.File(os.path.join(subjectPath,'glanatComposite.h5'),'r') as f:
-      parameters  = f['TransformGroup/1']['TransformParameters'][()]
-      fixedParameters = f['TransformGroup/1']['TransformFixedParameters'][()]
+      try:
+        parameters  = f['TransformGroup/1']['TransformParameters'][()]
+        fixedParameters = f['TransformGroup/1']['TransformFixedParameters'][()]
+      except:
+        parameters  = f['TransformGroup/1']['TranformParameters'][()]
+        fixedParameters = f['TransformGroup/1']['TranformFixedParameters'][()]
     # save parameters to .txt transform
     tmpTransform = os.path.join(subjectPath,'tmpTransform.txt')
     file1 = open(tmpTransform,"w") 
