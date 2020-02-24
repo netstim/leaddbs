@@ -317,7 +317,7 @@ try
             elspec.contact_spacing=1.5;
             elspec.numel=16;
             elspec.tipiscontact=1;
-            elspec.contactnames={'K0','K1','K2','K3','K4',...
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15'...
                                  'K16','K17','K18','K19','K20','K21','K22','K23','K24','K25','K26','K27','K28','K29','K30','K31'};
         case '2069-EPC-05C-35'
             elspec.matfname='epc_05c';
