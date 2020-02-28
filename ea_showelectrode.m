@@ -128,7 +128,18 @@ for side=options.sides
             if ~isempty(options.colorMacroContacts)
                 specsurf(elrender(cnt),options.colorMacroContacts(con,:),1);
             else
-                if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{side})) % make active red contact without transparency
+                if contains(nameprefix, '_mirrored_')
+                    % Mirror highlight contact
+                    if side == 1
+                        mside = 2;
+                    elseif side == 2
+                        mside = 1;
+                    end
+                else
+                    mside = side;
+                end
+
+                if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{mside})) % make active red contact without transparency
                     specsurf(elrender(cnt),[0.8,0.2,0.2],1);
                 else
                     specsurf(elrender(cnt),elspec.contact_color,aData);
