@@ -21,7 +21,7 @@ end
 
 earoot=ea_getearoot;
 
-updurl = 'http://www.lead-dbs.org/release/download.php';
+updurl = 'https://www.lead-dbs.org/release/download.php';
 if update
     try
         if update==1 % full update
@@ -43,13 +43,14 @@ if update
                 urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',Inf);
             catch
                 if update==1
-                    info='Download error! Please retry later.';
+                    fprintf(['\nDownload error! You may try to download Lead-DBS manually from:\n',...
+                             '%s_dropbox\nOR\n%s_pcloud\n\n'], [updurl,'?id=',id], [updurl,'?id=',id]);
+
                 elseif update==2
-                    info=sprintf(['Update error! Please retry later or download the full version from:\n',...
-                                  'http://www.lead-dbs.org/release/download.php?id=lead']);
+                    fprintf(['\nDownload error! You may try to download the update package manually from:\n',...
+                             '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=',id]);
                 end
-                disp(info);
-                msgbox(info,'Error','Error')
+                msgbox('Please check the command window for more information.','Download error!','Error')
                 return
             end
         end
@@ -102,13 +103,13 @@ if update
         end
     catch
         info=sprintf(['Failed to update!\n',...
-                      'Alternatively, you can download the latest version from: http://www.lead-dbs.org/release/download.php']);
+                      'Alternatively, you can download the latest version from: https://www.lead-dbs.org/release/download.php']);
         disp(info);
         msgbox(info,'Update','Error');
     end
 else
     info=sprintf(['LEAD aleady up-to-date!\n',...
-                  'Alternatively, you can re-download the latest version from: http://www.lead-dbs.org/release/download.php']);
+                  'Alternatively, you can re-download the latest version from: https://www.lead-dbs.org/release/download.php']);
     disp(info);
     msgbox(info,'Update','Help');
 end

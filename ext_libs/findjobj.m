@@ -572,7 +572,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         %if isa(jcontainer,'java.awt.Container')
         try  % try-catch is faster than checking isa(jcontainer,'java.awt.Container')...
             %if jcontainer.getComponentCount,  jcontainer.getComponents,  end
-            if ~nomenu || menuBarFoundFlag || ~ea_contains(class(jcontainer),'FigureMenuBar')
+            if ~nomenu || menuBarFoundFlag || ~contains(class(jcontainer),'FigureMenuBar')
                 lastChildComponent = java.lang.Object;
                 child = 0;
                 while (child < jcontainer.getComponentCount)
@@ -862,7 +862,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             foundIdx = (abs(baseDeltas(:,1)) < 7) & (abs(baseDeltas(:,2)) < 7); % & (minHeight >= 0);
             %fi = find(foundIdx);
             %for componentIdx = 1 : length(fi)
-                %foundIdx(componentIdx) = handles(componentIdx).getBounds.ea_contains(positionFilter);
+                %foundIdx(componentIdx) = handles(componentIdx).getBounds.contains(positionFilter);
 
                 % Search for a point no farther than 7 pixels away (prevents rounding errors)
                 %foundIdx(componentIdx) = handles(componentIdx).getLocationOnScreen.distanceSq(positionFilter) < 50;  % fails for invisible components...
@@ -3286,7 +3286,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             nodeTitleStr = sprintf('<html>Class name: <font color="blue">%s</font><br>Text/title: %s',objClass,objName);
 
             % If the component is invisible, state this in the tooltip
-            if ea_contains(nodeName,'color="gray"')
+            if contains(nodeName,'color="gray"')
                 nodeTitleStr = [nodeTitleStr '<br><font color="gray"><i><b>*** Invisible ***</b></i></font>'];
             end
             nodeTitleStr = [nodeTitleStr '<hr>Right-click for context-menu'];

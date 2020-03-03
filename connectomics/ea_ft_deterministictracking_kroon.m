@@ -32,8 +32,6 @@ jobs{1}=matlabbatch;
 spm_jobman('run',jobs);
 clear matlabbatch jobs;
 
-
-
 %% prepare DTI
 Vdti=spm_vol([options.root,options.patientname,filesep,options.prefs.dti]);
 Xdti=spm_read_vols(Vdti);
@@ -90,7 +88,7 @@ fibers=ea_FT(FA,VectorF,Xmask,parametersFT);
 save([options.root,options.patientname,filesep,options.prefs.FTR_unnormalized],'fibers');
 
 %% export .trk copy for trackvis visualization
-ea_b0ftr2trk([directory,options.prefs.FTR_unnormalized],[directory,options.prefs.b0]); % export unnormalized ftr to .trk
+ea_ftr2trk([directory,options.prefs.FTR_unnormalized],[directory,options.prefs.b0]); % export unnormalized ftr to .trk
 disp('Done.');
 
 %% add methods dump:

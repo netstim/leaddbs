@@ -10,7 +10,7 @@ directory=[options.root,options.patientname,filesep];
 try
 	if ~exist([directory,ftrfname,'.trk'],'file')
         fprintf('\nExporting unnormalized fibers to TrackVis...\n');
-        ea_b0ftr2trk([directory,ftrfname,'.mat'],[directory,options.prefs.b0]);
+        ea_ftr2trk([directory,ftrfname,'.mat'],[directory,options.prefs.b0]);
         disp('Done.');
 	end
 end

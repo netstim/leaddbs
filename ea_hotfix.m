@@ -12,7 +12,7 @@ end
 
 earoot=ea_getearoot;
 
-updurl = 'http://www.lead-dbs.org/release/download.php';
+updurl = 'https://www.lead-dbs.org/release/download.php';
 if hotfix
     try
         disp('*** Updating LEAD. Please do not quit MATLAB.');
@@ -28,9 +28,9 @@ if hotfix
             try
                 urlwrite([updurl,'?id=hotfix'],[earoot,'tmp',filesep,'hotfix.zip'],'Timeout',Inf);
             catch
-                info='Download error! Please retry later.';
-                disp(info);
-                msgbox(info,'Update','Error')
+                fprintf(['\nDownload error! You may try to download the file manually from:\n',...
+                         '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=hotfix']);
+                msgbox('Please check the command window for more information.','Download error!','Error')
                 return
             end
         end
