@@ -58,8 +58,6 @@ end
 [node,~,face]=s2m(unique_ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
 
 % Revert to real dimension
-for i=1:length(node)
-    node = node / rescaleratio;
-end
+node = node / rescaleratio;
 
 save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
