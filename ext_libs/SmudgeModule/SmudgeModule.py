@@ -550,6 +550,14 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     SmudgeModuleLogic().applyChanges()
     nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
     subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
+    
+    # initialize multiple old lead folders
+    #for nextSubjectN in range(1,len(subjectPaths)):
+    #  self.parameterNode.SetParameter("subjectN", str(nextSubjectN))
+    #  self.parameterNode.SetParameter("subjectPath", subjectPaths[nextSubjectN])
+    #  SmudgeModuleLogic().resetSubjectData()
+    #slicer.util.exit() 
+    
     if nextSubjectN < len(subjectPaths):
       self.parameterNode.SetParameter("subjectN", str(nextSubjectN))
       self.parameterNode.SetParameter("subjectPath", subjectPaths[nextSubjectN])
@@ -590,7 +598,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         atlasesPath = os.path.join(MNIPath,'atlases')
         atlases = sorted(os.listdir(atlasesPath))
         for atlas in atlases:
-          self.segmentationComboBox.addItem(atlas)
+          if atlas[0] != '.':
+            self.segmentationComboBox.addItem(atlas)
     self.smudgeButton.setEnabled(bool(int(self.parameterNode.GetParameter("initialized"))))
     self.snapButton.setEnabled(bool(int(self.parameterNode.GetParameter("initialized"))))
     self.flattenButton.setEnabled(bool(int(self.parameterNode.GetParameter("initialized"))))
@@ -619,6 +628,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.parameterNode.SetParameter("radius", str(self.radiusSlider.value) )
     self.parameterNode.SetParameter("blurr", str(self.blurrSlider.value) )
     self.parameterNode.SetParameter("hardness", str(self.hardnessSlider.value) )
+    self.parameterNode.SetParameter("modality", self.modalityComboBox.currentText.lower() )
     if not __name__ == "__main__":
       if self.transformSelector.currentNode():
         self.parameterNode.SetParameter("transformID", self.transformSelector.currentNode().GetID())
@@ -733,6 +743,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("radius", "10")
     node.SetParameter("blurr", "60")
     node.SetParameter("hardness", "100")
+    node.SetParameter("modality", "t1")
     node.SetParameter("initialized", "0")
     node.SetParameter("subjectPath", "")
     node.SetParameter("subjectPath", "")
@@ -778,8 +789,15 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     
   
   def applyChanges(self):
-
+    parameterNode = self.getParameterNode()
     if int(parameterNode.GetParameter("currentLayer")) == 0: # no changes
+      msgBox = qt.QMessageBox()
+      msgBox.setText('No modifications in warp')
+      msgBox.setInformativeText('Save subject as approved?')
+      msgBox.setStandardButtons(qt.QMessageBox().Save | qt.QMessageBox().Discard)
+      ret = msgBox.exec_()
+      if ret == qt.QMessageBox().Save:
+        FunctionsUtil.saveApprovedData(parameterNode.GetParameter("subjectPath"))
       return
     tmpFolder, displacementFileName = self.flattenTransform(cleanup=False)
     inverseDisplacementFileName = self.invertTransform(displacementFileName)
@@ -961,12 +979,14 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       self.updateTransforms(subjectPath)
 
     # load nodes
-    imagePath = os.path.join(subjectPath,'anat_t1.nii')
+    imagePath = os.path.join(subjectPath,'anat_' + parameterNode.GetParameter("modality") + '.nii')
+    if not os.path.isfile(imagePath):
+      imagePath = os.path.join(subjectPath,'anat_t1.nii')
     transformPath = os.path.join(subjectPath,'glanatComposite.nii.gz')
     affinePath = os.path.join(subjectPath,'glanat0GenericAffine_backup.mat')
 
-    ls, imageNode = slicer.util.loadVolume(imagePath, properties = {'name':'anat_t1', 'show':False}, returnNode = True)
     ls, transformNode = slicer.util.loadTransform(transformPath, returnNode = True)
+    ls, imageNode = slicer.util.loadVolume(imagePath, properties = {'name':'anat_t1', 'show':False}, returnNode = True)
     if not os.path.isfile(affinePath):
       msg=qt.QMessageBox().warning(qt.QWidget(),'','Affine transform not available. The Displayed warp is affine+deformable')
       affineNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')

@@ -5,15 +5,39 @@ import SimpleITK as sitk
 import sitkUtils
 import numpy as np
 import glob
+import sys
 
 try:
   import h5py
+  import hdf5storage
 except:
+  import importlib
   from pip._internal import main as pipmain
-  failed = pipmain(['install', 'h5py'])
-  if not failed:
-    import h5py
+  for package in ['h5py','hdf5storage']: 
+    failed = pipmain(['install', package])
+    if not failed:
+      importlib.import_module(package)
 
+
+def saveApprovedData(subjectPath):
+  approvedFile = os.path.join(subjectPath,'ea_coreg_approved.mat')
+  glanatValue = np.array([2]) # init glanat approved value
+  matfiledata = {}
+  if os.path.isfile(approvedFile):
+    # read file and copy data except for glanat
+    with h5py.File(approvedFile,'r') as f:
+      for k in f.keys():
+        if k != 'glanat':
+          keyValue = f[k][()]
+          matfiledata[k] = keyValue
+  # now add approved glanat
+  matfiledata[u'glanat'] = glanatValue
+  # save
+  # for some reason putting subject path into hdf5storage.write doesnt work
+  currentDir = os.getcwd()
+  os.chdir(subjectPath)
+  hdf5storage.write(matfiledata, '.', 'ea_coreg_approved.mat', matlab_compatible=True)
+  os.chdir(currentDir)
 
 def getTransformRASToIJK(transformNode):
   origin = transformNode.GetTransformFromParent().GetDisplacementGrid().GetOrigin()
@@ -56,8 +80,11 @@ def loadAtlas(atlasPath, modelHierarchyNode=None):
     atlases = atlasFile['atlases']
     for column in atlases['names']:
       row_data = []
-      for row_number in range(len(column)):      
-        row_data.append(''.join(map(unichr, atlases[column[row_number]][:])))   
+      for row_number in range(len(column)):     
+        if sys.version_info[0] < 3: 
+          row_data.append(''.join(map(unichr, atlases[column[row_number]][:])))   
+        else:
+          row_data.append(''.join(map(chr, atlases[column[row_number]][:]))) 
       names.append(row_data)
 
     types = atlasFile['atlases']['types'][()]

@@ -144,7 +144,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
       sliceIndex = int(np.nonzero([self.sliceLogic.GetSliceNode().GetName()==name for name in ['Yellow','Green','Red']])[0])
       sliceValue = self.sliceLogic.GetSliceNode().GetSliceToRAS().MultiplyDoublePoint([0,0,0,1])[sliceIndex]
 
-      pointIndex = [i for i in range(0,pd.GetNumberOfPoints(),5) if (pd.GetPoint(i)[sliceIndex] > sliceValue-0.2 and pd.GetPoint(i)[sliceIndex] < sliceValue+0.2)]
+      pointIndex = [i for i in range(0,pd.GetNumberOfPoints()) if (pd.GetPoint(i)[sliceIndex] > sliceValue-0.2 and pd.GetPoint(i)[sliceIndex] < sliceValue+0.2)]
 
       points = vtk.vtkPoints()
       for i in pointIndex:
@@ -157,44 +157,114 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
       pointsLocator.SetDataSet(pd2)
       pointsLocator.BuildLocator()
 
+
       # get closest point of initial and last position
-      #      closestPointId0 = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(0))
-      #      closestPointIdend = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(self.rasPoints.GetNumberOfPoints()-1))
-      #
-      #      # go through points from initial to end in the two possible directions
-      #      points_dir1 = vtk.vtkPoints()
-      #      points_dir1.InsertNextPoint(points.GetPoint(closestPointId0))
-      #      points_dir2 = vtk.vtkPoints()
-      #      points_dir2.InsertNextPoint(points.GetPoint(closestPointId0))
-      #
-      #      idl = vtk.vtkIdList()
-      #      pointsLocator.FindClosestNPoints(3,points.GetPoint(closestPointId0),idl)
-      #
-      #      # closest point is the same one. Append the other two to the other points respectivly
-      #      points_dir1.InsertNextPoint(points.GetPoint(idl.GetId(1)))
-      #      points_dir2.InsertNextPoint(points.GetPoint(idl.GetId(2)))
-      #
-      #      # add points
-      #      lastID = idl.GetId(1)
-      #      IDs = [closestPointId0, idl.GetId(1)]
-      #
-      #      while lastID != closestPointIdend:
-      #        pointsLocator.FindClosestNPoints(3,points.GetPoint(lastID),idl)
-      #        for i in range(1,3):
-      #          if idl.GetId(i) not in IDs:
-      #            IDs.append(idl.GetId(i))
-      #            lastID = idl.GetId(i)
-      #            
-      #
-      #      #print(closestPointId0)
-      #      #print(idl.GetId(0))
-      #      #rint(idl.GetId(1))
-      #      print(points_dir1)
-      #
+      closestPointId0 = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(0))
+      closestPointIdend = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(self.rasPoints.GetNumberOfPoints()-1))
+      
+      # sort indexes
+      idlist=vtk.vtkIdList()
+      sortedPointIndex = [closestPointId0]
+      pid = closestPointId0
+      while len(sortedPointIndex) != points.GetNumberOfPoints():
+        n=1
+        while pid in sortedPointIndex:
+          n+=1
+          pointsLocator.FindClosestNPoints(n, points.GetPoint(sortedPointIndex[-1]), idlist )
+          pid = idlist.GetId(n-1)
+        sortedPointIndex.append(pid)
+
+      # prepare filter for comparison
+      import vtkSlicerSegmentComparisonModuleLogicPython
+      pdf=vtkSlicerSegmentComparisonModuleLogicPython.vtkPolyDataDistanceHistogramFilter()
+      pdf.SetInputReferencePolyData(self.polyData)
+
+      ## one way
+      
+      sortedPoints1 = vtk.vtkPoints()
+      for i in range(sortedPointIndex.index(closestPointIdend)+1):
+        sortedPoints1.InsertNextPoint(points.GetPoint(sortedPointIndex[i]))
+      
+      polyLine = vtk.vtkPolyLine()
+      polyLine.GetPointIds().SetNumberOfIds(sortedPoints1.GetNumberOfPoints())
+      for i in range(sortedPoints1.GetNumberOfPoints()):
+        polyLine.GetPointIds().SetId(i, i)
+      
+      cells = vtk.vtkCellArray()
+      cells.InsertNextCell(polyLine)
+      
+      polyData1 = vtk.vtkPolyData()
+      polyData1.SetPoints(sortedPoints1)
+      polyData1.SetLines(cells)
+
+      pointsLocator = vtk.vtkPointLocator()
+      pointsLocator.SetDataSet(polyData1)
+      pointsLocator.BuildLocator()
+      midpt = self.rasPoints.GetPoint(int(self.rasPoints.GetNumberOfPoints()/2))
+      closestPointIdmidle = pointsLocator.FindClosestPoint(midpt)
+      pt = sortedPoints1.GetPoint(closestPointIdmidle)
+      d1 = np.sqrt(np.sum((np.array(midpt)-np.array(pt))**2, axis=0))
+      #print(d1)
+
+      
+      #m=slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode')
+      #m.SetAndObservePolyData(polyData1)
+      #m.CreateDefaultDisplayNodes()
+      #m.GetDisplayNode().SetColor(0 ,0,1)
+      #m.GetDisplayNode().SetSliceIntersectionVisibility(True)
+      
+      
+      ## other way
+      
+      sortedPoints2 = vtk.vtkPoints()
+      
+      for i in range(sortedPointIndex.index(closestPointIdend),len(sortedPointIndex)):
+        sortedPoints2.InsertNextPoint(points.GetPoint(sortedPointIndex[i]))
+      
+      #sortedPoints2.InsertNextPoint(points.GetPoint(sortedPointIndex[0]))
+      
+      polyLine = vtk.vtkPolyLine()
+      polyLine.GetPointIds().SetNumberOfIds(sortedPoints2.GetNumberOfPoints())
+      for i in range(sortedPoints2.GetNumberOfPoints()):
+        polyLine.GetPointIds().SetId(i, i)
+      
+      cells = vtk.vtkCellArray()
+      cells.InsertNextCell(polyLine)
+      
+      polyData2 = vtk.vtkPolyData()
+      polyData2.SetPoints(sortedPoints2)
+      polyData2.SetLines(cells)
+
+      pointsLocator = vtk.vtkPointLocator()
+      pointsLocator.SetDataSet(polyData2)
+      pointsLocator.BuildLocator()
+      midpt = self.rasPoints.GetPoint(int(self.rasPoints.GetNumberOfPoints()/2))
+      closestPointIdmidle = pointsLocator.FindClosestPoint(midpt)
+      pt = sortedPoints2.GetPoint(closestPointIdmidle)
+      d2 = np.sqrt(np.sum((np.array(midpt)-np.array(pt))**2, axis=0))
+
+      #print(pdf2>pdf1)
+      
+      #m=slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode')
+      #if d1<d2:
+      #  m.SetAndObservePolyData(polyData1)
+      #else:
+      #  m.SetAndObservePolyData(polyData2)
+      #m.CreateDefaultDisplayNodes()
+      #m.GetDisplayNode().SetColor(1,0,0)
+      #m.GetDisplayNode().SetSliceIntersectionVisibility(True)
+
+      if d1==d2: # can happen when midpoint is the same as start/end point
+        sp = sortedPoints1 if sortedPoints1.GetNumberOfPoints() < sortedPoints2.GetNumberOfPoints() else sortedPoints2
+      else:
+        sp = sortedPoints1 if d1 < d2 else sortedPoints2
+      
+
       self.markupNode.RemoveAllMarkups()
-      for i in range(self.rasPoints.GetNumberOfPoints()):
-        closestPointId = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(i))
-        self.markupNode.AddFiducialFromArray(points.GetPoint(closestPointId))
+      #n=slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+      for i in range(sp.GetNumberOfPoints()):
+      #  closestPointId = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(i))
+        self.markupNode.AddFiducialFromArray(sp.GetPoint(i))
 
       #closestPointId0 = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(0))
       #closestPointIdend = pointsLocator.FindClosestPoint(self.rasPoints.GetPoint(self.rasPoints.GetNumberOfPoints()-1))
