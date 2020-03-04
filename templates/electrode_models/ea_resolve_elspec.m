@@ -102,7 +102,7 @@ try
             elspec.contact_spacing=0.5;
             elspec.numel=8; % correct here since the directional leads will be inflated lateron.
             elspec.tipiscontact=1;
-            elspec.contactnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15'};
         case 'St. Jude ActiveTip (6146-6149)'
             elspec.matfname='stjude_activetip_2mm';
             elspec.lead_diameter=1.27;
