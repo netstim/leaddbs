@@ -8,7 +8,9 @@ function electrode=ea_elspec_stjude_directed_15(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-electrodeorder = [1 2 4 3 5 7 6 8 9]; % 211117 - small change so that order of the directional electrodes is clockwise seen from the tip
+% The segmented contacts are clockwise arranged seen from the top view, the
+% same as in the models in the components folder.
+% electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
 for k = 1:18
@@ -20,7 +22,7 @@ for k = 1:18
 end
 
 for k = 1:9
-    filename = [fileparts(mfilename('fullpath')),'/StJude_Directed_15_Components/Contacts/con',num2str(electrodeorder(k)),'.1'];
+    filename = [fileparts(mfilename('fullpath')),'/StJude_Directed_15_Components/Contacts/con',num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
     electrode.contacts(k).vertices = node;
     electrode.contacts(k).faces = face(:,1:3);
@@ -37,6 +39,8 @@ electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 
+% The segmented contacts in the null model are clockwise arranged from the
+% top view.
 electrode.coords_mm(1,:)=[0 0 0.75];
 electrode.coords_mm(2,:)=[0 0 3.75]+[-0.66,0,0];
 electrode.coords_mm(3,:)=[0 0 3.75]+[0.33,0.66,0];
