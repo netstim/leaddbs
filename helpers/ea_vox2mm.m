@@ -3,7 +3,7 @@ function mm=ea_vox2mm(vox, transform)
 % coords need to be row vector: N*3
 
 if ischar(transform)
-    transform = spm_get_space(transform);
+    transform = ea_get_affine(transform);
 end
 
 % vox = round(vox);
