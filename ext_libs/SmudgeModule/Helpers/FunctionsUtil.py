@@ -11,10 +11,13 @@ try:
   import h5py
   import hdf5storage
 except:
-  import importlib
-  from pip._internal import main as pipmain
+  import importlib  
   for package in ['h5py','hdf5storage']: 
-    failed = pipmain(['install', package])
+    if sys.version_info[0] < 3: 
+      from pip._internal import main as pipmain
+      failed = pipmain(['install', package])
+    else:
+      failed = slicer.util.pip_install(package)
     if not failed:
       importlib.import_module(package)
 

@@ -1,5 +1,8 @@
-import PointerEffect
-import FunctionsUtil
+import sys
+if sys.version_info[0] < 3: 
+  import PointerEffect, FunctionsUtil
+else:
+  from . import PointerEffect, FunctionsUtil
 import slicer, vtk
 import numpy as np
 
