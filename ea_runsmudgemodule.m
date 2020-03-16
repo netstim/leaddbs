@@ -1,6 +1,6 @@
 function [] = ea_runsmudgemodule(options)
 
-if options.pat > 1
+if options.pat > 1 % run all subjects at once with the first one
     return
 end
 
@@ -18,6 +18,11 @@ if ~ (isfield(options, 'overwriteapproved') && options.overwriteapproved)
         end
     end
     
+end
+
+
+if ~any(do_pts) % all subjects approved
+    return
 end
 
 do_pts_dirs = options.uipatdirs(do_pts);
