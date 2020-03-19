@@ -1,13 +1,42 @@
 import vtk, qt, slicer
 from math import sqrt, cos, sin
-from Helpers import Effect
+import Effect
 from slicer.util import VTKObservationMixin
 
-
-class CircleEffectTool(Effect.EffectTool, VTKObservationMixin):
+class PointerEffectTool(Effect.EffectTool):
 
   def __init__(self, sliceWidget):
     Effect.EffectTool.__init__(self, sliceWidget)
+    self.previousOutlineOpacity = None
+    self.previousTemplateOpacity = None
+
+  def processEvent(self, caller=None, event=None):
+
+    if event == "KeyPressEvent":
+      key = self.interactor.GetKeySym()
+      if key.lower() == 's':
+        if self.previousOutlineOpacity is None:
+          self.previousOutlineOpacity = float(self.parameterNode.GetParameter("structureOutline"))
+          self.parameterNode.SetParameter("structureOutline", "0")
+      elif key.lower() == 't':
+        if self.previousTemplateOpacity is None:
+          self.previousTemplateOpacity = float(self.parameterNode.GetParameter("templateOpacity"))
+          self.parameterNode.SetParameter("templateOpacity", "1")   
+
+    elif event == "KeyReleaseEvent":
+      key = self.interactor.GetKeySym()
+      if key.lower() == 's':
+        self.parameterNode.SetParameter("structureOutline", str(self.previousOutlineOpacity))
+        self.previousOutlineOpacity = None
+      if key.lower() == 't':
+        self.parameterNode.SetParameter("templateOpacity", str(self.previousTemplateOpacity))
+        self.previousTemplateOpacity = None
+
+
+class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
+
+  def __init__(self, sliceWidget):
+    PointerEffectTool.__init__(self, sliceWidget)
     VTKObservationMixin.__init__(self)
 
     self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGlyph)
@@ -129,6 +158,8 @@ class CircleEffectTool(Effect.EffectTool, VTKObservationMixin):
     if caller and caller.IsA('vtkMRMLSliceNode'):
       self.updateGlyph([],[])
 
+    PointerEffectTool.processEvent(self, caller, event)
+
   def scaleRadius(self,scaleFactor):
     radius = float(self.parameterNode.GetParameter("radius"))
     self.parameterNode.SetParameter( "radius", str(radius * scaleFactor) )
@@ -143,7 +174,7 @@ class CircleEffectTool(Effect.EffectTool, VTKObservationMixin):
 
 
 
-class DrawEffectTool(Effect.EffectTool):
+class DrawEffectTool(PointerEffectTool):
 
   def __init__(self, sliceWidget):
 
@@ -152,7 +183,7 @@ class DrawEffectTool(Effect.EffectTool):
     # invoke our processEvents method
     self.initialized = False
 
-    Effect.EffectTool.__init__(self, sliceWidget)
+    PointerEffectTool.__init__(self, sliceWidget)
 
 
     # interaction state variables
@@ -211,8 +242,7 @@ class DrawEffectTool(Effect.EffectTool):
         self.addPoint(self.xyToRAS(xy))
         self.abortEvent(event)
 
-    else:
-      pass
+    PointerEffectTool.processEvent(self, caller, event)
 
     self.positionActors()
 

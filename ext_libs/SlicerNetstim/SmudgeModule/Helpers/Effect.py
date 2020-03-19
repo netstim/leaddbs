@@ -15,6 +15,7 @@ class EffectTool(object):
 
     # sliceWidget to operate on and convenience variables
     # to access the internals
+    print(sliceWidget)
     self.sliceWidget = sliceWidget
     self.sliceLogic = sliceWidget.sliceLogic()
     self.sliceView = self.sliceWidget.sliceView()
@@ -46,6 +47,7 @@ class EffectTool(object):
       vtk.vtkCommand.RightButtonReleaseEvent,
       vtk.vtkCommand.MouseMoveEvent,
       vtk.vtkCommand.KeyPressEvent,
+      vtk.vtkCommand.KeyReleaseEvent,
       vtk.vtkCommand.EnterEvent,
       vtk.vtkCommand.LeaveEvent )
     for e in events:
@@ -68,13 +70,7 @@ class EffectTool(object):
     """
     if event == "KeyPressEvent":
       key = self.interactor.GetKeySym()
-      if key.lower() == 'backslash':
-        xy = self.interactor.GetEventPosition()
-        if self.interactor.FindPokedRenderer(*xy):
-          self.editUtil.setLabel(self.logic.labelAtXY(xy))
-        else:
-          print('not in viewport')
-        self.abortEvent(event)
+      if key.lower() == 's':
         return True
     return False
 

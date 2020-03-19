@@ -28,9 +28,9 @@ end
 do_pts_dirs = options.uipatdirs(do_pts);
 
 slicer_path = ea_runslicer(options,5);
-module_path = fullfile(ea_getearoot,'ext_libs','SmudgeModule');
-module_script = fullfile(module_path,'SmudgeModule.py');
-command = [slicer_path ' --no-main-window --additional-module-paths ' module_path ' --python-script ' module_script ' ' ea_getearoot ' ' strjoin(do_pts_dirs,' ')];
+d = dir(fullfile(ea_getearoot,'ext_libs','SlicerNetstim','*','CMakeLists.txt')); % aditional modules
+
+command = [slicer_path ' --no-splash --additional-module-paths ' strjoin({d.folder},' ') ' --python-code "slicer.util.selectModule(''SmudgeModule'')" ' ea_getearoot ' ' strjoin(do_pts_dirs,' ')];
 system(command);
 
 
