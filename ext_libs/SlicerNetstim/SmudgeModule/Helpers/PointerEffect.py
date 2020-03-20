@@ -1,7 +1,9 @@
 import vtk, qt, slicer
 from math import sqrt, cos, sin
-import Effect
 from slicer.util import VTKObservationMixin
+
+from . import Effect
+
 
 class PointerEffectTool(Effect.EffectTool):
 

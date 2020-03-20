@@ -11,16 +11,17 @@ from math import sqrt
 from slicer.util import VTKObservationMixin
 import glob
 import SimpleITK as sitk
-import h5py # should already be installed
 
 # import other netstim modules
-sys.path.append(os.path.join(os.path.dirname(__file__),'Helpers'))
-import WarpEffect
-import FunctionsUtil
-#sys.path.append(os.path.join(os.path.dirname(__file__),'..','TransformsUtil'))
+from Helpers import WarpEffect, FunctionsUtil, Toolbar
+
+# other netstim modules
 import TransformsUtil
 import ImportSubject
 import ImportAtlas
+
+import h5py # should already be installed
+
 
 #
 # SmudgeModule
@@ -95,17 +96,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.warpSelector.setToolTip( "Pick the warp to refine." )
     inputsFormLayout.addRow("Warp: ", self.warpSelector)
 
-
-    self.subjectFrame = qt.QFrame()
-    self.subjectFrame.setLayout(qt.QHBoxLayout())
-    self.subjectNameLabel = qt.QLabel('')
-
-    self.subjectFrame.layout().addWidget(qt.QLabel('Subject: '))
-    self.subjectFrame.layout().addWidget(self.subjectNameLabel)
-    self.subjectFrame.layout().addStretch()
-    self.subjectFrame.setVisible(False)
-
-    self.layout.addWidget(self.subjectFrame)
 
     #
     # Tools Area
@@ -237,15 +227,16 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     self.historyList = qt.QListWidget()
     self.historyList.setCurrentRow(0)
+    self.historyList.setMaximumHeight(redoPixmap.rect().size().height() * 3.3)
 
     historyGridLayout.addWidget(self.historyList,0,1)
-
 
     #
     # View Area
     #
     viewCollapsibleButton = ctk.ctkCollapsibleButton()
     viewCollapsibleButton.text = "View"
+    viewCollapsibleButton.collapsed=True
     self.layout.addWidget(viewCollapsibleButton)
 
     # Layout within the dummy collapsible button
@@ -255,13 +246,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Display
     #
 
-
-    #
-    # Warp
-    #
-
-    self.warpViewCheckBox = qt.QCheckBox('Slice View')
-    viewFormLayout.addRow("Warp Field:", self.warpViewCheckBox)
 
     #
     # Modality
@@ -286,40 +270,32 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Atlas
     #
 
-    self.structuresOutlineSlider = ctk.ctkSliderWidget()
-    self.structuresOutlineSlider.singleStep = 0.1
-    self.structuresOutlineSlider.minimum = 0
-    self.structuresOutlineSlider.maximum = 1
-    self.structuresOutlineSlider.decimals = 1
-    self.structuresOutlineSlider.value = 1
-    viewFormLayout.addRow("&Structure Outline:", self.structuresOutlineSlider)
-
-    self.structuresOutlineThickness = ctk.ctkSliderWidget()
-    self.structuresOutlineThickness.singleStep = 1
-    self.structuresOutlineThickness.minimum = 1
-    self.structuresOutlineThickness.maximum = 10
-    self.structuresOutlineThickness.decimals = 0
-    self.structuresOutlineThickness.value = 1
-    viewFormLayout.addRow("Structure Thickness:", self.structuresOutlineThickness)
 
     self.atlasesComboBox = qt.QComboBox()
     self.atlasesComboBox.addItem('Choose Atlas')
     self.atlasesComboBox.setMaximumWidth(350)
     viewFormLayout.addRow("Import Atlas:", self.atlasesComboBox)
 
-    self.modelTreeView = qt.QTreeView()
-    self.modelStandardItem = qt.QStandardItemModel()
-    sceneModelsItem = qt.QStandardItem('Scene Models')
-    sceneModelsItem.setFlags(33) # enabled
-    self.modelStandardItem.appendRow(sceneModelsItem)
-    self.modelTreeView.setModel(self.modelStandardItem)
-    self.modelTreeView.setHeaderHidden(True)
-    self.modelTreeView.setSelectionMode(qt.QAbstractItemView().ExtendedSelection)
-    viewFormLayout.addRow("",self.modelTreeView)
 
+    #
+    # Modles Area
+    #
 
-    # Add vertical spacer
-    self.layout.addStretch(1)
+    modelsCollapsibleButton = ctk.ctkCollapsibleButton()
+    modelsCollapsibleButton.text = "Model Control"
+    self.layout.addWidget(modelsCollapsibleButton, 1)
+
+    modelsGridLayout = qt.QGridLayout(modelsCollapsibleButton)    
+
+    self.dataTreeWidget = slicer.qMRMLSubjectHierarchyTreeView(slicer.util.mainWindow())
+    self.dataTreeWidget.setMRMLScene(slicer.mrmlScene)
+    self.dataTreeWidget.setColumnHidden(self.dataTreeWidget.model().idColumn, True)
+    self.dataTreeWidget.setColumnHidden(self.dataTreeWidget.model().transformColumn, True)
+    self.dataTreeWidget.nodeTypes = ('vtkMRMLModelNode','vtkMRMLFolderDisplayNode')
+
+    modelsGridLayout.addWidget(self.dataTreeWidget,0,0)
+
+    self.layout.addStretch(0)
 
     #
     # Save Area
@@ -339,7 +315,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.smudgeButton.connect('clicked(bool)', self.onSmudgeButton)
     self.snapButton.connect('clicked(bool)', self.onSnapButton)
     
-    #self.initializeButton.connect("clicked(bool)", self.onInitializeButton)
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.blurrSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
@@ -348,20 +323,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
     self.historyList.itemSelectionChanged.connect(self.historyItemChanged)
-    #self.layoutComboBox.connect('currentIndexChanged(int)', self.onLayoutChanged)
-    #self.sliceIntersectionVisibilityCheckBox.connect('stateChanged(int)', self.onSliceIntersectionVisibilityChanged)
+
     self.modalityComboBox.connect('currentIndexChanged(int)', self.onModalityChanged)
     self.templateSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.templateSlider.connect('valueChanged(double)', self.updateTemplateView)
-    self.warpViewCheckBox.connect('stateChanged(int)', self.onWarpCheckBoxChange)
     self.atlasesComboBox.connect('currentIndexChanged(int)', self.onAtlasChanged)
-    self.modelTreeView.selectionModel().selectionChanged.connect(self.onModelItemChanged)
-    self.modelTreeView.doubleClicked.connect(self.onModelTreeDoubleClicked)
-    self.structuresOutlineSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
-    self.structuresOutlineSlider.connect('valueChanged(double)', self.updateStructures)
-    self.structuresOutlineThickness.connect('valueChanged(double)', self.updateStructures)
-    #self.segmentationList.itemSelectionChanged.connect(self.segmentationItemChanged)
-    #self.segmentationList.itemDoubleClicked.connect(self.segmentationDoubleClicked)
+    self.dataTreeWidget.doubleClicked.connect(self.onDataTreeDoubleClicked)
 
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)    
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeAddedEvent, self.onSceneNodeAdded)    
@@ -377,10 +344,13 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.atlasesComboBox.addItems(ImportAtlas.ImportAtlasLogic().getValidAtlases(self.parameterNode.GetParameter("MNIAtlasPath")))
       self.onAtlasChanged(1,'DISTAL Minimal (Ewert 2017)')
       self.showSingleModule()
+      tb = Toolbar.reducedToolbar(self.parameterNode)
+      slicer.util.mainWindow().addToolBar(tb.toolbar)
 
     self.updateGuiFromMRML()  
     self.onSceneNodeAdded()
     self.toogleTools()
+
   
 
   #
@@ -391,22 +361,18 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     
     singleModule = True
 
-    keepToolbars = [
-      slicer.util.findChild(slicer.util.mainWindow(), 'MouseModeToolBar'),
-      slicer.util.findChild(slicer.util.mainWindow(), 'ViewToolBar'),
-      slicer.util.findChild(slicer.util.mainWindow(), 'ViewersToolBar')]
+    keepToolbars = []
     slicer.util.setToolbarsVisible(not singleModule, keepToolbars)
     slicer.util.setMenuBarsVisible(not singleModule)
     slicer.util.setApplicationLogoVisible(not singleModule)
     slicer.util.setModuleHelpSectionVisible(not singleModule)
     slicer.util.setModulePanelTitleVisible(not singleModule)
     slicer.util.setDataProbeVisible(not singleModule)
-    slicer.util.setViewControllersVisible(not singleModule)
+    #slicer.util.setViewControllersVisible(not singleModule)
 
     if singleModule:
       slicer.util.setPythonConsoleVisible(False)
 
-    self.subjectFrame.setVisible(singleModule)
     self.saveButton.setVisible(singleModule)
     self.modalityComboBox.setEnabled(singleModule)
     self.inputsCollapsibleButton.setVisible(not singleModule)
@@ -463,26 +429,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     slicer.util.setSliceViewerLayers(foreground=templateNode.GetID())
 
 
-  def onWarpCheckBoxChange(self,state):
-    if self.parameterNode.GetParameter("MNIPath") != ".": # called from lead
-      viewTransform =  "affineTransformID"
-    else:
-      viewTransform = "warpID"
-    viewTransformID = self.parameterNode.GetParameter(viewTransform)
-    if viewTransformID != "":
-      viewTransformNode = slicer.util.getNode(viewTransformID)
-      if not viewTransformNode.GetDisplayNode():
-        viewTransformNode.CreateDefaultDisplayNodes()
-      viewTransformNode.GetDisplayNode().SetVisibility(state)
-      viewTransformNode.GetDisplayNode().SetVisibility2D(state)
-
   def updateStructures(self,value):
     modelsInScene = slicer.mrmlScene.GetNodesByClass('vtkMRMLModelNode')
     for i in range(modelsInScene.GetNumberOfItems()):
       modelNode = modelsInScene.GetItemAsObject(i)
       try:
-        modelNode.GetDisplayNode().SetSliceIntersectionOpacity(self.structuresOutlineSlider.value)
-        modelNode.GetDisplayNode().SetSliceIntersectionThickness(int(self.structuresOutlineThickness.value))
+        modelNode.GetDisplayNode().SetSliceIntersectionOpacity(value)
       except:
         pass
 
@@ -529,7 +481,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.warpSelector.setCurrentNode(warpNode)
     self.smudgeButton.enabled = bool(warpNode)
     self.snapButton.enabled = bool(warpNode)
-    self.historyList.enabled = bool(warpNode)
+    self.historyList.enabled = bool(warpNode) 
     # undo redo button
     self.undoButton.setEnabled(warpNumberOfComponents > 1) 
     self.redoButton.setEnabled(self.parameterNode.GetParameter("redoTransformID") != "") 
@@ -539,12 +491,11 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.historyList.addItems(['Component ' + str(i) for i in range(warpNumberOfComponents + int(self.redoButton.enabled))])
     self.historyList.setCurrentRow(warpNumberOfComponents - 1)
     # structure outline - temaplate
-    self.structuresOutlineSlider.value = float(self.parameterNode.GetParameter("structureOutline"))
+    self.updateStructures(float(self.parameterNode.GetParameter("structureOutline")))
     self.templateSlider.value = float(self.parameterNode.GetParameter("templateOpacity"))
     # subject text
     subjectN = int(self.parameterNode.GetParameter("subjectN"))
     subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
-    self.subjectNameLabel.text = os.path.split(subjectPaths[subjectN])[-1]
     self.saveButton.text = 'Save and Exit' if subjectN == len(subjectPaths)-1 else 'Save and Next'
 
 
@@ -553,7 +504,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.parameterNode.SetParameter("blurr", str(self.blurrSlider.value) )
     self.parameterNode.SetParameter("hardness", str(self.hardnessSlider.value) )
     self.parameterNode.SetParameter("warpID", self.warpSelector.currentNode().GetID() if self.warpSelector.currentNode() else "")
-    self.parameterNode.SetParameter("structureOutline", str(self.structuresOutlineSlider.value))
     self.parameterNode.SetParameter("templateOpacity", str(self.templateSlider.value))
 
   def historyItemChanged(self):
@@ -562,17 +512,15 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       warpNode = slicer.util.getNode(warpID)
       self.historyList.setCurrentRow(TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) - 1) # keep same value
 
+
+  def iterItems(self, item):
+    item.setFlags(33)
+    for row in range(item.rowCount()):
+      self.iterItems(item.child(row))
+
   def onSceneNodeAdded(self,caller=None,event=None):
-    # update scene models
-    modelsItem = self.modelStandardItem.item(0,0)
-    modelsChildren = [modelsItem.child(i).text() for i in range(modelsItem.rowCount())]
-    modelsCollection = slicer.mrmlScene.GetNodesByClass('vtkMRMLModelNode')
-    for i in range(modelsCollection.GetNumberOfItems()):
-      modelName = modelsCollection.GetItemAsObject(i).GetName()
-      if modelName not in modelsChildren + ["Red Volume Slice", "Green Volume Slice", "Yellow Volume Slice"]:
-        item = qt.QStandardItem(modelName)
-        item.setFlags(33)
-        modelsItem.appendRow(item)
+    sceneItem = self.dataTreeWidget.model().item(0,0)
+    self.iterItems(sceneItem)
 
   def onAtlasChanged(self, index, atlasName = None):
     if not atlasName:
@@ -580,48 +528,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if index != 0:
       atlasPath = os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName)
       folderID = ImportAtlas.ImportAtlasLogic().run(atlasPath)
-      # get added models
-      shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-      rootItem = qt.QStandardItem(shNode.GetItemName(folderID))
-      rootItem.setFlags(33) # selectable
-      self.modelStandardItem.appendRow(rootItem)
-      childList = vtk.vtkIdList()
-      shNode.GetItemChildren(folderID, childList)
-      for i in range(childList.GetNumberOfIds()):
-        childItem = qt.QStandardItem(shNode.GetItemName(childList.GetId(i)))
-        childItem.setFlags(33) # enabled
-        rootItem.appendRow(childItem)
-        shNode.GetItemDataNode(childList.GetId(i)).GetDisplayNode().SetVisibility(False)
 
 
-  def getNodeFromTreeIndex(self, treeIndex):
-    # get parent
-    parent = self.modelStandardItem.item(treeIndex.parent().row(), 0)
-    if not parent: # top level
-      return None
+  def onDataTreeDoubleClicked(self, i):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    if treeIndex.parent().row() == 0: # all models in scene
-      structureID = shNode.GetItemByName(parent.child(treeIndex.row()).text())
-    else: # can distiguish between atlases
-      atlasID = shNode.GetItemByName(parent.text())
-      structureID = shNode.GetItemByPositionUnderParent(atlasID, treeIndex.row())
-    return shNode.GetItemDataNode(structureID)
-
-  def onModelItemChanged(self, selectedItems, deselectedItems):
-    for i in selectedItems.indexes():
-      node = self.getNodeFromTreeIndex(i)
-      if node:
-        node.GetDisplayNode().SetVisibility(True)
-        node.GetDisplayNode().SetVisibility2D(True)
-        node.GetDisplayNode().SetVisibility3D(True)
-    for i in deselectedItems.indexes():
-      node = self.getNodeFromTreeIndex(i)
-      if node:
-        node.GetDisplayNode().SetVisibility(False)
-
-  def onModelTreeDoubleClicked(self, i):
-    node = self.getNodeFromTreeIndex(i)
-    if node:
+    node = shNode.GetItemDataNode(self.dataTreeWidget.currentItem())
+    if isinstance(node, slicer.vtkMRMLModelNode):
       # center
       pd = node.GetPolyData()
       center = vtk.vtkCenterOfMass()
@@ -630,6 +542,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       segCenter = center.GetCenter()
       # create markups node, add center as fiducial and jump and center slices
       markupsNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+      markupsNode.GetDisplayNode().SetVisibility(False)
       markupsNode.AddFiducialFromArray(np.array(segCenter),'')
       markupsLogic = slicer.modules.markups.logic()
       markupsLogic.JumpSlicesToNthPointInMarkup(markupsNode.GetID(),0,True)
@@ -760,6 +673,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       if not affineNode:
         affineNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
       affineNode.Inverse()
+      affineNode.CreateDefaultDisplayNodes()
       parameterNode.SetParameter("affineTransformID", affineNode.GetID())
     if anat: # load image
       imageNode = ImportSubject.ImportSubjectLogic().importFile(subjectPath, 'anat_' + parameterNode.GetParameter("modality") + '.nii')
