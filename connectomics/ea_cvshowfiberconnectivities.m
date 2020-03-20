@@ -39,7 +39,7 @@ if ~options.savefibers.load
         fibersidx=getappdata(resultfig,'fibersidx');
     else % load data
         if ischar(fibersfile)
-        [fibers,fibersidx]=ea_loadfibertracts(fibersfile);
+            [fibers,fibersidx]=ea_loadfibertracts(fibersfile);
         else
             fibers=fibersfile.fibers;
             fibersidx=fibersfile.fibersidx;

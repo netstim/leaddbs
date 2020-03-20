@@ -3,7 +3,7 @@ function vox=ea_mm2vox(mm, transform)
 % coords need to be row vector: N*3
 
 if ischar(transform)
-    transform = spm_get_space(transform);
+    transform = ea_get_affine(transform);
 end
 
 vox = [mm, ones(size(mm,1),1)] / transform';

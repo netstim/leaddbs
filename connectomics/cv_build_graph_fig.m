@@ -73,9 +73,9 @@ if get(handles.wmatedges,'Value')
     % draw edges:
     stemfactor=0.5;
     if isdirected
-    tipfactor=0.7;
+        tipfactor=0.7;
     else
-       tipfactor=0; 
+        tipfactor=0;
     end
 
     pcnt=1;
