@@ -196,7 +196,6 @@ for side=1:length(options.sides)
                 % figure
                 % patch('faces',vatfv.faces,'vertices',vatfv.vertices,'FaceColor','none','EdgeColor','g');
                 % patch('faces',nfv.faces,'vertices',nfv.vertices,'FaceColor','none','EdgeColor','r');
-                if options.prefs.machine.vatsettings.horn_useatlas
                     atlasName = options.prefs.machine.vatsettings.horn_atlasset;
                     load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
                     for atlas=1:size(atlases.XYZ,1)
@@ -241,7 +240,7 @@ for side=1:length(options.sides)
 
                         end
                     end
-                end
+                
                 save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
             end
         end
