@@ -115,7 +115,11 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     optionsFrame.setLayout(qt.QHBoxLayout())
     optionsFrame.setMinimumHeight(50)
 
-    self.noneButton = qt.QPushButton("None")
+    nonePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','cursor.png')))
+    noneIcon = qt.QIcon(nonePixmap)
+    self.noneButton = qt.QPushButton()
+    self.noneButton.setIcon(noneIcon)
+    self.noneButton.setIconSize(nonePixmap.rect().size())
     self.noneButton.setAutoExclusive(True)
     self.noneButton.setCheckable(True)
     self.noneButton.setChecked(True)
@@ -344,8 +348,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.atlasesComboBox.addItems(ImportAtlas.ImportAtlasLogic().getValidAtlases(self.parameterNode.GetParameter("MNIAtlasPath")))
       self.onAtlasChanged(1,'DISTAL Minimal (Ewert 2017)')
       self.showSingleModule()
-      tb = Toolbar.reducedToolbar(self.parameterNode)
-      slicer.util.mainWindow().addToolBar(tb.toolbar)
+      tb = Toolbar.reducedToolbar()
+      slicer.util.mainWindow().addToolBar(tb)
 
     self.updateGuiFromMRML()  
     self.onSceneNodeAdded()
@@ -579,6 +583,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def toogleTools(self):
     SmudgeModuleLogic().effectOff() # deactivate previous effect (if any)
+    self.radiusSlider.setEnabled(False)
+    self.blurrSlider.setEnabled(False)
+    self.hardnessSlider.setEnabled(False)
     interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
     self.removeObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) # so that changing mode doesnt affect
     if not self.noneButton.checked:
@@ -589,10 +596,14 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def onSmudgeButton(self, buttonDown):
     if buttonDown:      
+      self.radiusSlider.setEnabled(True)
+      self.blurrSlider.setEnabled(True)
+      self.hardnessSlider.setEnabled(True)
       SmudgeModuleLogic().effectOn('Smudge')
 
   def onSnapButton(self, buttonDown):
     if buttonDown:
+      self.blurrSlider.setEnabled(True)
       SmudgeModuleLogic().effectOn('Snap')
       
   def exit(self):

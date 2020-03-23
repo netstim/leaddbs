@@ -1,23 +1,29 @@
 import qt, vtk, slicer
+from qt import QToolBar
 import os
 from slicer.util import VTKObservationMixin
 
-class reducedToolbar(VTKObservationMixin):
-
-  def __init__(self, parameterNode):
+import SmudgeModule
 
 
+class reducedToolbar(QToolBar, VTKObservationMixin):
+
+  def __init__(self):
+
+    QToolBar.__init__(self)
     VTKObservationMixin.__init__(self)
 
-    self.parameterNode = parameterNode
+    self.parameterNode = SmudgeModule.SmudgeModuleLogic().getParameterNode()
     self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateToolbarFromMRML)
     
-    self.toolbar = qt.QToolBar()
+    self.setWindowTitle(qt.QObject().tr("LeadDBS"))
 
     smw = slicer.util.mainWindow()
     interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
     layoutManager = slicer.app.layoutManager()
-    affineNode = slicer.util.getNode(parameterNode.GetParameter("affineTransformID"))
+    affineNode = slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID"))
+
+    self.addObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) 
 
 
     #
@@ -27,20 +33,20 @@ class reducedToolbar(VTKObservationMixin):
     layoutFourUpAction = qt.QAction(smw)
     layoutFourUpAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','LayoutFourUpView.png'))))
     layoutFourUpAction.connect('triggered(bool)', lambda t: layoutManager.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView))
-    self.toolbar.addAction(layoutFourUpAction)
+    self.addAction(layoutFourUpAction)
 
     layoutTabbedAction = qt.QAction(smw)
     layoutTabbedAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','LayoutTabbedSliceView.png'))))
     layoutTabbedAction.connect('triggered(bool)', lambda t: layoutManager.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTabbedSliceView))
 
-    self.toolbar.addAction(layoutTabbedAction)
+    self.addAction(layoutTabbedAction)
 
     sliceIntersectionAction = qt.QAction(smw)
     sliceIntersectionAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','SlicesCrosshair.png'))))
     sliceIntersectionAction.setCheckable(True)
     sliceIntersectionAction.connect('toggled(bool)', self.sliceIntersectionToggle)
 
-    self.toolbar.addAction(sliceIntersectionAction)
+    self.addAction(sliceIntersectionAction)
     
     #
     # Window Level
@@ -73,14 +79,12 @@ class reducedToolbar(VTKObservationMixin):
     windowLevelMenu.addActions(windowLevelModeActions.actions())
     
     self.windowLevelAction = qt.QAction(smw)
-    self.windowLevelAction.setIcon(qt.QIcon(qt.QPixmap('/Users/simon/Slicer/Base/QTGUI/Resources/Icons/MouseWindowLevelMode.png')))
+    self.windowLevelAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','MouseWindowLevelMode.png'))))
     self.windowLevelAction.setCheckable(True)
     self.windowLevelAction.setMenu(windowLevelMenu)
     self.windowLevelAction.connect('toggled(bool)', lambda t: interactionNode.SetCurrentInteractionMode(5) if t else interactionNode.SetCurrentInteractionMode(2))
 
-    self.addObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) 
-
-    self.toolbar.addAction(self.windowLevelAction)
+    self.addAction(self.windowLevelAction)
 
     #
     # Warp visible in slice view
@@ -91,7 +95,7 @@ class reducedToolbar(VTKObservationMixin):
     warpViewAction.setCheckable(True)
     warpViewAction.connect('toggled(bool)', lambda t: affineNode.GetDisplayNode().SetVisibility(t))
     warpViewAction.connect('toggled(bool)', lambda t: affineNode.GetDisplayNode().SetVisibility2D(t))
-    self.toolbar.addAction(warpViewAction)
+    self.addAction(warpViewAction)
 
     #
     # Space
@@ -99,14 +103,24 @@ class reducedToolbar(VTKObservationMixin):
 
     empty = qt.QWidget()
     empty.setSizePolicy(qt.QSizePolicy.Expanding,qt.QSizePolicy.Preferred)
-    self.toolbar.addWidget(empty)
+    self.addWidget(empty)
 
     #
     # Subject
     #
 
     self.subjectNameLabel = qt.QLabel('Subject: ')    
-    self.toolbar.addWidget(self.subjectNameLabel)
+    self.addWidget(self.subjectNameLabel)
+
+    #
+    # Save
+    #
+    self.saveButton = qt.QPushButton("Save and Next")
+    self.saveButton.setFixedWidth(200)
+    self.saveButton.setStyleSheet("background-color: green")
+    #self.addWidget(self.saveButton)
+
+    self.saveButton.connect("clicked(bool)", self.onSaveButton)
 
     #
     # Update
@@ -129,3 +143,36 @@ class reducedToolbar(VTKObservationMixin):
     subjectN = int(self.parameterNode.GetParameter("subjectN"))
     subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
     self.subjectNameLabel.text = 'Subject: ' + os.path.split(subjectPaths[subjectN])[-1]
+
+
+
+  def onSaveButton(self):
+    pass
+    #self.SmudgeModuleWidget.exit()
+    #SmudgeModuleLogic().applyChanges()
+
+    # remove nodes
+    #slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID")))
+    #slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
+    #layoutManager = slicer.app.layoutManager()
+    #compositeNode = layoutManager.sliceWidget('Red').sliceLogic().GetSliceCompositeNode()
+    #slicer.mrmlScene.RemoveNode(slicer.util.getNode(compositeNode.GetBackgroundVolumeID()))
+
+    #nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
+    #subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
+    
+    #if nextSubjectN < len(subjectPaths):
+    #  self.parameterNode.SetParameter("subjectN", str(nextSubjectN))
+    #  self.parameterNode.SetParameter("subjectPath", subjectPaths[nextSubjectN])
+    #  imageNode = SmudgeModuleLogic().loadSubjectData()
+    #  SmudgeModuleLogic().initialize(imageNode)
+    #  slicer.util.setSliceViewerLayers(background=imageNode.GetID())
+    #  self.updateGuiFromMRML()
+    #  self.toogleTools()
+    #else:
+    #  slicer.util.exit()
+
+
+
+class reducedToolbarLogic(object):
+  pass

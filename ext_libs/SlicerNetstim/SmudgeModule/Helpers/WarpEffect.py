@@ -102,7 +102,7 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
         sphereResult = (xx-r) ** 2 + (yy-r) ** 2 + (zz-r) ** 2
         sphereResult[r][r][r] = 1 # replace 0 by 1
         sphereLarge = sphereResult <= (r**2+1) # sphere that the mouse shows
-        sphereSmall = sphereResult <= ((r * (1-float(self.parameterNode.GetParameter("blurr")) / 100.0)) **2 + 1 ) # Blurr amount
+        sphereSmall = sphereResult <= ((r * (1 - float(self.parameterNode.GetParameter("blurr")) / 100.0)) **2 + 1 ) # Blurr amount
         sphereResult = 1.0 / sphereResult # invert
         # get value in the edge of the small sphere
         i1,i2,i3 = np.nonzero(sphereSmall)
@@ -178,7 +178,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
         curve2.SetCurveTypeToShortestDistanceOnSurface(slicedModel)
         curve2.ResampleCurveSurface(0.2, slicer.vtkMRMLModelNode().SafeDownCast(slicedModel), 0.0025)
         # get same number of points as other curve
-        curve2.ResampleCurveWorld(curve2.GetCurveLengthWorld() / (curve1.GetNumberOfControlPoints() - 1))
+        curve2.ResampleCurveWorld(curve2.GetCurveLengthWorld() / max((curve1.GetNumberOfControlPoints() - 1), 1) )
         curve2.GetControlPointPositionsWorld(points2)
         # calculate transform and apply
         transformNode = self.createTransform(points1, points2, modelNode)
@@ -223,11 +223,47 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     slicer.mrmlScene.RemoveNode(ruler)
     return outModel
 
+  def getModelCenter(self, modelNode):
+    pd = modelNode.GetPolyData()
+    center = vtk.vtkCenterOfMass()
+    center.SetInputData(pd)
+    center.Update()
+    return np.array(center.GetCenter())
+
+  def scaleBoundaryPoints(self, bpoints, modelCenter, scaleAmount):
+    # expand boundry points
+    outPoints = []
+    totalScale = scaleAmount * 2 * float(self.parameterNode.GetParameter("blurr")) / 100.0 # scale moduate by blurr
+    # aux angle node
+    angleNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsAngleNode')
+    for i in range(3):
+      angleNode.AddControlPoint(vtk.vtkVector3d(), 'ControlPoint' + str(i))
+    angleNode.SetNthControlPointPositionFromArray(1, modelCenter)
+    for bp in bpoints: # for each boundry point
+      angleNode.SetNthControlPointPositionFromArray(0, bp)
+      for direction in [[1,0,0],[0,1,0],[0,0,1]]: # for each direction (R A S)
+        angleNode.SetNthControlPointPositionFromArray(2, modelCenter+np.array(direction))
+        bp += np.array(direction) * (np.cos(angleNode.GetNthMeasurement(0).GetValue() / 180.0 * np.pi) * totalScale)
+      outPoints.append(bp)
+    slicer.mrmlScene.RemoveNode(angleNode)
+    return outPoints
+
+  def getMaxDistanceBetweenSetsOfPoints(self, sourcePoints, targetPoints):
+    # get max distance between source and target pair of points
+    maxDistance = 0
+    for i in range(sourcePoints.GetNumberOfPoints()):
+      localDistance = np.linalg.norm( np.array(sourcePoints.GetPoint(i)) - np.array(targetPoints.GetPoint(i)) )
+      maxDistance = localDistance if localDistance > maxDistance else maxDistance
+    return maxDistance
+
   def createTransform(self, sourcePoints, targetPoints, modelNode):
     # get model bounds
     b = [0]*6
     modelNode.GetBounds(b)
     bpoints = [[b[i],b[j],b[k]] for i in [0,1] for j in [2,3] for k in [4,5]]
+    modelCenter = self.getModelCenter(modelNode)
+    maxDistance = self.getMaxDistanceBetweenSetsOfPoints(sourcePoints, targetPoints)
+    bpoints = self.scaleBoundaryPoints(bpoints, modelCenter, maxDistance)
     # add model and mni bounds to source and target points (so as to constrain the deformation)
     for bp in (bpoints + self.MNIBounds):
       sourcePoints.InsertNextPoint(*bp)
