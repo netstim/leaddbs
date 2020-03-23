@@ -196,50 +196,50 @@ for side=1:length(options.sides)
                 % figure
                 % patch('faces',vatfv.faces,'vertices',vatfv.vertices,'FaceColor','none','EdgeColor','g');
                 % patch('faces',nfv.faces,'vertices',nfv.vertices,'FaceColor','none','EdgeColor','r');
-                    atlasName = options.prefs.machine.vatsettings.horn_atlasset;
-                    load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
-                    for atlas=1:size(atlases.XYZ,1)
-                        if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
-                            clear thisatl
+                atlasName = options.atlasset;
+                load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
+                for atlas=1:size(atlases.XYZ,1)
+                    if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
+                        clear thisatl
 
-                            try % for midline or combined atlases, only the right side atlas is used.
-                                if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
-                                    thisatl=atlases.XYZ{atlas,1}.mm;
-                                    tpd=atlases.pixdim{atlas,1};
-                                else
-                                    thisatl=atlases.XYZ{atlas,side}.mm;
-                                    tpd=atlases.pixdim{atlas,side};
-                                end
-                            catch
+                        try % for midline or combined atlases, only the right side atlas is used.
+                            if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
                                 thisatl=atlases.XYZ{atlas,1}.mm;
                                 tpd=atlases.pixdim{atlas,1};
+                            else
+                                thisatl=atlases.XYZ{atlas,side}.mm;
+                                tpd=atlases.pixdim{atlas,side};
                             end
-                            %% this search strategy commented out for now - would fail in case of a very large atlas structure with VAT in center of it touching no border.
-
-                                tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
-
-
-                                ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(vatfv.vertices,vatfv.faces,thisatl))*tpv;
-                                ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
-
-                                % now also add efield overlap:
-                                if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
-                                        S.label,filesep,'vat_efield_',sidec]),'file')
-                                    Vefield=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
-                                        S.label,filesep,'vat_efield_',sidec]));
-                                    atlasvoxels=Vefield.mat\[thisatl,ones(length(thisatl),1)]';
-                                    ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=...
-                                        mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1));
-                                    ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
-                                        mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1))./...
-                                        sum(Vefield.img(:));
-                                end
-                        else % no voltage on this vat, simply set vi to zero.
-                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
-                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
-
+                        catch
+                            thisatl=atlases.XYZ{atlas,1}.mm;
+                            tpd=atlases.pixdim{atlas,1};
                         end
+                        %% this search strategy commented out for now - would fail in case of a very large atlas structure with VAT in center of it touching no border.
+
+                            tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
+
+
+                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(vatfv.vertices,vatfv.faces,thisatl))*tpv;
+                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
+
+                            % now also add efield overlap:
+                            if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
+                                    S.label,filesep,'vat_efield_',sidec]),'file')
+                                Vefield=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
+                                    S.label,filesep,'vat_efield_',sidec]));
+                                atlasvoxels=Vefield.mat\[thisatl,ones(length(thisatl),1)]';
+                                ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=...
+                                    mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1));
+                                ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
+                                    mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1))./...
+                                    sum(Vefield.img(:));
+                            end
+                    else % no voltage on this vat, simply set vi to zero.
+                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
+                        ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
+
                     end
+                end
                 
                 save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
             end
