@@ -128,7 +128,7 @@ if strcmp(options.leadprod, 'group')
     isdirected=0; % for now allow everything in lead group
 else
     e=load(fullfile(ea_getearoot,'templates','electrode_models',options.elspec.matfname));
-    directed_funs={'ea_genvat_horn'};
+    directed_funs={'ea_genvat_horn','ea_genvat_fastfield'};
     if isfield(e.electrode,'isdirected')
         isdirected=e.electrode.isdirected;
     else
@@ -2211,6 +2211,13 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
+      case 'fastfield'
+        ea_show_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','off');
+        S.monopolarmodel=0;
+        ea_enable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','on');
 end
 S.model=model;
 
@@ -3235,6 +3242,8 @@ switch model
         ea_vatsettings_horn;
     case 'Dembek 2017'
         ea_vatsettings_dembek;
+     case 'fastfield'
+        ea_vatsettings_fastfield;
 end
 % ea_vatsettings_horn;
 
