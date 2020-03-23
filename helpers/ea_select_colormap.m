@@ -58,9 +58,20 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-if ~isempty(varargin)
-    set(handles.colormapsize, 'String', num2str(varargin{1}));
-end
+presets = {'parula'
+           'jet'
+           'hsv'
+           'hot'
+           'cool'
+           'spring'
+           'summer'
+           'autumn'
+           'winter'
+           'gray'
+           'bone'
+           'copper'
+           'pink'};
+set(handles.presetcolormap, 'String', presets);
 
 setappdata(handles.custom1, 'custom1startcolor', [1,1,1]);   % White
 setappdata(handles.custom1, 'custom1endcolor',  [1,0,0]);    % Red
@@ -68,9 +79,64 @@ setappdata(handles.custom2, 'custom2startcolor',  [0,0,1]);  % Blue
 setappdata(handles.custom2, 'custom2middlecolor',  [1,1,1]); % White
 setappdata(handles.custom2, 'custom2endcolor',  [1,0,0]);    % Red
 
-presets = get(handles.presetcolormap, 'String');
-cmap = presets{get(handles.presetcolormap, 'Value')};
-cmap = eval([cmap, '(', get(handles.colormapsize, 'String') ,')']);
+if ~isempty(varargin)
+    if ~isempty(varargin{1})
+        set(handles.colormapsize, 'String', num2str(varargin{1}));
+    end
+
+    if length(varargin) == 2
+        switch(varargin{2})
+            case presets
+                set(handles.colormapsetting, 'SelectedObject', handles.preset);
+                set(handles.presetcolormap, 'Enable', 'on');
+                set(handles.custom1startcolor, 'Enable', 'off');
+                set(handles.custom1endcolor, 'Enable', 'off');
+                set(handles.custom2startcolor, 'Enable', 'off');
+                set(handles.custom2middlecolor, 'Enable', 'off');
+                set(handles.custom2endcolor, 'Enable', 'off');
+
+                set(handles.presetcolormap, 'Value', find(ismember(presets,varargin{2})));
+                cmap = eval([varargin{2}, '(', get(handles.colormapsize, 'String') ,')']);
+            case 'custom1'
+                set(handles.colormapsetting, 'SelectedObject', handles.custom1);
+                set(handles.presetcolormap, 'Enable', 'off');
+                set(handles.custom1startcolor, 'Enable', 'on');
+                set(handles.custom1endcolor, 'Enable', 'on');
+                set(handles.custom2startcolor, 'Enable', 'off');
+                set(handles.custom2middlecolor, 'Enable', 'off');
+                set(handles.custom2endcolor, 'Enable', 'off');
+
+                color1 = getappdata(handles.custom1, 'custom1startcolor');
+                color2 = getappdata(handles.custom1, 'custom1endcolor');
+
+                cmapsize = str2double(get(handles.colormapsize, 'String'));
+                cmap = ea_colorgradient(cmapsize, color1, color2);
+                setappdata(handles.selectcolormap, 'colormap', cmap);
+            case 'custom2'
+                set(handles.colormapsetting, 'SelectedObject', handles.custom2);
+                set(handles.presetcolormap, 'Enable', 'off');
+                set(handles.custom1startcolor, 'Enable', 'off');
+                set(handles.custom1endcolor, 'Enable', 'off');
+                set(handles.custom2startcolor, 'Enable', 'on');
+                set(handles.custom2middlecolor, 'Enable', 'on');
+                set(handles.custom2endcolor, 'Enable', 'on');
+
+                color1 = getappdata(handles.custom2, 'custom2startcolor');
+                color2 = getappdata(handles.custom2, 'custom2middlecolor');
+                color3 = getappdata(handles.custom2, 'custom2endcolor');
+
+                cmapsize = str2double(get(handles.colormapsize, 'String'));
+                cmap = ea_colorgradient(cmapsize, color1, color2, color3);
+                setappdata(handles.selectcolormap, 'colormap', cmap);
+        end
+    end
+end
+
+if length(varargin) < 2
+    cmap = presets{get(handles.presetcolormap, 'Value')};
+    cmap = eval([cmap, '(', get(handles.colormapsize, 'String') ,')']);
+end
+
 setappdata(handles.selectcolormap, 'colormap', cmap);
 updatePreview(cmap, handles.previewcolorbar);
 
@@ -129,19 +195,6 @@ function colormapsize_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of colormapsize as a double
 
 
-% --- Executes during object creation, after setting all properties.
-function presetcolormap_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to presetcolormap (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on button press in preset.
 function preset_Callback(hObject, eventdata, handles)
 % hObject    handle to preset (see GCBO)
@@ -161,6 +214,19 @@ cmap = presets{get(handles.presetcolormap, 'Value')};
 cmap = eval([cmap, '(', get(handles.colormapsize, 'String') ,')']);
 setappdata(handles.selectcolormap, 'colormap', cmap);
 updatePreview(cmap, handles.previewcolorbar);
+
+
+% --- Executes during object creation, after setting all properties.
+function presetcolormap_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to presetcolormap (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
 % --- Executes on selection change in presetcolormap.
