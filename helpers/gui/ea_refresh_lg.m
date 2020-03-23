@@ -265,10 +265,12 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 set(handles.leadfigure,'name','Lead Group Analysis');
                 set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
                 set(handles.explorestats, 'Enable', 'off');
+                set(handles.exportstats, 'Enable', 'off');
                 break
             else
                 set(handles.calculatebutton, 'BackgroundColor', [0.93,0.93,0.93]);
                 set(handles.explorestats, 'Enable', 'on');
+                set(handles.exportstats, 'Enable', 'on');
             end
 
             priorvilist=M.vilist;

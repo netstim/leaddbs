@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 15-Jan-2020 12:13:42
+% Last Modified by GUIDE v2.5 23-Mar-2020 14:04:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,7 +79,7 @@ atlases{end+1} = 'Use none';
 set(handles.atlassetpopup,'String', atlases);
 [~, defix]=ismember(options.prefs.atlases.default, atlases);
 if defix
-set(handles.atlassetpopup,'Value',defix);
+    set(handles.atlassetpopup,'Value',defix);
 end
 
 % setup vat functions
@@ -1081,6 +1081,7 @@ ea_refresh_lg(handles);
 
 set(handles.calculatebutton, 'BackgroundColor', [0.93,0.93,0.93]);
 set(handles.explorestats, 'Enable', 'on');
+set(handles.exportstats, 'Enable', 'on');
 
 
 % --- Executes on selection change in fiberspopup.
@@ -1110,6 +1111,7 @@ ea_refresh_lg(handles);
 if connChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
+    set(handles.exportstats, 'Enable', 'off');
 end
 
 
@@ -1150,6 +1152,7 @@ ea_refresh_lg(handles);
 if labelChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
+    set(handles.exportstats, 'Enable', 'off');
 end
 
 
@@ -1190,6 +1193,7 @@ ea_refresh_lg(handles);
 if atlasChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
+    set(handles.exportstats, 'Enable', 'off');
 end
 
 
@@ -1693,3 +1697,14 @@ function targetreport_Callback(hObject, eventdata, handles)
 ea_refresh_lg(handles);
 M=getappdata(gcf,'M');
 ea_gentargetreport(M);
+
+
+% --- Executes on button press in exportstats.
+function exportstats_Callback(hObject, eventdata, handles)
+% hObject    handle to exportstats (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M = getappdata(gcf,'M');
+[file, path] = uiputfile('*.mat','Export DBS Stats as...', [M.root, 'ea_stats_export.mat']);
+ea_lg_exportstats(M, [path, file]);
+fprintf('\nDBS Stats exported to:\n%s\n\n', [path, file]);
