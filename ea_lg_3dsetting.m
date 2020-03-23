@@ -86,7 +86,7 @@ catch
 end
 
 try
-	set(handles.colorpointcloudcheck, 'Value', M.ui.colorpointcloudcheck);
+    set(handles.colorpointcloudcheck, 'Value', M.ui.colorpointcloudcheck);
 catch
     set(handles.colorpointcloudcheck, 'Value', 1);
 end
