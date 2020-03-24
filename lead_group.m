@@ -426,6 +426,7 @@ options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
 options.d3.showpassivecontacts=get(handles.showpassivecontcheck,'Value');
 options.d3.elrendering=M.ui.elrendering;
 options.d3.mirrorsides=M.ui.mirrorsides;
+try options.d3.regressorcolormap = M.ui.regressorcolormap; end
 try options.d3.isomatrix=M.isomatrix; end
 try options.d3.isomatrix_name=M.isomatrix_name; end
 

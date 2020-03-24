@@ -22,7 +22,7 @@ function varargout = ea_lg_3dsetting(varargin)
 
 % Edit the above text to modify the response to help ea_lg_3dsetting
 
-% Last Modified by GUIDE v2.5 14-Jan-2020 12:34:34
+% Last Modified by GUIDE v2.5 24-Mar-2020 09:01:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -98,7 +98,7 @@ else
 end
 
 try
-	set(handles.mirrorsides, 'Value', M.ui.mirrorsides);
+    set(handles.mirrorsides, 'Value', M.ui.mirrorsides);
 catch
     set(handles.mirrorsides, 'Value', 0);
 end
@@ -458,3 +458,15 @@ function showboth_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of showboth
 set(handles.pospredthreshold, 'Enable', 'on');
 set(handles.negpredthreshold, 'Enable', 'on');
+
+
+% --- Executes on button press in regressorcolormap.
+function regressorcolormap_Callback(hObject, eventdata, handles)
+% hObject    handle to regressorcolormap (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+leadfigure = getappdata(handles.lg_3dsetting, 'leadfigure');
+
+M = getappdata(leadfigure, 'M');
+M.ui.regressorcolormap = ea_select_colormap(length(gray),'custom2');
+setappdata(leadfigure, 'M', M);
