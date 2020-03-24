@@ -468,5 +468,9 @@ function regressorcolormap_Callback(hObject, eventdata, handles)
 leadfigure = getappdata(handles.lg_3dsetting, 'leadfigure');
 
 M = getappdata(leadfigure, 'M');
-M.ui.regressorcolormap = ea_select_colormap(length(gray),'custom2');
+if isfield(M.ui, 'regressorcolormap')
+    M.ui.regressorcolormap = ea_select_colormap(length(gray),'custom2',M.ui.regressorcolormap);
+else
+    M.ui.regressorcolormap = ea_select_colormap(length(gray),'custom2');
+end
 setappdata(leadfigure, 'M', M);
