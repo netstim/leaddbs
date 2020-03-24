@@ -217,7 +217,7 @@ try
             elspec.contact_spacing=0.5;
             elspec.numel=4;
             elspec.tipiscontact=0;
-            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)'};
+            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
             elspec.isdirected=0;
             elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
             elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
@@ -236,7 +236,7 @@ try
             elspec.contact_spacing=1.5;
             elspec.numel=4;
             elspec.tipiscontact=0;
-            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)'};
+            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
             elspec.isdirected=0;
             elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
             elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
@@ -255,7 +255,7 @@ try
             elspec.contact_spacing=3;
             elspec.numel=4;
             elspec.tipiscontact=0;
-            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)'};
+            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
             elspec.isdirected=0;
             elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
             elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
@@ -414,7 +414,7 @@ try
             elspec.contact_spacing=1.5;
             elspec.numel=16;
             elspec.tipiscontact=1;
-            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)',...
+            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)',...
                 'K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)'};
             elspec.isdirected=0;
             elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
