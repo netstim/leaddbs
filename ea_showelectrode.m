@@ -20,15 +20,17 @@ if ~isfield(elstruct,'activecontacts')
     elstruct.activecontacts{1}=zeros(elspec.numel,1);
     elstruct.activecontacts{2}=zeros(elspec.numel,1);
 end
-if ~isfield(options.d3,'pntcmap') % use default blue to red colormap
-    jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
-else
-    jetlist = options.d3.pntcmap;
+if isfield(options.d3,'pntcmap')
+    cmap = options.d3.pntcmap;
+elseif isfield(options.d3, 'regressorcolormap')
+    cmap = options.d3.regressorcolormap;
+else % use default blue to red colormap
+    cmap = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
 end
+
 try
-    jetlist=evalin('base','custom_cmap');
+    cmap=evalin('base','custom_cmap');
 end
-%   jetlist=jet;
 
 for side=options.sides
 %     trajvector=mean(diff(trajectory{side}));
@@ -242,7 +244,7 @@ for side=options.sides
                         %
                         %                         % ##
 
-                        usefacecolor=ind2rgb(round(usefacecolor),jetlist);
+                        usefacecolor=ind2rgb(round(usefacecolor),cmap);
                     else
                         usefacecolor=nan; % won't draw the point then.
                     end
