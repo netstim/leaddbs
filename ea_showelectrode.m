@@ -231,7 +231,7 @@ for side=options.sides
 
                     if ~isnan(options.d3.isomatrix{1}{side}(pt,cntct))
 
-                        usefacecolor=((options.d3.isomatrix{1}{side}(pt,cntct)-minval)/(maxval-minval))*length(gray);
+                        usefacecolor=((options.d3.isomatrix{1}{side}(pt,cntct)-minval)/(maxval-minval))*length(cmap);
 
                         %                         % ## add some contrast (remove these lines for linear
                         %                         % mapping)
