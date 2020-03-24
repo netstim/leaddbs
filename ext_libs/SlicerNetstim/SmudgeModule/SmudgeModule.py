@@ -699,7 +699,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     warpNode.Inverse()
 
     # load the volume again to set as reference
-    imageNode = slicer.util.loadVolume(os.path.join(subjectPath,'anat_t1.nii'))
+    imageNode = slicer.util.loadVolume(os.path.join(subjectPath,'anat_' + parameterNode.GetParameter("modality") + '.nii'))
 
     outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
     transformsLogic = slicer.modules.transforms.logic()
