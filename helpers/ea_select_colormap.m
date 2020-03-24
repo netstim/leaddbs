@@ -205,6 +205,28 @@ function colormapsize_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of colormapsize as text
 %        str2double(get(hObject,'String')) returns contents of colormapsize as a double
+switch get(get(handles.colormapsetting, 'SelectedObject'), 'Tag');
+    case 'preset'
+        presets = get(handles.presetcolormap, 'String');
+        cmap = presets{get(handles.presetcolormap, 'Value')};
+        cmap = eval([cmap, '(', get(handles.colormapsize, 'String') ,')']);
+    case 'custom1'
+        color1 = getappdata(handles.custom1, 'custom1startcolor');
+        color2 = getappdata(handles.custom1, 'custom1endcolor');
+
+        cmapsize = str2double(get(handles.colormapsize, 'String'));
+        cmap = ea_colorgradient(cmapsize, color1, color2);
+    case 'custom2'
+        color1 = getappdata(handles.custom2, 'custom2startcolor');
+        color2 = getappdata(handles.custom2, 'custom2middlecolor');
+        color3 = getappdata(handles.custom2, 'custom2endcolor');
+
+        cmapsize = str2double(get(handles.colormapsize, 'String'));
+        cmap = ea_colorgradient(cmapsize, color1, color2, color3);
+end
+
+setappdata(handles.selectcolormap, 'colormap', cmap);
+updatePreview(cmap, handles.previewcolorbar);
 
 
 % --- Executes on button press in preset.
