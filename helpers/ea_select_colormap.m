@@ -84,7 +84,7 @@ if ~isempty(varargin)
         set(handles.colormapsize, 'String', num2str(varargin{1}));
     end
 
-    if length(varargin) == 2
+    if length(varargin) >= 2
         switch(varargin{2})
             case presets
                 set(handles.colormapsetting, 'SelectedObject', handles.preset);
@@ -106,11 +106,18 @@ if ~isempty(varargin)
                 set(handles.custom2middlecolor, 'Enable', 'off');
                 set(handles.custom2endcolor, 'Enable', 'off');
 
-                color1 = getappdata(handles.custom1, 'custom1startcolor');
-                color2 = getappdata(handles.custom1, 'custom1endcolor');
+                if length(varargin) == 3
+                    cmapsize = length(varargin{3});
+                    set(handles.colormapsize, 'String', num2str(cmapsize));
+                    cmap = varargin{3};
+                else
+                    color1 = getappdata(handles.custom1, 'custom1startcolor');
+                    color2 = getappdata(handles.custom1, 'custom1endcolor');
 
-                cmapsize = str2double(get(handles.colormapsize, 'String'));
-                cmap = ea_colorgradient(cmapsize, color1, color2);
+                    cmapsize = str2double(get(handles.colormapsize, 'String'));
+                    cmap = ea_colorgradient(cmapsize, color1, color2);
+                end
+
                 setappdata(handles.selectcolormap, 'colormap', cmap);
             case 'custom2'
                 set(handles.colormapsetting, 'SelectedObject', handles.custom2);
@@ -121,12 +128,17 @@ if ~isempty(varargin)
                 set(handles.custom2middlecolor, 'Enable', 'on');
                 set(handles.custom2endcolor, 'Enable', 'on');
 
-                color1 = getappdata(handles.custom2, 'custom2startcolor');
-                color2 = getappdata(handles.custom2, 'custom2middlecolor');
-                color3 = getappdata(handles.custom2, 'custom2endcolor');
-
-                cmapsize = str2double(get(handles.colormapsize, 'String'));
-                cmap = ea_colorgradient(cmapsize, color1, color2, color3);
+                if length(varargin) == 3
+                    cmapsize = length(varargin{3});
+                    set(handles.colormapsize, 'String', num2str(cmapsize));
+                    cmap = varargin{3};
+                else
+                    color1 = getappdata(handles.custom2, 'custom2startcolor');
+                    color2 = getappdata(handles.custom2, 'custom2middlecolor');
+                    color3 = getappdata(handles.custom2, 'custom2endcolor');
+                    cmapsize = str2double(get(handles.colormapsize, 'String'));
+                    cmap = ea_colorgradient(cmapsize, color1, color2, color3);
+                end
                 setappdata(handles.selectcolormap, 'colormap', cmap);
         end
     end
