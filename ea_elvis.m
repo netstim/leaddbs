@@ -151,7 +151,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
             for side=elSide{pt}
                 try
-                    pobj=ea_load_trajectory(directory,side);
+                    pobj=ea_load_electrode(directory,side);
                     pobj.hasPlanning=1;
                     pobj.showPlanning=strcmp(options.leadprod,'or');
                 end
@@ -176,7 +176,18 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     end
                 end
             end
-
+            if ~multiplemode
+                d=load([directory,'ea_reconstruction.mat']);
+                plans=d.reco.electrode(side+1:end);
+                if ~isempty(plans)
+                    if isfield(plans,'plan')
+                        for plan=1:length(plans)
+                            pobj=ea_load_electrode(directory,side+plan);
+                            ea_add_trajectory([],[],options,pobj);
+                        end
+                    end
+                end
+            end
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
                % this part for brainbrowser support.
                vizstruct=struct('faces',[],'vertices',[],'colors',[]);
@@ -284,7 +295,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         % Initialize Stimulation-Button
         if ~strcmp(options.leadprod, 'group')
             eladdTraj = uipushtool(ht,'CData',ea_get_icn('addelectrode'),...
-                'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
+                'TooltipString','Add Trajectory...','ClickedCallback',{@ea_add_trajectory,options});
             stimbutton = uipushtool(ht,'CData',ea_get_icn('stimulation'),...
                 'TooltipString','Stimulation Control Figure',...
                 'ClickedCallback',{@openstimviewer,elstruct,resultfig,options});
