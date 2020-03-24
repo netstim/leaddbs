@@ -231,20 +231,16 @@ for side=options.sides
 
                     if ~isnan(options.d3.isomatrix{1}{side}(pt,cntct))
 
-                        usefacecolor=((options.d3.isomatrix{1}{side}(pt,cntct)-minval)/(maxval-minval))*length(cmap);
+                        usefacecolor=((options.d3.isomatrix{1}{side}(pt,cntct)-minval)/(maxval-minval))*(length(cmap)-1);
 
-                        %                         % ## add some contrast (remove these lines for linear
-                        %                         % mapping)
-                        %
-                        %
-                        %                         usefacecolor=usefacecolor-20;
-                        %                         usefacecolor(usefacecolor<1)=1;
-                        %                         usefacecolor=usefacecolor*2;
-                        %                         usefacecolor(usefacecolor>64)=64;
-                        %
-                        %                         % ##
+                        % % Add some contrast (remove these lines for linear mapping)
+                        % usefacecolor=usefacecolor-20;
+                        % usefacecolor(usefacecolor<1)=1;
+                        % usefacecolor=usefacecolor*2;
+                        % usefacecolor(usefacecolor>64)=64;
 
-                        usefacecolor=ind2rgb(round(usefacecolor),cmap);
+                        usefacecolor = usefacecolor + 1;
+                        usefacecolor = ind2rgb(round(usefacecolor),cmap);
                     else
                         usefacecolor=nan; % won't draw the point then.
                     end
