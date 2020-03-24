@@ -345,7 +345,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     slicer.util.setModuleHelpSectionVisible(not singleModule)
     slicer.util.setModulePanelTitleVisible(not singleModule)
     slicer.util.setDataProbeVisible(not singleModule)
-    #slicer.util.setViewControllersVisible(not singleModule)
 
     if singleModule:
       slicer.util.setPythonConsoleVisible(False)
@@ -353,7 +352,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.saveButton.setVisible(singleModule)
     self.modalityComboBox.setEnabled(singleModule)
     self.inputsCollapsibleButton.setVisible(not singleModule)
-    self.reloadCollapsibleButton.setVisible(not singleModule)
+    if self.developerMode:
+      self.reloadCollapsibleButton.setVisible(not singleModule)
 
     slicer.util.mainWindow().setWindowTitle("Name goes here")
 
