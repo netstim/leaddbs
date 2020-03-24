@@ -141,17 +141,9 @@ set(atls, 'Visible', 'off');
 %disp([atls,'invisible clicked']);
 
 
-function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.
-m=-inf;
-for c=1:length(cellinp)
-    nm=max(cellinp{c}(:));
-    if nm>m; m=nm; end
-end
+function m = maxiso(isomatrix) % Returns the max value of matrices in a cell.
+m = max(cellfun(@(x) max(x(:)), isomatrix));
 
 
-function m=miniso(cellinp)
-m=inf;
-for c=1:length(cellinp)
-    nm=min(cellinp{c}(:));
-    if nm<m; m=nm; end
-end
+function m = miniso(isomatrix) % Returns the min value of matrices in a cell.
+m = min(cellfun(@(x) min(x(:)), isomatrix));
