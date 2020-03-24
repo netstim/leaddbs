@@ -1,7 +1,7 @@
 function varargout=ea_genvat_fastfield(varargin)
 
-prefs.machine.vatsettings.fastfield_cb=0.1;
-prefs.machine.vatsettings.fastfield_ethresh=0.2;
+%prefs.machine.vatsettings.fastfield_cb=0.1;
+%prefs.machine.vatsettings.fastfield_ethresh=0.2;
 
 useSI = 1;
 
