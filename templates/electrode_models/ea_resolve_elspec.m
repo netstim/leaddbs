@@ -479,7 +479,7 @@ try
             elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
             elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
             elspec.etageidx=num2cell(1:elspec.numel);
-            elspec.forstimulation=0;
+            elspec.forstimulation=1;
         case 'DIXI D08-18AM'
             elspec.matfname='dixi_d08_18am';
             elspec.lead_diameter=0.8;
