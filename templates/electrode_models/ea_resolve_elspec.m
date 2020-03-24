@@ -493,8 +493,8 @@ try
             elspec.contact_spacing=1.5;
             elspec.numel=18;
             elspec.tipiscontact=1;
-            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15','K16','K17',...
-                                 'K18','K19','K20','K21','K22','K23','K24','K25','K26','K27','K28','K29','K30','K31','K32','K33'};
+            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)','K16 (R)','K17 (R)',...
+                'K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)','K32 (L)','K33 (L)'};
         case 'AdTech SD10R-SP05X Choi'
             elspec.matfname='adtech_sd10r_sp05x_choi';
             elspec.lead_diameter=1.1;
@@ -508,8 +508,8 @@ try
             elspec.contact_spacing=2.4;
             elspec.numel=10;
             elspec.tipiscontact=0;
-            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9',...
-                                 'K10','K11','K12','K13','K14','K15','K16','K17','K18','K19'};
+            elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
+                'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
 
     end
 catch
