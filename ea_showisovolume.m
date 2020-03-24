@@ -46,7 +46,10 @@ for side=1:length(options.sides)
         end
     end
 
-    X{side}=X{side}(:);        Y{side}=Y{side}(:);        Z{side}=Z{side}(:); V{side}=V{side}(:);
+    X{side}=X{side}(:);
+    Y{side}=Y{side}(:);
+    Z{side}=Z{side}(:);
+    V{side}=V{side}(:);
     %assignin('base','X',X);
     %assignin('base','Y',Y);
     %assignin('base','Z',Z);
