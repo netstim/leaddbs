@@ -7,14 +7,16 @@ set(0,'CurrentFigure',resultfig);
 
 isobar=getappdata(resultfig,'isobar');
 if isempty(isobar)
-isobar=uitoolbar(resultfig);
-setappdata(resultfig,'isobar',isobar);
+    isobar=uitoolbar(resultfig);
+    setappdata(resultfig,'isobar',isobar);
 end
 hold on
 
-% default blue to red colormap
-jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
-% jetlist=jet;
+if isfield(options.d3, 'regressorcolormap')
+    cmap = options.d3.regressorcolormap;
+else % default blue to red colormap
+    cmap = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
+end
 
 if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
     shifthalfup=1;
@@ -23,6 +25,7 @@ elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
 else
     ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
 end
+
 for side=1:length(options.sides)
     cnt=1;
     for sub=1:length(elstruct)
@@ -67,7 +70,7 @@ for side=1:length(options.sides)
                 for zz=1:10:size(VI{side},3)
                     if ~isnan(VI{side}(xx,yy,zz))
                         usefacecolor=VI{side}(xx,yy,zz)*((64+miniso(options.d3.isomatrix))/(maxiso(options.d3.isomatrix)+miniso(options.d3.isomatrix)));
-                        usefacecolor=ind2rgb(round(usefacecolor),jetlist);
+                        usefacecolor=ind2rgb(round(usefacecolor),cmap);
                         isopatch(side,ipcnt)=plot3(XI(xx,yy,zz),YI(xx,yy,zz),ZI(xx,yy,zz),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',usefacecolor,'Color',usefacecolor);
                         ipcnt=ipcnt+1;
                     end
@@ -97,10 +100,10 @@ for side=1:length(options.sides)
         C=C+1;
 
         nc=isocolors(XI,YI,ZI,C,fv{side}.vertices);
-        nc=squeeze(ind2rgb(round(nc),jet));
+        nc=squeeze(ind2rgb(round(nc),cmap));
         isopatch(side,1)=patch(fv{side},'FaceVertexCData',nc,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
 
-        ea_spec_atlas(isopatch(side,1),'isovolume',jet,1);
+        ea_spec_atlas(isopatch(side,1),'isovolume',cmap,1);
 
         % export isovolume manually here:
         res=length(Vol);
