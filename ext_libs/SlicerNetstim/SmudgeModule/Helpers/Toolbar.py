@@ -4,7 +4,7 @@ import os
 from slicer.util import VTKObservationMixin
 
 import SmudgeModule
-
+import ImportAtlas
 
 class reducedToolbar(QToolBar, VTKObservationMixin):
 
@@ -97,8 +97,36 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     warpViewAction.connect('toggled(bool)', lambda t: affineNode.GetDisplayNode().SetVisibility2D(t))
     self.addAction(warpViewAction)
 
+
+
     #
-    # Space
+    # B <-> F slider
+    #
+
+    templateSlider = qt.QSlider(1)
+    templateSlider.singleStep = 10
+    templateSlider.minimum = 0
+    templateSlider.maximum = 100
+    templateSlider.value = 0
+    templateSlider.setFixedWidth(120)
+    templateSlider.connect('valueChanged(int)', lambda value: slicer.util.setSliceViewerLayers(foregroundOpacity = value / 100.0))
+    self.addWidget(templateSlider)
+
+    #
+    # Atlas
+    #
+
+    self.atlasesComboBox = qt.QComboBox()
+    self.atlasesComboBox.addItem('Import Atlas')
+    self.atlasesComboBox.setMaximumWidth(350)
+    self.atlasesComboBox.addItems(ImportAtlas.ImportAtlasLogic().getValidAtlases(self.parameterNode.GetParameter("MNIAtlasPath")))
+    self.atlasesComboBox.connect('currentIndexChanged(int)', self.onAtlasChanged)
+    self.atlasesComboBox.connect('activated(int)', lambda i: print(i))
+
+    self.addWidget(self.atlasesComboBox)
+
+    #
+    # Space Separator
     #
 
     empty = qt.QWidget()
@@ -126,6 +154,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     # Update
     #
 
+    self.onAtlasChanged(1,'DISTAL Minimal (Ewert 2017)')
     self.updateToolbarFromMRML()
 
 
@@ -144,7 +173,13 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
     self.subjectNameLabel.text = 'Subject: ' + os.path.split(subjectPaths[subjectN])[-1]
 
-
+  def onAtlasChanged(self, index, atlasName = None):
+    if not atlasName:
+      atlasName = self.atlasesComboBox.itemText(index)
+    if index != 0:
+      atlasPath = os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName)
+      folderID = ImportAtlas.ImportAtlasLogic().run(atlasPath)
+    self.atlasesComboBox.setCurrentIndex(0)
 
   def onSaveButton(self):
     pass

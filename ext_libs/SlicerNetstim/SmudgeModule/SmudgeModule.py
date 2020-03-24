@@ -260,28 +260,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     viewFormLayout.addRow("Modality:", self.modalityComboBox)
 
     #
-    # Template
-    #
-    self.templateSlider = ctk.ctkSliderWidget()
-    self.templateSlider.singleStep = 0.1
-    self.templateSlider.minimum = 0
-    self.templateSlider.maximum = 1
-    self.templateSlider.decimals = 1
-    self.templateSlider.value = 0
-    viewFormLayout.addRow("&Template Image:", self.templateSlider)
-
-    #
-    # Atlas
-    #
-
-
-    self.atlasesComboBox = qt.QComboBox()
-    self.atlasesComboBox.addItem('Choose Atlas')
-    self.atlasesComboBox.setMaximumWidth(350)
-    viewFormLayout.addRow("Import Atlas:", self.atlasesComboBox)
-
-
-    #
     # Modles Area
     #
 
@@ -329,9 +307,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.historyList.itemSelectionChanged.connect(self.historyItemChanged)
 
     self.modalityComboBox.connect('currentIndexChanged(int)', self.onModalityChanged)
-    self.templateSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
-    self.templateSlider.connect('valueChanged(double)', self.updateTemplateView)
-    self.atlasesComboBox.connect('currentIndexChanged(int)', self.onAtlasChanged)
     self.dataTreeWidget.doubleClicked.connect(self.onDataTreeDoubleClicked)
 
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)    
@@ -345,8 +320,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if self.updateMRMLFromArgs(): # was called from command line
       SmudgeModuleLogic().loadSubjectData(anat=False)
       self.onModalityChanged(0)
-      self.atlasesComboBox.addItems(ImportAtlas.ImportAtlasLogic().getValidAtlases(self.parameterNode.GetParameter("MNIAtlasPath")))
-      self.onAtlasChanged(1,'DISTAL Minimal (Ewert 2017)')
       self.showSingleModule()
       tb = Toolbar.reducedToolbar()
       slicer.util.mainWindow().addToolBar(tb)
@@ -426,24 +399,13 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # load new temaplate image
     if compositeNode.GetForegroundVolumeID():
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(compositeNode.GetForegroundVolumeID()))
+    modality = self.parameterNode.GetParameter("modality") # in case loading subject image modality was changed 
     templateNode = slicer.util.loadVolume(os.path.join(self.parameterNode.GetParameter("MNIPath"), modality + ".nii"), properties={'show':False})
     templateNode.GetDisplayNode().AutoWindowLevelOff()
     templateNode.GetDisplayNode().SetWindow(100)
     templateNode.GetDisplayNode().SetLevel(70)
     slicer.util.setSliceViewerLayers(foreground=templateNode.GetID())
 
-
-  def updateStructures(self,value):
-    modelsInScene = slicer.mrmlScene.GetNodesByClass('vtkMRMLModelNode')
-    for i in range(modelsInScene.GetNumberOfItems()):
-      modelNode = modelsInScene.GetItemAsObject(i)
-      try:
-        modelNode.GetDisplayNode().SetSliceIntersectionOpacity(value)
-      except:
-        pass
-
-  def updateTemplateView(self,value):
-    slicer.util.setSliceViewerLayers(foregroundOpacity=value)
 
   def updateMRMLFromArgs(self): 
     args = sys.argv
@@ -494,13 +456,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.historyList.clear()
     self.historyList.addItems(['Component ' + str(i) for i in range(warpNumberOfComponents + int(self.redoButton.enabled))])
     self.historyList.setCurrentRow(warpNumberOfComponents - 1)
-    # structure outline - temaplate
-    self.updateStructures(float(self.parameterNode.GetParameter("structureOutline")))
-    self.templateSlider.value = float(self.parameterNode.GetParameter("templateOpacity"))
     # subject text
     subjectN = int(self.parameterNode.GetParameter("subjectN"))
     subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
     self.saveButton.text = 'Save and Exit' if subjectN == len(subjectPaths)-1 else 'Save and Next'
+    # modality
+    self.modalityComboBox.setCurrentText(self.parameterNode.GetParameter("modality").upper())
 
 
   def updateMRMLFromGUI(self):
@@ -508,7 +469,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.parameterNode.SetParameter("blurr", str(self.blurrSlider.value) )
     self.parameterNode.SetParameter("hardness", str(self.hardnessSlider.value) )
     self.parameterNode.SetParameter("warpID", self.warpSelector.currentNode().GetID() if self.warpSelector.currentNode() else "")
-    self.parameterNode.SetParameter("templateOpacity", str(self.templateSlider.value))
 
   def historyItemChanged(self):
     warpID = self.parameterNode.GetParameter("warpID")
@@ -525,13 +485,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def onSceneNodeAdded(self,caller=None,event=None):
     sceneItem = self.dataTreeWidget.model().item(0,0)
     self.iterItems(sceneItem)
-
-  def onAtlasChanged(self, index, atlasName = None):
-    if not atlasName:
-      atlasName = self.atlasesComboBox.itemText(index)
-    if index != 0:
-      atlasPath = os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName)
-      folderID = ImportAtlas.ImportAtlasLogic().run(atlasPath)
 
 
   def onDataTreeDoubleClicked(self, i):
@@ -656,8 +609,6 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("MNIAtlasPath", ".")
     node.SetParameter("antsApplyTransformsPath", "")
     node.SetParameter("warpModified", "1")
-    node.SetParameter("structureOutline", "1")
-    node.SetParameter("templateOpacity", "0")
     return node
 
   def removeRedoTransform(self):
@@ -686,11 +637,13 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       affineNode.Inverse()
       affineNode.CreateDefaultDisplayNodes()
       parameterNode.SetParameter("affineTransformID", affineNode.GetID())
+
     if anat: # load image
-      imageNode = ImportSubject.ImportSubjectLogic().importFile(subjectPath, 'anat_' + parameterNode.GetParameter("modality") + '.nii')
-      if not imageNode:
-        imageNode = ImportSubject.ImportSubjectLogic().importFile(subjectPath, 'anat_t1.nii')
-      return imageNode
+      for m in [parameterNode.GetParameter("modality"), "t1", "t2"]: # try modalities to load
+        imageNode = ImportSubject.ImportSubjectLogic().importFile(subjectPath, 'anat_' + m + '.nii')
+        if imageNode:
+          parameterNode.SetParameter("modality", m)
+          return imageNode
 
 
   def initialize(self, imageNode):

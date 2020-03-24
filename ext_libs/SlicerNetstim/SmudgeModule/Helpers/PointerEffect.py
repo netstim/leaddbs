@@ -9,30 +9,42 @@ class PointerEffectTool(Effect.EffectTool):
 
   def __init__(self, sliceWidget):
     Effect.EffectTool.__init__(self, sliceWidget)
-    self.previousOutlineOpacity = None
-    self.previousTemplateOpacity = None
+    self.previousVisibleIDs = vtk.vtkIdList()
+    self.previousBackgroundNodeID = None
 
   def processEvent(self, caller=None, event=None):
 
     if event == "KeyPressEvent":
       key = self.interactor.GetKeySym()
       if key.lower() == 's':
-        if self.previousOutlineOpacity is None:
-          self.previousOutlineOpacity = float(self.parameterNode.GetParameter("structureOutline"))
-          self.parameterNode.SetParameter("structureOutline", "0")
+        if not self.previousVisibleIDs.GetNumberOfIds():
+          # get all ids from subject hierarchy node
+          shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+          shNode.GetItemChildren(shNode.GetSceneItemID(), self.previousVisibleIDs, True)
+          ids = [self.previousVisibleIDs.GetId(i) for i in range(self.previousVisibleIDs.GetNumberOfIds())]
+          for id in ids:
+            data = shNode.GetItemDataNode(id)
+            if isinstance(data, slicer.vtkMRMLModelNode) and data.GetDisplayNode() and data.GetDisplayNode().GetVisibility():
+              data.GetDisplayNode().SetVisibility(0) # hide visible models
+            else:
+              self.previousVisibleIDs.DeleteId(id) # remove non visible models IDs
       elif key.lower() == 't':
-        if self.previousTemplateOpacity is None:
-          self.previousTemplateOpacity = float(self.parameterNode.GetParameter("templateOpacity"))
-          self.parameterNode.SetParameter("templateOpacity", "1")   
+        if self.previousBackgroundNodeID is None:
+          compositeNode = slicer.app.layoutManager().sliceWidget('Red').sliceLogic().GetSliceCompositeNode()
+          self.previousBackgroundNodeID = compositeNode.GetBackgroundVolumeID()
+          self.previousForegroundOpacity = compositeNode.GetForegroundOpacity()
+          slicer.util.setSliceViewerLayers(background = None)
 
     elif event == "KeyReleaseEvent":
       key = self.interactor.GetKeySym()
       if key.lower() == 's':
-        self.parameterNode.SetParameter("structureOutline", str(self.previousOutlineOpacity))
-        self.previousOutlineOpacity = None
+        shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+        for i in range(self.previousVisibleIDs.GetNumberOfIds()):
+          shNode.GetItemDataNode(self.previousVisibleIDs.GetId(i)).GetDisplayNode().SetVisibility(1)
+        self.previousVisibleIDs.Reset()
       if key.lower() == 't':
-        self.parameterNode.SetParameter("templateOpacity", str(self.previousTemplateOpacity))
-        self.previousTemplateOpacity = None
+        slicer.util.setSliceViewerLayers(background = self.previousBackgroundNodeID, foregroundOpacity=self.previousForegroundOpacity)
+        self.previousBackgroundNodeID = None
 
 
 class CircleEffectTool(PointerEffectTool, VTKObservationMixin):

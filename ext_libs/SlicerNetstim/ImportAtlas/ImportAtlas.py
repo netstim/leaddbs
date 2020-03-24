@@ -198,18 +198,26 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
     modelNode.GetDisplayNode().SetVisibility(0) # hide by default
     return modelNode
 
+  def createFolderDisplayNode(self, folderID, color=[0.66,0.66,0.66]):
+    # from qSlicerSubjectHierarchyFolderPlugin.cxx
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    displayNode = slicer.vtkMRMLFolderDisplayNode()
+    displayNode.SetName(shNode.GetItemName(folderID))
+    displayNode.SetHideFromEditors(0)
+    displayNode.SetAttribute('SubjectHierarchy.Folder', "1")
+    displayNode.SetColor(*color)
+    shNode.GetScene().AddNode(displayNode)
+    shNode.SetItemDataNode(folderID, displayNode)
+    shNode.ItemModified(folderID)
+
   def run(self, atlasPath):
     """
     Run the actual algorithm
     """
   
-    if slicer.app.majorVersion >= 4 and slicer.app.minorVersion > 10:
-      shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-      folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), os.path.split(atlasPath)[-1])
-    else:
-      modelHierarchyNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelHierarchyNode')
-      modelHierarchyNode.SetName(os.path.split(atlasPath)[-1])
-    
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), os.path.split(atlasPath)[-1])
+    self.createFolderDisplayNode(folderID)
   
     with h5py.File(os.path.join(atlasPath,'atlas_index.mat'),'r') as atlasFile:
       # get .mat data
@@ -228,34 +236,38 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
         showIndex = np.array(range(len(names)))
 
       for index in range(len(names)): # for each structure     
+        
+        structureName = os.path.splitext(os.path.splitext(names[index][0])[0])[0]
+        structureColor = colormap[int(colors[index])-1]
 
         if types[index][0] in [3,4]:
-          endName = ['_rh', '_lh']
+          subName = ['rh', 'lh']
+          subFolderID = shNode.CreateFolderItem(folderID, structureName)
+          self.createFolderDisplayNode(subFolderID, structureColor)
+          shNode.SetItemDisplayVisibility(subFolderID, index in showIndex)
+          shNode.SetItemExpanded(subFolderID, 0)
         else:
-          endName = ['']
+          subName = [structureName]
+          subFolderID = folderID
 
-        for sideIndex,sideName in zip(range(len(endName)),endName):
+        for sideIndex,sideName in zip(range(len(subName)),subName):
           # get faces and vertices data
           ref = fv[sideIndex][index]
           b = atlasFile[ref]
           vertices = b['vertices'][()].transpose()
           faces = b['faces'][()].transpose()
           # create polydata
-          structurePolyData = self.createPolyData(vertices, faces)
-          structureName = os.path.splitext(os.path.splitext(names[index][0])[0])[0] + sideName
-          structureColor = colormap[int(colors[index])-1]
+          structurePolyData = self.createPolyData(vertices, faces)          
           # add model node
-          modelNode = self.createModel(structurePolyData, structureName, structureColor)
-          if index in showIndex:
-            modelNode.GetDisplayNode().SetVisibility(1)
-          # add as child to parent
-          if slicer.app.majorVersion >= 4 and slicer.app.minorVersion > 10:
-            shNode.SetItemParent(shNode.GetItemChildWithName(shNode.GetSceneItemID(), structureName), folderID)
+          modelNode = self.createModel(structurePolyData, sideName, structureColor)
+          if subFolderID == folderID:
+            modelNode.GetDisplayNode().SetVisibility(index in showIndex)
           else:
-            mh = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelHierarchyNode')
-            mh.SetModelNodeID(modelNode.GetID())
-            mh.SetParentNodeID(modelHierarchyNode.GetID())    
-            mh.SetHideFromEditors(1)
+            modelNode.GetDisplayNode().SetVisibility(1) # always visible - the parent folder is invisible
+          # add as child to parent
+          shNode.SetItemParent(shNode.GetItemChildWithName(shNode.GetSceneItemID(), sideName), subFolderID)
+        
+
   
     return folderID
 
