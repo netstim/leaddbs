@@ -8,12 +8,13 @@ function varargout=ea_resolve_elspec(varargin)
 
 varargout{1}={'Medtronic 3389', 'Medtronic 3387', 'Medtronic 3391', ...
     'Boston Scientific Vercise', 'Boston Scientific Vercise Directed', ...
-    'Abbott St. Jude Medical Infinity ActiveTip (6146-6149)','Abbott St. Jude Medical Infinity ActiveTip (6142-6145)',...
-    'Abbott St. Jude Medical Infinity Directed 6172 (short)','Abbott St. Jude Medical Infinity Directed 6173 (long)', ...
-    'PINS Medical L301', 'PINS Medical L302', 'PINS Medical L303', ...
+    'St. Jude ActiveTip (6146-6149)','St. Jude ActiveTip (6142-6145)',...
+    'St. Jude Directed 6172 (short)','St. Jude Directed 6173 (long)', .
+    'PINS Medical L301', 'PINS Medical L302', 'PINS Medical L303', .....
     'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy', ...
     'SDE-08 S8', 'SDE-08 S10', 'SDE-08 S12', 'SDE-08 S16', ...
-    '2069-EPC-05C-35', '2069-EPC-15C-35', 'NeuroPace DL-344-3.5'};
+    '2069-EPC-05C-35', '2069-EPC-15C-35', 'NeuroPace DL-344-3.5', ...
+    'DIXI D08-18AM', 'AdTech SD10R-SP05X Choi'};
 varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
     'boston_vercise', 'boston_vercise_directed', ...
     'stjude_activetip_2mm','stjude_activetip_3mm', ...
@@ -21,7 +22,8 @@ varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
     'pins_l301', 'pins_l302', 'pins_l303', ...
     'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy',...
     'sde_08_s8', 'sde_08_s10', 'sde_08_s12', 'sde_08_s16', ...
-    'epc_05c', 'epc_15c', 'neuropace_dl_344_35'};
+    'epc_05c', 'epc_15c', 'neuropace_dl_344_35', ...
+    'dixi_d08_18am', 'adtech_sd10r_sp05x_choi'};
 
 if ~nargin
     return
@@ -118,7 +120,7 @@ try
             elspec.tip_color=0.3;
             elspec.tip_length=1.5;
             elspec.contact_spacing=0.5;
-            elspec.numel=8; % correct here since the directional leads will be inflated lateron.
+            elspec.numel=8;
             elspec.tipiscontact=1;
             elspec.contactnames={'K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)','K16 (R)','K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)'};
             elspec.isdirected=1;
@@ -126,7 +128,7 @@ try
             elspec.etagenames{2}={'K1 (L)','K2-4 (L)','K5-7 (L)','K8 (L)'};
             elspec.etageidx={1,2:4,5:7,8};
             elspec.forstimulation=1;
-        case 'Abbott St. Jude Medical Infinity ActiveTip (6146-6149)'
+        case 'St. Jude ActiveTip (6146-6149)'
             elspec.matfname='stjude_activetip_2mm';
             elspec.lead_diameter=1.27;
             elspec.lead_color=0.7;
@@ -145,7 +147,7 @@ try
             elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
             elspec.etageidx=num2cell(1:elspec.numel);
             elspec.forstimulation=1;
-        case 'Abbott St. Jude Medical Infinity ActiveTip (6142-6145)'
+        case 'St. Jude ActiveTip (6142-6145)'
             elspec.matfname='stjude_activetip_3mm';
             elspec.lead_diameter=1.27;
             elspec.lead_color=0.7;
@@ -164,7 +166,7 @@ try
             elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
             elspec.etageidx=num2cell(1:elspec.numel);
             elspec.forstimulation=1;
-        case 'Abbott St. Jude Medical Infinity Directed 6172 (short)'
+        case 'St. Jude Directed 6172 (short)'
             elspec.matfname='stjude_directed_05';
             elspec.lead_diameter=1.27;
             elspec.lead_color=0.7;
@@ -183,7 +185,7 @@ try
             elspec.etagenames{2}={'K1 (L)','K2 (L)','K3 (L)','K4 (L)'};
             elspec.etageidx={1,2:4,5:7,8};
             elspec.forstimulation=1;
-        case 'Abbott St. Jude Medical Infinity Directed 6173 (long)'
+        case 'St. Jude Directed 6173 (long)'
             elspec.matfname='stjude_directed_15';
             elspec.lead_diameter=1.27;
             elspec.lead_color=0.7;
@@ -478,12 +480,43 @@ try
             elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
             elspec.etageidx=num2cell(1:elspec.numel);
             elspec.forstimulation=0;
+        case 'DIXI D08-18AM'
+            elspec.matfname='dixi_d08_18am';
+            elspec.lead_diameter=0.8;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2;
+            elspec.contact_diameter=0.8;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=0.8;
+            elspec.tip_color=0.3;
+            elspec.tip_length=2;
+            elspec.contact_spacing=1.5;
+            elspec.numel=18;
+            elspec.tipiscontact=1;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9','K10','K11','K12','K13','K14','K15','K16','K17',...
+                                 'K18','K19','K20','K21','K22','K23','K24','K25','K26','K27','K28','K29','K30','K31','K32','K33'};
+        case 'AdTech SD10R-SP05X Choi'
+            elspec.matfname='adtech_sd10r_sp05x_choi';
+            elspec.lead_diameter=1.1;
+            elspec.lead_color=0.7;
+            elspec.contact_length=2.4;
+            elspec.contact_diameter=1.1;
+            elspec.contact_color=0.3;
+            elspec.tip_diameter=1.1;
+            elspec.tip_color=0.7;
+            elspec.tip_length=1;
+            elspec.contact_spacing=2.4;
+            elspec.numel=10;
+            elspec.tipiscontact=0;
+            elspec.contactnames={'K0','K1','K2','K3','K4','K5','K6','K7','K8','K9',...
+                                 'K10','K11','K12','K13','K14','K15','K16','K17','K18','K19'};
+
     end
 catch
     warning('No electrode model specified. Using Medtronic 3389.');
     topts.elmodel='Medtronic 3389';
     topts=ea_resolve_elspec(topts);
-    elspec=topts.elspec;    
+    elspec=topts.elspec;
 end
 
 if ~isfield(elspec,'eldist')
