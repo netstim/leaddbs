@@ -495,6 +495,11 @@ try
             elspec.tipiscontact=1;
             elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)','K16 (R)','K17 (R)',...
                 'K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)','K25 (L)','K26 (L)','K27 (L)','K28 (L)','K29 (L)','K30 (L)','K31 (L)','K32 (L)','K33 (L)'};
+            elspec.isdirected=0;
+            elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+            elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+            elspec.etageidx=num2cell(1:elspec.numel);
+            elspec.forstimulation=0;
         case 'AdTech SD10R-SP05X Choi'
             elspec.matfname='adtech_sd10r_sp05x_choi';
             elspec.lead_diameter=1.1;
@@ -510,6 +515,11 @@ try
             elspec.tipiscontact=0;
             elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
                 'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
+            elspec.isdirected=0;
+            elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+            elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+            elspec.etageidx=num2cell(1:elspec.numel);
+            elspec.forstimulation=0;
 
     end
 catch
