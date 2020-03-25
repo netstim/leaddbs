@@ -198,7 +198,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                             M.elstruct(pt).elmodel='Medtronic 3389'; % use default for older reconstructions that did not store elmodel.
                         end
                     else
-                        elmodels = [{'Patient specified'},ea_resolve_elspec];
+                        elmodels = [{'Patient specified'};ea_resolve_elspec];
                         M.elstruct(pt).elmodel = elmodels{M.ui.elmodelselect};
                     end
 

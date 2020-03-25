@@ -66,7 +66,7 @@ leadfigure = varargin{1};
 setappdata(handles.lg_3dsetting, 'leadfigure', leadfigure);
 
 M = getappdata(leadfigure, 'M');
-set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
+set(handles.elmodelselect,'String',[{'Patient specified'};ea_resolve_elspec]);
 try
 	set(handles.elmodelselect, 'Value', M.ui.elmodelselect);
 catch
@@ -182,7 +182,7 @@ if eventdata.Source.Value ~= M.ui.elmodelselect
                             M.elstruct(pt).elmodel = 'Medtronic 3389';
                         end
                     else
-                        elmodels = [{'Patient specified'},ea_resolve_elspec];
+                        elmodels = [{'Patient specified'};ea_resolve_elspec];
                         M.elstruct(pt).elmodel = elmodels{M.ui.elmodelselect};
                     end
 

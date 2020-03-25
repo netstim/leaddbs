@@ -535,7 +535,7 @@ for pt=1:length(ptidx)
     M.elstruct(ptidx(pt)).pt=ptidx(pt);
 end
 
-elmodels = [{'Patient specified'},ea_resolve_elspec];
+elmodels = [{'Patient specified'};ea_resolve_elspec];
 whichelmodel = elmodels{M.ui.elmodelselect};
 % account for electrode model specified in lead group
 if ~strcmp(whichelmodel,'Patient specified')
