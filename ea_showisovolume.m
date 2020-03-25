@@ -68,12 +68,18 @@ for side=1:length(options.sides)
 
     if options.d3.isovscloud==1 % show interpolated point mesh
         ipcnt=1;
+
+        C = VI{side};
+        C = (C-min(C(:)))./(max(C(:))-min(C(:))).*(length(cmap)-1);
+        C(isnan(C)) = 0;
+        C = C+1;
+
         for xx=1:10:size(VI{side},1)
             for yy=1:10:size(VI{side},2)
                 for zz=1:10:size(VI{side},3)
                     if ~isnan(VI{side}(xx,yy,zz))
-                        usefacecolor=VI{side}(xx,yy,zz)*((length(cmap)+miniso(options.d3.isomatrix))/(maxiso(options.d3.isomatrix)+miniso(options.d3.isomatrix)));
-                        usefacecolor=ind2rgb(round(usefacecolor),cmap);
+                        usefacecolor = C(xx,yy,zz);
+                        usefacecolor = ind2rgb(round(usefacecolor),cmap);
                         isopatch(side,ipcnt)=plot3(XI(xx,yy,zz),YI(xx,yy,zz),ZI(xx,yy,zz),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',usefacecolor,'Color',usefacecolor);
                         ipcnt=ipcnt+1;
                     end
