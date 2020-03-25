@@ -82,18 +82,19 @@ for side=1:length(options.sides)
         end
     elseif options.d3.isovscloud==2 % show isovolume
         VI{side}=smooth3(VI{side},'gaussian',[15 15 15]);
-        %keyboard
-        thresh=ea_nanmean(VI{side}(:))-2*ea_nanstd(VI{side}(:));
-        thresh=nanmin(VI{side}(:));
+
         Vol=VI{side};
         Vol(isnan(Vol))=0;
         fv{side}=isosurface(XI,YI,ZI,Vol,0); % could use thresh instead of 0
         try fv{side}=ea_smoothpatch(fv{side},1,100); end
+
         C = VI{side};
-        C(C<thresh)=nan;
-        C = (C-ea_nanmin(C(:)))./(ea_nanmax(C(:))-ea_nanmin(C(:))).*(length(cmap)-1);
-        C(isnan(C))=0;
-        C=C+1;
+        % thresh=ea_nanmean(VI{side}(:))-2*ea_nanstd(VI{side}(:));
+        % thresh=nanmin(VI{side}(:));
+        % C(C<thresh)=nan;
+        C = (C-min(C(:)))./(max(C(:))-min(C(:))).*(length(cmap)-1);
+        C(isnan(C)) = 0;
+        C = C+1;
 
         nc=isocolors(XI,YI,ZI,C,fv{side}.vertices);
         nc=squeeze(ind2rgb(round(nc),cmap));
@@ -119,7 +120,6 @@ for side=1:length(options.sides)
         nii.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',lr,'.nii'];
         ea_write_nii(nii);
         patchbutton(side)=uitoggletool(isobar,'CData',ea_get_icn('isovolume'),'TooltipString',options.d3.isomatrix_name,'OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
-
     end
 end
 
