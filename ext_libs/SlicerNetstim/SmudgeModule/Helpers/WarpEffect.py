@@ -223,48 +223,37 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     slicer.mrmlScene.RemoveNode(ruler)
     return outModel
 
-  def getModelCenter(self, modelNode):
-    pd = modelNode.GetPolyData()
-    center = vtk.vtkCenterOfMass()
-    center.SetInputData(pd)
-    center.Update()
-    return np.array(center.GetCenter())
-
-  def scaleBoundaryPoints(self, bpoints, modelCenter, scaleAmount):
-    # expand boundry points
-    outPoints = []
-    totalScale = scaleAmount * 2 * float(self.parameterNode.GetParameter("blurr")) / 100.0 # scale moduate by blurr
-    # aux angle node
-    angleNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsAngleNode')
-    for i in range(3):
-      angleNode.AddControlPoint(vtk.vtkVector3d(), 'ControlPoint' + str(i))
-    angleNode.SetNthControlPointPositionFromArray(1, modelCenter)
-    for bp in bpoints: # for each boundry point
-      angleNode.SetNthControlPointPositionFromArray(0, bp)
-      for direction in [[1,0,0],[0,1,0],[0,0,1]]: # for each direction (R A S)
-        angleNode.SetNthControlPointPositionFromArray(2, modelCenter+np.array(direction))
-        bp += np.array(direction) * (np.cos(angleNode.GetNthMeasurement(0).GetValue() / 180.0 * np.pi) * totalScale)
-      outPoints.append(bp)
-    slicer.mrmlScene.RemoveNode(angleNode)
-    return outPoints
-
-  def getMaxDistanceBetweenSetsOfPoints(self, sourcePoints, targetPoints):
-    # get max distance between source and target pair of points
-    maxDistance = 0
-    for i in range(sourcePoints.GetNumberOfPoints()):
-      localDistance = np.linalg.norm( np.array(sourcePoints.GetPoint(i)) - np.array(targetPoints.GetPoint(i)) )
-      maxDistance = localDistance if localDistance > maxDistance else maxDistance
-    return maxDistance
 
   def createTransform(self, sourcePoints, targetPoints, modelNode):
-    # get model bounds
-    b = [0]*6
-    modelNode.GetBounds(b)
-    bpoints = [[b[i],b[j],b[k]] for i in [0,1] for j in [2,3] for k in [4,5]]
-    modelCenter = self.getModelCenter(modelNode)
-    maxDistance = self.getMaxDistanceBetweenSetsOfPoints(sourcePoints, targetPoints)
-    bpoints = self.scaleBoundaryPoints(bpoints, modelCenter, maxDistance)
-    # add model and mni bounds to source and target points (so as to constrain the deformation)
+
+    normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']])
+    radius = float(self.parameterNode.GetParameter("radius"))
+    bpoints = []
+    for i in range(sourcePoints.GetNumberOfPoints()):
+      # get normal direction of curve in points
+      sourcePoint = np.array(sourcePoints.GetPoint(i)) 
+      direction = np.array(targetPoints.GetPoint(i)) - sourcePoint
+      direction = direction / np.linalg.norm(direction)
+      # add control point a radius away from the point in normal direction
+      bpoints.append(sourcePoint + direction * radius)
+      bpoints.append(sourcePoint - direction * radius)
+      # add control point normal to the plane
+      bpoints.append(sourcePoint + normal * radius)
+      bpoints.append(sourcePoint - normal * radius)
+      # add control points a radius away from first and last point of line
+      if i == 0 or i == sourcePoints.GetNumberOfPoints() - 1:
+        direction = sourcePoint - np.array(sourcePoints.GetPoint(max(1,i-1)))
+        direction = direction / np.linalg.norm(direction)
+        bpoints.append(sourcePoint + direction * radius)
+
+    # get indexes of control points that are a radius away from all points in line
+    for i in range(sourcePoints.GetNumberOfPoints()):
+      sourcePoint = np.array(sourcePoints.GetPoint(i)) 
+      keepIndex = [j for j in range(len(bpoints)) if np.linalg.norm(bpoints[j] - sourcePoint) > (radius - 0.5)]
+    
+    bpoints = [bpoints[i] for i in np.unique(keepIndex)] # only keep these points
+    
+    # addmni bounds to source and target points (so as to constrain the deformation)
     for bp in (bpoints + self.MNIBounds):
       sourcePoints.InsertNextPoint(*bp)
       targetPoints.InsertNextPoint(*bp)

@@ -556,7 +556,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def onSnapButton(self, buttonDown):
     if buttonDown:
-      self.blurrSlider.setEnabled(True)
+      self.radiusSlider.setEnabled(True)
       SmudgeModuleLogic().effectOn('Snap')
       
   def exit(self):
