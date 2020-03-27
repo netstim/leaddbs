@@ -229,7 +229,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']])
     radius = float(self.parameterNode.GetParameter("radius"))
     bpoints = []
-    for i in range(sourcePoints.GetNumberOfPoints()):
+    for i in [0, int(sourcePoints.GetNumberOfPoints()/2), sourcePoints.GetNumberOfPoints()-1]:
       # get normal direction of curve in points
       sourcePoint = np.array(sourcePoints.GetPoint(i)) 
       direction = np.array(targetPoints.GetPoint(i)) - sourcePoint
