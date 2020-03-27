@@ -102,7 +102,7 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
         sphereResult = (xx-r) ** 2 + (yy-r) ** 2 + (zz-r) ** 2
         sphereResult[r][r][r] = 1 # replace 0 by 1
         sphereLarge = sphereResult <= (r**2+1) # sphere that the mouse shows
-        sphereSmall = sphereResult <= ((r * (1 - float(self.parameterNode.GetParameter("blurr")) / 100.0)) **2 + 1 ) # Blurr amount
+        sphereSmall = sphereResult <= ((r * (1 - float(self.parameterNode.GetParameter("hardness")) / 100.0)) **2 + 1 ) # hardness amount
         sphereResult = 1.0 / sphereResult # invert
         # get value in the edge of the small sphere
         i1,i2,i3 = np.nonzero(sphereSmall)
@@ -114,8 +114,8 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
         # set range to [0-1]
         newMinValue = sphereResult.min()
         sphereResult = (sphereResult - newMinValue) / (newMaxValue - newMinValue)
-        # set hardness
-        sphereResult = sphereResult * float(self.parameterNode.GetParameter("hardness")) / 100.0
+        # set force
+        sphereResult = sphereResult * float(self.parameterNode.GetParameter("force")) / 100.0
         # get current IJK coord
         xy = self.interactor.GetEventPosition()
         xyToRAS = self.sliceLogic.GetSliceNode().GetXYToRAS()

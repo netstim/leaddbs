@@ -160,17 +160,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     toolsFormLayout.addRow("Radius (mm):", self.radiusSlider)
 
     #
-    # blurr
-    #
-    self.blurrSlider = ctk.ctkSliderWidget()
-    self.blurrSlider.singleStep = 1
-    self.blurrSlider.minimum = 0
-    self.blurrSlider.maximum = 100
-    self.blurrSlider.decimals = 0
-    self.blurrSlider.value = float(self.parameterNode.GetParameter("blurr"))
-    toolsFormLayout.addRow("Blurr (%):", self.blurrSlider)
-
-    #
     # hardness
     #
     self.hardnessSlider = ctk.ctkSliderWidget()
@@ -180,6 +169,17 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.hardnessSlider.decimals = 0
     self.hardnessSlider.value = float(self.parameterNode.GetParameter("hardness"))
     toolsFormLayout.addRow("Hardness (%):", self.hardnessSlider)
+
+    #
+    # force
+    #
+    self.forceSlider = ctk.ctkSliderWidget()
+    self.forceSlider.singleStep = 1
+    self.forceSlider.minimum = 0
+    self.forceSlider.maximum = 100
+    self.forceSlider.decimals = 0
+    self.forceSlider.value = float(self.parameterNode.GetParameter("force"))
+    toolsFormLayout.addRow("Force (%):", self.forceSlider)
 
 
     #
@@ -298,8 +298,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.snapButton.connect('clicked(bool)', self.onSnapButton)
     
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
-    self.blurrSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.forceSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.flattenButton.connect("clicked(bool)", self.onFlattenButton)
     self.saveButton.connect("clicked(bool)", self.onSaveButton)
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
@@ -433,13 +433,13 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       return False
 
   def updateGuiFromMRML(self,caller=None,event=None):
-    # radius - blur - hardness
+    # radius - blur - force
     radius = float(self.parameterNode.GetParameter("radius"))
     self.radiusSlider.setValue( radius )
     if radius < self.radiusSlider.minimum or radius > self.radiusSlider.maximum:
       self.updateMRMLFromGUI()
-    self.blurrSlider.setValue(float(self.parameterNode.GetParameter("blurr")))
     self.hardnessSlider.setValue(float(self.parameterNode.GetParameter("hardness")))
+    self.forceSlider.setValue(float(self.parameterNode.GetParameter("force")))
     # get warp node and set selector and buttons
     warpID = self.parameterNode.GetParameter("warpID")
     warpNode = slicer.util.getNode(warpID) if warpID != "" else None
@@ -466,8 +466,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("radius", str(self.radiusSlider.value) )
-    self.parameterNode.SetParameter("blurr", str(self.blurrSlider.value) )
     self.parameterNode.SetParameter("hardness", str(self.hardnessSlider.value) )
+    self.parameterNode.SetParameter("force", str(self.forceSlider.value) )
     self.parameterNode.SetParameter("warpID", self.warpSelector.currentNode().GetID() if self.warpSelector.currentNode() else "")
 
   def historyItemChanged(self):
@@ -537,8 +537,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def toogleTools(self):
     SmudgeModuleLogic().effectOff() # deactivate previous effect (if any)
     self.radiusSlider.setEnabled(False)
-    self.blurrSlider.setEnabled(False)
     self.hardnessSlider.setEnabled(False)
+    self.forceSlider.setEnabled(False)
     interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
     self.removeObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) # so that changing mode doesnt affect
     if not self.noneButton.checked:
@@ -550,8 +550,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def onSmudgeButton(self, buttonDown):
     if buttonDown:      
       self.radiusSlider.setEnabled(True)
-      self.blurrSlider.setEnabled(True)
       self.hardnessSlider.setEnabled(True)
+      self.forceSlider.setEnabled(True)
       SmudgeModuleLogic().effectOn('Smudge')
 
   def onSnapButton(self, buttonDown):
@@ -600,8 +600,8 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("imageID", "")
     node.SetParameter("templateID", "")
     node.SetParameter("radius", "25")
-    node.SetParameter("blurr", "60")
-    node.SetParameter("hardness", "100")
+    node.SetParameter("hardness", "60")
+    node.SetParameter("force", "100")
     node.SetParameter("modality", "t1")
     node.SetParameter("subjectPath", "")
     node.SetParameter("subjectN", "0")
