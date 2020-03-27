@@ -56,33 +56,17 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
     self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGlyph)
     
     self.rasToXY = vtk.vtkMatrix4x4()
-
-    self.brush1 = vtk.vtkPolyData()
-    self.brush2 = vtk.vtkPolyData()
-
+    self.brush = vtk.vtkPolyData()
     self.updateGlyph([],[])
+    self.mapper = vtk.vtkPolyDataMapper2D()
+    self.mapper.SetInputData(self.brush)
+    self.actor = vtk.vtkActor2D()
+    self.actor.GetProperty().SetColor(.7, .7, 0)
+    self.actor.SetMapper(self.mapper)
+    self.actor.VisibilityOff()
+    self.actors.append(self.actor) 
+    self.renderer.AddActor2D(self.actor)
 
-    self.mapper1 = vtk.vtkPolyDataMapper2D()
-    self.mapper1.SetInputData(self.brush1)
-    self.mapper2 = vtk.vtkPolyDataMapper2D()
-    self.mapper2.SetInputData(self.brush2)
-
-    self.actor1 = vtk.vtkActor2D()
-    self.actor1.GetProperty().SetColor(.5, .5, 0)
-    self.actor1.SetMapper(self.mapper1)
-    self.actor1.VisibilityOff()
-    self.actor2 = vtk.vtkActor2D()
-    self.actor2.GetProperty().SetColor(.7, .7, 0)
-    self.actor2.SetMapper(self.mapper2)
-    self.actor2.VisibilityOff()
-
-    self.actors.append(self.actor1) 
-    self.actors.append(self.actor2) 
-
-    self.renderer.AddActor2D(self.actor1)   
-    self.renderer.AddActor2D(self.actor2)   
-
-    
 
   def createGlyph(self, polyData, radius):
     """
@@ -148,16 +132,13 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
   def processEvent(self, caller=None, event=None):
     if event == 'MouseMoveEvent':
       xy = self.interactor.GetEventPosition()
-      self.actor1.SetPosition(xy)
-      self.actor2.SetPosition(xy)
+      self.actor.SetPosition(xy)
       self.sliceView.scheduleRender()
     elif event == "EnterEvent":
       self.updateGlyph([],[]) # update in case radius changed from slider
-      self.actor1.VisibilityOn()
-      self.actor2.VisibilityOn()
+      self.actor.VisibilityOn()
     elif event == "LeaveEvent":
-      self.actor1.VisibilityOff()
-      self.actor2.VisibilityOff()
+      self.actor.VisibilityOff()
     elif event == 'LeftButtonPressEvent':
       self.cursorOff()
     elif event == 'LeftButtonReleaseEvent':
@@ -180,8 +161,7 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
     
   def updateGlyph(self, caller, event):
     r = float(self.parameterNode.GetParameter("radius"))
-    self.createGlyph(self.brush1, r)
-    self.createGlyph(self.brush2, r * (1-float(self.parameterNode.GetParameter("blurr")) / 100.0))
+    self.createGlyph(self.brush, r)
 
   def cleanup(self):
     super(CircleEffectTool,self).cleanup()
