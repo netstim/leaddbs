@@ -64,6 +64,9 @@ elseif exist([directory,'lanat1Warp.nii.gz'],'file')
         ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
 end
 
+cmd = [cmd, ' -v 1'];
+icmd = [icmd, ' -v 1'];
+
 if exist('cmd','var')
     if ~ispc
         system(['bash -c "', cmd, '"']);
