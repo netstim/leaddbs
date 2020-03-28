@@ -28,7 +28,7 @@ end
 if nargin < 3
     outputName = ['corrFTR', suffix];
 else
-    outputName = strrep(outputName, '.mat', '');
+    outputName = strrep(outputName, '.trk', '');
 end
 
 fibcell = fibcell(selInd);
