@@ -1,4 +1,4 @@
-function outputformat=ea_conv_antswarps(directory,outputformat)
+function outputformat=ea_conv_antswarps(directory,outputformat,float)
 
 if ~exist('outputformat','var')
     % check which version is present:
@@ -62,6 +62,13 @@ elseif exist([directory,'lanat1Warp.nii.gz'],'file')
         ' -t ',ea_path_helper([directory,'lanat1InverseWarp.nii.gz']),...
         ' -t [',ea_path_helper([directory,'lanat0GenericAffine.mat']),',1]',...
         ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
+end
+
+if exist('float', 'var')
+    if ischar(float) && strcmp(float, 'float') || float
+        cmd = [cmd, ' --float'];
+        icmd = [icmd, ' --float'];
+    end
 end
 
 cmd = [cmd, ' -v 1'];
