@@ -86,12 +86,10 @@ if refinewarp
    ea_addrefinewarp(props.directory);
 end
 
-ea_conv_antswarps(props.directory);
-
+ea_conv_antswarps(props.directory, '.nii.gz', 'float');
 
 
 function ea_addrefinewarp(directory)
-
 
 outputformat='.nii.gz';
 

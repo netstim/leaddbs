@@ -265,4 +265,4 @@ if exist('tmaskdir', 'var')
     ea_delete(tmaskdir);
 end
 
-ea_conv_antswarps(directory);
+ea_conv_antswarps(directory, '.nii.gz', 'float');
