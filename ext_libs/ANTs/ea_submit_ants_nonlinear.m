@@ -39,10 +39,6 @@ if exist([props.outputbase,'Composite',ea_getantstransformext(directory)],'file'
     end
 end
 
-
-
-
-
 if exist(ea_niigz([props.directory,filesep,'mask_template.nii']),'file')
     fixedinit=ea_niigz([props.directory,filesep,'mask_template.nii']);
 else
@@ -55,17 +51,13 @@ else
     movinginit=props.moving;
 end
 
-
-
-
 if refinewarp
-     initreg=[' --write-composite-transform 0', ...
-                ' --initial-moving-transform ',ea_path_helper([props.outputbase,'Composite',ea_getantstransformext(directory)])];
+    initreg=[' --write-composite-transform 0', ...
+        ' --initial-moving-transform ',ea_path_helper([props.outputbase,'Composite',ea_getantstransformext(directory)])];
 else
     initreg=[' --write-composite-transform 1', ...
-    ' --initial-moving-transform [', fixedinit, ',', movinginit, ',0]'];
+        ' --initial-moving-transform [', fixedinit, ',', movinginit, ',0]'];
 end
-
 
 cmd = [props.ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
