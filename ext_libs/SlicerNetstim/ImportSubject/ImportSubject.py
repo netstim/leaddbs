@@ -3,7 +3,7 @@ import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 import logging
-
+import glob
 
 import sys
 from subprocess import call
@@ -69,19 +69,12 @@ class ImportSubjectWidget(ScriptedLoadableModuleWidget):
     imagesFormLayout = qt.QFormLayout(imagesCollapsibleButton)
 
     #
-    # check box select images
+    # select images list
     #
 
-    self.imageCheckboxes = []
-    parameterNode = ImportSubjectLogic().getParameterNode()
-    posibleImages = parameterNode.GetParameter("posibleImages").split(' ')
-
-    for posibleImage in posibleImages:
-      imageCheckbox = qt.QCheckBox(posibleImage)
-      imageCheckbox.checked = False
-      imageCheckbox.visible = False
-      imagesFormLayout.addRow(imageCheckbox)
-      self.imageCheckboxes.append(imageCheckbox)
+    self.imagesList = qt.QListWidget()
+    self.imagesList.setSelectionMode(qt.QAbstractItemView.ExtendedSelection)
+    imagesFormLayout.addRow(self.imagesList)
 
     #
     # Transforms Area
@@ -93,6 +86,7 @@ class ImportSubjectWidget(ScriptedLoadableModuleWidget):
     # Layout within the dummy collapsible button
     transformsFormLayout = qt.QFormLayout(transformsCollapsibleButton)
 
+
     # converts transforms
     self.updateTransformButton = qt.QPushButton('Update Transform')
     self.updateTransformButton.visible = False
@@ -102,29 +96,10 @@ class ImportSubjectWidget(ScriptedLoadableModuleWidget):
     # check box select transforms
     #
 
-    self.transformCheckboxes = []
-    posibleTransforms = parameterNode.GetParameter("posibleTransforms").split(' ')
-    for posibleTransform in posibleTransforms:
-      transformCheckbox = qt.QCheckBox(posibleTransform)
-      transformCheckbox.checked = False
-      transformCheckbox.visible = False
-      transformsFormLayout.addRow(transformCheckbox)
-      self.transformCheckboxes.append(transformCheckbox)     
+    self.transformsList = qt.QListWidget()
+    self.transformsList.setSelectionMode(qt.QAbstractItemView.ExtendedSelection)
+    imagesFormLayout.addRow(self.transformsList)
 
-
-    #
-    # Electrode reconstruction
-    #
-    reconstructionCollapsibleButton = ctk.ctkCollapsibleButton()
-    reconstructionCollapsibleButton.text = "Electrode Reconstruction"
-    self.layout.addWidget(reconstructionCollapsibleButton)
-
-    # Layout within the dummy collapsible button
-    reconstructionFormLayout = qt.QFormLayout(reconstructionCollapsibleButton)
-
-    self.recoMNICheckbox = qt.QCheckBox('MNI')
-    self.recoMNICheckbox.checked = False
-    self.recoMNICheckbox.visible = False
 
     #
     # Import Button
@@ -150,28 +125,26 @@ class ImportSubjectWidget(ScriptedLoadableModuleWidget):
 
   def onSubjectDirectoryChanged(self, directory):
     logic = ImportSubjectLogic()
-    availableFiles = logic.getAvailableFiles(directory, "Images") + logic.getAvailableFiles(directory, "Transforms")
-    for checkbox in self.imageCheckboxes + self.transformCheckboxes:
-      checkbox.checked = False
-      checkbox.visible = checkbox.text in availableFiles # enable checkbox if image is available
+    self.imagesList.clear()
+    self.imagesList.addItems(logic.getAvailableModalities(directory))
+    self.transformsList.clear()
+    self.transformsList.addItems(logic.getAvailableTransforms(directory))
     # check for old transform version
     self.updateTransformButton.visible = logic.ish5Transform(directory)
-    # reconstruction
-    self.recoMNICheckbox.visible = os.path.isfile(os.path.join(directory, 'ea_reconstruction.mat'))
     # change subject buton text to subject directory name
-    subjectName = os.path.basename(directory) if any([ch.visible for ch in self.imageCheckboxes + self.transformCheckboxes]) else "Select Lead-DBS directory"
+    subjectName = os.path.basename(directory) if self.imagesList.count else "Select Lead-DBS directory"
     self.subjectDirectoryButton.text = subjectName
 
 
   def onImportButton(self):
     logic = ImportSubjectLogic()
-    # import images and transforms
-    for checkbox in self.imageCheckboxes + self.transformCheckboxes:
-      if checkbox.visible and checkbox.checked:
-        logic.importFile(self.subjectDirectoryButton.directory, checkbox.text)
-    # import electrode reconstruction
-    if self.recoMNICheckbox.checked:
-      logic.importReconstruction(self.subjectDirectoryButton.directory)
+    for i in range(self.imagesList.count):
+      if self.imagesList.item(i).isSelected():
+        logic.importImage(self.subjectDirectoryButton.directory, self.imagesList.item(i).text())
+    for i in range(self.transformsList.count):
+      if self.transformsList.item(i).isSelected():
+        logic.importTransform(self.subjectDirectoryButton.directory, self.transformsList.item(i).text())
+
 
   def onUpdateTransformButton(self):
     logic = ImportSubjectLogic()
@@ -194,46 +167,42 @@ class ImportSubjectLogic(ScriptedLoadableModuleLogic):
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
 
-  def createParameterNode(self):
-    node = ScriptedLoadableModuleLogic.createParameterNode(self)
-    node.SetParameter("posibleImages", "anat_t1.nii anat_t2.nii anat_pd.nii postop_ct.nii glanat.nii")
-    node.SetParameter("posibleTransforms", "glanat0GenericAffine_backup.mat glanatComposite.nii.gz glanatInverseComposite.nii.gz")
-    return node 
-
   def ish5Transform(self, directory):
     return os.path.isfile(os.path.join(directory, 'glanatComposite.h5'))
 
-  def getAvailableFiles(self, directory, fileType):
-    """
-    Check for files available in directory. fileType is "Images" os "Transforms"
-    """
-    parameterNode = self.getParameterNode()
-    posibleFiles = parameterNode.GetParameter("posible" + fileType).split(' ')
-    availableFiles = [posibleFile for posibleFile in posibleFiles if os.path.isfile(os.path.join(directory, posibleFile))]
-    return availableFiles
+  def getAvailableModalities(self, directory):
+    modalities = []
+    listing = glob.glob(os.path.join(directory,'anat_*.nii'))
+    for fileName in listing:
+      fileName = os.path.split(fileName)[-1] # remove directory
+      fileName = os.path.splitext(fileName)[0] # remove extension
+      modality = fileName.split('_')[-1] # remove 'anat'
+      modalities.append(modality)
+    return modalities
 
-  def importFile(self, directory, fileName):
-    """
-    Import image or transform from directory and return node
-    """
-    if fileName in self.getAvailableFiles(directory, "Images"):
-      isImage = True
-    elif fileName in self.getAvailableFiles(directory, "Transforms"):
-      isImage = False
-    else:
-      return None
+  def getAvailableTransforms(self, directory):
+    posibleTransforms = ["glanat0GenericAffine_backup.mat", "glanatComposite.nii.gz", "glanatInverseComposite.nii.gz"]
+    availableTransforms = [pt for pt in posibleTransforms if os.path.isfile(os.path.join(directory,pt))]
+    return availableTransforms
 
-    filePath = os.path.join(directory, fileName)
 
-    if isImage:
-      node = slicer.util.loadVolume(filePath, properties={'show':False})
-    else:
-      node = slicer.util.loadTransform(filePath)
-    
-    subjectName = os.path.basename(directory)
+  def createNodeName(self, directory, fileName):
+    subjectName = os.path.split(os.path.abspath(directory))[-1]
     fileNameNoExt = os.path.splitext(os.path.splitext(fileName)[0])[0]    
-    node.SetName(subjectName + '_' + fileNameNoExt)
+    return subjectName + '_' + fileNameNoExt
 
+  def importImage(self, directory, fileName):
+    if os.path.splitext(fileName)[-1] != '.nii':
+      fileName = 'anat_' + fileName + '.nii'
+    filePath = os.path.join(directory, fileName)
+    node = slicer.util.loadVolume(filePath, properties={'show':False})
+    node.SetName(self.createNodeName(directory,fileName))
+    return node
+
+  def importTransform(self, directory, fileName):
+    filePath = os.path.join(directory, fileName)
+    node = slicer.util.loadTransform(filePath)
+    node.SetName(self.createNodeName(directory,fileName))
     return node
 
   def importReconstruction(self, directory):
