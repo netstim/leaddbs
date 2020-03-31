@@ -166,7 +166,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
 
       # get closest model to points
       modelNode = self.getClosestModel(points1)
-      if not modelNode: # clean and continue
+      if (not modelNode) or (points1.GetNumberOfPoints() == 1): # clean and continue
         slicer.mrmlScene.RemoveNode(curve1)
       else:
         # cut model with current plane
