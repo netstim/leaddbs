@@ -23,7 +23,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     smw = slicer.util.mainWindow()
     interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
     layoutManager = slicer.app.layoutManager()
-    #affineNode = slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID"))
 
     self.addObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) 
 
@@ -95,8 +94,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     warpViewAction = qt.QAction(smw)
     warpViewAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','GlyphIcon.png'))))
     warpViewAction.setCheckable(True)
-    #warpViewAction.connect('toggled(bool)', lambda t: affineNode.GetDisplayNode().SetVisibility(t))
-    #warpViewAction.connect('toggled(bool)', lambda t: affineNode.GetDisplayNode().SetVisibility2D(t))
+    warpViewAction.connect('toggled(bool)', self.onWarpViewAction)
     self.addAction(warpViewAction)
 
 
@@ -171,6 +169,13 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.updateToolbarFromMRML()
 
 
+  def onWarpViewAction(self, t):
+    affineID = self.parameterNode.GetParameter("affineTransformID")
+    if affineID != "":
+      affineNode = slicer.util.getNode(affineID)
+      affineNode.GetDisplayNode().SetVisibility(t)
+      affineNode.GetDisplayNode().SetVisibility2D(t)
+
   def initializeTransforms(self, imageNode):
     # apply affine transform to image
     affineNode = slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID"))
@@ -179,9 +184,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     imageNode.SetAndObserveTransformNodeID(self.parameterNode.GetParameter("affineTransformID"))
     # set transform to affine
     affineNode.SetAndObserveTransformNodeID(self.parameterNode.GetParameter("warpID"))
-
-
-
 
   def onModalityPressed(self, item, modality=None):
     if modality is None:
