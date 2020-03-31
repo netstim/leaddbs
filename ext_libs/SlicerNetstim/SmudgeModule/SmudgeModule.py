@@ -388,14 +388,14 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.historyList.setCurrentRow(TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) - 1) # keep same value
 
 
-  def iterItems(self, item):
-    item.setFlags(33)
+  def setItemChildrenFlags(self, item):
+    item.setFlags(qt.Qt.ItemIsSelectable + qt.Qt.ItemIsEnabled)
     for row in range(item.rowCount()):
-      self.iterItems(item.child(row))
+      self.setItemChildrenFlags(item.child(row))
 
   def onSceneNodeAdded(self,caller=None,event=None):
     sceneItem = self.dataTreeWidget.model().item(0,0)
-    self.iterItems(sceneItem)
+    self.setItemChildrenFlags(sceneItem)
 
 
   def onDataTreeDoubleClicked(self, i):
