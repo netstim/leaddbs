@@ -236,30 +236,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     historyGridLayout.addWidget(self.historyList,0,1)
 
     #
-    # View Area
-    #
-    viewCollapsibleButton = ctk.ctkCollapsibleButton()
-    viewCollapsibleButton.text = "View"
-    viewCollapsibleButton.collapsed=True
-    self.layout.addWidget(viewCollapsibleButton)
-
-    # Layout within the dummy collapsible button
-    viewFormLayout = qt.QFormLayout(viewCollapsibleButton)
-
-    #
-    # Display
-    #
-
-
-    #
-    # Modality
-    #
-    self.modalityComboBox = qt.QComboBox()
-    self.modalityComboBox.addItems(['T1','T2'])
-    self.modalityComboBox.setEnabled(False)
-    viewFormLayout.addRow("Modality:", self.modalityComboBox)
-
-    #
     # Modles Area
     #
 
@@ -279,15 +255,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     self.layout.addStretch(0)
 
-    #
-    # Save Area
-    #
-
-    self.saveButton = qt.QPushButton("Save and Next")
-    self.saveButton.setMinimumHeight(30)
-    self.saveButton.setStyleSheet("background-color: green")
-    self.saveButton.setVisible(False)
-    self.layout.addWidget(self.saveButton)
 
     # connections
     self.warpSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.exit) # deselect effect
@@ -301,12 +268,10 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.forceSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.flattenButton.connect("clicked(bool)", self.onFlattenButton)
-    self.saveButton.connect("clicked(bool)", self.onSaveButton)
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
     self.historyList.itemSelectionChanged.connect(self.historyItemChanged)
 
-    self.modalityComboBox.connect('currentIndexChanged(int)', self.onModalityChanged)
     self.dataTreeWidget.doubleClicked.connect(self.onDataTreeDoubleClicked)
 
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)    
@@ -318,8 +283,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Refresh
     qt.QApplication.processEvents()
     if self.updateMRMLFromArgs(): # was called from command line
-      SmudgeModuleLogic().loadSubjectData(anat=False)
-      self.onModalityChanged(0)
       self.showSingleModule()
       tb = Toolbar.reducedToolbar()
       slicer.util.mainWindow().addToolBar(tb)
@@ -349,62 +312,11 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if singleModule:
       slicer.util.setPythonConsoleVisible(False)
 
-    self.saveButton.setVisible(singleModule)
-    self.modalityComboBox.setEnabled(singleModule)
     self.inputsCollapsibleButton.setVisible(not singleModule)
     if self.developerMode:
       self.reloadCollapsibleButton.setVisible(not singleModule)
 
     slicer.util.mainWindow().setWindowTitle("Name goes here")
-
-
-  def onSaveButton(self):
-    self.exit()
-    SmudgeModuleLogic().applyChanges()
-
-    # remove nodes
-    slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID")))
-    slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
-    layoutManager = slicer.app.layoutManager()
-    compositeNode = layoutManager.sliceWidget('Red').sliceLogic().GetSliceCompositeNode()
-    slicer.mrmlScene.RemoveNode(slicer.util.getNode(compositeNode.GetBackgroundVolumeID()))
-
-    nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
-    subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
-    
-    if nextSubjectN < len(subjectPaths):
-      self.parameterNode.SetParameter("subjectN", str(nextSubjectN))
-      self.parameterNode.SetParameter("subjectPath", subjectPaths[nextSubjectN])
-      imageNode = SmudgeModuleLogic().loadSubjectData()
-      SmudgeModuleLogic().initialize(imageNode)
-      slicer.util.setSliceViewerLayers(background=imageNode.GetID())
-      self.updateGuiFromMRML()
-      self.toogleTools()
-    else:
-      slicer.util.exit()
-
-
-  def onModalityChanged(self, index):
-    modality = self.modalityComboBox.itemText(index).lower() # get modality
-    self.parameterNode.SetParameter("modality",modality)
-    # find old node and delete
-    layoutManager = slicer.app.layoutManager()
-    compositeNode = layoutManager.sliceWidget('Red').sliceLogic().GetSliceCompositeNode()
-    if compositeNode.GetBackgroundVolumeID():
-      slicer.mrmlScene.RemoveNode(slicer.util.getNode(compositeNode.GetBackgroundVolumeID()))
-    # initialize new image and init
-    imageNode = SmudgeModuleLogic().loadSubjectData(anat=True, warp=False, affine=False)
-    SmudgeModuleLogic().initialize(imageNode)
-    slicer.util.setSliceViewerLayers(background=imageNode.GetID())
-    # load new temaplate image
-    if compositeNode.GetForegroundVolumeID():
-      slicer.mrmlScene.RemoveNode(slicer.util.getNode(compositeNode.GetForegroundVolumeID()))
-    modality = self.parameterNode.GetParameter("modality") # in case loading subject image modality was changed 
-    templateNode = slicer.util.loadVolume(os.path.join(self.parameterNode.GetParameter("MNIPath"), modality + ".nii"), properties={'show':False})
-    templateNode.GetDisplayNode().AutoWindowLevelOff()
-    templateNode.GetDisplayNode().SetWindow(100)
-    templateNode.GetDisplayNode().SetLevel(70)
-    slicer.util.setSliceViewerLayers(foreground=templateNode.GetID())
 
 
   def updateMRMLFromArgs(self): 
@@ -456,12 +368,11 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.historyList.clear()
     self.historyList.addItems(['Component ' + str(i) for i in range(warpNumberOfComponents + int(self.redoButton.enabled))])
     self.historyList.setCurrentRow(warpNumberOfComponents - 1)
-    # subject text
-    subjectN = int(self.parameterNode.GetParameter("subjectN"))
-    subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
-    self.saveButton.text = 'Save and Exit' if subjectN == len(subjectPaths)-1 else 'Save and Next'
-    # modality
-    self.modalityComboBox.setCurrentText(self.parameterNode.GetParameter("modality").upper())
+    # if subject is changed
+    if bool(int(self.parameterNode.GetParameter("subjectChanged"))):
+      self.exit()
+      self.toogleTools()
+      self.parameterNode.SetParameter("subjectChanged","0")
 
 
   def updateMRMLFromGUI(self):
@@ -609,6 +520,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("MNIAtlasPath", ".")
     node.SetParameter("antsApplyTransformsPath", "")
     node.SetParameter("warpModified", "1")
+    node.SetParameter("subjectChanged","0")
     return node
 
   def removeRedoTransform(self):
@@ -617,45 +529,6 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     if redoTransformID != "":
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(redoTransformID))
       parameterNode.SetParameter("redoTransformID","")
-
-
-  def loadSubjectData(self, anat=True, warp=True, affine=True):
-    parameterNode = self.getParameterNode()
-    subjectPath = parameterNode.GetParameter("subjectPath")
-
-    if warp: # load warp
-      if ImportSubject.ImportSubjectLogic().ish5Transform(subjectPath):
-        ImportSubject.ImportSubjectLogic().updateTranform(subjectPath, parameterNode.GetParameter("antsApplyTransformsPath"))
-
-      warpNode = ImportSubject.ImportSubjectLogic().importFile(subjectPath, 'glanatComposite.nii.gz')
-      parameterNode.SetParameter("warpID", warpNode.GetID())
-
-    if affine: # load affine
-      affineNode = ImportSubject.ImportSubjectLogic().importFile(subjectPath, 'glanat0GenericAffine_backup.mat')
-      if not affineNode:
-        affineNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
-      affineNode.Inverse()
-      affineNode.CreateDefaultDisplayNodes()
-      parameterNode.SetParameter("affineTransformID", affineNode.GetID())
-
-    if anat: # load image
-      for m in [parameterNode.GetParameter("modality"), "t1", "t2"]: # try modalities to load
-        imageNode = ImportSubject.ImportSubjectLogic().importFile(subjectPath, 'anat_' + m + '.nii')
-        if imageNode:
-          parameterNode.SetParameter("modality", m)
-          return imageNode
-
-
-  def initialize(self, imageNode):
-    parameterNode = self.getParameterNode()
-    # apply affine transform to image
-    affineNode = slicer.util.getNode(parameterNode.GetParameter("affineTransformID"))
-    imageNode.ApplyTransform(affineNode.GetTransformFromParent())
-    # set to image 
-    imageNode.SetAndObserveTransformNodeID(parameterNode.GetParameter("affineTransformID"))
-    # set transform to affine
-    affineNode.SetAndObserveTransformNodeID(parameterNode.GetParameter("warpID"))
-
 
   def effectOn(self, effectName):
     
