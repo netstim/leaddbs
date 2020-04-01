@@ -70,9 +70,9 @@ if reforce
     end
     switch statmetric
         case 1 % ttests
-            [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},connthreshold);
+            [fibsweighted,fibsin,fibsval,iaix,XYZmm,nii]=ea_discfibers_heatfibertracts(cfile,{allroilist},M.ui.listselect,{I},connthreshold);
         case 2 % spearmans R
-            [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},M.ui.listselect,{I},efieldthresh);
+            [fibsweighted,fibsin,fibsval,iaix,XYZmm,nii,valsmm]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},M.ui.listselect,{I},efieldthresh);
     end
     save([M.ui.groupdir,'connected_fibers',msuffix,savesuffix,'.mat'],'fibsin','opts','-v7.3');
     save([M.ui.groupdir,'correlative_fibertracts_fibsval',msuffix,savesuffix,'.mat'],'fibsval','iaix','-v7.3');

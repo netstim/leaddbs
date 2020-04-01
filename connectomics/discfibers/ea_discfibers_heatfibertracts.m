@@ -1,4 +1,4 @@
-function [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts(cfile,roilist,patselection,vals,connthreshold)
+function [fibcell,fibsval,XYZmm,nii]=ea_discfibers_heatfibertracts(cfile,roilist,patselection,vals,connthreshold)
 % function extracts fibers from a connectome connected to ROIs in the
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.
@@ -23,57 +23,35 @@ if ~exist('connthreshold','var') % minimum of percentage fibers that need to be 
 end
 
 [fibsin,XYZmm,nii]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection);
-fibsval=zeros(size(fibsin,1),length(patselection)); % 5th column will add up values, 6th will take note how many entries were summed.
-
-% now color fibsin based on predictive value of improvement
 ea_dispt('');
 
-ea_dispercent(0,'Iterating ROI');
-for roi=1:length(patselection)
-    [~,D]=knnsearch(XYZmm{roi}(:,1:3),fibsin(:,1:3),'Distance','chebychev');
-    in=D<mean(nii{end}.voxsize);
-    fibsval(ismember(fibsin(:,4),unique(fibsin(in,4))),roi)=1;
-    ea_dispercent(roi/length(patselection));
+% Reformat to cell:
+[~,fibiaxfirst]=unique(fibsin(:,4),'first');
+[~,fibiaxlast]=unique(fibsin(:,4),'last');
+fiblen = fibiaxlast - fibiaxfirst + 1;
+fibcell = mat2cell(fibsin(:,1:3),fiblen);
+
+% repair fibsin to be incrementing from 1 to x:
+for f=1:length(fibcell)
+    fibsin(fibiaxfirst(f):fibiaxlast(f),4)=f;
 end
-ea_dispercent(1,'end');
+    
+searchfibsin=round(fibsin(:,1:3).*4)/4; % reduce precision a bit (0.25 mm) to speed up search
+[searchfibsin,~,ic]=unique(searchfibsin,'rows');
 
-cnt=1;
-ea_dispt('Correlating fibers with values');
-for group=1:length(roilist)
-    thisgroupidx=cnt:(cnt+length(patselection))-1;
-    cnt=cnt+length(patselection);
-    repvals=repmat(vals{group}',size(fibsval,1),1);
-    try
-        nfibsval=fibsval(:,thisgroupidx);
-        nfibsval(~logical(nfibsval))=nan;
-        posvals=repvals.*nfibsval;
-        nfibsval=double(~fibsval(:,thisgroupidx));
-        nfibsval(~logical(nfibsval))=nan;
-        negvals=repvals.*nfibsval;
-    catch
-        keyboard
+for side=1:2
+    fibsval{side}=zeros(size(fibcell,1),length(patselection)); % 5th column will add up values, 6th will take note how many entries were summed.
+    
+    % now color fibsin based on predictive value of improvement
+    
+    ea_dispercent(0,['Iterating ROI, side ',num2str(side)]);
+ 
+    for roi=1:length(patselection)
+        [~,D]=knnsearch(XYZmm{roi,side}(:,1:3),searchfibsin,'Distance','chebychev');
+        in=D<mean(nii{end}.voxsize);
+        in=in(ic); % upscale using unique output
+        fibsval{side}(unique(fibsin(in,4)),roi)=1;
+        ea_dispercent(roi/length(patselection));
     end
-
-    [~,fibidx,iaix]=unique(fibsin(:,4));
-    fibsval=fibsval(fibidx,:);
-    nfibsval=nfibsval(fibidx,:);
-
-    sumfibsval=sum(fibsval,2);
-    % discard fibers with less than connthreshold connections.
-    exclude=sumfibsval<size(fibsval,2)*connthreshold;
-    % discard fibers with more than 1-connthreshold connections.
-    exclude=logical(exclude+(sumfibsval>size(fibsval,2)*(1-connthreshold)));
-    fibsval(exclude,:)=[];
-    fibsweighted=fibsin;
-    fibsweighted((exclude(iaix)),:)=[];
-
-    [~,fibidx,iaix]=unique(fibsweighted(:,4));
-
-    allvals=repmat(vals{1}',size(fibsval,1),1);
-    fibsimpval=allvals;
-    fibsimpval(~logical(fibsval))=nan;
-    nfibsimpval=allvals;
-    nfibsimpval(logical(fibsval))=nan;
-    [h,p,ci,stats]=ttest2(fibsimpval',nfibsimpval');
-    fibsweighted=[fibsweighted,stats.tstat(iaix)'];
+    ea_dispercent(1,'end');
 end
