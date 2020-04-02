@@ -5,10 +5,10 @@ function h = ea_plot_colorbar(cmap, width, orientation, titletxt, tick, ticklabe
 %     cmap: colormap to be plotted
 %     width: width/height of the colorbar (vertical/horizontal mode)
 %     orientation: 'v' for vertical or 'h' for horizontal
-%     title: tile of the colorbar
+%     titletxt: tile of the colorbar figure
 %     tick: tick locations
 %     ticklabel: tick labels
-%     targe: figure or axes to plot the colorbar
+%     target: figure or axes to plot the colorbar
 %
 % Output:
 %     handle to the colorbar image figure
