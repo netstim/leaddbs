@@ -4,7 +4,6 @@ classdef ea_disctract < handle
 
     properties (SetObservable)
         M % content of lead group project
-        tractset % parent object of ea_disctractset
         resultfig % figure handle to plot results
         ID % name / ID of discriminative fibers object
         posvisible % pos tract visible
@@ -57,9 +56,9 @@ classdef ea_disctract < handle
             end
 
             %%% DEBUGGING
-            %d=load('/PA/Neuro/_projects/lead/lead_demo/testresult.mat');
-            %obj.results=d.results;
-            %return
+            d=load('/PA/Neuro/_projects/lead/lead_demo/testresult.mat');
+            obj.results=d.results;
+            return
             %%%
 
             efieldthresh=obj.connthreshold;
@@ -140,6 +139,12 @@ classdef ea_disctract < handle
 
         end
 
+        function save(obj)
+            tractset=obj;
+            ea_mkdir([obj.leadgroup,'tractsets']);
+            save([obj.leadgroup,'tractsets',filesep,obj.ID,'.mat'],'tractset','-v7.3');
+        end
+        
         function draw(obj)
             I=obj.responsevar; % need to correct for bilateral vars
 
