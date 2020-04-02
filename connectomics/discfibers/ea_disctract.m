@@ -23,6 +23,7 @@ classdef ea_disctract < handle
         % fibsval % connection weight value for each fiber to each VTA
         % fibweights % usually T- or R-values associated with each tract
         %
+        drawobject % actual streamtube handle
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
         allpatients % list of all patients (as from M.patient.list)
         mirrorsides % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
@@ -30,6 +31,7 @@ classdef ea_disctract < handle
         responsevarlabel % label of response variable
         covars % covariates
         covarlabels % covariate labels
+        analysispath % where to store results
         leadgroup % redundancy protocol only, path to original lead group project
         connectome % redundancy protocol only, name of underlying connectome
         colorbar % colorbar information
@@ -141,15 +143,18 @@ classdef ea_disctract < handle
 
         function save(obj)
             tractset=obj;
-            ea_mkdir([obj.leadgroup,'tractsets']);
-            save([obj.leadgroup,'tractsets',filesep,obj.ID,'.mat'],'tractset','-v7.3');
+            [pth,fn]=fileparts(tractset.leadgroup);
+            tractset.analysispath=[pth,filesep,'tractsets',filesep,obj.ID,'.mat'];
+            ea_mkdir([pth,filesep,'tractsets']);
+            tractset.resultfig=[]; % rm figure handle before saving.
+            save(tractset.analysispath,'tractset','-v7.3');
         end
         
         function draw(obj)
             I=obj.responsevar; % need to correct for bilateral vars
 
             [vals]=calcstats(obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibsval,I,obj);
-
+            set(0,'CurrentFigure',obj.resultfig);
 
             % Contruct default blue to red colormap
             colormap(gray);
@@ -160,7 +165,8 @@ classdef ea_disctract < handle
             colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
             negUpperBound=ceil(size(fibcmap,1)/2*colorbarThreshold);
             poslowerBound=floor((size(fibcmap,1)-size(fibcmap,1)/2*colorbarThreshold));
-
+            try delete(obj.drawobject{1}); end
+            try delete(obj.drawobject{2}); end
             for side=1:2
                 fibcell{side}=obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibcell(~isnan(vals{side}));
 
@@ -198,17 +204,17 @@ classdef ea_disctract < handle
                 fibalpha=mat2cell(alphas{side},ones(size(fibcolorInd{side},1),1));
 
                 % Plot fibers
-                h=streamtube(fibcell{side},0.2);
+                obj.drawobject{side}=streamtube(fibcell{side},0.2);
                 nones=repmat({'none'},size(fibcolorInd{side}));
-                [h.EdgeColor]=nones{:};
+                [obj.drawobject{side}.EdgeColor]=nones{:};
 
                 % Calulate fiber colors
                 colors=fibcmap(round(fibcolorInd{side}),:);
                 fibcolor=mat2cell(colors,ones(size(fibcolorInd{side})));
 
                 % Set fiber colors and alphas
-                [h.FaceColor]=fibcolor{:};
-                [h.FaceAlpha]=fibalpha{:};
+                [obj.drawobject{side}.FaceColor]=fibcolor{:};
+                [obj.drawobject{side}.FaceAlpha]=fibalpha{:};
             end
 
             % Set colorbar tick positions and labels

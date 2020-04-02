@@ -247,24 +247,27 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                         'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
             end
 
+            
+            % add discriminative fiber explorer button.
+            discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber_add'),...
+                'TooltipString', ['Add discriminative fibertract'],...
+                'Tag', ['Add discriminative fibertract'],...
+                'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
+            
+            di=dir([options.root,options.patientname,filesep,'disctracts',filesep,'*.mat']);
+            for d=1:length(di)
+                discfiber(d) = uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
+                    'TooltipString', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
+                    'Tag', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
+                    'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'disctracts',filesep,di(d).name],resultfig});
+            end
+            
             % Move the group toggle forward
             isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
             eleToggleInd = numel(unique(elstructGroupID))+1:find(~isEleToggle,1)-1;
             ht.Children=ht.Children([eleToggleInd, 1:numel(unique(elstructGroupID)), find(~isEleToggle,1):end]);
             
-            % add discriminative fiber explorer button.
-            discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber_add'),...
-                        'TooltipString', ['Add discriminative fibertract'],...
-                        'Tag', ['Add discriminative fibertract'],...
-                        'PushCallback', {@add_discfiber,[options.root,options.patientname],resultfig});
-                    
-                    di=dir([options.root,options.patientname,filesep,'disctracts',filesep,'*.mat']);
-                    for d=1:length(di)
-                       discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
-                        'TooltipString', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
-                        'Tag', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
-                        'PushCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'disctracts',filesep,di(d).name],resultfig});  
-                    end
+            
         end
 
         try
