@@ -231,9 +231,9 @@ classdef ea_disctract < handle
             end
 
             % colorbar
-            obj.colorbar.cbmap = cbmap;
-            obj.colorbar.cbtick = tick;
-            obj.colorbar.cbticklabel = ticklabel;
+            obj.colorbar.cmap = cbmap;
+            obj.colorbar.tick = tick;
+            obj.colorbar.ticklabel = ticklabel;
         end
     end
 
