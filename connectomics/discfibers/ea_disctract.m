@@ -33,28 +33,29 @@ classdef ea_disctract < handle
         covarlabels % covariate labels
         leadgroup % redundancy protocol only, path to original lead group project
         connectome % redundancy protocol only, name of underlying connectome
+        colorbar % colorbar information
     end
-    
+
     properties (Access = private)
         switchedFromSpace=3 % if switching space, this will protocol where from
     end
-    
+
     methods
         function obj=ea_disctract() % class constructor
-            
+
         end
-        
+
         function calculate(obj)
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,conn2connid(obj.connectome))
-                    
+
                     if isfield(obj.results.(conn2connid(obj.connectome)),method2methodid(obj.statmetric)) % this combination was already calculated.
                         return
                     end
                 end
             end
-            
+
             %%% DEBUGGING
             %d=load('/PA/Neuro/_projects/lead/lead_demo/testresult.mat');
             %obj.results=d.results;
@@ -140,7 +141,6 @@ classdef ea_disctract < handle
         end
 
         function draw(obj)
-
             I=obj.responsevar; % need to correct for bilateral vars
 
             [vals]=calcstats(obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibsval,I,obj);
@@ -230,8 +230,10 @@ classdef ea_disctract < handle
                 ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
             end
 
-            % Plot colorbar
-            ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
+            % colorbar
+            obj.colorbar.cbmap = cbmap;
+            obj.colorbar.cbtick = tick;
+            obj.colorbar.cbticklabel = ticklabel;
         end
     end
 
