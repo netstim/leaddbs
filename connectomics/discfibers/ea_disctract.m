@@ -58,7 +58,7 @@ classdef ea_disctract < handle
             end
 
             %%% DEBUGGING
-            d=load('/PA/Neuro/_projects/lead/lead_demo/testresult.mat');
+            d=load('/Users/andreashorn/Dropbox/testresult.mat');
             obj.results=d.results;
             return
             %%%
@@ -144,10 +144,12 @@ classdef ea_disctract < handle
         function save(obj)
             tractset=obj;
             [pth,fn]=fileparts(tractset.leadgroup);
-            tractset.analysispath=[pth,filesep,'tractsets',filesep,obj.ID,'.mat'];
-            ea_mkdir([pth,filesep,'tractsets']);
+            tractset.analysispath=[pth,filesep,'disctracts',filesep,obj.ID,'.mat'];
+            ea_mkdir([pth,filesep,'disctracts']);
+            rf=obj.resultfig; % need to stash fig handle for saving.
             tractset.resultfig=[]; % rm figure handle before saving.
             save(tractset.analysispath,'tractset','-v7.3');
+            obj.resultfig=rf;
         end
         
         function draw(obj)
