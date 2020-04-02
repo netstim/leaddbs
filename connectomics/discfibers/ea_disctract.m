@@ -1,7 +1,7 @@
 classdef ea_disctract < handle
     % Discriminative fiber class to handle visualizations of discriminative fibers in lead dbs resultfig / 3D Matlab figures
     % A. Horn
-    
+
     properties (SetObservable)
         M % content of lead group project
         tractset % parent object of ea_disctractset
@@ -16,8 +16,8 @@ classdef ea_disctract < handle
         poscolor % positive main color
         negcolor % negative main color
         % the  main content variables:
-        
-        results 
+
+        results
         % includes subfields by results.connectomename.ttests /
         % results.connectomename.efields with
         % fibcell % cell of all fibers connected
@@ -60,12 +60,11 @@ classdef ea_disctract < handle
             %obj.results=d.results;
             %return
             %%%
-            
+
             efieldthresh=obj.connthreshold;
-            
-            
+
             options.native = 0;
-            
+
             allroilist=cell(length(obj.allpatients)*2,2);
             switch obj.statmetric
                 case 1 % use paired T-Tests and binary VTA
@@ -96,21 +95,18 @@ classdef ea_disctract < handle
                     [fibcell,fibsval,XYZmm,nii,valsmm]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},mirroredpatselection,{obj.variables(:,1)},efieldthresh);
                     obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).valsmm=valsmm;
             end
-            
-            
-            
+
             % Main output of results - this is all we will ever need if statmetric
             % and connectome wont change
             obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibsval=fibsval;
             obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibcell=fibcell;
             obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).XYZmm=XYZmm;
             obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).nii=nii;
-            
+
         end
 
-        
         function [vals]=calcstats(fibsval,I,obj,patsel)
-            
+
             % quickly recalc stats:
             if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
                 patsel=obj.patientselection;
@@ -118,12 +114,11 @@ classdef ea_disctract < handle
             if obj.mirrorsides
                 patsel=[patsel;patsel+length(obj.allpatients)];
             end
-             
+
             if size(I,2)==1 % 1 entry per patient, not per electrode
                 I=[I,I]; % both sides the same;
             end
-            
-            
+
             for side=1:2
                 switch obj.statmetric
                     case 1 % t-tests
@@ -141,132 +136,105 @@ classdef ea_disctract < handle
                         vals{side}=corr(nanfibsval',I(patsel,side),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
                 end
             end
-   
+
         end
-        
+
         function draw(obj)
-            
+
             I=obj.responsevar; % need to correct for bilateral vars
-            
+
             [vals]=calcstats(obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibsval,I,obj);
-         
-            
+
+
             % Contruct default blue to red colormap
             colormap(gray);
             fibcmap = ea_colorgradient(1024, [0,0,1], [1,1,1], [1,0,0]);
             setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
-            
+
+            % Set alphas of fibers with light color to 0
+            colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
+            negUpperBound=ceil(size(fibcmap,1)/2*colorbarThreshold);
+            poslowerBound=floor((size(fibcmap,1)-size(fibcmap,1)/2*colorbarThreshold));
+
             for side=1:2
                 fibcell{side}=obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibcell(~isnan(vals{side}));
-                
+
                 vals{side}=vals{side}(~isnan(vals{side}))'; % final weights for surviving fibers
-                
+
                 posvals{side}=sort(vals{side}(vals{side}>0),'descend');
                 negvals{side}=sort(vals{side}(vals{side}<0),'ascend');
-                
+
                 posthresh{side}=posvals{side}(round((obj.showposamount(side)/100)*length(posvals{side})));
-                negthresh{side}=posvals{side}(round((obj.shownegamount(side)/100)*length(negvals{side})));
-            
-            
-            
-            
+                negthresh{side}=negvals{side}(round((obj.shownegamount(side)/100)*length(negvals{side})));
+
+                % Remove vals and fibers outside the thresholding range
+                remove=logical(logical(vals{side}<posthresh{side}) .* logical(vals{side}>negthresh{side}));
+                vals{side}(remove)=[];
+                fibcell{side}(remove)=[];
+
                 tvalsRescale{side} = vals{side};
                 tvalsRescale{side}(vals{side}>0) = ea_rescale(vals{side}(vals{side}>0), [0 1]);
                 tvalsRescale{side}(vals{side}<0) = ea_rescale(vals{side}(vals{side}<0), [-1 0]);
-                
-                
+
                 fibcolorInd{side}=tvalsRescale{side}*(size(fibcmap,1)/2-0.5);
                 fibcolorInd{side}=fibcolorInd{side}+(size(fibcmap,1)/2+0.5);
-             
-%             % Set alphas of fibers with light color to 0
-%             colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
-%             negUpperBound=ceil(size(fibcmap,1)/2*colorbarThreshold);
-%             poslowerBound=floor((size(fibcmap,1)-size(fibcmap,1)/2*colorbarThreshold));
-%             alphas=zeros(size(fibcolorInd,1),1);
-%             switch showfibersset
-%                 case 'positive'
-%                     alphas(round(fibcolorInd)>=poslowerBound) = 1;
-%                 case 'negative'
-%                     alphas(round(fibcolorInd)<=negUpperBound) = 1;
-%                 case 'both'
-%                     alphas(round(fibcolorInd)>=poslowerBound) = 1;
-%                     alphas(round(fibcolorInd)<=negUpperBound) = 1;
-%             end
-%             
-%             alphas(round(fibcolorInd)>=poslowerBound) = 1;
-            
-            % only show right side
-            % for i=1:length(tfibcell)
-            %     if any(tfibcell{i}(:,1)<0)
-            %         alphas(i) = 0;
-            %     end
-            % end
-            
-            %fibalpha=mat2cell(alphas,ones(size(fibcolorInd,1),1));
-            
-            % Plot fibers
-            h=streamtube(fibcell,0.2);
-            nones=repmat({'none'},size(fibcolorInd));
-            [h.EdgeColor]=nones{:};
-            
-            % Calulate fiber colors
-            colors=fibcmap(round(fibcolorInd),:);
-            fibcolor=mat2cell(colors,ones(size(fibcolorInd)));
-            
-            % Set fiber colors and alphas
-            [h.FaceColor]=fibcolor{:};
-            [h.FaceAlpha]=fibalpha{:};
-            
+
+                alphas{side}=zeros(size(fibcolorInd{side},1),1);
+                if obj.posvisible && ~obj.negvisible
+                	alphas{side}(round(fibcolorInd{side})>=poslowerBound) = 1;
+                elseif ~obj.posvisible && obj.negvisible
+                	alphas{side}(round(fibcolorInd{side})<=negUpperBound) = 1;
+                elseif obj.posvisible && obj.negvisible
+                    alphas{side}(round(fibcolorInd{side})>=poslowerBound) = 1;
+                    alphas{side}(round(fibcolorInd{side})<=negUpperBound) = 1;
+                end
+
+                alphas{side}(round(fibcolorInd{side})>=poslowerBound) = 1;
+                fibalpha=mat2cell(alphas{side},ones(size(fibcolorInd{side},1),1));
+
+                % Plot fibers
+                h=streamtube(fibcell{side},0.2);
+                nones=repmat({'none'},size(fibcolorInd{side}));
+                [h.EdgeColor]=nones{:};
+
+                % Calulate fiber colors
+                colors=fibcmap(round(fibcolorInd{side}),:);
+                fibcolor=mat2cell(colors,ones(size(fibcolorInd{side})));
+
+                % Set fiber colors and alphas
+                [h.FaceColor]=fibcolor{:};
+                [h.FaceAlpha]=fibalpha{:};
+            end
+
             % Set colorbar tick positions and labels
-            cbvals = tvals(logical(alphas));
-            % cbvals=tvalsRescale(logical(alphas));
-            switch showfibersset
-                case 'positive'
-                    cbmap = fibcmap(ceil(length(fibcmap)/2+0.5):end,:);
-                    tick = [poslowerBound, length(fibcmap)] - floor(length(fibcmap)/2) ;
-                    poscbvals = sort(cbvals(cbvals>0));
-                    ticklabel = [poscbvals(1), poscbvals(end)];
-                    ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-                case 'negative'
-                    cbmap = fibcmap(1:floor(length(fibcmap)/2-0.5),:);
-                    tick = [1, negUpperBound];
-                    negcbvals = sort(cbvals(cbvals<0));
-                    ticklabel = [negcbvals(1), negcbvals(end)];
-                    ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
-                case 'both'
-                    cbmap = fibcmap;
-                    tick = [1, negUpperBound, poslowerBound, length(fibcmap)];
-                    poscbvals = sort(cbvals(cbvals>0));
-                    negcbvals = sort(cbvals(cbvals<0));
-                    ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
-                    ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+            cbvals = [vals{1}(logical(alphas{1}));vals{2}(logical(alphas{2}))];
+            % cbvals=tvalsRescale{side}(logical(alphas));
+            if obj.posvisible && ~obj.negvisible
+                cbmap = fibcmap(ceil(length(fibcmap)/2+0.5):end,:);
+                tick = [poslowerBound, length(fibcmap)] - floor(length(fibcmap)/2) ;
+                poscbvals = sort(cbvals(cbvals>0));
+                ticklabel = [poscbvals(1), poscbvals(end)];
+                ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+            elseif ~obj.posvisible && obj.negvisible
+                cbmap = fibcmap(1:floor(length(fibcmap)/2-0.5),:);
+                tick = [1, negUpperBound];
+                negcbvals = sort(cbvals(cbvals<0));
+                ticklabel = [negcbvals(1), negcbvals(end)];
+                ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
+            elseif obj.posvisible && obj.negvisible
+                cbmap = fibcmap;
+                tick = [1, negUpperBound, poslowerBound, length(fibcmap)];
+                poscbvals = sort(cbvals(cbvals>0));
+                negcbvals = sort(cbvals(cbvals<0));
+                ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
+                ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
             end
-            
-            figTitle = 'discfibers';
-            discfibersname = ['discfibers', discfiberID];
-            cbfigname = ['cbfig', discfiberID];
-            discfiberscontrolname = ['discfiberscontrol', discfiberID];
-            
+
             % Plot colorbar
-            cbfig = ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
-            set(cbfig, 'NumberTitle', 'off',  'Name', ['Colorbar: ', figTitle]);
-            
-            % Discriminative fiber control
-            discfiberscontrol = ea_discfibers_control(resultfig, discfiberID);
-            set(discfiberscontrol, 'NumberTitle', 'off', 'Name', ['Control: ', figTitle]);
-            setappdata(discfiberscontrol, 'discfiberID', discfiberID);
-            
-            setappdata(resultfig, discfibersname, h);
-            setappdata(resultfig, cbfigname, cbfig);
-            setappdata(resultfig, discfiberscontrolname, discfiberscontrol);
-            set(0,'CurrentFigure',resultfig)
-            end
+            ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel);
         end
-        
-        
-        
     end
-    
+
     methods (Static)
         function changeevent(~,event)
             update_trajectory(event.AffectedObject,event.Source.Name);
@@ -293,6 +261,3 @@ conname=strrep(conname,'(','');
 conname=strrep(conname,')','');
 conname=strrep(conname,'-','');
 end
-
-
-
