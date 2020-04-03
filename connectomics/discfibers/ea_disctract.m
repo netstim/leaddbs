@@ -53,7 +53,10 @@ classdef ea_disctract < handle
                 if isfield(obj.results,conn2connid(obj.connectome))
 
                     if isfield(obj.results.(conn2connid(obj.connectome)),method2methodid(obj.statmetric)) % this combination was already calculated.
-                        return
+                        answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
+                        if ~strcmp(answ,'Yes')
+                            return
+                        end
                     end
                 end
             end
@@ -64,7 +67,7 @@ classdef ea_disctract < handle
             return
             %%%
 
-            efieldthresh=obj.connthreshold;
+            efieldthresh=10; % fixed value for now. This is the amount of efield magnitude strength each has to have.
 
             options.native = 0;
 
@@ -127,9 +130,13 @@ classdef ea_disctract < handle
             for side=1:2
                 
                 % check connthreshold
-                keyboard
-                
-                
+                switch obj.statmetric
+                    case 1
+                        sumfibsval=sum(fibsval{side}(:,patsel),2);
+                    case 2
+                        sumfibsval=sum((fibsval{side}(:,patsel)>obj.efieldthreshold),2);
+                end
+                fibsval{side}(sumfibsval<((obj.connthreshold/100)*size(length(patsel))),:)=0;
                 switch obj.statmetric
                     case 1 % t-tests
                         allvals=repmat(I(patsel,side),1,size(fibsval{side}(:,patsel),1)); % improvement values (taken from Lead group file or specified in line 12).
