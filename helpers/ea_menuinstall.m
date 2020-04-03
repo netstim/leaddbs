@@ -1,6 +1,6 @@
 function ea_menuinstall(~,~,cmd)
 
-choice=questdlg(['Please confirm to start downloading dataset: ',cmd],'Download additional data','Proceed','Cancel','Proceed');
+choice=questdlg(['Please confirm to start downloading: ',cmd],'Download additional data','Proceed','Cancel','Proceed');
 
 if ~strcmp(choice,'Proceed')
     return
