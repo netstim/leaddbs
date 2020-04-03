@@ -31,8 +31,13 @@ else
 end
 
 if ~isfield(options, 'elmodel')
-    warning('No electrode model specified. Using Medtronic 3389.');
-    elmodel = 'Medtronic 3389';
+    try
+        load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
+        elmodel = reco.props(1).elmodel;
+    catch
+        warning('No electrode model specified. Using Medtronic 3389.');
+        elmodel = 'Medtronic 3389';
+    end
 else
     elmodel = options.elmodel;
 end
