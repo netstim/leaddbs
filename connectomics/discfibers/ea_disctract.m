@@ -62,11 +62,6 @@ classdef ea_disctract < handle
                 end
             end
 
-            %%% DEBUGGING
-            d=load('/Users/andreashorn/Dropbox/testresult.mat');
-            obj.results=d.results;
-            return
-            %%%
 
             efieldthresh=10; % fixed value for now. This is the amount of efield magnitude strength each has to have.
 
