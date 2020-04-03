@@ -136,7 +136,7 @@ classdef ea_disctract < handle
                     case 2
                         sumfibsval=sum((fibsval{side}(:,patsel)>obj.efieldthreshold),2);
                 end
-                fibsval{side}(sumfibsval<((obj.connthreshold/100)*size(length(patsel))),:)=0;
+                fibsval{side}(sumfibsval<((obj.connthreshold/100)*length(patsel)),:)=0;
                 switch obj.statmetric
                     case 1 % t-tests
                         allvals=repmat(I(patsel,side),1,size(fibsval{side}(:,patsel),1)); % improvement values (taken from Lead group file or specified in line 12).
