@@ -50,9 +50,9 @@ classdef ea_disctract < handle
         function calculate(obj)
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
-                if isfield(obj.results,conn2connid(obj.connectome))
+                if isfield(obj.results,ea_conn2connid(obj.connectome))
 
-                    if isfield(obj.results.(conn2connid(obj.connectome)),method2methodid(obj.statmetric)) % this combination was already calculated.
+                    if isfield(obj.results.(ea_conn2connid(obj.connectome)),ea_method2methodid(obj.statmetric)) % this combination was already calculated.
                         answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
                         if ~strcmp(answ,'Yes')
                             return
@@ -99,15 +99,15 @@ classdef ea_disctract < handle
                     [fibcell,fibsval,XYZmm,nii]=ea_discfibers_heatfibertracts(cfile,{allroilist},mirroredpatselection,{obj.variables(:,1)},obj.connthreshold/100);
                 case 2 % spearmans R
                     [fibcell,fibsval,XYZmm,nii,valsmm]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},mirroredpatselection,{obj.variables(:,1)},efieldthresh);
-                    obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).valsmm=valsmm;
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).valsmm=valsmm;
             end
 
             % Main output of results - this is all we will ever need if statmetric
             % and connectome wont change
-            obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibsval=fibsval;
-            obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibcell=fibcell;
-            obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).XYZmm=XYZmm;
-            obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).nii=nii;
+            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval=fibsval;
+            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibcell=fibcell;
+            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).XYZmm=XYZmm;
+            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).nii=nii;
 
         end
 
@@ -170,12 +170,12 @@ classdef ea_disctract < handle
         function draw(obj)
             I=obj.responsevar; % need to correct for bilateral vars
 
-            [vals]=calcstats(obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibsval,I,obj);
+            [vals]=calcstats(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval,I,obj);
             set(0,'CurrentFigure',obj.resultfig);
 
             % Contruct default blue to red colormap
             colormap(gray);
-            fibcmap = ea_colorgradient(1024, [0,0,1], [1,1,1], [1,0,0]);
+            fibcmap = ea_colorgradient(1024, obj.negcolor, [1,1,1], obj.poscolor);
             setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
 
             % Set alphas of fibers with light color to 0
@@ -185,7 +185,7 @@ classdef ea_disctract < handle
             try delete(obj.drawobject{1}); end
             try delete(obj.drawobject{2}); end
             for side=1:2
-                fibcell{side}=obj.results.(conn2connid(obj.connectome)).(method2methodid(obj.statmetric)).fibcell(~isnan(vals{side}));
+                fibcell{side}=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibcell(~isnan(vals{side}));
 
                 vals{side}=vals{side}(~isnan(vals{side}))'; % final weights for surviving fibers
 
@@ -274,20 +274,6 @@ end
 
 
 
-function id=method2methodid(method)
-switch method
-    case 1
-        id='ttests';
-    case 2
-        id='spearman';
-end
-end
 
-function conname=conn2connid(conname)
 
-conname=strrep(conname,' ','');
-conname=strrep(conname,'_','');
-conname=strrep(conname,'(','');
-conname=strrep(conname,')','');
-conname=strrep(conname,'-','');
-end
+
