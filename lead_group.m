@@ -540,7 +540,7 @@ whichelmodel = elmodels{M.ui.elmodelselect};
 % account for electrode model specified in lead group
 if ~strcmp(whichelmodel,'Patient specified')
     arcell=repmat({whichelmodel},length(ptidx),1);
-   [M.elstruct(ptidx).elmodel]=arcell{:};
+    [M.elstruct(ptidx).elmodel]=arcell{:};
 end
 
 resultfig=ea_elvis(options,M.elstruct(ptidx));

@@ -202,8 +202,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                         M.elstruct(pt).elmodel = elmodels{M.ui.elmodelselect};
                     end
 
-                    % make sure coords_mm is congruent to coded electrode
-                    % model:
+                    % make sure coords_mm is congruent to coded electrode model
                     poptions=options;
                     poptions.native=0;
                     poptions.elmodel=M.elstruct(pt).elmodel;
