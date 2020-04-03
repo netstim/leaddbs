@@ -263,11 +263,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             end
             
             % Move the group toggle forward
+            tractToggleInd = 1:length(di)+1;
+            eleGroupToggleInd = length(tractToggleInd)+1:length(tractToggleInd)+numel(unique(elstructGroupID));
             isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
-            eleToggleInd = numel(unique(elstructGroupID))+1:find(~isEleToggle,1)-1;
-            ht.Children=ht.Children([eleToggleInd, 1:numel(unique(elstructGroupID)), find(~isEleToggle,1):end]);
-            
-            
+            eleToggleInd = length(tractToggleInd)+length(eleGroupToggleInd)+1:find(isEleToggle,1,'last');
+            ht.Children=ht.Children([eleToggleInd, eleGroupToggleInd, tractToggleInd, find(isEleToggle,1,'last')+1:end]);   
         end
 
         try
