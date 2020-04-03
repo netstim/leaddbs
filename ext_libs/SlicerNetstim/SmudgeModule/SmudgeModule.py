@@ -145,6 +145,17 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.snapButton.setAutoExclusive(True)
     optionsFrame.layout().addWidget(self.snapButton)
 
+
+    blurPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','blurIcon.png')))
+    blurIcon = qt.QIcon(blurPixmap)
+    self.blurButton = qt.QPushButton()
+    self.blurButton.setIcon(blurIcon)
+    self.blurButton.setIconSize(blurPixmap.rect().size())
+    self.blurButton.setCheckable(True)
+    self.blurButton.setEnabled(False)
+    self.blurButton.setAutoExclusive(True)
+    optionsFrame.layout().addWidget(self.blurButton)
+
     toolsFormLayout.addRow(optionsFrame)
 
 
@@ -154,7 +165,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.radiusSlider = ctk.ctkSliderWidget()
     self.radiusSlider.singleStep = 0.1
     self.radiusSlider.minimum = 1
-    self.radiusSlider.maximum = 50
+    self.radiusSlider.maximum = float(self.parameterNode.GetParameter("maxRadius"))
     self.radiusSlider.decimals = 1
     self.radiusSlider.value = float(self.parameterNode.GetParameter("radius"))
     toolsFormLayout.addRow("Radius (mm):", self.radiusSlider)
@@ -180,6 +191,18 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.forceSlider.decimals = 0
     self.forceSlider.value = float(self.parameterNode.GetParameter("force"))
     toolsFormLayout.addRow("Force (%):", self.forceSlider)
+
+    #
+    # sigma
+    #
+    self.sigmaSlider = ctk.ctkSliderWidget()
+    self.sigmaSlider.singleStep = 1
+    self.sigmaSlider.minimum = 0
+    self.sigmaSlider.maximum = 30
+    self.sigmaSlider.decimals = 0
+    self.sigmaSlider.value = float(self.parameterNode.GetParameter("sigma"))
+    toolsFormLayout.addRow("Sigma:", self.sigmaSlider)
+
 
 
     #
@@ -221,9 +244,13 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.redoButton.setEnabled(False)
     self.redoButton.toolTip = 'Redo'
 
+    self.firstComponentCheckBox = qt.QCheckBox('Component 0')
+    self.firstComponentCheckBox.toolTip = 'If checked, Component 0 will be included when flattening'
+
     undoredoFrame.layout().addWidget(self.undoButton)
     undoredoFrame.layout().addWidget(self.redoButton)
     undoredoFrame.layout().addWidget(self.flattenButton)
+    undoredoFrame.layout().addWidget(self.firstComponentCheckBox)
     
     historyGridLayout.addWidget(undoredoFrame,0,0)
 
@@ -231,7 +258,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     self.historyList = qt.QListWidget()
     self.historyList.setCurrentRow(0)
-    self.historyList.setMaximumHeight(redoPixmap.rect().size().height() * 3.3)
+    self.historyList.setMaximumHeight(redoPixmap.rect().size().height() * 3.3 + self.firstComponentCheckBox.height)
 
     historyGridLayout.addWidget(self.historyList,0,1)
 
@@ -261,12 +288,15 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.warpSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateMRMLFromGUI)
     self.smudgeButton.toggled.connect(self.toogleTools)
     self.snapButton.toggled.connect(self.toogleTools)
+    self.blurButton.toggled.connect(self.toogleTools)
     self.smudgeButton.connect('clicked(bool)', self.onSmudgeButton)
     self.snapButton.connect('clicked(bool)', self.onSnapButton)
+    self.blurButton.connect('clicked(bool)', self.onBlurButton)
     
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.forceSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.sigmaSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.flattenButton.connect("clicked(bool)", self.onFlattenButton)
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
@@ -352,6 +382,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.updateMRMLFromGUI()
     self.hardnessSlider.setValue(float(self.parameterNode.GetParameter("hardness")))
     self.forceSlider.setValue(float(self.parameterNode.GetParameter("force")))
+    self.sigmaSlider.setValue(float(self.parameterNode.GetParameter("sigma")))
     # get warp node and set selector and buttons
     warpID = self.parameterNode.GetParameter("warpID")
     warpNode = slicer.util.getNode(warpID) if warpID != "" else None
@@ -359,11 +390,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.warpSelector.setCurrentNode(warpNode)
     self.smudgeButton.enabled = bool(warpNode)
     self.snapButton.enabled = bool(warpNode)
+    self.blurButton.enabled = bool(warpNumberOfComponents == 1)
     self.historyList.enabled = bool(warpNode) 
     # undo redo button
     self.undoButton.setEnabled(warpNumberOfComponents > 1) 
     self.redoButton.setEnabled(self.parameterNode.GetParameter("redoTransformID") != "") 
-    self.flattenButton.setEnabled(warpNumberOfComponents > 2)
+    self.flattenButton.setEnabled(warpNumberOfComponents > 1)
     # update warp history. add number of warp component plus redo transform (if available)
     self.historyList.clear()
     self.historyList.addItems(['Component ' + str(i) for i in range(warpNumberOfComponents + int(self.redoButton.enabled))])
@@ -379,6 +411,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.parameterNode.SetParameter("radius", str(self.radiusSlider.value) )
     self.parameterNode.SetParameter("hardness", str(self.hardnessSlider.value) )
     self.parameterNode.SetParameter("force", str(self.forceSlider.value) )
+    self.parameterNode.SetParameter("sigma", str(self.sigmaSlider.value) )
     self.parameterNode.SetParameter("warpID", self.warpSelector.currentNode().GetID() if self.warpSelector.currentNode() else "")
 
   def historyItemChanged(self):
@@ -442,19 +475,31 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def onFlattenButton(self):
     SmudgeModuleLogic().removeRedoTransform()
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, False, [193,229,193],[-96.0, -132.0, -78.0],[1.0, 1.0, 1.0])
+    includeFirstLayer = self.firstComponentCheckBox.checked
+    TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, includeFirstLayer, [193,229,193],[-96.0, -132.0, -78.0],[1.0, 1.0, 1.0])
     self.updateGuiFromMRML() # update history
+
+
+  def warpNodeModified(self, caller=None, event=None):
+    # update gui
+    self.updateGuiFromMRML()
+    self.parameterNode.SetParameter("warpModified","1")
+
+
 
   def toogleTools(self):
     SmudgeModuleLogic().effectOff() # deactivate previous effect (if any)
     self.radiusSlider.setEnabled(False)
     self.hardnessSlider.setEnabled(False)
     self.forceSlider.setEnabled(False)
+    self.sigmaSlider.setEnabled(False)
     interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
     self.removeObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) # so that changing mode doesnt affect
     if not self.noneButton.checked:
       interactionNode.SetCurrentInteractionMode(2)
       self.addObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) 
+      warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+      eventTag = warpNode.AddObserver(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent, self.warpNodeModified)
     else:
       SmudgeModuleLogic().effectOn('None')
 
@@ -463,12 +508,21 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.radiusSlider.setEnabled(True)
       self.hardnessSlider.setEnabled(True)
       self.forceSlider.setEnabled(True)
+      self.sigmaSlider.setEnabled(True)
       SmudgeModuleLogic().effectOn('Smudge')
 
   def onSnapButton(self, buttonDown):
     if buttonDown:
       self.radiusSlider.setEnabled(True)
       SmudgeModuleLogic().effectOn('Snap')
+
+  def onBlurButton(self, buttonDown):
+    if buttonDown:
+      self.radiusSlider.setEnabled(True)
+      self.hardnessSlider.setEnabled(True)
+      self.forceSlider.setEnabled(True)
+      self.sigmaSlider.setEnabled(True)
+      SmudgeModuleLogic().effectOn('Blur')
       
   def exit(self):
     self.noneButton.setChecked(True)
@@ -511,16 +565,18 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("imageID", "")
     node.SetParameter("templateID", "")
     node.SetParameter("radius", "25")
-    node.SetParameter("hardness", "60")
+    node.SetParameter("maxRadius", "50")
+    node.SetParameter("hardness", "40")
     node.SetParameter("force", "100")
+    node.SetParameter("sigma", "5")
     node.SetParameter("modality", "t1")
     node.SetParameter("subjectPath", "")
     node.SetParameter("subjectN", "0")
     node.SetParameter("MNIPath", ".")
     node.SetParameter("MNIAtlasPath", ".")
     node.SetParameter("antsApplyTransformsPath", "")
-    node.SetParameter("warpModified", "1")
     node.SetParameter("subjectChanged","0")
+    node.SetParameter("warpModified","0")
     return node
 
   def removeRedoTransform(self):
@@ -532,57 +588,25 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
 
   def effectOn(self, effectName):
     
-    if effectName == 'Smudge':
+    if effectName in ['Smudge']:
       auxTransformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
       TransformsUtil.TransformsUtilLogic().emptyTransfrom(auxTransformNode)
 
-    parameterNode = self.getParameterNode()
     for color in ['Red','Green','Yellow']:
       sliceWidget = slicer.app.layoutManager().sliceWidget(color)
       if effectName == 'None':
-        WarpEffect.NoneEffect(parameterNode, sliceWidget)
+        WarpEffect.NoneEffect(sliceWidget)
       elif effectName == 'Smudge':
-        WarpEffect.SmudgeEffectTool(parameterNode, sliceWidget, auxTransformNode)
+        WarpEffect.SmudgeEffectTool(sliceWidget, auxTransformNode)
+      elif effectName == 'Blur':
+        WarpEffect.BlurEffectTool(sliceWidget)
       elif effectName == 'Snap':
-        WarpEffect.SnapEffectTool(parameterNode, sliceWidget)
+        WarpEffect.SnapEffectTool(sliceWidget)
   
   def effectOff(self):
     WarpEffect.WarpEffectTool.empty()
 
-  def applyChanges(self):
 
-    parameterNode = self.getParameterNode()
-    warpNode = slicer.util.getNode(parameterNode.GetParameter("warpID"))
-    subjectPath = parameterNode.GetParameter("subjectPath")
-
-    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) == 1:
-      msgBox = qt.QMessageBox()
-      msgBox.setText('No modifications in warp')
-      msgBox.setInformativeText('Save subject as approved?')
-      msgBox.setStandardButtons(qt.QMessageBox().Save | qt.QMessageBox().Discard)
-      ret = msgBox.exec_()
-      if ret == qt.QMessageBox().Save:
-        FunctionsUtil.saveApprovedData(subjectPath)
-      return
-    
-    TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True, [], [], [])
-
-    slicer.util.saveNode(warpNode, os.path.join(subjectPath,'glanatComposite.nii.gz'))
-
-    warpNode.Inverse()
-
-    # load the volume again to set as reference
-    imageNode = slicer.util.loadVolume(os.path.join(subjectPath,'anat_' + parameterNode.GetParameter("modality") + '.nii'))
-
-    outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
-    transformsLogic = slicer.modules.transforms.logic()
-    transformsLogic.ConvertToGridTransform(warpNode, imageNode, outNode)
-
-    slicer.util.saveNode(outNode, os.path.join(subjectPath,'glanatInverseComposite.nii.gz'))
-
-    # delete
-    slicer.mrmlScene.RemoveNode(outNode)
-    slicer.mrmlScene.RemoveNode(imageNode)
 
 
 

@@ -1,10 +1,12 @@
 import slicer, vtk, qt
 import numpy as np
 import sys, os
+from scipy import ndimage
 
 from . import PointerEffect
 
 import TransformsUtil
+import SmudgeModule
 
 
 
@@ -16,15 +18,43 @@ class WarpEffectTool():
 
   def __init__(self):
     self._instances.add(self)
+    self.parameterNode = SmudgeModule.SmudgeModuleLogic().getParameterNode()
 
+  def createSphere(self, r):
+    # create a sphere with redius
+    xx, yy, zz = np.mgrid[:2*r+1, :2*r+1, :2*r+1]
+    sphereResult = (xx-r) ** 2 + (yy-r) ** 2 + (zz-r) ** 2
+    sphereResult[r][r][r] = 1 # replace 0 by 1
+    sphereLarge = sphereResult <= (r**2+1) # sphere that the mouse shows
+    sphereSmall = sphereResult <= ((r * float(self.parameterNode.GetParameter("hardness")) / 100.0) **2 + 1 ) # hardness amount
+    sphereResult = 1.0 / sphereResult # invert
+    # get value in the edge of the small sphere
+    i1,i2,i3 = np.nonzero(sphereSmall)
+    newMaxValue = sphereResult[i1[0]][i2[0]][i3[0]]
+    # set same value inside the small sphere
+    sphereResult[sphereSmall] = sphereSmall[sphereSmall] * newMaxValue
+    # delete outside values 
+    sphereResult = sphereResult * sphereLarge
+    # set range to [0-1]
+    newMinValue = sphereResult.min()
+    sphereResult = (sphereResult - newMinValue) / (newMaxValue - newMinValue)
+    # set force
+    sphereResult = sphereResult * float(self.parameterNode.GetParameter("force")) / 100.0
+    return sphereResult
 
-  def removeRedoTransform(self, redoTransformID):
-    if redoTransformID != "":
-      slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("redoTransformID")))
-      self.parameterNode.SetParameter("redoTransformID","")
+  def eventPositionToRAS(self):
+    xy = self.interactor.GetEventPosition()
+    xyToRAS = self.sliceLogic.GetSliceNode().GetXYToRAS()
+    currentPoint = xyToRAS.MultiplyDoublePoint( (xy[0], xy[1], 0, 1) )[0:3]
+    return currentPoint
 
-  def notityWarpModified(self, parameterNode):
-    parameterNode.SetParameter("warpModified",str(1+int(parameterNode.GetParameter("warpModified"))))
+  def getCurrentIndex(self, r, currentPoint, RASToIJK):
+    # get current IJK
+    pos_i,pos_j,pos_k,aux = RASToIJK.MultiplyDoublePoint(currentPoint + (1,))
+    k,j,i = int(round(pos_k)),int(round(pos_j)),int(round(pos_i))
+    # expand with radius
+    currentIndex = slice(k-r,k+r+1), slice(j-r,j+r+1), slice(i-r,i+r+1)
+    return currentIndex
 
   def cleanup(self):
     pass
@@ -45,10 +75,10 @@ class WarpEffectTool():
 
 class NoneEffect(PointerEffect.PointerEffectTool, WarpEffectTool):
 
-  def __init__(self, parameterNode, sliceWidget):
-    self.parameterNode = parameterNode
-    PointerEffect.PointerEffectTool.__init__(self, sliceWidget)
+  def __init__(self, sliceWidget):
     WarpEffectTool.__init__(self)
+    PointerEffect.PointerEffectTool.__init__(self, sliceWidget)
+    
 
 
 
@@ -58,12 +88,11 @@ class NoneEffect(PointerEffect.PointerEffectTool, WarpEffectTool):
 
 class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
-  def __init__(self, parameterNode, sliceWidget, auxTransformNode):
+  def __init__(self, sliceWidget, auxTransformNode):
 
-    self.parameterNode = parameterNode
-    PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
     WarpEffectTool.__init__(self)
-
+    PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
+    
     self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     
     # transform data
@@ -88,44 +117,27 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
       self.previousPoint = xyToRAS.MultiplyDoublePoint( (xy[0], xy[1], 0, 1) )[0:3]
     elif event == 'LeftButtonReleaseEvent':
       self.smudging = False
+      # smooth
+      sigma = float(self.parameterNode.GetParameter("sigma")) / self.auxTransformSpacing
+      self.auxTransformArray[:] = np.stack([ndimage.gaussian_filter(self.auxTransformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
+      # apply
       self.warpNode.HardenTransform()
       TransformsUtil.TransformsUtilLogic().emptyTransfrom(self.auxTransformNode)
-      self.notityWarpModified(self.parameterNode)
-      self.removeRedoTransform(self.parameterNode.GetParameter("redoTransformID"))
+      self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
+      SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
 
 
     elif event == 'MouseMoveEvent':
       if self.smudging:
-        # create a sphere with redius
+
         r = int(round(float(self.parameterNode.GetParameter("radius")) / self.auxTransformSpacing))
-        xx, yy, zz = np.mgrid[:2*r+1, :2*r+1, :2*r+1]
-        sphereResult = (xx-r) ** 2 + (yy-r) ** 2 + (zz-r) ** 2
-        sphereResult[r][r][r] = 1 # replace 0 by 1
-        sphereLarge = sphereResult <= (r**2+1) # sphere that the mouse shows
-        sphereSmall = sphereResult <= ((r * (1 - float(self.parameterNode.GetParameter("hardness")) / 100.0)) **2 + 1 ) # hardness amount
-        sphereResult = 1.0 / sphereResult # invert
-        # get value in the edge of the small sphere
-        i1,i2,i3 = np.nonzero(sphereSmall)
-        newMaxValue = sphereResult[i1[0]][i2[0]][i3[0]]
-        # set same value inside the small sphere
-        sphereResult[sphereSmall] = sphereSmall[sphereSmall] * newMaxValue
-        # delete outside values 
-        sphereResult = sphereResult * sphereLarge
-        # set range to [0-1]
-        newMinValue = sphereResult.min()
-        sphereResult = (sphereResult - newMinValue) / (newMaxValue - newMinValue)
-        # set force
-        sphereResult = sphereResult * float(self.parameterNode.GetParameter("force")) / 100.0
-        # get current IJK coord
-        xy = self.interactor.GetEventPosition()
-        xyToRAS = self.sliceLogic.GetSliceNode().GetXYToRAS()
-        currentPoint = xyToRAS.MultiplyDoublePoint( (xy[0], xy[1], 0, 1) )[0:3]
-        pos_i,pos_j,pos_k,aux = self.auxTransfromRASToIJK.MultiplyDoublePoint(currentPoint + (1,))
-        k,j,i = int(round(pos_k)),int(round(pos_j)),int(round(pos_i))
-        curr_index = slice(k-r,k+r+1), slice(j-r,j+r+1), slice(i-r,i+r+1)
+        sphereResult = self.createSphere(r)
+        currentPoint = self.eventPositionToRAS()
+        currentIndex = self.getCurrentIndex(r, currentPoint, self.auxTransfromRASToIJK)
 
         # apply to transform array
-        self.auxTransformArray[curr_index] += np.stack([(sphereResult) * i for i in (np.array(self.previousPoint) - np.array(currentPoint))],3) # original
+        self.auxTransformArray[currentIndex] += np.stack([(sphereResult) * i for i in (np.array(self.previousPoint) - np.array(currentPoint))],3) # original
+
 
         # update view
         self.auxTransformNode.Modified()
@@ -138,6 +150,76 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     PointerEffect.CircleEffectTool.cleanup(self)
 
 
+
+#
+# BlurEffectTool
+#
+
+class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
+
+  def __init__(self, sliceWidget):
+
+    WarpEffectTool.__init__(self)
+    PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
+    
+
+    self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    self.warpRASToIJK = TransformsUtil.TransformsUtilLogic().getTransformRASToIJK(self.warpNode)
+    self.warpSpacing = self.warpNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0] # Asume isotropic!
+
+    self.blurContent = []
+    self.currentIndex = []
+    self.preview = False
+    
+  def processEvent(self, caller=None, event=None):
+
+    PointerEffect.CircleEffectTool.processEvent(self, caller, event)
+
+    if event =='LeftButtonDoubleClickEvent':
+      self.preview = False
+      self.transformArray[self.currentIndex] += self.blurContent
+      self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
+      SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
+      
+    elif event == 'LeftButtonReleaseEvent':
+      if self.preview:
+        self.transformArray[self.currentIndex] -= self.blurContent
+        self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
+
+    elif event == 'LeftButtonPressEvent':
+      self.preview = True
+      # get array 
+      self.transformArray = slicer.util.array(self.warpNode.GetID())
+
+      sigma = float(self.parameterNode.GetParameter("sigma")) / self.warpSpacing
+      r = int(round(float(self.parameterNode.GetParameter("radius")) / self.warpSpacing))
+
+      if r != int(round(float(self.parameterNode.GetParameter("maxRadius")) / self.warpSpacing)):
+        # get shpere and index
+        sphereResult = self.createSphere(r)
+        currentPoint = self.eventPositionToRAS()
+        self.currentIndex = self.getCurrentIndex(r, currentPoint, self.warpRASToIJK)   
+        # gaussian filter for each component 
+        self.blurContent =  np.stack([ndimage.gaussian_filter(self.transformArray[self.currentIndex + (slice(i,i+1),)], sigma) for i in range(3)], 3).squeeze()
+        # substract original
+        self.blurContent = self.blurContent - self.transformArray[self.currentIndex]
+        # modulate result with the sphere
+        self.blurContent = np.stack([self.blurContent[:,:,:,i] * sphereResult for i in range(3)], 3).squeeze()
+      else: # maximum radius: take all warp field
+        self.blurContent =  np.stack([ndimage.gaussian_filter(self.transformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
+        self.blurContent = self.blurContent - self.transformArray
+        self.currentIndex = tuple([slice(0,s) for s in self.blurContent.shape])
+      # apply
+      self.transformArray[self.currentIndex] += self.blurContent
+      self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
+      
+
+  def cleanup(self):
+    WarpEffectTool.cleanup(self)
+    PointerEffect.CircleEffectTool.cleanup(self)
+
+
+
 #
 # Snap Effect Tool
 #
@@ -145,12 +227,11 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
 
     
-  def __init__(self, parameterNode, sliceWidget):
+  def __init__(self, sliceWidget):
 
     WarpEffectTool.__init__(self)
     PointerEffect.DrawEffectTool.__init__(self,sliceWidget)
-
-    self.parameterNode = parameterNode
+    
     self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     self.MNIBounds = [[-98.25, -134.25, -72.25], [-98.25, -134.25, 116.75], [-98.25, 98.75, -72.25], [-98.25, 98.75, 116.75], [98.75, -134.25, -72.25], [98.75, -134.25, 116.75], [98.75, 98.75, -72.25], [98.75, 98.75, 116.75]]
     
@@ -190,8 +271,8 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
         slicer.mrmlScene.RemoveNode(curve2)
         slicer.mrmlScene.RemoveNode(transformNode)
         slicer.mrmlScene.RemoveNode(slicedModel)
-        self.removeRedoTransform(self.parameterNode.GetParameter("redoTransformID"))
-        self.notityWarpModified(self.parameterNode)
+        self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
+        SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
 
     PointerEffect.DrawEffectTool.processEvent(self, caller, event) 
     

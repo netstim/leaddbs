@@ -45,6 +45,7 @@ class EffectTool(object):
       vtk.vtkCommand.MiddleButtonReleaseEvent,
       vtk.vtkCommand.RightButtonPressEvent,
       vtk.vtkCommand.RightButtonReleaseEvent,
+      vtk.vtkCommand.LeftButtonDoubleClickEvent,
       vtk.vtkCommand.MouseMoveEvent,
       vtk.vtkCommand.KeyPressEvent,
       vtk.vtkCommand.KeyReleaseEvent,

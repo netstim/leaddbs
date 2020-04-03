@@ -201,9 +201,12 @@ class ImportSubjectLogic(ScriptedLoadableModuleLogic):
 
   def importTransform(self, directory, fileName):
     filePath = os.path.join(directory, fileName)
-    node = slicer.util.loadTransform(filePath)
-    node.SetName(self.createNodeName(directory,fileName))
-    return node
+    if os.path.isfile(filePath):
+      node = slicer.util.loadTransform(filePath)
+      node.SetName(self.createNodeName(directory,fileName))
+      return node
+    else:
+      return None
 
   def importReconstruction(self, directory):
     pass

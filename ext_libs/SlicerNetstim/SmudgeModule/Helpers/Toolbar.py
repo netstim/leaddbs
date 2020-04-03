@@ -220,9 +220,11 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     subjectN = int(self.parameterNode.GetParameter("subjectN"))
     subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
     self.subjectNameLabel.text = 'Subject: ' + os.path.split(os.path.abspath(self.parameterNode.GetParameter("subjectPath")))[-1]
-    self.saveButton.text = 'Save and Exit' if subjectN == len(subjectPaths)-1 else 'Save and Next'
+    self.saveButton.text = 'Finish and Exit' if subjectN == len(subjectPaths)-1 else 'Finish and Next'
     # modality
     self.modalityComboBox.setCurrentText(self.parameterNode.GetParameter("modality"))
+
+
 
   def onAtlasChanged(self, index, atlasName = None):
     if not atlasName:
@@ -234,25 +236,27 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
   def onSaveButton(self):
     SmudgeModule.SmudgeModuleLogic().effectOff()
-    reducedToolbarLogic().applyChanges()
+    if reducedToolbarLogic().applyChanges():
+      # remove nodes
+      slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID")))
+      slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
+      slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getBackgroundNode())
 
-    # remove nodes
-    slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID")))
-    slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
-
-    nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
-    subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
+      nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
+      subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
     
-    if nextSubjectN < len(subjectPaths):
-      self.updateModalities(subjectPaths[nextSubjectN])
-      self.parameterNode.SetParameter("subjectN", str(nextSubjectN))
-      self.parameterNode.SetParameter("subjectPath", subjectPaths[nextSubjectN])
-      reducedToolbarLogic().loadSubjectTransforms()
-      self.onModalityPressed([],self.parameterNode.GetParameter("modality"))
-      self.updateToolbarFromMRML()
-      self.parameterNode.SetParameter("subjectChanged","1")
-    else:
-      slicer.util.exit()
+      if nextSubjectN < len(subjectPaths):
+        self.updateModalities(subjectPaths[nextSubjectN])
+        self.parameterNode.SetParameter("subjectN", str(nextSubjectN))
+        self.parameterNode.SetParameter("subjectPath", subjectPaths[nextSubjectN])
+        reducedToolbarLogic().loadSubjectTransforms()
+        self.onModalityPressed([],self.parameterNode.GetParameter("modality"))
+        self.updateToolbarFromMRML()
+        self.parameterNode.SetParameter("warpModified","0")
+      else:
+        slicer.util.exit()
+
+    self.parameterNode.SetParameter("subjectChanged","1")
 
   def updateModalities(self, subjectPath):
     currentModality = self.modalityComboBox.currentText
@@ -285,7 +289,6 @@ class reducedToolbarLogic(object):
     affineNode.CreateDefaultDisplayNodes()
     self.parameterNode.SetParameter("affineTransformID", affineNode.GetID())
 
-
   
   def applyChanges(self):
 
@@ -293,17 +296,30 @@ class reducedToolbarLogic(object):
     warpNode = slicer.util.getNode(parameterNode.GetParameter("warpID"))
     subjectPath = parameterNode.GetParameter("subjectPath")
 
-    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) == 1:
+    if not bool(int(parameterNode.GetParameter("warpModified"))):
       msgBox = qt.QMessageBox()
       msgBox.setText('No modifications in warp')
       msgBox.setInformativeText('Save subject as approved?')
-      msgBox.setStandardButtons(qt.QMessageBox().Save | qt.QMessageBox().Discard)
+      msgBox.setStandardButtons(qt.QMessageBox().Save | qt.QMessageBox().Discard | qt.QMessageBox().Cancel)
       ret = msgBox.exec_()
+      if ret == qt.QMessageBox().Cancel:
+        return False
       if ret == qt.QMessageBox().Save:
         FunctionsUtil.saveApprovedData(subjectPath)
-      return
+      return True
     
-    TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True, [], [], [])
+    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) == 1:
+      msgBox = qt.QMessageBox()
+      msgBox.setText('Only one layer')
+      msgBox.setInformativeText('Save changes?')
+      msgBox.setStandardButtons(qt.QMessageBox().Save | qt.QMessageBox().Discard | qt.QMessageBox().Cancel)
+      ret = msgBox.exec_()
+      if ret == qt.QMessageBox().Cancel:
+        return False
+      elif ret == qt.QMessageBox().Discard:
+        return True
+    else:
+      TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True, [], [], [])
 
     slicer.util.saveNode(warpNode, os.path.join(subjectPath,'glanatComposite.nii.gz'))
 
@@ -324,7 +340,9 @@ class reducedToolbarLogic(object):
 
     # delete
     slicer.mrmlScene.RemoveNode(outNode)
-    slicer.mrmlScene.RemoveNode(imageNode)
+    
+
+    return True
 
 
   def getBackgroundNode(self):
