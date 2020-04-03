@@ -11,6 +11,7 @@ classdef ea_disctract < handle
         showposamount % two entries for right and left
         shownegamount % two entries for right and left
         connthreshold
+        efieldthreshold
         statmetric % entry from discfiber settings as initially specified in prefs.machine.lg (which are separately stored for each analysis/object).
         poscolor % positive main color
         negcolor % negative main color
@@ -113,15 +114,22 @@ classdef ea_disctract < handle
             if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
                 patsel=obj.patientselection;
             end
-            if obj.mirrorsides
-                patsel=[patsel;patsel+length(obj.allpatients)];
-            end
-
             if size(I,2)==1 % 1 entry per patient, not per electrode
                 I=[I,I]; % both sides the same;
             end
+            if obj.mirrorsides
+                patsel=[patsel;patsel+length(obj.allpatients)];
+                I=[I;I];
+            end
+
+        
 
             for side=1:2
+                
+                % check connthreshold
+                keyboard
+                
+                
                 switch obj.statmetric
                     case 1 % t-tests
                         allvals=repmat(I(patsel,side),1,size(fibsval{side}(:,patsel),1)); % improvement values (taken from Lead group file or specified in line 12).
@@ -177,8 +185,8 @@ classdef ea_disctract < handle
                 posvals{side}=sort(vals{side}(vals{side}>0),'descend');
                 negvals{side}=sort(vals{side}(vals{side}<0),'ascend');
 
-                posthresh{side}=posvals{side}(round((obj.showposamount(side)/100)*length(posvals{side})));
-                negthresh{side}=negvals{side}(round((obj.shownegamount(side)/100)*length(negvals{side})));
+                posthresh{side}=posvals{side}(ceil(((obj.showposamount(side)+eps)/100)*length(posvals{side})));
+                negthresh{side}=negvals{side}(ceil(((obj.shownegamount(side)+eps)/100)*length(negvals{side})));
 
                 % Remove vals and fibers outside the thresholding range
                 remove=logical(logical(vals{side}<posthresh{side}) .* logical(vals{side}>negthresh{side}));
