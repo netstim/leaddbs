@@ -92,9 +92,9 @@ classdef ea_disctract < handle
             mirroredpatselection=[obj.patientselection,obj.patientselection+length(obj.allpatients)];
             switch obj.statmetric
                 case 1 % ttests
-                    [fibcell,fibsval,XYZmm,nii]=ea_discfibers_heatfibertracts(cfile,{allroilist},mirroredpatselection,{obj.variables(:,1)},obj.connthreshold/100);
+                    [fibcell,fibsval,XYZmm,nii]=ea_discfibers_heatfibertracts(cfile,{allroilist},mirroredpatselection,{obj.responsevar},obj.connthreshold/100);
                 case 2 % spearmans R
-                    [fibcell,fibsval,XYZmm,nii,valsmm]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},mirroredpatselection,{obj.variables(:,1)},efieldthresh);
+                    [fibcell,fibsval,XYZmm,nii,valsmm]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},mirroredpatselection,{obj.responsevar},efieldthresh);
                     obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).valsmm=valsmm;
             end
 
