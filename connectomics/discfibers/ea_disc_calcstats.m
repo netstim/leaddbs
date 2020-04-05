@@ -24,6 +24,8 @@ for group=groups
     if dogroups
         groupspt=find(obj.M.patient.group==group);
         gpatsel=groupspt(ismember(groupspt,patsel));
+    else
+        gpatsel=patsel;
     end
     if obj.mirrorsides
         gpatsel=[gpatsel;gpatsel+length(obj.allpatients)];

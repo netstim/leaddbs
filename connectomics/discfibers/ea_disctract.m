@@ -66,10 +66,6 @@ classdef ea_disctract < handle
                 obj.allpatients = obj.M.patient.list;
                 obj.responsevarlabel = obj.M.clinical.labels{1};
                 obj.covarlabels={'Stimulation Amplitude'};
-            elseif isfield(D,'tractset') % saved tractobject loaded
-                obj = D.tractset;
-                obj.resultfig = resultfig;
-                obj.draw;
             else
                 ea_error('You have opened a file of unknown type.')
                 return
@@ -135,6 +131,15 @@ classdef ea_disctract < handle
 
         end
 
+        function Amps = getstimamp(obj)
+            keyboard
+        end
+        
+        function VTAvolumes = getvtavolumes(obj)
+            keyboard
+        end
+        
+        
         function [I,Ihat] = loocv(obj)
             allpts=obj.patientselection;
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
