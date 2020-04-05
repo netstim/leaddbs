@@ -47,6 +47,34 @@ classdef ea_disctract < handle
         function obj=ea_disctract() % class constructor
 
         end
+        
+        
+        function initialize(obj,lgpath,resultfig)
+            
+            D=load(lgpath);
+            if isfield(D,'M') % Lead Group analysis path loaded
+                obj.M = D.M;
+                obj.leadgroup=lgpath;
+
+                testID=obj.M.guid;
+                ea_mkdir([fileparts(obj.leadgroup),filesep,'disctracts',filesep]);
+                while exist([fileparts(obj.leadgroup),filesep,'disctracts',filesep,testID,'.mat'],'file')
+                    testID=[testID,'_1'];
+                end
+                obj.ID = testID;
+                obj.resultfig = resultfig;
+                obj.allpatients = obj.M.patient.list;
+                obj.responsevarlabel = obj.M.clinical.labels{1};
+                obj.covarlabels={'Stimulation Amplitude'};
+            elseif isfield(D,'tractset') % saved tractobject loaded
+                obj = D.tractset;
+                obj.resultfig = resultfig;
+                obj.draw;
+            else
+                ea_error('You have opened a file of unknown type.')
+                return
+            end
+        end
 
         function calculate(obj)
             % check that this has not been calculated before:
