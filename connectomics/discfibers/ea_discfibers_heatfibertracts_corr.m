@@ -47,7 +47,7 @@ for side=1:2
             [IX,D]=knnsearch(tree,fibcell{fib},'Distance','chebychev');
             in=D<dthresh;
             if any(in)
-                fibsval{side}(fib,roi)=sum(valsmm{roi}(IX(in)));
+                fibsval{side}(fib,roi)=sum(valsmm{roi,side}(IX(in)));
             end
         end
         ea_dispercent(roi/length(patselection));
