@@ -144,17 +144,32 @@ classdef ea_disctract < handle
         end
         
         function VTAvolumes = getvtavolumes(obj)
-            
-            VTAvolumes = obj.getstimamp;
-            
+            if ~isfield(obj.M.stats(1).ea_stats.stimulation.vat(1),'volume')
+               VTAvolumes = obj.getstimamp;
+                warning('No VTA volumes found. Using stimulation amplitudes instead. Re-run stats in Lead-group to obtain volumes.');
+                return
+            end
+            VTAvolumes=zeros(length(obj.M.patient.list),2);
+            for pt=1:length(obj.M.patient.list)
+                for side=1:2
+                    VTAvolumes(pt,side)=obj.M.stats(pt).ea_stats.stimulation.vat(side).volume;
+                end
+            end
             
         end
         
-        function Efieldmags = getefieldmagnitudes(obj)
-            
-            Efieldmags = obj.getstimamp;
-            
-            
+        function Efieldmags = getefieldmagnitudes(obj)        
+            if ~isfield(obj.M.stats(1).ea_stats.stimulation.efield(1),'volume')
+                Efieldmags = obj.getstimamp;
+                warning('No Efield magnitude sums found. Using stimulation amplitudes instead. Re-run stats in Lead-group to obtain values.');
+                return
+            end
+            Efieldmags=zeros(length(obj.M.patient.list),2);
+            for pt=1:length(obj.M.patient.list)
+                for side=1:2
+                    Efieldmags(pt,side)=obj.M.stats(pt).ea_stats.stimulation.efield(side).volume;
+                end
+            end
         end
         
         function [I,Ihat] = loocv(obj)
