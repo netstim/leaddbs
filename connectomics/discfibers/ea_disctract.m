@@ -132,13 +132,30 @@ classdef ea_disctract < handle
         end
 
         function Amps = getstimamp(obj)
-            keyboard
+            Amps=zeros(length(obj.M.patient.list),2);
+            for pt=1:length(obj.M.patient.list)
+                for side=1:2
+            
+                    thisamp=obj.M.stats(pt).ea_stats.stimulation.vat(side).amp;
+                    thisamp(thisamp==0)=nan;
+                    Amps(pt,side)=ea_nanmean(thisamp(:));
+                end
+            end
         end
         
         function VTAvolumes = getvtavolumes(obj)
-            keyboard
+            
+            VTAvolumes = obj.getstimamp;
+            
+            
         end
         
+        function Efieldmags = getefieldmagnitudes(obj)
+            
+            Efieldmags = obj.getstimamp;
+            
+            
+        end
         
         function [I,Ihat] = loocv(obj)
             allpts=obj.patientselection;

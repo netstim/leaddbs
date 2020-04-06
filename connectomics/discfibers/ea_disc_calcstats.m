@@ -43,14 +43,50 @@ for group=groups
         gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=0;
         switch obj.statmetric
             case 1 % t-tests
-                allvals=repmat(I(gpatsel,side),1,size(gfibsval{side}(:,gpatsel),1)); % improvement values (taken from Lead group file or specified in line 12).
-                fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
-                fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
-                nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
-                nfibsimpval(logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all connected values
-                [~,p,~,stats]=ttest2(fibsimpval,nfibsimpval); % Run two-sample t-test across connected / unconnected values
-                vals{group,side}=stats.tstat;
-                %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
+                
+                % check if covariates exist:
+                if ~isempty(obj.covars)
+                    % they do:
+                    vals{group,side}=nan(1,size(gfibsval{side},1));
+                    ea_dispercent(0,['Side ',num2str(side),': Calculating T-values (taking covariates into account)']);
+                    nixfib=find(any(gfibsval{side}(:,gpatsel)').*(~all(gfibsval{side}(:,gpatsel)')));
+                    for fib=1:length(nixfib)
+                        data = table(I(gpatsel,side),gfibsval{side}(nixfib(fib),gpatsel)',...
+                            'VariableNames',{'response','fibsval'});
+                        formula = 'response ~ 1 + fibsval';
+                        data.fibsval=categorical(data.fibsval);
+                        for cv=1:length(obj.covars)
+                            thiscv=obj.covars{cv}(gpatsel,:);
+                            if (size(thiscv,2)==2)
+                                thiscv=thiscv(:,side);
+                            end
+                            data=addvars(data,thiscv,'NewVariableNames',ea_space2sub(obj.covarlabels{cv}));
+                            if isequal(thiscv,logical(thiscv))
+                                formula=[formula,' + (1 + fibsval | ',ea_space2sub(obj.covarlabels{cv}),')'];
+                                data.(ea_space2sub(obj.covarlabels{cv}))=categorical(data.(ea_space2sub(obj.covarlabels{cv})));
+                                
+                            else
+                                formula=[formula,' + ',ea_space2sub(obj.covarlabels{cv})];
+                            end
+                        end
+                        mdl = fitlme(data,formula);
+                        vals{group,side}(nixfib(fib))=mdl.Coefficients.tStat(2);
+                        ea_dispercent(fib/length(nixfib));
+                    end
+                    ea_dispercent(1,'end');
+                    
+                else
+                    % no covariates exist:
+                    
+                    allvals=repmat(I(gpatsel,side),1,size(gfibsval{side}(:,gpatsel),1)); % improvement values (taken from Lead group file or specified in line 12).
+                    fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
+                    fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
+                    nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
+                    nfibsimpval(logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all connected values
+                    [~,p,~,stats]=ttest2(fibsimpval,nfibsimpval); % Run two-sample t-test across connected / unconnected values
+                    vals{group,side}=stats.tstat;
+                    %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
+                end
             case 2 % spearmans correlations
                 nangfibsval=gfibsval{side}(:,gpatsel);
                 nangfibsval(nangfibsval==0)=nan; % only used in spearmans correlations
