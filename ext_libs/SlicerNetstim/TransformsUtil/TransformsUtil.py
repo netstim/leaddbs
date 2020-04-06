@@ -181,6 +181,16 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
   """
 
 
+  def getMNIGrid(self, resolution):
+    size = [394, 466, 378]
+    origin = [-98, -134, -72]
+    spacing = [0.5, 0.5, 0.5]
+    if resolution != 0.5:
+      size = [int(round(s * spacing[0] / resolution)) for s in size]
+      spacing = [resolution] * 3
+
+    return size,origin,spacing
+
   def emptyTransfrom(self, transformNode, transformSize = [193,229,193], transformOrigin = [-96.0, -132.0, -78.0], transformSpacing = [1.0, 1.0, 1.0]):
     """
     Run the actual algorithm
@@ -206,7 +216,7 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
 
     return True
 
-  def createEmpyVolume(self, imageSize = [193,229,193], imageOrigin = [-96.0, -132.0, -78.0], imageSpacing = [1.0, 1.0, 1.0]):
+  def createEmpyVolume(self, imageSize, imageOrigin, imageSpacing):
     voxelType = vtk.VTK_UNSIGNED_CHAR
     imageDirections = [[1,0,0], [0,1,0], [0,0,1]]
     fillVoxelValue = 0
@@ -230,26 +240,36 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     transformNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLTransformNode')
     return set([transformNodes.GetItemAsObject(i).GetName() for i in range(transformNodes.GetNumberOfItems())])
 
+  def getGridDefinition(self, transformNode):
+    if isinstance(transformNode.GetTransformFromParent(), slicer.vtkOrientedGridTransform) and transformNode.GetTransformFromParent().GetDisplacementGrid():
+      grid = transformNode.GetTransformFromParent().GetDisplacementGrid()
+    elif isinstance(transformNode.GetTransformToParent(), slicer.vtkOrientedGridTransform) and transformNode.GetTransformToParent().GetDisplacementGrid():
+      grid = transformNode.GetTransformToParent().GetDisplacementGrid()
+    elif isinstance(transformNode.GetTransformFromParent(), vtk.vtkGeneralTransform) and transformNode.GetTransformFromParent().GetConcatenatedTransform(0).GetDisplacementGrid():
+      grid = transformNode.GetTransformFromParent().GetConcatenatedTransform(0).GetDisplacementGrid()
+    elif isinstance(transformNode.GetTransformToParent(), vtk.vtkGeneralTransform) and transformNode.GetTransformToParent().GetConcatenatedTransform(0).GetDisplacementGrid():
+      grid = transformNode.GetTransformToParent().GetConcatenatedTransform(0).GetDisplacementGrid()
+    else:
+      return False
+    
+    size = grid.GetDimensions()
+    origin = grid.GetOrigin()
+    spacing = grid.GetSpacing()
+
+    return size,origin,spacing
+
+
   def getNumberOfLayers(self, transformNode):
     if not transformNode:
       return 0
     if isinstance(transformNode.GetTransformFromParent(), vtk.vtkGeneralTransform):
-      return transformNode.GetTransformFromParent().GetNumberOfConcatenatedTransforms()
-    elif isinstance(transformNode.GetTransformToParent(), vtk.vtkGeneralTransform):
-      return transformNode.GetTransformToParent().GetNumberOfConcatenatedTransforms()
+      return max(transformNode.GetTransformFromParent().GetNumberOfConcatenatedTransforms(), transformNode.GetTransformToParent().GetNumberOfConcatenatedTransforms())
     else:
       return 1
 
   def hasMinimumNumberOfLayers(self, transformNode, N):
     return self.getNumberOfLayers(transformNode) >= N
 
-  def getTransformGridProperties(self, transformNode):
-    spacing = transformNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()
-    b = transformNode.GetTransformFromParent().GetDisplacementGrid().GetBounds()
-    sizeFloat = list((np.diff(np.array(b))[0::2] + np.array(spacing)) / np.array(spacing)) # get size from bounds and spacing
-    size = tuple([int(s) for s in sizeFloat])
-    origin = transformNode.GetTransformFromParent().GetDisplacementGrid().GetOrigin()
-    return size, origin, spacing
 
   def splitAndGetNodeNames(self, transformNode):
     # split transform and get the created node names
@@ -270,11 +290,11 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
       print('already flat')
       return
 
+    size, origin, spacing = self.getGridDefinition(transformNode)
     newNodeNames = self.splitAndGetNodeNames(transformNode)
 
     if includeFirstLayer:
       newNodeNames.append(transformNode.GetName()) # add first layer in the end
-      size, origin, spacing = self.getTransformGridProperties(transformNode)
 
     for nodeName in newNodeNames[1:]:
       node = slicer.util.getNode(nodeName)

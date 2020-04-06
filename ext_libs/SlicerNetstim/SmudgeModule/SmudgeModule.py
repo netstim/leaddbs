@@ -201,7 +201,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.sigmaSlider.maximum = 30
     self.sigmaSlider.decimals = 0
     self.sigmaSlider.value = float(self.parameterNode.GetParameter("sigma"))
-    toolsFormLayout.addRow("Sigma:", self.sigmaSlider)
+    toolsFormLayout.addRow("Sigma (mm):", self.sigmaSlider)
 
 
 
@@ -483,7 +483,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def warpNodeModified(self, caller=None, event=None):
     # update gui
     self.updateGuiFromMRML()
-    self.parameterNode.SetParameter("warpModified","1")
+    self.parameterNode.SetParameter("warpModified", str(int(self.parameterNode.GetParameter("warpModified"))+1) )
 
 
 
@@ -561,14 +561,15 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node = ScriptedLoadableModuleLogic.createParameterNode(self)
     node.SetParameter("warpID", "")
     node.SetParameter("redoTransformID", "")
-    node.SetParameter("affineTransformID", "")
-    node.SetParameter("imageID", "")
-    node.SetParameter("templateID", "")
     node.SetParameter("radius", "25")
     node.SetParameter("maxRadius", "50")
     node.SetParameter("hardness", "40")
     node.SetParameter("force", "100")
     node.SetParameter("sigma", "5")
+    node.SetParameter("warpModified","0")
+    # lead dbs specific
+    node.SetParameter("affineTransformID", "")
+    node.SetParameter("templateID", "")
     node.SetParameter("modality", "t1")
     node.SetParameter("subjectPath", "")
     node.SetParameter("subjectN", "0")
@@ -576,7 +577,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("MNIAtlasPath", ".")
     node.SetParameter("antsApplyTransformsPath", "")
     node.SetParameter("subjectChanged","0")
-    node.SetParameter("warpModified","0")
+    node.SetParameter("resolution","1")
     return node
 
   def removeRedoTransform(self):
@@ -589,8 +590,12 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
   def effectOn(self, effectName):
     
     if effectName in ['Smudge']:
+      # create aux transform with same grid as warp
+      parameterNode = self.getParameterNode()
+      warpNode = slicer.util.getNode(parameterNode.GetParameter("warpID"))
+      size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
       auxTransformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
-      TransformsUtil.TransformsUtilLogic().emptyTransfrom(auxTransformNode)
+      TransformsUtil.TransformsUtilLogic().emptyTransfrom(auxTransformNode, size, origin, spacing)
 
     for color in ['Red','Green','Yellow']:
       sliceWidget = slicer.app.layoutManager().sliceWidget(color)

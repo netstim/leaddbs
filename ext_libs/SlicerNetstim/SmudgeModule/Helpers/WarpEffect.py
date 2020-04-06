@@ -122,7 +122,7 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
       self.auxTransformArray[:] = np.stack([ndimage.gaussian_filter(self.auxTransformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
       # apply
       self.warpNode.HardenTransform()
-      TransformsUtil.TransformsUtilLogic().emptyTransfrom(self.auxTransformNode)
+      self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)
       self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
       SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
 

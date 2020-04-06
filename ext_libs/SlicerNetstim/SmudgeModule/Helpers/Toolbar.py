@@ -128,9 +128,20 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.atlasesComboBox.setMaximumWidth(350)
     self.atlasesComboBox.addItems(ImportAtlas.ImportAtlasLogic().getValidAtlases(self.parameterNode.GetParameter("MNIAtlasPath")))
     self.atlasesComboBox.connect('currentIndexChanged(int)', self.onAtlasChanged)
-    self.atlasesComboBox.connect('activated(int)', lambda i: print(i))
 
     self.addWidget(self.atlasesComboBox)
+
+    #
+    # Resolution
+    #
+    self.addWidget(qt.QLabel('Resolution: '))
+    self.resolutionComboBox = qt.QComboBox()
+    avalibaleResolutions = [r/2.0 for r in range(1,9)]
+    self.resolutionComboBox.addItems([str(r)+'mm' for r in avalibaleResolutions])
+    self.resolutionComboBox.setCurrentIndex(avalibaleResolutions.index(float(self.parameterNode.GetParameter("resolution"))))
+    self.resolutionComboBox.connect('currentIndexChanged(int)', self.onResolutionChanged)
+
+    self.addWidget(self.resolutionComboBox)
 
     #
     # Space Separator
@@ -223,7 +234,11 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.saveButton.text = 'Finish and Exit' if subjectN == len(subjectPaths)-1 else 'Finish and Next'
     # modality
     self.modalityComboBox.setCurrentText(self.parameterNode.GetParameter("modality"))
-
+    # change resolution
+    warpID = self.parameterNode.GetParameter("warpID")
+    warpNode = slicer.util.getNode(warpID) if warpID != "" else None
+    warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
+    self.resolutionComboBox.enabled = warpNumberOfComponents == 1
 
 
   def onAtlasChanged(self, index, atlasName = None):
@@ -266,6 +281,18 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.modalityComboBox.clear()
     self.modalityComboBox.addItems(subjectModalities)
 
+  def onResolutionChanged(self, index):
+    SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
+    newResolution = float(self.resolutionComboBox.itemText(index)[:-2]) # get resolution
+    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID")) # get warp node
+    reducedToolbarLogic().resampleTransform(warpNode, newResolution)
+    self.parameterNode.SetParameter("resolution",str(newResolution))
+
+
+
+#
+# Logic
+#
 
 class reducedToolbarLogic(object):
 
@@ -276,12 +303,17 @@ class reducedToolbarLogic(object):
   def loadSubjectTransforms(self):
     subjectPath = self.parameterNode.GetParameter("subjectPath")
 
+    # update subject warp fields to new lead dbs specification
     if ImportSubject.ImportSubjectLogic().ish5Transform(subjectPath):
       ImportSubject.ImportSubjectLogic().updateTranform(subjectPath, self.parameterNode.GetParameter("antsApplyTransformsPath"))
 
+    # load warp
     warpNode = ImportSubject.ImportSubjectLogic().importTransform(subjectPath, 'glanatComposite.nii.gz')
     self.parameterNode.SetParameter("warpID", warpNode.GetID())
+    # resample
+    self.resampleTransform(warpNode, float(self.parameterNode.GetParameter("resolution")))
 
+    # load affine
     affineNode = ImportSubject.ImportSubjectLogic().importTransform(subjectPath, 'glanat0GenericAffine_backup.mat')
     if not affineNode:
       affineNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
@@ -289,6 +321,23 @@ class reducedToolbarLogic(object):
     affineNode.CreateDefaultDisplayNodes()
     self.parameterNode.SetParameter("affineTransformID", affineNode.GetID())
 
+  def resampleTransform(self, transformNode, resolution):
+    # check resolution
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(transformNode)
+    if spacing[0] == resolution:
+      return
+    # aux nodes
+    outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getMNIGrid(resolution)
+    referenceVolume = TransformsUtil.TransformsUtilLogic().createEmpyVolume(size,origin,spacing) # aux reference volume with specified resolution 
+    # apply
+    transformsLogic = slicer.modules.transforms.logic()
+    transformsLogic.ConvertToGridTransform(transformNode, referenceVolume, outNode)
+    transformNode.SetAndObserveTransformFromParent(outNode.GetTransformFromParent()) # set new transform to warp node
+    # remove aux nodes
+    slicer.mrmlScene.RemoveNode(outNode)
+    slicer.mrmlScene.RemoveNode(referenceVolume)
+    self.parameterNode.SetParameter("subjectChanged","1")
   
   def applyChanges(self):
 
@@ -321,24 +370,30 @@ class reducedToolbarLogic(object):
     else:
       TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True, [], [], [])
 
+    # back to original resolution
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+    if spacing[0] != 0.5:
+      self.resampleTransform(warpNode, 0.5)
+
+    # save foreward
     slicer.util.saveNode(warpNode, os.path.join(subjectPath,'glanatComposite.nii.gz'))
 
+    # invert transform
     warpNode.Inverse()
-
-    # get image and reset transform to set as reference 
+    # get image and undo affine transform to set as reference 
     imageNode = self.getBackgroundNode()
     imageNode.SetAndObserveTransformNodeID("")
     affineNode = slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID"))
     affineNode.Inverse()
     imageNode.ApplyTransform(affineNode.GetTransformFromParent())
-
+    # get inverse
     outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
     transformsLogic = slicer.modules.transforms.logic()
     transformsLogic.ConvertToGridTransform(warpNode, imageNode, outNode)
-
+    # save inverse
     slicer.util.saveNode(outNode, os.path.join(subjectPath,'glanatInverseComposite.nii.gz'))
 
-    # delete
+    # delete aux node
     slicer.mrmlScene.RemoveNode(outNode)
     
 
