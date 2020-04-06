@@ -241,14 +241,16 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     return set([transformNodes.GetItemAsObject(i).GetName() for i in range(transformNodes.GetNumberOfItems())])
 
   def getGridDefinition(self, transformNode):
-    if isinstance(transformNode.GetTransformFromParent(), slicer.vtkOrientedGridTransform) and transformNode.GetTransformFromParent().GetDisplacementGrid():
-      grid = transformNode.GetTransformFromParent().GetDisplacementGrid()
-    elif isinstance(transformNode.GetTransformToParent(), slicer.vtkOrientedGridTransform) and transformNode.GetTransformToParent().GetDisplacementGrid():
-      grid = transformNode.GetTransformToParent().GetDisplacementGrid()
-    elif isinstance(transformNode.GetTransformFromParent(), vtk.vtkGeneralTransform) and transformNode.GetTransformFromParent().GetConcatenatedTransform(0).GetDisplacementGrid():
-      grid = transformNode.GetTransformFromParent().GetConcatenatedTransform(0).GetDisplacementGrid()
-    elif isinstance(transformNode.GetTransformToParent(), vtk.vtkGeneralTransform) and transformNode.GetTransformToParent().GetConcatenatedTransform(0).GetDisplacementGrid():
-      grid = transformNode.GetTransformToParent().GetConcatenatedTransform(0).GetDisplacementGrid()
+    fp = transformNode.GetTransformFromParent()
+    tp = transformNode.GetTransformToParent()
+    if isinstance(fp, slicer.vtkOrientedGridTransform) and fp.GetDisplacementGrid():
+      grid = fp.GetDisplacementGrid()
+    elif isinstance(tp, slicer.vtkOrientedGridTransform) and tp.GetDisplacementGrid():
+      grid = tp.GetDisplacementGrid()
+    elif isinstance(fp, vtk.vtkGeneralTransform) and fp.GetConcatenatedTransform(fp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid():
+      grid = fp.GetConcatenatedTransform(fp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid()
+    elif isinstance(tp, vtk.vtkGeneralTransform) and tp.GetConcatenatedTransform(tp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid():
+      grid = tp.GetConcatenatedTransform(tp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid()
     else:
       return False
     

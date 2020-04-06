@@ -164,7 +164,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     #
     self.radiusSlider = ctk.ctkSliderWidget()
     self.radiusSlider.singleStep = 0.1
-    self.radiusSlider.minimum = 1
+    self.radiusSlider.minimum = 5
     self.radiusSlider.maximum = float(self.parameterNode.GetParameter("maxRadius"))
     self.radiusSlider.decimals = 1
     self.radiusSlider.value = float(self.parameterNode.GetParameter("radius"))
@@ -203,6 +203,28 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.sigmaSlider.value = float(self.parameterNode.GetParameter("sigma"))
     toolsFormLayout.addRow("Sigma (mm):", self.sigmaSlider)
 
+
+    #
+    # Advanced Area
+    #
+    advancedCollapsibleButton = ctk.ctkCollapsibleButton()
+    advancedCollapsibleButton.text = "Advanced"
+    advancedCollapsibleButton.collapsed=True
+    self.layout.addWidget(advancedCollapsibleButton)
+
+    # Layout within the dummy collapsible button
+    advancedFormLayout = qt.QFormLayout(advancedCollapsibleButton)
+
+    #
+    # expand edge value
+    #
+    self.expandEdgeSlider = ctk.ctkSliderWidget()
+    self.expandEdgeSlider.singleStep = 1
+    self.expandEdgeSlider.minimum = 0
+    self.expandEdgeSlider.maximum = 100
+    self.expandEdgeSlider.decimals = 0
+    self.expandEdgeSlider.value = float(self.parameterNode.GetParameter("expandEdge"))
+    advancedFormLayout.addRow("Expand Edge (mm):", self.expandEdgeSlider)
 
 
     #
@@ -297,6 +319,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.forceSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.sigmaSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.expandEdgeSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.flattenButton.connect("clicked(bool)", self.onFlattenButton)
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
@@ -412,6 +435,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.parameterNode.SetParameter("hardness", str(self.hardnessSlider.value) )
     self.parameterNode.SetParameter("force", str(self.forceSlider.value) )
     self.parameterNode.SetParameter("sigma", str(self.sigmaSlider.value) )
+    self.parameterNode.SetParameter("expandEdge", str(self.expandEdgeSlider.value) )
     self.parameterNode.SetParameter("warpID", self.warpSelector.currentNode().GetID() if self.warpSelector.currentNode() else "")
 
   def historyItemChanged(self):
@@ -493,6 +517,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.hardnessSlider.setEnabled(False)
     self.forceSlider.setEnabled(False)
     self.sigmaSlider.setEnabled(False)
+    self.expandEdgeSlider.setEnabled(True)
     interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
     self.removeObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) # so that changing mode doesnt affect
     if not self.noneButton.checked:
@@ -509,6 +534,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.hardnessSlider.setEnabled(True)
       self.forceSlider.setEnabled(True)
       self.sigmaSlider.setEnabled(True)
+      self.expandEdgeSlider.setEnabled(False)
       SmudgeModuleLogic().effectOn('Smudge')
 
   def onSnapButton(self, buttonDown):
@@ -566,6 +592,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("hardness", "40")
     node.SetParameter("force", "100")
     node.SetParameter("sigma", "5")
+    node.SetParameter("expandEdge", "0")
     node.SetParameter("warpModified","0")
     # lead dbs specific
     node.SetParameter("affineTransformID", "")
@@ -594,6 +621,10 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       parameterNode = self.getParameterNode()
       warpNode = slicer.util.getNode(parameterNode.GetParameter("warpID"))
       size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+      # expand aux transform to deal with borders
+      expandEdge = float(parameterNode.GetParameter("expandEdge"))
+      origin = [o - expandEdge for o in origin]
+      size = [int(round(s+expandEdge*2/spacing[0])) for s in size]
       auxTransformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
       TransformsUtil.TransformsUtilLogic().emptyTransfrom(auxTransformNode, size, origin, spacing)
 

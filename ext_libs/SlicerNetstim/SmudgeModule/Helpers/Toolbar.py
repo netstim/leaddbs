@@ -136,7 +136,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     self.addWidget(qt.QLabel('Resolution: '))
     self.resolutionComboBox = qt.QComboBox()
-    avalibaleResolutions = [r/2.0 for r in range(1,9)]
+    avalibaleResolutions = [0.5] + [r for r in range(1,6)]
     self.resolutionComboBox.addItems([str(r)+'mm' for r in avalibaleResolutions])
     self.resolutionComboBox.setCurrentIndex(avalibaleResolutions.index(float(self.parameterNode.GetParameter("resolution"))))
     self.resolutionComboBox.connect('currentIndexChanged(int)', self.onResolutionChanged)
