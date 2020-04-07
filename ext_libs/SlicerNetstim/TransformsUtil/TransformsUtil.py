@@ -160,7 +160,7 @@ class TransformsUtilWidget(ScriptedLoadableModuleWidget):
     size =    np.fromstring(self.transformSizeSelect.coordinates, dtype=int, sep=',')
     origin =  np.fromstring(self.transformOriginSelect.coordinates, sep=',')
     spacing = np.fromstring(self.transformSpacingSelect.coordinates, sep=',')
-    logic.flattenTransform(self.inputSelector.currentNode(), self.includeFirstLayerCB.checked, size, origin, spacing)
+    logic.flattenTransform(self.inputSelector.currentNode(), self.includeFirstLayerCB.checked)
 
   def onRemoveLastLayerButton(self):
     logic = TransformsUtilLogic()
@@ -284,7 +284,7 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
 
     return newNodeNames
 
-  def flattenTransform(self, transformNode, includeFirstLayer, size, origin, spacing):
+  def flattenTransform(self, transformNode, includeFirstLayer):
 
     # check that there are at least a number of layers to flatten the transform
     minimumNumberOfLayers = 2 if includeFirstLayer else 3

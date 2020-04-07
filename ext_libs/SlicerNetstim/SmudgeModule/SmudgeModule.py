@@ -500,7 +500,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     SmudgeModuleLogic().removeRedoTransform()
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     includeFirstLayer = self.firstComponentCheckBox.checked
-    TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, includeFirstLayer, [193,229,193],[-96.0, -132.0, -78.0],[1.0, 1.0, 1.0])
+    TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, includeFirstLayer)
     self.updateGuiFromMRML() # update history
 
 
@@ -540,6 +540,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def onSnapButton(self, buttonDown):
     if buttonDown:
       self.radiusSlider.setEnabled(True)
+      self.sigmaSlider.setEnabled(True)
       SmudgeModuleLogic().effectOn('Snap')
 
   def onBlurButton(self, buttonDown):

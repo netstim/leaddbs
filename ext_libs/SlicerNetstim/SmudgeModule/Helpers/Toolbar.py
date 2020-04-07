@@ -136,7 +136,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     self.addWidget(qt.QLabel('Resolution: '))
     self.resolutionComboBox = qt.QComboBox()
-    avalibaleResolutions = [0.5] + [r for r in range(1,6)]
+    avalibaleResolutions = [0.5, 1, 2, 5, 10]
     self.resolutionComboBox.addItems([str(r)+'mm' for r in avalibaleResolutions])
     self.resolutionComboBox.setCurrentIndex(avalibaleResolutions.index(float(self.parameterNode.GetParameter("resolution"))))
     self.resolutionComboBox.connect('currentIndexChanged(int)', self.onResolutionChanged)
@@ -368,7 +368,7 @@ class reducedToolbarLogic(object):
       elif ret == qt.QMessageBox().Discard:
         return True
     else:
-      TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True, [], [], [])
+      TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True)
 
     # back to original resolution
     size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)

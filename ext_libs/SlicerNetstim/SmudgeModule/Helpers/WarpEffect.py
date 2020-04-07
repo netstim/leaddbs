@@ -233,7 +233,8 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     PointerEffect.DrawEffectTool.__init__(self,sliceWidget)
     
     self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    self.MNIBounds = [[-98.25, -134.25, -72.25], [-98.25, -134.25, 116.75], [-98.25, 98.75, -72.25], [-98.25, 98.75, 116.75], [98.75, -134.25, -72.25], [98.75, -134.25, 116.75], [98.75, 98.75, -72.25], [98.75, 98.75, 116.75]]
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)
+    self.warpBounds = [[origin[0]+spacing[0]*size[0]*i,  origin[1]+spacing[1]*size[1]*j, origin[2]+spacing[2]*size[2]*k] for i in range(2) for j in range(2) for k in range(2)]
     
   def processEvent(self, caller=None, event=None):
 
@@ -257,12 +258,12 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
         curve2 = self.pointsToCurve(points2)
         # in case line is inside the model the curve will be the same. set curve type to shortest distance to surface and resample again
         curve2.SetCurveTypeToShortestDistanceOnSurface(slicedModel)
-        curve2.ResampleCurveSurface(0.2, slicer.vtkMRMLModelNode().SafeDownCast(slicedModel), 0.0025)
+        curve2.ResampleCurveSurface(2, slicer.vtkMRMLModelNode().SafeDownCast(slicedModel), 0.0025)
         # get same number of points as other curve
         curve2.ResampleCurveWorld(curve2.GetCurveLengthWorld() / max((curve1.GetNumberOfControlPoints() - 1), 1) )
         curve2.GetControlPointPositionsWorld(points2)
         # calculate transform and apply
-        transformNode = self.createTransform(points1, points2, modelNode)
+        transformNode = self.createTransform(points1, points2)
         self.displayTransformFromPoints(transformNode, points1)
         self.warpNode.SetAndObserveTransformNodeID(transformNode.GetID())
         self.warpNode.HardenTransform()
@@ -276,7 +277,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
 
     PointerEffect.DrawEffectTool.processEvent(self, caller, event) 
     
-  def samplePointsInModel(self, points, model, sampleDist = 0.2, maximumSearchRadius = 0.0025):
+  def samplePointsInModel(self, points, model, sampleDist = 2, maximumSearchRadius = 0.0025):
     auxCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
     auxCurve.SetControlPointPositionsWorld(points)
     constraintNode = slicer.vtkMRMLModelNode().SafeDownCast(model)
@@ -305,8 +306,10 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     return outModel
 
 
-  def createTransform(self, sourcePoints, targetPoints, modelNode):
-
+  def getControlPoints(self, sourcePoints, targetPoints):
+    """
+    Get points a radius away from the curve in normal direction
+    """
     normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']])
     radius = float(self.parameterNode.GetParameter("radius"))
     bpoints = []
@@ -333,12 +336,18 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
       keepIndex = [j for j in range(len(bpoints)) if np.linalg.norm(bpoints[j] - sourcePoint) > (radius - 0.5)]
     
     bpoints = [bpoints[i] for i in np.unique(keepIndex)] # only keep these points
-    
-    # addmni bounds to source and target points (so as to constrain the deformation)
-    for bp in (bpoints + self.MNIBounds):
+
+    return bpoints
+
+
+  def createTransform(self, sourcePoints, targetPoints):
+    # get control points
+    bpoints = self.getControlPoints(sourcePoints, targetPoints)    
+    # add warp bounds to source and target points (so as to constrain the deformation)
+    for bp in (bpoints + self.warpBounds):
       sourcePoints.InsertNextPoint(*bp)
       targetPoints.InsertNextPoint(*bp)
-    # create thin plate spline transfrom
+    #create thin plate spline transfrom
     transform = vtk.vtkThinPlateSplineTransform()
     transform.SetSourceLandmarks(sourcePoints)
     transform.SetTargetLandmarks(targetPoints)
@@ -346,6 +355,21 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     transform.Inverse()
     transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
     transformNode.SetAndObserveTransformFromParent(transform)
+    # to grid transform
+    outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)
+    referenceVolume = TransformsUtil.TransformsUtilLogic().createEmpyVolume(size,origin,spacing) # aux reference volume with specified resolution 
+    # apply
+    transformsLogic = slicer.modules.transforms.logic()
+    transformsLogic.ConvertToGridTransform(transformNode, referenceVolume, outNode)
+    transformNode.SetAndObserveTransformFromParent(outNode.GetTransformFromParent())
+    # remove aux
+    slicer.mrmlScene.RemoveNode(outNode)
+    slicer.mrmlScene.RemoveNode(referenceVolume)
+    # smooth
+    sigma = float(self.parameterNode.GetParameter("sigma")) / spacing[0]
+    a = slicer.util.array(transformNode.GetID())
+    a[:] = np.stack([ndimage.gaussian_filter(a[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
     return transformNode
 
   def delay(self):
