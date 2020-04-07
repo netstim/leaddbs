@@ -1,4 +1,7 @@
-function [vals]=ea_disc_calcstats(fibsval,I,obj,patsel)
+function [vals]=ea_disc_calcstats(obj,patsel)
+
+I=obj.responsevar;
+fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
 
 % quickly recalc stats:
 if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
