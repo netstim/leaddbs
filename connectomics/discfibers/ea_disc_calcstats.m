@@ -31,7 +31,7 @@ for group=groups
         gpatsel=patsel;
     end
     if obj.mirrorsides
-        gpatsel=[gpatsel;gpatsel+length(obj.allpatients)];
+        gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
     
     for side=1:2
