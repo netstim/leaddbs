@@ -6,16 +6,16 @@ classdef ea_disctract < handle
         M % content of lead group project
         resultfig % figure handle to plot results
         ID % name / ID of discriminative fibers object
-        posvisible % pos tract visible
-        negvisible % neg tract visible
-        showposamount % two entries for right and left
-        shownegamount % two entries for right and left
-        connthreshold
-        efieldthreshold
-        statmetric % entry from discfiber settings as initially specified in prefs.machine.lg (which are separately stored for each analysis/object).
-        poscolor % positive main color
-        negcolor % negative main color
-        splitbygroup
+        posvisible = 1 % pos tract visible
+        negvisible = 0 % neg tract visible
+        showposamount = [2 2] % two entries for right and left
+        shownegamount = [2 2] % two entries for right and left
+        connthreshold = 20
+        efieldthreshold = 20
+        statmetric = 1 % entry from discfiber settings as initially specified in prefs.machine.lg (which are separately stored for each analysis/object).
+        poscolor = [1,0,0] % positive main color
+        negcolor = [0,0,1] % negative main color
+        splitbygroup = 0
         % the  main content variables:
 
         results
@@ -372,9 +372,13 @@ classdef ea_disctract < handle
             tractset.analysispath=[pth,filesep,'disctracts',filesep,obj.ID,'.mat'];
             ea_mkdir([pth,filesep,'disctracts']);
             rf=obj.resultfig; % need to stash fig handle for saving.
+            rd=obj.drawobject; % need to stash handle of drawing before saving.
+            setappdata(rf,['dt_',tractset.ID],rd); % store handle of tract to figure.
             tractset.resultfig=[]; % rm figure handle before saving.
+            tractset.drawobject=[]; % rm drawobject.
             save(tractset.analysispath,'tractset','-v7.3');
             obj.resultfig=rf;
+            obj.drawobject=rd;
         end
         
         function draw(obj)            
@@ -383,10 +387,19 @@ classdef ea_disctract < handle
             
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
             linecols=obj.M.groups.color;
+            if isempty(obj.drawobject) % check if prior object has been stored
+                obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
+            end
             for tract=1:length(obj.drawobject)
                 delete(obj.drawobject{tract});
-            end
 
+            end
+            % reset colorbar
+            obj.colorbar=[];
+            if ~any([obj.posvisible,obj.negvisible])
+                return
+            end
+            
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Contruct default blue to red colormap
                 colormap(gray);
@@ -435,16 +448,10 @@ classdef ea_disctract < handle
                     fibcolorInd{group,side}=fibcolorInd{group,side}+(size(fibcmap{group},1)/2+0.5);
                     
                     alphas{group,side}=zeros(size(fibcolorInd{group,side},1),1);
-                    if obj.posvisible && ~obj.negvisible
-                        alphas{group,side}(round(fibcolorInd{group,side})>=poslowerBound) = 1;
-                    elseif ~obj.posvisible && obj.negvisible
-                        alphas{group,side}(round(fibcolorInd{group,side})<=negUpperBound) = 1;
-                    elseif obj.posvisible && obj.negvisible
-                        alphas{group,side}(round(fibcolorInd{group,side})>=poslowerBound) = 1;
-                        alphas{group,side}(round(fibcolorInd{group,side})<=negUpperBound) = 1;
-                    end
                     
-                    alphas{group,side}(round(fibcolorInd{group,side})>=poslowerBound) = 1;
+                    alphas{group,side}(round(fibcolorInd{group,side})>=poslowerBound) = obj.posvisible;
+                    alphas{group,side}(round(fibcolorInd{group,side})<=negUpperBound) = obj.negvisible;
+                    
                     fibalpha=mat2cell(alphas{group,side},ones(size(fibcolorInd{group,side},1),1));
                     
                     % Plot fibers if any survived
@@ -494,10 +501,11 @@ classdef ea_disctract < handle
             end
             
             % store colorbar in object
-            obj.colorbar.cmap = cbmap;
-            obj.colorbar.tick = tick;
-            obj.colorbar.ticklabel = ticklabel;
-            
+            if exist('cbmap','var') % could be no fibers present at all.
+                obj.colorbar.cmap = cbmap;
+                obj.colorbar.tick = tick;
+                obj.colorbar.ticklabel = ticklabel;
+            end
         end
         
         

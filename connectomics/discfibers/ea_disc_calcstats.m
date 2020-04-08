@@ -44,6 +44,8 @@ for group=groups
                 sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
         end
         gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=0;
+        gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
+        
         switch obj.statmetric
             case 1 % t-tests
                 
