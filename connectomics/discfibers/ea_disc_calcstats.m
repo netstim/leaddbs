@@ -12,6 +12,11 @@ if size(I,2)==1 % 1 entry per patient, not per electrode
 end
 if obj.mirrorsides
     I=[I;I];
+    if ~isempty(obj.covars)
+        for i=1:length(obj.covars)
+            covars{i} = [obj.covars{i};obj.covars{i}];
+        end
+    end
 end
 
 if obj.splitbygroup
@@ -48,7 +53,7 @@ for group=groups
         switch obj.statmetric
             case 1 % t-tests
                 % check if covariates exist:
-                if ~isempty(obj.covars)
+                if exist('covars', 'var')
                     % they do:
                     vals{group,side}=nan(1,size(gfibsval{side},1));
                     ea_dispercent(0,['Side ',num2str(side),': Calculating T-values (taking covariates into account)']);
@@ -58,8 +63,8 @@ for group=groups
                             'VariableNames',{'response','fibsval'});
                         formula = 'response ~ 1 + fibsval';
                         data.fibsval=categorical(data.fibsval);
-                        for cv=1:length(obj.covars)
-                            thiscv=obj.covars{cv}(gpatsel,:);
+                        for cv=1:length(covars)
+                            thiscv=covars{cv}(gpatsel,:);
                             if (size(thiscv,2)==2)
                                 thiscv=thiscv(:,side);
                             end
