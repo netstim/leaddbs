@@ -442,12 +442,12 @@ classdef ea_disctract < handle
                     fibcolorInd{group,side}=tvalsRescale{group,side}*(size(fibcmap{group},1)/2-0.5);
                     fibcolorInd{group,side}=fibcolorInd{group,side}+(size(fibcmap{group},1)/2+0.5);
 
-                    alphas{group,side}=zeros(size(fibcolorInd{group,side},1),1);
+                    alphas{group,side}=zeros(size(fibcolorInd{group,side},2),1);
 
                     alphas{group,side}(round(fibcolorInd{group,side})>=poslowerBound) = obj.posvisible;
                     alphas{group,side}(round(fibcolorInd{group,side})<=negUpperBound) = obj.negvisible;
 
-                    fibalpha=mat2cell(alphas{group,side},ones(size(fibcolorInd{group,side},1),1));
+                    fibalpha=mat2cell(alphas{group,side},ones(size(fibcolorInd{group,side},2),1));
 
                     % Plot fibers if any survived
                     if ~isempty(fibcell{group,side})
