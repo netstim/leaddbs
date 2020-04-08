@@ -83,13 +83,13 @@ for group=groups
                 else
                     % no covariates exist:
                     
-                    allvals=repmat(I(gpatsel,side),1,size(gfibsval{side}(:,gpatsel),1)); % improvement values (taken from Lead group file or specified in line 12).
+                    allvals=repmat(I(gpatsel,side)',size(gfibsval{side}(:,gpatsel),1),1); % improvement values (taken from Lead group file or specified in line 12).
                     fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
                     fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
                     nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
                     nfibsimpval(logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all connected values
-                    [~,p,~,stats]=ttest2(fibsimpval,nfibsimpval); % Run two-sample t-test across connected / unconnected values
-                    vals{group,side}=stats.tstat;
+                    [~,p,~,stats]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
+                    vals{group,side}=stats.tstat';
                     %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                 end
             case 2 % spearmans correlations

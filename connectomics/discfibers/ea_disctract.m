@@ -194,7 +194,7 @@ classdef ea_disctract < handle
                 for side=1:2
                     switch obj.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            Ihat(pt,side)=ea_nansum(vals{1,side}'.*fibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
+                            Ihat(pt,side)=ea_nansum(vals{1,side}.*fibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
                         case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
                             Ihat(pt,side)=ea_nansum(vals{1,side}.*nfibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
                     end
