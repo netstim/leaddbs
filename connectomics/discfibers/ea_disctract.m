@@ -47,10 +47,8 @@ classdef ea_disctract < handle
         function obj=ea_disctract() % class constructor
 
         end
-        
-        
+
         function initialize(obj,lgpath,resultfig)
-            
             D=load(lgpath);
             if isfield(D,'M') % Lead Group analysis path loaded
                 obj.M = D.M;
@@ -102,19 +100,19 @@ classdef ea_disctract < handle
                         suffix='_efield_gauss';
                     end
             end
-            
+
             if obj.M.ui.detached
               pthprefix=[fileparts(obj.leadgroup),filesep];
             else
                 pthprefix='';
             end
-            
+
             cnt=1;
             for sub=1:length(obj.allpatients) % all patients - for connected fibers selection ? and always flip
                 allroilist(cnt,:)={[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'vat',suffix,'_right.nii'],[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'vat',suffix,'_left.nii']};
                 cnt=cnt+1;
             end
-            
+
             for sub=1:length(obj.allpatients) % all patients - for connected fibers selection ? and always flip
                 ea_genflippedjointnii([pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'vat',suffix,'_right.nii'],[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'vat',suffix,'_left.nii']);
                 allroilist(cnt,:)={[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'fl_','vat',suffix,'_left.nii'],[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'fl_','vat',suffix,'_right.nii']};
@@ -136,21 +134,18 @@ classdef ea_disctract < handle
             obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibcell=fibcell;
             obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).XYZmm=XYZmm;
             obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).nii=nii;
-
         end
 
         function Amps = getstimamp(obj)
             Amps=zeros(length(obj.M.patient.list),2);
             for pt=1:length(obj.M.patient.list)
                 for side=1:2
-            
                     thisamp=obj.M.stats(pt).ea_stats.stimulation.vat(side).amp;
-                    thisamp(thisamp==0)=nan;
-                    Amps(pt,side)=ea_nanmean(thisamp(:));
+                    Amps(pt,side)=ea_nanmean(thisamp(thisamp~=0));
                 end
             end
         end
-        
+
         function VTAvolumes = getvtavolumes(obj)
             if ~isfield(obj.M.stats(1).ea_stats.stimulation.vat(1),'volume')
                VTAvolumes = obj.getstimamp;
@@ -163,10 +158,10 @@ classdef ea_disctract < handle
                     VTAvolumes(pt,side)=obj.M.stats(pt).ea_stats.stimulation.vat(side).volume;
                 end
             end
-            
+
         end
-        
-        function Efieldmags = getefieldmagnitudes(obj)        
+
+        function Efieldmags = getefieldmagnitudes(obj)
             if ~isfield(obj.M.stats(1).ea_stats.stimulation.efield(1),'volume')
                 Efieldmags = obj.getstimamp;
                 warning('No Efield magnitude sums found. Using stimulation amplitudes instead. Re-run stats in Lead-group to obtain values.');
@@ -179,17 +174,19 @@ classdef ea_disctract < handle
                 end
             end
         end
-        
+
         function [I,Ihat] = loocv(obj)
             allpts=obj.patientselection;
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
-            I=obj.responsevar;                
+            I=obj.responsevar;
             for side=1:2
-                nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
+                nfibsval{side}=fibsval{side};
+                nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
             end
             disp(['Side ',num2str(side),':']);
             for pt=allpts
-                opts=allpts; opts(opts==pt)=[]; % generate variable of patients on which model will be built.
+                opts=allpts;  % generate variable of patients on which model will be built.
+                opts(opts==pt)=[];
                 [vals]=ea_disc_calcstats(obj,opts);
                 for side=1:2
                     switch obj.statmetric
@@ -208,21 +205,23 @@ classdef ea_disctract < handle
                 Ihat=mean(Ihat,2); % compare bodyscores (patient wise)
             end
             ea_dispercent(1,'end');
-            loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
+            loginx=zeros(size(Ihat));
+            loginx(allpts,:)=1;
             Ihat(~loginx)=nan; % make sure info of not included patients are not used
         end
-        
-        
+
         function [I,Ihat] = lococv(obj)
             allpts=obj.patientselection;
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
             I=obj.responsevar;
-            for side=1:2
-                nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
+            for side=1:2  % only used in spearmans correlations
+                nfibsval{side}=fibsval{side};
+                nfibsval{side}(nfibsval{side}==0)=nan;
             end
             disp(['Side ',num2str(side),':']);
             for group=unique(obj.M.patient.group)'
-                opts=allpts; opts(obj.M.patient.group(allpts)==group)=[]; % generate variable of patients on which model will be built.
+                opts=allpts; % generate variable of patients on which model will be built.
+                opts(obj.M.patient.group(allpts)==group)=[];
                 [vals]=ea_disc_calcstats(obj,opts);
 
                 for side=1:2
@@ -238,7 +237,6 @@ classdef ea_disctract < handle
                     end
                     ea_dispercent(pt/length(allpts));
                 end
-
             end
             if size(obj.responsevar,2)==2 % hemiscores
                 Ihat=Ihat(:); % compare hemiscores (electrode wise)
@@ -250,8 +248,7 @@ classdef ea_disctract < handle
             loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
             Ihat(~loginx)=nan; % make sure info of not included patients are not used
         end
-        
-        
+
         function [I,Ihat] = kfoldcv(obj)
             ea_error('This has not been implemented yet.');
             allpts=obj.patientselection;
@@ -259,10 +256,11 @@ classdef ea_disctract < handle
             I=obj.responsevar;
             for side=1:2
                 nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
-                
+
                 disp(['Side ',num2str(side),':']);
                 for group=unique(obj.M.patient.group)'
-                    opts=allpts; opts(obj.M.patient.group(allpts)==group)=[]; % generate variable of patients on which model will be built.
+                    opts=allpts; % generate variable of patients on which model will be built.
+                    opts(obj.M.patient.group(allpts)==group)=[];
                     switch discfiberssetting.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
                             optsval=fibsval{side}(:,opts); % all other patients connections to each fibertract
@@ -292,12 +290,11 @@ classdef ea_disctract < handle
             loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
             Ihat(~loginx)=nan; % make sure info of not included patients are not used
         end
-        
-        
+
         function [I,Ihat,R0,R1,pperm,Nperm] = lnopb(obj)
             allpts=obj.patientselection;
             Nperm=5000; % run as many as Nperm permutations
-            
+
 
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
             I=obj.responsevar;
@@ -320,7 +317,7 @@ classdef ea_disctract < handle
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
 
                             allvals=repmat(Iperm(allpts)',size(fibsval{side}(:,allpts),1),1); % improvement values (taken from Lead group file or specified in line 12).
-                            
+
                             fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
                             fibsimpval(~logical(fibsval{side}(:,allpts)))=nan; % Delete all unconnected values
                             nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
@@ -337,34 +334,32 @@ classdef ea_disctract < handle
                                 Ihat{perm}(pt,side)=ea_nansum(Model.*nfibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
                             end
                     end
-                    
+
                     R0(perm,side)=corr(Iperm,Ihat{perm}(:,side),'type','Spearman','rows','pairwise');
                     ea_dispercent(perm/Nperm);
                 end
-                
+
             end
             ea_error('The following needs to be adapted for two sides.');
-            
+
             R1=R0(1); % real correlation value when using empirical values
             R0=R0(2:end); % 1-by-Nperm set of R values
-            
+
             % generate null distribution
             R0=abs(R0);
             R0=sort(R0,'descend');
             p95=R0(round(0.05*Nperm));
             v=ea_searchclosest(R0,R1);
-            
+
             pperm=v/Nperm;
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
 
-            
             Ihat=Ihat{1};
             Ihat=mean(Ihat,2);
             ea_dispercent(1,'end');
             loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
             Ihat(~loginx)=nan; % make sure info of not included patients are not used
         end
-        
 
         function save(obj)
             tractset=obj;
@@ -380,11 +375,11 @@ classdef ea_disctract < handle
             obj.resultfig=rf;
             obj.drawobject=rd;
         end
-        
-        function draw(obj)            
+
+        function draw(obj)
             [vals]=ea_disc_calcstats(obj);
             set(0,'CurrentFigure',obj.resultfig);
-            
+
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
             linecols=obj.M.groups.color;
             if isempty(obj.drawobject) % check if prior object has been stored
@@ -399,7 +394,7 @@ classdef ea_disctract < handle
             if ~any([obj.posvisible,obj.negvisible])
                 return
             end
-            
+
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Contruct default blue to red colormap
                 colormap(gray);
@@ -410,7 +405,7 @@ classdef ea_disctract < handle
                     fibcmap{1} = ea_colorgradient(1024, obj.negcolor, [1,1,1], obj.poscolor);
                     setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
                 end
-                
+
                 % Set alphas of fibers with light color to 0
                 colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
                 negUpperBound=ceil(size(fibcmap{group},1)/2*colorbarThreshold);
@@ -421,10 +416,10 @@ classdef ea_disctract < handle
                         fibcell{group,side}=ea_disc_addjitter(fibcell{group,side},0.01);
                     end
                     vals{group,side}=vals{group,side}(~isnan(vals{group,side}))'; % final weights for surviving fibers
-                    
+
                     posvals{group,side}=sort(vals{group,side}(vals{group,side}>0),'descend');
                     negvals{group,side}=sort(vals{group,side}(vals{group,side}<0),'ascend');
-                    
+
                     try
                         posthresh{group,side}=posvals{group,side}(ceil(((obj.showposamount(side)+eps)/100)*length(posvals{group,side})));
                     catch
@@ -439,38 +434,38 @@ classdef ea_disctract < handle
                     remove=logical(logical(vals{group,side}<posthresh{group,side}) .* logical(vals{group,side}>negthresh{group,side}));
                     vals{group,side}(remove)=[];
                     fibcell{group,side}(remove)=[];
-                    
+
                     tvalsRescale{group,side} = vals{group,side};
                     tvalsRescale{group,side}(vals{group,side}>0) = ea_rescale(vals{group,side}(vals{group,side}>0), [0 1]);
                     tvalsRescale{group,side}(vals{group,side}<0) = ea_rescale(vals{group,side}(vals{group,side}<0), [-1 0]);
-                    
+
                     fibcolorInd{group,side}=tvalsRescale{group,side}*(size(fibcmap{group},1)/2-0.5);
                     fibcolorInd{group,side}=fibcolorInd{group,side}+(size(fibcmap{group},1)/2+0.5);
-                    
+
                     alphas{group,side}=zeros(size(fibcolorInd{group,side},1),1);
-                    
+
                     alphas{group,side}(round(fibcolorInd{group,side})>=poslowerBound) = obj.posvisible;
                     alphas{group,side}(round(fibcolorInd{group,side})<=negUpperBound) = obj.negvisible;
-                    
+
                     fibalpha=mat2cell(alphas{group,side},ones(size(fibcolorInd{group,side},1),1));
-                    
+
                     % Plot fibers if any survived
                     if ~isempty(fibcell{group,side})
                         obj.drawobject{group,side}=streamtube(fibcell{group,side},0.2);
-                        
+
                         nones=repmat({'none'},size(fibcolorInd{group,side}));
                         [obj.drawobject{group,side}.EdgeColor]=nones{:};
-                        
+
                         % Calulate fiber colors
                         colors=fibcmap{group}(round(fibcolorInd{group,side}),:);
                         fibcolor=mat2cell(colors,ones(size(fibcolorInd{group,side})));
-                        
+
                         % Set fiber colors and alphas
                         [obj.drawobject{group,side}.FaceColor]=fibcolor{:};
                         [obj.drawobject{group,side}.FaceAlpha]=fibalpha{:};
                     end
                 end
-                
+
                 % Set colorbar tick positions and labels
                 if ~any([isempty(vals{group,1}),isempty(vals{group,2})])
                     cbvals = [vals{group,1}(logical(alphas{group,1}));vals{group,2}(logical(alphas{group,2}))];
@@ -496,10 +491,10 @@ classdef ea_disctract < handle
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     end
                 end
-               
-                
+
+
             end
-            
+
             % store colorbar in object
             if exist('cbmap','var') % could be no fibers present at all.
                 obj.colorbar.cmap = cbmap;
@@ -507,9 +502,6 @@ classdef ea_disctract < handle
                 obj.colorbar.ticklabel = ticklabel;
             end
         end
-        
-        
-        
     end
 
     methods (Static)

@@ -10,7 +10,7 @@ end
 if size(I,2)==1 % 1 entry per patient, not per electrode
     I=[I,I]; % both sides the same;
 end
-if obj.mirrorsides    
+if obj.mirrorsides
     I=[I;I];
 end
 
@@ -33,9 +33,8 @@ for group=groups
     if obj.mirrorsides
         gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
-    
+
     for side=1:2
-        
         % check connthreshold
         switch obj.statmetric
             case 1
@@ -45,10 +44,9 @@ for group=groups
         end
         gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=0;
         gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
-        
+
         switch obj.statmetric
             case 1 % t-tests
-                
                 % check if covariates exist:
                 if ~isempty(obj.covars)
                     % they do:
@@ -69,7 +67,6 @@ for group=groups
                             if isequal(thiscv,logical(thiscv))
                                 formula=[formula,' + (1 + fibsval | ',ea_space2sub(obj.covarlabels{cv}),')'];
                                 data.(ea_space2sub(obj.covarlabels{cv}))=categorical(data.(ea_space2sub(obj.covarlabels{cv})));
-                                
                             else
                                 formula=[formula,' + ',ea_space2sub(obj.covarlabels{cv})];
                             end
@@ -79,10 +76,8 @@ for group=groups
                         ea_dispercent(fib/length(nixfib));
                     end
                     ea_dispercent(1,'end');
-                    
                 else
                     % no covariates exist:
-                    
                     allvals=repmat(I(gpatsel,side)',size(gfibsval{side}(:,gpatsel),1),1); % improvement values (taken from Lead group file or specified in line 12).
                     fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
                     fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
