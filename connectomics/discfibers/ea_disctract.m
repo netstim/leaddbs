@@ -28,7 +28,7 @@ classdef ea_disctract < handle
         drawobject % actual streamtube handle
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
         allpatients % list of all patients (as from M.patient.list)
-        mirrorsides % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
+        mirrorsides = 0 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
         responsevar % response variable
         responsevarlabel % label of response variable
         covars % covariates
