@@ -7,14 +7,21 @@ fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.sta
 if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
     patsel=obj.patientselection;
 end
+
 if size(I,2)==1 % 1 entry per patient, not per electrode
     I=[I,I]; % both sides the same;
 end
+
 if obj.mirrorsides
     I=[I;I];
-    if ~isempty(obj.covars)
-        for i=1:length(obj.covars)
+end
+
+if ~isempty(obj.covars)
+    for i=1:length(obj.covars)
+        if obj.mirrorsides
             covars{i} = [obj.covars{i};obj.covars{i}];
+        else
+            covars{i} = obj.covars{i};
         end
     end
 end
@@ -55,7 +62,7 @@ for group=groups
                 % check if covariates exist:
                 if exist('covars', 'var')
                     % they do:
-                    vals{group,side}=nan(1,size(gfibsval{side},1));
+                    vals{group,side}=nan(size(gfibsval{side},1),1);
                     ea_dispercent(0,['Side ',num2str(side),': Calculating T-values (taking covariates into account)']);
                     nixfib=find(any(gfibsval{side}(:,gpatsel)').*(~all(gfibsval{side}(:,gpatsel)')));
                     for fib=1:length(nixfib)
