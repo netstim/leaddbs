@@ -50,15 +50,17 @@ classdef ea_disctract < handle
         end
 
         function initialize(obj,lgpath,resultfig)
-            D=load(lgpath);
-            if isfield(D,'M') % Lead Group analysis path loaded
+            D = load(lgpath);
+            if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
-                obj.leadgroup=lgpath;
+                obj.leadgroup = lgpath;
 
-                testID=obj.M.guid;
+                testID = obj.M.guid;
                 ea_mkdir([fileparts(obj.leadgroup),filesep,'disctracts',filesep]);
+                id = 1;
                 while exist([fileparts(obj.leadgroup),filesep,'disctracts',filesep,testID,'.mat'],'file')
-                    testID=[testID,'_1'];
+                    testID = [obj.M.guid, '_', num2str(id)];
+                    id = id + 1;
                 end
                 obj.ID = testID;
                 obj.resultfig = resultfig;
