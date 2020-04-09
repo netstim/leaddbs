@@ -13,6 +13,7 @@ classdef ea_disctract < handle
         connthreshold = 20
         efieldthreshold = 20
         statmetric = 1 % entry from discfiber settings as initially specified in prefs.machine.lg (which are separately stored for each analysis/object).
+        efieldmetric = 'sum' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [1,0,0] % positive main color
         negcolor = [0,0,1] % negative main color
         splitbygroup = 0
@@ -76,7 +77,7 @@ classdef ea_disctract < handle
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
 
-                    if isfield(obj.results.(ea_conn2connid(obj.connectome)),ea_method2methodid(obj.statmetric)) % this combination was already calculated.
+                    if isfield(obj.results.(ea_conn2connid(obj.connectome)),ea_method2methodid(obj)) % this combination was already calculated.
                         answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
                         if ~strcmp(answ,'Yes')
                             return
@@ -86,55 +87,23 @@ classdef ea_disctract < handle
             end
 
 
-            efieldthresh=10; % fixed value for now. This is the amount of efield magnitude strength each has to have.
 
-            options.native = 0;
+ 
 
-            allroilist=cell(length(obj.allpatients)*2,2);
-            switch obj.statmetric
-                case 1 % use paired T-Tests and binary VTA
-                    suffix='';
-                case 2 % use Spearman Rs and E-Fields
-                    suffix='_efield';
-                    prefs=ea_prefs;
-                    if strcmp(prefs.lcm.vatseed,'efield_gauss')
-                        suffix='_efield_gauss';
-                    end
-            end
 
-            if obj.M.ui.detached
-              pthprefix=[fileparts(obj.leadgroup),filesep];
-            else
-                pthprefix='';
-            end
-
-            cnt=1;
-            for sub=1:length(obj.allpatients) % all patients - for connected fibers selection ? and always flip
-                allroilist(cnt,:)={[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'vat',suffix,'_right.nii'],[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'vat',suffix,'_left.nii']};
-                cnt=cnt+1;
-            end
-
-            for sub=1:length(obj.allpatients) % all patients - for connected fibers selection ? and always flip
-                ea_genflippedjointnii([pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'vat',suffix,'_right.nii'],[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'vat',suffix,'_left.nii']);
-                allroilist(cnt,:)={[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'fl_','vat',suffix,'_left.nii'],[pthprefix,obj.allpatients{sub},filesep,'stimulations',filesep,ea_nt(options),'gs_',obj.M.guid,filesep,'fl_','vat',suffix,'_right.nii']};
-                cnt=cnt+1;
-            end
+            
             cfile=[ea_getconnectomebase('dMRI'),obj.connectome,filesep,'data.mat'];
-            mirroredpatselection=[obj.patientselection,obj.patientselection+length(obj.allpatients)];
+            [fibcell,fibsin,XYZmm,niivx,valsmm]=ea_discfibers_getfibcell(obj,cfile);
             switch obj.statmetric
                 case 1 % ttests
-                    [fibcell,fibsval,XYZmm,nii]=ea_discfibers_heatfibertracts(cfile,{allroilist},mirroredpatselection,{obj.responsevar},obj.connthreshold/100);
+                    [fibsval]=ea_discfibers_heatfibertracts(obj,fibcell,fibsin,XYZmm,niivx);
                 case 2 % spearmans R
-                    [fibcell,fibsval,XYZmm,nii,valsmm]=ea_discfibers_heatfibertracts_corr(cfile,{allroilist},mirroredpatselection,{obj.responsevar},efieldthresh);
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).valsmm=valsmm;
+                    [fibsval]=ea_discfibers_heatfibertracts_corr(obj,fibcell,XYZmm,niivx,valsmm);
             end
 
             % Main output of results - this is all we will ever need if statmetric
             % and connectome wont change
-            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval=fibsval;
-            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibcell=fibcell;
-            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).XYZmm=XYZmm;
-            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).nii=nii;
+            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval=fibsval;
         end
 
         function Amps = getstimamp(obj)
@@ -178,7 +147,7 @@ classdef ea_disctract < handle
 
         function [I,Ihat] = loocv(obj)
             allpts=obj.patientselection;
-            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
+            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
             I=obj.responsevar;
             for side=1:2
                 nfibsval{side}=fibsval{side};
@@ -213,7 +182,7 @@ classdef ea_disctract < handle
 
         function [I,Ihat] = lococv(obj)
             allpts=obj.patientselection;
-            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
+            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
             I=obj.responsevar;
             for side=1:2  % only used in spearmans correlations
                 nfibsval{side}=fibsval{side};
@@ -253,7 +222,7 @@ classdef ea_disctract < handle
         function [I,Ihat] = kfoldcv(obj)
             ea_error('This has not been implemented yet.');
             allpts=obj.patientselection;
-            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
+            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
             I=obj.responsevar;
             for side=1:2
                 nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
@@ -297,7 +266,7 @@ classdef ea_disctract < handle
             Nperm=5000; % run as many as Nperm permutations
 
 
-            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
+            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
             I=obj.responsevar;
             R0 = zeros(Nperm+1,1);
             for side=1:2
@@ -369,7 +338,9 @@ classdef ea_disctract < handle
             ea_mkdir([pth,filesep,'disctracts']);
             rf=obj.resultfig; % need to stash fig handle for saving.
             rd=obj.drawobject; % need to stash handle of drawing before saving.
-            setappdata(rf,['dt_',tractset.ID],rd); % store handle of tract to figure.
+            try % could be figure is already closed.
+                setappdata(rf,['dt_',tractset.ID],rd); % store handle of tract to figure.
+            end
             tractset.resultfig=[]; % rm figure handle before saving.
             tractset.drawobject=[]; % rm drawobject.
             save(tractset.analysispath,'tractset','-v7.3');
@@ -412,7 +383,7 @@ classdef ea_disctract < handle
                 negUpperBound=ceil(size(fibcmap{group},1)/2*colorbarThreshold);
                 poslowerBound=floor((size(fibcmap{group},1)-size(fibcmap{group},1)/2*colorbarThreshold));
                 for side=1:2
-                    fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibcell(~isnan(vals{group,side}));
+                    fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell(~isnan(vals{group,side}));
                     if dogroups % introduce small jitter for visualization
                         fibcell{group,side}=ea_disc_addjitter(fibcell{group,side},0.01);
                     end

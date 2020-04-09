@@ -1,7 +1,7 @@
 function [vals]=ea_disc_calcstats(obj,patsel)
 
 I=obj.responsevar;
-fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj.statmetric)).fibsval;
+fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
 
 % quickly recalc stats:
 if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
@@ -54,6 +54,8 @@ for group=groups
             case 2
                 sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
         end
+        % remove fibers that are not connected to enough VTAs or connected
+        % to too many VTAs (connthreshold slider)
         gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=0;
         gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
 
@@ -102,7 +104,15 @@ for group=groups
             case 2 % spearmans correlations
                 nangfibsval=gfibsval{side}(:,gpatsel);
                 nangfibsval(nangfibsval==0)=nan; % only used in spearmans correlations
-                vals{group,side}=corr(nangfibsval',I(gpatsel,side),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
+                if exist('covars', 'var')
+                    usecovars=[];
+                    for cv=1:length(covars)
+                        usecovars=[usecovars,covars{cv}(:,side)];
+                    end
+                    vals{group,side}=partialcorr(nangfibsval',I(gpatsel,side),usecovars,'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
+                else
+                    vals{group,side}=corr(nangfibsval',I(gpatsel,side),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
+                end
         end
     end
 end

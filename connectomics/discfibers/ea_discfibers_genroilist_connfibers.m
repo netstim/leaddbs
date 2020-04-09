@@ -1,12 +1,7 @@
-function [fibsin, XYZmm, nii, valsmm]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection, thresh)
+function [fibsin,XYZmm,nii,valsmm]=ea_discfibers_genroilist_connfibers(fibers, roilist)
 
-if ~exist('thresh', 'var')
-    thresh = 0;
-    mode = 'binary';
-else
-    mode = 'efield';
-end
-
+prefs = ea_prefs;
+thresh = prefs.machine.vatsettings.horn_ethresh;
 allroilist=cat(2,roilist{:});
 % tree=KDTreeSearcher(fibers(:,1:3));
 % load in all ROI
@@ -14,11 +9,8 @@ allroilist=cat(2,roilist{:});
 cnt=1;
 XYZmm = cell(size(allroilist,1), 1);
 nii = cell(size(allroilist,1), 2);
-if strcmp(mode, 'binary')
-    valsmm = [];
-else
     valsmm = cell(size(allroilist,1), 1);
-end
+
 ea_dispercent(0,'Aggregating ROI');
 for roi=1:size(allroilist,1)
         nii{roi,1}=ea_load_nii(allroilist{roi,1});
@@ -27,18 +19,15 @@ for roi=1:size(allroilist,1)
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,1}.mat*XYZvx;
         XYZmm{roi,1}=XY(1:3,:)';
-        if strcmp(mode, 'efield')
-            valsmm{roi,1}=nii{roi,1}.img((nii{roi,1}.img(:))>thresh);
-        end
+        valsmm{roi,1}=nii{roi,1}.img((nii{roi,1}.img(:))>thresh);
+        
 
         nii{roi,2}=ea_load_nii(allroilist{roi,2});
         [xx,yy,zz]=ind2sub(size(nii{roi,2}.img),find(nii{roi,2}.img(:)>thresh));
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,2}.mat*XYZvx;
         XYZmm{roi,2}=XY(1:3,:)';
-        if strcmp(mode, 'efield')
-            valsmm{roi,2}=nii{roi,2}.img((nii{roi,2}.img(:))>thresh);
-        end
+        valsmm{roi,2}=nii{roi,2}.img((nii{roi,2}.img(:))>thresh);
    
 
     if ~exist('AllXYZ','var')
