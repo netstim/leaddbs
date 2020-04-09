@@ -1,6 +1,6 @@
 function [fibcell,fibsin,XYZmm,niivx,valsmm]=ea_discfibers_getfibcell(obj,cfile)
-if exist(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat']),'file')
-    load(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat']));
+if exist(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'),'file')
+    load(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'));
     if isfield(obj.results.(ea_conn2connid(obj.connectome)),'fibcell')
         fibcell = obj.results.(ea_conn2connid(obj.connectome)).fibcell;
         fibsin=fibcell2fibsin(fibcell);
@@ -54,12 +54,9 @@ save(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'),.
     'XYZmm','niivx','valsmm','-v7.3');
 
 
-
-
 function [fibcell,fibsin]=fibsin2fibcell(fibsin)
 % now color fibsin based on predictive value of improvement
 ea_dispt('');
-
 
 % Reformat to cell:
 [~,fibiaxfirst]=unique(fibsin(:,4),'first');
@@ -70,6 +67,7 @@ fibcell = mat2cell(fibsin(:,1:3),fiblen);
 for f=1:length(fibcell)
     fibsin(fibiaxfirst(f):fibiaxlast(f),4)=f;
 end
+
 
 function fibsin=fibcell2fibsin(fibcell)
 fibsin=cell2mat(fibcell);
