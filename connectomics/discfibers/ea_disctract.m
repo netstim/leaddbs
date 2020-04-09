@@ -78,7 +78,6 @@ classdef ea_disctract < handle
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
-
                     if isfield(obj.results.(ea_conn2connid(obj.connectome)),ea_method2methodid(obj)) % this combination was already calculated.
                         answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
                         if ~strcmp(answ,'Yes')
@@ -88,12 +87,6 @@ classdef ea_disctract < handle
                 end
             end
 
-
-
- 
-
-
-            
             cfile=[ea_getconnectomebase('dMRI'),obj.connectome,filesep,'data.mat'];
             [fibcell,fibsin,XYZmm,niivx,valsmm]=ea_discfibers_getfibcell(obj,cfile);
             switch obj.statmetric
@@ -130,7 +123,6 @@ classdef ea_disctract < handle
                     VTAvolumes(pt,side)=obj.M.stats(pt).ea_stats.stimulation.vat(side).volume;
                 end
             end
-
         end
 
         function Efieldmags = getefieldmagnitudes(obj)
@@ -255,7 +247,6 @@ classdef ea_disctract < handle
                     end
                     ea_dispercent(pt/length(allpts));
                 end
-
             end
             Ihat=mean(Ihat,2);
             ea_dispercent(1,'end');
@@ -267,24 +258,23 @@ classdef ea_disctract < handle
             allpts=obj.patientselection;
             Nperm=5000; % run as many as Nperm permutations
 
-
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
             I=obj.responsevar;
             R0 = zeros(Nperm+1,1);
             for side=1:2
                 nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
             end
-                disp(['Side ',num2str(side),':']);
-                for perm=1:Nperm+1
-                    Ihat{perm} = zeros(length(I),2);
-                    if perm>1
-                        Iperm=I(randperm(length(I)));
-                    else % use real empirical set in first run
-                        Iperm=I;
-                    end
-                    [vals]=ea_disc_calcstats(obj,allpts,Iperm);
+            disp(['Side ',num2str(side),':']);
+            for perm=1:Nperm+1
+                Ihat{perm} = zeros(length(I),2);
+                if perm>1
+                    Iperm=I(randperm(length(I)));
+                else % use real empirical set in first run
+                    Iperm=I;
+                end
+                [vals]=ea_disc_calcstats(obj,allpts,Iperm);
 
-                    for side=1:2
+                for side=1:2
                     switch obj.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
 
@@ -310,7 +300,6 @@ classdef ea_disctract < handle
                     R0(perm,side)=corr(Iperm,Ihat{perm}(:,side),'type','Spearman','rows','pairwise');
                     ea_dispercent(perm/Nperm);
                 end
-
             end
             ea_error('The following needs to be adapted for two sides.');
 
@@ -465,8 +454,6 @@ classdef ea_disctract < handle
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     end
                 end
-
-
             end
 
             % store colorbar in object
@@ -484,9 +471,3 @@ classdef ea_disctract < handle
         end
     end
 end
-
-
-
-
-
-
