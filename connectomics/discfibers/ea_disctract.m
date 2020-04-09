@@ -11,7 +11,7 @@ classdef ea_disctract < handle
         showposamount = [2 2] % two entries for right and left
         shownegamount = [2 2] % two entries for right and left
         connthreshold = 20
-        efieldthreshold = 20
+        efieldthreshold = 2500
         statmetric = 1 % entry from discfiber settings as initially specified in prefs.machine.lg (which are separately stored for each analysis/object).
         efieldmetric = 'sum' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [1,0,0] % positive main color
