@@ -1,6 +1,6 @@
 function [fibcell,fibsin,XYZmm,niivx,valsmm]=ea_discfibers_getfibcell(obj,cfile)
-if exist(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo',[ea_conn2connid(obj.connectome),'.mat']),'file')
-    load(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo',[ea_conn2connid(obj.connectome),'.mat']));
+if exist(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat']),'file')
+    load(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat']));
     if isfield(obj.results.(ea_conn2connid(obj.connectome)),'fibcell')
         fibcell = obj.results.(ea_conn2connid(obj.connectome)).fibcell;
         fibsin=fibcell2fibsin(fibcell);
@@ -50,7 +50,7 @@ end
 obj.results.(ea_conn2connid(obj.connectome)).fibcell=fibcell;
 niivx=mean(niivx);
 ea_mkdir(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo'));
-save(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo',[ea_conn2connid(obj.connectome),'.mat']),...
+save(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'),...
     'XYZmm','niivx','valsmm','-v7.3');
 
 
