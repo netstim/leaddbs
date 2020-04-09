@@ -62,6 +62,7 @@ classdef ea_disctract < handle
                 obj.ID = testID;
                 obj.resultfig = resultfig;
                 obj.allpatients = obj.M.patient.list;
+                obj.patientselection = obj.M.ui.listselect;
                 obj.responsevarlabel = obj.M.clinical.labels{1};
                 obj.covarlabels={'Stimulation Amplitude'};
             else
