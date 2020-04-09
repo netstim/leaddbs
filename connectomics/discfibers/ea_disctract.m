@@ -468,7 +468,7 @@ classdef ea_disctract < handle
 
                 % Set colorbar tick positions and labels
                 if ~any([isempty(vals{group,1}),isempty(vals{group,2})])
-                    cbvals = [vals{group,1}(logical(alphas{group,1}));vals{group,2}(logical(alphas{group,2}))];
+                    cbvals = [vals{group,1}(logical(alphas{group,1})),vals{group,2}(logical(alphas{group,2}))];
                     % cbvals=tvalsRescale{group,side}(logical(alphas));
                     if obj.posvisible && ~obj.negvisible
                         cbmap{group} = fibcmap{group}(ceil(length(fibcmap{group})/2+0.5):end,:);
