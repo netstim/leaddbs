@@ -1,7 +1,7 @@
 function [fibcell,fibsin,XYZmm,niivx,valsmm]=ea_discfibers_getfibcell(obj,cfile)
 if exist(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'),'file')
     load(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'));
-    if isfield(obj.results.(ea_conn2connid(obj.connectome)),'fibcell')
+    if isfield(obj.results,ea_conn2connid(obj.connectome)) && isfield(obj.results.(ea_conn2connid(obj.connectome)),'fibcell')
         fibcell = obj.results.(ea_conn2connid(obj.connectome)).fibcell;
         fibsin=fibcell2fibsin(fibcell);
         return
@@ -37,7 +37,7 @@ catch
     fibers=fibers.(fn{1});
 end
 
-if isfield(obj.results.(ea_conn2connid(obj.connectome)),'fibcell')
+if isfield(obj.results,ea_conn2connid(obj.connectome)) && isfield(obj.results.(ea_conn2connid(obj.connectome)),'fibcell')
     fibcell = obj.results.(ea_conn2connid(obj.connectome)).fibcell;
     fibsin=fibcell2fibsin(fibcell);
 else
@@ -57,24 +57,27 @@ save(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'),.
 function [fibcell,fibsin]=fibsin2fibcell(fibsin)
 % now color fibsin based on predictive value of improvement
 ea_dispt('');
-
-% Reformat to cell:
-[~,fibiaxfirst]=unique(fibsin(:,4),'first');
-[~,fibiaxlast]=unique(fibsin(:,4),'last');
-fiblen = fibiaxlast - fibiaxfirst + 1;
-fibcell = mat2cell(fibsin(:,1:3),fiblen);
-% repair fibsin to be incrementing from 1 to x:
-for f=1:length(fibcell)
-    fibsin(fibiaxfirst(f):fibiaxlast(f),4)=f;
+for side=1:2
+    % Reformat to cell:
+    [~,fibiaxfirst]=unique(fibsin{side}(:,4),'first');
+    [~,fibiaxlast]=unique(fibsin{side}(:,4),'last');
+    fiblen = fibiaxlast - fibiaxfirst + 1;
+    fibcell{side} = mat2cell(fibsin{side}(:,1:3),fiblen);
+    % repair fibsin to be incrementing from 1 to x:
+    for f=1:length(fibcell{side})
+        fibsin{side}(fibiaxfirst(f):fibiaxlast(f),4)=f;
+    end
 end
 
 
 function fibsin=fibcell2fibsin(fibcell)
-fibsin=cell2mat(fibcell);
-fibsin=[fibsin,zeros(size(fibsin,1),1)];
-cnt=1;
-for fib=1:length(fibcell)
-    thisfiblen=length(fibcell{fib});
-    fibsin(cnt:cnt+thisfiblen-1,4)=fib;
-    cnt=cnt+thisfiblen;
+for side=1:2
+    fibsin{side}=cell2mat(fibcell{side});
+    fibsin{side}=[fibsin{side},zeros(size(fibsin{side},1),1)];
+    cnt=1;
+    for fib=1:length(fibcell{side})
+        thisfiblen=length(fibcell{side}{fib});
+        fibsin{side}(cnt:cnt+thisfiblen-1,4)=fib;
+        cnt=cnt+thisfiblen;
+    end
 end

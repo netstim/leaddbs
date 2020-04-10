@@ -8,12 +8,10 @@ disp('ROI fiber analysis');
 patselection=[obj.patientselection,obj.patientselection+length(obj.allpatients)];
 
 
-    
-searchfibsin=round(fibsin(:,1:3).*4)/4; % reduce precision a bit (0.25 mm) to speed up search
-[searchfibsin,~,ic]=unique(searchfibsin,'rows');
-
 for side=1:2
-    fibsval{side}=zeros(size(fibcell,1),length(patselection),'logical'); % 5th column will add up values, 6th will take note how many entries were summed.
+    searchfibsin=round(fibsin{side}(:,1:3).*4)/4; % reduce precision a bit (0.25 mm) to speed up search
+    [searchfibsin,~,ic]=unique(searchfibsin,'rows');
+    fibsval{side}=zeros(size(fibcell{side},1),length(patselection),'logical'); % 5th column will add up values, 6th will take note how many entries were summed.
     
     % now color fibsin based on predictive value of improvement
     
@@ -23,7 +21,7 @@ for side=1:2
         [~,D]=knnsearch(XYZmm{roi,side}(:,1:3),searchfibsin,'Distance','chebychev');
         in=D<mean(niivx);
         in=in(ic); % upscale using unique output
-        fibsval{side}(unique(fibsin(in,4)),roi)=1;
+        fibsval{side}(unique(fibsin{side}(in,4)),roi)=1;
         ea_dispercent(roi/length(patselection));
     end
     ea_dispercent(1,'end');

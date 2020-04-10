@@ -22,7 +22,7 @@ classdef ea_disctract < handle
         results
         % includes subfields by results.connectomename.ttests /
         % results.connectomename.efields with
-        % fibcell % cell of all fibers connected
+        % fibcell % cell of all fibers connected, sorted by side
         % fibsval % connection weight value for each fiber to each VTA
         % fibweights % usually T- or R-values associated with each tract
         %
@@ -92,13 +92,18 @@ classdef ea_disctract < handle
             switch obj.statmetric
                 case 1 % ttests
                     [fibsval]=ea_discfibers_heatfibertracts(obj,fibcell,fibsin,XYZmm,niivx);
+                    % Main output of results - this is all we will ever need if statmetric
+                    % and connectome wont change
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval=fibsval;
                 case 2 % spearmans R
-                    [fibsval]=ea_discfibers_heatfibertracts_corr(obj,fibcell,XYZmm,niivx,valsmm);
+                    [fibsval_sum,fibsval_mean,fibsval_peak,fibsval_5peak]=ea_discfibers_heatfibertracts_corr(obj,fibcell,XYZmm,niivx,valsmm);
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'sum')).fibsval=fibsval_sum;
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'mean')).fibsval=fibsval_mean;
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'peak')).fibsval=fibsval_peak;
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'5peak')).fibsval=fibsval_5peak;
             end
 
-            % Main output of results - this is all we will ever need if statmetric
-            % and connectome wont change
-            obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval=fibsval;
+           
         end
 
         function Amps = getstimamp(obj)
@@ -374,7 +379,7 @@ classdef ea_disctract < handle
                 negUpperBound=ceil(size(fibcmap{group},1)/2*colorbarThreshold);
                 poslowerBound=floor((size(fibcmap{group},1)-size(fibcmap{group},1)/2*colorbarThreshold));
                 for side=1:2
-                    fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell(~isnan(vals{group,side}));
+                    fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));
                     if dogroups % introduce small jitter for visualization
                         fibcell{group,side}=ea_disc_addjitter(fibcell{group,side},0.01);
                     end

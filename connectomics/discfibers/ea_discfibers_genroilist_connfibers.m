@@ -31,23 +31,27 @@ for roi=1:size(allroilist,1)
    
 
     if ~exist('AllXYZ','var')
-        AllXYZ=[XYZmm{roi,1};XYZmm{roi,2}];
+        AllXYZ{1}=XYZmm{roi,1};
+        AllXYZ{2}=XYZmm{roi,2};
     else
-        AllXYZ=[AllXYZ;XYZmm{roi,1};XYZmm{roi,2}];
+        AllXYZ{1}=[AllXYZ{1};XYZmm{roi,1}];
+        AllXYZ{2}=[AllXYZ{2};XYZmm{roi,2}];
     end
     
     ea_dispercent(roi/size(allroilist,1));
 end
 ea_dispercent(1,'end');
 ea_dispt('Selecting connected fibers');
-% isolate fibers that are connected to any ROI:
-AllXYZ=unique(round(AllXYZ*4)/4,'rows');
-
-[~,D]=knnsearch(AllXYZ(:,1:3),fibers(:,1:3),'Distance','chebychev');
-
-in=D<(0.5); % larger threshold here since seed vals have been rounded above. Also, this is just to reduce size of the connectome for speed improvements, so we can be more liberal here.
-
-fibsin=fibers(ismember(fibers(:,4),unique(fibers(in,4))),:);
-if size(fibsin,2)>4
-   fibsin(:,5:end)=[];
+for side=1:2
+    % isolate fibers that are connected to any ROI:
+    AllXYZ{side}=unique(round(AllXYZ{side}*4)/4,'rows');
+    
+    [~,D]=knnsearch(AllXYZ{side}(:,1:3),fibers(:,1:3),'Distance','chebychev');
+    
+    in=D<(0.5); % larger threshold here since seed vals have been rounded above. Also, this is just to reduce size of the connectome for speed improvements, so we can be more liberal here.
+    
+    fibsin{side}=fibers(ismember(fibers(:,4),unique(fibers(in,4))),:);
+    if size(fibsin{side},2)>4
+        fibsin{side}(:,5:end)=[];
+    end
 end
