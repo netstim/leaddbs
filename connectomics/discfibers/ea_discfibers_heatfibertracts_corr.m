@@ -25,15 +25,8 @@ for side=1:2
                 fibsval_sum{side}(fib,roi)=sum(tv);
                 fibsval_mean{side}(fib,roi)=mean(tv);
                 fibsval_peak{side}(fib,roi)=max(tv);
- 
-%                 switch obj.efieldmetric
-%                     case 'sum'
-%                         fibsval{side}(fib,roi)=sum(tv);
-%                     case 'mean'
-%                         fibsval{side}(fib,roi)=mean(tv);
-%                     case 'peak'
-%                         fibsval{side}(fib,roi)=max(tv);
-%                 end
+                tv=sort(tv,'descend');
+                fibsval_5peak{side}(fib,roi)=mean(tv(1:ceil(0.05*length(tv))));
             end
         end
         ea_dispercent(roi/length(patselection));
