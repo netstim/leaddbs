@@ -8,13 +8,13 @@ switch obj.statmetric
     case 2
         id='spearman';
         switch efm
-            case 'mean'
+            case 'Mean'
                 id=[id,'_mean'];
-            case 'peak'
+            case 'Peak'
                 id=[id,'_peak'];
-            case 'sum'
+            case 'Sum'
                 id=[id,'_sum'];
-            case '5peak'
+            case 'Peak 5%'
                 id=[id,'_5peak'];
         end
 end

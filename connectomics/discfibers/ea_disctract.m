@@ -13,7 +13,7 @@ classdef ea_disctract < handle
         connthreshold = 20
         efieldthreshold = 2500
         statmetric = 1 % entry from discfiber settings as initially specified in prefs.machine.lg (which are separately stored for each analysis/object).
-        efieldmetric = 'sum' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
+        efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [1,0,0] % positive main color
         negcolor = [0,0,1] % negative main color
         splitbygroup = 0
@@ -97,10 +97,10 @@ classdef ea_disctract < handle
                     obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval=fibsval;
                 case 2 % spearmans R
                     [fibsval_sum,fibsval_mean,fibsval_peak,fibsval_5peak]=ea_discfibers_heatfibertracts_corr(obj,fibcell,XYZmm,niivx,valsmm);
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'sum')).fibsval=fibsval_sum;
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'mean')).fibsval=fibsval_mean;
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'peak')).fibsval=fibsval_peak;
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'5peak')).fibsval=fibsval_5peak;
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Sum')).fibsval=fibsval_sum;
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Mean')).fibsval=fibsval_mean;
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Peak')).fibsval=fibsval_peak;
+                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Peak 5%')).fibsval=fibsval_5peak;
             end
 
            
