@@ -54,11 +54,15 @@ for group=groups
             case 2
                 sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
         end
-        % remove fibers that are not connected to enough VTAs or connected
+        % remove fibers that are not connected to enough VTAs/Efields or connected
         % to too many VTAs (connthreshold slider)
         gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=0;
-        gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
-
+        % only in case of VTAs (given two-sample-t-test statistic) do we
+        % need to also exclude if tract is connected to too many VTAs:
+        if obj.statmetric==1
+            gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
+        end
+        
         switch obj.statmetric
             case 1 % t-tests
                 % check if covariates exist:
