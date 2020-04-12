@@ -3,9 +3,7 @@ prefs=ea_prefs;
 if ~iscell(geneidx)
     geneidx={geneidx};
 end
-if ~exist('cols','var')
-   cols=ones(length(geneidx),1); 
-end
+
 load([prefs.genetics.dbdir,'geneinfo.mat'],'geneinfo');
 for g=1:length(geneidx)
 id{g}=[];
@@ -41,47 +39,47 @@ else
 end
 
 
+ea_plothistperm(mapfn,sims,geneidx,id,cols);
 
-
-colorc=ones(length(sims),1);
-
-gr(1)=gramm('x',sims,'color',colorc);
-gr(1).set_color_options('chroma',0,'lightness',50);
-gr(1).stat_bin('geom','line','fill','all');
-
-gr(1).set_title(['> ',mapfn]);
-h=figure('Position',[100 100 800 600]);
-
-gr.draw();
-hold on
-
-set(0,'CurrentFigure',h);
-set(h,'CurrentAxes',gr.facet_axes_handles);
-
-ccode=lines;
-
-% plot lines
-for g=1:length(geneidx)
-    thissims=sims(id{g});
-
-    plot([mean(thissims),mean(thissims)],[0,10000],'Color',ccode(cols(g),:),'LineWidth',2);
-    
-end
-
-ax=gr(1).facet_axes_handles;
-
-
-% plot textboxes
-for g=1:length(geneidx)
-    thissims=sims(id{g});
-
-    ssims=sort(abs(sims),'descend');
-    
-    ssims=ssims>abs(mean(thissims));
-    p=sum(ssims)/numel(ssims);
-    if mean(thissims)>0
-        text(double(mean(thissims)),(ax.YLim(2))-(g*(0.07*ax.YLim(2))),[' \leftarrow ',geneidx{g},' [p = ',sprintf('%.4f',p),']'],'Color',ccode(cols(g),:),'FontSize',14,'FontWeight','bold','HorizontalAlignment','left','BackgroundColor','w');
-    else
-        text(double(mean(thissims)),(ax.YLim(2))-(g*(0.07*ax.YLim(2))),['',geneidx{g},' [p = ',sprintf('%.4f',p),'] \rightarrow '],'Color',ccode(cols(g),:),'FontSize',14,'FontWeight','bold','HorizontalAlignment','right','BackgroundColor','w');
-    end
-end
+% colorc=ones(length(sims),1);
+% 
+% gr(1)=gramm('x',sims,'color',colorc);
+% gr(1).set_color_options('chroma',0,'lightness',50);
+% gr(1).stat_bin('geom','line','fill','all');
+% 
+% gr(1).set_title(['> ',mapfn]);
+% h=figure('Position',[100 100 800 600]);
+% 
+% gr.draw();
+% hold on
+% 
+% set(0,'CurrentFigure',h);
+% set(h,'CurrentAxes',gr.facet_axes_handles);
+% 
+% ccode=lines;
+% 
+% % plot lines
+% for g=1:length(geneidx)
+%     thissims=sims(id{g});
+% 
+%     plot([mean(thissims),mean(thissims)],[0,10000],'Color',ccode(cols(g),:),'LineWidth',2);
+%     
+% end
+% 
+% ax=gr(1).facet_axes_handles;
+% 
+% 
+% % plot textboxes
+% for g=1:length(geneidx)
+%     thissims=sims(id{g});
+% 
+%     ssims=sort(abs(sims),'descend');
+%     
+%     ssims=ssims>abs(mean(thissims));
+%     p=sum(ssims)/numel(ssims);
+%     if mean(thissims)>0
+%         text(double(mean(thissims)),(ax.YLim(2))-(g*(0.07*ax.YLim(2))),[' \leftarrow ',geneidx{g},' [p = ',sprintf('%.4f',p),']'],'Color',ccode(cols(g),:),'FontSize',14,'FontWeight','bold','HorizontalAlignment','left','BackgroundColor','w');
+%     else
+%         text(double(mean(thissims)),(ax.YLim(2))-(g*(0.07*ax.YLim(2))),['',geneidx{g},' [p = ',sprintf('%.4f',p),'] \rightarrow '],'Color',ccode(cols(g),:),'FontSize',14,'FontWeight','bold','HorizontalAlignment','right','BackgroundColor','w');
+%     end
+% end

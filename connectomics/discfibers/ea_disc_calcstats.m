@@ -1,6 +1,10 @@
-function [vals]=ea_disc_calcstats(obj,patsel)
+function [vals]=ea_disc_calcstats(obj,patsel,Iperm)
 
+if ~exist('Iperm','var')
 I=obj.responsevar;
+else % used in permutation based statistics - in this case the real improvement can be substituted with permuted variables.
+    I=Iperm;
+end
 fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
 
 % quickly recalc stats:

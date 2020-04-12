@@ -32,14 +32,17 @@ classdef ea_disctract < handle
         mirrorsides = 0 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
         responsevar % response variable
         responsevarlabel % label of response variable
-        covars % covariates
-        covarlabels % covariate labels
+        covars = {} % covariates
+        covarlabels = {} % covariate labels
         analysispath % where to store results
         leadgroup % redundancy protocol only, path to original lead group project
         connectome % redundancy protocol only, name of underlying connectome
         colorbar % colorbar information
         % stats: (how many fibers available and shown etc for GUI)
         stats
+        % additional settings:
+        kfold = 5 % divide into k sets when doing k-fold CV
+        Nperm = 1000 % how many permutations in leave-nothing-out permtest strategy
     end
 
     properties (Access = private)
@@ -182,6 +185,25 @@ classdef ea_disctract < handle
         end
 
         function [I,Ihat] = lococv(obj)
+            [I,Ihat]=groupwisecv(obj,obj.M.patient.group);
+        end
+
+        function [I,Ihat] = kfoldcv(obj) 
+            % group assignment:
+            setlen=floor(length(obj.patientselection)/obj.kfold);
+            cnt=1;
+            for fold=1:obj.kfold
+            groupassignment(cnt:cnt+setlen-1)=fold;
+            cnt=cnt+setlen;
+            end
+            groupassignment(length(groupassignment):(length(groupassignment)+(length(obj.patientselection)-length(groupassignment))))=fold; % fill up remnants
+            %randpermute
+            groupassignment=groupassignment(randperm(length(groupassignment)));
+            [I,Ihat]=groupwisecv(obj,groupassignment);
+
+        end
+
+        function [I,Ihat]=groupwisecv(obj,groupassignment)
             allpts=obj.patientselection;
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
             I=obj.responsevar;
@@ -189,26 +211,30 @@ classdef ea_disctract < handle
                 nfibsval{side}=fibsval{side};
                 nfibsval{side}(nfibsval{side}==0)=nan;
             end
-            disp(['Side ',num2str(side),':']);
-            for group=unique(obj.M.patient.group)'
+            if length(unique(groupassignment))<2
+               ea_error(['Only 1 set of patients assigned. Cross-validation not possible.']); 
+            end
+            ea_dispercent(0,'Iterating sets');
+            for group=unique(groupassignment)
                 opts=allpts; % generate variable of patients on which model will be built.
-                opts(obj.M.patient.group(allpts)==group)=[];
+                opts(groupassignment(allpts)==group)=[];
                 [vals]=ea_disc_calcstats(obj,opts);
 
                 for side=1:2
                     switch obj.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            for pt=find(obj.M.patient.group==group)
+                            for pt=find(groupassignment==group)
                                 Ihat(pt,side)=ea_nansum(vals{1,side}'.*fibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
                             end
                         case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
-                            for pt=find(obj.M.patient.group(allpts)==group)
+                            for pt=find(groupassignment==group)
                                 Ihat(pt,side)=ea_nansum(vals{1,side}.*nfibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
                             end
                     end
-                    ea_dispercent(pt/length(allpts));
                 end
+                ea_dispercent(group/length(unique(groupassignment)));
             end
+            ea_dispercent(1,'end');
             if size(obj.responsevar,2)==2 % hemiscores
                 Ihat=Ihat(:); % compare hemiscores (electrode wise)
                 I=I(:);
@@ -219,60 +245,20 @@ classdef ea_disctract < handle
             loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
             Ihat(~loginx)=nan; % make sure info of not included patients are not used
         end
-
-        function [I,Ihat] = kfoldcv(obj)
-            ea_error('This has not been implemented yet.');
+        
+        function [I,Ihat,R0,R1,pperm] = lnopb(obj)
             allpts=obj.patientselection;
-            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
-            I=obj.responsevar;
-            for side=1:2
-                nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
-
-                disp(['Side ',num2str(side),':']);
-                for group=unique(obj.M.patient.group)'
-                    opts=allpts; % generate variable of patients on which model will be built.
-                    opts(obj.M.patient.group(allpts)==group)=[];
-                    switch discfiberssetting.statmetric
-                        case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            optsval=fibsval{side}(:,opts); % all other patients connections to each fibertract
-                            allvals=repmat(I(opts)',size(optsval,1),1); % improvement values (taken from Lead group file or specified in line 12).
-                            fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
-                            fibsimpval(~logical(optsval))=nan; % Delete all unconnected values
-                            nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
-                            nfibsimpval(logical(optsval))=nan; % Delete all connected values
-                            [~,p,~,Model]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
-                            Model.tstat(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
-                            for pt=find(obj.M.patient.group==group)
-                                thisptval=fibsval{side}(:,pt); % this patients connections to each fibertract (1 = connected, 0 = unconnected)
-                                Ihat(pt,side)=ea_nansum(Model.tstat'.*thisptval); % I hat is the estimate of improvements (not scaled to real improvements)
-                            end
-                        case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
-                            Model=corr(nfibsval{side}(:,opts)',I(opts),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
-                            for pt=find(obj.M.patient.group(allpts)==group)
-                                Ihat(pt,side)=ea_nansum(Model.*nfibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
-                            end
-                    end
-                    ea_dispercent(pt/length(allpts));
-                end
-            end
-            Ihat=mean(Ihat,2);
-            ea_dispercent(1,'end');
-            loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
-            Ihat(~loginx)=nan; % make sure info of not included patients are not used
-        end
-
-        function [I,Ihat,R0,R1,pperm,Nperm] = lnopb(obj)
-            allpts=obj.patientselection;
-            Nperm=5000; % run as many as Nperm permutations
+            Numperm=obj.Nperm; % run as many as Nperm permutations
 
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
             I=obj.responsevar;
-            R0 = zeros(Nperm+1,1);
+            R0 = zeros(Numperm+1,1);
             for side=1:2
                 nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
             end
-            disp(['Side ',num2str(side),':']);
-            for perm=1:Nperm+1
+            ea_dispercent(0,'Calculating permutations');
+
+            for perm=1:Numperm+1
                 Ihat{perm} = zeros(length(I),2);
                 if perm>1
                     Iperm=I(randperm(length(I)));
@@ -282,44 +268,35 @@ classdef ea_disctract < handle
                 [vals]=ea_disc_calcstats(obj,allpts,Iperm);
 
                 for side=1:2
+
                     switch obj.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-
-                            allvals=repmat(Iperm(allpts)',size(fibsval{side}(:,allpts),1),1); % improvement values (taken from Lead group file or specified in line 12).
-
-                            fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
-                            fibsimpval(~logical(fibsval{side}(:,allpts)))=nan; % Delete all unconnected values
-                            nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
-                            nfibsimpval(logical(fibsval{side}(:,allpts)))=nan; % Delete all connected values
-                            [~,p,~,Model]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
-                            Model.tstat(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                             for pt=allpts
                                 thisptval=fibsval{side}(:,pt); % this patients connections to each fibertract (1 = connected, 0 = unconnected)
-                                Ihat{perm}(pt,side)=ea_nansum(Model.tstat'.*thisptval); % I hat is the estimate of improvements (not scaled to real improvements)
+                                Ihat{perm}(pt,side)=ea_nansum(vals{side}.*thisptval); % I hat is the estimate of improvements (not scaled to real improvements)
                             end
                         case 2 % spearmans correlations, efields - see Irmen et al. 2019 TBP
-                            Model=corr(nfibsval{side}(:,allpts)',I(allpts),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
                             for pt=allpts
-                                Ihat{perm}(pt,side)=ea_nansum(Model.*nfibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
+                                Ihat{perm}(pt,side)=ea_nansum(vals{side}.*nfibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
                             end
                     end
 
                     R0(perm,side)=corr(Iperm,Ihat{perm}(:,side),'type','Spearman','rows','pairwise');
-                    ea_dispercent(perm/Nperm);
+                    ea_dispercent(perm/Numperm);
                 end
             end
-            ea_error('The following needs to be adapted for two sides.');
+            ea_dispercent(1,'end');
 
-            R1=R0(1); % real correlation value when using empirical values
-            R0=R0(2:end); % 1-by-Nperm set of R values
+            R1=mean(R0(1,:),2); % real correlation value when using empirical values
+            R0=mean(R0(2:end,:),2); % 1-by-Nperm set of R values
 
             % generate null distribution
             R0=abs(R0);
             R0=sort(R0,'descend');
-            p95=R0(round(0.05*Nperm));
+            p95=R0(round(0.05*Numperm));
             v=ea_searchclosest(R0,R1);
 
-            pperm=v/Nperm;
+            pperm=v/Numperm;
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
 
             Ihat=Ihat{1};
