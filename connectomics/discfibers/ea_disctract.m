@@ -38,6 +38,8 @@ classdef ea_disctract < handle
         leadgroup % redundancy protocol only, path to original lead group project
         connectome % redundancy protocol only, name of underlying connectome
         colorbar % colorbar information
+        % stats: (how many fibers available and shown etc for GUI)
+        stats
     end
 
     properties (Access = private)
@@ -346,6 +348,11 @@ classdef ea_disctract < handle
 
         function draw(obj)
             [vals]=ea_disc_calcstats(obj);
+            obj.stats.pos.available(1)=sum(vals{1,1}>0);
+            obj.stats.neg.available(1)=sum(vals{1,1}<0);            
+            obj.stats.pos.available(2)=sum(vals{1,2}>0);
+            obj.stats.neg.available(2)=sum(vals{1,2}<0);
+
             set(0,'CurrentFigure',obj.resultfig);
 
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
@@ -433,6 +440,11 @@ classdef ea_disctract < handle
                         [obj.drawobject{group,side}.FaceAlpha]=fibalpha{:};
                     end
                 end
+                
+                obj.stats.pos.shown(1)=sum(vals{1,1}>0);
+                obj.stats.neg.shown(1)=sum(vals{1,1}<0);
+                obj.stats.pos.shown(2)=sum(vals{1,2}>0);
+                obj.stats.neg.shown(2)=sum(vals{1,2}<0);
 
                 % Set colorbar tick positions and labels
                 if ~any([isempty(vals{group,1}),isempty(vals{group,2})])

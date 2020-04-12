@@ -56,11 +56,11 @@ for group=groups
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
         % to too many VTAs (connthreshold slider)
-        gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=0;
+        gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=nan;
         % only in case of VTAs (given two-sample-t-test statistic) do we
         % need to also exclude if tract is connected to too many VTAs:
         if obj.statmetric==1
-            gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
+            gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=nan;
         end
         
         switch obj.statmetric
@@ -120,3 +120,4 @@ for group=groups
         end
     end
 end
+
