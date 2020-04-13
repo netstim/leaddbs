@@ -108,8 +108,6 @@ classdef ea_disctract < handle
                     obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Peak')).fibsval=fibsval_peak;
                     obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Peak 5%')).fibsval=fibsval_5peak;
             end
-
-           
         end
 
         function Amps = getstimamp(obj)
@@ -162,13 +160,14 @@ classdef ea_disctract < handle
         function coh = getcohortregressor(obj)
             coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
         end
+
         function [I,Ihat] = loocv(obj)
             allpts=obj.patientselection;
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
             I=obj.responsevar;
             for side=1:2
                 nfibsval{side}=fibsval{side};
-                nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
+                nfibsval{side}(nfibsval{side}==0)=0; % only used in spearmans correlations
             end
             for pt=allpts
                 opts=allpts;  % generate variable of patients on which model will be built.
