@@ -110,9 +110,7 @@ for group=groups
                     %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                 end
             case 2 % spearmans correlations
-                nangfibsval=gfibsval{side}(:,gpatsel);
-                nangfibsval(nangfibsval==0)=nan; % only used in spearmans correlations
-                if exist('covars', 'var')
+                 if exist('covars', 'var')
                     usecovars=[];
                     for cv=1:length(covars)
                         thiscv=covars{cv}(gpatsel,:);
@@ -121,9 +119,9 @@ for group=groups
                         end
                         usecovars=[usecovars,thiscv];
                     end
-                    vals{group,side}=partialcorr(nangfibsval',I(gpatsel,side),usecovars,'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
+                    vals{group,side}=partialcorr(gfibsval{side}(:,gpatsel)',I(gpatsel,side),usecovars,'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
                 else
-                    vals{group,side}=corr(nangfibsval',I(gpatsel,side),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
+                    vals{group,side}=corr(gfibsval{side}(:,gpatsel)',I(gpatsel,side),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
                 end
         end
     end

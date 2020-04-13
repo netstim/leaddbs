@@ -1,11 +1,16 @@
 function [fibcell,fibsin,XYZmm,niivx,valsmm]=ea_discfibers_getfibcell(obj,cfile)
 if exist(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'),'file')
-    load(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'));
+    D=load(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'));
     if isfield(obj.results,ea_conn2connid(obj.connectome)) && isfield(obj.results.(ea_conn2connid(obj.connectome)),'fibcell')
         fibcell = obj.results.(ea_conn2connid(obj.connectome)).fibcell;
         fibsin=fibcell2fibsin(fibcell);
+        XYZmm=D.XYZmm;
+        niivx=D.niivx;
+        valsmm=D.valsmm;
         return
     end
+else
+    D=[];
 end
 
 if obj.M.ui.detached
@@ -37,18 +42,15 @@ catch
     fibers=fibers.(fn{1});
 end
 
-if isfield(obj.results,ea_conn2connid(obj.connectome)) && isfield(obj.results.(ea_conn2connid(obj.connectome)),'fibcell')
-    fibcell = obj.results.(ea_conn2connid(obj.connectome)).fibcell;
-    fibsin=fibcell2fibsin(fibcell);
-else
-    [fibsin,XYZmm,nii,valsmm]=ea_discfibers_genroilist_connfibers(fibers, allroilist);
-    for vta=1:numel(nii)
-        niivx(vta,:)=nii{vta}.voxsize;
-    end
-    [fibcell,fibsin]=fibsin2fibcell(fibsin);
+
+[fibsin,XYZmm,nii,valsmm]=ea_discfibers_genroilist_connfibers(fibers, allroilist, D);
+for vta=1:numel(nii)
+    niivx(vta,:)=nii{vta}.voxsize;
 end
+niivx=mean(niivx,1);
+[fibcell,fibsin]=fibsin2fibcell(fibsin);
+
 obj.results.(ea_conn2connid(obj.connectome)).fibcell=fibcell;
-niivx=mean(niivx);
 ea_mkdir(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo'));
 save(fullfile(fileparts(obj.leadgroup),'disctracts','baseinfo','baseinfo.mat'),...
     'XYZmm','niivx','valsmm','-v7.3');
