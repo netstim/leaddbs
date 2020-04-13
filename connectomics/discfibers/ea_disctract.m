@@ -265,7 +265,7 @@ classdef ea_disctract < handle
             I=obj.responsevar;
             R0 = zeros(Numperm+1,1);
             for side=1:2
-                nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
+                nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=0; % only used in spearmans correlations
             end
             ea_dispercent(0,'Calculating permutations');
 
