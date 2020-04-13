@@ -60,11 +60,11 @@ for group=groups
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
         % to too many VTAs (connthreshold slider)
-        gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=nan;
+        gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=0;
         % only in case of VTAs (given two-sample-t-test statistic) do we
         % need to also exclude if tract is connected to too many VTAs:
         if obj.statmetric==1
-            gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=nan;
+            gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
         end
         
         switch obj.statmetric
@@ -74,7 +74,7 @@ for group=groups
                     % they do:
                     vals{group,side}=nan(size(gfibsval{side},1),1);
                     ea_dispercent(0,['Side ',num2str(side),': Calculating T-values (taking covariates into account)']);
-                    nixfib=find(any(gfibsval{side}(:,gpatsel)').*(~all(gfibsval{side}(:,gpatsel)')));
+                    nixfib=find(any(gfibsval{side}(:,gpatsel)').*~all(gfibsval{side}(:,gpatsel)'));
                     for fib=1:length(nixfib)
                         data = table(I(gpatsel,side),gfibsval{side}(nixfib(fib),gpatsel)',...
                             'VariableNames',{'response','fibsval'});
@@ -126,4 +126,3 @@ for group=groups
         end
     end
 end
-
