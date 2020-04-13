@@ -2,56 +2,61 @@ function pal=ea_color_wes(set)
 % source: http://opencolor.tools/palettes/wesanderson/
 % similar or same palettes found in R here: https://github.com/karthik/wesanderson
 % different sets here https://prafter.com/color/
+sets={'lifeaquatic','budapest','moonrisekingdom','royaltenenbaums','fantasticmrfox','darjeeling','hotelchevalier','rushmore'};
 if ~exist('set','var')
-    sets={'lifeacquatic','royaltenenbaums','budapest','moonrisekingdom','fantasticmrfox','darjeeling','hotelchevalier','rushmore'};
     s=randperm(length(sets));
     set=sets{s(1)};
 end
 switch set
+    case 'all'
+        pal=[];
+        for s=1:length(sets)
+            pal=[pal;ea_color_wes(sets{s})];
+        end
     case 'lifeaquatic'
-        pal(1,:)=hexrgb('#1DACE8');
-        pal(2,:)=hexrgb('#1C366B');
-        pal(3,:)=hexrgb('#F24D29');
-        pal(4,:)=hexrgb('#E5C4A1');
-        pal(5,:)=hexrgb('#C4CFD0');
+        pal(1,:)=hex2rgb('#1DACE8');
+        pal(2,:)=hex2rgb('#1C366B');
+        pal(3,:)=hex2rgb('#F24D29');
+        pal(4,:)=hex2rgb('#E5C4A1');
+        pal(5,:)=hex2rgb('#C4CFD0');
     case 'royaltenenbaums'
-        pal(1,:)=hexrgb('#9A872D');
-        pal(2,:)=hexrgb('#F5CDB6');
-        pal(3,:)=hexrgb('#F7B0AA');
-        pal(4,:)=hexrgb('#FDDDA4');
-        pal(5,:)=hexrgb('#76A08A');
+        pal(1,:)=hex2rgb('#9A872D');
+        pal(2,:)=hex2rgb('#F5CDB6');
+        pal(3,:)=hex2rgb('#F7B0AA');
+        pal(4,:)=hex2rgb('#FDDDA4');
+        pal(5,:)=hex2rgb('#76A08A');
     case 'budapest'
-        pal(1,:)=hexrgb('#D8A49B');
-        pal(2,:)=hexrgb('#C7CEF6');
-        pal(3,:)=hexrgb('#7496D2');
+        pal(1,:)=hex2rgb('#D8A49B');
+        pal(2,:)=hex2rgb('#C7CEF6');
+        pal(3,:)=hex2rgb('#7496D2');
     case 'moonrisekingdom'
-        pal(1,:)=hexrgb('#B62A3D');
-        pal(2,:)=hexrgb('#EDCB64');
-        pal(3,:)=hexrgb('#B5966D');
-        pal(4,:)=hexrgb('#DAECED');
-        pal(5,:)=hexrgb('#CECD7B');
+        pal(1,:)=hex2rgb('#B62A3D');
+        pal(2,:)=hex2rgb('#EDCB64');
+        pal(3,:)=hex2rgb('#B5966D');
+        pal(4,:)=hex2rgb('#DAECED');
+        pal(5,:)=hex2rgb('#CECD7B');
     case 'fantasticmrfox'
-        pal(1,:)=hexrgb('#F8DF4F');
-        pal(2,:)=hexrgb('#A35E60');
-        pal(3,:)=hexrgb('#541F12');
-        pal(4,:)=hexrgb('#CC8B3C');
-        pal(5,:)=hexrgb('#E8D2B9');
+        pal(1,:)=hex2rgb('#F8DF4F');
+        pal(2,:)=hex2rgb('#A35E60');
+        pal(3,:)=hex2rgb('#541F12');
+        pal(4,:)=hex2rgb('#CC8B3C');
+        pal(5,:)=hex2rgb('#E8D2B9');
     case 'darjeeling'
-        pal(1,:)=hexrgb('#AEA8A8');
-        pal(2,:)=hexrgb('#CB9E23');
-        pal(3,:)=hexrgb('#957A6D');
-        pal(4,:)=hexrgb('#AC6E49');
+        pal(1,:)=hex2rgb('#AEA8A8');
+        pal(2,:)=hex2rgb('#CB9E23');
+        pal(3,:)=hex2rgb('#957A6D');
+        pal(4,:)=hex2rgb('#AC6E49');
     case 'hotelchevalier'
-        pal(1,:)=hexrgb('#456355');
-        pal(2,:)=hexrgb('#FCD16B');
-        pal(3,:)=hexrgb('#D3DDDC');
-        pal(4,:)=hexrgb('#C6B19D');
+        pal(1,:)=hex2rgb('#456355');
+        pal(2,:)=hex2rgb('#FCD16B');
+        pal(3,:)=hex2rgb('#D3DDDC');
+        pal(4,:)=hex2rgb('#C6B19D');
     case 'rushmore'
-        pal(1,:)=hexrgb('#DBB165');
-        pal(2,:)=hexrgb('#DEB18B');
-        pal(3,:)=hexrgb('#2E604A');
-        pal(4,:)=hexrgb('#27223C');
-        pal(5,:)=hexrgb('#D1362F');
+        pal(1,:)=hex2rgb('#DBB165');
+        pal(2,:)=hex2rgb('#DEB18B');
+        pal(3,:)=hex2rgb('#2E604A');
+        pal(4,:)=hex2rgb('#27223C');
+        pal(5,:)=hex2rgb('#D1362F');
 end
 
 
