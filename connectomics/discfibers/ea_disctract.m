@@ -170,7 +170,6 @@ classdef ea_disctract < handle
                 nfibsval{side}=fibsval{side};
                 nfibsval{side}(nfibsval{side}==0)=nan; % only used in spearmans correlations
             end
-            disp(['Side ',num2str(side),':']);
             for pt=allpts
                 opts=allpts;  % generate variable of patients on which model will be built.
                 opts(opts==pt)=[];
@@ -189,7 +188,7 @@ classdef ea_disctract < handle
                 Ihat=Ihat(:); % compare hemiscores (electrode wise)
                 I=I(:);
             else
-                Ihat=mean(Ihat,2); % compare bodyscores (patient wise)
+                Ihat=ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
             end
             ea_dispercent(1,'end');
             loginx=zeros(size(Ihat));
@@ -252,7 +251,7 @@ classdef ea_disctract < handle
                 Ihat=Ihat(:); % compare hemiscores (electrode wise)
                 I=I(:);
             else
-                Ihat=mean(Ihat,2); % compare bodyscores (patient wise)
+                Ihat=ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
             end
             ea_dispercent(1,'end');
             loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
@@ -300,8 +299,8 @@ classdef ea_disctract < handle
             end
             ea_dispercent(1,'end');
 
-            R1=mean(R0(1,:),2); % real correlation value when using empirical values
-            R0=mean(R0(2:end,:),2); % 1-by-Nperm set of R values
+            R1=ea_nanmean(R0(1,:),2); % real correlation value when using empirical values
+            R0=ea_nanmean(R0(2:end,:),2); % 1-by-Nperm set of R values
 
             % generate null distribution
             R0=abs(R0);
@@ -313,7 +312,7 @@ classdef ea_disctract < handle
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
 
             Ihat=Ihat{1};
-            Ihat=mean(Ihat,2);
+            Ihat=ea_nanmean(Ihat,2);
             ea_dispercent(1,'end');
             loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
             Ihat(~loginx)=nan; % make sure info of not included patients are not used
