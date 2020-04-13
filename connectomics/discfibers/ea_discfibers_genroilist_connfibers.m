@@ -48,7 +48,7 @@ else % aggregate AllXYZ from prior data
 end
 
 AllXYZ{1}=cell2mat(XYZmm(:,1));
-AllXYZ{2}=cell2mat(XYZmm(:,1));
+AllXYZ{2}=cell2mat(XYZmm(:,2));
 
 dthreshs=[3,0.7,mean(niivx)];
 dsfactor=[0.5,2,inf];

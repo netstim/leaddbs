@@ -6,7 +6,7 @@ function [fibsval_sum,fibsval_mean,fibsval_peak,fibsval_5peak]=ea_discfibers_hea
 disp('ROI fiber analysis');
 
 patselection=[obj.patientselection,obj.patientselection+length(obj.allpatients)];
-
+vizz=0;
 dthresh=2*mean(niivx);
 for side=1:2
     fibsval_sum{side}=zeros(size(fibcell{side},1),length(patselection),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
@@ -17,6 +17,14 @@ for side=1:2
     ea_dispercent(0,['Iterating ROI, side ',num2str(side)]);   
     for roi=1:length(patselection)
         tree=KDTreeSearcher(XYZmm{roi,side}(:,1:3));
+        if vizz
+           figure
+           hold on
+           plot3(XYZmm{roi,side}(:,1),XYZmm{roi,side}(:,2),XYZmm{roi,side}(:,3),'r.');
+           for fib=1:100
+           plot3(fibcell{side}{fib}(:,1),fibcell{side}{fib}(:,2),fibcell{side}{fib}(:,3),'r.');
+           end
+        end
         for fib=1:length(fibcell{side})
             [IX,D]=knnsearch(tree,fibcell{side}{fib},'Distance','chebychev');
             in=D<dthresh;
