@@ -43,11 +43,7 @@ catch
 end
 
 
-[fibsin,XYZmm,nii,valsmm]=ea_discfibers_genroilist_connfibers(fibers, allroilist, D);
-for vta=1:numel(nii)
-    niivx(vta,:)=nii{vta}.voxsize;
-end
-niivx=mean(niivx,1);
+[fibsin,XYZmm,niivx,valsmm]=ea_discfibers_genroilist_connfibers(fibers, allroilist, D);
 [fibcell,fibsin]=fibsin2fibcell(fibsin);
 
 obj.results.(ea_conn2connid(obj.connectome)).fibcell=fibcell;
