@@ -105,7 +105,7 @@ for group=groups
                     fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
                     nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
                     nfibsimpval(logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all connected values
-                    [~,p,~,stats]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
+                    [~,~,~,stats]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
                     vals{group,side}=stats.tstat';
                     %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                 end
@@ -115,7 +115,11 @@ for group=groups
                 if exist('covars', 'var')
                     usecovars=[];
                     for cv=1:length(covars)
-                        usecovars=[usecovars,covars{cv}(:,side)];
+                        thiscv=covars{cv}(gpatsel,:);
+                        if (size(thiscv,2)==2)
+                            thiscv=thiscv(:,side);
+                        end
+                        usecovars=[usecovars,thiscv];
                     end
                     vals{group,side}=partialcorr(nangfibsval',I(gpatsel,side),usecovars,'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
                 else

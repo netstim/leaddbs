@@ -43,6 +43,7 @@ classdef ea_disctract < handle
         % additional settings:
         kfold = 5 % divide into k sets when doing k-fold CV
         Nperm = 1000 % how many permutations in leave-nothing-out permtest strategy
+        adjustforgroups = 1 % adjust correlations for group effects
     end
 
     properties (Access = private)
@@ -144,11 +145,23 @@ classdef ea_disctract < handle
             Efieldmags=zeros(length(obj.M.patient.list),2);
             for pt=1:length(obj.M.patient.list)
                 for side=1:2
-                    Efieldmags(pt,side)=obj.M.stats(pt).ea_stats.stimulation.efield(side).volume;
+                    if isempty(obj.M.stats(pt).ea_stats.stimulation.efield(side).volume)
+                        val=0;
+                    else
+                        val=obj.M.stats(pt).ea_stats.stimulation.efield(side).volume;
+                    end
+                    Efieldmags(pt,side)=val;
                 end
             end
         end
-
+        function refreshlg(obj)
+            D = load(obj.leadgroup);
+            obj.M = D.M;
+        end
+            
+        function coh = getcohortregressor(obj)
+            coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
+        end
         function [I,Ihat] = loocv(obj)
             allpts=obj.patientselection;
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
@@ -185,7 +198,7 @@ classdef ea_disctract < handle
         end
 
         function [I,Ihat] = lococv(obj)
-            [I,Ihat]=groupwisecv(obj,obj.M.patient.group);
+            [I,Ihat]=groupwisecv(obj,obj.M.patient.group');
         end
 
         function [I,Ihat] = kfoldcv(obj) 
