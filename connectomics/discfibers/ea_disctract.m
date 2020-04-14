@@ -270,19 +270,19 @@ classdef ea_disctract < handle
             for side=1:2
                 nfibsval{side}=fibsval{side}; nfibsval{side}(nfibsval{side}==0)=0; % only used in spearmans correlations
             end
-            ea_dispercent(0,'Calculating permutations');
 
             for perm=1:Numperm+1
                 Ihat{perm} = zeros(length(I),2);
                 if perm>1
                     Iperm=I(randperm(length(I)));
+                    fprintf('Calculating permutations: %d/%d\n\n', perm-1, Numperm);
                 else % use real empirical set in first run
                     Iperm=I;
                 end
+
                 [vals]=ea_disc_calcstats(obj,allpts,Iperm);
 
                 for side=1:2
-
                     switch obj.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
                             for pt=allpts
@@ -294,12 +294,9 @@ classdef ea_disctract < handle
                                 Ihat{perm}(pt,side)=ea_nansum(vals{side}.*nfibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
                             end
                     end
-
                     R0(perm,side)=corr(Iperm,Ihat{perm}(:,side),'type','Spearman','rows','pairwise');
-                    ea_dispercent(perm/Numperm);
                 end
             end
-            ea_dispercent(1,'end');
 
             R1=ea_nanmean(R0(1,:),2); % real correlation value when using empirical values
             R0=ea_nanmean(R0(2:end,:),2); % 1-by-Nperm set of R values
@@ -315,7 +312,6 @@ classdef ea_disctract < handle
 
             Ihat=Ihat{1};
             Ihat=ea_nanmean(Ihat,2);
-            ea_dispercent(1,'end');
             loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
             Ihat(~loginx)=nan; % make sure info of not included patients are not used
         end
