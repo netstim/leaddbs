@@ -222,7 +222,7 @@ classdef ea_disctract < handle
             for side=1:2  % only used in spearmans correlations
                 if obj.statmetric==2
                     nfibsval{side}=fibsval{side};
-                    nfibsval{side}(nfibsval{side}==0)=nan;
+                    nfibsval{side}(nfibsval{side}==0)=0;
                 end
             end
             if length(unique(groupassignment))<2
