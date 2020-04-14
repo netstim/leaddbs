@@ -210,8 +210,19 @@ for suffix=dowhich
             nativeprefix='';
             for pt=1:length(options.uivatdirs)
                 vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
-
-                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,'.nii'],'file')
+                cname=options.lcm.func.connectome;
+                
+                if ismember('>',cname)
+                    delim=strfind(cname,'>');
+                    subset=cname(delim+1:end);
+                    cname=cname(1:delim-1);
+                end
+                if ~strcmp(cname,'No functional connectome found.') && ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
+                    nativeprefix=['_',cname(length('Patient''s fMRI - ')+1:end)];
+                else
+                    nativeprefix='';
+                end
+                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
 
                     cnt=1;
                     for side=1:2
@@ -227,17 +238,11 @@ for suffix=dowhich
                             tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                             tnii.dt=[16,0];
                             ea_write_nii(tnii);
-                            cname=options.lcm.func.connectome;
-
-                            if ismember('>',cname)
-                                delim=strfind(cname,'>');
-                                subset=cname(delim+1:end);
-                                cname=cname(1:delim-1);
-                            end
+                            
                             if ~strcmp(cname,'No functional connectome found.')
                                 if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
                                     ea_warp_vat2rest(cname,vatdir,sidec,options);
-                                    nativeprefix=['_',cname(length('Patient''s fMRI - ')+1:end)];
+
                                 else
                                     d=load([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']);
                                     d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
@@ -286,7 +291,7 @@ end
 
 options.prefs.rest=[restfname,'.nii']; % make sure the proper rest_* is used
 
-directory=[fileparts(fileparts(fileparts(vatdir))),filesep];
+directory=[fileparts(fileparts(fileparts(fileparts(vatdir)))),filesep];
 options=ea_getptopts(directory,options);
 
 % warp VTA to native subject space (anchor modality):
