@@ -115,7 +115,8 @@ classdef ea_disctract < handle
             for pt=1:length(obj.M.patient.list)
                 for side=1:2
                     thisamp=obj.M.stats(pt).ea_stats.stimulation.vat(side).amp;
-                    Amps(pt,side)=ea_nanmean(thisamp(thisamp~=0));
+                    thisamp(thisamp==0)=nan;
+                    Amps(pt,side)=ea_nanmean(thisamp');
                 end
             end
         end
@@ -219,8 +220,10 @@ classdef ea_disctract < handle
             fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
             I=obj.responsevar;
             for side=1:2  % only used in spearmans correlations
-                nfibsval{side}=fibsval{side};
-                nfibsval{side}(nfibsval{side}==0)=nan;
+                if obj.statmetric==2
+                    nfibsval{side}=fibsval{side};
+                    nfibsval{side}(nfibsval{side}==0)=nan;
+                end
             end
             if length(unique(groupassignment))<2
                ea_error(['Only 1 set of patients assigned. Cross-validation not possible.']); 
@@ -235,7 +238,7 @@ classdef ea_disctract < handle
                     switch obj.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
                             for pt=find(groupassignment==group)
-                                Ihat(pt,side)=ea_nansum(vals{1,side}'.*fibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
+                                Ihat(pt,side)=ea_nansum(vals{1,side}.*double(fibsval{side}(:,pt))); % I hat is the estimate of improvements (not scaled to real improvements)
                             end
                         case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
                             for pt=find(groupassignment==group)
