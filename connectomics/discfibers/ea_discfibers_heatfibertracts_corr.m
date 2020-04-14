@@ -1,54 +1,44 @@
-function [fibsweighted,fibsin,fibsval,iaix]=ea_discfibers_heatfibertracts_corr(cfile,roilist,patselection,vals,efieldthresh)
+function [fibsval_sum,fibsval_mean,fibsval_peak,fibsval_5peak]=ea_discfibers_heatfibertracts_corr(obj,fibcell,XYZmm,niivx,valsmm)
 % function extracts fibers from a connectome connected to ROIs in the
 % roilist and assigns them correlative values based on vals. Vals needs to be of
 % same length as roilist, assigning a value for each ROI.
 
 disp('ROI fiber analysis');
 
-fibers=load(cfile);
-fn=fieldnames(fibers);
-try
-    fibers=fibers.fibers;
-catch
-    fibers=fibers.(fn{1});
-end
+patselection=[obj.patientselection,obj.patientselection+length(obj.allpatients)];
+vizz=0;
+dthresh=2*mean(niivx);
+for side=1:2
+    fibsval_sum{side}=zeros(size(fibcell{side},1),length(patselection),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
+    fibsval_mean{side}=zeros(size(fibcell{side},1),length(patselection),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
+    fibsval_peak{side}=zeros(size(fibcell{side},1),length(patselection),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
+    fibsval_5peak{side}=zeros(size(fibcell{side},1),length(patselection),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
 
-if ~iscell(roilist)
-    roilist={roilist};
-    vals={vals};
-end
-
-[fibsin,XYZmm,nii,valsmm]=ea_discfibers_genroilist_connfibers(fibers, roilist, patselection, efieldthresh);
-fibsval=zeros(size(fibsin,1),length(patselection)); % 5th column will add up values, 6th will take note how many entries were summed.
-
-% now color fibsin based on predictive value of improvement
-ea_dispt('');
-ea_dispercent(0,'Iterating ROI');
-fibunique=unique(fibsin(:,4))';
-for roi=1:length(patselection)
-    [IX,D]=knnsearch(XYZmm{roi}(:,1:3),fibsin(:,1:3),'Distance','chebychev');
-    in=D<mean(nii{end}.voxsize);
-    for fib=fibunique
-        fibsel=fibsin(:,4)==fib;
-        fibsval(fibsel,roi)=sum(valsmm{roi}(IX(and(in,fibsel))));
+    ea_dispercent(0,['Iterating ROI, side ',num2str(side)]);   
+    for roi=1:length(patselection)
+        tree=KDTreeSearcher(XYZmm{roi,side}(1:2:end,1:3)); % light downsample
+        if vizz
+           figure
+           hold on
+           plot3(XYZmm{roi,side}(:,1),XYZmm{roi,side}(:,2),XYZmm{roi,side}(:,3),'r.');
+           for fib=1:100
+           plot3(fibcell{side}{fib}(:,1),fibcell{side}{fib}(:,2),fibcell{side}{fib}(:,3),'r.');
+           end
+        end
+        for fib=1:length(fibcell{side})
+            [IX,D]=knnsearch(tree,fibcell{side}{fib}(1:2:end,:),'Distance','chebychev'); % light downsample
+            in=D<dthresh;
+            if any(in)
+                tv=valsmm{roi,side}(IX(in));
+                fibsval_sum{side}(fib,roi)=sum(tv);
+                fibsval_mean{side}(fib,roi)=mean(tv);
+                fibsval_peak{side}(fib,roi)=max(tv);
+                tv=sort(tv,'descend');
+                fibsval_5peak{side}(fib,roi)=mean(tv(1:ceil(0.05*length(tv))));
+            end
+        end
+        ea_dispercent(roi/length(patselection));
     end
-    ea_dispercent(roi/length(patselection));
-end
-ea_dispercent(1,'end');
-ea_dispt('Correlating fibers with values');
-cnt=1;
-for group=1:length(roilist) % groups currently not implemented, should always be one within Lead-DBS
-    % thisgroupidx=cnt:(cnt+length(patselection))-1;
-    cnt=cnt+length(patselection);
-
-    % reduce to one entry per fiber:
-    [~,fibidx,iaix]=unique(fibsin(:,4));
-    fibsval=fibsval(fibidx,:);
-    %repvals=repmat(vals{group}',size(fibsval,1),1);
-
-    [R]=corr(vals{group},fibsval','rows','pairwise','type','Spearman');
-
-    fibsweighted=fibsin;
-
-    fibsweighted=[fibsweighted,R(iaix)'];
+    ea_dispercent(1,'end');
+    
 end

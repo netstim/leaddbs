@@ -214,13 +214,13 @@ for side=1:length(options.sides)
                             thisatl=atlases.XYZ{atlas,1}.mm;
                             tpd=atlases.pixdim{atlas,1};
                         end
-                        %% this search strategy commented out for now - would fail in case of a very large atlas structure with VAT in center of it touching no border.
 
                             tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
 
 
                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(vatfv.vertices,vatfv.faces,thisatl))*tpv;
                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
+                            ea_stats.stimulation(thisstim).vat(side,vat).volume=stimparams(1,side).volume(vat);
 
                             % now also add efield overlap:
                             if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
@@ -233,6 +233,7 @@ for side=1:length(options.sides)
                                 ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
                                     mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1))./...
                                     sum(Vefield.img(:));
+                                ea_stats.stimulation(thisstim).efield(side,vat).volume=sum(Vefield.img(:));
                             end
                     else % no voltage on this vat, simply set vi to zero.
                         ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
