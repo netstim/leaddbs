@@ -1,7 +1,7 @@
-function [vals]=ea_disc_calcstats(obj,patsel,Iperm)
+function [vals] = ea_disc_calcstats(obj,patsel,Iperm)
 
 if ~exist('Iperm','var')
-I=obj.responsevar;
+    I=obj.responsevar;
 else % used in permutation based statistics - in this case the real improvement can be substituted with permuted variables.
     I=Iperm;
 end
