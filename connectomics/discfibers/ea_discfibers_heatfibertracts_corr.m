@@ -16,7 +16,7 @@ for side=1:2
 
     ea_dispercent(0,['Iterating ROI, side ',num2str(side)]);   
     for roi=1:length(patselection)
-        tree=KDTreeSearcher(XYZmm{roi,side}(:,1:3));
+        tree=KDTreeSearcher(XYZmm{roi,side}(1:2:end,1:3)); % light downsample
         if vizz
            figure
            hold on
@@ -26,7 +26,7 @@ for side=1:2
            end
         end
         for fib=1:length(fibcell{side})
-            [IX,D]=knnsearch(tree,fibcell{side}{fib},'Distance','chebychev');
+            [IX,D]=knnsearch(tree,fibcell{side}{fib}(1:2:end,:),'Distance','chebychev'); % light downsample
             in=D<dthresh;
             if any(in)
                 tv=valsmm{roi,side}(IX(in));
