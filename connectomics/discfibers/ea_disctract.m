@@ -157,109 +157,86 @@ classdef ea_disctract < handle
             D = load(obj.leadgroup);
             obj.M = D.M;
         end
-            
+
         function coh = getcohortregressor(obj)
             coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
         end
 
         function [I,Ihat] = loocv(obj)
-            allpts=obj.patientselection;
-            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
-            I=obj.responsevar;
-            for side=1:2
-                nfibsval{side}=fibsval{side};
-                nfibsval{side}(nfibsval{side}==0)=0; % only used in spearmans correlations
-            end
-            for pt=allpts
-                opts=allpts;  % generate variable of patients on which model will be built.
-                opts(opts==pt)=[];
-                [vals]=ea_disc_calcstats(obj,opts);
-                for side=1:2
-                    switch obj.statmetric
-                        case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            Ihat(pt,side)=ea_nansum(vals{1,side}.*fibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
-                        case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
-                            Ihat(pt,side)=ea_nansum(vals{1,side}.*nfibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
-                    end
-                    ea_dispercent(pt/length(allpts));
-                end
-            end
-            if size(obj.responsevar,2)==2 % hemiscores
-                Ihat=Ihat(:); % compare hemiscores (electrode wise)
-                I=I(:);
-            else
-                Ihat=ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
-            end
-            ea_dispercent(1,'end');
-            loginx=zeros(size(Ihat));
-            loginx(allpts,:)=1;
-            Ihat(~loginx)=nan; % make sure info of not included patients are not used
+            cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
+            [I,Ihat] = crossval(obj, cvp);
         end
 
         function [I,Ihat] = lococv(obj)
-            [I,Ihat]=groupwisecv(obj,obj.M.patient.group');
-        end
-
-        function [I,Ihat] = kfoldcv(obj) 
-            % group assignment:
-            setlen=floor(length(obj.patientselection)/obj.kfold);
-            cnt=1;
-            for fold=1:obj.kfold
-            groupassignment(cnt:cnt+setlen-1)=fold;
-            cnt=cnt+setlen;
+            if length(unique(obj.M.patient.group)) == 1
+                ea_error(sprintf(['Only one cohort in the analysis.\n', ...
+                    'Leave-One-Cohort-Out cross-validation not possible.']));
             end
-            groupassignment(length(groupassignment):(length(groupassignment)+(length(obj.patientselection)-length(groupassignment))))=fold; % fill up remnants
-            %randpermute
-            groupassignment=groupassignment(randperm(length(groupassignment)));
-            [I,Ihat]=groupwisecv(obj,groupassignment);
-
+            [I,Ihat] = crossval(obj, obj.M.patient.group);
         end
 
-        function [I,Ihat]=groupwisecv(obj,groupassignment)
-            allpts=obj.patientselection;
-            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
-            I=obj.responsevar;
-            for side=1:2  % only used in spearmans correlations
-                if obj.statmetric==2
-                    nfibsval{side}=fibsval{side};
-                    nfibsval{side}(nfibsval{side}==0)=0;
+        function [I,Ihat] = kfoldcv(obj)
+            cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
+            [I,Ihat] = crossval(obj, cvp);
+        end
+        end
+
+        function [I,Ihat] = crossval(obj, cvp)
+            if isnumeric(cvp) % cvp is crossvalind
+                cvIndices = cvp;
+                cvID = unique(cvIndices);
+                cvp = struct;
+                cvp.NumTestSets = length(cvID);
+                for i=1:cvp.NumTestSets
+                    cvp.training{i} = cvIndices~=cvID(i);
+                    cvp.test{i} = cvIndices==cvID(i);
                 end
             end
-            if length(unique(groupassignment))<2
-               ea_error(['Only 1 set of patients assigned. Cross-validation not possible.']); 
-            end
-            ea_dispercent(0,'Iterating sets');
-            for group=unique(groupassignment)
-                opts=allpts; % generate variable of patients on which model will be built.
-                opts(groupassignment(allpts)==group)=[];
-                [vals]=ea_disc_calcstats(obj,opts);
 
+            I = obj.responsevar(obj.patientselection);
+            % Ihat is the estimate of improvements (not scaled to real improvements)
+            Ihat = nan(length(obj.patientselection),2);
+
+            fibsval = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+            for side=1:2  % only used in spearmans correlations
+                if obj.statmetric==2
+                    nfibsval{side} = fibsval{side};
+                    nfibsval{side}(nfibsval{side}==0) = 0;
+                end
+            end
+
+            ea_dispercent(0,'Iterating sets');
+
+            for c=1:cvp.NumTestSets
+                if isobject(cvp)
+                    training = cvp.training(c);
+                    test = cvp.test(c);
+                elseif isstruct(cvp)
+                    training = cvp.training{c};
+                    test = cvp.test{c};
+                end
+
+                [vals] = ea_disc_calcstats(obj, obj.patientselection(training));
                 for side=1:2
                     switch obj.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            for pt=find(groupassignment==group)
-                                Ihat(pt,side)=ea_nansum(vals{1,side}.*double(fibsval{side}(:,pt))); % I hat is the estimate of improvements (not scaled to real improvements)
-                            end
+                            Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{side}(:,obj.patientselection(test)));
                         case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
-                            for pt=find(groupassignment==group)
-                                Ihat(pt,side)=ea_nansum(vals{1,side}.*nfibsval{side}(:,pt)); % I hat is the estimate of improvements (not scaled to real improvements)
-                            end
+                            Ihat(test,side) = ea_nansum(vals{1,side}.*nfibsval{side}(:,obj.patientselection(test)));
                     end
                 end
-                ea_dispercent(group/length(unique(groupassignment)));
+                ea_dispercent(c/cvp.NumTestSets);
             end
             ea_dispercent(1,'end');
             if size(obj.responsevar,2)==2 % hemiscores
-                Ihat=Ihat(:); % compare hemiscores (electrode wise)
-                I=I(:);
+                Ihat = Ihat(:); % compare hemiscores (electrode wise)
+                I = I(:);
             else
-                Ihat=ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
+                Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
             end
             ea_dispercent(1,'end');
-            loginx=zeros(size(Ihat)); loginx(allpts,:)=1;
-            Ihat(~loginx)=nan; % make sure info of not included patients are not used
         end
-        
+
         function [I,Ihat,R0,R1,pperm] = lnopb(obj)
             allpts=obj.patientselection;
             Numperm=obj.Nperm; % run as many as Nperm permutations
@@ -336,7 +313,7 @@ classdef ea_disctract < handle
         function draw(obj)
             [vals]=ea_disc_calcstats(obj);
             obj.stats.pos.available(1)=sum(vals{1,1}>0);
-            obj.stats.neg.available(1)=sum(vals{1,1}<0);            
+            obj.stats.neg.available(1)=sum(vals{1,1}<0);
             obj.stats.pos.available(2)=sum(vals{1,2}>0);
             obj.stats.neg.available(2)=sum(vals{1,2}<0);
 
@@ -427,7 +404,7 @@ classdef ea_disctract < handle
                         [obj.drawobject{group,side}.FaceAlpha]=fibalpha{:};
                     end
                 end
-                
+
                 obj.stats.pos.shown(1)=sum(vals{1,1}>0);
                 obj.stats.neg.shown(1)=sum(vals{1,1}<0);
                 obj.stats.pos.shown(2)=sum(vals{1,2}>0);
