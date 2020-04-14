@@ -179,6 +179,10 @@ classdef ea_disctract < handle
             cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
             [I,Ihat] = crossval(obj, cvp);
         end
+
+        function [I,Ihat] = lno(obj)
+            cvp = cvpartition(length(obj.patientselection), 'resubstitution');
+            [I,Ihat] = crossval(obj, cvp);
         end
 
         function [I,Ihat] = crossval(obj, cvp)
