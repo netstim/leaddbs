@@ -11,6 +11,7 @@ from math import sqrt
 from slicer.util import VTKObservationMixin
 import glob
 import SimpleITK as sitk
+import uuid
 
 # import other netstim modules
 from Helpers import WarpEffect, FunctionsUtil, Toolbar
@@ -155,6 +156,16 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.blurButton.setEnabled(False)
     self.blurButton.setAutoExclusive(True)
     optionsFrame.layout().addWidget(self.blurButton)
+
+    splineEditPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','splineIcon.png')))
+    splineEditIcon = qt.QIcon(splineEditPixmap)
+    self.splineEditButton = qt.QPushButton()
+    self.splineEditButton.setIcon(splineEditIcon)
+    self.splineEditButton.setIconSize(splineEditPixmap.rect().size())
+    self.splineEditButton.setCheckable(True)
+    self.splineEditButton.setEnabled(False)
+    self.splineEditButton.setAutoExclusive(True)
+    optionsFrame.layout().addWidget(self.splineEditButton)
 
     toolsFormLayout.addRow(optionsFrame)
 
@@ -311,9 +322,11 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.smudgeButton.toggled.connect(self.toogleTools)
     self.snapButton.toggled.connect(self.toogleTools)
     self.blurButton.toggled.connect(self.toogleTools)
+    self.splineEditButton.toggled.connect(self.toogleTools)
     self.smudgeButton.connect('clicked(bool)', self.onSmudgeButton)
     self.snapButton.connect('clicked(bool)', self.onSnapButton)
     self.blurButton.connect('clicked(bool)', self.onBlurButton)
+    self.splineEditButton.connect('clicked(bool)', self.onSplineEditButton)
     
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
@@ -374,9 +387,10 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def updateMRMLFromArgs(self): 
     args = sys.argv
+    print(args)
     if (len(sys.argv) > 2) and os.path.isfile(os.path.join(sys.argv[1],'lead.m')):
-      subjectPaths = ' '.join(sys.argv[2:])
-      subjectPath = subjectPaths.split(' ')[0]
+      subjectPaths = self.parameterNode.GetParameter("separator").join(sys.argv[2:])
+      subjectPath = subjectPaths.split(self.parameterNode.GetParameter("separator"))[0]
       MNIPath = os.path.join(sys.argv[1],'templates','space','MNI_ICBM_2009b_NLIN_ASYM')
       MNIAtlasPath = os.path.join(MNIPath,'atlases')
       if sys.platform == "darwin":
@@ -414,6 +428,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.smudgeButton.enabled = bool(warpNode)
     self.snapButton.enabled = bool(warpNode)
     self.blurButton.enabled = bool(warpNumberOfComponents == 1)
+    self.splineEditButton.enabled = bool(warpNode)
     self.historyList.enabled = bool(warpNode) 
     # undo redo button
     self.undoButton.setEnabled(warpNumberOfComponents > 1) 
@@ -477,6 +492,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     SmudgeModuleLogic().removeRedoTransform()
     redoTransformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
     self.parameterNode.SetParameter("redoTransformID", redoTransformID)
+    if self.splineEditButton.checked:
+      self.noneButton.checked = True
 
   def onRedoButton(self):
     # see if smudging. aux transform causes problems here
@@ -550,7 +567,13 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.forceSlider.setEnabled(True)
       self.sigmaSlider.setEnabled(True)
       SmudgeModuleLogic().effectOn('Blur')
-      
+
+  def onSplineEditButton(self, buttonDown):
+    if buttonDown:
+      self.radiusSlider.setEnabled(True)
+      SmudgeModuleLogic().effectOn('SplineEdit')
+
+
   def exit(self):
     self.noneButton.setChecked(True)
     SmudgeModuleLogic().effectOff()
@@ -601,6 +624,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("modality", "t1")
     node.SetParameter("subjectPath", "")
     node.SetParameter("subjectN", "0")
+    node.SetParameter("separator",uuid.uuid4().hex)
     node.SetParameter("MNIPath", ".")
     node.SetParameter("MNIAtlasPath", ".")
     node.SetParameter("antsApplyTransformsPath", "")
@@ -618,16 +642,18 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
   def effectOn(self, effectName):
     
     if effectName in ['Smudge']:
-      # create aux transform with same grid as warp
+      size, origin, spacing = self.getExpandedGrid()
+      auxTransformNode = TransformsUtil.TransformsUtilLogic().emptyGridTransfrom(size, origin, spacing)
+    elif effectName in ['SplineEdit']:
+      size, origin, spacing = self.getExpandedGrid()
+      spline_spacing = [float(self.getParameterNode().GetParameter("radius"))] * 3
+      spline_size = [int(np.ceil(size[i]*spacing[i]/spline_spacing[i])) for i in range(3)]
+      splineTransformNode = TransformsUtil.TransformsUtilLogic().emptySplineTransfrom(spline_size, origin, spline_spacing)
+      f = self.createPoints(spline_size, origin, spline_spacing)
       parameterNode = self.getParameterNode()
       warpNode = slicer.util.getNode(parameterNode.GetParameter("warpID"))
-      size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
-      # expand aux transform to deal with borders
-      expandEdge = float(parameterNode.GetParameter("expandEdge"))
-      origin = [o - expandEdge for o in origin]
-      size = [int(round(s+expandEdge*2/spacing[0])) for s in size]
-      auxTransformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
-      TransformsUtil.TransformsUtilLogic().emptyTransfrom(auxTransformNode, size, origin, spacing)
+      warpNode.SetAndObserveTransformNodeID(splineTransformNode.GetID())
+      warpNode.HardenTransform()
 
     for color in ['Red','Green','Yellow']:
       sliceWidget = slicer.app.layoutManager().sliceWidget(color)
@@ -639,12 +665,32 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
         WarpEffect.BlurEffectTool(sliceWidget)
       elif effectName == 'Snap':
         WarpEffect.SnapEffectTool(sliceWidget)
+      elif effectName == 'SplineEdit':
+        WarpEffect.SplineEffectTool(sliceWidget, f)
   
+
+  def createPoints(self, size,origin,spacing):
+    rasPoints = [np.array(origin) + np.array(spacing) * np.array([i,j,k]) for k in range(size[2]) for j in range(size[1]) for i in range(size[0])]
+    f = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    for p in rasPoints:
+      f.AddFiducialFromArray(p, ' ')
+    return f
+
   def effectOff(self):
     WarpEffect.WarpEffectTool.empty()
 
 
+  def getExpandedGrid(self):
+    # create aux transform with same grid as warp
+    parameterNode = self.getParameterNode()
+    warpNode = slicer.util.getNode(parameterNode.GetParameter("warpID"))
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+    # expand aux transform to deal with borders
+    expandEdge = float(parameterNode.GetParameter("expandEdge"))
+    origin = [o - expandEdge for o in origin]
+    size = [int(round(s+expandEdge*2/spacing[0])) for s in size]
 
+    return size, origin, spacing
 
 
 

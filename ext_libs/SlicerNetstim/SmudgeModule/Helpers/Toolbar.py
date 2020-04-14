@@ -258,7 +258,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getBackgroundNode())
 
       nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
-      subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
+      subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(self.parameterNode.GetParameter("separator"))
     
       if nextSubjectN < len(subjectPaths):
         self.updateModalities(subjectPaths[nextSubjectN])

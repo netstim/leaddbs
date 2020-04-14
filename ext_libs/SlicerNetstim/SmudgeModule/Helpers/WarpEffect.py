@@ -432,6 +432,54 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     PointerEffect.DrawEffectTool.cleanup(self)
 
     
-  
 
+class SplineEffectTool(PointerEffect.PointerEffectTool, WarpEffectTool):
+
+  def __init__(self, sliceWidget, f):
+
+    WarpEffectTool.__init__(self)
+    PointerEffect.PointerEffectTool.__init__(self, sliceWidget)
+    
+    self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    
+    # transform data
+    self.coefficientData = self.warpNode.GetTransformFromParent().GetConcatenatedTransform(0).GetCoefficientData()
+    self.markupsNode = f
+    self.observerID = 0
+
+  def processEvent(self, caller=None, event=None):
+
+    PointerEffect.PointerEffectTool.processEvent(self, caller, event)
+
+    if event =='LeftButtonDoubleClickEvent':
+      markupsLogic = slicer.modules.markups.logic()
+      markupsLogic.JumpSlicesToNthPointInMarkup(self.markupsNode.GetID(),self.currentIndex,False)
+      self.markupsNode.RemoveObserver(self.observerID)
+
+    elif event == 'LeftButtonReleaseEvent':
+      self.markupsNode.RemoveObserver(self.observerID)
+
+    elif event == 'LeftButtonPressEvent':
+      currentPoint = self.eventPositionToRAS()
+      self.currentIndex = self.markupsNode.GetClosestControlPointIndexToPositionWorld(currentPoint)
+      self.observerID = self.markupsNode.AddObserver(slicer.vtkMRMLMarkupsFiducialNode.PointModifiedEvent, self.modifySpline)
+
+  def modifySpline(self,caller=None,event=None):
+    size = self.coefficientData.GetDimensions()
+    origin = self.coefficientData.GetOrigin()
+    spacing = self.coefficientData.GetSpacing()
+    k,j,i = np.unravel_index(self.currentIndex, (size[2],size[1],size[0]))
+    sliceIndex = np.nonzero([int(self.sliceLogic.GetSliceNode().GetName()!=name) for name in ['Yellow','Green','Red']])[0]
+    originalPoint = np.array(origin) + np.array(spacing) * np.array([i,j,k])
+    currentPoint = [0] * 3
+    self.markupsNode.GetNthFiducialPosition(self.currentIndex, currentPoint)
+    pointDiff = originalPoint - currentPoint
+    self.coefficientData.SetScalarComponentFromFloat(i,j,k,sliceIndex[0], float(pointDiff[sliceIndex[0]]))
+    self.coefficientData.SetScalarComponentFromFloat(i,j,k,sliceIndex[1], float(pointDiff[sliceIndex[1]]))
+    self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
   
+  def cleanup(self):
+    slicer.mrmlScene.RemoveNode(self.markupsNode)
+    WarpEffectTool.cleanup(self)
+    PointerEffect.PointerEffectTool.cleanup(self)
+

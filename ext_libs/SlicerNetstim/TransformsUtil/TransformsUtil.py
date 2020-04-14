@@ -153,7 +153,7 @@ class TransformsUtilWidget(ScriptedLoadableModuleWidget):
     size =    np.fromstring(self.transformSizeSelect.coordinates, dtype=int, sep=',')
     origin =  np.fromstring(self.transformOriginSelect.coordinates, sep=',')
     spacing = np.fromstring(self.transformSpacingSelect.coordinates, sep=',')
-    logic.emptyTransfrom(self.inputSelector.currentNode(), size, origin, spacing)
+    logic.emptyGridTransfrom(size, origin, spacing, self.inputSelector.currentNode())
 
   def onFlattenButton(self):
     logic = TransformsUtilLogic()
@@ -191,10 +191,12 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
 
     return size,origin,spacing
 
-  def emptyTransfrom(self, transformNode, transformSize = [193,229,193], transformOrigin = [-96.0, -132.0, -78.0], transformSpacing = [1.0, 1.0, 1.0]):
+  def emptyGridTransfrom(self, transformSize = [193,229,193], transformOrigin = [-96.0, -132.0, -78.0], transformSpacing = [1.0, 1.0, 1.0], transformNode = None):
     """
     Run the actual algorithm
     """
+    if not transformNode:
+      transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
 
     voxelType = vtk.VTK_FLOAT
     fillVoxelValue = 0
@@ -214,7 +216,34 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     #transformNode.CreateDefaultDisplayNodes()
     transformNode.CreateDefaultStorageNode()  
 
-    return True
+    return transformNode
+
+
+  def emptySplineTransfrom(self, transformSize = [19,23,19], transformOrigin = [-96.0, -132.0, -78.0], transformSpacing = [10, 10, 10], transformNode = None):
+    """
+    Run the actual algorithm
+    """
+    if not transformNode:
+      transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLBSplineTransformNode')
+
+    voxelType = vtk.VTK_FLOAT
+    fillVoxelValue = 0
+    # Create an empty image volume, filled with fillVoxelValue
+    imageData = vtk.vtkImageData()
+    imageData.SetDimensions(transformSize)
+    imageData.AllocateScalars(voxelType, 3)
+    imageData.GetPointData().GetScalars().Fill(fillVoxelValue)
+    # Create transform
+    transform = slicer.vtkOrientedBSplineTransform()
+    transform.SetCoefficientData(imageData)
+    # Create transform node
+    transformNode.SetAndObserveTransformFromParent(transform)
+    transformNode.GetTransformFromParent().GetCoefficientData().SetOrigin(transformOrigin)
+    transformNode.GetTransformFromParent().GetCoefficientData().SetSpacing(transformSpacing)
+    #transformNode.CreateDefaultDisplayNodes()
+    transformNode.CreateDefaultStorageNode()  
+
+    return transformNode
 
   def createEmpyVolume(self, imageSize, imageOrigin, imageSpacing):
     voxelType = vtk.VTK_UNSIGNED_CHAR
@@ -251,6 +280,8 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
       grid = fp.GetConcatenatedTransform(fp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid()
     elif isinstance(tp, vtk.vtkGeneralTransform) and tp.GetConcatenatedTransform(tp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid():
       grid = tp.GetConcatenatedTransform(tp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid()
+    elif isinstance(fp, slicer.vtkOrientedBSplineTransform) and fp.GetCoefficientData():
+      grid = fp.GetCoefficientData()
     else:
       return False
     
