@@ -347,9 +347,8 @@ classdef ea_disctract < handle
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
             end
-            for tract=1:length(obj.drawobject)
+            for tract=1:numel(obj.drawobject)
                 delete(obj.drawobject{tract});
-
             end
             % reset colorbar
             obj.colorbar=[];

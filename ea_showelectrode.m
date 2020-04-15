@@ -220,8 +220,11 @@ for side=options.sides
 
         % draw contacts
         try
-            minval=ea_nanmin(options.d3.isomatrix{1}{side}(:));
-            maxval=ea_nanmax(options.d3.isomatrix{1}{side}(:));
+
+            normalisomatrix{side}=options.d3.isomatrix{1}{side};
+            normalisomatrix{side}(:)=ea_normal(normalisomatrix{side}(:));
+            minval=ea_nanmin(normalisomatrix{side}(:));
+            maxval=ea_nanmax(normalisomatrix{side}(:));
             %minval=-1;
             %maxval=1;
         end
@@ -245,7 +248,7 @@ for side=options.sides
 
                     if ~isnan(options.d3.isomatrix{1}{side}(pt,cntct))
 
-                        usefacecolor=((options.d3.isomatrix{1}{side}(pt,cntct)-minval)/(maxval-minval))*(length(cmap)-1);
+                        usefacecolor=((normalisomatrix{side}(pt,cntct)-minval)/(maxval-minval))*(length(cmap)-1);
 
                         % % Add some contrast (remove these lines for linear mapping)
                         % usefacecolor=usefacecolor-20;
