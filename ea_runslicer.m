@@ -1,4 +1,4 @@
-function ea_runslicer(options, task)
+function varargout =  ea_runslicer(options, task)
 %% Function to launch slicer and load *.nii files
 %  Last Revision: 21/05/2018
 %  Thushara Perera (c) 2018 Bionics Institute
@@ -136,6 +136,10 @@ function ea_runslicer(options, task)
             end
             slicer_mrml = 'Slicer_electrodes.mrml';
             [nfiles, filepaths, filenames] = GetNormalizedFiles(options);
+            
+        case 5 % return slicer path
+            varargout = {SLICER};
+            return
 
         otherwise
             warning('Task ID not recognised');

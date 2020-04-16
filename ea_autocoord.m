@@ -214,7 +214,8 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.refine
-       ea_checkstructures(options);
+       %ea_checkstructures(options);
+       ea_runsmudgemodule(options);
     end
 
     if options.ecog.extractsurface.do
