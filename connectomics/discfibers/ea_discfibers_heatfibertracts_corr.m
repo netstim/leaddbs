@@ -5,17 +5,17 @@ function [fibsval_sum,fibsval_mean,fibsval_peak,fibsval_5peak]=ea_discfibers_hea
 
 disp('ROI fiber analysis');
 
-patselection=[obj.patientselection,obj.patientselection+length(obj.allpatients)];
+patInd = 1:2*length(obj.allpatients);
 vizz=0;
 dthresh=2*mean(niivx);
 for side=1:2
-    fibsval_sum{side}=zeros(size(fibcell{side},1),length(patselection),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
-    fibsval_mean{side}=zeros(size(fibcell{side},1),length(patselection),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
-    fibsval_peak{side}=zeros(size(fibcell{side},1),length(patselection),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
-    fibsval_5peak{side}=zeros(size(fibcell{side},1),length(patselection),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
+    fibsval_sum{side}=zeros(size(fibcell{side},1),length(patInd),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
+    fibsval_mean{side}=zeros(size(fibcell{side},1),length(patInd),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
+    fibsval_peak{side}=zeros(size(fibcell{side},1),length(patInd),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
+    fibsval_5peak{side}=zeros(size(fibcell{side},1),length(patInd),'single'); % 5th column will add up values, 6th will take note how many entries were summed.
 
     ea_dispercent(0,['Iterating ROI, side ',num2str(side)]);   
-    for roi=1:length(patselection)
+    for roi=1:length(patInd)
         tree=KDTreeSearcher(XYZmm{roi,side}(1:2:end,1:3)); % light downsample
         if vizz
            figure
@@ -37,8 +37,7 @@ for side=1:2
                 fibsval_5peak{side}(fib,roi)=mean(tv(1:ceil(0.05*length(tv))));
             end
         end
-        ea_dispercent(roi/length(patselection));
+        ea_dispercent(roi/length(patInd));
     end
     ea_dispercent(1,'end');
-    
 end

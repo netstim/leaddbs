@@ -3,4 +3,3 @@ function ea_add_discfiber(~,~,leadgroup,resultfig)
 % either lead group analysis file or saved fiber explorer.
 
 ea_discfiberexplorer(leadgroup,resultfig);
-
