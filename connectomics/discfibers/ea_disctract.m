@@ -254,7 +254,7 @@ classdef ea_disctract < handle
             end
         end
 
-        function [Iperm, Ihat, R0, R1, pperm, p95] = lnopb(obj, corrType)
+        function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
             if ~exist('corrType', 'var')
                 corrType = 'Spearman';
             end
@@ -286,7 +286,7 @@ classdef ea_disctract < handle
             % generate null distribution
             R1 = R(1);
             R0 = sort(abs(R(2:end)),'descend');
-            p95 = R0(round(0.05*numPerm));
+            Rp95 = R0(round(0.05*numPerm));
             v = ea_searchclosest(R0, R1);
             pperm = v/numPerm;
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
