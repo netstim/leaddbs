@@ -415,26 +415,28 @@ classdef ea_disctract < handle
                 % Set colorbar tick positions and labels
                 if ~any([isempty(vals{group,1}),isempty(vals{group,2})])
                     cbvals = [vals{group,1}(logical(alphas{group,1})),vals{group,2}(logical(alphas{group,2}))];
-                    % cbvals=tvalsRescale{group,side}(logical(alphas));
-                    if obj.posvisible && ~obj.negvisible
-                        cbmap{group} = fibcmap{group}(ceil(length(fibcmap{group})/2+0.5):end,:);
-                        tick{group} = [poslowerBound, length(fibcmap{group})] - floor(length(fibcmap{group})/2) ;
-                        poscbvals = sort(cbvals(cbvals>0));
-                        ticklabel{group} = [poscbvals(1), poscbvals(end)];
-                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-                    elseif ~obj.posvisible && obj.negvisible
-                        cbmap{group} = fibcmap{group}(1:floor(length(fibcmap{group})/2-0.5),:);
-                        tick{group} = [1, negUpperBound];
-                        negcbvals = sort(cbvals(cbvals<0));
-                        ticklabel{group} = [negcbvals(1), negcbvals(end)];
-                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-                    elseif obj.posvisible && obj.negvisible
-                        cbmap{group} = fibcmap{group};
-                        tick{group} = [1, negUpperBound, poslowerBound, length(fibcmap{group})];
-                        poscbvals = sort(cbvals(cbvals>0));
-                        negcbvals = sort(cbvals(cbvals<0));
-                        ticklabel{group} = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
-                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                    if ~isempty(cbvals)
+                        % cbvals=tvalsRescale{group,side}(logical(alphas));
+                        if obj.posvisible && ~obj.negvisible
+                            cbmap{group} = fibcmap{group}(ceil(length(fibcmap{group})/2+0.5):end,:);
+                            tick{group} = [poslowerBound, length(fibcmap{group})] - floor(length(fibcmap{group})/2) ;
+                            poscbvals = sort(cbvals(cbvals>0));
+                            ticklabel{group} = [poscbvals(1), poscbvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        elseif ~obj.posvisible && obj.negvisible
+                            cbmap{group} = fibcmap{group}(1:floor(length(fibcmap{group})/2-0.5),:);
+                            tick{group} = [1, negUpperBound];
+                            negcbvals = sort(cbvals(cbvals<0));
+                            ticklabel{group} = [negcbvals(1), negcbvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        elseif obj.posvisible && obj.negvisible
+                            cbmap{group} = fibcmap{group};
+                            tick{group} = [1, negUpperBound, poslowerBound, length(fibcmap{group})];
+                            poscbvals = sort(cbvals(cbvals>0));
+                            negcbvals = sort(cbvals(cbvals<0));
+                            ticklabel{group} = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        end
                     end
                 end
             end
