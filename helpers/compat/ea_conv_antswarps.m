@@ -64,17 +64,17 @@ elseif exist([directory,'lanat1Warp.nii.gz'],'file')
         ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
 end
 
-if exist('float', 'var')
-    if ischar(float) && strcmp(float, 'float') || float
-        cmd = [cmd, ' --float'];
-        icmd = [icmd, ' --float'];
-    end
-end
-
-cmd = [cmd, ' -v 1'];
-icmd = [icmd, ' -v 1'];
-
 if exist('cmd','var')
+    if exist('float', 'var')
+        if ischar(float) && strcmp(float, 'float') || float
+            cmd = [cmd, ' --float'];
+            icmd = [icmd, ' --float'];
+        end
+    end
+
+    cmd = [cmd, ' -v 1'];
+    icmd = [icmd, ' -v 1'];
+
     if ~ispc
         system(['bash -c "', cmd, '"']);
         system(['bash -c "', icmd, '"']);
