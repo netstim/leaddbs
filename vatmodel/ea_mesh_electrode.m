@@ -211,8 +211,9 @@ end
 %% remove duplicated nodes in the surface
 [nboth3,fboth3]=meshcheckrepair(nboth2,fboth2,'dup');
 [nboth3,fboth3]=meshcheckrepair(nboth3,fboth3,'deep');
+[nboth4,fboth4]=meshcheckrepair(nboth3,fboth3,'dup');
 
-
+%[I,IA,IC]=unique(nboth4,'rows');
 
 %figure, patch('faces',fboth4,'vertices',nboth4,'facecolor','r','facealpha',0.3);
 
@@ -234,7 +235,7 @@ end
 % - this is the part where we have all 4 element types combined already.
 
 
-[nmesh,emesh,fmesh]=s2m(nboth3,fboth3,1,3);
+[nmesh,emesh,fmesh]=s2m(nboth4,fboth4,1,3);
 if vizz
     figure('name','Final mesh');
     fvv.faces=face(:,1:3);
