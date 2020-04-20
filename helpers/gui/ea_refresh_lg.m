@@ -285,9 +285,11 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
 
             %disp('Comparing stats with prior atlas intersection list...');
             % check and compare with prior atlas intersection list.
-
             if ~isempty(priorvilist) && ~isequal(priorvilist,M.vilist)
-                warning('Patient stats are inhomogeneous. Please re-run group analysis (Section Prepare DBS stats).');
+                warning('off', 'backtrace');
+                [~, ptname] = fileparts(M.patient.list{pt});
+                warning('%s: inhomogeneous stats. Please re-run group analysis (Calculate Stats).', ptname);
+                warning('on', 'backtrace');
             end
 
             priorfclist=M.fclist;
