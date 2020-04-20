@@ -351,9 +351,11 @@ if checkrebuild(atlases,options,root,mifix)
             ea_crop_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
 
             clear X V
+            
+            ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[0.2,0.2,0.2],0,0,1,[],[],3);
+            spm_smooth([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[1,1,1]);
             gzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
-
         end
 
         % save table information that has been generated from nii files (on first run with this atlas set).
