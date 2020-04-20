@@ -116,10 +116,10 @@ end
 
 if(isempty(cmdopt)) % default run
 
-    for tolerance=[8,10,5]
-       if ~exist(mwpath('post_vmesh.1.node'),'file') % check if outputs are there
-            system([' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
-       end
+    for tolerance=[8,10,5,1,12]
+            if ~exist(mwpath('post_vmesh.1.node'),'file') % check if outputs are there
+                system([' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 -p/0.02 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
+            end
     end
     
 else
