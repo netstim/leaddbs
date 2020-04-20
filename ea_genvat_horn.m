@@ -123,11 +123,13 @@ if hmchanged
 
     [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
     success=0;
-    for attempt=1:3 % allow three attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
+    for attempt=1:4 % allow three attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
         try
             [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
-            success=1;
-            break
+            if ~isempty(mesh.tet)
+                success=1;
+                break
+            end
         catch
             Y=Y+randn(4)/700; % very small jitter on transformation which will be used on electrode.
         end
