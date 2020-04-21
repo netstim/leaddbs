@@ -124,14 +124,17 @@ if hmchanged
     [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
     success=0;
     for attempt=1:4 % allow three attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
-        try
-            [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec);
-            if ~isempty(mesh.tet)
-                success=1;
-                break
+        for precision=[100,0,1000] % iterate different precision values (0 = no change to original data)
+            
+            try
+                [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec,precision);
+                if ~isempty(mesh.tet)
+                    success=1;
+                    break
+                end
+            catch
+                Y=Y+randn(4)/700; % very small jitter on transformation which will be used on electrode.
             end
-        catch
-            Y=Y+randn(4)/700; % very small jitter on transformation which will be used on electrode.
         end
     end
 

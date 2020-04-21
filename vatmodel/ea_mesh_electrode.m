@@ -1,4 +1,4 @@
-function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec)
+function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec,precision)
 % meshing an electrode and tissue structures bounded by a cylinder
 %% load the nucleus data
 ea_dispt('Generating tetraedrical mesh...');
@@ -23,8 +23,9 @@ end
 
 orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
-
-
+if ~exist('precision','var')
+    precision=100; %set to 0 to not do any precision reduction
+end
 el_o_orig=[0,0,15+(20*stretchfactor)];
 el_o_etop=[0,0,-20*stretchfactor];
 
@@ -58,6 +59,10 @@ face = elmodel.face;
 node=transformmatrix*[node,ones(size(node,1),1)]';
 node=node(1:3,:)';
 
+if precision
+    node=round(node*precision)/precision;
+end
+
 % - this is the node / elem / face made by tetgen of the electrode only.
 if vizz
     figure
@@ -85,6 +90,10 @@ c1bbc=c0+cylz1*v;
 [nbcyl,fbcyl]=meshacylinder(el_o_etop,el_o_orig,cylradius,bcyltrisize,10,ndiv);
 nbcyl=transformmatrix*[nbcyl,ones(length(nbcyl),1)]';
 nbcyl=nbcyl(1:3,:)';
+
+if precision
+    nbcyl=round(nbcyl*precision)/precision;
+end
 
 if vizz
     figure
@@ -118,6 +127,10 @@ if ~isempty(fv) % use atlas to define GM
         for i=1:ncount
             no=fv(i).vertices;
             fo=fv(i).faces;
+            if precision
+               no=round(no*precision)/precision; 
+            end
+            
             [no,fo]=meshcheckrepair(no,fo,'dup'); % clean topological defects
             [no,fo]=meshresample(no,fo,nucleidecimate); % mesh is too dense, reduce the density by 80%
             
@@ -201,6 +214,8 @@ end
 [nboth2,fboth2]=meshcheckrepair(nboth2,fboth2,'dup');
 [nboth2,fboth2]=meshcheckrepair(nboth2,fboth2,'deep');
 [nboth2,fboth2]=meshcheckrepair(nboth2,fboth2,'dup');
+
+
 
 
 %[I,IA,IC]=unique(nboth4,'rows');
