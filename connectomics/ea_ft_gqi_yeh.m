@@ -127,8 +127,12 @@ end
 ftr.fourindex = 1;
 ftr.ea_fibformat = '1.0';
 ftr.idx = idx;
-
-fibers=ea_resolve_usfibers(options,fibers); % this also pops the raw (uninterpolated dti.nii and b0.nii files).
+if options.lc.struc.ft.upsample.factor == 1 % No upsampling
+    % Change ZERO-BASED indexing to ONE-BASED indexing.
+    fibers(:,1:3) = fibers(:,1:3) + 1;
+else
+    fibers = ea_resolve_usfibers(options,fibers);
+end
 
 ftr.fibers = fibers;
 
