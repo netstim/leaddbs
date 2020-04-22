@@ -158,6 +158,9 @@ if hmchanged
                 end
             end
         end
+        if success
+            break
+        end
     end
 
     % replace wmboundary:
