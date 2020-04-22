@@ -7,7 +7,11 @@ ftr.fibers=fibers;
 ftr.idx=idx;
 ftr.voxmm=voxmm;
 if exist('mat','var')
-    ftr.mat=mat;
+    if ischar(mat) % Path to the reference image provided
+        ftr.mat = ea_get_affine(mat);
+    else
+        ftr.mat = mat;
+    end
 end
 if exist('vals','var')
     ftr.vals=vals;
