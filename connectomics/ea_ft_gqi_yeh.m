@@ -131,13 +131,13 @@ if vizz
     plot3(xx,yy,zz,'g.')
 end
 
-ftr.fourindex = 1;
 ftr.ea_fibformat = '1.0';
-ftr.idx = idx;
-
+ftr.fourindex = 1;
 ftr.fibers = fibers;
-
+ftr.idx = idx;
 ftr.voxmm = 'vox';
+ftr.mat = b0.mat;
+
 disp('Saving fibers...');
 save([directory,ftrbase,'.mat'],'-struct','ftr','-v7.3');
 disp('Done.');
