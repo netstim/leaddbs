@@ -1,7 +1,7 @@
 function [fibsin,XYZmm,niivx,valsmm]=ea_discfibers_genroilist_connfibers(fibers, roilist, D)
 
 prefs = ea_prefs;
-thresh = prefs.machine.vatsettings.horn_ethresh;
+thresh = prefs.machine.vatsettings.horn_ethresh*1000;
 allroilist=cat(2,roilist{:});
 % tree=KDTreeSearcher(fibers(:,1:3));
 % load in all ROI
@@ -16,7 +16,7 @@ if isempty(D)
     ea_dispercent(0,'Aggregating ROI');
     for roi=1:size(allroilist,1)
         nii{roi,1}=ea_load_nii(allroilist{roi,1});
-        ixs=find(nii{roi,1}.img(:)>(thresh*100));
+        ixs=find(nii{roi,1}.img(:)>thresh);
         [xx,yy,zz]=ind2sub(size(nii{roi,1}.img),ixs);
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,1}.mat*XYZvx;
@@ -24,7 +24,7 @@ if isempty(D)
         valsmm{roi,1}=nii{roi,1}.img(ixs);
 
         nii{roi,2}=ea_load_nii(allroilist{roi,2});
-        ixs=find(nii{roi,2}.img(:)>(thresh*100));
+        ixs=find(nii{roi,2}.img(:)>thresh);
         [xx,yy,zz]=ind2sub(size(nii{roi,2}.img),ixs);
         XYZvx=[xx,yy,zz,ones(length(xx),1)]';
         XY=nii{roi,2}.mat*XYZvx;
