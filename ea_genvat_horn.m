@@ -122,18 +122,40 @@ if hmchanged
 
 
     [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
+    Ymod=Y;
     success=0;
-    for attempt=1:4 % allow three attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
-        for precision=[100,0,1000] % iterate different precision values (0 = no change to original data)
+    for precision=[100,0,1000,50] % iterate different precision values (0 = no change to original data)
+        for attempt=1:4 % allow four attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
             
             try
-                [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Y,elspec,precision);
+                [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Ymod,elspec,precision);
                 if ~isempty(mesh.tet)
                     success=1;
                     break
                 end
             catch
-                Y=Y+randn(4)/700; % very small jitter on transformation which will be used on electrode.
+                % The VTA model has led to an intersection of meshes, which
+                % can sometimes happen. We will introduce a small jitter to
+                % the electrode and try again.
+                Ymod=Y+(randn(4)/700); % Very small jitter on transformation which will be used on electrode. - should not exceed ~700. Use vizz below to see effects.
+                if vizz
+                    h=figure
+                    telfv=elfv;
+                    for c=1:length(elfv)
+                           telfv(c).vertices=Y*[telfv(c).vertices,ones(size(telfv(c).vertices,1),1)]';
+                        telfv(c).vertices=telfv(c).vertices(1:3,:)';
+                    patch(telfv(c),'edgecolor','m','facecolor','none');
+                    end
+                    telfv=elfv;
+                    for c=1:length(elfv)
+                        telfv(c).vertices=Ymod*[telfv(c).vertices,ones(size(telfv(c).vertices,1),1)]';
+                        telfv(c).vertices=telfv(c).vertices(1:3,:)';
+                        patch(telfv(c),'edgecolor','g','facecolor','none');
+                    end
+                    axis equal
+                    view(0,0)
+                    h.Position=[1000          85         253        1253];
+                end
             end
         end
     end

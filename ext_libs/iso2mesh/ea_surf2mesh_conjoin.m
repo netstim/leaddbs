@@ -1,4 +1,4 @@
-function [node,elem,face,success]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox)
+function [node,elem,face,success]=ea_surf2mesh_conjoin(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox)
 %
 % [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox)
 %
@@ -116,7 +116,7 @@ end
 
 if(isempty(cmdopt)) % default run
 
-    for tolerance=[8,10,5,1,12]
+    for tolerance=[8,10,5,4,12]
             if ~exist(mwpath('post_vmesh.1.node'),'file') % check if outputs are there
                 system([' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 -p/0.02 -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
 
