@@ -1,4 +1,4 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak] = ea_discfibers_calcvals(vats, cfile)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vats, cfile)
 % Calculate fiber connection values based on the VATs and the connectome
 
 disp('Load Connectome...');
@@ -14,6 +14,8 @@ fibsvalSum = cell(1, numSide);
 fibsvalMean = cell(1, numSide);
 fibsvalPeak = cell(1, numSide);
 fibsval5Peak = cell(1, numSide);
+
+fibcell = cell(1, numSide);
 
 for side = 1:numSide
     fibsvalBin{side} = zeros(length(idx), numPatient);
@@ -60,10 +62,15 @@ for side = 1:numSide
         fibsval5Peak{side}(trimmedFiberInd(connected), pt) = cellfun(@(x) mean(maxk(x,ceil(0.05*numel(x)))), vals);
     end
 
-    % Convert to sparse matrix
-    fibsvalBin{side} = sparse(fibsvalBin{side});
-    fibsvalSum{side} = sparse(fibsvalSum{side});
-    fibsvalMean{side} = sparse(fibsvalMean{side});
-    fibsvalPeak{side} = sparse(fibsvalPeak{side});
-    fibsval5Peak{side} = sparse(fibsval5Peak{side});
+    % Remove values for not connected fibers, convert to sparse matrix
+    fibsvalBin{side} = sparse(fibsvalBin{side}(any(fibsvalBin{side}, 2), :));
+    fibsvalSum{side} = sparse(fibsvalSum{side}(any(fibsvalSum{side}, 2), :));
+    fibsvalMean{side} = sparse(fibsvalMean{side}(any(fibsvalMean{side}, 2), :));
+    fibsvalPeak{side} = sparse(fibsvalPeak{side}(any(fibsvalPeak{side}, 2), :));
+    fibsval5Peak{side} = sparse(fibsval5Peak{side}(any(fibsval5Peak{side}, 2), :));
+
+    % Extract connected fiber cell
+    connFiberInd = find(any(fibsvalBin{side}, 2));
+    connFiber = fibers(ismember(fibers(:,4), connFiberInd), 1:3);
+    fibcell{side} = mat2cell(connFiber, idx(connFiberInd));
 end
