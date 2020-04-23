@@ -93,21 +93,15 @@ classdef ea_disctract < handle
                 end
             end
 
-            cfile=[ea_getconnectomebase('dMRI'),obj.connectome,filesep,'data.mat'];
-            [fibcell,fibsin,XYZmm,niivx,valsmm]=ea_discfibers_getfibcell(obj,cfile);
-            switch obj.statmetric
-                case 1 % ttests
-                    [fibsval]=ea_discfibers_heatfibertracts(obj,fibcell,fibsin,XYZmm,niivx);
-                    % Main output of results - this is all we will ever need if statmetric
-                    % and connectome wont change
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval=fibsval;
-                case 2 % spearmans R
-                    [fibsval_sum,fibsval_mean,fibsval_peak,fibsval_5peak]=ea_discfibers_heatfibertracts_corr(obj,fibcell,XYZmm,niivx,valsmm);
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Sum')).fibsval=fibsval_sum;
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Mean')).fibsval=fibsval_mean;
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Peak')).fibsval=fibsval_peak;
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Peak 5%')).fibsval=fibsval_5peak;
-            end
+            cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
+            vats = ea_discfibers_getvats(obj);
+            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak] = ea_discfibers_calcval(vats, cfile);
+
+            obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
+            obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
+            obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
+            obj.results.(ea_conn2connid(obj.connectome)).('spearman_peak').fibsval = fibsvalPeak;
+            obj.results.(ea_conn2connid(obj.connectome)).('spearman_5peak').fibsval = fibsval5Peak;
         end
 
         function Amps = getstimamp(obj)
@@ -210,7 +204,7 @@ classdef ea_disctract < handle
             % Ihat is the estimate of improvements (not scaled to real improvements)
             Ihat = nan(length(obj.patientselection),2);
 
-            fibsval = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+            fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
             for side=1:2  % only used in spearmans correlations
                 if obj.statmetric==2
                     nfibsval{side} = fibsval{side};
@@ -259,7 +253,7 @@ classdef ea_disctract < handle
                 corrType = 'Spearman';
             end
 
-            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+            fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
             for side=1:2
                 nfibsval{side}=fibsval{side};
                 nfibsval{side}(nfibsval{side}==0)=0; % only used in spearmans correlations

@@ -5,7 +5,7 @@ if ~exist('Iperm','var')
 else % used in permutation based statistics - in this case the real improvement can be substituted with permuted variables.
     I=Iperm;
 end
-fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
 
 % quickly recalc stats:
 if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
@@ -66,7 +66,7 @@ for group=groups
         if obj.statmetric==1
             gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
         end
-        
+
         switch obj.statmetric
             case 1 % t-tests
                 % check if covariates exist:
