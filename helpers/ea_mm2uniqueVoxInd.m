@@ -15,5 +15,5 @@ voxSub = voxSub(all(voxSub>0, 2) & all(voxSub<=refnii.dim, 2), :);
 if ~isempty(voxSub)
     voxInd = sub2ind(refnii.dim, voxSub(:,1), voxSub(:,2), voxSub(:,3));
 else
-    voxInd = 0;
+    voxInd = nan;
 end
