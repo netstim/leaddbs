@@ -94,8 +94,8 @@ classdef ea_disctract < handle
             end
 
             cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
-            vats = ea_discfibers_getvats(obj);
-            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vats, cfile);
+            vatlist = ea_discfibers_getvats(obj);
+            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile);
 
             obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
