@@ -63,14 +63,15 @@ for side = 1:numSide
     end
 
     % Remove values for not connected fibers, convert to sparse matrix
-    fibsvalBin{side} = sparse(fibsvalBin{side}(any(fibsvalBin{side}, 2), :));
-    fibsvalSum{side} = sparse(fibsvalSum{side}(any(fibsvalSum{side}, 2), :));
-    fibsvalMean{side} = sparse(fibsvalMean{side}(any(fibsvalMean{side}, 2), :));
-    fibsvalPeak{side} = sparse(fibsvalPeak{side}(any(fibsvalPeak{side}, 2), :));
-    fibsval5Peak{side} = sparse(fibsval5Peak{side}(any(fibsval5Peak{side}, 2), :));
+    fibIsConnected = any(fibsvalBin{side}, 2);
+    fibsvalBin{side} = sparse(fibsvalBin{side}(fibIsConnected, :));
+    fibsvalSum{side} = sparse(fibsvalSum{side}(fibIsConnected, :));
+    fibsvalMean{side} = sparse(fibsvalMean{side}(fibIsConnected, :));
+    fibsvalPeak{side} = sparse(fibsvalPeak{side}(fibIsConnected, :));
+    fibsval5Peak{side} = sparse(fibsval5Peak{side}(fibIsConnected, :));
 
     % Extract connected fiber cell
-    connFiberInd = find(any(fibsvalBin{side}, 2));
+    connFiberInd = find(fibIsConnected);
     connFiber = fibers(ismember(fibers(:,4), connFiberInd), 1:3);
     fibcell{side} = mat2cell(connFiber, idx(connFiberInd));
 end
