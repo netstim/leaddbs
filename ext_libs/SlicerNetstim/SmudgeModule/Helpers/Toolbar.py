@@ -208,7 +208,8 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     slicer.util.setSliceViewerLayers(background=imageNode.GetID())
     # load new temaplate image
     slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getForegroundNode())
-    #modality = self.parameterNode.GetParameter("modality") # in case loading subject image modality was changed 
+    # change to t1 in case modality not present
+    modality = modality if modality in ['t1','t2','pca','pd'] else 't1'
     templateNode = slicer.util.loadVolume(os.path.join(self.parameterNode.GetParameter("MNIPath"), modality + ".nii"), properties={'show':False})
     templateNode.GetDisplayNode().AutoWindowLevelOff()
     templateNode.GetDisplayNode().SetWindow(100)
