@@ -9,7 +9,7 @@ end
 [voxSub, uniqueInd] = unique(round(ea_mm2vox(XYZmm, refnii.mat)), 'rows');
 
 % Remove all outliers
-voxSub = voxSub(all(voxSub>0, 2) & all(voxSub<=refnii.dim, 2), :);
+voxSub = voxSub(all(voxSub, 2) & all(voxSub<=refnii.dim, 2), :);
 
 % Return the unique voxel indices
 if ~isempty(voxSub)
