@@ -157,15 +157,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.blurButton.setAutoExclusive(True)
     optionsFrame.layout().addWidget(self.blurButton)
 
-    splineEditPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','splineIcon.png')))
-    splineEditIcon = qt.QIcon(splineEditPixmap)
-    self.splineEditButton = qt.QPushButton()
-    self.splineEditButton.setIcon(splineEditIcon)
-    self.splineEditButton.setIconSize(splineEditPixmap.rect().size())
-    self.splineEditButton.setCheckable(True)
-    self.splineEditButton.setEnabled(False)
-    self.splineEditButton.setAutoExclusive(True)
-    optionsFrame.layout().addWidget(self.splineEditButton)
 
     toolsFormLayout.addRow(optionsFrame)
 
@@ -295,6 +286,29 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     historyGridLayout.addWidget(self.historyList,0,1)
 
+
+
+    #
+    # Anchor Points
+    #
+
+    anchorPointsCollapsibleButton = ctk.ctkCollapsibleButton()
+    anchorPointsCollapsibleButton.text = "Anchor Points"
+    anchorPointsCollapsibleButton.collapsed = True
+    self.layout.addWidget(anchorPointsCollapsibleButton, 1)
+
+    anchorPointsGridLayout = qt.QGridLayout(anchorPointsCollapsibleButton)    
+
+    self.anchorPointsTreeWidget = slicer.qMRMLSubjectHierarchyTreeView(slicer.util.mainWindow())
+    self.anchorPointsTreeWidget.setMRMLScene(slicer.mrmlScene)
+    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().idColumn, True)
+    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().transformColumn, True)
+    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().descriptionColumn, True)
+
+    anchorPointsGridLayout.addWidget(self.anchorPointsTreeWidget,0,0)
+
+
+
     #
     # Modles Area
     #
@@ -322,11 +336,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.smudgeButton.toggled.connect(self.toogleTools)
     self.snapButton.toggled.connect(self.toogleTools)
     self.blurButton.toggled.connect(self.toogleTools)
-    self.splineEditButton.toggled.connect(self.toogleTools)
     self.smudgeButton.connect('clicked(bool)', self.onSmudgeButton)
     self.snapButton.connect('clicked(bool)', self.onSnapButton)
     self.blurButton.connect('clicked(bool)', self.onBlurButton)
-    self.splineEditButton.connect('clicked(bool)', self.onSplineEditButton)
     
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
@@ -428,7 +440,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.smudgeButton.enabled = bool(warpNode)
     self.snapButton.enabled = bool(warpNode)
     self.blurButton.enabled = bool(warpNumberOfComponents == 1)
-    self.splineEditButton.enabled = bool(warpNode)
     self.historyList.enabled = bool(warpNode) 
     # undo redo button
     self.undoButton.setEnabled(warpNumberOfComponents > 1) 
@@ -438,12 +449,25 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.historyList.clear()
     self.historyList.addItems(['Component ' + str(i) for i in range(warpNumberOfComponents + int(self.redoButton.enabled))])
     self.historyList.setCurrentRow(warpNumberOfComponents - 1)
+    # get subject hierarchy node
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     # if subject is changed
     if bool(int(self.parameterNode.GetParameter("subjectChanged"))):
       self.exit()
       self.toogleTools()
+      SmudgeModuleLogic().removeRedoTransform()
+      shNode.RemoveItem(int(self.parameterNode.GetParameter("drawingsRootItem")))
+      self.parameterNode.SetParameter("drawingsRootItem","0") # reset drawings
       self.parameterNode.SetParameter("subjectChanged","0")
-
+    # drawings hierarchy
+    if not bool(int(self.parameterNode.GetParameter("drawingsRootItem"))):
+      folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), 'AnchorDrawings')
+      self.parameterNode.SetParameter("drawingsRootItem",str(folderID))
+    # anchor points settings
+    self.anchorPointsTreeWidget.setRootItem(int(self.parameterNode.GetParameter("drawingsRootItem")))
+    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().idColumn, True)
+    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().transformColumn, True)
+    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().descriptionColumn, True)
 
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("radius", str(self.radiusSlider.value) )
@@ -458,7 +482,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if warpID != "":
       warpNode = slicer.util.getNode(warpID)
       self.historyList.setCurrentRow(TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) - 1) # keep same value
-
 
   def setItemChildrenFlags(self, item):
     item.setFlags(qt.Qt.ItemIsSelectable + qt.Qt.ItemIsEnabled)
@@ -492,8 +515,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     SmudgeModuleLogic().removeRedoTransform()
     redoTransformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
     self.parameterNode.SetParameter("redoTransformID", redoTransformID)
-    if self.splineEditButton.checked:
-      self.noneButton.checked = True
 
   def onRedoButton(self):
     # see if smudging. aux transform causes problems here
@@ -568,11 +589,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.sigmaSlider.setEnabled(True)
       SmudgeModuleLogic().effectOn('Blur')
 
-  def onSplineEditButton(self, buttonDown):
-    if buttonDown:
-      self.radiusSlider.setEnabled(True)
-      SmudgeModuleLogic().effectOn('SplineEdit')
-
 
   def exit(self):
     self.noneButton.setChecked(True)
@@ -618,6 +634,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("sigma", "5")
     node.SetParameter("expandEdge", "0")
     node.SetParameter("warpModified","0")
+    node.SetParameter("drawingsRootItem","0")
     # lead dbs specific
     node.SetParameter("affineTransformID", "")
     node.SetParameter("templateID", "")
@@ -644,16 +661,6 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     if effectName in ['Smudge']:
       size, origin, spacing = self.getExpandedGrid()
       auxTransformNode = TransformsUtil.TransformsUtilLogic().emptyGridTransfrom(size, origin, spacing)
-    elif effectName in ['SplineEdit']:
-      size, origin, spacing = self.getExpandedGrid()
-      spline_spacing = [float(self.getParameterNode().GetParameter("radius"))] * 3
-      spline_size = [int(np.ceil(size[i]*spacing[i]/spline_spacing[i])) for i in range(3)]
-      splineTransformNode = TransformsUtil.TransformsUtilLogic().emptySplineTransfrom(spline_size, origin, spline_spacing)
-      f = self.createPoints(spline_size, origin, spline_spacing)
-      parameterNode = self.getParameterNode()
-      warpNode = slicer.util.getNode(parameterNode.GetParameter("warpID"))
-      warpNode.SetAndObserveTransformNodeID(splineTransformNode.GetID())
-      warpNode.HardenTransform()
 
     for color in ['Red','Green','Yellow']:
       sliceWidget = slicer.app.layoutManager().sliceWidget(color)
@@ -665,16 +672,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
         WarpEffect.BlurEffectTool(sliceWidget)
       elif effectName == 'Snap':
         WarpEffect.SnapEffectTool(sliceWidget)
-      elif effectName == 'SplineEdit':
-        WarpEffect.SplineEffectTool(sliceWidget, f)
   
-
-  def createPoints(self, size,origin,spacing):
-    rasPoints = [np.array(origin) + np.array(spacing) * np.array([i,j,k]) for k in range(size[2]) for j in range(size[1]) for i in range(size[0])]
-    f = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-    for p in rasPoints:
-      f.AddFiducialFromArray(p, ' ')
-    return f
 
   def effectOff(self):
     WarpEffect.WarpEffectTool.empty()

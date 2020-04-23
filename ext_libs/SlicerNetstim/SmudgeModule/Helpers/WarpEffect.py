@@ -262,21 +262,39 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
         # get same number of points as other curve
         curve2.ResampleCurveWorld(curve2.GetCurveLengthWorld() / max((curve1.GetNumberOfControlPoints() - 1), 1) )
         curve2.GetControlPointPositionsWorld(points2)
+        # add drawings to hierarchy (before more points are added) TODO: better implement this
+        self.addDrawingsToHierarchy(points1,points2,modelNode) 
         # calculate transform and apply
         transformNode = self.createTransform(points1, points2)
         self.displayTransformFromPoints(transformNode, points1)
         self.warpNode.SetAndObserveTransformNodeID(transformNode.GetID())
-        self.warpNode.HardenTransform()
+        self.warpNode.HardenTransform()       
         # cleanup
         slicer.mrmlScene.RemoveNode(curve1)
         slicer.mrmlScene.RemoveNode(curve2)
-        slicer.mrmlScene.RemoveNode(transformNode)
         slicer.mrmlScene.RemoveNode(slicedModel)
+        slicer.mrmlScene.RemoveNode(transformNode)
         self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
         SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
-
+        
     PointerEffect.DrawEffectTool.processEvent(self, caller, event) 
     
+
+  def addDrawingsToHierarchy(self, points1, points2, modelNode):
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    # add folder with nearest model name
+    drawingsRootItem = int(self.parameterNode.GetParameter("drawingsRootItem"))
+    modelParentName =  shNode.GetItemName(shNode.GetItemParent(shNode.GetItemByDataNode(modelNode)))
+    subFolderID = shNode.CreateFolderItem(drawingsRootItem, modelParentName + '_' + modelNode.GetName())
+    # create curve from points and add to folder
+    for points,name in zip([points1, points2],['source','target']):
+      auxCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
+      auxCurve.SetControlPointPositionsWorld(points)
+      auxCurve.SetName(name)
+      auxCurve.SetLocked(1)
+      auxCurve.GetDisplayNode().SetVisibility(0)
+      shNode.SetItemParent(shNode.GetItemByDataNode(auxCurve), subFolderID)
+
   def samplePointsInModel(self, points, model, sampleDist = 2, maximumSearchRadius = 0.0025):
     auxCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
     auxCurve.SetControlPointPositionsWorld(points)
@@ -430,56 +448,3 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
   def cleanup(self):
     WarpEffectTool.cleanup(self)
     PointerEffect.DrawEffectTool.cleanup(self)
-
-    
-
-class SplineEffectTool(PointerEffect.PointerEffectTool, WarpEffectTool):
-
-  def __init__(self, sliceWidget, f):
-
-    WarpEffectTool.__init__(self)
-    PointerEffect.PointerEffectTool.__init__(self, sliceWidget)
-    
-    self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    
-    # transform data
-    self.coefficientData = self.warpNode.GetTransformFromParent().GetConcatenatedTransform(0).GetCoefficientData()
-    self.markupsNode = f
-    self.observerID = 0
-
-  def processEvent(self, caller=None, event=None):
-
-    PointerEffect.PointerEffectTool.processEvent(self, caller, event)
-
-    if event =='LeftButtonDoubleClickEvent':
-      markupsLogic = slicer.modules.markups.logic()
-      markupsLogic.JumpSlicesToNthPointInMarkup(self.markupsNode.GetID(),self.currentIndex,False)
-      self.markupsNode.RemoveObserver(self.observerID)
-
-    elif event == 'LeftButtonReleaseEvent':
-      self.markupsNode.RemoveObserver(self.observerID)
-
-    elif event == 'LeftButtonPressEvent':
-      currentPoint = self.eventPositionToRAS()
-      self.currentIndex = self.markupsNode.GetClosestControlPointIndexToPositionWorld(currentPoint)
-      self.observerID = self.markupsNode.AddObserver(slicer.vtkMRMLMarkupsFiducialNode.PointModifiedEvent, self.modifySpline)
-
-  def modifySpline(self,caller=None,event=None):
-    size = self.coefficientData.GetDimensions()
-    origin = self.coefficientData.GetOrigin()
-    spacing = self.coefficientData.GetSpacing()
-    k,j,i = np.unravel_index(self.currentIndex, (size[2],size[1],size[0]))
-    sliceIndex = np.nonzero([int(self.sliceLogic.GetSliceNode().GetName()!=name) for name in ['Yellow','Green','Red']])[0]
-    originalPoint = np.array(origin) + np.array(spacing) * np.array([i,j,k])
-    currentPoint = [0] * 3
-    self.markupsNode.GetNthFiducialPosition(self.currentIndex, currentPoint)
-    pointDiff = originalPoint - currentPoint
-    self.coefficientData.SetScalarComponentFromFloat(i,j,k,sliceIndex[0], float(pointDiff[sliceIndex[0]]))
-    self.coefficientData.SetScalarComponentFromFloat(i,j,k,sliceIndex[1], float(pointDiff[sliceIndex[1]]))
-    self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
-  
-  def cleanup(self):
-    slicer.mrmlScene.RemoveNode(self.markupsNode)
-    WarpEffectTool.cleanup(self)
-    PointerEffect.PointerEffectTool.cleanup(self)
-

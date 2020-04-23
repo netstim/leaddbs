@@ -260,10 +260,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
           structurePolyData = self.createPolyData(vertices, faces)          
           # add model node
           modelNode = self.createModel(structurePolyData, sideName, structureColor)
-          if subFolderID == folderID:
-            modelNode.GetDisplayNode().SetVisibility(index in showIndex)
-          else:
-            modelNode.GetDisplayNode().SetVisibility(1) # always visible - the parent folder is invisible
+          modelNode.GetDisplayNode().SetVisibility(index in showIndex)
           # add as child to parent
           shNode.SetItemParent(shNode.GetItemChildWithName(shNode.GetSceneItemID(), sideName), subFolderID)
         
