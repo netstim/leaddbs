@@ -1,7 +1,7 @@
-function [voxInd, uniqueInd, voxSub] = ea_mm2uniqueVoxInd(XYZmm, reference)
+function [voxInd, uniqueInd, voxSub] = ea_mm2uniqueVoxInd(XYZmm, refnii)
 % Convert XYZ mm coordinates to unique voxel indices in reference nifti
 
-if ~exist('reference', 'var') || ischar(reference)
+if ~exist('refnii', 'var') || ischar(refnii)
     refnii = ea_load_nii([ea_space, 't1.nii']);
 end
 
