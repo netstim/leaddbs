@@ -301,7 +301,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Type selector
     self.sceneRadioButton = qt.QRadioButton('Scene')
     self.atlasesRadioButton = qt.QRadioButton('Atlases')
-    self.drawingsRadioButton = qt.QRadioButton('Drawings')
+    self.drawingsRadioButton = qt.QRadioButton('Fixed Points')
     self.fiducialsRadioButton = qt.QRadioButton('Fiducials')
     self.atlasesRadioButton.setChecked(True)
 
@@ -467,7 +467,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.parameterNode.SetParameter("subjectChanged","0")
     # drawings hierarchy
     if not bool(int(self.parameterNode.GetParameter("drawingsRootItem"))):
-      folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), 'AnchorDrawings')
+      folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), 'Fixed Points')
       self.parameterNode.SetParameter("drawingsRootItem", str(folderID))
     self.dataTreeTypeToggle(1) # update
 
@@ -535,7 +535,14 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.parameterNode.SetParameter("redoTransformID", redoTransformID)
     # apply to anchor points
     redoTransformNode = slicer.util.getNode(redoTransformID)
-    SmudgeModuleLogic().applyChangesToAnchorPoints(redoTransformNode.GetTransformFromParent())
+    # delete anchor points if was a drawing operation
+    operationHistory = self.parameterNode.GetParameter("operationHistory").split(' ')
+    lastOperation = operationHistory.pop()
+    self.parameterNode.SetParameter("operationHistory", ' '.join(operationHistory))
+    if lastOperation == 'snap':
+      SmudgeModuleLogic().removeRedoTransform()
+      SmudgeModuleLogic().removeLastDrawing()
+    
 
   def onRedoButton(self):
     # see if smudging. aux transform causes problems here
@@ -548,10 +555,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # apply
     warpNode.SetAndObserveTransformNodeID(redoTransformNode.GetID())
     warpNode.HardenTransform()
-    SmudgeModuleLogic().applyChangesToAnchorPoints(redoTransformNode.GetTransformToParent())
     # delete redo transform
     slicer.mrmlScene.RemoveNode(redoTransformNode)
     self.parameterNode.SetParameter("redoTransformID","")
+    # add redo to operation history
+    operationHistory = self.parameterNode.GetParameter("operationHistory").split(' ')
+    self.parameterNode.SetParameter("operationHistory", ' '.join(operationHistory + ['redo']))
     # restore state
     if smudgeEnabled:
       SmudgeModuleLogic().effectOn('Smudge')
@@ -561,6 +570,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     includeFirstLayer = self.firstComponentCheckBox.checked
     TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, includeFirstLayer)
+    self.parameterNode.SetParameter("operationHistory","flatten")
     self.updateGuiFromMRML() # update history
 
 
@@ -658,7 +668,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("expandEdge", "0")
     node.SetParameter("warpModified","0")
     node.SetParameter("drawingsRootItem","0")
-    node.SetParameter("lastOperation","")
+    node.SetParameter("operationHistory","")
     # lead dbs specific
     node.SetParameter("affineTransformID", "")
     node.SetParameter("templateID", "")

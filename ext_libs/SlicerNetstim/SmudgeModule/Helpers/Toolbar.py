@@ -134,7 +134,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     # Resolution
     #
-    self.addWidget(qt.QLabel('Resolution: '))
+    self.addWidget(qt.QLabel('Warp Resolution: '))
     self.resolutionComboBox = qt.QComboBox()
     avalibaleResolutions = [0.5, 1, 2, 5, 10]
     self.resolutionComboBox.addItems([str(r)+'mm' for r in avalibaleResolutions])
