@@ -186,7 +186,9 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             options.native=0;
             try
                 [options.root,options.patientname]=fileparts(M.patient.list{pt});
-                options.root=[options.root,filesep];
+                if ~isempty(options.root)
+                    options.root=[options.root,filesep];
+                end
                 options = ea_resolve_elspec(options);
                 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
                     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
