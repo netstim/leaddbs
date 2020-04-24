@@ -56,6 +56,19 @@ class WarpEffectTool():
     currentIndex = slice(k-r,k+r+1), slice(j-r,j+r+1), slice(i-r,i+r+1)
     return currentIndex
 
+  def applyChanges(self, transformNode):
+    # apply to anchor points
+    SmudgeModule.SmudgeModuleLogic().applyChangesToAnchorPoints(transformNode.GetTransformToParent())
+    # get warp and harden transform
+    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    warpNode.HardenTransform()
+    warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
+    # remove redo options
+    SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
+    # save tool name
+    self.parameterNode.SetParameter("lastOperation",self.toolName)
+
+
   def cleanup(self):
     pass
 
@@ -93,6 +106,8 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     WarpEffectTool.__init__(self)
     PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
     
+    self.toolName = 'smudge'
+
     self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     
     # transform data
@@ -121,10 +136,8 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
       sigma = float(self.parameterNode.GetParameter("sigma")) / self.auxTransformSpacing
       self.auxTransformArray[:] = np.stack([ndimage.gaussian_filter(self.auxTransformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
       # apply
-      self.warpNode.HardenTransform()
+      self.applyChanges(self.auxTransformNode)
       self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)
-      self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
-      SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
 
 
     elif event == 'MouseMoveEvent':
@@ -162,6 +175,7 @@ class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     WarpEffectTool.__init__(self)
     PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
     
+    self.toolName = 'blur'
 
     self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     self.warpRASToIJK = TransformsUtil.TransformsUtilLogic().getTransformRASToIJK(self.warpNode)
@@ -178,8 +192,15 @@ class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     if event =='LeftButtonDoubleClickEvent':
       self.preview = False
       self.transformArray[self.currentIndex] += self.blurContent
-      self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
-      SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
+      # create aux transform to apply to anchor points
+      size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)
+      auxTransformNode = TransformsUtil.TransformsUtilLogic().emptyGridTransfrom(size,origin,spacing)
+      auxTransformArray = slicer.util.array(auxTransformNode.GetID())
+      auxTransformArray[self.currentIndex] = self.blurContent
+      auxTransformNode.Modified()
+      # apply and remove
+      self.applyChanges(auxTransformNode)
+      slicer.mrmlScene.RemoveNode(auxTransformNode)
       
     elif event == 'LeftButtonReleaseEvent':
       if self.preview:
@@ -231,6 +252,8 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
 
     WarpEffectTool.__init__(self)
     PointerEffect.DrawEffectTool.__init__(self,sliceWidget)
+
+    self.toolName = 'snap'
     
     self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)
@@ -268,14 +291,12 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
         transformNode = self.createTransform(points1, points2)
         self.displayTransformFromPoints(transformNode, points1)
         self.warpNode.SetAndObserveTransformNodeID(transformNode.GetID())
-        self.warpNode.HardenTransform()       
+        self.applyChanges(transformNode)
         # cleanup
         slicer.mrmlScene.RemoveNode(curve1)
         slicer.mrmlScene.RemoveNode(curve2)
         slicer.mrmlScene.RemoveNode(slicedModel)
         slicer.mrmlScene.RemoveNode(transformNode)
-        self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
-        SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
         
     PointerEffect.DrawEffectTool.processEvent(self, caller, event) 
     
@@ -286,14 +307,17 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     drawingsRootItem = int(self.parameterNode.GetParameter("drawingsRootItem"))
     modelParentName =  shNode.GetItemName(shNode.GetItemParent(shNode.GetItemByDataNode(modelNode)))
     subFolderID = shNode.CreateFolderItem(drawingsRootItem, modelParentName + '_' + modelNode.GetName())
+    shNode.SetItemAttribute(subFolderID, 'drawing', '1')
     # create curve from points and add to folder
     for points,name in zip([points1, points2],['source','target']):
       auxCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
       auxCurve.SetControlPointPositionsWorld(points)
       auxCurve.SetName(name)
       auxCurve.SetLocked(1)
-      auxCurve.GetDisplayNode().SetVisibility(0)
+      auxCurve.GetDisplayNode().SetVisibility(name == 'source') # show source points
+      auxCurve.GetDisplayNode().SetSelectedColor([1,0.5,0.5] if name=='source' else [0.8,0.6,0.5])
       shNode.SetItemParent(shNode.GetItemByDataNode(auxCurve), subFolderID)
+      shNode.SetItemAttribute(shNode.GetItemByDataNode(auxCurve), 'drawing', '1')
 
   def samplePointsInModel(self, points, model, sampleDist = 2, maximumSearchRadius = 0.0025):
     auxCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
@@ -357,6 +381,27 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
 
     return bpoints
 
+  def getAnchorPoints(self):
+    # get drawings
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    drawingsRootItem = int(self.parameterNode.GetParameter("drawingsRootItem"))
+    childrenIDs = vtk.vtkIdList()
+    shNode.GetItemChildren(drawingsRootItem, childrenIDs, True)
+    # init
+    p=vtk.vtkPoints()
+    sourcePoints=vtk.vtkPoints()
+    targetPoints=vtk.vtkPoints()
+    # iterete over source and target to get points
+    for i in range(childrenIDs.GetNumberOfIds()):
+      dataNode = shNode.GetItemDataNode(childrenIDs.GetId(i))
+      if dataNode and isinstance(dataNode, slicer.vtkMRMLMarkupsCurveNode):
+        dataNode.GetControlPointPositionsWorld(p)
+        if dataNode.GetName() == 'source':
+          sourcePoints.InsertPoints(sourcePoints.GetNumberOfPoints(),p.GetNumberOfPoints(),0,p)
+        elif dataNode.GetName() == 'target':
+          targetPoints.InsertPoints(targetPoints.GetNumberOfPoints(),p.GetNumberOfPoints(),0,p)
+    
+    return sourcePoints,targetPoints
 
   def createTransform(self, sourcePoints, targetPoints):
     # get control points
@@ -365,6 +410,10 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     for bp in (bpoints + self.warpBounds):
       sourcePoints.InsertNextPoint(*bp)
       targetPoints.InsertNextPoint(*bp)
+    # add anchor points
+    sourceAnchorPoints, targetAnchorPoints = self.getAnchorPoints()
+    sourcePoints.InsertPoints(sourcePoints.GetNumberOfPoints(), sourceAnchorPoints.GetNumberOfPoints(), 0, sourceAnchorPoints)
+    targetPoints.InsertPoints(targetPoints.GetNumberOfPoints(), targetAnchorPoints.GetNumberOfPoints(), 0, targetAnchorPoints)
     #create thin plate spline transfrom
     transform = vtk.vtkThinPlateSplineTransform()
     transform.SetSourceLandmarks(sourcePoints)

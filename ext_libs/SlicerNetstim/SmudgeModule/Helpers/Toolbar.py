@@ -161,7 +161,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     # Save
     #
-    self.saveButton = qt.QPushButton("Save and Next")
+    self.saveButton = qt.QPushButton("Finish and Exit")
     self.saveButton.setFixedWidth(200)
     self.saveButton.setStyleSheet("background-color: green")
     self.addWidget(self.saveButton)
@@ -230,7 +230,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
   def updateToolbarFromMRML(self, caller=None, event=None):
     # subject text
     subjectN = int(self.parameterNode.GetParameter("subjectN"))
-    subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(' ')
+    subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(self.parameterNode.GetParameter("separator"))
     self.subjectNameLabel.text = 'Subject: ' + os.path.split(os.path.abspath(self.parameterNode.GetParameter("subjectPath")))[-1]
     self.saveButton.text = 'Finish and Exit' if subjectN == len(subjectPaths)-1 else 'Finish and Next'
     # modality
@@ -254,6 +254,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     SmudgeModule.SmudgeModuleLogic().effectOff()
     if reducedToolbarLogic().applyChanges():
       # remove nodes
+      SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID")))
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
       slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getBackgroundNode())
@@ -338,7 +339,7 @@ class reducedToolbarLogic(object):
     # remove aux nodes
     slicer.mrmlScene.RemoveNode(outNode)
     slicer.mrmlScene.RemoveNode(referenceVolume)
-    self.parameterNode.SetParameter("subjectChanged","1")
+    #self.parameterNode.SetParameter("subjectChanged","1")
   
   def applyChanges(self):
 

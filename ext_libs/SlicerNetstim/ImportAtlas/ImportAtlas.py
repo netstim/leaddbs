@@ -218,6 +218,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), os.path.split(atlasPath)[-1])
     self.createFolderDisplayNode(folderID)
+    shNode.SetItemAttribute(folderID, 'atlas', '1')
   
     with h5py.File(os.path.join(atlasPath,'atlas_index.mat'),'r') as atlasFile:
       # get .mat data
@@ -246,6 +247,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
           self.createFolderDisplayNode(subFolderID, structureColor)
           shNode.SetItemDisplayVisibility(subFolderID, index in showIndex)
           shNode.SetItemExpanded(subFolderID, 0)
+          shNode.SetItemAttribute(subFolderID, 'atlas', '1')
         else:
           subName = [structureName]
           subFolderID = folderID
@@ -263,6 +265,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
           modelNode.GetDisplayNode().SetVisibility(index in showIndex)
           # add as child to parent
           shNode.SetItemParent(shNode.GetItemChildWithName(shNode.GetSceneItemID(), sideName), subFolderID)
+          shNode.SetItemAttribute(shNode.GetItemByDataNode(modelNode), 'atlas', '1')
         
 
   

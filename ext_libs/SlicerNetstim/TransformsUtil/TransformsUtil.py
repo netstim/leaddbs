@@ -270,6 +270,8 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     return set([transformNodes.GetItemAsObject(i).GetName() for i in range(transformNodes.GetNumberOfItems())])
 
   def getGridDefinition(self, transformNode):
+    if not transformNode:
+      return 0,0,[1,1,1]
     fp = transformNode.GetTransformFromParent()
     tp = transformNode.GetTransformToParent()
     if isinstance(fp, slicer.vtkOrientedGridTransform) and fp.GetDisplacementGrid():

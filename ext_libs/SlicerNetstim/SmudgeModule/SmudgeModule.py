@@ -289,43 +289,39 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     #
-    # Anchor Points
-    #
-
-    anchorPointsCollapsibleButton = ctk.ctkCollapsibleButton()
-    anchorPointsCollapsibleButton.text = "Anchor Points"
-    anchorPointsCollapsibleButton.collapsed = True
-    self.layout.addWidget(anchorPointsCollapsibleButton, 1)
-
-    anchorPointsGridLayout = qt.QGridLayout(anchorPointsCollapsibleButton)    
-
-    self.anchorPointsTreeWidget = slicer.qMRMLSubjectHierarchyTreeView(slicer.util.mainWindow())
-    self.anchorPointsTreeWidget.setMRMLScene(slicer.mrmlScene)
-    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().idColumn, True)
-    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().transformColumn, True)
-    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().descriptionColumn, True)
-
-    anchorPointsGridLayout.addWidget(self.anchorPointsTreeWidget,0,0)
-
-
-
-    #
     # Modles Area
     #
 
     modelsCollapsibleButton = ctk.ctkCollapsibleButton()
-    modelsCollapsibleButton.text = "Model Control"
+    modelsCollapsibleButton.text = "Data Control"
     self.layout.addWidget(modelsCollapsibleButton, 1)
 
     modelsGridLayout = qt.QGridLayout(modelsCollapsibleButton)    
 
+    # Type selector
+    self.sceneRadioButton = qt.QRadioButton('Scene')
+    self.atlasesRadioButton = qt.QRadioButton('Atlases')
+    self.drawingsRadioButton = qt.QRadioButton('Drawings')
+    self.fiducialsRadioButton = qt.QRadioButton('Fiducials')
+    self.atlasesRadioButton.setChecked(True)
+
+    # delete selected
+    self.deleteTreeElement = qt.QPushButton('Delete')
+
+    # Tree widget
     self.dataTreeWidget = slicer.qMRMLSubjectHierarchyTreeView(slicer.util.mainWindow())
     self.dataTreeWidget.setMRMLScene(slicer.mrmlScene)
     self.dataTreeWidget.setColumnHidden(self.dataTreeWidget.model().idColumn, True)
     self.dataTreeWidget.setColumnHidden(self.dataTreeWidget.model().transformColumn, True)
-    self.dataTreeWidget.nodeTypes = ('vtkMRMLModelNode','vtkMRMLFolderDisplayNode')
+    self.dataTreeWidget.setColumnHidden(self.dataTreeWidget.model().descriptionColumn, True)
+    self.dataTreeWidget.contextMenuEnabled = False
 
-    modelsGridLayout.addWidget(self.dataTreeWidget,0,0)
+    modelsGridLayout.addWidget(self.sceneRadioButton,0,0)
+    modelsGridLayout.addWidget(self.atlasesRadioButton,0,1)
+    modelsGridLayout.addWidget(self.drawingsRadioButton,0,2)
+    modelsGridLayout.addWidget(self.fiducialsRadioButton,0,3)
+    modelsGridLayout.addWidget(self.deleteTreeElement,0,4)
+    modelsGridLayout.addWidget(self.dataTreeWidget,1,0,1,5)
 
     self.layout.addStretch(0)
 
@@ -350,6 +346,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
     self.historyList.itemSelectionChanged.connect(self.historyItemChanged)
 
+    
+    self.sceneRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
+    self.drawingsRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
+    self.atlasesRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
+    self.fiducialsRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
+    self.deleteTreeElement.connect("clicked(bool)", lambda i: self.dataTreeWidget.deleteSelectedItems())
     self.dataTreeWidget.doubleClicked.connect(self.onDataTreeDoubleClicked)
 
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)    
@@ -368,6 +370,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.updateGuiFromMRML()  
     self.onSceneNodeAdded()
     self.toogleTools()
+    self.dataTreeTypeToggle(1)
 
   
 
@@ -393,6 +396,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.inputsCollapsibleButton.setVisible(not singleModule)
     if self.developerMode:
       self.reloadCollapsibleButton.setVisible(not singleModule)
+
+    self.sceneRadioButton.setEnabled(False)
 
     slicer.util.mainWindow().setWindowTitle("Name goes here")
 
@@ -449,25 +454,22 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.historyList.clear()
     self.historyList.addItems(['Component ' + str(i) for i in range(warpNumberOfComponents + int(self.redoButton.enabled))])
     self.historyList.setCurrentRow(warpNumberOfComponents - 1)
+    # resolution change
+    if float(self.parameterNode.GetParameter("resolution")) != TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)[2][0]:
+      self.exit()
     # get subject hierarchy node
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     # if subject is changed
     if bool(int(self.parameterNode.GetParameter("subjectChanged"))):
       self.exit()
-      self.toogleTools()
-      SmudgeModuleLogic().removeRedoTransform()
       shNode.RemoveItem(int(self.parameterNode.GetParameter("drawingsRootItem")))
       self.parameterNode.SetParameter("drawingsRootItem","0") # reset drawings
       self.parameterNode.SetParameter("subjectChanged","0")
     # drawings hierarchy
     if not bool(int(self.parameterNode.GetParameter("drawingsRootItem"))):
       folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), 'AnchorDrawings')
-      self.parameterNode.SetParameter("drawingsRootItem",str(folderID))
-    # anchor points settings
-    self.anchorPointsTreeWidget.setRootItem(int(self.parameterNode.GetParameter("drawingsRootItem")))
-    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().idColumn, True)
-    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().transformColumn, True)
-    self.anchorPointsTreeWidget.setColumnHidden(self.anchorPointsTreeWidget.model().descriptionColumn, True)
+      self.parameterNode.SetParameter("drawingsRootItem", str(folderID))
+    self.dataTreeTypeToggle(1) # update
 
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("radius", str(self.radiusSlider.value) )
@@ -486,35 +488,54 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def setItemChildrenFlags(self, item):
     item.setFlags(qt.Qt.ItemIsSelectable + qt.Qt.ItemIsEnabled)
     for row in range(item.rowCount()):
-      self.setItemChildrenFlags(item.child(row))
+      self.setItemChildrenFlags(item.child(row))      
 
   def onSceneNodeAdded(self,caller=None,event=None):
     sceneItem = self.dataTreeWidget.model().item(0,0)
     self.setItemChildrenFlags(sceneItem)
 
-
   def onDataTreeDoubleClicked(self, i):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     node = shNode.GetItemDataNode(self.dataTreeWidget.currentItem())
+    # get center position of model/drawing
     if isinstance(node, slicer.vtkMRMLModelNode):
-      # center
       pd = node.GetPolyData()
       center = vtk.vtkCenterOfMass()
       center.SetInputData(pd)
       center.Update()
-      segCenter = center.GetCenter()
-      # create markups node, add center as fiducial and jump and center slices
-      markupsNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-      markupsNode.GetDisplayNode().SetVisibility(False)
-      markupsNode.AddFiducialFromArray(np.array(segCenter),'')
-      markupsLogic = slicer.modules.markups.logic()
-      markupsLogic.JumpSlicesToNthPointInMarkup(markupsNode.GetID(),0,True)
-      slicer.mrmlScene.RemoveNode(markupsNode)
+      centerList = center.GetCenter()
+    elif isinstance(node, slicer.vtkMRMLMarkupsCurveNode):
+      centerList = [0] * 3
+      node.GetNthControlPointPosition(round(node.GetNumberOfControlPoints()/2),centerList)
+    else:
+      return
+    SmudgeModuleLogic().centerPosition(centerList)
+    
+
+  def dataTreeTypeToggle(self, b):
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    if self.sceneRadioButton.isChecked():
+      self.dataTreeWidget.nodeTypes = ('vtkMRMLModelNode','vtkMRMLFolderDisplayNode')
+      self.dataTreeWidget.attributeNameFilter = ('')
+    elif self.atlasesRadioButton.isChecked():
+      self.dataTreeWidget.nodeTypes = ('vtkMRMLModelNode','vtkMRMLFolderDisplayNode')
+      self.dataTreeWidget.attributeNameFilter = ('atlas')
+    elif self.drawingsRadioButton.isChecked():
+      self.dataTreeWidget.nodeTypes = ('vtkMRMLMarkupsCurveNode','vtkMRMLFolderDisplayNode')
+      self.dataTreeWidget.attributeNameFilter = ('drawing')
+    elif self.fiducialsRadioButton.isChecked():
+      self.dataTreeWidget.attributeNameFilter = ('fiducial')
+    # reset settings
+    self.dataTreeWidget.expandToDepth(0)
+
 
   def onUndoButton(self):
     SmudgeModuleLogic().removeRedoTransform()
     redoTransformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
     self.parameterNode.SetParameter("redoTransformID", redoTransformID)
+    # apply to anchor points
+    redoTransformNode = slicer.util.getNode(redoTransformID)
+    SmudgeModuleLogic().applyChangesToAnchorPoints(redoTransformNode.GetTransformFromParent())
 
   def onRedoButton(self):
     # see if smudging. aux transform causes problems here
@@ -527,6 +548,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # apply
     warpNode.SetAndObserveTransformNodeID(redoTransformNode.GetID())
     warpNode.HardenTransform()
+    SmudgeModuleLogic().applyChangesToAnchorPoints(redoTransformNode.GetTransformToParent())
     # delete redo transform
     slicer.mrmlScene.RemoveNode(redoTransformNode)
     self.parameterNode.SetParameter("redoTransformID","")
@@ -546,7 +568,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # update gui
     self.updateGuiFromMRML()
     self.parameterNode.SetParameter("warpModified", str(int(self.parameterNode.GetParameter("warpModified"))+1) )
-
 
 
   def toogleTools(self):
@@ -592,6 +613,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def exit(self):
     self.noneButton.setChecked(True)
+    self.toogleTools()
+    SmudgeModuleLogic().removeRedoTransform()
     SmudgeModuleLogic().effectOff()
 
   def onInteractionModeChanged(self, caller, event):
@@ -631,10 +654,11 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("maxRadius", "50")
     node.SetParameter("hardness", "40")
     node.SetParameter("force", "100")
-    node.SetParameter("sigma", "5")
+    node.SetParameter("sigma", "2")
     node.SetParameter("expandEdge", "0")
     node.SetParameter("warpModified","0")
     node.SetParameter("drawingsRootItem","0")
+    node.SetParameter("lastOperation","")
     # lead dbs specific
     node.SetParameter("affineTransformID", "")
     node.SetParameter("templateID", "")
@@ -655,6 +679,13 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     if redoTransformID != "":
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(redoTransformID))
       parameterNode.SetParameter("redoTransformID","")
+
+  def removeLastDrawing(self):
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    drawingsRootItem = int(self.getParameterNode().GetParameter("drawingsRootItem"))
+    ids = vtk.vtkIdList()
+    shNode.GetItemChildren(drawingsRootItem,ids,False)
+    shNode.RemoveItem(ids.GetId(ids.GetNumberOfIds()-1))
 
   def effectOn(self, effectName):
     
@@ -678,6 +709,19 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     WarpEffect.WarpEffectTool.empty()
 
 
+  def applyChangesToAnchorPoints(self, transform):
+    # get drawings
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    drawingsRootItem = int(self.getParameterNode().GetParameter("drawingsRootItem"))
+    childrenIDs = vtk.vtkIdList()
+    shNode.GetItemChildren(drawingsRootItem, childrenIDs, True)
+    # apply transform to all source points
+    for i in range(childrenIDs.GetNumberOfIds()):
+      dataNode = shNode.GetItemDataNode(childrenIDs.GetId(i))
+      if dataNode and dataNode.GetName() == 'source':
+        dataNode.ApplyTransform(transform)
+
+
   def getExpandedGrid(self):
     # create aux transform with same grid as warp
     parameterNode = self.getParameterNode()
@@ -690,7 +734,14 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
 
     return size, origin, spacing
 
-
+  def centerPosition(self, centerList):
+    # create markups node, add center as fiducial and jump and center slices
+    markupsNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    markupsNode.GetDisplayNode().SetVisibility(False)
+    markupsNode.AddFiducialFromArray(np.array(centerList),'')
+    markupsLogic = slicer.modules.markups.logic()
+    markupsLogic.JumpSlicesToNthPointInMarkup(markupsNode.GetID(),0,True)
+    slicer.mrmlScene.RemoveNode(markupsNode)
 
 
 
