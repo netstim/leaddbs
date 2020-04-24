@@ -36,6 +36,12 @@ for side = 1:numSide
         [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
         vatmm = ea_vox2mm([xvox, yvox, zvox], vat.mat);
         filter = all(fibers(:,1:3)>=min(vatmm),2) & all(fibers(:,1:3)<=max(vatmm), 2);
+
+        % Skip further calculation in case VAT is totally not connected
+        if ~any(filter)
+            continue;
+        end
+
         trimmedFiber = fibers(filter,:);
 
         % Map mm connectome fibers into VAT voxel space
