@@ -25,27 +25,27 @@ else
     spfx='r';
 end
 
-% get GM, CSF TC:
-rest=ea_load_nii([directory,spfx,restfname,'.nii']);
-signallength=size(rest.img,4);
-interpol_tc=nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
-for tmpt = 1:signallength % for GM-, WM-mask
-    thisvol=rest.img(:,:,:,tmpt);
-    interpol_tc(:,tmpt)=thisvol(:);
-end
+%% Get GM, WM and CSF
+c1=ea_load_nii([directory,'r',restfname,'_c1',options.prefs.prenii_unnormalized]);
+c2=ea_load_nii([directory,'r',restfname,'_c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'r',restfname,'_c3',options.prefs.prenii_unnormalized]);
+
 %% Extract timecourses of complete volume for signal regression..
-%alltc=spm_read_vols(spm_vol(restfilename));
+rest = ea_load_nii([directory,spfx,restfname,'.nii']);
+signallength = size(rest.img,4);
+interpol_tc = nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
+for tmpt = 1:signallength
+    thisvol = rest.img(:,:,:,tmpt);
+    thisvol = thisvol .* logical(c1.img+c2.img+c3.img); % Mask out voxels outside the brain
+    interpol_tc(:,tmpt) = thisvol(:);
+end
 
 load([directory,'TR.mat']);
 
 %% Data corrections steps
-
 disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
-c2=ea_load_nii([directory,'r',restfname,'_c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'r',restfname,'_c3',options.prefs.prenii_unnormalized]);
-
 ec2map=c2.img(:); ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img(:); ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
 
