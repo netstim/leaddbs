@@ -345,18 +345,16 @@ for field=1:length(fn)
 end
 
 % Check if the transformation already exists
-xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+xfm = [anatfname, '2', ea_stripext(reference), '_', lower(coregmethod), '\d*\.(mat|h5)$'];
 transform = ea_regexpdir(directory, xfm, 0);
 
 if numel(transform) == 0
     warning('Transformation not found! Running coregistration now!');
     transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
         [directory,reference],...
-        [directory,refname,'_',options.prefs.prenii_unnormalized],...
+        [directory,'tmp.nii'],...
         [],1,[],1);
-    % Fix transformation names, replace 'mean' by 'r'
-    cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
-    transform = strrep(transform, 'mean', 'r');
+    ea_delete([directory,'tmp.nii']);
     transform = transform{1}; % Forward transformation
 else
     if numel(transform) > 1
