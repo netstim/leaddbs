@@ -327,10 +327,8 @@ end
 
 options.coregmr.method = coregmethod;
 
-
 % for this pair of approved coregistations, find out which method to use -
 % irrespective of the current selection in coregmethod.
-
 coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
 fn=fieldnames(coregmethodsused);
 for field=1:length(fn)
@@ -340,7 +338,6 @@ for field=1:length(fn)
         break
     end
 end
-
 
 % Check if the transformation already exists
 xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];

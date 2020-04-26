@@ -125,9 +125,6 @@ for i=1:3
         transform, 'linear');
 end
 
-% % Fix transformation names, replace 'mean' by 'r'
-% cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
-
 
 function ea_smooth_fmri(signallength,options)
 directory=[options.root,options.patientname,filesep];
