@@ -5,6 +5,9 @@ if ~exist('Iperm','var')
 else % used in permutation based statistics - in this case the real improvement can be substituted with permuted variables.
     I=Iperm;
 end
+if obj.multresponsevarneg % flag to multiply response var by -1
+    I=-I;
+end
 fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
 
 % quickly recalc stats:

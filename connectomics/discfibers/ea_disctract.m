@@ -32,6 +32,7 @@ classdef ea_disctract < handle
         mirrorsides = 0 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
         responsevar % response variable
         responsevarlabel % label of response variable
+        multresponsevarneg = 0 % multiply response variable by -1
         covars = {} % covariates
         covarlabels = {} % covariate labels
         analysispath % where to store results
@@ -309,7 +310,7 @@ classdef ea_disctract < handle
 
         function draw(obj)
             [vals]=ea_disc_calcstats(obj);
-            obj.stats.pos.available(1)=sum(vals{1,1}>0);
+            obj.stats.pos.available(1)=sum(vals{1,1}>0); % need to move those into calcstats
             obj.stats.neg.available(1)=sum(vals{1,1}<0);
             obj.stats.pos.available(2)=sum(vals{1,2}>0);
             obj.stats.neg.available(2)=sum(vals{1,2}<0);
@@ -356,12 +357,12 @@ classdef ea_disctract < handle
                     negvals{group,side}=sort(vals{group,side}(vals{group,side}<0),'ascend');
 
                     try
-                        posthresh{group,side}=posvals{group,side}(ceil(((obj.showposamount(side)+eps)/100)*length(posvals{group,side})));
+                        posthresh{group,side}=posvals{group,side}(end);
                     catch
                         posthresh{group,side}=inf;
                     end
                     try
-                        negthresh{group,side}=negvals{group,side}(ceil(((obj.shownegamount(side)+eps)/100)*length(negvals{group,side})));
+                        negthresh{group,side}=negvals{group,side}(end);
                     catch
                         negthresh{group,side}=-inf;
                     end
