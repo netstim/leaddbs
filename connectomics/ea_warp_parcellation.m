@@ -104,7 +104,7 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
     options.coregmr.method = coregmethod;
 
     % Check if the corresponding transform already exists
-    xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+    xfm = [anatfname, '2', ea_stripext(reference), '_', lower(coregmethod), '\d*\.(mat|h5)$'];
     transform = ea_regexpdir(directory, xfm, 0);
 
     if numel(transform) == 0 || overwrite
@@ -114,13 +114,9 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
 
         transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
             [directory,reference],...
-            [directory,refname,'_',options.prefs.prenii_unnormalized],...
+            [directory,'tmp.nii'],...
             [],1,[],1);
-        % Fix transformation names, replace 'mean' by 'r' for fMRI
-        if strcmp(reference, ['mean', options.prefs.rest])
-            cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
-            transform = strrep(transform, 'mean', 'r');
-        end
+        ea_delete([directory,'tmp.nii']);
         transform = transform{1}; % Forward transformation
     else
         if numel(transform) > 1
