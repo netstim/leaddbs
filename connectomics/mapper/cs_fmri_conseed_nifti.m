@@ -248,24 +248,30 @@ for s=1:length(seedfile)
         end
 
         options.coregmr.method = coregmethod;
-        % Check if the transformation already exists
-        xfm = ['r', restfname, '2', anatfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
-        transform = ea_regexpdir(directory, xfm, 0);
-        
-        % Re-calculate mean re-aligned image if not found
-        if ~exist([directory, 'mean', restfname, '.nii'], 'file')
-            ea_meanimage([directory, 'r', restfname, '.nii'], ['mean', restfname, '.nii']);
+
+        % for this pair of approved coregistations, find out which method to use -
+        % irrespective of the current selection in coregmethod.
+        coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
+        fn=fieldnames(coregmethodsused);
+        for field=1:length(fn)
+            if contains(fn{field},['r',restfname])
+                disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
+                options.coregmr.method=coregmethodsused.(fn{field});
+                break
+            end
         end
-        
+
+        % Check if the transformation already exists
+        xfm = ['hdmean', restfname, '2', anatfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+        transform = ea_regexpdir(directory, xfm, 0);
+
         if numel(transform) == 0
             warning('Transformation not found! Running coregistration now!');
             transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
-                [directory, 'mean', restfname, '.nii'],...
-                [directory, 'r', restfname, '_', options.prefs.prenii_unnormalized],...
+                [directory, 'hdmean', restfname, '.nii'],...
+                [directory,'tmp.nii'],...
                 [],1,[],1);
-            % Fix transformation names, replace 'mean' by 'r'
-            cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
-            transform = strrep(transform, 'mean', 'r');
+            ea_delete([directory,'tmp.nii']);
             transform = transform{2}; % Inverse transformation
         else
             if numel(transform) > 1
