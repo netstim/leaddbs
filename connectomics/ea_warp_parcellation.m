@@ -66,14 +66,16 @@ end
 [~,refname]=fileparts(reference);
 [~,anatfname]=fileparts(options.prefs.prenii_unnormalized);
 
-% For fMRI, the real reference image is 'meanrest_*.nii' rather than 'rrest_*.nii'
+% For fMRI, the real reference image is 'hdmeanrest_*.nii' rather than 'rrest_*.nii'
 if strcmp(reference, ['r', options.prefs.rest])
     reference = ['hdmean', options.prefs.rest];
-    % Re-calculate mean re-aligned image if not found
+    % Re-calculate hdmean re-aligned image if not found
     if ~exist([directory, reference], 'file')
-        if ~exist(['mean', options.prefs.rest],'file')
+        % Re-calculate mean re-aligned image if not found
+        if ~exist([directory, 'mean', options.prefs.rest],'file')
             ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
         end
+        % Reslice mean re-aligned image to hd re-aligned image
         ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],0);
     end
 
