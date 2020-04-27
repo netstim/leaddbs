@@ -226,17 +226,17 @@ classdef ea_disctract < handle
                 end
 
                 if ~exist('Iperm', 'var')
-                    [vals] = ea_disc_calcstats(obj, obj.patientselection(training));
+                    [vals,~,usedidx] = ea_disc_calcstats(obj, obj.patientselection(training));
                 else
-                    [vals] = ea_disc_calcstats(obj, obj.patientselection(training), Iperm);
+                    [vals,~,usedidx] = ea_disc_calcstats(obj, obj.patientselection(training), Iperm);
                 end
 
                 for side=1:2
                     switch obj.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{side}(:,obj.patientselection(test)));
+                            Ihat(test,side) = ea_nansum(vals{1,side}'.*fibsval{1,side}(usedidx{1,side},obj.patientselection(test)));
                         case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
-                            Ihat(test,side) = ea_nansum(vals{1,side}.*nfibsval{side}(:,obj.patientselection(test)));
+                            Ihat(test,side) = ea_nansum(vals{1,side}'.*nfibsval{side}(usedidx{1,side},obj.patientselection(test)));
                     end
                 end
                 ea_dispercent(c/cvp.NumTestSets);
@@ -309,11 +309,7 @@ classdef ea_disctract < handle
         end
 
         function draw(obj)
-            [vals]=ea_disc_calcstats(obj);
-            obj.stats.pos.available(1)=sum(vals{1,1}>0); % need to move those into calcstats
-            obj.stats.neg.available(1)=sum(vals{1,1}<0);
-            obj.stats.pos.available(2)=sum(vals{1,2}>0);
-            obj.stats.neg.available(2)=sum(vals{1,2}<0);
+            [vals,fibcell]=ea_disc_calcstats(obj);
 
             set(0,'CurrentFigure',obj.resultfig);
 
@@ -347,11 +343,10 @@ classdef ea_disctract < handle
                 negUpperBound=ceil(size(fibcmap{group},1)/2*colorbarThreshold);
                 poslowerBound=floor((size(fibcmap{group},1)-size(fibcmap{group},1)/2*colorbarThreshold));
                 for side=1:2
-                    fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));
+
                     if dogroups % introduce small jitter for visualization
                         fibcell{group,side}=ea_disc_addjitter(fibcell{group,side},0.01);
                     end
-                    vals{group,side}=vals{group,side}(~isnan(vals{group,side}))'; % final weights for surviving fibers
 
                     posvals{group,side}=sort(vals{group,side}(vals{group,side}>0),'descend');
                     negvals{group,side}=sort(vals{group,side}(vals{group,side}<0),'ascend');
@@ -366,10 +361,6 @@ classdef ea_disctract < handle
                     catch
                         negthresh{group,side}=-inf;
                     end
-                    % Remove vals and fibers outside the thresholding range
-                    remove=logical(logical(vals{group,side}<posthresh{group,side}) .* logical(vals{group,side}>negthresh{group,side}));
-                    vals{group,side}(remove)=[];
-                    fibcell{group,side}(remove)=[];
 
                     tvalsRescale{group,side} = vals{group,side};
                     tvalsRescale{group,side}(vals{group,side}>0) = ea_rescale(vals{group,side}(vals{group,side}>0), [0 1]);
