@@ -57,7 +57,7 @@ end
 
 if exist('colors', 'var')
     map = colors;
-    if isnumeric(map)
+    if isnumeric(map) && ~isempty(group1)
         if size(map,1) ~= numel(unique(group1.idx))
             error('Number of custom colors doesn''t match number of categories!');
         end
@@ -122,7 +122,7 @@ if ~isempty(group2) && ~isempty(group1)
     set(h,'Position',[100 100 650 550]);
 elseif ~isempty(group2) && isempty(group1)
     g.update('marker',group2.idx);
-    g.set_color_options('map',map);
+    g.set_color_options();
     g.set_names('marker',group2.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
