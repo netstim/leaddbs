@@ -32,6 +32,7 @@ classdef ea_disctract < handle
         mirrorsides = 0 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
         responsevar % response variable
         responsevarlabel % label of response variable
+        multresponsevarneg = 0 % multiply response variable by -1
         covars = {} % covariates
         covarlabels = {} % covariate labels
         analysispath % where to store results
@@ -93,21 +94,16 @@ classdef ea_disctract < handle
                 end
             end
 
-            cfile=[ea_getconnectomebase('dMRI'),obj.connectome,filesep,'data.mat'];
-            [fibcell,fibsin,XYZmm,niivx,valsmm]=ea_discfibers_getfibcell(obj,cfile);
-            switch obj.statmetric
-                case 1 % ttests
-                    [fibsval]=ea_discfibers_heatfibertracts(obj,fibcell,fibsin,XYZmm,niivx);
-                    % Main output of results - this is all we will ever need if statmetric
-                    % and connectome wont change
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval=fibsval;
-                case 2 % spearmans R
-                    [fibsval_sum,fibsval_mean,fibsval_peak,fibsval_5peak]=ea_discfibers_heatfibertracts_corr(obj,fibcell,XYZmm,niivx,valsmm);
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Sum')).fibsval=fibsval_sum;
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Mean')).fibsval=fibsval_mean;
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Peak')).fibsval=fibsval_peak;
-                    obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj,'Peak 5%')).fibsval=fibsval_5peak;
-            end
+            cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
+            vatlist = ea_discfibers_getvats(obj);
+            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile);
+
+            obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
+            obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
+            obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
+            obj.results.(ea_conn2connid(obj.connectome)).('spearman_peak').fibsval = fibsvalPeak;
+            obj.results.(ea_conn2connid(obj.connectome)).('spearman_5peak').fibsval = fibsval5Peak;
+            obj.results.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
         end
 
         function Amps = getstimamp(obj)
@@ -210,7 +206,7 @@ classdef ea_disctract < handle
             % Ihat is the estimate of improvements (not scaled to real improvements)
             Ihat = nan(length(obj.patientselection),2);
 
-            fibsval = obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+            fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
             for side=1:2  % only used in spearmans correlations
                 if obj.statmetric==2
                     nfibsval{side} = fibsval{side};
@@ -230,17 +226,17 @@ classdef ea_disctract < handle
                 end
 
                 if ~exist('Iperm', 'var')
-                    [vals] = ea_disc_calcstats(obj, obj.patientselection(training));
+                    [vals,~,usedidx] = ea_disc_calcstats(obj, obj.patientselection(training));
                 else
-                    [vals] = ea_disc_calcstats(obj, obj.patientselection(training), Iperm);
+                    [vals,~,usedidx] = ea_disc_calcstats(obj, obj.patientselection(training), Iperm);
                 end
 
                 for side=1:2
                     switch obj.statmetric
                         case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{side}(:,obj.patientselection(test)));
+                            Ihat(test,side) = ea_nansum(vals{1,side}'.*fibsval{1,side}(usedidx{1,side},obj.patientselection(test)));
                         case 2 % spearmans correlations, efields - see Li et al. 2019 TBP
-                            Ihat(test,side) = ea_nansum(vals{1,side}.*nfibsval{side}(:,obj.patientselection(test)));
+                            Ihat(test,side) = ea_nansum(vals{1,side}'.*nfibsval{side}(usedidx{1,side},obj.patientselection(test)));
                     end
                 end
                 ea_dispercent(c/cvp.NumTestSets);
@@ -259,7 +255,7 @@ classdef ea_disctract < handle
                 corrType = 'Spearman';
             end
 
-            fibsval=obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval;
+            fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
             for side=1:2
                 nfibsval{side}=fibsval{side};
                 nfibsval{side}(nfibsval{side}==0)=0; % only used in spearmans correlations
@@ -313,11 +309,7 @@ classdef ea_disctract < handle
         end
 
         function draw(obj)
-            [vals]=ea_disc_calcstats(obj);
-            obj.stats.pos.available(1)=sum(vals{1,1}>0);
-            obj.stats.neg.available(1)=sum(vals{1,1}<0);
-            obj.stats.pos.available(2)=sum(vals{1,2}>0);
-            obj.stats.neg.available(2)=sum(vals{1,2}<0);
+            [vals,fibcell]=ea_disc_calcstats(obj);
 
             set(0,'CurrentFigure',obj.resultfig);
 
@@ -351,29 +343,24 @@ classdef ea_disctract < handle
                 negUpperBound=ceil(size(fibcmap{group},1)/2*colorbarThreshold);
                 poslowerBound=floor((size(fibcmap{group},1)-size(fibcmap{group},1)/2*colorbarThreshold));
                 for side=1:2
-                    fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));
+
                     if dogroups % introduce small jitter for visualization
                         fibcell{group,side}=ea_disc_addjitter(fibcell{group,side},0.01);
                     end
-                    vals{group,side}=vals{group,side}(~isnan(vals{group,side}))'; % final weights for surviving fibers
 
                     posvals{group,side}=sort(vals{group,side}(vals{group,side}>0),'descend');
                     negvals{group,side}=sort(vals{group,side}(vals{group,side}<0),'ascend');
 
                     try
-                        posthresh{group,side}=posvals{group,side}(ceil(((obj.showposamount(side)+eps)/100)*length(posvals{group,side})));
+                        posthresh{group,side}=posvals{group,side}(end);
                     catch
                         posthresh{group,side}=inf;
                     end
                     try
-                        negthresh{group,side}=negvals{group,side}(ceil(((obj.shownegamount(side)+eps)/100)*length(negvals{group,side})));
+                        negthresh{group,side}=negvals{group,side}(end);
                     catch
                         negthresh{group,side}=-inf;
                     end
-                    % Remove vals and fibers outside the thresholding range
-                    remove=logical(logical(vals{group,side}<posthresh{group,side}) .* logical(vals{group,side}>negthresh{group,side}));
-                    vals{group,side}(remove)=[];
-                    fibcell{group,side}(remove)=[];
 
                     tvalsRescale{group,side} = vals{group,side};
                     tvalsRescale{group,side}(vals{group,side}>0) = ea_rescale(vals{group,side}(vals{group,side}>0), [0 1]);

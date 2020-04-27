@@ -49,16 +49,7 @@ M.ui.groupdir = get(handles.groupdir_choosebox,'String');
 
 disp('Refreshing selections on VI / FC Lists...');
 
-M.groups.group=unique(M.patient.group); % STN, GPi, Thalamus, cZi
-%groupcolors=squeeze(ind2rgb(round([1:9]*(64/9)),jet));
 
-if ~isfield(M.groups,'color')
-    M.groups.color=repmat(0.7,length(M.groups.group),3);
-end
-
-if ~isequal(size(M.groups.color),[length(M.groups.group),3])
-    M.groups.color=repmat(0.7,length(M.groups.group),3);
-end
 
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 
@@ -113,6 +104,18 @@ else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
 
+
+% check if groups are okay
+if ~isequal((unique(M.patient.group)),M.groups.group)
+    % reassign groups and colors
+    M.groups.group=unique(M.patient.group);
+    C=ea_color_wes('all');
+    C=rgb2hsv(C);
+    C(:,2)=C(:,2)./2;
+    C=hsv2rgb(C);
+    M.groups.color=C(M.groups.group,:);
+    M.groups.colorschosen=1;
+end
 % make choosecolors button green if chosen.
 if isfield(M.groups,'colorschosen')
     set(handles.choosegroupcolors,'BackgroundColor',[0.1;0.8;0.1]);
@@ -186,7 +189,9 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             options.native=0;
             try
                 [options.root,options.patientname]=fileparts(M.patient.list{pt});
-                options.root=[options.root,filesep];
+                if ~isempty(options.root)
+                    options.root=[options.root,filesep];
+                end
                 options = ea_resolve_elspec(options);
                 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
                     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);

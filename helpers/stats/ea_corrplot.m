@@ -1,6 +1,7 @@
-function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm)
-% Wrapper for gramm to produce a simple correlation plot. Group1 denotes
-% colors, Group2 Markers.
+function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm,colors)
+% Wrapper for gramm to produce a simple correlation plot.
+% Group1 denotes colors, Group2 Markers.
+% Can also specify custom colors
 % (c) Andreas Horn 2019 Charite Berlin
 
 % Example usage:
@@ -11,7 +12,7 @@ function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm)
 % ea_corrplot(X,Y)
 %
 % group1cell={'Prague','Berlin','London','Moscow','Paris','Madrid'};
-% group1.idx=group1cell(ceil(rand(100,1)*5));
+% group1.idx=group1cell(ceil(rand(100,1)*6));
 % group1.tag='Cohort';
 %
 % group2cell={'Parkinson','Alzheimer'};
@@ -19,9 +20,6 @@ function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm)
 % group2.tag='Disease';
 %
 % ea_corrplot(X,Y,{'Example Correlation','Age','Disease Duration'},'spearman',group1,group2)
-
-
-
 
 if ~exist('labels','var')
     labels={'','X','Y'};
@@ -35,11 +33,10 @@ if ~exist('corrtype','var')
     corrtype='Pearson';
 end
 
-
 if ~exist('group1','var')
     group1=[];
 else
-    if ~isstruct(group1)
+    if ~isempty(group1) && ~isstruct(group1)
         group1s.idx=group1;
         group1s.tag='group';
         clear group1
@@ -47,11 +44,10 @@ else
     end
 end
 
-
 if ~exist('group2','var')
     group2=[];
 else
-    if ~isstruct(group2)
+    if ~isempty(group2) && ~isstruct(group2)
         group2s.idx=group2;
         group2s.tag='type';
         clear group2
@@ -59,10 +55,20 @@ else
     end
 end
 
+if exist('colors', 'var')
+    map = colors;
+    if isnumeric(map) && ~isempty(group1)
+        if size(map,1) ~= numel(unique(group1.idx))
+            error('Number of custom colors doesn''t match number of categories!');
+        end
+    end
+else
+    map = 'lch';
+end
+
 switch corrtype
     case {'permutation_spearman','permutation'}
         for tries=1:3
-            
             try
                 [R,p]=ea_permcorr(X,Y,'spearman');
             end
@@ -72,7 +78,7 @@ switch corrtype
         end
     case 'permutation_pearson'
         for tries=1:3
-            
+
             try
                 [R,p]=ea_permcorr(X,Y,'pearson');
             end
@@ -83,7 +89,6 @@ switch corrtype
     otherwise
         [R,p]=corr(X,Y,'rows','pairwise','type',corrtype);
 end
-
 
 %Corner histogram
 g=gramm('x',X,'y',Y);
@@ -97,7 +102,7 @@ g.stat_glm();
 %g.stat_cornerhist('edges',[ea_nanmean(X)-1*ea_nanstd(X):0.2:ea_nanmean(X)+1*ea_nanstd(X)],'aspect',0.6,'location',max(X));
 pstr='p';
 pv=p;
-if exist('pperm','var')
+if exist('pperm','var') && ~isempty(pperm)
     pv=pperm;
     pstr='p(perm)';
 end
@@ -110,7 +115,7 @@ h=figure('Position',[100 100 550 550]);
 g.draw();
 if ~isempty(group2) && ~isempty(group1)
     g.update('marker',group2.idx,'color',group1.idx);
-    g.set_color_options();
+    g.set_color_options('map',map);
     g.set_names('marker',group2.tag,'color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
@@ -124,7 +129,7 @@ elseif ~isempty(group2) && isempty(group1)
     set(h,'Position',[100 100 650 550]);
 elseif isempty(group2) && ~isempty(group1)
     g.update('color',group1.idx);
-    g.set_color_options();
+    g.set_color_options('map',map);
     g.set_names('color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
