@@ -1,7 +1,7 @@
-function [vatfv,vatvolume,radius]=ea_write_vta_nii(midpts,gradient,options)
+function [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
 % define midpoints of quiver field
 vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
-
+vizz=0;
 gradvis=gradient(indices,:);
 mag_gradvis=sqrt(sum(gradvis'.^2,1))';
 nmag_gradvis=mag_gradvis; % copy to get normalized version
@@ -209,8 +209,113 @@ Vvat.img = imerode(Vvat.img,SE);
 Vvat.img = imdilate(Vvat.img,SE);
 ea_write_nii(Vvat);
 
-%% old vta.nii which lead to slight systematic shifts
-% Vvat.img=surf2vol(vatfv.vertices,vatfv.faces,gv{1},gv{2},gv{3});
-% Vvat.img=imfill(Vvat.img,'holes');
-% Vvat.fname = [Vvat.fname(1:end-4) '_old.nii'];
-% ea_write_nii(Vvat);
+
+function vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec)
+
+% anonymous functions for rotation matrices
+rotx = @(t) [1 0 0; 0 cosd(t) -sind(t) ; 0 sind(t) cosd(t)] ;
+roty = @(t) [cosd(t) 0 sind(t) ; 0 1 0 ; -sind(t) 0  cosd(t)] ;
+rotz = @(t) [cosd(t) -sind(t) 0 ; sind(t) cosd(t) 0; 0 0 1] ;
+
+% Remove electrode
+vat.pos(mesh.tissue>2,:) = [];
+vat.ET(mesh.tissue>2) = [];
+
+oldlocas = vat.pos;
+
+% Assign tip of electrode as origin
+org = elstruct.trajectory{1,side}(1,:);
+tra = elstruct.trajectory{1,side} - org;
+pos = vat.pos - org;
+
+% Rotate coordinate system so that y-axis aligns with electrode
+elvec = (tra(end,:))';
+yvec = [0 1 0]';
+
+th1 = atan2d(elvec(2),elvec(1));
+M1z = rotz(-th1);
+th2 = atan2d(yvec(2),yvec(1));
+M2z = rotz(-th2);
+v1 = M1z*elvec;
+v2 = M2z*yvec;
+b = atan2d(v2(1),v2(3));
+a = atan2d(v1(1),v1(3));
+My = roty(b-a);
+R = M2z'*My*M1z;
+r_elvec = R*elvec;
+
+if r_elvec(1) + r_elvec(3) > 0.01
+    disp('Error in electrode removal: Rotation did not align along y-axis')
+end
+
+r_pos = R*pos';
+
+cr_pos = r_pos(:,r_pos(2,:)>0); % Determine all points at electrode level
+fact = (vecnorm(cr_pos([1 3],:),2)-elspec.lead_diameter/2)./vecnorm(cr_pos([1 3],:),2); % Determine shifting factors
+cr_pos([1 3],:) = cr_pos([1 3],:).*fact;
+cr_pos(:,fact<0) = nan;
+
+r_pos(:,r_pos(2,:)>0) = cr_pos;
+artpts = find(isnan(r_pos(1,:)));
+
+% Rotate back
+yvec = (tra(end,:))';
+elvec = [0 1 0]';
+th1 = atan2d(elvec(2),elvec(1));
+M1z = rotz(-th1);
+th2 = atan2d(yvec(2),yvec(1));
+M2z = rotz(-th2);
+v1 = M1z*elvec;
+v2 = M2z*yvec;
+b = atan2d(v2(1),v2(3));
+a = atan2d(v1(1),v1(3));
+My = roty(b-a);
+R = M2z'*My*M1z;
+
+vat.pos = R*r_pos+org';
+
+% Remove potential artefacts
+vat.pos(:,artpts) = [];
+vat.ET(artpts) = [];
+
+oldlocas(artpts,:) = [];
+
+moved = vecnorm(vat.pos-oldlocas',2);
+moved(moved<0.2) = [];
+moved = abs(moved-elspec.lead_diameter/2);
+
+if max(moved)>0.2
+    disp('something went wrong during electrode removal... point movement too great or too small');
+end
+
+vat.pos = vat.pos';
+
+function outliers=ea_removeoutliers(pointcloud,dpvx,voltix,constvol)
+% using the heuristic Maedler/Coenen model to detect outliers
+vmax=max(abs(voltix));
+
+if ~constvol
+   vmax=vmax*1000;
+end
+r=maedler12_eq3(vmax,1000);
+r=r*4.5;
+mp=dpvx;
+
+D=pointcloud-repmat(mp,size(pointcloud,1),1);
+S=[r,r,r];%std(D,[],1); % fixed 50 cm
+outliers=D>repmat(S,size(D,1),1);
+outliers=any(outliers,2);
+
+function r=maedler12_eq3(U,Im)
+% This function radius of Volume of Activated Tissue for stimulation settings U and Ohm. See Maedler 2012 for details.
+% Clinical measurements of DBS electrode impedance typically range from
+% 500?1500 Ohm (Butson 2006).
+r=0; %
+if U %(U>0)
+
+    k1=-1.0473;
+    k3=0.2786;
+    k4=0.0009856;
+
+    r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)/(2*k3);
+end
