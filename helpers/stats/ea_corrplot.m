@@ -1,6 +1,7 @@
-function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm)
-% Wrapper for gramm to produce a simple correlation plot. Group1 denotes
-% colors, Group2 Markers.
+function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm,colors)
+% Wrapper for gramm to produce a simple correlation plot.
+% Group1 denotes colors, Group2 Markers.
+% Can also specify custom colors
 % (c) Andreas Horn 2019 Charite Berlin
 
 % Example usage:
@@ -59,6 +60,17 @@ else
     end
 end
 
+if exist('colors', 'var')
+    map = colors;
+    if isnumeric(map)
+        if size(map,1) ~= numel(unique(group1.idx))
+            error('Number of custom colors doesn''t match number of categories!');
+        end
+    end
+else
+    map = 'lch';
+end
+
 switch corrtype
     case {'permutation_spearman','permutation'}
         for tries=1:3
@@ -110,21 +122,21 @@ h=figure('Position',[100 100 550 550]);
 g.draw();
 if ~isempty(group2) && ~isempty(group1)
     g.update('marker',group2.idx,'color',group1.idx);
-    g.set_color_options();
+    g.set_color_options('map',map);
     g.set_names('marker',group2.tag,'color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
     set(h,'Position',[100 100 650 550]);
 elseif ~isempty(group2) && isempty(group1)
     g.update('marker',group2.idx);
-    g.set_color_options();
+    g.set_color_options('map',map);
     g.set_names('marker',group2.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
     set(h,'Position',[100 100 650 550]);
 elseif isempty(group2) && ~isempty(group1)
     g.update('color',group1.idx);
-    g.set_color_options();
+    g.set_color_options('map',map);
     g.set_names('color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
