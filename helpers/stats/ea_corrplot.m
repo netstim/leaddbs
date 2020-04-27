@@ -36,7 +36,7 @@ end
 if ~exist('group1','var')
     group1=[];
 else
-    if ~isstruct(group1)
+    if ~isempty(group1) && ~isstruct(group1)
         group1s.idx=group1;
         group1s.tag='group';
         clear group1
@@ -47,7 +47,7 @@ end
 if ~exist('group2','var')
     group2=[];
 else
-    if ~isstruct(group2)
+    if ~isempty(group2) && ~isstruct(group2)
         group2s.idx=group2;
         group2s.tag='type';
         clear group2
