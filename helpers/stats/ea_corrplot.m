@@ -102,7 +102,7 @@ g.stat_glm();
 %g.stat_cornerhist('edges',[ea_nanmean(X)-1*ea_nanstd(X):0.2:ea_nanmean(X)+1*ea_nanstd(X)],'aspect',0.6,'location',max(X));
 pstr='p';
 pv=p;
-if exist('pperm','var')
+if exist('pperm','var') && ~isempty(pperm)
     pv=pperm;
     pstr='p(perm)';
 end
