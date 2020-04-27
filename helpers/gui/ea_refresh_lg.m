@@ -111,7 +111,7 @@ if ~isequal((unique(M.patient.group)),M.groups.group)
     M.groups.group=unique(M.patient.group);
     C=ea_color_wes('all');
     C=rgb2hsv(C);
-    C(:,2)=C(:,2)./3;
+    C(:,2)=C(:,2)./2;
     C=hsv2rgb(C);
     M.groups.color=C(M.groups.group,:);
     M.groups.colorschosen=1;
