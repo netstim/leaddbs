@@ -156,12 +156,15 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
     PointerEffectTool.processEvent(self, caller, event)
 
   def scaleRadius(self,scaleFactor):
-    radius = float(self.parameterNode.GetParameter("radius"))
-    self.parameterNode.SetParameter( "radius", str(radius * scaleFactor) )
+    effectRadius = self.parameterNode.GetParameter("currentEffect") + "Radius"
+    radius = float(self.parameterNode.GetParameter(effectRadius))
+    self.parameterNode.SetParameter(effectRadius, str(radius * scaleFactor) )
     
   def updateGlyph(self, caller, event):
-    r = float(self.parameterNode.GetParameter("radius"))
-    self.createGlyph(self.brush, r)
+    effectName = self.parameterNode.GetParameter("currentEffect")
+    if effectName in ['Smudge','Blur']:
+      r = float(self.parameterNode.GetParameter(effectName + "Radius"))
+      self.createGlyph(self.brush, r)
 
   def cleanup(self):
     super(CircleEffectTool,self).cleanup()

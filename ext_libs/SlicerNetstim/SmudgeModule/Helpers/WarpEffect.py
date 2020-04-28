@@ -16,9 +16,11 @@ class WarpEffectTool():
 
   _instances = set()
 
-  def __init__(self):
+  def __init__(self, warpNode = True):
     self._instances.add(self)
     self.parameterNode = SmudgeModule.SmudgeModuleLogic().getParameterNode()
+    if warpNode:
+      self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
 
   def createSphere(self, r):
     # create a sphere with redius
@@ -26,7 +28,8 @@ class WarpEffectTool():
     sphereResult = (xx-r) ** 2 + (yy-r) ** 2 + (zz-r) ** 2
     sphereResult[r][r][r] = 1 # replace 0 by 1
     sphereLarge = sphereResult <= (r**2+1) # sphere that the mouse shows
-    sphereSmall = sphereResult <= ((r * float(self.parameterNode.GetParameter("hardness")) / 100.0) **2 + 1 ) # hardness amount
+    currentEffect = self.parameterNode.GetParameter("currentEffect")
+    sphereSmall = sphereResult <= ((r * float(self.parameterNode.GetParameter(currentEffect + "Hardness")) / 100.0) **2 + 1 ) # hardness amount
     sphereResult = 1.0 / sphereResult # invert
     # get value in the edge of the small sphere
     i1,i2,i3 = np.nonzero(sphereSmall)
@@ -39,7 +42,8 @@ class WarpEffectTool():
     newMinValue = sphereResult.min()
     sphereResult = (sphereResult - newMinValue) / (newMaxValue - newMinValue)
     # set force
-    sphereResult = sphereResult * float(self.parameterNode.GetParameter("force")) / 100.0
+    if currentEffect == "Smudge":
+      sphereResult = sphereResult * float(self.parameterNode.GetParameter("SmudgeForce")) / 100.0
     return sphereResult
 
   def eventPositionToRAS(self):
@@ -57,16 +61,16 @@ class WarpEffectTool():
     return currentIndex
 
   def applyChanges(self):
-    # get warp and harden transform
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    warpNode.HardenTransform()
-    warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
     # remove redo options
-    SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
+    SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
+    # flatten when there already 3 layers
+    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(self.warpNode) == 3:
+      TransformsUtil.TransformsUtilLogic().flattenTransform(self.warpNode, False)
+    # harden transform
+    self.warpNode.HardenTransform()
+    self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
     # save tool name
-    operationHistory = self.parameterNode.GetParameter("operationHistory").split(' ')
-    self.parameterNode.SetParameter("operationHistory", ' '.join(operationHistory + [self.toolName]))
-
+    self.parameterNode.SetParameter("lastOperation", self.toolName)
 
   def cleanup(self):
     pass
@@ -85,10 +89,10 @@ class WarpEffectTool():
 # None Effect
 #
 
-class NoneEffect(PointerEffect.PointerEffectTool, WarpEffectTool):
+class NoneEffectTool(PointerEffect.PointerEffectTool, WarpEffectTool):
 
   def __init__(self, sliceWidget):
-    WarpEffectTool.__init__(self)
+    WarpEffectTool.__init__(self, warpNode = False)
     PointerEffect.PointerEffectTool.__init__(self, sliceWidget)
     
 
@@ -106,8 +110,6 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
     
     self.toolName = 'smudge'
-
-    self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     
     # transform data
     self.auxTransformNode = auxTransformNode
@@ -132,8 +134,8 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     elif event == 'LeftButtonReleaseEvent':
       self.smudging = False
       # smooth
-      sigma = float(self.parameterNode.GetParameter("sigma")) / self.auxTransformSpacing
-      self.auxTransformArray[:] = np.stack([ndimage.gaussian_filter(self.auxTransformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
+      #sigma = float(self.parameterNode.GetParameter("BlurSigma")) / self.auxTransformSpacing
+      #self.auxTransformArray[:] = np.stack([ndimage.gaussian_filter(self.auxTransformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
       # apply
       self.applyChanges()
       self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)
@@ -142,7 +144,7 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     elif event == 'MouseMoveEvent':
       if self.smudging:
 
-        r = int(round(float(self.parameterNode.GetParameter("radius")) / self.auxTransformSpacing))
+        r = int(round(float(self.parameterNode.GetParameter("SmudgeRadius")) / self.auxTransformSpacing))
         sphereResult = self.createSphere(r)
         currentPoint = self.eventPositionToRAS()
         currentIndex = self.getCurrentIndex(r, currentPoint, self.auxTransfromRASToIJK)
@@ -176,7 +178,6 @@ class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     
     self.toolName = 'blur'
 
-    self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     self.warpRASToIJK = TransformsUtil.TransformsUtilLogic().getTransformRASToIJK(self.warpNode)
     self.warpSpacing = self.warpNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0] # Asume isotropic!
 
@@ -204,8 +205,8 @@ class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
       # get array 
       self.transformArray = slicer.util.array(self.warpNode.GetID())
 
-      sigma = float(self.parameterNode.GetParameter("sigma")) / self.warpSpacing
-      r = int(round(float(self.parameterNode.GetParameter("radius")) / self.warpSpacing))
+      sigma = float(self.parameterNode.GetParameter("BlurSigma")) / self.warpSpacing
+      r = int(round(float(self.parameterNode.GetParameter("BlurRadius")) / self.warpSpacing))
 
       if r != int(round(float(self.parameterNode.GetParameter("maxRadius")) / self.warpSpacing)):
         # get shpere and index
@@ -247,7 +248,6 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
 
     self.toolName = 'snap'
     
-    self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)
     self.warpBounds = [[origin[0]+spacing[0]*size[0]*i,  origin[1]+spacing[1]*size[1]*j, origin[2]+spacing[2]*size[2]*k] for i in range(2) for j in range(2) for k in range(2)]
     
@@ -306,6 +306,10 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     auxCurve.GetDisplayNode().SetGlyphScale(2)
     shNode.SetItemParent(shNode.GetItemByDataNode(auxCurve), drawingsRootItem)
     shNode.SetItemAttribute(shNode.GetItemByDataNode(auxCurve), 'drawing', '1')
+    # add and delete aux fiducial to refresh view #TODO: why doesnt it work
+    auxFid = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    shNode.SetItemAttribute(shNode.GetItemByDataNode(auxFid), 'drawing', '1')
+    slicer.mrmlScene.RemoveNode(auxFid)
 
   def samplePointsInModel(self, points, model, sampleDist = 2, maximumSearchRadius = 0.0025):
     auxCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
@@ -341,7 +345,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     Get points a radius away from the curve in normal direction
     """
     normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']])
-    radius = float(self.parameterNode.GetParameter("radius"))
+    radius = float(self.parameterNode.GetParameter("DrawSpread"))
     bpoints = []
     for i in [0, int(sourcePoints.GetNumberOfPoints()/2), sourcePoints.GetNumberOfPoints()-1]:
       # get normal direction of curve in points
@@ -381,7 +385,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     # iterete over source and target to get points
     for i in range(childrenIDs.GetNumberOfIds()):
       dataNode = shNode.GetItemDataNode(childrenIDs.GetId(i))
-      if dataNode and isinstance(dataNode, slicer.vtkMRMLMarkupsCurveNode):
+      if dataNode and isinstance(dataNode, (slicer.vtkMRMLMarkupsCurveNode,slicer.vtkMRMLMarkupsFiducialNode)):
         dataNode.GetControlPointPositionsWorld(p)
         anchorPoints.InsertPoints(anchorPoints.GetNumberOfPoints(),p.GetNumberOfPoints(),0,p)
     return anchorPoints
@@ -410,21 +414,6 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     transform.Inverse()
     transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
     transformNode.SetAndObserveTransformFromParent(transform)
-    # to grid transform
-    outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
-    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)
-    referenceVolume = TransformsUtil.TransformsUtilLogic().createEmpyVolume(size,origin,spacing) # aux reference volume with specified resolution 
-    # apply
-    transformsLogic = slicer.modules.transforms.logic()
-    transformsLogic.ConvertToGridTransform(transformNode, referenceVolume, outNode)
-    transformNode.SetAndObserveTransformFromParent(outNode.GetTransformFromParent())
-    # remove aux
-    slicer.mrmlScene.RemoveNode(outNode)
-    slicer.mrmlScene.RemoveNode(referenceVolume)
-    # smooth
-    sigma = float(self.parameterNode.GetParameter("sigma")) / spacing[0]
-    a = slicer.util.array(transformNode.GetID())
-    a[:] = np.stack([ndimage.gaussian_filter(a[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
     return transformNode
 
   def delay(self):

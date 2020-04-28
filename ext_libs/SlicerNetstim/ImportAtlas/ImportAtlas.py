@@ -6,7 +6,13 @@ import logging
 
 import sys
 import numpy as np
-import h5py
+
+try:
+  import h5py
+except:
+  slicer.util.pip_install('h5py')
+  import h5py
+
 
 #
 # ImportAtlas

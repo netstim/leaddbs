@@ -12,16 +12,14 @@ from slicer.util import VTKObservationMixin
 import glob
 import SimpleITK as sitk
 import uuid
+from PythonQt import BoolResult
 
-# import other netstim modules
-from Helpers import WarpEffect, FunctionsUtil, Toolbar
+# netstim helpers
+from Helpers import WarpEffect, FunctionsUtil, Toolbar, WarpEffectParameters
 
-# other netstim modules
+# netstim modules
 import TransformsUtil
-import ImportSubject
 import ImportAtlas
-
-import h5py # should already be installed
 
 
 #
@@ -108,184 +106,89 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Layout within the dummy collapsible button
     toolsFormLayout = qt.QFormLayout(toolsCollapsibleButton)
 
+    toolsFrame = qt.QFrame()
+    toolsFrame.setLayout(qt.QHBoxLayout())
+    toolsFormLayout.addRow(toolsFrame)
 
-    #
-    # Edit options pushbuttons
-    #
-    optionsFrame = qt.QFrame()
-    optionsFrame.setLayout(qt.QHBoxLayout())
-    optionsFrame.setMinimumHeight(50)
+    warpEffects = [WarpEffectParameters.NoneEffectParameters(), 
+                  WarpEffectParameters.SmudgeEffectParameters(), 
+                  WarpEffectParameters.DrawEffectParameters(),
+                  WarpEffectParameters.BlurEffectParameters()]
 
-    nonePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','cursor.png')))
-    noneIcon = qt.QIcon(nonePixmap)
-    self.noneButton = qt.QPushButton()
-    self.noneButton.setIcon(noneIcon)
-    self.noneButton.setIconSize(nonePixmap.rect().size())
-    self.noneButton.setAutoExclusive(True)
-    self.noneButton.setCheckable(True)
-    self.noneButton.setChecked(True)
-    optionsFrame.layout().addWidget(self.noneButton)
-    
-    smudgePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','smudgeIcon.png')))
-    smudgeIcon = qt.QIcon(smudgePixmap)
-    self.smudgeButton = qt.QPushButton()
-    self.smudgeButton.setIcon(smudgeIcon)
-    self.smudgeButton.setIconSize(smudgePixmap.rect().size())
-    self.smudgeButton.setCheckable(True)
-    self.smudgeButton.setEnabled(False)
-    self.smudgeButton.setAutoExclusive(True)
-    optionsFrame.layout().addWidget(self.smudgeButton)
-
-    pencilPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','pencilIcon.png')))
-    pencilIcon = qt.QIcon(pencilPixmap)
-    self.snapButton = qt.QPushButton()
-    self.snapButton.setIcon(pencilIcon)
-    self.snapButton.setIconSize(pencilPixmap.rect().size())
-    self.snapButton.setCheckable(True)
-    self.snapButton.setEnabled(False)
-    self.snapButton.setAutoExclusive(True)
-    optionsFrame.layout().addWidget(self.snapButton)
+    for warpEffectParametersWidget in warpEffects:
+      toolsFrame.layout().addWidget(warpEffectParametersWidget.effectButton)
+      toolsFormLayout.addRow(warpEffectParametersWidget.parametersFrame)
 
 
-    blurPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','blurIcon.png')))
-    blurIcon = qt.QIcon(blurPixmap)
-    self.blurButton = qt.QPushButton()
-    self.blurButton.setIcon(blurIcon)
-    self.blurButton.setIconSize(blurPixmap.rect().size())
-    self.blurButton.setCheckable(True)
-    self.blurButton.setEnabled(False)
-    self.blurButton.setAutoExclusive(True)
-    optionsFrame.layout().addWidget(self.blurButton)
-
-
-    toolsFormLayout.addRow(optionsFrame)
-
-
-    #
-    # radius value
-    #
-    self.radiusSlider = ctk.ctkSliderWidget()
-    self.radiusSlider.singleStep = 0.1
-    self.radiusSlider.minimum = 5
-    self.radiusSlider.maximum = float(self.parameterNode.GetParameter("maxRadius"))
-    self.radiusSlider.decimals = 1
-    self.radiusSlider.value = float(self.parameterNode.GetParameter("radius"))
-    toolsFormLayout.addRow("Radius (mm):", self.radiusSlider)
-
-    #
-    # hardness
-    #
-    self.hardnessSlider = ctk.ctkSliderWidget()
-    self.hardnessSlider.singleStep = 1
-    self.hardnessSlider.minimum = 0
-    self.hardnessSlider.maximum = 100
-    self.hardnessSlider.decimals = 0
-    self.hardnessSlider.value = float(self.parameterNode.GetParameter("hardness"))
-    toolsFormLayout.addRow("Hardness (%):", self.hardnessSlider)
-
-    #
-    # force
-    #
-    self.forceSlider = ctk.ctkSliderWidget()
-    self.forceSlider.singleStep = 1
-    self.forceSlider.minimum = 0
-    self.forceSlider.maximum = 100
-    self.forceSlider.decimals = 0
-    self.forceSlider.value = float(self.parameterNode.GetParameter("force"))
-    toolsFormLayout.addRow("Force (%):", self.forceSlider)
-
-    #
-    # sigma
-    #
-    self.sigmaSlider = ctk.ctkSliderWidget()
-    self.sigmaSlider.singleStep = 1
-    self.sigmaSlider.minimum = 0
-    self.sigmaSlider.maximum = 30
-    self.sigmaSlider.decimals = 0
-    self.sigmaSlider.value = float(self.parameterNode.GetParameter("sigma"))
-    toolsFormLayout.addRow("Sigma (mm):", self.sigmaSlider)
-
-
-    #
-    # Advanced Area
-    #
-    advancedCollapsibleButton = ctk.ctkCollapsibleButton()
-    advancedCollapsibleButton.text = "Advanced"
-    advancedCollapsibleButton.collapsed=True
-    self.layout.addWidget(advancedCollapsibleButton)
-
-    # Layout within the dummy collapsible button
-    advancedFormLayout = qt.QFormLayout(advancedCollapsibleButton)
-
-    #
-    # expand edge value
-    #
-    self.expandEdgeSlider = ctk.ctkSliderWidget()
-    self.expandEdgeSlider.singleStep = 1
-    self.expandEdgeSlider.minimum = 0
-    self.expandEdgeSlider.maximum = 100
-    self.expandEdgeSlider.decimals = 0
-    self.expandEdgeSlider.value = float(self.parameterNode.GetParameter("expandEdge"))
-    advancedFormLayout.addRow("Expand Edge (mm):", self.expandEdgeSlider)
+    self.noneButton = warpEffects[0].effectButton
+    self.smudgeButton = warpEffects[1].effectButton
 
 
     #
     # History Area
     #
-    historyCollapsibleButton = ctk.ctkCollapsibleButton()
-    historyCollapsibleButton.text = "History"
-    self.layout.addWidget(historyCollapsibleButton)
+    editCollapsibleButton = ctk.ctkCollapsibleButton()
+    editCollapsibleButton.text = "Edit"
+    self.layout.addWidget(editCollapsibleButton)
 
-    historyGridLayout = qt.QGridLayout(historyCollapsibleButton)
+    editFormLayout = qt.QFormLayout(editCollapsibleButton)  
 
     #
     # Undo Redo Flatten
     #   
     undoredoFrame = qt.QFrame()
-    undoredoFrame.setLayout(qt.QVBoxLayout())
+    undoredoFrame.setLayout(qt.QHBoxLayout())
 
-    flattenPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','flattenIcon.png')))
-    flattenIcon = qt.QIcon(flattenPixmap)
-    self.flattenButton = qt.QPushButton()
-    self.flattenButton.setIcon(flattenIcon)
-    self.flattenButton.setIconSize(flattenPixmap.rect().size())
-    self.flattenButton.setEnabled(False)    
-    self.flattenButton.toolTip = 'Flatten'
+    undoAllPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','undoAllIcon.png')))
+    undoAllIcon = qt.QIcon(undoAllPixmap)
+    self.undoAllButton = qt.QToolButton()
+    self.undoAllButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    self.undoAllButton.setText('Undo All')
+    self.undoAllButton.setIcon(undoAllIcon)
+    self.undoAllButton.setIconSize(undoAllPixmap.rect().size())
+    self.undoAllButton.setEnabled(False)
+    self.undoAllButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
+    self.undoAllButton.toolTip = 'Undo All'
 
     undoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','undoIcon.png')))
     undoIcon = qt.QIcon(undoPixmap)
-    self.undoButton = qt.QPushButton()
+    self.undoButton = qt.QToolButton()
+    self.undoButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    self.undoButton.setText('Undo Last Operation')
     self.undoButton.setIcon(undoIcon)
     self.undoButton.setIconSize(undoPixmap.rect().size())
     self.undoButton.setEnabled(False)
+    self.undoButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
     self.undoButton.toolTip = 'Undo'
 
     redoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','redoIcon.png')))
     redoIcon = qt.QIcon(redoPixmap)
-    self.redoButton = qt.QPushButton()
+    self.redoButton = qt.QToolButton()
+    self.redoButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    self.redoButton.setText('Redo')
     self.redoButton.setIcon(redoIcon)
     self.redoButton.setIconSize(redoPixmap.rect().size())
     self.redoButton.setEnabled(False)
+    self.redoButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
     self.redoButton.toolTip = 'Redo'
 
-    self.firstComponentCheckBox = qt.QCheckBox('Component 0')
-    self.firstComponentCheckBox.toolTip = 'If checked, Component 0 will be included when flattening'
+    overwritePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','Overwrite.png')))
+    overwriteIcon = qt.QIcon(overwritePixmap)
+    self.overwriteButton = qt.QToolButton()
+    self.overwriteButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    self.overwriteButton.setText('Overwrite')
+    self.overwriteButton.setIcon(overwriteIcon)
+    self.overwriteButton.setIconSize(overwritePixmap.rect().size())
+    self.overwriteButton.setEnabled(False)    
+    self.overwriteButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
+    #self.overwriteButton.toolTip = 'Flatten'
 
+    undoredoFrame.layout().addWidget(self.undoAllButton)
     undoredoFrame.layout().addWidget(self.undoButton)
     undoredoFrame.layout().addWidget(self.redoButton)
-    undoredoFrame.layout().addWidget(self.flattenButton)
-    undoredoFrame.layout().addWidget(self.firstComponentCheckBox)
+    undoredoFrame.layout().addWidget(self.overwriteButton)
     
-    historyGridLayout.addWidget(undoredoFrame,0,0)
-
-    # History Stack
-
-    self.historyList = qt.QListWidget()
-    self.historyList.setCurrentRow(0)
-    self.historyList.setMaximumHeight(redoPixmap.rect().size().height() * 3.3 + self.firstComponentCheckBox.height)
-
-    historyGridLayout.addWidget(self.historyList,0,1)
-
+    editFormLayout.addRow(undoredoFrame)
 
 
     #
@@ -302,11 +205,32 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.sceneRadioButton = qt.QRadioButton('Scene')
     self.atlasesRadioButton = qt.QRadioButton('Atlases')
     self.drawingsRadioButton = qt.QRadioButton('Fixed Points')
-    self.fiducialsRadioButton = qt.QRadioButton('Fiducials')
     self.atlasesRadioButton.setChecked(True)
 
-    # delete selected
-    self.deleteTreeElement = qt.QPushButton('Delete')
+    # add
+    addPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','Add.png')))
+    addIcon = qt.QIcon(addPixmap)
+    self.addTreeElement = qt.QPushButton()
+    self.addTreeElement.setIcon(addIcon)
+    self.addTreeElement.setIconSize(addPixmap.rect().size())
+    # delete
+    deletePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','Delete.png')))
+    deleteIcon = qt.QIcon(deletePixmap)
+    self.deleteTreeElement = qt.QPushButton()
+    self.deleteTreeElement.setIcon(deleteIcon)
+    self.deleteTreeElement.setIconSize(deletePixmap.rect().size())
+    # rename
+    renamePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','Rename.png')))
+    renameIcon = qt.QIcon(renamePixmap)
+    self.renameTreeElement = qt.QPushButton()
+    self.renameTreeElement.setIcon(renameIcon)
+    self.renameTreeElement.setIconSize(renamePixmap.rect().size())
+
+    modelEditFrame = qt.QFrame()
+    modelEditFrame.setLayout(qt.QHBoxLayout())
+    modelEditFrame.layout().addWidget(self.addTreeElement)
+    modelEditFrame.layout().addWidget(self.deleteTreeElement)
+    modelEditFrame.layout().addWidget(self.renameTreeElement)
 
     # Tree widget
     self.dataTreeWidget = slicer.qMRMLSubjectHierarchyTreeView(slicer.util.mainWindow())
@@ -319,46 +243,33 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     modelsGridLayout.addWidget(self.sceneRadioButton,0,0)
     modelsGridLayout.addWidget(self.atlasesRadioButton,0,1)
     modelsGridLayout.addWidget(self.drawingsRadioButton,0,2)
-    modelsGridLayout.addWidget(self.fiducialsRadioButton,0,3)
-    modelsGridLayout.addWidget(self.deleteTreeElement,0,4)
-    modelsGridLayout.addWidget(self.dataTreeWidget,1,0,1,5)
+    modelsGridLayout.addWidget(modelEditFrame,0,3)
+    modelsGridLayout.addWidget(self.dataTreeWidget,1,0,1,4)
 
     self.layout.addStretch(0)
 
 
     # connections
     self.warpSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.exit) # deselect effect
-    self.warpSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateMRMLFromGUI)
-    self.smudgeButton.toggled.connect(self.toogleTools)
-    self.snapButton.toggled.connect(self.toogleTools)
-    self.blurButton.toggled.connect(self.toogleTools)
-    self.smudgeButton.connect('clicked(bool)', self.onSmudgeButton)
-    self.snapButton.connect('clicked(bool)', self.onSnapButton)
-    self.blurButton.connect('clicked(bool)', self.onBlurButton)
-    
-    self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
-    self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
-    self.forceSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
-    self.sigmaSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
-    self.expandEdgeSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
-    self.flattenButton.connect("clicked(bool)", self.onFlattenButton)
+    self.warpSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onWarpSelectionChanged)
+
+    self.overwriteButton.connect("clicked(bool)", self.onOverwriteButton)
+    self.undoAllButton.connect("clicked(bool)", self.onUndoAllButton)
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
-    self.historyList.itemSelectionChanged.connect(self.historyItemChanged)
-
     
     self.sceneRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
     self.drawingsRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
     self.atlasesRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
-    self.fiducialsRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
     self.deleteTreeElement.connect("clicked(bool)", lambda i: self.dataTreeWidget.deleteSelectedItems())
+    self.addTreeElement.connect("clicked(bool)", self.onAddTreeElement)
+    self.renameTreeElement.connect("clicked(bool)", self.onRenameTreeElement)
     self.dataTreeWidget.doubleClicked.connect(self.onDataTreeDoubleClicked)
+    self.dataTreeWidget.currentItemModified.connect(self.onDataTreeItemModified)
 
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)    
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeAddedEvent, self.onSceneNodeAdded)    
-    interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
-    self.addObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) 
-
+    self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeAboutToBeAddedEvent, self.onSceneNodeAboutToBeAdded)    
 
     # Refresh
     qt.QApplication.processEvents()
@@ -369,7 +280,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     self.updateGuiFromMRML()  
     self.onSceneNodeAdded()
-    self.toogleTools()
     self.dataTreeTypeToggle(1)
 
   
@@ -429,31 +339,15 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       return False
 
   def updateGuiFromMRML(self,caller=None,event=None):
-    # radius - blur - force
-    radius = float(self.parameterNode.GetParameter("radius"))
-    self.radiusSlider.setValue( radius )
-    if radius < self.radiusSlider.minimum or radius > self.radiusSlider.maximum:
-      self.updateMRMLFromGUI()
-    self.hardnessSlider.setValue(float(self.parameterNode.GetParameter("hardness")))
-    self.forceSlider.setValue(float(self.parameterNode.GetParameter("force")))
-    self.sigmaSlider.setValue(float(self.parameterNode.GetParameter("sigma")))
     # get warp node and set selector and buttons
     warpID = self.parameterNode.GetParameter("warpID")
     warpNode = slicer.util.getNode(warpID) if warpID != "" else None
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
-    self.warpSelector.setCurrentNode(warpNode)
-    self.smudgeButton.enabled = bool(warpNode)
-    self.snapButton.enabled = bool(warpNode)
-    self.blurButton.enabled = bool(warpNumberOfComponents == 1)
-    self.historyList.enabled = bool(warpNode) 
     # undo redo button
-    self.undoButton.setEnabled(warpNumberOfComponents > 1) 
+    self.undoButton.setEnabled(warpNumberOfComponents > 1 and self.parameterNode.GetParameter("redoTransformID") == "" and self.parameterNode.GetParameter("lastOperation") != "undoall") 
     self.redoButton.setEnabled(self.parameterNode.GetParameter("redoTransformID") != "") 
-    self.flattenButton.setEnabled(warpNumberOfComponents > 1)
-    # update warp history. add number of warp component plus redo transform (if available)
-    self.historyList.clear()
-    self.historyList.addItems(['Component ' + str(i) for i in range(warpNumberOfComponents + int(self.redoButton.enabled))])
-    self.historyList.setCurrentRow(warpNumberOfComponents - 1)
+    self.overwriteButton.setEnabled(warpNumberOfComponents > 1)
+    self.undoAllButton.setEnabled(warpNumberOfComponents > 1)
     # resolution change
     if float(self.parameterNode.GetParameter("resolution")) != TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)[2][0]:
       self.exit()
@@ -469,34 +363,24 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if not bool(int(self.parameterNode.GetParameter("drawingsRootItem"))):
       folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), 'Fixed Points')
       self.parameterNode.SetParameter("drawingsRootItem", str(folderID))
-    self.dataTreeTypeToggle(1) # update
 
-  def updateMRMLFromGUI(self):
-    self.parameterNode.SetParameter("radius", str(self.radiusSlider.value) )
-    self.parameterNode.SetParameter("hardness", str(self.hardnessSlider.value) )
-    self.parameterNode.SetParameter("force", str(self.forceSlider.value) )
-    self.parameterNode.SetParameter("sigma", str(self.sigmaSlider.value) )
-    self.parameterNode.SetParameter("expandEdge", str(self.expandEdgeSlider.value) )
+
+  def onWarpSelectionChanged(self):
     self.parameterNode.SetParameter("warpID", self.warpSelector.currentNode().GetID() if self.warpSelector.currentNode() else "")
 
-  def historyItemChanged(self):
-    warpID = self.parameterNode.GetParameter("warpID")
-    if warpID != "":
-      warpNode = slicer.util.getNode(warpID)
-      self.historyList.setCurrentRow(TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) - 1) # keep same value
-
-  def setItemChildrenFlags(self, item):
-    item.setFlags(qt.Qt.ItemIsSelectable + qt.Qt.ItemIsEnabled)
+  def setItemChildrenFlags(self, item, flags):
+    item.setFlags(flags)
     for row in range(item.rowCount()):
-      self.setItemChildrenFlags(item.child(row))      
+      self.setItemChildrenFlags(item.child(row), flags)      
 
   def onSceneNodeAdded(self,caller=None,event=None):
     sceneItem = self.dataTreeWidget.model().item(0,0)
-    self.setItemChildrenFlags(sceneItem)
+    self.setItemChildrenFlags(sceneItem, qt.Qt.ItemIsSelectable + qt.Qt.ItemIsEnabled)
 
   def onDataTreeDoubleClicked(self, i):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     node = shNode.GetItemDataNode(self.dataTreeWidget.currentItem())
+    centerList = [0] * 3
     # get center position of model/drawing
     if isinstance(node, slicer.vtkMRMLModelNode):
       pd = node.GetPolyData()
@@ -505,50 +389,95 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       center.Update()
       centerList = center.GetCenter()
     elif isinstance(node, slicer.vtkMRMLMarkupsCurveNode):
-      centerList = [0] * 3
       node.GetNthControlPointPosition(round(node.GetNumberOfControlPoints()/2),centerList)
+    elif isinstance(node, slicer.vtkMRMLMarkupsFiducialNode):
+      node.GetNthFiducialPosition(0,centerList)
     else:
       return
     SmudgeModuleLogic().centerPosition(centerList)
     
+  def onSceneNodeAboutToBeAdded(self,caller=None,event=None):
+    # when adding fixed points while one of them is selected the new one is not set in the correct parent folder
+    # this is overdoing, but fixes the problem
+    self.dataTreeWidget.setCurrentItem(int(self.parameterNode.GetParameter("drawingsRootItem")))
 
   def dataTreeTypeToggle(self, b):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     if self.sceneRadioButton.isChecked():
       self.dataTreeWidget.nodeTypes = ('vtkMRMLModelNode','vtkMRMLFolderDisplayNode')
       self.dataTreeWidget.attributeNameFilter = ('')
+      self.dataTreeWidget.attributeValueFilter = ('')
     elif self.atlasesRadioButton.isChecked():
       self.dataTreeWidget.nodeTypes = ('vtkMRMLModelNode','vtkMRMLFolderDisplayNode')
       self.dataTreeWidget.attributeNameFilter = ('atlas')
+      self.dataTreeWidget.attributeValueFilter = ('')
     elif self.drawingsRadioButton.isChecked():
-      self.dataTreeWidget.nodeTypes = ('vtkMRMLMarkupsCurveNode','vtkMRMLFolderDisplayNode')
+      self.dataTreeWidget.nodeTypes = ('vtkMRMLMarkupsCurveNode','vtkMRMLMarkupsFiducialNode','vtkMRMLFolderDisplayNode')
       self.dataTreeWidget.attributeNameFilter = ('drawing')
-    elif self.fiducialsRadioButton.isChecked():
-      self.dataTreeWidget.attributeNameFilter = ('fiducial')
+      self.dataTreeWidget.attributeValueFilter = ('1')
     # reset settings
     self.dataTreeWidget.expandToDepth(0)
 
+  def onAddTreeElement(self):
+    if self.atlasesRadioButton.isChecked() and self.parameterNode.GetParameter("MNIAtlasPath") != ".":
+      items = ImportAtlas.ImportAtlasLogic().getValidAtlases(self.parameterNode.GetParameter("MNIAtlasPath"))
+      result = BoolResult()
+      atlasName = qt.QInputDialog.getItem(qt.QWidget(),'Select Atlas','',items,0,0,result)
+      if result:
+        ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName))
+    elif self.drawingsRadioButton.isChecked():
+      # interaction node
+      interactionNode = slicer.app.applicationLogic().GetInteractionNode()
+      selectionNode = slicer.app.applicationLogic().GetSelectionNode()
+      selectionNode.SetReferenceActivePlaceNodeClassName("vtkMRMLMarkupsFiducialNode")
+      # create aux marpus node
+      fiducialNode = slicer.vtkMRMLMarkupsFiducialNode()
+      slicer.mrmlScene.AddNode(fiducialNode)
+      fiducialNode.CreateDefaultDisplayNodes() 
+      fiducialNode.GetDisplayNode().SetGlyphScale(2)
+      fiducialNode.SetLocked(1)
+      fiducialNode.SetName('Fixed Point')
+      # add to subject hierarchy
+      shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+      shNode.SetItemAttribute(shNode.GetItemByDataNode(fiducialNode), 'drawing', '1')
+      shNode.SetItemParent(shNode.GetItemByDataNode(fiducialNode), int(self.parameterNode.GetParameter("drawingsRootItem")))
+      # activate placement
+      selectionNode.SetActivePlaceNodeID(fiducialNode.GetID())
+      interactionNode.SetCurrentInteractionMode(interactionNode.Place)
+      
+  def onRenameTreeElement(self):
+    sceneItem = self.dataTreeWidget.model().item(0,0)
+    self.setItemChildrenFlags(sceneItem, qt.Qt.ItemIsSelectable + qt.Qt.ItemIsEnabled + qt.Qt.ItemIsEditable)
+    self.dataTreeWidget.edit(self.dataTreeWidget.currentIndex())
+
+  def onDataTreeItemModified(self):
+    sceneItem = self.dataTreeWidget.model().item(0,0)
+    self.setItemChildrenFlags(sceneItem, qt.Qt.ItemIsSelectable + qt.Qt.ItemIsEnabled)
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    node = shNode.GetItemDataNode(self.dataTreeWidget.currentItem())
+    if isinstance(node, slicer.vtkMRMLMarkupsFiducialNode):
+      node.SetNthControlPointLabel(0,node.GetName())
+
+  def onUndoAllButton(self):
+    self.parameterNode.SetParameter("lastOperation","undoall")
+    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) > 2:
+      TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, False)
+    self.onUndoButton()
 
   def onUndoButton(self):
-    SmudgeModuleLogic().removeRedoTransform()
+    SmudgeModuleLogic().removeRedoNodes()
     redoTransformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
     self.parameterNode.SetParameter("redoTransformID", redoTransformID)
-    # apply to anchor points
-    redoTransformNode = slicer.util.getNode(redoTransformID)
-    # delete anchor points if was a drawing operation
-    operationHistory = self.parameterNode.GetParameter("operationHistory").split(' ')
-    lastOperation = operationHistory.pop()
-    self.parameterNode.SetParameter("operationHistory", ' '.join(operationHistory))
-    if lastOperation == 'snap':
-      SmudgeModuleLogic().removeRedoTransform()
-      SmudgeModuleLogic().removeLastDrawing()
-    
+    # disable last drawing if was a drawing operation
+    if self.parameterNode.GetParameter("lastOperation") == 'snap':
+      SmudgeModuleLogic().disableLastDrawing()
 
   def onRedoButton(self):
     # see if smudging. aux transform causes problems here
-    smudgeEnabled = self.smudgeButton.checked
+    smudgeEnabled = self.smudgeButton.isChecked()
     if smudgeEnabled:
-      SmudgeModuleLogic().effectOff()
+      WarpEffect.WarpEffectTool.empty()
     # get nodes
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     redoTransformNode = slicer.util.getNode(self.parameterNode.GetParameter("redoTransformID"))
@@ -558,83 +487,31 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # delete redo transform
     slicer.mrmlScene.RemoveNode(redoTransformNode)
     self.parameterNode.SetParameter("redoTransformID","")
-    # add redo to operation history
-    operationHistory = self.parameterNode.GetParameter("operationHistory").split(' ')
-    self.parameterNode.SetParameter("operationHistory", ' '.join(operationHistory + ['redo']))
+    # re enable drawing
+    if self.parameterNode.GetParameter("lastOperation") == 'snap':
+      SmudgeModuleLogic().enableLastDrawing()
     # restore state
     if smudgeEnabled:
-      SmudgeModuleLogic().effectOn('Smudge')
+      self.smudgeButton.animateClick()
 
-  def onFlattenButton(self):
-    SmudgeModuleLogic().removeRedoTransform()
+  def onOverwriteButton(self):
+    SmudgeModuleLogic().removeRedoNodes()
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    includeFirstLayer = self.firstComponentCheckBox.checked
-    TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, includeFirstLayer)
-    self.parameterNode.SetParameter("operationHistory","flatten")
+    TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True)
+    self.parameterNode.SetParameter("lastOperation","flatten")
     self.updateGuiFromMRML() # update history
-
-
-  def warpNodeModified(self, caller=None, event=None):
-    # update gui
-    self.updateGuiFromMRML()
-    self.parameterNode.SetParameter("warpModified", str(int(self.parameterNode.GetParameter("warpModified"))+1) )
-
-
-  def toogleTools(self):
-    SmudgeModuleLogic().effectOff() # deactivate previous effect (if any)
-    self.radiusSlider.setEnabled(False)
-    self.hardnessSlider.setEnabled(False)
-    self.forceSlider.setEnabled(False)
-    self.sigmaSlider.setEnabled(False)
-    self.expandEdgeSlider.setEnabled(True)
-    interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
-    self.removeObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) # so that changing mode doesnt affect
-    if not self.noneButton.checked:
-      interactionNode.SetCurrentInteractionMode(2)
-      self.addObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) 
-      warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-      eventTag = warpNode.AddObserver(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent, self.warpNodeModified)
-    else:
-      SmudgeModuleLogic().effectOn('None')
-
-  def onSmudgeButton(self, buttonDown):
-    if buttonDown:      
-      self.radiusSlider.setEnabled(True)
-      self.hardnessSlider.setEnabled(True)
-      self.forceSlider.setEnabled(True)
-      self.sigmaSlider.setEnabled(True)
-      self.expandEdgeSlider.setEnabled(False)
-      SmudgeModuleLogic().effectOn('Smudge')
-
-  def onSnapButton(self, buttonDown):
-    if buttonDown:
-      self.radiusSlider.setEnabled(True)
-      self.sigmaSlider.setEnabled(True)
-      SmudgeModuleLogic().effectOn('Snap')
-
-  def onBlurButton(self, buttonDown):
-    if buttonDown:
-      self.radiusSlider.setEnabled(True)
-      self.hardnessSlider.setEnabled(True)
-      self.forceSlider.setEnabled(True)
-      self.sigmaSlider.setEnabled(True)
-      SmudgeModuleLogic().effectOn('Blur')
 
 
   def exit(self):
     self.noneButton.setChecked(True)
-    self.toogleTools()
-    SmudgeModuleLogic().removeRedoTransform()
-    SmudgeModuleLogic().effectOff()
+    SmudgeModuleLogic().removeRedoNodes()
 
-  def onInteractionModeChanged(self, caller, event):
-    self.exit()
 
   def cleanup(self):
     self.exit()
 
   def enter(self):
-    self.toogleTools()
+    self.noneButton.setChecked(True)
       
   def onSceneStartClose(self, caller, event):
     pass
@@ -660,15 +537,24 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node = ScriptedLoadableModuleLogic.createParameterNode(self)
     node.SetParameter("warpID", "")
     node.SetParameter("redoTransformID", "")
-    node.SetParameter("radius", "25")
-    node.SetParameter("maxRadius", "50")
-    node.SetParameter("hardness", "40")
-    node.SetParameter("force", "100")
-    node.SetParameter("sigma", "2")
-    node.SetParameter("expandEdge", "0")
+    node.SetParameter("lastDrawingID", "-1")
     node.SetParameter("warpModified","0")
     node.SetParameter("drawingsRootItem","0")
-    node.SetParameter("operationHistory","")
+    node.SetParameter("lastOperation","")
+    node.SetParameter("currentEfect","None")
+    # smudge 
+    node.SetParameter("SmudgeRadius", "25")
+    node.SetParameter("SmudgeHardness", "40")
+    node.SetParameter("SmudgeForce", "100")
+    node.SetParameter("SmudgePostSmoothing", "0")
+    node.SetParameter("expandEdge", "0")
+    node.SetParameter("maxRadius", "50")
+    # draw
+    node.SetParameter("DrawSpread", "25")
+    # blur
+    node.SetParameter("BlurRadius", "25")
+    node.SetParameter("BlurHardness", "40")
+    node.SetParameter("BlurSigma", "2")
     # lead dbs specific
     node.SetParameter("affineTransformID", "")
     node.SetParameter("templateID", "")
@@ -683,53 +569,49 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("resolution","1")
     return node
 
-  def removeRedoTransform(self):
+  def removeRedoNodes(self):
     parameterNode = self.getParameterNode()
+    # redo transform
     redoTransformID = parameterNode.GetParameter("redoTransformID")
     if redoTransformID != "":
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(redoTransformID))
       parameterNode.SetParameter("redoTransformID","")
+    # last drawing
+    lastDrawingID = int(parameterNode.GetParameter("lastDrawingID"))
+    if lastDrawingID != -1:
+      shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+      shNode.RemoveItem(lastDrawingID)
+      parameterNode.SetParameter("lastDrawingID","-1")
 
-  def removeLastDrawing(self):
+  def disableLastDrawing(self):
+    parameterNode = self.getParameterNode()
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    drawingsRootItem = int(self.getParameterNode().GetParameter("drawingsRootItem"))
+    drawingsRootItem = int(parameterNode.GetParameter("drawingsRootItem"))
     ids = vtk.vtkIdList()
     shNode.GetItemChildren(drawingsRootItem,ids,False)
-    shNode.RemoveItem(ids.GetId(ids.GetNumberOfIds()-1))
+    for j in range(ids.GetNumberOfIds()-1,-1,-1):
+      if isinstance(shNode.GetItemDataNode(ids.GetId(j)), slicer.vtkMRMLMarkupsCurveNode):
+        lastDrawingID = ids.GetId(j)
+        shNode.SetItemParent(lastDrawingID, shNode.GetSceneItemID())
+        shNode.SetItemDisplayVisibility(lastDrawingID, 0)
+        shNode.SetItemAttribute(lastDrawingID, 'drawing', '0')
+        parameterNode.SetParameter("lastDrawingID", str(lastDrawingID))
+        return
 
-  def effectOn(self, effectName):
-    
-    if effectName in ['Smudge']:
-      size, origin, spacing = self.getExpandedGrid()
-      auxTransformNode = TransformsUtil.TransformsUtilLogic().emptyGridTransfrom(size, origin, spacing)
-
-    for color in ['Red','Green','Yellow']:
-      sliceWidget = slicer.app.layoutManager().sliceWidget(color)
-      if effectName == 'None':
-        WarpEffect.NoneEffect(sliceWidget)
-      elif effectName == 'Smudge':
-        WarpEffect.SmudgeEffectTool(sliceWidget, auxTransformNode)
-      elif effectName == 'Blur':
-        WarpEffect.BlurEffectTool(sliceWidget)
-      elif effectName == 'Snap':
-        WarpEffect.SnapEffectTool(sliceWidget)
-  
-
-  def effectOff(self):
-    WarpEffect.WarpEffectTool.empty()
-
-
-  def applyChangesToAnchorPoints(self, transform):
-    # get drawings
-    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    drawingsRootItem = int(self.getParameterNode().GetParameter("drawingsRootItem"))
-    childrenIDs = vtk.vtkIdList()
-    shNode.GetItemChildren(drawingsRootItem, childrenIDs, True)
-    # apply transform to all source points
-    for i in range(childrenIDs.GetNumberOfIds()):
-      dataNode = shNode.GetItemDataNode(childrenIDs.GetId(i))
-      if dataNode and dataNode.GetName() == 'source':
-        dataNode.ApplyTransform(transform)
+  def enableLastDrawing(self):
+    parameterNode = self.getParameterNode()
+    lastDrawingID = int(parameterNode.GetParameter("lastDrawingID"))
+    if lastDrawingID != -1:
+      shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+      drawingsRootItem = int(parameterNode.GetParameter("drawingsRootItem"))
+      shNode.SetItemParent(lastDrawingID, drawingsRootItem)
+      shNode.SetItemDisplayVisibility(lastDrawingID, 1)
+      shNode.SetItemAttribute(lastDrawingID, 'drawing', '1')
+      parameterNode.SetParameter("lastDrawingID", "-1")
+      # add and delete aux fiducial to refresh view #TODO: why doesnt it work
+      auxFid = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+      shNode.SetItemAttribute(shNode.GetItemByDataNode(auxFid), 'drawing', '1')
+      slicer.mrmlScene.RemoveNode(auxFid)
 
 
   def getExpandedGrid(self):
@@ -741,7 +623,6 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     expandEdge = float(parameterNode.GetParameter("expandEdge"))
     origin = [o - expandEdge for o in origin]
     size = [int(round(s+expandEdge*2/spacing[0])) for s in size]
-
     return size, origin, spacing
 
   def centerPosition(self, centerList):

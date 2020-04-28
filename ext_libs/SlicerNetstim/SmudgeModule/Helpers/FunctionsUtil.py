@@ -6,21 +6,19 @@ import sitkUtils
 import numpy as np
 import glob
 import sys
+from scipy import io
 
 try:
   import h5py
-  import hdf5storage
-  from scipy import io
 except:
-  import importlib  
-  for package in ['h5py','hdf5storage','scipy']: 
-    if sys.version_info[0] < 3: 
-      from pip._internal import main as pipmain
-      failed = pipmain(['install', package])
-    else:
-      failed = slicer.util.pip_install(package)
-    if not failed:
-      importlib.import_module(package)
+  slicer.util.pip_install('h5py')
+  import h5py
+
+try:
+  import hdf5storage
+except:
+  slicer.util.pip_install('hdf5storage')
+  import hdf5storage
 
 
 def saveApprovedData(subjectPath):

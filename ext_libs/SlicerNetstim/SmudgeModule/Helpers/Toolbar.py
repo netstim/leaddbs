@@ -120,18 +120,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.addWidget(templateSlider)
 
     #
-    # Atlas
-    #
-
-    self.atlasesComboBox = qt.QComboBox()
-    self.atlasesComboBox.addItem('Import Atlas')
-    self.atlasesComboBox.setMaximumWidth(350)
-    self.atlasesComboBox.addItems(ImportAtlas.ImportAtlasLogic().getValidAtlases(self.parameterNode.GetParameter("MNIAtlasPath")))
-    self.atlasesComboBox.connect('currentIndexChanged(int)', self.onAtlasChanged)
-
-    self.addWidget(self.atlasesComboBox)
-
-    #
     # Resolution
     #
     self.addWidget(qt.QLabel('Warp Resolution: '))
@@ -165,7 +153,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.saveButton.setFixedWidth(200)
     self.saveButton.setStyleSheet("background-color: green")
     self.addWidget(self.saveButton)
-
+    ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), 'DISTAL Minimal (Ewert 2017)'))
     self.saveButton.connect("clicked(bool)", self.onSaveButton)
 
     #
@@ -176,7 +164,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.updateModalities(self.parameterNode.GetParameter("subjectPath"))
     reducedToolbarLogic().loadSubjectTransforms()
     self.onModalityPressed([],self.modalityComboBox.currentText)
-    self.onAtlasChanged(1,'DISTAL Minimal (Ewert 2017)')
     self.updateToolbarFromMRML()
 
 
@@ -242,19 +229,11 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.resolutionComboBox.enabled = warpNumberOfComponents == 1
 
 
-  def onAtlasChanged(self, index, atlasName = None):
-    if not atlasName:
-      atlasName = self.atlasesComboBox.itemText(index)
-    if index != 0:
-      atlasPath = os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName)
-      folderID = ImportAtlas.ImportAtlasLogic().run(atlasPath)
-    self.atlasesComboBox.setCurrentIndex(0)
-
   def onSaveButton(self):
     SmudgeModule.SmudgeModuleLogic().effectOff()
     if reducedToolbarLogic().applyChanges():
       # remove nodes
-      SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
+      SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID")))
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
       slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getBackgroundNode())
@@ -284,7 +263,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.modalityComboBox.addItems(subjectModalities)
 
   def onResolutionChanged(self, index):
-    SmudgeModule.SmudgeModuleLogic().removeRedoTransform()
+    SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
     newResolution = float(self.resolutionComboBox.itemText(index)[:-2]) # get resolution
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID")) # get warp node
     reducedToolbarLogic().resampleTransform(warpNode, newResolution)

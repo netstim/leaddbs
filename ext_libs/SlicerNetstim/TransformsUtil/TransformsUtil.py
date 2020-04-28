@@ -325,6 +325,10 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
       print('already flat')
       return
 
+    # get current transform ID applied and save for after flatten
+    lastLayerID = transformNode.GetTransformNodeID()
+    transformNode.SetAndObserveTransformNodeID('')
+
     size, origin, spacing = self.getGridDefinition(transformNode)
     newNodeNames = self.splitAndGetNodeNames(transformNode)
 
@@ -352,6 +356,9 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     slicer.mrmlScene.RemoveNode(outNode)
     for nodeName in newNodeNames:
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(nodeName))
+
+    # re-apply ID
+    transformNode.SetAndObserveTransformNodeID(lastLayerID)
 
     return True
 
