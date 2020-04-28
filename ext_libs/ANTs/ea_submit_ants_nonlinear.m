@@ -9,6 +9,7 @@ end
 
 function ea_antsnl_monostep(props)
 directory=props.directory;
+outputPrefix = strrep(props.outputbase, directory, '');
 refinewarp=0;
 if exist([props.outputbase,'Composite',ea_getantstransformext(directory)],'file') % prior ANTs transform found.
     if isfield(props, 'ants_usepreexisting')
@@ -98,7 +99,7 @@ end
 
 ea_addrefinewarp(props.directory);
 
-ea_conv_antswarps(props.directory, '.nii.gz', 'float');
+ea_conv_antswarps(props.directory, outputPrefix, '.nii.gz', 'float');
 
 
 function ea_addrefinewarp(directory)
@@ -118,7 +119,8 @@ options.root=[options.root,filesep];
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
 prenii=[directory,options.prefs.prenii_unnormalized];
-if exist([directory,'glanat0GenericAffine.mat'],'file') % happens in first iteration 
+
+if exist([directory,'glanat0GenericAffine.mat'],'file') % happens in first iteration
     cmd=[applyTransforms,' -r ',template,...
         ' -t ',ea_path_helper([directory,'glanat1Warp.nii.gz']),...
         ' -t ',ea_path_helper([directory,'glanat0GenericAffine.mat']),...
@@ -147,6 +149,7 @@ elseif exist([directory,'glanat1Warp.nii.gz'],'file') % happens in third and upw
         ' -t ',ea_path_helper([directory,'glanat1InverseWarp.nii.gz']),...
         ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
 end
+
 if exist('cmd','var')
     if ~ispc
         system(['bash -c "', cmd, '"']);

@@ -22,12 +22,12 @@ if exist([directory,'stimulations'],'dir') && ~exist([directory,'stimulations',f
         end
     end
 end
-    
+
 % move legacy ANTs warps
 if ismember(ea_whichnormmethod(directory),ea_getantsnormfuns)
     % commented for now. This seems not to work in all cases and lead to
     % errors. People need to renormalize with ANTs instead.
-%    ea_conv_antswarps(directory);
+    % ea_conv_antswarps(directory);
 end
 
 % move normalized Fibertracts
