@@ -25,18 +25,79 @@ else
     spfx='r';
 end
 
-%% Get GM, WM and CSF
-c1=ea_load_nii([directory,'r',restfname,'_c1',options.prefs.prenii_unnormalized]);
-c2=ea_load_nii([directory,'r',restfname,'_c2',options.prefs.prenii_unnormalized]);
-c3=ea_load_nii([directory,'r',restfname,'_c3',options.prefs.prenii_unnormalized]);
+%% Generate brain mask in fMRI space ('meanrest.nii')
+if ~exist([directory,'mean',restfname,'_mask.nii'], 'file')
+    copyfile(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']),...
+        [directory,'temp.nii.gz']);
+    gunzip([directory,'temp.nii.gz']);
+    ea_delete([directory,'temp.nii.gz']);
 
-%% Extract timecourses of complete volume for signal regression..
+    % Warp mask from MNI space to patient T1 space
+    ea_apply_normalization_tofile(ea_getptopts(directory),...
+        {[directory,'temp.nii']},...
+        {[directory,'temp.nii']}, directory, 1, 0);
+
+    % Check coregistration method
+    try
+        load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
+        % Disable Hybrid coregistration
+        coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
+    catch
+        coregmethod = 'SPM'; % fallback to SPM coregistration
+    end
+
+    options.coregmr.method = coregmethod;
+
+    % for this pair of approved coregistations, find out which method to use -
+    % irrespective of the current selection in coregmethod.
+    coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
+    fn=fieldnames(coregmethodsused);
+    for field=1:length(fn)
+        if contains(fn{field},['r',restfname])
+            disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
+            options.coregmr.method=coregmethodsused.(fn{field});
+            break
+        end
+    end
+
+    % Check if the corresponding transform already exists
+    xfm = [ea_stripext(options.prefs.prenii_unnormalized), '2r', restfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+    transform = ea_regexpdir(directory, xfm, 0);
+
+    if numel(transform) == 0
+        warning('Transformation not found! Running coregistration now!');
+        transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
+            [directory,'mean',restfname,'.nii'],...
+            [directory,'r',ea_stripext(options.prefs.rest),'_',options.prefs.prenii_unnormalized],...
+            [],1,[],1);
+        % Fix transformation names, replace 'mean' by 'r' for fMRI
+        cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
+        transform = strrep(transform, 'mean', 'r');
+        transform = transform{1}; % Forward transformation
+    else
+        if numel(transform) > 1
+            warning(['Multiple transformations of the same type found! ' ...
+                'Will use the last one:\n%s'], transform{end});
+        end
+        transform = transform{end};
+    end
+
+    % Transform mask from patient T1 space to fMRI space ('meanrest.nii')
+    ea_apply_coregistration([directory,'mean',restfname,'.nii'],...
+        [directory,'temp.nii'],...
+        [directory,'mean',restfname,'_mask.nii'],...
+        transform,'nn');
+    ea_delete([directory,'temp.nii']);
+end
+
+%% Extract timecourses of complete volume for signal regression
+brainmask = ea_load_nii([directory,'mean',restfname,'_mask.nii']);
 rest = ea_load_nii([directory,spfx,restfname,'.nii']);
 signallength = size(rest.img,4);
 interpol_tc = nan(numel(rest.img(:,:,:,1)),size(rest.img,4));
 for tmpt = 1:signallength
     thisvol = rest.img(:,:,:,tmpt);
-    thisvol = thisvol .* logical(c1.img+c2.img+c3.img); % Mask out voxels outside the brain
+    thisvol = thisvol .* brainmask.img; % Mask out voxels outside the brain
     interpol_tc(:,tmpt) = thisvol(:);
 end
 
@@ -46,6 +107,8 @@ load([directory,'TR.mat']);
 disp('Calculating C2 and CSF-signals for signal regression...');
 
 % regression steps
+c2=ea_load_nii([directory,'r',restfname,'_c2',options.prefs.prenii_unnormalized]);
+c3=ea_load_nii([directory,'r',restfname,'_c3',options.prefs.prenii_unnormalized]);
 ec2map=c2.img(:); ec2map(ec2map<0.6)=0; ec2map=logical(ec2map);
 ec3map=c3.img(:); ec3map(ec3map<0.6)=0; ec3map=logical(ec3map);
 
