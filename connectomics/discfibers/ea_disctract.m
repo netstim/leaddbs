@@ -138,12 +138,16 @@ classdef ea_disctract < handle
             Efieldmags=zeros(length(obj.M.patient.list),2);
             for pt=1:length(obj.M.patient.list)
                 for side=1:2
-                    if isempty(obj.M.stats(pt).ea_stats.stimulation.efield(side).volume)
-                        val=0;
-                    else
-                        val=obj.M.stats(pt).ea_stats.stimulation.efield(side).volume;
+                    try
+                        if isempty(obj.M.stats(pt).ea_stats.stimulation.efield(side).volume)
+                            val=0;
+                        else
+                            val=obj.M.stats(pt).ea_stats.stimulation.efield(side).volume;
+                        end
+                        Efieldmags(pt,side)=val;
+                    catch % could be efield(side) is not defined.
+                        Efieldmags(pt,side)=0;
                     end
-                    Efieldmags(pt,side)=val;
                 end
             end
         end

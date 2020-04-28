@@ -85,9 +85,9 @@ try
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
 catch
-    varargout{1}=nan;
-    varargout{2}=nan;
-    varargout{3}=nan;
+    vatfv=nan;
+    vatvolume=nan;
+    radius=nan;
     return
 end
 
