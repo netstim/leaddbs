@@ -386,9 +386,21 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     
     return lastLayer.GetID()
 
+
+  def arrayFromGeneralTransform(self, transformNode, componentNumber):
+    # https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/util.py
+    transformGrid = transformNode.GetTransformFromParent().GetConcatenatedTransform(componentNumber)
+    if not isinstance(transformGrid, slicer.vtkOrientedGridTransform):
+      return False
+    displacementGrid = transformGrid.GetDisplacementGrid()
+    nshape = tuple(reversed(displacementGrid.GetDimensions()))
+    import vtk.util.numpy_support
+    nshape = nshape + (3,)
+    narray = vtk.util.numpy_support.vtk_to_numpy(displacementGrid.GetPointData().GetScalars()).reshape(nshape)
+    return narray
+
   def getTransformRASToIJK(self, transformNode):
-    origin = transformNode.GetTransformFromParent().GetDisplacementGrid().GetOrigin()
-    spacing = transformNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()
+    size,origin,spacing = self.getGridDefinition(transformNode)
     IJKToRAS = [ 
                 [spacing[0],          0 ,         0 ,  origin[0] ],
                 [        0 ,  spacing[1],         0 ,  origin[1] ],

@@ -59,6 +59,20 @@ class WarpAbstractEffect(VTKObservationMixin):
       yield slicer.app.layoutManager().sliceWidget(color)
 
 
+  def addEditButtonListeners(self, parent):
+    parent.undoButton.connect("pressed()", self.onEditButtonPressed)
+    parent.redoButton.connect("pressed()", self.onEditButtonPressed)
+    parent.undoButton.connect("released()", self.onEditButtonReleased)
+    parent.redoButton.connect("released()", self.onEditButtonReleased)
+
+  def onEditButtonPressed(self):
+    WarpEffect.WarpEffectTool.empty()
+    for sliceWidget in self.sliceWidgets():
+      WarpEffect.NoneEffectTool(sliceWidget)
+
+  def onEditButtonReleased(self):
+    if self.effectButton.isChecked():
+      self.effectButton.animateClick()
 
 #
 # None
@@ -209,6 +223,25 @@ class BlurEffectParameters(WarpAbstractEffect):
   def __init__(self):
 
     WarpAbstractEffect.__init__(self, 'Blur')
+
+    # select transform
+    transformSelectFrame = qt.QFrame()
+    transformSelectFrame.setLayout(qt.QHBoxLayout())
+
+    self.userModificationsRadioButton = qt.QRadioButton('User Modifications')
+    self.CompleteRadioButton = qt.QRadioButton('Original + User Modifications (Overwrite Required)')
+    transformSelectFrame.layout().addWidget(self.userModificationsRadioButton)
+    transformSelectFrame.layout().addWidget(self.CompleteRadioButton)
+    self.parametersFrame.layout().addRow("Warp:", transformSelectFrame)
+
+    # sigma
+    self.sigmaSlider = ctk.ctkSliderWidget()
+    self.sigmaSlider.singleStep = 1
+    self.sigmaSlider.minimum = 0
+    self.sigmaSlider.maximum = 30
+    self.sigmaSlider.decimals = 0
+    self.sigmaSlider.value = float(self.parameterNode.GetParameter("BlurSigma"))
+    self.parametersFrame.layout().addRow("Sigma (mm):", self.sigmaSlider)
     
     # radius
     self.radiusSlider = ctk.ctkSliderWidget()
@@ -228,30 +261,57 @@ class BlurEffectParameters(WarpAbstractEffect):
     self.hardnessSlider.value = float(self.parameterNode.GetParameter("BlurHardness"))
     self.parametersFrame.layout().addRow("Hardness (%):", self.hardnessSlider)
 
-    # sigma
-    self.sigmaSlider = ctk.ctkSliderWidget()
-    self.sigmaSlider.singleStep = 1
-    self.sigmaSlider.minimum = 0
-    self.sigmaSlider.maximum = 30
-    self.sigmaSlider.decimals = 0
-    self.sigmaSlider.value = float(self.parameterNode.GetParameter("BlurSigma"))
-    self.parametersFrame.layout().addRow("Sigma (mm):", self.sigmaSlider)
 
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.sigmaSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.userModificationsRadioButton.connect('clicked(bool)', self.onUserModificationsRadioButton)
+    self.CompleteRadioButton.connect('clicked(bool)', self.onCompleteRadioButton)
 
+  def onCompleteRadioButton(self):
+    # flatten if needed
+    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) > 1:
+      TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True)
+    # get array
+    transformArray = slicer.util.array(warpNode.GetID())
+    # init
+    for sliceWidget in self.sliceWidgets():
+      WarpEffect.BlurEffectTool(sliceWidget, transformArray)
+
+  def onUserModificationsRadioButton(self):
+    self.parameterNode.SetParameter("lastOperation","undoall") # disable undo last operation
+    # flatten if needed
+    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    hasCorrectNumberOFLayers = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) == 2
+    isCorrectTransformType = isinstance(warpNode.GetTransformFromParent().GetConcatenatedTransform(0), slicer.vtkOrientedGridTransform)
+    if not hasCorrectNumberOFLayers or not isCorrectTransformType:
+      TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, False)
+    # get array
+    transformArray = TransformsUtil.TransformsUtilLogic().arrayFromGeneralTransform(warpNode, 0)
+    # init
+    for sliceWidget in self.sliceWidgets():
+      WarpEffect.BlurEffectTool(sliceWidget, transformArray)
+
+
+  def resetButtons(self):
+    # uncheck radio buttons
+    self.userModificationsRadioButton.setAutoExclusive(False)
+    self.CompleteRadioButton.setAutoExclusive(False)
+    self.userModificationsRadioButton.setChecked(False)
+    self.CompleteRadioButton.setChecked(False)
+    self.userModificationsRadioButton.setAutoExclusive(False)
+    self.CompleteRadioButton.setAutoExclusive(False)
 
   def onEffectButtonClicked(self):
     super().onEffectButtonClicked()
-    for sliceWidget in self.sliceWidgets():
-      WarpEffect.BlurEffectTool(sliceWidget)
-
+    self.resetButtons()
 
   def updateGuiFromMRML(self, caller=None, event=None):
     warpNode = super().updateGuiFromMRML(caller, event)
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
-    self.effectButton.enabled = bool(warpNumberOfComponents == 1)
+    self.userModificationsRadioButton.enabled = warpNumberOfComponents > 1
+    self.CompleteRadioButton.enabled = warpNumberOfComponents == 1
     radius = float(self.parameterNode.GetParameter("BlurRadius"))
     self.radiusSlider.setValue( radius )
     if radius < self.radiusSlider.minimum or radius > self.radiusSlider.maximum:
@@ -264,4 +324,3 @@ class BlurEffectParameters(WarpAbstractEffect):
     self.parameterNode.SetParameter("BlurRadius", str(self.radiusSlider.value) )
     self.parameterNode.SetParameter("BlurHardness", str(self.hardnessSlider.value) )
     self.parameterNode.SetParameter("BlurSigma", str(self.sigmaSlider.value) )
-

@@ -121,8 +121,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     self.noneButton = warpEffects[0].effectButton
-    self.smudgeButton = warpEffects[1].effectButton
-
 
     #
     # History Area
@@ -141,9 +139,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     undoAllPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','undoAllIcon.png')))
     undoAllIcon = qt.QIcon(undoAllPixmap)
-    self.undoAllButton = qt.QToolButton()
-    self.undoAllButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
-    self.undoAllButton.setText('Undo All')
+    self.undoAllButton = qt.QPushButton()
+    #self.undoAllButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    #self.undoAllButton.setText('Undo All')
     self.undoAllButton.setIcon(undoAllIcon)
     self.undoAllButton.setIconSize(undoAllPixmap.rect().size())
     self.undoAllButton.setEnabled(False)
@@ -152,9 +150,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     undoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','undoIcon.png')))
     undoIcon = qt.QIcon(undoPixmap)
-    self.undoButton = qt.QToolButton()
-    self.undoButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
-    self.undoButton.setText('Undo Last Operation')
+    self.undoButton = qt.QPushButton()
+    #self.undoButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    #self.undoButton.setText('Undo Last Operation')
     self.undoButton.setIcon(undoIcon)
     self.undoButton.setIconSize(undoPixmap.rect().size())
     self.undoButton.setEnabled(False)
@@ -163,9 +161,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     redoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','redoIcon.png')))
     redoIcon = qt.QIcon(redoPixmap)
-    self.redoButton = qt.QToolButton()
-    self.redoButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
-    self.redoButton.setText('Redo')
+    self.redoButton = qt.QPushButton()
+    #self.redoButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    #self.redoButton.setText('Redo')
     self.redoButton.setIcon(redoIcon)
     self.redoButton.setIconSize(redoPixmap.rect().size())
     self.redoButton.setEnabled(False)
@@ -174,9 +172,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     overwritePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','Overwrite.png')))
     overwriteIcon = qt.QIcon(overwritePixmap)
-    self.overwriteButton = qt.QToolButton()
-    self.overwriteButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
-    self.overwriteButton.setText('Overwrite')
+    self.overwriteButton = qt.QPushButton()
+    #self.overwriteButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    #self.overwriteButton.setText('Overwrite')
     self.overwriteButton.setIcon(overwriteIcon)
     self.overwriteButton.setIconSize(overwritePixmap.rect().size())
     self.overwriteButton.setEnabled(False)    
@@ -258,6 +256,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
     
+    for effect in warpEffects:
+      effect.addEditButtonListeners(self)
+
     self.sceneRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
     self.drawingsRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
     self.atlasesRadioButton.connect("toggled(bool)", self.dataTreeTypeToggle)
@@ -458,6 +459,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if isinstance(node, slicer.vtkMRMLMarkupsFiducialNode):
       node.SetNthControlPointLabel(0,node.GetName())
 
+
   def onUndoAllButton(self):
     self.parameterNode.SetParameter("lastOperation","undoall")
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
@@ -466,7 +468,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.onUndoButton()
 
   def onUndoButton(self):
+    # remove redo nodes
     SmudgeModuleLogic().removeRedoNodes()
+    # apply and save redo transform
     redoTransformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
     self.parameterNode.SetParameter("redoTransformID", redoTransformID)
     # disable last drawing if was a drawing operation
@@ -474,10 +478,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       SmudgeModuleLogic().disableLastDrawing()
 
   def onRedoButton(self):
-    # see if smudging. aux transform causes problems here
-    smudgeEnabled = self.smudgeButton.isChecked()
-    if smudgeEnabled:
-      WarpEffect.WarpEffectTool.empty()
     # get nodes
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     redoTransformNode = slicer.util.getNode(self.parameterNode.GetParameter("redoTransformID"))
@@ -490,9 +490,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # re enable drawing
     if self.parameterNode.GetParameter("lastOperation") == 'snap':
       SmudgeModuleLogic().enableLastDrawing()
-    # restore state
-    if smudgeEnabled:
-      self.smudgeButton.animateClick()
+
 
   def onOverwriteButton(self):
     SmudgeModuleLogic().removeRedoNodes()
@@ -555,7 +553,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     # blur
     node.SetParameter("BlurRadius", "25")
     node.SetParameter("BlurHardness", "40")
-    node.SetParameter("BlurSigma", "2")
+    node.SetParameter("BlurSigma", "10")
     # lead dbs specific
     node.SetParameter("affineTransformID", "")
     node.SetParameter("templateID", "")

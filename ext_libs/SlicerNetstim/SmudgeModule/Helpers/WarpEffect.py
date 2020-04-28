@@ -71,6 +71,7 @@ class WarpEffectTool():
     self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
     # save tool name
     self.parameterNode.SetParameter("lastOperation", self.toolName)
+    # update gui
     self.parameterNode.SetParameter("warpModified", str(int(self.parameterNode.GetParameter("warpModified"))+1))
 
   def cleanup(self):
@@ -173,15 +174,16 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
 class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
-  def __init__(self, sliceWidget):
+  def __init__(self, sliceWidget, transformArray):
 
     WarpEffectTool.__init__(self)
     PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
     
     self.toolName = 'blur'
 
+    self.transformArray = transformArray
     self.warpRASToIJK = TransformsUtil.TransformsUtilLogic().getTransformRASToIJK(self.warpNode)
-    self.warpSpacing = self.warpNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0] # Asume isotropic!
+    self.warpSpacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)[2][0]
 
     self.blurContent = []
     self.currentIndex = []
@@ -204,8 +206,6 @@ class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
     elif event == 'LeftButtonPressEvent':
       self.preview = True
-      # get array 
-      self.transformArray = slicer.util.array(self.warpNode.GetID())
 
       sigma = float(self.parameterNode.GetParameter("BlurSigma")) / self.warpSpacing
       r = int(round(float(self.parameterNode.GetParameter("BlurRadius")) / self.warpSpacing))
