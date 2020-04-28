@@ -122,7 +122,7 @@ if hmchanged
 
 
     [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
-    Ymod=Y;
+    Ymod=Y+(randn(4)/1000);
     success=0;
     for precision=[0,100,1000,50] % iterate different precision values (0 = no change to original data)
 

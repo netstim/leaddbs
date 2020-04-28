@@ -131,12 +131,19 @@ if(isempty(cmdopt)) % default run
         for tolerance=[8,10,5,4,12]
             if ~exist(mwpath('post_vmesh.1.node'),'file') % check if outputs are there
                 [status,cmdout] = system([cmdprefix,' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '" & echo $!',cmdsuffix]);
+                system([cmdprefix,' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
                 tStart=tic;
                 while ~exist(mwpath('post_vmesh.1.node'),'file')
+                    
+                    [statusin,cmdoutin] = system(['kill -0 ',cmdout,'; echo $?']); % check if process is still running
+                    if ~strcmp(cmdoutin,'0') % process has ended
+                       break 
+                    end
                     pause(2);
                     tEnd = toc(tStart);
                     if tEnd > 300
                         system(['kill ' cmdout]);
+                        break
                     end
                 end
             end

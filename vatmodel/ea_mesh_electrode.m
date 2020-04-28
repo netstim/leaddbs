@@ -30,7 +30,7 @@ el_o_orig=[0,0,15+(20*stretchfactor)];
 el_o_etop=[0,0,-20*stretchfactor];
 
 
-nucleidecimate=0.1;    % downsample the nucleius mesh to 20%
+nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
 bcyltrisize=0.01;       % the maximum triangle size of the bounding cyl
 
@@ -134,8 +134,8 @@ if ~isempty(fv) % use atlas to define GM
                no=round(no*precision)/precision; 
             end
             
+            [no,fo]=meshresample(no,fo,nucleidecimate); % mesh is too dense, reduce the density by 80%
             [no,fo]=meshcheckrepair(no,fo,'dup'); % clean topological defects
-            %[no,fo]=meshresample(no,fo,nucleidecimate); % mesh is too dense, reduce the density by 80%
            
             %% merge all nuclei
             
