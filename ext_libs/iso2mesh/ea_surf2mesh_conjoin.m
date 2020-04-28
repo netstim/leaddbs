@@ -109,9 +109,16 @@ end
 
 %  system([' "' mcpath('tetgen') exesuff '" ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 if ~ispc
-    cmdsuffix='& sleep 300; kill $!';
+    cmdsuffix='';
+    switch computer('arch')
+        case 'maci64'
+            cmdprefix='ulimit -t 300; ';
+        otherwise
+            cmdprefix='';
+    end
 else
     cmdsuffix='';
+    cmdprefix='';
 end
 
 if(isempty(cmdopt)) % default run
@@ -123,7 +130,7 @@ if(isempty(cmdopt)) % default run
         end
         for tolerance=[8,10,5,4,12]
             if ~exist(mwpath('post_vmesh.1.node'),'file') % check if outputs are there
-                system([' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
+                system([cmdprefix,' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"',cmdsuffix]);
                 
             end
         end
