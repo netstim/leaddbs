@@ -30,6 +30,7 @@ class WarpAbstractEffect(VTKObservationMixin):
     self.effectButton.setAutoExclusive(True)
     self.effectButton.setCheckable(True)
     self.effectButton.setChecked(False)
+    self.effectButton.setEnabled(False)
     self.effectButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
     self.effectButton.connect('toggled(bool)', self.onEffectButtonToggle)
     self.effectButton.connect('clicked(bool)', self.onEffectButtonClicked)
@@ -60,10 +61,9 @@ class WarpAbstractEffect(VTKObservationMixin):
 
 
   def addEditButtonListeners(self, parent):
-    parent.undoButton.connect("pressed()", self.onEditButtonPressed)
-    parent.redoButton.connect("pressed()", self.onEditButtonPressed)
-    parent.undoButton.connect("released()", self.onEditButtonReleased)
-    parent.redoButton.connect("released()", self.onEditButtonReleased)
+    for button in [parent.undoAllButton, parent.undoButton, parent.redoButton, parent.overwriteButton]:
+      button.connect("pressed()", self.onEditButtonPressed)
+      button.connect("released()", self.onEditButtonReleased)
 
   def onEditButtonPressed(self):
     WarpEffect.WarpEffectTool.empty()
@@ -242,7 +242,7 @@ class BlurEffectParameters(WarpAbstractEffect):
     self.sigmaSlider.decimals = 0
     self.sigmaSlider.value = float(self.parameterNode.GetParameter("BlurSigma"))
     self.parametersFrame.layout().addRow("Sigma (mm):", self.sigmaSlider)
-    
+
     # radius
     self.radiusSlider = ctk.ctkSliderWidget()
     self.radiusSlider.singleStep = 0.1

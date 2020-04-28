@@ -134,58 +134,28 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     #
     # Undo Redo Flatten
     #   
+
     undoredoFrame = qt.QFrame()
     undoredoFrame.setLayout(qt.QHBoxLayout())
 
-    undoAllPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','undoAllIcon.png')))
-    undoAllIcon = qt.QIcon(undoAllPixmap)
-    self.undoAllButton = qt.QPushButton()
-    #self.undoAllButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
-    #self.undoAllButton.setText('Undo All')
-    self.undoAllButton.setIcon(undoAllIcon)
-    self.undoAllButton.setIconSize(undoAllPixmap.rect().size())
-    self.undoAllButton.setEnabled(False)
-    self.undoAllButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
-    self.undoAllButton.toolTip = 'Undo All'
+    buttonNames = ['Undo All', 'Undo', 'Redo', 'Overwrite']
+    buttons = []
 
-    undoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','undoIcon.png')))
-    undoIcon = qt.QIcon(undoPixmap)
-    self.undoButton = qt.QPushButton()
-    #self.undoButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
-    #self.undoButton.setText('Undo Last Operation')
-    self.undoButton.setIcon(undoIcon)
-    self.undoButton.setIconSize(undoPixmap.rect().size())
-    self.undoButton.setEnabled(False)
-    self.undoButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
-    self.undoButton.toolTip = 'Undo'
+    for name in buttonNames:
+      buttonIconPath = self.resourcePath(os.path.join('Icons', name + '.png'))
+      buttonPixmap = qt.QPixmap(buttonIconPath)
+      button = qt.QPushButton(name)
+      button.setStyleSheet("QPushButton { background-image: url(" + buttonIconPath + "); font-size: 10px; text-align: bottom; border-radius: 3px; border-style: solid; border-color: rgb(182, 182, 182); border-width: 1px; } QPushButton:disabled { background-image: url(" + self.resourcePath(os.path.join('Icons', name + '_d.png')) + "); }")
+      button.setFixedSize(buttonPixmap.rect().size())
+      button.setEnabled(False)
+      button.setToolTip('')
+      undoredoFrame.layout().addWidget(button)
+      buttons.append(button)
 
-    redoPixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','redoIcon.png')))
-    redoIcon = qt.QIcon(redoPixmap)
-    self.redoButton = qt.QPushButton()
-    #self.redoButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
-    #self.redoButton.setText('Redo')
-    self.redoButton.setIcon(redoIcon)
-    self.redoButton.setIconSize(redoPixmap.rect().size())
-    self.redoButton.setEnabled(False)
-    self.redoButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
-    self.redoButton.toolTip = 'Redo'
-
-    overwritePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','Overwrite.png')))
-    overwriteIcon = qt.QIcon(overwritePixmap)
-    self.overwriteButton = qt.QPushButton()
-    #self.overwriteButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
-    #self.overwriteButton.setText('Overwrite')
-    self.overwriteButton.setIcon(overwriteIcon)
-    self.overwriteButton.setIconSize(overwritePixmap.rect().size())
-    self.overwriteButton.setEnabled(False)    
-    self.overwriteButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
-    #self.overwriteButton.toolTip = 'Flatten'
-
-    undoredoFrame.layout().addWidget(self.undoAllButton)
-    undoredoFrame.layout().addWidget(self.undoButton)
-    undoredoFrame.layout().addWidget(self.redoButton)
-    undoredoFrame.layout().addWidget(self.overwriteButton)
-    
+    self.undoAllButton = buttons[0]
+    self.undoButton = buttons[1]
+    self.redoButton = buttons[2]
+    self.overwriteButton = buttons[3]
     editFormLayout.addRow(undoredoFrame)
 
 
@@ -282,6 +252,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.updateGuiFromMRML()  
     self.onSceneNodeAdded()
     self.dataTreeTypeToggle(1)
+    self.noneButton.setEnabled(True)
 
   
 
