@@ -85,12 +85,10 @@ classdef ea_disctract < handle
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
-                    if isfield(obj.results.(ea_conn2connid(obj.connectome)),ea_method2methodid(obj)) % this combination was already calculated.
                         answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
                         if ~strcmp(answ,'Yes')
                             return
                         end
-                    end
                 end
             end
 
