@@ -109,7 +109,7 @@ end
 
 %  system([' "' mcpath('tetgen') exesuff '" ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '"']);
 if ~ispc
-    cmdsuffix='';
+    cmdsuffix='& sleep 300; kill $!';
 else
     cmdsuffix='';
 end
