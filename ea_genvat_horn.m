@@ -386,7 +386,7 @@ if options.native==1 % if we calculated in native space -> now transform back to
         ea_dispt(''); % stop chain of timed processes.        
     end
     % convert to MNI    
-    c=midpts';
+    c=[dpvx',midpts'];
     [~,anatpresent]=ea_assignpretra(options);
     V=ea_open_vol([options.root,options.patientname,filesep,anatpresent{1}]);
     c=V.mat\[c;ones(1,size(c,2))];
@@ -395,6 +395,8 @@ if options.native==1 % if we calculated in native space -> now transform back to
         [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
         '')';
     midpts=midpts(:,1:3);
+    dpvx=midpts(1,:);
+    midpts=midpts(2:end,:);
     options.native=0; % go back to template space for export
     [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
     options.native=options.orignative; % go back to originally set space
