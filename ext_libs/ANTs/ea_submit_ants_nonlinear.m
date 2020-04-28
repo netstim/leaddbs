@@ -66,7 +66,15 @@ cmd = [props.ANTS, ' --verbose 1', ...
     ' --use-histogram-matching 0', ...
     ' --float 1',...
     initreg, ...
-    props.rigidstage, props.affinestage, props.synstage, props.slabstage, props.synmaskstage];
+    props.rigidstage, props.affinestage, props.synstage];
+
+if isfield('props', 'slabstage')
+    cmd = [cmd, props.slabstage];
+end
+
+if isfield('props', 'synmaskstage')
+    cmd = [cmd, props.synmaskstage];
+end
 
 fid = fopen([props.directory,'ea_ants_command.txt'],'a');
 fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
