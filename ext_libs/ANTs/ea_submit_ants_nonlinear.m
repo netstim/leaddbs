@@ -11,8 +11,14 @@ function ea_antsnl_monostep(props)
 directory=props.directory;
 refinewarp=0;
 if exist([props.outputbase,'Composite',ea_getantstransformext(directory)],'file') % prior ANTs transform found.
-    prefs=ea_prefs;
-    switch prefs.machine.normsettings.ants_usepreexisting
+    if isfield(props, 'ants_usepreexisting')
+        ants_usepreexisting = props.ants_usepreexisting;
+    else
+        prefs = ea_prefs;
+        ants_usepreexisting = prefs.machine.normsettings.ants_usepreexisting;
+    end
+
+    switch ants_usepreexisting
         case 1 % ask
             answ=questdlg('We found existing ANTs transform files. Do you wish to build upon these transform (i.e. refine them) or discard them and start from scratch?','Old ANTs transform found.','Refine','Start from scratch','Start from scratch');
             switch lower(answ)
