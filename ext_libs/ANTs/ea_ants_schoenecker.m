@@ -265,4 +265,4 @@ if exist('tmaskdir', 'var')
     ea_delete(tmaskdir);
 end
 
-ea_conv_antswarps(directory, 'glanat', '.nii.gz', 'float');
+ea_conv_antswarps(directory, 'glanat', {}, '.nii.gz', 'float');

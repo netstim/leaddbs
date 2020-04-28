@@ -101,7 +101,8 @@ if refinewarp
     ea_addrefinewarp(props.directory);
 end
 
-ea_conv_antswarps(props.directory, outputPrefix, '.nii.gz', 'float');
+reference = {props.fixed, props.moving};
+ea_conv_antswarps(props.directory, outputPrefix, reference, '.nii.gz', 'float');
 
 
 function ea_addrefinewarp(directory)
