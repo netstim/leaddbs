@@ -76,22 +76,45 @@ fprintf('\nNormalizing fibers...\n');
 fprintf('\nMapping from b0 to anat...\n');
 [~, mov] = fileparts(options.prefs.b0);
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
-coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
-options.coregmr.method = coregmethod;
-xfm = [mov, '2', fix, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+if options.coregb0.addSyN
+    xfm = [ea_stripext(options.prefs.b0), '2', ea_stripext(options.prefs.prenii_unnormalized), '(Inverse)?Composite\.nii\.gz$'];
+else
+    coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
+    options.coregmr.method = coregmethod;
+    xfm = [mov, '2', fix, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+end
 transform = ea_regexpdir(directory, xfm, 0);
 
 if numel(transform) == 0
     warning('Specified transformation not found! Running coregistration now!');
-    ea_backuprestore(refb0);
-    ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
-    ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
+    if options.coregb0.addSyN
+        umachine = load([ea_gethome, '.ea_prefs.mat'], 'machine');
+        normsettings = umachine.machine.normsettings;
+        normsettings.ants_usepreexisting = 3; % Overwrite
+        ea_ants_nonlinear_coreg([directory,options.prefs.prenii_unnormalized],...
+            [directory,options.prefs.b0],...
+            [directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized],normsettings);
+        ea_delete([directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
+    else
+        ea_backuprestore(refb0);
+        ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
+        ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
+    end
 end
-[~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
-                                   refb0, ...
-                                   [directory, mov, '2', fix, '.mat'], ...
-                                   refanat, ...
-                                   options.coregmr.method);
+
+if options.coregb0.addSyN
+    [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
+                                       refb0, ...
+                                       [directory,ea_stripext(options.prefs.b0), '2', ea_stripext(options.prefs.prenii_unnormalized), 'InverseComposite.nii.gz'], ...
+                                       refanat, 'ANTs');
+else
+    [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
+                                       refb0, ...
+                                       [directory, mov, '2', fix, '.mat'], ...
+                                       refanat, ...
+                                       options.coregmr.method);
+end
+
 wfibsvox_anat = wfibsvox_anat';
 ea_savefibertracts([directory,ftrfname,'_anat.mat'],[wfibsvox_anat,fibers(:,4)],idx,'vox');
 fprintf('\nGenerating trk in anat space...\n');

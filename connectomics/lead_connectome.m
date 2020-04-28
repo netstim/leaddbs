@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 27-Apr-2020 11:59:34
+% Last Modified by GUIDE v2.5 27-Apr-2020 21:36:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -701,6 +701,11 @@ function coregmrpopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns coregmrpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from coregmrpopup
+if strcmp(hObject.String{hObject.Value}, 'ANTs')
+    set(handles.addSyN, 'Visible', 'on');
+else
+    set(handles.addSyN, 'Visible', 'off');
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -998,10 +1003,10 @@ function use_internal_upsampling_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of use_internal_upsampling
 
 
-% --- Executes on button press in addSyndMRI.
-function addSyndMRI_Callback(hObject, eventdata, handles)
-% hObject    handle to addSyndMRI (see GCBO)
+% --- Executes on button press in addSyN.
+function addSyN_Callback(hObject, eventdata, handles)
+% hObject    handle to addSyN (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of addSyndMRI
+% Hint: get(hObject,'Value') returns toggle state of addSyN

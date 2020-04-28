@@ -9,10 +9,17 @@ end
 
 function ea_antsnl_monostep(props)
 directory=props.directory;
+outputPrefix = strrep(props.outputbase, directory, '');
 refinewarp=0;
 if exist([props.outputbase,'Composite',ea_getantstransformext(directory)],'file') % prior ANTs transform found.
-    prefs=ea_prefs;
-    switch prefs.machine.normsettings.ants_usepreexisting
+    if isfield(props, 'ants_usepreexisting')
+        ants_usepreexisting = props.ants_usepreexisting;
+    else
+        prefs = ea_prefs;
+        ants_usepreexisting = prefs.machine.normsettings.ants_usepreexisting;
+    end
+
+    switch ants_usepreexisting
         case 1 % ask
             answ=questdlg('We found existing ANTs transform files. Do you wish to build upon these transform (i.e. refine them) or discard them and start from scratch?','Old ANTs transform found.','Refine','Start from scratch','Start from scratch');
             switch lower(answ)
@@ -55,7 +62,7 @@ if refinewarp
     initreg=[' --write-composite-transform 0', ...
         ' --initial-moving-transform ',ea_path_helper([props.outputbase,'Composite',ea_getantstransformext(directory)])];
 else
-    initreg=[' --write-composite-transform 0', ...
+    initreg=[' --write-composite-transform 1', ...
         ' --initial-moving-transform [', fixedinit, ',', movinginit, ',0]'];
 end
 
@@ -66,7 +73,15 @@ cmd = [props.ANTS, ' --verbose 1', ...
     ' --use-histogram-matching 0', ...
     ' --float 1',...
     initreg, ...
-    props.rigidstage, props.affinestage, props.synstage, props.slabstage, props.synmaskstage];
+    props.rigidstage, props.affinestage, props.synstage];
+
+if isfield('props', 'slabstage')
+    cmd = [cmd, props.slabstage];
+end
+
+if isfield('props', 'synmaskstage')
+    cmd = [cmd, props.synmaskstage];
+end
 
 fid = fopen([props.directory,'ea_ants_command.txt'],'a');
 fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
@@ -82,9 +97,12 @@ if status
    ea_error('ANTs normalization failed - likely due to out of memory problems. Please try a different normalization strategy or reduce the number of threads in the ANTs settings dialogue.');
 end
 
-ea_addrefinewarp(props.directory);
+if refinewarp
+    ea_addrefinewarp(props.directory);
+end
 
-ea_conv_antswarps(props.directory, '.nii.gz', 'float');
+reference = {props.fixed, props.moving};
+ea_conv_antswarps(props.directory, outputPrefix, reference, '.nii.gz', 'float');
 
 
 function ea_addrefinewarp(directory)
@@ -104,7 +122,8 @@ options.root=[options.root,filesep];
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
 prenii=[directory,options.prefs.prenii_unnormalized];
-if exist([directory,'glanat0GenericAffine.mat'],'file') % happens in first iteration 
+
+if exist([directory,'glanat0GenericAffine.mat'],'file') % happens in first iteration
     cmd=[applyTransforms,' -r ',template,...
         ' -t ',ea_path_helper([directory,'glanat1Warp.nii.gz']),...
         ' -t ',ea_path_helper([directory,'glanat0GenericAffine.mat']),...
@@ -133,6 +152,7 @@ elseif exist([directory,'glanat1Warp.nii.gz'],'file') % happens in third and upw
         ' -t ',ea_path_helper([directory,'glanat1InverseWarp.nii.gz']),...
         ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
 end
+
 if exist('cmd','var')
     if ~ispc
         system(['bash -c "', cmd, '"']);
