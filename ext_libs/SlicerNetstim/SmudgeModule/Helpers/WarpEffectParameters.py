@@ -130,12 +130,22 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.postSmoothingCheckBox.setChecked(int(self.parameterNode.GetParameter("SmudgePostSmoothing")))
     self.parametersFrame.layout().addRow("Post Smoothing:", self.postSmoothingCheckBox)
 
+    # post smoothing value
+    self.postSmoothingSlider = ctk.ctkSliderWidget()
+    self.postSmoothingSlider.singleStep = 1
+    self.postSmoothingSlider.minimum = 0
+    self.postSmoothingSlider.maximum = 100
+    self.postSmoothingSlider.decimals = 0
+    self.postSmoothingSlider.value = float(self.parameterNode.GetParameter("SmudgeSigma"))
+    self.parametersFrame.layout().addRow("Sigma (% Radius):", self.postSmoothingSlider)
+
     # force
 
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.forceSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.postSmoothingCheckBox.connect('toggled(bool)', self.updateMRMLFromGUI)
+    self.postSmoothingSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
 
   def onEffectButtonClicked(self):
     super().onEffectButtonClicked()
@@ -158,7 +168,8 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.parameterNode.SetParameter("SmudgeRadius", str(self.radiusSlider.value) )
     self.parameterNode.SetParameter("SmudgeHardness", str(self.hardnessSlider.value) )
     self.parameterNode.SetParameter("SmudgeForce", str(self.forceSlider.value) )
-    self.parameterNode.SetParameter("SmudgePostSmoothing", str(self.postSmoothingCheckBox.isChecked()))
+    self.parameterNode.SetParameter("SmudgePostSmoothing", str(int(self.postSmoothingCheckBox.isChecked())))
+    self.parameterNode.SetParameter("SmudgeSigma", str(self.postSmoothingSlider.value) )
 
 #
 # Draw

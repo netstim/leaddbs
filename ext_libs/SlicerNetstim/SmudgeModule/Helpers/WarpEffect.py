@@ -71,6 +71,7 @@ class WarpEffectTool():
     self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
     # save tool name
     self.parameterNode.SetParameter("lastOperation", self.toolName)
+    self.parameterNode.SetParameter("warpModified", str(int(self.parameterNode.GetParameter("warpModified"))+1))
 
   def cleanup(self):
     pass
@@ -134,8 +135,9 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     elif event == 'LeftButtonReleaseEvent':
       self.smudging = False
       # smooth
-      #sigma = float(self.parameterNode.GetParameter("BlurSigma")) / self.auxTransformSpacing
-      #self.auxTransformArray[:] = np.stack([ndimage.gaussian_filter(self.auxTransformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
+      if int(self.parameterNode.GetParameter("SmudgePostSmoothing")):
+        sigma = float(self.parameterNode.GetParameter("SmudgeSigma")) / 100.0 * float(self.parameterNode.GetParameter("SmudgeRadius")) / self.auxTransformSpacing
+        self.auxTransformArray[:] = np.stack([ndimage.gaussian_filter(self.auxTransformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
       # apply
       self.applyChanges()
       self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)

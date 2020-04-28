@@ -547,6 +547,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("SmudgeHardness", "40")
     node.SetParameter("SmudgeForce", "100")
     node.SetParameter("SmudgePostSmoothing", "0")
+    node.SetParameter("SmudgeSigma", "0")
     node.SetParameter("expandEdge", "0")
     node.SetParameter("maxRadius", "50")
     # draw
