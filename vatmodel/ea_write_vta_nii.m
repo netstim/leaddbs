@@ -1,4 +1,11 @@
 function [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
+
+
+vatgrad=getappdata(resultfig,'vatgrad');
+if isempty(vatgrad)
+    clear('vatgrad');
+end
+
 % define midpoints of quiver field
 vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
 vizz=0;
@@ -12,6 +19,9 @@ nmag_gradvis=nmag_gradvis/5; % largest grad vector will be 1/50 mm long
 % now apply scaling to gradvis:
 gradvis=gradvis.*repmat(nmag_gradvis,1,3);
 gradvis=gradvis./repmat(mag_gradvis,1,3);
+
+
+
 vatgrad(side).qx=gradvis(:,1); vatgrad(side).qy=gradvis(:,2); vatgrad(side).qz=gradvis(:,3);
 
 %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))

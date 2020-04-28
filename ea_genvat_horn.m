@@ -353,10 +353,7 @@ vol.pos=vol.pos*SIfx; % convert back to mm.
 
 midpts=mean(cat(3,vol.pos(vol.tet(:,1),:),vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,3),:),vol.pos(vol.tet(:,4),:)),3); % midpoints of each pyramid
 
-vatgrad=getappdata(resultfig,'vatgrad');
-if isempty(vatgrad)
-    clear('vatgrad');
-end
+
 reduc=10;
 
 
@@ -380,7 +377,15 @@ indices(indices>length(midpts))=[];
 
 [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
 % transform midpts to template if necessary:
-if options.native==1 && options.orignative==0 % case if we are visualizing in MNI but want to calc VTA in native space -> now transform back to MNI
+if options.native==1 % if we calculated in native space -> now transform back to MNI
+    if options.orignative==1 % if we are displaying in native space -> export native space results as function outputs before conversion to MNI
+        % define function outputs
+        varargout{1}=vatfv;
+        varargout{2}=vatvolume;
+        varargout{3}=radius;
+        ea_dispt(''); % stop chain of timed processes.        
+    end
+    % convert to MNI    
     c=midpts';
     [~,anatpresent]=ea_assignpretra(options);
     V=ea_open_vol([options.root,options.patientname,filesep,anatpresent{1}]);
@@ -390,21 +395,26 @@ if options.native==1 && options.orignative==0 % case if we are visualizing in MN
         [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
         '')';
     midpts=midpts(:,1:3);
-    options.native=options.orignative; % go back to template space
+    options.native=0; % go back to template space for export
     [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
+    options.native=options.orignative; % go back to originally set space
+
+    if options.orignative==0 % case if we are visualizing in MNI but calculated VTA in native space -> define MNI vta as function output
+        % define function outputs
+        varargout{1}=vatfv;
+        varargout{2}=vatvolume;
+        varargout{3}=radius;
+        ea_dispt(''); % stop chain of timed processes.
+    end
+    
+else % calculated in MNI space directly
+            % define function outputs
+        varargout{1}=vatfv;
+        varargout{2}=vatvolume;
+        varargout{3}=radius;
+        ea_dispt(''); % stop chain of timed processes.
 
 end
-
-
-% define function outputs
-varargout{1}=vatfv;
-varargout{2}=vatvolume;
-varargout{3}=radius;
-ea_dispt(''); % stop chain of timed processes.
-
-
-
-
 
 
 function changed=ea_headmodel_changed(options,side,elstruct)
