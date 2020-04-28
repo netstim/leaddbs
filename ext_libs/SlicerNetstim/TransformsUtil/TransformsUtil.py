@@ -387,6 +387,16 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     return lastLayer.GetID()
 
 
+  def transformToGridTransform(self, transformNode, size,origin,spacing):
+    outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
+    referenceVolume = self.createEmpyVolume(size, origin, spacing)    
+    transformsLogic = slicer.modules.transforms.logic()
+    transformsLogic.ConvertToGridTransform(transformNode, referenceVolume, outNode)
+    # remove aux nodes
+    slicer.mrmlScene.RemoveNode(referenceVolume)
+    return outNode
+
+
   def arrayFromGeneralTransform(self, transformNode, componentNumber):
     # https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/util.py
     transformGrid = transformNode.GetTransformFromParent().GetConcatenatedTransform(componentNumber)

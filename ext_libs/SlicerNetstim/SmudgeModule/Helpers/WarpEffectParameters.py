@@ -229,7 +229,7 @@ class BlurEffectParameters(WarpAbstractEffect):
     transformSelectFrame.setLayout(qt.QHBoxLayout())
 
     self.userModificationsRadioButton = qt.QRadioButton('User Modifications')
-    self.CompleteRadioButton = qt.QRadioButton('Original + User Modifications (Overwrite Required)')
+    self.CompleteRadioButton = qt.QRadioButton('Original + User Modifications')
     transformSelectFrame.layout().addWidget(self.userModificationsRadioButton)
     transformSelectFrame.layout().addWidget(self.CompleteRadioButton)
     self.parametersFrame.layout().addRow("Warp:", transformSelectFrame)
@@ -285,8 +285,20 @@ class BlurEffectParameters(WarpAbstractEffect):
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     hasCorrectNumberOFLayers = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) == 2
     isCorrectTransformType = isinstance(warpNode.GetTransformFromParent().GetConcatenatedTransform(0), slicer.vtkOrientedGridTransform)
-    if not hasCorrectNumberOFLayers or not isCorrectTransformType:
+    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) > 2:
       TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, False)
+    elif not isinstance(warpNode.GetTransformFromParent().GetConcatenatedTransform(0), slicer.vtkOrientedGridTransform):
+      # get last transform (drawing)
+      transformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
+      # transform to grid transform
+      size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+      outNode = TransformsUtil.TransformsUtilLogic().transformToGridTransform(slicer.util.getNode(transformID), size, origin, spacing)
+      # re-apply
+      warpNode.SetAndObserveTransformNodeID(outNode.GetID())
+      warpNode.HardenTransform()
+      # remove aux nodes
+      slicer.mrmlScene.RemoveNode(outNode)
+      slicer.mrmlScene.RemoveNode(slicer.util.getNode(transformID))
     # get array
     transformArray = TransformsUtil.TransformsUtilLogic().arrayFromGeneralTransform(warpNode, 0)
     # init
