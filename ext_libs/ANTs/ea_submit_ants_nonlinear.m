@@ -97,7 +97,9 @@ if status
    ea_error('ANTs normalization failed - likely due to out of memory problems. Please try a different normalization strategy or reduce the number of threads in the ANTs settings dialogue.');
 end
 
-ea_addrefinewarp(props.directory);
+if refinewarp
+    ea_addrefinewarp(props.directory);
+end
 
 ea_conv_antswarps(props.directory, outputPrefix, '.nii.gz', 'float');
 
