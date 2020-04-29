@@ -113,7 +113,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     warpEffects = [WarpEffectParameters.NoneEffectParameters(), 
                   WarpEffectParameters.SmudgeEffectParameters(), 
                   WarpEffectParameters.DrawEffectParameters(),
-                  WarpEffectParameters.BlurEffectParameters()]
+                  WarpEffectParameters.SmoothEffectParameters()]
 
     for warpEffectParametersWidget in warpEffects:
       toolsFrame.layout().addWidget(warpEffectParametersWidget.effectButton)
@@ -132,30 +132,45 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     editFormLayout = qt.QFormLayout(editCollapsibleButton)  
 
     #
-    # Undo Redo Flatten
+    # Undo Redo
     #   
 
     undoredoFrame = qt.QFrame()
     undoredoFrame.setLayout(qt.QHBoxLayout())
 
-    buttonNames = ['Undo All', 'Undo', 'Redo', 'Overwrite']
-    buttons = []
+    undoAllButton =   {'text':'Undo All',  'icon':'UndoAll',   'toolTip':'Undo all user modifications. Fixed points won\'t be deleted.'}
+    undoButton =      {'text':'Undo',      'icon':'Undo',      'toolTip':'Undo last operation. In case it was a drawing, corresponding fixed points will be deleted.'}
+    redoButton =      {'text':'Redo',      'icon':'Redo',      'toolTip':'Redo'}
+    overwriteButton = {'text':'Overwrite', 'icon':'Overwrite', 'toolTip':'Overwrite original warp with current modifications.'}
 
-    for name in buttonNames:
-      buttonIconPath = self.resourcePath(os.path.join('Icons', name + '.png'))
-      buttonPixmap = qt.QPixmap(buttonIconPath)
-      button = qt.QPushButton(name)
-      button.setStyleSheet("QPushButton { background-image: url(" + buttonIconPath + "); font-size: 10px; text-align: bottom; border-radius: 3px; border-style: solid; border-color: rgb(182, 182, 182); border-width: 1px; } QPushButton:disabled { background-image: url(" + self.resourcePath(os.path.join('Icons', name + '_d.png')) + "); }")
+    buttonStyleSheet = "QPushButton { \
+                          background-image: url(%s); \
+                          font-size: 10px; \
+                          text-align: bottom; \
+                          border-radius: 3px; \
+                          border-style: solid; \
+                          border-color: rgb(182, 182, 182); \
+                          border-width: 1px; } \
+                        QPushButton:disabled { \
+                          background-image: url(%s); }\
+                        QPushButton:pressed { \
+                          background-color: rgb(232, 232, 232); }"
+
+    for b in [undoAllButton, undoButton, redoButton, overwriteButton]:
+      buttonIconPath = self.resourcePath(os.path.join('Icons', b['icon'] + '%s.png'))
+      buttonPixmap = qt.QPixmap(buttonIconPath %'')
+      button = qt.QPushButton(b['text'])
+      button.setStyleSheet(buttonStyleSheet % (buttonIconPath %'', buttonIconPath %'_disabled'))
       button.setFixedSize(buttonPixmap.rect().size())
       button.setEnabled(False)
-      button.setToolTip('')
+      button.setToolTip(b['toolTip'])
       undoredoFrame.layout().addWidget(button)
-      buttons.append(button)
+      b['widget'] = button
 
-    self.undoAllButton = buttons[0]
-    self.undoButton = buttons[1]
-    self.redoButton = buttons[2]
-    self.overwriteButton = buttons[3]
+    self.undoAllButton = undoAllButton['widget']
+    self.undoButton = undoButton['widget']
+    self.redoButton = redoButton['widget']
+    self.overwriteButton = overwriteButton['widget']
     editFormLayout.addRow(undoredoFrame)
 
 
@@ -172,7 +187,9 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Type selector
     self.sceneRadioButton = qt.QRadioButton('Scene')
     self.atlasesRadioButton = qt.QRadioButton('Atlases')
+    self.atlasesRadioButton.setToolTip('Lead-DBS Atlases. Press + to import more atlases')
     self.drawingsRadioButton = qt.QRadioButton('Fixed Points')
+    self.drawingsRadioButton.setToolTip('Points in this list will remian fixed in following drawings. Press + to add fiducials.')
     self.atlasesRadioButton.setChecked(True)
 
     # add
@@ -181,18 +198,21 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.addTreeElement = qt.QPushButton()
     self.addTreeElement.setIcon(addIcon)
     self.addTreeElement.setIconSize(addPixmap.rect().size())
+    self.addTreeElement.setToolTip('Add')
     # delete
     deletePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','Delete.png')))
     deleteIcon = qt.QIcon(deletePixmap)
     self.deleteTreeElement = qt.QPushButton()
     self.deleteTreeElement.setIcon(deleteIcon)
     self.deleteTreeElement.setIconSize(deletePixmap.rect().size())
+    self.deleteTreeElement.setToolTip('Delete')
     # rename
     renamePixmap = qt.QPixmap(self.resourcePath(os.path.join('Icons','Rename.png')))
     renameIcon = qt.QIcon(renamePixmap)
     self.renameTreeElement = qt.QPushButton()
     self.renameTreeElement.setIcon(renameIcon)
     self.renameTreeElement.setIconSize(renamePixmap.rect().size())
+    self.renameTreeElement.setToolTip('Rename')
 
     modelEditFrame = qt.QFrame()
     modelEditFrame.setLayout(qt.QHBoxLayout())
@@ -316,7 +336,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     warpNode = slicer.util.getNode(warpID) if warpID != "" else None
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
     # undo redo button
-    self.undoButton.setEnabled(warpNumberOfComponents > 1 and self.parameterNode.GetParameter("redoTransformID") == "" and self.parameterNode.GetParameter("lastOperation") != "undoall") 
+    self.undoButton.setEnabled(warpNumberOfComponents > 1 and self.parameterNode.GetParameter("redoTransformID") == "" and self.parameterNode.GetParameter("lastOperation") != "UndoAll") 
     self.redoButton.setEnabled(self.parameterNode.GetParameter("redoTransformID") != "") 
     self.overwriteButton.setEnabled(warpNumberOfComponents > 1)
     self.undoAllButton.setEnabled(warpNumberOfComponents > 1)
@@ -432,7 +452,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
   def onUndoAllButton(self):
-    self.parameterNode.SetParameter("lastOperation","undoall")
+    self.parameterNode.SetParameter("lastOperation","UndoAll")
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) > 2:
       TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, False)
@@ -445,7 +465,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     redoTransformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
     self.parameterNode.SetParameter("redoTransformID", redoTransformID)
     # disable last drawing if was a drawing operation
-    if self.parameterNode.GetParameter("lastOperation") == 'snap':
+    if self.parameterNode.GetParameter("lastOperation") == 'Draw':
       SmudgeModuleLogic().disableLastDrawing()
 
   def onRedoButton(self):
@@ -459,7 +479,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     slicer.mrmlScene.RemoveNode(redoTransformNode)
     self.parameterNode.SetParameter("redoTransformID","")
     # re enable drawing
-    if self.parameterNode.GetParameter("lastOperation") == 'snap':
+    if self.parameterNode.GetParameter("lastOperation") == 'Draw':
       SmudgeModuleLogic().enableLastDrawing()
 
 
@@ -467,7 +487,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     SmudgeModuleLogic().removeRedoNodes()
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True)
-    self.parameterNode.SetParameter("lastOperation","flatten")
+    self.parameterNode.SetParameter("lastOperation", "Flatten")
     self.updateGuiFromMRML() # update history
 
 
@@ -521,10 +541,10 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("maxRadius", "50")
     # draw
     node.SetParameter("DrawSpread", "25")
-    # blur
-    node.SetParameter("BlurRadius", "25")
-    node.SetParameter("BlurHardness", "40")
-    node.SetParameter("BlurSigma", "10")
+    # Smooth
+    node.SetParameter("SmoothRadius", "25")
+    node.SetParameter("SmoothHardness", "40")
+    node.SetParameter("SmoothSigma", "10")
     # lead dbs specific
     node.SetParameter("affineTransformID", "")
     node.SetParameter("templateID", "")

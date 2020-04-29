@@ -162,7 +162,7 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
     
   def updateGlyph(self, caller, event):
     effectName = self.parameterNode.GetParameter("currentEffect")
-    if effectName in ['Smudge','Blur']:
+    if effectName in ['Smudge','Smooth']:
       r = float(self.parameterNode.GetParameter(effectName + "Radius"))
       self.createGlyph(self.brush, r)
 

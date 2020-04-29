@@ -12,7 +12,7 @@ from . import WarpEffect
 class WarpAbstractEffect(VTKObservationMixin):
   
 
-  def __init__(self, name):
+  def __init__(self, name, toolTip):
     VTKObservationMixin.__init__(self)
     self.parameterNode = SmudgeModule.SmudgeModuleLogic().getParameterNode()
     self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGuiFromMRML)
@@ -26,6 +26,7 @@ class WarpAbstractEffect(VTKObservationMixin):
     self.effectButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
     self.effectButton.setIcon(effectIcon)
     self.effectButton.setText(self.name)
+    self.effectButton.setToolTip(toolTip)
     self.effectButton.setIconSize(effectPixmap.rect().size())
     self.effectButton.setAutoExclusive(True)
     self.effectButton.setCheckable(True)
@@ -82,7 +83,8 @@ class NoneEffectParameters(WarpAbstractEffect):
 
   def __init__(self):
 
-    WarpAbstractEffect.__init__(self, 'None')
+    toolTip = 'None. Disable Effects.'
+    WarpAbstractEffect.__init__(self, 'None', toolTip)
 
     interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
     self.addObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) 
@@ -110,7 +112,8 @@ class SmudgeEffectParameters(WarpAbstractEffect):
 
   def __init__(self):
 
-    WarpAbstractEffect.__init__(self, 'Smudge')
+    toolTip = 'Click and drag to deform the image'
+    WarpAbstractEffect.__init__(self, 'Smudge', toolTip)
 
     # radius
     self.radiusSlider = ctk.ctkSliderWidget()
@@ -119,6 +122,7 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.radiusSlider.maximum = float(self.parameterNode.GetParameter("maxRadius"))
     self.radiusSlider.decimals = 1
     self.radiusSlider.value = float(self.parameterNode.GetParameter("SmudgeRadius"))
+    self.radiusSlider.setToolTip('Radius')
     self.parametersFrame.layout().addRow("Radius (mm):", self.radiusSlider)
 
     # hardness
@@ -128,6 +132,7 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.hardnessSlider.maximum = 100
     self.hardnessSlider.decimals = 0
     self.hardnessSlider.value = float(self.parameterNode.GetParameter("SmudgeHardness"))
+    self.hardnessSlider.setToolTip('Hardness')
     self.parametersFrame.layout().addRow("Hardness (%):", self.hardnessSlider)
 
     # force
@@ -137,11 +142,13 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.forceSlider.maximum = 100
     self.forceSlider.decimals = 0
     self.forceSlider.value = float(self.parameterNode.GetParameter("SmudgeForce"))
+    self.forceSlider.setToolTip('Force')
     self.parametersFrame.layout().addRow("Force (%):", self.forceSlider)
 
     # post smoothing
     self.postSmoothingCheckBox = qt.QCheckBox('')
     self.postSmoothingCheckBox.setChecked(int(self.parameterNode.GetParameter("SmudgePostSmoothing")))
+    self.postSmoothingCheckBox.setToolTip('Enable to smooth the added warp once the operation finished.')
     self.parametersFrame.layout().addRow("Post Smoothing:", self.postSmoothingCheckBox)
 
     # post smoothing value
@@ -151,6 +158,7 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.postSmoothingSlider.maximum = 100
     self.postSmoothingSlider.decimals = 0
     self.postSmoothingSlider.value = float(self.parameterNode.GetParameter("SmudgeSigma"))
+    self.postSmoothingSlider.setToolTip('Smoothing sigma as a percentage of the radius.')
     self.parametersFrame.layout().addRow("Sigma (% Radius):", self.postSmoothingSlider)
 
     # force
@@ -193,7 +201,8 @@ class DrawEffectParameters(WarpAbstractEffect):
 
   def __init__(self):
 
-    WarpAbstractEffect.__init__(self, 'Draw')
+    toolTip = 'Draw a structure in the image to move it to the nearest visible model. When finished, corresponding fixed points will be added.'
+    WarpAbstractEffect.__init__(self, 'Draw', toolTip)
 
     self.spreadSlider = ctk.ctkSliderWidget()
     self.spreadSlider.singleStep = 0.1
@@ -201,6 +210,7 @@ class DrawEffectParameters(WarpAbstractEffect):
     self.spreadSlider.maximum = 50
     self.spreadSlider.decimals = 1
     self.spreadSlider.value = float(self.parameterNode.GetParameter("DrawSpread"))
+    self.spreadSlider.setToolTip('Specify up to how far away from the drawing the warp will be modified.')
     self.parametersFrame.layout().addRow("Spread (mm):", self.spreadSlider)
 
     self.spreadSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
@@ -214,25 +224,28 @@ class DrawEffectParameters(WarpAbstractEffect):
     self.parameterNode.SetParameter("DrawSpread", str(self.spreadSlider.value))
 
 #
-# Blur
+# Smooth
 #
 
 
-class BlurEffectParameters(WarpAbstractEffect):
+class SmoothEffectParameters(WarpAbstractEffect):
 
   def __init__(self):
 
-    WarpAbstractEffect.__init__(self, 'Blur')
+    toolTip = 'Smooth the warp field. Specify active warp to enable. Click and hold to preview, double-click to aply.'
+    WarpAbstractEffect.__init__(self, 'Smooth', toolTip)
 
     # select transform
     transformSelectFrame = qt.QFrame()
     transformSelectFrame.setLayout(qt.QHBoxLayout())
 
     self.userModificationsRadioButton = qt.QRadioButton('User Modifications')
+    self.userModificationsRadioButton.setToolTip('Only smooth warp modifications added.')
     self.CompleteRadioButton = qt.QRadioButton('Original + User Modifications')
+    self.CompleteRadioButton.setToolTip('Smooth the complete warp. Overwrite is required to enable.')
     transformSelectFrame.layout().addWidget(self.userModificationsRadioButton)
     transformSelectFrame.layout().addWidget(self.CompleteRadioButton)
-    self.parametersFrame.layout().addRow("Warp:", transformSelectFrame)
+    self.parametersFrame.layout().addRow("Active Warp:", transformSelectFrame)
 
     # sigma
     self.sigmaSlider = ctk.ctkSliderWidget()
@@ -240,7 +253,8 @@ class BlurEffectParameters(WarpAbstractEffect):
     self.sigmaSlider.minimum = 0
     self.sigmaSlider.maximum = 30
     self.sigmaSlider.decimals = 0
-    self.sigmaSlider.value = float(self.parameterNode.GetParameter("BlurSigma"))
+    self.sigmaSlider.value = float(self.parameterNode.GetParameter("SmoothSigma"))
+    self.sigmaSlider.setToolTip('Smoothing sigma')
     self.parametersFrame.layout().addRow("Sigma (mm):", self.sigmaSlider)
 
     # radius
@@ -249,7 +263,8 @@ class BlurEffectParameters(WarpAbstractEffect):
     self.radiusSlider.minimum = 5
     self.radiusSlider.maximum = float(self.parameterNode.GetParameter("maxRadius"))
     self.radiusSlider.decimals = 1
-    self.radiusSlider.value = float(self.parameterNode.GetParameter("BlurRadius"))
+    self.radiusSlider.value = float(self.parameterNode.GetParameter("SmoothRadius"))
+    self.radiusSlider.setToolTip('Radius')
     self.parametersFrame.layout().addRow("Radius (mm):", self.radiusSlider)
 
     # hardness
@@ -258,7 +273,8 @@ class BlurEffectParameters(WarpAbstractEffect):
     self.hardnessSlider.minimum = 0
     self.hardnessSlider.maximum = 100
     self.hardnessSlider.decimals = 0
-    self.hardnessSlider.value = float(self.parameterNode.GetParameter("BlurHardness"))
+    self.hardnessSlider.value = float(self.parameterNode.GetParameter("SmoothHardness"))
+    self.hardnessSlider.setToolTip('Hardness')
     self.parametersFrame.layout().addRow("Hardness (%):", self.hardnessSlider)
 
 
@@ -277,10 +293,10 @@ class BlurEffectParameters(WarpAbstractEffect):
     transformArray = slicer.util.array(warpNode.GetID())
     # init
     for sliceWidget in self.sliceWidgets():
-      WarpEffect.BlurEffectTool(sliceWidget, transformArray)
+      WarpEffect.SmoothEffectTool(sliceWidget, transformArray)
 
   def onUserModificationsRadioButton(self):
-    self.parameterNode.SetParameter("lastOperation","undoall") # disable undo last operation
+    self.parameterNode.SetParameter("lastOperation","UndoAll") # disable undo last operation
     # flatten if needed
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     hasCorrectNumberOFLayers = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) == 2
@@ -303,7 +319,7 @@ class BlurEffectParameters(WarpAbstractEffect):
     transformArray = TransformsUtil.TransformsUtilLogic().arrayFromGeneralTransform(warpNode, 0)
     # init
     for sliceWidget in self.sliceWidgets():
-      WarpEffect.BlurEffectTool(sliceWidget, transformArray)
+      WarpEffect.SmoothEffectTool(sliceWidget, transformArray)
 
 
   def resetButtons(self):
@@ -324,15 +340,15 @@ class BlurEffectParameters(WarpAbstractEffect):
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
     self.userModificationsRadioButton.enabled = warpNumberOfComponents > 1
     self.CompleteRadioButton.enabled = warpNumberOfComponents == 1
-    radius = float(self.parameterNode.GetParameter("BlurRadius"))
+    radius = float(self.parameterNode.GetParameter("SmoothRadius"))
     self.radiusSlider.setValue( radius )
     if radius < self.radiusSlider.minimum or radius > self.radiusSlider.maximum:
       self.updateMRMLFromGUI()
-    self.hardnessSlider.setValue(float(self.parameterNode.GetParameter("BlurHardness")))
-    self.sigmaSlider.setValue(float(self.parameterNode.GetParameter("BlurSigma")))
+    self.hardnessSlider.setValue(float(self.parameterNode.GetParameter("SmoothHardness")))
+    self.sigmaSlider.setValue(float(self.parameterNode.GetParameter("SmoothSigma")))
 
 
   def updateMRMLFromGUI(self):
-    self.parameterNode.SetParameter("BlurRadius", str(self.radiusSlider.value) )
-    self.parameterNode.SetParameter("BlurHardness", str(self.hardnessSlider.value) )
-    self.parameterNode.SetParameter("BlurSigma", str(self.sigmaSlider.value) )
+    self.parameterNode.SetParameter("SmoothRadius", str(self.radiusSlider.value) )
+    self.parameterNode.SetParameter("SmoothHardness", str(self.hardnessSlider.value) )
+    self.parameterNode.SetParameter("SmoothSigma", str(self.sigmaSlider.value) )

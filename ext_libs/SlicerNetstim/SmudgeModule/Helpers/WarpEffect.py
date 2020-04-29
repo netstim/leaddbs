@@ -70,7 +70,7 @@ class WarpEffectTool():
     self.warpNode.HardenTransform()
     self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
     # save tool name
-    self.parameterNode.SetParameter("lastOperation", self.toolName)
+    self.parameterNode.SetParameter("lastOperation", self.parameterNode.GetParameter("currentEffect"))
     # update gui
     self.parameterNode.SetParameter("warpModified", str(int(self.parameterNode.GetParameter("warpModified"))+1))
 
@@ -110,9 +110,7 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
     WarpEffectTool.__init__(self)
     PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
-    
-    self.toolName = 'smudge'
-    
+        
     # transform data
     self.auxTransformNode = auxTransformNode
     self.auxTransformSpacing = self.auxTransformNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0] # Asume isotropic!
@@ -169,23 +167,21 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
 
 #
-# BlurEffectTool
+# SmoothEffectTool
 #
 
-class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
+class SmoothEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
   def __init__(self, sliceWidget, transformArray):
 
     WarpEffectTool.__init__(self)
     PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
     
-    self.toolName = 'blur'
-
     self.transformArray = transformArray
     self.warpRASToIJK = TransformsUtil.TransformsUtilLogic().getTransformRASToIJK(self.warpNode)
     self.warpSpacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)[2][0]
 
-    self.blurContent = []
+    self.smoothContent = []
     self.currentIndex = []
     self.preview = False
     
@@ -195,20 +191,20 @@ class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
     if event =='LeftButtonDoubleClickEvent':
       self.preview = False
-      self.transformArray[self.currentIndex] += self.blurContent
+      self.transformArray[self.currentIndex] += self.smoothContent
       # apply
       self.applyChanges()
       
     elif event == 'LeftButtonReleaseEvent':
       if self.preview:
-        self.transformArray[self.currentIndex] -= self.blurContent
+        self.transformArray[self.currentIndex] -= self.smoothContent
         self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
 
     elif event == 'LeftButtonPressEvent':
       self.preview = True
 
-      sigma = float(self.parameterNode.GetParameter("BlurSigma")) / self.warpSpacing
-      r = int(round(float(self.parameterNode.GetParameter("BlurRadius")) / self.warpSpacing))
+      sigma = float(self.parameterNode.GetParameter("SmoothSigma")) / self.warpSpacing
+      r = int(round(float(self.parameterNode.GetParameter("SmoothRadius")) / self.warpSpacing))
 
       if r != int(round(float(self.parameterNode.GetParameter("maxRadius")) / self.warpSpacing)):
         # get shpere and index
@@ -216,17 +212,17 @@ class BlurEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
         currentPoint = self.eventPositionToRAS()
         self.currentIndex = self.getCurrentIndex(r, currentPoint, self.warpRASToIJK)   
         # gaussian filter for each component 
-        self.blurContent =  np.stack([ndimage.gaussian_filter(self.transformArray[self.currentIndex + (slice(i,i+1),)], sigma) for i in range(3)], 3).squeeze()
+        self.smoothContent =  np.stack([ndimage.gaussian_filter(self.transformArray[self.currentIndex + (slice(i,i+1),)], sigma) for i in range(3)], 3).squeeze()
         # substract original
-        self.blurContent = self.blurContent - self.transformArray[self.currentIndex]
+        self.smoothContent = self.smoothContent - self.transformArray[self.currentIndex]
         # modulate result with the sphere
-        self.blurContent = np.stack([self.blurContent[:,:,:,i] * sphereResult for i in range(3)], 3).squeeze()
+        self.smoothContent = np.stack([self.smoothContent[:,:,:,i] * sphereResult for i in range(3)], 3).squeeze()
       else: # maximum radius: take all warp field
-        self.blurContent =  np.stack([ndimage.gaussian_filter(self.transformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
-        self.blurContent = self.blurContent - self.transformArray
-        self.currentIndex = tuple([slice(0,s) for s in self.blurContent.shape])
+        self.smoothContent =  np.stack([ndimage.gaussian_filter(self.transformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
+        self.smoothContent = self.smoothContent - self.transformArray
+        self.currentIndex = tuple([slice(0,s) for s in self.smoothContent.shape])
       # apply
-      self.transformArray[self.currentIndex] += self.blurContent
+      self.transformArray[self.currentIndex] += self.smoothContent
       self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
       
 
@@ -247,8 +243,6 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
 
     WarpEffectTool.__init__(self)
     PointerEffect.DrawEffectTool.__init__(self,sliceWidget)
-
-    self.toolName = 'snap'
     
     size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)
     self.warpBounds = [[origin[0]+spacing[0]*size[0]*i,  origin[1]+spacing[1]*size[1]*j, origin[2]+spacing[2]*size[2]*k] for i in range(2) for j in range(2) for k in range(2)]
