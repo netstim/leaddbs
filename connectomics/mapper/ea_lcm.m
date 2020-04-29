@@ -322,27 +322,17 @@ if ~exist([directory, reference], 'file')
 end
 
 % Check coregistration method
-try
-    load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
+coregmethodsused = load([directory,'ea_coregmrmethod_applied.mat']);
+coregPrefix = [refname,'_',anatfname];
+if isfield(coregmethodsused, coregPrefix) && ~isempty(coregmethodsused.(coregPrefix))
     % Disable Hybrid coregistration
-    coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
-catch
+    coregmethod = strrep(coregmethodsused.(coregPrefix), 'Hybrid SPM & ', '');
+    fprintf(['For this pair of coregistrations, the user specifically approved the ',coregmethod,' method.\n',...
+            'Will overwrite the current global options and use this method.\n']);
+else
     coregmethod = 'SPM'; % fallback to SPM coregistration
 end
-
 options.coregmr.method = coregmethod;
-
-% for this pair of approved coregistations, find out which method to use -
-% irrespective of the current selection in coregmethod.
-coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
-fn=fieldnames(coregmethodsused);
-for field=1:length(fn)
-    if contains(fn{field},refname)
-        disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
-        options.coregmr.method=coregmethodsused.(fn{field});
-        break
-    end
-end
 
 % Check if the transformation already exists
 xfm = [anatfname, '2', ea_stripext(reference), '_', lower(coregmethod), '\d*\.(mat|h5)$'];
