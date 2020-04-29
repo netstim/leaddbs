@@ -38,37 +38,27 @@ if ~exist([directory,'mean',restfname,'_mask.nii'], 'file')
         {[directory,'temp.nii']}, directory, 1, 0);
 
     % Check coregistration method
-    try
-        load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
+    coregmethodsused = load([directory,'ea_coregmrmethod_applied.mat']);
+    coregPrefix = ['r',restfname,'_',anatfname];
+    if isfield(coregmethodsused, coregPrefix) && ~isempty(coregmethodsused.(coregPrefix))
         % Disable Hybrid coregistration
-        coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
-    catch
+        coregmethod = strrep(coregmethodsused.(coregPrefix), 'Hybrid SPM & ', '');
+        fprintf(['For this pair of coregistrations, the user specifically approved the ',coregmethod,' method.\n',...
+            'Will overwrite the current global options and try to use this transform.\n']);
+    else
         coregmethod = 'SPM'; % fallback to SPM coregistration
     end
-
     options.coregmr.method = coregmethod;
 
-    % for this pair of approved coregistations, find out which method to use -
-    % irrespective of the current selection in coregmethod.
-    coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
-    fn=fieldnames(coregmethodsused);
-    for field=1:length(fn)
-        if contains(fn{field},['r',restfname])
-            disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
-            options.coregmr.method=coregmethodsused.(fn{field});
-            break
-        end
-    end
-
     % Check if the corresponding transform already exists
-    xfm = [ea_stripext(options.prefs.prenii_unnormalized), '2r', restfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+    xfm = [anatfname, '2r', restfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
     transform = ea_regexpdir(directory, xfm, 0);
 
     if numel(transform) == 0
         warning('Transformation not found! Running coregistration now!');
         transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
             [directory,'mean',restfname,'.nii'],...
-            [directory,'r',ea_stripext(options.prefs.rest),'_',options.prefs.prenii_unnormalized],...
+            [directory,'r',restfname,'_',options.prefs.prenii_unnormalized],...
             [],1,[],1);
         % Fix transformation names, replace 'mean' by 'r' for fMRI
         cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
@@ -302,27 +292,17 @@ for s=1:length(seedfile)
             fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
 
         % Check coregistration method
-        try
-            load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
+        coregmethodsused = load([directory,'ea_coregmrmethod_applied.mat']);
+        coregPrefix = ['r',restfname,'_',anatfname];
+        if isfield(coregmethodsused, coregPrefix) && ~isempty(coregmethodsused.(coregPrefix))
             % Disable Hybrid coregistration
-            coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
-        catch
+            coregmethod = strrep(coregmethodsused.(coregPrefix), 'Hybrid SPM & ', '');
+            fprintf(['For this pair of coregistrations, the user specifically approved the ',coregmethod,' method.\n',...
+                'Will overwrite the current global options and use this method.\n']);
+        else
             coregmethod = 'SPM'; % fallback to SPM coregistration
         end
-
         options.coregmr.method = coregmethod;
-
-        % for this pair of approved coregistations, find out which method to use -
-        % irrespective of the current selection in coregmethod.
-        coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
-        fn=fieldnames(coregmethodsused);
-        for field=1:length(fn)
-            if contains(fn{field},['r',restfname])
-                disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
-                options.coregmr.method=coregmethodsused.(fn{field});
-                break
-            end
-        end
 
         % Check if the transformation already exists
         xfm = ['hdmean', restfname, '2', anatfname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
