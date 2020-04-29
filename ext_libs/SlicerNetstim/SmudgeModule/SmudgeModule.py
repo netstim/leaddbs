@@ -143,6 +143,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     redoButton =      {'text':'Redo',      'icon':'Redo',      'toolTip':'Redo'}
     overwriteButton = {'text':'Overwrite', 'icon':'Overwrite', 'toolTip':'Overwrite original warp with current modifications.'}
 
+    # dont use QToolButton in order to use QPushButton's pressed and release signals
     buttonStyleSheet = "QPushButton { \
                           background-image: url(%s); \
                           font-size: 10px; \
@@ -536,7 +537,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("SmudgeHardness", "40")
     node.SetParameter("SmudgeForce", "100")
     node.SetParameter("SmudgePostSmoothing", "0")
-    node.SetParameter("SmudgeSigma", "0")
+    node.SetParameter("SmudgeSigma", "10")
     node.SetParameter("expandEdge", "0")
     node.SetParameter("maxRadius", "50")
     # draw
@@ -545,6 +546,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("SmoothRadius", "25")
     node.SetParameter("SmoothHardness", "40")
     node.SetParameter("SmoothSigma", "10")
+    node.SetParameter("SmoothUseRadius", "1")
     # lead dbs specific
     node.SetParameter("affineTransformID", "")
     node.SetParameter("templateID", "")

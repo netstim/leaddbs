@@ -185,6 +185,7 @@ class SmudgeEffectParameters(WarpAbstractEffect):
       self.updateMRMLFromGUI()
     self.hardnessSlider.setValue(float(self.parameterNode.GetParameter("SmudgeHardness")))
     self.forceSlider.setValue(float(self.parameterNode.GetParameter("SmudgeForce")))
+    self.postSmoothingSlider.setEnabled(self.postSmoothingCheckBox.checked)
     
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("SmudgeRadius", str(self.radiusSlider.value) )
@@ -241,10 +242,10 @@ class SmoothEffectParameters(WarpAbstractEffect):
 
     self.userModificationsRadioButton = qt.QRadioButton('User Modifications')
     self.userModificationsRadioButton.setToolTip('Only smooth warp modifications added.')
-    self.CompleteRadioButton = qt.QRadioButton('Original + User Modifications')
-    self.CompleteRadioButton.setToolTip('Smooth the complete warp. Overwrite is required to enable.')
+    self.completeRadioButton = qt.QRadioButton('Original + User Modifications')
+    self.completeRadioButton.setToolTip('Smooth the complete warp. Overwrite is required to enable.')
     transformSelectFrame.layout().addWidget(self.userModificationsRadioButton)
-    transformSelectFrame.layout().addWidget(self.CompleteRadioButton)
+    transformSelectFrame.layout().addWidget(self.completeRadioButton)
     self.parametersFrame.layout().addRow("Active Warp:", transformSelectFrame)
 
     # sigma
@@ -256,6 +257,12 @@ class SmoothEffectParameters(WarpAbstractEffect):
     self.sigmaSlider.value = float(self.parameterNode.GetParameter("SmoothSigma"))
     self.sigmaSlider.setToolTip('Smoothing sigma')
     self.parametersFrame.layout().addRow("Sigma (mm):", self.sigmaSlider)
+
+    # use radius / hole image
+    self.useRadiusCheckbox = qt.QCheckBox()
+    self.useRadiusCheckbox.setChecked(int(self.parameterNode.GetParameter("SmoothUseRadius")))
+    self.useRadiusCheckbox.setToolTip('Use radius to focus editable area. Otherwise the hole warp will be modified.')
+    self.parametersFrame.layout().addRow("Use Radius:", self.useRadiusCheckbox)
 
     # radius
     self.radiusSlider = ctk.ctkSliderWidget()
@@ -281,8 +288,10 @@ class SmoothEffectParameters(WarpAbstractEffect):
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.sigmaSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.useRadiusCheckbox.connect('toggled(bool)', self.updateMRMLFromGUI)
     self.userModificationsRadioButton.connect('clicked(bool)', self.onUserModificationsRadioButton)
-    self.CompleteRadioButton.connect('clicked(bool)', self.onCompleteRadioButton)
+    self.completeRadioButton.connect('clicked(bool)', self.onCompleteRadioButton)
+    
 
   def onCompleteRadioButton(self):
     # flatten if needed
@@ -325,11 +334,11 @@ class SmoothEffectParameters(WarpAbstractEffect):
   def resetButtons(self):
     # uncheck radio buttons
     self.userModificationsRadioButton.setAutoExclusive(False)
-    self.CompleteRadioButton.setAutoExclusive(False)
+    self.completeRadioButton.setAutoExclusive(False)
     self.userModificationsRadioButton.setChecked(False)
-    self.CompleteRadioButton.setChecked(False)
-    self.userModificationsRadioButton.setAutoExclusive(False)
-    self.CompleteRadioButton.setAutoExclusive(False)
+    self.completeRadioButton.setChecked(False)
+    self.userModificationsRadioButton.setAutoExclusive(True)
+    self.completeRadioButton.setAutoExclusive(True)
 
   def onEffectButtonClicked(self):
     super().onEffectButtonClicked()
@@ -339,16 +348,20 @@ class SmoothEffectParameters(WarpAbstractEffect):
     warpNode = super().updateGuiFromMRML(caller, event)
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
     self.userModificationsRadioButton.enabled = warpNumberOfComponents > 1
-    self.CompleteRadioButton.enabled = warpNumberOfComponents == 1
+    self.completeRadioButton.enabled = warpNumberOfComponents == 1
     radius = float(self.parameterNode.GetParameter("SmoothRadius"))
     self.radiusSlider.setValue( radius )
     if radius < self.radiusSlider.minimum or radius > self.radiusSlider.maximum:
       self.updateMRMLFromGUI()
     self.hardnessSlider.setValue(float(self.parameterNode.GetParameter("SmoothHardness")))
     self.sigmaSlider.setValue(float(self.parameterNode.GetParameter("SmoothSigma")))
+    # radius - hardness enables
+    self.radiusSlider.setEnabled(self.useRadiusCheckbox.checked)
+    self.hardnessSlider.setEnabled(self.useRadiusCheckbox.checked)
 
 
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("SmoothRadius", str(self.radiusSlider.value) )
     self.parameterNode.SetParameter("SmoothHardness", str(self.hardnessSlider.value) )
     self.parameterNode.SetParameter("SmoothSigma", str(self.sigmaSlider.value) )
+    self.parameterNode.SetParameter("SmoothUseRadius", str(int(self.useRadiusCheckbox.checked)) )

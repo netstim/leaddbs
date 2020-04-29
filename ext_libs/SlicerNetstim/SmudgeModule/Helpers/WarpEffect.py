@@ -206,7 +206,7 @@ class SmoothEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
       sigma = float(self.parameterNode.GetParameter("SmoothSigma")) / self.warpSpacing
       r = int(round(float(self.parameterNode.GetParameter("SmoothRadius")) / self.warpSpacing))
 
-      if r != int(round(float(self.parameterNode.GetParameter("maxRadius")) / self.warpSpacing)):
+      if int(self.parameterNode.GetParameter("SmoothUseRadius")):
         # get shpere and index
         sphereResult = self.createSphere(r)
         currentPoint = self.eventPositionToRAS()

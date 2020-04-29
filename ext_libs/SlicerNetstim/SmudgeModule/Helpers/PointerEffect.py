@@ -135,8 +135,8 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
       self.actor.SetPosition(xy)
       self.sliceView.scheduleRender()
     elif event == "EnterEvent":
-      self.updateGlyph([],[]) # update in case radius changed from slider
       self.actor.VisibilityOn()
+      self.updateGlyph([],[]) # update in case radius changed from slider
     elif event == "LeaveEvent":
       self.actor.VisibilityOff()
     elif event == 'LeftButtonPressEvent':
@@ -165,6 +165,8 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
     if effectName in ['Smudge','Smooth']:
       r = float(self.parameterNode.GetParameter(effectName + "Radius"))
       self.createGlyph(self.brush, r)
+    if effectName == 'Smooth' and hasattr(self, 'actor'):
+      self.actor.SetVisibility(int(self.parameterNode.GetParameter("SmoothUseRadius")))
 
   def cleanup(self):
     super(CircleEffectTool,self).cleanup()
