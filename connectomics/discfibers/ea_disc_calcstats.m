@@ -146,11 +146,19 @@ for group=groups
         catch
             posthresh{group,side}=inf;
         end
+        
+        if ~obj.posvisible
+        posthresh{group,side}=inf;
+        end
         try
             negthresh{group,side}=negvals{group,side}(ceil(((obj.shownegamount(side)+eps)/100)*length(negvals{group,side})));
         catch
             negthresh{group,side}=-inf;
         end
+        if ~obj.negvisible
+            negthresh{group,side}=-inf;
+        end
+        
         % Remove vals and fibers outside the thresholding range
         remove=logical(logical(vals{group,side}<posthresh{group,side}) .* logical(vals{group,side}>negthresh{group,side}));
         vals{group,side}(remove)=[]; 
