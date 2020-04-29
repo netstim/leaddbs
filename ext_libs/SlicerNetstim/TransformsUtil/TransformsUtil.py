@@ -153,7 +153,7 @@ class TransformsUtilWidget(ScriptedLoadableModuleWidget):
     size =    np.fromstring(self.transformSizeSelect.coordinates, dtype=int, sep=',')
     origin =  np.fromstring(self.transformOriginSelect.coordinates, sep=',')
     spacing = np.fromstring(self.transformSpacingSelect.coordinates, sep=',')
-    logic.emptyGridTransfrom(size, origin, spacing, self.inputSelector.currentNode())
+    logic.emptyGridTransform(size, origin, spacing, self.inputSelector.currentNode())
 
   def onFlattenButton(self):
     logic = TransformsUtilLogic()
@@ -191,7 +191,7 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
 
     return size,origin,spacing
 
-  def emptyGridTransfrom(self, transformSize = [193,229,193], transformOrigin = [-96.0, -132.0, -78.0], transformSpacing = [1.0, 1.0, 1.0], transformNode = None):
+  def emptyGridTransform(self, transformSize = [193,229,193], transformOrigin = [-96.0, -132.0, -78.0], transformSpacing = [1.0, 1.0, 1.0], transformNode = None):
     """
     Run the actual algorithm
     """

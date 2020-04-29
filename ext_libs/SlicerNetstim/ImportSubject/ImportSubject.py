@@ -223,9 +223,9 @@ class ImportSubjectLogic(ScriptedLoadableModuleLogic):
     
 
   def updateTranform(self, directory, antsApplyTransformsPath=None):
-    transformNode = slicer.util.loadTransform(os.path.join(directory,'glanatComposite.h5'))
-    self.saveAffineComponent(transformNode)
-    slicer.mrmlScene.RemoveNode(transformNode)
+    #transformNode = slicer.util.loadTransform(os.path.join(directory,'glanatComposite.h5'))
+    #self.saveAffineComponent(transformNode)
+    #slicer.mrmlScene.RemoveNode(transformNode)
     # flatten
     if not antsApplyTransformsPath:
       w = qt.QWidget()

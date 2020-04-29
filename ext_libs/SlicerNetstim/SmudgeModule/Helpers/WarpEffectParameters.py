@@ -173,7 +173,7 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     super().onEffectButtonClicked()
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
-    auxTransformNode = TransformsUtil.TransformsUtilLogic().emptyGridTransfrom(size, origin, spacing)
+    auxTransformNode = TransformsUtil.TransformsUtilLogic().emptyGridTransform(size, origin, spacing)
     for sliceWidget in self.sliceWidgets():
       WarpEffect.SmudgeEffectTool(sliceWidget, auxTransformNode)
 

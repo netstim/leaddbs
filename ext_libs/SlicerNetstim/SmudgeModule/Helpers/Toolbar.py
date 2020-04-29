@@ -7,6 +7,7 @@ import SmudgeModule
 import ImportAtlas
 import ImportSubject
 import TransformsUtil
+from . import WarpEffect
 
 class reducedToolbar(QToolBar, VTKObservationMixin):
 
@@ -168,20 +169,18 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
 
   def onWarpViewAction(self, t):
-    affineID = self.parameterNode.GetParameter("affineTransformID")
-    if affineID != "":
-      affineNode = slicer.util.getNode(affineID)
-      affineNode.GetDisplayNode().SetVisibility(t)
-      affineNode.GetDisplayNode().SetVisibility2D(t)
+    warpID = self.parameterNode.GetParameter("warpID")
+    if warpID != "":
+      warpNode = slicer.util.getNode(warpID)
+      warpNode.GetDisplayNode().SetVisibility(t)
+      warpNode.GetDisplayNode().SetVisibility2D(t)
 
   def initializeTransforms(self, imageNode):
-    # apply affine transform to image
-    affineNode = slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID"))
-    imageNode.ApplyTransform(affineNode.GetTransformFromParent())
-    # set to image 
-    imageNode.SetAndObserveTransformNodeID(self.parameterNode.GetParameter("affineTransformID"))
-    # set transform to affine
-    affineNode.SetAndObserveTransformNodeID(self.parameterNode.GetParameter("warpID"))
+    glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
+    # apply glanat to image
+    imageNode.SetAndObserveTransformNodeID(glanatCompositeNode.GetID())
+    # apply warp to glanat
+    glanatCompositeNode.SetAndObserveTransformNodeID(self.parameterNode.GetParameter("warpID"))
 
   def onModalityPressed(self, item, modality=None):
     if modality is None:
@@ -230,11 +229,11 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
 
   def onSaveButton(self):
-    SmudgeModule.SmudgeModuleLogic().effectOff()
+    WarpEffect.WarpEffectTool.empty()
     if reducedToolbarLogic().applyChanges():
       # remove nodes
       SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
-      slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID")))
+      slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID")))
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
       slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getBackgroundNode())
 
@@ -265,8 +264,13 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
   def onResolutionChanged(self, index):
     SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
     newResolution = float(self.resolutionComboBox.itemText(index)[:-2]) # get resolution
+    # apply to warp
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID")) # get warp node
     reducedToolbarLogic().resampleTransform(warpNode, newResolution)
+    # apply to glanat comp
+    glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID")) # get warp node
+    reducedToolbarLogic().resampleTransform(glanatCompositeNode, newResolution)
+    # save
     self.parameterNode.SetParameter("resolution",str(newResolution))
 
 
@@ -288,19 +292,17 @@ class reducedToolbarLogic(object):
     if ImportSubject.ImportSubjectLogic().ish5Transform(subjectPath):
       ImportSubject.ImportSubjectLogic().updateTranform(subjectPath, self.parameterNode.GetParameter("antsApplyTransformsPath"))
 
-    # load warp
-    warpNode = ImportSubject.ImportSubjectLogic().importTransform(subjectPath, 'glanatComposite.nii.gz')
-    self.parameterNode.SetParameter("warpID", warpNode.GetID())
+    # load glanat composite
+    glanatCompositeNode = ImportSubject.ImportSubjectLogic().importTransform(subjectPath, 'glanatComposite.nii.gz')
+    self.parameterNode.SetParameter("glanatCompositeID", glanatCompositeNode.GetID())
     # resample
-    self.resampleTransform(warpNode, float(self.parameterNode.GetParameter("resolution")))
+    self.resampleTransform(glanatCompositeNode, float(self.parameterNode.GetParameter("resolution")))
 
-    # load affine
-    affineNode = ImportSubject.ImportSubjectLogic().importTransform(subjectPath, 'glanat0GenericAffine_backup.mat')
-    if not affineNode:
-      affineNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
-    affineNode.Inverse()
-    affineNode.CreateDefaultDisplayNodes()
-    self.parameterNode.SetParameter("affineTransformID", affineNode.GetID())
+    # create warp
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(glanatCompositeNode)
+    warpNode = TransformsUtil.TransformsUtilLogic().emptyGridTransform(size,origin,spacing)
+    warpNode.CreateDefaultDisplayNodes()
+    self.parameterNode.SetParameter("warpID", warpNode.GetID())
 
   def resampleTransform(self, transformNode, resolution):
     # check resolution
@@ -318,7 +320,6 @@ class reducedToolbarLogic(object):
     # remove aux nodes
     slicer.mrmlScene.RemoveNode(outNode)
     slicer.mrmlScene.RemoveNode(referenceVolume)
-    #self.parameterNode.SetParameter("subjectChanged","1")
   
   def applyChanges(self):
 
@@ -348,29 +349,29 @@ class reducedToolbarLogic(object):
         return False
       elif ret == qt.QMessageBox().Discard:
         return True
+    
     else:
-      TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True)
+      # harden changes in glanat composite
+      glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
+      glanatCompositeNode.HardenTransform()
+      TransformsUtil.TransformsUtilLogic().flattenTransform(glanatCompositeNode, True)
 
     # back to original resolution
-    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(glanatCompositeNode)
     if spacing[0] != 0.5:
-      self.resampleTransform(warpNode, 0.5)
+      self.resampleTransform(glanatCompositeNode, 0.5)
 
     # save foreward
-    slicer.util.saveNode(warpNode, os.path.join(subjectPath,'glanatComposite.nii.gz'))
+    slicer.util.saveNode(glanatCompositeNode, os.path.join(subjectPath,'glanatComposite.nii.gz'))
 
     # invert transform
-    warpNode.Inverse()
-    # get image and undo affine transform to set as reference 
+    glanatCompositeNode.Inverse()
+    # get image to set as reference 
     imageNode = self.getBackgroundNode()
-    imageNode.SetAndObserveTransformNodeID("")
-    affineNode = slicer.util.getNode(self.parameterNode.GetParameter("affineTransformID"))
-    affineNode.Inverse()
-    imageNode.ApplyTransform(affineNode.GetTransformFromParent())
     # get inverse
     outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
     transformsLogic = slicer.modules.transforms.logic()
-    transformsLogic.ConvertToGridTransform(warpNode, imageNode, outNode)
+    transformsLogic.ConvertToGridTransform(glanatCompositeNode, imageNode, outNode)
     # save inverse
     slicer.util.saveNode(outNode, os.path.join(subjectPath,'glanatInverseComposite.nii.gz'))
 
