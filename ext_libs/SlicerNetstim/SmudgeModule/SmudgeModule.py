@@ -548,7 +548,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("SmoothSigma", "10")
     node.SetParameter("SmoothUseRadius", "1")
     # lead dbs specific
-    node.SetParameter("affineTransformID", "")
+    node.SetParameter("glanatCompositeID", "")
     node.SetParameter("templateID", "")
     node.SetParameter("modality", "t1")
     node.SetParameter("subjectPath", "")

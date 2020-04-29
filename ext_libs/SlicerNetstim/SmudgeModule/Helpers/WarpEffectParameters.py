@@ -233,20 +233,8 @@ class SmoothEffectParameters(WarpAbstractEffect):
 
   def __init__(self):
 
-    toolTip = 'Smooth the warp field. Specify active warp to enable. Click and hold to preview, double-click to aply.'
+    toolTip = 'Smooth the warp field. Click and hold to preview, double-click to aply. Overwrite required.'
     WarpAbstractEffect.__init__(self, 'Smooth', toolTip)
-
-    # select transform
-    transformSelectFrame = qt.QFrame()
-    transformSelectFrame.setLayout(qt.QHBoxLayout())
-
-    self.userModificationsRadioButton = qt.QRadioButton('User Modifications')
-    self.userModificationsRadioButton.setToolTip('Only smooth warp modifications added.')
-    self.completeRadioButton = qt.QRadioButton('Original + User Modifications')
-    self.completeRadioButton.setToolTip('Smooth the complete warp. Overwrite is required to enable.')
-    transformSelectFrame.layout().addWidget(self.userModificationsRadioButton)
-    transformSelectFrame.layout().addWidget(self.completeRadioButton)
-    self.parametersFrame.layout().addRow("Active Warp:", transformSelectFrame)
 
     # sigma
     self.sigmaSlider = ctk.ctkSliderWidget()
@@ -284,71 +272,21 @@ class SmoothEffectParameters(WarpAbstractEffect):
     self.hardnessSlider.setToolTip('Hardness')
     self.parametersFrame.layout().addRow("Hardness (%):", self.hardnessSlider)
 
-
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.sigmaSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.useRadiusCheckbox.connect('toggled(bool)', self.updateMRMLFromGUI)
-    self.userModificationsRadioButton.connect('clicked(bool)', self.onUserModificationsRadioButton)
-    self.completeRadioButton.connect('clicked(bool)', self.onCompleteRadioButton)
     
-
-  def onCompleteRadioButton(self):
-    # flatten if needed
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) > 1:
-      TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, True)
-    # get array
-    transformArray = slicer.util.array(warpNode.GetID())
-    # init
-    for sliceWidget in self.sliceWidgets():
-      WarpEffect.SmoothEffectTool(sliceWidget, transformArray)
-
-  def onUserModificationsRadioButton(self):
-    self.parameterNode.SetParameter("lastOperation","UndoAll") # disable undo last operation
-    # flatten if needed
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    hasCorrectNumberOFLayers = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) == 2
-    isCorrectTransformType = isinstance(warpNode.GetTransformFromParent().GetConcatenatedTransform(0), slicer.vtkOrientedGridTransform)
-    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) > 2:
-      TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, False)
-    elif not isinstance(warpNode.GetTransformFromParent().GetConcatenatedTransform(0), slicer.vtkOrientedGridTransform):
-      # get last transform (drawing)
-      transformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
-      # transform to grid transform
-      size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
-      outNode = TransformsUtil.TransformsUtilLogic().transformToGridTransform(slicer.util.getNode(transformID), size, origin, spacing)
-      # re-apply
-      warpNode.SetAndObserveTransformNodeID(outNode.GetID())
-      warpNode.HardenTransform()
-      # remove aux nodes
-      slicer.mrmlScene.RemoveNode(outNode)
-      slicer.mrmlScene.RemoveNode(slicer.util.getNode(transformID))
-    # get array
-    transformArray = TransformsUtil.TransformsUtilLogic().arrayFromGeneralTransform(warpNode, 0)
-    # init
-    for sliceWidget in self.sliceWidgets():
-      WarpEffect.SmoothEffectTool(sliceWidget, transformArray)
-
-
-  def resetButtons(self):
-    # uncheck radio buttons
-    self.userModificationsRadioButton.setAutoExclusive(False)
-    self.completeRadioButton.setAutoExclusive(False)
-    self.userModificationsRadioButton.setChecked(False)
-    self.completeRadioButton.setChecked(False)
-    self.userModificationsRadioButton.setAutoExclusive(True)
-    self.completeRadioButton.setAutoExclusive(True)
 
   def onEffectButtonClicked(self):
     super().onEffectButtonClicked()
-    self.resetButtons()
+    for sliceWidget in self.sliceWidgets():
+      WarpEffect.SmoothEffectTool(sliceWidget)
 
   def updateGuiFromMRML(self, caller=None, event=None):
     warpNode = super().updateGuiFromMRML(caller, event)
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
-    self.userModificationsRadioButton.enabled = warpNumberOfComponents > 1
-    self.completeRadioButton.enabled = warpNumberOfComponents == 1
+    self.effectButton.enabled = warpNumberOfComponents == 1
     radius = float(self.parameterNode.GetParameter("SmoothRadius"))
     self.radiusSlider.setValue( radius )
     if radius < self.radiusSlider.minimum or radius > self.radiusSlider.maximum:

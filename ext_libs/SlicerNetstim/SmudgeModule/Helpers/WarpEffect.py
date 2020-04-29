@@ -172,12 +172,12 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
 class SmoothEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
-  def __init__(self, sliceWidget, transformArray):
+  def __init__(self, sliceWidget):
 
     WarpEffectTool.__init__(self)
     PointerEffect.CircleEffectTool.__init__(self, sliceWidget)
     
-    self.transformArray = transformArray
+    self.transformArray = slicer.util.array(self.warpNode.GetID())
     self.warpRASToIJK = TransformsUtil.TransformsUtilLogic().getTransformRASToIJK(self.warpNode)
     self.warpSpacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)[2][0]
 
