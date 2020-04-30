@@ -111,31 +111,49 @@ g.set_title([labels{1},' [R = ',sprintf('%.2f',R),'; ',pstr,' = ',sprintf('%.3f'
 g.set_names('x',labels{2},'y',labels{3});
 g.set_text_options('base_size',22);
 g.no_legend();
-h=figure('Position',[100 100 550 550]);
+
+ratio = 7/8;
+Width = 550;
+Height = Width*ratio;
+h=figure('Position',[100 100 Width Height]);
 g.draw();
+
+gtitle = g.title_axe_handle.Children;
+gtitle.Units = 'pixels';
+
+if gtitle.Extent(3) > Width
+    % Shift the title a bit
+    if isempty(group2) && isempty(group1)
+        gtitle.Position(1) = 376;
+    else
+        gtitle.Position(1) = 246;
+    end
+
+    % Calculate new figure size
+    Width = gtitle.Extent(3)+100;
+    Height = Width*ratio;
+end
+
 if ~isempty(group2) && ~isempty(group1)
     g.update('marker',group2.idx,'color',group1.idx);
     g.set_color_options('map',map);
     g.set_names('marker',group2.tag,'color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
-    set(h,'Position',[100 100 650 550]);
 elseif ~isempty(group2) && isempty(group1)
     g.update('marker',group2.idx);
     g.set_color_options();
     g.set_names('marker',group2.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
-    set(h,'Position',[100 100 650 550]);
 elseif isempty(group2) && ~isempty(group1)
     g.update('color',group1.idx);
     g.set_color_options('map',map);
     g.set_names('color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
-    set(h,'Position',[100 100 650 550]);
 end
 
+set(h,'Position',[100 100 Width Height]);
 set([g.results.geom_point_handle],'MarkerSize',7);
 set([g.results.geom_point_handle],'MarkerEdgeColor','w');
-
