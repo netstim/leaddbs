@@ -350,11 +350,10 @@ class reducedToolbarLogic(object):
       elif ret == qt.QMessageBox().Discard:
         return True
     
-    else:
-      # harden changes in glanat composite
-      glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
-      glanatCompositeNode.HardenTransform()
-      TransformsUtil.TransformsUtilLogic().flattenTransform(glanatCompositeNode, True)
+    # harden changes in glanat composite
+    glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
+    glanatCompositeNode.HardenTransform()
+    TransformsUtil.TransformsUtilLogic().flattenTransform(glanatCompositeNode, True)
 
     # back to original resolution
     size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(glanatCompositeNode)
