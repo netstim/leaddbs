@@ -1,24 +1,48 @@
 function ea_dmri_conseed_map(dfold,cname,sfile,cmd,space,options)
 
+useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
 for s=1:length(sfile)
-    % okay to check to reload connectome again for each seed in case of
-    % using patient-specific connectomes:
-    map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
+    if useNativeSeed
+        vatdir = [fileparts(sfile{s}),filesep];
+        copyfile(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]),vatdir);
+        gunzip([vatdir,space,'.gz']);
+        ea_delete([vatdir,space,'.gz']);
+
+        % Warp mask from MNI space to patient T1 space
+        ea_apply_normalization_tofile(ea_getptopts(options.uivatdirs{s}),...
+            {[vatdir,space]},...
+            {[vatdir,space]}, options.uivatdirs{s}, 1, 0);
+        map=ea_load_nii([vatdir,space]);
+    else
+        map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
+    end
 
     if strcmp(dfold, 'Patient''s fiber tracts')
-        if strcmp(cname, options.prefs.FTR_normalized) % patient specific fibertracts
-            cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
-            [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile]);
+        if useNativeSeed
+            cfile=[options.uivatdirs{s},filesep,cname];
+        else
+            cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,cname];
+        end
+
+        if exist(cfile, 'file')
+            [fibers,fidx,voxmm,mat]=ea_loadfibertracts(cfile);
+            if strcmp(voxmm, 'vox')
+                if isempty(mat)
+                    patoptions = ea_getptopts(options.uivatdirs{s});
+                    mat = ea_get_affine([options.uivatdirs{s}, filesep, patoptions.prefs.prenii_unnormalized]);
+                end
+                fibers(:,1:3) = ea_vox2mm(fibers(:,1:3), mat);
+            end
             redotree=1;
             ctype='mat';
         else % connectome type not supported
-            ea_error(['Connectome file (',options.prefs.FTR_normalized,') vanished or not supported!']);
+            ea_error(['Connectome file (',cname,') not found!']);
         end
     else
         cfile=[dfold,'dMRI',filesep,cname];
         if exist([cfile,filesep,'data.mat'],'file') % regular mat file
             if ~exist('fibers','var')
-                [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
+                [fibers,fidx]=ea_loadfibertracts([cfile,filesep,'data.mat']);
                 if ~exist('fibers','var')
                     ea_error('Structural connectome file supplied in wrong format.');
                 end
@@ -76,7 +100,7 @@ for s=1:length(sfile)
             XYZmm=XYZmm(1:3,:)';
             %clear Vseed
             if ~exist('tree','var') || redotree % only compute for first seed.
-                tree=KDTreeSearcher(fibers(:,1:3));
+                tree=KDTreeSearcher(fibers(:,1:3),'distance','chebychev');
             end
             ids=rangesearch(tree,XYZmm,maxdist,'distance','chebychev');
             % select fibers for each ix
@@ -92,7 +116,6 @@ for s=1:length(sfile)
                 fiberstrengthn(fibnos)=fiberstrengthn(fibnos)+1;
                 %end
                 % ea_dispercent(ix/ixdim);
-
             end
             nzz=~(fiberstrength==0);
             fiberstrength(nzz)=fiberstrength(nzz)./fiberstrengthn(nzz); % now each fiber has a strength mediated by the seed.
@@ -139,8 +162,21 @@ for s=1:length(sfile)
         map.fname=fullfile(outputfolder,[fn,'_struc_',cmd,'.nii']);
         map.dt=[16,0];
         spm_write_vol(map,map.img);
+        if useNativeSeed
+            mniOutputFolder = strrep(outputfolder, ea_nt(1), ea_nt(0));
+            mniMap = fullfile(mniOutputFolder,[fn,'_struc_',cmd,'.nii']);
+            ea_mkdir(mniOutputFolder);
+            % Warp map from patient T1 space to MNI space
+            ea_apply_normalization_tofile(ea_getptopts(options.uivatdirs{s}),...
+                {map.fname},...
+                {mniMap}, options.uivatdirs{s}, 0, 1);
+        end
+
         if evalin('base','exist(''SB_SAVE_ITERS'',''var'')')
-            copyfile(fullfile(outputfolder,[fn,'_struc_',cmd,'.nii']),fullfile(outputfolder,[fn,'_struc_',cmd,'_',num2str(iter),'.nii']));
+            copyfile(map.fname, strrep(map.fname, '.nii', ['_',num2str(iter),'.nii']));
+            if useNativeSeed
+                copyfile(mniMap, strrep(mniMap, '.nii', ['_',num2str(iter),'.nii']));
+            end
         end
 
         if iter>1
