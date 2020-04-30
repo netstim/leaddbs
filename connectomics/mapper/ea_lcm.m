@@ -163,10 +163,19 @@ for suffix=dowhich
     switch modality
         case 'dMRI'
             seeds=cell(0);
+            useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
             for pt=1:length(options.uivatdirs)
-                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
+                if useNativeSeed
+                    vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(1),options.lcm.seeds,filesep];
+                    copyfile([ea_space,'bb.nii'], vatdir);
+                    ea_apply_normalization_tofile(options, {[vatdir,'bb.nii']},{[vatdir,'bb.nii']},options.uivatdirs{pt},1);
+                    bbfile = [vatdir,'bb.nii'];
+                else
+                    vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(0),options.lcm.seeds,filesep];
+                    bbfile = [ea_space,'bb.nii'];
+                end
 
-                if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
+                %if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -179,7 +188,7 @@ for suffix=dowhich
                         if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                             copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                             warning('off');
-                            ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],dinterp);
+                            ea_conformspaceto(bbfile,[vatdir,'tmp_',sidec,'.nii'],dinterp);
                             warning('on');
                             nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                             nii(cnt).img(isnan(nii(cnt).img))=0;
@@ -199,7 +208,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                end
+                %end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
                 end
@@ -211,7 +220,7 @@ for suffix=dowhich
             for pt=1:length(options.uivatdirs)
                 vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
                 cname=options.lcm.func.connectome;
-                
+
                 if ismember('>',cname)
                     delim=strfind(cname,'>');
                     subset=cname(delim+1:end);
@@ -222,7 +231,7 @@ for suffix=dowhich
                 else
                     nativeprefix='';
                 end
-                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+                %if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
 
                     cnt=1;
                     for side=1:2
@@ -238,7 +247,7 @@ for suffix=dowhich
                             tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                             tnii.dt=[16,0];
                             ea_write_nii(tnii);
-                            
+
                             if ~strcmp(cname,'No functional connectome found.')
                                 if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
                                     ea_warp_vat2rest(cname,vatdir,sidec,options);
@@ -271,7 +280,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                end
+                %end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end
@@ -311,50 +320,40 @@ refname = ['r', restfname];
 % The real reference image is 'meanrest_*.nii' rather than 'rrest_*.nii'
 reference = ['hdmean', restfname, '.nii'];
 
-% Re-calculate mean re-aligned image if not found
+% Re-calculate hdmean re-aligned image if not found
 if ~exist([directory, reference], 'file')
-    ea_meanimage([directory, 'r', restfname,'.nii'], reference);
+    % Re-calculate mean re-aligned image if not found
+    if ~exist([directory, 'mean', options.prefs.rest],'file')
+        ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
+    end
+    % Reslice mean re-aligned image to hd re-aligned image
+    ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],0);
 end
 
 % Check coregistration method
-try
-    load([directory,'ea_coregmrmethod_applied.mat'],'coregmr_method_applied');
+coregmethodsused = load([directory,'ea_coregmrmethod_applied.mat']);
+coregPrefix = [refname,'_',anatfname];
+if isfield(coregmethodsused, coregPrefix) && ~isempty(coregmethodsused.(coregPrefix))
     % Disable Hybrid coregistration
-    coregmethod = strrep(coregmr_method_applied{end}, 'Hybrid SPM & ', '');
-catch
+    coregmethod = strrep(coregmethodsused.(coregPrefix), 'Hybrid SPM & ', '');
+    fprintf(['For this pair of coregistrations, the user specifically approved the ',coregmethod,' method.\n',...
+            'Will overwrite the current global options and use this method.\n']);
+else
     coregmethod = 'SPM'; % fallback to SPM coregistration
 end
-
 options.coregmr.method = coregmethod;
 
-
-% for this pair of approved coregistations, find out which method to use -
-% irrespective of the current selection in coregmethod.
-
-coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
-fn=fieldnames(coregmethodsused);
-for field=1:length(fn)
-    if contains(fn{field},refname)
-        disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
-        options.coregmr.method=coregmethodsused.(fn{field});
-        break
-    end
-end
-
-
 % Check if the transformation already exists
-xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+xfm = [anatfname, '2', ea_stripext(reference), '_', lower(coregmethod), '\d*\.(mat|h5)$'];
 transform = ea_regexpdir(directory, xfm, 0);
 
 if numel(transform) == 0
     warning('Transformation not found! Running coregistration now!');
     transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
         [directory,reference],...
-        [directory,refname,'_',options.prefs.prenii_unnormalized],...
+        [directory,'tmp.nii'],...
         [],1,[],1);
-    % Fix transformation names, replace 'mean' by 'r'
-    cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
-    transform = strrep(transform, 'mean', 'r');
+    ea_delete([directory,'tmp.nii']);
     transform = transform{1}; % Forward transformation
 else
     if numel(transform) > 1

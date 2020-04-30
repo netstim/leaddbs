@@ -85,7 +85,6 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
 
     % for this pair of approved coregistations, find out which method to use -
     % irrespective of the current selection in coregmethod.
-
     coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
     fn=fieldnames(coregmethodsused);
     for field=1:length(fn)

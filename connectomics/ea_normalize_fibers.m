@@ -77,7 +77,7 @@ fprintf('\nMapping from b0 to anat...\n');
 [~, mov] = fileparts(options.prefs.b0);
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
 if options.coregb0.addSyN
-    xfm = [ea_stripext(options.prefs.b0), '2', ea_stripext(options.prefs.prenii_unnormalized), '(Inverse)?Composite\.nii\.gz$'];
+    xfm = [mov, '2', fix, '(Inverse)?Composite\.nii\.gz$'];
 else
     coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
     options.coregmr.method = coregmethod;
