@@ -231,7 +231,7 @@ for suffix=dowhich
                 else
                     nativeprefix='';
                 end
-                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+                %if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
 
                     cnt=1;
                     for side=1:2
@@ -280,7 +280,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                end
+                %end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end
