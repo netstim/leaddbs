@@ -175,7 +175,7 @@ for suffix=dowhich
                     bbfile = [ea_space,'bb.nii'];
                 end
 
-                if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
+                %if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -208,7 +208,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                end
+                %end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
                 end
