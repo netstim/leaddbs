@@ -1,4 +1,4 @@
-function [h,R,p]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm,colors)
+function [h,R,p,g]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm,colors)
 % Wrapper for gramm to produce a simple correlation plot.
 % Group1 denotes colors, Group2 Markers.
 % Can also specify custom colors
