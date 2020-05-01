@@ -386,17 +386,12 @@ if options.native==1 % if we calculated in native space -> now transform back to
         ea_dispt(''); % stop chain of timed processes.        
     end
     % convert to MNI    
-    c=[dpvx',midpts'];
-    [~,anatpresent]=ea_assignpretra(options);
-    V=ea_open_vol([options.root,options.patientname,filesep,anatpresent{1}]);
-    c=V.mat\[c;ones(1,size(c,2))];
-    midpts=ea_map_coords(c(1:3,:), ...
-        [options.root,options.patientname,filesep,anatpresent{1}], ...
-        [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
-        '')';
-    midpts=midpts(:,1:3);
-    dpvx=midpts(1,:);
-    midpts=midpts(2:end,:);
+    [~,anatpresent] = ea_assignpretra(options);
+    c = ea_mm2vox([dpvx;midpts], [options.root,options.patientname,filesep,anatpresent{1}]);
+    c = ea_map_coords(c', [options.root,options.patientname,filesep,anatpresent{1}], ...
+        [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], '');
+    dpvx = c(:,1:size(dpvx,1))';
+    midpts = c(:,size(dpvx,1)+1:end)';
     options.native=0; % go back to template space for export
     [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
     options.native=options.orignative; % go back to originally set space
