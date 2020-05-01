@@ -16,7 +16,7 @@ if ~isempty(prefs.ltx.pdfconverter)
 end
 if ~isempty(prefs.ls.dir)
     if ~exist(prefs.ls.dir,'file')
-        mkdir(prefs.ls.dir);
+        ea_mkdir(prefs.ls.dir);
         if ~exist(prefs.ls.dir,'file')
             warning('Lead DBS Server directory could not be established. Please set prefs.ls.dir folder to a valid directory in preferences.');
         end

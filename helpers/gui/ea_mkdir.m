@@ -1,4 +1,4 @@
 function ea_mkdir(pth)
 if ~exist(pth,'dir')
-    mkdir(pth);
+try    mkdir(pth); end
 end
