@@ -6,12 +6,14 @@ disp(description);
 
 [h,p,ci,stats]=ttest2(x,y)
 
-figure
+ygramm=[x;y]; % concat for gramm
+xgramm=labels([ones(length(x),1);repmat(2,length(y),1)]);
+g(1)=gramm('x',ones(length(ygramm),1),'y',ygramm,'color',xgramm);
+g(1).stat_boxplot();
+g(1).set_title(description);
 
-set(gcf,'name',description);
-set(gcf,'NumberTitle','off');
+%boxplot([stats.tstat+ci(1),stats.tstat,stats.tstat+ci(2)])
+g.set_names('x','Group','y','Values','color','Group');
 
-boxplot([stats.tstat+ci(1),stats.tstat,stats.tstat+ci(2)])
-
-title(['t-value: ',num2str(stats.tstat),', ','p-value: ',num2str(p),'.']);
-
+figure('Position',[27   449   312   571]);
+g.draw();
