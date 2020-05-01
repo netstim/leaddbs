@@ -1033,9 +1033,11 @@ for pt=selection
             
             try
                 [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,transmitcoords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
+                vatCalcPassed = 1;
             catch
                 msgbox(['Error while creating VTA of ',M.patient.list{pt},'.']);
                 volume=0;
+                vatCalcPassed = 0;
             end
             stimparams(1,side).volume=volume;
         end
@@ -1043,12 +1045,13 @@ for pt=selection
 
         setappdata(resultfig,'stimparams',stimparams(1,:));
     end
+
     % this will add the volume stats (atlasIntersections) to stats file:
     ea_showfibers_volume(resultfig,options);
 
 
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
-    if ~strcmp(mod,'Do not calculate connectivity stats')
+    if vatCalcPassed && ~strcmp(mod,'Do not calculate connectivity stats')
 
         % Convis part:
         parcs=get(handles.labelpopup,'String');
@@ -1068,6 +1071,7 @@ for pt=selection
             ea_cvshowvatdmri(resultfig,directory,{fibersfile,'gs'},selectedparc,options);
         end
     end
+
     close(resultfig);
 
     if processlocal % gather stats and recos to M
