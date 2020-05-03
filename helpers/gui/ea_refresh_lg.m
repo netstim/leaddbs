@@ -106,21 +106,23 @@ end
 
 
 % check if groups are okay
-if ~isequal((unique(M.patient.group)),M.groups.group)
-    % reassign groups and colors
-    M.groups.group=unique(M.patient.group);
-    C=ea_color_wes('all');
-    C=rgb2hsv(C);
-    C(:,2)=C(:,2)./2;
-    C=hsv2rgb(C);
-    M.groups.color=C(M.groups.group,:);
-    M.groups.colorschosen=1;
-end
-% make choosecolors button green if chosen.
-if isfield(M.groups,'colorschosen')
-    set(handles.choosegroupcolors,'BackgroundColor',[0.1;0.8;0.1]);
-else
-    set(handles.choosegroupcolors,'BackgroundColor',[0.93,0.93,0.93]);
+if isfield(M,'groups')
+    if ~isequal((unique(M.patient.group)),M.groups.group)
+        % reassign groups and colors
+        M.groups.group=unique(M.patient.group);
+        C=ea_color_wes('all');
+        C=rgb2hsv(C);
+        C(:,2)=C(:,2)./2;
+        C=hsv2rgb(C);
+        M.groups.color=C(M.groups.group,:);
+        M.groups.colorschosen=1;
+    end
+    % make choosecolors button green if chosen.
+    if isfield(M.groups,'colorschosen')
+        set(handles.choosegroupcolors,'BackgroundColor',[0.1;0.8;0.1]);
+    else
+        set(handles.choosegroupcolors,'BackgroundColor',[0.93,0.93,0.93]);
+    end
 end
 
 % update checkboxes:
