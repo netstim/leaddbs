@@ -402,9 +402,11 @@ vc_labels={};
 
 switch get(handles.VTAvsEfield,'value')
     case 1 % VTA
-        vtavsefield='VTA';
-    case 2 % Efield
-        vtavsefield='E-field';
+        vtavsefield='vat';
+        vtavsefieldLabel='VTA';
+    case 2 % E-field
+        vtavsefield='efield';
+        vtavsefieldLabel = 'E-field';
 end
 
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
@@ -436,7 +438,7 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         % could happen.
         ptcnt=ptcnt+1;
     end
-    vc_labels{end+1}=[ea_stripext(M.stats(pt).ea_stats.atlases.names{vi}),': ',vtavsefield,' intersection'];
+    vc_labels{end+1}=[ea_stripext(M.stats(pt).ea_stats.atlases.names{vi}),': ',vtavsefieldLabel,' intersection'];
 
     ptcnt=1;
     vicnt=vicnt+1;
