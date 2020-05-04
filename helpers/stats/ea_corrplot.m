@@ -62,8 +62,10 @@ if exist('colors', 'var') && ~isempty(colors)
             error('Number of custom colors doesn''t match number of categories!');
         end
     end
+    colorOptions = {'map', map, 'n_color', size(map,1), 'n_lightness', 1};
 else
     map = 'lch';
+    colorOptions = {'map',map};
 end
 
 switch corrtype
@@ -136,7 +138,7 @@ end
 
 if ~isempty(group2) && ~isempty(group1)
     g.update('marker',group2.idx,'color',group1.idx);
-    g.set_color_options('map',map);
+    g.set_color_options(colorOptions{:});
     g.set_names('marker',group2.tag,'color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
@@ -148,7 +150,7 @@ elseif ~isempty(group2) && isempty(group1)
     g.draw();
 elseif isempty(group2) && ~isempty(group1)
     g.update('color',group1.idx);
-    g.set_color_options('map',map);
+    g.set_color_options(colorOptions{:});
     g.set_names('color',group1.tag,'x',labels{2},'y',labels{3});
     g.geom_point();
     g.draw();
