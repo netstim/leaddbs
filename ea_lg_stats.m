@@ -202,7 +202,7 @@ if size(stats.corrcl,2)==1 % one value per patient
 
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
     if ~isempty(stats.vicorr.both)
-        ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],[{'Volume Impacts, both hemispheres'},stats.vc_labels]);
+        ea_corrplot(stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left],[{'Volume Impacts, both hemispheres'},stats.vc_labels]);
         ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],[{'Normalized Volume Impacts'},stats.vc_labels]);
     end
     %     if ~isempty(stats.vicorr.right)
