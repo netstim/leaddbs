@@ -185,9 +185,9 @@ M=getappdata(leadfigure,'M');
 
 % perform correlations:
 if size(stats.corrcl,2)==1 % one value per patient
-    try stats.vicorr.nboth=(stats.vicorr.nboth/2)*100; end
-    try stats.vicorr.nright=(stats.vicorr.nright/2)*100; end
-    try stats.vicorr.nleft=(stats.vicorr.nleft/2)*100; end
+    % try stats.vicorr.nboth=(stats.vicorr.nboth/2)*100; end
+    % try stats.vicorr.nright=(stats.vicorr.nright/2)*100; end
+    % try stats.vicorr.nleft=(stats.vicorr.nleft/2)*100; end
 
     if ~isempty(stats.vicorr.both)
         %ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
@@ -215,9 +215,9 @@ if size(stats.corrcl,2)==1 % one value per patient
     %     end
 
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
-    try stats.vicorr.nboth=(stats.vicorr.nboth)*100; end
-    try stats.vicorr.nright=(stats.vicorr.nright)*100; end
-    try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
+    % try stats.vicorr.nboth=(stats.vicorr.nboth)*100; end
+    % try stats.vicorr.nright=(stats.vicorr.nright)*100; end
+    % try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
     if ~isempty(stats.vicorr.both)
         ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],[{'Volume Impacts, both hemispheres'},stats.vc_labels]);
         ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],[{'Normalized Volume Impacts'},stats.vc_labels]);
