@@ -21,7 +21,7 @@ colorOptions = {'map', map, 'n_color', size(map,1), 'n_lightness', 1};
 
 disp(description);
 
-[h,p,ci,stats]=ttest2(x,y)
+[h,p,ci,stats] = ttest2(x,y)
 
 data = [x;y]; % concat for gramm
 colorVar = groups([ones(length(x),1);repmat(2,length(y),1)]);
@@ -34,5 +34,5 @@ g.set_names('x','','y',ylabel,'color','Group');
 g(1).axe_property('XTickLabel','');
 g(1).axe_property('XTick',[]);
 
-figure('Position',[27   449   312   571]);
+figure('Position',[100 100 360 600]);
 g.draw();
