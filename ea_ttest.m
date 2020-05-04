@@ -13,6 +13,8 @@ else
     map = [0.4127 0.4127 1;1 0.4127 0.4127];
 end
 
+colorOptions = {'map', map, 'n_color', size(map,1), 'n_lightness', 1};
+
 disp(description);
 
 [h,p,ci,stats]=ttest2(x,y)
@@ -20,7 +22,7 @@ disp(description);
 ygramm=[x;y]; % concat for gramm
 xgramm=labels([ones(length(x),1);repmat(2,length(y),1)]);
 g(1)=gramm('x',ones(length(ygramm),1),'y',ygramm,'color',xgramm);
-g(1).set_color_options('map',map);
+g(1).set_color_options(colorOptions{:});
 g(1).stat_boxplot();
 g(1).set_title(description);
 
