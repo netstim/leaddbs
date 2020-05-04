@@ -185,25 +185,11 @@ M=getappdata(leadfigure,'M');
 
 % perform correlations:
 if size(stats.corrcl,2)==1 % one value per patient
-    % try stats.vicorr.nboth=(stats.vicorr.nboth/2)*100; end
-    % try stats.vicorr.nright=(stats.vicorr.nright/2)*100; end
-    % try stats.vicorr.nleft=(stats.vicorr.nleft/2)*100; end
-
     if ~isempty(stats.vicorr.both)
-        %ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
-        %ea_corrplot([stats.corrcl,stats.vicorr.nboth],'VI_BH',stats.vc_labels,handles);
         description='Normalized Volume Impacts, both hemispheres';
-        [h,R,p]=ea_corrplot(stats.corrcl,stats.vicorr.nboth,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
+        ea_corrplot(stats.corrcl,stats.vicorr.nboth,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
         description='Volume Impacts, both hemispheres';
-        [h,R,p]=ea_corrplot(stats.corrcl,stats.vicorr.both,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
-
-        odir=get(leadfigure.groupdir_choosebox,'String');
-        [~,fn]=fileparts(stats.vc_labels{1+1});
-        if strcmp(fn(end-3:end),'.nii')
-            [~,fn]=fileparts(fn);
-        end
-        ofname=[odir,description,'_',fn,'_',stats.vc_labels{1},'.png'];
-        ea_screenshot(ofname);
+        ea_corrplot(stats.corrcl,stats.vicorr.both,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
     end
     %     if ~isempty(stats.vicorr.right)
     %         %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
@@ -215,9 +201,6 @@ if size(stats.corrcl,2)==1 % one value per patient
     %     end
 
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
-    % try stats.vicorr.nboth=(stats.vicorr.nboth)*100; end
-    % try stats.vicorr.nright=(stats.vicorr.nright)*100; end
-    % try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
     if ~isempty(stats.vicorr.both)
         ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],[{'Volume Impacts, both hemispheres'},stats.vc_labels]);
         ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],[{'Normalized Volume Impacts'},stats.vc_labels]);
@@ -247,19 +230,20 @@ stats=preparedataanalysis_vta(handles);
 assignin('base','stats',stats);
 
 % perform t-tests:
-
 if ~isempty(stats.vicorr.both)
     ea_ttest(stats.vicorr.both(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
         stats.vicorr.both(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
         'Volume Intersections, both hemispheres',...
         stats.vc_labels);
 end
+
 if ~isempty(stats.vicorr.right)
     ea_ttest(stats.vicorr.right(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
         stats.vicorr.right(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
         'Volume Intersections, right hemisphere',...
         stats.vc_labels);
 end
+
 if ~isempty(stats.vicorr.left)
     ea_ttest(stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
         stats.vicorr.left(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
@@ -267,19 +251,20 @@ if ~isempty(stats.vicorr.left)
         stats.vc_labels);
 end
 
-
 if ~isempty(stats.vicorr.nboth)
     ea_ttest(stats.vicorr.nboth(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
         stats.vicorr.nboth(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
         'Normalized Volume Intersections, both hemispheres',...
         stats.vc_labels);
 end
+
 if ~isempty(stats.vicorr.nright)
     ea_ttest(stats.vicorr.nright(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
         stats.vicorr.nright(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
         'Normalized Volume Intersections, right hemisphere',...
         stats.vc_labels);
 end
+
 if ~isempty(stats.vicorr.nleft)
     ea_ttest(stats.vicorr.nleft(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
         stats.vicorr.nleft(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
@@ -303,9 +288,11 @@ if size(stats.corrcl,2)==1 % one value per patient
     if ~isempty(stats.fccorr.both)
         ea_corrplot(stats.corrcl,stats.fccorr.nboth,{'FC_BH',stats.fc_labels(:)});
     end
+
     if ~isempty(stats.fccorr.right)
         ea_corrplot(stats.corrcl,stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
     end
+
     if ~isempty(stats.fccorr.left)
         ea_corrplot(stats.corrcl,stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
     end
@@ -313,9 +300,11 @@ elseif size(stats.corrcl,2)==2 % one value per hemisphere
     if ~isempty(stats.fccorr.both)
         ea_corrplot(stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left],{'FC_BH',stats.fc_labels(:)});
     end
+
     if ~isempty(stats.fccorr.right)
         ea_corrplot(stats.corrcl(:,1),stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
     end
+
     if ~isempty(stats.fccorr.left)
         ea_corrplot(stats.corrcl(:,2),stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
     end
@@ -412,7 +401,6 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
                     end
                     vicorr_both(ptcnt,vicnt)=vicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).AtlasIntersection(vi);
                     nvicorr_both(ptcnt,vicnt)=nvicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).nAtlasIntersection(vi);
-
                 end
             end
         catch
@@ -423,7 +411,6 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         % (e.g. if there was no stimulation at all on one hemisphere, this
         % could happen.
         ptcnt=ptcnt+1;
-
     end
     vc_labels{end+1}=[ea_stripext(M.stats(pt).ea_stats.atlases.names{vi}),': ',vtavsefield,' impact'];
 
