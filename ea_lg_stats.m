@@ -186,10 +186,12 @@ M=getappdata(leadfigure,'M');
 % perform correlations:
 if size(stats.corrcl,2)==1 % one value per patient
     if ~isempty(stats.vicorr.both)
-        description='Normalized Volume Impacts, both hemispheres';
-        ea_corrplot(stats.corrcl,stats.vicorr.nboth,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
-        description='Volume Impacts, both hemispheres';
-        ea_corrplot(stats.corrcl,stats.vicorr.both,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
+        ea_corrplot(stats.corrcl,stats.vicorr.nboth,...
+            [{'Normalized Volume Impacts, both hemispheres'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect));
+        ea_corrplot(stats.corrcl,stats.vicorr.both,...
+            [{'Volume Impacts, both hemispheres'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect));
     end
     %     if ~isempty(stats.vicorr.right)
     %         %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
@@ -202,8 +204,10 @@ if size(stats.corrcl,2)==1 % one value per patient
 
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
     if ~isempty(stats.vicorr.both)
-        ea_corrplot(stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left],[{'Volume Impacts, both hemispheres'},stats.vc_labels]);
-        ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],[{'Normalized Volume Impacts'},stats.vc_labels]);
+        ea_corrplot(stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left],...
+            [{'Volume Impacts, both hemispheres'},stats.vc_labels]);
+        ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],...
+            [{'Normalized Volume Impacts'},stats.vc_labels]);
     end
     %     if ~isempty(stats.vicorr.right)
     %         %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
@@ -286,27 +290,33 @@ assignin('base','stats',stats);
 % perform correlations:
 if size(stats.corrcl,2)==1 % one value per patient
     if ~isempty(stats.fccorr.both)
-        ea_corrplot(stats.corrcl,stats.fccorr.nboth,{'FC_BH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl,stats.fccorr.nboth,...
+            {'FC_BH',stats.fc_labels(:)});
     end
 
     if ~isempty(stats.fccorr.right)
-        ea_corrplot(stats.corrcl,stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl,stats.fccorr.nright,...
+            {'FC_RH',stats.fc_labels(:)});
     end
 
     if ~isempty(stats.fccorr.left)
-        ea_corrplot(stats.corrcl,stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl,stats.fccorr.nleft,...
+            {'FC_LH',stats.fc_labels(:)});
     end
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
     if ~isempty(stats.fccorr.both)
-        ea_corrplot(stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left],{'FC_BH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left],...
+            {'FC_BH',stats.fc_labels(:)});
     end
 
     if ~isempty(stats.fccorr.right)
-        ea_corrplot(stats.corrcl(:,1),stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl(:,1),stats.fccorr.nright,...
+            {'FC_RH',stats.fc_labels(:)});
     end
 
     if ~isempty(stats.fccorr.left)
-        ea_corrplot(stats.corrcl(:,2),stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl(:,2),stats.fccorr.nleft,...
+            {'FC_LH',stats.fc_labels(:)});
     end
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
