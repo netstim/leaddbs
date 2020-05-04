@@ -17,7 +17,11 @@ else
     map = [0.4127 0.4127 1;1 0.4127 0.4127];
 end
 
-colorOptions = {'map', map, 'n_color', size(map,1), 'n_lightness', 1};
+if ischar(map)
+    colorOptions = {'map', map};
+else
+    colorOptions = {'map', map, 'n_color', size(map,1), 'n_lightness', 1};
+end
 
 disp(description);
 

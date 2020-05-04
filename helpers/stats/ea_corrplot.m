@@ -62,10 +62,14 @@ if exist('colors', 'var') && ~isempty(colors)
             error('Number of custom colors doesn''t match number of categories!');
         end
     end
-    colorOptions = {'map', map, 'n_color', size(map,1), 'n_lightness', 1};
 else
     map = 'lch';
-    colorOptions = {'map',map};
+end
+
+if ischar(map)
+    colorOptions = {'map', map};
+else
+    colorOptions = {'map', map, 'n_color', size(map,1), 'n_lightness', 1};
 end
 
 switch corrtype
