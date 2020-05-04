@@ -10,7 +10,7 @@ if exist('colors', 'var') && ~isempty(colors)
         end
     end
 else
-    map = 'lch';
+    map = [0.4127 0.4127 1;1 0.4127 0.4127];
 end
 
 disp(description);
