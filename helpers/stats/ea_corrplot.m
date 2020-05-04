@@ -55,7 +55,7 @@ else
     end
 end
 
-if exist('colors', 'var')
+if exist('colors', 'var') && ~isempty(colors)
     map = colors;
     if isnumeric(map) && ~isempty(group1)
         if size(map,1) ~= numel(unique(group1.idx))

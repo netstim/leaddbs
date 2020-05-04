@@ -2,7 +2,7 @@ function ea_ttest(x,y,description,labels,colors)
 % this simple function is a small wrapper for a t-test figure and has been
 % written to go in line with the ea_corrplot wrapper.
 
-if exist('colors', 'var')
+if exist('colors', 'var') && ~isempty(colors)
     map = colors;
     if isnumeric(map)
         if size(map,1) ~= 2
