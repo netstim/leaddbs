@@ -257,37 +257,37 @@ assignin('base','stats',stats);
 if ~isempty(stats.vicorr.both)
     ea_ttest(stats.vicorr.both(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
         stats.vicorr.both(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
-        'VTA intersection, both hemispheres',stats.vc_labels);
+        'VTA intersection, both hemispheres',stats.vc_labels{end});
 end
 
 if ~isempty(stats.vicorr.right)
     ea_ttest(stats.vicorr.right(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
         stats.vicorr.right(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
-        'VTA intersection, right hemisphere',stats.vc_labels);
+        'VTA intersection, right hemisphere',stats.vc_labels{end});
 end
 
 if ~isempty(stats.vicorr.left)
     ea_ttest(stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
         stats.vicorr.left(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
-        'VTA intersection, left hemisphere',stats.vc_labels);
+        'VTA intersection, left hemisphere',stats.vc_labels{end});
 end
 
 if ~isempty(stats.vicorr.nboth)
     ea_ttest(stats.vicorr.nboth(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
         stats.vicorr.nboth(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
-        'Normalized VTA intersection, both hemispheres',stats.vc_labels);
+        'Normalized VTA intersection, both hemispheres',stats.vc_labels{end});
 end
 
 if ~isempty(stats.vicorr.nright)
     ea_ttest(stats.vicorr.nright(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
         stats.vicorr.nright(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
-        'Normalized VTA intersection, right hemisphere',stats.vc_labels);
+        'Normalized VTA intersection, right hemisphere',stats.vc_labels{end});
 end
 
 if ~isempty(stats.vicorr.nleft)
     ea_ttest(stats.vicorr.nleft(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
         stats.vicorr.nleft(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
-        'Normalized VTA intersection, left hemisphere',stats.vc_labels);
+        'Normalized VTA intersection, left hemisphere',stats.vc_labels{end});
 end
 
 
