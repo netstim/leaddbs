@@ -179,8 +179,8 @@ leadfigure = getappdata(handles.lg_stats, 'leadfigure');
 ea_busyaction('on', leadfigure, 'group');
 
 stats=preparedataanalysis_vta(handles);
-
 assignin('base','stats',stats);
+
 M=getappdata(leadfigure,'M');
 
 colors = M.groups.color(unique(M.patient.group(M.ui.listselect)),:);
@@ -255,8 +255,10 @@ function ttestbutton_vta_Callback(hObject, eventdata, handles)
 % hObject    handle to ttestbutton_vta (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-stats=preparedataanalysis_vta(handles);
+leadfigure = getappdata(handles.lg_stats, 'leadfigure');
+ea_busyaction('on', leadfigure, 'group');
 
+stats = preparedataanalysis_vta(handles);
 assignin('base','stats',stats);
 
 % perform t-tests:
@@ -296,6 +298,8 @@ if ~isempty(stats.vicorr.nleft)
         'Normalized VTA intersection, left hemisphere',stats.vc_labels{end});
 end
 
+ea_busyaction('off', leadfigure, 'group');
+
 
 % --- Executes on button press in corrbutton_ft.
 function corrbutton_ft_Callback(hObject, eventdata, handles)
@@ -304,7 +308,8 @@ function corrbutton_ft_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 leadfigure = getappdata(handles.lg_stats, 'leadfigure');
 ea_busyaction('on', leadfigure, 'group');
-stats=preparedataanalysis_ft(handles);
+
+stats = preparedataanalysis_ft(handles);
 assignin('base','stats',stats);
 
 % perform correlations:
@@ -341,6 +346,7 @@ elseif size(stats.corrcl,2)==2 % one value per hemisphere
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
+
 ea_busyaction('off', leadfigure, 'group');
 
 
@@ -349,8 +355,10 @@ function ttestbutton_ft_Callback(hObject, eventdata, handles)
 % hObject    handle to ttestbutton_ft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-stats = preparedataanalysis_ft(handles);
+leadfigure = getappdata(handles.lg_stats, 'leadfigure');
+ea_busyaction('on', leadfigure, 'group');
 
+stats = preparedataanalysis_ft(handles);
 assignin('base','stats',stats);
 
 % perform t-tests:
@@ -362,6 +370,7 @@ if ~isempty(stats.fc.nfccorr)
     ea_ttest(stats.fc.nfccorr(repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),stats.fc.nfccorr(~repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),'Normalized Fibercounts',stats.vc_labels);
 end
 
+ea_busyaction('off', leadfigure, 'group');
 
 % --- Executes on selection change in VTAvsEfield.
 function VTAvsEfield_Callback(hObject, eventdata, handles)
