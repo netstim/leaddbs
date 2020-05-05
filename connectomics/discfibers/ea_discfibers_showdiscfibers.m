@@ -140,6 +140,8 @@ end
 
 alphas(round(fibcolorInd)>=poslowerBound) = 1;
 
+% fibcolorInd(logical(alpha))=normalize(fibcolorInd(logical(alpha)),'range',[769,1024]);
+
 % only show right side
 % for i=1:length(tfibcell)
 %     if any(tfibcell{i}(:,1)<0)
