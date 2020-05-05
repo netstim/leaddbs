@@ -104,10 +104,9 @@ else
     g.set_color_options('chroma',0,'lightness',30);
 end
 g.stat_glm();
-%g.geom_abline();
-%g.stat_cornerhist('edges',[ea_nanmean(X)-1*ea_nanstd(X):0.2:ea_nanmean(X)+1*ea_nanstd(X)],'aspect',0.6,'location',max(X));
-pstr='p';
+
 pv=p;
+pstr='p';
 if exist('pperm','var') && ~isempty(pperm)
     pv=pperm;
     pstr='p(perm)';
