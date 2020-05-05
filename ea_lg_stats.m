@@ -185,8 +185,8 @@ M=getappdata(leadfigure,'M');
 
 colors = M.groups.color(unique(M.patient.group(M.ui.listselect)),:);
 % Colors in Lead Group are the same, fallback to gramm default colormap
-if unique(colors, 'rows') == 1
-    colors = [];
+if size(colors,1)>1 && size(unique(colors, 'rows'),1) == 1
+    colors = [1.0000  0.3686  0.4118];
 end
 
 % perform correlations:
