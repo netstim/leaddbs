@@ -327,7 +327,7 @@ if ~exist([directory, reference], 'file')
         ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
     end
     % Reslice mean re-aligned image to hd re-aligned image
-    ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],0);
+    ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],3);
 end
 
 % Check coregistration method

@@ -74,7 +74,7 @@ if strcmp(reference, ['r', options.prefs.rest])
         if ~exist(['mean', options.prefs.rest],'file')
             ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
         end
-        ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],0);
+        ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],3);
     end
 
 end
