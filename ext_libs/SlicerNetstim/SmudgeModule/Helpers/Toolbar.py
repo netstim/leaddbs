@@ -7,7 +7,7 @@ import SmudgeModule
 import ImportAtlas
 import ImportSubject
 import TransformsUtil
-from . import WarpEffect
+from . import WarpEffect, FunctionsUtil
 
 class reducedToolbar(QToolBar, VTKObservationMixin):
 
@@ -232,7 +232,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     warpNode = slicer.util.getNode(warpID) if warpID != "" else None
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
     self.resolutionComboBox.enabled = warpNumberOfComponents == 1
-    if warpID != self.prevWarpID:
+    if warpID not in [self.prevWarpID, ""]:
       self.addObserver(warpNode, slicer.vtkMRMLDisplayableNode.DisplayModifiedEvent, self.onWarpDisplayModified)
       try:
         self.removeObserver(slicer.util.getNode(self.prevWarpID), slicer.vtkMRMLDisplayableNode.DisplayModifiedEvent, self.onWarpDisplayModified)
@@ -250,8 +250,9 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       # remove nodes
       SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID")))
-      slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
       slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getBackgroundNode())
+      slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
+      self.parameterNode.SetParameter("warpID","")
 
       nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
       subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(self.parameterNode.GetParameter("separator"))
