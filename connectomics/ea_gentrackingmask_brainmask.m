@@ -21,8 +21,8 @@ else
     isapproved = 0;
 end
 
-if ~isapproved
-    fprintf(['\nCoregistration between b0 and anat not done or not approved yet!\n', ...
+if ~isapproved || isfield(options, 'overwriteapproved') && options.overwriteapproved
+    fprintf(['\nCoregistration between b0 and anat not done/not approved yet or overwrite mode enabled!\n', ...
              'Will do the coregistration using the method chosen from GUI.\n\n'])
     if exist([directory,'ea_coregmrmethod_applied.mat'], 'file')
         coregmrmethod = load([directory,'ea_coregmrmethod_applied.mat']);
