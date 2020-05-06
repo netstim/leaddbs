@@ -513,7 +513,7 @@ for fc=get(handles.fclist,'Value') % get volume interactions for each patient fr
     end
     ptcnt=1;
     fccnt=fccnt+1;
-    fc_labels{end+1}=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc};
+    fc_labels{end+1} = [M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc},':  fiber connection'];
 end
 
 % prepare outputs:
