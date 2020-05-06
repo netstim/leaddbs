@@ -251,7 +251,14 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID")))
       slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getBackgroundNode())
-      slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
+      # delete warps
+      shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+      transformNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLTransformNode')
+      transformNodes.UnRegister(slicer.mrmlScene)
+      for i in range(transformNodes.GetNumberOfItems()):
+        transformNode = transformNodes.GetItemAsObject(i)
+        if 'savedWarp' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(transformNode)):
+          slicer.mrmlScene.RemoveNode(transformNode)
       self.parameterNode.SetParameter("warpID","")
 
       nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
@@ -321,6 +328,7 @@ class reducedToolbarLogic(object):
     warpNode.CreateDefaultDisplayNodes()
     warpNode.GetDisplayNode().SetVisibility2D(True)
     warpNode.SetDescription('Current')
+    warpNode.SetName(slicer.mrmlScene.GenerateUniqueName('Initial'))
     self.parameterNode.SetParameter("warpID", warpNode.GetID())
     # add checkpoint attribute
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
