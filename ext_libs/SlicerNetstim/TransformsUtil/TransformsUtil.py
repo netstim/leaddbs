@@ -214,7 +214,7 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     transformNode.GetTransformFromParent().GetDisplacementGrid().SetOrigin(transformOrigin)
     transformNode.GetTransformFromParent().GetDisplacementGrid().SetSpacing(transformSpacing)
     #transformNode.CreateDefaultDisplayNodes()
-    transformNode.CreateDefaultStorageNode()  
+    #transformNode.CreateDefaultStorageNode()  
 
     return transformNode
 
@@ -241,7 +241,7 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     transformNode.GetTransformFromParent().GetCoefficientData().SetOrigin(transformOrigin)
     transformNode.GetTransformFromParent().GetCoefficientData().SetSpacing(transformSpacing)
     #transformNode.CreateDefaultDisplayNodes()
-    transformNode.CreateDefaultStorageNode()  
+    #transformNode.CreateDefaultStorageNode()  
 
     return transformNode
 
@@ -261,12 +261,13 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     volumeNode.SetIJKToRASDirections(imageDirections)
     volumeNode.SetAndObserveImageData(imageData)
     volumeNode.CreateDefaultDisplayNodes()
-    volumeNode.CreateDefaultStorageNode()
+    #volumeNode.CreateDefaultStorageNode()
 
     return volumeNode
 
   def getTransformNodesInScene(self):
     transformNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLTransformNode')
+    transformNodes.UnRegister(slicer.mrmlScene)
     return set([transformNodes.GetItemAsObject(i).GetName() for i in range(transformNodes.GetNumberOfItems())])
 
   def getGridDefinition(self, transformNode):
@@ -278,9 +279,9 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
       grid = fp.GetDisplacementGrid()
     elif isinstance(tp, slicer.vtkOrientedGridTransform) and tp.GetDisplacementGrid():
       grid = tp.GetDisplacementGrid()
-    elif isinstance(fp, vtk.vtkGeneralTransform) and fp.GetConcatenatedTransform(fp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid():
+    elif isinstance(fp, vtk.vtkGeneralTransform) and fp.GetNumberOfConcatenatedTransforms() and fp.GetConcatenatedTransform(fp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid():
       grid = fp.GetConcatenatedTransform(fp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid()
-    elif isinstance(tp, vtk.vtkGeneralTransform) and tp.GetConcatenatedTransform(tp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid():
+    elif isinstance(tp, vtk.vtkGeneralTransform) and tp.GetNumberOfConcatenatedTransforms() and tp.GetConcatenatedTransform(tp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid():
       grid = tp.GetConcatenatedTransform(tp.GetNumberOfConcatenatedTransforms()-1).GetDisplacementGrid()
     elif isinstance(fp, slicer.vtkOrientedBSplineTransform) and fp.GetCoefficientData():
       grid = fp.GetCoefficientData()

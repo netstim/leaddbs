@@ -92,16 +92,18 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     # Warp visible in slice view
     #
 
-    warpViewAction = qt.QAction(smw)
-    warpViewAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','GlyphIcon.png'))))
-    warpViewAction.setCheckable(True)
-    warpViewAction.connect('toggled(bool)', self.onWarpViewAction)
-    self.addAction(warpViewAction)
+    self.warpViewAction = qt.QAction(smw)
+    self.warpViewAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','GlyphIcon.png'))))
+    self.warpViewAction.setCheckable(True)
+    self.warpViewAction.connect('toggled(bool)', self.onWarpViewAction)
+    self.addAction(self.warpViewAction)
 
 
     #
     # Modality
     #
+    self.addSeparator()
+    self.addWidget(qt.QLabel('Modality:'))
     self.modalityComboBox = qt.QComboBox()
     self.modalityComboBox.addItem('t1')
     self.modalityComboBox.view().pressed.connect(self.onModalityPressed)
@@ -110,7 +112,8 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     # B <-> F slider
     #
-
+    self.addSeparator()
+    self.addWidget(qt.QLabel('Template:'))
     templateSlider = qt.QSlider(1)
     templateSlider.singleStep = 10
     templateSlider.minimum = 0
@@ -123,6 +126,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     # Resolution
     #
+    self.addSeparator()
     self.addWidget(qt.QLabel('Warp Resolution: '))
     self.resolutionComboBox = qt.QComboBox()
     avalibaleResolutions = [0.5, 1, 2, 5, 10]
@@ -161,19 +165,21 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     # Update
     #
 
-
+    self.prevWarpID = ""
     self.updateModalities(self.parameterNode.GetParameter("subjectPath"))
     reducedToolbarLogic().loadSubjectTransforms()
     self.onModalityPressed([],self.modalityComboBox.currentText)
     self.updateToolbarFromMRML()
 
 
+   
+
   def onWarpViewAction(self, t):
     warpID = self.parameterNode.GetParameter("warpID")
     if warpID != "":
       warpNode = slicer.util.getNode(warpID)
-      warpNode.GetDisplayNode().SetVisibility(t)
-      warpNode.GetDisplayNode().SetVisibility2D(t)
+      warpNode.GetDisplayNode().SetVisibility(self.warpViewAction.checked)
+      
 
   def initializeTransforms(self, imageNode):
     glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
@@ -226,7 +232,17 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     warpNode = slicer.util.getNode(warpID) if warpID != "" else None
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
     self.resolutionComboBox.enabled = warpNumberOfComponents == 1
+    if warpID != self.prevWarpID:
+      self.addObserver(warpNode, slicer.vtkMRMLDisplayableNode.DisplayModifiedEvent, self.onWarpDisplayModified)
+      try:
+        self.removeObserver(slicer.util.getNode(self.prevWarpID), slicer.vtkMRMLDisplayableNode.DisplayModifiedEvent, self.onWarpDisplayModified)
+      except:
+        pass
+      self.prevWarpID = warpID
+      self.onWarpDisplayModified()
 
+  def onWarpDisplayModified(self, caller=None, event=None):
+    self.warpViewAction.setChecked(slicer.util.getNode(self.prevWarpID).GetDisplayNode().GetVisibility())
 
   def onSaveButton(self):
     WarpEffect.WarpEffectTool.empty()
@@ -302,7 +318,12 @@ class reducedToolbarLogic(object):
     size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(glanatCompositeNode)
     warpNode = TransformsUtil.TransformsUtilLogic().emptyGridTransform(size,origin,spacing)
     warpNode.CreateDefaultDisplayNodes()
+    warpNode.GetDisplayNode().SetVisibility2D(True)
+    warpNode.SetDescription('Current')
     self.parameterNode.SetParameter("warpID", warpNode.GetID())
+    # add checkpoint attribute
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    shNode.SetItemAttribute(shNode.GetItemByDataNode(warpNode), 'savedWarp', '1')
 
   def resampleTransform(self, transformNode, resolution):
     # check resolution

@@ -118,6 +118,7 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
     self.previousPoint = [0,0,0]   
     self.smudging = False
+    self.outOfBounds = False
 
 
   def processEvent(self, caller=None, event=None):
@@ -126,12 +127,13 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
     if event == 'LeftButtonPressEvent':
       self.smudging = True
+      self.outOfBounds = False
       self.warpNode.SetAndObserveTransformNodeID(self.auxTransformNode.GetID())    
       self.auxTransformArray = slicer.util.array(self.auxTransformNode.GetID())
       xy = self.interactor.GetEventPosition()
       xyToRAS = self.sliceLogic.GetSliceNode().GetXYToRAS()
       self.previousPoint = xyToRAS.MultiplyDoublePoint( (xy[0], xy[1], 0, 1) )[0:3]
-    elif event == 'LeftButtonReleaseEvent':
+    elif event == 'LeftButtonReleaseEvent' and not self.outOfBounds:
       self.smudging = False
       # smooth
       if int(self.parameterNode.GetParameter("SmudgePostSmoothing")):
@@ -151,8 +153,13 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
         currentIndex = self.getCurrentIndex(r, currentPoint, self.auxTransfromRASToIJK)
 
         # apply to transform array
-        self.auxTransformArray[currentIndex] += np.stack([(sphereResult) * i for i in (np.array(self.previousPoint) - np.array(currentPoint))],3) # original
-
+        try:
+          self.auxTransformArray[currentIndex] += np.stack([(sphereResult) * i for i in (np.array(self.previousPoint) - np.array(currentPoint))],3) # original
+        except ValueError:
+          qt.QMessageBox.warning(qt.QWidget(), '', 'Out of bounds. Try expanding the grid.')
+          self.smudging = False
+          self.outOfBounds = True
+          self.cursorOn()
 
         # update view
         self.auxTransformNode.Modified()
@@ -184,24 +191,26 @@ class SmoothEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     self.smoothContent = []
     self.currentIndex = []
     self.preview = False
+    self.outOfBounds = False
     
   def processEvent(self, caller=None, event=None):
 
     PointerEffect.CircleEffectTool.processEvent(self, caller, event)
 
-    if event =='LeftButtonDoubleClickEvent':
+    if event =='LeftButtonDoubleClickEvent' and not self.outOfBounds:
       self.preview = False
       self.transformArray[self.currentIndex] += self.smoothContent
       # apply
       self.applyChanges()
       
-    elif event == 'LeftButtonReleaseEvent':
+    elif event == 'LeftButtonReleaseEvent' and not self.outOfBounds:
       if self.preview:
         self.transformArray[self.currentIndex] -= self.smoothContent
         self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
 
     elif event == 'LeftButtonPressEvent':
       self.preview = True
+      self.outOfBounds = False
 
       sigma = float(self.parameterNode.GetParameter("SmoothSigma")) / self.warpSpacing
       r = int(round(float(self.parameterNode.GetParameter("SmoothRadius")) / self.warpSpacing))
@@ -216,11 +225,19 @@ class SmoothEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
         # substract original
         self.smoothContent = self.smoothContent - self.transformArray[self.currentIndex]
         # modulate result with the sphere
-        self.smoothContent = np.stack([self.smoothContent[:,:,:,i] * sphereResult for i in range(3)], 3).squeeze()
+        try:
+          self.smoothContent = np.stack([self.smoothContent[:,:,:,i] * sphereResult for i in range(3)], 3).squeeze()
+        except ValueError:
+          qt.QMessageBox.warning(qt.QWidget(), '', 'Out of bounds. Try smoothing without radious.')
+          self.preview = False
+          self.outOfBounds = True
+          self.cursorOn()
+          return
       else: # maximum radius: take all warp field
         self.smoothContent =  np.stack([ndimage.gaussian_filter(self.transformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
         self.smoothContent = self.smoothContent - self.transformArray
         self.currentIndex = tuple([slice(0,s) for s in self.smoothContent.shape])
+      
       # apply
       self.transformArray[self.currentIndex] += self.smoothContent
       self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
@@ -251,12 +268,12 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
 
     if event == 'LeftButtonReleaseEvent':
       self.actionState = None # stop drawing
-
+      
       # create open curve from drawing
       curve1 = self.pointsToCurve(self.rasPoints)
       points1 = vtk.vtkPoints()
       curve1.GetControlPointPositionsWorld(points1)
-
+    
       # get closest model to points
       modelNode = self.getClosestModel(points1)
       if (not modelNode) or (points1.GetNumberOfPoints() == 1): # clean and continue
@@ -278,7 +295,6 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
         self.displayTransformFromPoints(transformNode, points1)
         self.warpNode.SetAndObserveTransformNodeID(transformNode.GetID())
         self.applyChanges()
-        # add drawings to hierarchy (before more points are added) TODO: better implement this
         self.addDrawingsToHierarchy(points2,modelNode) 
         # cleanup
         slicer.mrmlScene.RemoveNode(curve1)
@@ -323,6 +339,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     ruler.GetDisplayNode().SetVisibility(0)
     ruler.SetControlPoint(0,np.array(points.GetPoint(0)),0,0)
     models = slicer.mrmlScene.GetNodesByClass('vtkMRMLModelNode')
+    models.UnRegister(slicer.mrmlScene)
     minDistance = 10000.0
     for i in range(models.GetNumberOfItems()):
       model = models.GetItemAsObject(i)

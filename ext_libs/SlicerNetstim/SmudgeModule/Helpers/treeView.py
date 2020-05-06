@@ -1,0 +1,285 @@
+import qt, vtk, slicer
+from PythonQt import BoolResult
+import os
+import numpy as np
+
+import SmudgeModule, ImportAtlas, TransformsUtil
+
+
+class treeViewFilter(object):
+
+  def __init__(self):
+    # defaults
+    self.parameterNode = SmudgeModule.SmudgeModuleLogic().getParameterNode()
+    self.toolTip = ''
+    self.filterDictionary = {'nodeTypes': (), 'attributeNameFilter': (''), 'attributeValueFilter': ('')}
+    self.columnHidden = {'idColumn': True, 'transformColumn': True, 'descriptionColumn': True}
+
+  def deleteFunction(self, node):
+    slicer.mrmlScene.RemoveNode(node)
+
+  def addFunction(self):
+    pass
+
+  def doubleClickFunction(self, node):
+    centerList = [0] * 3
+    # get center position of model/drawing
+    if isinstance(node, slicer.vtkMRMLModelNode):
+      pd = node.GetPolyData()
+      center = vtk.vtkCenterOfMass()
+      center.SetInputData(pd)
+      center.Update()
+      centerList = center.GetCenter()
+    elif isinstance(node, slicer.vtkMRMLMarkupsCurveNode):
+      node.GetNthControlPointPosition(round(node.GetNumberOfControlPoints()/2),centerList)
+    elif isinstance(node, slicer.vtkMRMLMarkupsFiducialNode):
+      node.GetNthFiducialPosition(0,centerList)
+    else:
+      return
+    self.centerPosition(centerList)
+
+  def centerPosition(self, centerList):
+    # create markups node, add center as fiducial and jump and center slices
+    markupsNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    markupsNode.GetDisplayNode().SetVisibility(False)
+    markupsNode.AddFiducialFromArray(np.array(centerList),'')
+    markupsLogic = slicer.modules.markups.logic()
+    markupsLogic.JumpSlicesToNthPointInMarkup(markupsNode.GetID(),0,True)
+    slicer.mrmlScene.RemoveNode(markupsNode)
+
+  def renameFunction(self, node):
+    name = qt.QInputDialog.getText(qt.QWidget(),'Rename','New name:')
+    if name != '':
+      node.SetName(name)
+
+
+class treeViewSceneFilter(treeViewFilter):
+
+  def __init__(self):
+    super().__init__()
+    self.name = 'Scene'
+    self.toolTip = ''
+
+
+class treeViewAtlasFilter(treeViewFilter):
+
+  def __init__(self):
+    super().__init__()
+    self.name = 'Atlases'
+    self.toolTip = 'Lead-DBS Atlases. Press + to import more atlases'
+    self.filterDictionary['nodeTypes'] = ('vtkMRMLModelNode','vtkMRMLFolderDisplayNode')
+    self.filterDictionary['attributeNameFilter'] = ('atlas')
+
+  def addFunction(self):
+    if self.parameterNode.GetParameter("MNIAtlasPath") != ".":
+      items = ImportAtlas.ImportAtlasLogic().getValidAtlases(self.parameterNode.GetParameter("MNIAtlasPath"))
+      result = BoolResult()
+      atlasName = qt.QInputDialog.getItem(qt.QWidget(),'Select Atlas','',items,0,0,result)
+      if result:
+        ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName))    
+
+
+class treeViewDrawingsFilter(treeViewFilter):
+
+  def __init__(self):
+    super().__init__()
+    self.name = 'Fixed Points'
+    self.toolTip = 'Points in this list will remian fixed in following drawings. Press + to add fiducials.'
+    self.filterDictionary['nodeTypes'] = ('vtkMRMLMarkupsCurveNode','vtkMRMLMarkupsFiducialNode','vtkMRMLFolderDisplayNode')
+    self.filterDictionary['attributeNameFilter'] = ('drawing')
+    self.filterDictionary['attributeValueFilter'] = ('1')
+
+  def deleteFunction(self, node):
+    if not isinstance(node, slicer.vtkMRMLFolderDisplayNode):
+      super().deleteFunction(node)
+
+  def addFunction(self):
+    # interaction node
+    interactionNode = slicer.app.applicationLogic().GetInteractionNode()
+    selectionNode = slicer.app.applicationLogic().GetSelectionNode()
+    selectionNode.SetReferenceActivePlaceNodeClassName("vtkMRMLMarkupsFiducialNode")
+    # create aux marpus node
+    fiducialNode = slicer.vtkMRMLMarkupsFiducialNode()
+    slicer.mrmlScene.AddNode(fiducialNode)
+    fiducialNode.CreateDefaultDisplayNodes() 
+    fiducialNode.GetDisplayNode().SetGlyphScale(2)
+    fiducialNode.SetLocked(1)
+    fiducialNode.SetName('Fixed Point')
+    # add to subject hierarchy
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    shNode.SetItemAttribute(shNode.GetItemByDataNode(fiducialNode), 'drawing', '1')
+    shNode.SetItemParent(shNode.GetItemByDataNode(fiducialNode), int(self.parameterNode.GetParameter("drawingsRootItem")))
+    # activate placement
+    selectionNode.SetActivePlaceNodeID(fiducialNode.GetID())
+    interactionNode.SetCurrentInteractionMode(interactionNode.Place)
+
+  def renameFunction(self, node):
+    super().renameFunction(node)
+    if isinstance(node, slicer.vtkMRMLMarkupsFiducialNode):
+      node.SetNthControlPointLabel(0, node.GetName())
+
+class treeViewSavedWarpFilter(treeViewFilter):
+
+  def __init__(self):
+    super().__init__()
+    self.name = 'Saved Warps'
+    self.toolTip = 'Saved user modifications. Press + to save current state. Double click to change current warp.'
+    self.filterDictionary['nodeTypes'] = ('vtkMRMLTransformNode','vtkMRMLGridTransformNode')
+    self.filterDictionary['attributeNameFilter'] = ('savedWarp')
+    self.columnHidden['descriptionColumn'] = False
+
+  def deleteFunction(self, node):
+    if node.GetDescription() != 'Current':
+      super().deleteFunction(node)
+
+  def addFunction(self):
+    # get node
+    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    # save visibility
+    vis = warpNode.GetDisplayNode().GetVisibility()
+    warpNode.GetDisplayNode().SetVisibility(False)
+    # clone
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    clonedID = slicer.modules.subjecthierarchy.logic().CloneSubjectHierarchyItem(shNode, shNode.GetItemByDataNode(warpNode))
+    shNode.SetItemAttribute(clonedID, 'savedWarp', '1')
+    # flat new warp
+    newWarpNode = shNode.GetItemDataNode(clonedID)
+    newWarpNode.SetName(slicer.mrmlScene.GenerateUniqueName('SavedWarp'))
+    size, origin, spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(newWarpNode)
+    outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
+    referenceVolume = TransformsUtil.TransformsUtilLogic().createEmpyVolume(size, origin, spacing)    
+    transformsLogic = slicer.modules.transforms.logic()
+    transformsLogic.ConvertToGridTransform(newWarpNode, referenceVolume, outNode)
+    newWarpNode.SetAndObserveTransformFromParent(outNode.GetTransformFromParent())
+    # remove aux
+    slicer.mrmlScene.RemoveNode(outNode)
+    slicer.mrmlScene.RemoveNode(referenceVolume)
+    # restore visibility
+    warpNode.GetDisplayNode().SetVisibility(vis)
+    # simulate double click to change
+    self.doubleClickFunction(newWarpNode)
+
+  def doubleClickFunction(self, node):
+    SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
+    # reset descriptions
+    previousWarpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    previousWarpNode.SetDescription('')
+    # apply current node
+    glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
+    glanatCompositeNode.SetAndObserveTransformNodeID(node.GetID())
+    # apply visibility
+    node.GetDisplayNode().SetVisibility(previousWarpNode.GetDisplayNode().GetVisibility())
+    previousWarpNode.GetDisplayNode().SetVisibility(False)
+    # set description
+    node.SetDescription('Current')
+    # change parameter node
+    self.parameterNode.SetParameter("warpID", node.GetID())
+    
+
+
+
+
+class WarpDriveTreeView(qt.QWidget):
+
+  def __init__(self):
+
+    super().__init__()
+
+    layout = qt.QGridLayout(self)  
+
+    # set up tree view
+    self.treeView = slicer.qMRMLSubjectHierarchyTreeView(slicer.util.mainWindow())
+    self.treeView.setMRMLScene(slicer.mrmlScene)
+    self.treeView.contextMenuEnabled = False
+    self.treeView.setEditTriggers(0) # disable double click to edit
+
+    # add delete rename buttons
+    buttonsFrame = qt.QFrame()
+    buttonsFrame.setLayout(qt.QHBoxLayout())
+    # add
+    addPixmap = qt.QPixmap(os.path.join(os.path.split(__file__)[0] ,'Icons', 'Add.png'))
+    addIcon = qt.QIcon(addPixmap)
+    self.addButton = qt.QPushButton()
+    self.addButton.setIcon(addIcon)
+    self.addButton.setIconSize(addPixmap.rect().size())
+    self.addButton.setToolTip('Add')
+    # delete
+    deletePixmap = qt.QPixmap(os.path.join(os.path.split(__file__)[0] ,'Icons', 'Delete.png'))
+    deleteIcon = qt.QIcon(deletePixmap)
+    self.deleteButton = qt.QPushButton()
+    self.deleteButton.setIcon(deleteIcon)
+    self.deleteButton.setIconSize(deletePixmap.rect().size())
+    self.deleteButton.setToolTip('Delete')
+    # rename
+    renamePixmap = qt.QPixmap(os.path.join(os.path.split(__file__)[0] ,'Icons', 'Rename.png'))
+    renameIcon = qt.QIcon(renamePixmap)
+    self.renameButton = qt.QPushButton()
+    self.renameButton.setIcon(renameIcon)
+    self.renameButton.setIconSize(renamePixmap.rect().size())
+    self.renameButton.setToolTip('Rename')
+    # add to group
+    buttonsFrame.layout().addWidget(self.addButton)
+    buttonsFrame.layout().addWidget(self.deleteButton)
+    buttonsFrame.layout().addWidget(self.renameButton)
+
+    # set up filters
+    filtersGroupBox = qt.QFrame()
+    filtersGroupBox.setLayout(qt.QHBoxLayout())
+    filters = [treeViewSceneFilter(), treeViewAtlasFilter(), treeViewDrawingsFilter(), treeViewSavedWarpFilter()]
+    self.radioButtons = []
+
+    for filt in filters:
+      filterRadioButton = qt.QRadioButton(filt.name)
+      filterRadioButton.setToolTip(filt.toolTip)
+      filterRadioButton.clicked.connect(lambda b,f=filt: self.onFilterRadioButtonClicked(f))
+      filtersGroupBox.layout().addWidget(filterRadioButton)
+      self.radioButtons.append(filterRadioButton)
+
+    # add to layout
+    groupsFrame = qt.QFrame()
+    groupsFrame.setLayout(qt.QHBoxLayout())
+    groupsFrame.layout().addWidget(filtersGroupBox,1)
+    groupsFrame.layout().addWidget(buttonsFrame)
+    layout.addWidget(groupsFrame,0,0)
+    layout.addWidget(self.treeView,1,0)
+
+    # when adding fixed points while one of them is selected the new one is not set in the correct parent folder
+    # this is overdoing, but fixes the problem
+    self.treeView.model().rowsAboutToBeInserted.connect(lambda: self.treeView.setCurrentItem(0))
+
+    # init
+    self.radioButtons[1].animateClick()
+
+
+  def onFilterRadioButtonClicked(self, filt):
+    # filter data tree
+    for key,value in filt.filterDictionary.items():
+      setattr(self.treeView, key, value)
+    # columns hidden
+    for key,value in filt.columnHidden.items():
+      self.treeView.setColumnHidden(eval('self.treeView.model().'+key), value)
+    # reset depth
+    self.treeView.expandToDepth(0)
+    # set add function
+    self.addButton.disconnect('clicked(bool)')
+    self.addButton.connect('clicked(bool)', filt.addFunction)
+    self.addButton.connect('clicked(bool)', self.updateTree)
+    # set delete function
+    self.deleteButton.disconnect('clicked(bool)')
+    self.deleteButton.connect('clicked(bool)', lambda: filt.deleteFunction(self.currentNode()))
+    # set rename function
+    self.renameButton.disconnect('clicked(bool)')
+    self.renameButton.connect('clicked(bool)', lambda: filt.renameFunction(self.currentNode()))
+    # set double click function
+    self.treeView.doubleClicked.disconnect()
+    self.treeView.doubleClicked.connect(lambda: filt.doubleClickFunction(self.currentNode()))
+
+  def currentNode(self):
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    return shNode.GetItemDataNode(self.treeView.currentItem())
+
+  def updateTree(self):
+    # annimate click will update nodes in tree - useful when adding saved warps 
+    for button in self.radioButtons:
+      if button.checked:
+        button.animateClick()

@@ -41,6 +41,9 @@ class WarpAbstractEffect(VTKObservationMixin):
     self.parametersFrame.setLayout(qt.QFormLayout())
     self.parametersFrame.setVisible(False)
 
+    # aux prev warp id
+    self.prevWarpID = ""
+
   def onEffectButtonToggle(self):
     WarpEffect.WarpEffectTool.empty()
     self.parametersFrame.setVisible(self.effectButton.checked)
@@ -54,6 +57,9 @@ class WarpAbstractEffect(VTKObservationMixin):
     warpID = self.parameterNode.GetParameter("warpID")
     warpNode = slicer.util.getNode(warpID) if warpID != "" else None
     self.effectButton.enabled = bool(warpNode)
+    if warpID != self.prevWarpID:
+      self.resetEffect()
+      self.prevWarpID = warpID
     return warpNode
 
   def sliceWidgets(self):
@@ -62,7 +68,7 @@ class WarpAbstractEffect(VTKObservationMixin):
 
 
   def addEditButtonListeners(self, parent):
-    for button in [parent.undoAllButton, parent.undoButton, parent.redoButton, parent.overwriteButton]:
+    for button in [parent.undoAllButton, parent.undoButton, parent.redoButton]:
       button.connect("pressed()", self.onEditButtonPressed)
       button.connect("released()", self.onEditButtonReleased)
 
@@ -73,6 +79,11 @@ class WarpAbstractEffect(VTKObservationMixin):
 
   def onEditButtonReleased(self):
     if self.effectButton.isChecked():
+      self.effectButton.animateClick()
+
+  def resetEffect(self):
+    if self.effectButton.isChecked():
+      WarpEffect.WarpEffectTool.empty()
       self.effectButton.animateClick()
 
 #
@@ -145,11 +156,18 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.forceSlider.setToolTip('Force')
     self.parametersFrame.layout().addRow("Force (%):", self.forceSlider)
 
+    # advanced
+    advancedParametersGroupBox = ctk.ctkCollapsibleGroupBox()
+    advancedParametersGroupBox.setTitle('Advanced')
+    advancedParametersGroupBox.setLayout(qt.QFormLayout())
+    advancedParametersGroupBox.collapsed = True
+    self.parametersFrame.layout().addRow(advancedParametersGroupBox)
+    
     # post smoothing
     self.postSmoothingCheckBox = qt.QCheckBox('')
     self.postSmoothingCheckBox.setChecked(int(self.parameterNode.GetParameter("SmudgePostSmoothing")))
     self.postSmoothingCheckBox.setToolTip('Enable to smooth the added warp once the operation finished.')
-    self.parametersFrame.layout().addRow("Post Smoothing:", self.postSmoothingCheckBox)
+    advancedParametersGroupBox.layout().addRow("Post Smoothing:", self.postSmoothingCheckBox)
 
     # post smoothing value
     self.postSmoothingSlider = ctk.ctkSliderWidget()
@@ -159,26 +177,51 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.postSmoothingSlider.decimals = 0
     self.postSmoothingSlider.value = float(self.parameterNode.GetParameter("SmudgeSigma"))
     self.postSmoothingSlider.setToolTip('Smoothing sigma as a percentage of the radius.')
-    self.parametersFrame.layout().addRow("Sigma (% Radius):", self.postSmoothingSlider)
+    advancedParametersGroupBox.layout().addRow("Sigma (% Radius):", self.postSmoothingSlider)
 
-    # force
+    # expand edge
+    self.expandGridSlider = ctk.ctkSliderWidget()
+    self.expandGridSlider.singleStep = 1
+    self.expandGridSlider.minimum = 0
+    self.expandGridSlider.maximum = 100
+    self.expandGridSlider.decimals = 0
+    self.expandGridSlider.tracking = False
+    self.expandGridSlider.value = float(self.parameterNode.GetParameter("expandGrid"))
+    self.expandGridSlider.setToolTip('Expand the grid being modified. Useful when working with the edges of the image.')
+    advancedParametersGroupBox.layout().addRow("Expand Grid (mm):", self.expandGridSlider) 
+
+    # grid boounds
+    self.gridBoundsCheckBox = qt.QCheckBox('')
+    self.gridBoundsCheckBox.setChecked(False)
+    self.gridBoundsCheckBox.setToolTip('Display grid bounds.')
+    advancedParametersGroupBox.layout().addRow("Show grid bounds:", self.gridBoundsCheckBox)   
+
 
     self.radiusSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.hardnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.forceSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.postSmoothingCheckBox.connect('toggled(bool)', self.updateMRMLFromGUI)
     self.postSmoothingSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.expandGridSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.expandGridSlider.connect('valueChanged(double)', self.resetEffect)
+    self.gridBoundsCheckBox.connect('toggled(bool)', self.onGridBoundsCheckBox)
+
+  def onEffectButtonToggle(self):
+    super().onEffectButtonToggle()
+    if self.parameterNode.GetParameter("gridBoundsROIID") != "":
+      gridBoundsROINode = slicer.util.getNode(self.parameterNode.GetParameter("gridBoundsROIID"))
+      gridBoundsROINode.SetDisplayVisibility(self.gridBoundsCheckBox.checked and self.effectButton.checked)
 
   def onEffectButtonClicked(self):
     super().onEffectButtonClicked()
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+    size,origin,spacing = self.getExpandedGrid()
     auxTransformNode = TransformsUtil.TransformsUtilLogic().emptyGridTransform(size, origin, spacing)
     for sliceWidget in self.sliceWidgets():
       WarpEffect.SmudgeEffectTool(sliceWidget, auxTransformNode)
 
   def updateGuiFromMRML(self, caller=None, event=None):
-    super().updateGuiFromMRML(caller,event)
+    warpNode = super().updateGuiFromMRML(caller,event)
     radius = float(self.parameterNode.GetParameter("SmudgeRadius"))
     self.radiusSlider.setValue( radius )
     if radius < self.radiusSlider.minimum or radius > self.radiusSlider.maximum:
@@ -186,6 +229,13 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.hardnessSlider.setValue(float(self.parameterNode.GetParameter("SmudgeHardness")))
     self.forceSlider.setValue(float(self.parameterNode.GetParameter("SmudgeForce")))
     self.postSmoothingSlider.setEnabled(self.postSmoothingCheckBox.checked)
+    self.radiusSlider.maximum = float(self.parameterNode.GetParameter("maxRadius")) + float(self.parameterNode.GetParameter("expandGrid"))
+    # roi bounds
+    if warpNode and self.parameterNode.GetParameter("gridBoundsROIID") != "":
+      gridBoundsROINode = slicer.util.getNode(self.parameterNode.GetParameter("gridBoundsROIID"))
+      size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+      sizeMM = [size[i]*spacing[i] for i in range(3)]
+      gridBoundsROINode.SetRadiusXYZ([0.5*sizeMM[i]+float(self.parameterNode.GetParameter("expandGrid")) for i in range(3)])
     
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("SmudgeRadius", str(self.radiusSlider.value) )
@@ -193,6 +243,36 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.parameterNode.SetParameter("SmudgeForce", str(self.forceSlider.value) )
     self.parameterNode.SetParameter("SmudgePostSmoothing", str(int(self.postSmoothingCheckBox.isChecked())))
     self.parameterNode.SetParameter("SmudgeSigma", str(self.postSmoothingSlider.value) )
+    self.parameterNode.SetParameter("expandGrid", str(self.expandGridSlider.value) )
+
+
+  def getExpandedGrid(self):
+    # create aux transform with same grid as warp
+    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+    # expand aux transform to deal with borders
+    expandGrid = float(self.parameterNode.GetParameter("expandGrid"))
+    origin = [o - expandGrid for o in origin]
+    size = [int(round(s+expandGrid*2/spacing[0])) for s in size]
+    return size, origin, spacing
+
+  def onGridBoundsCheckBox(self):
+    if self.parameterNode.GetParameter("gridBoundsROIID") == "" and self.parameterNode.GetParameter("warpID") != "":
+      self.initROINode()
+    gridBoundsROINode = slicer.util.getNode(self.parameterNode.GetParameter("gridBoundsROIID"))
+    gridBoundsROINode.SetDisplayVisibility(self.gridBoundsCheckBox.checked)
+
+
+  def initROINode(self):
+    gridBoundsROINode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLAnnotationROINode')
+    gridBoundsROINode.SetLocked(True)
+    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+    sizeMM = [size[i]*spacing[i] for i in range(3)]
+    gridBoundsROINode.SetRadiusXYZ([0.5*sizeMM[i] for i in range(3)])
+    gridBoundsROINode.SetXYZ([origin[i]+0.5*sizeMM[i] for i in range(3)])
+    self.parameterNode.SetParameter("gridBoundsROIID", gridBoundsROINode.GetID())
+
 
 #
 # Draw
@@ -233,7 +313,7 @@ class SmoothEffectParameters(WarpAbstractEffect):
 
   def __init__(self):
 
-    toolTip = 'Smooth the warp field. Click and hold to preview, double-click to aply. Overwrite required.'
+    toolTip = 'Smooth the warp field. Click and hold to preview, double-click to aply. Save current state to enable.'
     WarpAbstractEffect.__init__(self, 'Smooth', toolTip)
 
     # sigma
