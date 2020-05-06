@@ -27,7 +27,7 @@ end
 
 %% Generate brain mask in fMRI space ('meanrest.nii')
 if ~exist([directory,'mean',restfname,'_mask.nii'], 'file')
-    copyfile(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']),...
+    copyfile([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii.gz'],...
         [directory,'temp.nii.gz']);
     gunzip([directory,'temp.nii.gz']);
     ea_delete([directory,'temp.nii.gz']);
