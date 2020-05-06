@@ -72,6 +72,14 @@ if ~isempty(M.clinical.labels)
     set(handles.clinicalvars, 'String', M.clinical.labels);
 end
 
+% Disable group comparison button for variables per hemisphere or
+% non-logical variable
+clinicvar = M.clinical.vars{get(handles.clinicalvars, 'Value')};
+if size(clinicvar,2)==2 || numel(unique(clinicvar))~=2
+    set(handles.ttestbutton_vta, 'Enable', 'off');
+    set(handles.ttestbutton_ft, 'Enable', 'off');
+end
+
 % refresh UI
 if ~isempty(M.vilist)
     set(handles.vilist, 'String', M.vilist);
@@ -604,6 +612,20 @@ function clinicalvars_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns clinicalvars contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from clinicalvars
+
+leadfigure = getappdata(handles.lg_stats, 'leadfigure');
+M = getappdata(leadfigure, 'M');
+
+% Disable group comparison button for variables per hemisphere or
+% non-logical variable
+clinicvar = M.clinical.vars{get(handles.clinicalvars, 'Value')};
+if size(clinicvar,2)==2 || numel(unique(clinicvar))~=2
+    set(handles.ttestbutton_vta, 'Enable', 'off');
+    set(handles.ttestbutton_ft, 'Enable', 'off');
+else
+    set(handles.ttestbutton_vta, 'Enable', 'on');
+    set(handles.ttestbutton_ft, 'Enable', 'on');
+end
 
 
 % --- Executes during object creation, after setting all properties.
