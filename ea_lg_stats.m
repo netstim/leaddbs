@@ -394,12 +394,40 @@ stats = preparedataanalysis_ft(handles);
 assignin('base','stats',stats);
 
 % perform t-tests:
-if ~isempty(stats.fc.fccorr)
-    ea_ttest(stats.fc.fccorr(repmat(logical(stats.corrcl),1,size(stats.fc.fccorr,2))),stats.fc.fccorr(~repmat(logical(stats.corrcl),1,size(stats.fc.fccorr,2))),'Fibercounts',stats.vc_labels);
+if ~isempty(stats.fccorr.both)
+    ea_ttest(stats.fccorr.both(repmat(logical(stats.corrcl),1,size(stats.fccorr.both,2))),...
+        stats.fccorr.both(~repmat(logical(stats.corrcl),1,size(stats.fccorr.both,2))),...
+        'Fiber connection, both hemispheres',stats.fc_labels{end});
 end
 
-if ~isempty(stats.fc.nfccorr)
-    ea_ttest(stats.fc.nfccorr(repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),stats.fc.nfccorr(~repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),'Normalized Fibercounts',stats.vc_labels);
+if ~isempty(stats.fccorr.nboth)
+    ea_ttest(stats.fccorr.nboth(repmat(logical(stats.corrcl),1,size(stats.fccorr.nboth,2))),...
+        stats.fccorr.nboth(~repmat(logical(stats.corrcl),1,size(stats.fccorr.nboth,2))),...
+        'Normalized Fiber connection, both hemispheres',stats.fc_labels{end});
+end
+
+if ~isempty(stats.fccorr.right)
+    ea_ttest(stats.fccorr.right(repmat(logical(stats.corrcl),1,size(stats.fccorr.right,2))),...
+        stats.fccorr.right(~repmat(logical(stats.corrcl),1,size(stats.fccorr.right,2))),...
+        'Fiber connection, right hemispheres',stats.fc_labels{end});
+end
+
+if ~isempty(stats.fccorr.nright)
+    ea_ttest(stats.fccorr.nright(repmat(logical(stats.corrcl),1,size(stats.fccorr.nright,2))),...
+        stats.fccorr.nright(~repmat(logical(stats.corrcl),1,size(stats.fccorr.nright,2))),...
+        'Normalized Fiber connection, right hemispheres',stats.fc_labels{end});
+end
+
+if ~isempty(stats.fccorr.left)
+    ea_ttest(stats.fccorr.left(repmat(logical(stats.corrcl),1,size(stats.fccorr.left,2))),...
+        stats.fccorr.left(~repmat(logical(stats.corrcl),1,size(stats.fccorr.left,2))),...
+        'Fiber connection, left hemispheres',stats.fc_labels{end});
+end
+
+if ~isempty(stats.fccorr.nleft)
+    ea_ttest(stats.fccorr.nleft(repmat(logical(stats.corrcl),1,size(stats.fccorr.nleft,2))),...
+        stats.fccorr.nleft(~repmat(logical(stats.corrcl),1,size(stats.fccorr.nleft,2))),...
+        'Normalized Fiber connection, left hemispheres',stats.fc_labels{end});
 end
 
 ea_busyaction('off', leadfigure, 'group');
