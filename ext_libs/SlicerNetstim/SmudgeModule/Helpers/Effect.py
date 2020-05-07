@@ -15,7 +15,6 @@ class EffectTool(object):
 
     # sliceWidget to operate on and convenience variables
     # to access the internals
-    print(sliceWidget)
     self.sliceWidget = sliceWidget
     self.sliceLogic = sliceWidget.sliceLogic()
     self.sliceView = self.sliceWidget.sliceView()

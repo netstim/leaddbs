@@ -120,8 +120,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       toolsFormLayout.addRow(warpEffectParametersWidget.parametersFrame)
 
 
-    self.noneButton = warpEffects[0].effectButton
-
     #
     # History Area
     #
@@ -211,7 +209,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       tv.radioButtons[1].setVisible(False)
 
     self.updateGuiFromMRML()  
-    self.noneButton.setEnabled(True)
 
   
 
@@ -253,7 +250,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def updateMRMLFromArgs(self): 
     args = sys.argv
-    print(args)
     if (len(sys.argv) > 2) and os.path.isfile(os.path.join(sys.argv[1],'lead.m')):
       subjectPaths = self.parameterNode.GetParameter("separator").join(sys.argv[2:])
       subjectPath = subjectPaths.split(self.parameterNode.GetParameter("separator"))[0]
@@ -341,7 +337,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
   def exit(self):
-    self.noneButton.setChecked(True)
+    WarpEffectParameters.NoneEffectParameters.activateNoneEffect()
     SmudgeModuleLogic().removeRedoNodes()
 
 
@@ -349,7 +345,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.exit()
 
   def enter(self):
-    self.noneButton.setChecked(True)
+    WarpEffectParameters.NoneEffectParameters.activateNoneEffect()
       
   def onSceneStartClose(self, caller, event):
     pass

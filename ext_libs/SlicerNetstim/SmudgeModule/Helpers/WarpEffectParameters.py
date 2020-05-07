@@ -16,6 +16,7 @@ class WarpAbstractEffect(VTKObservationMixin):
     VTKObservationMixin.__init__(self)
     self.parameterNode = SmudgeModule.SmudgeModuleLogic().getParameterNode()
     self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGuiFromMRML)
+    self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.resetEffect)
 
     self.name = name
 
@@ -57,9 +58,6 @@ class WarpAbstractEffect(VTKObservationMixin):
     warpID = self.parameterNode.GetParameter("warpID")
     warpNode = slicer.util.getNode(warpID) if warpID != "" else None
     self.effectButton.enabled = bool(warpNode)
-    if warpID != self.prevWarpID:
-      self.resetEffect()
-      self.prevWarpID = warpID
     return warpNode
 
   def sliceWidgets(self):
@@ -81,10 +79,15 @@ class WarpAbstractEffect(VTKObservationMixin):
     if self.effectButton.isChecked():
       self.effectButton.animateClick()
 
-  def resetEffect(self):
-    if self.effectButton.isChecked():
-      WarpEffect.WarpEffectTool.empty()
-      self.effectButton.animateClick()
+  def resetEffect(self, caller=None, effect=None):
+    if self.parameterNode.GetParameter("warpID") != self.prevWarpID:
+      self.prevWarpID = self.parameterNode.GetParameter("warpID")
+      if self.effectButton.isChecked():
+        WarpEffect.WarpEffectTool.empty()
+        if self.effectButton.enabled:
+          self.effectButton.animateClick()
+        else:
+          NoneEffectParameters.activateNoneEffect()
 
 #
 # None
@@ -92,10 +95,15 @@ class WarpAbstractEffect(VTKObservationMixin):
 
 class NoneEffectParameters(WarpAbstractEffect):
 
+  noneEffectButton = None
+
   def __init__(self):
 
     toolTip = 'None. Disable Effects.'
     WarpAbstractEffect.__init__(self, 'None', toolTip)
+
+    # keep none effect button as class attribute in order to call class method activateNoneEffect 
+    type(self).noneEffectButton = self.effectButton
 
     interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
     self.addObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) 
@@ -113,6 +121,10 @@ class NoneEffectParameters(WarpAbstractEffect):
     if interactionNode.GetCurrentInteractionMode() != interactionNode.ViewTransform:
       self.effectButton.setChecked(True)
 
+  @classmethod
+  def activateNoneEffect(cls):
+    if cls.noneEffectButton:
+      cls.noneEffectButton.animateClick()
 
 
 #
@@ -375,7 +387,7 @@ class SmoothEffectParameters(WarpAbstractEffect):
     self.sigmaSlider.setValue(float(self.parameterNode.GetParameter("SmoothSigma")))
     # radius - hardness enables
     self.radiusSlider.setEnabled(self.useRadiusCheckbox.checked)
-    self.hardnessSlider.setEnabled(self.useRadiusCheckbox.checked)
+    self.hardnessSlider.setEnabled(self.useRadiusCheckbox.checked)    
 
 
   def updateMRMLFromGUI(self):
