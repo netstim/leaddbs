@@ -49,96 +49,37 @@ class PointerEffectTool(Effect.EffectTool):
 
 class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
 
+  sphere = None
+  sphereModelNode = None
+
   def __init__(self, sliceWidget):
     PointerEffectTool.__init__(self, sliceWidget)
     VTKObservationMixin.__init__(self)
 
-    self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGlyph)
-    
-    self.rasToXY = vtk.vtkMatrix4x4()
-    self.brush = vtk.vtkPolyData()
-    self.updateGlyph([],[])
-    self.mapper = vtk.vtkPolyDataMapper2D()
-    self.mapper.SetInputData(self.brush)
-    self.actor = vtk.vtkActor2D()
-    self.actor.GetProperty().SetColor(.7, .7, 0)
-    self.actor.SetMapper(self.mapper)
-    self.actor.VisibilityOff()
-    self.actors.append(self.actor) 
-    self.renderer.AddActor2D(self.actor)
+    # init class attributes
+    if type(self).sphere is None:
+      type(self).sphere = vtk.vtkSphereSource()
+    if type(self).sphereModelNode is None:
+      type(self).sphereModelNode = slicer.modules.models.logic().AddModel(self.sphere.GetOutput())
+      self.sphereModelNode.GetDisplayNode().SetVisibility2D(True)
+      self.sphereModelNode.GetDisplayNode().SetVisibility3D(False)
+      self.sphereModelNode.GetDisplayNode().SetColor(0.7,0.7,0)
+      
+    self.effectName = self.parameterNode.GetParameter("currentEffect")
 
-
-  def createGlyph(self, polyData, radius):
-    """
-    create a brush circle of the right radius in XY space
-    - assume uniform scaling between XY and RAS which
-      is enforced by the view interactors
-    """
-    #polyData = self.brush
-    #radius = float(self.parameterNode.GetParameter("radius"))
-
-    sliceNode = self.sliceWidget.sliceLogic().GetSliceNode()
-    self.rasToXY.DeepCopy(sliceNode.GetXYToRAS())
-    self.rasToXY.Invert()
-
-    maximum, maxIndex = 0,0
-    for index in range(3):
-      if abs(self.rasToXY.GetElement(0, index)) > maximum:
-        maximum = abs(self.rasToXY.GetElement(0, index))
-        maxIndex = index
-    point = [0, 0, 0, 0]
-    point[maxIndex] = radius
-    xyRadius = self.rasToXY.MultiplyPoint(point)
-    
-    xyRadius = sqrt( xyRadius[0]**2 + xyRadius[1]**2 + xyRadius[2]**2 )
-
-    #if self.pixelMode:
-    #  xyRadius = 0.01
-
-    # make a circle paint brush
-    points = vtk.vtkPoints()
-    lines = vtk.vtkCellArray()
-    polyData.SetPoints(points)
-    polyData.SetLines(lines)
-    PI = 3.1415926
-    TWOPI = PI * 2
-    PIoverSIXTEEN = PI / 16
-    prevPoint = -1
-    firstPoint = -1
-    angle = 0
-    while angle <= TWOPI:
-      x = xyRadius * cos(angle)
-      y = xyRadius * sin(angle)
-      p = points.InsertNextPoint( x, y, 0 )
-      if prevPoint != -1:
-        idList = vtk.vtkIdList()
-        idList.InsertNextId(prevPoint)
-        idList.InsertNextId(p)
-        polyData.InsertNextCell( vtk.VTK_LINE, idList )
-      prevPoint = p
-      if firstPoint == -1:
-        firstPoint = p
-      angle = angle + PIoverSIXTEEN
-
-    # make the last line in the circle
-    idList = vtk.vtkIdList()
-    idList.InsertNextId(p)
-    idList.InsertNextId(firstPoint)
-    polyData.InsertNextCell( vtk.VTK_LINE, idList )
-
-    # update
-    self.sliceView.scheduleRender()
+    self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateSphere)
+    self.updateSphere()
+    self.sphereModelNode.GetDisplayNode().SetVisibility(False)
 
   def processEvent(self, caller=None, event=None):
     if event == 'MouseMoveEvent':
       xy = self.interactor.GetEventPosition()
-      self.actor.SetPosition(xy)
-      self.sliceView.scheduleRender()
+      self.sphere.SetCenter(self.sliceWidget.sliceLogic().GetSliceNode().GetXYToRAS().MultiplyPoint(xy + (0, 1))[0:3])
+      self.sphere.Update()
     elif event == "EnterEvent":
-      self.actor.VisibilityOn()
-      self.updateGlyph([],[]) # update in case radius changed from slider
+      self.sphereModelNode.GetDisplayNode().SetVisibility(True)
     elif event == "LeaveEvent":
-      self.actor.VisibilityOff()
+      self.sphereModelNode.GetDisplayNode().SetVisibility(False)
     elif event == 'LeftButtonPressEvent':
       self.cursorOff()
     elif event == 'LeftButtonReleaseEvent':
@@ -150,26 +91,29 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
       if key == 'minus' or key == 'underscore':
         self.scaleRadius(0.8) 
 
-    if caller and caller.IsA('vtkMRMLSliceNode'):
-      self.updateGlyph([],[])
-
     PointerEffectTool.processEvent(self, caller, event)
 
   def scaleRadius(self,scaleFactor):
-    effectRadius = self.parameterNode.GetParameter("currentEffect") + "Radius"
-    radius = float(self.parameterNode.GetParameter(effectRadius))
-    self.parameterNode.SetParameter(effectRadius, str(radius * scaleFactor) )
-    
-  def updateGlyph(self, caller, event):
-    effectName = self.parameterNode.GetParameter("currentEffect")
-    if effectName in ['Smudge','Smooth']:
-      r = float(self.parameterNode.GetParameter(effectName + "Radius"))
-      self.createGlyph(self.brush, r)
-    if effectName == 'Smooth' and hasattr(self, 'actor'):
-      self.actor.SetVisibility(int(self.parameterNode.GetParameter("SmoothUseRadius")))
+    radius = float(self.parameterNode.GetParameter(self.effectName + "Radius"))
+    self.parameterNode.SetParameter(self.effectName + "Radius", str(radius * scaleFactor))
+
+  def updateSphere(self,caller=None,event=None):
+    if self.sphere:
+      self.sphereModelNode.GetDisplayNode().SetVisibility((self.effectName=='Smooth' and int(self.parameterNode.GetParameter("SmoothUseRadius"))) or self.effectName=='Smudge')
+      self.sphere.SetRadius(float(self.parameterNode.GetParameter(self.effectName + "Radius")))
+      self.sphere.SetPhiResolution(30)
+      self.sphere.SetThetaResolution(30)
+      self.sphere.Update()
 
   def cleanup(self):
-    super(CircleEffectTool,self).cleanup()
+    slicer.mrmlScene.RemoveNode(self.sphereModelNode)
+    type(self).cleanSphere()
+    super(PointerEffectTool,self).cleanup()
+
+  @classmethod
+  def cleanSphere(cls):
+    cls.sphere = None
+    cls.sphereModelNode = None
 
 
 
