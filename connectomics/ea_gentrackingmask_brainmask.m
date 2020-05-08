@@ -1,3 +1,4 @@
+
 function ea_gentrackingmask_brainmask(options,threshold)
 directory=[options.root,options.patientname,filesep];
 
@@ -24,9 +25,6 @@ end
 if ~isapproved || isfield(options, 'overwriteapproved') && options.overwriteapproved
     fprintf(['\nCoregistration between b0 and anat not done/not approved yet or overwrite mode enabled!\n', ...
              'Will do the coregistration using the method chosen from GUI.\n\n'])
-    if exist([directory,'ea_coregmrmethod_applied.mat'], 'file')
-        coregmrmethod = load([directory,'ea_coregmrmethod_applied.mat']);
-    end
 
     coregmrmethod.(b0_anat) = checkCoregMethod(options);
 
@@ -148,7 +146,7 @@ end
 
 
 function coregmethod = checkCoregMethod(options)
-if options.coregb0.addSyN
+if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
     coregmethod = 'ANTsSyN';
 else
     coregmethod = options.coregmr.method;
