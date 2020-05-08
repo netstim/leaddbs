@@ -1,4 +1,3 @@
-
 function ea_gentrackingmask_brainmask(options,threshold)
 directory=[options.root,options.patientname,filesep];
 
