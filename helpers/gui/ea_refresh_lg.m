@@ -184,9 +184,13 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             [~, patientname] = fileparts(M.patient.list{pt});
 
             M.elstruct(pt).group=M.patient.group(pt);
-            M.elstruct(pt).groupcolors=M.groups.color;
-            M.elstruct(pt).groups=M.groups.group;
-
+            if ~isfield(M,'groups')
+            M.groups.color=[0.7,0.7,0.7];
+            M.groups.group=ones(length(M.patient.list),1);
+            end
+                M.elstruct(pt).groupcolors=M.groups.color;
+                M.elstruct(pt).groups=M.groups.group;
+            
             options.sides=1:2;
             options.native=0;
             try
