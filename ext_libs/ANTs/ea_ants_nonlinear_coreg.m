@@ -92,7 +92,7 @@ props.rigidstage = rigidstage;
 props.affinestage = affinestage;
 props.synstage = synstage;
 props.directory = directory;
-props.stagesep = normsettings.ants_stagesep;
-props.ants_usepreexisting = normsettings.ants_usepreexisting; % Overwrite
+props.stagesep = 0;
+props.ants_usepreexisting = 3; % Overwrite
 
 ea_submit_ants_nonlinear(props);
