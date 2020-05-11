@@ -180,8 +180,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.layout.addWidget(modelsCollapsibleButton, 1)
 
     modelsFormLayout = qt.QGridLayout(modelsCollapsibleButton)    
-    tv = treeView.WarpDriveTreeView()
-    modelsFormLayout.addWidget(tv,0,0)
+    modelsFormLayout.addWidget(treeView.WarpDriveTreeView(),0,0)
 
     self.layout.addStretch(0)
 
@@ -192,6 +191,10 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.undoAllButton.connect("clicked(bool)", self.onUndoAllButton)
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
     self.redoButton.connect("clicked(bool)", self.onRedoButton)
+
+    for button in [self.undoAllButton, self.undoButton, self.redoButton]:
+      button.connect("pressed()", self.onEditButtonPressed)
+      button.connect("released()", self.onEditButtonReleased)
     
     for effect in warpEffects:
       effect.addEditButtonListeners(self)
@@ -200,13 +203,15 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # Refresh
     qt.QApplication.processEvents()
-    if self.updateMRMLFromArgs(): # was called from command line
+
+    # check dependencies
+    if self.checkExtensionInstall(extensionName = 'SlicerRT'):
+      return
+
+    # Lead-DBS call
+    elif self.updateMRMLFromArgs(): # was called from command line
       self.showSingleModule()
-      tb = Toolbar.reducedToolbar()
-      slicer.util.mainWindow().addToolBar(tb)
-      tv.radioButtons[0].setVisible(False)
-    else:
-      tv.radioButtons[1].setVisible(False)
+      slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
 
     self.updateGuiFromMRML()  
 
@@ -216,24 +221,58 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   # Methods
   #
   
+  def checkExtensionInstall(self, extensionName):
+    em = slicer.app.extensionsManagerModel()
+    if not em.isExtensionInstalled(extensionName):
+      extensionMetaData = em.retrieveExtensionMetadataByName(extensionName)
+      url = os.path.join(em.serverUrl().toString(), 'download', 'item', extensionMetaData['item_id'])
+      extensionPackageFilename = os.path.join(slicer.app.temporaryPath, extensionMetaData['md5'])
+      slicer.util.downloadFile(url, extensionPackageFilename)
+      em.installExtension(extensionPackageFilename)
+      qt.QMessageBox.information(qt.QWidget(), '', 'Slicer will install %s and quit.\nPlease restart.' % extensionName)
+      slicer.util.exit()
+      return True
+
   def showSingleModule(self):
     
     singleModule = True
 
-    keepToolbars = []
-    slicer.util.setToolbarsVisible(not singleModule, keepToolbars)
+    # toolbars
+    slicer.util.setToolbarsVisible(not singleModule, [])
+
+    # customize view
+    viewToolBar = slicer.util.mainWindow().findChild('QToolBar', 'ViewToolBar')
+    viewToolBar.setVisible(1)
+    layoutMenu = viewToolBar.widgetForAction(viewToolBar.actions()[0]).menu()
+    for action in layoutMenu.actions():
+      if action.text not in ['Four-Up', 'Tabbed slice']:
+        layoutMenu.removeAction(action)
+
+    # customize mouse mode
+    mouseModeToolBar = slicer.util.mainWindow().findChild('QToolBar', 'MouseModeToolBar')
+    mouseModeToolBar.setVisible(1)
+    mouseModeToolBar.removeAction(mouseModeToolBar.actions()[2])
+
+    # viewers
+    viewersToolBar = slicer.util.mainWindow().findChild('QToolBar', 'ViewersToolBar')
+    viewersToolBar.setVisible(1)
+
+    # slicer window
     slicer.util.setMenuBarsVisible(not singleModule)
     slicer.util.setApplicationLogoVisible(not singleModule)
     slicer.util.setModuleHelpSectionVisible(not singleModule)
     slicer.util.setModulePanelTitleVisible(not singleModule)
     slicer.util.setDataProbeVisible(not singleModule)
-
     slicer.util.setPythonConsoleVisible(not singleModule)
 
+    # inputs area
     self.inputsCollapsibleButton.setVisible(not singleModule)
+
+    # reload area
     if self.developerMode:
       self.reloadCollapsibleButton.setVisible(not singleModule)
 
+    # slice controllers
     for color in ["Red","Green","Yellow"]:
       sliceController = slicer.app.layoutManager().sliceWidget(color).sliceController()
       sliceController.pinButton().hide()
@@ -245,7 +284,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       if n.GetModuleName() == "DataProbe":
         n.SetParameter('sliceViewAnnotationsEnabled','0')
 
-    slicer.util.mainWindow().setWindowTitle("Name goes here")
+    # set name
+    slicer.util.mainWindow().setWindowTitle("Warp Drive")
 
 
   def updateMRMLFromArgs(self): 
@@ -290,19 +330,20 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # if subject is changed
     if bool(int(self.parameterNode.GetParameter("subjectChanged"))):
       self.exit()
-      shNode.RemoveItem(int(self.parameterNode.GetParameter("drawingsRootItem")))
-      self.parameterNode.SetParameter("drawingsRootItem","0") # reset drawings
       self.parameterNode.SetParameter("subjectChanged","0")
-    # drawings hierarchy
-    if not bool(int(self.parameterNode.GetParameter("drawingsRootItem"))):
-      folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), 'Fixed Points')
-      shNode.SetItemAttribute(folderID, 'drawing', '1')
-      self.parameterNode.SetParameter("drawingsRootItem", str(folderID))
+
 
 
   def onWarpSelectionChanged(self):
     self.parameterNode.SetParameter("warpID", self.warpSelector.currentNode().GetID() if self.warpSelector.currentNode() else "")
 
+
+  def onEditButtonPressed(self):
+    qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+    qt.QApplication.processEvents()
+
+  def onEditButtonReleased(self):
+    qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
 
   def onUndoAllButton(self):
     self.parameterNode.SetParameter("lastOperation","UndoAll")
@@ -373,7 +414,6 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("redoTransformID", "")
     node.SetParameter("lastDrawingID", "-1")
     node.SetParameter("warpModified","0")
-    node.SetParameter("drawingsRootItem","0")
     node.SetParameter("lastOperation","")
     node.SetParameter("currentEfect","None")
     # smudge 
@@ -386,11 +426,13 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("maxRadius", "50")
     node.SetParameter("gridBoundsROIID", "")
     # draw
-    node.SetParameter("DrawSpread", "25")
+    node.SetParameter("DrawSpread", "15")
+    node.SetParameter("DrawSampleDistance", "2")
+    node.SetParameter("DrawStiffness", "0.1")
     # Smooth
     node.SetParameter("SmoothRadius", "25")
-    node.SetParameter("SmoothHardness", "40")
-    node.SetParameter("SmoothSigma", "10")
+    node.SetParameter("SmoothHardness", "50")
+    node.SetParameter("SmoothSigma", "5")
     node.SetParameter("SmoothUseRadius", "1")
     # lead dbs specific
     node.SetParameter("glanatCompositeID", "")
@@ -421,18 +463,16 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       parameterNode.SetParameter("lastDrawingID","-1")
 
   def disableLastDrawing(self):
-    parameterNode = self.getParameterNode()
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    drawingsRootItem = int(parameterNode.GetParameter("drawingsRootItem"))
-    ids = vtk.vtkIdList()
-    shNode.GetItemChildren(drawingsRootItem,ids,False)
-    for j in range(ids.GetNumberOfIds()-1,-1,-1):
-      if isinstance(shNode.GetItemDataNode(ids.GetId(j)), slicer.vtkMRMLMarkupsCurveNode):
-        lastDrawingID = ids.GetId(j)
+    nMarkups = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLMarkupsFiducialNode')
+    for i in range(nMarkups-1,-1,-1):
+      markupNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLMarkupsFiducialNode')
+      if 'drawing' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(markupNode)) and markupNode.GetNumberOfControlPoints()>1:
+        lastDrawingID = shNode.GetItemByDataNode(markupNode)
         shNode.SetItemParent(lastDrawingID, shNode.GetSceneItemID())
         shNode.SetItemDisplayVisibility(lastDrawingID, 0)
         shNode.SetItemAttribute(lastDrawingID, 'drawing', '0')
-        parameterNode.SetParameter("lastDrawingID", str(lastDrawingID))
+        self.getParameterNode().SetParameter("lastDrawingID", str(lastDrawingID))
         return
 
   def enableLastDrawing(self):
@@ -440,15 +480,10 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     lastDrawingID = int(parameterNode.GetParameter("lastDrawingID"))
     if lastDrawingID != -1:
       shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-      drawingsRootItem = int(parameterNode.GetParameter("drawingsRootItem"))
-      shNode.SetItemParent(lastDrawingID, drawingsRootItem)
       shNode.SetItemDisplayVisibility(lastDrawingID, 1)
       shNode.SetItemAttribute(lastDrawingID, 'drawing', '1')
       parameterNode.SetParameter("lastDrawingID", "-1")
-      # add and delete aux fiducial to refresh view #TODO: why doesnt it work
-      auxFid = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-      shNode.SetItemAttribute(shNode.GetItemByDataNode(auxFid), 'drawing', '1')
-      slicer.mrmlScene.RemoveNode(auxFid)
+
 
 
 

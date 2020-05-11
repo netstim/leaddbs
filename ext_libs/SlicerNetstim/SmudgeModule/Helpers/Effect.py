@@ -85,7 +85,7 @@ class EffectTool(object):
   def cursorOn(self):
     """Restore the saved cursor if it exists, otherwise
     just restore the default cursor"""
-    qt.QApplication.setOverrideCursor(qt.QCursor(0))
+    qt.QApplication.restoreOverrideCursor()
     #if self.savedCursor:
     #  self.sliceWidget.setCursor(self.savedCursor)
     #else:

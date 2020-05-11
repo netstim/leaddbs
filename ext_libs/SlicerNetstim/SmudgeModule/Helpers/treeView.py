@@ -16,7 +16,17 @@ class treeViewFilter(object):
     self.columnHidden = {'idColumn': True, 'transformColumn': True, 'descriptionColumn': True}
 
   def deleteFunction(self, node):
-    slicer.mrmlScene.RemoveNode(node)
+    # get subject hierarchy node ID
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    nodeID = shNode.GetItemByDataNode(node)
+    # get children
+    removeIDs = vtk.vtkIdList()
+    shNode.GetItemChildren(nodeID, removeIDs, True)
+    # add selected ID
+    removeIDs.InsertNextId(nodeID)
+    # remove
+    for i in range(removeIDs.GetNumberOfIds()):
+      shNode.RemoveItem(removeIDs.GetId(i))
 
   def addFunction(self):
     pass
@@ -59,6 +69,9 @@ class treeViewSceneFilter(treeViewFilter):
     super().__init__()
     self.name = 'Scene'
     self.toolTip = ''
+
+  def deleteFunction(self, node):
+    pass
 
 
 class treeViewAtlasFilter(treeViewFilter):
@@ -104,11 +117,10 @@ class treeViewDrawingsFilter(treeViewFilter):
     fiducialNode.CreateDefaultDisplayNodes() 
     fiducialNode.GetDisplayNode().SetGlyphScale(2)
     fiducialNode.SetLocked(1)
-    fiducialNode.SetName('Fixed Point')
+    fiducialNode.SetName(slicer.mrmlScene.GenerateUniqueName('Fixed Point'))
     # add to subject hierarchy
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     shNode.SetItemAttribute(shNode.GetItemByDataNode(fiducialNode), 'drawing', '1')
-    shNode.SetItemParent(shNode.GetItemByDataNode(fiducialNode), int(self.parameterNode.GetParameter("drawingsRootItem")))
     # activate placement
     selectionNode.SetActivePlaceNodeID(fiducialNode.GetID())
     interactionNode.SetCurrentInteractionMode(interactionNode.Place)
@@ -122,7 +134,7 @@ class treeViewSavedWarpFilter(treeViewFilter):
 
   def __init__(self):
     super().__init__()
-    self.name = 'Saved Warps'
+    self.name = 'Warps'
     self.toolTip = 'Saved user modifications. Press + to save current state. Double click to change current warp.'
     self.filterDictionary['nodeTypes'] = ('vtkMRMLTransformNode','vtkMRMLGridTransformNode')
     self.filterDictionary['attributeNameFilter'] = ('savedWarp')
@@ -133,6 +145,8 @@ class treeViewSavedWarpFilter(treeViewFilter):
       super().deleteFunction(node)
 
   def addFunction(self):
+    qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+    qt.QApplication.processEvents()
     # get node
     warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     # save visibility
@@ -158,6 +172,7 @@ class treeViewSavedWarpFilter(treeViewFilter):
     warpNode.GetDisplayNode().SetVisibility(vis)
     # simulate double click to change
     self.doubleClickFunction(newWarpNode)
+    qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
 
   def doubleClickFunction(self, node):
     SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
@@ -248,10 +263,12 @@ class WarpDriveTreeView(qt.QWidget):
     self.treeView.model().rowsAboutToBeInserted.connect(lambda: self.treeView.setCurrentItem(0))
 
     # init
-    self.radioButtons[1].animateClick()
+    self.radioButtons[0].animateClick()
 
 
   def onFilterRadioButtonClicked(self, filt):
+    # set scene item. if not crushes
+    self.treeView.setCurrentItem(0)
     # filter data tree
     for key,value in filt.filterDictionary.items():
       setattr(self.treeView, key, value)

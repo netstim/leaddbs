@@ -306,7 +306,37 @@ class DrawEffectParameters(WarpAbstractEffect):
     self.spreadSlider.setToolTip('Specify up to how far away from the drawing the warp will be modified.')
     self.parametersFrame.layout().addRow("Spread (mm):", self.spreadSlider)
 
+    # stiffness
+    self.stiffnessSlider = ctk.ctkSliderWidget()
+    self.stiffnessSlider.singleStep = 0.1
+    self.stiffnessSlider.minimum = 0
+    self.stiffnessSlider.maximum = 10
+    self.stiffnessSlider.decimals = 1
+    self.stiffnessSlider.value = float(self.parameterNode.GetParameter("DrawStiffness"))
+    self.stiffnessSlider.setToolTip('Regularization parameter.')
+    self.parametersFrame.layout().addRow("Stiffness:", self.stiffnessSlider)
+
+    # advanced
+    advancedParametersGroupBox = ctk.ctkCollapsibleGroupBox()
+    advancedParametersGroupBox.setTitle('Advanced')
+    advancedParametersGroupBox.setLayout(qt.QFormLayout())
+    advancedParametersGroupBox.collapsed = True
+    self.parametersFrame.layout().addRow(advancedParametersGroupBox)
+    
+    # sample distance
+    self.sampleDistanceSlider = ctk.ctkSliderWidget()
+    self.sampleDistanceSlider.singleStep = 0.1
+    self.sampleDistanceSlider.minimum = 0.1
+    self.sampleDistanceSlider.maximum = 10
+    self.sampleDistanceSlider.decimals = 1
+    self.sampleDistanceSlider.value = float(self.parameterNode.GetParameter("DrawSampleDistance"))
+    self.sampleDistanceSlider.setToolTip('Set drawing sample distance.')
+    advancedParametersGroupBox.layout().addRow("Sample Distance (mm):", self.sampleDistanceSlider)
+
+
     self.spreadSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.sampleDistanceSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.stiffnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
 
   def onEffectButtonClicked(self):
     super().onEffectButtonClicked()
@@ -315,6 +345,8 @@ class DrawEffectParameters(WarpAbstractEffect):
 
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("DrawSpread", str(self.spreadSlider.value))
+    self.parameterNode.SetParameter("DrawSampleDistance", str(self.sampleDistanceSlider.value))
+    self.parameterNode.SetParameter("DrawStiffness", str(self.stiffnessSlider.value))
 
 #
 # Smooth

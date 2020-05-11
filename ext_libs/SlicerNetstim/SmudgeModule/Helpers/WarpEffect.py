@@ -142,6 +142,7 @@ class SmudgeEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
       # apply
       self.applyChanges()
       self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)
+      qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
 
 
     elif event == 'MouseMoveEvent':
@@ -191,57 +192,48 @@ class SmoothEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
     self.smoothContent = []
     self.currentIndex = []
     self.preview = False
-    self.outOfBounds = False
     
   def processEvent(self, caller=None, event=None):
 
     PointerEffect.CircleEffectTool.processEvent(self, caller, event)
 
-    if event =='LeftButtonDoubleClickEvent' and not self.outOfBounds:
+    if self.preview and event in ['LeftButtonDoubleClickEvent','LeftButtonReleaseEvent']:
+      # undo pressed opperation. sometimes double click is called before release and viceversa
+      self.transformArray[self.currentIndex] -= self.smoothContent
       self.preview = False
-      self.transformArray[self.currentIndex] += self.smoothContent
-      # apply
-      self.applyChanges()
-      
-    elif event == 'LeftButtonReleaseEvent' and not self.outOfBounds:
-      if self.preview:
-        self.transformArray[self.currentIndex] -= self.smoothContent
-        self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
 
+    if event =='LeftButtonDoubleClickEvent':
+      self.calculateSmoothContent()
+      self.transformArray[self.currentIndex] += self.smoothContent
+      self.applyChanges()
+    elif event == 'LeftButtonReleaseEvent':
+      self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
+      qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
     elif event == 'LeftButtonPressEvent':
       self.preview = True
-      self.outOfBounds = False
-
-      sigma = float(self.parameterNode.GetParameter("SmoothSigma")) / self.warpSpacing
-      r = int(round(float(self.parameterNode.GetParameter("SmoothRadius")) / self.warpSpacing))
-
-      if int(self.parameterNode.GetParameter("SmoothUseRadius")):
-        # get shpere and index
-        sphereResult = self.createSphere(r)
-        currentPoint = self.eventPositionToRAS()
-        self.currentIndex = self.getCurrentIndex(r, currentPoint, self.warpRASToIJK)   
-        # gaussian filter for each component 
-        self.smoothContent =  np.stack([ndimage.gaussian_filter(self.transformArray[self.currentIndex + (slice(i,i+1),)], sigma) for i in range(3)], 3).squeeze()
-        # substract original
-        self.smoothContent = self.smoothContent - self.transformArray[self.currentIndex]
-        # modulate result with the sphere
-        try:
-          self.smoothContent = np.stack([self.smoothContent[:,:,:,i] * sphereResult for i in range(3)], 3).squeeze()
-        except ValueError:
-          qt.QMessageBox.warning(qt.QWidget(), '', 'Out of bounds. Try smoothing without radious.')
-          self.preview = False
-          self.outOfBounds = True
-          self.cursorOn()
-          return
-      else: # maximum radius: take all warp field
-        self.smoothContent =  np.stack([ndimage.gaussian_filter(self.transformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
-        self.smoothContent = self.smoothContent - self.transformArray
-        self.currentIndex = tuple([slice(0,s) for s in self.smoothContent.shape])
-      
-      # apply
+      self.calculateSmoothContent()
       self.transformArray[self.currentIndex] += self.smoothContent
       self.warpNode.InvokeEvent(slicer.vtkMRMLGridTransformNode.TransformModifiedEvent)
       
+
+  def calculateSmoothContent(self):
+    sigma = float(self.parameterNode.GetParameter("SmoothSigma")) / self.warpSpacing
+    r = int(round(float(self.parameterNode.GetParameter("SmoothRadius")) / self.warpSpacing))
+    if int(self.parameterNode.GetParameter("SmoothUseRadius")):
+      # get shpere and index
+      sphereResult = self.createSphere(r)
+      currentPoint = self.eventPositionToRAS()
+      self.currentIndex = self.getCurrentIndex(r, currentPoint, self.warpRASToIJK)   
+      # gaussian filter for each component 
+      self.smoothContent =  np.stack([ndimage.gaussian_filter(self.transformArray[self.currentIndex + (slice(i,i+1),)], sigma) for i in range(3)], 3).squeeze()
+      # substract original
+      self.smoothContent = self.smoothContent - self.transformArray[self.currentIndex]
+      # modulate result with the sphere
+      self.smoothContent = np.stack([self.smoothContent[:,:,:,i] * sphereResult for i in range(3)], 3).squeeze()
+    else: # maximum radius: take all warp field
+      self.smoothContent =  np.stack([ndimage.gaussian_filter(self.transformArray[:,:,:,i], sigma) for i in range(3)], 3).squeeze()
+      self.smoothContent = self.smoothContent - self.transformArray
+      self.currentIndex = tuple([slice(0,s) for s in self.smoothContent.shape])
 
   def cleanup(self):
     WarpEffectTool.cleanup(self)
@@ -261,228 +253,203 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     WarpEffectTool.__init__(self)
     PointerEffect.DrawEffectTool.__init__(self,sliceWidget)
     
-    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)
-    self.warpBounds = [[origin[0]+spacing[0]*size[0]*i,  origin[1]+spacing[1]*size[1]*j, origin[2]+spacing[2]*size[2]*k] for i in range(2) for j in range(2) for k in range(2)]
-    
   def processEvent(self, caller=None, event=None):
 
-    if event == 'LeftButtonReleaseEvent':
-      self.actionState = None # stop drawing
-      
-      # create open curve from drawing
-      curve1 = self.pointsToCurve(self.rasPoints)
-      points1 = vtk.vtkPoints()
-      curve1.GetControlPointPositionsWorld(points1)
-    
-      # get closest model to points
-      modelNode = self.getClosestModel(points1)
-      if (not modelNode) or (points1.GetNumberOfPoints() == 1): # clean and continue
-        slicer.mrmlScene.RemoveNode(curve1)
-      else:
-        # cut model with current plane
-        slicedModel = self.cutModelWithSliceIntersection(modelNode)
-        # get curve on sliced model
-        points2 = self.samplePointsInModel(points1, slicedModel)
-        curve2 = self.pointsToCurve(points2)
-        # in case line is inside the model the curve will be the same. set curve type to shortest distance to surface and resample again
-        curve2.SetCurveTypeToShortestDistanceOnSurface(slicedModel)
-        curve2.ResampleCurveSurface(2, slicer.vtkMRMLModelNode().SafeDownCast(slicedModel), 0.0025)
-        # get same number of points as other curve
-        curve2.ResampleCurveWorld(curve2.GetCurveLengthWorld() / max((curve1.GetNumberOfControlPoints() - 1), 1) )
-        curve2.GetControlPointPositionsWorld(points2)
-        # calculate transform and apply
-        transformNode = self.createTransform(points1, points2)
-        self.displayTransformFromPoints(transformNode, points1)
-        self.warpNode.SetAndObserveTransformNodeID(transformNode.GetID())
-        self.applyChanges()
-        self.addDrawingsToHierarchy(points2,modelNode) 
-        # cleanup
-        slicer.mrmlScene.RemoveNode(curve1)
-        slicer.mrmlScene.RemoveNode(curve2)
-        slicer.mrmlScene.RemoveNode(slicedModel)
-        slicer.mrmlScene.RemoveNode(transformNode)
-        
     PointerEffect.DrawEffectTool.processEvent(self, caller, event) 
-    
 
-  def addDrawingsToHierarchy(self, points, modelNode):
+    if event == 'LeftButtonReleaseEvent':
+
+      sampleDistance = float(self.parameterNode.GetParameter("DrawSampleDistance"))
+      
+      # create curve from drawing and resample
+      sourceCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
+      sourceCurve.SetControlPointPositionsWorld(self.rasPoints)
+      sourceCurve.ResampleCurveWorld(sampleDistance)  
+
+      # overwrite points with the resampled ones
+      sourceCurve.GetControlPointPositionsWorld(self.rasPoints)
+
+      # if only one point left exit
+      if self.rasPoints.GetNumberOfPoints() <= 1:
+        self.resetPolyData()
+        slicer.mrmlScene.RemoveNode(sourceCurve)
+        qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
+        return
+
+      # get closest model sliced
+      slicedModel, originalModel = self.sliceClosestModel(self.rasPoints.GetPoint(0))
+
+      # resample sourceCurve in sliced model with same amount of points
+      targetCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
+      targetCurve.GetDisplayNode().SetVisibility(0)
+      targetCurve.SetControlPointPositionsWorld(self.rasPoints)
+      targetCurve.SetCurveTypeToShortestDistanceOnSurface(slicedModel)
+      targetCurve.ResampleCurveSurface(sampleDistance, slicer.vtkMRMLModelNode().SafeDownCast(slicedModel), 0.0025)
+      targetCurve.ResampleCurveWorld(targetCurve.GetCurveLengthWorld() / max((sourceCurve.GetNumberOfControlPoints() - 1), 1))
+      
+      # curve to fiducial
+      sourceFiducial = self.curveToFiducial(sourceCurve)
+      targetFiducial = self.curveToFiducial(targetCurve)
+
+      # compute warp
+      landmarkWarp = self.computeWarp(sourceFiducial, targetFiducial)
+
+      # visualize
+      self.resetPolyData() # delete manual drawing
+      sourceCurve.GetDisplayNode().SetSelectedColor(1,1,0)
+      self.displayTransformFromFiducial(landmarkWarp, sourceFiducial)
+      
+      # apply
+      self.warpNode.SetAndObserveTransformNodeID(landmarkWarp.GetID())
+      self.applyChanges()
+
+      # save target as fixed points
+      self.addFiducialToHierarchy(targetFiducial, originalModel)
+
+      # remove nodes
+      slicer.mrmlScene.RemoveNode(sourceCurve)
+      slicer.mrmlScene.RemoveNode(sourceFiducial)
+      slicer.mrmlScene.RemoveNode(targetCurve)
+      slicer.mrmlScene.RemoveNode(slicedModel)
+      slicer.mrmlScene.RemoveNode(landmarkWarp)
+
+      qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
+
+
+
+
+  def addFiducialToHierarchy(self, fiducial, modelNode):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     # add folder with nearest model name
-    drawingsRootItem = int(self.parameterNode.GetParameter("drawingsRootItem"))
     modelParentName =  shNode.GetItemName(shNode.GetItemParent(shNode.GetItemByDataNode(modelNode)))
-    auxCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
-    auxCurve.SetControlPointPositionsWorld(points)
-    auxCurve.SetName(modelParentName + '_' + modelNode.GetName())
-    auxCurve.SetLocked(1)
-    auxCurve.GetDisplayNode().SetSelectedColor([1,0.5,0.5])
-    auxCurve.GetDisplayNode().SetGlyphScale(2)
-    shNode.SetItemParent(shNode.GetItemByDataNode(auxCurve), drawingsRootItem)
-    shNode.SetItemAttribute(shNode.GetItemByDataNode(auxCurve), 'drawing', '1')
-    # add and delete aux fiducial to refresh view #TODO: why doesnt it work
-    auxFid = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-    shNode.SetItemAttribute(shNode.GetItemByDataNode(auxFid), 'drawing', '1')
-    slicer.mrmlScene.RemoveNode(auxFid)
-
-  def samplePointsInModel(self, points, model, sampleDist = 2, maximumSearchRadius = 0.0025):
-    auxCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
-    auxCurve.SetControlPointPositionsWorld(points)
-    constraintNode = slicer.vtkMRMLModelNode().SafeDownCast(model)
-    auxCurve.ResampleCurveSurface(sampleDist, constraintNode, maximumSearchRadius)
-    outPoints = vtk.vtkPoints()
-    auxCurve.GetControlPointPositionsWorld(outPoints)
-    slicer.mrmlScene.RemoveNode(auxCurve)
-    return outPoints
-
-  def getClosestModel(self, points):
-    outModel = None
-    ruler = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLAnnotationRulerNode')
-    ruler.GetDisplayNode().SetVisibility(0)
-    ruler.SetControlPoint(0,np.array(points.GetPoint(0)),0,0)
-    models = slicer.mrmlScene.GetNodesByClass('vtkMRMLModelNode')
-    models.UnRegister(slicer.mrmlScene)
-    minDistance = 10000.0
-    for i in range(models.GetNumberOfItems()):
-      model = models.GetItemAsObject(i)
-      if bool(model.GetDisplayNode().GetVisibility()):
-        pointsInModel = self.samplePointsInModel(points, model)
-        ruler.SetControlPoint(1,np.array(pointsInModel.GetPoint(0)),0,0)
-        if ruler.GetDistanceMeasurement() < minDistance:
-          minDistance = ruler.GetDistanceMeasurement()
-          outModel = model
-    slicer.mrmlScene.RemoveNode(ruler)
-    return outModel
-
-
-  def getControlPoints(self, sourcePoints, targetPoints):
-    """
-    Get points a radius away from the curve in normal direction
-    """
-    normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']])
-    radius = float(self.parameterNode.GetParameter("DrawSpread"))
-    bpoints = []
-    for i in [0, int(sourcePoints.GetNumberOfPoints()/2), sourcePoints.GetNumberOfPoints()-1]:
-      # get normal direction of curve in points
-      sourcePoint = np.array(sourcePoints.GetPoint(i)) 
-      direction = np.array(targetPoints.GetPoint(i)) - sourcePoint
-      direction = direction / np.linalg.norm(direction)
-      # add control point a radius away from the point in normal direction
-      bpoints.append(sourcePoint + direction * radius)
-      bpoints.append(sourcePoint - direction * radius)
-      # add control point normal to the plane
-      bpoints.append(sourcePoint + normal * radius)
-      bpoints.append(sourcePoint - normal * radius)
-      # add control points a radius away from first and last point of line
-      if i == 0 or i == sourcePoints.GetNumberOfPoints() - 1:
-        direction = sourcePoint - np.array(sourcePoints.GetPoint(max(1,i-1)))
-        direction = direction / np.linalg.norm(direction)
-        bpoints.append(sourcePoint + direction * radius)
-
-    # get indexes of control points that are a radius away from all points in line
-    for i in range(sourcePoints.GetNumberOfPoints()):
-      sourcePoint = np.array(sourcePoints.GetPoint(i)) 
-      keepIndex = [j for j in range(len(bpoints)) if np.linalg.norm(bpoints[j] - sourcePoint) > (radius - 0.5)]
-    
-    bpoints = [bpoints[i] for i in np.unique(keepIndex)] # only keep these points
-
-    return bpoints
-
-  def getAnchorPoints(self):
-    # get drawings
-    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    drawingsRootItem = int(self.parameterNode.GetParameter("drawingsRootItem"))
-    childrenIDs = vtk.vtkIdList()
-    shNode.GetItemChildren(drawingsRootItem, childrenIDs)
-    # init
-    p=vtk.vtkPoints()
-    anchorPoints=vtk.vtkPoints()
-    # iterete over source and target to get points
-    for i in range(childrenIDs.GetNumberOfIds()):
-      dataNode = shNode.GetItemDataNode(childrenIDs.GetId(i))
-      if dataNode and isinstance(dataNode, (slicer.vtkMRMLMarkupsCurveNode,slicer.vtkMRMLMarkupsFiducialNode)):
-        dataNode.GetControlPointPositionsWorld(p)
-        anchorPoints.InsertPoints(anchorPoints.GetNumberOfPoints(),p.GetNumberOfPoints(),0,p)
-    return anchorPoints
-
-  def createTransform(self, sourceDrawing, targetDrawing):
-    sourcePoints = vtk.vtkPoints()
-    targetPoints = vtk.vtkPoints()
-    # add drawing points
-    sourcePoints.InsertPoints(sourcePoints.GetNumberOfPoints(), sourceDrawing.GetNumberOfPoints(), 0, sourceDrawing)
-    targetPoints.InsertPoints(targetPoints.GetNumberOfPoints(), targetDrawing.GetNumberOfPoints(), 0, targetDrawing)    
-    # get control points
-    bpoints = self.getControlPoints(sourceDrawing, targetDrawing)    
-    # add warp bounds to source and target points (so as to constrain the deformation)
-    for bp in (bpoints + self.warpBounds):
-      sourcePoints.InsertNextPoint(*bp)
-      targetPoints.InsertNextPoint(*bp)
-    # add anchor points
-    anchorPoints = self.getAnchorPoints()
-    sourcePoints.InsertPoints(sourcePoints.GetNumberOfPoints(), anchorPoints.GetNumberOfPoints(), 0, anchorPoints)
-    targetPoints.InsertPoints(targetPoints.GetNumberOfPoints(), anchorPoints.GetNumberOfPoints(), 0, anchorPoints)
-    #create thin plate spline transfrom
-    transform = vtk.vtkThinPlateSplineTransform()
-    transform.SetSourceLandmarks(sourcePoints)
-    transform.SetTargetLandmarks(targetPoints)
-    transform.SetBasisToR() # 3D data
-    transform.Inverse()
-    transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
-    transformNode.SetAndObserveTransformFromParent(transform)
-    return transformNode
+    fiducial.SetName(slicer.mrmlScene.GenerateUniqueName(modelParentName + '_' + modelNode.GetName()))
+    fiducial.SetLocked(1)
+    fiducial.GetDisplayNode().SetGlyphScale(2)
+    fiducial.GetDisplayNode().SetVisibility(1)
+    shNode.SetItemAttribute(shNode.GetItemByDataNode(fiducial), 'drawing', '1')
+    for i in range(fiducial.GetNumberOfControlPoints()):
+      fiducial.SetNthControlPointLabel(i,'')
 
   def delay(self):
     dieTime = qt.QTime().currentTime().addMSecs(500)
     while qt.QTime().currentTime() < dieTime:
       qt.QCoreApplication.processEvents(qt.QEventLoop.AllEvents, 100)
 
-  def displayTransformFromPoints(self, transform, points):
-    # aux fiducial node
-    f = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-    f.GetDisplayNode().SetVisibility(0)
-    for i in range(points.GetNumberOfPoints()):
-      f.AddFiducialFromArray(np.array(points.GetPoint(i)))
+  def displayTransformFromFiducial(self, transform, fiducial):
     if not transform.GetDisplayNode():
       transform.CreateDefaultDisplayNodes()
     transform.GetDisplayNode().SetVisibility(1)
-    transform.GetDisplayNode().SetSliceIntersectionVisibility(1)
+    transform.GetDisplayNode().SetVisibility2D(1)
     transform.GetDisplayNode().SetVisibility3D(0)
-    transform.GetDisplayNode().SetAndObserveGlyphPointsNode(f)
+    transform.GetDisplayNode().SetAndObserveGlyphPointsNode(fiducial)
     self.delay()
-    slicer.mrmlScene.RemoveNode(f)
 
-  def pointsToCurve(self, points, sampleDist = 2):
-    curve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
-    curve.GetDisplayNode().SetVisibility(0)
-    curve.SetControlPointPositionsWorld(points)
-    curve.ResampleCurveWorld(sampleDist)
-    return curve
+  def getFixedPoints(self):
+    points = vtk.vtkPoints()
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    nMarkups = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLMarkupsFiducialNode')
+    for i in range(nMarkups):
+      markupNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLMarkupsFiducialNode')
+      if 'drawing' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(markupNode)) and int(shNode.GetItemAttribute(shNode.GetItemByDataNode(markupNode),'drawing')):
+        p = vtk.vtkPoints()
+        markupNode.GetControlPointPositionsWorld(p)
+        points.InsertPoints(points.GetNumberOfPoints(), p.GetNumberOfPoints(), 0, p)
+    return points
 
-  def cutModelWithSliceIntersection(self, model):
+
+  def computeWarp(self, sourceDrawing, targetDrawing):
+    # points
+    sourcePoints = vtk.vtkPoints()
+    targetPoints = vtk.vtkPoints()
+    # add drawing
+    sourceDrawing.GetControlPointPositionsWorld(sourcePoints)
+    targetDrawing.GetControlPointPositionsWorld(targetPoints)
+    # add fixed points
+    fixedPoints = self.getFixedPoints()
+    sourcePoints.InsertPoints(sourcePoints.GetNumberOfPoints(), fixedPoints.GetNumberOfPoints(), 0, fixedPoints)
+    targetPoints.InsertPoints(targetPoints.GetNumberOfPoints(), fixedPoints.GetNumberOfPoints(), 0, fixedPoints) 
+
+    # source and target fiducials
+    sourceFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    targetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    sourceFiducial.SetControlPointPositionsWorld(sourcePoints)
+    targetFiducial.SetControlPointPositionsWorld(targetPoints)
+
+    # generate aux nodes
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.warpNode)
+    auxVolumeNode = TransformsUtil.TransformsUtilLogic().createEmpyVolume(size,origin,spacing)
+    outWarp = TransformsUtil.TransformsUtilLogic().emptyGridTransform(size,origin,spacing)
+
+    parameters = {}
+    parameters["plmslc_landwarp_fixed_volume"] = auxVolumeNode.GetID()
+    parameters["plmslc_landwarp_moving_volume"] = auxVolumeNode.GetID()
+    parameters["plmslc_landwarp_fixed_fiducials"] = targetFiducial.GetID()
+    parameters["plmslc_landwarp_moving_fiducials"] = sourceFiducial.GetID()
+    parameters["plmslc_landwarp_output_vf"] = outWarp.GetID()
+    parameters["plmslc_landwarp_rbf_type"] = "gauss"
+    parameters["plmslc_landwarp_rbf_radius"] = float(self.parameterNode.GetParameter("DrawSpread"))
+    parameters["plmslc_landwarp_stiffness"] = float(self.parameterNode.GetParameter("DrawStiffness"))
+
+    cli = slicer.cli.run(slicer.modules.plastimatch_slicer_landwarp, None, parameters, wait_for_completion=True, update_display=False)
+
+    slicer.mrmlScene.RemoveNode(auxVolumeNode)
+    slicer.mrmlScene.RemoveNode(sourceFiducial)
+    slicer.mrmlScene.RemoveNode(targetFiducial)
+
+    return outWarp
+
+   
+  def curveToFiducial(self, curve):
+    fiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    fiducial.GetDisplayNode().SetVisibility(0)
+    points = vtk.vtkPoints()
+    curve.GetControlPointPositionsWorld(points)
+    fiducial.SetControlPointPositionsWorld(points)
+    return fiducial
+
+  def sliceClosestModel(self, point):
+    # set up plane
+    normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']])
     plane = vtk.vtkPlane()
-    plane.SetOrigin(self.rasPoints.GetPoint(0)) # point in plane
-    normal = [float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']]
+    plane.SetOrigin(point) # point in plane
     plane.SetNormal(normal)
-
-    pd = model.GetPolyData()
-
+    # set up cutter
     cutter = vtk.vtkCutter()
-    cutter.SetInputData(pd)
     cutter.SetCutFunction(plane)
     cutter.SetGenerateCutScalars(0)
     cutter.Update()
-
-    pd2 = cutter.GetOutput()
-
+    # init point locator and output
+    pointsLocator = vtk.vtkPointLocator() 
+    globalMinDistance = 1000
+    outPolyData = vtk.vtkPolyData()
+    # iterate over models in scene
+    nModels = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLModelNode')
+    for i in range(nModels):
+      model = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLModelNode')
+      polyData = model.GetPolyData()
+      if model.GetDisplayNode() and model.GetDisplayNode().GetVisibility() and polyData.GetNumberOfCells() > 1: # model visible and cells available
+        cutter.SetInputData(polyData)
+        cutter.Update()
+        cutterOutput = cutter.GetOutput()
+        if cutterOutput.GetNumberOfCells(): # model intersects with plane
+          # get distance from input point to closest point in model
+          pointsLocator.SetDataSet(cutterOutput)
+          pointsLocator.BuildLocator()
+          closestPoint = cutterOutput.GetPoint(pointsLocator.FindClosestPoint(point))
+          localMinDistance = vtk.vtkMath().Distance2BetweenPoints(closestPoint, point)
+          if localMinDistance < globalMinDistance: # new min
+            outPolyData.DeepCopy(cutterOutput)
+            globalMinDistance = localMinDistance
+            originalModel = model
+    # generate output
     triangulator = vtk.vtkContourTriangulator()
-    triangulator.SetInputData(pd2)
+    triangulator.SetInputData(outPolyData)
     triangulator.Update()
-    pd3 = triangulator.GetOutput()
-
-    model3 = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode')
-    model3.SetAndObservePolyData(pd3)
-    model3.CreateDefaultDisplayNodes()
-    model3.GetDisplayNode().SetVisibility(0)
-
-    return model3
+    slicedModel = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode')
+    slicedModel.SetAndObservePolyData(triangulator.GetOutput())
+    slicedModel.CreateDefaultDisplayNodes()
+    slicedModel.GetDisplayNode().SetVisibility(0)
+    return slicedModel, originalModel
 
   def cleanup(self):
     WarpEffectTool.cleanup(self)

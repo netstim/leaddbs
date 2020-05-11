@@ -14,7 +14,13 @@ class PointerEffectTool(Effect.EffectTool):
 
   def processEvent(self, caller=None, event=None):
 
-    if event == "KeyPressEvent":
+    if event == 'LeftButtonPressEvent' and self.parameterNode.GetParameter("currentEffect") != 'None':
+      self.cursorOff()
+    elif event == 'LeftButtonReleaseEvent' and self.parameterNode.GetParameter("currentEffect") != 'None':
+      qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+      qt.QApplication.processEvents()
+
+    elif event == "KeyPressEvent":
       key = self.interactor.GetKeySym()
       if key.lower() == 's':
         if not self.previousVisibleIDs.GetNumberOfIds():
@@ -59,6 +65,8 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
     # init class attributes
     if type(self).sphere is None:
       type(self).sphere = vtk.vtkSphereSource()
+      self.sphere.SetPhiResolution(30)
+      self.sphere.SetThetaResolution(30)
     if type(self).sphereModelNode is None:
       type(self).sphereModelNode = slicer.modules.models.logic().AddModel(self.sphere.GetOutput())
       self.sphereModelNode.GetDisplayNode().SetVisibility2D(True)
@@ -77,13 +85,9 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
       self.sphere.SetCenter(self.sliceWidget.sliceLogic().GetSliceNode().GetXYToRAS().MultiplyPoint(xy + (0, 1))[0:3])
       self.sphere.Update()
     elif event == "EnterEvent":
-      self.sphereModelNode.GetDisplayNode().SetVisibility(True)
+      self.updateSphere()
     elif event == "LeaveEvent":
       self.sphereModelNode.GetDisplayNode().SetVisibility(False)
-    elif event == 'LeftButtonPressEvent':
-      self.cursorOff()
-    elif event == 'LeftButtonReleaseEvent':
-      self.cursorOn()
     elif event == "KeyPressEvent":
       key = self.interactor.GetKeySym()
       if key == 'plus' or key == 'equal':
@@ -101,8 +105,6 @@ class CircleEffectTool(PointerEffectTool, VTKObservationMixin):
     if self.sphere:
       self.sphereModelNode.GetDisplayNode().SetVisibility((self.effectName=='Smooth' and int(self.parameterNode.GetParameter("SmoothUseRadius"))) or self.effectName=='Smudge')
       self.sphere.SetRadius(float(self.parameterNode.GetParameter(self.effectName + "Radius")))
-      self.sphere.SetPhiResolution(30)
-      self.sphere.SetThetaResolution(30)
       self.sphere.Update()
 
   def cleanup(self):
@@ -166,26 +168,23 @@ class DrawEffectTool(PointerEffectTool):
     if not self.initialized:
       return
 
+    PointerEffectTool.processEvent(self, caller, event)
+
     # events from the interactor
     if event == "LeftButtonPressEvent":
       self.actionState = "drawing"
       xy = self.interactor.GetEventPosition()
       self.addPoint(self.xyToRAS(xy))
       self.abortEvent(event)
-      self.cursorOff()
       
     elif event == "LeftButtonReleaseEvent":
       self.actionState = None
-      self.cursorOn()
-      self.resetPolyData()
 
     elif event == "MouseMoveEvent":
       if self.actionState == "drawing":
         xy = self.interactor.GetEventPosition()
         self.addPoint(self.xyToRAS(xy))
         self.abortEvent(event)
-
-    PointerEffectTool.processEvent(self, caller, event)
 
     self.positionActors()
 

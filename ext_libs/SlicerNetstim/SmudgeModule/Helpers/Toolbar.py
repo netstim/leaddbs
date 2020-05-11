@@ -20,89 +20,11 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateToolbarFromMRML)
     
     self.setWindowTitle(qt.QObject().tr("LeadDBS"))
-
-    smw = slicer.util.mainWindow()
-    interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
-    layoutManager = slicer.app.layoutManager()
-
-    self.addObserver(interactionNode, interactionNode.InteractionModeChangedEvent, self.onInteractionModeChanged) 
-
-
-    #
-    # Layout
-    #
-
-    layoutFourUpAction = qt.QAction(smw)
-    layoutFourUpAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','LayoutFourUpView.png'))))
-    layoutFourUpAction.connect('triggered(bool)', lambda t: layoutManager.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView))
-    self.addAction(layoutFourUpAction)
-
-    layoutTabbedAction = qt.QAction(smw)
-    layoutTabbedAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','LayoutTabbedSliceView.png'))))
-    layoutTabbedAction.connect('triggered(bool)', lambda t: layoutManager.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTabbedSliceView))
-
-    self.addAction(layoutTabbedAction)
-
-    sliceIntersectionAction = qt.QAction(smw)
-    sliceIntersectionAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','SlicesCrosshair.png'))))
-    sliceIntersectionAction.setCheckable(True)
-    sliceIntersectionAction.connect('toggled(bool)', self.sliceIntersectionToggle)
-
-    self.addAction(sliceIntersectionAction)
-    
-    #
-    # Window Level
-    #
-
-    windowLevelModeActions = qt.QActionGroup(smw)
-    windowLevelModeActions.setExclusive(True)
-
-    windowLevelAdjustModeAction = qt.QAction(smw)
-    windowLevelAdjustModeAction.setText('Adjust')
-    windowLevelAdjustModeAction.setCheckable(True)
-    windowLevelAdjustModeAction.setChecked(True)
-    windowLevelAdjustModeAction.connect('triggered(bool)', lambda t: interactionNode.SetAttribute('AdjustWindowLevelMode', 'Adjust'))
-
-    windowLevelRegionModeAction = qt.QAction(smw)
-    windowLevelRegionModeAction.setText('Select Region')
-    windowLevelRegionModeAction.setCheckable(True)
-    windowLevelRegionModeAction.connect('triggered(bool)', lambda t: interactionNode.SetAttribute('AdjustWindowLevelMode', 'Rectangle'))
-
-    windowLevelCenteredRegionModeAction = qt.QAction(smw)
-    windowLevelCenteredRegionModeAction.setText('Select Region - centered')
-    windowLevelCenteredRegionModeAction.setCheckable(True)
-    windowLevelCenteredRegionModeAction.connect('triggered(bool)', lambda t: interactionNode.SetAttribute('AdjustWindowLevelMode', 'RectangleCentered'))
-
-    windowLevelModeActions.addAction(windowLevelAdjustModeAction)
-    windowLevelModeActions.addAction(windowLevelRegionModeAction)
-    windowLevelModeActions.addAction(windowLevelCenteredRegionModeAction)
-
-    windowLevelMenu = qt.QMenu(smw)
-    windowLevelMenu.addActions(windowLevelModeActions.actions())
-    
-    self.windowLevelAction = qt.QAction(smw)
-    self.windowLevelAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','MouseWindowLevelMode.png'))))
-    self.windowLevelAction.setCheckable(True)
-    self.windowLevelAction.setMenu(windowLevelMenu)
-    self.windowLevelAction.connect('toggled(bool)', lambda t: interactionNode.SetCurrentInteractionMode(5) if t else interactionNode.SetCurrentInteractionMode(2))
-
-    self.addAction(self.windowLevelAction)
-
-    #
-    # Warp visible in slice view
-    #
-
-    self.warpViewAction = qt.QAction(smw)
-    self.warpViewAction.setIcon(qt.QIcon(qt.QPixmap(os.path.join(os.path.dirname(__file__),'Icons','GlyphIcon.png'))))
-    self.warpViewAction.setCheckable(True)
-    self.warpViewAction.connect('toggled(bool)', self.onWarpViewAction)
-    self.addAction(self.warpViewAction)
-
+  
 
     #
     # Modality
     #
-    self.addSeparator()
     self.addWidget(qt.QLabel('Modality:'))
     self.modalityComboBox = qt.QComboBox()
     self.modalityComboBox.addItem('t1')
@@ -165,7 +87,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     # Update
     #
 
-    self.prevWarpID = ""
     self.updateModalities(self.parameterNode.GetParameter("subjectPath"))
     reducedToolbarLogic().loadSubjectTransforms()
     self.onModalityPressed([],self.modalityComboBox.currentText)
@@ -173,14 +94,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
 
    
-
-  def onWarpViewAction(self, t):
-    warpID = self.parameterNode.GetParameter("warpID")
-    if warpID != "":
-      warpNode = slicer.util.getNode(warpID)
-      warpNode.GetDisplayNode().SetVisibility(self.warpViewAction.checked)
-      
-
   def initializeTransforms(self, imageNode):
     glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
     # apply glanat to image
@@ -209,15 +122,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     slicer.util.setSliceViewerLayers(foreground=templateNode.GetID())
 
 
-  def onInteractionModeChanged(self, caller, event):
-    interactionNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLInteractionNode')
-    self.windowLevelAction.setChecked(interactionNode.GetCurrentInteractionMode() == 5)
-
-  def sliceIntersectionToggle(self, t):
-    compositeCollection = slicer.mrmlScene.GetNodesByClass("vtkMRMLSliceCompositeNode")
-    for i in range(compositeCollection.GetNumberOfItems()):
-      compositeCollection.GetItemAsObject(i).SetSliceIntersectionVisibility(t)
-
 
   def updateToolbarFromMRML(self, caller=None, event=None):
     # subject text
@@ -232,25 +136,17 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     warpNode = slicer.util.getNode(warpID) if warpID != "" else None
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
     self.resolutionComboBox.enabled = warpNumberOfComponents == 1
-    if warpID not in [self.prevWarpID, ""]:
-      self.addObserver(warpNode, slicer.vtkMRMLDisplayableNode.DisplayModifiedEvent, self.onWarpDisplayModified)
-      try:
-        self.removeObserver(slicer.util.getNode(self.prevWarpID), slicer.vtkMRMLDisplayableNode.DisplayModifiedEvent, self.onWarpDisplayModified)
-      except:
-        pass
-      self.prevWarpID = warpID
-      self.onWarpDisplayModified()
 
-  def onWarpDisplayModified(self, caller=None, event=None):
-    self.warpViewAction.setChecked(slicer.util.getNode(self.prevWarpID).GetDisplayNode().GetVisibility())
 
   def onSaveButton(self):
     WarpEffect.WarpEffectTool.empty()
     if reducedToolbarLogic().applyChanges():
+
       # remove nodes
       SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID")))
       slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getBackgroundNode())
+
       # delete warps
       shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
       transformNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLTransformNode')
@@ -260,6 +156,15 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
         if 'savedWarp' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(transformNode)):
           slicer.mrmlScene.RemoveNode(transformNode)
       self.parameterNode.SetParameter("warpID","")
+
+      # delete fiducials
+      markupsNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsFiducialNode')
+      markupsNodes.UnRegister(slicer.mrmlScene)
+      for i in range(markupsNodes.GetNumberOfItems()):
+        markupNode = markupsNodes.GetItemAsObject(i)
+        if 'drawing' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(markupNode)):
+          slicer.mrmlScene.RemoveNode(markupNode)
+      
 
       nextSubjectN = int(self.parameterNode.GetParameter("subjectN"))+1
       subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(self.parameterNode.GetParameter("separator"))

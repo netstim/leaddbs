@@ -220,6 +220,8 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
     """
     Run the actual algorithm
     """
+    qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+    qt.QApplication.processEvents()
   
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), os.path.split(atlasPath)[-1])
@@ -273,7 +275,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
           shNode.SetItemParent(shNode.GetItemChildWithName(shNode.GetSceneItemID(), sideName), subFolderID)
           shNode.SetItemAttribute(shNode.GetItemByDataNode(modelNode), 'atlas', '1')
         
-
+    qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
   
     return folderID
 
