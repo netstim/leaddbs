@@ -71,14 +71,23 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     #
-    # Inputs Area
+    # I / O
     #
     self.inputsCollapsibleButton = ctk.ctkCollapsibleButton()
-    self.inputsCollapsibleButton.text = "Inputs"
+    self.inputsCollapsibleButton.text = "I / O"
     self.layout.addWidget(self.inputsCollapsibleButton)
 
     # Layout within the dummy collapsible button
     inputsFormLayout = qt.QFormLayout(self.inputsCollapsibleButton)
+
+
+    #
+    # clean up checkbox
+    #
+    self.cleanUpOnNodeChange = qt.QCheckBox('')
+    self.cleanUpOnNodeChange.setChecked(True)
+    inputsFormLayout.addRow("Clean Up On Master Change: ", self.cleanUpOnNodeChange)
+
 
     #
     # master node selector
@@ -92,9 +101,15 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.masterNodeSelector.showHidden = False
     self.masterNodeSelector.showChildNodeTypes = False
     self.masterNodeSelector.setMRMLScene( slicer.mrmlScene )
-    self.masterNodeSelector.setToolTip( "Pick the warp to refine." )
+    self.masterNodeSelector.setToolTip( "Pick the warp to refine or volume to apply warp to." )
     inputsFormLayout.addRow("Master Warp or Volume: ", self.masterNodeSelector)
 
+    #
+    # output
+    #
+    self.hardenOutputPushButton = qt.QPushButton('Harden Current Output Warp on Master')
+    self.hardenOutputPushButton.setEnabled(False)
+    inputsFormLayout.addRow("Output: ", self.hardenOutputPushButton)
 
     #
     # Tools Area
@@ -121,20 +136,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     #
-    # History Area
-    #
-    editCollapsibleButton = ctk.ctkCollapsibleButton()
-    editCollapsibleButton.text = "Edit"
-    self.layout.addWidget(editCollapsibleButton)
-
-    editFormLayout = qt.QFormLayout(editCollapsibleButton)  
-
-    #
     # Undo Redo
     #   
 
-    undoredoFrame = qt.QFrame()
-    undoredoFrame.setLayout(qt.QHBoxLayout())
+    undoRedoGroupBox = qt.QGroupBox('Edit')
+    undoRedoGroupBox.setLayout(qt.QHBoxLayout())
+    toolsFormLayout.addRow(undoRedoGroupBox)
 
     undoAllButton =   {'text':'Undo All',  'icon':'UndoAll',   'toolTip':'Undo all user modifications. Fixed points won\'t be deleted.'}
     undoButton =      {'text':'Undo',      'icon':'Undo',      'toolTip':'Undo last operation. In case it was a drawing, corresponding fixed points will be deleted.'}
@@ -162,13 +169,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       button.setFixedSize(buttonPixmap.rect().size())
       button.setEnabled(False)
       button.setToolTip(b['toolTip'])
-      undoredoFrame.layout().addWidget(button)
+      undoRedoGroupBox.layout().addWidget(button)
       b['widget'] = button
 
     self.undoAllButton = undoAllButton['widget']
     self.undoButton = undoButton['widget']
     self.redoButton = redoButton['widget']
-    editFormLayout.addRow(undoredoFrame)
 
 
     #
@@ -185,6 +191,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.layout.addStretch(0)
 
     # connections
+    self.hardenOutputPushButton.connect("clicked(bool)", self.onHardenOutputPushButton) 
+
     self.masterNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.exit) # deselect effect
     self.masterNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onMasterNodeSelectionChanged)
 
@@ -333,6 +341,10 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
   def onMasterNodeSelectionChanged(self):
+    # clean up
+    if self.cleanUpOnNodeChange.checked:
+      SmudgeModuleLogic().cleanUp()
+    # get node
     currentNode = self.masterNodeSelector.currentNode()
     if currentNode:
       # get size origin spacing
@@ -356,6 +368,12 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.parameterNode.SetParameter("warpID", warpNode.GetID())
     else:
       self.parameterNode.SetParameter("warpID", "")
+    # enable / disable harden option
+    self.hardenOutputPushButton.enabled = self.parameterNode.GetParameter("warpID") != ""
+
+  def onHardenOutputPushButton(self, b):
+    self.masterNodeSelector.currentNode().HardenTransform()
+    self.masterNodeSelector.setCurrentNode(None)
 
   def onEditButtonPressed(self):
     qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
@@ -400,7 +418,6 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     WarpEffectParameters.NoneEffectParameters.activateNoneEffect()
     SmudgeModuleLogic().removeRedoNodes()
 
-
   def cleanup(self):
     self.exit()
 
@@ -408,7 +425,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     WarpEffectParameters.NoneEffectParameters.activateNoneEffect()
       
   def onSceneStartClose(self, caller, event):
-    pass
+    self.parameterNode.SetParameter("warpID", "")
 
 
 
@@ -503,6 +520,24 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       shNode.SetItemAttribute(lastDrawingID, 'drawing', '1')
       parameterNode.SetParameter("lastDrawingID", "-1")
 
+  def cleanUp(self):
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    # delete warps
+    transformNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLTransformNode')
+    transformNodes.UnRegister(slicer.mrmlScene)
+    for i in range(transformNodes.GetNumberOfItems()):
+      transformNode = transformNodes.GetItemAsObject(i)
+      if 'savedWarp' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(transformNode)):
+        slicer.mrmlScene.RemoveNode(transformNode)
+    self.getParameterNode().SetParameter("warpID","")
+
+    # delete fiducials
+    markupsNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsFiducialNode')
+    markupsNodes.UnRegister(slicer.mrmlScene)
+    for i in range(markupsNodes.GetNumberOfItems()):
+      markupNode = markupsNodes.GetItemAsObject(i)
+      if 'drawing' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(markupNode)):
+        slicer.mrmlScene.RemoveNode(markupNode)
 
 
 

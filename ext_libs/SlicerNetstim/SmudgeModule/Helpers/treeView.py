@@ -16,6 +16,8 @@ class treeViewFilter(object):
     self.columnHidden = {'idColumn': True, 'transformColumn': True, 'descriptionColumn': True}
 
   def deleteFunction(self, node):
+    if not node:
+      return
     # get subject hierarchy node ID
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     nodeID = shNode.GetItemByDataNode(node)
@@ -58,6 +60,8 @@ class treeViewFilter(object):
     slicer.mrmlScene.RemoveNode(markupsNode)
 
   def renameFunction(self, node):
+    if not node:
+      return
     name = qt.QInputDialog.getText(qt.QWidget(),'Rename','New name:')
     if name != '':
       node.SetName(name)
@@ -69,6 +73,7 @@ class treeViewSceneFilter(treeViewFilter):
     super().__init__()
     self.name = 'Scene'
     self.toolTip = ''
+    self.addText = ''
 
   def deleteFunction(self, node):
     pass
@@ -80,6 +85,7 @@ class treeViewAtlasFilter(treeViewFilter):
     super().__init__()
     self.name = 'Atlases'
     self.toolTip = 'Lead-DBS Atlases. Press + to import more atlases'
+    self.addText = 'Add Atlas'
     self.filterDictionary['nodeTypes'] = ('vtkMRMLModelNode','vtkMRMLFolderDisplayNode')
     self.filterDictionary['attributeNameFilter'] = ('atlas')
 
@@ -98,6 +104,7 @@ class treeViewDrawingsFilter(treeViewFilter):
     super().__init__()
     self.name = 'Fixed Points'
     self.toolTip = 'Points in this list will remian fixed in following drawings. Press + to add fiducials.'
+    self.addText = 'Add Fiducial'
     self.filterDictionary['nodeTypes'] = ('vtkMRMLMarkupsCurveNode','vtkMRMLMarkupsFiducialNode','vtkMRMLFolderDisplayNode')
     self.filterDictionary['attributeNameFilter'] = ('drawing')
     self.filterDictionary['attributeValueFilter'] = ('1')
@@ -134,17 +141,20 @@ class treeViewSavedWarpFilter(treeViewFilter):
 
   def __init__(self):
     super().__init__()
-    self.name = 'Warps'
+    self.name = 'Output Warp'
     self.toolTip = 'Saved user modifications. Press + to save current state. Double click to change current warp.'
+    self.addText = 'Duplicate Current Warp'
     self.filterDictionary['nodeTypes'] = ('vtkMRMLTransformNode','vtkMRMLGridTransformNode')
     self.filterDictionary['attributeNameFilter'] = ('savedWarp')
     self.columnHidden['descriptionColumn'] = False
 
   def deleteFunction(self, node):
-    if node.GetDescription() != 'Current':
+    if node and node.GetDescription() != 'Current':
       super().deleteFunction(node)
 
   def addFunction(self):
+    if self.parameterNode.GetParameter("warpID") == "":
+      return
     qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
     qt.QApplication.processEvents()
     # get node
@@ -208,13 +218,12 @@ class WarpDriveTreeView(qt.QWidget):
     self.treeView.contextMenuEnabled = False
     self.treeView.setEditTriggers(0) # disable double click to edit
 
-    # add delete rename buttons
-    buttonsFrame = qt.QFrame()
-    buttonsFrame.setLayout(qt.QHBoxLayout())
     # add
     addPixmap = qt.QPixmap(os.path.join(os.path.split(__file__)[0] ,'Icons', 'Add.png'))
     addIcon = qt.QIcon(addPixmap)
-    self.addButton = qt.QPushButton()
+    self.addButton = qt.QToolButton()
+    self.addButton.setToolButtonStyle(qt.Qt.ToolButtonTextBesideIcon)
+    self.addButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
     self.addButton.setIcon(addIcon)
     self.addButton.setIconSize(addPixmap.rect().size())
     self.addButton.setToolTip('Add')
@@ -232,38 +241,30 @@ class WarpDriveTreeView(qt.QWidget):
     self.renameButton.setIcon(renameIcon)
     self.renameButton.setIconSize(renamePixmap.rect().size())
     self.renameButton.setToolTip('Rename')
-    # add to group
-    buttonsFrame.layout().addWidget(self.addButton)
-    buttonsFrame.layout().addWidget(self.deleteButton)
-    buttonsFrame.layout().addWidget(self.renameButton)
 
     # set up filters
-    filtersGroupBox = qt.QFrame()
-    filtersGroupBox.setLayout(qt.QHBoxLayout())
-    filters = [treeViewSceneFilter(), treeViewAtlasFilter(), treeViewDrawingsFilter(), treeViewSavedWarpFilter()]
+    filters = [treeViewSavedWarpFilter(), treeViewAtlasFilter(), treeViewDrawingsFilter(), treeViewSceneFilter()]
     self.radioButtons = []
 
-    for filt in filters:
+    for filt,pos in zip(filters,[[0,0],[0,2],[1,0],[1,2]]):
       filterRadioButton = qt.QRadioButton(filt.name)
       filterRadioButton.setToolTip(filt.toolTip)
       filterRadioButton.clicked.connect(lambda b,f=filt: self.onFilterRadioButtonClicked(f))
-      filtersGroupBox.layout().addWidget(filterRadioButton)
+      layout.addWidget(filterRadioButton,pos[0],pos[1],1,2)
       self.radioButtons.append(filterRadioButton)
 
-    # add to layout
-    groupsFrame = qt.QFrame()
-    groupsFrame.setLayout(qt.QHBoxLayout())
-    groupsFrame.layout().addWidget(filtersGroupBox,1)
-    groupsFrame.layout().addWidget(buttonsFrame)
-    layout.addWidget(groupsFrame,0,0)
-    layout.addWidget(self.treeView,1,0)
+
+    layout.addWidget(self.addButton,0,4,1,2)
+    layout.addWidget(self.deleteButton,1,4,1,1)
+    layout.addWidget(self.renameButton,1,5,1,1)
+    layout.addWidget(self.treeView,2,0,1,6)
 
     # when adding fixed points while one of them is selected the new one is not set in the correct parent folder
     # this is overdoing, but fixes the problem
     self.treeView.model().rowsAboutToBeInserted.connect(lambda: self.treeView.setCurrentItem(0))
 
     # init
-    self.radioButtons[0].animateClick()
+    self.radioButtons[3].animateClick()
 
 
   def onFilterRadioButtonClicked(self, filt):
@@ -281,6 +282,7 @@ class WarpDriveTreeView(qt.QWidget):
     self.addButton.disconnect('clicked(bool)')
     self.addButton.connect('clicked(bool)', filt.addFunction)
     self.addButton.connect('clicked(bool)', self.updateTree)
+    self.addButton.setText(filt.addText)
     # set delete function
     self.deleteButton.disconnect('clicked(bool)')
     self.deleteButton.connect('clicked(bool)', lambda: filt.deleteFunction(self.currentNode()))
@@ -293,7 +295,8 @@ class WarpDriveTreeView(qt.QWidget):
 
   def currentNode(self):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    return shNode.GetItemDataNode(self.treeView.currentItem())
+    if self.treeView.currentItem():
+      return shNode.GetItemDataNode(self.treeView.currentItem())
 
   def updateTree(self):
     # annimate click will update nodes in tree - useful when adding saved warps 
