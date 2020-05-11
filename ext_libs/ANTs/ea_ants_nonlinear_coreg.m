@@ -84,6 +84,9 @@ if normsettings.ants_numcores
 end
 
 props.ANTS = ANTS;
+props.histogrammatching = '1';
+props.winsorize = '0.005,0.995';
+props.initializationFeature = '1';  % 0 for geometric center, 1 for image intensities, 2 for origin of the image
 props.fixed = fixedimage;
 props.moving = movingimage;
 props.outputbase = outputbase;
