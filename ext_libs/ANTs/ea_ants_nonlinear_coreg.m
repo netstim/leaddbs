@@ -5,18 +5,6 @@ fixedimage = varargin{1};
 movingimage = varargin{2};
 outputimage = varargin{3};
 
-if ischar(fixedimage)
-    fixedimage = {fixedimage};
-elseif ~iscell(fixedimage)
-    ea_error('Please supply variable fixedimage as either char or cellstring');
-end
-
-if ischar(movingimage)
-    movingimage = {movingimage};
-elseif ~iscell(movingimage)
-    ea_error('Please supply variable fixedimage as either char or cellstring');
-end
-
 if nargin >= 4 && ~isempty(varargin{4})
     normsettings = varargin{4};
 else
@@ -36,21 +24,8 @@ else
     movingmask = 'NULL';
 end
 
-if isempty(which(normsettings.ants_preset))
-    fprintf(['\nCurrent ANTs preset "%s" is unavailable/deprecated!\n', ...
-            'Will use the default preset "Effective: LowVariance, Default" instead.\n', ...
-            'You may check your ANTs setting again later.\n\n'], ...
-            normsettings.ants_preset);
-    % load default ANTs presets when current setting is unavailable/deprecated
-    load([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat'], 'machine');
-    ants_default_preset = machine.normsettings.ants_preset;
-    normsettings.ants_preset = ants_default_preset;
-
-    % save default ANTs presets to user preference file
-    load([ea_gethome, '.ea_prefs.mat'], 'machine')
-    machine.normsettings.ants_preset = ants_default_preset;
-    save([ea_gethome, '.ea_prefs.mat'], 'machine', '-append');
-end
+% Overwrite the default setting from GUI
+normsettings.ants_preset = 'ea_antspreset_ants_default_synquick';
 
 [outputdir, outputname, ~] = fileparts(outputimage);
 if outputdir
@@ -62,23 +37,15 @@ end
 % Load preset parameter set
 apref = feval(eval(['@', normsettings.ants_preset]), normsettings);
 
-directory = fileparts(movingimage{end});
+directory = fileparts(movingimage);
 if isempty(directory)
     directory = ['.', filesep];
 else
     directory = [directory, filesep];
 end
 
-for fi = 1:length(fixedimage)
-    fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
-end
-for fi = 1:length(movingimage)
-    movingimage{fi} = ea_path_helper(ea_niigz(movingimage{fi}));
-end
-
-if length(fixedimage) ~= length(movingimage)
-    ea_error('Please supply pairs of moving and fixed images (can be repetitive).');
-end
+fixedimage = ea_path_helper(ea_niigz(fixedimage));
+movingimage = ea_path_helper(ea_niigz(movingimage));
 
 outputimage = ea_path_helper(ea_niigz(outputimage));
 
@@ -90,61 +57,36 @@ else
     ANTS = [basedir, 'antsRegistration.', computer('arch')];
 end
 
-rigidconvergence = apref.convergence.rigid;
-rigidshrinkfactors = apref.shrinkfactors.rigid;
-rigidsmoothingssigmas = apref.smoothingsigmas.rigid;
+rigidstage = [' --transform Rigid[', apref.rigid.gradientstep, ']', ...
+    ' --metric ', apref.rigid.metric, '[', fixedimage, ',', movingimage, ',', apref.rigid.metricparams, ']', ...
+    ' --convergence ', apref.rigid.convergence, ...
+    ' --shrink-factors ', apref.rigid.shrinkfactors, ...
+    ' --smoothing-sigmas ', apref.rigid.smoothingsigmas, ...
+    ' --masks [', fixedmask, ',', movingmask, ']'];
 
-affineconvergence = apref.convergence.affine;
-affineshrinkfactors = apref.shrinkfactors.affine;
-affinesmoothingssigmas = apref.smoothingsigmas.affine;
+affinestage = [' --transform Affine[', apref.affine.gradientstep, ']', ...
+    ' --metric ', apref.affine.metric, '[', fixedimage, ',', movingimage, ',', apref.affine.metricparams, ']', ...
+    ' --convergence ', apref.affine.convergence, ...
+    ' --shrink-factors ', apref.affine.shrinkfactors, ...
+    ' --smoothing-sigmas ', apref.affine.smoothingsigmas, ...
+    ' --masks [', fixedmask, ',', movingmask, ']'];
 
-synconvergence = apref.convergence.syn;
-synshrinkfactors = apref.shrinkfactors.syn;
-synsmoothingssigmas = apref.smoothingsigmas.syn;
-
-rigidstage = [' --transform Rigid[0.25]' ... % bit faster gradient step (see https://github.com/stnava/ANTs/wiki/Anatomy-of-an-antsRegistration-call)
-    ' --convergence ', rigidconvergence, ...
-    ' --shrink-factors ', rigidshrinkfactors, ...
-    ' --smoothing-sigmas ', rigidsmoothingssigmas, ...
-    ' --masks [',fixedmask,',',movingmask,']'];
-
-for fi = 1:length(fixedimage)
-    rigidstage = [rigidstage,...
-        ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',1',apref.metricsuffix,']'];
-end
-
-affinestage = [' --transform Affine[0.15]'... % bit faster gradient step (see https://github.com/stnava/ANTs/wiki/Anatomy-of-an-antsRegistration-call)
-    ' --convergence ', affineconvergence, ...
-    ' --shrink-factors ', affineshrinkfactors ...
-    ' --smoothing-sigmas ', affinesmoothingssigmas, ...
-    ' --masks [',fixedmask,',',movingmask,']'];
-
-for fi = 1:length(fixedimage)
-    affinestage = [affinestage,...
-        ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',1',apref.metricsuffix,']'];
-end
-
-synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
-    ' --convergence ', synconvergence, ...
-    ' --shrink-factors ', synshrinkfactors ...
-    ' --smoothing-sigmas ', synsmoothingssigmas, ...
-    ' --masks [',fixedmask,',',movingmask,']'];
-
-
-for fi = 1:length(fixedimage)
-    synstage = [synstage,...
-        ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',1',apref.metricsuffix,']'];
-end
+synstage = [' --transform SyN[', apref.syn.gradientstep, ']', ...
+    ' --metric ', apref.syn.metric, '[', fixedimage, ',', movingimage, ',', apref.syn.metricparams, ']', ...
+    ' --convergence ', apref.syn.convergence, ...
+    ' --shrink-factors ', apref.syn.shrinkfactors, ...
+    ' --smoothing-sigmas ', apref.syn.smoothingsigmas, ...
+    ' --masks [', fixedmask, ',', movingmask, ']'];
 
 ea_libs_helper;
 if normsettings.ants_numcores
     setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',normsettings.ants_numcores) % no num2str needed since stored as string.
 end
 
-props.moving = movingimage{end};
-props.fixed = fixedimage{end};
-props.outputbase = outputbase;
 props.ANTS = ANTS;
+props.fixed = fixedimage;
+props.moving = movingimage;
+props.outputbase = outputbase;
 props.outputimage = outputimage;
 props.rigidstage = rigidstage;
 props.affinestage = affinestage;
