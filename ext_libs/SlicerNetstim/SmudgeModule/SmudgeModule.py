@@ -209,7 +209,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       return
 
     # Lead-DBS call
-    elif self.updateMRMLFromArgs(): # was called from command line
+    if self.updateMRMLFromArgs(): # was called from command line
       self.showSingleModule()
       slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
 
@@ -310,8 +310,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.parameterNode.SetParameter("MNIAtlasPath", MNIAtlasPath)
       self.parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
       return True
-    else:
-      return False
+      
 
   def updateGuiFromMRML(self,caller=None,event=None):
     # get warp node and set selector and buttons
