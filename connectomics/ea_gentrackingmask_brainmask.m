@@ -77,12 +77,9 @@ end
 
 if docoreg
     if strcmp(coregmrmethod.(b0_anat), 'ANTsSyN')
-        umachine = load([ea_gethome, '.ea_prefs.mat'], 'machine');
-        normsettings = umachine.machine.normsettings;
-        normsettings.ants_usepreexisting = 3; % Overwrite
         ea_ants_nonlinear_coreg([directory,options.prefs.prenii_unnormalized],...
             [directory,options.prefs.b0],...
-            [directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized],normsettings);
+            [directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
         ea_delete([directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
         ea_ants_apply_transforms(struct,[directory,'wbrainmask.nii'],...
             [directory,'trackingmask.nii'],0,[directory,options.prefs.b0],...

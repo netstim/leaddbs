@@ -88,12 +88,9 @@ transform = ea_regexpdir(directory, xfm, 0);
 if numel(transform) == 0
     warning('Specified transformation not found! Running coregistration now!');
     if options.coregb0.addSyN
-        umachine = load([ea_gethome, '.ea_prefs.mat'], 'machine');
-        normsettings = umachine.machine.normsettings;
-        normsettings.ants_usepreexisting = 3; % Overwrite
         ea_ants_nonlinear_coreg([directory,options.prefs.prenii_unnormalized],...
             [directory,options.prefs.b0],...
-            [directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized],normsettings);
+            [directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
         ea_delete([directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
     else
         ea_backuprestore(refb0);
