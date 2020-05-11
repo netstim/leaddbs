@@ -76,7 +76,7 @@ fprintf('\nNormalizing fibers...\n');
 fprintf('\nMapping from b0 to anat...\n');
 [~, mov] = fileparts(options.prefs.b0);
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
-if options.coregb0.addSyN
+if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
     xfm = [mov, '2', fix, '(Inverse)?Composite\.nii\.gz$'];
 else
     coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
@@ -87,7 +87,7 @@ transform = ea_regexpdir(directory, xfm, 0);
 
 if numel(transform) == 0
     warning('Specified transformation not found! Running coregistration now!');
-    if options.coregb0.addSyN
+    if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
         ea_ants_nonlinear_coreg([directory,options.prefs.prenii_unnormalized],...
             [directory,options.prefs.b0],...
             [directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
@@ -99,7 +99,7 @@ if numel(transform) == 0
     end
 end
 
-if options.coregb0.addSyN
+if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
     [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
                                        refb0, ...
                                        [directory,ea_stripext(options.prefs.b0), '2', ea_stripext(options.prefs.prenii_unnormalized), 'InverseComposite.nii.gz'], ...
