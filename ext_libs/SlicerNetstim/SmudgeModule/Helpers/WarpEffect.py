@@ -269,15 +269,15 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
       # overwrite points with the resampled ones
       sourceCurve.GetControlPointPositionsWorld(self.rasPoints)
 
+      # get closest model sliced
+      slicedModel, originalModel = self.sliceClosestModel(self.rasPoints.GetPoint(0))
+
       # if only one point left exit
-      if self.rasPoints.GetNumberOfPoints() <= 1:
+      if self.rasPoints.GetNumberOfPoints() <= 1 or not slicedModel:
         self.resetPolyData()
         slicer.mrmlScene.RemoveNode(sourceCurve)
         qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
         return
-
-      # get closest model sliced
-      slicedModel, originalModel = self.sliceClosestModel(self.rasPoints.GetPoint(0))
 
       # resample sourceCurve in sliced model with same amount of points
       targetCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
@@ -408,6 +408,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     return fiducial
 
   def sliceClosestModel(self, point):
+    originalModel = None
     # set up plane
     normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']])
     plane = vtk.vtkPlane()
@@ -441,6 +442,9 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
             outPolyData.DeepCopy(cutterOutput)
             globalMinDistance = localMinDistance
             originalModel = model
+    # return in case no model found
+    if not originalModel:
+      return False, False
     # generate output
     triangulator = vtk.vtkContourTriangulator()
     triangulator.SetInputData(outPolyData)
