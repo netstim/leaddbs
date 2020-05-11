@@ -81,19 +81,19 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     inputsFormLayout = qt.QFormLayout(self.inputsCollapsibleButton)
 
     #
-    # warp selector
+    # master node selector
     #
-    self.warpSelector = slicer.qMRMLNodeComboBox()
-    self.warpSelector.nodeTypes = ["vtkMRMLGridTransformNode"]
-    self.warpSelector.selectNodeUponCreation = False
-    self.warpSelector.addEnabled = False
-    self.warpSelector.removeEnabled = False
-    self.warpSelector.noneEnabled = True
-    self.warpSelector.showHidden = False
-    self.warpSelector.showChildNodeTypes = False
-    self.warpSelector.setMRMLScene( slicer.mrmlScene )
-    self.warpSelector.setToolTip( "Pick the warp to refine." )
-    inputsFormLayout.addRow("Warp: ", self.warpSelector)
+    self.masterNodeSelector = slicer.qMRMLNodeComboBox()
+    self.masterNodeSelector.nodeTypes = ["vtkMRMLGridTransformNode", "vtkMRMLScalarVolumeNode"]
+    self.masterNodeSelector.selectNodeUponCreation = False
+    self.masterNodeSelector.addEnabled = False
+    self.masterNodeSelector.removeEnabled = False
+    self.masterNodeSelector.noneEnabled = True
+    self.masterNodeSelector.showHidden = False
+    self.masterNodeSelector.showChildNodeTypes = False
+    self.masterNodeSelector.setMRMLScene( slicer.mrmlScene )
+    self.masterNodeSelector.setToolTip( "Pick the warp to refine." )
+    inputsFormLayout.addRow("Master Warp or Volume: ", self.masterNodeSelector)
 
 
     #
@@ -185,8 +185,8 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.layout.addStretch(0)
 
     # connections
-    self.warpSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.exit) # deselect effect
-    self.warpSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onWarpSelectionChanged)
+    self.masterNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.exit) # deselect effect
+    self.masterNodeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onMasterNodeSelectionChanged)
 
     self.undoAllButton.connect("clicked(bool)", self.onUndoAllButton)
     self.undoButton.connect("clicked(bool)", self.onUndoButton)
@@ -251,7 +251,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # customize mouse mode
     mouseModeToolBar = slicer.util.mainWindow().findChild('QToolBar', 'MouseModeToolBar')
     mouseModeToolBar.setVisible(1)
-    mouseModeToolBar.removeAction(mouseModeToolBar.actions()[2])
+    mouseModeToolBar.removeAction(mouseModeToolBar.actions()[2]) # remove place markups
 
     # viewers
     viewersToolBar = slicer.util.mainWindow().findChild('QToolBar', 'ViewersToolBar')
@@ -310,7 +310,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.parameterNode.SetParameter("MNIAtlasPath", MNIAtlasPath)
       self.parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
       return True
-      
+
 
   def updateGuiFromMRML(self,caller=None,event=None):
     # get warp node and set selector and buttons
@@ -332,10 +332,30 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.parameterNode.SetParameter("subjectChanged","0")
 
 
-
-  def onWarpSelectionChanged(self):
-    self.parameterNode.SetParameter("warpID", self.warpSelector.currentNode().GetID() if self.warpSelector.currentNode() else "")
-
+  def onMasterNodeSelectionChanged(self):
+    currentNode = self.masterNodeSelector.currentNode()
+    if currentNode:
+      # get size origin spacing
+      if isinstance(currentNode, slicer.vtkMRMLGridTransformNode):
+        size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(currentNode)
+      elif isinstance(currentNode, slicer.vtkMRMLScalarVolumeNode):
+        size = currentNode.GetImageData().GetDimensions()
+        origin = currentNode.GetOrigin()
+        spacing = currentNode.GetSpacing()
+      # create warp
+      warpNode = TransformsUtil.TransformsUtilLogic().emptyGridTransform(size,origin,spacing)
+      warpNode.CreateDefaultDisplayNodes()
+      warpNode.GetDisplayNode().SetVisibility2D(True)
+      warpNode.SetDescription('Current')
+      warpNode.SetName(slicer.mrmlScene.GenerateUniqueName('Initial'))
+      shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+      shNode.SetItemAttribute(shNode.GetItemByDataNode(warpNode), 'savedWarp', '1')
+      # set
+      currentNode.SetAndObserveTransformNodeID(warpNode.GetID())
+      self.parameterNode.SetParameter("resolution", str(spacing[0]))
+      self.parameterNode.SetParameter("warpID", warpNode.GetID())
+    else:
+      self.parameterNode.SetParameter("warpID", "")
 
   def onEditButtonPressed(self):
     qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)

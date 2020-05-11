@@ -272,7 +272,7 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
       # get closest model sliced
       slicedModel, originalModel = self.sliceClosestModel(self.rasPoints.GetPoint(0))
 
-      # if only one point left exit
+      # if only one point or non models found exit
       if self.rasPoints.GetNumberOfPoints() <= 1 or not slicedModel:
         self.resetPolyData()
         slicer.mrmlScene.RemoveNode(sourceCurve)
