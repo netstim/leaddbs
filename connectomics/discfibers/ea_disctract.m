@@ -17,7 +17,6 @@ classdef ea_disctract < handle
         poscolor = [1,0,0] % positive main color
         negcolor = [0,0,1] % negative main color
         splitbygroup = 0
-        % the  main content variables:
 
         results
         % Subfields:
@@ -28,6 +27,7 @@ classdef ea_disctract < handle
         % results.(connectomename).spearman_peak.fibsval % connection weights for each fiber to each VTA
         % results.(connectomename).spearman_5peak.fibsval % connection weights for each fiber to each VTA
 
+        fiberdrawn % struct contains fibercell and vals drawn in the resultfig
         drawobject % actual streamtube handle
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
         allpatients % list of all patients (as from M.patient.list)
@@ -332,6 +332,8 @@ classdef ea_disctract < handle
 
         function draw(obj)
             [vals,fibcell]=ea_discfibers_calcstats(obj);
+            obj.fiberdrawn.fibcell = fibcell;
+            obj.fiberdrawn.vals = vals;
 
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
