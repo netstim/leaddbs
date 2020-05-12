@@ -1,4 +1,4 @@
-function [vals,fibcell,usedidx] = ea_disc_calcstats(obj,patsel,Iperm)
+function [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj,patsel,Iperm)
 
 if ~exist('Iperm','var')
     I=obj.responsevar;

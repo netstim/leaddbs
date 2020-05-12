@@ -246,9 +246,9 @@ classdef ea_disctract < handle
                 end
 
                 if ~exist('Iperm', 'var')
-                    [vals,~,usedidx] = ea_disc_calcstats(obj, obj.patientselection(training));
+                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, obj.patientselection(training));
                 else
-                    [vals,~,usedidx] = ea_disc_calcstats(obj, obj.patientselection(training), Iperm);
+                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, obj.patientselection(training), Iperm);
                 end
 
                 for side=1:2
@@ -329,7 +329,7 @@ classdef ea_disctract < handle
         end
 
         function draw(obj)
-            [vals,fibcell]=ea_disc_calcstats(obj);
+            [vals,fibcell]=ea_discfibers_calcstats(obj);
 
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
@@ -369,7 +369,7 @@ classdef ea_disctract < handle
                 poslowerBound=floor((size(fibcmap{group},1)-size(fibcmap{group},1)/2*colorbarThreshold));
                 for side=1:2
                     if dogroups % introduce small jitter for visualization
-                        fibcell{group,side}=ea_disc_addjitter(fibcell{group,side},0.01);
+                        fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.01);
                     end
 
                     posvals{group,side}=sort(vals{group,side}(vals{group,side}>0),'descend');
