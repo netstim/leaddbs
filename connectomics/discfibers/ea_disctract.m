@@ -52,15 +52,19 @@ classdef ea_disctract < handle
     end
 
     methods
-        function obj=ea_disctract() % class constructor
-
+        function obj=ea_disctract(analysispath) % class constructor
+            if exist('analysispath', 'var') && ~isempty(analysispath)
+                obj.analysispath = analysispath;
+                [~, ID] = fileparts(obj.analysispath);
+                obj.ID = ID;
+            end
         end
 
-        function initialize(obj,lgpath,resultfig)
-            D = load(lgpath);
+        function initialize(obj,datapath,resultfig)
+            D = load(datapath);
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
-                obj.leadgroup = lgpath;
+                obj.leadgroup = datapath;
 
                 testID = obj.M.guid;
                 ea_mkdir([fileparts(obj.leadgroup),filesep,'disctracts',filesep]);
@@ -75,6 +79,15 @@ classdef ea_disctract < handle
                 obj.patientselection = obj.M.ui.listselect;
                 obj.responsevarlabel = obj.M.clinical.labels{1};
                 obj.covarlabels={'Stimulation Amplitude'};
+            elseif  isfield(D, 'tractset')  % Saved tractset class loaded
+                props = properties(D.tractset);
+                for p =  1:length(props) %copy all public properties
+                    if ~(strcmp(props{p}, 'analysispath') && ~isempty(obj.analysispath) ...
+                            || strcmp(props{p}, 'ID') && ~isempty(obj.ID))
+                        obj.(props{p}) = D.tractset.(props{p});
+                    end
+                end
+                clear D
             else
                 ea_error('You have opened a file of unknown type.')
                 return
