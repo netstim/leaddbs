@@ -347,7 +347,16 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 % Contruct colormap
                 colormap(gray);
-                fibcmap = ea_colorgradient(1024, [0,0,1], [1,1,1], [1,0,0]);
+                gradientLevel = 1024;
+                if ~exist('fibcolor', 'var') % Defualt blue, white, red
+                    fibcmap=ea_colorgradient(gradientLevel,[0,0,1],[1,1,1],[1,0,0]);
+                elseif size(fibcolor,1) == 1 % Blue, white, specified
+                    fibcmap=ea_colorgradient(gradientLevel,[0,0,1],[1,1,1],fibcolor);
+                elseif size(fibcolor,1) == 2 % Lowest value, white, highest value
+                    fibcmap=ea_colorgradient(gradientLevel,fibcolor(1,:),[1,1,1],fibcolor(2,:));
+                elseif size(fibcolor,1) == 3 % Lowest value, middle value, highest value
+                    fibcmap=ea_colorgradient(gradientLevel,fibcolor(1,:),fibcolor(2,:),fibcolor(3,:));
+                end
                 setappdata(resultfig, ['fibcmap',discfiberID], fibcmap);
 
                 fibcolorInd=tvalsRescale*(size(fibcmap,1)/2-0.5);
