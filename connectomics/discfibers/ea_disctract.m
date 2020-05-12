@@ -20,12 +20,14 @@ classdef ea_disctract < handle
         % the  main content variables:
 
         results
-        % includes subfields by results.connectomename.ttests /
-        % results.connectomename.efields with
-        % fibcell % cell of all fibers connected, sorted by side
-        % fibsval % connection weight value for each fiber to each VTA
-        % fibweights % usually T- or R-values associated with each tract
-        %
+        % Subfields:
+        % results.(connectomename).fibcell: cell of all fibers connected, sorted by side
+        % results.(connectomename).ttests.fibsval % connection status for each fiber to each VTA
+        % results.(connectomename).spearman_sum.fibsval % connection weights for each fiber to each VTA
+        % results.(connectomename).spearman_mean.fibsval % connection weights for each fiber to each VTA
+        % results.(connectomename).spearman_peak.fibsval % connection weights for each fiber to each VTA
+        % results.(connectomename).spearman_5peak.fibsval % connection weights for each fiber to each VTA
+
         drawobject % actual streamtube handle
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
         allpatients % list of all patients (as from M.patient.list)
