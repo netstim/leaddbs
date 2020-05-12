@@ -424,6 +424,11 @@ elseif strcmp(fname(end-3:end),'.mat')
             discfiberssetting.negpredthreshold = 5;
             save(fname, 'discfiberssetting', '-append');
         end
+        % Set default color (blue and red) if not found in mat.
+        if isempty(fieldnames(load(fname, 'fibcolor')))
+            fibcolor = [0 0 1;1 0 0];
+            save(fname, 'fibcolor', '-append');
+        end
     end
     if wasgzip
         delete(fname); % since gunzip makes a copy of the zipped file.
