@@ -138,7 +138,7 @@ for group=groups
         obj.stats.pos.available(side)=sum(vals{1,side}>0); % only collected for first group (positives)
         obj.stats.neg.available(side)=sum(vals{1,side}<0);
         usedidx{group,side}=find(~isnan(vals{group,side}));
-        vals{group,side}=vals{group,side}(usedidx{group,side})'; % final weights for surviving fibers
+        vals{group,side}=vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
 
         posvals{group,side}=sort(vals{group,side}(vals{group,side}>0),'descend');
         negvals{group,side}=sort(vals{group,side}(vals{group,side}<0),'ascend');
