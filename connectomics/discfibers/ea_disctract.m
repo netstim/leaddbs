@@ -363,7 +363,6 @@ classdef ea_disctract < handle
                 negUpperBound=ceil(size(fibcmap{group},1)/2*colorbarThreshold);
                 poslowerBound=floor((size(fibcmap{group},1)-size(fibcmap{group},1)/2*colorbarThreshold));
                 for side=1:2
-
                     if dogroups % introduce small jitter for visualization
                         fibcell{group,side}=ea_disc_addjitter(fibcell{group,side},0.01);
                     end
@@ -376,6 +375,7 @@ classdef ea_disctract < handle
                     catch
                         posthresh{group,side}=inf;
                     end
+
                     try
                         negthresh{group,side}=negvals{group,side}(end);
                     catch

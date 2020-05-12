@@ -5,9 +5,11 @@ if ~exist('Iperm','var')
 else % used in permutation based statistics - in this case the real improvement can be substituted with permuted variables.
     I=Iperm;
 end
+
 if obj.multresponsevarneg % flag to multiply response var by -1
     I=-I;
 end
+
 fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
 
 % quickly recalc stats:
@@ -129,10 +131,10 @@ for group=groups
                     vals{group,side}=corr(gfibsval{side}(:,gpatsel)',I(gpatsel,side),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
                 end
         end
-        
+
         fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));
         % Remove vals and fibers outside the thresholding range
-        
+
         obj.stats.pos.available(side)=sum(vals{1,side}>0); % only collected for first group (positives)
         obj.stats.neg.available(side)=sum(vals{1,side}<0);
         usedidx{group,side}=find(~isnan(vals{group,side}));
@@ -140,16 +142,17 @@ for group=groups
 
         posvals{group,side}=sort(vals{group,side}(vals{group,side}>0),'descend');
         negvals{group,side}=sort(vals{group,side}(vals{group,side}<0),'ascend');
-        
+
         try
             posthresh{group,side}=posvals{group,side}(ceil(((obj.showposamount(side)+eps)/100)*length(posvals{group,side})));
         catch
             posthresh{group,side}=inf;
         end
-        
+
         if ~obj.posvisible
-        posthresh{group,side}=inf;
+            posthresh{group,side}=inf;
         end
+
         try
             negthresh{group,side}=negvals{group,side}(ceil(((obj.shownegamount(side)+eps)/100)*length(negvals{group,side})));
         catch
@@ -158,14 +161,11 @@ for group=groups
         if ~obj.negvisible
             negthresh{group,side}=-inf;
         end
-        
+
         % Remove vals and fibers outside the thresholding range
         remove=logical(logical(vals{group,side}<posthresh{group,side}) .* logical(vals{group,side}>negthresh{group,side}));
-        vals{group,side}(remove)=[]; 
+        vals{group,side}(remove)=[];
         fibcell{group,side}(remove)=[];
         usedidx{group,side}(remove)=[];
-
     end
 end
-
-
