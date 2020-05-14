@@ -398,12 +398,12 @@ classdef ea_disctract < handle
                     fibcolorInd{group,side}=tvalsRescale{group,side}*(size(fibcmap{group},1)/2-0.5);
                     fibcolorInd{group,side}=fibcolorInd{group,side}+(size(fibcmap{group},1)/2+0.5);
 
-                    alphas{group,side}=zeros(size(fibcolorInd{group,side},2),1);
+                    alphas{group,side}=zeros(size(fibcolorInd{group,side}));
 
                     alphas{group,side}(round(fibcolorInd{group,side})>=poslowerBound) = obj.posvisible;
                     alphas{group,side}(round(fibcolorInd{group,side})<=negUpperBound) = obj.negvisible;
 
-                    fibalpha=mat2cell(alphas{group,side},ones(size(fibcolorInd{group,side},2),1));
+                    fibalpha=mat2cell(alphas{group,side},ones(size(fibcolorInd{group,side})));
 
                     % Plot fibers if any survived
                     if ~isempty(fibcell{group,side})
@@ -424,7 +424,7 @@ classdef ea_disctract < handle
 
                 % Set colorbar tick positions and labels
                 if ~any([isempty(vals{group,1}),isempty(vals{group,2})])
-                    cbvals = [vals{group,1}(logical(alphas{group,1})),vals{group,2}(logical(alphas{group,2}))];
+                    cbvals = [vals{group,1}(logical(alphas{group,1}));vals{group,2}(logical(alphas{group,2}))];
                     if ~isempty(cbvals)
                         % cbvals=tvalsRescale{group,side}(logical(alphas));
                         if obj.posvisible && ~obj.negvisible
