@@ -13,7 +13,7 @@ function print2eps(name, fig, export_options, varargin)
 % Secondly, it substitutes original font names back into the eps file,
 % where these have been changed by MATLAB, for up to 11 different fonts.
 %
-%IN:
+% Inputs:
 %   filename - string containing the name (optionally including full or
 %              relative path) of the file the figure is to be saved as. A
 %              ".eps" extension is added if not there already. If a path is
@@ -25,6 +25,7 @@ function print2eps(name, fig, export_options, varargin)
 %                    Can be negative as well as positive; Default: 0
 %       crop       - Cropping flag. Deafult: 0
 %       fontswap   - Whether to swap non-default fonts in figure. Default: true
+%       preserve_size - Whether to preserve the figure's PaperSize. Default: false
 %       font_space - Character used to separate font-name terms in the EPS output
 %                    e.g. "Courier New" => "Courier-New". Default: ''
 %                    (available only via the struct alternative)
@@ -100,6 +101,10 @@ function print2eps(name, fig, export_options, varargin)
 % 21/03/19: Improvement for issue #258: missing fonts in output EPS/PDF (still *NOT* fully solved)
 % 21/03/19: Fixed issues #166,#251: Arial font is no longer replaced with Helvetica but rather treated as a non-standard user font
 % 14/05/19: Made Helvetica the top default font-swap, replacing Courier
+% 12/06/19: Issue #277: Enabled preservation of figure's PaperSize in output PDF/EPS file
+% 06/08/19: Issue #281: only fix patch/textbox color if it's not opaque
+% 15/01/20: Added warning ID for easier suppression by users
+% 20/01/20: Added comment about unsupported patch transparency in some Ghostscript versions (issue #285)
 %}
 
     options = {'-loose'};
@@ -115,15 +120,21 @@ function print2eps(name, fig, export_options, varargin)
     % Retrieve padding, crop & font-swap values
     crop_amounts = nan(1,4);  % auto-crop all 4 sides by default
     if isstruct(export_options)
-        try fontswap     = export_options.fontswap;     catch, fontswap = true;     end
-        try font_space   = export_options.font_space;   catch, font_space = '';     end
+        try preserve_size = export_options.preserve_size; catch, preserve_size = false; end
+        try fontswap      = export_options.fontswap;      catch, fontswap = true;       end
+        try font_space    = export_options.font_space;    catch, font_space = '';       end
         font_space(2:end) = '';
-        try bb_crop      = export_options.crop;         catch, bb_crop = 0;         end
-        try crop_amounts = export_options.crop_amounts; catch,                      end
-        try bb_padding   = export_options.bb_padding;   catch, bb_padding = 0;      end
-        try renderer     = export_options.rendererStr;  catch, renderer = 'opengl'; end  % fix for issue #110
+        try bb_crop       = export_options.crop;          catch, bb_crop = 0;           end
+        try crop_amounts  = export_options.crop_amounts;  catch,                        end
+        try bb_padding    = export_options.bb_padding;    catch, bb_padding = 0;        end
+        try renderer      = export_options.rendererStr;   catch, renderer = 'opengl';   end  % fix for issue #110
         if renderer(1)~='-',  renderer = ['-' renderer];  end
     else
+        if numel(export_options) > 3  % preserve_size
+            preserve_size = export_options(4);
+        else
+            preserve_size = false;
+        end
         if numel(export_options) > 2  % font-swapping
             fontswap = export_options(3);
         else
@@ -149,9 +160,10 @@ function print2eps(name, fig, export_options, varargin)
     end
 
     % Set paper size
-    old_pos_mode = get(fig, 'PaperPositionMode');
+    old_pos_mode    = get(fig, 'PaperPositionMode');
     old_orientation = get(fig, 'PaperOrientation');
-    set(fig, 'PaperPositionMode', 'auto', 'PaperOrientation', 'portrait');
+    old_paper_units = get(fig, 'PaperUnits');
+    set(fig, 'PaperPositionMode','auto', 'PaperOrientation','portrait', 'PaperUnits','points');
 
     % Find all the used fonts in the figure
     font_handles = findall(fig, '-property', 'FontName');
@@ -343,9 +355,15 @@ function print2eps(name, fig, export_options, varargin)
         end
     end
 
+    % Bail out if EPS post-processing is not possible
+    if isempty(fstrm)
+        warning('YMA:export_fig:EPS','Loading EPS file failed, so unable to perform post-processing. This is usually because the figure contains a large number of patch objects. Consider exporting to a bitmap format in this case.');
+        return
+    end
+
     % Fix for Matlab R2014b bug (issue #31): LineWidths<0.75 are not set in the EPS (default line width is used)
     try
-        if ~isempty(fstrm) && using_hg2(fig)
+        if using_hg2(fig)
             % Convert miter joins to line joins
             %fstrm = regexprep(fstrm, '\n10.0 ML\n', '\n1 LJ\n');
             % This is faster (the original regexprep could take many seconds when the axes contains many lines):
@@ -428,20 +446,21 @@ function print2eps(name, fig, export_options, varargin)
     end
     set(white_line_handles, 'Color', [1 1 1]);
 
+    % Preserve the figure's PaperSize in the output file, if requested (issue #277)
+    if preserve_size
+        % https://stackoverflow.com/questions/19646329/postscript-document-size
+        paper_size = get(fig, 'PaperSize');  % in [points]
+        fstrm = sprintf('<< /PageSize [%d %d] >> setpagedevice\n%s', paper_size, fstrm);
+    end
+
     % Reset paper size
-    set(fig, 'PaperPositionMode', old_pos_mode, 'PaperOrientation', old_orientation);
+    set(fig, 'PaperPositionMode',old_pos_mode, 'PaperOrientation',old_orientation, 'PaperUnits',old_paper_units);
 
     % Reset the font names in the figure
     if ~isempty(font_swap)
         for a = update
             set(font_handles(a), 'FontName', fonts{a}, 'FontSize', fonts_size(a));
         end
-    end
-
-    % Bail out if EPS post-processing is not possible
-    if isempty(fstrm)
-        warning('Loading EPS file failed, so unable to perform post-processing. This is usually because the figure contains a large number of patch objects. Consider exporting to a bitmap format in this case.');
-        return
     end
 
     % Replace the font names
@@ -566,11 +585,13 @@ function [StoredColors, fstrm, foundFlags] = eps_maintainAlpha(fig, fstrm, Store
                 try
                     propName = propNames{propIdx};
                     if strcmp(hObj.(propName).ColorType, 'truecoloralpha')
-                        nColors = length(StoredColors);
                         oldColor = hObj.(propName).ColorData;
-                        newColor = uint8([101; 102+floor(nColors/255); mod(nColors,255); 255]);
-                        StoredColors{end+1} = {hObj, propName, oldColor, newColor}; %#ok<AGROW>
-                        hObj.(propName).ColorData = newColor;
+                        if numel(oldColor)>3 && oldColor(4)~=255  % issue #281: only fix patch/textbox color if it's not opaque
+                            nColors = length(StoredColors);
+                            newColor = uint8([101; 102+floor(nColors/255); mod(nColors,255); 255]);
+                            StoredColors{end+1} = {hObj, propName, oldColor, newColor}; %#ok<AGROW>
+                            hObj.(propName).ColorData = newColor;
+                        end
                     end
                 catch
                     % Never mind - ignore (either doesn't have the property or cannot change it)
@@ -595,6 +616,8 @@ function [StoredColors, fstrm, foundFlags] = eps_maintainAlpha(fig, fstrm, Store
                 origAlpha = num2str(round(double(origColor(end)) /255,3),'%.3g'); %Convert alpha value for EPS
 
                 %Find and replace the RGBA values within the EPS text fstrm
+                %Note: .setopacityalpha is an unsupported PS extension that croaks in some GS versions (issue #285, https://bugzilla.redhat.com/show_bug.cgi?id=1632030)
+                %      (such cases are caught in eps2pdf.m and corrected by adding the -dNOSAFER Ghosscript option or by removing the .setopacityalpha line)
                 if strcmpi(propName,'Face')
                     oldStr = sprintf(['\n' colorID ' RC\n']);  % ...N\n (removed to fix issue #225)
                     newStr = sprintf(['\n' origRGB ' RC\n' origAlpha ' .setopacityalpha true\n']);  % ...N\n
