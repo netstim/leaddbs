@@ -565,15 +565,6 @@ if options.expstatvat.do % export to nifti volume
     ea_roi([options.root,options.patientname,filesep,'statvat_results',filesep,'models',filesep,'statvat_',M.clinical.labels{M.ui.clinicallist},'_T_nthresh_',hshid,'.nii'],pobj);
 end
 
-if M.ui.showdiscfibers % show discriminative fibers
-    M.ui.connectomename=get(handles.fiberspopup,'String');
-    M.ui.connectomename=M.ui.connectomename{get(handles.fiberspopup,'Value')};
-    discfiberssetting = options.prefs.machine.lg.discfibers;
-    fibsweighted=ea_discfibers_calcdiscfibers(M,discfiberssetting);
-    ea_discfibers_showdiscfibers(M,discfiberssetting,resultfig,fibsweighted);
-    set(0, 'CurrentFigure', resultfig);
-end
-
 ea_busyaction('off',handles.leadfigure,'group');
 
 
@@ -1024,13 +1015,13 @@ for pt=selection
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
-            
+
             if options.native % port to native
                transmitcoords=ea_load_reconstruction(options);
             else
                 transmitcoords=M.elstruct(pt).coords_mm;
             end
-            
+
             try
                 [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,transmitcoords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
                 vatCalcPassed = 1;

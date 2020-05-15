@@ -19,15 +19,6 @@ try % if file already exists, load it (and overwrite M).
             M.ui.mirrorsides = 0;
         end
     end
-    if ~isfield(M.ui, 'showdiscfibers')
-        % Fix missing 'showdiscfibers' field for old analysis
-        try
-            currentUISetting = getappdata(handles.leadfigure, 'M');
-            M.ui.showdiscfibers = currentUISetting.ui.showdiscfibers;
-        catch
-            M.ui.showdiscfibers = 0;
-        end
-    end
 catch % if not, store it saving M.
     save([groupdir, 'LEAD_groupanalysis.mat'], 'M', '-v7.3');
 end

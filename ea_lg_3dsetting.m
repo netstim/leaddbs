@@ -103,32 +103,6 @@ catch
     set(handles.mirrorsides, 'Value', 0);
 end
 
-try
-	set(handles.showdiscfibers, 'Value', M.ui.showdiscfibers);
-catch
-    set(handles.showdiscfibers, 'Value', 0);
-end
-
-prefs = ea_prefs('');
-discfibers = prefs.machine.lg.discfibers;
-switch discfibers.showfibersset
-    case 'positive'
-        set(handles.showposonly, 'Value', 1);
-        set(handles.pospredthreshold, 'Enable', 'on');
-        set(handles.negpredthreshold, 'Enable', 'off');
-    case 'negative'
-        set(handles.shownegonly, 'Value', 1);
-        set(handles.pospredthreshold, 'Enable', 'off');
-        set(handles.negpredthreshold, 'Enable', 'on');
-    case 'both'
-        set(handles.showboth, 'Value', 1);
-        set(handles.pospredthreshold, 'Enable', 'on');
-        set(handles.negpredthreshold, 'Enable', 'on');
-end
-set(handles.pospredthreshold, 'String', num2str(discfibers.pospredthreshold));
-set(handles.negpredthreshold, 'String', num2str(discfibers.negpredthreshold));
-set(handles.statmetric,'Value',discfibers.statmetric);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_lg_3dsetting_OutputFcn(hObject, eventdata, handles)
@@ -315,15 +289,6 @@ function mirrorsides_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of mirrorsides
 
 
-% --- Executes on button press in showdiscfibers.
-function showdiscfibers_Callback(hObject, eventdata, handles)
-% hObject    handle to showdiscfibers (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showdiscfibers
-
-
 % --- Executes on button press in save3dsetting.
 function save3dsetting_Callback(hObject, eventdata, handles)
 % hObject    handle to save3dsetting (see GCBO)
@@ -337,71 +302,10 @@ M.ui.elrendering = get(handles.elrenderingpopup, 'Value');
 M.ui.isovscloudpopup = get(handles.isovscloudpopup, 'Value');
 M.ui.colorpointcloudcheck = get(handles.colorpointcloudcheck, 'Value');
 M.ui.mirrorsides = get(handles.mirrorsides, 'Value');
-M.ui.showdiscfibers = get(handles.showdiscfibers, 'Value');
 
 setappdata(leadfigure, 'M', M);
 
-prefs=ea_prefs('');
-discfibers = prefs.machine.lg.discfibers;
-switch get(get(handles.showfiberssetpanel, 'SelectedObject'), 'Tag')
-    case 'showposonly'
-        discfibers.showfibersset = 'positive';
-    case 'shownegonly'
-        discfibers.showfibersset = 'negative';
-    case 'showboth'
-        discfibers.showfibersset = 'both';
-end
-discfibers.pospredthreshold = str2double(get(handles.pospredthreshold,'String'));
-discfibers.negpredthreshold = str2double(get(handles.negpredthreshold,'String'));
-discfibers.statmetric = get(handles.statmetric,'Value');
-ea_setprefs('lg.discfibers', discfibers);
-
 delete(handles.lg_3dsetting);
-
-
-function pospredthreshold_Callback(hObject, eventdata, handles)
-% hObject    handle to pospredthreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of pospredthreshold as text
-%        str2double(get(hObject,'String')) returns contents of pospredthreshold as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function pospredthreshold_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to pospredthreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function negpredthreshold_Callback(hObject, eventdata, handles)
-% hObject    handle to negpredthreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of negpredthreshold as text
-%        str2double(get(hObject,'String')) returns contents of negpredthreshold as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function negpredthreshold_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to negpredthreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in statmetric.
@@ -425,39 +329,6 @@ function statmetric_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-% --- Executes on button press in showposonly.
-function showposonly_Callback(hObject, eventdata, handles)
-% hObject    handle to showposonly (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showposonly
-set(handles.pospredthreshold, 'Enable', 'on');
-set(handles.negpredthreshold, 'Enable', 'off');
-
-
-% --- Executes on button press in shownegonly.
-function shownegonly_Callback(hObject, eventdata, handles)
-% hObject    handle to shownegonly (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of shownegonly
-set(handles.pospredthreshold, 'Enable', 'off');
-set(handles.negpredthreshold, 'Enable', 'on');
-
-
-% --- Executes on button press in showboth.
-function showboth_Callback(hObject, eventdata, handles)
-% hObject    handle to showboth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showboth
-set(handles.pospredthreshold, 'Enable', 'on');
-set(handles.negpredthreshold, 'Enable', 'on');
 
 
 % --- Executes on button press in regressorcolormap.
