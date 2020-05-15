@@ -26,8 +26,8 @@ else
     mifix='';
 end
 
-if isempty(atlases) % create from scratch - if not empty, rebuild flag has been set.
-    disp('Generating Atlas table (first run with new atlas only). This may take a while...');
+if isempty(atlases) || atlases.rebuild==1
+    disp('Generating Atlas table. This may take a while...');
     lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
     delete([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
     lhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.ni*']);
@@ -86,9 +86,10 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     typecell=[ones(1,length(rhcell)),2*ones(1,length(lhcell)),3*ones(1,length(bothcell)),4*ones(1,length(mixedcell)),5*ones(1,length(midlinecell))];
     atlases.names=allcell;
     atlases.types=typecell;
-    atlases.rebuild=0;
-    atlases.threshold.type='relative_intensity';
-    atlases.threshold.value=0.5;
+    if ~isfield(atlases, 'threshold') || isempty(atlases.threshold)
+        atlases.threshold.type='relative_intensity';
+        atlases.threshold.value=0.5;
+    end
 end
 
 if ~isfield(atlases,'tissuetypes')
