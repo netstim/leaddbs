@@ -417,13 +417,6 @@ elseif strcmp(fname(end-3:end),'.mat')
         structure.idx=idx;
     elseif ~isempty(fieldnames(load(fname, 'vals'))) % discriminative fibers
         structure.isdiscfibers = 1;
-        % Set default discfiberssetting if not found in the mat.
-        if isempty(fieldnames(load(fname, 'discfiberssetting')))
-            discfiberssetting.showfibersset = 'positive';
-            discfiberssetting.pospredthreshold = 5;
-            discfiberssetting.negpredthreshold = 5;
-            save(fname, 'discfiberssetting', '-append');
-        end
         % Set default color (blue and red) if not found in mat.
         if isempty(fieldnames(load(fname, 'fibcolor')))
             fibcolor = [0 0 1;1 0 0];

@@ -158,6 +158,7 @@ for group=groups
         catch
             negthresh{group,side}=-inf;
         end
+
         if ~obj.negvisible
             negthresh{group,side}=-inf;
         end
