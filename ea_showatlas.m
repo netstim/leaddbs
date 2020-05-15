@@ -84,13 +84,14 @@ for nativemni=nm % switch between native and mni space atlases.
 
     setinterpol=1;
 
+    ht=getappdata(resultfig,'atlht');
+    if ~isempty(ht) % sweep nonempty atlases toolbar
+        delete(ht.Children(:));
+    else
+        ht=uitoolbar(resultfig);
+    end
+
     if ~atlases.discfibersonly
-        ht=getappdata(resultfig,'atlht');
-        if ~isempty(ht) % sweep nonempty atlases toolbar
-            delete(ht.Children(:));
-        else
-            ht=uitoolbar(resultfig);
-        end
         atlcntbutton=uipushtool(ht,'CData',ea_get_icn('atlases'),'Tag','Atlas Control','TooltipString','Atlas Control Figure','ClickedCallback',{@ea_openatlascontrol,atlases,resultfig,options});
     end
 
@@ -399,7 +400,12 @@ for nativemni=nm % switch between native and mni space atlases.
                 ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel, axes(cbfig));
                 saveas(cbfig, [tractPath, filesep, tractName, '_colorbar.svg']);
                 % export_fig(cbfig, [tractPath, filesep, tractName, '_colorbar.png']);
-                fprintf('Colorbar exported as:\n%s\n', [tractPath, filesep, tractName, '_colorbar.svg']);
+                fprintf('Colorbar exported as:\n%s\n\n', [tractPath, filesep, tractName, '_colorbar.svg']);
+
+                uitoggletool(ht, 'CData', ea_get_icn('discfiber'),...
+                    'TooltipString', ['Discriminative fibertract: ', tractName],...
+                    'Tag', ['Discriminative fibertract: ', tractName],...
+                    'OnCallback', {@showfiber, h},'OffCallback', {@hidefiber, h}, 'State', 'on');
 
                 set(0,'CurrentFigure',resultfig)
             end
@@ -551,6 +557,14 @@ switch type
         sides=1:2;
         sidestr={'right','left'};
 end
+
+
+function showfiber(~ ,~, discfibers)
+arrayfun(@(f) set(f, 'Visible', 'on'), discfibers);
+
+
+function hidefiber(~ ,~, discfibers)
+arrayfun(@(f) set(f, 'Visible', 'off'), discfibers)
 
 
 function sidec=getsidec(side, sidestr)
