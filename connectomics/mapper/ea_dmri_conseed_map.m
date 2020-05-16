@@ -169,7 +169,8 @@ for s=1:length(sfile)
             % Warp map from patient T1 space to MNI space
             ea_apply_normalization_tofile(ea_getptopts(options.uivatdirs{s}),...
                 {map.fname},...
-                {mniMap}, options.uivatdirs{s}, 0, 1);
+                {mniMap}, options.uivatdirs{s}, 0, 1, ...
+                ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]));
         end
 
         if evalin('base','exist(''SB_SAVE_ITERS'',''var'')')
