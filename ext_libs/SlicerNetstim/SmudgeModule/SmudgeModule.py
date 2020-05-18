@@ -323,12 +323,11 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def updateGuiFromMRML(self,caller=None,event=None):
     # get warp node and set selector and buttons
-    warpID = self.parameterNode.GetParameter("warpID")
-    warpNode = slicer.util.getNode(warpID) if warpID != "" else None
+    warpNode = self.parameterNode.GetNodeReference("warpID")
     warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
     # undo redo button
-    self.undoButton.setEnabled(warpNumberOfComponents > 1 and self.parameterNode.GetParameter("redoTransformID") == "" and self.parameterNode.GetParameter("lastOperation") != "UndoAll") 
-    self.redoButton.setEnabled(self.parameterNode.GetParameter("redoTransformID") != "") 
+    self.undoButton.setEnabled(warpNumberOfComponents > 1 and not self.parameterNode.GetNodeReferenceID("redoTransformID") and self.parameterNode.GetParameter("lastOperation") != "UndoAll") 
+    self.redoButton.setEnabled(self.parameterNode.GetNodeReferenceID("redoTransformID")) 
     self.undoAllButton.setEnabled(warpNumberOfComponents > 1)
     # resolution change
     if float(self.parameterNode.GetParameter("resolution")) != TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)[2][0]:
@@ -366,11 +365,11 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       # set
       currentNode.SetAndObserveTransformNodeID(warpNode.GetID())
       self.parameterNode.SetParameter("resolution", str(spacing[0]))
-      self.parameterNode.SetParameter("warpID", warpNode.GetID())
+      self.parameterNode.SetNodeReferenceID("warpID", warpNode.GetID())
     else:
-      self.parameterNode.SetParameter("warpID", "")
+      self.parameterNode.SetNodeReferenceID("warpID", None)
     # enable / disable harden option
-    self.hardenOutputPushButton.enabled = self.parameterNode.GetParameter("warpID") != ""
+    self.hardenOutputPushButton.enabled = bool(self.parameterNode.GetNodeReferenceID("warpID"))
 
   def onHardenOutputPushButton(self, b):
     self.masterNodeSelector.currentNode().HardenTransform()
@@ -385,7 +384,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def onUndoAllButton(self):
     self.parameterNode.SetParameter("lastOperation","UndoAll")
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    warpNode = self.parameterNode.GetNodeReference("warpID")
     if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) > 2:
       TransformsUtil.TransformsUtilLogic().flattenTransform(warpNode, False)
     self.onUndoButton()
@@ -394,22 +393,22 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # remove redo nodes
     SmudgeModuleLogic().removeRedoNodes()
     # apply and save redo transform
-    redoTransformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(slicer.util.getNode(self.parameterNode.GetParameter("warpID")))
-    self.parameterNode.SetParameter("redoTransformID", redoTransformID)
+    redoTransformID = TransformsUtil.TransformsUtilLogic().removeLastLayer(self.parameterNode.GetNodeReference("warpID"))
+    self.parameterNode.SetNodeReferenceID("redoTransformID", redoTransformID)
     # disable last drawing if was a drawing operation
     if self.parameterNode.GetParameter("lastOperation") == 'Draw':
       SmudgeModuleLogic().disableLastDrawing()
 
   def onRedoButton(self):
     # get nodes
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    redoTransformNode = slicer.util.getNode(self.parameterNode.GetParameter("redoTransformID"))
+    warpNode = self.parameterNode.GetNodeReference("warpID")
+    redoTransformNode = self.parameterNode.GetNodeReference("redoTransformID")
     # apply
     warpNode.SetAndObserveTransformNodeID(redoTransformNode.GetID())
     warpNode.HardenTransform()
     # delete redo transform
     slicer.mrmlScene.RemoveNode(redoTransformNode)
-    self.parameterNode.SetParameter("redoTransformID","")
+    self.parameterNode.SetNodeReferenceID("redoTransformID", None)
     # re enable drawing
     if self.parameterNode.GetParameter("lastOperation") == 'Draw':
       SmudgeModuleLogic().enableLastDrawing()
@@ -426,7 +425,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     WarpEffectParameters.NoneEffectParameters.activateNoneEffect()
       
   def onSceneStartClose(self, caller, event):
-    self.parameterNode.SetParameter("warpID", "")
+    self.parameterNode.SetNodeReferenceID("warpID", None)
 
 
 
@@ -447,14 +446,14 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
 
   def createParameterNode(self):
     node = ScriptedLoadableModuleLogic.createParameterNode(self)
-    node.SetParameter("warpID", "")
-    node.SetParameter("redoTransformID", "")
+    node.SetNodeReferenceID("warpID", None)
+    node.SetNodeReferenceID("redoTransformID", None)
     node.SetParameter("lastDrawingID", "-1")
     node.SetParameter("warpModified","0")
     node.SetParameter("lastOperation","")
     node.SetParameter("currentEfect","None")
     # linear
-    node.SetParameter("LinearTransform", "")
+    node.SetNodeReferenceID("LinearTransform", None)
     # smudge 
     node.SetParameter("SmudgeRadius", "25")
     node.SetParameter("SmudgeHardness", "40")
@@ -463,7 +462,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("SmudgeSigma", "10")
     node.SetParameter("expandGrid", "0")
     node.SetParameter("maxRadius", "50")
-    node.SetParameter("gridBoundsROIID", "")
+    node.SetNodeReferenceID("gridBoundsROIID", None)
     # draw
     node.SetParameter("DrawSpread", "15")
     node.SetParameter("DrawSampleDistance", "2")
@@ -490,10 +489,10 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
   def removeRedoNodes(self):
     parameterNode = self.getParameterNode()
     # redo transform
-    redoTransformID = parameterNode.GetParameter("redoTransformID")
-    if redoTransformID != "":
+    redoTransformID = parameterNode.GetNodeReferenceID("redoTransformID")
+    if redoTransformID:
       slicer.mrmlScene.RemoveNode(slicer.util.getNode(redoTransformID))
-      parameterNode.SetParameter("redoTransformID","")
+      parameterNode.SetNodeReferenceID("redoTransformID", None)
     # last drawing
     lastDrawingID = int(parameterNode.GetParameter("lastDrawingID"))
     if lastDrawingID != -1:
@@ -532,7 +531,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
       transformNode = transformNodes.GetItemAsObject(i)
       if 'savedWarp' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(transformNode)):
         slicer.mrmlScene.RemoveNode(transformNode)
-    self.getParameterNode().SetParameter("warpID","")
+    self.getParameterNode().SetNodeReferenceID("warpID", None)
 
     # delete fiducials
     markupsNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsFiducialNode')

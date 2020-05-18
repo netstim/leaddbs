@@ -153,12 +153,12 @@ class treeViewSavedWarpFilter(treeViewFilter):
       super().deleteFunction(node)
 
   def addFunction(self):
-    if self.parameterNode.GetParameter("warpID") == "":
+    if not self.parameterNode.GetNodeReferenceID("warpID"):
       return
     qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
     qt.QApplication.processEvents()
     # get node
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    warpNode = self.parameterNode.GetNodeReference("warpID")
     # save visibility
     vis = warpNode.GetDisplayNode().GetVisibility()
     warpNode.GetDisplayNode().SetVisibility(False)
@@ -187,18 +187,17 @@ class treeViewSavedWarpFilter(treeViewFilter):
   def doubleClickFunction(self, node):
     SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
     # reset descriptions
-    previousWarpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+    previousWarpNode = self.parameterNode.GetNodeReference("warpID")
     previousWarpNode.SetDescription('')
     # apply current node
-    glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
-    glanatCompositeNode.SetAndObserveTransformNodeID(node.GetID())
+    self.parameterNode.GetNodeReference("glanatCompositeID").SetAndObserveTransformNodeID(node.GetID())
     # apply visibility
     node.GetDisplayNode().SetVisibility(previousWarpNode.GetDisplayNode().GetVisibility())
     previousWarpNode.GetDisplayNode().SetVisibility(False)
     # set description
     node.SetDescription('Current')
     # change parameter node
-    self.parameterNode.SetParameter("warpID", node.GetID())
+    self.parameterNode.SetNodeReferenceID("warpID", node.GetID())
     
 
 

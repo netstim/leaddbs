@@ -55,10 +55,7 @@ class WarpAbstractEffect(VTKObservationMixin):
     interactionNode.SetCurrentInteractionMode(interactionNode.ViewTransform)
 
   def updateGuiFromMRML(self, caller=None, event=None):
-    warpID = self.parameterNode.GetParameter("warpID")
-    warpNode = slicer.util.getNode(warpID) if warpID != "" else None
-    self.effectButton.enabled = bool(warpNode)
-    return warpNode
+    self.effectButton.enabled = bool(self.parameterNode.GetNodeReferenceID("warpID"))
 
   def sliceWidgets(self):
     for color in ['Red','Green','Yellow']:
@@ -161,8 +158,7 @@ class LinearEffectParameters(WarpAbstractEffect):
 
   def updateGuiFromMRML(self, caller=None, event=None):
     super().updateGuiFromMRML(caller,event)
-    linearTransformID = self.parameterNode.GetParameter("LinearTransform")
-    self.nodeSelector.setCurrentNodeID(linearTransformID if linearTransformID != "" else None)
+    self.nodeSelector.setCurrentNodeID(self.parameterNode.GetNodeReferenceID("LinearTransform"))
 
 
 #
@@ -258,20 +254,18 @@ class SmudgeEffectParameters(WarpAbstractEffect):
 
   def onEffectButtonToggle(self):
     super().onEffectButtonToggle()
-    if self.parameterNode.GetParameter("gridBoundsROIID") != "":
-      gridBoundsROINode = slicer.util.getNode(self.parameterNode.GetParameter("gridBoundsROIID"))
-      gridBoundsROINode.SetDisplayVisibility(self.gridBoundsCheckBox.checked and self.effectButton.checked)
+    if self.parameterNode.GetNodeReferenceID("gridBoundsROIID"):
+      self.parameterNode.GetNodeReference("gridBoundsROIID").SetDisplayVisibility(self.gridBoundsCheckBox.checked and self.effectButton.checked)
 
   def onEffectButtonClicked(self):
     super().onEffectButtonClicked()
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
     size,origin,spacing = self.getExpandedGrid()
     auxTransformNode = TransformsUtil.TransformsUtilLogic().emptyGridTransform(size, origin, spacing)
     for sliceWidget in self.sliceWidgets():
       WarpEffect.SmudgeEffectTool(sliceWidget, auxTransformNode)
 
   def updateGuiFromMRML(self, caller=None, event=None):
-    warpNode = super().updateGuiFromMRML(caller,event)
+    super().updateGuiFromMRML(caller,event)
     radius = float(self.parameterNode.GetParameter("SmudgeRadius"))
     self.radiusSlider.setValue( radius )
     if radius < self.radiusSlider.minimum or radius > self.radiusSlider.maximum:
@@ -281,9 +275,9 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     self.postSmoothingSlider.setEnabled(self.postSmoothingCheckBox.checked)
     self.radiusSlider.maximum = float(self.parameterNode.GetParameter("maxRadius")) + float(self.parameterNode.GetParameter("expandGrid"))
     # roi bounds
-    if warpNode and self.parameterNode.GetParameter("gridBoundsROIID") != "":
-      gridBoundsROINode = slicer.util.getNode(self.parameterNode.GetParameter("gridBoundsROIID"))
-      size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+    if self.parameterNode.GetNodeReferenceID("warpID") and self.parameterNode.GetNodeReferenceID("gridBoundsROIID"):
+      gridBoundsROINode = self.parameterNode.GetNodeReference("gridBoundsROIID")
+      size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.parameterNode.GetNodeReference("warpID"))
       sizeMM = [size[i]*spacing[i] for i in range(3)]
       gridBoundsROINode.SetRadiusXYZ([0.5*sizeMM[i]+float(self.parameterNode.GetParameter("expandGrid")) for i in range(3)])
     
@@ -298,8 +292,7 @@ class SmudgeEffectParameters(WarpAbstractEffect):
 
   def getExpandedGrid(self):
     # create aux transform with same grid as warp
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.parameterNode.GetNodeReference("warpID"))
     # expand aux transform to deal with borders
     expandGrid = float(self.parameterNode.GetParameter("expandGrid"))
     origin = [o - expandGrid for o in origin]
@@ -307,21 +300,19 @@ class SmudgeEffectParameters(WarpAbstractEffect):
     return size, origin, spacing
 
   def onGridBoundsCheckBox(self):
-    if self.parameterNode.GetParameter("gridBoundsROIID") == "" and self.parameterNode.GetParameter("warpID") != "":
+    if not self.parameterNode.GetNodeReferenceID("gridBoundsROIID") and self.parameterNode.GetNodeReferenceID("warpID"):
       self.initROINode()
-    gridBoundsROINode = slicer.util.getNode(self.parameterNode.GetParameter("gridBoundsROIID"))
-    gridBoundsROINode.SetDisplayVisibility(self.gridBoundsCheckBox.checked)
+    self.parameterNode.GetNodeReference("gridBoundsROIID").SetDisplayVisibility(self.gridBoundsCheckBox.checked)
 
 
   def initROINode(self):
     gridBoundsROINode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLAnnotationROINode')
     gridBoundsROINode.SetLocked(True)
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
-    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(warpNode)
+    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(self.parameterNode.GetNodeReference("warpID"))
     sizeMM = [size[i]*spacing[i] for i in range(3)]
     gridBoundsROINode.SetRadiusXYZ([0.5*sizeMM[i] for i in range(3)])
     gridBoundsROINode.SetXYZ([origin[i]+0.5*sizeMM[i] for i in range(3)])
-    self.parameterNode.SetParameter("gridBoundsROIID", gridBoundsROINode.GetID())
+    self.parameterNode.SetNodeReferenceID("gridBoundsROIID", gridBoundsROINode.GetID())
 
 
 #
@@ -446,8 +437,8 @@ class SmoothEffectParameters(WarpAbstractEffect):
       WarpEffect.SmoothEffectTool(sliceWidget)
 
   def updateGuiFromMRML(self, caller=None, event=None):
-    warpNode = super().updateGuiFromMRML(caller, event)
-    warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
+    super().updateGuiFromMRML(caller, event)
+    warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(self.parameterNode.GetNodeReference("warpID"))
     self.effectButton.enabled = warpNumberOfComponents == 1
     radius = float(self.parameterNode.GetParameter("SmoothRadius"))
     self.radiusSlider.setValue( radius )

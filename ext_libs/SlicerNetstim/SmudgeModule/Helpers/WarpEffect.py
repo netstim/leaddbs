@@ -20,7 +20,7 @@ class WarpEffectTool():
     self._instances.add(self)
     self.parameterNode = SmudgeModule.SmudgeModuleLogic().getParameterNode()
     if warpNode:
-      self.warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID"))
+      self.warpNode = self.parameterNode.GetNodeReference("warpID")
 
   def createSphere(self, r):
     # create a sphere with redius
@@ -119,7 +119,7 @@ class LinearEffectTool(PointerEffect.PointerEffectTool, WarpEffectTool):
   def initTransform(self):
     if not type(self).linearTransformNode:
       type(self).linearTransformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
-      self.parameterNode.SetParameter("LinearTransform", self.linearTransformNode.GetID())
+      self.parameterNode.SetNodeReferenceID("LinearTransform", self.linearTransformNode.GetID())
       self.warpNode.SetAndObserveTransformNodeID(self.linearTransformNode.GetID())
 
   def applyChanges(self):

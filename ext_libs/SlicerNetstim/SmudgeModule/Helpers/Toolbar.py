@@ -95,11 +95,11 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
    
   def initializeTransforms(self, imageNode):
-    glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
+    glanatCompositeNode = self.parameterNode.GetNodeReference("glanatCompositeID")
     # apply glanat to image
     imageNode.SetAndObserveTransformNodeID(glanatCompositeNode.GetID())
     # apply warp to glanat
-    glanatCompositeNode.SetAndObserveTransformNodeID(self.parameterNode.GetParameter("warpID"))
+    glanatCompositeNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("warpID"))
 
   def onModalityPressed(self, item, modality=None):
     if modality is None:
@@ -132,9 +132,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     # modality
     self.modalityComboBox.setCurrentText(self.parameterNode.GetParameter("modality"))
     # change resolution
-    warpID = self.parameterNode.GetParameter("warpID")
-    warpNode = slicer.util.getNode(warpID) if warpID != "" else None
-    warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode)
+    warpNumberOfComponents = TransformsUtil.TransformsUtilLogic().getNumberOfLayers(self.parameterNode.GetNodeReference("warpID"))
     self.resolutionComboBox.enabled = warpNumberOfComponents == 1
 
 
@@ -155,7 +153,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
         transformNode = transformNodes.GetItemAsObject(i)
         if 'savedWarp' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(transformNode)):
           slicer.mrmlScene.RemoveNode(transformNode)
-      self.parameterNode.SetParameter("warpID","")
+      self.parameterNode.SetNodeReferenceID("warpID",None)
 
       # delete fiducials
       markupsNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsFiducialNode')
@@ -194,11 +192,9 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
     newResolution = float(self.resolutionComboBox.itemText(index)[:-2]) # get resolution
     # apply to warp
-    warpNode = slicer.util.getNode(self.parameterNode.GetParameter("warpID")) # get warp node
-    reducedToolbarLogic().resampleTransform(warpNode, newResolution)
+    reducedToolbarLogic().resampleTransform(self.parameterNode.GetNodeReference("warpID"), newResolution)
     # apply to glanat comp
-    glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID")) # get warp node
-    reducedToolbarLogic().resampleTransform(glanatCompositeNode, newResolution)
+    reducedToolbarLogic().resampleTransform(self.parameterNode.GetNodeReference("glanatCompositeID"), newResolution)
     # save
     self.parameterNode.SetParameter("resolution",str(newResolution))
 
@@ -223,7 +219,7 @@ class reducedToolbarLogic(object):
 
     # load glanat composite
     glanatCompositeNode = ImportSubject.ImportSubjectLogic().importTransform(subjectPath, 'glanatComposite.nii.gz')
-    self.parameterNode.SetParameter("glanatCompositeID", glanatCompositeNode.GetID())
+    self.parameterNode.SetNodeReferenceID("glanatCompositeID", glanatCompositeNode.GetID())
     # resample
     self.resampleTransform(glanatCompositeNode, float(self.parameterNode.GetParameter("resolution")))
 
@@ -234,7 +230,7 @@ class reducedToolbarLogic(object):
     warpNode.GetDisplayNode().SetVisibility2D(True)
     warpNode.SetDescription('Current')
     warpNode.SetName(slicer.mrmlScene.GenerateUniqueName('Initial'))
-    self.parameterNode.SetParameter("warpID", warpNode.GetID())
+    self.parameterNode.SetNodeReferenceID("warpID", warpNode.GetID())
     # add checkpoint attribute
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     shNode.SetItemAttribute(shNode.GetItemByDataNode(warpNode), 'savedWarp', '1')
@@ -258,11 +254,9 @@ class reducedToolbarLogic(object):
   
   def applyChanges(self):
 
-    parameterNode = self.parameterNode
-    warpNode = slicer.util.getNode(parameterNode.GetParameter("warpID"))
-    subjectPath = parameterNode.GetParameter("subjectPath")
+    subjectPath = self.parameterNode.GetParameter("subjectPath")
 
-    if not bool(int(parameterNode.GetParameter("warpModified"))):
+    if not bool(int(self.parameterNode.GetParameter("warpModified"))):
       msgBox = qt.QMessageBox()
       msgBox.setText('No modifications in warp')
       msgBox.setInformativeText('Save subject as approved?')
@@ -274,7 +268,7 @@ class reducedToolbarLogic(object):
         FunctionsUtil.saveApprovedData(subjectPath)
       return True
     
-    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(warpNode) == 1:
+    if TransformsUtil.TransformsUtilLogic().getNumberOfLayers(self.parameterNode.GetNodeReference("warpID")) == 1:
       msgBox = qt.QMessageBox()
       msgBox.setText('Only one layer')
       msgBox.setInformativeText('Save changes?')
@@ -286,7 +280,7 @@ class reducedToolbarLogic(object):
         return True
     
     # harden changes in glanat composite
-    glanatCompositeNode = slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID"))
+    glanatCompositeNode = self.parameterNode.GetNodeReference("glanatCompositeID")
     glanatCompositeNode.HardenTransform()
     TransformsUtil.TransformsUtilLogic().flattenTransform(glanatCompositeNode, True)
 
