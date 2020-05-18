@@ -126,6 +126,7 @@ class SmudgeModuleWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     toolsFormLayout.addRow(toolsFrame)
 
     warpEffects = [WarpEffectParameters.NoneEffectParameters(), 
+                  WarpEffectParameters.LinearEffectParameters(), 
                   WarpEffectParameters.SmudgeEffectParameters(), 
                   WarpEffectParameters.DrawEffectParameters(),
                   WarpEffectParameters.SmoothEffectParameters()]
@@ -452,6 +453,8 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetParameter("warpModified","0")
     node.SetParameter("lastOperation","")
     node.SetParameter("currentEfect","None")
+    # linear
+    node.SetParameter("LinearTransform", "")
     # smudge 
     node.SetParameter("SmudgeRadius", "25")
     node.SetParameter("SmudgeHardness", "40")

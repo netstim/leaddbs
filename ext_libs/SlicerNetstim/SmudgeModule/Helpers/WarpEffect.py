@@ -98,6 +98,47 @@ class NoneEffectTool(PointerEffect.PointerEffectTool, WarpEffectTool):
     PointerEffect.PointerEffectTool.__init__(self, sliceWidget)
     
 
+#
+# Linear Effect
+#
+
+class LinearEffectTool(PointerEffect.PointerEffectTool, WarpEffectTool):
+
+  linearTransformNode = None
+
+  def __init__(self, sliceWidget):
+    WarpEffectTool.__init__(self)
+    PointerEffect.PointerEffectTool.__init__(self, sliceWidget)
+
+    self.initTransform()
+
+  def processEvent(self, caller=None, event=None):
+    if event == 'LeftButtonReleaseEvent':
+      qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
+
+  def initTransform(self):
+    if not type(self).linearTransformNode:
+      type(self).linearTransformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
+      self.parameterNode.SetParameter("LinearTransform", self.linearTransformNode.GetID())
+      self.warpNode.SetAndObserveTransformNodeID(self.linearTransformNode.GetID())
+
+  def applyChanges(self):
+    WarpEffectTool.applyChanges(self)
+    # reset
+    type(self).cleanTransform()
+    self.initTransform()
+
+  def cleanup(self):
+    self.warpNode.SetAndObserveTransformNodeID(None)
+    type(self).cleanTransform()
+    WarpEffectTool.cleanup(self)
+    PointerEffect.PointerEffectTool.cleanup(self)
+
+  @classmethod
+  def cleanTransform(cls):
+    slicer.mrmlScene.RemoveNode(cls.linearTransformNode)
+    cls.linearTransformNode = None
+
 
 
 #

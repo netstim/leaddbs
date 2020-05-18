@@ -71,9 +71,8 @@ class WarpAbstractEffect(VTKObservationMixin):
       button.connect("released()", self.onEditButtonReleased)
 
   def onEditButtonPressed(self):
-    WarpEffect.WarpEffectTool.empty()
-    for sliceWidget in self.sliceWidgets():
-      WarpEffect.NoneEffectTool(sliceWidget)
+    if self.effectButton.isChecked():
+      self.onEffectButtonToggle()
 
   def onEditButtonReleased(self):
     if self.effectButton.isChecked():
@@ -125,6 +124,45 @@ class NoneEffectParameters(WarpAbstractEffect):
   def activateNoneEffect(cls):
     if cls.noneEffectButton:
       cls.noneEffectButton.animateClick()
+
+
+#
+# Linear
+#
+
+
+class LinearEffectParameters(WarpAbstractEffect):
+
+  def __init__(self):
+
+    toolTip = 'Linear Modifications'
+    WarpAbstractEffect.__init__(self, 'Linear', toolTip)
+
+    transformsWidget = slicer.modules.transforms.createNewWidgetRepresentation()
+    self.nodeSelector = transformsWidget.children()[2]
+    self.transformEdit = transformsWidget.children()[5]
+    self.parametersFrame.layout().addRow(self.transformEdit)
+
+    applyButton = qt.QPushButton('Apply')
+    self.parametersFrame.layout().addRow(applyButton)
+
+    applyButton.connect('clicked(bool)', self.onApplyButton)
+
+
+  def onEffectButtonClicked(self):
+    super().onEffectButtonClicked()
+    self.transformEdit.collapsed = True # init collapsed. so no much space is taken and apply button is seen
+    for sliceWidget in self.sliceWidgets():
+      self.tool = WarpEffect.LinearEffectTool(sliceWidget)
+
+  def onApplyButton(self):
+    self.tool.applyChanges()
+    self.transformEdit.collapsed = True 
+
+  def updateGuiFromMRML(self, caller=None, event=None):
+    super().updateGuiFromMRML(caller,event)
+    linearTransformID = self.parameterNode.GetParameter("LinearTransform")
+    self.nodeSelector.setCurrentNodeID(linearTransformID if linearTransformID != "" else None)
 
 
 #
