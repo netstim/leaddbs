@@ -376,30 +376,14 @@ classdef ea_disctract < handle
                         fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.01);
                     end
 
-                    posvals{group,side}=sort(vals{group,side}(vals{group,side}>0),'descend');
-                    negvals{group,side}=sort(vals{group,side}(vals{group,side}<0),'ascend');
+                    valsRescale{group,side} = vals{group,side};
+                    valsRescale{group,side}(vals{group,side}>0) = ea_rescale(vals{group,side}(vals{group,side}>0), [0 1]);
+                    valsRescale{group,side}(vals{group,side}<0) = ea_rescale(vals{group,side}(vals{group,side}<0), [-1 0]);
 
-                    try
-                        posthresh{group,side}=posvals{group,side}(end);
-                    catch
-                        posthresh{group,side}=inf;
-                    end
-
-                    try
-                        negthresh{group,side}=negvals{group,side}(end);
-                    catch
-                        negthresh{group,side}=-inf;
-                    end
-
-                    tvalsRescale{group,side} = vals{group,side};
-                    tvalsRescale{group,side}(vals{group,side}>0) = ea_rescale(vals{group,side}(vals{group,side}>0), [0 1]);
-                    tvalsRescale{group,side}(vals{group,side}<0) = ea_rescale(vals{group,side}(vals{group,side}<0), [-1 0]);
-
-                    fibcolorInd{group,side}=tvalsRescale{group,side}*(size(fibcmap{group},1)/2-0.5);
+                    fibcolorInd{group,side}=valsRescale{group,side}*(size(fibcmap{group},1)/2-0.5);
                     fibcolorInd{group,side}=fibcolorInd{group,side}+(size(fibcmap{group},1)/2+0.5);
 
                     alphas{group,side}=zeros(size(fibcolorInd{group,side}));
-
                     alphas{group,side}(round(fibcolorInd{group,side})>=poslowerBound) = obj.posvisible;
                     alphas{group,side}(round(fibcolorInd{group,side})<=negUpperBound) = obj.negvisible;
 
