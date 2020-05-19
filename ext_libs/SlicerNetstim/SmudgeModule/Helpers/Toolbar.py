@@ -142,7 +142,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
       # remove nodes
       SmudgeModule.SmudgeModuleLogic().removeRedoNodes()
-      slicer.mrmlScene.RemoveNode(slicer.util.getNode(self.parameterNode.GetParameter("glanatCompositeID")))
+      slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("glanatCompositeID"))
       slicer.mrmlScene.RemoveNode(reducedToolbarLogic().getBackgroundNode())
 
       # delete warps
@@ -278,16 +278,14 @@ class reducedToolbarLogic(object):
         return False
       elif ret == qt.QMessageBox().Discard:
         return True
+      
+    qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+    qt.QApplication.processEvents()
     
-    # harden changes in glanat composite
+    # harden changes in glanat composite with MNI 0.5 resolution
     glanatCompositeNode = self.parameterNode.GetNodeReference("glanatCompositeID")
     glanatCompositeNode.HardenTransform()
-    TransformsUtil.TransformsUtilLogic().flattenTransform(glanatCompositeNode, True)
-
-    # back to original resolution
-    size,origin,spacing = TransformsUtil.TransformsUtilLogic().getGridDefinition(glanatCompositeNode)
-    if spacing[0] != 0.5:
-      self.resampleTransform(glanatCompositeNode, 0.5)
+    TransformsUtil.TransformsUtilLogic().flattenTransform(glanatCompositeNode, includeFirstLayer=True, useMNIGrid=True)
 
     # save foreward
     slicer.util.saveNode(glanatCompositeNode, os.path.join(subjectPath,'glanatComposite.nii.gz'))
@@ -306,6 +304,7 @@ class reducedToolbarLogic(object):
     # delete aux node
     slicer.mrmlScene.RemoveNode(outNode)
     
+    qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
 
     return True
 

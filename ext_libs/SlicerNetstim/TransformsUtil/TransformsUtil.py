@@ -318,7 +318,7 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
 
     return newNodeNames
 
-  def flattenTransform(self, transformNode, includeFirstLayer):
+  def flattenTransform(self, transformNode, includeFirstLayer, useMNIGrid = False):
 
     # check that there are at least a number of layers to flatten the transform
     minimumNumberOfLayers = 2 if includeFirstLayer else 3
@@ -330,7 +330,11 @@ class TransformsUtilLogic(ScriptedLoadableModuleLogic):
     lastLayerID = transformNode.GetTransformNodeID()
     transformNode.SetAndObserveTransformNodeID('')
 
-    size, origin, spacing = self.getGridDefinition(transformNode)
+    if useMNIGrid:
+      size, origin, spacing = self.getMNIGrid(0.5)
+    else:
+      size, origin, spacing = self.getGridDefinition(transformNode)
+      
     newNodeNames = self.splitAndGetNodeNames(transformNode)
 
     if includeFirstLayer:
