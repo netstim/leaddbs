@@ -115,6 +115,13 @@ if b0.mat(11)<0  % 'I' is positive z-axis
     fibers(:,3) = b0.dim(3)-1-fibers(:,3);
 end
 
+if options.lc.struc.ft.upsample.factor == 1 % No upsampling
+    % Change ZERO-BASED indexing to ONE-BASED indexing.
+    fibers(:,1:3) = fibers(:,1:3) + 1;
+else
+    fibers = ea_resolve_usfibers(options,fibers);
+end
+
 if vizz
     figure
     thresh=700; % set to a good grey value.
@@ -125,15 +132,13 @@ if vizz
     plot3(xx,yy,zz,'g.')
 end
 
-ftr.fourindex = 1;
 ftr.ea_fibformat = '1.0';
-ftr.idx = idx;
-
-fibers=ea_resolve_usfibers(options,fibers); % this also pops the raw (uninterpolated dti.nii and b0.nii files).
-
+ftr.fourindex = 1;
 ftr.fibers = fibers;
-
+ftr.idx = idx;
 ftr.voxmm = 'vox';
+ftr.mat = b0.mat;
+
 disp('Saving fibers...');
 save([directory,ftrbase,'.mat'],'-struct','ftr','-v7.3');
 disp('Done.');

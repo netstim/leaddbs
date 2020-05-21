@@ -470,7 +470,9 @@ for nativemni=nm % switch between native and mni space atlases.
     if options.writeoutstats
         if exist('prioratlasnames','var')
             if ~isequal(ea_stats.atlases.names,prioratlasnames)
-                warning('Other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.');
+                warning('off', 'backtrace');
+                warning('%s: other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.', options.patientname);
+                warning('on', 'backtrace');
                 ds=load([options.root,options.patientname,filesep,'ea_stats']);
                 save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
                 save(fullfile([options.root,options.patientname],'ea_stats_backup'),'-struct','ds','-v7.3');
