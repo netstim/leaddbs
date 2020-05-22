@@ -20,6 +20,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateToolbarFromMRML)
     
     self.setWindowTitle(qt.QObject().tr("LeadDBS"))
+    self.name = 'LeadDBS'
   
 
     #
