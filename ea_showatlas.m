@@ -205,7 +205,7 @@ for nativemni=nm % switch between native and mni space atlases.
                         [~,thislabel]=fileparts(thislabel);
                 %     end
                 % end
-                atlaslabels(atlas,side)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
+                atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
 
                 if ~exist('labelbutton','var')
                     labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
@@ -275,7 +275,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 try
                     set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
                     set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
-                    set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlas,side))
+                    set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlascnt))
                 catch
                     keyboard
                 end
