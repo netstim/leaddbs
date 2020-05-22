@@ -25,7 +25,7 @@ else
 end
 
 % Overwrite the default setting from GUI
-normsettings.ants_preset = 'ea_antspreset_ants_default_synquick';
+normsettings.ants_preset = 'ea_antspreset_ants_wiki';
 
 [outputdir, outputname, ~] = fileparts(outputimage);
 if outputdir
@@ -84,7 +84,7 @@ if normsettings.ants_numcores
 end
 
 props.ANTS = ANTS;
-props.histogrammatching = '1';
+props.histogrammatching = '0';
 props.winsorize = '0.005,0.995';
 props.initializationFeature = '1';  % 0 for geometric center, 1 for image intensities, 2 for origin of the image
 props.fixed = fixedimage;
