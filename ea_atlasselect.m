@@ -335,7 +335,7 @@ for branch=1:length(sels.branches)
         if ~isempty(sels.sides{branch}{leaf}) % has side children
             for side=1:length(sels.sides{branch}{leaf})
 
-                sidec=getsidec(length(sels.sides{branch}{leaf}),side);
+                sidec=getsidec(length(sels.sides{branch}{leaf}),side,h.atlases.types(leaf));
 
                 [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
                 if strcmp(sels.sides{branch}{leaf}{side},'selected')
@@ -367,7 +367,7 @@ for branch=1:length(sels.branches)
 end
 
 
-function sidec=getsidec(sel,side)
+function sidec=getsidec(sel,side,type)
 
 if sel==2
     switch side
@@ -377,7 +377,14 @@ if sel==2
             sidec='_left';
     end
 elseif sel==1
-    sidec='_midline';
+    switch type
+        case 1
+            sidec='_right';
+        case 2
+            sidec='_left';
+        case 5
+            sidec='_midline';
+    end
 end
 
 
@@ -498,7 +505,7 @@ for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
 
-            sidec=getsidec(length(sels.sides{branch}{leaf}),side);
+            sidec=getsidec(length(sels.sides{branch}{leaf}),side,atlases.types(leaf));
 
             %[ixs,ixt]=getsubindex(h.sgsub{branch}{leaf},sidec,h.atlassurfs,h.togglebuttons);
 
@@ -576,7 +583,7 @@ for branch=1:length(sels.branches)
     for leaf=1:length(sels.leaves{branch})
         for side=1:length(sels.sides{branch}{leaf})
 
-            sidec=getsidec(length(sels.sides{branch}{leaf}),side);
+            sidec=getsidec(length(sels.sides{branch}{leaf}),side,atlases.types(leaf));
             [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
 
             if ismember(char(h.sgsubfi{branch}{leaf}),onatlasnames)
