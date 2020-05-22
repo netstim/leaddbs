@@ -1,8 +1,8 @@
 function atlases=ea_genatlastable(varargin)
 % This function reads in atlases in the Lead-dbs/atlases directory and
 % generates a table of all available atlas files.
-% Atlastypes:   1 - LH
-%               2 - RH
+% Atlastypes:   1 - RH
+%               2 - LH
 %               3 - both hemispheres (2 files present both in lhs and rhs
 %               folder
 %               4 - mixed (one file with one cluster on each hemisphere)
