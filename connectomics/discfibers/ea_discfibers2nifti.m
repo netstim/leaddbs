@@ -10,6 +10,14 @@ function ea_discfibers2nifti(discfiber, threshold, fiberset, outputName, referen
 load(discfiber, 'fibcell')
 load(discfiber, 'vals')
 
+if size(fibcell,2) == 2
+    fibcell = vertcat(fibcell{:});
+end
+
+if iscell(vals) && size(vals,2) == 2
+    vals = vertcat(vals{:});
+end
+
 if ~exist('threshold', 'var')
     threshold = 5/100;
 elseif isempty(threshold)
@@ -35,6 +43,7 @@ posits = vals(vals>0);
 posits = sort(posits,'descend');
 negits = vals(vals<0);
 negits = sort(negits,'ascend');
+
 % Determine positive/negative threshold
 if ismember(fiberset, {'pos', 'positive'})
     posthresh = posits(round(length(posits)*threshold));
