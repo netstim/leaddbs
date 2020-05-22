@@ -12,10 +12,11 @@ else
     normsettings = umachine.machine.normsettings;
 end
 
+fixedmask = fullfile(fileparts(fixedimage), 'brainmask.nii'); % take by default
 if nargin >= 5
-    fixedmask = varargin{5};
-else
-    fixedmask = 'NULL';
+    fixedmask = varargin{5}; % replace if specified
+elseif ~isfile(fixedmask)
+    fixedmask = 'NULL'; % NULL if default doesn't exist
 end
 
 if nargin >= 6
