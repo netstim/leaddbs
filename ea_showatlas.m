@@ -467,6 +467,10 @@ for nativemni=nm % switch between native and mni space atlases.
         save([adir,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
     end
 
+    if isfield(atlases, 'citation')
+        ea_methods(options, ['Atlas used for 3D visualization: ', atlases.citation.name], atlases.citation.long);
+    end
+
     if options.writeoutstats
         if exist('prioratlasnames','var')
             if ~isequal(ea_stats.atlases.names,prioratlasnames)
