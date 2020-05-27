@@ -701,7 +701,8 @@ function coregmrpopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns coregmrpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from coregmrpopup
-if strcmp(hObject.String{hObject.Value}, 'ANTs')
+prefs = ea_prefs;
+if strcmp(hObject.String{hObject.Value}, 'ANTs') &&  prefs.env.dev
     set(handles.addSyN, 'Visible', 'on');
 else
     set(handles.addSyN, 'Visible', 'off');
