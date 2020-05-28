@@ -1,15 +1,12 @@
-function [PL]=ea_showfibers_volume(resultfig,options,hmchanged)
-% This function shows fiber-connectivity from a volume defined by a nx3
-% point-list (volume). If stimparams.showconnectivities is set, connected
-% areas to the volume are also visualized. To do so, the function uses
-% inhull.m which is covered by the BSD-license (see below).
+function [PL]=ea_calc_vatstats(resultfig,options,hmchanged)
+% Calculate VAT stats (atlas intersection and volume)
+% Stimulation information w.r.t the VTA will also be stored in stats.
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 PL.ht=uitoolbar(resultfig);
 set(0,'CurrentFigure',resultfig)
-colornames='rbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywkrbgcmywk';
 
 ea_dispt('Visualizing VTA...');
 
@@ -79,14 +76,6 @@ end
 clear expand
 
 load([options.root,options.patientname,filesep,'ea_stats']);
-
-try
-    upriorvatlength=length(ea_stats.vat)+1;
-    upriorftlength=length(ea_stats.ft)+1;
-catch
-    upriorvatlength=1;
-    upriorftlength=1;
-end
 
 % assign the place where to write stim stats into struct
 
@@ -220,7 +209,7 @@ for side=1:length(options.sides)
                         ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
                     end
                 end
-                
+
                 save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
             end
         end

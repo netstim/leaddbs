@@ -1038,9 +1038,9 @@ for pt=selection
         setappdata(resultfig,'stimparams',stimparams(1,:));
     end
 
-    % this will add the volume stats (atlasIntersections) to stats file:
+    % Calc VAT stats (atlas intersection and volume)
     if all(vatCalcPassed)
-        ea_showfibers_volume(resultfig,options);
+        ea_calc_vatstats(resultfig,options);
     else
         ea_error(sprintf(['An error occured when building the VTA mesh/headmodel for %s.\n',...
             'Try re-calculating this VTA with a different atlas or with no atlas.'],...
@@ -1049,7 +1049,6 @@ for pt=selection
 
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
     if all(vatCalcPassed) && ~strcmp(mod,'Do not calculate connectivity stats')
-
         % Convis part:
         parcs=get(handles.labelpopup,'String');
         selectedparc=parcs{get(handles.labelpopup,'Value')};
