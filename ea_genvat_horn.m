@@ -164,12 +164,8 @@ if hmchanged
         end
     end
 
-    % replace wmboundary:
-    try
-        tess = mesh.tet(:,1:4);
-    catch
-        ea_error(['An error occured when building the VTA mesh/headmodel for ',options.patientname,'. Try re-calculating this VTA with a different atlas or with no atlas.']);
-    end
+    % replace wmboundary
+    tess = mesh.tet(:,1:4);
     tess = sort(tess,2);
 
     % all faces

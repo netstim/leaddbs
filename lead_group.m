@@ -1012,6 +1012,7 @@ for pt=selection
             options.native=0;
         end
         setappdata(handles.leadfigure,'resultfig',resultfig);
+
         for side=1:2
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
@@ -1026,20 +1027,26 @@ for pt=selection
                 [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,transmitcoords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
                 vatCalcPassed = 1;
             catch
-                msgbox(['Error while creating VTA of ',M.patient.list{pt},'.']);
                 volume=0;
                 vatCalcPassed = 0;
             end
             stimparams(1,side).volume=volume;
         end
-        options.native=options.orignative; % restore
 
+        options.native=options.orignative; % restore
         setappdata(resultfig,'stimparams',stimparams(1,:));
     end
 
-    % this will add the volume stats (atlasIntersections) to stats file:
-    ea_showfibers_volume(resultfig,options);
+    if ~vatCalcPassed
+        ea_error(sprintf(['An error occured when building the VTA mesh/headmodel for %s.\n',...
+            'Try re-calculating this VTA with a different atlas or with no atlas.'],...
+            options.patientname));
+	end
 
+    % this will add the volume stats (atlasIntersections) to stats file:
+    if vatCalcPassed
+        ea_showfibers_volume(resultfig,options);
+    end
 
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
     if vatCalcPassed && ~strcmp(mod,'Do not calculate connectivity stats')
