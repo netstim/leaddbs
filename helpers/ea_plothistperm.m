@@ -7,7 +7,7 @@ end
 todel=[];
 R0similarities=similarities;
 for id=1:length(ids)
-   todel=[todel,ids{id}];
+   todel=[todel;ids{id}];
 end
 R0similarities(todel)=[];
 
