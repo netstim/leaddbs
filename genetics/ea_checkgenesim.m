@@ -38,9 +38,11 @@ else
     [~,mapfn]=fileparts(map);
 end
 
-
-ea_plothistperm(mapfn,sims,geneidx,id,cols);
-
+if ~exist('cols','var')
+    ea_plothistperm(mapfn,sims,geneidx,id);
+else
+    ea_plothistperm(mapfn,sims,geneidx,id,cols);
+end
 % colorc=ones(length(sims),1);
 % 
 % gr(1)=gramm('x',sims,'color',colorc);
