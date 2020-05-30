@@ -270,6 +270,7 @@ for s=1:length(seedfile)
             mkdir(fullfile(pth,outputfolder))
         end
         ea_write_nii(seed{s});
+        seed{s}.dt(1)=16;
         seed{s}.img(:)=atanh(seed{s}.img(:));
         seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']);
         ea_write_nii(seed{s});
