@@ -446,8 +446,11 @@ options.normregressor=M.ui.normregpopup;
 % says so:
 
 for reg=1:length(options.d3.isomatrix)
-    try options.d3.isomatrix{reg}=ea_reformat_isomatrix(options.d3.isomatrix{reg},M,options); end
+    try
+        options.d3.isomatrix{reg}=ea_reformat_isomatrix(options.d3.isomatrix{reg},M,options);
+    end
 end
+
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M

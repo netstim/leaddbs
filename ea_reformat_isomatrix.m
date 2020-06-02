@@ -13,7 +13,6 @@ if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]
             try
                 stimmat{side}=cat(1,M.stimparams(:,1).U);
             catch
-                warning('Stimulation parameters not set, using each electrode contact from lead.');
                 stimmat{side}=ones(length(M.patient.list),4);
             end
             stimmat{side}=bsxfun(@times,stimmat{side}>0,isom);
@@ -23,7 +22,6 @@ if ~iscell(isom) % check if isomatrix is a cell ({[right_matrix]},{[left_matrix]
             try
                 stimmat{side}=cat(1,M.stimparams(:,1).U);
             catch
-                warning('Stimulation parameters not set, using each electrode contact from lead.');
                 stimmat{side}=ones(length(M.patient.list),4);
             end
             stimmat{side}=bsxfun(@times,stimmat{side}>0,isom(:,side));
