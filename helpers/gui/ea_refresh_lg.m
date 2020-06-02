@@ -162,6 +162,8 @@ try set(handles.normregpopup,'Value',M.ui.normregpopup); end
 try
     if M.ui.detached
         set(handles.detachbutton,'Visible','off');
+    else
+        set(handles.detachbutton,'Visible','on');
     end
 end
 
