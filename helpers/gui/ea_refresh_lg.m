@@ -172,24 +172,26 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
         for pt=1:length(M.patient.list)
             % set stimparams based on values provided by user
             for side=1:2
-
                 if M.ui.labelpopup>length(get(handles.labelpopup,'String'))
                     M.ui.labelpopup=length(get(handles.labelpopup,'String'));
                 end
             end
+
             if isfield(M,'stimparams') % deprecated.
                 M=rmfield(M,'stimparams');
             end
+
             % load localization
             [~, patientname] = fileparts(M.patient.list{pt});
 
             M.elstruct(pt).group=M.patient.group(pt);
             if ~isfield(M,'groups')
-            M.groups.color=[0.7,0.7,0.7];
-            M.groups.group=ones(length(M.patient.list),1);
+                M.groups.color=[0.7,0.7,0.7];
+                M.groups.group=ones(length(M.patient.list),1);
             end
-                M.elstruct(pt).groupcolors=M.groups.color;
-                M.elstruct(pt).groups=M.groups.group;
+
+            M.elstruct(pt).groupcolors=M.groups.color;
+            M.elstruct(pt).groups=M.groups.group;
             
             options.sides=1:2;
             options.native=0;
