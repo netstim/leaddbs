@@ -151,6 +151,11 @@ class DrawEffectTool(PointerEffectTool):
     self.renderer.AddActor2D( self.actor )
     self.actors.append( self.actor )
 
+    self.transform = vtk.vtkThinPlateSplineTransform()
+    self.transform.SetBasisToR()
+    self.transform.Inverse()
+    self.auxNodes = []
+
     self.initialized = True
 
   def cleanup(self):
@@ -172,21 +177,56 @@ class DrawEffectTool(PointerEffectTool):
 
     # events from the interactor
     if event == "LeftButtonPressEvent":
-      self.actionState = "drawing"
-      xy = self.interactor.GetEventPosition()
-      self.addPoint(self.xyToRAS(xy))
-      self.abortEvent(event)
+      if not self.actionState:
+        self.actionState = "drawing"
+        xy = self.interactor.GetEventPosition()
+        self.addPoint(self.xyToRAS(xy))
+        self.abortEvent(event)
       
     elif event == "LeftButtonReleaseEvent":
-      self.actionState = None
+      if self.actionState == "drawing":
+        if self.rasPoints.GetNumberOfPoints() > 1:
+          self.actionState = None
+        else:
+          self.actionState = "placingPoint"
+          self.initTransform()
+          self.cursorOff()
+      elif self.actionState == "placingPoint":
+        self.removeAuxNodes()
+        self.actionState = None
 
     elif event == "MouseMoveEvent":
       if self.actionState == "drawing":
         xy = self.interactor.GetEventPosition()
         self.addPoint(self.xyToRAS(xy))
         self.abortEvent(event)
+      elif self.actionState == "placingPoint":
+        p = vtk.vtkPoints()
+        xy = self.interactor.GetEventPosition()
+        p.InsertNextPoint(self.xyToRAS(xy))
+        self.transform.SetTargetLandmarks(p)
 
     self.positionActors()
+
+  def removeAuxNodes(self):
+    while len(self.auxNodes):
+      slicer.mrmlScene.RemoveNode(self.auxNodes.pop())
+
+  def initTransform(self):
+    sourceFiducialNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    sourceFiducialNode.GetDisplayNode().SetVisibility(0)
+    sourceFiducialNode.SetControlPointPositionsWorld(self.rasPoints)
+    self.transform.SetSourceLandmarks(self.rasPoints)
+    self.transform.SetTargetLandmarks(self.rasPoints)
+    transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
+    transformNode.SetAndObserveTransformFromParent(self.transform)
+    transformNode.CreateDefaultDisplayNodes()
+    transformNode.GetDisplayNode().SetVisibility(1)
+    transformNode.GetDisplayNode().SetVisibility2D(1)
+    transformNode.GetDisplayNode().SetVisibility3D(0)
+    transformNode.GetDisplayNode().SetAndObserveGlyphPointsNode(sourceFiducialNode)
+    self.auxNodes.append(sourceFiducialNode)
+    self.auxNodes.append(transformNode)
 
   def xyToRAS(self,xyPoint):
     """return r a s for a given x y"""

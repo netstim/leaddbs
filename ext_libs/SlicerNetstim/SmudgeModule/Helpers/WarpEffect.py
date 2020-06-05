@@ -1,7 +1,10 @@
 import slicer, vtk, qt
 import numpy as np
 import sys, os
+
 from scipy import ndimage
+import SimpleITK as sitk
+import sitkUtils
 
 from . import PointerEffect
 
@@ -288,102 +291,235 @@ class SmoothEffectTool(PointerEffect.CircleEffectTool, WarpEffectTool):
 
 class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
 
+  globalSourceFiducial = None
+  globalTargetFiducial = None
+
     
   def __init__(self, sliceWidget):
 
     WarpEffectTool.__init__(self)
     PointerEffect.DrawEffectTool.__init__(self,sliceWidget)
+
+    if not type(self).globalSourceFiducial:
+      type(self).globalSourceFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+      type(self).globalTargetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+      self.globalSourceFiducial.GetDisplayNode().SetVisibility(0)
+      self.globalSourceFiducial.GetDisplayNode().SetTextScale(0)
+      self.globalTargetFiducial.GetDisplayNode().SetVisibility(0)
+
     
   def processEvent(self, caller=None, event=None):
 
     PointerEffect.DrawEffectTool.processEvent(self, caller, event) 
 
-    if event == 'LeftButtonReleaseEvent':
+    if event == 'LeftButtonReleaseEvent' and not self.actionState:
 
-      sampleDistance = float(self.parameterNode.GetParameter("DrawSampleDistance"))
-      
-      # create curve from drawing and resample
-      sourceCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
-      sourceCurve.SetControlPointPositionsWorld(self.rasPoints)
-      sourceCurve.ResampleCurveWorld(sampleDistance)  
+      # create source and target fiducials from points or drawing
+      if self.rasPoints.GetNumberOfPoints() == 1:
+        sourceFiducial, targetFiducial, sourceCurve = self.getSourceTargetFromPoints()
+      else:
+        sourceFiducial, targetFiducial, sourceCurve = self.getSourceTargetFromDrawing()
 
-      # overwrite points with the resampled ones
-      sourceCurve.GetControlPointPositionsWorld(self.rasPoints)
+      # reset
+      self.resetPolyData()
 
-      # get closest model sliced
-      slicedModel, originalModel = self.sliceClosestModel(self.rasPoints.GetPoint(0))
-
-      # if only one point or non models found exit
-      if self.rasPoints.GetNumberOfPoints() <= 1 or not slicedModel:
-        self.resetPolyData()
-        slicer.mrmlScene.RemoveNode(sourceCurve)
-        qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
+      if not sourceFiducial: # return in case not created
+        self.endOperation()
         return
+      else:
+        self.auxNodes.append(sourceFiducial)
+        self.auxNodes.append(targetFiducial)
 
-      # resample sourceCurve in sliced model with same amount of points
-      targetCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
-      targetCurve.GetDisplayNode().SetVisibility(0)
-      targetCurve.SetControlPointPositionsWorld(self.rasPoints)
-      targetCurve.SetCurveTypeToShortestDistanceOnSurface(slicedModel)
-      targetCurve.ResampleCurveSurface(sampleDistance, slicer.vtkMRMLModelNode().SafeDownCast(slicedModel), 0.0025)
-      targetCurve.ResampleCurveWorld(targetCurve.GetCurveLengthWorld() / max((sourceCurve.GetNumberOfControlPoints() - 1), 1))
-      
-      # curve to fiducial
-      sourceFiducial = self.curveToFiducial(sourceCurve)
-      targetFiducial = self.curveToFiducial(targetCurve)
+      # undo last transform and apply to source
+      if self.globalSourceFiducial.GetNumberOfControlPoints() > 0:
+        # undo and get transform
+        lastLayerID = TransformsUtil.TransformsUtilLogic().removeLastLayer(self.warpNode) 
+        self.auxNodes.append(slicer.util.getNode(lastLayerID))
+        # apply
+        sourceFiducial.ApplyTransform(slicer.util.getNode(lastLayerID).GetTransformFromParent()) 
+        if sourceCurve: # is drawing
+          sourceCurve.ApplyTransform(slicer.util.getNode(lastLayerID).GetTransformFromParent()) # apply for visualization
+        else:
+          targetFiducial.ApplyTransform(slicer.util.getNode(lastLayerID).GetTransformFromParent()) # apply to target as well (was warped)
+      else:
+        lastLayerID = None
 
-      # compute warp
-      landmarkWarp = self.computeWarp(sourceFiducial, targetFiducial)
+      # add new fiducials to global
+      self.copyControlPoints(sourceFiducial, self.globalSourceFiducial)
+      self.copyControlPoints(targetFiducial, self.globalTargetFiducial)
+
+      # compute preview warp
+      previewWarp = self.computePreviewWarp(self.globalSourceFiducial, self.globalTargetFiducial)
+      self.auxNodes.append(previewWarp)
 
       # visualize
-      self.resetPolyData() # delete manual drawing
-      sourceCurve.GetDisplayNode().SetSelectedColor(1,1,0)
-      self.displayTransformFromFiducial(landmarkWarp, sourceFiducial)
-      
-      # apply
-      self.warpNode.SetAndObserveTransformNodeID(landmarkWarp.GetID())
-      self.applyChanges()
+      previewWarp.CreateDefaultDisplayNodes()
+      previewWarp.GetDisplayNode().SetVisibility(1)
+      previewWarp.GetDisplayNode().SetVisibility2D(1)
+      previewWarp.GetDisplayNode().SetVisibility3D(0)
+      previewWarp.GetDisplayNode().SetAndObserveGlyphPointsNode(self.globalSourceFiducial)
+      self.globalSourceFiducial.GetDisplayNode().SetVisibility(1)
+
+      if not self.userConfirmOperation():
+        self.removeLastPoints()
+        if lastLayerID:
+          self.warpNode.SetAndObserveTransformNodeID(lastLayerID)
+          self.applyChanges()
+        self.endOperation()
+        self.globalSourceFiducial.GetDisplayNode().SetVisibility(0)
+        return
+
+      previewWarp.GetDisplayNode().SetVisibility(0)
+      self.globalSourceFiducial.GetDisplayNode().SetVisibility(0)
+      self.computeAndApply()
 
       # save target as fixed points
-      self.addFiducialToHierarchy(targetFiducial, originalModel)
+      if not int(self.parameterNode.GetParameter("DrawPersistent")):
+        self.endPersistent(targetFiducial.GetName())
 
-      # remove nodes
-      slicer.mrmlScene.RemoveNode(sourceCurve)
-      slicer.mrmlScene.RemoveNode(sourceFiducial)
-      slicer.mrmlScene.RemoveNode(targetCurve)
-      slicer.mrmlScene.RemoveNode(slicedModel)
-      slicer.mrmlScene.RemoveNode(landmarkWarp)
-
-      qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
+      self.endOperation()
 
 
+  def endPersistent(self, fiducialName='Persistent Operation'):
+     self.addFiducialToHierarchy(fiducialName)
+     self.globalTargetFiducial.RemoveAllControlPoints()
+     self.globalSourceFiducial.RemoveAllControlPoints()
 
+  def computeAndApply(self):
+    # compute warp
+    landmarkWarp = self.computeWarp(self.globalSourceFiducial, self.globalTargetFiducial)
+    # visualize
+    landmarkWarp.CreateDefaultDisplayNodes()
+    landmarkWarp.GetDisplayNode().SetVisibility(1)
+    landmarkWarp.GetDisplayNode().SetVisibility2D(1)    
+    self.delay()
+    # apply
+    self.warpNode.SetAndObserveTransformNodeID(landmarkWarp.GetID())
+    self.applyChanges()
+    # remove
+    slicer.mrmlScene.RemoveNode(landmarkWarp)
 
-  def addFiducialToHierarchy(self, fiducial, modelNode):
+  def endOperation(self):
+    self.removeAuxNodes()
+    qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
+
+  def getSourceTargetFromPoints(self):
+    # get clicked points from the vtk thinplate transform
+    # source
+    sourceFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    sourceFiducial.SetControlPointPositionsWorld(self.transform.GetSourceLandmarks())
+    sourceFiducial.GetDisplayNode().SetVisibility(0)
+    # target
+    targetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    targetFiducial.SetControlPointPositionsWorld(self.transform.GetTargetLandmarks())
+    targetFiducial.GetDisplayNode().SetVisibility(0)
+    targetFiducial.SetName(slicer.mrmlScene.GenerateUniqueName('Point'))
+    return sourceFiducial, targetFiducial, None
+
+  def getSourceTargetFromDrawing(self):
+    # get smplae distance
+    sampleDistance = float(self.parameterNode.GetParameter("DrawSampleDistance"))
+
+    # create curve from drawing and resample
+    sourceCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
+    sourceCurve.GetDisplayNode().SetSelectedColor(1,1,0)
+    sourceCurve.SetControlPointPositionsWorld(self.rasPoints)
+    sourceCurve.ResampleCurveWorld(sampleDistance)  
+    self.auxNodes.append(sourceCurve)
+
+    # get resampled points
+    resampledPoints = vtk.vtkPoints()
+    sourceCurve.GetControlPointPositionsWorld(resampledPoints)
+    if resampledPoints.GetNumberOfPoints() <= 1:
+      return (None,)*3
+
+    # get closest model sliced
+    slicedModel, originalModel = self.sliceClosestModel(resampledPoints.GetPoint(0))
+
+    if not slicedModel:
+      return (None,)*3
+    
+    self.auxNodes.append(slicedModel)
+
+    # resample sourceCurve in sliced model with same amount of points
+    targetCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
+    targetCurve.GetDisplayNode().SetVisibility(0)
+    targetCurve.SetControlPointPositionsWorld(resampledPoints)
+    targetCurve.SetCurveTypeToShortestDistanceOnSurface(slicedModel)
+    targetCurve.ResampleCurveSurface(sampleDistance, slicer.vtkMRMLModelNode().SafeDownCast(slicedModel), 0.0025)
+    targetCurve.ResampleCurveWorld(targetCurve.GetCurveLengthWorld() / max((sourceCurve.GetNumberOfControlPoints() - 1), 1))
+    self.auxNodes.append(targetCurve)
+      
+    # curve to fiducial
+    sourceFiducial = self.curveToFiducial(sourceCurve)
+    targetFiducial = self.curveToFiducial(targetCurve)
+
+    # set name
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    # add folder with nearest model name
-    modelParentName =  shNode.GetItemName(shNode.GetItemParent(shNode.GetItemByDataNode(modelNode)))
-    fiducial.SetName(slicer.mrmlScene.GenerateUniqueName(modelParentName + '_' + modelNode.GetName()))
+    modelParentName =  shNode.GetItemName(shNode.GetItemParent(shNode.GetItemByDataNode(originalModel)))
+    targetFiducial.SetName(modelParentName + '_' + originalModel.GetName())
+
+    return sourceFiducial, targetFiducial, sourceCurve
+
+  def removeLastPoints(self):
+    for node in [self.globalSourceFiducial, self.globalTargetFiducial]:
+      label = node.GetNthFiducialLabel(node.GetNumberOfControlPoints()-1)
+      while node.GetNthFiducialLabel(node.GetNumberOfControlPoints()-1) == label:
+        node.RemoveNthControlPoint(node.GetNumberOfControlPoints()-1)
+
+  def copyControlPoints(self, sourceNode, targetNode):
+    if targetNode.GetNumberOfControlPoints() == 0:
+      label = '1'
+    else:
+      label = str( int(targetNode.GetNthFiducialLabel(targetNode.GetNumberOfControlPoints()-1)) + 1 )
+    p = [0]*3
+    for i in range(sourceNode.GetNumberOfControlPoints()):
+      sourceNode.GetNthControlPointPosition(i,p)
+      targetNode.AddFiducialFromArray(p, label)
+
+
+  def userConfirmOperation(self):
+    msgBox = qt.QMessageBox()
+    msgBox.setText('Preview Visualization')
+    msgBox.setInformativeText('Compute Warp?')
+    msgBox.setStandardButtons(qt.QMessageBox().Ok | qt.QMessageBox().Abort)
+    return msgBox.exec_() == qt.QMessageBox().Ok
+
+
+  def computePreviewWarp(self, sourceFiducial, targetFiducial):
+    # points
+    sourcePoints = vtk.vtkPoints()
+    targetPoints = vtk.vtkPoints()
+    # add drawing
+    sourceFiducial.GetControlPointPositionsWorld(sourcePoints)
+    targetFiducial.GetControlPointPositionsWorld(targetPoints)
+    # thin plate
+    transform=vtk.vtkThinPlateSplineTransform()
+    transform.SetSourceLandmarks(sourcePoints)
+    transform.SetTargetLandmarks(targetPoints)
+    transform.SetBasisToR()
+    transform.Inverse()
+    transformNode=slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
+    transformNode.SetAndObserveTransformFromParent(transform)
+    return transformNode
+
+
+  def addFiducialToHierarchy(self, fiducialName):
+    fiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    self.copyControlPoints(self.globalTargetFiducial, fiducial)
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    fiducial.SetName(slicer.mrmlScene.GenerateUniqueName(fiducialName))
     fiducial.SetLocked(1)
-    fiducial.GetDisplayNode().SetGlyphScale(2)
     fiducial.GetDisplayNode().SetVisibility(1)
     shNode.SetItemAttribute(shNode.GetItemByDataNode(fiducial), 'drawing', '1')
+    shNode.SetItemAttribute(shNode.GetItemByDataNode(fiducial), 'auto', '1')
     for i in range(fiducial.GetNumberOfControlPoints()):
       fiducial.SetNthControlPointLabel(i,'')
 
-  def delay(self):
-    dieTime = qt.QTime().currentTime().addMSecs(500)
+  def delay(self, msecs = 500):
+    dieTime = qt.QTime().currentTime().addMSecs(msecs)
     while qt.QTime().currentTime() < dieTime:
       qt.QCoreApplication.processEvents(qt.QEventLoop.AllEvents, 100)
-
-  def displayTransformFromFiducial(self, transform, fiducial):
-    if not transform.GetDisplayNode():
-      transform.CreateDefaultDisplayNodes()
-    transform.GetDisplayNode().SetVisibility(1)
-    transform.GetDisplayNode().SetVisibility2D(1)
-    transform.GetDisplayNode().SetVisibility3D(0)
-    transform.GetDisplayNode().SetAndObserveGlyphPointsNode(fiducial)
-    self.delay()
 
   def getFixedPoints(self):
     points = vtk.vtkPoints()
@@ -497,5 +633,16 @@ class SnapEffectTool(PointerEffect.DrawEffectTool, WarpEffectTool):
     return slicedModel, originalModel
 
   def cleanup(self):
+    if self.globalSourceFiducial and self.globalSourceFiducial.GetNumberOfControlPoints():
+      self.endPersistent()
+    type(self).cleanGlobalFiducials()
     WarpEffectTool.cleanup(self)
     PointerEffect.DrawEffectTool.cleanup(self)
+
+  @classmethod
+  def cleanGlobalFiducials(cls):
+    slicer.mrmlScene.RemoveNode(cls.globalSourceFiducial)
+    slicer.mrmlScene.RemoveNode(cls.globalTargetFiducial)
+    cls.globalSourceFiducial = None
+    cls.globalTargetFiducial = None
+

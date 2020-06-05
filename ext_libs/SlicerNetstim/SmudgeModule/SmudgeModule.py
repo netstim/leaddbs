@@ -465,8 +465,9 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     node.SetNodeReferenceID("gridBoundsROIID", None)
     # draw
     node.SetParameter("DrawSpread", "15")
-    node.SetParameter("DrawSampleDistance", "2")
+    node.SetParameter("DrawSampleDistance", "1.5")
     node.SetParameter("DrawStiffness", "0.1")
+    node.SetParameter("DrawPersistent", "0")
     # Smooth
     node.SetParameter("SmoothRadius", "25")
     node.SetParameter("SmoothHardness", "50")
@@ -505,7 +506,7 @@ class SmudgeModuleLogic(ScriptedLoadableModuleLogic):
     nMarkups = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLMarkupsFiducialNode')
     for i in range(nMarkups-1,-1,-1):
       markupNode = slicer.mrmlScene.GetNthNodeByClass(i, 'vtkMRMLMarkupsFiducialNode')
-      if 'drawing' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(markupNode)) and markupNode.GetNumberOfControlPoints()>1:
+      if all([att in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(markupNode)) for att in ['drawing','auto']]):
         lastDrawingID = shNode.GetItemByDataNode(markupNode)
         shNode.SetItemParent(lastDrawingID, shNode.GetSceneItemID())
         shNode.SetItemDisplayVisibility(lastDrawingID, 0)

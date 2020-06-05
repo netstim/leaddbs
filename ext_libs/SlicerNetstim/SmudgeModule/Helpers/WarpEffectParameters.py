@@ -326,11 +326,22 @@ class DrawEffectParameters(WarpAbstractEffect):
     toolTip = 'Draw a structure in the image to move it to the nearest visible model. When finished, corresponding fixed points will be added.'
     WarpAbstractEffect.__init__(self, 'Draw', toolTip)
 
+    # sample distance
+    self.sampleDistanceSlider = ctk.ctkSliderWidget()
+    self.sampleDistanceSlider.singleStep = 0.1
+    self.sampleDistanceSlider.minimum = 0.1
+    self.sampleDistanceSlider.maximum = 10
+    self.sampleDistanceSlider.decimals = 1
+    self.sampleDistanceSlider.value = float(self.parameterNode.GetParameter("DrawSampleDistance"))
+    self.sampleDistanceSlider.setToolTip('Set drawing sample distance.')
+    self.parametersFrame.layout().addRow("Sample Distance (mm):", self.sampleDistanceSlider)
+
+    # Spread (RBF Radius)
     self.spreadSlider = ctk.ctkSliderWidget()
-    self.spreadSlider.singleStep = 0.1
+    self.spreadSlider.singleStep = 1
     self.spreadSlider.minimum = 5
     self.spreadSlider.maximum = 50
-    self.spreadSlider.decimals = 1
+    self.spreadSlider.decimals = 0
     self.spreadSlider.value = float(self.parameterNode.GetParameter("DrawSpread"))
     self.spreadSlider.setToolTip('Specify up to how far away from the drawing the warp will be modified.')
     self.parametersFrame.layout().addRow("Spread (mm):", self.spreadSlider)
@@ -345,37 +356,81 @@ class DrawEffectParameters(WarpAbstractEffect):
     self.stiffnessSlider.setToolTip('Regularization parameter.')
     self.parametersFrame.layout().addRow("Stiffness:", self.stiffnessSlider)
 
-    # advanced
-    advancedParametersGroupBox = ctk.ctkCollapsibleGroupBox()
-    advancedParametersGroupBox.setTitle('Advanced')
-    advancedParametersGroupBox.setLayout(qt.QFormLayout())
-    advancedParametersGroupBox.collapsed = True
-    self.parametersFrame.layout().addRow(advancedParametersGroupBox)
-    
-    # sample distance
-    self.sampleDistanceSlider = ctk.ctkSliderWidget()
-    self.sampleDistanceSlider.singleStep = 0.1
-    self.sampleDistanceSlider.minimum = 0.1
-    self.sampleDistanceSlider.maximum = 10
-    self.sampleDistanceSlider.decimals = 1
-    self.sampleDistanceSlider.value = float(self.parameterNode.GetParameter("DrawSampleDistance"))
-    self.sampleDistanceSlider.setToolTip('Set drawing sample distance.')
-    advancedParametersGroupBox.layout().addRow("Sample Distance (mm):", self.sampleDistanceSlider)
+    # persistent mode
+    self.persistentCheckBox = qt.QCheckBox()
+    self.parametersFrame.layout().addRow("Persistent:", self.persistentCheckBox)
 
+    # persistent options
+    self.persistentParametersGroupBox = ctk.ctkCollapsibleGroupBox()
+    self.persistentParametersGroupBox.setTitle('Persistent Options')
+    self.persistentParametersGroupBox.setLayout(qt.QVBoxLayout())
+    self.persistentParametersGroupBox.collapsed = True
+    self.parametersFrame.layout().addRow(self.persistentParametersGroupBox)
 
+    self.numberOfOperationsLabel = qt.QLabel('Number Of Operations: 0')
+    self.persistentParametersGroupBox.layout().addWidget(self.numberOfOperationsLabel)
+
+    recalculateButton = qt.QPushButton('Re-calculate warp')
+    self.persistentParametersGroupBox.layout().addWidget(recalculateButton)
+
+    removeLastButton = qt.QPushButton('Remove last operation')
+    self.persistentParametersGroupBox.layout().addWidget(removeLastButton)
+
+    setTargetAsFixedButton = qt.QPushButton('Set target points as fixed')
+    self.persistentParametersGroupBox.layout().addWidget(setTargetAsFixedButton)
+
+    # connections
+    recalculateButton.connect('clicked(bool)', self.onRecalculateButton)
+    removeLastButton.connect('clicked(bool)', self.onRemoveLastButton)
+    setTargetAsFixedButton.connect('clicked(bool)', self.onSetTargetAsFixedButton)
     self.spreadSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.sampleDistanceSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
     self.stiffnessSlider.connect('valueChanged(double)', self.updateMRMLFromGUI)
+    self.persistentCheckBox.connect('stateChanged(int)', self.updateMRMLFromGUI)
 
   def onEffectButtonClicked(self):
     super().onEffectButtonClicked()
     for sliceWidget in self.sliceWidgets():
-      WarpEffect.SnapEffectTool(sliceWidget)
+      self.tool = WarpEffect.SnapEffectTool(sliceWidget)
+    self.addObserver(self.tool.globalTargetFiducial, slicer.vtkMRMLMarkupsNode.PointAddedEvent, self.setNumberOfOperations)
+    self.addObserver(self.tool.globalTargetFiducial, slicer.vtkMRMLMarkupsNode.PointRemovedEvent, self.setNumberOfOperations)
+
+  def setNumberOfOperations(self, caller=None, event=None):
+    if self.tool.globalTargetFiducial.GetNumberOfControlPoints():
+      self.numberOfOperationsLabel.text = 'Number of operations: ' + self.tool.globalTargetFiducial.GetNthFiducialLabel(self.tool.globalTargetFiducial.GetNumberOfControlPoints()-1)
+    else:
+      self.numberOfOperationsLabel.text = 'Number of operations: 0'
 
   def updateMRMLFromGUI(self):
     self.parameterNode.SetParameter("DrawSpread", str(self.spreadSlider.value))
     self.parameterNode.SetParameter("DrawSampleDistance", str(self.sampleDistanceSlider.value))
     self.parameterNode.SetParameter("DrawStiffness", str(self.stiffnessSlider.value))
+    self.parameterNode.SetParameter("DrawPersistent", str(int(self.persistentCheckBox.checked)))
+
+  def updateGuiFromMRML(self, caller=None, event=None):
+    super().updateGuiFromMRML(caller,event)
+    self.persistentParametersGroupBox.enabled = int(self.parameterNode.GetParameter("DrawPersistent"))
+    if not int(self.parameterNode.GetParameter("DrawPersistent")):
+      self.persistentParametersGroupBox.collapsed = True      
+  
+  def onRecalculateButton(self):
+    if self.tool.globalSourceFiducial.GetNumberOfControlPoints() > 0:
+      lastLayerID = TransformsUtil.TransformsUtilLogic().removeLastLayer(self.parameterNode.GetNodeReference("warpID")) 
+      slicer.mrmlScene.RemoveNode(slicer.util.getNode(lastLayerID))
+      self.tool.computeAndApply()
+
+  def onRemoveLastButton(self):
+    if self.tool.globalSourceFiducial.GetNumberOfControlPoints() > 0:
+      lastLayerID = TransformsUtil.TransformsUtilLogic().removeLastLayer(self.parameterNode.GetNodeReference("warpID")) 
+      slicer.mrmlScene.RemoveNode(slicer.util.getNode(lastLayerID))
+      self.tool.removeLastPoints()
+      if self.tool.globalSourceFiducial.GetNumberOfControlPoints() > 0:
+        self.tool.computeAndApply()
+  
+  def onSetTargetAsFixedButton(self):
+    if self.tool.globalSourceFiducial.GetNumberOfControlPoints() > 0:
+      self.tool.endPersistent()
+      
 
 #
 # Smooth
