@@ -79,6 +79,7 @@ classdef ea_roi < handle
                 obj.binary=0;
             end
             obj.nii.img(isnan(obj.nii.img)) = 0;
+            obj.nii.img(isinf(obj.nii.img)) = 0;
             options.prefs=ea_prefs;
             obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
             obj.min=ea_nanmin(obj.nii.img(~(obj.nii.img==0)));
