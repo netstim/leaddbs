@@ -72,6 +72,7 @@ classdef ea_roi < handle
             % load nifti
             obj.nii=ea_load_nii(obj.niftiFilename);
             obj.nii.img(obj.nii.img==0) = nan;
+            obj.nii.img(isinf(obj.nii.img)) = nan;
             if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
                 obj.binary=1;
             else
@@ -127,11 +128,8 @@ classdef ea_roi < handle
             if exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit
                 ea_editroi([],[],obj)
             end
-
         end
-
     end
-
 end
 
 
