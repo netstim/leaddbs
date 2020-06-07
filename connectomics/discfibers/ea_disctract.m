@@ -237,7 +237,10 @@ classdef ea_disctract < handle
             end
 
             for c=1:cvp.NumTestSets
-                fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
+                if cvp.NumTestSets ~= 1
+                    fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
+                end
+
                 if isobject(cvp)
                     training = cvp.training(c);
                     test = cvp.test(c);
@@ -332,9 +335,10 @@ classdef ea_disctract < handle
             R = zeros(numPerm+1, 1);
             for perm=1:numPerm+1
                 if perm==1
+                    fprintf('Calculating without permutation\n\n');
                     [~, Ihat{perm}] = lno(obj);
                 else
-                    fprintf('Calculating permutations: %d/%d\n\n', perm, numPerm);
+                    fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
                     [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
                 end
 
