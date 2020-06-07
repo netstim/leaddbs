@@ -236,9 +236,8 @@ classdef ea_disctract < handle
                 end
             end
 
-            ea_dispercent(0,'Iterating sets');
-
             for c=1:cvp.NumTestSets
+                fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
                 if isobject(cvp)
                     training = cvp.training(c);
                     test = cvp.test(c);
@@ -261,9 +260,8 @@ classdef ea_disctract < handle
                             Ihat(test,side) = ea_nansum(vals{1,side}.*nfibsval{side}(usedidx{1,side},obj.patientselection(test)));
                     end
                 end
-                ea_dispercent(c/cvp.NumTestSets);
             end
-            ea_dispercent(1,'end');
+
             if size(obj.responsevar,2)==2 % hemiscores
                 Ihat = Ihat(:); % compare hemiscores (electrode wise)
                 I = I(:);

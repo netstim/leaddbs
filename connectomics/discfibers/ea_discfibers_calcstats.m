@@ -104,6 +104,7 @@ for group=groups
                         ea_dispercent(fib/length(nixfib));
                     end
                     ea_dispercent(1,'end');
+                    fprintf('\b');
                     warning('on', 'stats:classreg:regr:lmeutils:StandardLinearMixedModel:Message_PerfectFit');
                 else
                     % no covariates exist:
