@@ -275,9 +275,7 @@ classdef ea_disctract < handle
         end
 
         function [I, Ihat] = predict(obj, training, test)
-            
             I = obj.responsevar(test);
-            
 
             % Ihat is the estimate of improvements (not scaled to real improvements)
             Ihat = nan(length(test),2);
@@ -289,8 +287,6 @@ classdef ea_disctract < handle
                     nfibsval{side}(nfibsval{side}==0) = 0;
                 end
             end
-
-
 
                 if ~exist('Iperm', 'var')
                     [vals,~,usedidx] = ea_discfibers_calcstats(obj, obj.patientselection(training));
@@ -306,7 +302,7 @@ classdef ea_disctract < handle
                             Ihat(:,side) = ea_nansum(vals{1,side}.*nfibsval{side}(usedidx{1,side},obj.patientselection(test)));
                     end
                 end
-            
+
             if size(obj.responsevar,2)==2 % hemiscores
                 Ihat = Ihat(:); % compare hemiscores (electrode wise)
                 I = I(:);
@@ -314,8 +310,7 @@ classdef ea_disctract < handle
                 Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
             end
         end
-        
-        
+
         function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
             if ~exist('corrType', 'var')
                 corrType = 'Spearman';
