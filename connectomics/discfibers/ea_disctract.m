@@ -280,43 +280,6 @@ classdef ea_disctract < handle
             end
         end
 
-        function [I, Ihat] = predict(obj, training, test)
-            I = obj.responsevar(test);
-
-            % Ihat is the estimate of improvements (not scaled to real improvements)
-            Ihat = nan(length(test),2);
-
-            fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
-            for side=1:2  % only used in spearmans correlations
-                if obj.statmetric==2
-                    nfibsval{side} = fibsval{side};
-                    nfibsval{side}(nfibsval{side}==0) = 0;
-                end
-            end
-
-                if ~exist('Iperm', 'var')
-                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, obj.patientselection(training));
-                else
-                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, obj.patientselection(training), Iperm);
-                end
-
-                for side=1:2
-                    switch obj.statmetric
-                        case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            Ihat(:,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},obj.patientselection(test)));
-                        case 2 % spearmans correlations, efields - see Irmen et al. 2020 Annals of Neurology
-                            Ihat(:,side) = ea_nansum(vals{1,side}.*nfibsval{side}(usedidx{1,side},obj.patientselection(test)));
-                    end
-                end
-
-            if size(obj.responsevar,2)==2 % hemiscores
-                Ihat = Ihat(:); % compare hemiscores (electrode wise)
-                I = I(:);
-            else
-                Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
-            end
-        end
-
         function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
             if ~exist('corrType', 'var')
                 corrType = 'Spearman';
@@ -344,7 +307,7 @@ classdef ea_disctract < handle
                     [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
                 end
 
-                R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
+                R(perm) = corr(Iperm(obj.patientselection,1),Ihat{perm},'type',corrType,'rows','pairwise');
             end
 
             % generate null distribution
