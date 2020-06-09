@@ -307,7 +307,7 @@ classdef ea_disctract < handle
                     [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
                 end
 
-                R(perm) = corr(Iperm(obj.patientselection,1),Ihat{perm},'type',corrType,'rows','pairwise');
+                R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
             end
 
             % generate null distribution
