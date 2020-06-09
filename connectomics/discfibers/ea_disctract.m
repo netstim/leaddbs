@@ -266,6 +266,12 @@ classdef ea_disctract < handle
                 end
             end
 
+            if cvp.NumTestSets == 1
+                test = cvp.test{1};
+                Ihat = Ihat(test,:);
+                I = I(test);
+            end
+
             if size(obj.responsevar,2)==2 % hemiscores
                 Ihat = Ihat(:); % compare hemiscores (electrode wise)
                 I = I(:);
