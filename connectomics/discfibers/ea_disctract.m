@@ -44,8 +44,9 @@ classdef ea_disctract < handle
         % stats: (how many fibers available and shown etc for GUI)
         stats
         % additional settings:
-        kfold = 5 % divide into k sets when doing k-fold CV
         Nperm = 1000 % how many permutations in leave-nothing-out permtest strategy
+        kfold = 5 % divide into k sets when doing k-fold CV
+        Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
     end
 
