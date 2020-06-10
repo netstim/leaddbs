@@ -26,11 +26,11 @@ elseif threshold>1  % Use percentage
     threshold = threshold/100;
 end
 
-if ~exist('fiberset', 'var')
+if ~exist('fiberset', 'var') || isempty(fiberset)
     fiberset = 'pos';
 end
 
-if ~exist('outputName', 'var')
+if ~exist('outputName', 'var') || isempty(outputName)
     outputName = regexprep(discfiber, '\.mat$', '.nii');
 end
 
