@@ -75,7 +75,7 @@ end
 % Disable group comparison button for variables per hemisphere or
 % non-logical variable
 clinicvar = M.clinical.vars{get(handles.clinicalvars, 'Value')};
-if size(clinicvar,2)==2 || numel(unique(clinicvar))~=2
+if size(clinicvar,2)==2 || numel(unique(clinicvar(~isnan(clinicvar))))~=2
     set(handles.ttestbutton_vta, 'Enable', 'off');
     set(handles.ttestbutton_ft, 'Enable', 'off');
 end
@@ -619,7 +619,7 @@ M = getappdata(leadfigure, 'M');
 % Disable group comparison button for variables per hemisphere or
 % non-logical variable
 clinicvar = M.clinical.vars{get(handles.clinicalvars, 'Value')};
-if size(clinicvar,2)==2 || numel(unique(clinicvar))~=2
+if size(clinicvar,2)==2 || numel(unique(clinicvar(~isnan(clinicvar))))~=2
     set(handles.ttestbutton_vta, 'Enable', 'off');
     set(handles.ttestbutton_ft, 'Enable', 'off');
 else
