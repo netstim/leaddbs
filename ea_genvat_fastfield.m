@@ -1,8 +1,5 @@
 function varargout=ea_genvat_fastfield(varargin)
 
-% prefs.machine.vatsettings.fastfield_cb=0.1;
-% prefs.machine.vatsettings.fastfield_ethresh=0.2;
-
 useSI = 1;
 
 if nargin==5
@@ -11,17 +8,13 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=options.prefs.machine.vatsettings.fastfield_ethresh; %0.2;
-
-elseif nargin==7
+elseif nargin==6
     acoords=varargin{1};
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=varargin{6};
-    lgfigure=varargin{7};
-
+    lgfigure=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}= 'Fastfield (Baniasadi 2020)';
@@ -29,7 +22,9 @@ elseif nargin==1
     end
 end
 
-% thresh=0.2;
+conductivity = options.prefs.machine.vatsettings.fastfield_cb;  %0.1;
+thresh = options.prefs.machine.vatsettings.fastfield_ethresh; %0.2;
+
 if useSI
     thresh=thresh.*(10^3);
 end
@@ -51,10 +46,6 @@ elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0;
 coords=acoords{side};
 setappdata(resultfig,'elstruct',elstruct);
-
-% conductivity = 0.16;
-% conductivity = options.prefs.machine.vatsettings.horn_cwm;
-conductivity = options.prefs.machine.vatsettings.fastfield_cb;
 
 switch side
     case 1
@@ -101,6 +92,8 @@ for source=S.sources
         [Efield2] = get_efield(perc,standard_efield,amp1,conductivity,amp_mode,impedence);
         Efield_all=Efield_all+Efield2;
     end
+
+    %amp = stimsource.amp;
 end
 
 Efield = Efield_all;
@@ -233,7 +226,3 @@ varargout{2}=vatvolume;
 ea_dispt('');
 
 end
-
-
-
-
