@@ -1,0 +1,270 @@
+/* Extracellular stimulation of FH myelinated axon model.
+Axon is in a conductive medium in which there is 
+a uniform electrical field of intensity E (volt/meter)
+parallel to the axon.
+
+This triggers a spike that starts at one end or the other of the axon
+so the spike detector must be placed near the middle of the axon.
+*/
+
+load_file("nrngui.hoc")
+
+///// parameters
+
+RHOE = 300 // extracellular resistivity in ohm cm
+
+///// anatomical and biophysical properties of the axon
+///// assuming extracellular medium is perfect conductor
+
+// load_file("axon10.hoc") // external diameter is 10 um
+load_file("axon5.hoc") // external diameter is 5 um
+
+v_init = -70 // from ModelDB entry 3507
+// actual resting potential is closer to -69.77 mV
+
+///// stimulation
+
+// axon is assumed to lie along the x axis
+// with its root node (0 node of 1st node of Ranvier)
+// being at x=0
+// and the axon extending toward larger x values
+// extracellular field is parallel to axon
+// so, choosing the axon originaxon (zero node of the first node of Ranvier)
+// as the point at which local extracellular potential is 0,
+// the extracellular potential in mV
+// at any point x in a section along the axon is
+// E*distance(x)/1000
+// where E is in V/meter, and distance(x) is distance from axon origin to x in um
+// 
+// steps:
+// 0.  insert extracellular mechanism and specify its parameters
+// 1.  set up distance(x)/1000 values
+// 2.  set up stimulus waveform
+// 3.  couple stim waveform to xstim
+
+// 0.  insert extracellular mechanism and specify its parameters
+//     when using extracellular to implement extracelluar stimulation,
+//     use extracellular's xg and xc to play the role of myelin--see axon.hoc
+
+forall insert extracellular
+forsec internodes {
+  for (x,0) {
+    cm(x) = CM // since extracellular's default xc is 0; CM is defined in axon.hoc
+    for i=0,1 xg(x) = 1e-9 // "effectively a perfect insulator"
+  }
+}
+
+// 1.  set up distance(x)/1000 values
+
+forall {
+  insert xstim
+  for (x,0) setpointer ex_xstim(x), e_extracellular(x)
+}
+is_xstim = 0 // for development & testing
+             // eventually is driven by a forcing function
+
+axlen = 0
+forall axlen+=L
+
+// Note that xstim calculates ex_xstim as
+// ex = is*rx*(1e6)
+// where rx and is have units of megohms and mA, respectively
+// but what I really want is
+// ex = E*distance(x)/1000
+// where E and distance(x) have units of V/m and um, respectively.
+// If I reuse the variable is as E (convenient for reporting results)
+// then
+// E*rx*(1e6) = E*distance(x)/1000
+// rx*(1e6) = distance(x)/1000
+// so the numerical values stored in the rx variable must be
+// rx = distance(x)/(1e9)
+
+proc setrx() {
+  node[0] distance() // 0 node of node[0] is reference for distance
+  forall for (x,0) rx_xstim(x) = distance(x)/(1e9)
+}
+
+setrx()
+
+// 2.  set up stimulus waveform
+// and
+// 3.  couple stim waveform to xstim
+
+objref fsq
+fsq = new Fsquare(0.5) // square wave generator
+setpointer fsq.x, is_xstim
+
+/*
+dummy = 0
+objref fzap
+fzap = new Fzap(0.5) // swept sine wave generator
+                     // used here to produce a fixed frequency sine wave
+setpointer fzap.x, dummy
+*/
+
+///// graphical user interface
+
+load_file("basicrig.ses") // RunControl
+  // IClamp for direct intracellular stim at node[0](0.5) (for testing)
+  // v vs. t
+IClamp[0].amp = 0 // no intracellularly injected current
+
+load_file("varstep.ses") // variable dt tool
+
+load_file("vvsx.ses") // Movie Run, v vs. x
+
+// additional graphs
+// these have little effect on run time
+
+load_file("vext_eext.ses") // vext and e_extracellular vs. distance along axon
+
+// plot of rx vs distance along axon
+// not updated during simulation!
+
+objref xval, rxval, grx
+xval = new Vector()
+rxval = new Vector()
+grx = new Graph(0)
+
+proc plotrx() { localobj rvp
+  grx = new Graph(0)
+  grx.size(0,100000,0,0.0002)
+  grx.view(0, 0, 100000, 0.0002, 327, 534, 300.48, 200.32)
+  rvp = new RangeVarPlot("rx_xstim")
+  node[0] rvp.begin(0)
+  node[100] rvp.end(1)
+  rvp.origin(0)
+  grx.addobject(rvp)
+  grx.exec_menu("View = plot")
+}
+
+plotrx()
+
+
+///// automatic detection of threshold stimulus intensity
+
+// spike detection
+// for stimulation that triggers spike onset in middle of axon
+// attach an APCount to the node at the proximal end of the axon
+// this assumes spike initiation occurs far from node[0]
+// so that stim artifact doesn't trigger spike detector
+
+objref apc
+// node[0] apc = new APCount(0.5) // -20 mV is default thresh for spike detection
+// monitor middle of axon for spike
+node[50] apc = new APCount(0.5) // -20 mV is default thresh for spike detection
+
+stimamp = 0
+
+load_file("thresh4.hoc") // determines spike threshold to 4 significant figures
+
+// This function requires an existing APCount[0] at the user desired location
+// returns 1 if the voltage passed the APCount[0].thresh
+func thresh_excited() {
+  if (waveform==PULSE) {
+    fsq.amp1 = stimamp
+    fsq.amp2 = 0
+  }
+  if (waveform==SQUARE) {
+    fsq.amp1 = stimamp
+    fsq.amp2 = -stimamp
+  }
+/*
+  if (waveform==SINE) {
+    fzap.amp = stimamp
+  }
+*/
+	run()
+	return APCount[0].n > 0
+}
+
+// print "spike threshold is ", threshold(&stimamp), "mA"
+
+///// define stimulus protocol and find corresponding threshold
+
+tstop = 12 // these simulations need to be a bit longer
+tstop_changed() // force graphs to rescale t axis
+load_file("protocolsB.hoc")
+
+proc doprotocols() { local i, thresh, t0
+  t0 = startsw()
+//printf("%d \t%s \t%5.3f \t%d \t%11.5f\n", \
+//        i,   wstr,TP,     NC,  thresh)
+//  printf("test \twform \ttp \tnc \txa,ya \t \txc,yc \t\t   thresh\n")
+  printf("axon external diameter %4.1f um\n", DIAM)
+  printf("test \twform \ttp \tnc \tthresh\n")  
+  for i=$1,$2 if (protocol(i)) {
+    if (waveform==PULSE) {
+      setpointer fsq.x, is_xstim
+      fsq.del = 1
+      fsq.num = NC
+      fsq.dp = TP // update pulse or square wave stimulus waveform
+
+/*
+      setpointer fzap.x, dummy
+      fzap.del = 0
+      fzap.dur = 0
+*/
+    }
+    if (waveform==SQUARE) {
+      setpointer fsq.x, is_xstim
+      fsq.del = 1
+      fsq.dp = TP // update pulse or square wave stimulus waveform
+      fsq.num = NC
+
+/*
+      setpointer fzap.x, dummy
+      fzap.del = 0
+      fzap.dur = 0
+*/
+    }
+/*
+    if (waveform==SINE) {
+      setpointer fsq.x, dummy
+      fsq.del = 0
+      fsq.dp = 0
+      fsq.num = 0
+      fsq.amp1 = 0
+      fsq.amp2 = 0
+
+      setpointer fzap.x, is_xstim
+      fzap.del = 1
+      fzap.dur = TP*2*NC
+      fzap.f0 = 1000/2/TP
+      fzap.f1 = fzap.f0
+    }
+*/
+// the B protocols don't need these two statements
+//    calcrx() // update rx, in case the new protocol changed electrode locations
+//    plotrx()
+    stimamp = 0
+    thresh = threshold(&stimamp)
+//    printf("%d \t%s \t%5.3f \t%d \t%5.2f,%5.2f \t%5.2f,%5.2f \t%11.5f\n", \
+//            i, wstr, TP, NC, XA, YA, XC, YC, thresh)
+    printf("%d \t%s \t%5.3f \t%d \t%11.5f\n", \
+            i,   wstr,TP,     NC,  thresh)
+  }
+  print " "
+  print "run time: ", startsw()-t0
+}
+
+// doprotocols(12,18) // the full battery
+print "To run through cases 13, 14, 16, and 17"
+print "with axon diameter == ", DIAM, "um"
+print "enter command"
+print "doprotocols(13,17)"
+print "then press return"
+
+/*
+Results obtained with adaptive integration, 
+finding threshold to 4 place accuracy.
+
+doprotocols(12,18)
+axon external diameter  5.0 um
+test 	wform 	tp 	nc 	thresh
+13 	pls 	0.005 	1 	  562.65625
+14 	pls 	2.000 	1 	   22.71191
+16 	sqr 	0.005 	1 	 1604.06250
+17 	sqr 	2.000 	1 	   22.08301
+*/
+

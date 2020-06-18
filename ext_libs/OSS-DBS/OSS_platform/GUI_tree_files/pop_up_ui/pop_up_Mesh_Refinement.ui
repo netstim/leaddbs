@@ -1,0 +1,719 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>centralwidget</class>
+ <widget class="QWidget" name="centralwidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>836</width>
+    <height>449</height>
+   </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>836</width>
+    <height>450</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Mesh Refinement</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="2" column="1">
+    <widget class="QWidget" name="widget_Run_Close" native="true">
+     <property name="font">
+      <font/>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_57">
+      <item>
+       <spacer name="horizontalSpacer_63">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_Save">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>Ok</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_Cancel">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>Cancel</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <widget class="QWidget" name="widget" native="true">
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="8" column="1">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_Rel_Div_Current">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="locale">
+         <locale language="English" country="UnitedKingdom"/>
+        </property>
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000000000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_Deviation_Threshold">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="locale">
+         <locale language="English" country="UnitedKingdom"/>
+        </property>
+        <property name="inputMethodHints">
+         <set>Qt::ImhFormattedNumbersOnly</set>
+        </property>
+        <property name="showGroupSeparator" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="minimum">
+         <double>-1000000000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000000000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QWidget" name="widget_Refinement_Frequencies" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <property name="leftMargin">
+          <number>20</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_Refinement_Frequency">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="text">
+            <string>Refinement Frequencies</string>
+           </property>
+           <property name="indent">
+            <number>30</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLabel" name="label_Deviation_Threshold_2">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>%</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="4">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="6" column="1">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_CSF_Ref_Reg">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="locale">
+         <locale language="English" country="UnitedKingdom"/>
+        </property>
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100000000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_Rel_Div_Current">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>Rel. Deviation of Current Magnitude</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QWidget" name="widget_No_Of_Refinement_Frequencies" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <property name="leftMargin">
+          <number>23</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_No_Of_Refinement_Frequencies">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="text">
+            <string>Number of Refinement Frequencies</string>
+           </property>
+           <property name="indent">
+            <number>30</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QWidget" name="widget_Refinement_Frequencies_2" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_Refinement_Frequency">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="placeholderText">
+            <string>[-1]</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_CSF_Ref_Reg">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>CSF Refinement Area</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="2">
+       <widget class="QLabel" name="label_18">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>%</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_Min_Scaling">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>Maximum Element to Voxel Ratio</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QPushButton" name="pushButton_Deviation_Threshold">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'wf_segoe-ui_normal,Segoe UI,Segoe WP,Tahoma,Arial,sans-serif,serif,EmojiFont'; font-size:14pt; color:#212121; background-color:#ffffff;&quot;&gt;Provide threshold for acceptable electric potential deviation on neuron compartments as a percent of the overall voltage drop in the system. For example, if the parameters is set to 2% in the system with 0V/1V/2V/-3V on contacts, the threshold will be set to 0.1V.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:'wf_segoe-ui_normal,Segoe UI,Segoe WP,Tahoma,Arial,sans-serif,serif,EmojiFont'; font-size:14pt; font-weight:600; color:#212121; background-color:#ffffff;&quot;&gt;Important:&lt;/span&gt;&lt;span style=&quot; font-family:'wf_segoe-ui_normal,Segoe UI,Segoe WP,Tahoma,Arial,sans-serif,serif,EmojiFont'; font-size:14pt; color:#212121; background-color:#ffffff;&quot;&gt; For current-controlled mode, the threshold will be estimated after scaling the voltage on contacts to match the desired current. Therefore, the threshold will differ among the refinement frequencies due to changes in the impedance.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../icons.qrc">
+          <normaloff>:/icons/icons/info.png</normaloff>:/icons/icons/info.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="2">
+       <widget class="QLabel" name="label_6">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;%&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_Rel_Div">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="locale">
+         <locale language="English" country="UnitedKingdom"/>
+        </property>
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>10.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_Refinement_Frequencies">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>Pick of Refinement Frequencies</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="QPushButton" name="pushButton_Min_Scaling">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Choose maximum ratio of FEM element edge to voxel size edge in the full CSF refinement (the ratio will be applied to elements containing CSF). We recommend to put it to 1.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../icons.qrc">
+          <normaloff>:/icons/icons/info.png</normaloff>:/icons/icons/info.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="comboBox_Refinement_Frequencies">
+        <property name="font">
+         <font/>
+        </property>
+        <item>
+         <property name="text">
+          <string>Refinement Frequencies</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>No. of Refinement Frequencies</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QWidget" name="widget_Refinement_Frequencies_3" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_7">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="pushButton_Refinement_Frequency">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Provide frequencies of sine wave signals for adaptive mesh refinement, e.g. [130.0,10000.0]. We recommend to make a choice basing on the frequency spectrum of the DBS signal or to use option No. of Refinement Frequencies instead.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icons/icons/info.png</normaloff>:/icons/icons/info.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="label_Rel_Div">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>Rel. Deviation of E-field for Adaptive Refinement</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QWidget" name="widget_No_Of_Refinement_Frequencies_3" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_9">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="pushButton_No_of_Refinement_Frequencies">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'wf_segoe-ui_normal,Segoe UI,Segoe WP,Tahoma,Arial,sans-serif,serif,EmojiFont'; font-size:14pt; color:#212121; background-color:#ffffff;&quot;&gt;Provide number of frequencies for mesh refinement. The frequencies will be defined by splitting power spectrum of the stimulation signal. &lt;/span&gt;&lt;span style=&quot; font-family:'wf_segoe-ui_normal,Segoe UI,Segoe WP,Tahoma,Arial,sans-serif,serif,EmojiFont'; font-size:14pt; font-weight:600; color:#212121; background-color:#ffffff;&quot;&gt;Note:&lt;/span&gt;&lt;span style=&quot; font-family:'wf_segoe-ui_normal,Segoe UI,Segoe WP,Tahoma,Arial,sans-serif,serif,EmojiFont'; font-size:14pt; color:#212121; background-color:#ffffff;&quot;&gt; This parameter is an alternative to Refinement Frequency.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icons/icons/info.png</normaloff>:/icons/icons/info.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QWidget" name="widget_No_Of_Refinement_Frequencies_2" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QSpinBox" name="spinBox_No_Of_Refinement_Frequencies">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_Min_Scaling">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="locale">
+         <locale language="English" country="UnitedKingdom"/>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000000000000000000000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_Deviation_Threshold">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>Deviation Threshold in Relation to Voltage</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="2">
+       <widget class="QLabel" name="label_27">
+        <property name="font">
+         <font/>
+        </property>
+        <property name="text">
+         <string>mm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QWidget" name="widget_Refinement_Frequencies_4" native="true">
+        <layout class="QGridLayout" name="gridLayout_2">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_Refinement_Frequency_2">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="text">
+            <string>Hz</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <widget class="QPushButton" name="pushButton_CSF_Ref_Reg">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;This parameter defines area for full CSF refinement. FEM Elements with CSF will be refined in the region of interest (where neuron array is confined) + indent defined by CSF Refinement Area.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../icons.qrc">
+          <normaloff>:/icons/icons/info.png</normaloff>:/icons/icons/info.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="3">
+       <widget class="QPushButton" name="pushButton_Rel_Div">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'wf_segoe-ui_normal,Segoe UI,Segoe WP,Tahoma,Arial,sans-serif,serif,EmojiFont'; font-size:14pt; color:#212121; background-color:#ffffff;&quot;&gt;Provide threshold for relative deviation of E-field during adaptive refinement.  A cell will be marked for refinement if the deviation on its midpoint is above the threshold. Cells with negligibly small E-fields are disregarded.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../icons.qrc">
+          <normaloff>:/icons/icons/info.png</normaloff>:/icons/icons/info.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="3">
+       <widget class="QPushButton" name="pushButton_Z_Length">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Provide threshold for relative deviation of current on the contacts during adaptive mesh refinement. For multicontact current-controlled stimulation, a quasi impedance (an analogue to initially computed currents) is estimated instead.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../icons.qrc">
+          <normaloff>:/icons/icons/info.png</normaloff>:/icons/icons/info.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../icons.qrc"/>
+  <include location="../imgs.qrc"/>
+ </resources>
+ <connections/>
+</ui>

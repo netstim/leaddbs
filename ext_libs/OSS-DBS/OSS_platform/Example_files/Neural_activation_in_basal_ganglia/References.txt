@@ -1,0 +1,42 @@
+"Basal_ganlia_axons_corrected.h5" is based on data from The Parkinson Progression Marker Initiative (PPMI), see Marek et al. 2011 for details..
+Please review this license abstract when using the dataset:
+http://www.ppmi-info.org/documents/ppmi-data-use-agreement.pdf
+
+Manuscripts that use this dataset must include the following statements:
+
+“Data used in the preparation of this article were obtained from the Parkinson’s Progression
+Markers Initiative (PPMI) database (www.ppmi-info.org/data). For up-to-date information on
+the study, visit www.ppmi-info.org.”
+“PPMI – a public-private partnership – is funded by The Michael J. Fox Foundation for
+Parkinson’s Research and funding partners, including [list the full names of all of the PPMI
+funding partners found at www.ppmi-info.org/fundingpartners].”
+
+Marek, K., Jennings, D., Lasch, S., Siderowf, A., Tanner, C., Simuni, T., et al. (2011). The Parkinson Progression Marker Initiative (PPMI). Progress in Neurobiology, 95(4), 629–635. http://doi.org/10.1016/j.pneurobio.2011.09.005
+
+It was also preprocessed by Ewert et al. 2017
+Siobhan Ewert, Philip Plettig, Ningfei Li, M. Mallar Chakravarty, D. Louis Collins, Todd M. Herrington, Andrea A. Kühn, Andreas Horn, Toward defining deep brain stimulation targets in MNI space: A subcortical atlas based on multimodal MRI, histology and structural connectivity, NeuroImage,
+Volume 170, 2018, Pages 271-282.
+
+
+"icbm_avg_152_segmented.nii.gz" was created using data from ICBM 152 Nonlinear atlases
+G. Grabner, A. L. Janke, M. M. Budge, D. Smith, J. Pruessner, and D. L. Collins, "Symmetric atlasing and model based segmentation: an application to the hippocampus in older adults", Med Image Comput Comput Assist Interv Int Conf Med Image Comput Comput Assist Interv, vol. 9, pp. 58-66, 2006.
+
+Copyright (C) 1993-2004 Louis Collins, McConnell Brain
+Imaging Centre, Montreal Neurological Institute, McGill University.
+Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies.  The
+authors and McGill University make no representations about the
+suitability of this software for any purpose.  It is provided "as
+is" without express or implied warranty.  The authors are not
+responsible for any data loss, equipment damage, property loss, or
+injury to subjects or patients resulting from the use or misuse of
+this software package. 
+
+Fiber tracts were classified using data from the following publications:
+
+S. Ewert et al., “Toward defining deep brain stimulation targets in MNI space: A subcortical atlas based on multimodal MRI, histology and structural connectivity,” NeuroImage, vol. 170, pp. 271 – 282, 2018. 
+
+M. M. Chakravarty et al., “The creation of a brain atlas for image guided neurosurgery using serial histological data,” NeuroImag,. vol. 30(2), pp. 359 – 376, 2006. 
+
+L. Fan et al. “The Human Brainnetome Atlas: A New Brain Atlas Based on Connectional Architecture”. In: Cerebral Cortex 26(8), pp. 3508 – 3526, 2016.

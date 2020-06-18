@@ -1,0 +1,26 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>icons/image_placeholder.png</file>
+    <file>icons/portfolio.png</file>
+    <file>icons/spindown.png</file>
+    <file>icons/leftarrow.png</file>
+    <file>icons/rightarrow.png</file>
+    <file>icons/spinup.png</file>
+    <file>icons/combobox.png</file>
+    <file>icons/save.png</file>
+    <file>icons/reset-password.png</file>
+    <file>icons/neuron.png</file>
+    <file>icons/info.png</file>
+    <file>icons/human-brain.png</file>
+    <file>icons/gears.png</file>
+    <file>icons/folder.png</file>
+    <file>icons/confirm.png</file>
+    <file>icons/computer-system.png</file>
+    <file>icons/compass.png</file>
+    <file>icons/cog.png</file>
+    <file>icons/checkbox_checked_icon.png</file>
+    <file>icons/checkbox_unchecked.png</file>
+    <file>icons/ai.png</file>
+    <file>icons/Updated_OSS_DBS_logo.jpeg</file>
+  </qresource>
+</RCC>

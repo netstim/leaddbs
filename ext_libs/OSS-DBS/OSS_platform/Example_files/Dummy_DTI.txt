@@ -1,0 +1,16 @@
+%The file should have exactly the same structure, including comment lines (they will be automatically dropped, you can just substitute them with empty lines). Structure is similar to Dummy_MRI.txt but we have 6 (6 is enough as diffusion tensor is simmetric) values for each voxel.
+0.0 1.0 2.0
+0.0 1.0
+0.0 1.0
+%Values for XX component of the tensor (preserve these comments, or just add a blank line here) (I was too lazy to put unique values everywhere)
+0.34 0.12 -0.45 0.23 -0.12 1.44 0.11 0.12 0.14 0.41 0.62 0.75 0.63 1.25 1.01 1.02 0.82 -0.11
+%Values for XY component of the tensor (preserve these comments, or just add a blank line here)
+0.28 0.16 -0.22 1.24 -0.12 1.44 0.11 0.12 0.14 0.41 0.62 0.75 0.63 1.25 1.01 1.02 0.82 -0.11
+%Values for XZ component of the tensor (preserve these comments, or just add a blank line here)
+-0.11 0.11 0.11 0.34 -0.12 1.44 0.11 0.12 0.14 0.41 0.62 0.75 0.63 1.25 1.01 1.02 0.82 -0.11
+%Values for YY component of the tensor (preserve these comments, or just add a blank line here)
+0.74 0.18 -0.46 1.11 -0.12 1.44 0.11 0.12 0.14 0.41 0.62 0.75 0.63 1.25 1.01 1.02 0.82 -0.11
+%Values for YZ component of the tensor (preserve these comments, or just add a blank line here)
+-0.87 0.78 0.09 -0.11 -0.12 1.44 0.11 0.12 0.14 0.41 0.62 0.75 0.63 1.25 1.01 1.02 0.82 -0.11
+%Values for ZZ component of the tensor (preserve these comments, or just add a blank line here)
+0.12 0.34 -1.00 1.23 -0.12 1.44 0.11 0.12 0.14 0.41 0.62 0.75 0.63 1.25 1.01 1.02 0.82 -0.11

@@ -1,0 +1,14 @@
+Follow the instructions to reproduce plot "Electric potential distribution on a single axonal compartment during DBS with different computational models".
+
+1) Resave GUI_inp_dict_EQS_QS.py as GUI_inp_dict.py in OSS_platform/
+2) Run it with Laplace Formulation set to EQS.
+3) Check the result in Images/Signal_convoluted_1st_point.png (also stored as a 1D array in Points_in_time/Signal_t_conv0.npy)
+4) Run it with Laplace Formulation set to QS.
+5) Check the result in Images/Signal_convoluted_1st_point.png (also stored as a 1D array in Points_in_time/Signal_t_conv0.npy)
+
+1) Resave GUI_inp_dict_CPE.py as GUI_inp_dict.py in OSS_platform/
+    1.1) Check Adjusted Neuron Array ready if the simulation with EQS-QS was already conducted (we do not need to re-run some steps)
+2) Run it with CPE Active
+3) Check the result in Images/Signal_convoluted_1st_point.png (also stored as a 1D array in Points_in_time/Signal_t_conv0.npy)
+4) Run it with CPE Active unchecked
+5) Check the result in Images/Signal_convoluted_1st_point.png (also stored as a 1D array in Points_in_time/Signal_t_conv0.npy)

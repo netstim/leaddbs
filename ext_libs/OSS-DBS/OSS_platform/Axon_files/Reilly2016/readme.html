@@ -1,0 +1,129 @@
+<html>
+readme.html for ModelDB entry of NEURON model used in<p/>
+Reilly, J.P. Survey of numerical electrostimulation models. Physics in Medicine and Biology 61:4346-4363, 2016.(see (*) at far bottom for errata) PMID 27223870<p></p>
+
+<strong>Developer:</strong> N.T. Carnevale, Neuroscience Department, Yale Medical School, New Haven, CT.<p></p>
+
+<h3>Usage</h3>
+Auto-launch from ModelDB, or unzip the zip file.<br>
+Use mknrndll (OS X or MSWin) or nrnivmodl (UNIX/Linux) to compile the mod files.<br>
+Then launch mosinit.hoc ("nrngui mosinit.hoc" in unix/linux) and <br>
+choose a button or individually run one of the main programs:<br>
+for cases A1-12 (see Reilly 2016): nrngui initA.hoc<br>
+for cases B13, 14, 16, and 17 with a 5 um diameter axon: nrngui initB5.hoc<br>
+for cases B13, 14, 16, and 17 with a 10 um diameter axon: nrngui initB10.hoc<br>
+Then follow the instructions that the program prints to its terminal.<p></p>
+As the program runs traces of voltage are displayed on the screen.  <br>
+For example the 10 um diam case ends with one of the graphs displaying: <br>
+<img src="./screenshot2.png"  alt="screenshot" width="550"> <br>
+Note that the values printed on the command line correspond to the "I" traces in figures 1 and 2 in the paper. <br>
+Those should match those in comments at the end of each program. <br>
+<h3>Description of code</h3>
+This code implements NEURON models of extracellular stimulation of the Frankenhaeuser-Huxley (F-H) model of myelinated axon (in particular, an A fiber). Parameters are from (Frankenhaeuser and Huxley 1964), (Hines and Shrager 1991), and page 3 of "Survey of nerve electrostimulation models" dated 11/29/2014 and provided by J.P. Reilly (see comments in the source code). Pertinent differences relative to McNeal model (1976): McNeal used 110 ohm cm for cytoplasmic resistivity, as did Frankenhaeuser and Huxley (1964), but this model uses 100, following Reilly and Diamant (2011).<p></p>
+
+The extracellular stimulus is implemented directly, i.e. by controlling potential at the outer surface of each model compartment. Simulations use NEURON's built-in adaptive integrator with DASPK, a differential algebraic solver with preconditioned Krylov method (Brown et al. 1994). Absolute error tolerance is 0.001, and tolerance scale factors selected automatically by NEURON's VariableTimeStep tool are as follows:<br>
+v (transmembrane potential) 100<br>
+vext (extracellular potential) 10<br>
+m_fh, h_fh, n_fh 0.1<br>
+p_fh 0.01<p></p>
+
+The code follows a more or less modular design and is implemented as main files that load other files.<br>
+initA.hoc is the main file for cases A1-12.<br>
+axon5.hoc and axon10.hoc specify properties of models with external diameter 5 and 10 um, respectively.<br>
+interpxyz.hoc contains proc grindaway() which calculates the xyz coordinates of the model's internal "nodes" (compartment centers, not nodes of Ranvier).<br>
+basicrig.ses, varstep.ses, vvsx.ses, and vext_eext.ses recreate GUI tools for launching simulations, specifying integration method, plotting variables of interest vs. time and distance along the axon.<br>
+thresh4.hoc contains procedures for determining spike threshold to 4 significant figures. <br>
+protocolsA.hoc specifies the stimulus parameters for cases A1-12.<br>
+initB5.hoc and initB10.hoc are the main files for cases B15 and B18, and for B13, B14, B16, and B17, respectively.<br>
+protocolsB.hoc specifies the stimulus parameters for cases B13-18.<p></p>
+
+<h3>Major features or limitations</h3>
+The threshold stimulus for eliciting a spike is determined automatically by binary search.
+To insure correct spike detection, membrane potential is monitored for a positive going deflection rising above -20 mV at a location that is anatomically and electrotonically distant from the site at which the stimulus produces the maximum local depolarization (i.e. at node 0 for Case A, and node 50 for Case B). During development, after threshold was determined, spiking was confirmed by visual examination of the time course of membrane potential along the axon following application of a just suprathreshold stimulus.<p></p>
+
+It would be nice if the model specification code were written in such a way that it would be easy to change axon external diameter after a model has been set up. Since it is not, initB5.hoc and initB10.hoc are both designed to run through cases B13, 14, 16, and 17, using models with external diameters of 5 and 10 um, respectively. This avoids the need to write special simulation code to deal with cases 15 and 18, by taking advantage of the fact that cases 15 and 18 differ from 14 and 17 only in axon diameter--5 um for the former, 10 um for the latter.<p></p>
+
+<h3>Simulation results</h3>
+Waveform abbreviations:<br>
+<table>
+  <tbody>
+    <tr>
+      <td>pls</td>
+      <td>pulse (monophasic square wave)</td>
+    </tr>
+    <tr>
+      <td>sqr</td>
+      <td>biphasic square wave</td>
+    </tr>
+    <tr>
+      <td>sin</td>
+      <td>sine</td>
+    </tr>
+  </tbody>
+</table>
+<p></p>
+Other parameters:<br>
+<table>
+  <tbody>
+    <tr>
+      <td>tp</td>
+      <td>duration of a single phase of square or sine wave</td>
+    </tr>
+    <tr>
+      <td>nc</td>
+      <td>number of full cycles of sine wave</td>
+    </tr>
+    <tr>
+      <td>xa,ya</td>
+      <td>coords of anode relative to axon* [cm]</td>
+    </tr>
+    <tr>
+      <td>xc,yc</td>
+      <td>coords of cathode relative to axon [cm]</td>
+    </tr>
+    <tr>
+      <td>D</td>
+      <td>axon diameter, including myelin [um]</td>
+    </tr>
+  </tbody>
+</table>
+*--Axon lies along x axis, with midpoint located at (0,0).<br>
+(x,y) = (0,1) means electrode center is 1 cm above the axon's central node of Ranvier.
+<p></p>
+
+<strong>A. Point electrodes (bipolar) on surface of semi-infinite conductive medium</strong><br>
+
+<pre>Case	Waveform	tp	nc	xa	ya	xc	yc	threshold [mA]
+1	pls		0.005	1	50	0.25	0	0.25	11.08643
+2	pls		2	1	50	0.25	0	0.25	0.47032
+3	pls		0.005	1	50	0.25	0	1	409.95312
+4	pls		2	1	50	0.25	0	1	12.83545
+5	pls		2	1	0	0.25	50	0.25	2.10657
+6	pls		2	1	0	1	1	1	11.00342
+7	sqr		0.005	1	50	0.25	0	0.25	32.57227
+8	sqr		2	1	50	0.25	0	0.25	0.47038
+9	sin		0.005	1	50	0.25	0	0.25	48.41992
+10	sin		0.1	1	50	0.25	0	0.25	1.4422
+11	sin		0.005	20000	50	0.25	0	0.25	14.86279
+12	sin		0.1	10	50	0.25	0	0.25	1.30255</pre>
+<p></p>
+<strong>B. Uniform field parallel to axon</strong><br>
+
+<pre>Case	Waveform	tp	D	threshold [V/m]
+13	pls	 	0.005	10	281.54688
+14	pls		2	10	11.36865
+15	pls		2	5	22.71191
+16	sqr		0.005	10	802.59375
+17	sqr		2	10	11.05225
+18	sqr		2	5	22.08301</pre>
+<p></p>
+
+<h3>References</h3>
+Brown, P.N., Hindmarsh, A.C. and Petzold, L.R.. SIAM J. Sci. Comput. 15:1467–1488, 1994.<br>
+Frankenhaeuser, B. and Huxley, A.F.. J. Physiol. 171:302-15, 1964.<br>
+Hines, M. and Shrager, P.. J. Restorative Neurology and Neuroscience 3:81-93, 1991.<br>
+McNeal, D.R.. IEEE Trans. Biomed. Eng. 23:329-337, 1976.<br>
+Reilly, J.P. and Diamant, A.. Electrostimulation: Theory, Applications, and Computational Model. Artech House, 2011.<p></p>
+<strong>(*) The publisher did not include the correct figure 1 in the paper (it duplicated figure 2). Figure 1 (supplied by JP Reilly) is:</strong>
+  <img src="./Fig1.png" alt="Fig 1">
+  </html>
