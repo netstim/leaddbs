@@ -61,8 +61,6 @@ if strcmp(context, 'normal')
     prefs.machine = combinestructs(dmachine.machine, umachine.machine);
 end
 
-
-
 % legacy code support for gl/l normalized file differentiation:
 prefs.prenii=prefs.gprenii;
 prefs.tranii=prefs.gtranii;
