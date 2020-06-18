@@ -65,7 +65,8 @@ if ~isfile([segMaskDir, 'segmask.nii'])
     c2.img(c3.img) = 0;
     c1.img(c2.img | c3.img) = 0;
     c1.fname = [segMaskDir, 'segmask.nii'];
-    c1.img = uint8(c1.img) + uint8(c2.img)*2 + uint8(c3.img)*3;
+    c1.dt = [4 0];
+    c1.img = int16(c1.img) + int16(c2.img)*2 + int16(c3.img)*3;
     ea_write_nii(c1);
 end
 
