@@ -137,4 +137,4 @@ end
 settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_ethresh;
 
 %% Save settings for OSS-DBS
-save([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options.native),S.label,filesep,'oss-dbs_parameters.mat'],'settings');
+save([directory, 'stimulations', filesep, ea_nt(options.native), S.label, filesep, 'oss-dbs_parameters.mat'], 'settings');
