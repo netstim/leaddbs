@@ -368,46 +368,55 @@ classdef ea_disctract < handle
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Contruct default blue to red colormap
                 colormap(gray);
+                cmapsize = 1024;
                 if dogroups
-                    fibcmap{group} = ea_colorgradient(1024, [1,1,1], linecols(group,:));
-                    setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
+                    fibcmap{group} = ea_colorgradient(cmapsize, [1,1,1], linecols(group,:));
                 else
-                    fibcmap{1} = ea_colorgradient(1024, obj.negcolor, [1,1,1], obj.poscolor);
-                    setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
+                    if obj.posvisible && obj.negvisible
+                        fibcmap{group} = ea_colorgradient(cmapsize, obj.negcolor, [1,1,1], obj.poscolor);
+                    elseif obj.posvisible
+                        fibcmap{group} = ea_colorgradient(cmapsize, [1,1,1], obj.poscolor);
+                    elseif obj.negvisible
+                        fibcmap{group} = ea_colorgradient(cmapsize, obj.negcolor, [1,1,1]);
+                    end
+                end
+                setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
+
+                allvals = cell2mat(vals(group,:)');
+                if obj.posvisible && obj.negvisible
+                    cmapind = ones(size(allvals))*cmapsize/2;
+                    cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,cmapsize/2]));
+                    cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[cmapsize/2+1,cmapsize]));
+                    alphaind = zeros(size(allvals));
+                    alphaind(allvals<0) = normalize(-allvals(allvals<0), 'range');
+                    alphaind(allvals>0) = normalize(allvals(allvals>0), 'range');
+                elseif obj.negvisible
+                    cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                    alphaind = normalize(-allvals, 'range');
+                elseif obj.posvisible
+                    cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                    alphaind = normalize(allvals, 'range');
                 end
 
-                % Set alphas of fibers with light color to 0
-                colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
-                negUpperBound=ceil(size(fibcmap{group},1)/2*colorbarThreshold);
-                poslowerBound=floor((size(fibcmap{group},1)-size(fibcmap{group},1)/2*colorbarThreshold));
+                cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
+                alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
+
                 for side=1:2
                     if dogroups % introduce small jitter for visualization
                         fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.01);
                     end
 
-                    valsRescale{group,side} = vals{group,side};
-                    valsRescale{group,side}(vals{group,side}>0) = ea_rescale(vals{group,side}(vals{group,side}>0), [0 1]);
-                    valsRescale{group,side}(vals{group,side}<0) = ea_rescale(vals{group,side}(vals{group,side}<0), [-1 0]);
-
-                    fibcolorInd{group,side}=valsRescale{group,side}*(size(fibcmap{group},1)/2-0.5);
-                    fibcolorInd{group,side}=fibcolorInd{group,side}+(size(fibcmap{group},1)/2+0.5);
-
-                    alphas{group,side}=zeros(size(fibcolorInd{group,side}));
-                    alphas{group,side}(round(fibcolorInd{group,side})>=poslowerBound) = obj.posvisible;
-                    alphas{group,side}(round(fibcolorInd{group,side})<=negUpperBound) = obj.negvisible;
-
-                    fibalpha=mat2cell(alphas{group,side},ones(size(fibcolorInd{group,side})));
-
                     % Plot fibers if any survived
                     if ~isempty(fibcell{group,side})
                         obj.drawobject{group,side}=streamtube(fibcell{group,side},0.2);
 
-                        nones=repmat({'none'},size(fibcolorInd{group,side}));
+                        nones=repmat({'none'},size(fibcell{group,side}));
                         [obj.drawobject{group,side}.EdgeColor]=nones{:};
 
-                        % Calulate fiber colors
-                        colors=fibcmap{group}(round(fibcolorInd{group,side}),:);
-                        fibcolor=mat2cell(colors,ones(size(fibcolorInd{group,side})));
+                        % Calulate fiber colors alpha values
+                        colors = fibcmap{group}(cmapind{side},:);
+                        fibcolor=mat2cell(colors,ones(size(fibcell{group,side})));
+                        fibalpha = mat2cell(alphaind{side},ones(size(fibcell{group,side})));
 
                         % Set fiber colors and alphas
                         [obj.drawobject{group,side}.FaceColor]=fibcolor{:};
@@ -417,27 +426,22 @@ classdef ea_disctract < handle
 
                 % Set colorbar tick positions and labels
                 if ~any([isempty(vals{group,1}),isempty(vals{group,2})])
-                    cbvals = [vals{group,1}(logical(alphas{group,1}));vals{group,2}(logical(alphas{group,2}))];
-                    if ~isempty(cbvals)
-                        % cbvals=tvalsRescale{group,side}(logical(alphas));
+                    if ~isempty(allvals)
                         if obj.posvisible && ~obj.negvisible
-                            cbmap{group} = fibcmap{group}(ceil(length(fibcmap{group})/2+0.5):end,:);
-                            tick{group} = [poslowerBound, length(fibcmap{group})] - floor(length(fibcmap{group})/2) ;
-                            poscbvals = sort(cbvals(cbvals>0));
-                            ticklabel{group} = [poscbvals(1), poscbvals(end)];
+                            tick{group} = [1, length(fibcmap{group})];
+                            posvals = sort(allvals(allvals>0));
+                            ticklabel{group} = [posvals(1), posvals(end)];
                             ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                         elseif ~obj.posvisible && obj.negvisible
-                            cbmap{group} = fibcmap{group}(1:floor(length(fibcmap{group})/2-0.5),:);
-                            tick{group} = [1, negUpperBound];
-                            negcbvals = sort(cbvals(cbvals<0));
-                            ticklabel{group} = [negcbvals(1), negcbvals(end)];
+                            tick{group} = [1, length(fibcmap{group})];
+                            negvals = sort(allvals(allvals<0));
+                            ticklabel{group} = [negvals(1), negvals(end)];
                             ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                         elseif obj.posvisible && obj.negvisible
-                            cbmap{group} = fibcmap{group};
-                            tick{group} = [1, negUpperBound, poslowerBound, length(fibcmap{group})];
+                            tick{group} = [1, length(fibcmap{group})];
                             poscbvals = sort(cbvals(cbvals>0));
                             negcbvals = sort(cbvals(cbvals<0));
-                            ticklabel{group} = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
+                            ticklabel{group} = [negcbvals(1), poscbvals(end)];
                             ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                         end
                     end
@@ -445,8 +449,8 @@ classdef ea_disctract < handle
             end
 
             % store colorbar in object
-            if exist('cbmap','var') % could be no fibers present at all.
-                obj.colorbar.cmap = cbmap;
+            if exist('fibcmap','var') % could be no fibers present at all.
+                obj.colorbar.cmap = fibcmap;
                 obj.colorbar.tick = tick;
                 obj.colorbar.ticklabel = ticklabel;
             end
