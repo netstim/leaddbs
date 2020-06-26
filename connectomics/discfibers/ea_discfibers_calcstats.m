@@ -140,32 +140,39 @@ for group=groups
         obj.stats.neg.available(side)=sum(vals{1,side}<0);
         usedidx{group,side}=find(~isnan(vals{group,side}));
         vals{group,side}=vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
+    end
 
-        posvals{group,side}=sort(vals{group,side}(vals{group,side}>0),'descend');
-        negvals{group,side}=sort(vals{group,side}(vals{group,side}<0),'ascend');
+    allvals = [vals{group,1};vals{group,2}];
+    posvals = sort(allvals(allvals>0),'descend');
+    posrange = posvals(1) - posvals(end);
+    negvals = sort(allvals(allvals<0),'ascend');
+    negrange = negvals(1) - negvals(end);
 
-        try
-            posthresh{group,side}=posvals{group,side}(ceil(((obj.showposamount(side)+eps)/100)*length(posvals{group,side})));
-        catch
-            posthresh{group,side}=inf;
-        end
-
+    for side=1:2
         if ~obj.posvisible
-            posthresh{group,side}=inf;
+            posthresh = posvals(1);
+        else
+            try
+                posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
+            catch
+                posthresh = posvals(1);
+            end
         end
-
-        try
-            negthresh{group,side}=negvals{group,side}(ceil(((obj.shownegamount(side)+eps)/100)*length(negvals{group,side})));
-        catch
-            negthresh{group,side}=-inf;
-        end
+        posthresh = posthresh + eps;
 
         if ~obj.negvisible
-            negthresh{group,side}=-inf;
+            negthresh = negvals(1);
+        else
+            try
+                negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
+            catch
+                negthresh = negvals(1);
+            end
         end
+        negthresh = negthresh - eps;
 
         % Remove vals and fibers outside the thresholding range
-        remove=logical(logical(vals{group,side}<posthresh{group,side}) .* logical(vals{group,side}>negthresh{group,side}));
+        remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
         vals{group,side}(remove)=[];
         fibcell{group,side}(remove)=[];
         usedidx{group,side}(remove)=[];
