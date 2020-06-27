@@ -142,7 +142,7 @@ for group=groups
         vals{group,side}=vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
     end
 
-    allvals = [vals{group,1};vals{group,2}];
+    allvals = vertcat(vals{group,:});
     posvals = sort(allvals(allvals>0),'descend');
     posrange = posvals(1) - posvals(end);
     negvals = sort(allvals(allvals<0),'ascend');
