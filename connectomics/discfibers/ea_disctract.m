@@ -372,33 +372,33 @@ classdef ea_disctract < handle
                     continue;
                 end
                 colormap(gray);
-                cmapsize = 1024;
+                gradientLevel = 1024;
                 if dogroups
                     if ~obj.posvisible && obj.negvisible
-                        fibcmap{group} = ea_colorgradient(cmapsize, linecols(group,:), [1,1,1]);
-                        cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                        fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
+                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = normalize(-allvals, 'range');
                     else
-                        fibcmap{group} = ea_colorgradient(cmapsize, [1,1,1], linecols(group,:));
-                        cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                        fibcmap{group} = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
+                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = normalize(allvals, 'range');
                     end
                 else
                     if obj.posvisible && obj.negvisible
-                        fibcmap{group} = ea_colorgradient(cmapsize, obj.negcolor, [1,1,1], obj.poscolor);
-                        cmapind = ones(size(allvals))*cmapsize/2;
-                        cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,cmapsize/2]));
-                        cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[cmapsize/2+1,cmapsize]));
+                        fibcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1], obj.poscolor);
+                        cmapind = ones(size(allvals))*gradientLevel/2;
+                        cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
+                        cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
                         alphaind = zeros(size(allvals));
                         alphaind(allvals<0) = normalize(-allvals(allvals<0), 'range');
                         alphaind(allvals>0) = normalize(allvals(allvals>0), 'range');
                     elseif obj.posvisible
-                        fibcmap{group} = ea_colorgradient(cmapsize, [1,1,1], obj.poscolor);
-                        cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                        fibcmap{group} = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
+                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = normalize(allvals, 'range');
                     elseif obj.negvisible
-                        fibcmap{group} = ea_colorgradient(cmapsize, obj.negcolor, [1,1,1]);
-                        cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                        fibcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
+                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = normalize(-allvals, 'range');
                     end
                 end
