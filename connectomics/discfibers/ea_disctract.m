@@ -434,8 +434,8 @@ classdef ea_disctract < handle
                     if ~isempty(allvals)
                         if obj.posvisible && obj.negvisible
                             tick{group} = [1, length(fibcmap{group})];
-                            poscbvals = sort(cbvals(cbvals>0));
-                            negcbvals = sort(cbvals(cbvals<0));
+                            poscbvals = sort(allvals(allvals>0));
+                            negcbvals = sort(allvals(allvals<0));
                             ticklabel{group} = [negcbvals(1), poscbvals(end)];
                             ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                         elseif obj.posvisible
