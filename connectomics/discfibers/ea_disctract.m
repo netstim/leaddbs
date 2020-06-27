@@ -367,36 +367,42 @@ classdef ea_disctract < handle
 
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Contruct default blue to red colormap
+                allvals = cell2mat(vals(group,:)');
+                if isempty(allvals)
+                    continue;
+                end
                 colormap(gray);
                 cmapsize = 1024;
                 if dogroups
-                    fibcmap{group} = ea_colorgradient(cmapsize, [1,1,1], linecols(group,:));
+                    if ~obj.posvisible && obj.negvisible
+                        fibcmap{group} = ea_colorgradient(cmapsize, linecols(group,:), [1,1,1]);
+                        cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                        alphaind = normalize(-allvals, 'range');
+                    else
+                        fibcmap{group} = ea_colorgradient(cmapsize, [1,1,1], linecols(group,:));
+                        cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                        alphaind = normalize(allvals, 'range');
+                    end
                 else
                     if obj.posvisible && obj.negvisible
                         fibcmap{group} = ea_colorgradient(cmapsize, obj.negcolor, [1,1,1], obj.poscolor);
+                        cmapind = ones(size(allvals))*cmapsize/2;
+                        cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,cmapsize/2]));
+                        cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[cmapsize/2+1,cmapsize]));
+                        alphaind = zeros(size(allvals));
+                        alphaind(allvals<0) = normalize(-allvals(allvals<0), 'range');
+                        alphaind(allvals>0) = normalize(allvals(allvals>0), 'range');
                     elseif obj.posvisible
                         fibcmap{group} = ea_colorgradient(cmapsize, [1,1,1], obj.poscolor);
+                        cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                        alphaind = normalize(allvals, 'range');
                     elseif obj.negvisible
                         fibcmap{group} = ea_colorgradient(cmapsize, obj.negcolor, [1,1,1]);
+                        cmapind = round(normalize(allvals,'range',[1,cmapsize]));
+                        alphaind = normalize(-allvals, 'range');
                     end
                 end
                 setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
-
-                allvals = cell2mat(vals(group,:)');
-                if obj.posvisible && obj.negvisible
-                    cmapind = ones(size(allvals))*cmapsize/2;
-                    cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,cmapsize/2]));
-                    cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[cmapsize/2+1,cmapsize]));
-                    alphaind = zeros(size(allvals));
-                    alphaind(allvals<0) = normalize(-allvals(allvals<0), 'range');
-                    alphaind(allvals>0) = normalize(allvals(allvals>0), 'range');
-                elseif obj.negvisible
-                    cmapind = round(normalize(allvals,'range',[1,cmapsize]));
-                    alphaind = normalize(-allvals, 'range');
-                elseif obj.posvisible
-                    cmapind = round(normalize(allvals,'range',[1,cmapsize]));
-                    alphaind = normalize(allvals, 'range');
-                end
 
                 cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
                 alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
@@ -414,8 +420,7 @@ classdef ea_disctract < handle
                         [obj.drawobject{group,side}.EdgeColor]=nones{:};
 
                         % Calulate fiber colors alpha values
-                        colors = fibcmap{group}(cmapind{side},:);
-                        fibcolor=mat2cell(colors,ones(size(fibcell{group,side})));
+                        fibcolor = mat2cell(fibcmap{group}(cmapind{side},:), ones(size(fibcell{group,side})));
                         fibalpha = mat2cell(alphaind{side},ones(size(fibcell{group,side})));
 
                         % Set fiber colors and alphas
@@ -427,21 +432,21 @@ classdef ea_disctract < handle
                 % Set colorbar tick positions and labels
                 if ~any([isempty(vals{group,1}),isempty(vals{group,2})])
                     if ~isempty(allvals)
-                        if obj.posvisible && ~obj.negvisible
-                            tick{group} = [1, length(fibcmap{group})];
-                            posvals = sort(allvals(allvals>0));
-                            ticklabel{group} = [posvals(1), posvals(end)];
-                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-                        elseif ~obj.posvisible && obj.negvisible
-                            tick{group} = [1, length(fibcmap{group})];
-                            negvals = sort(allvals(allvals<0));
-                            ticklabel{group} = [negvals(1), negvals(end)];
-                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-                        elseif obj.posvisible && obj.negvisible
+                        if obj.posvisible && obj.negvisible
                             tick{group} = [1, length(fibcmap{group})];
                             poscbvals = sort(cbvals(cbvals>0));
                             negcbvals = sort(cbvals(cbvals<0));
                             ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        elseif obj.posvisible
+                            tick{group} = [1, length(fibcmap{group})];
+                            posvals = sort(allvals(allvals>0));
+                            ticklabel{group} = [posvals(1), posvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        elseif obj.negvisible
+                            tick{group} = [1, length(fibcmap{group})];
+                            negvals = sort(allvals(allvals<0));
+                            ticklabel{group} = [negvals(1), negvals(end)];
                             ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                         end
                     end
