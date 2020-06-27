@@ -158,7 +158,7 @@ for group=groups
                 posthresh = posvals(1);
             end
         end
-        posthresh = posthresh + eps;
+        posthresh = posthresh + eps*10;
 
         if ~obj.negvisible
             negthresh = negvals(1);
@@ -169,7 +169,7 @@ for group=groups
                 negthresh = negvals(1);
             end
         end
-        negthresh = negthresh - eps;
+        negthresh = negthresh - eps*10;
 
         % Remove vals and fibers outside the thresholding range
         remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
