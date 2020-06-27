@@ -307,72 +307,51 @@ for nativemni=nm % switch between native and mni space atlases.
                     vals = {vals};
                 end
 
-                valsAll = vertcat(vals{:});
+                allvals = vertcat(vals{:});
                 alphas = cell(size(vals));
 
                 % Contruct colormap
                 colormap(gray);
                 gradientLevel = 1024;
-                if ~exist('fibcolor', 'var') % Defualt blue, white, red
-                    fibcmap = ea_colorgradient(gradientLevel,[0,0,1],[1,1,1],[1,0,0]);
-                elseif size(fibcolor,1) == 1 % Blue, white, specified
-                    fibcmap = ea_colorgradient(gradientLevel,[0,0,1],[1,1,1],fibcolor);
-                elseif size(fibcolor,1) == 2 % Lowest value, white, highest value
-                    fibcmap = ea_colorgradient(gradientLevel,fibcolor(1,:),[1,1,1],fibcolor(2,:));
-                elseif size(fibcolor,1) == 3 % Lowest value, middle value, highest value
-                    fibcmap = ea_colorgradient(gradientLevel,fibcolor(1,:),fibcolor(2,:),fibcolor(3,:));
-                end
-
-                % Set alphas of fibers with light color to 0
-                colorbarThreshold = 0.60; % Percentage of the pos/neg color to be kept
-                negUpperBound = ceil(size(fibcmap,1)/2*colorbarThreshold);
-                poslowerBound = floor((size(fibcmap,1)-size(fibcmap,1)/2*colorbarThreshold));
 
                 if isfield(disctract.info, 'PosAmount') && isfield(disctract.info, 'NegAmount')
-                    disp(['Fiber colors: Positive (T = ',num2str(min(valsAll(valsAll>0))),' ~ ',num2str(max(valsAll(valsAll>0))), ...
-                      '); Negative (T = ',num2str(max(valsAll(valsAll<0))),' ~ ',num2str(min(valsAll(valsAll<0))),').']);
+                    disp(['Fiber colors: Positive (T = ',num2str(min(allvals(allvals>0))),' ~ ',num2str(max(allvals(allvals>0))), ...
+                      '); Negative (T = ',num2str(max(allvals(allvals<0))),' ~ ',num2str(min(allvals(allvals<0))),').']);
+                    fibcmap = ea_colorgradient(gradientLevel, fibcolor(1,:), [1,1,1], fibcolor(2,:));
+                    cmapind = ones(size(allvals))*gradientLevel/2;
+                    cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
+                    cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
+                    alphaind = zeros(size(allvals));
+                    alphaind(allvals<0) = normalize(-allvals(allvals<0), 'range');
+                    alphaind(allvals>0) = normalize(allvals(allvals>0), 'range');
                 elseif isfield(disctract.info, 'PosAmount')
-                	disp(['Fiber colors: Positive (T = ',num2str(min(valsAll)),' ~ ',num2str(min(valsAll(valsAll>0))), ')']);
+                    disp(['Fiber colors: Positive (T = ',num2str(min(allvals)),' ~ ',num2str(max(allvals)), ')']);
+                    fibcmap = ea_colorgradient(gradientLevel, [1,1,1], fibcolor(2,:));
+                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                    alphaind = normalize(allvals, 'range');
                 elseif isfield(disctract.info, 'NegAmount')
-                	disp(['Fiber colors: Negative (T = ',num2str(max(valsAll)),' ~ ',num2str(min(valsAll)), ')']);
+                    disp(['Fiber colors: Negative (T = ',num2str(max(allvals)),' ~ ',num2str(min(allvals)), ')']);
+                    fibcmap = ea_colorgradient(gradientLevel, fibcolor(1,:), [1,1,1]);
+                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                    alphaind = normalize(-allvals, 'range');
                 end
+
+                cmapind = mat2cell(cmapind, [numel(vals{1}), numel(vals{2})])';
+                alphaind = mat2cell(alphaind, [numel(vals{1}), numel(vals{2})])';
 
                 for fibside=1:2
                     if isempty(fibcell{fibside}) || isempty(vals{fibside})
                         continue;
                     end
 
-                    % Rescale positive/negative tvals to [0 1]/[-1 0]
-                    valsRescale = vals{fibside};
-                    valsRescale(isnan(valsRescale))=0;
-                    valsRescale(valsRescale>0) = ea_rescale(valsRescale(valsRescale>0), [0 1]);
-                    valsRescale(valsRescale<0) = ea_rescale(valsRescale(valsRescale<0), [-1 0]);
-
-                    fibcolorInd = valsRescale*(size(fibcmap,1)/2-0.5);
-                    fibcolorInd = fibcolorInd+(size(fibcmap,1)/2+0.5);
-
-                    alphas{fibside} = zeros(size(fibcolorInd,1),1);
-
-                    if isfield(disctract.info, 'PosAmount') && isfield(disctract.info, 'NegAmount')
-                        alphas{fibside}(round(fibcolorInd)>=poslowerBound) = 1;
-                        alphas{fibside}(round(fibcolorInd)<=negUpperBound) = 1;
-                    elseif isfield(disctract.info, 'PosAmount')
-                        alphas{fibside}(round(fibcolorInd)>=poslowerBound) = 1;
-                    elseif isfield(disctract.info, 'NegAmount')
-                        alphas{fibside}(round(fibcolorInd)<=negUpperBound) = 1;
-                    end
-
-                    alphas{fibside}(round(fibcolorInd)>=poslowerBound) = 1;
-                    fibalpha = mat2cell(alphas{fibside},ones(size(fibcolorInd)));
-
                     % Plot fibers
                     h = streamtube(fibcell{fibside},0.2);
-                    nones = repmat({'none'},size(fibcolorInd));
+                    nones = repmat({'none'},size(fibcell{fibside}));
                     [h.EdgeColor] = nones{:};
 
-                    % Calulate fiber colors
-                    colors = fibcmap(round(fibcolorInd),:);
-                    fibcolor = mat2cell(colors,ones(size(fibcolorInd)));
+                    % Calulate fiber colors alpha values
+                    fibcolor = mat2cell(fibcmap(cmapind{fibside},:), ones(size(fibcell{fibside})));
+                    fibalpha = mat2cell(alphaind{fibside},ones(size(fibcell{fibside})));
 
                     % Set fiber colors and alphas
                     [h.FaceColor] = fibcolor{:};
@@ -395,32 +374,27 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
 
                 % Set colorbar tick positions and labels
-                cbvals = valsAll(logical(vertcat(alphas{:})));
-                % cbvals = valsRescale(logical(alphas));
                 if isfield(disctract.info, 'PosAmount') && isfield(disctract.info, 'NegAmount')
-                    cbmap = fibcmap;
-                    tick = [1, negUpperBound, poslowerBound, length(fibcmap)];
-                    poscbvals = sort(cbvals(cbvals>0));
-                    negcbvals = sort(cbvals(cbvals<0));
-                    ticklabel = [min(cbvals), negcbvals(end), poscbvals(1), max(cbvals)];
+                    tick = [1, length(fibcmap)];
+                    poscbvals = sort(allvals(allvals>0));
+                    negcbvals = sort(allvals(allvals<0));
+                    ticklabel = [negcbvals(1), poscbvals(end)];
                     ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
                 elseif isfield(disctract.info, 'PosAmount')
-                    cbmap = fibcmap(ceil(length(fibcmap)/2+0.5):end,:);
-                    tick = [poslowerBound, length(fibcmap)] - floor(length(fibcmap)/2) ;
-                    poscbvals = sort(cbvals(cbvals>0));
+                    tick = [1, length(fibcmap)];
+                    poscbvals = sort(allvals(allvals>0));
                     ticklabel = [poscbvals(1), poscbvals(end)];
                     ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
                 elseif isfield(disctract.info, 'NegAmount')
-                    cbmap = fibcmap(1:floor(length(fibcmap)/2-0.5),:);
-                    tick = [1, negUpperBound];
-                    negcbvals = sort(cbvals(cbvals<0));
+                    tick = [1, length(fibcmap)];
+                    negcbvals = sort(allvals(allvals<0));
                     ticklabel = [negcbvals(1), negcbvals(end)];
                     ticklabel = arrayfun(@(x) num2str(x,'%.2f'), ticklabel, 'Uni', 0);
                 end
 
                 % Plot colorbar
                 cbfig = figure('Visible', 'off');
-                ea_plot_colorbar(cbmap, [], 'h', '', tick, ticklabel, axes(cbfig));
+                ea_plot_colorbar(fibcmap, [], 'h', '', tick, ticklabel, axes(cbfig));
                 saveas(cbfig, [tractPath, filesep, tractName, '_colorbar.svg']);
                 % export_fig(cbfig, [tractPath, filesep, tractName, '_colorbar.png']);
                 fprintf('Colorbar exported as:\n%s\n\n', [tractPath, filesep, tractName, '_colorbar.svg']);
