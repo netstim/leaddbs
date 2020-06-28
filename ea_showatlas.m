@@ -313,11 +313,20 @@ for nativemni=nm % switch between native and mni space atlases.
                 % Contruct colormap
                 colormap(gray);
                 gradientLevel = 1024;
+                cmapShiftRatio = 0.4;
+                shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
+                shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
+                shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
+                shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
 
                 if isfield(disctract.info, 'PosAmount') && isfield(disctract.info, 'NegAmount')
                     disp(['Fiber colors: Positive (T = ',num2str(min(allvals(allvals>0))),' ~ ',num2str(max(allvals(allvals>0))), ...
                       '); Negative (T = ',num2str(max(allvals(allvals<0))),' ~ ',num2str(min(allvals(allvals<0))),').']);
-                    fibcmap = ea_colorgradient(gradientLevel, fibcolor(1,:), [1,1,1], fibcolor(2,:));
+                    cmap = ea_colorgradient(gradientLevel/2, fibcolor(1,:), [1,1,1]);
+                    cmapLeft = ea_colorgradient(gradientLevel/2, fibcolor(1,:), cmap(shiftedCmapLeftEnd,:));
+                    cmap = ea_colorgradient(gradientLevel/2, [1,1,1], fibcolor(2,:));
+                    cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), fibcolor(2,:));
+                    fibcmap = [cmapLeft;cmapRight];
                     cmapind = ones(size(allvals))*gradientLevel/2;
                     cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
                     cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
@@ -326,12 +335,14 @@ for nativemni=nm % switch between native and mni space atlases.
                     alphaind(allvals>0) = normalize(allvals(allvals>0), 'range');
                 elseif isfield(disctract.info, 'PosAmount')
                     disp(['Fiber colors: Positive (T = ',num2str(min(allvals)),' ~ ',num2str(max(allvals)), ')']);
-                    fibcmap = ea_colorgradient(gradientLevel, [1,1,1], fibcolor(2,:));
+                    cmap = ea_colorgradient(gradientLevel, [1,1,1], fibcolor(2,:));
+                    fibcmap = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), fibcolor(2,:));
                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                     alphaind = normalize(allvals, 'range');
                 elseif isfield(disctract.info, 'NegAmount')
                     disp(['Fiber colors: Negative (T = ',num2str(max(allvals)),' ~ ',num2str(min(allvals)), ')']);
-                    fibcmap = ea_colorgradient(gradientLevel, fibcolor(1,:), [1,1,1]);
+                    cmap = ea_colorgradient(gradientLevel, fibcolor(1,:), [1,1,1]);
+                    fibcmap{group} = ea_colorgradient(gradientLevel, fibcolor(1,:), cmap(shiftedCmapEnd,:));
                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                     alphaind = normalize(-allvals, 'range');
                 end
