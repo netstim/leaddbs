@@ -374,14 +374,18 @@ classdef ea_disctract < handle
                 colormap(gray);
                 gradientLevel = 1024;
                 if dogroups
-                    if ~obj.posvisible && obj.negvisible
+                    if obj.posvisible && ~obj.negvisible
+                        fibcmap{group} = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
+                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                        alphaind = normalize(allvals, 'range');
+                    elseif ~obj.posvisible && obj.negvisible
                         fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
                         cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = normalize(-allvals, 'range');
                     else
-                        fibcmap{group} = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = normalize(allvals, 'range');
+                        warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
+                            '\nShow both positive and negative fibers is not supported when "Color by Group Variable" is on.']));
+                        return;
                     end
                 else
                     if obj.posvisible && obj.negvisible
