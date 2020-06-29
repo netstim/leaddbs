@@ -1,4 +1,4 @@
-function ea_spherical_roi(fname,mni,r,crop,template)
+function ea_spherical_roi(fname,mni,r,crop,template,bg)
 if ~exist('crop','var')
     crop=1;
 end
@@ -7,7 +7,11 @@ if exist('template','var')
 else
     Vol=ea_load_nii([ea_space,'t1.nii']);
 end
-Vol.img(:)=nan;
+if ~exist('bg','var')
+    Vol.img(:)=nan;
+else
+    Vol.img(:)=bg;
+end
 voxmm = Vol.voxsize;
 for a=1:size(mni,1)
     X= mni(a,1); Y = mni(a,2); Z = mni(a,3);

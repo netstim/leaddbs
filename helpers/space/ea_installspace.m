@@ -2,7 +2,7 @@ function ea_installspace
 
 disp(['Installing / Downloading space ',ea_getspace,'...']);
 disp('This could take a while...');
-downloadurl = 'http://www.lead-dbs.org/release/download.php';
+downloadurl = 'https://www.lead-dbs.org/release/download.php';
     destination=[ea_space,'../data_download.zip'];
     try
         webopts=weboptions('Timeout',Inf);

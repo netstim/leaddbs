@@ -22,7 +22,7 @@ function varargout = lead_group_connectome(varargin)
 
 % Edit the above text to modify the response to help lead_group_connectome
 
-% Last Modified by GUIDE v2.5 24-Aug-2017 09:44:13
+% Last Modified by GUIDE v2.5 29-Jan-2020 09:10:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -923,9 +923,22 @@ if ~exist([M.ui.groupdir,'connectomes',filesep,'dMRI'], 'dir')
     mkdir([M.ui.groupdir,'connectomes',filesep,'dMRI'])
 end
 
+entries=get(handles.gcfilter,'String');
+entry=entries{get(handles.gcfilter,'Value')};
+switch entry
+    case 'No filtering'
+        filtermask='';
+    case 'Filter by white matter mask'
+        filtermask=ea_niigz([ea_space,'c2mask']);
+    case 'Filter by brain mask'
+        filtermask=ea_niigz([ea_space,'brainmask']);
+    case 'Filter by custom nii...'
+        filtermask=getappdata(handles.gcfilter,'filtermask');
+end
+
 ea_ftr_aggregate(ftrFiles, ...
     [M.ui.groupdir,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized], ...
-    howmanyfibs, 'number');
+    howmanyfibs, 'number', filtermask);
 
 
 function lc_contrast_Callback(hObject, eventdata, handles)
@@ -1208,3 +1221,32 @@ function lc_nbsadvanced_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 ea_nbs_advanced;
+
+
+% --- Executes on selection change in gcfilter.
+function gcfilter_Callback(hObject, eventdata, handles)
+% hObject    handle to gcfilter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns gcfilter contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from gcfilter
+
+entries=get(hObject,'String');
+entry=entries{get(hObject,'Value')};
+if strcmp(entry,'Filter by custom nii...')
+    [file,path]=uigetfile({'*.nii','.nii.gz'},'Select nifti file for filtering...');
+    setappdata(hObject,'filtermask',fullfile(path,file));
+end
+
+% --- Executes during object creation, after setting all properties.
+function gcfilter_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to gcfilter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

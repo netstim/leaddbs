@@ -16,26 +16,28 @@ if ~isfield(fibinfo,'ea_fibformat')
     ea_convertfibs2newformat(fibinfo,cfile);
     fibinfo = load(cfile);
 end
+
 fibers = fibinfo.fibers;
 idx = fibinfo.idx;
+
 if isfield(fibinfo,'vals')
     vals=fibinfo.vals;
 else
     vals=ones(size(idx));
 end
+
 if nargout>2
-    try
+    if isfield(fibinfo, 'voxmm')
         voxmm = fibinfo.voxmm;
-    catch
-        if any(min(fibers)<0)
-            voxmm = 'mm';
-        else % assume voxel
-            voxmm = 'vox';
-        end
+    elseif any(fibers<0,'all')
+        voxmm = 'mm';
+    else % assume voxel
+        voxmm = 'vox';
     end
-    try
+
+    if isfield(fibinfo, 'mat')
         mat = fibinfo.mat;
-    catch
+    else
         mat = [];
     end
 end
@@ -86,12 +88,12 @@ if exist('freiburgconvert','var')
         b0fi=[pth,filesep,prefs.b0];
     end
     try
-    ver=str2double(fibinfo.version(2:end));
+        ver=str2double(fibinfo.version(2:end));
     catch
         ver=1.1;
     end
     if ver<1.1
-        display('Flip fibers...');
+        disp('Flip fibers...');
 
         dim=getfield(spm_vol(b0fi),'dim');
 

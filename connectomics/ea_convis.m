@@ -80,13 +80,6 @@ set(handles.ymm,'String',num2str(ymm,'%.2f'));
 set(handles.zmm,'String',num2str(zmm,'%.2f'));
 set(handles.matseed,'ForegroundColor',[0,0,0]);
 
-% dev
-if options.prefs.env.dev
-    set(handles.savefibers,'Visible','on')
-else
-    set(handles.savefibers,'Visible','off')
-end
-
 
 function refreshcv(varargin)
 handles=varargin{1};

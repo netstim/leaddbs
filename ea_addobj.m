@@ -148,6 +148,7 @@ end
 % load nifti
 nii=ea_load_nii(addobj);
 nii.img(isnan(nii.img))=0;
+nii.img(isinf(nii.img))=0;
 % if ~all(abs(nii.voxsize)<=1)
 %     ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],0,[],3);
 %     nii=ea_load_nii(addobj);

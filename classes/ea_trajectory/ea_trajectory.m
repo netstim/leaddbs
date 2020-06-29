@@ -6,6 +6,7 @@ classdef ea_trajectory < handle
         elstruct % reconstruction of electrodes as handled by ea_elvis
         plan2elstruct % reconstruction (pseudo) of stereotactical plan
         plan2elstruct_model='Medtronic 3389' % electrode model of pseudo reconstruction of stereotactical plan
+        electrodeRelativeToPlan=3;
         elpatch % handle to macroelectrode patch
         eltype % indexes 1 for electrode contacts in elpatch
         ellabel % handle to electrode label
@@ -14,10 +15,10 @@ classdef ea_trajectory < handle
         target % target and entrypoints as used in surgical planning
         alpha=0.7 % alpha of Planning patch
         radius=0.2 % radius of Planning line
-        color=[0.8,0.3,0.2] % color of Planning patch
+        color=[0.5,0.5,0.5] % color of Planning patch
         colorMacroContacts=[] % optional coloring of macroelectrode contacts
         options % lead-dbs options struct
-        planRelative=[2,1,1,1,1] % First entry: AC=1, MCP=2, PC=3; Second entry: Right=1, Left=2; Third entry: Anterior=1, Posterior=2; Fourth entry: Ventral=1; Dorsal=2; Last entry: ACPC=1, native=2, MNI/Template=3 
+        planRelative=[2,1,1,1,3] % First entry: AC=1, MCP=2, PC=3; Second entry: Right=1, Left=2; Third entry: Anterior=1, Posterior=2; Fourth entry: Ventral=1; Dorsal=2; Last entry: ACPC=1, native=2, MNI/Template=3 
         hasPlanning % determines if object has information to show a fiducial
         hasMacro % determines if object has information to show a macroelectrode
         relateMicro='macro' % determines if microelectrodes shown should be related to planning Fiducial ('planning') or Macroelectrodes ('macro')
@@ -39,7 +40,7 @@ classdef ea_trajectory < handle
     end
     
     properties (Access = private)
-        switchedFromSpace=1 % if switching space, this will protocol where from
+        switchedFromSpace=3 % if switching space, this will protocol where from
     end
 
     methods
@@ -74,8 +75,16 @@ classdef ea_trajectory < handle
                 obj.hasPlanning=1;
                 obj.hasMacro=0;
             else % determine if fiducial and macro information is available
-                obj.hasMacro=~isempty(obj.elstruct);
-                obj.hasPlanning=~isempty(obj.target);
+                try
+                    obj.hasMacro=pobj.hasMacro;
+                catch 
+                    obj.hasMacro=~isempty(obj.elstruct);
+                end
+                try
+                    obj.hasPlanning=pobj.hasPlanning;
+                catch
+                    obj.hasPlanning=~isempty(obj.target);
+                end
                 obj.showMacro=obj.hasMacro;
                 obj.showPlanning=obj.hasPlanning*(~obj.showMacro);
             end
@@ -184,6 +193,7 @@ classdef ea_trajectory < handle
             addlistener(obj, 'colorMacroContacts', 'PostSet', @ea_trajectory.changeevent);
             addlistener(obj, 'planningAppearance', 'PostSet', @ea_trajectory.changeevent);
             addlistener(obj, 'plan2elstruct_model', 'PostSet', @ea_trajectory.changeevent);
+            addlistener(obj, 'electrodeRelativeToPlan', 'PostSet', @ea_trajectory.changeevent);
 
             if (exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit) || ~exist('pobj','var')
                 obj.controlH = ea_trajectorycontrol(obj);
@@ -303,10 +313,11 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         
         obj.target=t;
         ea_synctrajectoryhandles(getappdata(obj.controlH,'chandles'),obj); % sync back control figure
+        ea_save_electrode(obj);
         return
     end
     
-    if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model'}) % need to redraw planning fiducials:
+    if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model','electrodeRelativeToPlan','color'}) % need to redraw planning fiducials:
         % planning fiducial
         if obj.showPlanning
             coords=ea_convertfiducials(obj,[obj.target.target;obj.target.entry]);
@@ -317,13 +328,28 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             delete(obj.patchPlanning);
             
             % estimate pseudo-reconstruction (plan2elstruct):
-            markers.head=tgt;
             
             options=obj.options;
             options.elmodel=obj.plan2elstruct_model;
             options=ea_resolve_elspec(options);
             intraj=(ent-tgt)./norm(ent-tgt);
-            markers.tail=tgt+((3*options.elspec.eldist)*intraj);
+            
+            if options.elspec.tipiscontact
+                shift=-(obj.electrodeRelativeToPlan-1);
+                markers.head=tgt+(((0+shift)*options.elspec.eldist)*intraj);
+                markers.tail=tgt+(((3+shift)*options.elspec.eldist)*intraj);
+            else
+                if obj.electrodeRelativeToPlan>0
+                    shift=-(obj.electrodeRelativeToPlan-1);
+                    markers.head=tgt+(((0+shift)*options.elspec.eldist)*intraj);
+                    markers.tail=tgt+(((3+shift)*options.elspec.eldist)*intraj);
+                else % relative to tip
+                    markers.head=tgt+(((options.elspec.tip_length/2)+(options.elspec.contact_length/2))*intraj);
+                    markers.tail=tgt+(((3)*options.elspec.eldist)*intraj)+(((options.elspec.tip_length/2)+(options.elspec.contact_spacing))*intraj);
+                end
+                
+            end
+
 
             normtrajvector=(markers.tail-markers.head)./norm(markers.tail-markers.head);
             orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
@@ -345,7 +371,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                     options=ea_defaultoptions(options);
                     options.sides=1;
                     options.colorMacroContacts=[];
-                    obj.patchPlanning=ea_showelectrode(obj.plotFigureH,obj.plan2elstruct,1,options);
+                    obj.patchPlanning=ea_showelectrode(obj,'plan',options);
             end
         end
 
@@ -360,9 +386,9 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         end
     end
 
-    if ismember(evtnm,{'color'}) % simply change color of patch
-        obj.patchPlanning.FaceVertexCData=repmat(obj.color,size(obj.patchPlanning.FaceVertexCData,1),1);
-    end
+%     if ismember(evtnm,{'color'}) % simply change color of patch
+%         obj.patchPlanning.FaceVertexCData=repmat(obj.color,size(obj.patchPlanning.FaceVertexCData,1),1);
+%     end
 
     if ismember(evtnm,{'showPlanning'}) && obj.hasPlanning
         for po=1:length({obj.patchPlanning.Visible})
@@ -383,7 +409,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             poptions.colorMacroContacts=obj.colorMacroContacts;
             el_render=getappdata(obj.plotFigureH,'el_render');
 
-            [obj.elpatch,obj.ellabel,obj.eltype]=ea_showelectrode(obj.plotFigureH,obj.elstruct,obj.pt,poptions);
+            [obj.elpatch,obj.ellabel,obj.eltype]=ea_showelectrode(obj,'dbs',poptions);
             if isempty(el_render)
                 clear el_render
             end
@@ -434,7 +460,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     else
         elToggleTag = ['Patient: ', ptname, ', Planning'];
     end
-
+try    ea_save_electrode(obj); end
     set(obj.toggleH, {'Parent','CData','TooltipString','Tag','OnCallback','OffCallback','State'},...
         {obj.htH, ...
         elToogleIcon, elToggleTooltip, elToggleTag,...

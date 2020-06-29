@@ -9,6 +9,7 @@ nii=dir([pth,'.nii']);
 niigz=dir([pth,'.nii.gz']);
 
 if ~isempty(nii) && ~isempty(niigz)
+    warning('off', 'backtrace');
     warning(['Duplicate .nii/.nii.gz files detected for ',name]);
     switch ext
         case '.nii' % explicitly asked for .nii
@@ -17,6 +18,7 @@ if ~isempty(nii) && ~isempty(niigz)
         otherwise
             fn=[pth,'.nii.gz'];
     end
+    warning('on', 'backtrace');
 elseif isempty(nii) && ~isempty(niigz)
     fn=[pth,'.nii.gz'];
 elseif ~isempty(nii) && isempty(niigz)

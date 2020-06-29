@@ -151,7 +151,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
             for side=elSide{pt}
                 try
-                    pobj=ea_load_trajectory(directory,side);
+                    pobj=ea_load_electrode(directory,side);
                     pobj.hasPlanning=1;
                     pobj.showPlanning=strcmp(options.leadprod,'or');
                 end
@@ -176,7 +176,18 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     end
                 end
             end
-
+            if ~multiplemode
+                d=load([directory,'ea_reconstruction.mat']);
+                plans=d.reco.electrode(side+1:end);
+                if ~isempty(plans)
+                    if isfield(plans,'plan')
+                        for plan=1:length(plans)
+                            pobj=ea_load_electrode(directory,side+plan);
+                            ea_add_trajectory([],[],options,pobj);
+                        end
+                    end
+                end
+            end
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
                % this part for brainbrowser support.
                vizstruct=struct('faces',[],'vertices',[],'colors',[]);
@@ -236,10 +247,27 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                         'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
             end
 
+            
+            % add discriminative fiber explorer button.
+            discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber_add'),...
+                'TooltipString', ['Add discriminative fibertract'],...
+                'Tag', ['Add discriminative fibertract'],...
+                'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
+            
+            di=dir([options.root,options.patientname,filesep,'disctracts',filesep,'*.mat']);
+            for d=1:length(di)
+                uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
+                    'TooltipString', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
+                    'Tag', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
+                    'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'disctracts',filesep,di(d).name],resultfig});
+            end
+            
             % Move the group toggle forward
+            tractToggleInd = 1:length(di)+1;
+            eleGroupToggleInd = length(tractToggleInd)+1:length(tractToggleInd)+numel(unique(elstructGroupID));
             isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
-            eleToggleInd = numel(unique(elstructGroupID))+1:find(~isEleToggle,1)-1;
-            ht.Children=ht.Children([eleToggleInd, 1:numel(unique(elstructGroupID)), find(~isEleToggle,1):end]);
+            eleToggleInd = length(tractToggleInd)+length(eleGroupToggleInd)+1:find(isEleToggle,1,'last');
+            ht.Children=ht.Children([eleToggleInd, eleGroupToggleInd, tractToggleInd, find(isEleToggle,1,'last')+1:end]);   
         end
 
         try
@@ -284,7 +312,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         % Initialize Stimulation-Button
         if ~strcmp(options.leadprod, 'group')
             eladdTraj = uipushtool(ht,'CData',ea_get_icn('addelectrode'),...
-                'TooltipString','Add Trajectory...','ClickedCallback',@ea_add_trajectory);
+                'TooltipString','Add Trajectory...','ClickedCallback',{@ea_add_trajectory,options});
             stimbutton = uipushtool(ht,'CData',ea_get_icn('stimulation'),...
                 'TooltipString','Stimulation Control Figure',...
                 'ClickedCallback',{@openstimviewer,elstruct,resultfig,options});

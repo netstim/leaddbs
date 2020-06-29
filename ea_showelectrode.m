@@ -1,13 +1,24 @@
-function [elrender,ellabel,eltype]=ea_showelectrode(resultfig,elstruct,pt,options)
+function [elrender,ellabel,eltype]=ea_showelectrode(obj,cmd,options)
 % This function renders the electrode as defined by options.elspec and
 % coords_mm.
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
+switch cmd
+    case 'dbs'
+        resultfig=obj.plotFigureH;
+        elstruct=obj.elstruct;
+        pt=obj.pt;
+    case 'plan'
+        resultfig=obj.plotFigureH;
+        elstruct=obj.plan2elstruct;
+        pt=1;
+end
+
+
 coords_mm=elstruct.coords_mm;
 trajectory=elstruct.trajectory;
-
 
 if ~isfield(elstruct,'elmodel') % usually, elspec is defined by the GUI. In case of group analyses, for each patient, a different electrode model can be selected for rendering.
     elspec=options.elspec;
@@ -20,15 +31,17 @@ if ~isfield(elstruct,'activecontacts')
     elstruct.activecontacts{1}=zeros(elspec.numel,1);
     elstruct.activecontacts{2}=zeros(elspec.numel,1);
 end
-if ~isfield(options.d3,'pntcmap') % use default blue to red colormap
-    jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
-else
-    jetlist = options.d3.pntcmap;
+if isfield(options.d3,'pntcmap')
+    cmap = options.d3.pntcmap;
+elseif isfield(options.d3, 'regressorcolormap')
+    cmap = options.d3.regressorcolormap;
+else % use default blue to red colormap
+    cmap = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
 end
+
 try
-    jetlist=evalin('base','custom_cmap');
+    cmap=evalin('base','custom_cmap');
 end
-%   jetlist=jet;
 
 for side=options.sides
 %     trajvector=mean(diff(trajectory{side}));
@@ -107,12 +120,15 @@ for side=options.sides
                         usecolor=elspec.lead_color;
                 end
             else
-                if isfield(elstruct,'group')
-
-                    usecolor=elstruct.groupcolors(elstruct.group,:);
-
-                else
-                    usecolor=elspec.lead_color;
+                switch cmd
+                    case 'dbs'
+                        if isfield(elstruct,'group')
+                            usecolor=elstruct.groupcolors(elstruct.group,:);
+                        else
+                            usecolor=elspec.lead_color;
+                        end
+                    case 'plan'
+                        usecolor=obj.color;
                 end
             end
             specsurf(elrender(cnt),usecolor,aData);
@@ -128,7 +144,18 @@ for side=options.sides
             if ~isempty(options.colorMacroContacts)
                 specsurf(elrender(cnt),options.colorMacroContacts(con,:),1);
             else
-                if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{side})) % make active red contact without transparency
+                if contains(nameprefix, '_mirrored_')
+                    % Mirror highlight contact
+                    if side == 1
+                        mside = 2;
+                    elseif side == 2
+                        mside = 1;
+                    end
+                else
+                    mside = side;
+                end
+
+                if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{mside})) % make active red contact without transparency
                     specsurf(elrender(cnt),[0.8,0.2,0.2],1);
                 else
                     specsurf(elrender(cnt),elspec.contact_color,aData);
@@ -193,8 +220,11 @@ for side=options.sides
 
         % draw contacts
         try
-            minval=ea_nanmin(options.d3.isomatrix{1}{side}(:));
-            maxval=ea_nanmax(options.d3.isomatrix{1}{side}(:));
+
+            normalisomatrix{side}=options.d3.isomatrix{1}{side};
+            normalisomatrix{side}(:)=ea_normal(normalisomatrix{side}(:));
+            minval=ea_nanmin(normalisomatrix{side}(:));
+            maxval=ea_nanmax(normalisomatrix{side}(:));
             %minval=-1;
             %maxval=1;
         end
@@ -218,20 +248,16 @@ for side=options.sides
 
                     if ~isnan(options.d3.isomatrix{1}{side}(pt,cntct))
 
-                        usefacecolor=((options.d3.isomatrix{1}{side}(pt,cntct)-minval)/(maxval-minval))*64;
+                        usefacecolor=((normalisomatrix{side}(pt,cntct)-minval)/(maxval-minval))*(length(cmap)-1);
 
-                        %                         % ## add some contrast (remove these lines for linear
-                        %                         % mapping)
-                        %
-                        %
-                        %                         usefacecolor=usefacecolor-20;
-                        %                         usefacecolor(usefacecolor<1)=1;
-                        %                         usefacecolor=usefacecolor*2;
-                        %                         usefacecolor(usefacecolor>64)=64;
-                        %
-                        %                         % ##
+                        % % Add some contrast (remove these lines for linear mapping)
+                        % usefacecolor=usefacecolor-20;
+                        % usefacecolor(usefacecolor<1)=1;
+                        % usefacecolor=usefacecolor*2;
+                        % usefacecolor(usefacecolor>64)=64;
 
-                        usefacecolor=ind2rgb(round(usefacecolor),jetlist);
+                        usefacecolor = usefacecolor + 1;
+                        usefacecolor = ind2rgb(round(usefacecolor),cmap);
                     else
                         usefacecolor=nan; % won't draw the point then.
                     end

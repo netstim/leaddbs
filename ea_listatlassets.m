@@ -14,7 +14,9 @@ if options.prefs.env.dev
     atlases{end+1}='Segment patient anatomy';
 end
 
-atlases{end+1}='Use none';
+if ~(isfield(handles, 'output') && strcmp(get(handles.output,'Name'),'FEM-based VAT model setting'))
+    atlases{end+1}='Use none';
+end
 
 natlases=cell(0);
 if mninative==2

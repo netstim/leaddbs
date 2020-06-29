@@ -41,14 +41,11 @@ function eps2pdf(source, dest, crop, append, gray, quality, gs_options)
 % Suggestion of appending pdf files provided by Matt C at:
 % http://www.mathworks.com/matlabcentral/fileexchange/23629
 
-% Thank you to Fabio Viola for pointing out compression artifacts, leading
-% to the quality setting.
-% Thank you to Scott for pointing out the subsampling of very small images,
-% which was fixed for lossless compression settings.
+% Thank you Fabio Viola for pointing out compression artifacts, leading to the quality setting.
+% Thank you Scott for pointing out the subsampling of very small images, which was fixed for lossless compression settings.
 
 % 09/12/11: Pass font path to ghostscript
-% 26/02/15: If temp dir is not writable, use the dest folder for temp
-%           destination files (Javier Paredes)
+% 26/02/15: If temp dir is not writable, use the dest folder for temp destination files (Javier Paredes)
 % 28/02/15: Enable users to specify optional ghostscript options (issue #36)
 % 01/03/15: Upon GS error, retry without the -sFONTPATH= option (this might solve
 %           some /findfont errors according to James Rankin, FEX Comment 23/01/15)
@@ -57,35 +54,48 @@ function eps2pdf(source, dest, crop, append, gray, quality, gs_options)
 % 22/02/16: Bug fix from latest release of this file (workaround for issue #41)
 % 20/03/17: Added informational message in case of GS croak (issue #186)
 % 16/01/18: Improved appending of multiple EPS files into single PDF (issue #233; thanks @shartjen)
+% 18/10/19: Workaround for GS 9.51+ .setpdfwrite removal problem (issue #285)
+% 18/10/19: Warn when ignoring GS fontpath or quality options; clarified error messages
+% 15/01/20: Added information about the GS/destination filepath in case of error (issue #294)
+% 20/01/20: Attempted fix for issue #285: unsupported patch transparency in some Ghostscript versions
+% 12/02/20: Improved fix for issue #285: add -dNOSAFER and -dALLOWPSTRANSPARENCY (thanks @linasstonys)
 
     % Intialise the options string for ghostscript
     options = ['-q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile="' dest '"'];
+
     % Set crop option
     if nargin < 3 || crop
         options = [options ' -dEPSCrop'];
     end
+
     % Set the font path
     fp = font_path();
     if ~isempty(fp)
         options = [options ' -sFONTPATH="' fp '"'];
     end
+
     % Set the grayscale option
     if nargin > 4 && gray
         options = [options ' -sColorConversionStrategy=Gray -dProcessColorModel=/DeviceGray'];
     end
+
     % Set the bitmap quality
+    qualityOptions = '';
     if nargin > 5 && ~isempty(quality)
-        options = [options ' -dAutoFilterColorImages=false -dAutoFilterGrayImages=false'];
+        qualityOptions = ' -dAutoFilterColorImages=false -dAutoFilterGrayImages=false';
         if quality > 100
-            options = [options ' -dColorImageFilter=/FlateEncode -dGrayImageFilter=/FlateEncode -c ".setpdfwrite << /ColorImageDownsampleThreshold 10 /GrayImageDownsampleThreshold 10 >> setdistillerparams"'];
+            qualityOptions = [qualityOptions ' -dColorImageFilter=/FlateEncode -dGrayImageFilter=/FlateEncode'];
+            qualityOptions = [qualityOptions ' -c ".setpdfwrite << /ColorImageDownsampleThreshold 10 /GrayImageDownsampleThreshold 10 >> setdistillerparams"'];
         else
-            options = [options ' -dColorImageFilter=/DCTEncode -dGrayImageFilter=/DCTEncode'];
+            qualityOptions = [qualityOptions ' -dColorImageFilter=/DCTEncode -dGrayImageFilter=/DCTEncode'];
             v = 1 + (quality < 80);
             quality = 1 - quality / 100;
             s = sprintf('<< /QFactor %.2f /Blend 1 /HSample [%d 1 1 %d] /VSample [%d 1 1 %d] >>', quality, v, v, v, v);
-            options = sprintf('%s -c ".setpdfwrite << /ColorImageDict %s /GrayImageDict %s >> setdistillerparams"', options, s, s);
+            qualityOptions = [qualityOptions ' -c ".setpdfwrite << /ColorImageDict ' s ' /GrayImageDict ' s ' >> setdistillerparams"'];
         end
+        options = [options qualityOptions];
     end
+
     % Enable users to specify optional ghostscript options (issue #36)
     if nargin > 6 && ~isempty(gs_options)
         if iscell(gs_options)
@@ -97,6 +107,7 @@ function eps2pdf(source, dest, crop, append, gray, quality, gs_options)
         end
         options = [options gs_options];
     end
+
     % Check if the output file exists
     if nargin > 3 && append && exist(dest, 'file') == 2
         % File exists - append current figure to the end
@@ -142,33 +153,80 @@ function eps2pdf(source, dest, crop, append, gray, quality, gs_options)
         % Convert to pdf using ghostscript
         [status, message] = ghostscript(options);
     end
+
     % Check for error
     if status
+        % Catch and correct undefined .setopacityalpha errors (issue #285)
+        % (see explanation inside print2eps.m)
+        if ~isempty(regexpi(message,'undefined in .setopacityalpha'))
+            % First try with -dNOSAFER and -dALLOWPSTRANSPARENCY  (thanks @linasstonys)
+            new_options = [options ' -dNOSAFER -dALLOWPSTRANSPARENCY'];
+            [status, message] = ghostscript(new_options);
+            if ~status  % hurray! (no error)
+                return
+            elseif isempty(regexpi(message,'undefined in .setopacityalpha'))  % still some other error
+                options = new_options;
+            else  % we still get a .setopacityalpha error
+                % Remove the transparency and retry
+                fstrm = read_write_entire_textfile(source);
+                fstrm = regexprep(fstrm, '0?\.\d+ .setopacityalpha \w+\n', '');
+                read_write_entire_textfile(source, fstrm);
+                [status, message] = ghostscript(options);
+                if ~status % hurray! (no error)
+                    % Alert the user that transparency is not supported
+                    warning('export_fig:GS:quality','Export_fig Face/Edge alpha transparancy is ignored - not supported by your Ghostscript version')
+                    return
+                end
+            end
+        end
+
         % Retry without the -sFONTPATH= option (this might solve some GS
         % /findfont errors according to James Rankin, FEX Comment 23/01/15)
         orig_options = options;
         if ~isempty(fp)
             options = regexprep(options, ' -sFONTPATH=[^ ]+ ',' ');
-            status = ghostscript(options);
-            if ~status, return; end  % hurray! (no error)
+            [status, message] = ghostscript(options);
+            if ~status % hurray! (no error)
+                warning('export_fig:GS:fontpath','Export_fig font option is ignored - not supported by your Ghostscript version')
+                return
+            end
         end
+
+        % Retry without quality options (may solve problems with GS 9.51+, issue #285)
+        if ~isempty(qualityOptions)
+            options = strrep(orig_options, qualityOptions, '');
+            [status, message] = ghostscript(options);
+            if ~status % hurray! (no error)
+                warning('export_fig:GS:quality','Export_fig quality option is ignored - not supported by your Ghostscript version')
+                return
+            end
+        end
+
         % Report error
         if isempty(message)
-            error('Unable to generate pdf. Check destination directory is writable.');
-        elseif ~isempty(strfind(message,'/typecheck in /findfont'))
+            error(['Unable to generate pdf. Ensure that the destination folder (' fileparts(dest) ') is writable.']);
+        elseif ~isempty(strfind(message,'/typecheck in /findfont')) %#ok<STREMP>
             % Suggest a workaround for issue #41 (missing font path)
             font_name = strtrim(regexprep(message,'.*Operand stack:\s*(.*)\s*Execution.*','$1'));
             fprintf(2, 'Ghostscript error: could not find the following font(s): %s\n', font_name);
-            fpath = fileparts(mfilename('fullpath'));
-            gs_fonts_file = fullfile(fpath, '.ignore', 'gs_font_path.txt');
+            %fpath = fileparts(mfilename('fullpath'));
+            %gs_fonts_file = fullfile(fpath, '.ignore', 'gs_font_path.txt');
+            [unused, gs_fonts_file] = user_string('gs_font_path'); %#ok<ASGLU>
             fprintf(2, '  try to add the font''s folder to your %s file\n\n', gs_fonts_file);
             error('export_fig error');
         else
-            fprintf(2, '\nGhostscript error: perhaps %s is open by another application\n', dest);
-            if ~isempty(gs_options)
-                fprintf(2, '  or maybe the%s option(s) are not accepted by your GS version\n', gs_options);
+            gs_options = strtrim(gs_options);
+            fprintf(2, '\nGhostscript error: ');
+            msg = regexprep(message, '^Error: /([^\n]+).*', '$1');
+            if ~isempty(msg) && ~strcmp(msg,message)
+                fprintf(2,'%s',msg);
             end
-            fprintf(2, '  or maybe you have another gs executable in your system''s path\n');
+            fprintf(2, '\n * perhaps %s is open by another application\n', dest);
+            if ~isempty(gs_options)
+                fprintf(2, ' * or maybe your Ghostscript version does not accept the extra "%s" option(s) that you requested\n', gs_options);
+            end
+            fprintf(2, ' * or maybe you have another gs executable in your system''s path\n\n');
+            fprintf(2, 'Ghostscript path: %s\n', user_string('ghostscript'));
             fprintf(2, 'Ghostscript options: %s\n\n', orig_options);
             error(message);
         end

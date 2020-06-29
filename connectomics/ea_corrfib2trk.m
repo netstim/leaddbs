@@ -28,7 +28,7 @@ end
 if nargin < 3
     outputName = ['corrFTR', suffix];
 else
-    outputName = strrep(outputName, '.mat', '');
+    outputName = strrep(outputName, '.trk', '');
 end
 
 fibcell = fibcell(selInd);
@@ -51,8 +51,8 @@ if isempty(fileparts(reformatted_corrfibs))
 else
     outputDir = fileparts(reformatted_corrfibs);
 end
-save(fullfile(outputDir, outputName), ...
+save(fullfile(outputDir, [outputName, '.mat']), ...
      'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
 
 % FTR to TRK conversion
-ea_ftr2trk(fullfile(outputDir, outputName));
+ea_ftr2trk(fullfile(outputDir, [outputName, '.mat']));

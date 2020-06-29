@@ -68,11 +68,19 @@ switch ea_whichnormmethod(directory)
             else
                 wasgz = 0;
             end
+
+            refIsGz = 0;
+
             usepush=1;
             if useinverse
                 if isempty(refim)
                     refim = [directory,options.prefs.prenii_unnormalized];
+                elseif endsWith(refim, '.gz')
+                    refIsGz = 1;
+                    gunzip(refim);
+                    refim = strrep(refim, '.gz', '');
                 end
+
                 if usepush
                     matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
                     matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
@@ -82,9 +90,7 @@ switch ea_whichnormmethod(directory)
                     matlabbatch{1}.spm.util.defs.out{1}.push.preserve = 0;
                     matlabbatch{1}.spm.util.defs.out{1}.push.fwhm = [0.5 0.5 0.5];
                     matlabbatch{1}.spm.util.defs.out{1}.push.prefix = '';
-                    
                 else
- 
                     matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                     matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = from(fi);
                     matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {fileparts(to{fi})};
@@ -99,7 +105,12 @@ switch ea_whichnormmethod(directory)
                 if isempty(refim)
                     spacedef=ea_getspacedef;
                     refim = [ea_space,spacedef.templates{1},'.nii'];
+                elseif endsWith(refim, '.gz')
+                    refIsGz = 1;
+                    gunzip(refim);
+                    refim = strrep(refim, '.gz', '');
                 end
+
                 if usepush
                     matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_inv_normparams.nii']};
                     matlabbatch{1}.spm.util.defs.out{1}.push.fnames = from(fi);
@@ -117,7 +128,6 @@ switch ea_whichnormmethod(directory)
                     matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
                     matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0.5 0.5 0.5];
                     matlabbatch{1}.spm.util.defs.out{1}.pull.prefix = '';
-
                 end
                 spm_jobman('run',{matlabbatch});
                 clear matlabbatch
@@ -135,6 +145,11 @@ switch ea_whichnormmethod(directory)
 
             try % fails if to is a w prefixed file already
                 movefile(fullfile(pth,['sw', fn, ext]),to{fi});
+            end
+
+            if refIsGz
+                gzip(refim);
+                delete(refim);
             end
 
             if gzip_output

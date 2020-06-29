@@ -1,42 +1,45 @@
-function ea_ftr2nii(ftr,niftifile)
+function ea_ftr2nii(ftrFile, reference, outputName)
 
-
-if ~exist('niftifile','var')
-    niftifile=[ea_space,'t1.nii'];
+if ~exist('reference','var')
+    reference = [ea_space,'t1.nii'];
 end
-nii=ea_load_nii(niftifile);
+refnii = ea_load_nii(reference);
 
-[fibers,idx,voxmm,mat,vals]=ea_loadfibertracts(ftr);
-
-if strcmp(voxmm,'vox') % convert to mm based on mat supplied with ftr file
-    T=(mat*[fibers(:,1:3)';ones(1,size(fibers,1))]);
-    fibers(:,1:3)=round(T(1:3,:)');
+if ~exist('outputName','var')
+    outputName = regexprep(ftrFile, '\.mat$', '.nii');
 end
 
-T=(nii.mat\[fibers(:,1:3)';ones(1,size(fibers,1))]);
-fibers=round(T(1:3,:)');
+[fibers,idx,voxmm,mat,vals] = ea_loadfibertracts(ftrFile);
 
-nii.img(:)=0;
-niisz=size(nii.img);
+fiberval = repelem(vals, idx);
+fiberval(isnan(fiberval)) = 0;
+fiberval(isinf(fiberval)) = 0;
 
-fibers(fibers<=0)=1;
-for dim=1:3
-fibers(fibers(:,dim)>niisz(dim),dim)=niisz(dim);
-end
-cnt=1;
-ea_dispercent(0,'Iterating fibers');
-for fib=1:length(idx)
-    if ~isnan(vals(fib)) && ~isinf(vals(fib))
-        fixx=cnt:cnt+(idx(fib)-1);
-        ixx=sub2ind(niisz,fibers(fixx,1),fibers(fixx,2),fibers(fixx,3));
-        nii.img(ixx)=nii.img(ixx)+vals(fib);
+if strcmp(voxmm, 'mm')
+    % Covert fibers into the reference voxel space
+    fibers_vox = round(ea_mm2vox(fibers(:,1:3), refnii.mat));
+elseif strcmp(voxmm, 'vox')
+    if isempty(mat) || all(mat==refnii.mat, 'all')
+        % Suppose fibers are already in the reference voxel space
+        fibers_vox = round(fibers(:,1:3));
+    else
+        % Covert fibers to mm and then into the reference voxel space
+        fibers_mm = ea_vox2mm(fibers(:,1:3), mat);
+        fibers_vox = round(ea_mm2vox(fibers_mm(:,1:3), refnii.mat));
     end
-    cnt=cnt+idx(fib);
-    ea_dispercent(fib/length(idx));
 end
-ea_dispercent(1,'end');
 
-[pth,fn,ext]=fileparts(ftr);
-nii.fname=fullfile(pth,[fn,'.nii']);
-nii.dt=[16,0];
-ea_write_nii(nii);
+% Remove all outliers
+fibers_vox = fibers_vox(all(fibers_vox>0, 2) & all(fibers_vox<=refnii.dim, 2), :);
+
+% Calculate values at voxels
+refnii.img = zeros(size(refnii.img));
+fibImgInd = sub2ind(size(refnii.img), fibers_vox(:,1), fibers_vox(:,2), fibers_vox(:,3));
+[unifibImgInd, ~, ic] = unique(fibImgInd);
+fibImgVal = accumarray(ic, fiberval);
+refnii.img(unifibImgInd) = refnii.img(unifibImgInd) + fibImgVal;
+
+% Save nifti
+refnii.fname = outputName;
+refnii.dt = [16,0];
+ea_write_nii(refnii);

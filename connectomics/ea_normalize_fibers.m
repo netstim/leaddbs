@@ -10,7 +10,7 @@ directory=[options.root,options.patientname,filesep];
 try
 	if ~exist([directory,ftrfname,'.trk'],'file')
         fprintf('\nExporting unnormalized fibers to TrackVis...\n');
-        ea_b0ftr2trk([directory,ftrfname,'.mat'],[directory,options.prefs.b0]);
+        ea_ftr2trk([directory,ftrfname,'.mat'],[directory,options.prefs.b0]);
         disp('Done.');
 	end
 end
@@ -76,24 +76,44 @@ fprintf('\nNormalizing fibers...\n');
 fprintf('\nMapping from b0 to anat...\n');
 [~, mov] = fileparts(options.prefs.b0);
 [~, fix] = fileparts(options.prefs.prenii_unnormalized);
-coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
-options.coregmr.method = coregmethod;
-xfm = [mov, '2', fix, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
+    xfm = [mov, '2', fix, '(Inverse)?Composite\.nii\.gz$'];
+else
+    coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
+    options.coregmr.method = coregmethod;
+    xfm = [mov, '2', fix, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
+end
 transform = ea_regexpdir(directory, xfm, 0);
 
 if numel(transform) == 0
     warning('Specified transformation not found! Running coregistration now!');
-    ea_backuprestore(refb0);
-    ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
-    ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
+    if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
+        ea_ants_nonlinear_coreg([directory,options.prefs.prenii_unnormalized],...
+            [directory,options.prefs.b0],...
+            [directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
+        ea_delete([directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
+    else
+        ea_backuprestore(refb0);
+        ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
+        ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
+    end
 end
-[~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
-                                   refb0, ...
-                                   [directory, mov, '2', fix, '.mat'], ...
-                                   refanat, ...
-                                   options.coregmr.method);
+
+if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
+    [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
+                                       refb0, ...
+                                       [directory,ea_stripext(options.prefs.b0), '2', ea_stripext(options.prefs.prenii_unnormalized), 'InverseComposite.nii.gz'], ...
+                                       refanat, 'ANTs');
+else
+    [~, wfibsvox_anat] = ea_map_coords(fibers(:,1:3)', ...
+                                       refb0, ...
+                                       [directory, mov, '2', fix, '.mat'], ...
+                                       refanat, ...
+                                       options.coregmr.method);
+end
+
 wfibsvox_anat = wfibsvox_anat';
-ea_savefibertracts([directory,ftrfname,'_anat.mat'],[wfibsvox_anat,fibers(:,4)],idx,'vox');
+ea_savefibertracts([directory,ftrfname,'_anat.mat'],[wfibsvox_anat,fibers(:,4)],idx,'vox',refanat);
 fprintf('\nGenerating trk in anat space...\n');
 ea_ftr2trk([directory,ftrfname,'_anat.mat'],refanat);
 
@@ -117,8 +137,6 @@ fprintf('\nMapping from anat to mni...\n');
 
 wfibsmm_mni = wfibsmm_mni';
 wfibsvox_mni = wfibsvox_mni';
-
-mniaffine=spm_get_space(refnorm);
 
 fprintf('\nNormalization done.\n');
 
@@ -151,7 +169,7 @@ if ~exist([directory,'connectomes',filesep,'dMRI'],'file')
     mkdir([directory,'connectomes',filesep,'dMRI']);
 end
 ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'.mat'],[wfibsmm_mni,fibers(:,4)],idx,'mm');
-ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'_vox.mat'],[wfibsvox_mni,fibers(:,4)],idx,'vox');
+ea_savefibertracts([directory,'connectomes',filesep,'dMRI',filesep,ftrbase,'_vox.mat'],[wfibsvox_mni,fibers(:,4)],idx,'vox',refnorm);
 
 %% create normalized trackvis version
 fprintf('\nExporting normalized fibers to TrackVis...\n');

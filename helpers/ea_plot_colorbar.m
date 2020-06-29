@@ -1,13 +1,14 @@
-function h = ea_plot_colorbar(cmap, width, orientation, titletxt, tick, ticklabel)
+function h = ea_plot_colorbar(cmap, width, orientation, titletxt, tick, ticklabel, target)
 % Plot a standalone colorbar
 %
 % Parameters:
 %     cmap: colormap to be plotted
 %     width: width/height of the colorbar (vertical/horizontal mode)
 %     orientation: 'v' for vertical or 'h' for horizontal
-%     title: tile of the colorbar
+%     titletxt: tile of the colorbar figure
 %     tick: tick locations
-%     label: tick labels
+%     ticklabel: tick labels
+%     target: figure or axes to plot the colorbar
 %
 % Output:
 %     handle to the colorbar image figure
@@ -16,10 +17,16 @@ function h = ea_plot_colorbar(cmap, width, orientation, titletxt, tick, ticklabe
 %     h = ea_plot_colorbar(colormap, 10, 'h', 'Cool');
 %     ea_plot_colorbar(jet(128), [], 'v', '');
 
-h = figure('Name', 'Colorbar');
-h.Position(3:4) = [370, 440];
+if ~exist('target', 'var')
+    h = figure('Name', 'Colorbar');
+    h.Position(3:4) = [370, 440];
+    target = gca;
+    plotInSeparateFigure = 1;
+else
+    plotInSeparateFigure = 0;
+end
 
-map = colormap(gcf, cmap);
+map = colormap(target, cmap);
 
 if ~exist('width', 'var') || isempty(width)
     width = ceil(length(cmap)/16);
@@ -35,7 +42,7 @@ end
 
 switch lower(orientation)
     case {'v', 'vert', 'vertical'}
-        image(repmat(cat(3, map(:,1), map(:,2), map(:,3)), 1, width));
+        image(target, repmat(cat(3, map(:,1), map(:,2), map(:,3)), 1, width));
 
         % Remove xticks
         set(gca, 'xtick', []);
@@ -46,7 +53,7 @@ switch lower(orientation)
             set(gca, 'ytick', tick);
             if exist('ticklabel', 'var')
                 if length(tick) == length(ticklabel)
-                    set(gca, 'yticklabel', ticklabel);
+                    set(target, 'yticklabel', ticklabel);
                 else
                     error('tick and ticklabel should have the same length!');
                 end
@@ -54,23 +61,23 @@ switch lower(orientation)
                 error('Please also specify ticklabel!');
             end
         else
-            tick = get(gca, 'ytick');
-            set(gca, 'ytick', [0.5, tick]);
-            set(gca, 'yticklabel', [0, tick]);
+            tick = get(target, 'ytick');
+            set(target, 'ytick', [0.5, tick]);
+            set(target, 'yticklabel', [0, tick]);
         end
 
     case {'h', 'horz', 'horizontal'}
-        image(repmat(cat(3, map(:,1)', map(:,2)', map(:,3)'), width, 1));
+        image(target, repmat(cat(3, map(:,1)', map(:,2)', map(:,3)'), width, 1));
 
         % Remove yticks
-        set(gca, 'ytick', []);
+        set(target, 'ytick', []);
 
         % Set xticks
         if exist('tick', 'var')
-            set(gca, 'xtick', tick);
+            set(target, 'xtick', tick);
             if exist('ticklabel', 'var')
                 if length(tick) == length(ticklabel)
-                    set(gca, 'xticklabel', ticklabel);
+                    set(target, 'xticklabel', ticklabel);
                 else
                     error('tick and ticklabel should have the same length!');
                 end
@@ -78,18 +85,20 @@ switch lower(orientation)
                 error('Please also specify ticklabel!');
             end
         else
-            tick = get(gca, 'xtick');
-            set(gca, 'xtick', [0.5, tick]);
-            set(gca, 'xticklabel', [0, tick]);
+            tick = get(target, 'xtick');
+            set(target, 'xtick', [0.5, tick]);
+            set(target, 'xticklabel', [0, tick]);
         end
 
     otherwise
         error('Unknown colorbar orientation!');
 end
 
-% Set up the axis
-set(gca, 'Color', 'none');
-title(titletxt)
-axis equal
-axis tight
-axis xy
+set(target, 'Color', 'none');
+set(get(target,'XLabel'), 'Visible', 'off');
+set(get(target,'YLabel'), 'Visible', 'off');
+axis(target, 'equal', 'tight', 'xy');
+
+if plotInSeparateFigure
+    title(titletxt);
+end

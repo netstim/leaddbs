@@ -1,5 +1,6 @@
 function outputfolder = ea_getoutputfolder(sfile,con)
-if strcmp(con, 'wFTR.mat')
+prefs = ea_prefs;
+if strcmp(con, prefs.FTR_normalized) || strcmp(con, strrep(prefs.FTR_unnormalized, '.mat', '_anat.mat'))
     con = 'Patient''s fiber tracts';
 else
     con = strrep(con, '>', '_');

@@ -92,7 +92,7 @@ clear matlabbatch;
 % ftrstruct_write(ftr,[directory,options.prefs.FTR_unnormalized]);
 
 %% export .trk copy for trackvis visualization
-ea_b0ftr2trk([directory,options.prefs.FTR_unnormalized],[directory,options.prefs.b0]); % export unnormalized ftr to .trk
+ea_ftr2trk([directory,options.prefs.FTR_unnormalized],[directory,options.prefs.b0]); % export unnormalized ftr to .trk
 disp('Done.');
 
 %% add methods dump:

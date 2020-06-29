@@ -40,6 +40,3 @@ matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
 
 spm_jobman('run', {matlabbatch});
 clear matlabbatch
-
-
-

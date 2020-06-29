@@ -12,7 +12,7 @@ end
 
 earoot=ea_getearoot;
 
-updurl = 'http://www.lead-dbs.org/release/download.php';
+updurl = 'https://www.lead-dbs.org/release/download.php';
 if hotfix
     try
         disp('*** Updating LEAD. Please do not quit MATLAB.');

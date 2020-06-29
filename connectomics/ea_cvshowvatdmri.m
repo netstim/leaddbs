@@ -6,12 +6,12 @@ if isstruct(handles) % called from GUI
     vatmodality=vatmodality{get(handles.vatmodality,'Value')};
     vs=get(handles.vatseed,'String'); % dont need this below
     vss=get(handles.vatseed,'Value'); % dont need this below
-    vsname=[ea_nt(options),vs{vss}];
+    vsname=vs{vss};
     [usevat,dimensionality,~,sides]=ea_checkvatselection(handles);
     thresh=get(handles.vatthresh,'String');
 elseif iscell(handles) % called from lead_group
     vatmodality=handles{1};
-    vsname=[ea_nt(options),handles{2},'_',options.groupid];
+    vsname=[handles{2},'_',options.groupid];
     thresh='auto';
     usevat={'right','left'};
     dimensionality=2; % how many ROI.
@@ -33,14 +33,14 @@ end
 % seed filename
 seedfile={};
 for v=1:length(usevat)
-    seedfile{v}=[directory,'stimulations',filesep,vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
+    seedfile{v}=[directory,'stimulations',filesep,ea_nt(options),vsname,filesep,'vat_',usevat{options.sides(v)},'.nii'];
 end
 
 for side=1:length(usevat)
     try
-        load([directory,'stimulations',filesep,vsname,filesep,'stimparameters.mat']);
+        load([directory,'stimulations',filesep,ea_nt(options),vsname,filesep,'stimparameters.mat']);
     catch
-        ea_error(['Could not find stimulation parameters for ',directory,vsname,'.']);
+        ea_error(['Could not find stimulation parameters for ',directory,ea_nt(options),vsname,'.']);
     end
 end
 

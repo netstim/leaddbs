@@ -15,10 +15,10 @@ switch com
     case 'web'
         try
             webopts = weboptions('Timeout',5);
-            version = webread('http://www.lead-dbs.org/release/sw_version.txt',webopts);
+            version = webread('https://www.lead-dbs.org/release/sw_version.txt',webopts);
         catch
             try
-                version = urlread('http://www.lead-dbs.org/release/sw_version.txt','Timeout',5);
+                version = urlread('https://www.lead-dbs.org/release/sw_version.txt','Timeout',5);
             catch
                 version = 'Unknown';
                 return

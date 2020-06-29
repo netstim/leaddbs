@@ -22,7 +22,7 @@ function varargout = ea_lg_3dsetting(varargin)
 
 % Edit the above text to modify the response to help ea_lg_3dsetting
 
-% Last Modified by GUIDE v2.5 14-Jan-2020 12:34:34
+% Last Modified by GUIDE v2.5 24-Mar-2020 09:01:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,7 +66,7 @@ leadfigure = varargin{1};
 setappdata(handles.lg_3dsetting, 'leadfigure', leadfigure);
 
 M = getappdata(leadfigure, 'M');
-set(handles.elmodelselect,'String',[{'Patient specified'},ea_resolve_elspec]);
+set(handles.elmodelselect,'String',[{'Patient specified'};ea_resolve_elspec]);
 try
 	set(handles.elmodelselect, 'Value', M.ui.elmodelselect);
 catch
@@ -86,7 +86,7 @@ catch
 end
 
 try
-	set(handles.colorpointcloudcheck, 'Value', M.ui.colorpointcloudcheck);
+    set(handles.colorpointcloudcheck, 'Value', M.ui.colorpointcloudcheck);
 catch
     set(handles.colorpointcloudcheck, 'Value', 1);
 end
@@ -98,36 +98,10 @@ else
 end
 
 try
-	set(handles.mirrorsides, 'Value', M.ui.mirrorsides);
+    set(handles.mirrorsides, 'Value', M.ui.mirrorsides);
 catch
     set(handles.mirrorsides, 'Value', 0);
 end
-
-try
-	set(handles.showdiscfibers, 'Value', M.ui.showdiscfibers);
-catch
-    set(handles.showdiscfibers, 'Value', 0);
-end
-
-prefs = ea_prefs('');
-discfibers = prefs.machine.lg.discfibers;
-switch discfibers.showfibersset
-    case 'positive'
-        set(handles.showposonly, 'Value', 1);
-        set(handles.pospredthreshold, 'Enable', 'on');
-        set(handles.negpredthreshold, 'Enable', 'off');
-    case 'negative'
-        set(handles.shownegonly, 'Value', 1);
-        set(handles.pospredthreshold, 'Enable', 'off');
-        set(handles.negpredthreshold, 'Enable', 'on');
-    case 'both'
-        set(handles.showboth, 'Value', 1);
-        set(handles.pospredthreshold, 'Enable', 'on');
-        set(handles.negpredthreshold, 'Enable', 'on');
-end
-set(handles.pospredthreshold, 'String', num2str(discfibers.pospredthreshold));
-set(handles.negpredthreshold, 'String', num2str(discfibers.negpredthreshold));
-set(handles.statmetric,'Value',discfibers.statmetric);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -182,7 +156,7 @@ if eventdata.Source.Value ~= M.ui.elmodelselect
                             M.elstruct(pt).elmodel = 'Medtronic 3389';
                         end
                     else
-                        elmodels = [{'Patient specified'},ea_resolve_elspec];
+                        elmodels = [{'Patient specified'};ea_resolve_elspec];
                         M.elstruct(pt).elmodel = elmodels{M.ui.elmodelselect};
                     end
 
@@ -315,15 +289,6 @@ function mirrorsides_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of mirrorsides
 
 
-% --- Executes on button press in showdiscfibers.
-function showdiscfibers_Callback(hObject, eventdata, handles)
-% hObject    handle to showdiscfibers (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showdiscfibers
-
-
 % --- Executes on button press in save3dsetting.
 function save3dsetting_Callback(hObject, eventdata, handles)
 % hObject    handle to save3dsetting (see GCBO)
@@ -337,71 +302,10 @@ M.ui.elrendering = get(handles.elrenderingpopup, 'Value');
 M.ui.isovscloudpopup = get(handles.isovscloudpopup, 'Value');
 M.ui.colorpointcloudcheck = get(handles.colorpointcloudcheck, 'Value');
 M.ui.mirrorsides = get(handles.mirrorsides, 'Value');
-M.ui.showdiscfibers = get(handles.showdiscfibers, 'Value');
 
 setappdata(leadfigure, 'M', M);
 
-prefs=ea_prefs('');
-discfibers = prefs.machine.lg.discfibers;
-switch get(get(handles.showfiberssetpanel, 'SelectedObject'), 'Tag')
-    case 'showposonly'
-        discfibers.showfibersset = 'positive';
-    case 'shownegonly'
-        discfibers.showfibersset = 'negative';
-    case 'showboth'
-        discfibers.showfibersset = 'both';
-end
-discfibers.pospredthreshold = str2double(get(handles.pospredthreshold,'String'));
-discfibers.negpredthreshold = str2double(get(handles.negpredthreshold,'String'));
-discfibers.statmetric = get(handles.statmetric,'Value');
-ea_setprefs('lg.discfibers', discfibers);
-
 delete(handles.lg_3dsetting);
-
-
-function pospredthreshold_Callback(hObject, eventdata, handles)
-% hObject    handle to pospredthreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of pospredthreshold as text
-%        str2double(get(hObject,'String')) returns contents of pospredthreshold as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function pospredthreshold_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to pospredthreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function negpredthreshold_Callback(hObject, eventdata, handles)
-% hObject    handle to negpredthreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of negpredthreshold as text
-%        str2double(get(hObject,'String')) returns contents of negpredthreshold as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function negpredthreshold_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to negpredthreshold (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 
 % --- Executes on selection change in statmetric.
@@ -427,34 +331,17 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in showposonly.
-function showposonly_Callback(hObject, eventdata, handles)
-% hObject    handle to showposonly (see GCBO)
+% --- Executes on button press in regressorcolormap.
+function regressorcolormap_Callback(hObject, eventdata, handles)
+% hObject    handle to regressorcolormap (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+leadfigure = getappdata(handles.lg_3dsetting, 'leadfigure');
 
-% Hint: get(hObject,'Value') returns toggle state of showposonly
-set(handles.pospredthreshold, 'Enable', 'on');
-set(handles.negpredthreshold, 'Enable', 'off');
-
-
-% --- Executes on button press in shownegonly.
-function shownegonly_Callback(hObject, eventdata, handles)
-% hObject    handle to shownegonly (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of shownegonly
-set(handles.pospredthreshold, 'Enable', 'off');
-set(handles.negpredthreshold, 'Enable', 'on');
-
-
-% --- Executes on button press in showboth.
-function showboth_Callback(hObject, eventdata, handles)
-% hObject    handle to showboth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of showboth
-set(handles.pospredthreshold, 'Enable', 'on');
-set(handles.negpredthreshold, 'Enable', 'on');
+M = getappdata(leadfigure, 'M');
+if isfield(M.ui, 'regressorcolormap')
+    M.ui.regressorcolormap = ea_select_colormap(length(gray),'custom2',M.ui.regressorcolormap);
+else
+    M.ui.regressorcolormap = ea_select_colormap(length(gray),'custom2');
+end
+setappdata(leadfigure, 'M', M);

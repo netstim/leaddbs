@@ -1,11 +1,11 @@
 function ea_update_data(varargin)
 % update lead data
 
-updurl = 'http://www.lead-dbs.org/release/download.php';
+updurl = 'https://www.lead-dbs.org/release/download.php';
 
 if nargin
     if strcmp(varargin{1},'full')
-    	id = 'data';
+    	id = 'data_dropbox';
     else
         id = 'updates_data';
     end
@@ -20,7 +20,8 @@ if strcmp(id, 'updates_data')
     if status ~= 200
         info=sprintf(['No data update found!\n',...
                       'Alternatively, you can download the full data zip from:\n', ...
-                      'http://www.lead-dbs.org/release/download.php?id=data']);
+                      'https://www.lead-dbs.org/release/download.php?id=data_dropbox or\n', ...
+                      'https://www.lead-dbs.org/release/download.php?id=data_pcloud']);
         disp(info);
         msgbox(info,'No Update','Help');
         return
@@ -41,7 +42,7 @@ catch
     try
         urlwrite([updurl,'?id=',id],[earoot,'tmp',filesep,'updates.zip'],'Timeout',Inf);
     catch
-        fprintf(['\nDownload error! You may try to download the file manually from:\n',...
+        fprintf(['\nDownload error! You may try to download the update package manually from:\n',...
                  '%s\nand then extract it into Lead-DBS installation folder.\n\n'], [updurl,'?id=',id]);
         msgbox('Please check the command window for more information.','Download error!','Error')
         return

@@ -36,6 +36,12 @@ if nargin
         case {'grey_5','gray_5'}
             load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
             mask=modeldata.mask_hd5;
+        case {'cb','cb_2'}
+            load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
+            mask=modeldata.cbmask;
+        case {'cb_hd','cb_1'}
+            load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);
+            mask=modeldata.cbmask_hd;
     end
 else
     load([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'modeldata.mat']);

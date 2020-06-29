@@ -74,53 +74,66 @@ if strcmp(reference, ['r', options.prefs.rest])
         if ~exist(['mean', options.prefs.rest],'file')
             ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
         end
-        ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],0);
+        ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],3);
     end
-
 end
 
 if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
         options.lc.general.parcellation,'.nii'],'file') ...
         || overwrite
 
-    % for this pair of approved coregistations, find out which method to use -
-    % irrespective of the current selection in coregmethod.
-
-    coregmethodsused=load([directory,'ea_coregmrmethod_applied.mat']);
-    fn=fieldnames(coregmethodsused);
-    for field=1:length(fn)
-        if contains(fn{field},refname)
-            if ~isempty(coregmethodsused.(fn{field}))
-                disp(['For this pair of coregistrations, the user specifically approved the ',coregmethodsused.(fn{field}),' method, so we will overwrite the current global options and use this transform.']);
-                options.coregmr.method=coregmethodsused.(fn{field});
-            end
-            break
+    if exist([directory,'ea_coregmrmethod_applied.mat'], 'file')
+        % Check coreg method used
+        coregmrmethod = load([directory,'ea_coregmrmethod_applied.mat']);
+        images = fieldnames(coregmrmethod);
+        if any(contains(images, refname))
+            options.coregmr.method = coregmrmethod.(images{contains(images, refname)});
+            fprintf(['Coregistration already done using ', options.coregmr.method, '.\n'...
+                'Will try to use the existing transform.\n']);
         end
+    else
+        fprintf(['Unable to determine the coregistration method used.\n', ...
+                 'Will redo the coregistration using the method chosen from GUI.\n']);
+        coregmrmethod.([refname, '_', anatfname]) = checkCoregMethod(options);
+        save([directory,'ea_coregmrmethod_applied.mat'],'-struct','coregmrmethod');
     end
 
     % Disable Hybrid coregistration
-    coregmethod = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
-    options.coregmr.method = coregmethod;
+    options.coregmr.method = strrep(options.coregmr.method, 'Hybrid SPM & ', '');
 
     % Check if the corresponding transform already exists
-    xfm = [anatfname, '2', refname, '_', lower(coregmethod), '\d*\.(mat|h5)$'];
-    transform = ea_regexpdir(directory, xfm, 0);
+    if strcmp(options.coregmr.method, 'ANTsSyN')
+        transform = [refname, '2', anatfname, 'InverseComposite\.nii\.gz$'];
+    else
+        transform = [anatfname, '2', refname, '_', lower(options.coregmr.method), '\d*\.(mat|h5)$'];
+    end
+
+    transform = ea_regexpdir(directory, transform, 0);
 
     if numel(transform) == 0 || overwrite
         if numel(transform) == 0
             warning('Transformation not found! Running coregistration now!');
         end
 
-        transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
-            [directory,reference],...
-            [directory,refname,'_',options.prefs.prenii_unnormalized],...
-            [],1,[],1);
-        % Fix transformation names, replace 'mean' by 'r' for fMRI
-        if strcmp(reference, ['mean', options.prefs.rest])
-            cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
-            transform = strrep(transform, 'mean', 'r');
+        if strcmp(options.coregmr.method, 'ANTsSyN') % ANTs nonlinear case, only for b0 coreg
+            ea_ants_nonlinear_coreg([directory, options.prefs.prenii_unnormalized],...
+                [directory, reference],...
+                [directory, refname, '2', options.prefs.prenii_unnormalized]);
+            ea_delete([directory, refname, '2', options.prefs.prenii_unnormalized]);
+            transform = [directory, refname, '2', anatfname, 'InverseComposite.nii.gz'];
+        else
+            transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
+                [directory,reference],...
+                [directory,refname,'_',options.prefs.prenii_unnormalized],...
+                [],1,[],1);
+
+            % Fix transformation names, replace 'mean' by 'r' for fMRI
+            if strcmp(reference, ['mean', options.prefs.rest])
+                cellfun(@(f) movefile(f, strrep(f, 'mean', 'r')), transform);
+                transform = strrep(transform, 'mean', 'r');
+            end
+            transform = transform{1}; % Forward transformation
         end
-        transform = transform{1}; % Forward transformation
     else
         if numel(transform) > 1
             warning(['Multiple transformations of the same type found! ' ...
@@ -129,12 +142,28 @@ if ~exist([directory,'templates',filesep,'labeling',filesep,refname,'w', ...
         transform = transform{end};
     end
 
-    ea_apply_coregistration([directory,reference], ...
-        [directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'], ...
-        [directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation,'.nii'], ...
-        transform, 'label');
+    if strcmp(options.coregmr.method, 'ANTsSyN') % ANTs nonlinear case, only for b0 coreg
+        ea_ants_apply_transforms(struct,...
+            [directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'],...
+            [directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation,'.nii'],...
+            0,[directory,reference],...
+            transform,'NearestNeighbor');
+    else
+        ea_apply_coregistration([directory,reference], ...
+            [directory,'templates',filesep,'labeling',filesep,'w',options.lc.general.parcellation,'.nii'], ...
+            [directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation,'.nii'], ...
+            transform, 'label');
+    end
 
     ea_gencheckregpair([directory,'templates',filesep,'labeling',filesep,refname,'w',options.lc.general.parcellation],...
         [directory,refname],...
         [directory,'checkreg',filesep,options.lc.general.parcellation,'2',refname,'.png']);
+end
+
+
+function coregmethod = checkCoregMethod(options)
+if strcmp(options.coregmr.method, 'ANTs') && options.coregb0.addSyN
+    coregmethod = 'ANTsSyN';
+else
+    coregmethod = options.coregmr.method;
 end

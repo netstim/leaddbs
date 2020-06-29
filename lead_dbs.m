@@ -1025,7 +1025,7 @@ function viewmanual_Callback(hObject, eventdata, handles)
 % hObject    handle to viewmanual (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-web('http://www.lead-dbs.org/?page_id=71', '-browser')
+web('https://www.lead-dbs.org/?page_id=71', '-browser')
 
 
 % --- Executes on selection change in vizspacepopup.
@@ -1119,7 +1119,7 @@ function leadfigure_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 label='lead-dbs.org';
-url='http://www.lead-dbs.org/';
+url='https://www.lead-dbs.org/';
 position=[65,hObject.Position(4)-60,85,16];
 ea_hyperlink_label(label, url, position);
 

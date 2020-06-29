@@ -76,6 +76,10 @@ catch
     options.coregmr.method='';
 end
 
+try
+    options.coregb0.addSyN = get(handles.addSyN, 'Value');
+end
+
 try % not working when calling from lead_connectome
     % coreg CT
     options.coregct.do=(get(handles.coreg_checkbox,'Value') == get(handles.coreg_checkbox,'Max'));

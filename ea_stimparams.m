@@ -128,7 +128,7 @@ if strcmp(options.leadprod, 'group')
     isdirected=0; % for now allow everything in lead group
 else
     e=load(fullfile(ea_getearoot,'templates','electrode_models',options.elspec.matfname));
-    directed_funs={'ea_genvat_horn'};
+    directed_funs={'ea_genvat_horn','ea_genvat_fastfield'};
     if isfield(e.electrode,'isdirected')
         isdirected=e.electrode.isdirected;
     else
@@ -242,7 +242,7 @@ if ~strcmp(options.leadprod, 'group')
             S=ea_loadstimulation(label,options);
             setappdata(resultfig,'curS',S(1))
             options.writeoutstats = 1;
-            ea_showfibers_volume(resultfig,options);
+            ea_calc_vatstats(resultfig,options);
         end
     end
 end
@@ -1074,7 +1074,7 @@ for group=flix
     if ~exist('hmchanged','var')
         hmchanged=1;
     end
-    ea_showfibers_volume(resultfig,options,hmchanged);
+    ea_calc_vatstats(resultfig,options,hmchanged);
 
     %copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
     try
@@ -1801,7 +1801,7 @@ else
         setappdata(resultfig,'stimparams',stimparams(1,:));
         setappdata(resultfig,'curS',S(1))
         options.writeoutstats = 1;
-        ea_showfibers_volume(resultfig,options);
+        ea_calc_vatstats(resultfig,options);
     else
         disp('VAT, cannot be visualized please recalculate')
     end
@@ -2208,6 +2208,13 @@ switch model
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=1;
+        ea_enable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','on');
+      case 'fastfield'
+        ea_show_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','off');
+        S.monopolarmodel=0;
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
@@ -3235,6 +3242,8 @@ switch model
         ea_vatsettings_horn;
     case 'Dembek 2017'
         ea_vatsettings_dembek;
+     case 'fastfield'
+        ea_vatsettings_fastfield;
 end
 % ea_vatsettings_horn;
 

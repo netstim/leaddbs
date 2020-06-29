@@ -7,14 +7,16 @@ set(0,'CurrentFigure',resultfig);
 
 isobar=getappdata(resultfig,'isobar');
 if isempty(isobar)
-isobar=uitoolbar(resultfig);
-setappdata(resultfig,'isobar',isobar);
+    isobar=uitoolbar(resultfig);
+    setappdata(resultfig,'isobar',isobar);
 end
 hold on
 
-% default blue to red colormap
-jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
-% jetlist=jet;
+if isfield(options.d3, 'regressorcolormap')
+    cmap = options.d3.regressorcolormap;
+else % default blue to red colormap
+    cmap = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]);
+end
 
 if size(options.d3.isomatrix{1},2)==4-1 % 3 contact pairs
     shifthalfup=1;
@@ -23,6 +25,7 @@ elseif size(options.d3.isomatrix{1},2)==4 % 4 contacts
 else
     ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
 end
+
 for side=1:length(options.sides)
     cnt=1;
     for sub=1:length(elstruct)
@@ -43,7 +46,10 @@ for side=1:length(options.sides)
         end
     end
 
-    X{side}=X{side}(:);        Y{side}=Y{side}(:);        Z{side}=Z{side}(:); V{side}=V{side}(:);
+    X{side}=X{side}(:);
+    Y{side}=Y{side}(:);
+    Z{side}=Z{side}(:);
+    V{side}=V{side}(:);
     %assignin('base','X',X);
     %assignin('base','Y',Y);
     %assignin('base','Z',Z);
@@ -62,12 +68,18 @@ for side=1:length(options.sides)
 
     if options.d3.isovscloud==1 % show interpolated point mesh
         ipcnt=1;
+
+        C = VI{side};
+        C = (C-min(C(:)))./(max(C(:))-min(C(:))).*(length(cmap)-1);
+        C(isnan(C)) = 0;
+        C = C+1;
+
         for xx=1:10:size(VI{side},1)
             for yy=1:10:size(VI{side},2)
                 for zz=1:10:size(VI{side},3)
                     if ~isnan(VI{side}(xx,yy,zz))
-                        usefacecolor=VI{side}(xx,yy,zz)*((64+miniso(options.d3.isomatrix))/(maxiso(options.d3.isomatrix)+miniso(options.d3.isomatrix)));
-                        usefacecolor=ind2rgb(round(usefacecolor),jetlist);
+                        usefacecolor = C(xx,yy,zz);
+                        usefacecolor = ind2rgb(round(usefacecolor),cmap);
                         isopatch(side,ipcnt)=plot3(XI(xx,yy,zz),YI(xx,yy,zz),ZI(xx,yy,zz),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',usefacecolor,'Color',usefacecolor);
                         ipcnt=ipcnt+1;
                     end
@@ -76,31 +88,25 @@ for side=1:length(options.sides)
         end
     elseif options.d3.isovscloud==2 % show isovolume
         VI{side}=smooth3(VI{side},'gaussian',[15 15 15]);
-        %keyboard
-        thresh=ea_nanmean(VI{side}(:))-2*ea_nanstd(VI{side}(:));
-        thresh=nanmin(VI{side}(:));
+
         Vol=VI{side};
         Vol(isnan(Vol))=0;
         fv{side}=isosurface(XI,YI,ZI,Vol,0); % could use thresh instead of 0
         try fv{side}=ea_smoothpatch(fv{side},1,100); end
-        C=VI{side};
-        C(C<thresh)=nan;
-        C=C-ea_nanmin(C(:));
-        C=C./ea_nanmax(C(:));
-        C=C.*(length(gray)-1);
-        C(isnan(C))=0;
-        C=C+1;
-        %C=smooth3(C,'gaussian',[11 11 11]);
-        C=C-ea_nanmin(C(:));
-        C=C./ea_nanmax(C(:));
-        C=C.*(length(gray)-1);
-        C=C+1;
+
+        C = VI{side};
+        % thresh=ea_nanmean(VI{side}(:))-2*ea_nanstd(VI{side}(:));
+        % thresh=nanmin(VI{side}(:));
+        % C(C<thresh)=nan;
+        C = (C-min(C(:)))./(max(C(:))-min(C(:))).*(length(cmap)-1);
+        C(isnan(C)) = 0;
+        C = C+1;
 
         nc=isocolors(XI,YI,ZI,C,fv{side}.vertices);
-        nc=squeeze(ind2rgb(round(nc),jet));
+        nc=squeeze(ind2rgb(round(nc),cmap));
         isopatch(side,1)=patch(fv{side},'FaceVertexCData',nc,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong');
 
-        ea_spec_atlas(isopatch(side,1),'isovolume',jet,1);
+        ea_spec_atlas(isopatch(side,1),'isovolume',cmap,1);
 
         % export isovolume manually here:
         res=length(Vol);
@@ -120,7 +126,6 @@ for side=1:length(options.sides)
         nii.fname=[options.root,options.patientname,filesep,options.d3.isomatrix_name,'_',lr,'.nii'];
         ea_write_nii(nii);
         patchbutton(side)=uitoggletool(isobar,'CData',ea_get_icn('isovolume'),'TooltipString',options.d3.isomatrix_name,'OnCallback',{@isovisible,isopatch(side,:)},'OffCallback',{@isoinvisible,isopatch(side,:)},'State','on');
-
     end
 end
 
@@ -135,17 +140,9 @@ set(atls, 'Visible', 'off');
 %disp([atls,'invisible clicked']);
 
 
-function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.
-m=-inf;
-for c=1:length(cellinp)
-    nm=max(cellinp{c}(:));
-    if nm>m; m=nm; end
-end
+function m = maxiso(isomatrix) % Returns the max value of matrices in a cell.
+m = max(cellfun(@(x) max(x(:)), isomatrix));
 
 
-function m=miniso(cellinp)
-m=inf;
-for c=1:length(cellinp)
-    nm=min(cellinp{c}(:));
-    if nm<m; m=nm; end
-end
+function m = miniso(isomatrix) % Returns the min value of matrices in a cell.
+m = min(cellfun(@(x) min(x(:)), isomatrix));
