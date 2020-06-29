@@ -72,6 +72,14 @@ if ~isempty(M.clinical.labels)
     set(handles.clinicalvars, 'String', M.clinical.labels);
 end
 
+% Disable group comparison button for variables per hemisphere or
+% non-logical variable
+clinicvar = M.clinical.vars{get(handles.clinicalvars, 'Value')};
+if size(clinicvar,2)==2 || numel(unique(clinicvar(~isnan(clinicvar))))~=2
+    set(handles.ttestbutton_vta, 'Enable', 'off');
+    set(handles.ttestbutton_ft, 'Enable', 'off');
+end
+
 % refresh UI
 if ~isempty(M.vilist)
     set(handles.vilist, 'String', M.vilist);
@@ -179,58 +187,71 @@ leadfigure = getappdata(handles.lg_stats, 'leadfigure');
 ea_busyaction('on', leadfigure, 'group');
 
 stats=preparedataanalysis_vta(handles);
-
 assignin('base','stats',stats);
+
 M=getappdata(leadfigure,'M');
+
+colors = M.groups.color(unique(M.patient.group(M.ui.listselect)),:);
+% Colors in Lead Group are the same, fallback to gramm default colormap
+if size(colors,1)>1 && size(unique(colors, 'rows'),1) == 1
+    colors = [1.0000  0.3686  0.4118];
+end
 
 % perform correlations:
 if size(stats.corrcl,2)==1 % one value per patient
-    try stats.vicorr.nboth=(stats.vicorr.nboth/2)*100; end
-    try stats.vicorr.nright=(stats.vicorr.nright/2)*100; end
-    try stats.vicorr.nleft=(stats.vicorr.nleft/2)*100; end
-
     if ~isempty(stats.vicorr.both)
-        %ea_corrplot([stats.corrcl,stats.vicorr.both],'Volume Intersections, both hemispheres',stats.vc_labels);
-        %ea_corrplot([stats.corrcl,stats.vicorr.nboth],'VI_BH',stats.vc_labels,handles);
-        description='Normalized Volume Impacts, both hemispheres';
-        [h,R,p]=ea_corrplot(stats.corrcl,stats.vicorr.nboth,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
-        description='Volume Impacts, both hemispheres';
-        [h,R,p]=ea_corrplot(stats.corrcl,stats.vicorr.both,[{description},stats.vc_labels],'permutation',M.patient.group(M.ui.listselect));
-
-        odir=get(leadfigure.groupdir_choosebox,'String');
-        [~,fn]=fileparts(stats.vc_labels{1+1});
-        if strcmp(fn(end-3:end),'.nii')
-            [~,fn]=fileparts(fn);
-        end
-        ofname=[odir,description,'_',fn,'_',stats.vc_labels{1},'.png'];
-        ea_screenshot(ofname);
+        ea_corrplot(stats.corrcl,stats.vicorr.both,...
+            [{'VTA intersection, both hemispheres'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl,stats.vicorr.nboth,...
+            [{'Normalized VTA intersection, both hemispheres'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
     end
-    %     if ~isempty(stats.vicorr.right)
-    %         %ea_corrplot([stats.corrcl,stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
-    %         ea_corrplot([stats.corrcl,stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
-    %     end
-    %     if ~isempty(stats.vicorr.left)
-    %         %ea_corrplot([stats.corrcl,stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
-    %         ea_corrplot([stats.corrcl,stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
-    %     end
 
+    if ~isempty(stats.vicorr.right)
+        ea_corrplot(stats.corrcl,stats.vicorr.right,...
+            [{'VTA intersection, right hemisphere'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl,stats.vicorr.nright,...
+            [{'Normalized VTA intersection, right hemisphere'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+    end
+
+    if ~isempty(stats.vicorr.left)
+        ea_corrplot(stats.corrcl,stats.vicorr.left,...
+            [{'VTA intersection, left hemisphere'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl,stats.vicorr.nleft,...
+            [{'Normalized VTA intersection, left hemisphere'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+    end
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
-    try stats.vicorr.nboth=(stats.vicorr.nboth)*100; end
-    try stats.vicorr.nright=(stats.vicorr.nright)*100; end
-    try stats.vicorr.nleft=(stats.vicorr.nleft)*100; end
     if ~isempty(stats.vicorr.both)
-        ea_corrplot([stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left]],[{'Volume Impacts, both hemispheres'},stats.vc_labels]);
-        ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],[{'Normalized Volume Impacts'},stats.vc_labels]);
+        ea_corrplot(stats.corrcl(:),[stats.vicorr.right;stats.vicorr.left],...
+            [{'VTA intersection, both hemispheres'},stats.vc_labels],...
+            'permutation',repmat(M.patient.group(M.ui.listselect),2,1),'',[],colors);
+        ea_corrplot(stats.corrcl(:),[stats.vicorr.nright;stats.vicorr.nleft],...
+            [{'Normalized VTA intersection, both hemispheres'},stats.vc_labels],...
+            'permutation',repmat(M.patient.group(M.ui.listselect),2,1),'',[],colors);
     end
-    %     if ~isempty(stats.vicorr.right)
-    %         %ea_corrplot([stats.corrcl(:,1),stats.vicorr.right],'Volume Intersections, right hemisphere',stats.vc_labels);
-    %         ea_corrplot([stats.corrcl(:,1),stats.vicorr.nright],'VI_RH',stats.vc_labels,handles);
-    %     end
-    %     if ~isempty(stats.vicorr.left)
-    %         %ea_corrplot([stats.corrcl(:,2),stats.vicorr.left],'Volume Intersections, left hemisphere',stats.vc_labels);
-    %         ea_corrplot([stats.corrcl(:,2),stats.vicorr.nleft],'VI_LH',stats.vc_labels,handles);
-    %     end
 
+    if ~isempty(stats.vicorr.right)
+        ea_corrplot(stats.corrcl(:,1),stats.vicorr.right,...
+            [{'VTA intersection, right hemisphere'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl(:,1),stats.vicorr.nright,...
+            [{'Normalized VTA intersection, right hemispheres'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+    end
+
+    if ~isempty(stats.vicorr.left)
+        ea_corrplot(stats.corrcl(:,2),stats.vicorr.left,...
+            [{'VTA intersection, left hemisphere'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl(:,2),stats.vicorr.nleft,...
+            [{'Normalized VTA intersection, left hemispheres'},stats.vc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+    end
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
@@ -242,32 +263,50 @@ function ttestbutton_vta_Callback(hObject, eventdata, handles)
 % hObject    handle to ttestbutton_vta (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-stats=preparedataanalysis_vta(handles);
+leadfigure = getappdata(handles.lg_stats, 'leadfigure');
+ea_busyaction('on', leadfigure, 'group');
 
+stats = preparedataanalysis_vta(handles);
 assignin('base','stats',stats);
 
 % perform t-tests:
-
 if ~isempty(stats.vicorr.both)
-    ea_ttest(stats.vicorr.both(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),stats.vicorr.both(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),'Volume Intersections, both hemispheres',stats.vc_labels);
-end
-if ~isempty(stats.vicorr.right)
-    ea_ttest(stats.vicorr.right(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),stats.vicorr.right(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),'Volume Intersections, right hemisphere',stats.vc_labels);
-end
-if ~isempty(stats.vicorr.left)
-    ea_ttest(stats.vicorr.left(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),'Volume Intersections, left hemisphere',stats.vc_labels);
+    ea_ttest(stats.vicorr.both(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
+        stats.vicorr.both(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
+        'VTA intersection, both hemispheres',stats.vc_labels{end});
 end
 
+if ~isempty(stats.vicorr.right)
+    ea_ttest(stats.vicorr.right(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
+        stats.vicorr.right(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
+        'VTA intersection, right hemisphere',stats.vc_labels{end});
+end
+
+if ~isempty(stats.vicorr.left)
+    ea_ttest(stats.vicorr.left(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
+        stats.vicorr.left(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
+        'VTA intersection, left hemisphere',stats.vc_labels{end});
+end
 
 if ~isempty(stats.vicorr.nboth)
-    ea_ttest(stats.vicorr.nboth(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),stats.vicorr.nboth(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),'Normalized Volume Intersections, both hemispheres',stats.vc_labels);
+    ea_ttest(stats.vicorr.nboth(~repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
+        stats.vicorr.nboth(repmat(logical(stats.corrcl),1,size(stats.vicorr.both,2))),...
+        'Normalized VTA intersection, both hemispheres',stats.vc_labels{end});
 end
+
 if ~isempty(stats.vicorr.nright)
-    ea_ttest(stats.vicorr.nright(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),stats.vicorr.nright(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),'Normalized Volume Intersections, right hemisphere',stats.vc_labels);
+    ea_ttest(stats.vicorr.nright(~repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
+        stats.vicorr.nright(repmat(logical(stats.corrcl),1,size(stats.vicorr.right,2))),...
+        'Normalized VTA intersection, right hemisphere',stats.vc_labels{end});
 end
+
 if ~isempty(stats.vicorr.nleft)
-    ea_ttest(stats.vicorr.nleft(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),stats.vicorr.nleft(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),'Normalized Volume Intersections, left hemisphere',stats.vc_labels);
+    ea_ttest(stats.vicorr.nleft(~repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
+        stats.vicorr.nleft(repmat(logical(stats.corrcl),1,size(stats.vicorr.left,2))),...
+        'Normalized VTA intersection, left hemisphere',stats.vc_labels{end});
 end
+
+ea_busyaction('off', leadfigure, 'group');
 
 
 % --- Executes on button press in corrbutton_ft.
@@ -277,33 +316,77 @@ function corrbutton_ft_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 leadfigure = getappdata(handles.lg_stats, 'leadfigure');
 ea_busyaction('on', leadfigure, 'group');
-stats=preparedataanalysis_ft(handles);
+
+stats = preparedataanalysis_ft(handles);
 assignin('base','stats',stats);
+
+M=getappdata(leadfigure,'M');
+
+colors = M.groups.color(unique(M.patient.group(M.ui.listselect)),:);
+% Colors in Lead Group are the same, fallback to gramm default colormap
+if size(colors,1)>1 && size(unique(colors, 'rows'),1) == 1
+    colors = [];
+end
 
 % perform correlations:
 if size(stats.corrcl,2)==1 % one value per patient
     if ~isempty(stats.fccorr.both)
-        ea_corrplot(stats.corrcl,stats.fccorr.nboth,{'FC_BH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl,stats.fccorr.both,...
+            [{'Fiber connection, both hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl,stats.fccorr.nboth,...
+            [{'Normalized Fiber connection, both hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
     end
+
     if ~isempty(stats.fccorr.right)
-        ea_corrplot(stats.corrcl,stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl,stats.fccorr.right,...
+            [{'Fiber connection, right hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl,stats.fccorr.nright,...
+            [{'Normalized Fiber connection, right hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
     end
+
     if ~isempty(stats.fccorr.left)
-        ea_corrplot(stats.corrcl,stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl,stats.fccorr.left,...
+            [{'Fiber connection, left hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl,stats.fccorr.nleft,...
+            [{'Normalized Fiber connection, left hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
     end
 elseif size(stats.corrcl,2)==2 % one value per hemisphere
     if ~isempty(stats.fccorr.both)
-        ea_corrplot(stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left],{'FC_BH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl(:),[stats.fccorr.right;stats.fccorr.left],...
+            [{'Fiber connection, both hemispheres'},stats.fc_labels],...
+            'permutation',repmat(M.patient.group(M.ui.listselect),2,1),'',[],colors);
+        ea_corrplot(stats.corrcl(:),[stats.fccorr.nright;stats.fccorr.nleft],...
+            [{'Normalized Fiber connection, both hemispheres'},stats.fc_labels],...
+            'permutation',repmat(M.patient.group(M.ui.listselect),2,1),'',[],colors);
     end
+
     if ~isempty(stats.fccorr.right)
-        ea_corrplot(stats.corrcl(:,1),stats.fccorr.nright,{'FC_RH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl(:,1),stats.fccorr.right,...
+            [{'Fiber connection, right hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl(:,1),stats.fccorr.nright,...
+            [{'Normalized Fiber connection, right hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
     end
+
     if ~isempty(stats.fccorr.left)
-        ea_corrplot(stats.corrcl(:,2),stats.fccorr.nleft,{'FC_LH',stats.fc_labels(:)});
+        ea_corrplot(stats.corrcl(:,2),stats.fccorr.left,...
+            [{'Fiber connection, left hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
+        ea_corrplot(stats.corrcl(:,2),stats.fccorr.nleft,...
+            [{'Normalized Fiber connection, left hemispheres'},stats.fc_labels],...
+            'permutation',M.patient.group(M.ui.listselect),'',[],colors);
     end
 else
     ea_error('Please select a regressor with one value per patient or per hemisphere to perform this correlation.');
 end
+
 ea_busyaction('off', leadfigure, 'group');
 
 
@@ -312,19 +395,50 @@ function ttestbutton_ft_Callback(hObject, eventdata, handles)
 % hObject    handle to ttestbutton_ft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-stats = preparedataanalysis_ft(handles);
+leadfigure = getappdata(handles.lg_stats, 'leadfigure');
+ea_busyaction('on', leadfigure, 'group');
 
+stats = preparedataanalysis_ft(handles);
 assignin('base','stats',stats);
 
 % perform t-tests:
-if ~isempty(stats.fc.fccorr)
-    ea_ttest(stats.fc.fccorr(repmat(logical(stats.corrcl),1,size(stats.fc.fccorr,2))),stats.fc.fccorr(~repmat(logical(stats.corrcl),1,size(stats.fc.fccorr,2))),'Fibercounts',stats.vc_labels);
+if ~isempty(stats.fccorr.both)
+    ea_ttest(stats.fccorr.both(repmat(logical(stats.corrcl),1,size(stats.fccorr.both,2))),...
+        stats.fccorr.both(~repmat(logical(stats.corrcl),1,size(stats.fccorr.both,2))),...
+        'Fiber connection, both hemispheres',stats.fc_labels{end});
 end
 
-if ~isempty(stats.fc.nfccorr)
-    ea_ttest(stats.fc.nfccorr(repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),stats.fc.nfccorr(~repmat(logical(stats.corrcl),1,size(stats.fc.nfccorr,2))),'Normalized Fibercounts',stats.vc_labels);
+if ~isempty(stats.fccorr.nboth)
+    ea_ttest(stats.fccorr.nboth(repmat(logical(stats.corrcl),1,size(stats.fccorr.nboth,2))),...
+        stats.fccorr.nboth(~repmat(logical(stats.corrcl),1,size(stats.fccorr.nboth,2))),...
+        'Normalized Fiber connection, both hemispheres',stats.fc_labels{end});
 end
 
+if ~isempty(stats.fccorr.right)
+    ea_ttest(stats.fccorr.right(repmat(logical(stats.corrcl),1,size(stats.fccorr.right,2))),...
+        stats.fccorr.right(~repmat(logical(stats.corrcl),1,size(stats.fccorr.right,2))),...
+        'Fiber connection, right hemispheres',stats.fc_labels{end});
+end
+
+if ~isempty(stats.fccorr.nright)
+    ea_ttest(stats.fccorr.nright(repmat(logical(stats.corrcl),1,size(stats.fccorr.nright,2))),...
+        stats.fccorr.nright(~repmat(logical(stats.corrcl),1,size(stats.fccorr.nright,2))),...
+        'Normalized Fiber connection, right hemispheres',stats.fc_labels{end});
+end
+
+if ~isempty(stats.fccorr.left)
+    ea_ttest(stats.fccorr.left(repmat(logical(stats.corrcl),1,size(stats.fccorr.left,2))),...
+        stats.fccorr.left(~repmat(logical(stats.corrcl),1,size(stats.fccorr.left,2))),...
+        'Fiber connection, left hemispheres',stats.fc_labels{end});
+end
+
+if ~isempty(stats.fccorr.nleft)
+    ea_ttest(stats.fccorr.nleft(repmat(logical(stats.corrcl),1,size(stats.fccorr.nleft,2))),...
+        stats.fccorr.nleft(~repmat(logical(stats.corrcl),1,size(stats.fccorr.nleft,2))),...
+        'Normalized Fiber connection, left hemispheres',stats.fc_labels{end});
+end
+
+ea_busyaction('off', leadfigure, 'group');
 
 % --- Executes on selection change in VTAvsEfield.
 function VTAvsEfield_Callback(hObject, eventdata, handles)
@@ -353,7 +467,7 @@ function [stats] = preparedataanalysis_vta(handles)
 leadfigure = getappdata(handles.lg_stats, 'leadfigure');
 M=getappdata(leadfigure, 'M');
 
-% Get volume intersections:
+% Get VTA intersection:
 vicnt=1; ptcnt=1;
 
 howmanyvis=length(get(handles.vilist,'Value'));
@@ -372,8 +486,10 @@ vc_labels={};
 switch get(handles.VTAvsEfield,'value')
     case 1 % VTA
         vtavsefield='vat';
-    case 2 % Efield
+        vtavsefieldLabel='VTA';
+    case 2 % E-field
         vtavsefield='efield';
+        vtavsefieldLabel = 'E-field';
 end
 
 for vi=get(handles.vilist,'Value') % get volume interactions for each patient from stats
@@ -394,7 +510,6 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
                     end
                     vicorr_both(ptcnt,vicnt)=vicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).AtlasIntersection(vi);
                     nvicorr_both(ptcnt,vicnt)=nvicorr_both(ptcnt,vicnt)+M.stats(pt).ea_stats.stimulation(usewhichstim).(vtavsefield)(side,vat).nAtlasIntersection(vi);
-
                 end
             end
         catch
@@ -405,9 +520,8 @@ for vi=get(handles.vilist,'Value') % get volume interactions for each patient fr
         % (e.g. if there was no stimulation at all on one hemisphere, this
         % could happen.
         ptcnt=ptcnt+1;
-
     end
-    vc_labels{end+1}=[ea_stripext(M.stats(pt).ea_stats.atlases.names{vi}),': ',vtavsefield,' impact'];
+    vc_labels{end+1}=[ea_stripext(M.stats(pt).ea_stats.atlases.names{vi}),': ',vtavsefieldLabel,' intersection'];
 
     ptcnt=1;
     vicnt=vicnt+1;
@@ -437,7 +551,7 @@ function [stats]=preparedataanalysis_ft(handles)
 leadfigure = getappdata(handles.lg_stats, 'leadfigure');
 M=getappdata(leadfigure, 'M');
 
-% Get volume intersections:
+% Get VTA intersection:
 vicnt=1; ptcnt=1;
 
 patientlist = leadfigure.findobj('Tag','patientlist');
@@ -467,7 +581,7 @@ for fc=get(handles.fclist,'Value') % get volume interactions for each patient fr
     end
     ptcnt=1;
     fccnt=fccnt+1;
-    fc_labels{end+1}=M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc};
+    fc_labels{end+1} = [M.stats(pt).ea_stats.stimulation(usewhichstim).ft(1).labels{1}{fc},':  fiber connection'];
 end
 
 % prepare outputs:
@@ -498,6 +612,20 @@ function clinicalvars_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns clinicalvars contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from clinicalvars
+
+leadfigure = getappdata(handles.lg_stats, 'leadfigure');
+M = getappdata(leadfigure, 'M');
+
+% Disable group comparison button for variables per hemisphere or
+% non-logical variable
+clinicvar = M.clinical.vars{get(handles.clinicalvars, 'Value')};
+if size(clinicvar,2)==2 || numel(unique(clinicvar(~isnan(clinicvar))))~=2
+    set(handles.ttestbutton_vta, 'Enable', 'off');
+    set(handles.ttestbutton_ft, 'Enable', 'off');
+else
+    set(handles.ttestbutton_vta, 'Enable', 'on');
+    set(handles.ttestbutton_ft, 'Enable', 'on');
+end
 
 
 % --- Executes during object creation, after setting all properties.

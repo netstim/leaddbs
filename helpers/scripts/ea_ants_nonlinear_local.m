@@ -82,7 +82,7 @@ smoothingssigmas='4x4x2x1vox';
 
 mask=ea_load_nii(movingimage{1});
 mask.img=mask.img~=0;
-mask.fname=(['/private/tmp/','synmask.nii']);
+mask.fname=([tempdir,'synmask.nii']);
 ea_write_nii(mask);
 
 synstage = [' --transform BSplineSyN[0.1,26,0,3]'...
@@ -99,7 +99,7 @@ synstage = [' --transform BSplineSyN[0.1,26,0,3]'...
                 ' --metric ',metrics{fi},'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),suffx,']'];
         end
 
-ea_libs_helper
+ea_libs_helper;
 
 cmd = [ANTS, ' --verbose 1' ...
              ' --dimensionality 3 --float 1' ...

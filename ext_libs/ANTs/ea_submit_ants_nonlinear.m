@@ -9,10 +9,17 @@ end
 
 function ea_antsnl_monostep(props)
 directory=props.directory;
+outputPrefix = strrep(props.outputbase, directory, '');
 refinewarp=0;
 if exist([props.outputbase,'Composite',ea_getantstransformext(directory)],'file') % prior ANTs transform found.
-    prefs=ea_prefs;
-    switch prefs.machine.normsettings.ants_usepreexisting
+    if isfield(props, 'ants_usepreexisting')
+        ants_usepreexisting = props.ants_usepreexisting;
+    else
+        prefs = ea_prefs;
+        ants_usepreexisting = prefs.machine.normsettings.ants_usepreexisting;
+    end
+
+    switch ants_usepreexisting
         case 1 % ask
             answ=questdlg('We found existing ANTs transform files. Do you wish to build upon these transform (i.e. refine them) or discard them and start from scratch?','Old ANTs transform found.','Refine','Start from scratch','Start from scratch');
             switch lower(answ)
@@ -52,21 +59,49 @@ else
 end
 
 if refinewarp
-    initreg=[' --write-composite-transform 0', ...
-        ' --initial-moving-transform ',ea_path_helper([props.outputbase,'Composite',ea_getantstransformext(directory)])];
+    writecomposite = '0';
+    initreg=[' --initial-moving-transform ',ea_path_helper([props.outputbase,'Composite',ea_getantstransformext(directory)])];
 else
-    initreg=[' --write-composite-transform 1', ...
-        ' --initial-moving-transform [', fixedinit, ',', movinginit, ',0]'];
+    writecomposite = '1';
+    if isfield(props, 'initializationFeature') && ~isempty(props.initializationFeature)
+        initializationFeature = props.initializationFeature;
+    else
+         % 0 for geometric center, 1 for image intensities, 2 for origin of the image
+        initializationFeature = '0';
+    end
+    initreg=[' --initial-moving-transform [', fixedinit, ',', movinginit, ',', initializationFeature, ']'];
+end
+
+if isfield(props, 'histogrammatching') && ~isempty(props.histogrammatching)
+    histogrammatching = props.histogrammatching;
+else
+    histogrammatching = '0';
+end
+
+if isfield(props, 'winsorize') && ~isempty(props.winsorize)
+    winsorize = [' --winsorize-image-intensities [', props.winsorize, ']'];
+else
+    winsorize = '';
 end
 
 cmd = [props.ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
+    ' --float 1',...
+    ' --write-composite-transform ', writecomposite, ...
     ' --output [',ea_path_helper(props.outputbase), ',', props.outputimage, ']', ...
     ' --interpolation Linear', ...
-    ' --use-histogram-matching 0', ...
-    ' --float 1',...
+    ' --use-histogram-matching ', histogrammatching, ...
+    winsorize, ...
     initreg, ...
-    props.rigidstage, props.affinestage, props.synstage, props.slabstage, props.synmaskstage];
+    props.rigidstage, props.affinestage, props.synstage];
+
+if isfield('props', 'slabstage')
+    cmd = [cmd, props.slabstage];
+end
+
+if isfield('props', 'synmaskstage')
+    cmd = [cmd, props.synmaskstage];
+end
 
 fid = fopen([props.directory,'ea_ants_command.txt'],'a');
 fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
@@ -83,10 +118,11 @@ if status
 end
 
 if refinewarp
-   ea_addrefinewarp(props.directory);
+    ea_addrefinewarp(props.directory);
 end
 
-ea_conv_antswarps(props.directory, '.nii.gz', 'float');
+reference = {props.fixed, props.moving};
+ea_conv_antswarps(props.directory, outputPrefix, reference, '.nii.gz', 'float');
 
 
 function ea_addrefinewarp(directory)
@@ -106,7 +142,18 @@ options.root=[options.root,filesep];
 options.prefs=ea_prefs(options.patientname);
 options=ea_assignpretra(options);
 prenii=[directory,options.prefs.prenii_unnormalized];
-if exist([directory,'glanat2Warp.nii.gz'],'file') % happens in second iteration of normalization refine
+
+if exist([directory,'glanat0GenericAffine.mat'],'file') % happens in first iteration
+    cmd=[applyTransforms,' -r ',template,...
+        ' -t ',ea_path_helper([directory,'glanat1Warp.nii.gz']),...
+        ' -t ',ea_path_helper([directory,'glanat0GenericAffine.mat']),...
+        ' -o [',ea_path_helper([directory,'glanatComposite',outputformat]),',1]'];
+    icmd=[applyTransforms,' -r ',ea_path_helper(prenii),...
+        ' -t [' ea_path_helper([directory,'glanat0GenericAffine.mat']) ',1]',...
+        ' -t ',ea_path_helper([directory,'glanat1InverseWarp.nii.gz']),...
+        ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
+    copyfile([directory,'glanat0GenericAffine.mat'],[directory,'glanat0GenericAffine_backup.mat']); % save affine transform
+elseif exist([directory,'glanat2Warp.nii.gz'],'file') % happens in second iteration of normalization refine
     cmd=[applyTransforms,' -r ',template,...
         ' -t ',ea_path_helper([directory,'glanat2Warp.nii.gz']),...
         ' -t ',ea_path_helper([directory,'glanatComposite',ea_getantstransformext(directory)]),...
@@ -125,6 +172,7 @@ elseif exist([directory,'glanat1Warp.nii.gz'],'file') % happens in third and upw
         ' -t ',ea_path_helper([directory,'glanat1InverseWarp.nii.gz']),...
         ' -o [',ea_path_helper([directory,'glanatInverseComposite',outputformat]),',1]'];
 end
+
 if exist('cmd','var')
     if ~ispc
         system(['bash -c "', cmd, '"']);

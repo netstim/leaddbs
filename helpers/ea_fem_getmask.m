@@ -17,9 +17,9 @@ end
 
 [xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
 if isempty(xx)
-fv.vertices=[]; % no gray matter.
-fv.faces=[];
-return
+    fv.vertices=[]; % no gray matter.
+    fv.faces=[];
+    return
 end
 XYZ=[xx,yy,zz]; % concatenate points to one matrix.
 XYZ=nii.mat*[XYZ,ones(length(xx),1)]'; % map to mm-space

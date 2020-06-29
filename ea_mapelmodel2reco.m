@@ -1,7 +1,7 @@
 function [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig)
 err=0;
 
-load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname])
+load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'.mat'])
 A=[electrode.head_position,1;
     electrode.tail_position,1
     electrode.x_position,1

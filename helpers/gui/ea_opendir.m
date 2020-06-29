@@ -3,7 +3,9 @@ function ea_opendir(directory)
 % file manager. For multiple directories, open them in OS file manager.
 
 if ischar(directory)    % Single directory
-    if ~isdeployed, cd(directory); end
+    if ~isdeployed
+        cd(directory);
+    end
     directory = {directory};
 end
 

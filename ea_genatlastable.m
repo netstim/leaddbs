@@ -1,8 +1,8 @@
 function atlases=ea_genatlastable(varargin)
 % This function reads in atlases in the Lead-dbs/atlases directory and
 % generates a table of all available atlas files.
-% Atlastypes:   1 - LH
-%               2 - RH
+% Atlastypes:   1 - RH
+%               2 - LH
 %               3 - both hemispheres (2 files present both in lhs and rhs
 %               folder
 %               4 - mixed (one file with one cluster on each hemisphere)
@@ -26,8 +26,8 @@ else
     mifix='';
 end
 
-if isempty(atlases) % create from scratch - if not empty, rebuild flag has been set.
-    disp('Generating Atlas table (first run with new atlas only). This may take a while...');
+if isempty(atlases) || atlases.rebuild==1
+    disp('Generating Atlas table. This may take a while...');
     lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
     delete([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
     lhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.ni*']);
@@ -86,9 +86,10 @@ if isempty(atlases) % create from scratch - if not empty, rebuild flag has been 
     typecell=[ones(1,length(rhcell)),2*ones(1,length(lhcell)),3*ones(1,length(bothcell)),4*ones(1,length(mixedcell)),5*ones(1,length(midlinecell))];
     atlases.names=allcell;
     atlases.types=typecell;
-    atlases.rebuild=0;
-    atlases.threshold.type='relative_intensity';
-    atlases.threshold.value=0.5;
+    if ~isfield(atlases, 'threshold') || isempty(atlases.threshold)
+        atlases.threshold.type='relative_intensity';
+        atlases.threshold.value=0.5;
+    end
 end
 
 if ~isfield(atlases,'tissuetypes')
@@ -351,9 +352,11 @@ if checkrebuild(atlases,options,root,mifix)
             ea_crop_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
 
             clear X V
+            
+            ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[0.2,0.2,0.2],0,0,1,[],[],3);
+            spm_smooth([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[1,1,1]);
             gzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
-
         end
 
         % save table information that has been generated from nii files (on first run with this atlas set).
@@ -415,12 +418,10 @@ elseif strcmp(fname(end-3:end),'.mat')
         structure.idx=idx;
     elseif ~isempty(fieldnames(load(fname, 'vals'))) % discriminative fibers
         structure.isdiscfibers = 1;
-        % Set default discfiberssetting if not found in the mat.
-        if isempty(fieldnames(load(fname, 'discfiberssetting')))
-            discfiberssetting.showfibersset = 'positive';
-            discfiberssetting.pospredthreshold = 5;
-            discfiberssetting.negpredthreshold = 5;
-            save(fname, 'discfiberssetting', '-append');
+        % Set default color (blue and red) if not found in mat.
+        if isempty(fieldnames(load(fname, 'fibcolor')))
+            fibcolor = [0 0 1;1 0 0];
+            save(fname, 'fibcolor', '-append');
         end
     end
     if wasgzip

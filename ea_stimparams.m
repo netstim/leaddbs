@@ -242,7 +242,7 @@ if ~strcmp(options.leadprod, 'group')
             S=ea_loadstimulation(label,options);
             setappdata(resultfig,'curS',S(1))
             options.writeoutstats = 1;
-            ea_showfibers_volume(resultfig,options);
+            ea_calc_vatstats(resultfig,options);
         end
     end
 end
@@ -1074,7 +1074,7 @@ for group=flix
     if ~exist('hmchanged','var')
         hmchanged=1;
     end
-    ea_showfibers_volume(resultfig,options,hmchanged);
+    ea_calc_vatstats(resultfig,options,hmchanged);
 
     %copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
     try
@@ -1801,7 +1801,7 @@ else
         setappdata(resultfig,'stimparams',stimparams(1,:));
         setappdata(resultfig,'curS',S(1))
         options.writeoutstats = 1;
-        ea_showfibers_volume(resultfig,options);
+        ea_calc_vatstats(resultfig,options);
     else
         disp('VAT, cannot be visualized please recalculate')
     end

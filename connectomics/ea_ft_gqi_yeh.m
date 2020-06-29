@@ -32,8 +32,8 @@ end
 btable=[bvals;bvecs];
 
 % build white matter mask
-if ~exist([directory,'ttrackingmask.nii'],'file') || ...
-    (isfield(options, 'overwriteapproved') && options.overwriteapproved) || redo
+if ~exist([directory,'ttrackingmask.nii'],'file') || redo || ...
+        (isfield(options, 'overwriteapproved') && options.overwriteapproved)
     ea_gentrackingmask_brainmask(options,1)
 end
 
@@ -53,9 +53,10 @@ end
 
 % build .fib.gz file
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
-if ~exist([directory,ftrbase,'.fib.gz'],'file') || redo
+if ~exist([directory,ftrbase,'.fib.gz'],'file') || redo || ...
+        (isfield(options, 'overwriteapproved') && options.overwriteapproved)
     disp('Estimating ODF / preparing GQI...');
-    ea_prepare_fib_gqi(DSISTUDIO,btable,1.2,options,redo);
+    ea_prepare_fib_gqi(DSISTUDIO,btable,1.2,options);
 
     disp('Done.');
 else
@@ -69,7 +70,6 @@ trkcmd=[DSISTUDIO,' --action=trk',...
     ' --fiber_count=', num2str(options.lc.struc.ft.dsistudio.fiber_count),...
     ' --output=',ea_path_helper([directory,ftrbase,'.mat']),...
     ' --dt_threshold=0.2',...
-    ' --fa_threshold=0.08',...
     ' --initial_dir=0',...
     ' --interpolation=0',...
     ' --max_length=300.0',...
@@ -146,16 +146,9 @@ fprintf('\nGenerating trk in b0 space...\n');
 ea_ftr2trk([directory,ftrbase,'.mat'], [directory,options.prefs.b0])
 
 
-function ea_prepare_fib_gqi(DSISTUDIO,btable,mean_diffusion_distance_ratio,options,redo)
+function ea_prepare_fib_gqi(DSISTUDIO,btable,mean_diffusion_distance_ratio,options)
 directory=[options.root,options.patientname,filesep];
 [~,ftrbase]=fileparts(options.prefs.FTR_unnormalized);
-
-if exist([directory,ftrbase,'.fib.gz'],'file') && (~redo)
-   disp('.fib.gz file already present, no need to rebuild.');
-   return
-end
-
-% try the DSI-studio way (faster):
 
 % source images
 ea_delete([directory,'dti.src.gz']);
@@ -165,15 +158,11 @@ cmd=[DSISTUDIO,' --action=src --source=',ea_path_helper([directory,options.prefs
     ' --sort_b_table=0',...
     ' --output=',ea_path_helper([directory,'dti.src.gz'])];
 
-
-
-
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used
     cmd=[cmd,...
         ' --up_sampling=',num2str(factor2dsistudiofactor(ea_resolve_usfactor(options.lc.struc.ft.upsample)))];
     
     %% add methods dump:
-    
     cits={
         'Dyrby, T. B., Lundell, H., Burke, M. W., Reislev, N. L., Paulson, O. B., Ptito, M., & Siebner, H. R. (2013). Interpolation of diffusion weighted imaging datasets. NeuroImage, 103(C), 1?12. http://doi.org/10.1016/j.neuroimage.2014.09.005'
         'Yeh, F.-C., Wedeen, V. J., & Tseng, W.-Y. I. (2010). Generalized q-Sampling Imaging. IEEE Transactions on Medical Imaging, 29(9), 1626?1635. http://doi.org/10.1109/TMI.2010.2045126'

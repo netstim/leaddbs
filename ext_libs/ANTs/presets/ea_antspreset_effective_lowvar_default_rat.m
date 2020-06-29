@@ -1,7 +1,7 @@
-function apref = ea_antspreset_effective_lowvar_default(cmd)
+function apref = ea_antspreset_effective_lowvar_default_rat(cmd)
 
 if ischar(cmd) % 'query' mode, return the name of the preset
-    apref = 'Effective: Low Variance, Default';
+    apref = 'Effective: Low Variance, Default for Rat';
     return
 end
 
@@ -22,7 +22,7 @@ switch normsettings.ants_strategy
     case 'SyN'
         apref.antsmode='SyN';
         apref.antsmode_suffix='[0.3,4,3]';
-        
+
         apref.convergence.syn='[1000x500x500x0,1e-7,7]'; % SyN convergence params
         apref.convergence.scrf='[200x50x10x0,1e-6,7]'; % SyN subcortical focus stage convergence params
         apref.smoothingsigmas.syn='4x3x1x1vox'; % SyN Smoothing sigmas
@@ -30,7 +30,7 @@ switch normsettings.ants_strategy
 
         apref.shrinkfactors.syn='16x6x6x1'; % SyN shrink factors
         apref.shrinkfactors.scrf='6x6x4x1'; % SyN subcortical focus stage shrink factors
-       
+
         % Shrink Factors (please keep in mind these refer to fixed space which is
         % typically 0.5 mm resolution in Lead-DBS whereas usually input images are
         % resliced to 0.7 mm. Thus should consider not going down to shrink factor
@@ -38,17 +38,17 @@ switch normsettings.ants_strategy
         apref.shrinkfactors.rigid='12x8x6x1'; % Rigid shrink factors
         apref.shrinkfactors.affine='12x8x6x1'; % Affine shrink factors
 
-        
+
     case 'BSplineSyN'
         apref.antsmode='BSplineSyN';
         apref.antsmode_suffix='[0.1,26,0,3]';
-        
+
         apref.convergence.syn='[100x70x50x20,1e-6,7]'; % SyN convergence params
         apref.convergence.scrf='[100x70x50x20,1e-6,7]'; % SyN subcortical focus stage convergence params
-        
+
         apref.smoothingsigmas.syn='3x2x1x0vox'; % SyN Smoothing sigmas
         apref.smoothingsigmas.scrf='2x2x1x0vox'; % SyN subcortical focus stage smoothing sigmas
-        
+
         apref.shrinkfactors.syn='6x4x2x1'; % SyN shrink factors
         apref.shrinkfactors.scrf='6x4x2x1'; % SyN subcortical focus stage shrink factors
 
@@ -59,7 +59,7 @@ switch normsettings.ants_strategy
         apref.shrinkfactors.rigid='12x8x4x1'; % Rigid shrink factors
         apref.shrinkfactors.affine='12x8x4x1'; % Affine shrink factors
 
-        
+
 end
 
 % Convergence

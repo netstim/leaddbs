@@ -22,10 +22,10 @@ function varargout = ea_checkstructures(varargin)
 
 % Edit the above text to modify the response to help ea_checkstructures
 
-% Last Modified by GUIDE v2.5 21-May-2019 11:39:05
+% Last Modified by GUIDE v2.5 04-Feb-2020 14:57:52
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 0;
+gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
     'gui_OpeningFcn', @ea_checkstructures_OpeningFcn, ...
@@ -852,3 +852,15 @@ spm_jobman('run',{matlabbatch});
 movefile(fullfile(pathn,['s',filen]),fullfile(pathn,filen));
 gzip(fullfile(pathn,filen));
 delete(fullfile(pathn,filen));
+
+
+% --- Executes on button press in pushbutton6.
+function pushbutton6_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+
+

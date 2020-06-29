@@ -163,10 +163,19 @@ for suffix=dowhich
     switch modality
         case 'dMRI'
             seeds=cell(0);
+            useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
             for pt=1:length(options.uivatdirs)
-                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
+                if useNativeSeed
+                    vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(1),options.lcm.seeds,filesep];
+                    copyfile([ea_space,'bb.nii'], vatdir);
+                    ea_apply_normalization_tofile(options, {[vatdir,'bb.nii']},{[vatdir,'bb.nii']},options.uivatdirs{pt},1);
+                    bbfile = [vatdir,'bb.nii'];
+                else
+                    vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(0),options.lcm.seeds,filesep];
+                    bbfile = [ea_space,'bb.nii'];
+                end
 
-                if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file');
+                %if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -179,7 +188,7 @@ for suffix=dowhich
                         if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                             copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
                             warning('off');
-                            ea_conformspaceto([ea_space,'bb.nii'],[vatdir,'tmp_',sidec,'.nii'],dinterp);
+                            ea_conformspaceto(bbfile,[vatdir,'tmp_',sidec,'.nii'],dinterp);
                             warning('on');
                             nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                             nii(cnt).img(isnan(nii(cnt).img))=0;
@@ -199,7 +208,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                end
+                %end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
                 end
@@ -211,7 +220,7 @@ for suffix=dowhich
             for pt=1:length(options.uivatdirs)
                 vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
                 cname=options.lcm.func.connectome;
-                
+
                 if ismember('>',cname)
                     delim=strfind(cname,'>');
                     subset=cname(delim+1:end);
@@ -222,7 +231,7 @@ for suffix=dowhich
                 else
                     nativeprefix='';
                 end
-                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+                %if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
 
                     cnt=1;
                     for side=1:2
@@ -238,7 +247,7 @@ for suffix=dowhich
                             tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                             tnii.dt=[16,0];
                             ea_write_nii(tnii);
-                            
+
                             if ~strcmp(cname,'No functional connectome found.')
                                 if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
                                     ea_warp_vat2rest(cname,vatdir,sidec,options);
@@ -271,7 +280,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                end
+                %end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end
@@ -318,7 +327,7 @@ if ~exist([directory, reference], 'file')
         ea_meanimage([directory, 'r', options.prefs.rest], ['mean', options.prefs.rest]);
     end
     % Reslice mean re-aligned image to hd re-aligned image
-    ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],0);
+    ea_reslice_nii([directory,'mean', options.prefs.rest],[directory,reference],[0.7,0.7,0.7],0,0,1,[],[],3);
 end
 
 % Check coregistration method

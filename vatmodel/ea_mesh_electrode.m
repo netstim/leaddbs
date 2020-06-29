@@ -1,4 +1,4 @@
-function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec)
+function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec,precision)
 % meshing an electrode and tissue structures bounded by a cylinder
 %% load the nucleus data
 ea_dispt('Generating tetraedrical mesh...');
@@ -23,8 +23,9 @@ end
 
 orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
-
-
+if ~exist('precision','var')
+    precision=100; %set to 0 to not do any precision reduction
+end
 el_o_orig=[0,0,15+(20*stretchfactor)];
 el_o_etop=[0,0,-20*stretchfactor];
 
@@ -58,6 +59,10 @@ face = elmodel.face;
 node=transformmatrix*[node,ones(size(node,1),1)]';
 node=node(1:3,:)';
 
+if precision
+    node=round(node*precision)/precision;
+end
+
 % - this is the node / elem / face made by tetgen of the electrode only.
 if vizz
     figure
@@ -86,6 +91,10 @@ c1bbc=c0+cylz1*v;
 nbcyl=transformmatrix*[nbcyl,ones(length(nbcyl),1)]';
 nbcyl=nbcyl(1:3,:)';
 
+if precision
+    nbcyl=round(nbcyl*precision)/precision;
+end
+
 if vizz
     figure
     fva.faces=fbcyl(:,1:3);
@@ -101,22 +110,8 @@ if vizz
     
 end
 
-% if isempty(fv) % use TPM
-%     c1=ea_load_nii([ea_space(options),'TPM.nii,1']);
-%     voxnbcyl=c1.mat\[nbcyl,ones(length(nbcyl),1)]';
-%     voxnbcyl=voxnbcyl(1:3,:)';
-%     cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
-%     cyl=imfill(cyl,'holes');
-%
-%     cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
-%     c1.img=c1.img.*permute(cyl,[2,1,3]);
-%     fv=isosurface(c1.img,0.5,'noshare');
-%     fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
-%     fv.vertices=fv.vertices(1:3,:)';
-%     tpmuse=1;
-% else
+
 tpmuse=0;
-% end
 if ~isempty(fv) % use atlas to define GM
     %% load the nucleus surfaces
     
@@ -130,11 +125,18 @@ if ~isempty(fv) % use atlas to define GM
     else
         graymatterpresent=1;
         for i=1:ncount
+            
+            fv(i)=reducepatch(fv(i),nucleidecimate);
+            
             no=fv(i).vertices;
             fo=fv(i).faces;
-            [no,fo]=meshresample(no,fo,nucleidecimate); % mesh is too dense, reduce the density by 80%
-            %[no,fo]=meshcheckrepair(no,fo,'meshfix');  % clean topological defects
+            if precision
+               no=round(no*precision)/precision; 
+            end
             
+            [no,fo]=meshresample(no,fo,nucleidecimate); % mesh is too dense, reduce the density by 80%
+            [no,fo]=meshcheckrepair(no,fo,'dup'); % clean topological defects
+           
             %% merge all nuclei
             
             if isempty(nobj)
@@ -145,14 +147,17 @@ if ~isempty(fv) % use atlas to define GM
             end
             %         fobj=[fobj;fo+size(nobj,1)];
             %         nobj=[nobj;no];
+            
         end
         
         
         
         if vizz
             figure
+            %patch('Vertices',no,'Faces',fo,'FaceColor','none');
             patch('Vertices',nobj,'Faces',fobj,'FaceColor','none');
-            patch('Vertices',node,'Faces',face(:,1:3),'FaceColor','blue');
+            
+            %patch('Vertices',node,'Faces',face(:,1:3),'FaceColor','blue');
         end
     end
     
@@ -209,17 +214,21 @@ end
 
 
 %% remove duplicated nodes in the surface
-[nboth3,fboth3]=meshcheckrepair(nboth2,fboth2,'dup');
-[nboth3,fboth3]=meshcheckrepair(nboth3,fboth3,'deep');
+[nboth2,fboth2]=meshcheckrepair(nboth2,fboth2,'dup');
+[nboth2,fboth2]=meshcheckrepair(nboth2,fboth2,'deep');
+[nboth2,fboth2]=meshcheckrepair(nboth2,fboth2,'dup');
 
 
+
+
+%[I,IA,IC]=unique(nboth4,'rows');
 
 %figure, patch('faces',fboth4,'vertices',nboth4,'facecolor','r','facealpha',0.3);
 
 if vizz
-    figure('name','nboth3');
-    fvv.faces=fboth3(:,1:3);
-    fvv.vertices=nboth3;
+    figure('name','nboth2');
+    fvv.faces=fboth2(:,1:3);
+    fvv.vertices=nboth2;
     patch(fvv,'edgecolor','m','facecolor','none');
     axis equal
 end
@@ -234,13 +243,18 @@ end
 % - this is the part where we have all 4 element types combined already.
 
 
-[nmesh,emesh,fmesh]=s2m(nboth3,fboth3,1,3);
+[nmesh,emesh,fmesh]=ea_s2m_conjoin(nboth2,fboth2,1,3);
 if vizz
-    figure('name','Final mesh');
-    fvv.faces=face(:,1:3);
-    fvv.vertices=nmesh;
-    patch(fvv,'edgecolor','k','facecolor','none');
-    axis equal
+%     figure('name','Final mesh');
+%     fvv.faces=fmesh(:,1:3);
+%     fvv.vertices=nmesh;
+%     patch(fvv,'edgecolor','k','facecolor','none');
+%     axis equal
+    
+        figure
+    hold on;
+    plotmesh(nmesh,emesh,'facealpha',0.1)
+    
 end
 
 
@@ -490,11 +504,11 @@ end
 if stlexport
     ea_dispt('Exporting STL files');
     tissuelabels={'grey','white','contacts','insulation'};
-    if ~exist([options.root,options.patientname,filesep,'headmodel',filesep],'file')
-        mkdir([options.root,options.patientname,filesep,'headmodel',filesep]);
+    if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep],'file')
+        mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep]);
     end
     for tt=1:length(tissuelabels)
-        savestl(nmesh,emesh(emesh(:,5)==tt,1:4),[options.root,options.patientname,filesep,'headmodel',filesep,tissuelabels{tt},num2str(side),'.stl'],tissuelabels{tt});
+        savestl(nmesh,emesh(emesh(:,5)==tt,1:4),[options.root,options.patientname,filesep,'current_headmodel',filesep,tissuelabels{tt},num2str(side),'.stl'],tissuelabels{tt});
     end
 end
 % plot all 4 tissue types:

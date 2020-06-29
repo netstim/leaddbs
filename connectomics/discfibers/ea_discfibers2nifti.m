@@ -10,6 +10,14 @@ function ea_discfibers2nifti(discfiber, threshold, fiberset, outputName, referen
 load(discfiber, 'fibcell')
 load(discfiber, 'vals')
 
+if size(fibcell,2) == 2
+    fibcell = vertcat(fibcell{:});
+end
+
+if iscell(vals) && size(vals,2) == 2
+    vals = vertcat(vals{:});
+end
+
 if ~exist('threshold', 'var')
     threshold = 5/100;
 elseif isempty(threshold)
@@ -18,11 +26,11 @@ elseif threshold>1  % Use percentage
     threshold = threshold/100;
 end
 
-if ~exist('fiberset', 'var')
+if ~exist('fiberset', 'var') || isempty(fiberset)
     fiberset = 'pos';
 end
 
-if ~exist('outputName', 'var')
+if ~exist('outputName', 'var') || isempty(outputName)
     outputName = regexprep(discfiber, '\.mat$', '.nii');
 end
 
@@ -35,20 +43,39 @@ posits = vals(vals>0);
 posits = sort(posits,'descend');
 negits = vals(vals<0);
 negits = sort(negits,'ascend');
+
 % Determine positive/negative threshold
 if ismember(fiberset, {'pos', 'positive'})
-    posthresh = posits(round(length(posits)*threshold));
-    negthresh = min(vals)-eps;
-    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ')']);
+    if ~isempty(posits)
+        posthresh = posits(round(length(posits)*threshold));
+        negthresh = min(vals)-eps;
+        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ')']);
+    else
+        error('No positive fibers found!');
+    end
 elseif ismember(fiberset, {'neg', 'negative'})
-    posthresh = max(vals)+eps;
-    negthresh = negits(round(length(negits)*threshold));
-    disp(['Fiber colors: Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh), ')']);
+    if ~isempty(negits)
+        posthresh = max(vals)+eps;
+        negthresh = negits(round(length(negits)*threshold));
+        disp(['Fiber colors: Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh), ')']);
+    else
+        error('No negative fibers found!');
+    end
 elseif strcmp(fiberset, 'both')
-    posthresh = posits(round(length(posits)*threshold));
-    negthresh = negits(round(length(negits)*threshold));
-    disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ')']);
-    disp(['Fiber colors: Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh), ')']);
+    if ~isempty(posits)
+        posthresh = posits(round(length(posits)*threshold));
+        disp(['Fiber colors: Positive (T = ',num2str(posthresh),' ~ ',num2str(posits(1)), ')']);
+    else
+        posthresh = inf;
+        warning('No positive fibers found!');
+    end
+    if ~isempty(negits)
+        negthresh = negits(round(length(negits)*threshold));
+        disp(['Fiber colors: Negative (T = ',num2str(negits(1)),' ~ ',num2str(negthresh), ')']);
+    else
+        negthresh = -inf;
+        warning('No negative fibers found!');
+    end
 end
 
 % Remove vals and fibers outside the thresholding range
