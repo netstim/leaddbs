@@ -373,7 +373,7 @@ classdef ea_disctract < handle
                 end
                 colormap(gray);
                 gradientLevel = 1024;
-                cmapShiftRatio = 0.4;
+                cmapShiftRatio = 0.5;
                 shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
                 shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
                 shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
