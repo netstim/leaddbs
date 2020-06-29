@@ -330,21 +330,23 @@ for nativemni=nm % switch between native and mni space atlases.
                     cmapind = ones(size(allvals))*gradientLevel/2;
                     cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
                     cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
-                    alphaind = zeros(size(allvals));
-                    alphaind(allvals<0) = normalize(-allvals(allvals<0), 'range');
-                    alphaind(allvals>0) = normalize(allvals(allvals>0), 'range');
+                    alphaind = ones(size(allvals));
+                    % alphaind(allvals<0) = normalize(-allvals(allvals<0), 'range');
+                    % alphaind(allvals>0) = normalize(allvals(allvals>0), 'range');
                 elseif isfield(disctract.info, 'PosAmount')
                     disp(['Fiber colors: Positive (T = ',num2str(min(allvals)),' ~ ',num2str(max(allvals)), ')']);
                     cmap = ea_colorgradient(gradientLevel, [1,1,1], fibcolor(2,:));
                     fibcmap = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), fibcolor(2,:));
                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                    alphaind = normalize(allvals, 'range');
+                    alphaind = ones(size(allvals));
+                    % alphaind = normalize(allvals, 'range');
                 elseif isfield(disctract.info, 'NegAmount')
                     disp(['Fiber colors: Negative (T = ',num2str(max(allvals)),' ~ ',num2str(min(allvals)), ')']);
                     cmap = ea_colorgradient(gradientLevel, fibcolor(1,:), [1,1,1]);
                     fibcmap{group} = ea_colorgradient(gradientLevel, fibcolor(1,:), cmap(shiftedCmapEnd,:));
                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                    alphaind = normalize(-allvals, 'range');
+                    alphaind = ones(size(allvals));
+                    % alphaind = normalize(-allvals, 'range');
                 end
 
                 cmapind = mat2cell(cmapind, [numel(vals{1}), numel(vals{2})])';
