@@ -138,3 +138,15 @@ settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_et
 
 %% Save settings for OSS-DBS
 save([directory, 'stimulations', filesep, ea_nt(options.native), S.label, filesep, 'oss-dbs_parameters.mat'], 'settings');
+
+
+%% Save results
+% Convert the unit from V/mm to V/m for efield VTA (to be consistent as in Lead-DBS)
+efieldVAT = {'vat_efield_right.nii', 'vat_efield_left.nii'};
+for f=1:length(efieldVAT)
+    efield = ea_load_nii([directory, 'stimulations', filesep, ea_nt(options.native), S.label, filesep, efieldVAT{f}]);
+    efield.img = efield.img*1000;
+    ea_write_nii(efield);
+end
+
+% ea_axonact2ftr([directory, 'stimulations', filesep, ea_nt(options.native), S.label, filesep, Activation]);
