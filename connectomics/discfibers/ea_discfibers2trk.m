@@ -1,11 +1,11 @@
-function ea_corrfib2trk(reformatted_corrfibs, sel, outputName)
-% Convert correlative fibertracts to trk file
+function ea_discfibers2trk(disfibers, sel, outputName)
+% Convert discriminitive fibertracts to trk file
 
 if nargin < 2 || isempty(sel)
     sel = 'both';
 end
 
-load(reformatted_corrfibs);
+load(disfibers);
 
 % Select fibers
 if ischar(sel)
@@ -46,10 +46,10 @@ fourindex = 1;
 voxmm = 'mm';
 
 % Save FTR for trk conversion
-if isempty(fileparts(reformatted_corrfibs))
+if isempty(fileparts(disfibers))
     outputDir = '.';
 else
-    outputDir = fileparts(reformatted_corrfibs);
+    outputDir = fileparts(disfibers);
 end
 save(fullfile(outputDir, [outputName, '.mat']), ...
      'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
