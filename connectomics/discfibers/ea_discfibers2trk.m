@@ -1,11 +1,20 @@
-function ea_discfibers2trk(disfibers, sel, outputName)
+function ea_discfibers2trk(disfiber, sel, outputName)
 % Convert discriminitive fibertracts to trk file
 
 if nargin < 2 || isempty(sel)
     sel = 'both';
 end
 
-load(disfibers);
+load(disfiber, 'fibcell')
+load(disfiber, 'vals')
+
+if size(fibcell,2) == 2
+    fibcell = vertcat(fibcell{:});
+end
+
+if iscell(vals) && size(vals,2) == 2
+    vals = vertcat(vals{:});
+end
 
 % Select fibers
 if ischar(sel)
@@ -46,10 +55,10 @@ fourindex = 1;
 voxmm = 'mm';
 
 % Save FTR for trk conversion
-if isempty(fileparts(disfibers))
+if isempty(fileparts(disfiber))
     outputDir = '.';
 else
-    outputDir = fileparts(disfibers);
+    outputDir = fileparts(disfiber);
 end
 save(fullfile(outputDir, [outputName, '.mat']), ...
      'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
