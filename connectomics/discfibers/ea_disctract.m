@@ -8,8 +8,8 @@ classdef ea_disctract < handle
         ID % name / ID of discriminative fibers object
         posvisible = 1 % pos tract visible
         negvisible = 0 % neg tract visible
-        showposamount = [2 2] % two entries for right and left
-        shownegamount = [2 2] % two entries for right and left
+        showposamount = [25 25] % two entries for right and left
+        shownegamount = [25 25] % two entries for right and left
         connthreshold = 20
         efieldthreshold = 2500
         statmetric = 1 % stats metric to use, 1 = ttest, 2 = spearman
