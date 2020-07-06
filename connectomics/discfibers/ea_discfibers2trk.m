@@ -48,6 +48,7 @@ fibers = zeros(sum(idx), 4);
 fibers(:, 1:3) = cell2mat(fibcell);
 fibInd = repelem((1:length(idx))', idx);
 fibers(:, 4) = fibInd;
+vals = vals(selInd);
 
 % Meta information
 ea_fibformat = '1.1';
@@ -61,7 +62,7 @@ else
     outputDir = fileparts(disfiber);
 end
 save(fullfile(outputDir, [outputName, '.mat']), ...
-     'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', '-v7.3');
+     'ea_fibformat', 'fibers', 'fourindex', 'idx', 'voxmm', 'vals', '-v7.3');
 
 % FTR to TRK conversion
 ea_ftr2trk(fullfile(outputDir, [outputName, '.mat']));
