@@ -267,7 +267,6 @@ classdef ea_disctract < handle
             end
 
             if cvp.NumTestSets == 1
-                test = cvp.test{1};
                 Ihat = Ihat(test,:);
                 I = I(test);
             end
