@@ -257,11 +257,13 @@ classdef ea_disctract < handle
                 end
 
                 for side=1:2
-                    switch obj.statmetric
-                        case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},obj.patientselection(test)));
-                        case 2 % spearmans correlations, efields - see Irmen et al. 2020 Annals of Neurology
-                            Ihat(test,side) = ea_nansum(vals{1,side}.*nfibsval{side}(usedidx{1,side},obj.patientselection(test)));
+                    if ~isempty(vals{1,side})
+                        switch obj.statmetric
+                            case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
+                            	Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},obj.patientselection(test)));
+                            case 2 % spearmans correlations, efields - see Irmen et al. 2020 Annals of Neurology
+                            	Ihat(test,side) = ea_nansum(vals{1,side}.*nfibsval{side}(usedidx{1,side},obj.patientselection(test)));
+                        end
                     end
                 end
             end
