@@ -188,12 +188,16 @@ if ~strcmp(options.leadprod, 'group')
             load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = vatvolume;
-            vatgradtemp(1) = vatgrad;
+            if exist('vatgrad','var')
+                vatgradtemp(1) = vatgrad;
+            end
             load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
-            vatgradtemp(2) = vatgrad;
-            vatgrad = vatgradtemp;
+            if exist('vatgrad','var')
+                vatgradtemp(2) = vatgrad;                
+                vatgrad = vatgradtemp;
+            end
         elseif  exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
             load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
