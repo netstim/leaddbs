@@ -30,6 +30,7 @@ classdef ea_disctract < handle
         fiberdrawn % struct contains fibercell and vals drawn in the resultfig
         drawobject % actual streamtube handle
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
+        customselection % selected patients in the custom test list
         allpatients % list of all patients (as from M.patient.list)
         mirrorsides = 0 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
         responsevar % response variable
@@ -220,14 +221,20 @@ classdef ea_disctract < handle
                 end
             end
 
-            if ~exist('Iperm', 'var')
-                I = obj.responsevar(obj.patientselection);
+            if isempty(obj.customselection)
+                patientsel = obj.patientselection;
             else
-                I = Iperm(obj.patientselection);
+                patientsel = obj.customselection;
+            end
+
+            if ~exist('Iperm', 'var') || isempty(Iperm)
+                I = obj.responsevar(patientsel);
+            else
+                I = Iperm(patientsel);
             end
 
             % Ihat is the estimate of improvements (not scaled to real improvements)
-            Ihat = nan(length(obj.patientselection),2);
+            Ihat = nan(length(patientsel),2);
 
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
             for side=1:2  % only used in spearmans correlations
@@ -251,18 +258,18 @@ classdef ea_disctract < handle
                 end
 
                 if ~exist('Iperm', 'var')
-                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, obj.patientselection(training));
+                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
                 else
-                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, obj.patientselection(training), Iperm);
+                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
                 end
 
                 for side=1:2
                     if ~isempty(vals{1,side})
                         switch obj.statmetric
                             case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            	Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},obj.patientselection(test)));
+                            	Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)));
                             case 2 % spearmans correlations, efields - see Irmen et al. 2020 Annals of Neurology
-                            	Ihat(test,side) = ea_nansum(vals{1,side}.*nfibsval{side}(usedidx{1,side},obj.patientselection(test)));
+                            	Ihat(test,side) = ea_nansum(vals{1,side}.*nfibsval{side}(usedidx{1,side},patientsel(test)));
                         end
                     end
                 end
