@@ -188,11 +188,11 @@ classdef ea_disctract < handle
         end
 
         function [I, Ihat] = lococv(obj)
-            if length(unique(obj.M.patient.group)) == 1
+            if length(unique(obj.M.patient.group(obj.patientselection))) == 1
                 ea_error(sprintf(['Only one cohort in the analysis.\n', ...
                     'Leave-One-Cohort-Out cross-validation not possible.']));
             end
-            [I, Ihat] = crossval(obj, obj.M.patient.group);
+            [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
         end
 
         function [I, Ihat] = kfoldcv(obj)
