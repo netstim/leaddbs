@@ -7,8 +7,6 @@ import glob
 
 import sys
 from subprocess import call
-sys.path.append(os.path.join(os.path.dirname(__file__),'..','TransformsUtil'))
-import TransformsUtil
 
 #
 # ImportSubject
@@ -212,20 +210,8 @@ class ImportSubjectLogic(ScriptedLoadableModuleLogic):
     pass
 
 
-  def saveAffineComponent(self,transformNode):
-    # split transforms and get new nodes
-    newNodeNames = TransformsUtil.TransformsUtilLogic().splitAndGetNodeNames(transformNode)
-    # save affine
-    slicer.util.saveNode(transformNode, os.path.join(os.path.dirname(transformNode.GetStorageNode().GetFileName()),'glanat0GenericAffine_backup.mat'))
-    # join again and delete created node
-    transformNode.HardenTransform()
-    slicer.mrmlScene.RemoveNode(slicer.util.getNode(newNodeNames[0]))
-    
-
   def updateTranform(self, directory, antsApplyTransformsPath=None):
-    #transformNode = slicer.util.loadTransform(os.path.join(directory,'glanatComposite.h5'))
-    #self.saveAffineComponent(transformNode)
-    #slicer.mrmlScene.RemoveNode(transformNode)
+
     # flatten
     if not antsApplyTransformsPath:
       w = qt.QWidget()

@@ -8,10 +8,8 @@ function ea_perform_lc(options)
 disp('*** Performing structural parts of LEAD-Connectome...');
 
 % perform fibertracking
-
 if options.lc.struc.ft.do
     ea_perform_ft_proxy(options);
-
 end
 
 % normalize fibers
@@ -41,12 +39,11 @@ if options.lc.struc.compute_CM
     end
 end
 
-
 disp('*** Done.');
 
 %% functional parts
 if options.lc.func.compute_GM || options.lc.func.compute_CM
-    disp(['*** Performing functional parts of LEAD-Connectome...']);
+    disp('*** Performing functional parts of LEAD-Connectome...');
 
     % get files with rs-fMRI data
     restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_searchstring]);
@@ -57,6 +54,7 @@ if options.lc.func.compute_GM || options.lc.func.compute_CM
     % display number of rs-fMRI files to analyze
     disp(['*** ' num2str(options.prefs.n_rest) ' rs-fMRI files to analyze...']);
 end
+
 % connectivity matrix steps:
 if options.lc.func.compute_CM
     if ~exist([options.root,options.patientname,filesep,'connectomics'],'dir')
@@ -67,7 +65,7 @@ if options.lc.func.compute_CM
     if ~exist(expfolder,'dir')
         mkdir(expfolder);
     end
-[~, presentfiles] = ea_assignpretra(options);
+    [~, presentfiles] = ea_assignpretra(options);
     % set filenames for each rs-fMRI file
     for irest = 1:options.prefs.n_rest
         % set filenames for this iteration
@@ -87,10 +85,9 @@ if options.lc.func.compute_CM
             save([expfolder,name,'_fMRI_CM.mat'],'fMRI_CM','-v7.3');
             saveas(cm,[expfolder,name,'_fMRI_CM.png']);
         end % end loop for this rs-fMRI file
-
     end % end loop for for all rs-fMRI files
-
 end % end connectivity matrix section
+
 if options.lc.func.compute_GM || options.lc.func.compute_CM
     disp(['*** Done analyzing ' num2str(options.prefs.n_rest) ' rs-fMRI files...']);
 end
@@ -126,6 +123,7 @@ if options.lc.func.compute_GM || options.lc.struc.compute_GM % perform graph met
         threshs{end+1}=options.lc.graph.sthresh;
         fs(end+1)=2;
     end
+
     try
         ea_computeGM(options,modes,finas,threshs,fs);
     catch

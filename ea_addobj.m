@@ -1,3 +1,4 @@
+
 function ea_addobj(src, evt, resultfig, obj, options)
 
 addht = getappdata(resultfig,'addht');
@@ -162,14 +163,31 @@ if ~isempty(xx)
     XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
 end
 
-bb=[0,0,0;size(nii.img)];
+%% old approach, with meshgrid based on boundingbox -> does not work for Niftis with rotated coordinate system
+% bb=[0,0,0;size(nii.img)];
+% 
+% bb=map_coords_proxy(bb,nii);
+% gv=cell(3,1);
+% for dim=1:3
+%     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
+% end
+% [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+% 
+% if options.prefs.hullsmooth
+%     nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
+% end
+% 
+% fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
+% fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
+% fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
+% fv.vertices=[fv.vertices;fvc.vertices];
 
-bb=map_coords_proxy(bb,nii);
-gv=cell(3,1);
+%% new approach with meshgrid based on voxels, then transformed to Nifti coordinatesystem -> should work for all Niftis
 for dim=1:3
-    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
+    gv{dim}=[1:size(nii.img,dim)];
 end
 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+
 if options.prefs.hullsmooth
     nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
 end
@@ -178,6 +196,10 @@ fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
 fv.vertices=[fv.vertices;fvc.vertices];
+
+tmp_vertices = nii.mat * [fv.vertices,ones(size(fv.vertices,1),1)]';
+fv.vertices = tmp_vertices(1:3,:)';
+%%
 
 if ischar(options.prefs.hullsimplify)
     % get to 700 faces

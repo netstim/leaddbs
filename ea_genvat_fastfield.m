@@ -109,7 +109,7 @@ for source=S.sources
         [Efield2] = get_efield(perc,standard_efield,amp1,conductivity,amp_mode,impedence);
         %[Efield2] = get_efield(perc,standard_efield,amp1,conductivity,amp_mode);
         Efield_all=Efield_all+Efield2;
-        Efield_all = permute(Efield_all,[2 1 3]);
+%         Efield_all = permute(Efield_all,[2 1 3]);
         
     end
 
@@ -129,7 +129,7 @@ Efield = Efield_all;
 electrode_patient = elstruct;
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,Electrode_type '.mat']);
 
-[~,~,xg,yg,zg] = get_trans_mat(electrode,electrode_patient,grid_vec,side);
+[trans_mat,~,xg,yg,zg] = get_trans_mat(electrode,electrode_patient,grid_vec,side);
 
 gv=grid_vec; 
 
@@ -140,6 +140,7 @@ ea_dispt('Creating nifti header for export...');
 res=100;
 chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
 Vvat.mat=mldivide([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
+Vvat.mat = trans_mat * Vvat.mat;
 Vvat.dim=[res,res,res];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
@@ -212,9 +213,11 @@ Vvat.img=eg; %permute(eg,[1,2,3]);
 ea_write_nii(Vvat);
 
 ea_dispt('Calculating isosurface to display...');
-vatfv=isosurface(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.75);
+% vatfv=isosurface(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.75);
+vatfv=isosurface(xg,yg,zg,Vvat.img,0.75);
 
-caps=isocaps(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.5);
+% caps=isocaps(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.5);
+caps=isocaps(xg,yg,zg,Vvat.img,0.5);
 
 vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
 vatfv.vertices=[vatfv.vertices;caps.vertices];
@@ -237,9 +240,9 @@ end
 % visualization
 switch side
     case 1
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.mat'];
+        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_right.mat'];
     case 2
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.mat'];
+        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_left.mat'];
 end
 
 save(vatfvname,'vatfv','vatvolume');
