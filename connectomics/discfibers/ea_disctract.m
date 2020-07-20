@@ -221,6 +221,7 @@ classdef ea_disctract < handle
                 end
             end
 
+            % Check if patients are selected in the custom training/test list
             if isempty(obj.customselection)
                 patientsel = obj.patientselection;
             else
