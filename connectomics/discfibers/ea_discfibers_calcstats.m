@@ -144,32 +144,30 @@ for group=groups
 
     allvals = vertcat(vals{group,:});
     posvals = sort(allvals(allvals>0),'descend');
-    posrange = posvals(1) - posvals(end);
     negvals = sort(allvals(allvals<0),'ascend');
-    negrange = negvals(1) - negvals(end);
 
     for side=1:2
-        if ~obj.posvisible
-            posthresh = posvals(1);
+        if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
+            posthresh = inf;
         else
-            try
-                posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-            catch
-                posthresh = posvals(1);
-            end
-        end
-        posthresh = posthresh + eps*10;
+            posrange = posvals(1) - posvals(end);
+            posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
 
-        if ~obj.negvisible
-            negthresh = negvals(1);
-        else
-            try
-                negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-            catch
-                negthresh = negvals(1);
+            if posrange == 0
+                posthresh = posthresh - eps*10;
             end
         end
-        negthresh = negthresh - eps*10;
+
+        if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
+            negthresh = -inf;
+        else
+            negrange = negvals(1) - negvals(end);
+            negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
+
+            if negrange == 0
+                negthresh = negthresh + eps*10;
+            end
+        end
 
         % Remove vals and fibers outside the thresholding range
         remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
