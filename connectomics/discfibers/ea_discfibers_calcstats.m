@@ -147,37 +147,25 @@ for group=groups
     negvals = sort(allvals(allvals<0),'ascend');
 
     for side=1:2
-        if ~obj.posvisible || isempty(posvals)
+        if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
             posthresh = inf;
         else
             posrange = posvals(1) - posvals(end);
-            try
-                posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-            catch
-                posthresh = posvals(1);
-            end
+            posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
 
-            if posthresh == posvals(1)
+            if posrange == 0
                 posthresh = posthresh - eps*10;
-            else
-                posthresh = posthresh + eps*10;
             end
         end
 
-        if ~obj.negvisible || isempty(negvals)
+        if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
             negthresh = -inf;
         else
             negrange = negvals(1) - negvals(end);
-            try
-                negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-            catch
-                negthresh = negvals(1);
-            end
+            negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
 
-            if negthresh == negvals(1)
+            if negrange == 0
                 negthresh = negthresh + eps*10;
-            else
-                negthresh = negthresh - eps*10;
             end
         end
 
