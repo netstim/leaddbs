@@ -144,41 +144,41 @@ for group=groups
 
     allvals = vertcat(vals{group,:});
     posvals = sort(allvals(allvals>0),'descend');
-    posrange = posvals(1) - posvals(end);
     negvals = sort(allvals(allvals<0),'ascend');
-    negrange = negvals(1) - negvals(end);
 
     for side=1:2
-        if ~obj.posvisible
-            posthresh = posvals(1);
+        if ~obj.posvisible || isempty(posvals)
+            posthresh = inf;
         else
+            posrange = posvals(1) - posvals(end);
             try
                 posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
             catch
                 posthresh = posvals(1);
             end
+
+            if posthresh == posvals(1)
+                posthresh = posthresh - eps*10;
+            else
+                posthresh = posthresh + eps*10;
+            end
         end
 
-        if posthresh == posvals(1)
-            posthresh = posthresh - eps*10;
+        if ~obj.negvisible || isempty(negvals)
+            negthresh = -inf;
         else
-            posthresh = posthresh + eps*10;
-        end
-
-        if ~obj.negvisible
-            negthresh = negvals(1);
-        else
+            negrange = negvals(1) - negvals(end);
             try
                 negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
             catch
                 negthresh = negvals(1);
             end
-        end
 
-        if negthresh == negvals(1)
-            negthresh = negthresh + eps*10;
-        else
-            negthresh = negthresh - eps*10;
+            if negthresh == negvals(1)
+                negthresh = negthresh + eps*10;
+            else
+                negthresh = negthresh - eps*10;
+            end
         end
 
         % Remove vals and fibers outside the thresholding range
