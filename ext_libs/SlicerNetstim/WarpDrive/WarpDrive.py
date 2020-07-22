@@ -340,6 +340,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """
     Run processing when user clicks "Apply" button.
     """
+    # cursor
+    qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+    qt.QApplication.processEvents()
+
     # update (sets the RBF value)
     self.updateParameterNodeFromGUI()
     # get source and target from points
@@ -395,6 +399,9 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     slicer.mrmlScene.RemoveNode(sourceFiducial)
     slicer.mrmlScene.RemoveNode(targetFiducial)
     slicer.mrmlScene.RemoveNode(auxVolumeNode)
+
+    # cursor
+    qt.QApplication.setOverrideCursor(qt.Qt.ArrowCursor)
     
     
 

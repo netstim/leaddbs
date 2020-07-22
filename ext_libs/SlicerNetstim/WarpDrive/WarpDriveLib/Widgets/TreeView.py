@@ -79,6 +79,18 @@ class treeViewSceneFilter(treeViewFilter):
   def deleteFunction(self, node):
     pass
 
+
+class treeViewSegmentationsFilter(treeViewFilter):
+
+  def __init__(self):
+    super().__init__()
+    self.name = 'Segments'
+    self.toolTip = ''
+    self.addText = ''
+    self.filterDictionary['attributeNameFilter'] = ('Segment')
+
+
+
 class treeViewCorrectionsFiducialsFilter(treeViewFilter):
 
   def __init__(self):
@@ -203,10 +215,10 @@ class WarpDriveTreeView(qt.QWidget):
 
     # set up filters
     #filters = [treeViewSavedWarpFilter(), treeViewAtlasFilter(), treeViewDrawingsFilter(), treeViewSceneFilter()]
-    filters = [treeViewCorrectionsFiducialsFilter(), treeViewAtlasFilter()]
+    filters = [treeViewCorrectionsFiducialsFilter(), treeViewAtlasFilter(), treeViewSegmentationsFilter()]
     self.radioButtons = []
 
-    for filt,pos in zip(filters,[[0,0],[0,2]]):
+    for filt,pos in zip(filters,[[0,0],[0,2],[0,4]]):
       filterRadioButton = qt.QRadioButton(filt.name)
       filterRadioButton.setToolTip(filt.toolTip)
       filterRadioButton.clicked.connect(lambda b,f=filt: self.onFilterRadioButtonClicked(f))
@@ -214,10 +226,10 @@ class WarpDriveTreeView(qt.QWidget):
       self.radioButtons.append(filterRadioButton)
 
 
-    layout.addWidget(self.addButton,0,4,1,2)
-    layout.addWidget(self.deleteButton,0,6,1,1)
-    layout.addWidget(self.renameButton,0,7,1,1)
-    layout.addWidget(self.treeView,1,0,1,8)
+    layout.addWidget(self.addButton,0,6,1,2)
+    layout.addWidget(self.deleteButton,0,8,1,1)
+    layout.addWidget(self.renameButton,0,9,1,1)
+    layout.addWidget(self.treeView,1,0,1,10)
 
     # when adding fixed points while one of them is selected the new one is not set in the correct parent folder
     # this is overdoing, but fixes the problem

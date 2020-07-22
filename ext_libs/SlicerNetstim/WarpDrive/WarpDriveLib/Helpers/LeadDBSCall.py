@@ -92,6 +92,7 @@ def updateParameterNodeFromArgs(parameterNode):
     parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
     parameterNode.SetNodeReferenceID("ImageNode", None)
     parameterNode.SetNodeReferenceID("TemplateNode", None)
+    parameterNode.SetNodeReferenceID("Segmentation", None)
     return True
 
 
