@@ -23,7 +23,13 @@ if(length(elecmodels) ~= length(options.sides))
 end
 
 for side=options.sides
-    coords_mm{side}=[tmat*[elecmodels{side}.getContactPositions3D,ones(size(elecmodels{side}.getContactPositions3D,1),1)]']';%#ok<NBRAK,AGROW>
+    if length(elecmodels) == 1 % fix in case only left electrode
+        side2 = 1;
+    else
+        side2 = side;
+    end
+        
+    coords_mm{side}=[tmat*[elecmodels{side2}.getContactPositions3D,ones(size(elecmodels{side2}.getContactPositions3D,1),1)]']';%#ok<NBRAK,AGROW>
     coords_mm{side}=coords_mm{side}(:,1:3);%#ok<AGROW>
     for dim=1:3
         trajectory{side}(:,dim)=linspace(coords_mm{side}(1,dim),coords_mm{side}(1,dim)+10*(coords_mm{side}(1,dim)-coords_mm{side}(end,dim)),20);%#ok<AGROW>
