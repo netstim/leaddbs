@@ -177,7 +177,7 @@ class ImportSubjectLogic(ScriptedLoadableModuleLogic):
     for fileName in listing:
       fileName = os.path.split(fileName)[-1] # remove directory
       fileName = os.path.splitext(fileName)[0] # remove extension
-      modality = fileName.split('_')[-1] # remove 'anat'
+      modality = fileName[5:] # remove 'anat_'
       modalities.append(modality)
     return modalities
 
@@ -259,55 +259,43 @@ class ImportSubjectLogic(ScriptedLoadableModuleLogic):
     # init segmentation node
     segmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
     segmentColor = [0] * 4
+    currentSegment = 0
 
     for filename, i in zip(listing,range(len(listing))):
 
       segmentName = os.path.split(filename)[-1].split('.')[0] # name
-      slicer.util.getNode('Labels').GetColor(i+1, segmentColor) # color
-      volumeNode = slicer.util.loadVolume(filename) # load volume node
+      volumeNode = slicer.util.loadVolume(filename, properties={'name': 'tmp'}) # load volume node
       labelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode') # init label map node
 
       # volume to labelmap
-      if len(np.unique(slicer.util.array(volumeNode.GetID()))) == 2: # probably a better way to check this
-        slicer.modules.volumes.logic().CreateLabelVolumeFromVolume(slicer.mrmlScene, labelMapNode, volumeNode)
-      else:
+      if volumeNode.GetImageData().GetScalarType() in [vtk.VTK_FLOAT, vtk.VTK_DOUBLE]:
         self.runBinaryThresholdImageFilter(volumeNode, labelMapNode)
+      else:
+        slicer.modules.volumes.logic().CreateLabelVolumeFromVolume(slicer.mrmlScene, labelMapNode, volumeNode)
       
       # add to segmentation
       slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(labelMapNode, segmentationNode)
-      addedSegment = segmentationNode.GetSegmentation().GetNthSegment(i)
-      addedSegment.SetName(segmentName)
-      addedSegment.SetColor(segmentColor[:-1])
+      for s in range(currentSegment, segmentationNode.GetSegmentation().GetNumberOfSegments()):
+        slicer.util.getNode('Labels').GetColor(s+1, segmentColor) # color
+        addedSegment = segmentationNode.GetSegmentation().GetNthSegment(s)
+        addedSegment.SetName(slicer.mrmlScene.GenerateUniqueName(segmentName))
+        addedSegment.SetColor(segmentColor[:-1])
       
+      currentSegment = segmentationNode.GetSegmentation().GetNumberOfSegments()
       # remove nodes
       slicer.mrmlScene.RemoveNode(volumeNode)
       slicer.mrmlScene.RemoveNode(labelMapNode)
 
-
-    # add folder display node from qSlicerSubjectHierarchyFolderPlugin.cxx
-    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), 'Segments')
-    displayNode = slicer.vtkMRMLFolderDisplayNode()
-    displayNode.SetName(shNode.GetItemName(folderID))
-    displayNode.SetHideFromEditors(0)
-    displayNode.SetAttribute('SubjectHierarchy.Folder', "1")
-    shNode.GetScene().AddNode(displayNode)
-    shNode.SetItemDataNode(folderID, displayNode)
-    shNode.ItemModified(folderID)
-
-    slicer.modules.segmentations.logic().ExportAllSegmentsToModels(segmentationNode, folderID)
-
     # add data attributes
-    shNode.SetItemAttribute(folderID, 'Segment', '1')
+    shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+    shNode.SetItemAttribute(shNode.GetItemByDataNode(segmentationNode), 'Segment', '1')
     # segmentation children
     IDList = vtk.vtkIdList()
-    shNode.GetItemChildren(folderID, IDList)
+    shNode.GetItemChildren(shNode.GetItemByDataNode(segmentationNode), IDList)
     for i in range(IDList.GetNumberOfIds()):
       shNode.SetItemAttribute(IDList.GetId(i), 'Segment', '1')
       
-    slicer.mrmlScene.RemoveNode(segmentationNode)
-
-    return displayNode
+    return segmentationNode
 
 
 

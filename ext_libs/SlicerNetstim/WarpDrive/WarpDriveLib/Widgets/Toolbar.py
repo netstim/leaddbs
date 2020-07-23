@@ -1,6 +1,7 @@
 import qt, vtk, slicer
 from qt import QToolBar
 import os
+import itertools
 from slicer.util import VTKObservationMixin
 
 import WarpDrive
@@ -59,6 +60,10 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.segmentOpacitySlider.setFixedWidth(120)
     self.segmentOpacitySlider.connect('valueChanged(int)', self.onSegmentOpacitySlider)
     self.addWidget(self.segmentOpacitySlider)
+    segmentMode = qt.QPushButton('Fill/Outline')
+    segmentMode.connect('clicked(bool)', self.onSegmentMode)
+    self.segmentModeIterator = itertools.cycle([[1,1],[1,0],[0,1]])
+    self.addWidget(segmentMode)
 
     #
     # Space Separator
@@ -95,10 +100,17 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.updateToolbarFromParameterNode()
 
 
+  def onSegmentMode(self, b):
+    segmentationNode = self.parameterNode.GetNodeReference("Segmentation")
+    if segmentationNode:
+      fill,outline = next(self.segmentModeIterator)
+      segmentationNode.GetDisplayNode().SetAllSegmentsVisibility2DFill(fill)
+      segmentationNode.GetDisplayNode().SetAllSegmentsVisibility2DOutline(outline)
+
   def onSegmentOpacitySlider(self, value):
-    segmentsFolderNode = self.parameterNode.GetNodeReference("Segmentation")
-    if segmentsFolderNode:
-      segmentsFolderNode.SetOpacity(value/100)
+    segmentationNode = self.parameterNode.GetNodeReference("Segmentation")
+    if segmentationNode:
+      segmentationNode.GetDisplayNode().SetOpacity(value/100)
 
   def initSubject(self):
     # set up transform
@@ -106,20 +118,14 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     outputNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
     inputNode.SetAndObserveTransformNodeID(outputNode.GetID())
     # set up segmentation
-    segmentsFolderNode = ImportSubject.ImportSubjectLogic().importSegmentations(self.parameterNode.GetParameter("subjectPath"))
-    if segmentsFolderNode:
-      shnode = slicer.mrmlScene.GetSubjectHierarchyNode()
-      IDList = vtk.vtkIdList()
-      shnode.GetItemChildren(shnode.GetItemByDataNode(segmentsFolderNode), IDList)
-      for i in range(IDList.GetNumberOfIds()):
-        shnode.GetItemDataNode(IDList.GetId(i)).SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))    
-        shnode.GetItemDataNode(IDList.GetId(i)).GetDisplayNode().SetVisibility2D(1)   
-        shnode.GetItemDataNode(IDList.GetId(i)).GetDisplayNode().SetVisibility3D(0)   
-      segmentsFolderNode.SetOpacity(self.segmentOpacitySlider.value/100)
+    segmentationNode = ImportSubject.ImportSubjectLogic().importSegmentations(self.parameterNode.GetParameter("subjectPath"))
+    if segmentationNode:
+      segmentationNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))    
+      segmentationNode.GetDisplayNode().SetOpacity(self.segmentOpacitySlider.value/100)
     # parameter node
     self.parameterNode.SetNodeReferenceID("InputNode", inputNode.GetID())
     self.parameterNode.SetNodeReferenceID("OutputGridTransform", outputNode.GetID())
-    self.parameterNode.SetNodeReferenceID("Segmentation", segmentsFolderNode.GetID() if segmentsFolderNode else None)
+    self.parameterNode.SetNodeReferenceID("Segmentation", segmentationNode.GetID() if segmentationNode else None)
 
 
   def onModalityPressed(self, item, modality=None):
@@ -171,7 +177,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("InputNode"))
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("ImageNode"))
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("OutputGridTransform"))
-    LeadDBSCall.removeNodeAndChildren(self.parameterNode.GetNodeReference("Segmentation"))
+    slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("Segmentation"))
     
     LeadDBSCall.DeleteCorrections()
 
