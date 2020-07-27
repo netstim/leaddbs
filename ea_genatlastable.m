@@ -26,43 +26,43 @@ else
     mifix='';
 end
 
-if isempty(atlases) || atlases.rebuild==1
+if isempty(atlases)
     disp('Generating Atlas table. This may take a while...');
+
     lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
+
     delete([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
     lhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.ni*']);
     lhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.tr*']);
     lhmats=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.mat']);
     lhatlases=[lhatlases;lhtrks;lhmats];
-
     for i=1:length(lhatlases)
         lhcell{i}=lhatlases(i).name;
     end
+
     delete([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*_temp.ni*']);
     rhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.ni*']);
     rhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.tr*']);
     rhmats=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.mat']);
     rhatlases=[rhatlases;rhtrks;rhmats];
-
     for i=1:length(rhatlases)
         rhcell{i}=rhatlases(i).name;
     end
+
     delete([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*_temp.ni*']);
     mixedatlases=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.ni*']);
     mixedtrks=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.tr*']);
     mixedmats=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.mat']);
     mixedatlases=[mixedatlases;mixedtrks;mixedmats];
-
     for i=1:length(mixedatlases)
         mixedcell{i}=mixedatlases(i).name;
     end
-    delete([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
 
+    delete([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
     midlineatlases=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.ni*']);
     midlinetrks=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.tr*']);
     midlinemats=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.mat']);
     midlineatlases=[midlineatlases;midlinetrks;midlinemats];
-
     for i=1:length(midlineatlases)
         midlinecell{i}=midlineatlases(i).name;
     end
@@ -83,6 +83,7 @@ if isempty(atlases) || atlases.rebuild==1
     rhcell(todeleterh)=[];
 
     allcell=[rhcell,lhcell,bothcell,mixedcell,midlinecell];
+
     typecell=[ones(1,length(rhcell)),2*ones(1,length(lhcell)),3*ones(1,length(bothcell)),4*ones(1,length(mixedcell)),5*ones(1,length(midlinecell))];
     atlases.names=allcell;
     atlases.types=typecell;
