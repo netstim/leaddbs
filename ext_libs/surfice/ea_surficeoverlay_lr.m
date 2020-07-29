@@ -50,16 +50,14 @@ if ~autothresh
     end
 end
 
- sidest={'r','l','cb'};
-
-
+sidest={'r','l','cb'};
 
 % get thresholds
 if autothresh
-threshs=ea_sfc_getautothresh(fis);
+    threshs=ea_sfc_getautothresh(fis);
 end
-for side=sides
 
+for side=sides
     if side <3
         if smoothed
             mesh = [ea_space,'surf_',sidest{side},'_smoothed.mz3'];
@@ -68,15 +66,16 @@ for side=sides
         end
     else
         mesh = [ea_space,'mni152_2009.mz3'];
-
     end
 
     if ~exist(mesh,'file')
         ea_gensurfice_temps;
     end
+
     script=['BEGIN;',...
         ' RESETDEFAULTS;'...
         ' ORIENTCUBEVISIBLE(FALSE);'];
+
     for fi=1:length(fis)
         [pth,fn]=fileparts(fis{fi});
         expfn_medial{fi}=fullfile(pth,[fn,'_',sidest{side},'_med.png']);
@@ -89,20 +88,22 @@ for side=sides
             ' OVERLAYLOAD(''',ea_path_helper(fis{fi}),''');',...
             ' OVERLAYCOLORNAME(1, ''Red-Yellow'');',...
             ' OVERLAYMINMAX(1,',num2str(threshs(fi,1)),',',num2str(threshs(fi,2)),');'];
+
         if ~isnan(threshs(fi,3)) % has a negative threshold as well
             script=[script,...
                 ' OVERLAYLOAD(''',ea_path_helper(fis{fi}),''');',...
                 ' OVERLAYCOLORNAME(2, ''Blue-Green'');',...
                 ' OVERLAYMINMAX(2,',num2str(threshs(fi,3)),',',num2str(threshs(fi,4)),');'];
         end
+
         if side<3
-        script=[script,...
-            ' COLORBARVISIBLE(',colorbar,');',...
-            ' AZIMUTHELEVATION(',num2str(90+(180*side)),', 0);',...
-            ' SAVEBMP(''',ea_path_helper(expfn_medial{fi}),''');',...
-            ' AZIMUTHELEVATION(',num2str(-90+(180*side)),', 0);',...
-            ' SAVEBMP(''',ea_path_helper(expfn_lateral{fi}),''');',...
-            ' OVERLAYCLOSEALL;'];
+            script=[script,...
+                ' COLORBARVISIBLE(',colorbar,');',...
+                ' AZIMUTHELEVATION(',num2str(90+(180*side)),', 0);',...
+                ' SAVEBMP(''',ea_path_helper(expfn_medial{fi}),''');',...
+                ' AZIMUTHELEVATION(',num2str(-90+(180*side)),', 0);',...
+                ' SAVEBMP(''',ea_path_helper(expfn_lateral{fi}),''');',...
+                ' OVERLAYCLOSEALL;'];
         else
             script=[script,...
                 ' COLORBARVISIBLE(',colorbar,');',...
@@ -111,10 +112,10 @@ for side=sides
                 ' OVERLAYCLOSEALL;'];
         end
     end
+
     script=[script,...
         ' QUIT',...
         ' END.'];
-
 
     ea_surfice_script(script);
     pause(0.5);
@@ -135,12 +136,6 @@ for side=sides
         end
     end
 end
-
-
-
-
-
-
 
 
 function [img2,transp] = crop_img(img,transp)
@@ -315,8 +310,3 @@ for cc=1:CC % loop for the colors
     img2(:,:,cc) = img(edge_row(1):edge_row(2),edge_col(1):edge_col(2),cc);
 end
 transp=transp(edge_row(1):edge_row(2),edge_col(1):edge_col(2));
-
-
-
-
-
