@@ -75,7 +75,8 @@ for side=sides
         ea_gensurfice_temps;
     end
     script=['BEGIN;',...
-        ' RESETDEFAULTS;'];
+        ' RESETDEFAULTS;'...
+        ' ORIENTCUBEVISIBLE(FALSE);'];
     for fi=1:length(fis)
         [pth,fn]=fileparts(fis{fi});
         expfn_medial{fi}=fullfile(pth,[fn,'_',sidest{side},'_med.png']);
