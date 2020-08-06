@@ -13,6 +13,8 @@
 *.zip
 *.6
 *.pyc
+.idea
+__pycache__
 CMakeLists.txt
 
 /ea_prefs_*.m
