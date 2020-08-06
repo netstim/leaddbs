@@ -17,11 +17,11 @@ def get_cellmap(mesh,subdomains_assigned,Domains,MRI_param,default_material):
     
     #Tissue_array_get=read_csv('MRI_DTI_derived_data/Tissue_array_MRI.csv', delimiter=' ', header=None)
     #Tissue_array=Tissue_array_get.values
-    Tissue_array=np.load('MRI_DTI_derived_data/Tissue_array_MRI.npy')
+    Tissue_array=np.load('/opt/Patient/MRI_DTI_derived_data/Tissue_array_MRI.npy')
     
-    x_vect=np.genfromtxt('MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
-    y_vect=np.genfromtxt('MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
-    z_vect=np.genfromtxt('MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
+    x_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
+    y_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
+    z_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
     
     #[Mx_mri,My_mri,Mz_mri]=map_MRI()         #don't need to run know, the voxel_array already formed
     
@@ -136,19 +136,19 @@ def get_cellmap_tensors(mesh,subdomains_assigned,Domains,MRI_param,DTI_param,def
     
     #Tissue_array_get=read_csv('MRI_DTI_derived_data/Tissue_array_MRI.csv', delimiter=' ', header=None)
     #Tissue_array=Tissue_array_get.values
-    Tissue_array=np.load('MRI_DTI_derived_data/Tissue_array_MRI.npy')
+    Tissue_array=np.load('/opt/Patient/MRI_DTI_derived_data/Tissue_array_MRI.npy')
     
-    x_vect=np.genfromtxt('MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
-    y_vect=np.genfromtxt('MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
-    z_vect=np.genfromtxt('MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
+    x_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
+    y_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
+    z_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
     
     #DTI_array_get=read_csv('MRI_DTI_derived_data/Tensor_array_DTI.csv', delimiter=' ', header=None)
     #DTI_array=DTI_array_get.values
-    DTI_array=np.load('MRI_DTI_derived_data/Tensor_array_DTI.npy')
+    DTI_array=np.load('/opt/Patient/MRI_DTI_derived_data/Tensor_array_DTI.npy')
     
-    x_vect_DTI=np.genfromtxt('MRI_DTI_derived_data/x_vector_DTI_Box.csv', delimiter=' ')
-    y_vect_DTI=np.genfromtxt('MRI_DTI_derived_data/y_vector_DTI_Box.csv', delimiter=' ')
-    z_vect_DTI=np.genfromtxt('MRI_DTI_derived_data/z_vector_DTI_Box.csv', delimiter=' ')
+    x_vect_DTI=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/x_vector_DTI_Box.csv', delimiter=' ')
+    y_vect_DTI=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/y_vector_DTI_Box.csv', delimiter=' ')
+    z_vect_DTI=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/z_vector_DTI_Box.csv', delimiter=' ')
 
     #[Mx_dti,My_dti,Mz_dti]=map_DTI()
     
@@ -331,7 +331,7 @@ def get_cellmap_tensors(mesh,subdomains_assigned,Domains,MRI_param,DTI_param,def
     #subdomains.array()[subdomains_assigned.array()==3]=4          #mark every cell with value 3 from xml to index encap as 4
 
     #here we also keep a reference to the number of elements as the mesh identifier
-    hdf = HDF5File(mesh.mpi_comm(), 'Results_adaptive/Tensors_to_solve_num_el_'+str(mesh.num_cells())+'.h5', 'w')
+    hdf = HDF5File(mesh.mpi_comm(), '/opt/Patient/Results_adaptive/Tensors_to_solve_num_el_'+str(mesh.num_cells())+'.h5', 'w')
     hdf.write(c00, "/c00")
     hdf.write(c01, "/c01")
     hdf.write(c02, "/c02")
@@ -340,17 +340,17 @@ def get_cellmap_tensors(mesh,subdomains_assigned,Domains,MRI_param,DTI_param,def
     hdf.write(c22, "/c22")
     hdf.close()
     
-    file=File('Tensors/c00_unscaled.pvd')
+    file=File('/opt/Patient/Tensors/c00_unscaled.pvd')
     file<<c00,mesh      
-    file=File('Tensors/c01_unscaled.pvd')
+    file=File('/opt/Patient/Tensors/c01_unscaled.pvd')
     file<<c01,mesh         
-    file=File('Tensors/c02_unscaled.pvd')
+    file=File('/opt/Patient/Tensors/c02_unscaled.pvd')
     file<<c02,mesh
-    file=File('Tensors/c11_unscaled.pvd')
+    file=File('/opt/Patient/Tensors/c11_unscaled.pvd')
     file<<c11,mesh
-    file=File('Tensors/c12_unscaled.pvd')
+    file=File('/opt/Patient/Tensors/c12_unscaled.pvd')
     file<<c12,mesh
-    file=File('Tensors/c22_unscaled.pvd')
+    file=File('/opt/Patient/Tensors/c22_unscaled.pvd')
     file<<c22,mesh
         
     #Store to file

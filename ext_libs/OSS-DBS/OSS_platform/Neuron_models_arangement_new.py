@@ -208,7 +208,7 @@ def generate_pattern_model(name,N_Ranv,axon_param,Axon_Model_Type):
     
     Array_coord_pattern=np.round(Array_coord_pattern,8)
     
-    np.savetxt('Neuron_model_arrays/'+name, Array_coord_pattern, delimiter=" ") 
+    np.savetxt('/opt/Patient/Neuron_model_arrays/'+name, Array_coord_pattern, delimiter=" ") 
         
     return n_segments
 
@@ -224,7 +224,7 @@ def get_neuron_models_dims(Full_model_ready,X_imp,Y_imp,Z_imp,Neuron_param,axon_
             Array_coord_load=Array_coord_load_get.values    #
             
         else:   #or get a pattern from the internally created file
-            Array_coord_load_get=read_csv('Neuron_model_arrays/'+Neuron_param.name, delimiter=' ', header=None)
+            Array_coord_load_get=read_csv('/opt/Patient/Neuron_model_arrays/'+Neuron_param.name, delimiter=' ', header=None)
             Array_coord_load=Array_coord_load_get.values
     
         n_segments=Array_coord_load.shape[0]        #number of compartments per neuron (axon)
@@ -254,14 +254,14 @@ def get_neuron_models_dims(Full_model_ready,X_imp,Y_imp,Z_imp,Neuron_param,axon_
     if Full_model_ready==1:         # load the provided neuron array (already preprocessed by cut_models_by_domain)
     
         # load MRI meta data to check the shift of the coordinate system
-        [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
+        [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
         
-        if os.path.isfile('Neuron_model_arrays/Prepared_models_full_filtered.csv'):              # if the the neuron array was provided in .csv   
-            Array_coord_get=read_csv('Neuron_model_arrays/Prepared_models_full_filtered.csv', delimiter=' ', header=None)        #
+        if os.path.isfile('/opt/Patient/Neuron_model_arrays/Prepared_models_full_filtered.csv'):              # if the the neuron array was provided in .csv   
+            Array_coord_get=read_csv('/opt/Patient/Neuron_model_arrays/Prepared_models_full_filtered.csv', delimiter=' ', header=None)        #
             Array_coord=Array_coord_get.values
                 
-        if os.path.isfile('Neuron_model_arrays/Prepared_models_full_filtered.h5'):              # if the the neuron array was provided in .h5
-            hf = h5py.File('Neuron_model_arrays/Prepared_models_full_filtered.h5', 'r')
+        if os.path.isfile('/opt/Patient/Neuron_model_arrays/Prepared_models_full_filtered.h5'):              # if the the neuron array was provided in .h5
+            hf = h5py.File('/opt/Patient/Neuron_model_arrays/Prepared_models_full_filtered.h5', 'r')
             lst=list(hf.keys())
             result_total=[]
             for i in lst:
@@ -270,7 +270,7 @@ def get_neuron_models_dims(Full_model_ready,X_imp,Y_imp,Z_imp,Neuron_param,axon_
                 result_total.append(a)               
                 b=np.copy(a)
                 
-                hf3 = h5py.File('Neuron_model_arrays/All_neuron_models_by_populations.h5', 'a')     # resave to .h5
+                hf3 = h5py.File('/opt/Patient/Neuron_model_arrays/All_neuron_models_by_populations.h5', 'a')     # resave to .h5
                 b[:,0]=b[:,0]-x_min           # shift to the positive octant space
                 b[:,1]=b[:,1]-y_min
                 b[:,2]=b[:,2]-z_min
@@ -285,7 +285,7 @@ def get_neuron_models_dims(Full_model_ready,X_imp,Y_imp,Z_imp,Neuron_param,axon_
         Array_coord[:,1]=Array_coord[:,1]-y_min
         Array_coord[:,2]=Array_coord[:,2]-z_min
                 
-    np.savetxt('Neuron_model_arrays/All_neuron_models.csv', Array_coord, delimiter=" ") 
+    np.savetxt('/opt/Patient/Neuron_model_arrays/All_neuron_models.csv', Array_coord, delimiter=" ") 
         
     print("Initial neuron models can be visualized from Neuron_model_arrays/All_neuron_models.csv in Paraview\n")
 
@@ -312,34 +312,34 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
             Array_coord_load_get=read_csv(Neuron_param.name, delimiter=' ', header=None)
             Array_coord_load=Array_coord_load_get.values        
         else:
-            Array_coord_load_get=read_csv('Neuron_model_arrays/'+Neuron_param.name, delimiter=' ', header=None)
+            Array_coord_load_get=read_csv('/opt/Patient/Neuron_model_arrays/'+Neuron_param.name, delimiter=' ', header=None)
             Array_coord_load=Array_coord_load_get.values
     
         n_segments=Array_coord_load.shape[0]
 
-        Array_coord_get=read_csv('Neuron_model_arrays/All_neuron_models.csv', delimiter=' ', header=None)        #
+        Array_coord_get=read_csv('/opt/Patient/Neuron_model_arrays/All_neuron_models.csv', delimiter=' ', header=None)        #
         Array_coord=Array_coord_get.values
                     
     if Full_model_ready == 1:             # if the neuron array was provided
                          
-        if os.path.isfile('Neuron_model_arrays/All_neuron_models.csv'):
+        if os.path.isfile('/opt/Patient/Neuron_model_arrays/All_neuron_models.csv'):
             same_axon_type=True            
-            Array_coord_get=read_csv('Neuron_model_arrays/All_neuron_models.csv', delimiter=' ', header=None)        #
+            Array_coord_get=read_csv('/opt/Patient/Neuron_model_arrays/All_neuron_models.csv', delimiter=' ', header=None)        #
             Array_coord=Array_coord_get.values
-            [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
-            [__, __, __, __, __, __, __, __, __, __,__,__,n_segments]=np.genfromtxt('Neuron_model_arrays/Neuron_model_misc.csv', delimiter=' ')
+            [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
+            [__, __, __, __, __, __, __, __, __, __,__,__,n_segments]=np.genfromtxt('/opt/Patient/Neuron_model_arrays/Neuron_model_misc.csv', delimiter=' ')
                            
-        if os.path.isfile('Neuron_model_arrays/All_neuron_models_by_populations.h5'):
+        if os.path.isfile('/opt/Patient/Neuron_model_arrays/All_neuron_models_by_populations.h5'):
             
             same_axon_type=False            
             
-            hf = h5py.File('Neuron_model_arrays/All_neuron_models_by_populations.h5', 'r')
+            hf = h5py.File('/opt/Patient/Neuron_model_arrays/All_neuron_models_by_populations.h5', 'r')
             lst=list(hf.keys())
             List_of_arrays=[]
             List_of_empty=[]
             List_of_placed=[]
                        
-            [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
+            [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
             
             for i in lst:
                 Array_coord=hf.get(i)
@@ -355,29 +355,29 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
                 del Array_coord
             hf.close()
             
-            n_segments_fib_diam_array=np.load('Neuron_model_arrays/Neuron_populations_misc.npy')
+            n_segments_fib_diam_array=np.load('/opt/Patient/Neuron_model_arrays/Neuron_populations_misc.npy')
             N_models=np.zeros((len(List_of_arrays)),int)    # number of models per population  
 
     n_segments=int(n_segments)  # if loaded from .csv
 
     # now we will folter out unphysiological neurins    
-    mesh = Mesh("Meshes/Mesh_unref.xml")
-    subdomains_assigned=MeshFunction('size_t',mesh,"Meshes/Mesh_unref_physical_region.xml")
+    mesh = Mesh("/opt/Patient/Meshes/Mesh_unref.xml")
+    subdomains_assigned=MeshFunction('size_t',mesh,"/opt/Patient/Meshes/Mesh_unref_physical_region.xml")
 
     #first, the neuron compartments should not pass through CSF
     import os      
-    if os.path.isfile('MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF.npy') or os.path.isfile('MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF.npy'):        #if array was already prepared
+    if os.path.isfile('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF.npy') or os.path.isfile('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF.npy'):        #if array was already prepared
         if MRI_param.name[-2:]=='gz':
-            voxel_array_CSF=np.load('MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF.npy')
+            voxel_array_CSF=np.load('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF.npy')
         else:   
-            voxel_array_CSF=np.load('MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF.npy') 
+            voxel_array_CSF=np.load('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF.npy') 
         print("voxel_array_CSF is loaded")    
     else:   #otherwise prepare an array that stores coordinated of all voxels with CSF in the vicinity of the neurons    
-        Tissue_array=np.load('MRI_DTI_derived_data/Tissue_array_MRI.npy')
+        Tissue_array=np.load('/opt/Patient/MRI_DTI_derived_data/Tissue_array_MRI.npy')
         
-        x_vect=np.genfromtxt('MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
-        y_vect=np.genfromtxt('MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
-        z_vect=np.genfromtxt('MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
+        x_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
+        y_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
+        z_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
                 
         voxel_size_x=MRI_param.x_vox_size
         voxel_size_y=MRI_param.y_vox_size
@@ -428,9 +428,9 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
         voxel_array_CSF=voxel_array_CSF[~np.all(voxel_array_CSF==0.0,axis=1)]  #deletes all zero enteries
 
         if MRI_param.name[-2:]=='gz':
-            np.save('MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF', voxel_array_CSF) 
+            np.save('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF', voxel_array_CSF) 
         else:
-            np.save('MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF', voxel_array_CSF)
+            np.save('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF', voxel_array_CSF)
                              
         del Tissue_array,x_vect,y_vect,z_vect
         print("voxel_array_CSF (contains CSF voxels close to the neuron array) is prepared")
@@ -500,16 +500,16 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
         Array_coord=Array_coord[~np.all(Array_coord==-100000000.0,axis=1)]  #deletes all -100000000.0 enteries          
         Array_coord=np.round(Array_coord,8)
         
-        np.savetxt('Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', Array_coord, delimiter=" ")   
+        np.savetxt('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', Array_coord, delimiter=" ")   
         print("Adjusted neuron models can be visualized from Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv in Paraview")
  
         import os
         import subprocess
-        with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_csv_neurons.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        #with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_csv_neurons.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
            
         N_models=int(Array_coord.shape[0]/n_segments)
         
-        np.savetxt('Neuron_model_arrays/Adjusted_neuron_array_info.csv', np.array([N_models,points_csf,points_encap,points_outside]), delimiter=" ") 
+        np.savetxt('/opt/Patient/Neuron_model_arrays/Adjusted_neuron_array_info.csv', np.array([N_models,points_csf,points_encap,points_outside]), delimiter=" ") 
         print("Number of placed neuron models: ",N_models)
 
                         
@@ -517,8 +517,8 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
         
         list_of_connections=[]
         
-        if os.path.isfile('Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5'):
-            os.remove('Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5')
+        if os.path.isfile('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5'):
+            os.remove('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5')
             
         number_of_points_filtered=0
         N_models=np.zeros((len(List_of_arrays)),int)
@@ -526,7 +526,7 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
         for i in range(len(List_of_arrays)):
             
             if not(type(List_of_arrays[i]) is np.ndarray):
-                hf3 = h5py.File('Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'a')
+                hf3 = h5py.File('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'a')
                 hf3.create_dataset(lst[i], data=0)
                 hf3.close()                
             else:            
@@ -573,16 +573,16 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
                 Array_coord=np.round(Array_coord,8)
                 N_models[i]=int(Array_coord.shape[0]/int(n_segments_fib_diam_array[i,0]))
                 
-                hf3 = h5py.File('Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'a')
+                hf3 = h5py.File('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'a')
                 hf3.create_dataset(lst[i], data=Array_coord)
                 hf3.close()
                         
-                np.savetxt('Neuron_model_arrays/'+lst[i]+'.csv', Array_coord, delimiter=" ") 
+                np.savetxt('/opt/Patient/Neuron_model_arrays/'+lst[i]+'.csv', Array_coord, delimiter=" ") 
                 list_of_connections.append(lst[i])
 
                 number_of_points_filtered=number_of_points_filtered+Array_coord.shape[0]
         
-        hf = h5py.File('Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'r')
+        hf = h5py.File('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'r')
         lst=list(hf.keys())
         result_total=[]        
         for i in lst:
@@ -595,8 +595,8 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
         Array_coord_total=np.concatenate(result_total)
         hf.close()
 
-        np.savetxt('Neuron_model_arrays/Adjusted_neuron_array_info.csv', N_models, delimiter=" ")
-        np.savetxt('Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', Array_coord_total, delimiter=" ")   
+        np.savetxt('/opt/Patient/Neuron_model_arrays/Adjusted_neuron_array_info.csv', N_models, delimiter=" ")
+        np.savetxt('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', Array_coord_total, delimiter=" ")   
         print("Points in CSF, encapsulation layer (and floating conductors) and outside (and intersecting with the electrode): ",points_csf,points_encap,points_outside)
         print("Adjusted neuron models can be visualized from Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv in Paraview")
         
@@ -604,11 +604,11 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
         #from Visualization_files.Paraview_connections_processed import show_connections
         #show_connections(list_of_connections)
         
-        from Parameter_insertion import paste_paraview_connections_vis
-        paste_paraview_connections_vis(list_of_connections)
-        import os
-        import subprocess
-        with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_connections_processed.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+#        from Parameter_insertion import paste_paraview_connections_vis
+#        paste_paraview_connections_vis(list_of_connections)
+#        import os
+#        import subprocess
+#        with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_connections_processed.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
  
         print("Number of placed neuron models per population: ",N_models)
@@ -681,7 +681,7 @@ def build_neuron_models(d,MRI_param):
         del Array_coord_load
        
     Neuron_param=Neuron_info(pattern_model_name,X_coord,Y_coord,Z_coord,d["YZ_angles"],d["ZX_angles"],d["XY_angles"],d["alpha_array_glob"],d["beta_array_glob"],d["gamma_array_glob"],N_models_in_plane)                
-    with open('Neuron_model_arrays/Neuron_param_class.file', "wb") as f:
+    with open('/opt/Patient/Neuron_model_arrays/Neuron_param_class.file', "wb") as f:
         pickle.dump(Neuron_param, f, pickle.HIGHEST_PROTOCOL)
     
     # implantation coordinated in the positive octant space
@@ -698,7 +698,7 @@ def build_neuron_models(d,MRI_param):
         Neuron_model_misc=np.array([d["n_Ranvier"], 0, 0, d["n_Ranvier"]-1, 0.0, 0.0, 0.0, 0.0, internodel_length,d["diam_fib"],d["n_Ranvier"],ROI_radius,n_segments])
     
     '''Save meta data for the future simulations with the current Neuron model data set'''
-    np.savetxt('Neuron_model_arrays/Neuron_model_misc.csv', Neuron_model_misc, delimiter=" ")
+    np.savetxt('/opt/Patient/Neuron_model_arrays/Neuron_model_misc.csv', Neuron_model_misc, delimiter=" ")
     
     print("Initial neuron models and corresponding meta data were created\n")
 
@@ -742,7 +742,7 @@ def create_meta_data_for_predefined_models(d,MRI_param):
         elif d["Axon_Model_Type"] == 'Reilly2016':
             Neuron_model_misc=np.array([d["n_Ranvier"], 0, 0, d["n_Ranvier"]-1, 0.0, 0.0, 0.0, 0.0, internodel_length,d["diam_fib"],d["n_Ranvier"],ROI_radius,n_segments])
         '''Save meta data for the future simulations with the current Neuron model data set'''
-        np.savetxt('Neuron_model_arrays/Neuron_model_misc.csv', Neuron_model_misc, delimiter=" ")
+        np.savetxt('/opt/Patient/Neuron_model_arrays/Neuron_model_misc.csv', Neuron_model_misc, delimiter=" ")
     
         print("Meta data for predefined neuron models was created\n")
         
@@ -750,11 +750,11 @@ def create_meta_data_for_predefined_models(d,MRI_param):
         
         param_axon=[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1]          #not needed here
 
-        n_segments_fib_diam_array=np.load('Neuron_model_arrays/Neuron_populations_misc.npy')
+        n_segments_fib_diam_array=np.load('/opt/Patient/Neuron_model_arrays/Neuron_populations_misc.npy')
         ROI_radius=get_neuron_models_dims(d["Neuron_model_array_prepared"],Xt_new,Yt_new,Zt_new,0,0,0)
         
         Neuron_model_misc=np.array([-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, ROI_radius,-1])          #not needed here
-        np.savetxt('Neuron_model_arrays/Neuron_model_misc.csv', Neuron_model_misc, delimiter=" ")
+        np.savetxt('/opt/Patient/Neuron_model_arrays/Neuron_model_misc.csv', Neuron_model_misc, delimiter=" ")
         
         n_segments=n_segments_fib_diam_array[:,0]
         n_segments=n_segments.astype(int)
@@ -778,7 +778,7 @@ def adjust_neuron_models(d,MRI_param,Domains,Neuron_param,param_axon):
 def cut_models_by_domain(d,Brain_shape_name,name_prepared_neuron_array):
     
     if Brain_shape_name=='Brain_substitute.brep':       # load the brain approximation
-        mesh_brain_sub = Mesh("Meshes/Mesh_brain_substitute_max_ROI.xml")
+        mesh_brain_sub = Mesh("/opt/Patient/Meshes/Mesh_brain_substitute_max_ROI.xml")
 
     if name_prepared_neuron_array[-4:]=='.csv':      #if we have an array where all axons have the same length
         if d["Axon_Model_Type"] == 'McIntyre2002':
@@ -797,7 +797,7 @@ def cut_models_by_domain(d,Brain_shape_name,name_prepared_neuron_array):
             print("The neuron model "+str(d["Axon_Model_Type"])+" is not implemented, exiting")
             raise SystemExit  
       
-        Array_coord_get=read_csv(name_prepared_neuron_array, delimiter=' ', header=None)        #
+        Array_coord_get=read_csv('/opt/Patient/'+name_prepared_neuron_array, delimiter=' ', header=None)        #
         Array_coord_in_MRI=Array_coord_get.values
         
         if Brain_shape_name=='Brain_substitute.brep':
@@ -817,7 +817,7 @@ def cut_models_by_domain(d,Brain_shape_name,name_prepared_neuron_array):
             print(n_models_before-n_models_after, " models were outside of the approximating geometrical domain")            
             Array_coord_in_MRI=np.round(Array_coord_in_MRI,8)
         
-        np.savetxt('Neuron_model_arrays/Prepared_models_full_filtered.csv', Array_coord_in_MRI, delimiter=" ")
+        np.savetxt('/opt/Patient/Neuron_model_arrays/Prepared_models_full_filtered.csv', Array_coord_in_MRI, delimiter=" ")
         del Array_coord_in_MRI
         return True
     
@@ -829,7 +829,7 @@ def cut_models_by_domain(d,Brain_shape_name,name_prepared_neuron_array):
             diam_of_populations=[d["diam_fib"]]
             d["n_Ranvier"]=[d["n_Ranvier"]]
 
-        hf = h5py.File(name_prepared_neuron_array, 'r')
+        hf = h5py.File('/opt/Patient/'+name_prepared_neuron_array, 'r')
         lst=list(hf.keys())
 
         population_index=0
@@ -877,7 +877,7 @@ def cut_models_by_domain(d,Brain_shape_name,name_prepared_neuron_array):
                 
                 Array_coord_in_MRI=np.round(Array_coord_in_MRI,8)
 
-            hf2 = h5py.File('Neuron_model_arrays/Prepared_models_full_filtered.h5', 'a')
+            hf2 = h5py.File('/opt/Patient/Neuron_model_arrays/Prepared_models_full_filtered.h5', 'a')
             hf2.create_dataset(i, data=Array_coord_in_MRI)
             hf2.close()
 
@@ -886,7 +886,7 @@ def cut_models_by_domain(d,Brain_shape_name,name_prepared_neuron_array):
         hf.close()
         
         '''Here the meta data is different as we have different structure of the input array'''
-        np.save('Neuron_model_arrays/Neuron_populations_misc', n_segments_fib_diam_array)
+        np.save('/opt/Patient/Neuron_model_arrays/Neuron_populations_misc', n_segments_fib_diam_array)
 
         return True
     

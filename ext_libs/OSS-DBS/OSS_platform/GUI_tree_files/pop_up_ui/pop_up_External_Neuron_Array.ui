@@ -854,111 +854,6 @@
       <item>
        <widget class="QWidget" name="widget_Global_Rot_Unchecked" native="true">
         <layout class="QGridLayout" name="gridLayout_3">
-         <item row="1" column="2">
-          <widget class="QLabel" name="label_35">
-           <property name="font">
-            <font/>
-           </property>
-           <property name="text">
-            <string>mm</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="lineEdit_Z_Coordinate_Old">
-           <property name="font">
-            <font/>
-           </property>
-           <property name="toolTip">
-            <string>Enter Co-ordinate: Format: [-0.5,-0.5,-0.5,...,0.5]</string>
-           </property>
-           <property name="locale">
-            <locale language="English" country="UnitedKingdom"/>
-           </property>
-           <property name="placeholderText">
-            <string>[-0.5,-0.5,-0.5,...,0.5]</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_Y_Coordinate_Old">
-           <property name="font">
-            <font/>
-           </property>
-           <property name="text">
-            <string>Y-coord of Central Node</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_X_Coordinate_Old">
-           <property name="font">
-            <font/>
-           </property>
-           <property name="text">
-            <string>X-coord of Central Node</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QLineEdit" name="lineEdit_ZX_Angles">
-           <property name="font">
-            <font/>
-           </property>
-           <property name="locale">
-            <locale language="English" country="UnitedKingdom"/>
-           </property>
-           <property name="placeholderText">
-            <string>[0.0, 0.0]</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="3">
-          <widget class="QPushButton" name="pushButton_XY_Angles">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Provide rotational angles for neuron models arond local Z axis (i.e. models will be rotated relatively to their own central compartments).&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;Important&lt;/span&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;: Unlike 'Turn around .. axis'., here the angle vectors are not required to have the same legnth, as the models will be rotated using 3 nested &amp;quot;for&amp;quot; loops. For example, to have only models rotated by 90 degrees around X axis, we should provide 90.0 , 0.0 , 0.0. If we want to rotate them additionally around Y axis by 30 degrees, we should provide 90.0, [0.0,30.0], 0.0.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="../icons.qrc">
-             <normaloff>:/icons/icons/info.png</normaloff>:/icons/icons/info.png</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
-           <property name="flat">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_ZX_Angles">
-           <property name="font">
-            <font/>
-           </property>
-           <property name="text">
-            <string>Angles in Plane ZX</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QLineEdit" name="lineEdit_XY_Angles">
-           <property name="font">
-            <font/>
-           </property>
-           <property name="locale">
-            <locale language="English" country="UnitedKingdom"/>
-           </property>
-           <property name="placeholderText">
-            <string>0.0, 0.0]</string>
-           </property>
-          </widget>
-         </item>
          <item row="6" column="2">
           <widget class="QLabel" name="label_26">
            <property name="font">
@@ -992,6 +887,62 @@
            </property>
           </widget>
          </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_X_Coordinate_Old">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="text">
+            <string>X-coord of Central Node</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QLabel" name="label_24">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;deg&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_ZX_Angles">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="text">
+            <string>Angles in Plane ZX</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="lineEdit_YZ_Angles">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="locale">
+            <locale language="English" country="UnitedKingdom"/>
+           </property>
+           <property name="placeholderText">
+            <string>[0.0, 0.0]</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLineEdit" name="lineEdit_XY_Angles">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="locale">
+            <locale language="English" country="UnitedKingdom"/>
+           </property>
+           <property name="placeholderText">
+            <string>0.0, 0.0]</string>
+           </property>
+          </widget>
+         </item>
          <item row="4" column="3">
           <widget class="QPushButton" name="pushButton_YZ_Angles">
            <property name="toolTip">
@@ -1015,16 +966,42 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
-          <widget class="QLineEdit" name="lineEdit_YZ_Angles">
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="lineEdit_Z_Coordinate_Old">
            <property name="font">
             <font/>
+           </property>
+           <property name="toolTip">
+            <string>Enter Co-ordinate: Format: [-0.5,-0.5,-0.5,...,0.5]</string>
            </property>
            <property name="locale">
             <locale language="English" country="UnitedKingdom"/>
            </property>
            <property name="placeholderText">
-            <string>[0.0, 0.0]</string>
+            <string>[-0.5,-0.5,-0.5,...,0.5]</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="3">
+          <widget class="QPushButton" name="pushButton_XY_Angles">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Provide rotational angles for neuron models arond local Z axis (i.e. models will be rotated relatively to their own central compartments).&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;Important&lt;/span&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;: Unlike 'Turn around .. axis'., here the angle vectors are not required to have the same legnth, as the models will be rotated using 3 nested &amp;quot;for&amp;quot; loops. For example, to have only models rotated by 90 degrees around X axis, we should provide 90.0 , 0.0 , 0.0. If we want to rotate them additionally around Y axis by 30 degrees, we should provide 90.0, [0.0,30.0], 0.0.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../icons.qrc">
+             <normaloff>:/icons/icons/info.png</normaloff>:/icons/icons/info.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -1035,6 +1012,26 @@
            </property>
            <property name="text">
             <string>Z-coord of Central Node</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_34">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="text">
+            <string>mm</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLabel" name="label_36">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="text">
+            <string>mm</string>
            </property>
           </widget>
          </item>
@@ -1061,18 +1058,8 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_YZ_Angles">
-           <property name="font">
-            <font/>
-           </property>
-           <property name="text">
-            <string>Angles in Plane YZ</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLabel" name="label_34">
+         <item row="1" column="2">
+          <widget class="QLabel" name="label_35">
            <property name="font">
             <font/>
            </property>
@@ -1091,23 +1078,13 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="2">
-          <widget class="QLabel" name="label_36">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_Y_Coordinate_Old">
            <property name="font">
             <font/>
            </property>
            <property name="text">
-            <string>mm</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="2">
-          <widget class="QLabel" name="label_24">
-           <property name="font">
-            <font/>
-           </property>
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;deg&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>Y-coord of Central Node</string>
            </property>
           </widget>
          </item>
@@ -1127,6 +1104,29 @@
            </property>
           </widget>
          </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="lineEdit_ZX_Angles">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="locale">
+            <locale language="English" country="UnitedKingdom"/>
+           </property>
+           <property name="placeholderText">
+            <string>[0.0, 0.0]</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QLabel" name="label_25">
+           <property name="font">
+            <font/>
+           </property>
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;deg&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="1">
           <widget class="QLineEdit" name="lineEdit_X_Coordinate_Old">
            <property name="font">
@@ -1143,13 +1143,13 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="2">
-          <widget class="QLabel" name="label_25">
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_YZ_Angles">
            <property name="font">
             <font/>
            </property>
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;deg&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>Angles in Plane YZ</string>
            </property>
           </widget>
          </item>

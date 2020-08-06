@@ -54,11 +54,11 @@ forsec internodes {
   }
 }
 
-axonnodes=15
+axonnodes=20
 objectvar wf[axonnodes*2-1] // input waveforms
 n_pulse = 1  // number of DBS pulses. default 1
 // Initialize variables
-steps_per_ms=20
+steps_per_ms=1000
 
 // EXTRACELLULAR STIMULUS
 proc stimul() {

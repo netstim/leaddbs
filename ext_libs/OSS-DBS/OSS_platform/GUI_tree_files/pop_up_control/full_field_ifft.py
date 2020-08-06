@@ -15,7 +15,6 @@ class PopUpFullFieldIFFT(Functionalities):
         # set relative folder
         self.rel_folder = self.rel_folder()
 
-
         self.ui.checkBox_VTA_From_DivE.stateChanged.connect(
             lambda: self.connected_check_boxes_3(self.ui.checkBox_VTA_From_DivE, self.ui.checkBox_VTA_From_NEURON,
                                                  self.ui.checkBox_VTA_From_E))
@@ -57,6 +56,7 @@ class PopUpFullFieldIFFT(Functionalities):
         self.ui.widget_Activation_Threshold_1.hide()
         self.ui.widget_Activation_Threshold_2.hide()
         self.ui.widget_Activation_Threshold_3.hide()
+
 
         # QPopUp
         self.filename = "{}/pop_up_control/dictionaries/dict_full_field_ifft.py".format(self.rel_folder)

@@ -57,35 +57,30 @@ class PopUpExternalNeuronArray(Functionalities):
         self.ui.pushButton_Cancel.clicked.connect(lambda: self.closeWindow())
 
     def output_dict(self):
-        if self.ui.checkBox_Global_Rot.checkState() == 2:
-            output_dict = {
-                'Global_rot': self.corrector(1, self.ui.checkBox_Global_Rot.checkState()),
-                'x_seed': self.set_default_values(0, self.ui.doubleSpinBox_X_Seed.value()),
-                'y_seed': self.set_default_values(0, self.ui.doubleSpinBox_Y_Seed.value()),
-                'z_seed': self.set_default_values(0, self.ui.doubleSpinBox_Z_Seed.value()),
-                'x_steps': self.set_default_values(0, self.ui.spinBox_X_Steps.value()),
-                'y_steps': self.set_default_values(0, self.ui.spinBox_Y_Steps.value()),
-                'z_steps': self.set_default_values(0, self.ui.spinBox_Z_Steps.value()),
-                'x_step': self.set_default_values(0, self.ui.doubleSpinBox_X_Step.value()),
-                'y_step': self.set_default_values(0, self.ui.doubleSpinBox_Y_Step.value()),
-                'z_step': self.set_default_values(0, self.ui.doubleSpinBox_Z_Step.value()),
-                'alpha_array_glob': self.set_default_values([0],
-                                                            self.ui.lineEdit_Alpha_Array_Glob.text()),
-                'beta_array_glob': self.set_default_values([0],
-                                                           self.ui.lineEdit_Beta_Array_Glob.text()),
-                'gamma_array_glob': self.set_default_values([0],
-                                                            self.ui.lineEdit_Gamma_Array_Glob.text())
-            }
-        else:
-            output_dict = {
-                'Global_rot': self.corrector(1, self.ui.checkBox_Global_Rot.checkState()),
-                'X_coord_old': self.set_default_values(0, self.ui.lineEdit_X_Coordinate_Old.text()),
-                'Y_coord_old': self.set_default_values(0, self.ui.lineEdit_Y_Coordinate_Old.text()),
-                'Z_coord_old': self.set_default_values(0, self.ui.lineEdit_Z_Coordinate_Old.text()),
-                'YZ_angles': self.set_default_values([0], self.ui.lineEdit_YZ_Angles.text()),
-                'ZX_angles': self.set_default_values([0], self.ui.lineEdit_ZX_Angles.text()),
-                'XY_angles': self.set_default_values([0], self.ui.lineEdit_XY_Angles.text())
-            }
+        output_dict = {
+            'Global_rot': self.corrector(1, self.ui.checkBox_Global_Rot.checkState()),
+            'x_seed': self.set_default_values(0, self.ui.doubleSpinBox_X_Seed.value()),
+            'y_seed': self.set_default_values(0, self.ui.doubleSpinBox_Y_Seed.value()),
+            'z_seed': self.set_default_values(0, self.ui.doubleSpinBox_Z_Seed.value()),
+            'x_steps': self.set_default_values(0, self.ui.spinBox_X_Steps.value()),
+            'y_steps': self.set_default_values(0, self.ui.spinBox_Y_Steps.value()),
+            'z_steps': self.set_default_values(0, self.ui.spinBox_Z_Steps.value()),
+            'x_step': self.set_default_values(0, self.ui.doubleSpinBox_X_Step.value()),
+            'y_step': self.set_default_values(0, self.ui.doubleSpinBox_Y_Step.value()),
+            'z_step': self.set_default_values(0, self.ui.doubleSpinBox_Z_Step.value()),
+            'alpha_array_glob': self.set_default_values([0],
+                                                        self.ui.lineEdit_Alpha_Array_Glob.text()),
+            'beta_array_glob': self.set_default_values([0],
+                                                       self.ui.lineEdit_Beta_Array_Glob.text()),
+            'gamma_array_glob': self.set_default_values([0],
+                                                        self.ui.lineEdit_Gamma_Array_Glob.text()),
+            'X_coord_old': self.set_default_values(0, self.ui.lineEdit_X_Coordinate_Old.text()),
+            'Y_coord_old': self.set_default_values(0, self.ui.lineEdit_Y_Coordinate_Old.text()),
+            'Z_coord_old': self.set_default_values(0, self.ui.lineEdit_Z_Coordinate_Old.text()),
+            'YZ_angles': self.set_default_values([0], self.ui.lineEdit_YZ_Angles.text()),
+            'ZX_angles': self.set_default_values([0], self.ui.lineEdit_ZX_Angles.text()),
+            'XY_angles': self.set_default_values([0], self.ui.lineEdit_XY_Angles.text())
+        }
 
         return output_dict
 

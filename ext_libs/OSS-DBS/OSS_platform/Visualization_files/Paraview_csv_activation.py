@@ -3,125 +3,135 @@ from paraview.simple import *
 #### disable automatic camera reset on 'Show'
 paraview.simple._DisableFirstRenderCameraReset()
 
-# create a new 'CSV Reader'
-neuron_model_resultscsv = CSVReader(FileName=['Field_solutions/Activation/Neuron_model_results.csv'])
 
-# Properties modified on neuron_model_resultscsv
-neuron_model_resultscsv.HaveHeaders = 0
-neuron_model_resultscsv.FieldDelimiterCharacters = ' '
 
-# Create a new 'SpreadSheet View'
-spreadSheetView1 = CreateView('SpreadSheetView')
-spreadSheetView1.ColumnToSort = ''
-spreadSheetView1.BlockSize = 1024L
-# uncomment following to set a specific view size
-# spreadSheetView1.ViewSize = [400, 400]
+import os
+def make_a_screenshot(path_to_insert):
+	# create a new 'PVD Reader'
+	home_dir=os.path.expanduser("~")
 
-# get layout
-layout1 = GetLayout()
+	# create a new 'CSV Reader'
+	neuron_model_resultscsv = CSVReader(FileName=[home_dir+path_to_insert+'/Field_solutions/Activation/Neuron_model_results.csv'])
 
-# place view in the layout
-layout1.AssignView(2, spreadSheetView1)
+	# Properties modified on neuron_model_resultscsv
+	neuron_model_resultscsv.HaveHeaders = 0
+	neuron_model_resultscsv.FieldDelimiterCharacters = ' '
 
-# show data in view
-neuron_model_resultscsvDisplay = Show(neuron_model_resultscsv, spreadSheetView1)
-# trace defaults for the display properties.
-neuron_model_resultscsvDisplay.FieldAssociation = 'Row Data'
+	# Create a new 'SpreadSheet View'
+	spreadSheetView1 = CreateView('SpreadSheetView')
+	spreadSheetView1.ColumnToSort = ''
+	spreadSheetView1.BlockSize = 1024L
+	# uncomment following to set a specific view size
+	# spreadSheetView1.ViewSize = [400, 400]
 
-# find view
-renderView1 = FindViewOrCreate('RenderView1', viewtype='RenderView')
-# uncomment following to set a specific view size
-# renderView1.ViewSize = [518, 724]
+	# get layout
+	layout1 = GetLayout()
 
-# update the view to ensure updated data information
-renderView1.Update()
+	# place view in the layout
+	layout1.AssignView(2, spreadSheetView1)
 
-# update the view to ensure updated data information
-spreadSheetView1.Update()
+	# show data in view
+	neuron_model_resultscsvDisplay = Show(neuron_model_resultscsv, spreadSheetView1)
+	# trace defaults for the display properties.
+	neuron_model_resultscsvDisplay.FieldAssociation = 'Row Data'
 
-# create a new 'Table To Points'
-tableToPoints1 = TableToPoints(Input=neuron_model_resultscsv)
-tableToPoints1.XColumn = 'Field 0'
-tableToPoints1.YColumn = 'Field 0'
-tableToPoints1.ZColumn = 'Field 0'
+	# find view
+	renderView1 = FindViewOrCreate('RenderView1', viewtype='RenderView')
+	# uncomment following to set a specific view size
+	# renderView1.ViewSize = [518, 724]
 
-# Properties modified on tableToPoints1
-tableToPoints1.YColumn = 'Field 1'
-tableToPoints1.ZColumn = 'Field 2'
+	# update the view to ensure updated data information
+	renderView1.Update()
 
-# show data in view
-tableToPoints1Display = Show(tableToPoints1, spreadSheetView1)
+	# update the view to ensure updated data information
+	spreadSheetView1.Update()
 
-# hide data in view
-Hide(neuron_model_resultscsv, spreadSheetView1)
+	# create a new 'Table To Points'
+	tableToPoints1 = TableToPoints(Input=neuron_model_resultscsv)
+	tableToPoints1.XColumn = 'Field 0'
+	tableToPoints1.YColumn = 'Field 0'
+	tableToPoints1.ZColumn = 'Field 0'
 
-# update the view to ensure updated data information
-spreadSheetView1.Update()
+	# Properties modified on tableToPoints1
+	tableToPoints1.YColumn = 'Field 1'
+	tableToPoints1.ZColumn = 'Field 2'
 
-# set active view
-SetActiveView(renderView1)
+	# show data in view
+	tableToPoints1Display = Show(tableToPoints1, spreadSheetView1)
 
-# set active view
-SetActiveView(spreadSheetView1)
+	# hide data in view
+	Hide(neuron_model_resultscsv, spreadSheetView1)
 
-# destroy spreadSheetView1
-Delete(spreadSheetView1)
-del spreadSheetView1
+	# update the view to ensure updated data information
+	spreadSheetView1.Update()
 
-# close an empty frame
-layout1.Collapse(2)
+	# set active view
+	SetActiveView(renderView1)
 
-# set active view
-SetActiveView(renderView1)
+	# set active view
+	SetActiveView(spreadSheetView1)
 
-# set active source
-SetActiveSource(tableToPoints1)
+	# destroy spreadSheetView1
+	Delete(spreadSheetView1)
+	del spreadSheetView1
 
-# show data in view
-tableToPoints1Display = Show(tableToPoints1, renderView1)
-# trace defaults for the display properties.
-tableToPoints1Display.Representation = 'Surface'
-tableToPoints1Display.ColorArrayName = [None, '']
-tableToPoints1Display.OSPRayScaleArray = 'Field 3'
-tableToPoints1Display.OSPRayScaleFunction = 'PiecewiseFunction'
-tableToPoints1Display.SelectOrientationVectors = 'Field 3'
-tableToPoints1Display.ScaleFactor = 0.3399610000000003
-tableToPoints1Display.SelectScaleArray = 'Field 3'
-tableToPoints1Display.GlyphType = 'Arrow'
-tableToPoints1Display.GlyphTableIndexArray = 'Field 3'
-tableToPoints1Display.DataAxesGrid = 'GridAxesRepresentation'
-tableToPoints1Display.PolarAxes = 'PolarAxesRepresentation'
+	# close an empty frame
+	layout1.Collapse(2)
 
-# reset view to fit data
-renderView1.ResetCamera()
+	# set active view
+	SetActiveView(renderView1)
 
-# set scalar coloring
-ColorBy(tableToPoints1Display, ('POINTS', 'Field 3'))
+	# set active source
+	SetActiveSource(tableToPoints1)
 
-# rescale color and/or opacity maps used to include current data range
-tableToPoints1Display.RescaleTransferFunctionToDataRange(True, False)
+	# show data in view
+	tableToPoints1Display = Show(tableToPoints1, renderView1)
+	# trace defaults for the display properties.
+	tableToPoints1Display.Representation = 'Surface'
+	tableToPoints1Display.ColorArrayName = [None, '']
+	tableToPoints1Display.OSPRayScaleArray = 'Field 3'
+	tableToPoints1Display.OSPRayScaleFunction = 'PiecewiseFunction'
+	tableToPoints1Display.SelectOrientationVectors = 'Field 3'
+	tableToPoints1Display.ScaleFactor = 0.3399610000000003
+	tableToPoints1Display.SelectScaleArray = 'Field 3'
+	tableToPoints1Display.GlyphType = 'Arrow'
+	tableToPoints1Display.GlyphTableIndexArray = 'Field 3'
+	tableToPoints1Display.DataAxesGrid = 'GridAxesRepresentation'
+	tableToPoints1Display.PolarAxes = 'PolarAxesRepresentation'
 
-# show color bar/color legend
-tableToPoints1Display.SetScalarBarVisibility(renderView1, True)
+	# reset view to fit data
+	renderView1.ResetCamera()
 
-# get color transfer function/color map for 'Field3'
-field3LUT = GetColorTransferFunction('Field3')
+	# set scalar coloring
+	ColorBy(tableToPoints1Display, ('POINTS', 'Field 3'))
 
-# reset view to fit data
-renderView1.ResetCamera()
+	# rescale color and/or opacity maps used to include current data range
+	tableToPoints1Display.RescaleTransferFunctionToDataRange(True, False)
 
-#### saving camera placements for all active views
+	# show color bar/color legend
+	tableToPoints1Display.SetScalarBarVisibility(renderView1, True)
 
-# current camera placement for renderView1
-renderView1.CameraPosition = [11.8661065, 11.502742601993386, 8.924483]
-renderView1.CameraFocalPoint = [11.8661065, 21.668008, 8.924483]
-renderView1.CameraViewUp = [0.0, 0.0, 1.0]
-renderView1.CameraParallelScale = 2.6309642835257674
+	# get color transfer function/color map for 'Field3'
+	field3LUT = GetColorTransferFunction('Field3')
 
-renderView1.ViewSize = [1600, 1000]
-renderView1.ResetCamera()
-SaveScreenshot('Images/Activated_neurons.png', magnification=1, quality=100, view=renderView1)
+	# reset view to fit data
+	renderView1.ResetCamera()
 
-#### uncomment the following to render all views
-# RenderAllViews()
-# alternatively, if you want to write images, you can use SaveScreenshot(...).
+	#### saving camera placements for all active views
+
+	# current camera placement for renderView1
+	renderView1.CameraPosition = [11.8661065, 11.502742601993386, 8.924483]
+	renderView1.CameraFocalPoint = [11.8661065, 21.668008, 8.924483]
+	renderView1.CameraViewUp = [0.0, 0.0, 1.0]
+	renderView1.CameraParallelScale = 2.6309642835257674
+
+	renderView1.ViewSize = [1600, 1000]
+	renderView1.ResetCamera()
+	SaveScreenshot(home_dir+path_to_insert+'/Images/Activated_neurons.png', magnification=1, quality=100, view=renderView1)
+
+	#### uncomment the following to render all views
+	# RenderAllViews()
+	# alternatively, if you want to write images, you can use SaveScreenshot(...).
+
+if __name__ == '__main__':
+	make_a_screenshot(*sys.argv[1:])

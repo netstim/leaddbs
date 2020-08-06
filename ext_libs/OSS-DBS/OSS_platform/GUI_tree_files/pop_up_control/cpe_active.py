@@ -12,7 +12,6 @@ class PopUpCPEActive(Functionalities):
         # Create main window object
         self.mainWindow = parent
 
-
         # mini dictionary
         self.filename = "{}/pop_up_control/dictionaries/dict_cpe_active.py".format(self.rel_folder())
 

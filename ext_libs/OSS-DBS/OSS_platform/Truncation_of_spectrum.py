@@ -29,7 +29,7 @@ def get_specific_freq(mode,freq,freq_param,FR_vector_signal,Xs_signal_norm,t_vec
         
 #        with open('Stim_Signal/Indices_high_ampl.csv','w') as f_handle:
 #            np.savetxt(f_handle,ind_max) 
-        np.savetxt('Stim_Signal/Indices_high_ampl.csv', ind_max, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/Indices_high_ampl.csv', ind_max, delimiter=" ")
         
         
         '''To create the truncated signal'''
@@ -54,7 +54,7 @@ def get_specific_freq(mode,freq,freq_param,FR_vector_signal,Xs_signal_norm,t_vec
         plt.xlabel('t, sec')
         plt.ylabel('Signal amplitude (A or V)')
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        plt.savefig('Images/Signal_convoluted_truncated.png', format='png', dpi=1000)
+        plt.savefig('/opt/Patient/Images/Signal_convoluted_truncated.png', format='png', dpi=1000)
         
         
         return FR_vector_signal_new,Xs_signal_norm_new
@@ -77,7 +77,7 @@ def get_specific_freq(mode,freq,freq_param,FR_vector_signal,Xs_signal_norm,t_vec
         
 #        with open('Stim_Signal/Indices_cutoff.csv','w') as f_handle:
 #            np.savetxt(f_handle,np.array([Xs_signal_norm.shape[0],inx_cutoff]))
-        np.savetxt('Stim_Signal/Indices_cutoff.csv', np.array([Xs_signal_norm.shape[0],inx_cutoff]), delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/Indices_cutoff.csv', np.array([Xs_signal_norm.shape[0],inx_cutoff]), delimiter=" ")
         
         
         Xs_signal_full=np.complex(1.0,0.0)*np.zeros(Xs_signal_norm.shape[0],float)
@@ -101,7 +101,7 @@ def get_specific_freq(mode,freq,freq_param,FR_vector_signal,Xs_signal_norm,t_vec
         plt.xlabel('t, sec')
         plt.ylabel('Signal amplitude (A or V)')
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        plt.savefig('Images/Signal_convoluted_truncated.png', format='png', dpi=1000)
+        plt.savefig('/opt/Patient/Images/Signal_convoluted_truncated.png', format='png', dpi=1000)
         
         return FR_vector_signal_new,Xs_signal_norm_new
         
@@ -146,7 +146,7 @@ def get_specific_freq(mode,freq,freq_param,FR_vector_signal,Xs_signal_norm,t_vec
 #                    with open('Stim_Signal/Fr_corresp_array.csv','a') as f_handle:
 #                        np.savetxt(f_handle,Fr_corresp_array)
                     #np.savetxt('Stim_Signal/Fr_corresp_array.csv','a', np.array([Xs_signal_norm.shape[0],inx_cutoff]), delimiter=" ")
-                    f=open('Stim_Signal/Fr_corresp_array'+str(freq_param*1.0)+'.csv','ab')
+                    f=open('/opt/Patient/Stim_Signal/Fr_corresp_array'+str(freq_param*1.0)+'.csv','ab')
                     np.savetxt(f, Fr_corresp_array, delimiter=" ")
                     f.close()
                     
@@ -157,7 +157,7 @@ def get_specific_freq(mode,freq,freq_param,FR_vector_signal,Xs_signal_norm,t_vec
         print("Number of frequencies after truncation with the octave method: ", FR_vector_signal_new.shape[0])
                   
         Fr_octave_vector=np.asarray(Fr_octave_vector)    
-        np.savetxt('Stim_Signal/Fr_octave_vector_'+str(freq_param*1.0)+'.csv', Fr_octave_vector, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/Fr_octave_vector_'+str(freq_param*1.0)+'.csv', Fr_octave_vector, delimiter=" ")
         
         #print "number of frequencies: ", FR_vector_signal_new.shape[0]
         #print("Frequency vector: ", FR_vector_signal_new
@@ -168,15 +168,15 @@ def get_specific_freq(mode,freq,freq_param,FR_vector_signal,Xs_signal_norm,t_vec
     
 def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
             
-    if d["spectrum_trunc_method"]=='Octave Band Method' and not(os.path.isfile('Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv')):
+    if d["spectrum_trunc_method"]=='Octave Band Method' and not(os.path.isfile('/opt/Patient/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv')):
         
         from Truncation_of_spectrum import get_specific_freq
         
         #for mode=3 we do not get XS vector. For others we do.
         FR_vector_signal_new = get_specific_freq(d["spectrum_trunc_method"],d["freq"],d["trunc_param"],FR_vector_signal,Xs_signal_norm,t_vector,d["T"])
         
-        Fr_corresp_array = np.genfromtxt('Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-        Fr_octave_vector = np.genfromtxt('Stim_Signal/Fr_octave_vector_'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        Fr_corresp_array = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        Fr_octave_vector = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_octave_vector_'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
         
         Fr_corresp_array=np.round(Fr_corresp_array,6)
         Fr_octave_vector=np.round(Fr_octave_vector,6)
@@ -193,19 +193,19 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         plt.xlabel('Frequency, Hz')
         #plt.ylabel('Magnitude')
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-        plt.savefig('Images/FT_octave'+str(d["trunc_param"]*1.0)+'.eps', format='eps', dpi=1000)  
+        plt.savefig('/opt/Patient/Images/FT_octave'+str(d["trunc_param"]*1.0)+'.eps', format='eps', dpi=1000)  
      
-        np.savetxt('Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', FR_vector_signal_new, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', FR_vector_signal_new, delimiter=" ")
         
         print('New frequency vector can be found in Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv')
         print(" ")
         
         return FR_vector_signal_new,inx_start_octv
     
-    if d["spectrum_trunc_method"]=='Octave Band Method' and (os.path.isfile('Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv')):
-        FR_vector_signal_new = np.genfromtxt('Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-        Fr_corresp_array = np.genfromtxt('Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-        Fr_octave_vector = np.genfromtxt('Stim_Signal/Fr_octave_vector_'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+    if d["spectrum_trunc_method"]=='Octave Band Method' and (os.path.isfile('/opt/Patient/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv')):
+        FR_vector_signal_new = np.genfromtxt('/opt/Patient/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        Fr_corresp_array = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        Fr_octave_vector = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_octave_vector_'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
         
         Fr_corresp_array=np.round(Fr_corresp_array,6)
         Fr_octave_vector=np.round(Fr_octave_vector,6)
@@ -213,15 +213,17 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         inx_start_octv_rslt=np.where(np.round(FR_vector_signal_new,6)==Fr_octave_vector[0])
         inx_start_octv=inx_start_octv_rslt[0][0]
         
+        print("Number of frequencies after truncation with the octave method: ", FR_vector_signal_new.shape[0])
+        
         return FR_vector_signal_new,inx_start_octv
         
-    if d["spectrum_trunc_method"]=='High Amplitude Method' and not(os.path.isfile('Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv')):
+    if d["spectrum_trunc_method"]=='High Amplitude Method' and not(os.path.isfile('/opt/Patient/Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv')):
         
         from Truncation_of_spectrum import get_specific_freq        
         FR_vector_signal_new,Xs_signal_norm_new = get_specific_freq(d["spectrum_trunc_method"],d["freq"],d["trunc_param"],FR_vector_signal,Xs_signal_norm,t_vector,d["T"])
         #with open('Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv','w') as f_handle:
         #    np.savetxt(f_handle,FR_vector_signal_new)
-        np.savetxt('Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv', FR_vector_signal_new, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv', FR_vector_signal_new, delimiter=" ")
         
         print('New frequency vector can be found in Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv')
         
@@ -231,26 +233,26 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         Xs_storage_trunc[:,1]=np.imag(Xs_signal_norm_new)
         #with open('Stim_Signal/Xs_storage_high_ampl'+str(d["trunc_param"])+'.csv','w') as f_handle:
         #    np.savetxt(f_handle,Xs_storage_trunc)
-        np.savetxt('Stim_Signal/Xs_storage_high_ampl'+str(d["trunc_param"])+'.csv', Xs_storage_trunc, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/Xs_storage_high_ampl'+str(d["trunc_param"])+'.csv', Xs_storage_trunc, delimiter=" ")
         print(" ")
         
         return FR_vector_signal_new,Xs_signal_norm_new
             
-    if d["spectrum_trunc_method"]=='High Amplitude Method' and (os.path.isfile('Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv')):
-        Xs_recovered_new = np.genfromtxt('Stim_Signal/Xs_storage_high_ampl'+str(d["trunc_param"])+'.csv', delimiter=' ')
+    if d["spectrum_trunc_method"]=='High Amplitude Method' and (os.path.isfile('/opt/Patient/Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv')):
+        Xs_recovered_new = np.genfromtxt('/opt/Patient/Stim_Signal/Xs_storage_high_ampl'+str(d["trunc_param"])+'.csv', delimiter=' ')
         Xs_signal_norm_new=np.vectorize(complex)(Xs_recovered_new[:,0],Xs_recovered_new[:,1])
-        FR_vector_signal_new = np.genfromtxt('Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv', delimiter=' ')
+        FR_vector_signal_new = np.genfromtxt('/opt/Patient/Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv', delimiter=' ')
         
         return FR_vector_signal_new,Xs_signal_norm_new
     
-    if d["spectrum_trunc_method"]=='Cutoff Method' and not(os.path.isfile('Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv')):
+    if d["spectrum_trunc_method"]=='Cutoff Method' and not(os.path.isfile('/opt/Patient/Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv')):
         from Truncation_of_spectrum import get_specific_freq        
         FR_vector_signal_new,Xs_signal_norm_new = get_specific_freq(d["spectrum_trunc_method"],d["freq"],d["trunc_param"],FR_vector_signal,Xs_signal_norm,t_vector,d["T"])
         #with open('Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv','w') as f_handle:
         #    np.savetxt(f_handle,FR_vector_signal_new)
-        np.savetxt('Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv', FR_vector_signal_new, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv', FR_vector_signal_new, delimiter=" ")
         
-        print('New frequency vector can be found in Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv')
+        print('New frequency vector can be found in /opt/Patient/Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv')
         
         Xs_storage_trunc=np.zeros((np.real(Xs_signal_norm_new).shape[0],2),float)
         
@@ -258,15 +260,15 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         Xs_storage_trunc[:,1]=np.imag(Xs_signal_norm_new)
         #with open('Stim_Signal/Xs_storage_cutoff'+str(d["trunc_param"])+'.csv','w') as f_handle:
         #    np.savetxt(f_handle,Xs_storage_trunc)
-        np.savetxt('Stim_Signal/Xs_storage_cutoff'+str(d["trunc_param"])+'.csv', Xs_storage_trunc, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/Xs_storage_cutoff'+str(d["trunc_param"])+'.csv', Xs_storage_trunc, delimiter=" ")
         print(" ")
         
         return FR_vector_signal_new,Xs_signal_norm_new
             
-    if d["spectrum_trunc_method"]=='Cutoff Method' and (os.path.isfile('Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv')):
-        Xs_recovered_new = np.genfromtxt('Stim_Signal/Xs_storage_cutoff'+str(d["trunc_param"])+'.csv', delimiter=' ')
+    if d["spectrum_trunc_method"]=='Cutoff Method' and (os.path.isfile('/opt/Patient/Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv')):
+        Xs_recovered_new = np.genfromtxt('/opt/Patient/Stim_Signal/Xs_storage_cutoff'+str(d["trunc_param"])+'.csv', delimiter=' ')
         Xs_signal_norm_new=np.vectorize(complex)(Xs_recovered_new[:,0],Xs_recovered_new[:,1])
-        FR_vector_signal_new = np.genfromtxt('Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv', delimiter=' ')
+        FR_vector_signal_new = np.genfromtxt('/opt/Patient/Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv', delimiter=' ')
     
         return FR_vector_signal_new,Xs_signal_norm_new
     

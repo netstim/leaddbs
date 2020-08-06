@@ -34,7 +34,7 @@ run_full_model(master_dict) governs the simulation flow taking master_dict as th
 
 '''
 print("\n\n\nOSS-DBS by K.Butenko --- version 0.3")
-print("Manuscript is submitted")
+print("Butenko K, Bahls C, Schroeder M, Koehling R, van Rienen U (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.' PLoS Comput Biol 16(7): e1008023. https://doi.org/10.1371/journal.pcbi.1008023")
 print("____________________________________\n")
 
 import numpy as np
@@ -51,7 +51,7 @@ with warnings.catch_warnings():
 
 
 def run_full_model(master_dict):
-    
+        
     start_simulation_run=time.time() 
     
     #===================Load and update input dictionary======================#
@@ -65,6 +65,7 @@ def run_full_model(master_dict):
     d.update(master_dict)               #modifies the user provided input dictionary (e.g. for UQ study), check run_master_study() function . Warning: this does not work update the encap. layer properties and the solver during adaptive mesh refiment, because these data are realoaded from the original dictionary
    
     #=========Check the simulation setup and state, load the corresponding data=========#
+
     if d["current_control"]==1 and d["CPE_activ"]==1:
         d["CPE_activ"]=0
         print("Disabling CPE for current-controlled simulation")
@@ -83,22 +84,23 @@ def run_full_model(master_dict):
     
     #loading of meta data depending on the simulatation setup and state
     if d["Init_neuron_model_ready"]==1:     
-        [ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib,n_Ranvier,ROI_radius,N_segm]=np.genfromtxt('Neuron_model_arrays/Neuron_model_misc.csv', delimiter=' ')
+        [ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib,n_Ranvier,ROI_radius,N_segm]=np.genfromtxt('/opt/Patient/Neuron_model_arrays/Neuron_model_misc.csv', delimiter=' ')
         param_axon=[ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib]            
 
         if d["Neuron_model_array_prepared"]==0:    
-            with open('Neuron_model_arrays/Neuron_param_class.file', "rb") as f:
+            with open('/opt/Patient/Neuron_model_arrays/Neuron_param_class.file', "rb") as f:
                 Neuron_param = pickle.load(f)
         if d["Neuron_model_array_prepared"]==1:
             Neuron_param=0          #not needed for a pre-defined neuron array
             if d["Name_prepared_neuron_array"][-3:]=='.h5':     
-                n_segments_fib_diam_array=np.load('Neuron_model_arrays/Neuron_populations_misc.npy')
+                n_segments_fib_diam_array=np.load('/opt/Patient/Neuron_model_arrays/Neuron_populations_misc.npy')
                 N_segm=n_segments_fib_diam_array[:,0]
                 N_segm=N_segm.astype(int)
     if d["Init_mesh_ready"]==1:
-        with open('Meshes/Mesh_ind.file', "rb") as f:
+        with open('/opt/Patient/Meshes/Mesh_ind.file', "rb") as f:
             Domains = pickle.load(f)
         
+    import os    
     #========================Formating MRI and DTI data=======================#
     from MRI_DTI_prep_new import obtain_MRI_class
     MRI_param=obtain_MRI_class(d)       #also creates 'MRI_DTI_derived_data/Tissue_array_MRI.csv' and meta data
@@ -111,6 +113,19 @@ def run_full_model(master_dict):
         DTI_param=obtain_DTI_class(d,MRI_param) #also creates 'MRI_DTI_derived_data/Tensor_array_DTI.csv' and meta data
             
     #========================Geometry generation==============================#
+    
+    if d["Full_Field_IFFT"] == 1:       # for this case, we use a neuron array that matches the VTA array in dimensions
+        d['Axon_Model_Type']='Reilly2016'
+        d['x_seed'],d['y_seed'],d['z_seed']=(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z'])
+        d['diam_fib']=5.0
+        d['n_Ranvier']=22
+        d['x_step'],d['y_step'],d['z_step']=(1.0,1.0,1.0)
+        d['x_steps'],d['y_steps'],d['z_steps']=(20.0,0.0,20.0)  #we assume that Z-axis is ventra-dorsal in the MRI 
+        d['Global_rot']=1
+        d['alpha_array_glob']=[0]
+        d['beta_array_glob']=[0]
+        d['gamma_array_glob']=[0]
+    
     if d["Init_mesh_ready"]==0:
                         
         if d["Brain_shape_name"]==0:   #Creates a brain approximation (ellisploid)
@@ -175,28 +190,36 @@ def run_full_model(master_dict):
     else:
         if d["Neuron_model_array_prepared"]==1:
             if d["Name_prepared_neuron_array"][-3:]=='.h5':     #if imported with h5
-                N_models = np.genfromtxt('Neuron_model_arrays/Adjusted_neuron_array_info.csv', delimiter=' ')
+                N_models = np.genfromtxt('/opt/Patient/Neuron_model_arrays/Adjusted_neuron_array_info.csv', delimiter=' ')
                 N_models=N_models.astype(int)
             else:
-                N_models,points_csf,points_encap_and_float_contacts,points_outside=np.genfromtxt('Neuron_model_arrays/Adjusted_neuron_array_info.csv', delimiter=' ')
+                N_models,points_csf,points_encap_and_float_contacts,points_outside=np.genfromtxt('/opt/Patient/Neuron_model_arrays/Adjusted_neuron_array_info.csv', delimiter=' ')
                 N_models=int(N_models)                
         else:
-            N_models,points_csf,points_encap_and_float_contacts,points_outside=np.genfromtxt('Neuron_model_arrays/Adjusted_neuron_array_info.csv', delimiter=' ')
+            N_models,points_csf,points_encap_and_float_contacts,points_outside=np.genfromtxt('/opt/Patient/Neuron_model_arrays/Adjusted_neuron_array_info.csv', delimiter=' ')
             N_models=int(N_models)
         print("--- Neuron array meta data were loaded\n")
         
     number_of_points=int(np.sum(N_segm*N_models))
 
     #subprocess.call('python Paraview_InitMesh_and_Neurons.py', shell=True)
-    if d['Show_paraview_screenshots']==1:
-        subprocess.call('xdg-open "Images/InitMesh_and_Neurons.png"',shell=True)
+    #if d['Show_paraview_screenshots']==1:
+    #    subprocess.call('xdg-open "/opt/Patient/Images/InitMesh_and_Neurons.png"',shell=True)
 
+    #IFFT_on_VTA_array = 1
+    if d["Full_Field_IFFT"] == 1:       # rename later
+    #if IFFT_on_VTA_array == 1:
+        #if we create internally
+        from VTA_from_array import create_VTA_array,resave_as_verts,get_VTA
+        VTA_edge,VTA_full_name,VTA_resolution= create_VTA_array(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z'])
+        arrays_shape = resave_as_verts(VTA_full_name)
+        number_of_points=sum(arrays_shape)
 
 #=============================Signal creation=================================#
     #in case there was an update of the signal
     Phi_vector=[x for x in d["Phi_vector"] if x is not None] #now we don't need None values (floating potentials), Contacts contain only the active ones
     Domains.fi=Phi_vector
-    with open('Meshes/Mesh_ind.file', "wb") as f:
+    with open('/opt/Patient/Meshes/Mesh_ind.file', "wb") as f:
         pickle.dump(Domains, f, pickle.HIGHEST_PROTOCOL)
 
     if d["current_control"]==1 and cc_multicontact==False:     #if multicontact, then it will be scaled in parallel comp.
@@ -216,18 +239,23 @@ def run_full_model(master_dict):
         
         Xs_storage[:,0]=np.real(Xs_signal_norm)
         Xs_storage[:,1]=np.imag(Xs_signal_norm)
-        np.savetxt('Stim_Signal/Xs_storage_full.csv', Xs_storage, delimiter=" ")
-        np.savetxt('Stim_Signal/t_vector.csv', t_vector, delimiter=" ")
-        np.savetxt('Stim_Signal/FR_vector_signal.csv', FR_vector_signal, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/Xs_storage_full.csv', Xs_storage, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/t_vector.csv', t_vector, delimiter=" ")
+        np.savetxt('/opt/Patient/Stim_Signal/FR_vector_signal.csv', FR_vector_signal, delimiter=" ")
     else:
         print("--- DBS signal is taken from the previous simulation\n")
-        Xs_recovered = np.genfromtxt('Stim_Signal/Xs_storage_full.csv', delimiter=' ')
+        Xs_recovered = np.genfromtxt('/opt/Patient/Stim_Signal/Xs_storage_full.csv', delimiter=' ')
         Xs_signal_norm=np.vectorize(complex)(Xs_recovered[:,0],Xs_recovered[:,1])
-        FR_vector_signal = np.genfromtxt('Stim_Signal/FR_vector_signal.csv', delimiter=' ')
-        t_vector = np.genfromtxt('Stim_Signal/t_vector.csv', delimiter=' ')       
+        FR_vector_signal = np.genfromtxt('/opt/Patient/Stim_Signal/FR_vector_signal.csv', delimiter=' ')
+        t_vector = np.genfromtxt('/opt/Patient/Stim_Signal/t_vector.csv', delimiter=' ')       
 
 
 #=============================CSF_refinement==================================#
+
+    if d["external_grounding"]==1:
+        d["external_grounding"]==True
+        from Ext_ground_preref import refine_external_ground
+        refine_external_ground(Domains)
 
     '''if we want to skip CSF and adaptive mesh refinement'''
     if d["Skip_mesh_refinement"]==1:
@@ -251,39 +279,20 @@ def run_full_model(master_dict):
         
         from Visualization_files.paraview_find_arrayname import get_Para_Array_name
         from Parameter_insertion import insert_f_name
-        #vtu_file = "CSF_ref/Field_r_1.0000000.vtu"
-        #f_name="Visualization_files/Paraview_field_CSF_ref.py"
-        #f_nam = get_Para_Array_name(vtu_file)
-        #insert_f_name(f_nam,f_name)
         
     elif d["Skip_mesh_refinement"]==0:      #should be changed
-        Scaling_CSF=np.genfromtxt('CSF_ref/Scaling_CSF.csv', delimiter=' ')
+        Scaling_CSF=np.genfromtxt('/opt/Patient/CSF_ref/Scaling_CSF.csv', delimiter=' ')
 
         
-    import os
-    #with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_field_CSF_ref.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-    with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_CSFref.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-    
-    if d['Show_paraview_screenshots']==1 and d["Skip_mesh_refinement"]==0:
-        subprocess.call('xdg-open "Images/CSF_ref.png"',shell=True)
-        #subprocess.call('xdg-open "Images/Field_Adapted_CSF.png"',shell=True)
-    
-    
 #====================Mesh adaptive algorithm==================================#
 
     if d["Adapted_mesh_ready"]==0:
         from Mesh_adaption_hybrid import mesh_adapter        
         Ampl_on_vert=mesh_adapter(MRI_param,DTI_param,Scaling_CSF,Domains,d,anisotrop,cc_multicontact,ref_freqs)     #also saves adapted mesh
-        np.savetxt('Results_adaptive/Ampl_on_vert.csv', Ampl_on_vert, delimiter=" ")    #just to check
-     
-    with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_adapted.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-
-    if d['Show_paraview_screenshots']==1 and d["Skip_mesh_refinement"]==0:  
-        subprocess.call('xdg-open "Images/Adapted_mesh.png"',shell=True)
-                      
+        np.savetxt('/opt/Patient/Results_adaptive/Ampl_on_vert.csv', Ampl_on_vert, delimiter=" ")    #just to check
+                           
 #===================Truncate the frequency spectrum===========================#
     if d["spectrum_trunc_method"]!='No Truncation':
-
         from Truncation_of_spectrum import get_freqs_for_calc
         FR_vector_signal_new,add_trunc_data=get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector)
         if d["spectrum_trunc_method"]=='Octave Band Method':
@@ -295,8 +304,7 @@ def run_full_model(master_dict):
     if d["Parallel_comp_ready"]==0:
         
         if ["Parallel_comp_interrupted"]==1:
-            import os
-            if not (os.path.isfile('Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile('Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations 
+            if not (os.path.isfile('/opt/Patient/Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile('/opt/Patient/Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations 
                 print("There were no previous computations, 'Parallel_comp_interrupted' is put to 0")
                 ["Parallel_comp_interrupted"]==0
         
@@ -314,9 +322,9 @@ def run_full_model(master_dict):
         print("--- Results of calculations in the frequency spectrum were loaded\n")
 
     if d["spectrum_trunc_method"]=='No Truncation':
-        name_sorted_solution='Field_solutions/sorted_solution.csv'  
+        name_sorted_solution='/opt/Patient/Field_solutions/sorted_solution.csv'  
     else:
-        name_sorted_solution='Field_solutions/sorted_solution_'+str(d["spectrum_trunc_method"])+'_'+str(d["trunc_param"])+'.csv'
+        name_sorted_solution='/opt/Patient/Field_solutions/sorted_solution_'+str(d["spectrum_trunc_method"])+'_'+str(d["trunc_param"])+'.csv'
   
 
         '''sorted_solution structure is'''
@@ -333,21 +341,35 @@ def run_full_model(master_dict):
 #=============================Full Field IFFT=================================#
     if d["IFFT_ready"] == 1:
         print("--- Results of IFFT (FFEM) were loaded\n")
-    
-    if d["IFFT_ready"] == 0 and d["Full_Field_IFFT"] == 1:
-        from Full_IFFT_field_function import get_field_in_time
         
-        VTA_size = get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector)        # also uses data from Field_solutions_functions/ and if spectrum truncation is applied, than data from Stim_Signal/
-                                                                    # if VTA_from_NEURON is enabled, will save pointwise solutions in Points_in_time/ 
+    #if IFFT_on_VTA_array == 1:
+    if d["Full_Field_IFFT"]  == 1:
+        #Max_signal_for_point=ifft_on_VTA_array(name_sorted_solution,d,FR_vector_signal,Xs_signal_norm,t_vector,d["T"],inx_start_octv,arrays_shape)
+        
+        from Parallel_IFFT_on_VTA_array import get_IFFT_on_VTA_array
+        Max_signal_for_point=get_IFFT_on_VTA_array(d['number_of_processors'],name_sorted_solution,d,FR_vector_signal,Xs_signal_norm,t_vector,d["T"],inx_start_octv,arrays_shape)
+
+        get_VTA(d,VTA_full_name,Max_signal_for_point,arrays_shape,VTA_edge,VTA_resolution)
+        
+        return True
+        
         d["IFFT_ready"] = 1               #modification of dictionary
+
+    '''This will be enabled after the next update'''    
+    # if d["IFFT_ready"] == 0 and d["Full_Field_IFFT"] == 1:
+    #     from Full_IFFT_field_function import get_field_in_time
         
-        if d["VTA_from_divE"]==True or d["VTA_from_E"]==True:           #else it will just jump to NEURON_direct_run.py
-            minutes=int((time.time() - start_simulation_run)/60)
-            secnds=int(time.time() - start_simulation_run)-minutes*60
-            total_seconds=time.time() - start_simulation_run
-            print("---Simulation run took ",minutes," min ",secnds," s ") 
+    #     VTA_size = get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector)        # also uses data from Field_solutions_functions/ and if spectrum truncation is applied, than data from Stim_Signal/
+    #                                                                 # if VTA_from_NEURON is enabled, will save pointwise solutions in Points_in_time/ 
+    #     d["IFFT_ready"] = 1               #modification of dictionary
+        
+    #     if d["VTA_from_divE"]==True or d["VTA_from_E"]==True:           #else it will just jump to NEURON_direct_run.py
+    #         minutes=int((time.time() - start_simulation_run)/60)
+    #         secnds=int(time.time() - start_simulation_run)-minutes*60
+    #         total_seconds=time.time() - start_simulation_run
+    #         print("---Simulation run took ",minutes," min ",secnds," s ") 
             
-            return None,VTA_size
+    #         return None,VTA_size
 
 #==============Truncation of the already computed spectrum====================#
         
@@ -362,9 +384,9 @@ def run_full_model(master_dict):
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
                     print("in ",lst_population_names[i]," population")
-                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models[i],N_segm[i],FR_vector_signal,t_vector,A,'Field_solutions/sorted_solution.csv',dif_axons=True,last_point=last_point)
+                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models[i],N_segm[i],FR_vector_signal,t_vector,A,'/opt/Patient/Field_solutions/sorted_solution.csv',dif_axons=True,last_point=last_point)
             else:
-                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,'Field_solutions/sorted_solution.csv')       
+                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,'/opt/Patient/Field_solutions/sorted_solution.csv')       
         else:        
             print("Truncation of the obtained full solution is only for high. ampl and cutoff methods")
     
@@ -414,15 +436,15 @@ def run_full_model(master_dict):
         
     '''Just to compute impedance in time, on if CPE is added or current-control mode'''
 
-    if (d["CPE_activ"]==1 or d["current_control"]==1) and cc_multicontact==False and d["spectrum_trunc_method"]!='Octave Band Method' and d["IFFT_ready"]==0:        #modify later
+    if (d["CPE_activ"]==1 or d["current_control"]==1) and cc_multicontact==False:# and d["IFFT_ready"]==0:        #modify later
         from Field_IFFT_on_different_axons import compute_Z_ifft
         print("-----Calculating impedance over time-----\n")
         if d["spectrum_trunc_method"]=='No Truncation' or d["Truncate_the_obtained_full_solution"]==1:
             Imp_in_time=compute_Z_ifft(d,Xs_signal_norm,t_vector,A)
+        elif d["spectrum_trunc_method"]=='Octave Band Method':
+            Imp_in_time=compute_Z_ifft(d,Xs_signal_norm,t_vector,A,i_start_octv=inx_start_octv)
         else:
             Imp_in_time=compute_Z_ifft(d,Xs_signal_norm_new,t_vector,A)
-        
-    
 #===========================NEURON model simulation===========================#
 
     print("----- Estimating neuron activity -----")
@@ -442,7 +464,7 @@ def run_full_model(master_dict):
         Number_of_activated=0
         last_point=0
         for i in range(len(d["n_Ranvier"])):
-            Number_of_activated_population=run_simulation_with_NEURON(last_point,i,d["diam_fib"][i],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"][i],N_models[i],d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"])
+            Number_of_activated_population=run_simulation_with_NEURON(last_point,i,d["diam_fib"][i],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"][i],N_models[i],d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d["Name_prepared_neuron_array"])
             Number_of_activated=Number_of_activated+Number_of_activated_population
             os.chdir("Axon_files/")
             if d["Axon_Model_Type"] == 'Reilly2016':
@@ -454,14 +476,14 @@ def run_full_model(master_dict):
     else:
         Number_of_activated=run_simulation_with_NEURON(0,-1,d["diam_fib"],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"],N_models,d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"])
     
-    if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
-        with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_connections_activation.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        if d['Show_paraview_screenshots']==1:
-            subprocess.call('xdg-open "Images/Axon_activation.png"',shell=True)
-    else:
-        subprocess.call('python Visualization_files/Paraview_csv_activation.py', shell=True)
-        if d['Show_paraview_screenshots']==1:
-            subprocess.call('xdg-open "Images/Activated_neurons.png"',shell=True)
+    #if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
+        #with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_connections_activation.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        #if d['Show_paraview_screenshots']==1:
+        #    subprocess.call('xdg-open "Images/Axon_activation.png"',shell=True)
+    #else:
+        #subprocess.call('python Visualization_files/Paraview_csv_activation.py', shell=True)
+        #if d['Show_paraview_screenshots']==1:
+         #   subprocess.call('xdg-open "/opt/Patient/Images/Activated_neurons.png"',shell=True)
 
     minutes=int((time.time() - start_neuron)/60)
     secnds=int(time.time() - start_neuron)-minutes*60
@@ -472,7 +494,7 @@ def run_full_model(master_dict):
     total_seconds=time.time() - start_simulation_run
     print("---Simulation run took ",minutes," min ",secnds," s ")  
     
-    return total_seconds,Number_of_activated
+    return True
 
 
 #===========================Master Study======================================#
@@ -563,4 +585,5 @@ def run_master_study():
 #run_master_study()    #in case we want to find optimal spectrum truncation method and initial mesh settings.
 
 master_dict={}          #you can implement UQ or optimization by adding a function that will create master_dict with entries to be optimized. Name of entries should be the same as in GUI_inp_dict.py
-Run_time_high_ampl,Number_of_activated_high_ampl=run_full_model(master_dict)
+run_full_model(master_dict) 
+

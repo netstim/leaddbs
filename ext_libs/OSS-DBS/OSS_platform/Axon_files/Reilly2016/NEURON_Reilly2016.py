@@ -120,11 +120,11 @@ def get_one_internodal(N_index,n_segments,last_point,n_Ranvier,Ampl_scale,fiberD
         for point_inx in range(n_segments):            
             if point_inx%11==0: 
                 loc_index=0
-                nodes_point_in_time=np.load('Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
+                nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
                 nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV    
             elif loc_index%6==0 and loc_index!=0:
-                nodes_point_in_time_left=np.load('Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point-1)+'.npy')
-                nodes_point_in_time_right=np.load('Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
+                nodes_point_in_time_left=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point-1)+'.npy')
+                nodes_point_in_time_right=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
                     
                 #nodes_point_in_time_left=np.asarray(nodes_point_in_time_left)
                 #nodes_point_in_time_left = nodes_point_in_time_left.ravel()
@@ -139,7 +139,7 @@ def get_one_internodal(N_index,n_segments,last_point,n_Ranvier,Ampl_scale,fiberD
     else:
         for point_inx in range(n_segments):     #take every forth compartment (either Ranvier or middle STIN)
             if point_inx%4==0:
-                nodes_point_in_time=np.load('Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
+                nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
                 nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV                
 
     nodes=np.asarray(nodes)
@@ -194,7 +194,7 @@ def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl
     n_segments=n_Ranvier*2-1
     for point_inx in range(n_segments):
     
-        nodes_point_in_time=np.load('Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')   #get solution for each compartment in time for one neuron
+        nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')   #get solution for each compartment in time for one neuron
         nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
 
     nodes=np.asarray(nodes)
@@ -232,7 +232,7 @@ def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl
         return output.put([N_index_glob,-1])
 
 
-def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_Ranvier,N_models,v_init,t_steps,Ampl_scale,n_processors):
+def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_Ranvier,N_models,v_init,t_steps,Ampl_scale,n_processors,neuron_array_name=None):
     # this script is solely for Reilly2016 model
     '''Here we assume that all axons have the same number of nodes of Ranvier (and hence the length) and the morphology'''
 
@@ -249,15 +249,15 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     
     if population_index==-1:    # only one population is simulated
         population_name=''
-        Vert_full_get=read_csv('Neuron_model_arrays/All_neuron_models.csv', delimiter=' ', header=None) # get all neuron models
+        Vert_full_get=read_csv('/opt/Patient/Neuron_model_arrays/All_neuron_models.csv', delimiter=' ', header=None) # get all neuron models
         Vert_full=Vert_full_get.values
         Vert_full=np.round(Vert_full,8)
         
-        Vert_get=read_csv('Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)    # get only physiologically correct neuron models 
+        Vert_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)    # get only physiologically correct neuron models 
         Vert=Vert_get.values
         Vert=np.round(Vert,8)        
     else:    
-        hf = h5py.File('Neuron_model_arrays/All_neuron_models_by_populations.h5', 'r')
+        hf = h5py.File('/opt/Patient/Neuron_model_arrays/All_neuron_models_by_populations.h5', 'r')
         lst=list(hf.keys())
 
         if N_models==0:
@@ -269,7 +269,7 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
         hf.close()
         Vert_full=np.round(Vert_full,8)
         
-        hf2 = h5py.File('Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'r')
+        hf2 = h5py.File('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'r')
         lst=list(hf2.keys())
         population_name=str(lst[population_index])+'/'
         Vert=hf2.get(lst[population_index])
@@ -360,7 +360,7 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
 
     Axon_status=np.zeros((N_models,7),float)      #x1,y1,z1,x2,y2,z2,status. Holds info only about placed neurons. Important: coordinates are in the initial MRI space!
     
-    [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')    
+    [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')    
     shift_to_MRI_space=np.array([x_min,y_min,z_min])
     
     loc_ind_start=0
@@ -370,26 +370,42 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
         Axon_status[i,6]=Nodes_status[loc_ind_start,3]
         loc_ind_start=loc_ind_start+n_segments
             
+    #for Lead-DBS for visualization purposes    
+    Nodes_status_MRI_space=np.zeros((N_models*n_segments,4),float) 
+    Nodes_status_MRI_space[:,:3]=Nodes_status[:,:3]+shift_to_MRI_space
+    Nodes_status_MRI_space[:,3]=Nodes_status[:,3]
+            
     print(Activated_models, " models were activated")
-        
+    
     List_of_activated=np.asarray(List_of_activated)
+    
+    #only activated ones for Lead-DBS
+    Nodes_status_MRI_space_only_activated=np.delete(Nodes_status_MRI_space, np.where(Nodes_status_MRI_space[:,3] == 0.0)[0], axis=0)
+    
+#    if neuron_array_name==None:
+#        hf = h5py.File('Field_solutions/Activation/VAT_Neuron_array.h5', 'a')
+#        hf.create_dataset('VAT_Neuron_array_'+str(Activated_models), data=Nodes_status_MRI_space_only_activated)
+#        hf.close()
+#    else:
+#        hf = h5py.File('Field_solutions/Activation/Activation_in_'+neuron_array_name[:-3]+'.h5', 'a')
+#        hf.create_dataset(str(lst[population_index])+'_'+str(Activated_models), data=Nodes_status_MRI_space_only_activated)
+#        hf.close()
     
     if population_index==-1:
         print(np.round(Activated_models/float(N_models)*100,2),"% activation (subtracted axons do not count)\n")
-        np.savetxt('Field_solutions/Activation/Last_run.csv', List_of_activated, delimiter=" ")
-        np.save('Field_solutions/Activation/Connection_status',Axon_status)
-        np.save('Field_solutions/Activation/Network_status',Vert_full_status) 
-        np.savetxt('Field_solutions/Activation/Neuron_model_results.csv', Nodes_status, delimiter=" ")        
+        np.savetxt('/opt/Patient/Field_solutions/Activation/Last_run.csv', List_of_activated, delimiter=" ")
+        np.save('/opt/Patient/Field_solutions/Activation/Connection_status',Axon_status)
+        np.save('/opt/Patient/Field_solutions/Activation/Network_status',Vert_full_status) 
+        np.savetxt('/opt/Patient/Field_solutions/Activation/Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")        
     else:
         print(np.round(Activated_models/float(N_models)*100,2),"% activation in ",lst[population_index], "(subtracted axons do not count)\n")
-        np.savetxt('Field_solutions/Activation/Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
-        np.save('Field_solutions/Activation/Connection_status_'+str(lst[population_index]),Axon_status)    
-        np.savetxt('Field_solutions/Activation/Neuron_model_results_'+str(lst[population_index])+'.csv', Nodes_status, delimiter=" ")
+        np.savetxt('/opt/Patient/Field_solutions/Activation/Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
+        np.save('/opt/Patient/Field_solutions/Activation/Connection_status_'+str(lst[population_index]),Axon_status)    
+        np.savetxt('/opt/Patient/Field_solutions/Activation/Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
     
-        hf = h5py.File('Field_solutions/Activation/Network_status.h5', 'a')
+        hf = h5py.File('/opt/Patient/Field_solutions/Activation/Network_status.h5', 'a')
         hf.create_dataset(str(lst[population_index]), data=Vert_full_status)
         hf.close()
-                
     #this function will prepare data for connection states due to DBS    
     if population_index!=-1:
         connection_visualizator(Activated_models,Number_of_axons_initially,lst[population_index],last_point)    

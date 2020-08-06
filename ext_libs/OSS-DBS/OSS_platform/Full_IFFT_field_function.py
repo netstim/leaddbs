@@ -32,7 +32,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
     start_full_IFFT=time_lib.clock()    
 
     mesh = Mesh()
-    f = HDF5File(mesh.mpi_comm(),'Field_solutions_functions/solution'+str(d["freq"]*1.0)+'.h5','r')
+    f = HDF5File(mesh.mpi_comm(),'/opt/Patient/Field_solutions_functions/solution'+str(d["freq"]*1.0)+'.h5','r')
     f.read(mesh,"mesh", False)
     if d["EQS_core"]=='EQS':
         Er = FiniteElement("Lagrange", mesh.ufl_cell(),d["el_order"])
@@ -54,7 +54,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
         f.close()
     
     
-    file=File('Field_solutions_functions/phi_r_sol_unscaled_'+str(d["freq"]*1.0)+'.pvd')
+    file=File('/opt/Patient/Field_solutions_functions/phi_r_sol_unscaled_'+str(d["freq"]*1.0)+'.pvd')
     file<<phi_r_sol1
     
     #Xs_recovered = np.genfromtxt('Stim_Signal/Xs_storage_full.csv', delimiter=' ')
@@ -62,10 +62,10 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
     #FR_vector_signal = np.genfromtxt('Stim_Signal/FR_vector_signal.csv', delimiter=' ')
     
     if d["spectrum_trunc_method"]=='Octave Band Method':
-        FR_vector_signal_new = np.genfromtxt('Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        FR_vector_signal_new = np.genfromtxt('/opt/Patient/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
         
-        Fr_corresp_arr = np.genfromtxt('Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-        Fr_octave_vect = np.genfromtxt('Stim_Signal/Fr_octave_vector_'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        Fr_corresp_arr = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        Fr_octave_vect = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_octave_vector_'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
         
         Fr_corresp_arr=np.round(Fr_corresp_arr,6)
         Fr_octave_vect=np.round(Fr_octave_vect,6)        
@@ -84,8 +84,8 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
     if d["spectrum_trunc_method"]=='No Truncation':
         i_fr=0
         for fr in FR_vector_signal:
-            if os.path.isfile('Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5'): 
-                f = HDF5File(mesh.mpi_comm(),'Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5','r')
+            if os.path.isfile('/opt/Patient/Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5'): 
+                f = HDF5File(mesh.mpi_comm(),'/opt/Patient/Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5','r')
                 #print("Freq: ", fr)
                 
                 if d["EQS_core"]=='EQS':
@@ -107,7 +107,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
                     phi_i_sol.vector()[:] = 0.0
                     f.close()
                 if d["current_control"] == 1 and cc_multicontact==False:
-                    with open('Field_solutions_functions/current_scale'+str(np.round(fr,6))+'.file', "rb") as fpickle:
+                    with open('/opt/Patient/Field_solutions_functions/current_scale'+str(np.round(fr,6))+'.file', "rb") as fpickle:
                         Currents = pickle.load(fpickle)
                         
                     a=np.real((phi_r_sol.vector()[:]+1j*phi_i_sol.vector()[:])/(Currents[0]+1j*Currents[1]))
@@ -132,8 +132,8 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
     if d["spectrum_trunc_method"]=='High Amplitude Method' or d["spectrum_trunc_method"]=='Cutoff Method':
         i_fr=0
         for fr in FR_vector_signal:
-            if os.path.isfile('Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5'): 
-                f = HDF5File(mesh.mpi_comm(),'Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5','r')
+            if os.path.isfile('/opt/Patient/Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5'): 
+                f = HDF5File(mesh.mpi_comm(),'/opt/Patient/Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5','r')
                 #print("Freq: ", fr)
                 if d["EQS_core"]=='EQS':
                     Er = FiniteElement("Lagrange", mesh.ufl_cell(),d["el_order"])
@@ -155,7 +155,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
                     f.close()
                 
                 if d["current_control"] == 1 and cc_multicontact==False:
-                    with open('Field_solutions_functions/current_scale'+str(np.round(fr,6))+'.file', "rb") as fpickle:
+                    with open('/opt/Patient/Field_solutions_functions/current_scale'+str(np.round(fr,6))+'.file', "rb") as fpickle:
                         Currents = pickle.load(fpickle)
                         
                     a=np.real((phi_r_sol.vector()[:]+1j*phi_i_sol.vector()[:])/(Currents[0]+1j*Currents[1]))
@@ -195,7 +195,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
                 rslt=np.where(Fr_corresp_arr[:,0]==np.round(fr,6))
                 step_octv=rslt[0].shape[0]   #size of the freq. pack in the octave
                        
-                f = HDF5File(mesh.mpi_comm(),'Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5','r')
+                f = HDF5File(mesh.mpi_comm(),'/opt/Patient/Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5','r')
                 #f = HDF5File(mesh.mpi_comm(),'Field_solutions_functions/solution'+str(int(fr))+'.h5','r')
                 #print("Freq: ", i_fr)
                 if d["EQS_core"]=='EQS':
@@ -217,7 +217,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
                     phi_i_sol.vector()[:] = 0.0
                     f.close()
                 if d["current_control"] == 1 and cc_multicontact==False:
-                    with open('Field_solutions_functions/current_scale'+str(np.round(fr,6))+'.file', "rb") as fpickle:
+                    with open('/opt/Patient/Field_solutions_functions/current_scale'+str(np.round(fr,6))+'.file', "rb") as fpickle:
                         Currents = pickle.load(fpickle)
                         
                     a=np.real((phi_r_sol.vector()[:]+1j*phi_i_sol.vector()[:])/(Currents[0]+1j*Currents[1]))
@@ -233,7 +233,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
                     #print "hrreee!"
                     #print step_octv       
             else:
-                f = HDF5File(mesh.mpi_comm(),'Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5','r')
+                f = HDF5File(mesh.mpi_comm(),'/opt/Patient/Field_solutions_functions/solution'+str(np.round(fr,6))+'.h5','r')
                 #f = HDF5File(mesh.mpi_comm(),'Field_solutions_functions/solution'+str(int(fr))+'.h5','r')
                 #print("Freq: ", i_fr)
                 if d["EQS_core"]=='EQS':
@@ -256,7 +256,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
                     f.close()
                     
                 if d["current_control"] == 1 and cc_multicontact==False:
-                    with open('Field_solutions_functions/current_scale'+str(np.round(fr,6))+'.file', "rb") as fpickle:
+                    with open('/opt/Patient/Field_solutions_functions/current_scale'+str(np.round(fr,6))+'.file', "rb") as fpickle:
                         Currents = pickle.load(fpickle)
                         
                     a=np.real((phi_r_sol.vector()[:]+1j*phi_i_sol.vector()[:])/(Currents[0]+1j*Currents[1]))
@@ -333,7 +333,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
         
     del Phi_Global_conv
     Signal_t_conv=np.ascontiguousarray(Signal_t_conv, dtype=np.float32)
-    np.save('Field_solutions/Signal_t_conv', Signal_t_conv.real)
+    np.save('/opt/Patient/Field_solutions/Signal_t_conv', Signal_t_conv.real)
     #print(Signal_t_conv[0:40,0])
     #print(Signal_t_conv[0:40,10000])
     
@@ -415,14 +415,14 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
     
     if d["VTA_from_NEURON"]==True:
         start_VTA_NEURON=time_lib.clock() 
-        Vert_get=read_csv('Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+        Vert_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
         Vert=Vert_get.values
         Signal_t_points=np.zeros((Vert.shape[0],t_vect.shape[0]),float)    
     else:
         start_VTA_divE=time_lib.clock() 
     
     
-    file=File('Animation_Field_in_time/Field.pvd')
+    file=File('/opt/Patient/Animation_Field_in_time/Field.pvd')
     for i in range(t_vect.shape[0]):
         t_step=int(i)
         
@@ -451,7 +451,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
     if d["VTA_from_NEURON"]==True:
         for i_point in range(Vert.shape[0]):
             #np.savetxt('Points_in_time/Signal_t_conv'+str(i_point)+'.csv', Signal_t_points[i_point,:], delimiter=" ")
-            np.save('Points_in_time/Signal_t_conv'+str(i_point), Signal_t_points[i_point,:])
+            np.save('/opt/Patient/Points_in_time/Signal_t_conv'+str(i_point), Signal_t_points[i_point,:])
         
         minutes=int((time_lib.clock() - start_VTA_NEURON)/60)
         secnds=int(time_lib.clock() - start_VTA_NEURON)-minutes*60
@@ -495,7 +495,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
         local_solver = PETScKrylovSolver('bicgstab')
         local_solver.solve(A_local,E_field_real.vector(),b_local)
         
-        file=File('Field_solutions_functions/E_field_at_stim_peak.pvd')
+        file=File('/opt/Patient/Field_solutions_functions/E_field_at_stim_peak.pvd')
         file<<E_field_real
         
         #V_for_Enorm = FunctionSpace(mesh, "DG", 2)   
@@ -519,7 +519,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
             local_solver = PETScKrylovSolver('bicgstab')
             local_solver.solve(A_local,E_norm.vector(),b_local)      
 
-            file=File('Field_solutions_functions/E_norm_at_stim_peak.pvd')
+            file=File('/opt/Patient/Field_solutions_functions/E_norm_at_stim_peak.pvd')
             file<<E_norm                    
                  
             for cell in cells(mesh):
@@ -563,7 +563,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
             a_abs=Second_deriv_abs.vector()[:]
             Second_deriv_abs.vector()[:]=abs(a_abs)
             
-            file=File('Field_solutions_functions/Second_derivative.pvd')
+            file=File('/opt/Patient/Field_solutions_functions/Second_derivative.pvd')
             file<<Second_deriv_abs
             
             '''This is only for the particular example! Check, where the marked cells are'''            

@@ -18,7 +18,7 @@ parameters["allow_extrapolation"] = True;
 
 
 class Field_calc_parameters:
-    def __init__(self,default_material,element_order,anisotropy,c_c,CPE,refinement_frequency,Laplace_formulation,Solver):
+    def __init__(self,default_material,element_order,anisotropy,c_c,CPE,refinement_frequency,Laplace_formulation,external_grounding,Solver):
         self.default_material=default_material
         self.element_order=element_order
         self.anisotropy=anisotropy
@@ -26,11 +26,12 @@ class Field_calc_parameters:
         self.CPE=CPE
         self.frequenc=refinement_frequency      #list
         self.EQS_mode=Laplace_formulation
+        self.external_grounding=external_grounding
         self.Solver_type=Solver
  
 def save_mesh_and_subdomains_to_h5(mesh_to_h5,subdomains_to_h5,subdomains_assigned_to_h5,boundaries_to_h5,Scaling):
           
-    hdf = HDF5File(mesh_to_h5.mpi_comm(), 'CSF_ref/Mesh_to_solve_scaling_'+str(Scaling)+'.h5', 'w')
+    hdf = HDF5File(mesh_to_h5.mpi_comm(), '/opt/Patient/CSF_ref/Mesh_to_solve_scaling_'+str(Scaling)+'.h5', 'w')
     hdf.write(mesh_to_h5, "/mesh")
     hdf.write(subdomains_to_h5, "/subdomains")
     hdf.write(subdomains_assigned_to_h5, "/subdomains_assigned")
@@ -42,7 +43,7 @@ def save_mesh_and_subdomains_to_h5(mesh_to_h5,subdomains_to_h5,subdomains_assign
 def load_mesh_and_subdomains_from_h5(Scaling):
           
     mesh_from_h5 = Mesh()
-    hdf = HDF5File(mesh_from_h5.mpi_comm(), 'CSF_ref/Mesh_to_solve_scaling_'+str(Scaling)+'.h5', "r")
+    hdf = HDF5File(mesh_from_h5.mpi_comm(), '/opt/Patient/CSF_ref/Mesh_to_solve_scaling_'+str(Scaling)+'.h5', "r")
     hdf.read(mesh_from_h5, "/mesh", False)
     subdomains_from_h5 = MeshFunction("size_t", mesh_from_h5, 3)
     hdf.read(subdomains_from_h5, "/subdomains")   
@@ -55,14 +56,27 @@ def load_mesh_and_subdomains_from_h5(Scaling):
     return mesh_from_h5,subdomains_from_h5,subdomains_assigned_from_h5,boundaries_from_h5   
    
 def Dummy_CSF():        #if we want to skip adaptive mesh refinement
+ 
+    mesh = Mesh("/opt/Patient/Meshes/Mesh_unref.xml")
+    boundaries = MeshFunction('size_t',mesh,'/opt/Patient/Meshes/Mesh_unref_facet_region.xml')
+    subdomains_assigned=MeshFunction('size_t',mesh,"/opt/Patient/Meshes/Mesh_unref_physical_region.xml")
+
+
+    # print("Before ground ref: ",mesh.num_cells())
+    # from Ext_ground_preref import prerefine_ground
     
-    mesh = Mesh("Meshes/Mesh_unref.xml")
-    boundaries = MeshFunction('size_t',mesh,'Meshes/Mesh_unref_facet_region.xml')
-    subdomains_assigned=MeshFunction('size_t',mesh,"Meshes/Mesh_unref_physical_region.xml")
+    # mesh,subdomains_assigned,boundaries=prerefine_ground(mesh,subdomains_assigned,boundaries,Domains)
+    # mesh,subdomains_assigned,boundaries=prerefine_ground(mesh,subdomains_assigned,boundaries,Domains)
+    # mesh,subdomains_assigned,boundaries=prerefine_ground(mesh,subdomains_assigned,boundaries,Domains)
+    # mesh,subdomains_assigned,boundaries=prerefine_ground(mesh,subdomains_assigned,boundaries,Domains)
+    # mesh,subdomains_assigned,boundaries=prerefine_ground(mesh,subdomains_assigned,boundaries,Domains)    
+    # #mesh,subdomains_assigned,boundaries=prerefine_ground(mesh,subdomains_assigned,boundaries,Domains) 
+    # #mesh,subdomains_assigned,boundaries=prerefine_ground(mesh,subdomains_assigned,boundaries,Domains)
+    # print("After ground ref: ",mesh.num_cells())
         
-    mesh_file=File('Results_adaptive/mesh_adapt.xml.gz')
-    boundaries_file = File('Results_adaptive/boundaries_adapt.xml')
-    subdomains_assigned_file=File('Results_adaptive/subdomains_assigned_adapt.xml')
+    mesh_file=File('/opt/Patient/Results_adaptive/mesh_adapt.xml.gz')
+    boundaries_file = File('/opt/Patient/Results_adaptive/boundaries_adapt.xml')
+    subdomains_assigned_file=File('/opt/Patient/Results_adaptive/subdomains_assigned_adapt.xml')
     
     mesh_file<<mesh
     boundaries_file<<boundaries
@@ -154,25 +168,30 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
     
     '''load results and mesh from the most refined iteration if available'''
     if Best_scaling!=0:
-        Phi_amp_on_neuron_old_get=read_csv('CSF_ref/Field_on_points'+str(Best_scaling)+'.csv', delimiter=' ', header=None)
+        Phi_amp_on_neuron_old_get=read_csv('/opt/Patient/CSF_ref/Field_on_points'+str(Best_scaling)+'.csv', delimiter=' ', header=None)
         Phi_amp_on_neuron_old=Phi_amp_on_neuron_old_get.values
         
-        mesh = Mesh('CSF_ref/mesh_adapt_CSF'+str(scaling_old)+'.xml.gz')
-        boundaries = MeshFunction('size_t',mesh,'CSF_ref/boundaries_adapt_CSF'+str(scaling_old)+'.xml')
-        subdomains_assigned=MeshFunction('size_t',mesh,'CSF_ref/subdomains_assigned_adapt_CSF'+str(scaling_old)+'.xml')  
+        mesh = Mesh('/opt/Patient/CSF_ref/mesh_adapt_CSF'+str(scaling_old)+'.xml.gz')
+        boundaries = MeshFunction('size_t',mesh,'/opt/Patient/CSF_ref/boundaries_adapt_CSF'+str(scaling_old)+'.xml')
+        subdomains_assigned=MeshFunction('size_t',mesh,'/opt/Patient/CSF_ref/subdomains_assigned_adapt_CSF'+str(scaling_old)+'.xml')  
     else:
-        mesh = Mesh("Meshes/Mesh_unref.xml")
-        boundaries = MeshFunction('size_t',mesh,'Meshes/Mesh_unref_facet_region.xml')
-        subdomains_assigned=MeshFunction('size_t',mesh,"Meshes/Mesh_unref_physical_region.xml")    
+        if Field_calc_param.external_grounding==False:
+            mesh = Mesh("/opt/Patient/Meshes/Mesh_unref.xml")
+            boundaries = MeshFunction('size_t',mesh,'/opt/Patient/Meshes/Mesh_unref_facet_region.xml')
+            subdomains_assigned=MeshFunction('size_t',mesh,"/opt/Patient/Meshes/Mesh_unref_physical_region.xml")
+        else:
+            mesh = Mesh('/opt/Patient/Results_adaptive/mesh_adapt.xml.gz')
+            boundaries = MeshFunction('size_t',mesh,'/opt/Patient/Results_adaptive/boundaries_adapt.xml')
+            subdomains_assigned=MeshFunction('size_t',mesh,'/opt/Patient/Results_adaptive/subdomains_assigned_adapt.xml')           
     
     # load neuron compartments        
-    Vertices_neur_get=read_csv('Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+    Vertices_neur_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
     Vertices_neur=Vertices_neur_get.values 
         
     if Best_scaling==0:
-        mesh_file=File('CSF_ref/mesh_adapt_CSF'+str(Best_scaling)+'.xml.gz')
-        boundaries_file = File('CSF_ref/boundaries_adapt_CSF'+str(Best_scaling)+'.xml')
-        subdomains_assigned_file=File('CSF_ref/subdomains_assigned_adapt_CSF'+str(Best_scaling)+'.xml')
+        mesh_file=File('/opt/Patient/CSF_ref/mesh_adapt_CSF'+str(Best_scaling)+'.xml.gz')
+        boundaries_file = File('/opt/Patient/CSF_ref/boundaries_adapt_CSF'+str(Best_scaling)+'.xml')
+        subdomains_assigned_file=File('/opt/Patient/CSF_ref/subdomains_assigned_adapt_CSF'+str(Best_scaling)+'.xml')
         mesh_file<<mesh
         boundaries_file<<boundaries
         subdomains_assigned_file<<subdomains_assigned  
@@ -186,7 +205,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         save_mesh_and_subdomains_to_h5(mesh,subdomains,subdomains_assigned,boundaries,Best_scaling)
         
         print("CSF_Subdomains_unref file was created")
-        file=File('CSF_ref/CSF_Subdomains_unref.pvd')
+        file=File('/opt/Patient/CSF_ref/CSF_Subdomains_unref.pvd')
         file<<subdomains,mesh
 
         if cc_multicontact==True:
@@ -194,27 +213,27 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         else:
             Phi_r_old,Phi_im_old,Field_r_old,Field_im_old,max_E_old,J_r_old,J_im_old,j_dens_real,j_dens_im=get_field(mesh,Domains,subdomains,boundaries,Field_calc_param)
  
-        file=File('CSF_ref/Field_r_'+str(Best_scaling)+'.pvd')
+        file=File('/opt/Patient/CSF_ref/Field_r_'+str(Best_scaling)+'.pvd')
         file<<Field_r_old
         
         Phi_amp_on_neuron_old = get_field_on_points(Phi_r_old,Phi_im_old,Field_calc_param.c_c,J_r_old,J_im_old)        
-        np.savetxt('CSF_ref/Field_on_points'+str(Best_scaling)+'.csv', Phi_amp_on_neuron_old, delimiter=" ")
+        np.savetxt('/opt/Patient/CSF_ref/Field_on_points'+str(Best_scaling)+'.csv', Phi_amp_on_neuron_old, delimiter=" ")
            
     # load array with the CSF voxels if available, otherwise extract it from the MRI data    
-    if os.path.isfile('MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add)+'.npy') or os.path.isfile('MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF_'+str(CSF_ref_add)+'.npy'):
+    if os.path.isfile('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add)+'.npy') or os.path.isfile('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF_'+str(CSF_ref_add)+'.npy'):
         if MRI_param.name[-2:]=='gz':
-            voxel_array_CSF=np.load('MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF_'+str(CSF_ref_add)+'.npy') 
+            voxel_array_CSF=np.load('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF_'+str(CSF_ref_add)+'.npy') 
         else: 
-            voxel_array_CSF=np.load('MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add)+'.npy') 
+            voxel_array_CSF=np.load('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add)+'.npy') 
         
         print("voxel_array_CSF in ",str(CSF_ref_add)," mm vicinity is loaded")
     else:
         start_voxel_array_CSF=tim.clock()
 
-        Tissue_array=np.load('MRI_DTI_derived_data/Tissue_array_MRI.npy')        
-        x_vect=np.genfromtxt('MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
-        y_vect=np.genfromtxt('MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
-        z_vect=np.genfromtxt('MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
+        Tissue_array=np.load('/opt/Patient/MRI_DTI_derived_data/Tissue_array_MRI.npy')        
+        x_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
+        y_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
+        z_vect=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
         
         voxel_array_CSF=np.zeros((Tissue_array.shape[0],3),float)      #array to store all CSF voxels in the specified ROI
         
@@ -253,9 +272,9 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         voxel_array_CSF=voxel_array_CSF[~np.all(voxel_array_CSF==0.0,axis=1)]  #deletes all zero enteries
 
         if MRI_param.name[-2:]=='gz':
-            np.save('MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF_'+str(CSF_ref_add), voxel_array_CSF)
+            np.save('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-7]+'_voxel_array_CSF_'+str(CSF_ref_add), voxel_array_CSF)
         else:
-            np.save('MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add), voxel_array_CSF)
+            np.save('/opt/Patient/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add), voxel_array_CSF)
            
         del Tissue_array        
         print("----- voxel_array_CSF for ",str(CSF_ref_add)," mm vicinity was prepared in %s seconds -----" % (tim.clock() - start_voxel_array_CSF))             
@@ -267,19 +286,19 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
     print("refining CSF voxels with scaling ", int(Scaling))    
     num_cell_old=mesh.num_cells()
     
-    if os.path.isfile('CSF_ref/Mesh_to_solve_scaling_'+str(Scaling)+'.h5'):     
+    if os.path.isfile('/opt/Patient/CSF_ref/Mesh_to_solve_scaling_'+str(Scaling)+'.h5'):     
         print("Mesh and tissue mapping was loaded from the refinement at the previous frequency")
         mesh,subdomains,subdomains_assigned,boundaries=load_mesh_and_subdomains_from_h5(Scaling)
         loaded_from_h5=1  
-    elif os.path.isfile('CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz'):   #this and not the case above could be only triggered if no computations took place at this scalling at the last frequency (because of the same mesh size)
+    elif os.path.isfile('/opt/Patient/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz'):   #this and not the case above could be only triggered if no computations took place at this scalling at the last frequency (because of the same mesh size)
         if Best_scaling==0:
             print("No elements were refined during the full CSF refinement, skipping to adaptive mesh refinement (consider decreasing Minimum Element to Voxel Ratio)")
             return 1
         print("skipping scaling ",Scaling)
-        mesh_file=File('CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
+        mesh_file=File('/opt/Patient/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
         mesh_file<<mesh                        
-        boundaries_file = File('CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
-        subdomains_assigned_file=File('CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'.xml')                
+        boundaries_file = File('/opt/Patient/CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
+        subdomains_assigned_file=File('/opt/Patient/CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'.xml')                
         boundaries_file<<boundaries
         subdomains_assigned_file<<subdomains_assigned       
         return 0             
@@ -299,10 +318,10 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
             if not(cell_ref.where_equal(True)):     #if any cell was marked for refinement, will return True
                 csf_ref=1
                 
-                mesh_file=File('CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
+                mesh_file=File('/opt/Patient/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
                 mesh_file<<mesh                        
-                boundaries_file = File('CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
-                subdomains_assigned_file=File('CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'.xml')                
+                boundaries_file = File('/opt/Patient/CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
+                subdomains_assigned_file=File('/opt/Patient/CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'.xml')                
                 boundaries_file<<boundaries
                 subdomains_assigned_file<<subdomains_assigned
                                               
@@ -316,10 +335,10 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
                     return 0                 
             else:
                 
-                mesh_file=File('CSF_ref/mesh_adapt_CSF'+str(Scaling)+'_old.xml.gz')
+                mesh_file=File('/opt/Patient/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'_old.xml.gz')
                 mesh_file<<mesh                       
-                boundaries_file = File('CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'_old.xml')
-                subdomains_assigned_file=File('CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'_old.xml')       
+                boundaries_file = File('/opt/Patient/CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'_old.xml')
+                subdomains_assigned_file=File('/opt/Patient/CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'_old.xml')       
                 boundaries_file<<boundaries
                 subdomains_assigned_file<<subdomains_assigned
       
@@ -339,7 +358,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
             subdomains=get_cellmap(mesh,subdomains_assigned,Domains,MRI_param,Field_calc_param.default_material)
             
         print("CSF_Subdomains_refinement file with scaling ",int(Scaling)," was created")
-        file=File('CSF_ref/CSF_Subdomains_refinement_'+str(int(Scaling))+'.pvd')
+        file=File('/opt/Patient/CSF_ref/CSF_Subdomains_refinement_'+str(int(Scaling))+'.pvd')
         file<<subdomains,mesh
     
     save_mesh_and_subdomains_to_h5(mesh,subdomains,subdomains_assigned,boundaries,Scaling)
@@ -350,17 +369,17 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         Phi_r,Phi_im,Field_r,Field_im,max_E,J_r,J_im,j_dens_real,j_dens_im=get_field(mesh,Domains,subdomains,boundaries,Field_calc_param)
        
     if Scaling==1:
-        file=File('CSF_ref/Field_r_'+str(Scaling)+'.pvd')
+        file=File('/opt/Patient/CSF_ref/Field_r_'+str(Scaling)+'.pvd')
         file<<Field_r
         print("CSF_Subdomains full refinement was created")
-        file=File('CSF_ref/CSF_Subdomains_full_ref.pvd')
+        file=File('/opt/Patient/CSF_ref/CSF_Subdomains_full_ref.pvd')
         file<<subdomains,mesh
 
-        import subprocess
-        subprocess.call('python Visualization_files/Paraview_CSFref.py', shell=True)        
+        #import subprocess
+        #subprocess.call('python Visualization_files/Paraview_CSFref.py', shell=True)        
         
     Phi_amp_on_neuron =get_field_on_points(Phi_r,Phi_im,Field_calc_param.c_c,J_r,J_im)
-    np.savetxt('CSF_ref/Field_on_points'+str(Scaling)+'.csv', Phi_amp_on_neuron, delimiter=" ")
+    np.savetxt('/opt/Patient/CSF_ref/Field_on_points'+str(Scaling)+'.csv', Phi_amp_on_neuron, delimiter=" ")
    
     csf_refined=1
     max_div=0.0
@@ -380,6 +399,8 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
             phi_error=abs((max(Phi_r.vector()[:])-min(Phi_r.vector()[:]))*CSF_frac_div)   #should be scaled 
     else:    
         Phi_vector=[x for x in Domains.fi if x is not None]
+        if Field_calc_param.external_grounding==True:
+            Phi_vector.append(0.0)
         phi_error=abs((max(Phi_vector)-min(Phi_vector))*CSF_frac_div)      #Absolute potential error defined as a 1% of the maximum potential difference, VC case
 
     # compare solutions on the neuron compartments    
@@ -401,10 +422,10 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
             break
 
     if csf_refined==1:
-        mesh_file=File('CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
+        mesh_file=File('/opt/Patient/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
         mesh_file<<mesh                        
-        boundaries_file = File('CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
-        subdomains_assigned_file=File('CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'.xml')                
+        boundaries_file = File('/opt/Patient/CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
+        subdomains_assigned_file=File('/opt/Patient/CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'.xml')                
         boundaries_file<<boundaries
         subdomains_assigned_file<<subdomains_assigned
         
@@ -441,7 +462,7 @@ def launch_CSF_refinement(d,MRI_param,DTI_param,Domains,anisotrop,cc_multicontac
     
     for freq in ref_freqs:          # conduct refinement at different frequencies
         print("At frequency: ",freq)                
-        Field_calc_param=Field_calc_parameters(d["default_material"],el_order_for_CSF,anisotrop,d["current_control"],d["CPE_activ"],freq,d["EQS_core"],d["Solver_Type"])
+        Field_calc_param=Field_calc_parameters(d["default_material"],el_order_for_CSF,anisotrop,d["current_control"],d["CPE_activ"],freq,d["EQS_core"],d["external_grounding"],d["Solver_Type"])
         
         csf_ref=-1
         '''csf_ref is 1, when further refinement of elements with CSF voxels does not significantly change the result'''
@@ -469,7 +490,7 @@ def launch_CSF_refinement(d,MRI_param,DTI_param,Domains,anisotrop,cc_multicontac
     
     # store to load the correct mesh for the next stage of the refinement
     Scaling_arr=np.array([min(Scaling_results)])
-    np.savetxt('CSF_ref/Scaling_CSF.csv', Scaling_arr, delimiter=" ")
+    np.savetxt('/opt/Patient/CSF_ref/Scaling_CSF.csv', Scaling_arr, delimiter=" ")
     Scaling=float(Scaling)
     
     return Scaling

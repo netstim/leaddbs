@@ -6,11 +6,16 @@
 QLabel, QPushButton, QCheckBox{
 	padding: 4px;
 }
+
 QToolTip{
     background: white;
     padding: 4px;
-    border: 2px solid #3299a8;
+    border: 2px solid #c3512f;
     border-radius: 5px;
+}
+
+QGraphicsNode{
+    color: white;
 }
 
 /*QMenu*/
@@ -77,17 +82,17 @@ QTabWidget::pane { /* The tab widget frame */
 }
 
 QPushButton{
-	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #3299a8);
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #c3512f);
 }
 QPushButton:hover{
 	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 white);
     font-size: 14pt;
 }
 QPushButton:pressed{
-	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #3299a8);
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #c3512f);
 }
 
-#pushButton_Load, #pushButton_Save_As, #pushButton_Reset, #pushButton_Run, #pushButton_Save, #pushButton_Cancel, #pushButton_Display{
+#pushButton_Load, #pushButton_Save_As, #pushButton_Reset, #pushButton_Run, #pushButton_Save, #pushButton_Cancel{
     border: 1px solid;
     border-radius: 5px;
 }
@@ -148,7 +153,7 @@ image: url(:/icons/icons/checkbox_checked_icon.png);
 /*<QGroupBox>*/
 QGroupBox{
 margin-top: 1ex; /* leave space at the top for the title */
-border: 3px solid #3299a8;
+border: 3px solid #c3512f;
 border-radius: 15px;
 }
 QGroupBox::title {
@@ -368,9 +373,9 @@ QTreeView {
     border: 0px solid gray;
 }
 QTreeView::item {
-    border: 1px solid #3299a8;
-    border-top-color: #3299a8;
-    border-bottom-color: #3299a8;
+    border: 1px solid #c3512f;
+    border-top-color: #c3512f;
+    border-bottom-color: #c3512f;
 	padding: 5px;
 }
 
@@ -388,24 +393,24 @@ QTreeView::icon:hover, QTreeView::icon:selected{
 	height: 55px;
 }
 QTreeView::item:selected {
-    border: 1px solid #3299a8;
+    border: 1px solid #c3512f;
 }
 
 QTreeView::item:selected:active{
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #3299a8);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #c3512f);
 	color: black;
 }
 
 QTreeView::item:selected:!active {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #3299a8);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #c3512f);
     color: black;
 }
 /*<QTreeWidget>*/
 
 
 /*<QHeaderWidget>*/
-#MainWindow QHeaderView::section {
-    background-color: #3299a8;
+QHeaderView::section {
+    background-color: #c3512f;
     color: black;
     padding-left: 4px;
     /*border-top: 0px solid #6c6c6c;
@@ -429,7 +434,7 @@ QHeaderView::up-arrow {
 
 /*QTabwidget*/
 QTabWidget::pane { /* The tab widget frame */
-    border-top: 2px solid #3299a8;
+    border-top: 2px solid #c3512f;
 }
 QTabWidget::tab-bar {
     background-color: white;
@@ -438,7 +443,7 @@ QTabWidget::tab-bar {
 /* Style the tab using the tab sub-control. Note that
     it reads QTabBar _not_ QTabWidget */
 QTabBar::tab {
-    background: #3299a8;/*#393939*/
+    background: #c3512f;/*#393939*/
     border: 0px solid black;
     border-left: 2px solid white;
     border-right: 2px solid white;
@@ -447,7 +452,7 @@ QTabBar::tab {
 }
 
 QTabBar::tab:selected, QTabBar::tab:hover {
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #3299a8);
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 transparent, stop: 1 #c3512f);
     /*qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0 #fafafa, stop: 0.4 #f4f4f4,
                                 stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);*/
@@ -487,11 +492,11 @@ QTabBar QToolButton { /* the scroll buttons are tool buttons */
     border-width: 2px;
 }
 QTabBar QToolButton:pressed {
-  background-color: #3299a8;
+  background-color: #c3512f;
 }
 
 QTabBar QToolButton:hover {
-  background-color: #3299a8;
+  background-color: #c3512f;
   border: 1px solid white;
 }
 
@@ -501,4 +506,9 @@ QTabBar QToolButton::right-arrow { /* the arrow mark in the tool buttons */
 
 QTabBar QToolButton::left-arrow {
     image: url(:/icons/icons/leftarrow.png);
+}
+
+QFileDialog{
+    background: white;
+    color: black;
 }

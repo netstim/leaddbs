@@ -60,6 +60,9 @@ if Z_2nd == Zt:
 else:
     Z_2nd_artif=Z_2nd
 
+#for Lead-DBS, the tip point should be shifted down (they use the middle of the lowest contact as the reference point)
+Zt_tip=Zt-2.25		#for St Jude 6180
+
 
 Vert_array =[0];
 number_vertex = len(Vert_array)
@@ -235,11 +238,11 @@ if(Lead2nd_Enable): ##################  2nd LEAD ###############################
 
 ################## LEAD 1st #############################################################
 #print "Position 1st Fuse all object at [{},{},{}], [{}',{}',{}']\n".format(Xt,Yt,Zt,OX_angle,OY_angle,OZ_angle)
-geompy.TranslateDXDYDZ(Fuse_all_lead_encap_ROI_no_internal_face,Xt,Yt,Zt)
+geompy.TranslateDXDYDZ(Fuse_all_lead_encap_ROI_no_internal_face,Xt,Yt,Zt_tip)
 
-OX1 = geompy.MakeTranslation(OX,Xt,Yt,Zt)
-OY1 = geompy.MakeTranslation(OY,Xt,Yt,Zt)
-OZ1 = geompy.MakeTranslation(OZ,Xt,Yt,Zt)
+OX1 = geompy.MakeTranslation(OX,Xt,Yt,Zt_tip)
+OY1 = geompy.MakeTranslation(OY,Xt,Yt,Zt_tip)
+OZ1 = geompy.MakeTranslation(OZ,Xt,Yt,Zt_tip)
 
 geompy.Rotate(Fuse_all_lead_encap_ROI_no_internal_face, OZ1,135.0*math.pi/180.0)	# hardwired turn because of the Lead-DBS definition (marker points against X-axis)
 geompy.Rotate(Fuse_all_lead_encap_ROI_no_internal_face, OZ1,OZ_angle*math.pi/180.0)
@@ -254,14 +257,14 @@ if X_2nd!=Xt or Y_2nd!=Yt:
 
 #print "Position 1st Lead at [{},{},{}], [{}',{}',{}']\n".format(Xt,Yt,Zt,OX_angle,OY_angle,OZ_angle)
 for i in range(0,len(VolumeObject1)):
-    geompy.TranslateDXDYDZ(VolumeObject1[i],Xt,Yt,Zt)
+    geompy.TranslateDXDYDZ(VolumeObject1[i],Xt,Yt,Zt_tip)
     geompy.Rotate(VolumeObject1[i], OZ1,135.0*math.pi/180.0) # hardwired turn because of the Lead-DBS definition (marker points against X-axis)
     geompy.Rotate(VolumeObject1[i], OZ1,OZ_angle*math.pi/180.0)
     if X_2nd!=Xt or Y_2nd!=Yt:
         VolumeObject1[i]=geompy.MakeRotationThreePoints(VolumeObject1[i], Vertex_O, Vertex_3, Vertex_1)
 
 for i in range(0,len(ContactObject1)):
-    geompy.TranslateDXDYDZ(ContactObject1[i],Xt,Yt,Zt)
+    geompy.TranslateDXDYDZ(ContactObject1[i],Xt,Yt,Zt_tip)
     geompy.Rotate(ContactObject1[i], OZ1,135.0*math.pi/180.0)    # hardwired turn because of the Lead-DBS definition (marker points against X-axis)
     geompy.Rotate(ContactObject1[i], OZ1,OZ_angle*math.pi/180.0)
     if X_2nd!=Xt or Y_2nd!=Yt:
@@ -335,11 +338,11 @@ for ref_ind in range (0, len(reference_volume)):
 		Common_volume_Pro = geompy.BasicProperties(Common_volume) 
 		print "volume difference",abs(Common_volume_Pro[2]-subshape_Pro[2]),"/",abs(Common_volume_Pro[2]-reference_volume_Pro[ref_ind][2])
 		# if ( common volume = subshape) and (common volume = ref volume) => ref volume = sub shape
-		if (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.00001) and (abs(Common_volume_Pro[2]-reference_volume_Pro[ref_ind][2])<0.00001):
+		if (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.0003) and (abs(Common_volume_Pro[2]-reference_volume_Pro[ref_ind][2])<0.0003):
 		
 			Group_partition_volume.append([Volume_name[ref_ind],Partition_volume_IDsList[sub_ind]])
 		# if ( common volume = subshape) and (common volume < ref volume) => sub shape belong to ref volume
-		elif (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.00001) and ((Common_volume_Pro[2] - reference_volume_Pro[ref_ind][2])<-0.00001):
+		elif (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.0003) and ((Common_volume_Pro[2] - reference_volume_Pro[ref_ind][2])<-0.0003):
 			temp_volume.append( Partition_volume_IDsList[sub_ind] )
 	if len(temp_volume) >1 : # the volume is devided
 		Group_partition_volume.append([Volume_name[ref_ind],temp_volume ])
@@ -759,7 +762,7 @@ smesh.SetName(Sub_mesh_14, 'Sub-mesh_14')
 smesh.SetName(Sub_mesh_15, 'Sub-mesh_15')
 smesh.SetName(Sub_mesh_16, 'Sub-mesh_16')
 
-Mesh_1.ExportMED('Meshes/Mesh_unref.med')
+Mesh_1.ExportMED('/opt/Patient/Meshes/Mesh_unref.med')
 
 #if salome.sg.hasDesktop():
 #  salome.sg.updateObjBrowser(True)

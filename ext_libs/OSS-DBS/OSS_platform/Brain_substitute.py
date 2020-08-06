@@ -24,13 +24,13 @@ import math
 import SALOMEDS
 
 #input variables
-DX_MRI=65.0
-DY_MRI=65.0
-DZ_MRI=65.0
+DX_MRI=100.0
+DY_MRI=100.0
+DZ_MRI=100.0
 
-X_tip=10.92957028
-Y_tip=-12.11697637
-Z_tip=-7.69744601
+X_tip=10.0379
+Y_tip=-18.2943
+Z_tip=-6.5889
 
 ##################
 geompy = geomBuilder.New(theStudy)
@@ -52,7 +52,7 @@ Brain_model_ROI = geompy.MakeScaleAlongAxes(Sphere1_2, None, 1, MRI_DY_max_ROI/M
 geompy.TranslateDXDYDZ(Brain_model_ROI, X_tip, Y_tip, Z_tip)
 
 
-geompy.ExportBREP(Brain_model, "Brain_substitute.brep" )
+geompy.ExportBREP(Brain_model, "/opt/Patient/Brain_substitute.brep" )
 geompy.addToStudy( O, 'O' )
 geompy.addToStudy( OX, 'OX' )
 geompy.addToStudy( OY, 'OY' )
@@ -81,7 +81,7 @@ NETGEN_3D_Parameters_1.SetQuadAllowed( 0 )
 isDone = Mesh_1.Compute()
 smesh.SetName(Mesh_1, 'Mesh_1')
 
-Mesh_1.ExportMED('Meshes/Mesh_brain_substitute_max_ROI.med')
+Mesh_1.ExportMED('/opt/Patient/Meshes/Mesh_brain_substitute_max_ROI.med')
 
 smesh.SetName(NETGEN_1D_2D_3D.GetAlgorithm(), 'NETGEN 1D-2D-3D')
 smesh.SetName(NETGEN_3D_Parameters_1, 'NETGEN 3D Parameters_1')

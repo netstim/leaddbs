@@ -85,7 +85,7 @@ def my_generate_signal(T,A,signal_freq,phi,freq_max,t_step,simulation_time):    
     plt.xlabel('t, sec')
     plt.ylabel('Signal amplitude (A or V)')
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig('Images/Signal_regenerated.png', format='png', dpi=750)
+    plt.savefig('/opt/Patient/Images/Signal_regenerated.png', format='png', dpi=750)
 
     return t_vector,Signal_t_normalized,Xs_signal_normalized,FR_vector_signal
 
@@ -116,7 +116,7 @@ def numpy_analog_digit_converter(t_vect,signal_t_vect,freq,freq_spect_size,T):
     plt.xlabel('t, sec')
     plt.ylabel('Signal amplitude (A or V)')
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig('Images/Signal_recovered_shape.png', format='png', dpi=750)
+    plt.savefig('/opt/Patient/Images/Signal_recovered_shape.png', format='png', dpi=750)
 
     return fr_vector,sp_cut
 
@@ -227,7 +227,7 @@ def generate_signal(d,A,amp_max,cc_multi):
     plt.xlabel('t, sec')
     plt.ylabel('Signal amplitude (A or V)')
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig('Images/Signal.png', format='png', dpi=750)
+    plt.savefig('/opt/Patient/Images/Signal.png', format='png', dpi=750)
     t=np.asarray(t)
 
     # get a Fourier transformation of the signal with np.fft.fft and recover to check with np.fft.ifft

@@ -75,6 +75,7 @@ def get_current_density(mesh,element_order,EQS_mode,kappa,Cond_tensor,E_field_re
 
 def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
 
+    
     set_log_active(False)   #turns off debugging info
     print("_________________________")
     parameters['linear_algebra_backend']='PETSc'
@@ -101,12 +102,12 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     # to get conductivity (and permittivity if EQS formulation) mapped accrodingly to the subdomains. k_val_r is just a list of conductivities (S/mm!) in a specific order to scale the cond. tensor
     from FEM_in_spectrum import get_dielectric_properties_from_subdomains
     kappa,k_val_r=get_dielectric_properties_from_subdomains(mesh_sol,subdomains,Field_calc_param.EQS_mode,Domains.Float_contacts,conductivities,rel_permittivities,Field_calc_param.frequenc)
-    file=File('Results_adaptive/Last_subdomains_map.pvd')
+    file=File('/opt/Patient/Results_adaptive/Last_subdomains_map.pvd')
     file<<subdomains
-    file=File('Results_adaptive/Last_conductivity_map.pvd')
+    file=File('/opt/Patient/Results_adaptive/Last_conductivity_map.pvd')
     file<<kappa[0]
     if Field_calc_param.EQS_mode == 'EQS':
-        file=File('Results_adaptive/Last_permittivity_map.pvd')
+        file=File('/opt/Patient/Results_adaptive/Last_permittivity_map.pvd')
         file<<kappa[1]
 
 
@@ -120,7 +121,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
         c22 = MeshFunction("double", mesh_sol, 3, 0.0)
     
         # load the diffusion tensor (should be normalized beforehand)
-        hdf = HDF5File(mesh_sol.mpi_comm(), "Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_sol.num_cells())+".h5", "r")
+        hdf = HDF5File(mesh_sol.mpi_comm(), "/opt/Patient/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_sol.num_cells())+".h5", "r")
         hdf.read(c00, "/c00")
         hdf.read(c01, "/c01")
         hdf.read(c02, "/c02")
@@ -140,15 +141,16 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
 
     #In case of current-controlled stimulation, Dirichlet_bc or the whole potential distribution will be scaled afterwards (due to the system's linearity)
     from FEM_in_spectrum import get_solution_space_and_Dirichlet_BC
-    V_space,Dirichlet_bc,ground_index=get_solution_space_and_Dirichlet_BC(mesh_sol,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,Domains.fi)
+    V_space,Dirichlet_bc,ground_index,facets=get_solution_space_and_Dirichlet_BC(Field_calc_param.external_grounding,Field_calc_param.c_c,mesh_sol,subdomains,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,Domains.fi)
     #ground index refers to the ground in .med/.msh file
 
     print("dofs: ",(max(V_space.dofmap().dofs())+1))
     print("N of elements: ",mesh_sol.num_cells())
     
-    facets = MeshFunction('size_t',mesh_sol,2)
-    facets.set_all(0)
-    facets.array()[boundaries_sol.array()==Domains.Contacts[ground_index]]=1
+    #facets = MeshFunction('size_t',mesh_sol,2)
+    #facets.set_all(0)
+    if Field_calc_param.external_grounding==False:       # otherwise we have it already from get_solution_space_and_Dirichlet_BC()
+        facets.array()[boundaries_sol.array()==Domains.Contacts[ground_index]]=1
     dsS=Measure("ds",domain=mesh_sol,subdomain_data=facets)          
     Ground_surface_size=assemble(1.0*dsS(1))         
     dx = Measure("dx",domain=mesh_sol)
@@ -170,7 +172,9 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
 
     # get current flowing through the grounded contact and the electric field in the whole domain
     from FEM_in_spectrum import get_current
-    J_ground,E_field,E_field_im = get_current(mesh_sol,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_sol,phi_i_sol,ground_index,get_E_field=True)                
+    J_ground,E_field,E_field_im = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_sol,phi_i_sol,ground_index,get_E_field=True)                
+    
+    #print("J_ground_unscaled: ",J_ground)
     # If EQS, J_ground is a complex number. If QS, E_field_im is a null function
 
     # to get current density function which is required for mesh refinement when checking current convergence
@@ -189,9 +193,21 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     else: 
         V_normE=FunctionSpace(mesh_sol,"CG",Field_calc_param.element_order)
     
-    V_across=max(Domains.fi[:], key=abs)    #actually, not across, but against ground!!!             
+    #V_across=max(Domains.fi[:], key=abs)    #actually, not across, but against ground!!!
+
+    if Field_calc_param.external_grounding==True and (Field_calc_param.c_c==1 or len(Domains.fi)==1):
+        V_max=max(Domains.fi[:], key=abs)
+        V_min=0.0
+    elif -1*Domains.fi[0]==Domains.fi[1]:     # V_across is needed only for 2 active contact systems
+        V_min=-1*abs(Domains.fi[0])
+        V_max=abs(Domains.fi[0])
+    else:
+        V_min=min(Domains.fi[:], key=abs)
+        V_max=max(Domains.fi[:], key=abs)
+    V_across=V_max-V_min   # this can be negative
+          
     
-    Vertices_get=read_csv('Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+    Vertices_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
     Vertices_array=Vertices_get.values
 
     Phi_ROI=np.zeros((Vertices_array.shape[0],4),float) 
@@ -209,7 +225,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
         else:
             Phi_ROI[inx,3]=np.sqrt(phi_r_sol(pnt)*phi_r_sol(pnt)+phi_i_sol(pnt)*phi_i_sol(pnt))
         
-    np.savetxt('Results_adaptive/Phi_'+str(Field_calc_param.frequenc)+'.csv',  Phi_ROI, delimiter=" ")      # this is amplitude, actually
+    np.savetxt('/opt/Patient/Results_adaptive/Phi_'+str(Field_calc_param.frequenc)+'.csv',  Phi_ROI, delimiter=" ")      # this is amplitude, actually
 
 #    #Probe_of_potential        
 #    probe_z=np.zeros((100,4),float)
@@ -235,12 +251,16 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
         print("Tissue impedance: ", Z_tissue) 
         
         if Field_calc_param.CPE==1:
+            
+            if len(Domains.fi)>2:
+                print("Currently, CPE can be used only for simulations with two contacts. Please, assign the rest to 'None'")
+                raise SystemExit
                                 
             from GUI_inp_dict import d as d_cpe   
             CPE_param=[d_cpe["K_A"],d_cpe["beta"],d_cpe["K_A_ground"],d_cpe["beta_ground"]]
 
             from FEM_in_spectrum import get_CPE_corrected_Dirichlet_BC           
-            Dirichlet_bc_with_CPE,total_impedance=get_CPE_corrected_Dirichlet_BC(boundaries_sol,CPE_param,Field_calc_param.EQS_mode,Field_calc_param.frequenc,Field_calc_param.frequenc,Domains.Contacts,Domains.fi,V_across,Z_tissue,V_space)
+            Dirichlet_bc_with_CPE,total_impedance=get_CPE_corrected_Dirichlet_BC(Field_calc_param.external_grounding,facets,boundaries_sol,CPE_param,Field_calc_param.EQS_mode,Field_calc_param.frequenc,Field_calc_param.frequenc,Domains.Contacts,Domains.fi,V_across,Z_tissue,V_space)
             
             print("Solving for an adjusted potential on contacts to account for CPE")
             start_math=tm.time() 
@@ -257,7 +277,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
                 phi_i_CPE.vector()[:] = 0.0
 
             # get current flowing through the grounded contact and the electric field in the whole domain
-            J_ground_CPE,E_field_CPE,E_field_im_CPE = get_current(mesh_sol,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_CPE,phi_i_CPE,ground_index,get_E_field=True)                
+            J_ground_CPE,E_field_CPE,E_field_im_CPE = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_CPE,phi_i_CPE,ground_index,get_E_field=True)                
             # If EQS, J_ground is a complex number. If QS, E_field_CPE is a null function
         
             # to get current density function which is required for mesh refinement when checking current convergence
@@ -273,12 +293,12 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
             E_norm=project(sqrt(inner(E_field_CPE,E_field_CPE)+inner(E_field_im_CPE,E_field_im_CPE)),V_normE,solver_type="cg", preconditioner_type="amg")    
             max_E=E_norm.vector().max()
             
-            file=File('Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File('/opt/Patient/Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<E_norm,mesh_sol                
-            file=File('Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File('/opt/Patient/Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<phi_r_CPE,mesh_sol        
             if Field_calc_param.EQS_mode=='EQS':
-                file=File('Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+                file=File('/opt/Patient/Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
                 file<<phi_i_CPE,mesh_sol 
             
             return phi_r_CPE,phi_i_CPE,E_field_CPE,E_field_im_CPE,max_E,J_real_unscaled,J_im_unscaled,j_dens_real_unscaled,j_dens_im_unscaled
@@ -296,6 +316,15 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
                             Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), Constant(0.0), boundaries_sol,Domains.Contacts[bc_i]))
                             Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), Constant(0.0), boundaries_sol,Domains.Contacts[bc_i]))
 
+                if Field_calc_param.external_grounding==True:         
+                    if Field_calc_param.EQS_mode == 'EQS':
+                        Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0),0.0,facets,1))
+                        Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1),0.0,facets,1))
+                    else:
+                        Dirichlet_bc_scaled.append(DirichletBC(V_space,0.0,facets,1))
+
+
+
                 print("Solving for a scaled potential on contacts (to match the desired current)")
                 start_math=tm.time()                     
                 # to solve the Laplace equation for the adjusted Dirichlet   
@@ -307,7 +336,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
                 (phi_r_sol_scaled,phi_i_sol_scaled)=phi_sol_scaled.split(deepcopy=True)
 
                 # get current flowing through the grounded contact and the electric field in the whole domain
-                J_ground_scaled,E_field_scaled,E_field_im_scaled = get_current(mesh_sol,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_sol_scaled,phi_i_sol_scaled,ground_index,get_E_field=True)                
+                J_ground_scaled,E_field_scaled,E_field_im_scaled = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_sol_scaled,phi_i_sol_scaled,ground_index,get_E_field=True)                
                 # If EQS, J_ground is a complex number. If QS, E_field_im is 0              
             else:   # here we can simply scale the potential in the domain and recompute the E-field
                 phi_i_sol_scaled=Function(V_space)
@@ -315,18 +344,18 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
                 phi_r_sol_scaled=Function(V_space)
                 phi_r_sol_scaled.vector()[:]=V_across*phi_r_sol.vector()[:]/J_ground           
 
-                J_ground_scaled,E_field_scaled,E_field_im_scaled = get_current(mesh_sol,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_sol_scaled,phi_i_sol_scaled,ground_index,get_E_field=True)           
+                J_ground_scaled,E_field_scaled,E_field_im_scaled = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_sol_scaled,phi_i_sol_scaled,ground_index,get_E_field=True)           
                 #E_field_im_scale is a null function
             
             E_norm=project(sqrt(inner(E_field_scaled,E_field_scaled)+inner(E_field_im_scaled,E_field_im_scaled)),V_normE,solver_type="cg", preconditioner_type="amg")    
             max_E=E_norm.vector().max()
             
-            file=File('Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File('/opt/Patient/Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<E_norm,mesh_sol                
-            file=File('Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File('/opt/Patient/Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<phi_r_sol_scaled,mesh_sol        
             if Field_calc_param.EQS_mode=='EQS':
-                file=File('Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+                file=File('/opt/Patient/Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
                 file<<phi_i_sol_scaled,mesh_sol 
             
             return phi_r_sol_scaled,phi_i_sol_scaled,E_field_scaled,E_field_im_scaled,max_E,J_real_unscaled,J_im_unscaled,j_dens_real_unscaled,j_dens_im_unscaled
@@ -334,19 +363,19 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     else:
         E_norm=project(sqrt(inner(E_field,E_field)+inner(E_field_im,E_field_im)),V_normE,solver_type="cg", preconditioner_type="amg")
         max_E=E_norm.vector().max()
-        file=File('Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
+        file=File('/opt/Patient/Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
         file<<E_norm,mesh_sol                
-        file=File('Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+        file=File('/opt/Patient/Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
         file<<phi_r_sol,mesh_sol        
         if Field_calc_param.EQS_mode=='EQS':
-            file=File('Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File('/opt/Patient/Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<phi_i_sol,mesh_sol 
         
         return phi_r_sol,phi_i_sol,E_field,E_field_im,max_E,J_real_unscaled,J_im_unscaled,j_dens_real_unscaled,j_dens_im_unscaled
 
 def get_field_on_points(phi_r,phi_i,c_c,J_r,J_i):
 
-    Vertices_neur_get=read_csv('Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+    Vertices_neur_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
     Vertices_neur=Vertices_neur_get.values    
 
     Ampl_ROI=np.zeros((Vertices_neur.shape[0],4),float) 

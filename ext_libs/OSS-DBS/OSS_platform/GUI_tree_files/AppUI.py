@@ -13,12 +13,17 @@ from temp_dict import Dictionary
 
 APPLICATION_STATE = False
 
+import subprocess
+from threading import Thread
+
 
 class MainWindow(Functionalities):
-    def __init__(self):
+    def __init__(self,path_to_patient):
         self.main_win = QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.main_win)
+
+        self.path_to_patient=path_to_patient
 
         self.rel_folder = self.rel_folder()
 
@@ -167,53 +172,87 @@ class MainWindow(Functionalities):
                           "pop_up_control/dictionaries/dict_full_field_ifft.py",
                           "pop_up_control/dictionaries/dict_mesh_refinement.py"]
 
+        home_dir=os.path.expanduser("~")
         # Display Images
         self.ui.pushButton_Placed_Neurons.clicked.connect(lambda: self.display(self.ui.label_Image_Placed_Neurons,
-                                                                               'Images/Axon_connections.png',
-                                                                               'Images/Placed_neurons.png'))
+                                                                               home_dir+self.path_to_patient+'/Images/Axon_connections.png',
+                                                                               home_dir+self.path_to_patient+'/Images/Placed_neurons.png'))
+
         self.ui.pushButton_Signal_Recovered.clicked.connect(lambda: self.display(self.ui.label_Image_Signal_Recovered,
-                                                                                 'Images/Signal.png',
-                                                                                 'Images/Signal.png'))
+                                                                                 home_dir+self.path_to_patient+'/Images/Signal_recovered_shape.png',
+                                                                                 home_dir+self.path_to_patient+'/Images/Signal_recovered_shape.png'))
         self.ui.pushButton_CSF_Full_Refinement.clicked.connect(
             lambda: self.display(self.ui.label_Image_CSF_Full_Refinement,
-                                 'Images/CSF_full_refinement.png',
-                                 'Images/CSF_full_refinement.png'))
+                                 home_dir+self.path_to_patient+'/Images/CSF_full_refinement.png',
+                                 home_dir+self.path_to_patient+'/Images/CSF_full_refinement.png'))
         self.ui.pushButton_Adapted_Mesh.clicked.connect(lambda: self.display(self.ui.label_Image_Adapted_Mesh,
-                                                                             'Images/Adapted_mesh.png',
-                                                                             'Images/Adapted_mesh.png'))
+                                                                             home_dir+self.path_to_patient+'/Images/Adapted_mesh.png',
+                                                                             home_dir+self.path_to_patient+'/Images/Adapted_mesh.png'))
         self.ui.pushButton_Signal_Convoluted_1st_Point.clicked.connect(
             lambda: self.display(self.ui.label_Image_Signal_Convoluted_1st_Point,
-                                 'Images/Signal_convoluted_1st_point.png',
-                                 'Images/Signal_convoluted_1st_point.png'))
+                                 home_dir+self.path_to_patient+'/Images/Signal_convoluted_1st_point.png',
+                                 home_dir+self.path_to_patient+'/Images/Signal_convoluted_1st_point.png'))
         self.ui.pushButton_Axon_Activation.clicked.connect(lambda: self.display(self.ui.label_Image_Axon_Activation,
-                                                                                'Images/Axon_activation.png',
-                                                                                'Images/Activated_neurons.png'))
+                                                                                home_dir+self.path_to_patient+'/Images/Axon_activation.png',
+                                                                                home_dir+self.path_to_patient+'/Images/Activated_neurons.png'))
 
         # Load/Save/Reset/Run to dictionary
         self.ui.pushButton_Run.clicked.connect(lambda: self.dict_write(self.output_dict(), self.current_file_name))
-       
         # Modification to run a subprocess on another thread when Run button is clicked.
-        self.ui.pushButton_Run.clicked.connect(lambda: self.run_thread())    
-        
+        self.ui.pushButton_Run.clicked.connect(lambda: self.run_thread())   
+
         self.ui.pushButton_SaveAs.clicked.connect(lambda: self.save_as())
         self.ui.pushButton_Load.clicked.connect(lambda: self.load_dict())
         self.ui.pushButton_Reset.clicked.connect(lambda: self.reset_state())
 
     def show(self):
         self.main_win.show()
-        
+
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
         #subprocess.run(['sudo', 'docker', 'run', '--name', 'OSS_docker', '--volume', '/home/butenko/oss_platform:/opt/oss_platform', '--cap-add=SYS_PTRACE', '-it', '--rm gitlab.elaine.uni-rostock.de:4567/kb589/oss_platform:platform', 'python3', 'Launcher_OSS_lite.py'])
         #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial. 
-        #subprocess.run(['docker', 'run', '--volume', '/home/butenko/oss_platform:/opt/oss_platform', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])
+        home_dir=os.path.expanduser("~")
+        #subprocess.run(['gnome-terminal', '-x','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])#
+        OSS_DBS_path=os.getcwd()
+        output=subprocess.run(['xterm','-hold','-e','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
+        #output=subprocess.run(['xterm','-e','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.DEVNULL)#
+        output.check_returncode
+        print(output.returncode)
+
+        #print(self.path_to_patient)
+        #prepare screenshots
+        #we need to insert the correct path here (use the already written python scripts)
+        #with open(os.devnull, 'w') as FNULL: subprocess.call(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient], shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+
+        try:
+            subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
+        except:        
+            subprocess.run(['python','Visualization_files/Paraview_connections_processed.py',self.path_to_patient])
+
+        try:
+            subprocess.run(['python','Visualization_files/Paraview_csv_activation.py.py',self.path_to_patient])
+        except:
+            subprocess.run(['python','Visualization_files/Paraview_connections_activation.py',self.path_to_patient])
+
+        subprocess.run(['python','Visualization_files/Paraview_CSFref.py',self.path_to_patient])
+        subprocess.run(['python','Visualization_files/Paraview_adapted.py',self.path_to_patient])
+        #subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
+
+        #subprocess.run(['xterm','-hold','-e','ls'])
+        #command_to_run='gnome-terminal -- bash -c "python3 Launcher_OSS_lite.py && read"'
+        #command_to_run='xterm -hold -e python3 Launcher_OSS_lite.py'
+        #subprocess.run(['xterm','-hold','-e','python3','Launcher_OSS_lite.py'])
+        #subprocess.run(['gnome-terminal','--execute','python3', 'Launcher_OSS_lite.py'])#
+        #substitute tilda
+        #subprocess.run([
         """add the command you use to run OSS-DBS here (as shown above)"""
  
 
     def run_thread(self):
         t = Thread(target=self.run_command)
         t.start()
-        
+
     # Call to tree Item
     def qtree_item(self):
         if self.ui.treeWidget_Project_Browser.topLevelItem(0).isSelected():
@@ -563,7 +602,9 @@ class MainWindow(Functionalities):
 
         self.ui.checkBox_Truncate_The_Obtained_Full_Solution.setCheckState(
             self.anti_corrector(d['Truncate_the_obtained_full_solution']))
-        self.ui.checkBox_Show_Paraview_Screenshots.setCheckState(self.anti_corrector(d['Show_paraview_screenshots']))
+        #self.ui.checkBox_Show_Paraview_Screenshots.setCheckState(self.anti_corrector(d['Show_paraview_screenshots']))
+
+        self.ui.checkBox_external_grounding.setCheckState(self.anti_corrector(d['external_grounding']))
 
         # save sub dictionaries
         self.cpeActive.saveDict()
@@ -648,6 +689,8 @@ class MainWindow(Functionalities):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    main_win = MainWindow()
+    #print(sys.argv)
+    #path_to_patient_import='/home/John_Doe/'
+    main_win = MainWindow(*sys.argv[1:])
     main_win.show()
     sys.exit(app.exec_())

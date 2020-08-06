@@ -1,6 +1,0 @@
-%The file should have exactly the same structure, including comment lines (they will be automatically dropped, you can just substitute them with empty lines). First we have 3 spatial vectors to define coordinates of voxels in MRI data box.
-0.0 1.0 2.0
-0.0 1.0
-0.0 1.0
-%Now values of segmented tissues in corresponding voxels. For this example we should have 3*2*2 values (lenghts of the spatial vectors). Alternatively, you can have values in XY slices i.e different z-values are on different lines. NOTE: this whole comment is on one line. 
-1.0 1.0 3.0 2.0 3.0 1.0 3.0 0.0 0.0 0.0 1.0 2.0 3.0 2.0 1.0 3.0 2.0 1.0

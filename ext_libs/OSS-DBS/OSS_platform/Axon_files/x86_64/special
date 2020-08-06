@@ -10,4 +10,4 @@ if test "" = "yes" ; then
 else
 	NRNIV="${NRNBIN}nrniv"
 fi
-"${NRNIV}" -dll "/data/butenko/OSS_v03_release_pathway_vis_del/Axon_files/x86_64/.libs/libnrnmech.so" "$@"
+"${NRNIV}" -dll "/data/butenko/demonstration/OSS-DBS/OSS_platform/Axon_files/x86_64/.libs/libnrnmech.so" "$@"

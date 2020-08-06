@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>836</width>
-    <height>449</height>
+    <height>450</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -714,6 +714,7 @@
  <resources>
   <include location="../icons.qrc"/>
   <include location="../imgs.qrc"/>
+  <include location="../../Native_UI/icons.qrc"/>
  </resources>
  <connections/>
 </ui>

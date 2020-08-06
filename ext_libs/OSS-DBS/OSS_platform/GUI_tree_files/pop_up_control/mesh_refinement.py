@@ -15,7 +15,6 @@ class PopUpMeshRefinement(Functionalities):
         # set relative folder
         self.rel_folder = self.rel_folder()
 
-
         # Widget
         self.ui.widget_No_Of_Refinement_Frequencies.hide()
         self.ui.widget_No_Of_Refinement_Frequencies_2.hide()

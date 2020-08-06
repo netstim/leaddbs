@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_centralwidget(object):
     def setupUi(self, centralwidget):
         centralwidget.setObjectName("centralwidget")
-        centralwidget.resize(836, 449)
+        centralwidget.resize(836, 450)
         centralwidget.setMaximumSize(QtCore.QSize(836, 450))
         centralwidget.setStyleSheet("")
         self.gridLayout = QtWidgets.QGridLayout(centralwidget)
@@ -314,7 +314,7 @@ class Ui_centralwidget(object):
         self.label_27.setText(_translate("centralwidget", "mm"))
         self.label_Refinement_Frequency_2.setText(_translate("centralwidget", "Hz"))
         self.pushButton_CSF_Ref_Reg.setToolTip(_translate("centralwidget", "<html><head/><body><p><span style=\" font-size:14pt;\">This parameter defines area for full CSF refinement. FEM Elements with CSF will be refined in the region of interest (where neuron array is confined) + indent defined by CSF Refinement Area.</span></p></body></html>"))
-        self.pushButton_Rel_Div.setToolTip(_translate("centralwidget", "<html><head/><body><p><span style=\" font-family:\'wf_segoe-ui_normal,Segoe UI,Segoe WP,Tahoma,Arial,sans-serif,serif,EmojiFont\'; font-size:14pt; color:#212121; background-color:#ffffff;\">Provide threshold for relative deviation of E-field during adaptive refinement. A cell will be marked for refinement if the deviation on its midpoint is above the threshold. Cells with negligibly small E-fields are disregarded. Basing on our empirical tests, the reasonable value lies between 10%-20%.</span></p></body></html>"))
+        self.pushButton_Rel_Div.setToolTip(_translate("centralwidget", "<html><head/><body><p><span style=\" font-family:\'wf_segoe-ui_normal,Segoe UI,Segoe WP,Tahoma,Arial,sans-serif,serif,EmojiFont\'; font-size:14pt; color:#212121; background-color:#ffffff;\">Provide threshold for relative deviation of E-field during adaptive refinement.  A cell will be marked for refinement if the deviation on its midpoint is above the threshold. Cells with negligibly small E-fields are disregarded.</span></p></body></html>"))
         self.pushButton_Z_Length.setToolTip(_translate("centralwidget", "<html><head/><body><p><span style=\" font-size:14pt;\">Provide threshold for relative deviation of current on the contacts during adaptive mesh refinement. For multicontact current-controlled stimulation, a quasi impedance (an analogue to initially computed currents) is estimated instead.</span></p></body></html>"))
 
 import icons_rc

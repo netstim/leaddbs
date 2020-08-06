@@ -1,4 +1,0 @@
-Publication on SRI24 Atlas: 
-T. Rohlfing, N. M. Zahr, E. V. Sullivan, and A. Pfefferbaum, “The SRI24 multichannel atlas of normal adult human brain structure,” Human Brain Mapping, vol. 31, no. 5, pp. 798-819, 2010. DOI: 10.1002/hbm.20906
-
-We would like to express our gratitude to C. Schmidt for the segmentation of the data ("SRI24_Rohlfing_segmented.txt.zip") and the brain geometry ("Human_Brain_from_SRI24.brep.zip")

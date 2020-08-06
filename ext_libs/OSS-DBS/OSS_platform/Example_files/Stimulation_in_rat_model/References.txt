@@ -1,8 +1,0 @@
-Atlas version v1.00 - Papp et al. 2014
-Papp EA, Leergaard TB, Calabrese E, Johnson GA, Bjaalie JG (2014) Waxholm Space atlas of the Sprague Dawley rat brain. NeuroImage 97, 374-386.
-DOI: 10.1016/j.neuroimage.2014.04.001
-
-Papp EA, Leergaard TB, Calabrese E, Johnson GA, Bjaalie JG (2015) Addendum to "Waxholm Space atlas of the Sprague Dawley rat brain" [NeuroImage 97 (2014) 374-386]. NeuroImage 105, 561–562.
-DOI: 10.1016/j.neuroimage.2014.10.017
-
-We would like to express our gratitude to A. Andree for the segmentation of the data ("Waxholm_Papp_ROI_MRI.txt","Waxholm_Papp_ROI_DTI.txt")

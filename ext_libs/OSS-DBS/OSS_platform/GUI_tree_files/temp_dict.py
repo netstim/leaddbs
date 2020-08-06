@@ -92,6 +92,7 @@ class Dictionary(Functionalities):
 
             'Truncate_the_obtained_full_solution': self.corrector(0,
                                                                   self.ui.checkBox_Truncate_The_Obtained_Full_Solution.checkState()),
-            'Show_paraview_screenshots': self.corrector(0, self.ui.checkBox_Show_Paraview_Screenshots.checkState())
+            #'Show_paraview_screenshots': self.corrector(0, self.ui.checkBox_Show_Paraview_Screenshots.checkState()),
+            'external_grounding': self.corrector(0, self.ui.checkBox_external_grounding.checkState())
         }
         return output_dict

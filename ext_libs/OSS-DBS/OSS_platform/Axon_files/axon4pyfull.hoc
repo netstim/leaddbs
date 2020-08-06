@@ -41,13 +41,13 @@ proc model_globels() {
     n_pulse = 1  // number of DBS pulses. default 1
     opt_run = 0 // if set to 1, the model stops if the APs are not entrained with DBS
 //topological parameters (standard parameters)// 	
-axonnodes=9
-paranodes1=16.0
-paranodes2=16.0
+axonnodes=10
+paranodes1=18.0
+paranodes2=18.0
 	//axoninter=120
-axoninter=48
+axoninter=54
 	//axontotal=221
-axontotal=89
+axontotal=100
 v_init=-80.0
 //	axonnodes=5  			
 //	paranodes1=8

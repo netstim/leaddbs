@@ -37,7 +37,7 @@ def get_solutions(EQS_form,frequency,el_order):
     start_reassamble=tm.time()
            
     mesh_sol = Mesh()
-    f = HDF5File(mesh_sol.mpi_comm(),"Results_adaptive/Solution_"+str(np.round(frequency,6))+".h5",'r')
+    f = HDF5File(mesh_sol.mpi_comm(),"/opt/Patient/Results_adaptive/Solution_"+str(np.round(frequency,6))+".h5",'r')
     f.read(mesh_sol,"mesh_sol", False)
     
     if EQS_form == 'EQS':
@@ -75,11 +75,11 @@ def get_solutions(EQS_form,frequency,el_order):
         E_norm=project(sqrt(inner(E_field,E_field)+inner(E_field_im,E_field_im)),V_normE,solver_type="cg", preconditioner_type="amg")
         max_E=E_norm.vector().max()
         
-        file=File('Results_adaptive/Phi_r_field_EQS.pvd')
+        file=File('/opt/Patient/Results_adaptive/Phi_r_field_EQS.pvd')
         file<<phi_r_sol,mesh_sol
-        file=File('Results_adaptive/Phi_im_field_EQS.pvd')
+        file=File('/opt/Patient/Results_adaptive/Phi_im_field_EQS.pvd')
         file<<phi_i_sol,mesh_sol
-        file=File('Results_adaptive/E_norm_EQS.pvd')
+        file=File('/opt/Patient/Results_adaptive/E_norm_EQS.pvd')
         file<<E_norm,mesh_sol          
     elif EQS_form == 'QS':
         V = FunctionSpace(mesh_sol, "Lagrange",el_order)
@@ -111,16 +111,16 @@ def get_solutions(EQS_form,frequency,el_order):
              
         E_norm=project(sqrt(inner(E_field,E_field)),V_normE,solver_type="cg", preconditioner_type="amg")
         max_E=E_norm.vector().max()
-        file=File('Results_adaptive/E_norm_QS.pvd')
+        file=File('/opt/Patient/Results_adaptive/E_norm_QS.pvd')
         file<<E_norm,mesh_sol
         
-        file=File('Results_adaptive/Phi_r_field_QS.pvd')
+        file=File('/opt/Patient/Results_adaptive/Phi_r_field_QS.pvd')
         file<<phi_r_sol,mesh_sol
                 
     f.close()
 
     #if we want to get the potential magnitude on the neuron compartments
-    Vertices_get=read_csv('Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+    Vertices_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
     Vertices_array=Vertices_get.values
     Phi_ROI=np.zeros((Vertices_array.shape[0],4),float) 
     
@@ -133,7 +133,7 @@ def get_solutions(EQS_form,frequency,el_order):
         
         Phi_ROI[inx,3]=np.sqrt(phi_r_sol(pnt)*phi_r_sol(pnt)+phi_i_sol(pnt)*phi_i_sol(pnt))
         
-    np.savetxt('Results_adaptive/Phi_'+str(frequency)+'.csv',  Phi_ROI, delimiter=" ")
+    np.savetxt('/opt/Patient/Results_adaptive/Phi_'+str(frequency)+'.csv',  Phi_ROI, delimiter=" ")
 
         
     print("Quasi impedance (to check current convergence): ",J_real,J_im)
@@ -146,7 +146,7 @@ def get_solutions(EQS_form,frequency,el_order):
 
 def get_field_on_points(phi_r,phi_i,c_c,J_r,J_i):
         
-    Vertices_neur_get=read_csv('Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+    Vertices_neur_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
     Vertices_neur=Vertices_neur_get.values    
 
     Ampl_ROI=np.zeros((Vertices_neur.shape[0],4),float) 
@@ -204,9 +204,9 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains,boundaries_sol,
                 # to solve "one active contact (i) vs ground" system, get potentials on the rest of the active contacts (which are put to floating condcutors), get current on the active contact
                 from Math_module_hybrid_floating import get_field_with_floats
                 if Field_calc_param.EQS_mode == 'EQS':
-                    phi_r_floating[glob_counter,:],phi_i_floating[glob_counter,:],J_real_current_contacts[glob_counter],J_im_current_contacts[glob_counter]=get_field_with_floats(mesh_sol,i,Domains,subdomains,boundaries_sol,Field_calc_param.default_material,Field_calc_param.element_order,Field_calc_param.anisotropy,Field_calc_param.frequenc,Field_calc_param.EQS_mode,Solver_type,calc_with_MPI=True,kappa=kappa)
+                    phi_r_floating[glob_counter,:],phi_i_floating[glob_counter,:],J_real_current_contacts[glob_counter],J_im_current_contacts[glob_counter]=get_field_with_floats(Field_calc_param.external_grounding,mesh_sol,i,Domains,subdomains,boundaries_sol,Field_calc_param.default_material,Field_calc_param.element_order,Field_calc_param.anisotropy,Field_calc_param.frequenc,Field_calc_param.EQS_mode,Solver_type,calc_with_MPI=True,kappa=kappa)
                 else:
-                    phi_r_floating[glob_counter,:],__,J_real_current_contacts[glob_counter],__=get_field_with_floats(mesh_sol,i,Domains,subdomains,boundaries_sol,Field_calc_param.default_material,Field_calc_param.element_order,Field_calc_param.anisotropy,Field_calc_param.frequenc,Field_calc_param.EQS_mode,Solver_type,calc_with_MPI=True,kappa=kappa)
+                    phi_r_floating[glob_counter,:],__,J_real_current_contacts[glob_counter],__=get_field_with_floats(Field_calc_param.external_grounding,mesh_sol,i,Domains,subdomains,boundaries_sol,Field_calc_param.default_material,Field_calc_param.element_order,Field_calc_param.anisotropy,Field_calc_param.frequenc,Field_calc_param.EQS_mode,Solver_type,calc_with_MPI=True,kappa=kappa)
 
                 fl_ind[glob_counter,:]=fl_contacts_rel_ind[np.arange(len(fl_contacts_rel_ind))!=glob_counter]   # if three current contacts, it will store [[1,2][0,2],[0,1]]
                 contact_amplitude[glob_counter]=Domains.fi[i]
@@ -253,7 +253,7 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains,boundaries_sol,
     
     #the results are stored in h5 file, check get_solutions above
     from Math_module_hybrid_floating import get_field_with_scaled_BC
-    get_field_with_scaled_BC(mesh_sol,Domains,scaled_phi,subdomains,boundaries_sol,Field_calc_param.default_material,Field_calc_param.element_order,Field_calc_param.EQS_mode,Field_calc_param.anisotropy,Field_calc_param.frequenc,Solver_type,calc_with_MPI=True,kappa=kappa)
+    get_field_with_scaled_BC(Field_calc_param.external_grounding,mesh_sol,Domains,scaled_phi,subdomains,boundaries_sol,Field_calc_param.default_material,Field_calc_param.element_order,Field_calc_param.EQS_mode,Field_calc_param.anisotropy,Field_calc_param.frequenc,Solver_type,calc_with_MPI=True,kappa=kappa)
     
     minutes=int((tm.time() - start_math)/60)
     secnds=int(tm.time() - start_math)-minutes*60
@@ -265,14 +265,14 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains,boundaries_sol,
 
 if __name__ == '__main__':
 
-    with open('Meshes/Mesh_ind.file', "rb") as f:
+    with open('/opt/Patient/Meshes/Mesh_ind.file', "rb") as f:
         Domains = pickle.load(f)
 
-    with open('Results_adaptive/Field_calc_param.file', "rb") as f:
+    with open('/opt/Patient/Results_adaptive/Field_calc_param.file', "rb") as f:
         Field_calc_param = pickle.load(f)    
     
     mesh = Mesh()
-    hdf = HDF5File(mesh.mpi_comm(), "Results_adaptive/Mesh_to_solve.h5", "r")
+    hdf = HDF5File(mesh.mpi_comm(), "/opt/Patient/Results_adaptive/Mesh_to_solve.h5", "r")
     hdf.read(mesh, "/mesh", False)
     subdomains = MeshFunction("size_t", mesh, 3)
     hdf.read(subdomains, "/subdomains")

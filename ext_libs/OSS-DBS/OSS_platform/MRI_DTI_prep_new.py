@@ -52,8 +52,8 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
 
     if from_grid_txt==True:
         #kicks out strings with comments 
-        infile = open(MRI_name,'r').readlines()
-        with open('MRI_DTI_derived_data/Filtered_'+MRI_name,'w') as outfile:   
+        infile = open('/opt/Patient/'+MRI_name,'r').readlines()
+        with open('/opt/Patient/MRI_DTI_derived_data/Filtered_'+MRI_name,'w') as outfile:   
             for index,line in enumerate(infile):
                 #if index != 0 and index != 4 and index != 5:      #Waxholm atlas space
                 if index != 0 and index != 4:           #here, 1st and 5th line are comments (tissue_full.txt)
@@ -65,7 +65,7 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
         spc=' '
             
         #extracts vectors and values in MRI slices
-        with open('MRI_DTI_derived_data/Filtered_'+MRI_name, 'r') as f:
+        with open('/opt/Patient/MRI_DTI_derived_data/Filtered_'+MRI_name, 'r') as f:
             for index,line in enumerate(f):
                 if index==0:
                     line=line.rstrip()
@@ -98,7 +98,7 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
         import nibabel as nib      #nibabel should be installed
         import os
         
-        example_filename = os.path.join(MRI_name)
+        example_filename = os.path.join('/opt/Patient/'+MRI_name)
         img = nib.load(example_filename)
         img.shape
         tissue_array = img.get_fdata()
@@ -127,36 +127,37 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
     voxel_arr[voxel_array_temp==GM_inx]=3
     
     i=0         #counter for voxels
-    
-    for z_i in z_arr:
-        for y_i in y_arr:
-            for x_i in x_arr:
-    
-                '''If a voxel has an unassigned material or background (0), algorithm will take average from the surrounding cube (at least 14 out of 26 filled voxels are required)'''      
-            
-                if voxel_arr[i]==0:
-                    arr_around=np.array([i-Mx*My-Mx-1,i-Mx*My-Mx,i-Mx*My-Mx+1,i-Mx*My-1,i-Mx*My,i-Mx*My+1,i-Mx*My+Mx-1,i-Mx*My+Mx,i-Mx*My+Mx+1, #lower 9
-                                         i-Mx-1,i-Mx,i-Mx+1,i-1,i+1,i+Mx-1,i+Mx,i+Mx+1,                                                         #middle 8
-                                         i+Mx*My-Mx-1,i+Mx*My-Mx,i+Mx*My-Mx+1,i+Mx*My-1,i+Mx*My,i+Mx*My+1,i+Mx*My+Mx-1,i+Mx*My+Mx,i+Mx*My+Mx+1])#upper 9
-                    counter=0.0
-                    summa=0.0
 
-                    for indx in arr_around:
-                        if indx<Mx*My*Mz and indx>=0:                        
-                            if voxel_arr[indx]!=0:
-                                summa=summa+voxel_arr[indx]
-                                counter=counter+1
-                    if counter>14:      #how many voxels are needed for interpolation/approximation
-                        voxel_arr[i]=int(round(summa/counter))
-                    else:
-                        voxel_arr[i]=int(default_material)                #if no material was averaged, put to default
-       
-                i=i+1
+    ## For Lead-DBS we assume that the MRI data is well defined    
+    # for z_i in z_arr:
+    #     for y_i in y_arr:
+    #         for x_i in x_arr:
     
-    i=0
+    #             '''If a voxel has an unassigned material or background (0), algorithm will take average from the surrounding cube (at least 14 out of 26 filled voxels are required)'''      
+            
+    #             if voxel_arr[i]==0:
+    #                 arr_around=np.array([i-Mx*My-Mx-1,i-Mx*My-Mx,i-Mx*My-Mx+1,i-Mx*My-1,i-Mx*My,i-Mx*My+1,i-Mx*My+Mx-1,i-Mx*My+Mx,i-Mx*My+Mx+1, #lower 9
+    #                                      i-Mx-1,i-Mx,i-Mx+1,i-1,i+1,i+Mx-1,i+Mx,i+Mx+1,                                                         #middle 8
+    #                                      i+Mx*My-Mx-1,i+Mx*My-Mx,i+Mx*My-Mx+1,i+Mx*My-1,i+Mx*My,i+Mx*My+1,i+Mx*My+Mx-1,i+Mx*My+Mx,i+Mx*My+Mx+1])#upper 9
+    #                 counter=0.0
+    #                 summa=0.0
+
+    #                 for indx in arr_around:
+    #                     if indx<Mx*My*Mz and indx>=0:                        
+    #                         if voxel_arr[indx]!=0:
+    #                             summa=summa+voxel_arr[indx]
+    #                             counter=counter+1
+    #                 if counter>14:      #how many voxels are needed for interpolation/approximation
+    #                     voxel_arr[i]=int(round(summa/counter))
+    #                 else:
+    #                     voxel_arr[i]=int(default_material)                #if no material was averaged, put to default
+       
+    #             i=i+1
+    
+    # i=0
     
     #np.savetxt('MRI_DTI_derived_data/Tissue_array_MRI.csv', voxel_arr.astype(int), fmt='%i', delimiter=" ")
-    np.save('MRI_DTI_derived_data/Tissue_array_MRI', voxel_arr.astype('b'), allow_pickle=False, fix_imports=False)
+    np.save('/opt/Patient/MRI_DTI_derived_data/Tissue_array_MRI', voxel_arr.astype('b'), allow_pickle=False, fix_imports=False)
     del voxel_arr,voxel_array_temp
     
     if MRI_data_in_m==1:        #switch to mm if the MRI data is in m
@@ -177,9 +178,9 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
     y_vector_MRI_Box[:] = [round(y_i-min(y_arr)+voxel_size_y,6) for y_i in y_arr]
     z_vector_MRI_Box[:] = [round(z_i-min(z_arr)+voxel_size_z,6) for z_i in z_arr]
     
-    np.savetxt('MRI_DTI_derived_data/x_vector_MRI_Box.csv', x_vector_MRI_Box, delimiter=" ")
-    np.savetxt('MRI_DTI_derived_data/y_vector_MRI_Box.csv', y_vector_MRI_Box, delimiter=" ")
-    np.savetxt('MRI_DTI_derived_data/z_vector_MRI_Box.csv', z_vector_MRI_Box, delimiter=" ")
+    np.savetxt('/opt/Patient/MRI_DTI_derived_data/x_vector_MRI_Box.csv', x_vector_MRI_Box, delimiter=" ")
+    np.savetxt('/opt/Patient/MRI_DTI_derived_data/y_vector_MRI_Box.csv', y_vector_MRI_Box, delimiter=" ")
+    np.savetxt('/opt/Patient/MRI_DTI_derived_data/z_vector_MRI_Box.csv', z_vector_MRI_Box, delimiter=" ")
 
     print("----- Preparation of MRI data took %s seconds -----" % (time.clock() - start_voxel))
 
@@ -192,8 +193,8 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
     
     if from_grid_txt==True:
     
-        infile = open(DTI_name,'r').readlines()
-        with open('MRI_DTI_derived_data/Filtered_'+DTI_name,'w') as outfile:
+        infile = open('/opt/Patient/'+DTI_name,'r').readlines()
+        with open('/opt/Patient/MRI_DTI_derived_data/Filtered_'+DTI_name,'w') as outfile:
     
             #first, we check the length of z and y vectors (one line of DTI data corresponds to the same y and z coordinate, directions are separated by a comment)
             for index,line in enumerate(infile):
@@ -218,7 +219,7 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
         z_vector=[]
         spc=' '
     
-        with open('MRI_DTI_derived_data/Filtered_'+DTI_name, 'r') as f:
+        with open('/opt/Patient/MRI_DTI_derived_data/Filtered_'+DTI_name, 'r') as f:
             for index,line in enumerate(f):
                 if index==0:
                     line=line.rstrip()
@@ -311,7 +312,7 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
         import nibabel as nib      #nibabel should be installed
         import os
         
-        example_filename = os.path.join(DTI_name)
+        example_filename = os.path.join('/opt/Patient/'+DTI_name)
         img = nib.load(example_filename)
         img.shape
         tissue_array = img.get_fdata()
@@ -354,9 +355,9 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
     y_vector_DTI_Box[:] = [round(y_i-min(y_arr)+voxel_size_y,6) for y_i in y_arr]
     z_vector_DTI_Box[:] = [round(z_i-min(z_arr)+voxel_size_z,6) for z_i in z_arr]
     
-    np.savetxt('MRI_DTI_derived_data/x_vector_DTI_Box.csv', x_vector_DTI_Box, delimiter=" ")
-    np.savetxt('MRI_DTI_derived_data/y_vector_DTI_Box.csv', y_vector_DTI_Box, delimiter=" ")
-    np.savetxt('MRI_DTI_derived_data/z_vector_DTI_Box.csv', z_vector_DTI_Box, delimiter=" ")
+    np.savetxt('/opt/Patient/MRI_DTI_derived_data/x_vector_DTI_Box.csv', x_vector_DTI_Box, delimiter=" ")
+    np.savetxt('/opt/Patient/MRI_DTI_derived_data/y_vector_DTI_Box.csv', y_vector_DTI_Box, delimiter=" ")
+    np.savetxt('/opt/Patient/MRI_DTI_derived_data/z_vector_DTI_Box.csv', z_vector_DTI_Box, delimiter=" ")
     
     
     i=0
@@ -381,7 +382,7 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
     #voxel_array = voxel_array[voxel_array[:,2].argsort(kind='mergesort')]
     
     #np.savetxt('MRI_DTI_derived_data/Tensor_array_DTI.csv', Tensor_array, delimiter=" ")
-    np.save('MRI_DTI_derived_data/Tensor_array_DTI', Tensor_array)
+    np.save('/opt/Patient/MRI_DTI_derived_data/Tensor_array_DTI', Tensor_array)
 
     del Tensor_array,voxel_arr_c11,voxel_arr_c21,voxel_arr_c31,voxel_arr_c22,voxel_arr_c32,voxel_arr_c33
 
@@ -406,16 +407,16 @@ def obtain_MRI_class(inp_dict):
 
         '''Save meta data for the future simulations with the current MRI data set'''
         MRI_misc=np.array([Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z])
-        np.savetxt('MRI_DTI_derived_data/MRI_misc.csv', MRI_misc, delimiter=" ")
+        np.savetxt('/opt/Patient/MRI_DTI_derived_data/MRI_misc.csv', MRI_misc, delimiter=" ")
         print("--- MRI meta data were created\n")
     else:
-        [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
+        [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
         print("--- MRI meta data were loaded\n")
     
     x_shift,y_shift,z_shift=(-1*(x_min),-1*(y_min),-1*(z_min))  #shift of MRI to have it in the positive octant and start in (0,0,0)    
         
     MRI_param=MRI_info(inp_dict["MRI_data_name"],Mx_mri,My_mri,Mz_mri,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z,x_min,y_min,z_min,x_max,y_max,z_max,x_shift,y_shift,z_shift)    
-    with open('MRI_DTI_derived_data/MRI_class.file', "wb") as f:
+    with open('/opt/Patient/MRI_DTI_derived_data/MRI_class.file', "wb") as f:
         pickle.dump(MRI_param, f, pickle.HIGHEST_PROTOCOL)
         
     return MRI_param
@@ -438,15 +439,15 @@ def obtain_DTI_class(inp_dict,MRI_param):
             
         DTI_misc=np.array([Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti])
         '''Save meta data for the future simulations with the current MRI data set'''
-        np.savetxt('MRI_DTI_derived_data/DTI_misc.csv', DTI_misc, delimiter=" ")
+        np.savetxt('/opt/Patient/MRI_DTI_derived_data/DTI_misc.csv', DTI_misc, delimiter=" ")
         print("--- DTI meta data were created\n")
 
     if inp_dict["voxel_arr_DTI"]==1:
-        [Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti]=np.genfromtxt('MRI_DTI_derived_data/DTI_misc.csv', delimiter=' ')
+        [Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti]=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/DTI_misc.csv', delimiter=' ')
         print("--- DTI meta data were loaded\n")
 
     DTI_param=DTI_info(inp_dict["DTI_data_name"],Mx_dti,My_dti,Mz_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti)        
-    with open('MRI_DTI_derived_data/DTI_class.file', "wb") as f:
+    with open('/opt/Patient/MRI_DTI_derived_data/DTI_class.file', "wb") as f:
         pickle.dump(DTI_param, f, pickle.HIGHEST_PROTOCOL)
         
     return DTI_param
