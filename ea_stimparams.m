@@ -3342,7 +3342,7 @@ switch model
                 'Okay, show me how to install it.');
             switch answer
                 case 'Yes, it''s already installed.'
-                    vatsettings = machine.vatsettings;
+                    vatsettings = prefs.machine.vatsettings;
                     vatsettings.oss_dbs.installed = 1;
                     ea_setprefs('vatsettings', vatsettings);
                 case 'Okay, show me how to install it.'
