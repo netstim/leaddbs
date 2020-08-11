@@ -70,12 +70,16 @@ if ~isfile([segMaskDir, 'segmask.nii'])
     ea_write_nii(c1);
 end
 
-settings.MRI_data_name = [segMaskDir, 'segmask.nii'];
 %% Set patient folder
 settings.Patient_folder = directory;
 
 %% Set native/MNI flag
 settings.Estimate_In_Template = options.prefs.machine.vatsettings.estimateInTemplate;
+
+%% Set MRI path
+% Put the MRI file in stimulation folder
+copyfile([segMaskDir, 'segmask.nii'], [directory,'stimulations',filesep,ea_nt(options.native),S.label]);
+settings.MRI_data_name = [directory,'stimulations',filesep,ea_nt(options.native),S.label,filesep,'segmask.nii'];
 
 %% Scaled tensor data
 settings.DTI_data_name = ''; % 'dti_tensor.nii';
