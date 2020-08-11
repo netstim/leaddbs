@@ -153,6 +153,9 @@ settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_et
 parameterFile = [directory, 'stimulations', filesep, ea_nt(options.native), S.label, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings');
 
+%% Run OSS-DBS
+cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
+system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', parameterFile]);
 
 %% Save results
 % Convert the unit from V/mm to V/m for efield VTA (to be consistent as in Lead-DBS)
