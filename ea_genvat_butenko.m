@@ -35,7 +35,7 @@ if options.native
             || ~isfile([directory, 'c3', options.prefs.prenii_unnormalized])
         ea_newseg(directory, options.prefs.prenii_unnormalized, 0, options, 1);
     end
-    
+
     segMaskDir = directory;
     segFileSuffix = options.prefs.prenii_unnormalized;
 else
@@ -47,7 +47,7 @@ else
         movefile([ea_space, 'c2t1.nii'], [ea_space, 'c2mask.nii']);
         movefile([ea_space, 'c3t1.nii'], [ea_space, 'c3mask.nii']);
     end
-    
+
     segMaskDir = ea_space;
     segFileSuffix = 'mask.nii';
 end
@@ -117,7 +117,7 @@ settings.current_control = uint8([~eval(['S.Rs', num2str(source(1)), '.va'])
 % other numbers are in mA. None is for floating potentials
 amp = [S.amplitude{1}(source(1))
     S.amplitude{2}(source(2))];
-settings.Phi_vector = nan(2,options.elspec.numel); 
+settings.Phi_vector = nan(2,options.elspec.numel);
 
 for side = 1:2
     switch side
@@ -128,7 +128,7 @@ for side = 1:2
             sideCode = 'L';
             cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
     end
-    
+
     stimSource = S.([sideCode, 's', num2str(source(side))]);
     for cnt = 1:options.elspec.numel
         if S.activecontacts{side}(cnt)
