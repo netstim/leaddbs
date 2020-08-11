@@ -74,6 +74,9 @@ settings.MRI_data_name = [segMaskDir, 'segmask.nii'];
 %% Set patient folder
 settings.Patient_folder = directory;
 
+%% Set native/MNI flag
+settings.Estimate_In_Template = options.prefs.machine.vatsettings.estimateInTemplate;
+
 %% Scaled tensor data
 settings.DTI_data_name = ''; % 'dti_tensor.nii';
 
