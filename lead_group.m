@@ -1045,9 +1045,13 @@ for pt=selection
     if all(vatCalcPassed)
         ea_calc_vatstats(resultfig,options);
     else
-        ea_error(sprintf(['An error occured when building the VTA mesh/headmodel for %s.\n',...
-            'Try re-calculating this VTA with a different atlas or with no atlas.'],...
-            options.patientname));
+        try
+            ea_error(sprintf(['An error occured when building the VTA mesh/headmodel for %s.\n',...
+                'Try re-calculating this VTA with a different atlas or with no atlas.'],...
+                options.patientname));
+        catch
+            continue;
+        end
     end
 
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
