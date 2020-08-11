@@ -118,6 +118,7 @@ settings.current_control = uint8([~eval(['S.Rs', num2str(source(1)), '.va'])
 amp = [S.amplitude{1}(source(1))
     S.amplitude{2}(source(2))];
 settings.Phi_vector = nan(2,options.elspec.numel);
+settings.Case_grounding = zeros(2,1);
 
 for side = 1:2
     switch side
@@ -139,6 +140,9 @@ for side = 1:2
                     settings.Phi_vector(side, cnt) = amp(side)*stimSource.(cntlabel{cnt}).perc/100;
             end
         end
+    end
+    if stimSource.case.perc == 100
+        settings.Case_grounding(side) = 1;
     end
 end
 
