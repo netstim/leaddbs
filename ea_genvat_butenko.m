@@ -71,6 +71,8 @@ if ~isfile([segMaskDir, 'segmask.nii'])
 end
 
 settings.MRI_data_name = [segMaskDir, 'segmask.nii'];
+%% Set patient folder
+settings.Patient_folder = directory;
 
 %% Scaled tensor data
 settings.DTI_data_name = ''; % 'dti_tensor.nii';
