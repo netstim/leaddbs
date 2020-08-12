@@ -1718,7 +1718,8 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             if strcmp(answ,'No')
                 set(handles.stimlabel,'Value',1);
             else % truly delete Stimulation parameters
-                rmdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label],'s');
+                ea_delete([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(0),S.label]);
+                ea_delete([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(1),S.label]);
                 S=[]; % this will create the prompt to generate a new S.
                 setappdata(handles.stimfig,'S',S);
                 set(handles.stimlabel,'Value',1);
