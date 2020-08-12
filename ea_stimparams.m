@@ -1703,8 +1703,12 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             [~,ix]=ismember(stimlabel,get(handles.stimlabel,'String'));
             set(handles.stimlabel,'Value',ix);
             stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimlabel});
-
-            movefile([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimlabel],[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimc{1}]);
+            if isfolder([directory,'stimulations',filesep,ea_nt(0),stimlabel])
+                movefile([directory,'stimulations',filesep,ea_nt(0),stimlabel],[directory,'stimulations',filesep,ea_nt(0),stimc{1}]);
+            end
+            if isfolder([directory,'stimulations',filesep,ea_nt(1),stimlabel])
+                movefile([directory,'stimulations',filesep,ea_nt(1),stimlabel],[directory,'stimulations',filesep,ea_nt(1),stimc{1}]);
+            end
             slabelc=get(handles.stimlabel,'String');
             slabelc{ix}=stimc{1};
             set(handles.stimlabel,'String',slabelc);
