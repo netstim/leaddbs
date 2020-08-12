@@ -195,7 +195,7 @@ if ~strcmp(options.leadprod, 'group')
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
             if exist('vatgrad','var')
-                vatgradtemp(2) = vatgrad;                
+                vatgradtemp(2) = vatgrad;
                 vatgrad = vatgradtemp;
             end
         elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
@@ -1873,7 +1873,6 @@ if groupmode
                 keyboard
             end
             setappdata(handles.stimfig,'gSv',gSv);
-
         else
             [~,ind]=ismember(gSv.vatmodel,get(handles.modelselect,'String'));
             set(handles.modelselect,'Value',ind);
