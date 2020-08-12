@@ -1912,37 +1912,27 @@ if groupmode
     end
 end
 
-if ~isempty(S) % initialization
-    if ~isempty(S.model) % call from lead group
-        [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
-        if ~ix
-            ea_error('The model of the selected stimulation is not available.');
-        else
-            set(handles.modelselect,'Value',ix);
-        end
-    end
-end
-
 stimlabel=getappdata(handles.stimfig,'stimlabel');
 
 if isempty(S)
-    wasempty=1;
     S=ea_initializeS(stimlabel,options,handles);
     setappdata(handles.stimfig,'stimlabel',S.label);
 else
-    wasempty=0;
     if isempty(S.Rs1)
         S=ea_initializeS(stimlabel,options,handles);
         setappdata(handles.stimfig,'stimlabel',S.label);
     end
 end
-if ~wasempty
-    if isfield(S, 'model')
-        [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
-        set(handles.modelselect,'Value',ix);
+
+if isfield(S, 'model')
+    [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
+    if ~ix
+        ea_error('The model of the selected stimulation is not available.');
     else
-        set(handles.modelselect,'Value',1);
+        set(handles.modelselect,'Value',ix);
     end
+else
+    set(handles.modelselect,'Value',1);
 end
 
 Ractive=S.active(1);
