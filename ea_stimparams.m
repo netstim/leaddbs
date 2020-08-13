@@ -59,7 +59,6 @@ set(handles.stimfig,'Name','Stimulation Parameters');
 elstruct = varargin{1};
 resultfig = varargin{2};
 options = varargin{3};
-directory = [options.root,options.patientname,filesep];
 
 setappdata(handles.stimfig,'elstruct',elstruct);
 
@@ -179,6 +178,7 @@ set(handles.stimfig,'position',[51,51,pos(3),pos(4)]);
 ea_refreshguisp(handles,options);
 
 if ~strcmp(options.leadprod, 'group')
+    directory = [options.root,options.patientname,filesep];
     visualizeVAT = 1;
     if visualizeVAT
         labels=get(handles.stimlabel,'String');
