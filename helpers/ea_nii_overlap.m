@@ -25,10 +25,8 @@ if binary
             error('The images are not all binarized but threshold parameter is not supplied!');
         else
             if numel(threshold) == 1
-                nii1.img(nii1.img>=threshold) = 1;
-                nii1.img(nii1.img<threshold) = 0;
-                nii2.img(nii2.img>=threshold) = 1;
-                nii2.img(nii2.img<threshold) = 0;
+                nii1.img = nii1.img>=threshold;
+                nii2.img = nii2.img>=threshold;
             elseif numel(threshold) == 2
                 nii1.img = nii1.img>=threshold(1);
                 nii2.img = nii2.img>=threshold(2);
