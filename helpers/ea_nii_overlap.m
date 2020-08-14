@@ -18,6 +18,7 @@ nii1 = load_nii(image1);
 nii2 = load_nii(image2);
 
 if binary
+    % Binarize the image if they are not yet binaried
     if (numel(unique(nii1.img(:)))~=2 || numel(unique(nii2.img(:)))~=2) ...
        || (all(unique(nii1.img(:))==[0 1]') || all(unique(nii2.img(:))==[0 1]'))
         if ~exist('threshold', 'var')
