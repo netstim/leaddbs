@@ -2208,7 +2208,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
-      case 'fastfield'
+      case 'Fastfield (Baniasai 2020)'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=0;

@@ -354,7 +354,7 @@ if checkrebuild(atlases,options,root,mifix)
 
             clear X V
             
-            ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[0.2,0.2,0.2],0,0,1,[],[],3);
+            ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[0.3,0.3,0.3],0,0,1,[],[],3);
             spm_smooth([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[1,1,1]);
             gzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);

@@ -1,4 +1,4 @@
-function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec,precision)
+function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype,success]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec,precision,batchno)
 % meshing an electrode and tissue structures bounded by a cylinder
 %% load the nucleus data
 ea_dispt('Generating tetraedrical mesh...');
@@ -243,7 +243,8 @@ end
 % - this is the part where we have all 4 element types combined already.
 
 
-[nmesh,emesh,fmesh]=ea_s2m_conjoin(nboth2,fboth2,1,3);
+[nmesh,emesh,fmesh,success]=ea_surf2mesh_conjoin(nboth2,fboth2,min(nboth2,[],1),max(nboth2,[],1),1,3,batchno,precision,options,S.label,side);
+
 if vizz
 %     figure('name','Final mesh');
 %     fvv.faces=fmesh(:,1:3);
