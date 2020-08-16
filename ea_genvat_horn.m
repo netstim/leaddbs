@@ -131,9 +131,9 @@ if hmchanged
     
     switch options.native
         case 1
-            pss=[1000,0,100,50];
+            pss=[500,0,100,50];
         case 0
-            pss=[0,100,1000,50];
+            pss=[0,100,500,50];
     end
 
     for batchno=1:3 % for each precision-iteration, allow four series of batches with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
