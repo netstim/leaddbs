@@ -3,6 +3,7 @@ function varargout=ea_genvat_fastfield(varargin)
 %prefs.machine.vatsettings.fastfield_cb=0.1;
 %prefs.machine.vatsettings.fastfield_ethresh=0.2;
 
+
 useSI = 1;
 
 
@@ -26,7 +27,7 @@ elseif nargin==7
     
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
-        varargout{1}= 'fastfield';
+        varargout{1}= 'Fastfield (Baniasadi 2020)';
         return
     end
 end
@@ -145,8 +146,8 @@ Vvat.dim=[res,res,res];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations'],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations']);
+if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)]);
 end
 
 eeg = Efield;
@@ -180,21 +181,21 @@ S.volume(side)=vatvolume;
 ea_dispt('Writing files...');
 
 % determine stimulation name:
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,stimname],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,stimname]);
+if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname],'file')
+    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname]);
 end
 
 switch side
     case 1
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_right.nii'];
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_right.nii'];
         Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_right.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_right.nii'];
+        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_right.nii'];
+        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_gauss_right.nii'];
     case 2
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_left.nii'];
+        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_left.nii'];
         Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_left.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,stimname,filesep,'vat_efield_gauss_left.nii'];
+        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_left.nii'];
+        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_gauss_left.nii'];
 end
 %save(stimfile,'S');
 ea_savestimulation(S,options);

@@ -246,7 +246,7 @@ else
 end
 
 fprintf('\nANTs LINEAR registration done.\n');
-
+ea_ants_nonlinear
 %% add methods dump:
 cits={
     'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'

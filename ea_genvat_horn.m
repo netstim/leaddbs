@@ -122,16 +122,26 @@ if hmchanged
 
 
     [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
-    Ymod=Y+(randn(4)/1000);
+    Ymod=Y;
     success=0;
-    for precision=[0,100,1000,50] % iterate different precision values (0 = no change to original data)
+    protocolname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'ea_genvat_horn_output_',num2str(side),'.txt'];
+    fid=fopen(protocolname,'w');
+    fprintf(fid,'%s\n%s\n\n','Beginning a journey to estimate a VTA.','Hoping to pass the great filter.');
+    fclose(fid);
+    
+    switch options.native
+        case 1
+            pss=[500,0,100,50];
+        case 0
+            pss=[0,100,500,50];
+    end
 
-        for attempt=1:4 % allow four attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
+    for batchno=1:3 % for each precision-iteration, allow four series of batches with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
+        for precision=pss % iterate different precision values (0 = no change to original data)
             
             try
-                [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Ymod,elspec,precision);
-                if ~isempty(mesh.tet)
-                    success=1;
+                [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype,success]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Ymod,elspec,precision,batchno);
+                if success
                     break
                 end
             catch
@@ -158,10 +168,14 @@ if hmchanged
                     h.Position=[1000          85         253        1253];
                 end
             end
+            system(['killall tetgen',getexeext]);
         end
         if success
             break
         end
+    end
+    if ~success
+       ea_error('Despite all attempts the VTA model could not be created. Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.'); 
     end
 
     % replace wmboundary
