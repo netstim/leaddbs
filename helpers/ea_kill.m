@@ -25,7 +25,7 @@ switch lower(type)
                 system(['taskkill /F /IM "', process, '" >NUL 2>NUL'])
             end
         else
-            if ~system(['ps -C ', process, ' > /dev/null'])
+            if ~system(['pgrep -x ', process, ' > /dev/null'])
                 system(['killall ', process])
             end
         end
