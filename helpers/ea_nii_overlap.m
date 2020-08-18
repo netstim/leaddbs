@@ -1,8 +1,8 @@
 function [overlap1, normOverlap1, overlap2, normOverlap2] = ea_nii_overlap(image1, image2, binary, threshold)
 % Calculate the overlap between two images (within the same space)
 %
-% Return the overlaps in mm^3, and normalized overlaps (normalized by the
-% volumes of nii1 and nii2 respectively)
+% Return the overlaps in VOXEL (NOT IN MM^3), and normalized overlaps (
+% normalized by the voxels of nii1 and nii2 respectively)
 
 overlap1 = 0;
 normOverlap1 = 0;
@@ -38,14 +38,6 @@ end
 nii1.img = double(nii1.img);
 nii2.img = double(nii2.img);
 
-% Calculate voxel size
-voxsize1 = prod(ea_detvoxsize(image1));
-voxsize2 = prod(ea_detvoxsize(image2));
-
-% Calculate volume size
-volume1 = sum(nii1.img(:)) * voxsize1;
-volume2 = sum(nii2.img(:)) * voxsize2;
-
 % Map to non-zeros voxel in image2 to image1
 [xvox, yvox, zvox] = ind2sub(size(nii2.img), find(nii2.img(:)));
 mm = ea_vox2mm([xvox, yvox, zvox], image2);
@@ -55,8 +47,8 @@ if sum(filter)
     vox = vox(filter, :);
     ind = unique(sub2ind(size(nii1.img), vox(:,1), vox(:,2), vox(:,3)));
     % Checking overlap for image1
-    overlap1 = sum(nii1.img(ind)) * voxsize1;
-    normOverlap1 = overlap1/volume1;
+    overlap1 = sum(nii1.img(ind));
+    normOverlap1 = overlap1/sum(nii1.img(:));
 end
 
 % Map to non-zeros voxel in image1 to image2
@@ -68,6 +60,6 @@ if sum(filter)
     vox = vox(filter, :);
     ind = unique(sub2ind(size(nii2.img), vox(:,1), vox(:,2), vox(:,3)));
     % Checking overlap for image2
-    overlap2 = sum(nii2.img(ind)) * voxsize2;
-    normOverlap2 = overlap2/volume2;
+    overlap2 = sum(nii2.img(ind));
+    normOverlap2 = overlap2/sum(nii2.img(:));
 end
