@@ -129,7 +129,7 @@ if hmchanged
     fid=fopen(protocolname,'w');
     fprintf(fid,'%s\n%s\n\n','Beginning a journey to estimate a VTA.','Hoping to pass the great filter.');
     fclose(fid);
-    
+
     switch options.native
         case 1
             pss=[500,0,100,50];
@@ -139,7 +139,7 @@ if hmchanged
 
     for batchno=1:3 % for each precision-iteration, allow four series of batches with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
         for precision=pss % iterate different precision values (0 = no change to original data)
-            
+
             try
                 [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype,success]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Ymod,elspec,precision,batchno);
                 if success
@@ -176,7 +176,7 @@ if hmchanged
         end
     end
     if ~success
-       ea_error('Despite all attempts the VTA model could not be created. Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.'); 
+       ea_error('Despite all attempts the VTA model could not be created. Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.');
     end
 
     % replace wmboundary
@@ -196,7 +196,6 @@ if hmchanged
 
     wmboundary = unique(faces(:))';
     % end replace.
-
 
     if vizz
         figure
@@ -394,9 +393,9 @@ if options.native==1 % if we calculated in native space -> now transform back to
         varargout{1}=vatfv;
         varargout{2}=vatvolume;
         varargout{3}=radius;
-        ea_dispt(''); % stop chain of timed processes.        
+        ea_dispt(''); % stop chain of timed processes.
     end
-    % convert to MNI    
+    % convert to MNI
     [~,anatpresent] = ea_assignpretra(options);
     c = ea_mm2vox([dpvx;midpts], [options.root,options.patientname,filesep,anatpresent{1}]);
     c = ea_map_coords(c', [options.root,options.patientname,filesep,anatpresent{1}], ...
@@ -414,7 +413,7 @@ if options.native==1 % if we calculated in native space -> now transform back to
         varargout{3}=radius;
         ea_dispt(''); % stop chain of timed processes.
     end
-    
+
 else % calculated in MNI space directly
             % define function outputs
         varargout{1}=vatfv;
