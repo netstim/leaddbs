@@ -44,7 +44,7 @@ for side=1:length(options.sides)
         0,0,elspec.tip_length+(elspec.contact_length/2)+2*(elspec.contact_spacing+elspec.contact_length);...
         0,0,elspec.tip_length+(elspec.contact_length/2)+3*(elspec.contact_spacing+elspec.contact_length)];
 
-    trajectory{side}=[zeros(40*rescaleratio,2),linspace(40*rescaleratio,0,40*rescaleratio)'];
+    trajectory{side}=[zeros(80*rescaleratio,2),linspace(80*rescaleratio,0,80*rescaleratio)'];
     %%
     trajvector=mean(diff(trajectory{side}));
     trajvector=trajvector/norm(trajvector);
