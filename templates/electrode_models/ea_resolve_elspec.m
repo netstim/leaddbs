@@ -14,7 +14,7 @@ if ~nargin
         'PINS Medical L301', 'PINS Medical L302', 'PINS Medical L303', .....
         'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy', ...
         'SDE-08 S8', 'SDE-08 S10', 'SDE-08 S12', 'SDE-08 S16', ...
-        '2069-EPC-05C-35', '2069-EPC-15C-35', 'NeuroPace DL-344-3.5', ...
+        '2069-EPC-05C-35', '2069-EPC-15C-35', 'NeuroPace DL-344-3.5', 'NeuroPace DL-344-10', ...
         'DIXI D08-18AM', 'AdTech SD10R-SP05X Choi', 'AdTech RD10R-SP03X'}';
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
         'boston_vercise', 'boston_vercise_directed', ...
@@ -482,6 +482,25 @@ switch elmodel
         elspec.tip_color=0.7;
         elspec.tip_length=1.1;
         elspec.contact_spacing=1.5;
+        elspec.numel=4;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=1;
+    case 'NeuroPace DL-344-10'
+        elspec.matfname='neuropace_dl_344_10';
+        elspec.lead_diameter=1.27;
+        elspec.lead_color=0.7;
+        elspec.contact_length=2;
+        elspec.contact_diameter=1.27;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.27;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1.1;
+        elspec.contact_spacing=8;
         elspec.numel=4;
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
