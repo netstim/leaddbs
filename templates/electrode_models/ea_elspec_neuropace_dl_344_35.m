@@ -376,7 +376,7 @@ end
 
 
 
-ea_genvol_neuropace(meshel,elspec,vizz);
+ea_genvol_neuropace(meshel,elspec,1,vizz);
 
 
 
