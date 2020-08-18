@@ -868,22 +868,12 @@ end
 
 for pt=selection
     % set pt specific options
-
-    % own fileparts to support windows/mac/linux slashes even if they come
-    % from a different OS.
-    if ~contains(M.patient.list{pt},'/')
-        lookfor='\';
+    if M.ui.detached
+        options.patientname = M.patient.list{pt};
+        options.root = M.ui.groupdir;
     else
-        lookfor='/';
-    end
-
-    slashes=strfind(M.patient.list{pt},lookfor);
-    if ~isempty(slashes)
-        options.patientname=M.patient.list{pt}(slashes(end)+1:end);
-        options.root=M.patient.list{pt}(1:slashes(end));
-    else
-        options.patientname=M.patient.list{pt};
-        options.root='';
+        [options.root, options.patientname] = fileparts(M.patient.list{pt});
+        options.root = [options.root, filesep];
     end
 
     fprintf('\nProcessing %s...\n\n', options.patientname);
@@ -1452,11 +1442,7 @@ switch choice
         M=getappdata(gcf,'M');
         ea_dispercent(0,'Detaching group file');
         for pt=1:length(M.patient.list)
-            slashes=strfind(M.patient.list{pt},'/');
-            if isempty(slashes)
-                slashes=strfind(M.patient.list{pt},'\');
-            end
-            ptname=M.patient.list{pt}(max(slashes)+1:end);
+            [~, ptname] = fileparts(M.patient.list{pt});
             if strcmp('Yes and copy localizations/VTAs please.',choice)
                 odir=[M.ui.groupdir,ptname,filesep];
                 ea_mkdir([odir,'stimulations']);
