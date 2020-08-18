@@ -100,7 +100,7 @@ for p=1:2
         fprintf(protocol,'\n\n%s\n%s\n',['ATTEMPT WITH P ',padd,' TOLERANCE = 10^-',num2str(tolerance),' mm'],'-------------------------------------');
 
         if ~exist(mwpath('post_vmesh.1.node'),'file') % check if outputs are there
-            cmd = [cmdprefix,' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '" & echo $!'];
+            cmd = ['"' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '" & echo $!'];
             [~, cmdout] = system(cmd);
 
             if ~isnan(str2double(cmdout)) % did receive proper process id
