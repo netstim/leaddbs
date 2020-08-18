@@ -162,46 +162,44 @@ for side=1:length(options.sides)
                 ea_stats.stimulation(thisstim).vat(side,vat).side=side;
                 ea_stats.stimulation(thisstim).label=S.label;
 
-                vatfv.faces=K(side).K{vat}; vatfv.vertices=VAT{side}.VAT{vat};
-                vatfv=reducepatch(vatfv,0.05);
-                Vcent=mean(vatfv.vertices);
-
                 atlasName = options.atlasset;
                 load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
-                for atlas=1:size(atlases.XYZ,1)
+
+                for atlas=1:length(atlases.names)
                     if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
-                        clear thisatl
-
-                        try % for midline or combined atlases, only the right side atlas is used.
-                            if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
-                                thisatl=atlases.XYZ{atlas,1}.mm;
-                                tpd=atlases.pixdim{atlas,1};
-                            else
-                                thisatl=atlases.XYZ{atlas,side}.mm;
-                                tpd=atlases.pixdim{atlas,side};
-                            end
-                        catch
-                            thisatl=atlases.XYZ{atlas,1}.mm;
-                            tpd=atlases.pixdim{atlas,1};
+                        switch atlases.types(atlas)
+                            case 1 % right hemispheric atlas.
+                                atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
+                            case 2 % left hemispheric atlas.
+                                atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
+                            case 3 % both-sides atlas composed of 2 files.
+                                switch sidec
+                                    case 'right'
+                                        atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
+                                    case 'left'
+                                        atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
+                                end
+                            case 4 % mixed atlas (one file with both sides information).
+                                atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
+                            case 5 % midline atlas (one file with both sides information.
+                                atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
                         end
+                        atlasfile = ea_niigz(atlasfile);
 
-                        tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
+                        vatfile = ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_',sidec]);
+                        voxsize = prod(ea_detvoxsize(vatfile));
 
-                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(vatfv.vertices,vatfv.faces,thisatl))*tpv;
+                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vatfile,atlasfile,sidec).*voxsize;
                         ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
                         ea_stats.stimulation(thisstim).vat(side,vat).volume=stimparams(1,side).volume(vat);
 
                         % now also add efield overlap:
                         if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
                                 S.label,filesep,'vat_efield_',sidec]),'file')
-                            Vefield=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
-                                S.label,filesep,'vat_efield_',sidec]));
-                            atlasvoxels=Vefield.mat\[thisatl,ones(length(thisatl),1)]';
-                            ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=...
-                                mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1));
+                            vefieldfile=ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_efield_',sidec]);
+                            ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vefieldfile,atlasfile,sidec);
                             ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
-                                mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1))./...
-                                sum(Vefield.img(:));
+                                ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)./sum(Vefield.img(:));
                             ea_stats.stimulation(thisstim).efield(side,vat).volume=sum(Vefield.img(:));
                         end
                     else % no voltage on this vat, simply set vi to zero.
