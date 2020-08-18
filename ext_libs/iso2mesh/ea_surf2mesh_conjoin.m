@@ -43,17 +43,6 @@ if(keepratio<1-1e-9 & ~iscell(f))
 	fprintf(1,'resampling surface mesh ...\n');
 	[no,el]=meshresample(v(:,1:3),f(:,1:3),keepratio);
 	el=unique(sort(el,2),'rows');
-
-	% then smooth the resampled surface mesh (Laplace smoothing)
-
-	%% edges=surfedge(el);  % disable on 12/05/08, very slow on octave
-	%% mask=zeros(size(no,1),1);
-	%% mask(unique(edges(:)))=1;  % =1 for edge nodes, =0 otherwise
-	%[conn,connnum,count]=meshconn(el,length(no));
-	%no=smoothsurf(no,mask,conn,2);
-
-	% remove end elements (all nodes are edge nodes)
-	%el=delendelem(el,mask);
 else
 	no=v;
 	el=f;
@@ -70,7 +59,6 @@ end
 
 dobbx=0;
 
-
 % dump surface mesh to .poly file format
 if(~iscell(el) & ~isempty(no) & ~isempty(el))
 	saveoff(no(:,1:3),el(:,1:3),mwpath('post_vmesh.off'));
@@ -79,11 +67,7 @@ end
 deletemeshfile(mwpath('post_vmesh.mtr'));
 
 sweeptempdir;
-
 savesurfpoly(no,el,holes,regions,p0,p1,mwpath('post_vmesh.poly'),dobbx);
-
-% h=figure;
-% plotmesh(no,el,'linestyle','none','facealpha',0.1);
 
 moreopt='';
 if(size(no,2)==4)
@@ -129,21 +113,18 @@ for p=1:2
         fprintf(protocol,'\n\n%s\n%s\n',['ATTEMPT WITH P ',padd,' TOLERANCE = 10^-',num2str(tolerance),' mm'],'-------------------------------------');
 
         if ~exist(mwpath('post_vmesh.1.node'),'file') % check if outputs are there
-            cmd=[cmdprefix,' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '" & echo $!',cmdsuffix];
-            [status,cmdout] = system(cmd);
+            cmd = [cmdprefix,' "' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '" & echo $!',cmdsuffix];
+            [status, cmdout] = system(cmd);
 
             if ~isnan(str2double(cmdout)) % did receive proper process id
                 fprintf(protocol,'%s\n','Tetgen job received a proper ID.');
                 tStart=tic;
-                %wb = waitbar(0.1,['Running Tetgen, attempt: ',num2str(attempt),'.']);
-                %attempt=attempt+1;
                 while ~exist(mwpath('post_vmesh.1.node'),'file')
                     
                     [statusin] = system(['kill -0 ',cmdout]); % check if Tetgen job is still running (kill -0 does not truly kill)
                     if statusin % Tetgen job has ended
                         fprintf(protocol,'%s\n',['TERMINATED: Tetgen job terminated itself (because it failed) after ',num2str(tEnd),' seconds.']);
                         system(['killall tetgen',exesuff]); % make sure truly stopped.
-                        %close(wb);
                         break
                     end
                     pause(2);
@@ -152,12 +133,9 @@ for p=1:2
                     if tEnd > tMax
                         fprintf(protocol,'%s\n',['TERMINATED: Tetgen job has reached the time limit of ',num2str(tMax),' seconds and was killed by Lead-DBS.']);
                         system(['killall tetgen',exesuff]);
-                        %close(wb);
                         break
                     end
                 end
-
-                %close(wb);
             else
                 fprintf(protocol,'%s\n','Tetgen job did not receive a proper ID.');
                 fprintf(protocol,'%s\n','TERMINATED: upon creation.');
@@ -174,6 +152,7 @@ for p=1:2
         break
     end
 end
+
 if exist(mwpath('post_vmesh.1.node'),'file')
     % read in the generated mesh
     success=1;
@@ -186,10 +165,10 @@ else
 end
 fclose(protocol);
 
+
 function sweeptempdir
  file=mwpath('post_vmesh.poly');
  pth=fileparts(file);
  warning('off');
  delete([pth,filesep,'*']);
  warning('on');
-
