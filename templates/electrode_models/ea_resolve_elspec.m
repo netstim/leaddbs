@@ -15,7 +15,7 @@ if ~nargin
         'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy', ...
         'SDE-08 S8', 'SDE-08 S10', 'SDE-08 S12', 'SDE-08 S16', ...
         '2069-EPC-05C-35', '2069-EPC-15C-35', 'NeuroPace DL-344-3.5', ...
-        'DIXI D08-18AM', 'AdTech SD10R-SP05X Choi'}';
+        'DIXI D08-18AM', 'AdTech SD10R-SP05X Choi', 'AdTech RD10R-SP03X'}';
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
         'boston_vercise', 'boston_vercise_directed', ...
         'stjude_activetip_2mm','stjude_activetip_3mm', ...
@@ -24,7 +24,7 @@ if ~nargin
         'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy',...
         'sde_08_s8', 'sde_08_s10', 'sde_08_s12', 'sde_08_s16', ...
         'epc_05c', 'epc_15c', 'neuropace_dl_344_35', ...
-        'dixi_d08_18am', 'adtech_sd10r_sp05x_choi'}';
+        'dixi_d08_18am', 'adtech_sd10r_sp05x_choi', 'adtech_rd10r_sp03x'}';
     return
 else
     options=varargin{1};
@@ -530,7 +530,26 @@ switch elmodel
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
         elspec.forstimulation=0;
-
+    case 'AdTech RD10R-SP03X'
+        elspec.matfname='adtech_rd10r_sp03x';
+        elspec.lead_diameter=0.86;
+        elspec.lead_color=0.7;
+        elspec.contact_length=2.29;
+        elspec.contact_diameter=0.86;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.86;
+        elspec.tip_color=0.7;
+        elspec.tip_length=2;
+        elspec.contact_spacing=3;
+        elspec.numel=10;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
+            'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=0;
 end
 
 if ~isfield(elspec,'eldist')
