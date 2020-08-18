@@ -1,4 +1,4 @@
-function ea_genvol_neuropace(meshel,elspec,vizz)
+function ea_genvol_neuropace(meshel,elspec,rescaleratio,vizz)
 
 electrodetrisize=0.1;  % the maximum triangle size of the electrode mesh
 
@@ -69,6 +69,9 @@ end
 
 
 %% convert to obtain the electrode surface mesh model
-
 [node,~,face]=s2m(unique_ncyl,{fcyl{:}, scyl{:}},electrodetrisize,100,'tetgen',seeds,[]); % generate a tetrahedral mesh of the cylinders
+
+% Revert to real dimension
+node = node / rescaleratio;
+
 save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'_vol.mat'],'node','face');
