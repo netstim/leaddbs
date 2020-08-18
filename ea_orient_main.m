@@ -810,8 +810,8 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' deg, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
             %% methods dump:
             ea_methods(options,...
-                ['Rotation of directional DBS leads was determined using the algorithm published by Hellerbach et al. 2018 as implemented in Lead-DBS software.'],...
-                {'A. Hellerbach, T.A. Dembek, M. Hoevels, J.A. Holz, A. Gierich, K. Luyken, M.T. Barbe, J. Wirths, V. Visser-Vandewalle, & H. Treuer (2018). DiODe: Directional Orientation Detection of Segmented Deep Brain Stimulation Leads: A Sequential Algorithm Based on CT Imaging. Stereotact. Funct. Neurosurg. 96. doi:10.1159/000494738.'});
+                ['Orientation of directional DBS leads was determined using the algorithm published by Dembek et al. 2019 as implemented in Lead-DBS software.'],...
+                {'T.A. Dembek, M. Hoevels, A. Hellerbach, A. Horn, J.N. Petry-Schmelzer, J. Borggrefe, J. Wirths, H.S. Dafsari, M.T. Barbe, V. Visser-Vandewalle & H. Treuer (2019). Directional DBS leads show large deviations from their intended implantation orientation. Parkinsonism Relat Disord. 2019 Oct;67:117-121. doi: 10.1016/j.parkreldis.2019.08.017.'});
         elseif retrystate == 0
             disp(['Changes to rotation not saved'])
             roll_out = [];
