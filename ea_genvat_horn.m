@@ -124,6 +124,7 @@ if hmchanged
     [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
     Ymod=Y;
     success=0;
+    ea_mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep]);
     protocolname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'ea_genvat_horn_output_',num2str(side),'.txt'];
     fid=fopen(protocolname,'w');
     fprintf(fid,'%s\n%s\n\n','Beginning a journey to estimate a VTA.','Hoping to pass the great filter.');

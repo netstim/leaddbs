@@ -1028,7 +1028,11 @@ for pt=selection
             end
 
             try
-                [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,transmitcoords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
+                
+                poptions=options;
+                [poptions.root,poptions.patientname]=fileparts(M.patient.list{pt});
+                poptions.root=[poptions.root,filesep];
+                [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,transmitcoords,M.S(pt),side,poptions,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
                 vatCalcPassed(side) = 1;
             catch
                 volume=0;
