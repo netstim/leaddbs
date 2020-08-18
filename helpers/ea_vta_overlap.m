@@ -25,7 +25,8 @@ vtanii = load_nii(vta);
 vtanii.img = double(vtanii.img);
 
 % Threshold the efield to avoid leak overlap
-efiedthreshold = 200;
+prefs = ea_prefs;
+efiedthreshold = prefs.machine.vatsettings.horn_ethresh*10^3;
 if contains(vta, 'efield')
     vtanii.img(vtanii.img<=efiedthreshold)=0;
 end
