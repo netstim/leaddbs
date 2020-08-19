@@ -197,7 +197,7 @@ for side=1:length(options.sides)
                         if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
                                 S.label,filesep,'vat_efield_',sidec]),'file')
                             vefieldfile=ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_efield_',sidec]);
-                            Vefield=load_nii(vefieldfile);
+                            Vefield=load_untouch_nii(vefieldfile);
                             efiedthreshold = options.prefs.machine.vatsettings.horn_ethresh*10^3;
                             Vefield.img(Vefield.img<=efiedthreshold) = 0;
                             ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vefieldfile,atlasfile,sidec);

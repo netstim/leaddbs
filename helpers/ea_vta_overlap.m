@@ -21,7 +21,7 @@ end
 overlap = 0;
 
 % Load VTA image
-vtanii = load_nii(vta);
+vtanii = load_untouch_nii(vta);
 vtanii.img = double(vtanii.img);
 
 % Threshold the efield to avoid leak overlap
@@ -33,7 +33,7 @@ end
 
 % Check if atlas is nifti file or xyz coordinates
 if isfile(atlas)
-    atlasnii = load_nii(atlas);
+    atlasnii = load_untouch_nii(atlas);
     threshold = max(atlasnii.img(:)) * 0.5;
     atlasnii.img = atlasnii.img > threshold;
     [xvox, yvox, zvox] = ind2sub(size(atlasnii.img), find(atlasnii.img(:)));
