@@ -14,7 +14,6 @@ load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfnam
         elstruct.markers(side).y,1];
     Y = mldivide(A,B); Y=Y';
 
-
     cnt=1;
 
     % overwrite head and tail of model with actual values for mesh generation lateron:
@@ -34,9 +33,7 @@ load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfnam
         tissuetype(cnt)=3;
         t=surfinterior(elfv(cnt).vertices,elfv(cnt).faces);
         cnt=cnt+1;
-
     end
-
 
     % add insulation to mesh
     for ins=1:length(electrode.insulation)

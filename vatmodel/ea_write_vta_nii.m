@@ -6,7 +6,10 @@ if isempty(vatgrad)
 end
 
 % define midpoints of quiver field
-vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
+vatgrad(side).x=midpts(indices,1);
+vatgrad(side).y=midpts(indices,2);
+vatgrad(side).z=midpts(indices,3);
+
 vizz=0;
 gradvis=gradient(indices,:);
 mag_gradvis=sqrt(sum(gradvis'.^2,1))';
@@ -19,7 +22,9 @@ nmag_gradvis=nmag_gradvis/5; % largest grad vector will be 1/50 mm long
 gradvis=gradvis.*repmat(nmag_gradvis,1,3);
 gradvis=gradvis./repmat(mag_gradvis,1,3);
 
-vatgrad(side).qx=gradvis(:,1); vatgrad(side).qy=gradvis(:,2); vatgrad(side).qz=gradvis(:,3);
+vatgrad(side).qx=gradvis(:,1);
+vatgrad(side).qy=gradvis(:,2);
+vatgrad(side).qz=gradvis(:,3);
 
 %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
 
@@ -296,7 +301,7 @@ r=r*4.5;
 mp=dpvx;
 
 D=pointcloud-repmat(mp,size(pointcloud,1),1);
-S=[r,r,r];%std(D,[],1); % fixed 50 cm
+S=[r,r,r];
 outliers=D>repmat(S,size(D,1),1);
 outliers=any(outliers,2);
 

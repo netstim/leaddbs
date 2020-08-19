@@ -11,7 +11,6 @@ if nargin==5
     options=varargin{4};
     stimname=varargin{5};
     thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
-
 elseif nargin==7
     acoords=varargin{1};
     S=varargin{2};
@@ -42,9 +41,7 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-
 %% get electrodes handles // initial parameters:
-
 resultfig=getappdata(lgfigure,'resultfig');
 
 % Important to load in reco from a new since we need to decide whether to
@@ -283,7 +280,6 @@ for source=S.sources
             SIfx=1;
         end
         %ix=knnsearch(vol.pos,dpvx/SIfx); % add dpvx/1000 for m
-
 
         if any(volts>0)
             unipolar=0;
