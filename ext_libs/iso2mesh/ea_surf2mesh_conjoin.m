@@ -119,6 +119,7 @@ for p=1:2
                         break
                     end
 
+                    pause(2);
                     tEnd = toc(tStart);
 
                     % Break the while loop monitor if tetgen ran timeout
