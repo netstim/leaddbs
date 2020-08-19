@@ -51,7 +51,6 @@ end
 regions=[];
 holes=[];
 
-
 if(size(regions,2)>=4 && ~isempty(maxvol))
     warning('you specified both maxvol and the region based volume constraint,the maxvol setting will be ignored');
     maxvol=[];
@@ -84,7 +83,7 @@ end
 protocol_path=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'ea_genvat_horn_output_',num2str(side),'.txt'];
 protocol=fopen(protocol_path,'a');
 fprintf(protocol,'\n%s\n%s\n%s\n','================================',['BATCH #',num2str(batchno),', PRECISION = ',num2str(precision)],'================================');
-fprintf(protocol,'%s\n%s\n%s\n\n\n','################################','################################','################################');
+fprintf(protocol,'%s\n%s\n%s\n','################################','################################','################################');
 
 ea_delete(mwpath('post_vmesh.1.node'));
 system(['killall tetgen',exesuff]); % make sure processes from prior attempts are stopped.
