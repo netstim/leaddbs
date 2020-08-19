@@ -86,7 +86,7 @@ fprintf(protocol,'\n%s\n%s\n%s\n','================================',['BATCH #',
 fprintf(protocol,'%s\n%s\n%s\n','################################','################################','################################');
 
 ea_delete(mwpath('post_vmesh.1.node'));
-system(['killall tetgen',exesuff]); % make sure processes from prior attempts are stopped.
+ea_kill('name', ['tetgen',exesuff]);
 
 for p=1:2
     if p==1
@@ -96,44 +96,51 @@ for p=1:2
     end
 
     for tolerance=[8,10,5,4,12]
-        fprintf(protocol,'\n\n%s\n%s\n',['ATTEMPT WITH P ',padd,' TOLERANCE = 10^-',num2str(tolerance),' mm'],'-------------------------------------');
+        fprintf(protocol,'\n\n%s\n%s\n',['ATTEMPT WITH P ''',padd,''' & TOLERANCE = 10^-',num2str(tolerance),' mm'],'-------------------------------------');
 
-        if ~exist(mwpath('post_vmesh.1.node'),'file') % check if outputs are there
-            cmd = ['"' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '" & echo $!'];
-            [~, cmdout] = system(cmd);
+        % Start tetgen in background
+        cmd = ['"' mcpath('tetgen') exesuff '" -A -T1e-',num2str(tolerance),' -pq1/0 ',padd,' -a -Y ' num2str(maxvol) ' ' moreopt ' "' mwpath('post_vmesh.poly') '" &'];
+        system(cmd);
 
-            if ~isnan(str2double(cmdout)) % did receive proper process id
-                fprintf(protocol,'%s\n','Tetgen job received a proper ID.');
-                tStart=tic;
+        if ea_isprocess('name', ['tetgen',exesuff]) % Check if tetgen started
+            fprintf(protocol,'%s\n','Tetgen job started.');
+            tStart=tic;
+
+            % Break the 'tolerance' loop and toc if tetgen already finished so quickly
+            if exist(mwpath('post_vmesh.1.node'),'file')
+                tEnd = toc(tStart);
+                break;
+            else
+                % Monitor if tetgen generated the mesh
                 while ~exist(mwpath('post_vmesh.1.node'),'file')
-                    
-                    [statusin] = system(['kill -0 ',cmdout]); % check if Tetgen job is still running (kill -0 does not truly kill)
-                    if statusin % Tetgen job has ended
+                    % Break the while loop monitor if tetgen terminated itself
+                    if ~ea_isprocess('name', ['tetgen',exesuff])
                         fprintf(protocol,'%s\n',['TERMINATED: Tetgen job terminated itself (because it failed) after ',num2str(tEnd),' seconds.']);
-                        system(['killall tetgen',exesuff]); % make sure truly stopped.
                         break
                     end
-                    pause(2);
+
                     tEnd = toc(tStart);
 
+                    % Break the while loop monitor if tetgen ran timeout
                     if tEnd > tMax
+                        ea_kill('name', ['tetgen',exesuff]);
                         fprintf(protocol,'%s\n',['TERMINATED: Tetgen job has reached the time limit of ',num2str(tMax),' seconds and was killed by Lead-DBS.']);
-                        system(['killall tetgen',exesuff]);
                         break
                     end
                 end
-            else
-                fprintf(protocol,'%s\n','Tetgen job did not receive a proper ID.');
-                fprintf(protocol,'%s\n','TERMINATED: upon creation.');
-                system(['killall tetgen',exesuff]);
+
+                % Break the 'tolerance' loop if tetgen already generated the mesh
+                if exist(mwpath('post_vmesh.1.node'),'file')
+                    break;
+                end
             end
-        end
-        
-        if exist(mwpath('post_vmesh.1.node'),'file')
-            break
+        else
+            fprintf(protocol,'%s\n','Tetgen job failed to start.');
+            ea_kill('name', ['tetgen',exesuff]);
         end
     end
 
+    % Break the 'ppad' loop if tetgen already generated the mesh
     if exist(mwpath('post_vmesh.1.node'),'file')
         break
     end
