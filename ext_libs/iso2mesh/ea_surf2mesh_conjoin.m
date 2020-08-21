@@ -108,8 +108,13 @@ for p=1:2
 
             % Break the 'tolerance' loop and toc if tetgen already finished so quickly
             if exist(mwpath('post_vmesh.1.node'),'file')
-                tEnd = toc(tStart);
-                break;
+                if ~exist(mwpath('post_vmesh_skipped.node'),'file')
+                    tEnd = toc(tStart);
+                    break;
+                else
+                    ea_delete(mwpath('post_vmesh.1.node'));
+                    ea_delete(mwpath('post_vmesh_skipped.node'));
+                end
             else
                 % Monitor if tetgen generated the mesh
                 while ~exist(mwpath('post_vmesh.1.node'),'file')
@@ -132,7 +137,12 @@ for p=1:2
 
                 % Break the 'tolerance' loop if tetgen already generated the mesh
                 if exist(mwpath('post_vmesh.1.node'),'file')
-                    break;
+                    if ~exist(mwpath('post_vmesh_skipped.node'),'file')
+                        break;
+                    else
+                        ea_delete(mwpath('post_vmesh.1.node'));
+                        ea_delete(mwpath('post_vmesh_skipped.node'));
+                    end
                 end
             end
         else
@@ -143,11 +153,16 @@ for p=1:2
 
     % Break the 'ppad' loop if tetgen already generated the mesh
     if exist(mwpath('post_vmesh.1.node'),'file')
-        break
+        if ~exist(mwpath('post_vmesh_skipped.node'),'file')
+            break;
+        else
+            ea_delete(mwpath('post_vmesh.1.node'));
+            ea_delete(mwpath('post_vmesh_skipped.node'));
+        end
     end
 end
 
-if exist(mwpath('post_vmesh.1.node'),'file')
+if exist(mwpath('post_vmesh.1.node'),'file') && ~exist(mwpath('post_vmesh_skipped.node'),'file')
     % read in the generated mesh
     success=1;
     fprintf(protocol,'%s\n','TETGEN JOB SUCCESSFUL.');
