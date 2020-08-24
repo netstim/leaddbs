@@ -548,7 +548,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'AdTech RD10R-SP03X'
         elspec.matfname='adtech_rd10r_sp03x';
         elspec.lead_diameter=0.86;
@@ -568,7 +568,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
 end
 
 if ~isfield(elspec,'eldist')
