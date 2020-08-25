@@ -530,7 +530,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'DIXI D08-08AM'
         elspec.matfname='dixi_d08_08am';
         elspec.lead_diameter=0.8;
@@ -550,7 +550,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'DIXI D08-10AM'
         elspec.matfname='dixi_d08_10am';
         elspec.lead_diameter=0.8;
@@ -566,7 +566,7 @@ switch elmodel
         elspec.tipiscontact=1;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)',...
             'K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)'};
-        elspec.isdirected=0;
+        elspec.isdirected=1;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
@@ -590,7 +590,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'DIXI D08-15AM'
         elspec.matfname='dixi_d08_15am';
         elspec.lead_diameter=0.8;
@@ -610,7 +610,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'DIXI D08-18AM'
         elspec.matfname='dixi_d08_18am';
         elspec.lead_diameter=0.8;
@@ -630,7 +630,7 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
-        elspec.forstimulation=0;
+        elspec.forstimulation=1;
     case 'AdTech SD10R-SP05X Choi'
         elspec.matfname='adtech_sd10r_sp05x_choi';
         elspec.lead_diameter=1.1;
