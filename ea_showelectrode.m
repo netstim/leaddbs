@@ -16,7 +16,6 @@ switch cmd
         pt=1;
 end
 
-
 coords_mm=elstruct.coords_mm;
 trajectory=elstruct.trajectory;
 
@@ -31,6 +30,7 @@ if ~isfield(elstruct,'activecontacts')
     elstruct.activecontacts{1}=zeros(elspec.numel,1);
     elstruct.activecontacts{2}=zeros(elspec.numel,1);
 end
+
 if isfield(options.d3,'pntcmap')
     cmap = options.d3.pntcmap;
 elseif isfield(options.d3, 'regressorcolormap')
@@ -52,8 +52,8 @@ for side=options.sides
     catch
         keyboard
     end
-    if options.d3.elrendering<3
 
+    if options.d3.elrendering<3
         set(0,'CurrentFigure',resultfig);
 
         % draw patientname
@@ -198,7 +198,6 @@ for side=options.sides
             elseif size(options.d3.isomatrix{1}{1},2)==elspec.numel % 4 contacts
                 shifthalfup=0;
             else
-
                 ea_error('Isomatrix has wrong size. Please specify a correct matrix.')
             end
         end
@@ -220,7 +219,6 @@ for side=options.sides
 
         % draw contacts
         try
-
             normalisomatrix{side}=options.d3.isomatrix{1}{side};
             normalisomatrix{side}(:)=ea_normal(normalisomatrix{side}(:));
             minval=ea_nanmin(normalisomatrix{side}(:));
@@ -268,9 +266,7 @@ for side=options.sides
                         if isfield(elstruct,'group')
                             usefacecolor=elstruct.groupcolors(elstruct.group,:);
                         else
-
                             usefacecolor=[1,1,1];
-
                         end
                     end
                 end

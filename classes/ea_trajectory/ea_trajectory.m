@@ -460,14 +460,13 @@ function obj=update_trajectory(obj,evtnm) % update ROI
     else
         elToggleTag = ['Patient: ', ptname, ', Planning'];
     end
-try    ea_save_electrode(obj); end
+    try ea_save_electrode(obj); end
     set(obj.toggleH, {'Parent','CData','TooltipString','Tag','OnCallback','OffCallback','State'},...
         {obj.htH, ...
         elToogleIcon, elToggleTooltip, elToggleTag,...
         {@ea_trajvisible,'on',obj}, {@ea_trajvisible,'off',obj}, ...
         ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});
                 ea_busyaction('off',obj.controlH,'trajectory');
-
 end
 
 
