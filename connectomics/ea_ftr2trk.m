@@ -1,7 +1,8 @@
 function ea_ftr2trk(ftrfile, specs)
 % export FTR matrix to TrackVis trk format
 %
-% specs can also be the path of the nifti file which defines the space.
+% specs can also be the path of the nifti file which defines the space. If
+% not specified or empty, MNI space T1 will be used as reference.
 
 [directory, ftrname, ext] = fileparts(ftrfile);
 if isempty(directory)
