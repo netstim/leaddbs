@@ -2,20 +2,20 @@ function [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resul
 err=0;
 
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'.mat'])
-A=[electrode.head_position,1;
-    electrode.tail_position,1
-    electrode.x_position,1
-    electrode.y_position,1]; % points in model
+A = [electrode.head_position,1;
+     electrode.tail_position,1
+     electrode.x_position,1
+     electrode.y_position,1]; % points in model
 redomarkers=0;
+
 if ~isfield(elstruct,'markers') % backward compatibility to old electrode format
     redomarkers=1;
-
 else
     if isempty(elstruct.markers)
-
         redomarkers=1;
     end
 end
+
 if redomarkers
     for iside=options.sides
         elstruct.markers(iside).head=elstruct.coords_mm{iside}(1,:);
@@ -28,14 +28,12 @@ if redomarkers
     end
 end
 
-B=[elstruct.markers(side).head,1;
-    elstruct.markers(side).tail,1;
-    elstruct.markers(side).x,1;
-    elstruct.markers(side).y,1];
+B = [elstruct.markers(side).head,1;
+     elstruct.markers(side).tail,1;
+     elstruct.markers(side).x,1;
+     elstruct.markers(side).y,1];
 setappdata(resultfig,'elstruct',elstruct);
 setappdata(resultfig,'elspec',elspec);
-
-
 
 X=mldivide(A,B);
 
@@ -71,7 +69,6 @@ if 90-ea_rad2deg(acos(dot(...
         )) > angvizprec
     err=1;
 end
-
 % end tests
 
 X=X';
