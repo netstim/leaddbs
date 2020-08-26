@@ -24,7 +24,7 @@ end
 %% set header
 header = ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
 
-if ~exist('specs','var') % Use MNI T1 as reference space by default.
+if ~exist('specs','var') || isempty(specs) % Use MNI T1 as reference space by default.
     disp('Header from MNI t1.nii ...');
     refhdr = ea_fslhd([ea_space,'t1.nii']);
     specs.origin = [0,0,0];
@@ -35,7 +35,7 @@ elseif isstruct(specs)
     % Suppose that the affine matrix is from SPM
     specs.affine(:,4) = specs.affine(:,4) + sum(specs.affine(:,1:3),2);
     header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
-else % Use the specified nifti as reference space.
+elseif isfile(specs) % Use the specified nifti as reference space.
     disp(['Header from ',specs,' ...']);
     refimage = specs;
     refhdr = ea_fslhd(refimage);
