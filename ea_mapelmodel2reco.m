@@ -55,7 +55,7 @@ end
 % plot3(Ab(4,1),Ab(4,2),Ab(4,3),'g*');
 % axis square
 angvizprec=0.5; % angular visualization precision tolerance in sums of degrees
-if 90-ea_rad2deg(acos(dot(...
+if 90-rad2deg(acos(dot(...
         (Ab(1,1:3)-Ab(2,1:3))/...
         norm(Ab(1,1:3)-Ab(2,1:3)),...
         (Ab(1,1:3)-Ab(3,1:3))/...
@@ -72,8 +72,3 @@ end
 % end tests
 
 X=X';
-
-
-function aiD = ea_rad2deg(aiR)
-aiD = (180/pi) * aiR;
-
