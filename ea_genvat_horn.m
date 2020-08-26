@@ -301,7 +301,7 @@ for source=S.sources
 
         if isempty(ix)
             rmdir([options.root,options.patientname,filesep,'current_headmodel'],'s'); % the least I can do at this point is to clean up the faulty headmodel.
-           ea_error('Something went wrong. Active vertex index not found.');
+            ea_error('Something went wrong. Active vertex index not found.');
         end
 
         if ~constvol

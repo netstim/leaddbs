@@ -3,12 +3,15 @@ function [options, presentfiles] = ea_assignpretra(options,allowgz)
 if ~exist('allowgz','var')
     allowgz=0;
 end
+
 directory = fullfile(options.root, options.patientname);
+
 if allowgz
     sstr=[options.prefs.prenii_searchstring(1:end-1),'*'];
 else
     sstr=[options.prefs.prenii_searchstring];
 end
+
 presfiles = dir(fullfile(directory, sstr));
 pfcell = {presfiles.name}';
 
@@ -43,11 +46,13 @@ if any(idx)
            break
        end
     end
+
     if t==size(spacedef.norm_mapping,1) && (~ismember(which,spacedef.norm_mapping{t,1})) % didnt find corresponding template
         options.primarytemplate=spacedef.norm_mapping{t,2};
     else
-    options.primarytemplate = spacedef.misfit_template;
+        options.primarytemplate = spacedef.misfit_template;
     end
+
     if iscell(options.primarytemplate)
         options.primarytemplate=options.primarytemplate{1};
     end
