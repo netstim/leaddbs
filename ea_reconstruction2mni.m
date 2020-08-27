@@ -81,8 +81,8 @@ for side=options.sides
         %     % new version which makes y point strictly anterior ~TD
         %     y = [0 normtrajvector(3) normtrajvector(2)];
         %     x = cross(normtrajvector,y);
-        %     y = (y/norm(y)) * 0.65;
-        %     x = (x/norm(x)) * 0.65;
+        %     y = (y/norm(y)) * (options.elspec.lead_diameter/2);
+        %     x = (x/norm(x)) * (options.elspec.lead_diameter/2);
         %     reco.mni.markers(side).x=reco.mni.markers(side).head + x;
         %     reco.mni.markers(side).y=reco.mni.markers(side).head + y;
         % else
