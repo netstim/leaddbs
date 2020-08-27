@@ -80,7 +80,7 @@ for side=options.sides
         % if strcmp(options.elspec.orientation,'anterior')
         %     % new version which makes y point strictly anterior ~TD
         %     y = [0 normtrajvector(3) normtrajvector(2)];
-        %     x = cross(normtrajvector,y);
+        %     x = -cross(normtrajvector,y);
         %     y = (y/norm(y)) * (options.elspec.lead_diameter/2);
         %     x = (x/norm(x)) * (options.elspec.lead_diameter/2);
         %     reco.mni.markers(side).x=reco.mni.markers(side).head + x;
