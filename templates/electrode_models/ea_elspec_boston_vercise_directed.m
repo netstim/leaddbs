@@ -37,11 +37,16 @@ for k = 1:numel(electrodeorder)
 end
 
 %% other specifications
+
+options.elmodel = 'Boston Scientific Vercise Directed';
+options = ea_resolve_elspec(options);
+elspec = options.elspec;
+
 electrode.electrode_model = 'Boston Scientific Vercise Directed';
 electrode.head_position = [0 0 0.75];
 electrode.tail_position = [0 0 6.75];
-electrode.x_position = [0.65 0 0.75];
-electrode.y_position = [0 0.65 0.75];
+electrode.x_position = [elspec.lead_diameter/2, 0, 0.75];
+electrode.y_position = [0, elspec.lead_diameter/2, 0.75];
 electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
@@ -72,10 +77,6 @@ if nargin
 else
     vizz=1;
 end
-
-options.elmodel = 'Boston Scientific Vercise Directed';
-options = ea_resolve_elspec(options);
-elspec = options.elspec;
 
 if vizz
     X = eye(4);
