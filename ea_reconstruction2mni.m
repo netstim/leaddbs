@@ -86,9 +86,10 @@ for side=options.sides
         %     reco.mni.markers(side).x=reco.mni.markers(side).head + x;
         %     reco.mni.markers(side).y=reco.mni.markers(side).head + y;
         % else
-        %     orth = null(normtrajvector)*(options.elspec.lead_diameter/2);
-        %     reco.mni.markers(side).x=reco.mni.markers(side).head+orth(:,1)';
-        %     reco.mni.markers(side).y=reco.mni.markers(side).head+orth(:,2)'; % corresponding points in reality
+        %     orth = fliplr(null(normtrajvector))'*(options.elspec.lead_diameter/2);
+        %     orth(1,:) = -orth(1,:);
+        %     reco.mni.markers(side).x = reco.mni.markers(side).head+orth(:,1);
+        %     reco.mni.markers(side).y = reco.mni.markers(side).head+orth(:,2); % corresponding points in reality
         % end
     else
         reco.mni.markers(side).x=[];
