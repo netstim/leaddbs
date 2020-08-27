@@ -64,11 +64,9 @@ for side=options.sides
     offset=size(reco.(usenative).trajectory{side},1);
     reco.mni.trajectory{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
     
-    normtrajvector{side}=diff([reco.mni.markers(side).head;...
-        reco.mni.markers(side).tail])/...
-        norm(diff([reco.mni.markers(side).head;...
-        reco.mni.markers(side).tail]));
-    orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
+    trajvector = diff([reco.mni.markers(side).head;reco.mni.markers(side).tail]);
+    normtrajvector = trajvector/norm(trajvector);
+    orth = null(normtrajvector)*(options.elspec.lead_diameter/2);
 
     if ~isempty(reco.mni.markers(side).head)
         % calculates x and y using the warped marker.y, projecting it onto
@@ -76,16 +74,14 @@ for side=options.sides
         % the crossproduct.
         y =  reco.mni.markers(side).y - reco.mni.markers(side).head;
         y = y/norm(y);
-        t = normtrajvector{side};
-        y = y - (dot(y,t) / (norm(t) ^2)) * t;
-        x = -cross(y,t);
+        y = y - (dot(y,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;
+        x = -cross(y,normtrajvector);
         reco.mni.markers(side).x = reco.mni.markers(side).head + (x * (options.elspec.lead_diameter/2));
         reco.mni.markers(side).y = reco.mni.markers(side).head + (y * (options.elspec.lead_diameter/2));
         % if strcmp(options.elspec.orientation,'anterior')
         %     % new version which makes y point strictly anterior ~TD
-        %     y = [0 normtrajvector{side}(3) -normtrajvector{side}(2)];
-        %     x = cross(normtrajvector{side},y);
-
+        %     y = [0 normtrajvector(3) normtrajvector(2)];
+        %     x = cross(normtrajvector,y);
         %     y = (y/norm(y)) * 0.65;
         %     x = (x/norm(x)) * 0.65;
         %     reco.mni.markers(side).x=reco.mni.markers(side).head + x;
