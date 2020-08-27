@@ -7,7 +7,8 @@ map=first;
 map.img((first.img.*second.img)<0)=nan; % set nonagreeing voxels to nan.
 map.img(map.img>0)=first.img(map.img>0).*second.img(map.img>0); % multiply positives
 map.img(map.img<0)=-first.img(map.img<0).*second.img(map.img<0); % multiply negatives
-
-map.fname=outputfilename;
-ea_write_nii(map);
+if exist('outputfilename','var')
+    map.fname=outputfilename;
+    ea_write_nii(map);
+end
 
