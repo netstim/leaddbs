@@ -74,7 +74,7 @@ for side=options.sides
         y =  reco.mni.markers(side).y - reco.mni.markers(side).head;
         y = y/norm(y);
         y = y - (dot(y,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;
-        x = -cross(y,normtrajvector);
+        x = cross(y,normtrajvector);
         reco.mni.markers(side).x = reco.mni.markers(side).head + (x * (options.elspec.lead_diameter/2));
         reco.mni.markers(side).y = reco.mni.markers(side).head + (y * (options.elspec.lead_diameter/2));
         % if strcmp(options.elspec.orientation,'anterior')
