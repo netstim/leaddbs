@@ -62,6 +62,8 @@ electrode.coords_mm(6,:)=[0 0 4.75]+[0.33,-0.66,0];
 electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,0.66,0];
 electrode.coords_mm(8,:)=[0 0 6.75];
 
+electrode.isdirected = 1;
+
 %% saving electrode struct
 save([elemodelPath, filesep, 'boston_vercise_directed.mat'],'electrode');
 
