@@ -66,7 +66,6 @@ for side=options.sides
     
     trajvector = diff([reco.mni.markers(side).head;reco.mni.markers(side).tail]);
     normtrajvector = trajvector/norm(trajvector);
-    orth = null(normtrajvector)*(options.elspec.lead_diameter/2);
 
     if ~isempty(reco.mni.markers(side).head)
         % calculates x and y using the warped marker.y, projecting it onto
@@ -87,6 +86,7 @@ for side=options.sides
         %     reco.mni.markers(side).x=reco.mni.markers(side).head + x;
         %     reco.mni.markers(side).y=reco.mni.markers(side).head + y;
         % else
+        %     orth = null(normtrajvector)*(options.elspec.lead_diameter/2);
         %     reco.mni.markers(side).x=reco.mni.markers(side).head+orth(:,1)';
         %     reco.mni.markers(side).y=reco.mni.markers(side).head+orth(:,2)'; % corresponding points in reality
         % end
