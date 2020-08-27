@@ -53,13 +53,16 @@ electrode.lead_color = 0.7;
 
 % The segmented contact in the null model are also anti-clockwise arranged
 % from the top view.
+cx = elspec.lead_diameter/2*cos(pi/6);
+cy = elspec.lead_diameter/2*sin(pi/6);
+
 electrode.coords_mm(1,:)=[0 0 0.75];
-electrode.coords_mm(2,:)=[0 0 2.75]+[-0.66,0,0];
-electrode.coords_mm(3,:)=[0 0 2.75]+[0.33,-0.66,0];
-electrode.coords_mm(4,:)=[0 0 2.75]+[0.33,0.66,0];
-electrode.coords_mm(5,:)=[0 0 4.75]+[-0.66,0,0];
-electrode.coords_mm(6,:)=[0 0 4.75]+[0.33,-0.66,0];
-electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,0.66,0];
+electrode.coords_mm(2,:)=[0 0 2.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(3,:)=[0 0 2.75]+[-cx, -cy, 0];
+electrode.coords_mm(4,:)=[0 0 2.75]+[cx, -cy, 0];
+electrode.coords_mm(5,:)=[0 0 4.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(6,:)=[0 0 4.75]+[-cx,-cy, 0];
+electrode.coords_mm(7,:)=[0 0 4.75]+[cx,-cy, 0];
 electrode.coords_mm(8,:)=[0 0 6.75];
 
 electrode.isdirected = 1;
