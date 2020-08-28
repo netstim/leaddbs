@@ -37,12 +37,9 @@ for side=options.sides
     
     markers(side).head=coords_mm{side}(1,:); %#ok<AGROW>
     markers(side).tail=coords_mm{side}(4,:); %#ok<AGROW>
-    normtrajvector{side}=(coords_mm{side}(1,:)-coords_mm{side}(end,:))/... %#ok<AGROW>
-        norm((coords_mm{side}(1,:)-coords_mm{side}(end,:))); %#ok<AGROW>
-    orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2); % #ok<AGROW>
-    
-    markers(side).x=coords_mm{side}(1,:)+orth(:,1)';%#ok<AGROW>
-    markers(side).y=coords_mm{side}(1,:)+orth(:,2)';%#ok<AGROW> % corresponding points in reality
+    [xnorm, ynorm] = ea_calcxy(coords_mm{side}(1,:), coords_mm{side}(end,:));
+    markers(side).x=coords_mm{side}(1,:)+xnorm*(options.elspec.lead_diameter/2);
+    markers(side).y=coords_mm{side}(1,:)+ynorm*(options.elspec.lead_diameter/2);
 end
 
 
