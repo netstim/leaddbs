@@ -5,14 +5,14 @@ function varargout=ea_genvat_horn(varargin)
 useSI=1;
 vizz=0;
 if nargin==5
-    acoords=varargin{1}; % MNI space
+    acoords=varargin{1};
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
     thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
 elseif nargin==7
-    acoords=varargin{1}; % MNI space
+    acoords=varargin{1};
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
@@ -57,7 +57,7 @@ elstruct(1).markers=markers;
 
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
-coords=acoords{side}; % MNI space
+coords=acoords{side};
 setappdata(resultfig,'elstruct',elstruct);
 
 % Add stretchfactor to elstruct simply for purpose of checking if headmodel
@@ -266,9 +266,9 @@ for source=S.sources
         end
     end
 
-    Acnt=find(U); % active contact
-    if ~isempty(Acnt)
-        dpmm_mni=coords(Acnt,:); % MNI space
+    actInd=find(U); % active contact indices
+    if ~isempty(actInd)
+        actContact=coords(actInd,:);
 
         volts=U(U~=0);
 
@@ -292,7 +292,7 @@ for source=S.sources
         voltix=[];
 
         cnt=1;
-        for ac=Acnt
+        for ac=actInd
             ix=[ix;activeidx(source).con(ac).ix];
             voltix=[voltix;repmat(U(ac),length(activeidx(source).con(ac).ix),1),...
                 repmat(cnt,length(activeidx(source).con(ac).ix),1)];
@@ -363,19 +363,14 @@ indices(indices==0)=[];
 indices(indices>length(midpts))=[];
 
 if ~options.native % VTA calculated in MNI space directly
-    [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpmm_mni,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
+    [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
     varargout{1}=vatfv;
     varargout{2}=vatvolume;
     varargout{3}=radius;
     ea_dispt('');
 else % VTA calculated in native space and then transformed back to MNI
-        % Convert dpmm from MNI to native space
-        dpvx_mni = ea_mm2vox(dpmm_mni, [ea_space,'t1.nii'])';
-        dpmm_native = ea_map_coords(dpvx_mni, [ea_space,'t1.nii'], ...
-            [options.root,options.patientname,filesep,'y_ea_normparams.nii'], '')';
-
         % Write out native space VTA
-        [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpmm_native,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
+        [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
 
         % If visualizing in native space -> output native space results first before conversion to MNI
         if options.orignative==1
@@ -385,13 +380,15 @@ else % VTA calculated in native space and then transformed back to MNI
             ea_dispt('');
         end
 
-        % Convert midpts from native space to MNI space
+        % Convert midpts and actContact from native space to MNI space
         [~,anatpresent] = ea_assignpretra(options);
-        midptsvx = ea_mm2vox(midpts, [options.root,options.patientname,filesep,anatpresent{1}])';
-        midptsmm_mni = ea_map_coords(midptsvx, [options.root,options.patientname,filesep,anatpresent{1}], ...
+        ptsvx_native = ea_mm2vox([midpts;actContact], [options.root,options.patientname,filesep,anatpresent{1}])';
+        ptsmm_mni = ea_map_coords(ptsvx_native, [options.root,options.patientname,filesep,anatpresent{1}], ...
             [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], '')';
+        midpts_mni = ptsmm_mni(1:size(midpts,1),:);
+        actContact_mni = ptsmm_mni(size(midpts,1)+1:end,:);
         options.native=0; % go back to template space for export
-        [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midptsmm_mni,indices,elspec,dpmm_mni,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
+        [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts_mni,indices,elspec,actContact_mni,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
         options.native=options.orignative; % go back to originally set space
 
         % If visualizing in MNI space -> output MNI space results

@@ -1011,14 +1011,14 @@ for pt=selection
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
 
-            if options.native % port to native
-                transmitcoords=ea_load_reconstruction(options);
+            if options.native % Reload native space coordinates
+                coords = ea_load_reconstruction(options);
             else
-                transmitcoords=M.elstruct(pt).coords_mm;
+                coords = M.elstruct(pt).coords_mm;
             end
 
             try
-                [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,transmitcoords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
+                [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
                 vatCalcPassed(side) = 1;
             catch
                 volume=0;
