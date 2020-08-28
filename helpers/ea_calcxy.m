@@ -4,7 +4,7 @@ function [x, y] = ea_calcxy(head, tail)
 % The X and Y axis orientation will be the same as in the null model of the
 % directed lead
 
-trajvector=diff([head; tail]);
+trajvector = diff([head; tail]);
 normtrajvector = trajvector/norm(trajvector);
 y = [0 normtrajvector(3) -normtrajvector(2)];
 x = -cross(normtrajvector,y);
