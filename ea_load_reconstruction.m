@@ -55,10 +55,9 @@ if exist('reco','var')
     markers = reco.(space_type).markers;
     if ~isfield(markers,'x')
         for side=1:2
-            normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-            markers(side).x=markers(side).head+orth(:,1)';
-            markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
+            [normx, normy] = ea_calcxy(markers(side).head, markers(side).tail);
+            markers(side).x = markers(side).head+normx*(options.elspec.lead_diameter/2);
+            markers(side).y = markers(side).head+normy*(options.elspec.lead_diameter/2); % corresponding points in reality
         end
     end
 
@@ -105,10 +104,9 @@ else % legacy format
         for side=1:options.sides
             markers(side).head=coords_mm{side}(1,:);
             markers(side).tail=coords_mm{side}(4,:);
-            normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-            markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
-            markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+            [normx, normy] = ea_calcxy(markers(side).head, markers(side).tail);
+            markers(side).x = coords_mm{side}(1,:)+normx*(options.elspec.lead_diameter/2);
+            markers(side).y = coords_mm{side}(1,:)+normy*(options.elspec.lead_diameter/2);
         end
 
         elmodel=options.elmodel;
