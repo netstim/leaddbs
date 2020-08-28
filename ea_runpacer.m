@@ -51,9 +51,6 @@ ea_methods(options,...
     ' (Husch et al., 2017; http://adhusch.github.io/PaCER/).'],...
     {'Husch, A., Petersen, M. V., Gemmar, P., Goncalves, J., & Hertel, F. (2017). PaCER - A fully automated method for electrode trajectory and contact reconstruction in deep brain stimulation. NeuroImage. Clinical, 17, 80?89. http://doi.org/10.1016/j.nicl.2017.10.004'});
 
-function fn=stripext(fn)
-[~,fn]=fileparts(fn);
-
 
 function model=ea_mod2pacermod(model)
 % current dictionary to translate between Lead-DBS and PaCER nomenclature.
