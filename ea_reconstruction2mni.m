@@ -63,31 +63,12 @@ for side=options.sides
 
     offset=size(reco.(usenative).trajectory{side},1);
     reco.mni.trajectory{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
-    trajvector = diff([reco.mni.markers(side).head;reco.mni.markers(side).tail]);
-    normtrajvector = trajvector/norm(trajvector);
 
     if ~isempty(reco.mni.markers(side).head)
-        % calculates x and y using the warped marker.y, projecting it onto
-        % the perpendicular plane to normtrajvector and then finding x via
-        % the crossproduct.
-        y =  reco.mni.markers(side).y - reco.mni.markers(side).head;
-        y = y/norm(y);
-        y = y - (dot(y,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;
-        x = cross(y,normtrajvector);
-        reco.mni.markers(side).x = reco.mni.markers(side).head + (x * (options.elspec.lead_diameter/2));
-        reco.mni.markers(side).y = reco.mni.markers(side).head + (y * (options.elspec.lead_diameter/2));
-        % if strcmp(options.elspec.orientation,'anterior')
-        %     % new version which makes y point strictly anterior ~TD
-        %     [xnorm, ynorm] = ea_calcxy(reco.mni.markers(side).head, reco.mni.markers(side).tail);
-        %     reco.mni.markers(side).x = reco.mni.markers(side).head + xnorm*(options.elspec.lead_diameter/2);
-        %     reco.mni.markers(side).y = reco.mni.markers(side).head + ynorm*(options.elspec.lead_diameter/2);
-        % else
-        %     orth = fliplr(null(normtrajvector))'*(options.elspec.lead_diameter/2);
-        %     orth(1,:) = -orth(1,:);
-        %     reco.mni.markers(side).x = reco.mni.markers(side).head+orth(:,1);
-        %     reco.mni.markers(side).y = reco.mni.markers(side).head+orth(:,2); % corresponding points in reality
-        % end
+        % Calc X and Y marker coordinates
+        [xnorm, ynorm] = ea_calcxy(reco.mni.markers(side).head, reco.mni.markers(side).tail);
+        reco.mni.markers(side).x = reco.mni.markers(side).head + xnorm*(options.elspec.lead_diameter/2);
+        reco.mni.markers(side).y = reco.mni.markers(side).head + ynorm*(options.elspec.lead_diameter/2);
     else
         reco.mni.markers(side).x=[];
         reco.mni.markers(side).y=[];
