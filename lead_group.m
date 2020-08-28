@@ -1012,7 +1012,7 @@ for pt=selection
             setappdata(resultfig,'elspec',options.elspec);
 
             if options.native % port to native
-               transmitcoords=ea_load_reconstruction(options);
+                transmitcoords=ea_load_reconstruction(options);
             else
                 transmitcoords=M.elstruct(pt).coords_mm;
             end

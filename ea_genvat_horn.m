@@ -227,7 +227,7 @@ if hmchanged
         mesh.unit='mm';
     end
     if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)],'dir')
-       mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
+        mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
     end
     save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
     ea_save_hmprotocol(options,side,elstruct,1);

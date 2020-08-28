@@ -63,7 +63,8 @@ if vizz
     hold on
     plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'k*');
     plot3(nvat.tpos(:,1),nvat.tpos(:,2),nvat.tpos(:,3),'m.');
-    toptions=options; toptions.native=1;
+    toptions=options;
+    toptions.native=1;
     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(toptions);
     plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'g*');
 end
