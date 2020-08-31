@@ -32,24 +32,22 @@ end
 
 %% other specifications
 electrode.electrode_model = 'St. Jude Directed 6172 (short)';
-electrode.head_position = [0 0 0.75];
-electrode.tail_position = [0 0 6.75];
-electrode.x_position = [0.65 0 0.75];
-electrode.y_position = [0 0.65 0.75];
+electrode.head_position = [0 0 1.75];
+electrode.tail_position = [0 0 7.75];
+electrode.x_position = [0.65 0 1.75];
+electrode.y_position = [0 0.65 1.75];
 electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 
-% The segmented contacts in the null model are clockwise arranged from the
-% top view.
-electrode.coords_mm(1,:)=[0 0 0.75];
-electrode.coords_mm(2,:)=[0 0 2.75]+[-0.66,0,0];
-electrode.coords_mm(3,:)=[0 0 2.75]+[0.33,0.66,0];
-electrode.coords_mm(4,:)=[0 0 2.75]+[0.33,-0.66,0];
-electrode.coords_mm(5,:)=[0 0 4.75]+[-0.66,0,0];
-electrode.coords_mm(6,:)=[0 0 4.75]+[0.33,0.66,0];
-electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,-0.66,0];
-electrode.coords_mm(8,:)=[0 0 6.75];
+electrode.coords_mm(1,:)=[0 0 1.75];
+electrode.coords_mm(2,:)=[0 0 3.75]+[-0.66,0,0];
+electrode.coords_mm(3,:)=[0 0 3.75]+[0.33,0.66,0];
+electrode.coords_mm(4,:)=[0 0 3.75]+[0.33,-0.66,0];
+electrode.coords_mm(5,:)=[0 0 5.75]+[-0.66,0,0];
+electrode.coords_mm(6,:)=[0 0 5.75]+[0.33,0.66,0];
+electrode.coords_mm(7,:)=[0 0 5.75]+[0.33,-0.66,0];
+electrode.coords_mm(8,:)=[0 0 7.75];
 
 %% saving electrode struct
 save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_05.mat'],'electrode');
