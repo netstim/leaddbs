@@ -5,14 +5,14 @@ function varargout=ea_genvat_horn(varargin)
 useSI=1;
 vizz=0;
 if nargin==5
-    acoords=varargin{1};
+    % acoords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
     thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
 elseif nargin==7
-    acoords=varargin{1};
+    % acoords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
@@ -57,7 +57,7 @@ elstruct(1).markers=markers;
 
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
-coords=acoords{side};
+coords = coords_mm{side};
 setappdata(resultfig,'elstruct',elstruct);
 
 % Add stretchfactor to elstruct simply for purpose of checking if headmodel
