@@ -30,7 +30,11 @@ for k = 1:9
 end
 
 %% other specifications
-electrode.electrode_model = 'St. Jude Directed 6172 (short)';
+options.elmodel = 'St. Jude Directed 6172 (short)';
+options = ea_resolve_elspec(options);
+elspec = options.elspec;
+
+electrode.electrode_model = options.elmodel;
 electrode.head_position = [0 0 1.75];
 electrode.tail_position = [0 0 7.75];
 electrode.x_position = [0.65 0 1.75];

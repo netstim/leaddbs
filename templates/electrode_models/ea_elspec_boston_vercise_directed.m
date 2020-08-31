@@ -42,7 +42,7 @@ options.elmodel = 'Boston Scientific Vercise Directed';
 options = ea_resolve_elspec(options);
 elspec = options.elspec;
 
-electrode.electrode_model = 'Boston Scientific Vercise Directed';
+electrode.electrode_model = options.elmodel;
 electrode.head_position = [0 0 0.75];
 electrode.tail_position = [0 0 6.75];
 electrode.x_position = [elspec.lead_diameter/2, 0, 0.75];
