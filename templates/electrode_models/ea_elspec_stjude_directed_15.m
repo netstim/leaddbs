@@ -43,13 +43,16 @@ electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 
+cx = elspec.lead_diameter/2*cos(pi/6);
+cy = elspec.lead_diameter/2*sin(pi/6);
+
 electrode.coords_mm(1,:)=[0 0 1.75];
-electrode.coords_mm(2,:)=[0 0 4.75]+[-0.66,0,0];
-electrode.coords_mm(3,:)=[0 0 4.75]+[0.33,0.66,0];
-electrode.coords_mm(4,:)=[0 0 4.75]+[0.33,-0.66,0];
-electrode.coords_mm(5,:)=[0 0 7.75]+[-0.66,0,0];
-electrode.coords_mm(6,:)=[0 0 7.75]+[0.33,0.66,0];
-electrode.coords_mm(7,:)=[0 0 7.75]+[0.33,-0.66,0];
+electrode.coords_mm(2,:)=[0 0 4.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(3,:)=[0 0 4.75]+[cx, -cy, 0];
+electrode.coords_mm(4,:)=[0 0 4.75]+[-cx, -cy, 0];
+electrode.coords_mm(5,:)=[0 0 7.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(6,:)=[0 0 7.75]+[cx, -cy, 0];
+electrode.coords_mm(7,:)=[0 0 7.75]+[-cx, -cy, 0];
 electrode.coords_mm(8,:)=[0 0 10.75];
 
 %% saving electrode struct
