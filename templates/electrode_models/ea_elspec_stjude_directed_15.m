@@ -52,7 +52,7 @@ electrode.coords_mm(8,:)=[0 0 9.75];
 
 
 %% saving electrode struct
-save([fileparts(mfilename('fullpath')),'stjude_directed_15.mat'],'electrode');
+save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_15.mat'],'electrode');
 
 %% create and save _vol file
 filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'final.1'];

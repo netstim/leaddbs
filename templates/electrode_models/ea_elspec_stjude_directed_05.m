@@ -52,12 +52,12 @@ electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,-0.66,0];
 electrode.coords_mm(8,:)=[0 0 6.75];
 
 %% saving electrode struct
-save([fileparts(mfilename('fullpath')),'stjude_directed_05.mat'],'electrode');
+save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_05.mat'],'electrode');
 
 %% create and save _vol file
 filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_05_Components',filesep,'final.1'];
 [node,~,face]=readtetgen(filename);
-save([fileparts(mfilename('fullpath')),'stjude_directed_05_vol.mat'],'face','node')
+save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_05_vol.mat'],'face','node')
 clear node face
 
 %% visualize
