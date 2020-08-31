@@ -55,6 +55,8 @@ electrode.coords_mm(6,:)=[0 0 7.75]+[cx, -cy, 0];
 electrode.coords_mm(7,:)=[0 0 7.75]+[-cx, -cy, 0];
 electrode.coords_mm(8,:)=[0 0 10.75];
 
+electrode.isdirected = 1;
+
 %% saving electrode struct
 save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_15.mat'],'electrode');
 
