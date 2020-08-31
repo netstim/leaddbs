@@ -7,9 +7,9 @@ end
 directory = fullfile(options.root, options.patientname);
 
 if allowgz
-    sstr=[options.prefs.prenii_searchstring(1:end-1),'*'];
+    sstr = [options.prefs.prenii_searchstring(1:end-1),'*'];
 else
-    sstr=[options.prefs.prenii_searchstring];
+    sstr = [options.prefs.prenii_searchstring];
 end
 
 presfiles = dir(fullfile(directory, sstr));
@@ -30,17 +30,17 @@ if isempty(presentfiles)
     return
 end
 
-ism=ismember(presentfiles,{'anat_STN.nii','anat_GPi.nii','anat_GPe.nii','anat_RN.nii'});
-addtoend=presentfiles(ism);
-presentfiles(ism)=[];
-presentfiles=[presentfiles;addtoend];
+ism = ismember(presentfiles,{'anat_STN.nii','anat_GPi.nii','anat_GPe.nii','anat_RN.nii'});
+addtoend = presentfiles(ism);
+presentfiles(ism) = [];
+presentfiles = [presentfiles;addtoend];
 
 % set prenii_unnormalized
 options.prefs.prenii_unnormalized = presentfiles{1};
 
 % determine primary template
 if any(idx)
-    which=options.prefs.prenii_order(find(idx,1));
+    which = options.prefs.prenii_order(find(idx,1));
     for t=1:size(spacedef.norm_mapping,1)
        if ismember(which,spacedef.norm_mapping{t,1})
            break
@@ -48,12 +48,12 @@ if any(idx)
     end
 
     if t==size(spacedef.norm_mapping,1) && (~ismember(which,spacedef.norm_mapping{t,1})) % didnt find corresponding template
-        options.primarytemplate=spacedef.norm_mapping{t,2};
+        options.primarytemplate = spacedef.norm_mapping{t,2};
     else
         options.primarytemplate = spacedef.misfit_template;
     end
 
     if iscell(options.primarytemplate)
-        options.primarytemplate=options.primarytemplate{1};
+        options.primarytemplate = options.primarytemplate{1};
     end
 end
