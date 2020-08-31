@@ -10,7 +10,7 @@ function electrode=ea_elspec_stjude_directed_15(varargin)
 
 % The segmented contacts are clockwise arranged seen from the top view, the
 % same as in the models in the components folder.
-% electrodeorder = [1 2 3 4 5 6 7 8 9];
+electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
 for k = 1:18
@@ -47,7 +47,6 @@ electrode.coords_mm(5,:)=[0 0 7.75]+[-0.66,0,0];
 electrode.coords_mm(6,:)=[0 0 7.75]+[0.33,0.66,0];
 electrode.coords_mm(7,:)=[0 0 7.75]+[0.33,-0.66,0];
 electrode.coords_mm(8,:)=[0 0 10.75];
-
 
 %% saving electrode struct
 save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_15.mat'],'electrode');

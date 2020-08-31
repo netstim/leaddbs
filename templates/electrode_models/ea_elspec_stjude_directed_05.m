@@ -10,7 +10,7 @@ function electrode=ea_elspec_stjude_directed_05(varargin)
 
 % The segmented contacts are clockwise arranged seen from the top view, the
 % same as in the models in the components folder.
-% electrodeorder = [1 2 3 4 5 6 7 8 9];
+electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
 for k = 1:18
@@ -28,7 +28,6 @@ for k = 1:9
     electrode.contacts(k).faces = face(:,1:3);
     clear face node filename
 end
-
 
 %% other specifications
 electrode.electrode_model = 'St. Jude Directed 6172 (short)';
