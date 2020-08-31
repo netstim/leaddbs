@@ -3,14 +3,17 @@ function electrode=ea_elspec_boston_vercise_directed(varargin)
 % This function creates the electrode specification for the Vercise directed lead.
 % In contrast to other electrode generation functions, it is based on an
 % externally generated FEM-compatible model, stored in the
-% .\Boston_Vercise_Directed_Components\ subfolder.
+% Boston_Vercise_Directed_Components subfolder.
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 elemodelPath = fileparts(mfilename('fullpath'));
 
-electrodeorder = [1 2 4 3 5 7 6 8 9]; % 211117 - small change so that order of the directional electrodes is clockwise seen from the tip
+% The segmented contacts are anti-clockwise arranged seen from the top view.
+% But they are clockwise ordered in the models in the components folder. So
+% We need to reoder it here.
+electrodeorder = [1 2 4 3 5 7 6 8 9];
 
 %% import insulations and contacts from subfolder
 for k = 1:16
@@ -41,13 +44,15 @@ electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 
+% The segmented contact in the null model are also anti-clockwise arranged
+% from the top view.
 electrode.coords_mm(1,:)=[0 0 0.75];
 electrode.coords_mm(2,:)=[0 0 2.75]+[-0.66,0,0];
-electrode.coords_mm(3,:)=[0 0 2.75]+[0.33,0.66,0];
-electrode.coords_mm(4,:)=[0 0 2.75]+[0.33,-0.66,0];
+electrode.coords_mm(3,:)=[0 0 2.75]+[0.33,-0.66,0];
+electrode.coords_mm(4,:)=[0 0 2.75]+[0.33,0.66,0];
 electrode.coords_mm(5,:)=[0 0 4.75]+[-0.66,0,0];
-electrode.coords_mm(6,:)=[0 0 4.75]+[0.33,0.66,0];
-electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,-0.66,0];
+electrode.coords_mm(6,:)=[0 0 4.75]+[0.33,-0.66,0];
+electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,0.66,0];
 electrode.coords_mm(8,:)=[0 0 6.75];
 
 %% saving electrode struct
