@@ -40,20 +40,17 @@ options.prefs.prenii_unnormalized = presentfiles{1};
 
 % determine primary template
 if any(idx)
-    which = options.prefs.prenii_order(find(idx,1));
+    anchor = options.prefs.prenii_order(find(idx,1));
+    templateFound = 0;
     for t=1:size(spacedef.norm_mapping,1)
-       if ismember(which,spacedef.norm_mapping{t,1})
+       if ismember(anchor, spacedef.norm_mapping{t,1})
+           templateFound = 1;
+           options.primarytemplate = spacedef.norm_mapping{t,2};
            break
        end
     end
 
-    if t==size(spacedef.norm_mapping,1) && (~ismember(which,spacedef.norm_mapping{t,1})) % didnt find corresponding template
-        options.primarytemplate = spacedef.norm_mapping{t,2};
-    else
+    if ~templateFound
         options.primarytemplate = spacedef.misfit_template;
-    end
-
-    if iscell(options.primarytemplate)
-        options.primarytemplate = options.primarytemplate{1};
     end
 end
