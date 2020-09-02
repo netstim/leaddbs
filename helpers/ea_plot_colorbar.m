@@ -36,7 +36,7 @@ if ~exist('orientation', 'var') || isempty(orientation)
     orientation = 'v';
 end
 
-if ~exist('titletxt', 'var')
+if ~exist('titletxt', 'var') || isempty(titletxt)
     titletxt = '';
 end
 
