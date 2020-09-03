@@ -125,7 +125,7 @@ classdef MERState < handle
                 obj.Toggles.keycontrol(traj_ix).side = obj.Config.MERTrajectory(traj_ix).side;
                 obj.Toggles.keycontrol(traj_ix).label = obj.Config.MERTrajectory(traj_ix).label;
                 obj.Toggles.keycontrol(traj_ix).value = 0;
-                
+
                 obj.Toggles.togglestates(traj_ix).side = obj.Config.MERTrajectory(traj_ix).side;
                 obj.Toggles.togglestates(traj_ix).label = obj.Config.MERTrajectory(traj_ix).label;
                 obj.Toggles.togglestates(traj_ix).value = 1;
@@ -138,7 +138,7 @@ classdef MERState < handle
                 [~, ~, dbs_contacts, obj.Config.elmodel] = ea_load_reconstruction(obj.Config);
             else % trajectory object supplied - will relate MER trajectories to information of the object
                 obj.Config.elmodel=obj.Trajectory.elmodel;
-                
+
                 switch obj.Trajectory.relateMicro
                     case 'macro' % relate MER fiducials to DBS electrode reconstructed from postoperative data
                         dbs_contacts=obj.Trajectory.elstruct.markers;
@@ -162,7 +162,7 @@ classdef MERState < handle
                         % end build markers struct from planning fiducial line. 
                 end
             end
-            
+
             obj.Config = ea_resolve_elspec(obj.Config);
             dbs_contacts = ea_resolvecoords(dbs_contacts, obj.Config);
             % Get template space
@@ -216,7 +216,7 @@ classdef MERState < handle
                 bSide(end+1) = true;
             end
             obj.Frame(bSide).landmarks = landmarks;
-            
+
             % Caclulate frame rotation. Currently only A/E/Entry works.
             % TODO: Support other configurations than requiring A, E, and Entry.
             [~, ~, ib] = intersect({'A', 'E', 'Entry'}, {landmarks.label}, 'stable');
@@ -226,7 +226,7 @@ classdef MERState < handle
             z = m - AEP(3, :);  % '' for +z
             x = cross(y, z);    % '' for +x
             x = x / norm(x); y = y / norm(y); z = z / norm(z);  % Make unit vectors.
-            
+
             % Get the transformation between native/scrf and frame spaces
             def_spc = [1 0 0; 0 1 0; 0 0 1];
             xform = [x; y; z] \ def_spc;  % == inv([x; y; z])
@@ -458,7 +458,7 @@ classdef MERState < handle
                     XYZ_nii_vx = obj.Cache.prenii_mat \ XYZ_nii_mm;
                     % Map to template space. Slow, but only once per side.
                     XYZ_mni_mm = ea_map_coords(XYZ_nii_vx(1:3,:), prenii_fname, ...
-                        fullfile(ptdir, 'y_ea_inv_normparams.nii'), '');  
+                        fullfile(ptdir, 'y_ea_inv_normparams.nii'), '');
                     % Save some values for later.
                     vx_native{sid} = XYZ_nii_vx;
                     mm_mni{sid} = XYZ_mni_mm;

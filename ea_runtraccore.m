@@ -57,6 +57,7 @@ for side=options.sides
     for electrode=2:4
         coords_mm{side}(electrode,:)=coords_mm{side}(1,:)-normtrajvector{side}.*((electrode-1)*distmm);
     end
+
     markers(side).head=coords_mm{side}(1,:);
     markers(side).tail=coords_mm{side}(4,:);
 

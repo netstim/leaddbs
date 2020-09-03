@@ -51,7 +51,6 @@ if exist('reco','var')
         space_type = 'mni';
     end
 
-
     markers = reco.(space_type).markers;
     if ~isfield(markers,'x')
         for side=1:2

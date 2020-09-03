@@ -10,9 +10,9 @@ for side=options.sides
     spm('defaults', 'fmri');
     Fgraph = spm_figure('GetWin', 'Graphics');
     Finter = spm('FnUIsetup','Select Trajectory', 0);
-    
+
     figure(Fgraph); clf;
-    
+
     switch options.modality
         case 1 % MRI
             vol = spm_vol([directory,options.prefs.tranii_unnormalized]);
@@ -25,22 +25,22 @@ for side=options.sides
     cameratoolbar('resetcamera')
     cameratoolbar('close')
     rotate3d off;
-    
+
     if spm_input(['Select tip and click'] , 1,'OK|Retry', [1,0], 1)
         markers(side).head = spm_orthviews('Pos')';
         %spm_orthviews('Reset');
     end
-    
+
     if spm_input(['Select point on trajectory and click'] , 1,'OK|Retry', [1,0], 1)
         markers(side).tail = spm_orthviews('Pos')';
         %spm_orthviews('Reset');
     end
-    
+
     markers(side).tail=markers(side).head+...
         (markers(side).tail-markers(side).head)*...
         normdist/norm(...
         (markers(side).tail-markers(side).head));
-    
+
     % add x and y
     normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
     orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
@@ -50,11 +50,5 @@ for side=options.sides
 end
 [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,0);
 
-
 close(Fgraph);
 close(Finter);
-
-
-
-
-

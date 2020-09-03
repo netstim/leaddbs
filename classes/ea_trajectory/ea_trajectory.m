@@ -18,7 +18,7 @@ classdef ea_trajectory < handle
         color=[0.5,0.5,0.5] % color of Planning patch
         colorMacroContacts=[] % optional coloring of macroelectrode contacts
         options % lead-dbs options struct
-        planRelative=[2,1,1,1,3] % First entry: AC=1, MCP=2, PC=3; Second entry: Right=1, Left=2; Third entry: Anterior=1, Posterior=2; Fourth entry: Ventral=1; Dorsal=2; Last entry: ACPC=1, native=2, MNI/Template=3 
+        planRelative=[2,1,1,1,3] % First entry: AC=1, MCP=2, PC=3; Second entry: Right=1, Left=2; Third entry: Anterior=1, Posterior=2; Fourth entry: Ventral=1; Dorsal=2; Last entry: ACPC=1, native=2, MNI/Template=3
         hasPlanning % determines if object has information to show a fiducial
         hasMacro % determines if object has information to show a macroelectrode
         relateMicro='macro' % determines if microelectrodes shown should be related to planning Fiducial ('planning') or Macroelectrodes ('macro')
@@ -38,7 +38,7 @@ classdef ea_trajectory < handle
         pt=1 % used for patient index count in lead group.
         planningAppearance='line' % can be set to 'electrode' to show 3D electrode instead
     end
-    
+
     properties (Access = private)
         switchedFromSpace=3 % if switching space, this will protocol where from
     end
@@ -77,7 +77,7 @@ classdef ea_trajectory < handle
             else % determine if fiducial and macro information is available
                 try
                     obj.hasMacro=pobj.hasMacro;
-                catch 
+                catch
                     obj.hasMacro=~isempty(obj.elstruct);
                 end
                 try
@@ -117,7 +117,7 @@ classdef ea_trajectory < handle
             catch
                 obj.patchMacro=patch('Visible','off');
             end
-            
+
             try % patient index when calling from lead group.
                 obj.pt=pobj.pt;
             end
@@ -232,7 +232,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         ecfg.mapmethod=0;
         ecfg.acmcpc=obj.planRelative(1);
         if fromspace==1 % from ACPC
-            
+
             if obj.planRelative(2)==2
                 tcfg.xmm=tcfg.xmm*-1;
                 ecfg.xmm=ecfg.xmm*-1;
@@ -246,7 +246,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                 ecfg.zmm=ecfg.zmm*-1;
             end
         end
-        
+
         if fromspace==1 && tospace==3 % ACPC 2 MNI
             twarped=ea_acpc2mni(tcfg,{[obj.options.root,obj.options.patientname,filesep]});
             ewarped=ea_acpc2mni(ecfg,{[obj.options.root,obj.options.patientname,filesep]});
@@ -260,7 +260,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         elseif fromspace==3 && tospace==1 % MNI 2 ACPC
             twarped=ea_mni2acpc(tcfg,{[obj.options.root,obj.options.patientname,filesep]});
             ewarped=ea_mni2acpc(ecfg,{[obj.options.root,obj.options.patientname,filesep]});
-            
+
             t.target=twarped.WarpedPointACPC;
             t.entry=ewarped.WarpedPointACPC;
 
@@ -288,14 +288,14 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             src=[obj.options.root,obj.options.patientname,filesep,anats{1}]; % assign src image as primary anat image here.
             coords=ea_map_coords(coords, [ea_space,obj.options.primarytemplate], [obj.options.root,obj.options.patientname,filesep,'y_ea_normparams.nii'],...
                 src);
-            
+
             t.target=coords(:,1)';
             t.entry=coords(:,2)';
         else % no change
             ea_busyaction('off',obj.controlH,'trajectory');
             return
         end
-        
+
         if tospace==1 % to ACPC
             if obj.planRelative(2)==2
                 t.target(1)=t.target(1)*-1;
@@ -310,13 +310,13 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                 t.entry(3)=t.entry(3)*-1;
             end
         end
-        
+
         obj.target=t;
         ea_synctrajectoryhandles(getappdata(obj.controlH,'chandles'),obj); % sync back control figure
         ea_save_electrode(obj);
         return
     end
-    
+
     if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model','electrodeRelativeToPlan','color'}) % need to redraw planning fiducials:
         % planning fiducial
         if obj.showPlanning
@@ -326,14 +326,14 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                 traj(:,dim)=linspace(ent(dim),tgt(dim),10);
             end
             delete(obj.patchPlanning);
-            
+
             % estimate pseudo-reconstruction (plan2elstruct):
-            
+
             options=obj.options;
             options.elmodel=obj.plan2elstruct_model;
             options=ea_resolve_elspec(options);
             intraj=(ent-tgt)./norm(ent-tgt);
-            
+
             if options.elspec.tipiscontact
                 shift=-(obj.electrodeRelativeToPlan-1);
                 markers.head=tgt+(((0+shift)*options.elspec.eldist)*intraj);
@@ -347,9 +347,8 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                     markers.head=tgt+(((options.elspec.tip_length/2)+(options.elspec.contact_length/2))*intraj);
                     markers.tail=tgt+(((3)*options.elspec.eldist)*intraj)+(((options.elspec.tip_length/2)+(options.elspec.contact_spacing))*intraj);
                 end
-                
-            end
 
+            end
 
             normtrajvector=(markers.tail-markers.head)./norm(markers.tail-markers.head);
             orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
@@ -361,8 +360,8 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             obj.plan2elstruct(1).trajectory=trajectory;
             obj.plan2elstruct(1).name='';
             obj.plan2elstruct(1).markers=markers;
-            
-            
+
+
             switch obj.planningAppearance
                 case 'line'
                     [obj.patchPlanning, fv] = ea_plot3t(traj(:,1),traj(:,2),traj(:,3),obj.radius,obj.color,12,1);
