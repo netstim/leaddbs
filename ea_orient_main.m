@@ -785,7 +785,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             t = diff([head;tail])/norm(diff([head;tail]));
             y = y - (dot(y,t) / (norm(t) ^2)) * t;
             y = y/norm(y);
-            x = -cross(y,t);
+            x = cross(y,t);
 
             y = (y / norm(y)) * (options.elspec.lead_diameter / 2);
             x = (x / norm(x)) * (options.elspec.lead_diameter / 2);

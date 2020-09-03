@@ -90,11 +90,11 @@ for side=options.elside
     yvec(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
     yvec(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
 
-    xvec = -cross(yvec,[0 0 1]); % [1 0 0] rotated by rotation
+    xvec = cross(yvec,[0 0 1]); % [1 0 0] rotated by rotation
 
     xvec = xvec - (dot(xvec,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;     % x is projected down the trajectory
     xvec = xvec ./ norm(xvec);
-    yvec = cross(xvec,normtrajvector);
+    yvec = -cross(xvec,normtrajvector);
 
 %     markers(side).x = markers(side).head + xvec;
 %     markers(side).y = markers(side).head + yvec;
