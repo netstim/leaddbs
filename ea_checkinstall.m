@@ -288,12 +288,18 @@ else
         mkdir(fileparts(destination));
     end
     try
+        disp('Trying ''websave''.');
         webopts=weboptions('Timeout',Inf);
+        % uncomment this if you encounter problems with certificate validation
+        % (see https://www.mathworks.com/matlabcentral/answers/400086-how-to-read-data-form-website-url)
+        %webopts.CertificateFilename=('');
         websave(destination,downloadurl,'id',id,webopts);
     catch
         try
+            disp('''websave'' failed, trying ''urlwrite''.');
             urlwrite([downloadurl,'?id=',id],destination,'Timeout',Inf);
         catch
+            disp('''urlwrite'' failed.');
             success=0;
         end
     end
@@ -301,15 +307,21 @@ else
     [loc,~,ext] = fileparts(destination);
     if success
         disp(['Installing ',assetname,'...'])
-        if strcmp(ext,'.gz')
-            gunzip(destination, loc);
-            ea_delete(destination);
-        elseif strcmp(ext,'.zip')
-            unzip(destination, loc);
-            ea_delete(destination);
+        try
+            if strcmp(ext,'.gz')
+                gunzip(destination, loc);
+                ea_delete(destination);
+            elseif strcmp(ext,'.zip')
+                unzip(destination, loc);
+                ea_delete(destination);
+            end
+        catch
+            disp('Installation failed.');
+            success=0;
         end
-    else
-        fprintf(['\nDownload error! You may try to download the file manually from:\n',...
+    end
+    if ~success
+        fprintf(['\nDownload / install error! You may try to download the file manually from:\n',...
                  '%s\nand then extract it into %s.\n\n'], [downloadurl,'?id=',id], loc);
         msgbox('Please check the command window for more information.','Download error!','Error')
         return
