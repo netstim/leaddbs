@@ -94,6 +94,8 @@ for side=options.elside
     markers(side).y = markers(side).head + (yunitv * (options.elspec.lead_diameter/2));
 end
 
+trajvector = diff([markers(options.elside).head; markers(options.elside).tail]);
+normtrajvector = trajvector/norm(trajvector);
 xvec_unrot=cross(normtrajvector,[1,0,0]); % orthogonal vectors used for x-ray mode
 xvec_unrot=xvec_unrot./norm(xvec_unrot);
 yvec_unrot=cross(normtrajvector,[0,1,0]); % orthogonal vectors used for x-ray mode
