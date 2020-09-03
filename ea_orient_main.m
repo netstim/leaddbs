@@ -819,9 +819,8 @@ else  % check for electrode type and postoperative imaging
     choice = questdlg(msg,'No Directional Lead!','Abort','Abort');
     roll_out = [];
 end
-end
+
 
 function buttonPress(hObject,eventdata)
 hObject.UserData = 1;
 uiresume
-end
