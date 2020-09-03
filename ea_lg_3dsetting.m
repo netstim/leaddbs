@@ -176,7 +176,7 @@ if eventdata.Source.Value ~= M.ui.elmodelselect
                         for side=1:2
                             markers(side).head = coords_mm{side}(1,:);
                             markers(side).tail = coords_mm{side}(4,:);
-                            [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, 'null');
+                            [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);
                             markers(side).x = coords_mm{side}(1,:) + xunitv*(options.elspec.lead_diameter/2);
                             markers(side).y = coords_mm{side}(1,:) + yunitv*(options.elspec.lead_diameter/2);
                         end

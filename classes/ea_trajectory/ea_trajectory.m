@@ -350,7 +350,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
 
             end
 
-            [xunitv, yunitv] = ea_calcxy(markers.head, markers.tail, 'null');
+            [xunitv, yunitv] = ea_calcxy(markers.head, markers.tail);
             markers.x = markers.head + xunitv*(options.elspec.lead_diameter/2);
             markers.y = markers.head + yunitv*(options.elspec.lead_diameter/2);
             [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options);

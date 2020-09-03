@@ -233,7 +233,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                         for side=1:2
                             markers(side).head=coords_mm{side}(1,:);
                             markers(side).tail=coords_mm{side}(4,:);
-                            [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, 'null');
+                            [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);
                             markers(side).x = markers(side).head +  xunitv*(options.elspec.lead_diameter/2);
                             markers(side).y = markers(side).head + yunitv*(options.elspec.lead_diameter/2);
                         end

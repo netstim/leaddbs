@@ -42,7 +42,7 @@ for rev=1:length(revs)
     reco.mni.markers(end+1).head=newmarkers.head;
     reco.mni.markers(end).tail=newmarkers.tail;
 
-    [xunitv, yunitv] = ea_calcxy(reco.mni.markers(end).head, reco.mni.markers(end).tail, 'null');
+    [xunitv, yunitv] = ea_calcxy(reco.mni.markers(end).head, reco.mni.markers(end).tail);
     reco.mni.markers(end).x = reco.mni.markers(end).head + xunitv*(options.elspec.lead_diameter/2);
     reco.mni.markers(end).y = reco.mni.markers(end).head + yunitv*(options.elspec.lead_diameter/2);
 

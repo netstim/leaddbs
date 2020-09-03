@@ -35,7 +35,7 @@ function [coords_mm,trajectory,markers] = ea_runmanualslicer(options)
         markers(side).tail = F(idx+1,:);
 
         % add x and y (copied from ea_runmanual.m)
-        [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, 'null');
+        [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);
         markers(side).x = markers(side).head +  xunitv*(options.elspec.lead_diameter/2);
         markers(side).y = markers(side).head + yunitv*(options.elspec.lead_diameter/2);
     end

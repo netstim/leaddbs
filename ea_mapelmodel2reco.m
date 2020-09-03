@@ -21,7 +21,7 @@ if redomarkers
         elstruct.markers(iside).head=elstruct.coords_mm{iside}(1,:);
         elstruct.markers(iside).tail=elstruct.coords_mm{iside}(4,:);
 
-        [xunitv, yunitv] = ea_calcxy(elstruct.markers(iside).head, elstruct.markers(iside).tail, 'null');
+        [xunitv, yunitv] = ea_calcxy(elstruct.markers(iside).head, elstruct.markers(iside).tail);
         elstruct.markers(iside).x = elstruct.coords_mm{iside}(1,:) + xunitv*(options.elspec.lead_diameter/2);
         elstruct.markers(iside).y = elstruct.coords_mm{iside}(1,:) + yunitv*(options.elspec.lead_diameter/2); % corresponding points in reality
     end
