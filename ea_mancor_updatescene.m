@@ -83,23 +83,15 @@ end
 
 for side=options.elside
     rotation=getappdata(gcf,'rotation');
-    normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-    normtrajvector2 = normtrajvector;
 
     yvec(1) = -cos(0) * sin(ea_deg2rad(rotation{side})); % [0 1 0] rotated by rotation
     yvec(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
     yvec(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
 
-    xvec = cross(yvec,[0 0 1]); % [1 0 0] rotated by rotation
+    [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, yvec);
 
-    xvec = xvec - (dot(xvec,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;     % x is projected down the trajectory
-    xvec = xvec ./ norm(xvec);
-    yvec = -cross(xvec,normtrajvector);
-
-%     markers(side).x = markers(side).head + xvec;
-%     markers(side).y = markers(side).head + yvec;
-    markers(side).x = markers(side).head + (xvec * (options.elspec.lead_diameter/2));
-    markers(side).y = markers(side).head + (yvec * (options.elspec.lead_diameter/2));
+    markers(side).x = markers(side).head + (xunitv * (options.elspec.lead_diameter/2));
+    markers(side).y = markers(side).head + (yunitv * (options.elspec.lead_diameter/2));
 end
 
 xvec_unrot=cross(normtrajvector,[1,0,0]); % orthogonal vectors used for x-ray mode
