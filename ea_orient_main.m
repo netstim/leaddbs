@@ -775,35 +775,27 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             elseif strcmp(CTname,[filesep 'rpostop_ct.nii'])
                 y = y;
             end
-            y = y(1:3)';
+
             head = head_native(1:3)';
             tail = tail_native(1:3)';
-            y = y - head;
+            y = y(1:3)' - head;
 
-            %% project y down on t and calculate x
-            y = y/norm(y);
-            t = diff([head;tail])/norm(diff([head;tail]));
-            y = y - (dot(y,t) / (norm(t) ^2)) * t;
-            y = y/norm(y);
-            x = cross(y,t);
+            %% Calculate direction of x and y markers
+            [xunitv, yunitv] = ea_calcxy(head, tail, y);
 
-            y = (y / norm(y)) * (options.elspec.lead_diameter / 2);
-            x = (x / norm(x)) * (options.elspec.lead_diameter / 2);
-            head = head_native(1:3)';
-            y_out = y;
-            y = head + y;
-            x = head + x;
+            y = head + yunitv * (options.elspec.lead_diameter / 2);
+            x = head + xunitv * (options.elspec.lead_diameter / 2);
 
             reco.native.markers(side).y = y;
             reco.native.markers(side).x = x;
+
             %% for direct saving into manual reconstruction
             [coords,trajectory,markers]=ea_resolvecoords(reco.native.markers,options);
             ea_save_reconstruction(coords,trajectory,markers,options.elmodel,1,options)
 
             % %% for transfering to ea_manualreconstruction
-            y_out(3) = 0;
-            y_out = y_out / norm(y_out);
-            roll_out = rad2deg(atan2(norm(cross([0 1 0],y_out)),dot([0 1 0],y_out)));
+            yunitv(3) = 0;
+            roll_out = rad2deg(atan2(norm(cross([0 1 0],yunitv)),dot([0 1 0],yunitv)));
             if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
                 roll_out = - roll_out;
             end
