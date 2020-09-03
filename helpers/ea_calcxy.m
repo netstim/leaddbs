@@ -9,6 +9,10 @@ function [xunitv, yunitv] = ea_calcxy(head, tail, y)
 % anterior, or to calculate x and y axes using null function (orthonormal
 % basis of the null space of the z axis).
 
+if ~exist('y', 'var')
+    y = 'anterior';
+end
+
 trajvector = diff([head; tail]); % z axis, poiting to the top of the lead
 normtrajvector = trajvector/norm(trajvector); % Unit vector along z axis
 if isnumeric(y)
