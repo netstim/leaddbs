@@ -61,10 +61,9 @@ for side=options.sides
     markers(side).head=coords_mm{side}(1,:);
     markers(side).tail=coords_mm{side}(4,:);
 
-    orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
-
-    markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
-    markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+    [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, 'null');
+    markers(side).x = coords_mm{side}(1,:) + xunitv*(options.elspec.lead_diameter/2);
+    markers(side).y = coords_mm{side}(1,:) + yunitv*(options.elspec.lead_diameter/2);
 
     coords_mm=ea_resolvecoords(markers,options);
 end

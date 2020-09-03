@@ -154,12 +154,10 @@ classdef MERState < handle
                             ((dbs_contacts(1).tail-dbs_contacts(1).head)/...
                             norm(dbs_contacts(1).tail-dbs_contacts(1).head))*...
                             hdist;
-                        normtrajvector=(dbs_contacts(1).tail-dbs_contacts(1).head)/...
-                            norm((dbs_contacts(1).tail-dbs_contacts(1).head));
-                        orth=null(normtrajvector)*(1.27/2);
-                        dbs_contacts(1).x=dbs_contacts(1).head+orth(:,1)';
-                        dbs_contacts(1).y=dbs_contacts(1).head+orth(:,2)'; % corresponding points in reality
-                        % end build markers struct from planning fiducial line. 
+                        [xunitv, yunitv] = ea_calcxy(dbs_contacts(1).head, dbs_contacts(1).tail, 'null');
+                        dbs_contacts(1).x = dbs_contacts(1).head + xunitv*(opts.elspec.lead_diameter/2);
+                        dbs_contacts(1).y = dbs_contacts(1).head + yunitv*(opts.elspec.lead_diameter/2);
+                        % end build markers struct from planning fiducial line.
                 end
             end
 

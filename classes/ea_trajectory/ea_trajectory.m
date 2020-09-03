@@ -350,10 +350,9 @@ function obj=update_trajectory(obj,evtnm) % update ROI
 
             end
 
-            normtrajvector=(markers.tail-markers.head)./norm(markers.tail-markers.head);
-            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-            markers.x=markers.head+orth(:,1)';
-            markers.y=markers.head+orth(:,2)'; % corresponding points in reality
+            [xunitv, yunitv] = ea_calcxy(markers.head, markers.tail, 'null');
+            markers.x = markers.head + xunitv*(options.elspec.lead_diameter/2);
+            markers.y = markers.head + yunitv*(options.elspec.lead_diameter/2);
             [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options);
             obj.plan2elstruct(1).coords_mm=coords_mm;
             obj.plan2elstruct(1).coords_mm=ea_resolvecoords(markers,options);

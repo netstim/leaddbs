@@ -41,10 +41,10 @@ for rev=1:length(revs)
 
     reco.mni.markers(end+1).head=newmarkers.head;
     reco.mni.markers(end).tail=newmarkers.tail;
-    normtrajvector=(reco.mni.markers(end).tail-reco.mni.markers(end).head)./norm(reco.mni.markers(end).tail-reco.mni.markers(end).head);
-    orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-    reco.mni.markers(end).x=reco.mni.markers(end).head+orth(:,1)';
-    reco.mni.markers(end).y=reco.mni.markers(end).head+orth(:,2)'; % corresponding points in reality
+
+    [xunitv, yunitv] = ea_calcxy(reco.mni.markers(end).head, reco.mni.markers(end).tail, 'null');
+    reco.mni.markers(end).x = reco.mni.markers(end).head + xunitv*(options.elspec.lead_diameter/2);
+    reco.mni.markers(end).y = reco.mni.markers(end).head + yunitv*(options.elspec.lead_diameter/2);
 
     reco=rmfield(reco,'native');
     save([directory,'ea_reconstruction.mat'],'reco');

@@ -233,10 +233,9 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                         for side=1:2
                             markers(side).head=coords_mm{side}(1,:);
                             markers(side).tail=coords_mm{side}(4,:);
-                            normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-                            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-                            markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
-                            markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+                            [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, 'null');
+                            markers(side).x = markers(side).head +  xunitv*(options.elspec.lead_diameter/2);
+                            markers(side).y = markers(side).head + yunitv*(options.elspec.lead_diameter/2);
                         end
                     end
                     M.elstruct(pt).markers=markers;

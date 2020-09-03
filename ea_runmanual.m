@@ -42,11 +42,9 @@ for side=options.sides
         (markers(side).tail-markers(side).head));
 
     % add x and y
-    normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-    orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-    markers(side).x=markers(side).head+orth(:,1)';
-    markers(side).y=markers(side).head+orth(:,2)'; % corresponding points in reality
-    
+    [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, 'null');
+    markers(side).x = markers(side).head + xunitv*(options.elspec.lead_diameter/2);
+    markers(side).y = markers(side).head + yunitv*(options.elspec.lead_diameter/2);
 end
 [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,0);
 

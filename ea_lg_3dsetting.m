@@ -176,10 +176,9 @@ if eventdata.Source.Value ~= M.ui.elmodelselect
                         for side=1:2
                             markers(side).head = coords_mm{side}(1,:);
                             markers(side).tail = coords_mm{side}(4,:);
-                            normtrajvector = (markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-                            orth = null(normtrajvector)*(options.elspec.lead_diameter/2);
-                            markers(side).x = coords_mm{side}(1,:)+orth(:,1)';
-                            markers(side).y = coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+                            [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, 'null');
+                            markers(side).x = coords_mm{side}(1,:) + xunitv*(options.elspec.lead_diameter/2);
+                            markers(side).y = coords_mm{side}(1,:) + yunitv*(options.elspec.lead_diameter/2);
                         end
                     end
                     M.elstruct(pt).markers = markers;
