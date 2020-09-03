@@ -28,18 +28,18 @@ for side=options.sides
     else
         side2 = side;
     end
-        
+
     coords_mm{side}=[tmat*[elecmodels{side2}.getContactPositions3D,ones(size(elecmodels{side2}.getContactPositions3D,1),1)]']';%#ok<NBRAK,AGROW>
     coords_mm{side}=coords_mm{side}(:,1:3);%#ok<AGROW>
     for dim=1:3
         trajectory{side}(:,dim)=linspace(coords_mm{side}(1,dim),coords_mm{side}(1,dim)+10*(coords_mm{side}(1,dim)-coords_mm{side}(end,dim)),20);%#ok<AGROW>
     end
-    
+
     markers(side).head=coords_mm{side}(1,:); %#ok<AGROW>
     markers(side).tail=coords_mm{side}(4,:); %#ok<AGROW>
-    [xnorm, ynorm] = ea_calcxy(coords_mm{side}(1,:), coords_mm{side}(end,:));
-    markers(side).x=coords_mm{side}(1,:)+xnorm*(options.elspec.lead_diameter/2);
-    markers(side).y=coords_mm{side}(1,:)+ynorm*(options.elspec.lead_diameter/2);
+    [xunitv, yunitv] = ea_calcxy(coords_mm{side}(1,:), coords_mm{side}(end,:));
+    markers(side).x=coords_mm{side}(1,:)+xunitv*(options.elspec.lead_diameter/2);
+    markers(side).y=coords_mm{side}(1,:)+yunitv*(options.elspec.lead_diameter/2);
 end
 
 

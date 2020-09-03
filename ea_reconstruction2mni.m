@@ -66,9 +66,9 @@ for side=options.sides
 
     if ~isempty(reco.mni.markers(side).head)
         % Calc X and Y marker coordinates
-        [xnorm, ynorm] = ea_calcxy(reco.mni.markers(side).head, reco.mni.markers(side).tail);
-        reco.mni.markers(side).x = reco.mni.markers(side).head + xnorm*(options.elspec.lead_diameter/2);
-        reco.mni.markers(side).y = reco.mni.markers(side).head + ynorm*(options.elspec.lead_diameter/2);
+        [xunitv, yunitv] = ea_calcxy(reco.mni.markers(side).head, reco.mni.markers(side).tail);
+        reco.mni.markers(side).x = reco.mni.markers(side).head + xunitv*(options.elspec.lead_diameter/2);
+        reco.mni.markers(side).y = reco.mni.markers(side).head + yunitv*(options.elspec.lead_diameter/2);
     else
         reco.mni.markers(side).x=[];
         reco.mni.markers(side).y=[];
