@@ -56,7 +56,7 @@ if exist('reco','var')
         for side=1:2
             [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);
             markers(side).x = markers(side).head+xunitv*(options.elspec.lead_diameter/2);
-            markers(side).y = markers(side).head+yunitv*(options.elspec.lead_diameter/2); % corresponding points in reality
+            markers(side).y = markers(side).head+yunitv*(options.elspec.lead_diameter/2);
         end
     end
 

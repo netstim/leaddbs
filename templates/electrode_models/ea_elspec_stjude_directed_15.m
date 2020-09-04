@@ -16,7 +16,7 @@ electrodeorder = [1 2 3 4 5 6 7 8 9];
 for k = 1:18
     filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins', num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
-    node(:,1) = -node(:,1); % Flip X axis
+    node(:,1) = -node(:,1); % Flip X axis since it's flipped in the tetgen models.
     electrode.insulation(k).vertices = node;
     electrode.insulation(k).faces = face(:,1:3);
     clear face node filename

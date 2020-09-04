@@ -20,7 +20,7 @@ for k = 1:16
     filename = [elemodelPath, filesep, 'Boston_Vercise_Directed_Components', ...
     	filesep, 'Insulations', filesep, 'ins', num2str(k), '.1'];
     [node,~,face]=readtetgen(filename);
-    node(:,1) = -node(:,1); % Flip X axis
+    node(:,1) = -node(:,1); % Flip X axis since it's flipped in the tetgen models.
     electrode.insulation(k).vertices = node;
     electrode.insulation(k).faces = face(:,1:3);
     clear face node filename

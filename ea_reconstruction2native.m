@@ -56,7 +56,7 @@ for side=options.sides
 
     [xunitv, yunitv] = ea_calcxy(reco.(usenative).markers(side).head, reco.(usenative).markers(side).tail);
     reco.(usenative).markers(side).x = reco.(usenative).markers(side).head+xunitv*(options.elspec.lead_diameter/2);
-    reco.(usenative).markers(side).y = reco.(usenative).markers(side).head+yunitv*(options.elspec.lead_diameter/2); % corresponding points in reality
+    reco.(usenative).markers(side).y = reco.(usenative).markers(side).head+yunitv*(options.elspec.lead_diameter/2);
 end
 
 
