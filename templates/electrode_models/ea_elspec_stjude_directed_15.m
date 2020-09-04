@@ -13,10 +13,17 @@ function electrode=ea_elspec_stjude_directed_15(varargin)
 electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
+% Calc offset since 0 (z axis) starts from the first contact in the tetgen models
+% filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins1.1'];
+% node = readtetgen(filename);
+% offset = -min(node(:,3));
+offset = 1;
+
 for k = 1:18
     filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins', num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
     node(:,1) = -node(:,1); % Flip X axis since it's flipped in the tetgen models.
+    node(:,3) = node(:,3) + offset; % Make 0 starts at the rear end of the tip
     electrode.insulation(k).vertices = node;
     electrode.insulation(k).faces = face(:,1:3);
     clear face node filename
@@ -26,6 +33,7 @@ for k = 1:9
     filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Contacts',filesep,'con',num2str(electrodeorder(k)),'.1'];
     [node,~,face]=readtetgen(filename);
     node(:,1) = -node(:,1); % Flip X axis since it's flipped in the tetgen models.
+    node(:,3) = node(:,3) + offset; % Make 0 starts at the rear end of the tip
     electrode.contacts(k).vertices = node;
     electrode.contacts(k).faces = face(:,1:3);
     clear face node filename
