@@ -164,13 +164,13 @@ for side=options.sides
         if isfield(options.prefs.d3,'showdirarrows') && options.prefs.d3.showdirarrows
             switch options.elmodel
                 case 'Boston Scientific Vercise Directed'
-                    markerposition = 10.25;
+                    markerposition = 11;
                     dothearrows = 1;
                 case 'St. Jude Directed 6172 (short)'
-                    markerposition = 9;
+                    markerposition = 9.75;
                     dothearrows = 1;
                 case 'St. Jude Directed 6173 (long)'
-                    markerposition = 12;
+                    markerposition = 12.75;
                     dothearrows = 1;
                 otherwise
                     dothearrows = 0;
