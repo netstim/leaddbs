@@ -142,14 +142,14 @@ switch elmodel
         elspec.forstimulation=1;
     case 'St. Jude ActiveTip (6146-6149)'
         elspec.matfname='stjude_activetip_2mm';
-        elspec.lead_diameter=1.27;
+        elspec.lead_diameter=1.4;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
-        elspec.contact_diameter=1.27;
+        elspec.contact_diameter=1.4;
         elspec.contact_color=0.3;
-        elspec.tip_diameter=1.27;
+        elspec.tip_diameter=1.4;
         elspec.tip_color=0.3;
-        elspec.tip_length=1.5;
+        elspec.tip_length=3.0;
         elspec.contact_spacing=0.5;
         elspec.numel=4;
         elspec.tipiscontact=1;
