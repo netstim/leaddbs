@@ -208,7 +208,7 @@ for side=1:length(options.sides)
     end
     set(0,'CurrentFigure',resultfig);
 
-    tipdiams=repmat(elspec.tip_diameter/2,1,19)-([10:-0.5:1].^10/10^10)*(elspec.tip_diameter/2);
+    tipdiams=repmat(elspec.tip_diameter/2,1,37)-([10:-0.25:1].^10/10^10)*(elspec.tip_diameter/2);
     tipdiams(end+1)=elspec.tip_diameter/2;
     [cX,cY,cZ] = ea_singlecylinder((tipdiams),N);
 
