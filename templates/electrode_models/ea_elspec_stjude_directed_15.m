@@ -14,10 +14,9 @@ electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
 % Calc offset since 0 (z axis) starts from the first contact in the tetgen models
-% filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins1.1'];
-% node = readtetgen(filename);
-% offset = -min(node(:,3));
-offset = 1;
+filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins1.1'];
+node = readtetgen(filename);
+offset = -min(node(:,3));
 
 for k = 1:18
     filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins', num2str(k),'.1'];
@@ -45,10 +44,10 @@ options = ea_resolve_elspec(options);
 elspec = options.elspec;
 
 electrode.electrode_model = options.elmodel;
-electrode.head_position = [0 0 1.75];
-electrode.tail_position = [0 0 10.75];
-electrode.x_position = [elspec.lead_diameter/2 0 1.75];
-electrode.y_position = [0 elspec.lead_diameter/2 1.75];
+electrode.head_position = [0 0 0.75+offset];
+electrode.tail_position = [0 0 9.75+offset];
+electrode.x_position = [elspec.lead_diameter/2 0 0.75+offset];
+electrode.y_position = [0 elspec.lead_diameter/2 0.75+offset];
 electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
@@ -56,14 +55,14 @@ electrode.lead_color = 0.7;
 cx = elspec.lead_diameter/2*cos(pi/6);
 cy = elspec.lead_diameter/2*sin(pi/6);
 
-electrode.coords_mm(1,:)=[0 0 1.75];
-electrode.coords_mm(2,:)=[0 0 4.75]+[0, elspec.lead_diameter/2, 0];
-electrode.coords_mm(3,:)=[0 0 4.75]+[cx, -cy, 0];
-electrode.coords_mm(4,:)=[0 0 4.75]+[-cx, -cy, 0];
-electrode.coords_mm(5,:)=[0 0 7.75]+[0, elspec.lead_diameter/2, 0];
-electrode.coords_mm(6,:)=[0 0 7.75]+[cx, -cy, 0];
-electrode.coords_mm(7,:)=[0 0 7.75]+[-cx, -cy, 0];
-electrode.coords_mm(8,:)=[0 0 10.75];
+electrode.coords_mm(1,:)=[0 0 0.75+offset];
+electrode.coords_mm(2,:)=[0 0 3.75+offset]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(3,:)=[0 0 3.75+offset]+[cx, -cy, 0];
+electrode.coords_mm(4,:)=[0 0 3.75+offset]+[-cx, -cy, 0];
+electrode.coords_mm(5,:)=[0 0 6.75+offset]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(6,:)=[0 0 6.75+offset]+[cx, -cy, 0];
+electrode.coords_mm(7,:)=[0 0 6.75+offset]+[-cx, -cy, 0];
+electrode.coords_mm(8,:)=[0 0 9.75+offset];
 
 electrode.isdirected = 1;
 
