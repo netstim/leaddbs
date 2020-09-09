@@ -200,16 +200,7 @@ for side=1:length(options.sides)
         cnt=cnt+1;
     end
 
-
-
-
-
-
-
-
-
     % draw tip
-
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
     else
