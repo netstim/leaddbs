@@ -212,16 +212,11 @@ for side=1:length(options.sides)
     tipdiams(end+1)=elspec.tip_diameter/2;
     [cX,cY,cZ] = ea_singlecylinder((tipdiams),N);
 
-    cZ=cZ.*(elspec.tip_length+elspec.contact_length); % scale to fit tip-diameter
+    cZ=cZ.*elspec.tip_length; % scale to fit tip-diameter
 
     % define two points to define cylinder.
-    X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
+    X1=coords_mm{side}(1,:)-trajvector*(elspec.tip_length/2);
     X2=X1+trajvector*elspec.tip_length;
-
-
-    cX=cX+X1(1);
-    cY=cY+X1(2);
-    cZ=cZ-(2*elspec.tip_length)/2+X1(3);
 
     p=surf2patch(surf(cX,cY,cZ),'triangles');
 
@@ -229,16 +224,12 @@ for side=1:length(options.sides)
 
     [cX,cY,cZ] = ea_singlecylinder((tipdiams),20);
 
-    cZ=cZ.*(elspec.tip_length+elspec.contact_length); % scale to fit tip-diameter
+    cZ=cZ.*elspec.tip_length; % scale to fit tip-diameter
 
     % define two points to define cylinder.
-    X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
+    X1=coords_mm{side}(1,:)-trajvector*(elspec.tip_length/2);
     X2=X1+trajvector*elspec.tip_length;
 
-
-    cX=cX+X1(1);
-    cY=cY+X1(2);
-    cZ=cZ-(2*elspec.tip_length)/2+X1(3);
     a=surf2patch(surf(cX,cY,cZ));
 
     a=ea_reordercylinder(a,20);
