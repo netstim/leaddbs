@@ -154,7 +154,7 @@ for side=1:length(options.sides)
     end
 
     % draw trajectory between contacts
-    for cntct=1:elspec.numel-1
+    for cntct=2:elspec.numel
         set(0,'CurrentFigure',resultfig);
         diams=repmat(elspec.lead_diameter/2,1,2);
         [cX,cY,cZ] = ea_singlecylinder((diams),N);
@@ -162,7 +162,7 @@ for side=1:length(options.sides)
         cZ=cZ.*(elspec.contact_spacing); % scale to fit tip-diameter
         htd=(max(cZ(:))/2);
         cZ=cZ-htd;
-        hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing/2;
+        hait=coords_mm{side}(cntct,3)-elspec.contact_length/2-elspec.contact_spacing/2;
         cZ=cZ+hait;
 
         p=surf2patch(surf(cX,cY,cZ),'triangles');
@@ -174,15 +174,15 @@ for side=1:length(options.sides)
         cZ=cZ.*(elspec.contact_spacing); % scale to fit tip-diameter
         htd=(max(cZ(:))/2);
         cZ=cZ-htd;
-        hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing/2;
+        hait=coords_mm{side}(cntct,3)-elspec.contact_length/2-elspec.contact_spacing/2;
         cZ=cZ+hait;
 
         a=surf2patch(surf(cX,cY,cZ));
         a=ea_reordercylinder(a,2);
-        meshel.ins{cntct+1}.faces=a.faces;
-        meshel.ins{cntct+1}.vertices=a.vertices;
-        ndiv=length(meshel.ins{cntct+1}.vertices)/2;
-        meshel.ins{cntct+1}.endplates=[1:ndiv;ndiv+1:2*ndiv];
+        meshel.ins{cntct}.faces=a.faces;
+        meshel.ins{cntct}.vertices=a.vertices;
+        ndiv=length(meshel.ins{cntct}.vertices)/2;
+        meshel.ins{cntct}.endplates=[1:ndiv;ndiv+1:2*ndiv];
 
 
         % add endplates:
