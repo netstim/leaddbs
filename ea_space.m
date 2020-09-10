@@ -39,7 +39,9 @@ switch cmd
 
     case 'dartel'
         path=[ea_getearoot,'templates',filesep,'space',filesep,spacename,filesep,'dartel',filesep];
-
+    case 'connectomes'
+        p=ea_prefs;
+        path=p.lc.datadir;
 end
 
 if ~exist(path,'dir')
