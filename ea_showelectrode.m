@@ -44,9 +44,6 @@ try
 end
 
 for side=options.sides
-%     trajvector=mean(diff(trajectory{side}));
-%
-%     trajvector=trajvector/norm(trajvector);
     try
         startpoint=trajectory{side}(1,:)-(2*(coords_mm{side}(1,:)-trajectory{side}(1,:)));
     catch
@@ -191,7 +188,6 @@ for side=options.sides
     else % simply draw pointcloud
         shifthalfup=0;
         % check if isomatrix needs to be expanded from single vector by using stimparams:
-
         try % sometimes isomatrix not defined.
             if size(options.d3.isomatrix{1}{1},2)==elspec.numel-1 % 3 contact pairs
                 shifthalfup=1;
@@ -227,7 +223,6 @@ for side=options.sides
             %maxval=1;
         end
         for cntct=1:elspec.numel-shifthalfup
-
             if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})))
                 if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
                     useedgecolor=[0.8,0.5,0.5];
@@ -239,15 +234,12 @@ for side=options.sides
                     useedgecolor='none';
                     ms=10;
                 end
-                % define color
 
+                % define color
                 if options.d3.colorpointcloud
                     % draw contacts as colored cloud defined by isomatrix.
-
                     if ~isnan(options.d3.isomatrix{1}{side}(pt,cntct))
-
                         usefacecolor=((normalisomatrix{side}(pt,cntct)-minval)/(maxval-minval))*(length(cmap)-1);
-
                         % % Add some contrast (remove these lines for linear mapping)
                         % usefacecolor=usefacecolor-20;
                         % usefacecolor(usefacecolor<1)=1;
