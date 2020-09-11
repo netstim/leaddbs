@@ -237,9 +237,9 @@ for mcfi=usesubjects % iterate across subjects
 
                             if ~exist('db','var')
                                 try
-                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,dataset.vol.matfilename]);
+                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,dataset.vol.matfilename],'Writable',false);
                                 catch
-                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
+                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat'],'Writable',false);
                                 end
                             end
 
