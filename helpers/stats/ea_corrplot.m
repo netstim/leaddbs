@@ -113,7 +113,7 @@ if isempty(group1) && isempty(group2)
 else
     g.set_color_options('chroma',0,'lightness',30);
 end
-g.set_point_options('markers', markers);
+g.set_point_options('markers', markers, 'base_size', 7);
 g.stat_glm();
 
 pv=p;
