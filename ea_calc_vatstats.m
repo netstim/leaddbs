@@ -166,7 +166,7 @@ for side=1:length(options.sides)
                 load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
 
                 for atlas=1:length(atlases.names)
-                    if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
+                    if any(S.amplitude{side}) % stimulation on
                         switch atlases.types(atlas)
                             case 1 % right hemispheric atlas.
                                 atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
@@ -205,7 +205,7 @@ for side=1:length(options.sides)
                                 ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)./sum(Vefield.img(:));
                             ea_stats.stimulation(thisstim).efield(side,vat).volume=sum(Vefield.img(:));
                         end
-                    else % no voltage on this vat, simply set vi to zero.
+                    else % no stimulation, simply set vi to zero.
                         ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
                         ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
                     end
