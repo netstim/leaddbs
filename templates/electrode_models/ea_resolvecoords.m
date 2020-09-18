@@ -18,7 +18,6 @@ end
 
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname]);
 for side=1:length(markers) % leave as is
-
     if resize
         can_dist=ea_pdist([electrode.head_position;electrode.tail_position]);
         %emp_dist=ea_pdist([markers(side).head;markers(side).tail]);
@@ -32,7 +31,6 @@ for side=1:length(markers) % leave as is
             can_eldist=sum(sum(tril(triu(A,1),1)))/(3);
             clear coords_temp
         else
-
             A=sqrt(ea_sqdist(electrode.coords_mm',electrode.coords_mm'));
             can_eldist=sum(sum(tril(triu(A,1),1)))/(options.elspec.numel-1);
         end
@@ -42,7 +40,6 @@ for side=1:length(markers) % leave as is
         else
             stretch=can_dist;
         end
-
         markers(side).tail=markers(side).head+vec*stretch;
     end
 

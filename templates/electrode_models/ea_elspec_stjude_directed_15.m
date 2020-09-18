@@ -8,52 +8,71 @@ function electrode=ea_elspec_stjude_directed_15(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-electrodeorder = [1 2 4 3 5 7 6 8 9]; % 211117 - small change so that order of the directional electrodes is clockwise seen from the tip
+% The segmented contacts are clockwise arranged seen from the top view, the
+% same as in the models in the components folder.
+electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
+% Calc offset since 0 (z axis) starts from the first contact in the tetgen models
+filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins1.1'];
+node = readtetgen(filename);
+offset = -min(node(:,3));
+
 for k = 1:18
-    filename = [fileparts(mfilename('fullpath')),'/StJude_Directed_15_Components/Insulations/ins', num2str(k),'.1'];
+    filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins', num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
+    node(:,1) = -node(:,1); % Flip X axis since it's flipped in the tetgen models.
+    node(:,3) = node(:,3) + offset; % Make 0 starts at the rear end of the tip
     electrode.insulation(k).vertices = node;
     electrode.insulation(k).faces = face(:,1:3);
     clear face node filename
 end
 
 for k = 1:9
-    filename = [fileparts(mfilename('fullpath')),'/StJude_Directed_15_Components/Contacts/con',num2str(electrodeorder(k)),'.1'];
+    filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Contacts',filesep,'con',num2str(electrodeorder(k)),'.1'];
     [node,~,face]=readtetgen(filename);
+    node(:,1) = -node(:,1); % Flip X axis since it's flipped in the tetgen models.
+    node(:,3) = node(:,3) + offset; % Make 0 starts at the rear end of the tip
     electrode.contacts(k).vertices = node;
     electrode.contacts(k).faces = face(:,1:3);
     clear face node filename
 end
 
 %% other specifications
-electrode.electrode_model = 'St. Jude Directed 6173 (long)';
-electrode.head_position = [0 0 0.75];
-electrode.tail_position = [0 0 6.75];
-electrode.x_position = [0.65 0 0.75];
-electrode.y_position = [0 0.65 0.75];
+options.elmodel = 'St. Jude Directed 6173 (long)';
+options = ea_resolve_elspec(options);
+elspec = options.elspec;
+
+electrode.electrode_model = options.elmodel;
+electrode.head_position = [0 0 0.75+offset];
+electrode.tail_position = [0 0 9.75+offset];
+electrode.x_position = [elspec.lead_diameter/2 0 0.75+offset];
+electrode.y_position = [0 elspec.lead_diameter/2 0.75+offset];
 electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 
-electrode.coords_mm(1,:)=[0 0 0.75];
-electrode.coords_mm(2,:)=[0 0 3.75]+[-0.66,0,0];
-electrode.coords_mm(3,:)=[0 0 3.75]+[0.33,0.66,0];
-electrode.coords_mm(4,:)=[0 0 3.75]+[0.33,-0.66,0];
-electrode.coords_mm(5,:)=[0 0 6.75]+[-0.66,0,0];
-electrode.coords_mm(6,:)=[0 0 6.75]+[0.33,0.66,0];
-electrode.coords_mm(7,:)=[0 0 6.75]+[0.33,-0.66,0];
-electrode.coords_mm(8,:)=[0 0 9.75];
+cx = elspec.lead_diameter/2*cos(pi/6);
+cy = elspec.lead_diameter/2*sin(pi/6);
 
+electrode.coords_mm(1,:)=[0 0 0.75+offset];
+electrode.coords_mm(2,:)=[0 0 3.75+offset]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(3,:)=[0 0 3.75+offset]+[cx, -cy, 0];
+electrode.coords_mm(4,:)=[0 0 3.75+offset]+[-cx, -cy, 0];
+electrode.coords_mm(5,:)=[0 0 6.75+offset]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(6,:)=[0 0 6.75+offset]+[cx, -cy, 0];
+electrode.coords_mm(7,:)=[0 0 6.75+offset]+[-cx, -cy, 0];
+electrode.coords_mm(8,:)=[0 0 9.75+offset];
+
+electrode.isdirected = 1;
 
 %% saving electrode struct
-save([fileparts(mfilename('fullpath')),'stjude_directed_15.mat'],'electrode');
+save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_15.mat'],'electrode');
 
 %% create and save _vol file
-filename = [fileparts(mfilename('fullpath')),'/StJude_Directed_15_Components/final.1'];
+filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'final.1'];
 [node,~,face]=readtetgen(filename);
-save([fileparts(mfilename('fullpath')),'/stjude_directed_15_vol.mat'],'face','node')
+save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_15_vol.mat'],'face','node')
 clear node face
 
 %% visualize

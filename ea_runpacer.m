@@ -28,21 +28,18 @@ for side=options.sides
     else
         side2 = side;
     end
-        
+
     coords_mm{side}=[tmat*[elecmodels{side2}.getContactPositions3D,ones(size(elecmodels{side2}.getContactPositions3D,1),1)]']';%#ok<NBRAK,AGROW>
     coords_mm{side}=coords_mm{side}(:,1:3);%#ok<AGROW>
     for dim=1:3
         trajectory{side}(:,dim)=linspace(coords_mm{side}(1,dim),coords_mm{side}(1,dim)+10*(coords_mm{side}(1,dim)-coords_mm{side}(end,dim)),20);%#ok<AGROW>
     end
-    
+
     markers(side).head=coords_mm{side}(1,:); %#ok<AGROW>
     markers(side).tail=coords_mm{side}(4,:); %#ok<AGROW>
-    normtrajvector{side}=(coords_mm{side}(1,:)-coords_mm{side}(end,:))/... %#ok<AGROW>
-        norm((coords_mm{side}(1,:)-coords_mm{side}(end,:))); %#ok<AGROW>
-    orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2); % #ok<AGROW>
-    
-    markers(side).x=coords_mm{side}(1,:)+orth(:,1)';%#ok<AGROW>
-    markers(side).y=coords_mm{side}(1,:)+orth(:,2)';%#ok<AGROW> % corresponding points in reality
+    [xunitv, yunitv] = ea_calcxy(coords_mm{side}(1,:), coords_mm{side}(end,:));
+    markers(side).x=coords_mm{side}(1,:)+xunitv*(options.elspec.lead_diameter/2);
+    markers(side).y=coords_mm{side}(1,:)+yunitv*(options.elspec.lead_diameter/2);
 end
 
 
@@ -50,9 +47,6 @@ ea_methods(options,...
     ['DBS-Electrodes were automatically pre-localized in native & template space using the PaCER algorithm',...
     ' (Husch et al., 2017; http://adhusch.github.io/PaCER/).'],...
     {'Husch, A., Petersen, M. V., Gemmar, P., Goncalves, J., & Hertel, F. (2017). PaCER - A fully automated method for electrode trajectory and contact reconstruction in deep brain stimulation. NeuroImage. Clinical, 17, 80?89. http://doi.org/10.1016/j.nicl.2017.10.004'});
-
-function fn=stripext(fn)
-[~,fn]=fileparts(fn);
 
 
 function model=ea_mod2pacermod(model)
