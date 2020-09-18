@@ -184,7 +184,14 @@ for side=1:length(options.sides)
                             case 5 % midline atlas (one file with both sides information.
                                 atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
                         end
-                        atlasfile = ea_niigz(atlasfile);
+
+                        if endsWith(atlasfile, {'.nii','.nii.gz'})
+                            atlasfile = ea_niigz(atlasfile);
+                        else % Skip fiber atlas
+                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
+                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
+                            continue;
+                        end
 
                         vatfile = ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_',sidec]);
                         voxsize = prod(ea_detvoxsize(vatfile));
