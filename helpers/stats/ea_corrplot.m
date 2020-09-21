@@ -110,6 +110,7 @@ end
 g=gramm('x',X,'y',Y);
 if isempty(group1) && isempty(group2)
     g.geom_point();
+    g.set_color_options(colorOptions{:});
 else
     g.set_color_options('chroma',0,'lightness',30);
 end
