@@ -98,7 +98,7 @@ prefs.normalize.fsl.warpres=8; % Defines the warp resolution in FSL warps.
 prefs.normalize.spm.resolution=1; % Defines resolution in mm when using SPM normalization routines (New Segment, DARTEL, SHOOT).
 
 %% Reconstruction
-prefs.reco.mancoruse='postop'; % switch to 'rpostop' to use resliced CT.
+prefs.reco.mancoruse='rpostop'; % switch to 'rpostop' to use resliced CT.
 prefs.reco.saveACPC=0; % also save reconstructions in AC/PC space
 prefs.reco.saveimg=0; % save fiducial marker visualisation as image after "Refined TRAC/CORE"
 prefs.reco.exportfiducials=0; % automatically export fiducials to a comma separated value file after "Refined TRAC/CORE". Set this to 'fcsv' for simple import into Slicer, otherwise set to 'csv' or 'txt' for import into other software.
