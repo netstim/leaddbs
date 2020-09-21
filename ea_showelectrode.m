@@ -74,9 +74,9 @@ for side=options.sides
             else
                 try
                     if ~isfield(options,'patient_list') % single subject mode
-                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.root,options.patientname],options);
+                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.root,options.patientname]);
                     else
-                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.patient_list{pt},filesep],options);
+                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.patient_list{pt},filesep]);
                     end
                     elstruct.markers=markers;
                     elstruct.coords_mm=coords_mm;
