@@ -58,6 +58,15 @@ else
     end
 end
 
+if nargin >= 8
+    imageDim = varargin{8};
+    if isnumeric(imageDim)
+        imageDim = num2str(imageDim);
+    end
+else
+    imageDim = '3';
+end
+
 if ~isempty(options) && ~isempty(fieldnames(options))
     directory = [options.root,options.patientname,filesep];
     warpsuffix = ea_getantstransformext(directory);
@@ -119,7 +128,8 @@ for fi = 1:length(fis)
 
 	cmd = [applyTransforms, ...
            ' --verbose 1' ...
-           ' --dimensionality 3 --float 1' ...
+           ' --dimensionality ', imageDim, ...
+           ' --float 1' ...
            ' --input ',ea_path_helper(fis{fi}), ...
            ' --output ',ea_path_helper(ofis{fi})];
 
