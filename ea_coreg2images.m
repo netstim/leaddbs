@@ -31,6 +31,8 @@ if ~exist('msks','var') || isempty(msks)
     msks={};
 end
 
+% Only effective for SPM, 4th degree BSpline by default.
+% ANTs and BRAINSFit use Linear interpolation, FSL use Sinc interpolation.
 if ~exist('interp','var') || isempty(interp)
     interp=4;
 end
