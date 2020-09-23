@@ -67,6 +67,16 @@ else
     imageDim = '3';
 end
 
+% Image type (-e 0/1/2/3/4): scalar/vector/tensor/time-series/multichannel
+if nargin == 9
+    imageType = varargin{9};
+    if isnumeric(imageType)
+        imageType = num2str(imageType);
+    end
+else
+    imageType = '0';
+end
+
 if ~isempty(options) && ~isempty(fieldnames(options))
     directory = [options.root,options.patientname,filesep];
     warpsuffix = ea_getantstransformext(directory);
@@ -129,6 +139,7 @@ for fi = 1:length(fis)
 	cmd = [applyTransforms, ...
            ' --verbose 1' ...
            ' --dimensionality ', imageDim, ...
+           ' --input-image-type ', imageType, ...
            ' --float 1' ...
            ' --input ',ea_path_helper(fis{fi}), ...
            ' --output ',ea_path_helper(ofis{fi})];
