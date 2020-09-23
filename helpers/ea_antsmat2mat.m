@@ -3,12 +3,10 @@ function mat=ea_antsmat2mat(afftransform,m_Center)
 % https://www.neuro.polymtl.ca/tips_and_tricks/how_to_use_ants and ITK code
 % in ComputeOffset() itkMatrixOffsetTransformBase.hxx
 
-
 mat=[reshape(afftransform(1:9),[3,3])',afftransform(10:12)];
 
 m_Translation=mat(:,4);
 mat=[mat;[0,0,0,1]];
-
 
 for i=1:3
     m_Offset(i) = m_Translation(i) + m_Center(i);
