@@ -467,6 +467,13 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         {@ea_trajvisible,'on',obj}, {@ea_trajvisible,'off',obj}, ...
         ea_bool2onoff(any([obj.showPlanning,obj.showMacro,obj.showMicro]))});
 
+    % Put all electrode toggles together
+    isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, 'Patient', 'once')), allchild(obj.htH));
+    EleToggleInd = find(isEleToggle)';
+    notEleToggleNode = find(diff(isEleToggle))'+[1 0 1];
+    newInd = [notEleToggleNode(1):notEleToggleNode(2),EleToggleInd,notEleToggleNode(3):length(isEleToggle)];
+    obj.htH.Children = obj.htH.Children(newInd);
+
     ea_busyaction('off',obj.controlH,'trajectory');
 end
 
