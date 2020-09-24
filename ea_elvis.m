@@ -183,7 +183,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     if isfield(plans,'plan')
                         for plan=1:length(plans)
                             pobj=ea_load_electrode(directory,side+plan);
-                            ea_add_trajectory([],[],options,pobj);
+                            ea_add_trajectory([],[],options,pobj,side+plan);
                         end
                     end
                 end
