@@ -455,7 +455,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
                ', Patient: ', ptname, ', Side: ', elToggleSideLabel];
     elseif strcmp(obj.relateMicro, 'macro')
         elToggleTag = ['Patient: ', ptname, ', Side: ', elToggleSideLabel];
-    else
+    elseif strcmp(obj.relateMicro, 'planning')
         elToggleTag = ['Patient: ', ptname, ', Planning'];
     end
     try ea_save_electrode(obj); end
