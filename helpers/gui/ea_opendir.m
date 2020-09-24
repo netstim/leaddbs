@@ -11,10 +11,10 @@ end
 
 for d=1:length(directory)
     if ismac
-        system(['open ', directory{d}]);
+        system(['open "', directory{d}, '"']);
     elseif isunix
-        system(['xdg-open ', directory{d}]);
+        system(['xdg-open "', directory{d}, '"']);
     elseif ispc
-        system(['explorer ', directory{d}]);
+        system(['explorer "', directory{d}, '"']);
     end
 end
