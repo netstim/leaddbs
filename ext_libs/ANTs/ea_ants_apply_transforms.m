@@ -47,7 +47,6 @@ if nargin >= 7
                 interp='GenericLabel';
             otherwise
                 interp='BSpline';
-
         end
     end
 else
