@@ -1,6 +1,10 @@
 function [vatFibScoreBin, vatFibScoreSum, vatFibScoreMean, vatFibScorePeak, vatFibScore5Peak] = ea_discfibers_vtascore(vatlist, atlas, side, posneg)
 % Calculate VAT fiber connection scores based on the discfiber atlas
 
+if ischar(vatlist)
+    vatlist = {vatlist};
+end
+
 disp('Load discfiber atlas...');
 load(atlas, 'fibcell', 'vals');
 
