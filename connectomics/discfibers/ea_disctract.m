@@ -238,12 +238,6 @@ classdef ea_disctract < handle
             Ihat = nan(length(patientsel),2);
 
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
-            for side=1:2  % only used in spearmans correlations
-                if obj.statmetric==2
-                    nfibsval{side} = fibsval{side};
-                    nfibsval{side}(nfibsval{side}==0) = 0;
-                end
-            end
 
             for c=1:cvp.NumTestSets
                 if cvp.NumTestSets ~= 1
@@ -266,12 +260,7 @@ classdef ea_disctract < handle
 
                 for side=1:2
                     if ~isempty(vals{1,side})
-                        switch obj.statmetric
-                            case 1 % ttests, vtas - see Baldermann et al. 2019 Biological Psychiatry
-                            	Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)));
-                            case 2 % spearmans correlations, efields - see Irmen et al. 2020 Annals of Neurology
-                            	Ihat(test,side) = ea_nansum(vals{1,side}.*nfibsval{side}(usedidx{1,side},patientsel(test)));
-                        end
+                    	Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)));
                     end
                 end
             end
