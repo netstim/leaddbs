@@ -294,12 +294,6 @@ classdef ea_disctract < handle
                 corrType = 'Spearman';
             end
 
-            fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
-            for side=1:2
-                nfibsval{side}=fibsval{side};
-                nfibsval{side}(nfibsval{side}==0)=0; % only used in spearmans correlations
-            end
-
             numPerm = obj.Nperm;
 
             Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection)';
