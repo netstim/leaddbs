@@ -40,14 +40,14 @@ vals = vertcat(vals{:});
 
 % Predict using only positive/negative fibers
 switch posneg
-    case 'pos'
+    case {'pos', 'positive'}
         if all(vals<0)
             error('No positive fiber exists!')
         else
             fibcell = fibcell(vals>0);
             vals = vals(vals>0);
         end
-    case 'neg'
+    case {'neg', 'negative'}
         if all(vals>0)
             error('No negative fiber exists!')
         else
