@@ -17,7 +17,7 @@ if ~exist('posneg', 'var')
 end
 
 % Predict using fiberss from only one side
-switch side
+switch lower(side)
     case 'right'
         if isempty(fibcell{1})
             error('No fiber exists for the right side!')
@@ -39,7 +39,7 @@ fibcell = vertcat(fibcell{:});
 vals = vertcat(vals{:});
 
 % Predict using only positive/negative fibers
-switch posneg
+switch lower(posneg)
     case {'pos', 'positive'}
         if all(vals<0)
             error('No positive fiber exists!')
