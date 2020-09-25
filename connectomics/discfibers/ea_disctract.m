@@ -333,7 +333,7 @@ classdef ea_disctract < handle
 
         function save(obj)
             tractset=obj;
-            [pth,fn]=fileparts(tractset.leadgroup);
+            pth = fileparts(tractset.leadgroup);
             tractset.analysispath=[pth,filesep,'disctracts',filesep,obj.ID,'.mat'];
             ea_mkdir([pth,filesep,'disctracts']);
             rf=obj.resultfig; % need to stash fig handle for saving.
