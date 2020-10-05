@@ -31,7 +31,7 @@ slicer_path = ea_runslicer(options,5);
 d = dir(fullfile(ea_getearoot,'ext_libs','SlicerNetstim','*','CMakeLists.txt')); % aditional modules
 
 command = [slicer_path ' --no-splash --additional-module-paths ' strjoin({d.folder},' ') ' --python-code "slicer.util.selectModule(''WarpDrive'')" ' ea_getearoot ' "' strjoin(do_pts_dirs,'" "') '"'];
-system(command);
-
+system([command ' &']); % with & return control to Matlab
+disp('Running WarpDrive in Slicer');
 
 end
