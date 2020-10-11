@@ -37,7 +37,8 @@ jetlist=othercolor('BuOr_12');
 %   jetlist=jet;
 N=10*rescaleratio; % resolution of electrode points
 
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
     % nullmodel:
     coords_mm{side}=[0,0,elspec.tip_length+(elspec.contact_length/2);...
         0,0,elspec.tip_length+(elspec.contact_length/2)+1*(elspec.contact_spacing+elspec.contact_length);...

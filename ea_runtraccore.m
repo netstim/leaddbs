@@ -69,7 +69,7 @@ for side=options.sides
 end
 
 % transform trajectory to mm space:
-for side=1:length(options.sides)
+for side=options.sides
     try
         if ~isempty(trajectory{side})
             trajectory{side}=ea_map_coords(trajectory{side}', [directory,'lpost.nii'])';

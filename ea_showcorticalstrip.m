@@ -23,7 +23,9 @@ end
 
 jetlist=jet;
 
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
+
     trajvector=mean(diff(trajectory{side}));
 
     trajvector=trajvector/norm(trajvector);
@@ -56,13 +58,15 @@ for side=1:length(options.sides)
         end
 
         if redomarkers
-            for iside=options.sides
-                elstruct.markers(iside).head=elstruct.coords_mm{iside}(1,:);
-                elstruct.markers(iside).tail=elstruct.coords_mm{iside}(4,:);
+            for iside2=1:length(options.sides)
+                side2=options.sides(iside2);
 
-                [xunitv, yunitv] = ea_calcxy(elstruct.markers(iside).head, elstruct.markers(iside).tail);
-                elstruct.markers(iside).x = elstruct.coords_mm{iside}(1,:) + xunitv*(options.elspec.lead_diameter/2);
-                elstruct.markers(iside).y = elstruct.coords_mm{iside}(1,:) + yunitv*(options.elspec.lead_diameter/2);
+                elstruct.markers(side2).head=elstruct.coords_mm{side2}(1,:);
+                elstruct.markers(side2).tail=elstruct.coords_mm{side2}(4,:);
+
+                [xunitv, yunitv] = ea_calcxy(elstruct.markers(side2).head, elstruct.markers(side2).tail);
+                elstruct.markers(side2).x = elstruct.coords_mm{side2}(1,:) + xunitv*(options.elspec.lead_diameter/2);
+                elstruct.markers(side2).y = elstruct.coords_mm{side2}(1,:) + yunitv*(options.elspec.lead_diameter/2);
             end
         end
 
