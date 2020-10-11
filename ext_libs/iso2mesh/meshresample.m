@@ -19,6 +19,7 @@ function [node,elem]=meshresample(v,f,keepratio)
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
+%proposed bugfix (for leaddbs use case) by Enrico Opri, 2020.
 
 [node,elem]=domeshsimplify(v,f,keepratio);
 
@@ -33,11 +34,48 @@ saveoff(node,elem,mwpath('post_remesh.off'));
 end
 
 % function to perform the actual resampling
-function [node,elem]=domeshsimplify(v,f,keepratio)
-  exesuff=getexeext;
+function [node,elem]=domeshsimplify(node,elem,keepratio)
 
-  saveoff(v,f,mwpath('pre_remesh.off'));
-  deletemeshfile(mwpath('post_remesh.off'));
-  system([' "' mcpath('cgalsimp2') exesuff '" "' mwpath('pre_remesh.off') '" ' num2str(keepratio) ' "' mwpath('post_remesh.off') '"']);
-  [node,elem]=readoff(mwpath('post_remesh.off'));
+    if true
+        %This is the original from iso2mesh toolbox (using CGAL tool <cgalsimp2>)
+        
+        %Considering that its input is not always manifold in leaddbs (e.g. VATmodel/ea_mesh_electrode)
+        %we may have to force the checkrepair first. For now I am assuming 
+        %<manifold> is not a guaranteed condition before resample (forcing check&repair+meshfix)
+        [node,elem]=meshcheckrepair(node,elem);
+        [node,elem]=meshcheckrepair(node,elem,'meshfix');  
+        
+        exesuff=getexeext;
+        saveoff(node,elem,mwpath('pre_remesh.off'));
+        deletemeshfile(mwpath('post_remesh.off'));
+        cmd_str=[' "' mcpath('cgalsimp2') exesuff '" "' mwpath('pre_remesh.off') '" ' num2str(keepratio) ' "' mwpath('post_remesh.off') '"'];
+        fprintf('command: %s\n',cmd_str);%useful for DEBUG
+        system(cmd_str);
+        [node,elem]=readoff(mwpath('post_remesh.off'));
+    else
+        %drop in replacement for mesh simplification. Using the mesh
+        %simplification available in matlab.
+        %The original cgalsimp2 can be slower, and requires the input to be <manifold> 
+
+        %Considering that its input is not always manifold in leaddbs (e.g. VATmodel/ea_mesh_electrode)
+        %we may have to force the checkrepair first. For now I am assuming 
+        %<manifold> is not a guaranteed condition before resample (forcing check&repair)
+        [node,elem]=meshcheckrepair(node,elem);
+
+        %node is vertex, elem is face
+        nfv = reducepatch(node,elem,keepratio);
+        elem=nfv.faces;
+        node=nfv.vertices;
+        
+        % Check/repair to make sure it is manifold (as matlab sometimes
+        % reduces it to a non-manifold mesh. Used the matlab reducepatch
+        % to reduce the number of dependancies.
+        % Consider switching to Surf Ice https://github.com/neurolabusc/surf-ice/
+        % ref: http://www.alecjacobson.com/weblog/?p=4444
+        % other wrappers at (but non-trivial to compile): https://github.com/alecjacobson/gptoolbox/
+        [node,elem]=meshcheckrepair(node,elem);%runs options: dupnode, duplicated, isolated, deep
+        %deep should have already been executed by the previous line. In case the toolbox changes, I enforce the removal non-manifold vertices
+        [node,elem]=meshcheckrepair(node,elem,'deep');
+        [node,elem]=meshcheckrepair(node,elem,'meshfix');        
+    end
 end
