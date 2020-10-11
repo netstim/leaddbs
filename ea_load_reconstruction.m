@@ -86,6 +86,7 @@ if exist('reco','var')
         elmodel=reco.props(1).elmodel;
     end
 
+    %if elmodel is empty, search for the first available side that has a model
     if isempty(elmodel)
         for side=1:length(reco.props)
             elmodel=reco.props(side).elmodel;
@@ -100,7 +101,9 @@ else % legacy format
         options=ea_getptopts(directory,options);
     end
     if ~exist('markers','var') % backward compatibility to old recon format
-        for side=1:options.sides
+        for iside=1:length(options.sides)
+            side=options.sides(iside);
+
             markers(side).head=coords_mm{side}(1,:);
             markers(side).tail=coords_mm{side}(4,:);
             [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);

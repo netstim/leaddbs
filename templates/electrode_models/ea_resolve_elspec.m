@@ -32,11 +32,14 @@ else
     options=varargin{1};
 end
 
+elmodel=[];
 if ~isfield(options, 'elmodel')
     try
         load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
-        elmodel = reco.props(1).elmodel;
+        %elmodel = reco.props(1).elmodel;
+        elmodel=ea_get_first_notempty_elmodel(reco.props);
     catch
+        %no model was found
         warning('No electrode model specified. Using Medtronic 3389.');
         elmodel = 'Medtronic 3389';
     end

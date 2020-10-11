@@ -67,7 +67,12 @@ for but=1:length(togglenames)
     eval([togglenames{but},'=getappdata(resultfig,''',togglenames{but},''');']);
     expand=1;
     if isempty(eval(togglenames{but}))
-        eval([togglenames{but},'=repmat(1,expand,length(options.sides));']);
+        %eval([togglenames{but},'=repmat(1,expand,length(options.sides));']);
+        %changed to max, as to include for sure the array as large as the maximum side used, 
+        %as this code was intended for the bilateral cases
+        %maybe will have to change it to minimum have two elements, to always include at least R and L sides
+        %For example, before if the side was only Left, the multiplier would have been only 1
+        eval([togglenames{but},'=repmat(1,expand,max(options.sides));']);
     end
 
     setappdata(resultfig,togglenames{but},eval(togglenames{but}));
@@ -87,9 +92,10 @@ end
 
 [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,S);
 
-if isstruct(VAT{1}.VAT) || isstruct(VAT{2}.VAT) % e.g. simbio model used
+if (isfield(VAT{1},'VAT') && isstruct(VAT{1}.VAT)) || (isfield(VAT{2},'VAT') && isstruct(VAT{2}.VAT)) % e.g. simbio model used
     vat=1;
-    for side=1:length(options.sides)
+    for iside=1:length(options.sides)
+        side=options.sides(iside);
         try
             nVAT{side}.VAT{vat}=VAT{side}.VAT.vertices;
             K(side).K{vat}=VAT{side}.VAT.faces;
@@ -101,7 +107,8 @@ if isstruct(VAT{1}.VAT) || isstruct(VAT{2}.VAT) % e.g. simbio model used
     VAT=nVAT;
 end
 
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
     switch side
         case 1
             sidec='right';
@@ -230,7 +237,8 @@ for side=1:length(options.sides)
 end
 
 % correct togglestates
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
     if ~vaton(side)
         try
             objvisible([],[],PL.vatsurfs(side,:),resultfig,'vaton',[],side,0)

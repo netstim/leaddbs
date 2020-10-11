@@ -3,7 +3,8 @@ function ea_reconstruction2acpc(options)
 directory=[options.root,options.patientname,filesep];
 load([directory,filesep,'ea_reconstruction.mat']);
 
-for side=options.sides
+for iside=1:length(options.sides)
+    side=options.sides(iside);
     for c=1:size(reco.native.coords_mm{side}(:,1),1)
         cfg.xmm=reco.native.coords_mm{side}(c,1);
         cfg.ymm=reco.native.coords_mm{side}(c,2);

@@ -17,13 +17,15 @@ else
 end
 
 if redomarkers
-    for iside=options.sides
-        elstruct.markers(iside).head=elstruct.coords_mm{iside}(1,:);
-        elstruct.markers(iside).tail=elstruct.coords_mm{iside}(4,:);
+    for iside=1:length(options.sides)
+        side=options.sides(iside);
+        
+        elstruct.markers(side).head=elstruct.coords_mm{side}(1,:);
+        elstruct.markers(side).tail=elstruct.coords_mm{side}(4,:);
 
-        [xunitv, yunitv] = ea_calcxy(elstruct.markers(iside).head, elstruct.markers(iside).tail);
-        elstruct.markers(iside).x = elstruct.coords_mm{iside}(1,:) + xunitv*(options.elspec.lead_diameter/2);
-        elstruct.markers(iside).y = elstruct.coords_mm{iside}(1,:) + yunitv*(options.elspec.lead_diameter/2);
+        [xunitv, yunitv] = ea_calcxy(elstruct.markers(side).head, elstruct.markers(side).tail);
+        elstruct.markers(side).x = elstruct.coords_mm{side}(1,:) + xunitv*(options.elspec.lead_diameter/2);
+        elstruct.markers(side).y = elstruct.coords_mm{side}(1,:) + yunitv*(options.elspec.lead_diameter/2);
     end
 end
 

@@ -13,22 +13,50 @@ end
 cnt=1;
 
 for pt=1:length(M.patient.list)
-    nii=ea_load_nii([options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_lh.nii']);
-    if ~exist('X','var')
-        X=nan(length(M.patient.list),numel(nii.img));
-        if bihemispheric
-            XR=X;
+    %for left side
+    fname_l=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_lh.nii'];
+    if exist(fname_l,'file')>0
+        nii=ea_load_nii(fname_l);
+        %init outputs X and XR if necessary
+        if ~exist('X','var')
+            X=nan(length(M.patient.list),numel(nii.img));
+            if bihemispheric
+                XR=X;
+            end
+        end
+        X(cnt,:)=nii.img(:);
+    end
+    
+    %for right side
+    if bihemispheric
+        fname_r=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh.nii'];
+        if exist(fname_r,'file')>0
+            nii=ea_load_nii(fname_r);
+            %init outputs X and XR if necessary
+            if ~exist('X','var')
+                X=nan(length(M.patient.list),numel(nii.img));
+                if bihemispheric
+                    XR=X;
+                end
+            end
+            XR(cnt,:)=nii.img(:);
+            XR(cnt,:)=logical(XR(cnt,:));
+        end
+    else
+        fname_rflip=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh_flipped.nii'];
+        if exist(fname_rflip,'file')>0
+            nii=ea_load_nii(fname_rflip);
+            %init outputs X and XR if necessary
+            if ~exist('X','var')
+                X=nan(length(M.patient.list),numel(nii.img));
+                if bihemispheric
+                    XR=X;
+                end
+            end
+            X(cnt,:)=X(cnt,:)+nii.img(:)';
         end
     end
-    X(cnt,:)=nii.img(:);
-    if bihemispheric
-        nii=ea_load_nii([options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh.nii']);
-        XR(cnt,:)=nii.img(:);
-        XR(cnt,:)=logical(XR(cnt,:));
-    else
-        nii=ea_load_nii([options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh_flipped.nii']);
-        X(cnt,:)=X(cnt,:)+nii.img(:)';
-    end
+    
     X(cnt,:)=logical(X(cnt,:));    
     cnt=cnt+1;
 end

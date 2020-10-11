@@ -204,8 +204,9 @@ if ~strcmp(options.leadprod, 'group')
             stimparams(1,1).volume = vatvolume;
         elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
             load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
-            stimparams(1,1).VAT.VAT = vatfv;
-            stimparams(1,1).volume = vatvolume;
+            %For consistency, left is always on 2nd element of stimparams 
+            stimparams(1,2).VAT.VAT = vatfv;
+            stimparams(1,2).volume = vatvolume;
         else
             if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
                 nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
@@ -225,7 +226,8 @@ if ~strcmp(options.leadprod, 'group')
                 nii = ea_load_nii([directory,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
     %             vatfv = ea_smoothpatch(vatfv,1,35);
-                stimparams(1,1).VAT.VAT = vatfv;
+                %For consistency, left is always on 2nd element of stimparams 
+                stimparams(1,2).VAT.VAT = vatfv;
             else
                 visualizeVAT = 0;
             end
@@ -1052,7 +1054,9 @@ ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
 stimname=S.label;
 
 for el=1:length(elstruct)
-    for side=1:length(elstruct.coords_mm)
+    for iside=1:length(options.sides)%length(elstruct.coords_mm)
+        side=options.sides(iside);
+
         if isfield(elstruct,'group') % group analysis, more than one electrode set
             % this should not happen, in this case the stim button is
             % hidden.
@@ -2235,6 +2239,20 @@ else % Ampere
     ea_show_percent(handles,options,2,'on'); % left hemisphere
 end
 
+% enable/disable panel based on sides that are present
+is_side_present=cellfun(@(x) ~ea_arenopoints4side(x), elstruct(actpt).trajectory);%First element is R, second is L
+if is_side_present(1)==1%check if R side is present
+    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'on')
+else
+    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'off')
+end
+if length(is_side_present)>1 && is_side_present(2)==1%check if L side is present
+    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'on')
+else
+    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
+end
+
+
 ea_savestimulation(S,options);
 setappdata(handles.stimfig,'S',S);
 
@@ -2283,10 +2301,12 @@ set(handles.kohmtext4,'visible',cmd);
 function ea_disable_vas(handles,options)
 
 RL={'R','L'};
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
+
     for Rva=1:4
-        set(handles.([RL{options.sides(side)},'s',num2str(Rva),'va']),'enable','off');
-        set(handles.([RL{options.sides(side)},'s',num2str(Rva),'va']),'value',1);
+        set(handles.([RL{side},'s',num2str(Rva),'va']),'enable','off');
+        set(handles.([RL{side},'s',num2str(Rva),'va']),'value',1);
     end
 end
 
@@ -2294,9 +2314,11 @@ end
 function ea_enable_vas(handles,options)
 
 RL={'R','L'};
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
+
     for Rva=1:4
-        set(handles.([RL{options.sides(side)},'s',num2str(Rva),'va']),'enable','on');
+        set(handles.([RL{side},'s',num2str(Rva),'va']),'enable','on');
     end
 end
 
