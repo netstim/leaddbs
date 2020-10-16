@@ -452,15 +452,21 @@ toc
 
 function s=ea_conformseedtofmri(dataset,s)
 td=tempdir;
-dataset.vol.space.fname=[td,'tmpspace.nii'];
+ref = [td,'tmpspace.nii'];
+seed = [td,'tmpseed.nii'];
+
+dataset.vol.space.fname = ref;
 ea_write_nii(dataset.vol.space);
-s.fname=[td,'tmpseed.nii'];
+
+s.fname = seed;
 ea_write_nii(s);
 
-ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
-s=ea_load_nii(s.fname);
-delete([td,'tmpspace.nii']);
-delete([td,'tmpseed.nii']);
+options.coregmr.method='SPM';
+ea_coreg2images(options,seed,ref,seed,[],[],[],1);
+
+s=ea_load_nii(seed);
+delete(ref);
+delete(seed);
 
 
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)
