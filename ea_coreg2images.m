@@ -37,8 +37,8 @@ if ~exist('interp','var') || isempty(interp)
     interp=4;
 end
 
-switch options.coregmr.method
-    case 'SPM' % SPM
+switch lower(options.coregmr.method)
+    case 'spm' % SPM
         affinefile = ea_spm_coreg(options,moving,fixed,'nmi',1,otherfiles,writeoutmat,interp);
 
         [fpth, fname, ext] = ea_niifileparts(moving);
@@ -53,33 +53,33 @@ switch options.coregmr.method
             movefile(spmoutput, [fpth, ext]);
         end
 
-    case 'FSL FLIRT' % FSL FLIRT
+    case 'fsl flirt' % FSL FLIRT
         affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 'FSL BBR' % FSL BBR
+    case 'fsl bbr' % FSL BBR
         affinefile = ea_flirt_bbr(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 'ANTs' % ANTs
+    case 'ants' % ANTs
         affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles,msks);
-    case 'BRAINSFIT' % BRAINSFit
+    case 'brainsfit' % BRAINSFit
         affinefile = ea_brainsfit(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
+    case 'hybrid spm & ants' % Hybrid SPM -> ANTs
         ea_spm_coreg(options,moving,fixed,'nmi',0,otherfiles,writeoutmat)
         affinefile = ea_ants(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 'Hybrid SPM & FSL' % Hybrid SPM -> FSL
+    case 'hybrid spm & fsl' % Hybrid SPM -> FSL
         ea_spm_coreg(options,moving,fixed,'nmi',0,otherfiles,writeoutmat)
         affinefile = ea_flirt(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
-    case 'Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
+    case 'hybrid spm & brainsfit' % Hybrid SPM -> Brainsfit
         ea_spm_coreg(options,moving,fixed,'nmi',0,otherfiles,writeoutmat)
         affinefile = ea_brainsfit(fixed,...
             moving,...
