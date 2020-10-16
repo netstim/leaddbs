@@ -1,4 +1,10 @@
 function seed = ea_conformseedtofmri(dataset,seed,interp)
+% Use SPM coreg to conform space for VTA.
+    
+% Can solve the all nan/zero problem for some very small VTA. The course is
+% that rigid body reslicing provided by spm_reslice is not enough. 12 DOF
+% (affine) or 9 DOF (traditional) transformation might be needed.
+
 if isfile(dataset)
     load(dataset, 'dataset');
 end
