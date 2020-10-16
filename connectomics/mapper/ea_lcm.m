@@ -290,7 +290,7 @@ for suffix=dowhich
 end
 
 
-function ea_warp_vat2rest(cname,vatdir,sidec,options)
+function vatseed = ea_warp_vat2rest(cname,vatdir,sidec,options)
 
 if strncmp(cname, 'Patient''s fMRI - ', length('Patient''s fMRI - '))
     restfname = cname(length('Patient''s fMRI - ')+1:end);
@@ -383,3 +383,5 @@ if ~any(rest_vat.img(:)) % image empty, at least set original peak to 1.
         msgbox(['Attempted to manually set peak voxel to ''',rest_vat.fname,''', but it seems to reside out of bounds.']);
     end
 end
+
+vatseed = ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
