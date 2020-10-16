@@ -1,10 +1,16 @@
-function seed = ea_conformseedtofmri(dataset,seed)
+function seed = ea_conformseedtofmri(dataset,seed,interp)
 if isfile(dataset)
     load(dataset, 'dataset');
 end
 
 if isfile(seed)
     seed = ea_load_nii(seed);
+end
+
+% Use trilinear interpolation by default.
+% Set to 0 to use nearest neighbour
+if ~exist('interp', 'var')
+    interp = 1;
 end
 
 td = tempdir;
@@ -22,7 +28,7 @@ ea_write_nii(seed);
 
 % Conform space by coregistration using SPM with trilinear interpolation
 options.coregmr.method='SPM';
-ea_coreg2images(options,tmpseed,tmpref,tmpseed,[],[],[],1);
+ea_coreg2images(options,tmpseed,tmpref,tmpseed,[],[],[],interp);
 
 % Load resliced seed file and clean up
 seed=ea_load_nii(tmpseed);
