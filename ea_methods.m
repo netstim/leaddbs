@@ -1,7 +1,7 @@
 function ea_methods(options,parsestr,refs)
-% function that dumps a methods text to patient directory
-% options can either be a leadsuite options struct or a string with the
-% patient directory.
+% Show method text and dump it to patient directory if possible
+%
+% options can either be a struct or a string with the patient directory.
 
 h=dbstack;
 try
@@ -45,4 +45,3 @@ if ~isempty(options)
         fclose(methodfile);
     end
 end
-
