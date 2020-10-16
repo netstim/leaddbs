@@ -218,19 +218,6 @@ disp('Done.');
 toc
 
 
-function s=ea_conformseedtofmri(dataset,s)
-td=tempdir;
-dataset.vol.space.fname=[td,'tmpspace.nii'];
-ea_write_nii(dataset.vol.space);
-s.fname=[td,'tmpseed.nii'];
-ea_write_nii(s);
-
-ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
-s=ea_load_nii(s.fname);
-delete([td,'tmpspace.nii']);
-delete([td,'tmpseed.nii']);
-
-
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)
 if strcmp(dataset.type,'fMRI_matrix')
     howmanyruns=1;
