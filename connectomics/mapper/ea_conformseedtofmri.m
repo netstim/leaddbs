@@ -1,4 +1,12 @@
 function seed = ea_conformseedtofmri(dataset,seed)
+if isfile(dataset)
+    load(dataset, 'dataset');
+end
+
+if isfile(seed)
+    seed = ea_load_nii(seed);
+end
+
 td = tempdir;
 tmpref = [td,'tmpspace.nii'];
 tmpseed = [td,'tmpseed.nii'];
