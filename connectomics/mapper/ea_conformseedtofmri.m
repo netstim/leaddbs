@@ -13,6 +13,7 @@ tmpseed = [td,'tmpseed.nii'];
 
 % Write out ref into temp file
 dataset.vol.space.fname = tmpref;
+dataset.vol.space.dt = [16,0];
 ea_write_nii(dataset.vol.space);
 
 % Write out seed into temp file
