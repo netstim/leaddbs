@@ -29,10 +29,10 @@ if exist('refs','var') % add refs
     end
 end
 
-
 expstr=[expstr,'\n***\n\n'];
 
-if options.prefs.machine.methods_show
+prefs = ea_prefs;
+if prefs.machine.methods_show
     try
         ea_methodsdisp({expstr});
     end
