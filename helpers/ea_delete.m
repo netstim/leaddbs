@@ -19,7 +19,7 @@ for i=1:numel(object)
         contents = dir(object{i});
         for c=1:length(contents)
             fd = [contents(c).folder, filesep, contents(c).name];
-            if isfile(fd)d
+            if isfile(fd)
                 delete(fd);
             elseif isfolder(fd)
                 rmdir(fd,'s');
