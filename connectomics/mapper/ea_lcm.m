@@ -127,7 +127,6 @@ switch modality
         end
 end
 
-
 % % load in txt
 % fid=fopen(fullfile(fileparts(options.lcm.seeds{1}),[ea_stripext(ea_stripext(options.lcm.seeds{1})),'.txt']),'r');
 % A=textscan(fid,'%f %s\n');
@@ -242,17 +241,11 @@ for suffix=dowhich
                         end
 
                         if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
-                            copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
-                            tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
-                            tnii.dt=[16,0];
-                            ea_write_nii(tnii);
-
                             if ~strcmp(cname,'No functional connectome found.')
                                 if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
                                     nii(cnt) = ea_warp_vat2rest(cname,vatdir,sidec,options);
                                 else
-                                    dataset = [ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'];
-                                    nii(cnt) = ea_conformseedtofmri(dataset,[vatdir,'tmp_',sidec,'.nii']);
+                                    nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'], [vatdir,'vat',addstr,'_',sidec,'.nii']);
                                 end
                                 nii(cnt).img(isnan(nii(cnt).img))=0;
                                 if ~any(nii(cnt).img(:))
@@ -277,7 +270,6 @@ for suffix=dowhich
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end
             end
-
     end
 end
 
