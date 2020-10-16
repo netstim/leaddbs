@@ -30,6 +30,7 @@ ea_write_nii(dataset.vol.space);
 
 % Write out seed into temp file
 seed.fname = tmpseed;
+seed.dt = [16,0];
 ea_write_nii(seed);
 
 % Conform space by coregistration using SPM with trilinear interpolation
