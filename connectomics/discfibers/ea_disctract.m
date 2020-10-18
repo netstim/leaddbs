@@ -290,6 +290,7 @@ classdef ea_disctract < handle
             Ihat = cell(numPerm+1, 1);
 
             R = zeros(numPerm+1, 1);
+            
             for perm=1:numPerm+1
                 if perm==1
                     fprintf('Calculating without permutation\n\n');
