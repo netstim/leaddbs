@@ -20,7 +20,7 @@ if strcmp(root(end), filesep)
 end
 
 options=varargin{3};
-if nargin==4
+if nargin>=4
     mifix=varargin{4};
 else
     mifix='';
@@ -99,7 +99,6 @@ end
 
 if checkrebuild(atlases,options,root,mifix)
     %% build iXYZ tables:
-    maxcolor=64; % change to 45 to avoid red / 64 to use all colors
 
     nm=1:2; % native and mni
     try
@@ -111,6 +110,8 @@ if checkrebuild(atlases,options,root,mifix)
     if ~isfield(atlases,'colormap')
         atlases.colormap=ea_color_wes('all');
     end
+    maxcolor=length(atlases.colormap); % change to 45 to avoid red / 64 to use all colors
+
     for nativemni=nm % switch between native and mni space atlases.
         switch nativemni
             case 1
@@ -119,7 +120,6 @@ if checkrebuild(atlases,options,root,mifix)
                 root=[options.root,options.patientname,filesep,'atlases'];
         end
 
-        atlascnt=1;
 
         % iterate through atlases, visualize them and write out stats.
         disp('Building atlas table...');
@@ -134,13 +134,14 @@ if checkrebuild(atlases,options,root,mifix)
                     lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
                     rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
                 case 4 % mixed atlas (one file with both sides information).
-                    structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}]);
+                    lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],'unmix_l');
+                    rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],'unmix_r');
                 case 5 % midline atlas (one file with both sides information).
                     structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
             end
 
             for side=detsides(atlases.types(atlas))
-                if atlases.types(atlas)==3 % both-sides atlas composed of 2 files.
+                if ismember(atlases.types(atlas),[3,4]) % both-sides atlas composed of 2 files.
                     if side==1
                         structure=rstructure;
                     elseif side==2
@@ -152,160 +153,44 @@ if checkrebuild(atlases,options,root,mifix)
 
                 colorc=colornames(1);
                 colorc=rgb(colorc);
-                if isfield(structure, 'img') % volumetric atlas
-                        pobj.nii=structure;
+                if isa(structure,'ea_roi') % volumetric atlas
                         % set cdata
                         try % check if explicit color info for this atlas is available.
                             cdat=atlases.colormap(atlases.colors(atlas),:);
                         catch
                             cdat=atlases.colormap(round(atlas*(maxcolor/length(atlases.names))),:);
                         end
-                        pobj.color=cdat;
+                        structure.color=cdat;
                      
-                     roi=ea_roi([],pobj);
-
-                    [xx,yy,zz]=ind2sub(size(structure.img),find(structure.img>0)); % find 3D-points that have correct value.
-                    vv=structure.img(structure.img(:)>0);
-
-                    if ~isempty(xx)
-                        XYZ.vx=[xx,yy,zz]; % concatenate points to one matrix.
-                        XYZ.val=vv;
-                        XYZ.mm=map_coords_proxy(XYZ.vx,structure); % map to mm-space
-                        XYZ.dims=structure.voxsize;
-                    else
-                        XYZ.vx=[];
-                        XYZ.val=[];
-                        XYZ.mm=[];
-                        XYZ.dims=structure.voxsize;
-                    end
-
-                    % surface(xx(1:10)',yy(1:10)',zz(1:10)',ones(10,1)');
-                    % hold on
-
-                    if atlases.types(atlas)==4 && side==2 % restore from backup
-                        structure=bstructure;
-                        XYZ.mm=bXYZ.mm;
-                        XYZ.val=bXYZ.val;
-                        XYZ.vx=bXYZ.vx;
-                    end
-
-                    try
-                        bb=[0,0,0;size(structure.img)];
-                    catch
-                        keyboard
-                    end
-
-                    bb=map_coords_proxy(bb,structure);
-                    gv=cell(3,1);
-                    for dim=1:3
-                        gv{dim}=linspace(bb(1,dim),bb(2,dim),size(structure.img,dim));
-                    end
-
-                    if atlases.types(atlas)==4 % mixed atlas, divide
-                        if side==1
-                            bstructure=structure;
-                            bXYZ=XYZ;
-                            if ~any(gv{1}>0)
-                                ea_error('Mixed atlas does not show positive voxels on the right side');
-                            end
-                            structure.img=structure.img(gv{1}>0,:,:);
-                            gv{1}=gv{1}(gv{1}>0);
-                            try
-                                XYZ.vx=XYZ.vx(XYZ.mm(:,1)>0,:,:);
-                            catch
-                                ea_error(['Atlas is empty: ',atlases.names{atlas},'.']);
-                            end
-                            XYZ.val=XYZ.val(XYZ.mm(:,1)>0,:,:);
-                            XYZ.mm=XYZ.mm(XYZ.mm(:,1)>0,:,:);
-
-                            structure.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
-                        elseif side==2
-                            if ~any(gv{1}<0)
-                                ea_error('Mixed atlas does not show positive voxels on the left side');
-                            end
-                            structure.img=structure.img(gv{1}<0,:,:);
-
-                            gv{1}=gv{1}(gv{1}<0);
-                            XYZ.vx=XYZ.vx(XYZ.mm(:,1)<0,:,:);
-                            XYZ.val=XYZ.val(XYZ.mm(:,1)<0,:,:);
-                            XYZ.mm=XYZ.mm(XYZ.mm(:,1)<0,:,:);
-
-                            structure.dim=[length(gv{1}),length(gv{2}),length(gv{3})];
+                        % keep XYZ
+                        [xx,yy,zz]=ind2sub(size(structure.nii.img),find(structure.nii.img>0)); % find 3D-points that have correct value.
+                        vv=structure.nii.img(structure.nii.img(:)>0);
+                        
+                        if ~isempty(xx)
+                            XYZ.vx=[xx,yy,zz]; % concatenate points to one matrix.
+                            XYZ.val=vv;
+                            XYZ.mm=map_coords_proxy(XYZ.vx,structure.nii); % map to mm-space
+                            XYZ.dims=structure.nii.voxsize;
+                        else
+                            XYZ.vx=[];
+                            XYZ.val=[];
+                            XYZ.mm=[];
+                            XYZ.dims=structure.nii.voxsize;
                         end
-                    end
-
-                    [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-
-                    % Xvx=linspace(1,length(gv{1}),3*length(gv{1}));
-                    % Yvx=linspace(1,length(gv{2}),3*length(gv{2}));
-                    % Zvx=linspace(1,length(gv{3}),3*length(gv{3}));
-                    % [Xq,Yq,Zq]=meshgrid(interp1(gv{1},Xvx),...
-                    %     interp1(gv{2},Yvx),...
-                    %     interp1(gv{3},Zvx));
-
-                    thresh=ea_detthresh(atlases,atlas,structure.img);
-                    ea_addnii2lf(atlases,atlas,thresh,options,root,mifix)
-                    try
-                        fv=isosurface(X,Y,Z,permute(structure.img,[2,1,3]),thresh);
-                        %fv=isosurface(Xq,Yq,Zq,permute(interp3(nii.img,Xvx,Yvx,Zvx),[2,1,3]),thresh);
-                    catch
-                        keyboard
-                    end
-
-                    fvc=isocaps(X,Y,Z,permute(structure.img,[2,1,3]),thresh);
-                    fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
-                    fv.vertices=[fv.vertices;fvc.vertices];
-                    if options.prefs.hullsmooth
-                        try
-                            fv=ea_smoothpatch(fv,[],ceil(options.prefs.hullsmooth/2));
-                        catch
-                            keyboard
-                        end
-                    end
+                        
+                        
+                        
                     
-                    if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
-                        % get to 700 faces
-                        simplify=700/length(fv.faces);
-                        if simplify < 1 % skip volumes with fewer than 700 faces
-                            fv=reducepatch(fv,simplify);
-                        end
-                    else
-                        if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-                            fv=reducepatch(fv,options.prefs.hullsimplify);
-                        elseif options.prefs.hullsimplify>1
-                            simplify=options.prefs.hullsimplify/length(fv.faces);
-                            fv=reducepatch(fv,simplify);
-                        end
-                    end
-                    
-                    
-                    try % works > ML 2015:
-                        tr=triangulation(fv.faces,fv.vertices);
-                        normals{atlas,side} = vertexNormal(tr);
-                    catch % workaround for older versions:
-                        % temporally plot atlas to get vertex normals..
-                        tmp=figure('visible','off');
-                        tp=patch(fv,'VertexNormalsMode','manual');
-                        set(tp,'VertexNormalsMode','manual')
-                        normals{atlas,side}=get(tp,'VertexNormals')*-1;
-                        delete(tmp);
-                    end
-
-            
-
-                    iroi{atlas,side}=roi; % later stored
-                    icdat{atlas,side}=cdat; % later stored
+                    ea_addnii2lf(atlases,atlas,structure.nii.img,options,root,mifix)
+                   
+                    iroi{atlas,side}=structure; % later stored
+                    ipixdim{atlas,side}=structure.nii.voxsize(1:3); % later stored
+                    iXYZ{atlas,side}=XYZ; % later stored
                     try
-                        iXYZ{atlas,side}=XYZ; % later stored
+                        atlases.colors(atlas); % check if predefined color exists
                     catch
-                        keyboard
+                        atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                     end
-
-                    ipixdim{atlas,side}=structure.voxsize(1:3); % later stored
-                    icolorc{atlas,side}=colorc; % later stored
-                    pixdim=ipixdim{atlas,side};
-                    atlascnt=atlascnt+1;
-
                 elseif isfield(structure, 'fibers') % fibertract
                     % concat fibers to one patch object
                     addobjr=ea_showfiber(structure.fibers,structure.idx,colorc);
@@ -364,20 +249,21 @@ if checkrebuild(atlases,options,root,mifix)
         end
 
         % save table information that has been generated from nii files (on first run with this atlas set).
-        atlases.fv=ifv;
-        atlases.cdat=icdat;
-        atlases.XYZ=iXYZ;
-        atlases.pixdim=ipixdim;
-        atlases.colorc=icolorc;
-        atlases.normals=normals;
-
+        try        atlases.fv=ifv; end
+        try        atlases.cdat=icdat; end
+        try        atlases.XYZ=iXYZ; end
+        try        atlases.pixdim=ipixdim; end
+        try        atlases.colorc=icolorc; end
+        try        atlases.normals=normals; end
+        try        atlases.roi=iroi; end
+        atlases.version=2; % crude versioning introduced (anything without a version tag is considered version 1).
         atlases.rebuild=0; % always reset rebuild flag.
         save([root,filesep,mifix,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
     end
 end
 
 
-function structure=load_structure(fname)
+function structure=load_structure(fname,unmix)
 
 if strcmp(fname(end-2:end),'.gz')
     wasgzip=1;
@@ -388,16 +274,34 @@ else
 end
 
 if strcmp(fname(end-3:end),'.nii') % volumetric
+    if exist('unmix','var')
+        ea_split_nii_lr(fname);
+        switch unmix
+            case 'unmix_l'
+                [pth,f,ext]=fileparts(fname);
+                fname=fullfile(pth,[f,'_l',ext]);
+            case 'unmix_r'
+                [pth,f,ext]=fileparts(fname);
+                fname=fullfile(pth,[f,'_r',ext]);
+        end
+        
+    end
     warning('off');
     ea_crop_nii(fname);
-    structure=ea_load_nii(fname);
+    pobj.color=[1,1,1];
+    test=ea_open_vol(fname);
     warning('on');
-
-    if ~all(abs(structure.voxsize)<=0.8)
+    
+    if ~all(abs(test.voxsize)<=0.8)
         ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,0,0,[],[],1);
-        structure=ea_load_nii(fname);
     end
+    structure=ea_roi(fname,pobj);
 
+    if exist('unmix','var')
+        delete(fullfile(pth,[f,'_r',ext]));
+        delete(fullfile(pth,[f,'_l',ext]));
+    end
+    
     if wasgzip
         gzip(fname);
         delete(fname); % since gunzip makes a copy of the zipped file.
@@ -467,9 +371,17 @@ function reb=checkrebuild(atlases,options,root,mifix)
 
 reb=1;
 
-if isfield(atlases,'roi')
+if isfield(atlases,'roi') || isfield(atlases,'fv')
     reb=0;
 end
+if ~isfield(atlases,'version')
+   reb=1;
+else
+    if atlases.version<2
+       reb=1; 
+    end
+end
+
 % if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file');
 %     reb=1;
 % end
@@ -480,7 +392,7 @@ try
 end
 
 
-function ea_addnii2lf(atlases,atlas,thresh,options,root,mifix)
+function ea_addnii2lf(atlases,atlas,imgg,options,root,mifix)
 
 switch atlases.types(atlas)
     case 1 % right hemispheric atlas.
@@ -538,7 +450,7 @@ for atl=1:length(atlnames)
         };
     matlabbatch{1}.spm.util.imcalc.output = 'gm_mask.nii';
     matlabbatch{1}.spm.util.imcalc.outdir = {[root,filesep,mifix,options.atlasset,filesep]};
-    matlabbatch{1}.spm.util.imcalc.expression = ['i1+(i2>',num2str(thresh),')'];
+    matlabbatch{1}.spm.util.imcalc.expression = ['i1+(i2>',num2str(ea_detthresh(atlases,atlas,imgg)),')'];
     matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
     matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
     matlabbatch{1}.spm.util.imcalc.options.mask = 0;

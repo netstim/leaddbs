@@ -24,6 +24,7 @@ catch
     nmind=[1 0];
 end
 nm=nm(logical(nmind)); % select which shall be performed.
+                colormap(gray);
 
 for nativemni=nm % switch between native and mni space atlases.
 
@@ -40,7 +41,7 @@ for nativemni=nm % switch between native and mni space atlases.
     set(0,'CurrentFigure',resultfig)
 
     if ~exist([adir,'atlas_index.mat'],'file')
-        atlases=ea_genatlastable([],ea_space(options,'atlases'),options,mifix);
+        atlases=ea_genatlastable([],ea_space(options,'atlases'),options,mifix,resultfig);
     else
         load([adir,'atlas_index.mat']);
         atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options,mifix);
@@ -86,7 +87,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
     ht=getappdata(resultfig,'atlht');
     if ~isempty(ht) % sweep nonempty atlases toolbar
-        delete(ht.Children(:));
+        %delete(ht.Children(:));
     else
         ht=uitoolbar(resultfig);
     end
@@ -114,89 +115,31 @@ for nativemni=nm % switch between native and mni space atlases.
     for atlas=1:length(atlases.names)
         [~,sidestr]=detsides(atlases.types(atlas));
         for side=detsides(atlases.types(atlas))
+            
             if isnumeric(atlases.pixdim{atlas,side}) || strcmp(atlases.pixdim{atlas,side}, 'fibers')
-                fv=atlases.fv{atlas,side};
+                %fv=atlases.fv{atlas,side};
 
-                if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
-                    % get to 700 faces
-                    simplify=700/length(fv.faces);
-                    if simplify < 1 % skip volumes with fewer than 700 faces
-                        fv=reducepatch(fv,simplify);
-                    end
-                else
-                    if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-                        fv=reducepatch(fv,options.prefs.hullsimplify);
-                    elseif options.prefs.hullsimplify>1
-                        simplify=options.prefs.hullsimplify/length(fv.faces);
-                        fv=reducepatch(fv,simplify);
-                    end
-                end
+                % breathe life into stored ea_roi
+                atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
+                atlases.roi{atlas,side}.htH=ht; % attach to tooltip menu
+                atlases.roi{atlas,side}.breathelife;
+                atlases.roi{atlas,side}.update_roi;
 
-                rndfactor=1;
-                try
-                    switch atlases.names{atlas,side}(end-2:end)
-                        case 'nii'
-                            rndfactor=2;
-                        case {'trk','mat'}
-                            rndfactor=0.2;
-                    end
-                end
-
-                try
-                    if ~options.prefs.d3.colorjitter
-                        rndfactor=0;
-                    end
-                end
-
-                cdat=repmat(atlases.colors(atlas),length(fv.vertices),1); % C-Data for surface
-
-                if size(cdat,2)==1
-                    if any(round(cdat)==0) % rounding error for large atlases.
-                        cdat(round(cdat)==0)=1;
-                    end
-                    cdat=atlases.colormap(round(cdat),:);
-                end
-
-                % add color jitter
-                cdat=cdat+(randn(size(cdat,1),3)*rndfactor);
-
-                XYZ=atlases.XYZ{atlas,side};
-                pixdim=atlases.pixdim{atlas,side};
-                colorc=nan;
-
+                atlassurfs(atlascnt,1)=atlases.roi{atlas,side};
+                colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
                 % show atlas label
 
-                if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
-                    try
-                        [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
-                    catch
-                        centroid=mean(XYZ.mm(:,1:3),1);
-                    end
-                else
-                    try
-                        centroid=XYZ.mm(:,1:3);
-                    catch
-                        centroid=[0,0,0];
-                        warning('No centroid found.')
-                    end
-                end
-                try
-                    centroid=centroid(1,:);
-                catch % empty file..
-                    break
-                end
-
+                
+                centroid=mean(atlases.roi{atlas,side}.fv.vertices(:,1:3));
                 set(0,'CurrentFigure',resultfig);
-
-                visible='on';
+                
+                atlases.roi{atlas,side}.Visible='on';
                 if isfield(atlases,'presets')
                     if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
-                        visible='off';
+                        atlases.roi{atlas,side}.visible='off';
                     end
                 end
-                if ~(atlases.types(atlas)>5)
-                    atlassurfs(atlascnt,1)=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
-                end
+                
                 % export label and labelbutton
 
                 [~,thislabel]=fileparts(atlases.names{atlas});
@@ -214,17 +157,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 % make fv compatible for stats
 
                 caxis([1 64]);
-
-                % prepare colorbutton icon
-                try
-                    atlasc=squeeze(jetlist(ceil(atlases.colors(atlas)),:));  % color for toggle button icon
-                catch
-                    ea_error('Atlas color not found.');
-                end
-
-                if ~(atlases.types(atlas)>5)
-                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
-                end
 
                 % gather contact statistics
                 if options.writeoutstats
@@ -257,25 +189,11 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
 
-                %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
-                if ~(atlases.types(atlas)>5)
-                    ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
-                else
-                    pobj.plotFigureH=resultfig;
-                    pobj.color=atlasc;
-                    pobj.threshold=0.55;
-                    pobj.openedit=1;
-                    pobj.htH=ht;
-                    obj=ea_roi([ea_space([],'atlases'),options.atlasset,filesep,getsidec(side),filesep,atlases.names{atlas}],pobj);
-                    atlassurfs(atlascnt,1)=obj.patchH;
-                    colorbuttons(atlascnt)=obj.toggleH;
-                end
-
-                % set Tags
+                %                set Tags
                 try
                     set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
-                    set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
-                    set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlascnt))
+                    atlassurfs(atlascnt,1).Tag=[thislabel,'_',sidestr{side}];
+                    %set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlascnt))
                 catch
                     keyboard
                 end
@@ -311,7 +229,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 alphas = cell(size(vals));
 
                 % Contruct colormap
-                colormap(gray);
                 gradientLevel = 1024;
                 cmapShiftRatio = 0.4;
                 shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
