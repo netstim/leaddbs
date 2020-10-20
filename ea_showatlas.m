@@ -116,7 +116,7 @@ for nativemni=nm % switch between native and mni space atlases.
         [~,sidestr]=detsides(atlases.types(atlas));
         for side=detsides(atlases.types(atlas))
             
-            if isnumeric(atlases.pixdim{atlas,side}) || strcmp(atlases.pixdim{atlas,side}, 'fibers')
+            if isnumeric(atlases.pixdim{atlas,side})
                 %fv=atlases.fv{atlas,side};
 
                 % breathe life into stored ea_roi
@@ -125,7 +125,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 atlases.roi{atlas,side}.breathelife;
                 atlases.roi{atlas,side}.update_roi;
 
-                atlassurfs(atlascnt,1)=atlases.roi{atlas,side};
+                atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
                 colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
                 % show atlas label
 
@@ -136,7 +136,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 atlases.roi{atlas,side}.Visible='on';
                 if isfield(atlases,'presets')
                     if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
-                        atlases.roi{atlas,side}.visible='off';
+                        atlases.roi{atlas,side}.Visible='off';
                     end
                 end
                 
@@ -192,7 +192,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 %                set Tags
                 try
                     set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
-                    atlassurfs(atlascnt,1).Tag=[thislabel,'_',sidestr{side}];
+                    atlassurfs{atlascnt,1}.Tag=[thislabel,'_',sidestr{side}];
                     %set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlascnt))
                 catch
                     keyboard
@@ -207,6 +207,182 @@ for nativemni=nm % switch between native and mni space atlases.
                 if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
                     drawnow
                 end
+            elseif strcmp(atlases.pixdim{atlas,side}, 'fibers')
+                fv=atlases.fv{atlas,side};
+
+                if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
+                    % get to 700 faces
+                    simplify=700/length(fv.faces);
+                    if simplify < 1 % skip volumes with fewer than 700 faces
+                        fv=reducepatch(fv,simplify);
+                    end
+                else
+                    if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
+                        fv=reducepatch(fv,options.prefs.hullsimplify);
+                    elseif options.prefs.hullsimplify>1
+                        simplify=options.prefs.hullsimplify/length(fv.faces);
+                        fv=reducepatch(fv,simplify);
+                    end
+                end
+
+                rndfactor=1;
+                try
+                    switch atlases.names{atlas,side}(end-2:end)
+                        case 'nii'
+                            rndfactor=2;
+                        case {'trk','mat'}
+                            rndfactor=0.2;
+                    end
+                end
+
+                try
+                    if ~options.prefs.d3.colorjitter
+                        rndfactor=0;
+                    end
+                end
+
+                cdat=repmat(atlases.colors(atlas),length(fv.vertices),1); % C-Data for surface
+
+                if size(cdat,2)==1
+                    if any(round(cdat)==0) % rounding error for large atlases.
+                        cdat(round(cdat)==0)=1;
+                    end
+                    cdat=atlases.colormap(round(cdat),:);
+                end
+
+                % add color jitter
+                cdat=cdat+(randn(size(cdat,1),3)*rndfactor);
+
+                XYZ=atlases.XYZ{atlas,side};
+                pixdim=atlases.pixdim{atlas,side};
+                colorc=nan;
+
+                % show atlas label
+
+                if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
+                    try
+                        [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
+                    catch
+                        centroid=mean(XYZ.mm(:,1:3),1);
+                    end
+                else
+                    try
+                        centroid=XYZ.mm(:,1:3);
+                    catch
+                        centroid=[0,0,0];
+                        warning('No centroid found.')
+                    end
+                end
+                try
+                    centroid=centroid(1,:);
+                catch % empty file..
+                    break
+                end
+
+                set(0,'CurrentFigure',resultfig);
+
+                visible='on';
+                if isfield(atlases,'presets')
+                    if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
+                        visible='off';
+                    end
+                end
+                if ~(atlases.types(atlas)>5)
+                    atlassurfs{atlascnt,1}=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
+                end
+                % export label and labelbutton
+
+                [~,thislabel]=fileparts(atlases.names{atlas});
+                % try % use try here because filename might be shorter than .nii
+                %     if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
+                        [~,thislabel]=fileparts(thislabel);
+                %     end
+                % end
+                atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
+
+                if ~exist('labelbutton','var')
+                    labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
+                    labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
+                end
+                % make fv compatible for stats
+
+                caxis([1 64]);
+
+                % prepare colorbutton icon
+                try
+                    atlasc=squeeze(jetlist(ceil(atlases.colors(atlas)),:));  % color for toggle button icon
+                catch
+                    ea_error('Atlas color not found.');
+                end
+
+                if ~(atlases.types(atlas)>5)
+                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
+                end
+
+                % gather contact statistics
+                if options.writeoutstats
+                    try
+                        if isfield(atlases.XYZ{atlas,side},'val') % volumetric atlas
+                            thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
+                            atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
+                        else % fibertract
+                            atsearch=KDTreeSearcher(XYZ.mm(:,1:3));
+                        end
+
+                        for el=1:length(elstruct)
+                            [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
+                            %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
+
+                            ea_stats.conmat{el,side}(:,atlas)=D;
+                            Dh=D;
+
+                            try
+                                in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
+                                Dh(in)=0;
+                            end
+                            ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
+
+                            D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
+                            ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
+                        end
+                    catch
+                        warning('Statistics for tract atlas parts are not implemented yet.');
+                    end
+                end
+
+                %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
+                if ~(atlases.types(atlas)>5)
+                    ea_spec_atlas(atlassurfs{atlascnt,1},atlases.names{atlas},atlases.colormap,setinterpol);
+                else
+                    pobj.plotFigureH=resultfig;
+                    pobj.color=atlasc;
+                    pobj.threshold=0.55;
+                    pobj.openedit=1;
+                    pobj.htH=ht;
+                    obj=ea_roi([ea_space([],'atlases'),options.atlasset,filesep,getsidec(side),filesep,atlases.names{atlas}],pobj);
+                    atlassurfs{atlascnt,1}=obj.patchH;
+                    colorbuttons(atlascnt)=obj.toggleH;
+                end
+
+                % set Tags
+                try
+                    set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
+                    set(atlassurfs{atlascnt,1},'tag',[thislabel,'_',sidestr{side}])
+                    set(atlassurfs{atlascnt,1},'UserData',atlaslabels(atlascnt))
+                catch
+                    keyboard
+                end
+                atlascnt=atlascnt+1;
+
+                set(gcf,'Renderer','OpenGL')
+                axis off
+                % set(gcf,'color','w');
+                axis equal
+
+                if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
+                    drawnow
+                end
+                
             elseif strcmp(atlases.pixdim{atlas,side}, 'discfibers')
                 tractPath = [ea_space([],'atlases'),options.atlasset,filesep,getsidec(side,sidestr)];
                 tractName = ea_stripext(atlases.names{atlas});

@@ -1,15 +1,17 @@
 function atlases=ea_reorderatlas(atlases,order)
 % reorders an atlas struct based on the order supplied
-atlases.names=atlases.names(order);
-atlases.types=atlases.types(order);
-atlases.tissuetypes=atlases.tissuetypes(order);
+try atlases.names=atlases.names(order); end
+try atlases.types=atlases.types(order); end
+try atlases.tissuetypes=atlases.tissuetypes(order); end
 atlases.colors=atlases.colors(order);
-atlases.fv=atlases.fv(order,:);
-atlases.cdat=atlases.cdat(order,:);
-atlases.XYZ=atlases.XYZ(order,:);
-atlases.pixdim=atlases.pixdim(order,:);
-atlases.colorc=atlases.colorc(order,:);
-atlases.normals=atlases.normals(order,:);
+try atlases.fv=atlases.fv(order,:); end
+try atlases.roi=atlases.roi(order,:); end
+
+try atlases.cdat=atlases.cdat(order,:); end
+try atlases.XYZ=atlases.XYZ(order,:); end
+try atlases.pixdim=atlases.pixdim(order,:); end
+try atlases.colorc=atlases.colorc(order,:); end
+try atlases.normals=atlases.normals(order,:); end
 
 try
 for p=1:length(atlases.presets)

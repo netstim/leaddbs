@@ -26,7 +26,7 @@ else
     mifix='';
 end
 
-if isempty(atlases) || ~isfield(atlases,'roi') % old format
+if isempty(atlases)
     disp('Generating Atlas table. This may take a while...');
 
     lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
@@ -184,6 +184,7 @@ if checkrebuild(atlases,options,root,mifix)
                     ea_addnii2lf(atlases,atlas,structure.nii.img,options,root,mifix)
                    
                     iroi{atlas,side}=structure; % later stored
+                    ifv{atlas,side} = [];
                     ipixdim{atlas,side}=structure.nii.voxsize(1:3); % later stored
                     iXYZ{atlas,side}=XYZ; % later stored
                     try
@@ -258,6 +259,10 @@ if checkrebuild(atlases,options,root,mifix)
         try        atlases.roi=iroi; end
         atlases.version=2; % crude versioning introduced (anything without a version tag is considered version 1).
         atlases.rebuild=0; % always reset rebuild flag.
+        try atlases=rmfield(atlases,'cdat'); end % redundancy cleanup
+        try atlases=rmfield(atlases,'colorc'); end % redundancy cleanup
+        try atlases=rmfield(atlases,'normals'); end % redundancy cleanup
+
         save([root,filesep,mifix,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
     end
 end

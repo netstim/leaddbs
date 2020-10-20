@@ -192,9 +192,9 @@ function showhide_Callback(hObject, eventdata, handles)
 obj=getappdata(handles.roicontrol,'obj');
 switch get(hObject,'Value')
     case 1
-obj.visible='on';
+obj.Visible='on';
     case 0
-   obj.visible='off';
+   obj.Visible='off';
 end
 
 

@@ -181,7 +181,7 @@ classdef ea_roi < handle
                 evtnm='all';
             end
             if isempty(obj.patchH)
-                                obj.patchH=patch;
+                obj.patchH=patch;
             end
             if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) % need to recalc fv here:
                 bb=[0,0,0;size(obj.nii.img)];

@@ -339,8 +339,8 @@ for branch=1:length(sels.branches)
 
                 [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
                 if strcmp(sels.sides{branch}{leaf}{side},'selected')
-                    if ~strcmp(h.atlassurfs(ixs).Visible,'on')
-                        h.atlassurfs(ixs).Visible='on';
+                    if ~strcmp(h.atlassurfs{ixs}.Visible,'on')
+                        h.atlassurfs{ixs}.Visible='on';
                         h.togglebuttons(ixt).State='on';
                     end
 
@@ -348,8 +348,8 @@ for branch=1:length(sels.branches)
                         h.atlaslabels(ixs).Visible='on';
                     end
                 elseif strcmp(sels.sides{branch}{leaf}{side},'not selected')
-                    if ~strcmp(h.atlassurfs(ixs).Visible,'off')
-                        h.atlassurfs(ixs).Visible='off';
+                    if ~strcmp(h.atlassurfs{ixs}.Visible,'off')
+                        h.atlassurfs{ixs}.Visible='off';
                         h.togglebuttons(ixt).State='off';
                     end
 
@@ -587,19 +587,19 @@ for branch=1:length(sels.branches)
             [ixs,ixt]=ea_getsubindex(h.sgsub{branch}{leaf}.toString,sidec,h.atlassurfs,h.togglebuttons,h.uselabelname,h.atlases);
 
             if ismember(char(h.sgsubfi{branch}{leaf}),onatlasnames)
-                h.atlassurfs(ixs).Visible='on';
+                h.atlassurfs{ixs}.Visible='on';
                 if strcmp(h.labelbutton.State, 'on')
                     h.atlaslabels(ixs).Visible='on';
                 end
                 h.togglebuttons(ixt).State='on';
             elseif ismember(char(h.sgsubfi{branch}{leaf}),offatlasnames)
-                h.atlassurfs(ixs).Visible='off';
+                h.atlassurfs{ixs}.Visible='off';
                 h.atlaslabels(ixs).Visible='off';
                 h.togglebuttons(ixt).State='off';
             else % not explicitly mentioned
                 switch preset.default
                     case 'absolute'
-                        h.atlassurfs(ixs).Visible='off';
+                        h.atlassurfs{ixs}.Visible='off';
                         h.atlaslabels(ixs).Visible='off';
                         h.togglebuttons(ixt).State='off';
                     case 'relative'
