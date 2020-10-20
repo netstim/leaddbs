@@ -26,7 +26,7 @@ else
     mifix='';
 end
 
-if isempty(atlases)
+if isempty(atlases) || ~isfield(atlases,'roi') % old format
     disp('Generating Atlas table. This may take a while...');
 
     lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
@@ -108,7 +108,9 @@ if checkrebuild(atlases,options,root,mifix)
         nmind=[1 0];
     end
     nm=nm(logical(nmind)); % select which shall be performed.
-
+    if ~isfield(atlases,'colormap')
+        atlases.colormap=ea_color_wes('all');
+    end
     for nativemni=nm % switch between native and mni space atlases.
         switch nativemni
             case 1
@@ -151,9 +153,16 @@ if checkrebuild(atlases,options,root,mifix)
                 colorc=colornames(1);
                 colorc=rgb(colorc);
                 if isfield(structure, 'img') % volumetric atlas
-                     if options.prefs.hullsmooth
-                         structure.img = smooth3(structure.img,'gaussian',options.prefs.hullsmooth);
-                     end
+                        pobj.nii=structure;
+                        % set cdata
+                        try % check if explicit color info for this atlas is available.
+                            cdat=atlases.colormap(atlases.colors(atlas),:);
+                        catch
+                            cdat=atlases.colormap(round(atlas*(maxcolor/length(atlases.names))),:);
+                        end
+                        pobj.color=cdat;
+                     
+                     roi=ea_roi([],pobj);
 
                     [xx,yy,zz]=ind2sub(size(structure.img),find(structure.img>0)); % find 3D-points that have correct value.
                     vv=structure.img(structure.img(:)>0);
@@ -282,15 +291,9 @@ if checkrebuild(atlases,options,root,mifix)
                         delete(tmp);
                     end
 
-                    % set cdata
-                    try % check if explicit color info for this atlas is available.
-                        cdat=abs(repmat(atlases.colors(atlas),length(fv.vertices),1));
-                    catch
-                        cdat=abs(repmat(atlas*(maxcolor/length(atlases.names)),length(fv.vertices),1));
-                        atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
-                    end
+            
 
-                    ifv{atlas,side}=fv; % later stored
+                    iroi{atlas,side}=roi; % later stored
                     icdat{atlas,side}=cdat; % later stored
                     try
                         iXYZ{atlas,side}=XYZ; % later stored
@@ -464,11 +467,8 @@ function reb=checkrebuild(atlases,options,root,mifix)
 
 reb=1;
 
-if isfield(atlases,'fv')
+if isfield(atlases,'roi')
     reb=0;
-    if ~isfield(atlases.XYZ{1,1},'mm')
-        reb=1;
-    end
 end
 % if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file');
 %     reb=1;

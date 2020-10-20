@@ -68,20 +68,26 @@ classdef ea_roi < handle
             else
                 obj.color = ea_uisetcolor;
             end
-
-            % load nifti
-            obj.nii=ea_load_nii(obj.niftiFilename);
-            obj.nii.img(obj.nii.img==0) = nan;
-            obj.nii.img(isinf(obj.nii.img)) = nan;
-            if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
-                obj.binary=1;
-            else
-                obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
-                obj.binary=0;
+            try
+                obj.nii=pobj.nii;
+            catch
+                % load nifti
+                obj.nii=ea_load_nii(obj.niftiFilename);
+                obj.nii.img(obj.nii.img==0) = nan;
+                obj.nii.img(isinf(obj.nii.img)) = nan;
+                
+                if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
+                    obj.binary=1;
+                else
+                    obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
+                    obj.binary=0;
+                end
+                obj.nii.img(isnan(obj.nii.img)) = 0;
+                obj.nii.img(isinf(obj.nii.img)) = 0;
             end
-            obj.nii.img(isnan(obj.nii.img)) = 0;
-            obj.nii.img(isinf(obj.nii.img)) = 0;
             options.prefs=ea_prefs;
+            
+            if ~isnan(obj.nii)
             obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
             obj.min=ea_nanmin(obj.nii.img(~(obj.nii.img==0)));
             maxmindiff=obj.max-obj.min;
