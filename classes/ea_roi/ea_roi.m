@@ -70,14 +70,12 @@ classdef ea_roi < handle
                 catch
                     [~,obj.name]=fileparts(obj.niftiFilename);
                 end
-                
-                obj.plotFigureH=gcf;
-                
-                if exist('pobj','var') && ~isempty(pobj)
-                    try
-                        obj.plotFigureH=pobj.plotFigureH;
-                    end
+                try
+                    obj.plotFigureH=pobj.plotFigureH;
+                catch
+                    obj.plotFigureH=gcf;
                 end
+
                 try
                     obj.htH=pobj.htH;
                 catch
@@ -141,7 +139,8 @@ classdef ea_roi < handle
                 
                 
                 update_roi(obj);
-                breathelife(obj);
+                    breathelife(obj);
+                
             end
             
             
@@ -152,29 +151,31 @@ classdef ea_roi < handle
         end
         
         function breathelife(obj)
-            addlistener(obj,'Visible','PostSet',...
-                @changeevent);
-            addlistener(obj,'color','PostSet',...
-                @changeevent);
-            addlistener(obj,'usesolidcolor','PostSet',...
-                @changeevent);
-            addlistener(obj,'threshold','PostSet',...
-                @changeevent);
-            addlistener(obj,'smooth','PostSet',...
-                @changeevent);
-            addlistener(obj,'hullsimplify','PostSet',...
-                @changeevent);
-            addlistener(obj,'alpha','PostSet',...
-                @changeevent);
-            if isempty(obj.toggleH)
-                                obj.toggleH=uitoggletool(obj.htH);
-            end
-            
-            % Get the underlying java object using findobj
-            jtoggle = findjobj(obj.toggleH);
-            % Specify a callback to be triggered on any mouse release event
-            set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
-            setappdata(obj.plotFigureH,'addht',obj.htH);
+                addlistener(obj,'Visible','PostSet',...
+                    @changeevent);
+                addlistener(obj,'color','PostSet',...
+                    @changeevent);
+                addlistener(obj,'usesolidcolor','PostSet',...
+                    @changeevent);
+                addlistener(obj,'threshold','PostSet',...
+                    @changeevent);
+                addlistener(obj,'smooth','PostSet',...
+                    @changeevent);
+                addlistener(obj,'hullsimplify','PostSet',...
+                    @changeevent);
+                addlistener(obj,'alpha','PostSet',...
+                    @changeevent);
+                if isempty(obj.toggleH)
+                    obj.toggleH=uitoggletool(obj.htH);
+                end
+                if strcmp(obj.plotFigureH.Visible,'on') % only make GUI functioning if figure is visible.
+                    
+                    % Get the underlying java object using findobj
+                    jtoggle = findjobj(obj.toggleH);
+                    % Specify a callback to be triggered on any mouse release event
+                    set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
+                end
+                setappdata(obj.plotFigureH,'addht',obj.htH);
         end
         function obj=update_roi(obj,evtnm) % update ROI
             if ~exist('evtnm','var')
