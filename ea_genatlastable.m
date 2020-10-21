@@ -279,6 +279,7 @@ else
 end
 
 if strcmp(fname(end-3:end),'.nii') % volumetric
+    origfname=fname;
     if exist('unmix','var')
         ea_split_nii_lr(fname);
         switch unmix
@@ -308,8 +309,10 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     end
     
     if wasgzip
-        gzip(fname);
-        delete(fname); % since gunzip makes a copy of the zipped file.
+        
+        gzip(origfname);
+        delete(origfname); % since gunzip makes a copy of the zipped file.
+     
     end
 elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
     [fibers,idx]=ea_loadfibertracts(fname,1);
