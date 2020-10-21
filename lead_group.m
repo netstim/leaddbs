@@ -1714,5 +1714,7 @@ function exportstats_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M = getappdata(gcf,'M');
 [file, path] = uiputfile('*.mat','Export DBS Stats as...', [M.root, 'ea_stats_export.mat']);
-ea_lg_exportstats(M, [path, file]);
-fprintf('\nDBS Stats exported to:\n%s\n\n', [path, file]);
+if file % make sure user didnt press cancel
+    ea_lg_exportstats(M, [path, file]);
+    fprintf('\nDBS Stats exported to:\n%s\n\n', [path, file]);
+end
