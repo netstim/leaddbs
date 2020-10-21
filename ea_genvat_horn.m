@@ -144,6 +144,7 @@ if hmchanged
                 h.Position=[1000          85         253        1253];
             end
         end
+        ea_kill('name', ['tetgen', getexeext]);
     end
 
     if ~success
