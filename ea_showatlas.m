@@ -163,9 +163,9 @@ for nativemni=nm % switch between native and mni space atlases.
                     try
                         if isfield(atlases.XYZ{atlas,side},'val') % volumetric atlas
                             thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
-                            atsearch=KDTreeSearcher(XYZ.mm(XYZ.val>thresh,:));
+                            atsearch=KDTreeSearcher(atlases.XYZ{atlas,side}.mm(atlases.XYZ{atlas,side}.val>thresh,:));
                         else % fibertract
-                            atsearch=KDTreeSearcher(XYZ.mm(:,1:3));
+                            atsearch=KDTreeSearcher(atlases.XYZ{atlas,side}.mm(:,1:3));
                         end
 
                         for el=1:length(elstruct)
@@ -176,12 +176,12 @@ for nativemni=nm % switch between native and mni space atlases.
                             Dh=D;
 
                             try
-                                in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
+                                in=inhull(ea_stats.electrodes(el).coords_mm{side},atlases.roi{atlas,side}.fv.vertices,atlases.roi{atlas,side}.fv.faces,1.e-13*mean(abs(atlases.roi{atlas,side}.fv.vertices(:))));
                                 Dh(in)=0;
                             end
                             ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
 
-                            D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
+                            D(D<mean(atlases.pixdim{atlas,side}))=0; % using mean here but assuming isotropic atlases in general..
                             ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
                         end
                     catch
