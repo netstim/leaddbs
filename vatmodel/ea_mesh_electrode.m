@@ -277,8 +277,7 @@ for reg=1:length(centroids)
     tetrcents=mean(cat(3,nmesh(thiscompsnodes(:,1),:),nmesh(thiscompsnodes(:,2),:),nmesh(thiscompsnodes(:,3),:),nmesh(thiscompsnodes(:,4),:)),3);
 
     % a - check contacts:
-    for con=find(eltissuetype==3);
-
+    for con=find(eltissuetype==3)
         in=double(ea_intriangulation(elfv(con).vertices,elfv(con).faces,tetrcents));
 
         if vizz
