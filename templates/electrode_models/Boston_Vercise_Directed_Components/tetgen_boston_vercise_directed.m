@@ -11,7 +11,7 @@ for k = 1:9
 end
 
 pfad2 = [pfad 'Insulations' filesep];
-for k = 1:17
+for k = 1:16
     file = ['ins' num2str(k) '.smesh'];
     system([' "' mcpath('tetgen') getexeext '" -pq -aA -g "' pfad2 file '"']);
 end
