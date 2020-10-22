@@ -11,14 +11,17 @@ if  options.modality == 1 % check for electrode type and postoperative imaging
 elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)') || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
     if strcmp(options.elmodel,'St. Jude Directed 6172 (short)')
         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
-        markerposition = 9;
+        markerposition = 10;
+        markerlength = 1.5;
         electrodespacing = 2;
     elseif strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
-        markerposition = 12;
+        markerposition = 13;
+        markerlength = 1.5;
         electrodespacing = 3;
     elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed')
-        markerposition = 10.25;
+        markerposition = 9.5;
+        markerlength = 3;
         electrodespacing = 2;
     else
         keyboard
@@ -712,9 +715,9 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         tempvec = [0; 1; 0];
         temp3x3 = ea_orient_rollpitchyaw(-tempangle,0,0);
         tempvec = temp3x3 * tempvec;
-        text(tempvec(1),tempvec(2),markerposition + 0.75,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
         text(tempvec(1),tempvec(2),0.75 + electrodespacing,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
         text(tempvec(1),tempvec(2),0.75 + (2*electrodespacing),'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        text(tempvec(1),tempvec(2),markerposition+markerlength/2,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
         clear tempangle
 
         set(ax_elec,'Position',[-0.16 0.21 0.43 0.73])
