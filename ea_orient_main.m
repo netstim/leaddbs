@@ -13,12 +13,14 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
     end
 
+    % Get specs from elspec struct
     markerposition = options.elspec.markerpos;
     markerlength = options.elspec.markerlen;
     electrodespacing = options.elspec.contact_length+options.elspec.contact_spacing;
     contactlength = options.elspec.contact_length;
     tipInsulationlength = options.elspec.tip_length*~options.elspec.tipiscontact;
 
+    % z position of the centers of level1, level2 and marker
     level1center = tipInsulationlength + electrodespacing+contactlength/2;
     level2center = tipInsulationlength + electrodespacing*2+contactlength/2;
     markercenter = markerposition + markerlength/2;
