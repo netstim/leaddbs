@@ -17,7 +17,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     markerlength = options.elspec.markerlen;
     electrodespacing = options.elspec.contact_length+options.elspec.contact_spacing;
     contactlength = options.elspec.contact_length;
-    tipInsulationlength = options.elspec.tip_length*options.elspec.tipiscontact;
+    tipInsulationlength = options.elspec.tip_length*~options.elspec.tipiscontact;
 
     %%
     load(options.elspec.matfname)
