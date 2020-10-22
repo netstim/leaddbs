@@ -25,6 +25,12 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     level2center = tipInsulationlength + electrodespacing*2 + contactlength/2;
     markercenter = markerposition + markerlength/2;
 
+    % z position of the centers of level1, level2 and marker relative to
+    % head position
+    level1centerRelative = level1center-contactlength/2-tipInsulationlength;
+    level2centerRelative = level2center-contactlength/2-tipInsulationlength;
+    markercenterRelative = markercenter-contactlength/2-tipInsulationlength;
+
     load(options.elspec.matfname)
 
     %% import CTs and choose which CT to use
@@ -127,9 +133,9 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         %% determine location of the stereotactic marker and the directional
         % levels
         unitvector_mm = (tail_mm - head_mm)/norm(tail_mm - head_mm);
-        marker_mm = round(head_mm + (markerposition .* unitvector_mm));
-        dirlevel1_mm = round(head_mm + (electrodespacing .* unitvector_mm));
-        dirlevel2_mm = round(head_mm + (2 * electrodespacing .* unitvector_mm));
+        marker_mm = round(head_mm + (markercenterRelative .* unitvector_mm));
+        dirlevel1_mm = round(head_mm + (level1centerRelative .* unitvector_mm));
+        dirlevel2_mm = round(head_mm + (level2centerRelative .* unitvector_mm));
 
         % transform to vx
         marker_vx = round(tmat_vx2mm\marker_mm);
