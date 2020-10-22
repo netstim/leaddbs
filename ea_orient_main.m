@@ -14,8 +14,6 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     end
 
     % Get specs from elspec struct
-    markerposition = options.elspec.markerpos;
-    markerlength = options.elspec.markerlen;
     electrodespacing = options.elspec.contact_length+options.elspec.contact_spacing;
     contactlength = options.elspec.contact_length;
     tipInsulationlength = options.elspec.tip_length*~options.elspec.tipiscontact;
@@ -23,7 +21,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     % z position of the centers of level1, level2 and marker
     level1center = tipInsulationlength + electrodespacing + contactlength/2;
     level2center = tipInsulationlength + electrodespacing*2 + contactlength/2;
-    markercenter = markerposition + markerlength/2;
+    markercenter = options.elspec.markerpos + options.elspec.markerlen/2;
 
     % z position of the centers of level1, level2 and marker relative to
     % head position
