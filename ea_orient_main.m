@@ -9,29 +9,16 @@ if  options.modality == 1 % check for electrode type and postoperative imaging
     choice = questdlg(msg,'No postoperative CT!','Abort','Abort');
     roll_out = [];
 elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)') || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
-    if strcmp(options.elmodel,'St. Jude Directed 6172 (short)')
+    if ismember(options.elmodel,{'St. Jude Directed 6172 (short)','St. Jude Directed 6173 (long)'})
         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
-        markerposition = 10;
-        markerlength = 1.5;
-        electrodespacing = 2;
-        contactlength = 1.5;
-        tipInsulationlength = 1;
-    elseif strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
-        disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
-        markerposition = 13;
-        markerlength = 1.5;
-        electrodespacing = 3;
-        contactlength = 1.5;
-        tipInsulationlength = 1;
-    elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed')
-        markerposition = 9.5;
-        markerlength = 3;
-        electrodespacing = 2;
-        contactlength = 1.5;
-        tipInsulationlength = 0;
-    else
-        keyboard
     end
+
+    markerposition = options.elspec.markerpos;
+    markerlength = options.elspec.markerlen;
+    electrodespacing = options.elspec.contact_length+options.elspec.contact_spacing;
+    contactlength = options.elspec.contact_length;
+    tipInsulationlength = options.elspec.tip_length*options.elspec.tipiscontact;
+
     %%
     load(options.elspec.matfname)
     %% import CTs and choose which CT to use
