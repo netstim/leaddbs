@@ -19,6 +19,10 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     contactlength = options.elspec.contact_length;
     tipInsulationlength = options.elspec.tip_length*~options.elspec.tipiscontact;
 
+    level1center = tipInsulationlength + electrodespacing+contactlength/2;
+    level2center = tipInsulationlength + electrodespacing*2+contactlength/2;
+    markercenter = markerposition + markerlength/2;
+
     %%
     load(options.elspec.matfname)
     %% import CTs and choose which CT to use
@@ -708,9 +712,9 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         tempvec = [0; 1; 0];
         temp3x3 = ea_orient_rollpitchyaw(-tempangle,0,0);
         tempvec = temp3x3 * tempvec;
-        text(tempvec(1),tempvec(2),markerposition+markerlength/2,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-        text(tempvec(1),tempvec(2),tipInsulationlength+electrodespacing+contactlength/2,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-        text(tempvec(1),tempvec(2),tipInsulationlength+(2*electrodespacing)+contactlength/2,'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        text(tempvec(1),tempvec(2),markercenter,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        text(tempvec(1),tempvec(2),level1center,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        text(tempvec(1),tempvec(2),level2center,'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
         clear tempangle
 
         set(ax_elec,'Position',[-0.16 0.21 0.43 0.73])
