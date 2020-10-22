@@ -32,14 +32,14 @@ if contains(vta, 'efield')
 end
 
 % Check if atlas is nifti file or xyz coordinates
-if isfile(atlas)
+if isnumeric(atlas)
+    xyz = atlas;
+elseif isfile(atlas)
     atlasnii = load_untouch_nii(atlas);
     threshold = max(atlasnii.img(:)) * 0.5;
     atlasnii.img = atlasnii.img > threshold;
     [xvox, yvox, zvox] = ind2sub(size(atlasnii.img), find(atlasnii.img(:)));
     xyz = ea_vox2mm([xvox, yvox, zvox], atlas);
-elseif isnumeric(atlas)
-    xyz = atlas;
 end
 
 % Only calculate for one side, suppose RAS orientation
