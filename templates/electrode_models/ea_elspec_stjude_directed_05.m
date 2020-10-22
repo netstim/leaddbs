@@ -13,26 +13,18 @@ function electrode=ea_elspec_stjude_directed_05(varargin)
 electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
-% Calc offset since 0 (z axis) starts from the first contact in the tetgen models
-filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_05_Components',filesep,'Insulations',filesep,'ins1.1'];
-node = readtetgen(filename);
-offset = -min(node(:,3));
-
 for k = 1:18
     filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_05_Components',filesep,'Insulations',filesep,'ins',num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
-    node(:,1) = -node(:,1); % Flip X axis since it's flipped in the tetgen models.
-    node(:,3) = node(:,3) + offset; % Make 0 starts at the rear end of the tip
     electrode.insulation(k).vertices = node;
     electrode.insulation(k).faces = face(:,1:3);
     clear face node filename
 end
 
-for k = 1:9
-    filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_05_Components',filesep,'Contacts',filesep,'con',num2str(electrodeorder(k)),'.1'];
+for k = 1:numel(electrodeorder)
+    filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_05_Components',...
+        filesep,'Contacts',filesep,'con',num2str(electrodeorder(k)),'.1'];
     [node,~,face]=readtetgen(filename);
-    node(:,1) = -node(:,1); % Flip X axis since it's flipped in the tetgen models.
-    node(:,3) = node(:,3) + offset; % Make 0 starts at the rear end of the tip
     electrode.contacts(k).vertices = node;
     electrode.contacts(k).faces = face(:,1:3);
     clear face node filename
@@ -44,10 +36,10 @@ options = ea_resolve_elspec(options);
 elspec = options.elspec;
 
 electrode.electrode_model = options.elmodel;
-electrode.head_position = [0 0 0.75+offset];
-electrode.tail_position = [0 0 6.75+offset];
-electrode.x_position = [elspec.lead_diameter/2 0 0.75+offset];
-electrode.y_position = [0 elspec.lead_diameter/2 0.75+offset];
+electrode.head_position = [0 0 1.75];
+electrode.tail_position = [0 0 7.75];
+electrode.x_position = [elspec.lead_diameter/2 0 1.75];
+electrode.y_position = [0 elspec.lead_diameter/2 1.75];
 electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
@@ -55,14 +47,14 @@ electrode.lead_color = 0.7;
 cx = elspec.lead_diameter/2*cos(pi/6);
 cy = elspec.lead_diameter/2*sin(pi/6);
 
-electrode.coords_mm(1,:)=[0 0 0.75+offset];
-electrode.coords_mm(2,:)=[0 0 2.75+offset]+[0, elspec.lead_diameter/2, 0];
-electrode.coords_mm(3,:)=[0 0 2.75+offset]+[cx, -cy, 0];
-electrode.coords_mm(4,:)=[0 0 2.75+offset]+[-cx, -cy, 0];
-electrode.coords_mm(5,:)=[0 0 4.75+offset]+[0, elspec.lead_diameter/2, 0];
-electrode.coords_mm(6,:)=[0 0 4.75+offset]+[cx, -cy, 0];
-electrode.coords_mm(7,:)=[0 0 4.75+offset]+[-cx, -cy, 0];
-electrode.coords_mm(8,:)=[0 0 6.75+offset];
+electrode.coords_mm(1,:)=[0 0 1.75];
+electrode.coords_mm(2,:)=[0 0 3.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(3,:)=[0 0 3.75]+[cx, -cy, 0];
+electrode.coords_mm(4,:)=[0 0 3.75]+[-cx, -cy, 0];
+electrode.coords_mm(5,:)=[0 0 5.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(6,:)=[0 0 5.75]+[cx, -cy, 0];
+electrode.coords_mm(7,:)=[0 0 5.75]+[-cx, -cy, 0];
+electrode.coords_mm(8,:)=[0 0 7.75];
 
 electrode.isdirected = 1;
 

@@ -23,6 +23,10 @@ function [node,elem]=meshresample(v,f,keepratio)
 [node,elem]=domeshsimplify(v,f,keepratio);
 
 if(length(node)==0)
+    warning(['Your input mesh contains topological defects, and the ',...
+       'mesh resampling utility aborted during processing. Now iso2mesh ',...
+       'is trying to repair your mesh with meshcheckrepair. ',...
+       'You can also call this manually before passing your mesh to meshresample.'] );
     [vnew,fnew]=meshcheckrepair(v,f);
     [node,elem]=domeshsimplify(vnew,fnew,keepratio);
 end
