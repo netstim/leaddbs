@@ -54,27 +54,70 @@ allV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'bb_
 
 cnt=2;
 for pt=1:length(M.patient.list)
-    if M.ui.detached % process locally in lead group directory
-        Vvatr=ea_load_nii([options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_right.nii']);
-        Vvatl=ea_load_nii([options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_left.nii']);
-    else
-        Vvatr=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_right.nii']);
-        Vvatl=ea_load_nii([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_left.nii']);
-    end
-    Vvatr.img(Vvatr.img==0)=nan;     Vvatl.img(Vvatl.img==0)=nan;
-
-    % writeout
-    Vvatr.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh','.nii'];
-    Vvatl.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','lh','.nii'];
+    %process left and right separately, check if file exists
     
-    Vvatr.dt=[16,2]; Vvatl.dt=[16,2];  
-    spm_write_vol(Vvatr,Vvatr.img);     spm_write_vol(Vvatl,Vvatl.img);
-    Vright{pt}=Vvatr.fname;
-    Vleft{pt}=Vvatl.fname;
-    ea_flip_lr_nonlinear([options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh','.nii'],[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh_flipped','.nii'],0);
-    allV{cnt}=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','lh','.nii'];
-    allV{cnt+1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh','.nii'];
-    cnt=cnt+2;
+    is_left_present=false;
+    is_right_present=false;
+
+    if M.ui.detached % process locally in lead group directory
+        fname_r=[options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_right.nii'];
+        fname_l=[options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_left.nii'];
+    else
+        fname_r=[M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_right.nii'];
+        fname_l=[M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_left.nii'];
+    end
+    
+    if exist(fname_l,'file')>0
+        %if file exist, process the right side
+        is_left_present=true;
+    end
+    if exist(fname_r,'file')>0
+        %if file exist, process the right side
+        is_right_present=true;
+    end
+    
+    fns_isprocessed=[false false false];%lh, rh, rh_flipped
+    
+    %process left side
+    if is_left_present
+        Vvatl=ea_load_nii(fname_l);
+        Vvatl.img(Vvatl.img==0)=nan;
+        % writeout
+        Vvatl.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','lh','.nii'];
+        Vvatl.dt=[16,2];
+        spm_write_vol(Vvatl,Vvatl.img);
+        Vleft{pt}=Vvatl.fname;
+    
+        allV{cnt}=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','lh','.nii'];
+        
+        cnt=cnt+1;
+        
+        fns_isprocessed(1)=true;
+    end
+
+    %process right side
+    if is_right_present
+        Vvatr=ea_load_nii(fname_r);
+        Vvatr.img(Vvatr.img==0)=nan;
+        % writeout
+        Vvatr.fname=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh','.nii'];
+        Vvatr.dt=[16,2];
+        spm_write_vol(Vvatr,Vvatr.img);
+        Vright{pt}=Vvatr.fname;
+        
+        ea_flip_lr_nonlinear( ...
+            [options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh','.nii'], ...
+            [options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh_flipped','.nii'], ...
+            0);
+        
+        allV{cnt}=[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_','rh','.nii'];
+        
+        cnt=cnt+1;
+        
+        fns_isprocessed(2)=true;% rh
+        fns_isprocessed(3)=true;% rh_flipped
+    end
+    
 end
 
 
@@ -102,6 +145,10 @@ for pt=1:length(M.patient.list)
     fns={[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_lh.nii'],...
         [options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh.nii'],...
         [options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh_flipped.nii']};
+    
+    %prune based on which side was actually processed
+    fns=fns(fns_isprocessed);
+    
     for f=1:length(fns)
         fn=fns{f};
         ea_conformspaceto([options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_bb.nii'],...

@@ -27,7 +27,7 @@ ethresh_pw = options.prefs.machine.vatsettings.dembek_ethreshpw;
 pw = options.prefs.machine.vatsettings.dembek_pw;
 
 
-switch options.sides(side)
+switch side
     case 1
         sidec='R';
         cnts={'k0','k1','k2','k3','k4','k5','k6','k7'};
@@ -117,10 +117,10 @@ mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(opt
 %S(side).volume=sum(volume);
 
 
-if options.sides(side) == 1
+if side == 1
     Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.nii'];
     stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_right.mat'];
-elseif options.sides(side) == 2
+elseif side == 2
     Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.nii'];
     stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_left.mat'];
 end

@@ -50,7 +50,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
     end
 
 
-    for side = options.sides(1):options.sides(end)
+    for side = options.sides
         options.elside = side;
         meantrajectory = genhd_inside(trajectory{side});
         imat = ea_resample_planes(V, meantrajectory', sample_width, doxx, 0.2);

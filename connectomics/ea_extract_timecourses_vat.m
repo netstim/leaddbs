@@ -12,8 +12,9 @@ stim=stims{get(handles.vatseed,'Value')};
 voxelmask.locsvx=[];
 voxelmask.vals=[];
 voxelmask.locsmm=[];
-for side=1:length(options.sides)
-    Vvat=spm_vol([directory,'stimulations',filesep,ea_nt(options),stim,filesep,'vat_',usevat{options.sides(side)},'.nii,1']);
+for iside=1:length(options.sides)
+    side=options.sides(iside);
+    Vvat=spm_vol([directory,'stimulations',filesep,ea_nt(options),stim,filesep,'vat_',usevat{side},'.nii,1']);
     Xvat=spm_read_vols(Vvat);
     nonzeros=find(Xvat(:));
     vv=Xvat(nonzeros);
@@ -25,6 +26,8 @@ for side=1:length(options.sides)
     locsmm=locsmm(:,1:3);
     voxelmask.locsmm=[voxelmask.locsmm;locsmm];
     voxelmask.locsvx=[voxelmask.locsvx;locsvx];
+    %Mod: check if it is ok to leave as side indexes 
+    %(which not necessarily start from 1), or with the iside indexes
     voxelmask.vals=[voxelmask.vals;vals*side];
 end
 

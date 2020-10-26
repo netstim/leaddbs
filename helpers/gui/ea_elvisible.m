@@ -5,7 +5,8 @@ function ea_elvisible(hobj,ev,atls,pt,side,onoff,options)
 %     eltog=getappdata(hobj.Parent.Parent,'eltog');
 %     set(eltog,'State',onoff);
 %     for el=1:length(atls)
-%         for side=1:length(options.sides)
+%         for iside=1:length(options.sides)
+%            side=options.sides(iside);
 %            try
 %                set(atls(el).el_render{side}, 'Visible', onoff);
 %            end

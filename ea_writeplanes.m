@@ -28,13 +28,21 @@ end
 if nargin==1
     % load prior results
     coords_mm=ea_load_reconstruction(options);
-    ave_coords_mm=coords_mm;
+    % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
+    elstruct(1).coords_mm=coords_mm;
+    %fill missing sides with nans, matching it to the other present side.
+    %At least one side should be present, which should be always the case.
+    elstruct=ea_elstruct_match_and_nanfill(elstruct);
     clear coords_mm
-    elstruct(1).coords_mm=ave_coords_mm; % if there is only one patient to show, ave_coords_mm are the same as the single entry in elstruct(1).coords_mm.
-
+    ave_coords_mm=ea_ave_elstruct(elstruct,options);
+        
 elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
         elstruct=varargin{2};
+        %fill missing sides with nans, matching it to the other present
+        %side. At least one side should be present, which should be always
+        %the case.
+        elstruct=ea_elstruct_match_and_nanfill(elstruct);
         % average coords_mm for image slicing
         ave_coords_mm=ea_ave_elstruct(elstruct,options);
     else % concrete height is being supplied (without electrode star plotting).
@@ -86,8 +94,9 @@ end
 %XYZ_src_vx = src.mat \ XYZ_mm;
 
 fid=fopen([options.root,options.patientname,filesep,'cuts_export_coordinates.txt'],'w');
-for side=1:length(options.sides)
-    %% write out axial images
+for iside=1:length(options.sides)
+    side=options.sides(iside);
+    %% write out axial/coronal/sagittal images
     for tracor=find(tracorpresent)'
         for elcnt=1:(options.elspec.numel-options.shifthalfup)
             if ~isstruct(elstruct)
@@ -130,7 +139,11 @@ for side=1:length(options.sides)
             %title(['Electrode ',num2str(el-1),', transversal view.']);
 
             [slice,~,boundboxmm,sampleheight]=ea_sample_slice(V,dstring,options.d2.bbsize,'mm',coords,el);
-
+            if length(slice)==1 && isnan(slice)
+                %there was no electrode here, skip this slice
+                continue;
+            end
+            
             cont=1;
             try                cont=evalin('base','custom_cont'); end
             offs=1;
@@ -153,10 +166,10 @@ for side=1:length(options.sides)
 
             try                level=evalin('base','level_offset'); end
 
-
-            disp(['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
+            printstr_el_stat=['Electrode(s) k',num2str(el-1),'/',options.elspec.contactnames{el} ', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.'];
+            disp(printstr_el_stat);
             if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
-                fprintf(fid,'%s\n',['Electrode(s) k',num2str(el-1),', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.']);
+                fprintf(fid,'%s\n',printstr_el_stat);
             end
             set(0,'CurrentFigure',cuts)
 
