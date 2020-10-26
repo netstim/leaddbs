@@ -35,8 +35,9 @@ end
 if ~isfield(options, 'elmodel')
     try
         load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
-        elmodel = reco.props(1).elmodel;
+        elmodel = ea_get_first_notempty_elmodel(reco.props);
     catch
+        %no model was found
         warning('No electrode model specified. Using Medtronic 3389.');
         elmodel = 'Medtronic 3389';
     end
@@ -58,7 +59,7 @@ switch elmodel
         elspec.contact_spacing=0.5;
         elspec.numel=4;
         elspec.tipiscontact=0;
-        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','R_K11 (L)'};
+        elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K8 (L)','K9 (L)','K10 (L)','K11 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
@@ -134,6 +135,8 @@ switch elmodel
         elspec.contact_spacing=0.5;
         elspec.numel=8;
         elspec.tipiscontact=1;
+        elspec.markerpos = 9.5;
+        elspec.markerlen = 3;
         elspec.contactnames={'K9 (R)','K10 (R)','K11 (R)','K12 (R)','K13 (R)','K14 (R)','K15 (R)','K16 (R)','K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)'};
         elspec.isdirected=1;
         elspec.etagenames{1}={'K9 (R)','K10-12 (R)','K13-15 (R)','K16 (R)'};
@@ -191,6 +194,8 @@ switch elmodel
         elspec.contact_spacing=0.5;
         elspec.numel=8;
         elspec.tipiscontact=0;
+        elspec.markerpos = 10;
+        elspec.markerlen = 1.5;
         elspec.contactnames={'K1 (R)','K2A (R)','K2B (R)','K2C (R)','K3A (R)','K3B (R)','K3C (R)','K4 (R)','K1 (L)','K2A (L)','K2B (L)','K2C (L)','K3A (L)','K3B (L)','K3C (L)','K4 (L)'};
         elspec.isdirected=1;
         elspec.etagenames{1}={'K1 (R)','K2 (R)','K3 (R)','K4 (R)'};
@@ -210,6 +215,8 @@ switch elmodel
         elspec.contact_spacing=1.5;
         elspec.numel=8;
         elspec.tipiscontact=0;
+        elspec.markerpos = 13;
+        elspec.markerlen = 1.5;
         elspec.contactnames={'K1 (R)','K2A (R)','K2B (R)','K2C (R)','K3A (R)','K3B (R)','K3C (R)','K4 (R)','K1 (L)','K2A (L)','K2B (L)','K2C (L)','K3A (L)','K3B (L)','K3C (L)','K4 (L)'};
         elspec.isdirected=1;
         elspec.etagenames{1}={'K1 (R)','K2 (R)','K3 (R)','K4 (R)'};

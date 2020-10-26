@@ -5,11 +5,11 @@ function seed = ea_conformseedtofmri(dataset,seed,interp)
 % that rigid body reslicing provided by spm_reslice is not enough. 12 DOF
 % (affine) or 9 DOF (traditional) transformation might be needed.
 
-if isfile(dataset)
+if ~isstruct(dataset) && isfile(dataset)
     load(dataset, 'dataset');
 end
 
-if isfile(seed)
+if ~isstruct(seed) && isfile(seed)
     seed = ea_load_nii(seed);
 end
 

@@ -22,11 +22,11 @@ if strcmp(voxmm,'mm')
     %
 end
 if iscell(coords)
-allc=[];
-for side=1:length(coords)
-    allc=[allc;coords{side}];
-end
-coords=allc;
+    allc=[];
+    for side=1:length(coords)
+        allc=[allc;coords{side}];
+    end
+    coords=allc;
 end
 
 if length(coords)==1 % scalar input, only a height is defined. convert to mm space.
@@ -34,6 +34,14 @@ if length(coords)==1 % scalar input, only a height is defined. convert to mm spa
 else
     getfullframe=0;
 end
+
+if any(isnan(coords(el,:)))
+    %set all to nan and return
+    %this is because there was no electrode here (nan coordinate)
+    [slice,boundbox,boundboxmm,sampleheight]=deal(nan);
+    return
+end
+
 switch tracor
     case 'tra'
         if getfullframe

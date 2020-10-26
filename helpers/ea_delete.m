@@ -1,5 +1,5 @@
 function ea_delete(object, warn)
-% wrapper for file/dir/graphic deleting, check existence beforehand
+% wrapper for file/dir deleting, check existence beforehand
 
 if nargin < 2
     warn = 0;

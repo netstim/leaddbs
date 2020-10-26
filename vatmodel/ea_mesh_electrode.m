@@ -1,6 +1,6 @@
-function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype,success]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec,precision,batchno)
+function [oemesh,nmesh,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,eltissuetype,electrode,options,S,side,elnumel,transformmatrix,elspec)
 % meshing an electrode and tissue structures bounded by a cylinder
-%% load the nucleus data
+% load the nucleus data
 ea_dispt('Generating tetraedrical mesh...');
 % meshel=electrode.meshel;
 vizz=0;
@@ -13,8 +13,8 @@ if vizz
     for f=1:length(elfv)
         patch(elfv(f),'FaceColor','none');
     end
-
 end
+
 if max(S.amplitude{side})>4
     stretchfactor=0.75*(max(S.amplitude{side})/2.5);
 else
@@ -23,12 +23,9 @@ end
 
 orig=electrode.tail_position-3*stretchfactor*(electrode.head_position-electrode.tail_position);
 etop=electrode.head_position-3*stretchfactor*(electrode.tail_position-electrode.head_position);
-if ~exist('precision','var')
-    precision=100; %set to 0 to not do any precision reduction
-end
+
 el_o_orig=[0,0,15+(20*stretchfactor)];
 el_o_etop=[0,0,-20*stretchfactor];
-
 
 nucleidecimate=0.2;    % downsample the nucleius mesh to 20%
 
@@ -58,10 +55,6 @@ face = elmodel.face;
 node=transformmatrix*[node,ones(size(node,1),1)]';
 node=node(1:3,:)';
 
-if precision
-    node=round(node*precision)/precision;
-end
-
 % - this is the node / elem / face made by tetgen of the electrode only.
 if vizz
     figure
@@ -71,10 +64,11 @@ if vizz
     axis equal
 end
 
-% plotmesh(node,elem) % plot the electrode mesh for now
+%plotmesh(node,elem) % plot the electrode mesh for now
 
-%% create a bounding cylinder
+% create a bounding cylinder
 %[anbcyl,afbcyl]=meshacylinder(orig, etop,cylradius,bcyltrisize,10,ndiv);
+
 c0bbc=c0+cylz0*v;
 c1bbc=c0+cylz1*v;
 %     [nbcyl,fbcyl]=meshacylinder(c0bbc, c1bbc,cylradius,bcyltrisize,10,ndiv);
@@ -84,10 +78,6 @@ c1bbc=c0+cylz1*v;
 [nbcyl,fbcyl]=meshacylinder(el_o_etop,el_o_orig,cylradius,bcyltrisize,10,ndiv);
 nbcyl=transformmatrix*[nbcyl,ones(length(nbcyl),1)]';
 nbcyl=nbcyl(1:3,:)';
-
-if precision
-    nbcyl=round(nbcyl*precision)/precision;
-end
 
 if vizz
     figure
@@ -102,9 +92,25 @@ if vizz
     axis equal
 end
 
+% if isempty(fv) % use TPM
+%     c1=ea_load_nii([ea_space(options),'TPM.nii,1']);
+%     voxnbcyl=c1.mat\[nbcyl,ones(length(nbcyl),1)]';
+%     voxnbcyl=voxnbcyl(1:3,:)';
+%     cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
+%     cyl=imfill(cyl,'holes');
+%
+%     cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
+%     c1.img=c1.img.*permute(cyl,[2,1,3]);
+%     fv=isosurface(c1.img,0.5,'noshare');
+%     fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
+%     fv.vertices=fv.vertices(1:3,:)';
+%     tpmuse=1;
+% else
 tpmuse=0;
+% end
+
 if ~isempty(fv) % use atlas to define GM
-    %% load the nucleus surfaces
+    % load the nucleus surfaces
     nobj=[];
     fobj=[];
     ncount=length(fv);     % the number of nuclei meshes inside fv()
@@ -115,18 +121,12 @@ if ~isempty(fv) % use atlas to define GM
     else
         graymatterpresent=1;
         for i=1:ncount
-            fv(i)=reducepatch(fv(i),nucleidecimate);
-
             no=fv(i).vertices;
             fo=fv(i).faces;
-            if precision
-               no=round(no*precision)/precision;
-            end
-
             [no,fo]=meshresample(no,fo,nucleidecimate); % mesh is too dense, reduce the density by 80%
-            [no,fo]=meshcheckrepair(no,fo,'dup'); % clean topological defects
+            % [no,fo]=meshcheckrepair(no,fo,'meshfix');  % clean topological defects
 
-            %% merge all nuclei
+            % merge all nuclei
             if isempty(nobj)
                 nobj=no;
                 fobj=fo;
@@ -139,12 +139,11 @@ if ~isempty(fv) % use atlas to define GM
 
         if vizz
             figure
-            % patch('Vertices',no,'Faces',fo,'FaceColor','none');
             patch('Vertices',nobj,'Faces',fobj,'FaceColor','none');
-            % patch('Vertices',node,'Faces',face(:,1:3),'FaceColor','blue');
+            patch('Vertices',node,'Faces',face(:,1:3),'FaceColor','blue');
         end
     end
-    %% merge the electrode mesh with the nucleus mesh
+    % merge the electrode mesh with the nucleus mesh
 else
     graymatterpresent=0;
 end
@@ -168,9 +167,10 @@ end
 %figure
 %patch('vertices',anbcyl,'faces',afbcyl,'FaceColor','none','EdgeColor','b');
 %patch('vertices',nbcyl,'faces',fbcyl,'FaceColor','none','EdgeColor','r');
+
 %seedbbc=nbcyl(1,:)*(1-1e-2)+mean(nbcyl)*1e-2;  % define a seed point for the bounding cylinder
 
-%% cut the electrode+nucleus mesh by the bounding cylinder
+% cut the electrode+nucleus mesh by the bounding cylinder
 ISO2MESH_SURFBOOLEAN='cork';
 
 [nboth2,fboth2]=surfboolean(nbcyl,fbcyl(:,[1 3 2]),'resolve',nboth,fboth);
@@ -186,47 +186,39 @@ if vizz
     axis equal
 end
 
-%% remove duplicated nodes in the surface
-[nboth2,fboth2]=meshcheckrepair(nboth2,fboth2,'dup');
-[nboth2,fboth2]=meshcheckrepair(nboth2,fboth2,'deep');
-[nboth2,fboth2]=meshcheckrepair(nboth2,fboth2,'dup');
-
-%[I,IA,IC]=unique(nboth4,'rows');
+% remove duplicated nodes in the surface
+[nboth3,fboth3]=meshcheckrepair(nboth2,fboth2,'dup');
+[nboth3,fboth3]=meshcheckrepair(nboth3,fboth3,'deep');
 
 %figure, patch('faces',fboth4,'vertices',nboth4,'facecolor','r','facealpha',0.3);
-
 if vizz
-    figure('name','nboth2');
-    fvv.faces=fboth2(:,1:3);
-    fvv.vertices=nboth2;
+    figure('name','nboth3');
+    fvv.faces=fboth3(:,1:3);
+    fvv.vertices=nboth3;
     patch(fvv,'edgecolor','m','facecolor','none');
     axis equal
 end
 
-%% define seeds along the electrode axis
+% define seeds along the electrode axis
 %[t,baryu,baryv,faceidx]=raytrace(orig,v0,nboth4,fboth4);
 %t=sort(t(faceidx));
 %t=(t(1:end-1)+t(2:end))*0.5;
 %seedlen=length(t);
 %electrodeseeds=repmat(orig(:)',seedlen,1)+repmat(v0(:)',seedlen,1).*repmat(t(:)-1,1,3);
 
-%% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
+% create tetrahedral mesh of the final combined mesh (seeds are ignored, tetgen 1.5 automatically find regions)
 % - this is the part where we have all 4 element types combined already.
 
-[nmesh,emesh,fmesh,success]=ea_surf2mesh_conjoin(nboth2,fboth2,min(nboth2,[],1),max(nboth2,[],1),1,3,batchno,precision,options,S.label,side);
-
+[nmesh,emesh,fmesh]=s2m(nboth3,fboth3,1,3);
 if vizz
-%     figure('name','Final mesh');
-%     fvv.faces=fmesh(:,1:3);
-%     fvv.vertices=nmesh;
-%     patch(fvv,'edgecolor','k','facecolor','none');
-%     axis equal
-    figure
-    hold on;
-    plotmesh(nmesh,emesh,'facealpha',0.1)
+    figure('name','Final mesh');
+    fvv.faces=face(:,1:3);
+    fvv.vertices=nmesh;
+    patch(fvv,'edgecolor','k','facecolor','none');
+    axis equal
 end
 
-%% remapping the region labels
+% remapping the region labels
 etype=emesh(:,end);
 labels=unique(etype);
 
@@ -243,13 +235,12 @@ for i=1:length(labels)
     zrange(i,:)=[min(cc(:,3)) max(cc(:,3))];
 end
 
-
 disp(['We have ',num2str(length(centroids)),' regions and need to map these to tissue types.']);
 tissuelabels=zeros(length(centroids),1);
 if vizz
-    %     h=figure;
-    %     plotmesh(nmesh,emesh(:,1:5),'linestyle','none','facealpha',0.1);
-    %     hold on
+    % h=figure;
+    % plotmesh(nmesh,emesh(:,1:5),'linestyle','none','facealpha',0.1);
+    % hold on
 end
 
 % init activeidx:
@@ -271,6 +262,7 @@ switch side
 end
 
 wmboundary=[];
+
 if vizz
     h=figure;
 end
@@ -286,7 +278,6 @@ for reg=1:length(centroids)
 
     % a - check contacts:
     for con=find(eltissuetype==3)
-
         in=double(ea_intriangulation(elfv(con).vertices,elfv(con).faces,tetrcents));
 
         if vizz
@@ -315,16 +306,17 @@ for reg=1:length(centroids)
             tissuelabels(reg)=3; % set contact
             disp(['Region ',num2str(reg),' captured by contact material.']);
             if vizz
-%             figure('name',['Conducting region ',num2str(reg)]);
-%             hold on
-%             patch('vertices',elfv(con).vertices,'faces',elfv(con).faces,'FaceColor','none','EdgeColor','b');
-%             patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
-%             plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
-%             axis equal
+                % figure('name',['Conducting region ',num2str(reg)]);
+                % hold on
+                % patch('vertices',elfv(con).vertices,'faces',elfv(con).faces,'FaceColor','none','EdgeColor','b');
+                % patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
+                % plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
+                % axis equal
             end
             break
         end
     end
+
     if tissuelabels(reg); continue; end % move to next component if already assigned.
 
     % b - check insulation:
@@ -343,22 +335,24 @@ for reg=1:length(centroids)
             tissuelabels(reg)=4; % set insulation
             disp(['Region ',num2str(reg),' captured by insulating material.']);
             if vizz
-%             figure('name',['Insulating region ',num2str(reg)]);
-%             hold on
-%             patch('vertices',elfv(ins).vertices,'faces',elfv(ins).faces,'FaceColor','none','EdgeColor','b');
-%             patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
-%             plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
-%             axis equal
+                % figure('name',['Insulating region ',num2str(reg)]);
+                % hold on
+                % patch('vertices',elfv(ins).vertices,'faces',elfv(ins).faces,'FaceColor','none','EdgeColor','b');
+                % patch('vertices',nmesh,'faces',emesh(emesh(:,5)==reg,1:4),'FaceColor','none','EdgeColor','r');
+                % plot3(centroids(reg,1),centroids(reg,2),centroids(reg,3),'go');
+                % axis equal
             end
             break
         end
     end
+
     if tissuelabels(reg); continue; end % move to next component if already assigned.
 
     % if not: if grey matter, then white matter
     if ~tpmuse
         if graymatterpresent
             for gm=1:length(fv)
+
                 in=double(ea_intriangulation(fv(gm).vertices,fv(gm).faces,tetrcents));
                 if vizz
                     set(h,'name',num2str(mean(in)));
@@ -392,11 +386,11 @@ for reg=1:length(centroids)
             disp(['Region ',num2str(reg),' captured by grey matter.']);
         end
     end
+
     if tissuelabels(reg); continue; end
 
     % assign the rest to white matter: (this following code will not be executed if
     % label has already been assigned above).
-
     tissuelabels(reg)=2; % set white matter
     disp(['Region ',num2str(reg),' captured by white matter.']);
 end
@@ -410,15 +404,13 @@ if vizz
     hold on
     plot3(nmesh(wmboundary,1),nmesh(wmboundary,2),nmesh(wmboundary,3),'r.');
     plot3(nbcyl(:,1),nbcyl(:,2),nbcyl(:,3),'b.');
-
-    plot3(nmesh(:,1),nmesh(:,2),nmesh(:,3),'g.')
+    plot3(nmesh(:,1),nmesh(:,2),nmesh(:,3),'g.');
 end
 
 % [nbothbc]=surfboolean(nmesh,fmesh(:,1:3),'second',nbcyl,fbcyl);
 % [~,wmboundary]=ismember(nbothbc,nmesh,'rows');
 % wmboundary(wmboundary==0)=[];
-
-%gmlabels=setdiff(labels,[wmlabels; electrodelabel]); % the remaining ones are from nuclei meshes.
+% gmlabels=setdiff(labels,[wmlabels; electrodelabel]); % the remaining ones are from nuclei meshes.
 
 tissuetype=emesh(:,5);
 for tt=1:4
@@ -434,7 +426,7 @@ oemesh=emesh;
 emesh(:,5)=tissuetype;
 
 if vizz
-    %% plot the final tetrahedral mesh
+    % plot the final tetrahedral mesh
     figure
     hold on;
     plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)

@@ -333,7 +333,8 @@ if options.writeoutpm
 end
 
 % plot fibers that do connect to seed:
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
     if ~isempty(connectingfibs{side})
         % Remove single point
         single = cellfun(@(x) all(size(x)==[1,3]),connectingfibs{side});

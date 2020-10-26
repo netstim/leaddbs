@@ -193,7 +193,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                vizstruct=struct('faces',[],'vertices',[],'colors',[]);
 
                cnt=1;
-                for side=1:length(options.sides)
+                for iside=1:length(options.sides)
+                    side=options.sides(iside);
                     extract=1:length(el_render(side).elpatch);
                     for ex=extract
                         tp=el_render(side).elpatch(ex);
@@ -368,7 +369,6 @@ if options.d3.writeatlases && ~strcmp(options.atlasset, 'Use none')
     if ~strcmp(options.d3.verbose,'off') && ~atlases.discfibersonly
         ea_openatlascontrol([],[],atlases,resultfig,options);
     end
-
 else
     colormap(gray)
 end
@@ -636,10 +636,11 @@ if(getappdata(gcf,'altpressed'))
     eltog=getappdata(hobj.Parent.Parent,'eltog');
     set(eltog,'State',onoff);
     for el=1:length(atls)
-        for side=1:length(options.sides)
-           try
+        for iside=1:length(options.sides)
+            side=options.sides(iside);
+            try
                set(atls(el).el_render{side}, 'Visible', onoff);
-           end
+            end
         end
     end
 else
