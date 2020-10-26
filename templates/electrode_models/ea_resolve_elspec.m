@@ -182,12 +182,12 @@ switch elmodel
         elspec.forstimulation=1;
     case 'St. Jude Directed 6172 (short)'
         elspec.matfname='stjude_directed_05';
-        elspec.lead_diameter=1.3;
+        elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
-        elspec.contact_diameter=1.3;
+        elspec.contact_diameter=1.27;
         elspec.contact_color=0.3;
-        elspec.tip_diameter=1.3;
+        elspec.tip_diameter=1.27;
         elspec.tip_color=0.3;
         elspec.tip_length=1;
         elspec.contact_spacing=0.5;
@@ -203,12 +203,12 @@ switch elmodel
         elspec.forstimulation=1;
     case 'St. Jude Directed 6173 (long)'
         elspec.matfname='stjude_directed_15';
-        elspec.lead_diameter=1.3;
+        elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
-        elspec.contact_diameter=1.3;
+        elspec.contact_diameter=1.27;
         elspec.contact_color=0.3;
-        elspec.tip_diameter=1.3;
+        elspec.tip_diameter=1.27;
         elspec.tip_color=0.3;
         elspec.tip_length=1;
         elspec.contact_spacing=1.5;
