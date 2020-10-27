@@ -15,7 +15,7 @@ function elstruct=ea_elstruct_match_and_nanfill(elstruct)
             elstruct(el).coords_mm=match_and_nanfill(elstruct(el).coords_mm);
         end
 
-        if isfield(elstruct(el),'coords_acpc') && ~isnan(elstruct(el).coords_acpc)
+        if isfield(elstruct(el),'coords_acpc') && ~(~iscell(elstruct(el).coords_acpc) && isnan(elstruct(el).coords_acpc))
             if length(elstruct(el).coords_acpc)==1
                 elstruct(el).coords_acpc{2}=[];
             elseif isempty(elstruct(el).coords_acpc)
