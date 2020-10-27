@@ -139,15 +139,9 @@ for nativemni=nm % switch between native and mni space atlases.
                         atlases.roi{atlas,side}.Visible='off';
                     end
                 end
-                
-                % export label and labelbutton
 
-                [~,thislabel]=fileparts(atlases.names{atlas});
-                % try % use try here because filename might be shorter than .nii
-                %     if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
-                        [~,thislabel]=fileparts(thislabel);
-                %     end
-                % end
+                % set atlaslabel
+                [~,thislabel] = ea_niifileparts(atlases.names{atlas});
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
 
                 if ~exist('labelbutton','var')
