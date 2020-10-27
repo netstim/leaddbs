@@ -22,28 +22,45 @@ for iside=1:length(options.sides)
     cnt=1;
     for sub=1:length(elstruct)
         for cont=1:size(options.d3.isomatrix{1},2)
-            if ~isnan(options.d3.isomatrix{side}(sub,cont));
-                try
-                    if ~shifthalfup
-                        X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
-                        Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
-                        Z{side}(cnt)=elstruct(sub).coords_mm{side}(cont,3);
-                    else % using pairs of electrode contacts (i.e. 3 pairs if there are 4 contacts)
-                        X{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,1),elstruct(sub).coords_mm{side}(cont+1,1)]);
-                        Y{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,2),elstruct(sub).coords_mm{side}(cont+1,2)]);
-                        Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
+            if ~isnan(options.d3.isomatrix{side}(sub,cont))
+                 if ea_arenopoints4side(elstruct(sub).coords_mm,side)
+                    %if there are no coordinates, don't parse anything, and skip to next
+                    warning_printf=@(str_in) fprintf(['ATTENTION!! : ' str_in '\n']);
+                    if side==1
+                        warning_printf(['no isovolume will be exported for the right side of subj #' num2str(sub) ' as there is no lead in it.']);
+                    elseif side==2
+                        warning_printf(['no isovolume will be exported for the right side of subj #' num2str(sub) ' as there is no lead in it.']);
+                    else
+                        warning_printf(['no isovolume will be exported for side=' num2str(side) ' of subj #' num2str(sub) ' as there is no lead in it.']);
                     end
-                V{side}(cnt)=options.d3.isomatrix{side}(sub,cont);
+                 else
+                    %if there are coordinates, parse them, otherwise skip to next
+                    try
+                        if ~shifthalfup
+                            X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
+                            Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
+                            Z{side}(cnt)=elstruct(sub).coords_mm{side}(cont,3);
+                        else % using pairs of electrode contacts (i.e. 3 pairs if there are 4 contacts)
+                            X{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,1),elstruct(sub).coords_mm{side}(cont+1,1)]);
+                            Y{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,2),elstruct(sub).coords_mm{side}(cont+1,2)]);
+                            Z{side}(cnt)=mean([elstruct(sub).coords_mm{side}(cont,3),elstruct(sub).coords_mm{side}(cont+1,3)]);
+                        end
+                        V{side}(cnt)=options.d3.isomatrix{side}(sub,cont);
 
-                PT{side}(cnt)=sub;
-                cnt=cnt+1;
-                catch
-                    warning(['Please check localization for subject no. ',num2str(sub),'.']);
-                end
+                        PT{side}(cnt)=sub;
+                        cnt=cnt+1;
+                    catch
+                        warning(['Please check localization for subject no. ',num2str(sub),'.']);
+                    end
+                 end
             end
         end
     end
 
+    if cnt==1
+        %no elements/leads were present in this side, skip it
+        continue
+    end
     X{side}=X{side}(:);        Y{side}=Y{side}(:);        Z{side}=Z{side}(:); V{side}=V{side}(:); PT{side}=PT{side}(:);
 
     Vol=spm_vol([ea_space(options),'bb.nii']);

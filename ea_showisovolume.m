@@ -33,7 +33,18 @@ for iside=1:length(options.sides)
     for sub=1:length(elstruct)
         for cont=1:size(options.d3.isomatrix{1},2)
             if ~isnan(options.d3.isomatrix{side}(sub,cont))
-                if ~isempty(elstruct(sub).coords_mm{side}) %if there are coordinates, parse them, otherwise skip to next
+                if ea_arenopoints4side(elstruct(sub).coords_mm,side)
+                    %if there are no coordinates, don't parse anything, and skip to next
+                    warning_printf=@(str_in) fprintf(['ATTENTION!! : ' str_in '\n']);
+                    if side==1
+                        warning_printf(['no isovolume will be exported for the right side of subj #' num2str(sub) ' as there is no lead in it.']);
+                    elseif side==2
+                        warning_printf(['no isovolume will be exported for the right side of subj #' num2str(sub) ' as there is no lead in it.']);
+                    else
+                        warning_printf(['no isovolume will be exported for side=' num2str(side) ' of subj #' num2str(sub) ' as there is no lead in it.']);
+                    end
+                else % ~isempty(elstruct(sub).coords_mm{side}) 
+                    %if there are coordinates, parse them, otherwise skip to next
                     if ~shifthalfup
                         X{side}(cnt)=elstruct(sub).coords_mm{side}(cont,1);
                         Y{side}(cnt)=elstruct(sub).coords_mm{side}(cont,2);
@@ -50,6 +61,10 @@ for iside=1:length(options.sides)
         end
     end
 
+    if cnt==1
+        %no elements/leads were present in this side, skip it
+        continue
+    end
     X{side}=X{side}(:);
     Y{side}=Y{side}(:);
     Z{side}=Z{side}(:);
