@@ -515,6 +515,11 @@ for nativemni=nm % switch between native and mni space atlases.
         setappdata(resultfig,'atlaslabels',atlaslabels);
     end
 
+    % Remove empty toolbar
+    toolbars = findobj(resultfig.Children,'Type', 'uitoolbar');
+    emptyToolbar = arrayfun(@(tb) isempty(tb.Children), toolbars);
+    delete(toolbars(emptyToolbar));
+
     try
         setappdata(resultfig,'atlases',atlases);
     end
