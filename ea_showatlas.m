@@ -215,15 +215,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
 
-                rndfactor=1;
-                try
-                    switch atlases.names{atlas,side}(end-2:end)
-                        case 'nii'
-                            rndfactor=2;
-                        case {'trk','mat'}
-                            rndfactor=0.2;
-                    end
-                end
+                rndfactor=0.2;
 
                 try
                     if ~options.prefs.d3.colorjitter
