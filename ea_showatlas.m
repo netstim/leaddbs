@@ -96,6 +96,11 @@ for nativemni=nm % switch between native and mni space atlases.
         atlcntbutton=uipushtool(ht,'CData',ea_get_icn('atlases'),'Tag','Atlas Control','TooltipString','Atlas Control Figure','ClickedCallback',{@ea_openatlascontrol,atlases,resultfig,options});
     end
 
+    if ~exist('labelbutton','var')
+        labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
+        labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
+    end
+
     % prepare stats fields
     if options.writeoutstats
         for el=1:length(elstruct)
@@ -144,10 +149,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 [~,thislabel] = ea_niifileparts(atlases.names{atlas});
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
 
-                if ~exist('labelbutton','var')
-                    labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
-                    labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
-                end
                 % make fv compatible for stats
                 caxis([1 64]);
 
