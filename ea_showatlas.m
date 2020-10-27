@@ -30,10 +30,10 @@ colormap(gray);
 for nativemni=nm % switch between native and mni space atlases.
 
     switch nativemni
-        case 1
+        case 1 % mni
             adir=[ea_space(options,'atlases'),options.atlasset,filesep];
             mifix='';
-        case 2
+        case 2 % native
             adir=[[options.root,options.patientname,filesep],'atlases',filesep,options.atlasset,filesep];
             mifix='';
     end
