@@ -279,11 +279,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 % end
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
 
-                if ~exist('labelbutton','var')
-                    labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
-                    labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
-                end
-
                 caxis([1 64]);
 
                 % prepare colorbutton icon
