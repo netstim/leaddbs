@@ -271,13 +271,8 @@ for nativemni=nm % switch between native and mni space atlases.
                     atlassurfs{atlascnt,1}=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
                 end
 
-                [~,thislabel]=fileparts(atlases.names{atlas});
-                % try % use try here because filename might be shorter than .nii
-                %     if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
-                        [~,thislabel]=fileparts(thislabel);
-                %     end
-                % end
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
+                thislabel = regexp(atlases.names{atlas},['[^',filesep,']+?(?=\.[^.]*$|$)'],'match','once');
 
                 caxis([1 64]);
 
