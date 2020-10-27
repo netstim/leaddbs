@@ -270,7 +270,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 if ~(atlases.types(atlas)>5)
                     atlassurfs{atlascnt,1}=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
                 end
-                % export label and labelbutton
 
                 [~,thislabel]=fileparts(atlases.names{atlas});
                 % try % use try here because filename might be shorter than .nii
@@ -284,7 +283,6 @@ for nativemni=nm % switch between native and mni space atlases.
                     labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
                     labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
                 end
-                % make fv compatible for stats
 
                 caxis([1 64]);
 
