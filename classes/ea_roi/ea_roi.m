@@ -3,7 +3,7 @@ classdef ea_roi < handle
     % example:
     % figure; pobj.openedit=1; ea_roi([spm('dir'),filesep,'toolbox',filesep,'OldSeg',filesep,'grey.nii'],pobj); a=light; axis('off','equal')
     % A. Horn
-    
+
     properties (SetObservable)
         niftiFilename % original nifti filename
         nii % nifti loaded
@@ -28,9 +28,9 @@ classdef ea_roi < handle
         htH % handle for toggle toolbar
         Tag % tag of ROI can be used in multi-roi scenes
     end
-    
+
     methods(Static)
-        
+
         function obj=loadobj(s)
             if isstruct(s)
                 newObj=ea_roi();
@@ -44,32 +44,30 @@ classdef ea_roi < handle
             end
         end
     end
-    
+
     methods
-        
+
         function sobj = saveobj(obj)
-            
             fn=fieldnames(obj);
             for f=1:length(fn)
                 if ~ismember(fn{f},{'plotFigureH','patchH','toggleH','htH','controlH'})
                     sobj.(fn{f})=obj.(fn{f});
                 end
             end
-            
         end
-        
-        
+
         function obj=ea_roi(niftiFilename,pobj) % generator function
             if nargin
                 if exist('niftiFilename','var') && ~isempty(niftiFilename)
                     obj.niftiFilename=niftiFilename;
                 end
-                
+
                 try
                     obj.name=pobj.name;
                 catch
                     [~,obj.name]=fileparts(obj.niftiFilename);
                 end
+
                 try
                     obj.plotFigureH=pobj.plotFigureH;
                 catch
@@ -81,10 +79,11 @@ classdef ea_roi < handle
                 catch
                     obj.htH=getappdata(obj.plotFigureH,'addht');
                 end
+
                 if isempty(obj.htH) % first ROI
                     obj.htH=uitoolbar(obj.plotFigureH);
                 end
-                
+
                 set(0,'CurrentFigure',obj.plotFigureH);
                 % set cdata
                 if exist('pobj','var') && ~isempty(pobj)
@@ -96,6 +95,7 @@ classdef ea_roi < handle
                 else
                     obj.color = ea_uisetcolor;
                 end
+
                 try
                     obj.nii=pobj.nii;
                 catch
@@ -103,7 +103,7 @@ classdef ea_roi < handle
                     obj.nii=ea_load_nii(obj.niftiFilename);
                     obj.nii.img(obj.nii.img==0) = nan;
                     obj.nii.img(isinf(obj.nii.img)) = nan;
-                    
+
                     if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
                         obj.binary=1;
                     else
@@ -114,7 +114,7 @@ classdef ea_roi < handle
                     obj.nii.img(isinf(obj.nii.img)) = 0;
                 end
                 options.prefs=ea_prefs;
-                
+
                 obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
                 obj.min=ea_nanmin(obj.nii.img(~(obj.nii.img==0)));
                 maxmindiff=obj.max-obj.min;
@@ -129,54 +129,50 @@ classdef ea_roi < handle
                         obj.threshold=obj.max-0.5*maxmindiff;
                     end
                 end
-                
+
                 obj.smooth=options.prefs.hullsmooth;
                 obj.hullsimplify=options.prefs.hullsimplify;
                 set(0,'CurrentFigure',obj.plotFigureH);
                 obj.patchH=patch;
-                
+
                 obj.toggleH=uitoggletool;
-                
-                
+
                 update_roi(obj);
-                    breathelife(obj);
-                
+                breathelife(obj);
             end
-            
-            
-            
+
             if exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit
                 ea_editroi([],[],obj)
             end
         end
-        
+
         function breathelife(obj)
-                addlistener(obj,'Visible','PostSet',...
-                    @changeevent);
-                addlistener(obj,'color','PostSet',...
-                    @changeevent);
-                addlistener(obj,'usesolidcolor','PostSet',...
-                    @changeevent);
-                addlistener(obj,'threshold','PostSet',...
-                    @changeevent);
-                addlistener(obj,'smooth','PostSet',...
-                    @changeevent);
-                addlistener(obj,'hullsimplify','PostSet',...
-                    @changeevent);
-                addlistener(obj,'alpha','PostSet',...
-                    @changeevent);
-                if isempty(obj.toggleH)
-                    obj.toggleH=uitoggletool(obj.htH);
-                end
-                if strcmp(obj.plotFigureH.Visible,'on') % only make GUI functioning if figure is visible.
-                    
-                    % Get the underlying java object using findobj
-                    jtoggle = findjobj(obj.toggleH);
-                    % Specify a callback to be triggered on any mouse release event
-                    set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
-                end
-                setappdata(obj.plotFigureH,'addht',obj.htH);
+            addlistener(obj,'Visible','PostSet',...
+                @changeevent);
+            addlistener(obj,'color','PostSet',...
+                @changeevent);
+            addlistener(obj,'usesolidcolor','PostSet',...
+                @changeevent);
+            addlistener(obj,'threshold','PostSet',...
+                @changeevent);
+            addlistener(obj,'smooth','PostSet',...
+                @changeevent);
+            addlistener(obj,'hullsimplify','PostSet',...
+                @changeevent);
+            addlistener(obj,'alpha','PostSet',...
+                @changeevent);
+            if isempty(obj.toggleH)
+                obj.toggleH=uitoggletool(obj.htH);
+            end
+            if strcmp(obj.plotFigureH.Visible,'on') % only make GUI functioning if figure is visible.
+                % Get the underlying java object using findobj
+                jtoggle = findjobj(obj.toggleH);
+                % Specify a callback to be triggered on any mouse release event
+                set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
+            end
+            setappdata(obj.plotFigureH,'addht',obj.htH);
         end
+
         function obj=update_roi(obj,evtnm) % update ROI
             if ~exist('evtnm','var')
                 evtnm='all';
@@ -192,26 +188,25 @@ classdef ea_roi < handle
                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));
                 end
                 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-                
+
                 obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 fvc=isocaps(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 obj.fv.faces=[obj.fv.faces;fvc.faces+size(obj.fv.vertices,1)];
                 obj.fv.vertices=[obj.fv.vertices;fvc.vertices];
-                
+
                 if obj.smooth
                     obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
                 else
                     obj.sfv=obj.fv;
                 end
-                
+
                 if ischar(obj.hullsimplify)
                     % get to 700 faces
                     simplify=700/length(obj.sfv.faces);
                     obj.sfv=reducepatch(obj.sfv,simplify);
-                    
                 else
                     if obj.hullsimplify<1 && obj.hullsimplify>0
-                        
+
                         obj.sfv=reducepatch(obj.sfv,obj.hullsimplify);
                     elseif obj.hullsimplify>1
                         simplify=obj.hullsimplify/length(obj.fv.faces);
@@ -219,30 +214,24 @@ classdef ea_roi < handle
                     end
                 end
                 jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]); % default blue to red colormap
-                
+
                 if obj.binary || obj.usesolidcolor
                     obj.cdat=abs(repmat(obj.color,length(obj.sfv.vertices),1) ... % C-Data for surface
                         +randn(length(obj.sfv.vertices),1)*2)';
                 else
-                    
                     obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
                     obj.cdat=round((ea_contrast(obj.cdat).*(length(gray)-1))+1);
                     obj.cdat=jetlist(obj.cdat,:);
                 end
             end
-            
-            
-            
-            
+
             %co=ones(1,1,3);
             %co(1,1,:)=obj.color;
             %atlasc=double(rgb2ind(co,jetlist));
-            
-            
-            
+
             % show atlas.
             set(0,'CurrentFigure',obj.plotFigureH);
-            
+
             set(obj.patchH,...
                 {'Faces','Vertices','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
                 {obj.sfv.faces,obj.sfv.vertices,obj.alpha,'none','phong',obj.Visible});
@@ -255,7 +244,7 @@ classdef ea_roi < handle
                     {'FaceVertexCData','FaceColor'},...
                     {obj.cdat,'interp'});
             end
-            
+
             % add toggle button:
             set(obj.toggleH,...
                 {'Parent','CData','TooltipString','OnCallback','OffCallback','State'},...
@@ -264,38 +253,31 @@ classdef ea_roi < handle
     end
 end
 
-
 function changeevent(~,event)
-update_roi(event.AffectedObject,event.Source.Name);
+    update_roi(event.AffectedObject,event.Source.Name);
 end
-
-
-
-
-
 
 function rightcallback(src, evnt,obj)
-if evnt.getButton() == 3
-    ea_editroi(src,evnt,obj)
-end
+    if evnt.getButton() == 3
+        ea_editroi(src,evnt,obj)
+    end
 end
 
 function ea_editroi(Hobj,evt,obj)
-obj.controlH=ea_roicontrol(obj);
-
+    obj.controlH=ea_roicontrol(obj);
 end
 
 function ea_roivisible(Hobj,evt,onoff,obj)
-obj.Visible=onoff;
+    obj.Visible=onoff;
 end
+
 function coords=map_coords_proxy(XYZ,V)
+    XYZ=[XYZ';ones(1,size(XYZ,1))];
 
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';
+    coords=V.mat*XYZ;
+    coords=coords(1:3,:)';
 end
 
 function fn=stripext(fn)
-[~,fn]=fileparts(fn);
+    [~,fn]=fileparts(fn);
 end
