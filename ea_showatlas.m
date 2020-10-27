@@ -580,9 +580,10 @@ end
 
 % open up atlas control viewer
 function setlabelcolor(hobj,ev,robject)
-
 co = ea_uisetcolor;
-set(robject,'Color',co);
+if ~numel(co)==1
+    set(robject,'Color',co);
+end
 
 
 function atlasvisible(hobj,ev,resultfig,atlscnt,onoff)
