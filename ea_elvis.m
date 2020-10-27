@@ -369,31 +369,6 @@ if options.d3.writeatlases && ~strcmp(options.atlasset, 'Use none')
     if ~strcmp(options.d3.verbose,'off') && ~atlases.discfibersonly
         ea_openatlascontrol([],[],atlases,resultfig,options);
     end
-
-    if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
-        try % see if electrode has been defined.
-            cnt=length(vizstruct);
-        catch
-            cnt=0;
-        end
-        % export vizstruct
-        try
-            for iside=1:length(options.sides)
-                side=options.sides(iside);
-                for atl=1:length(atlases.fv)
-                    if isfield(atlases.fv{atl,side},'faces')
-                        vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
-                        vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
-                        vizstruct(cnt+1).normals=atlases.normals{atl,side};
-                        vizstruct(cnt+1).colors=[...
-                            squeeze(ind2rgb(round(atlases.cdat{atl,side}),atlases.colormap)),...
-                            repmat(0.7,size(atlases.normals{atl,side},1),1)];
-                        cnt=cnt+1;
-                    end
-                end
-            end
-        end
-    end
 else
     colormap(gray)
 end

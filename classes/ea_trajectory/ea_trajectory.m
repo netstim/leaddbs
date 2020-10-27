@@ -175,26 +175,27 @@ classdef ea_trajectory < handle
             update_trajectory(obj);
 
             % Get the underlying java object using findobj
-            jtoggle = findjobj(obj.toggleH);
-
-            % Specify a callback to be triggered on any mouse release event
-            set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
-            addlistener(obj, 'showPlanning', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'hasPlanning', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'elmodel', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'showMacro', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'showMicro', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'relateMicro', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'color', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'target', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'alpha', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'target', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'planRelative', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'colorMacroContacts', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'planningAppearance', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'plan2elstruct_model', 'PostSet', @ea_trajectory.changeevent);
-            addlistener(obj, 'electrodeRelativeToPlan', 'PostSet', @ea_trajectory.changeevent);
-
+            if strcmp(obj.plotFigureH.Visible,'on') % only needed if figure is really visible (when calling from lead group it could be hidden).
+                jtoggle = findjobj(obj.toggleH);
+                
+                % Specify a callback to be triggered on any mouse release event
+                set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
+                addlistener(obj, 'showPlanning', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'hasPlanning', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'elmodel', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'showMacro', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'showMicro', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'relateMicro', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'color', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'target', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'alpha', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'target', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'planRelative', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'colorMacroContacts', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'planningAppearance', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'plan2elstruct_model', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'electrodeRelativeToPlan', 'PostSet', @ea_trajectory.changeevent);
+            end
             if (exist('pobj','var') && isfield(pobj,'openedit') && pobj.openedit) || ~exist('pobj','var')
                 obj.controlH = ea_trajectorycontrol(obj);
             end

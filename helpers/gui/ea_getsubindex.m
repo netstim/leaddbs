@@ -12,7 +12,7 @@ if uselabelname ~= 0
 end
 
 for p=1:length(surfs)
-    if strcmp(surfs(p).Tag,[sel,sidec])
+    if strcmp(surfs{p}.Tag,[sel,sidec])
         ixs=p;
         break
     end
