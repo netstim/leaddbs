@@ -899,6 +899,17 @@ for pt=selection
     catch
         options.d3.isomatrix={};
     end
+    try
+        options.d3.isomatrix_name=M.isomatrix_name;
+    catch
+        options.d3.isomatrix_name={};
+    end
+    options.normregressor=M.ui.normregpopup;
+    for reg=1:length(options.d3.isomatrix)
+        try
+            options.d3.isomatrix{reg}=ea_reformat_isomatrix(options.d3.isomatrix{reg},M,options);
+        end
+    end
 
     options.d3.isovscloud=M.ui.isovscloudpopup;
     options.d3.showisovolume=M.ui.showisovolumecheck;
