@@ -24,7 +24,8 @@ catch
     nmind=[1 0];
 end
 nm=nm(logical(nmind)); % select which shall be performed.
-                colormap(gray);
+
+colormap(gray);
 
 for nativemni=nm % switch between native and mni space atlases.
 
@@ -71,7 +72,6 @@ for nativemni=nm % switch between native and mni space atlases.
         catch
             jetlist=atlases.colormap;
         end
-        %colormap(atlases.colormap);
     else
         try
             jetlist=options.colormap;
@@ -87,7 +87,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
     ht=getappdata(resultfig,'atlht');
     if ~isempty(ht) % sweep nonempty atlases toolbar
-        %delete(ht.Children(:));
+        % delete(ht.Children(:));
     else
         ht=uitoolbar(resultfig);
     end
@@ -104,10 +104,9 @@ for nativemni=nm % switch between native and mni space atlases.
     % prepare stats fields
     if options.writeoutstats
         for el=1:length(elstruct)
-            %for side=1:length(elstruct(el).coords_mm)
             for iside=1:length(elstruct(el).coords_mm)
-                %in this case side is == to iside, as it is not iterating
-                %the options.sides vector
+                % In this case side is iside, as it is not iterating the
+                % options.sides vector
                 side=iside;
 
                 ea_stats.conmat{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
@@ -248,8 +247,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 pixdim=atlases.pixdim{atlas,side};
                 colorc=nan;
 
-                % show atlas label
-
                 if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
                     try
                         [~,centroid]=kmeans(XYZ.mm(:,1:3),1);
@@ -322,7 +319,6 @@ for nativemni=nm % switch between native and mni space atlases.
 
                         for el=1:length(elstruct)
                             if ea_arenopoints4side(ea_stats.electrodes(el).coords_mm,side)
-                                %warning_printf=@(str_in) warning(str_in);
                                 warning_printf=@(str_in) fprintf(['ATTENTION!! : ' str_in '\n']);%this is less obnoxious, as it is not too important
                                 if side==1
                                     warning_printf(['Statistics for right ' atlases.names{atlas} ' will not be computed as there is no lead in the right side.']);
@@ -333,7 +329,6 @@ for nativemni=nm % switch between native and mni space atlases.
                                 end
                             else
                                 [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
-                                %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
 
                                 ea_stats.conmat{el,side}(:,atlas)=D;
                                 Dh=D;
@@ -353,7 +348,6 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
 
-                %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
                 if ~(atlases.types(atlas)>5)
                     ea_spec_atlas(atlassurfs{atlascnt,1},atlases.names{atlas},atlases.colormap,setinterpol);
                 else
@@ -379,13 +373,11 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 set(gcf,'Renderer','OpenGL')
                 axis off
-                % set(gcf,'color','w');
                 axis equal
 
                 if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
                     drawnow
                 end
-
             elseif strcmp(atlases.pixdim{atlas,side}, 'discfibers')
                 tractPath = [ea_space([],'atlases'),options.atlasset,filesep,getsidec(side,sidestr)];
                 tractName = ea_stripext(atlases.names{atlas});
@@ -529,20 +521,8 @@ for nativemni=nm % switch between native and mni space atlases.
         setappdata(resultfig,'atlaslabels',atlaslabels);
     end
 
-    % save table information that has been generated from nii files (on first run with this atlas set).
-    % try
-    %     atlases.fv=ifv;
-    %     atlases.cdat=icdat;
-    %     atlases.XYZ=iXYZ;
-    %     atlases.pixdim=ipixdim;
-    %     atlases.colorc=icolorc;
-    %     atlases.normals=normals;
-    % end
-
     try
         setappdata(resultfig,'atlases',atlases);
-        % setappdata(resultfig,'iXYZ',atlases.XYZ);
-        % setappdata(resultfig,'ipixdim',atlases.pixdim);
     end
 
     try
