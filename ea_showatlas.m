@@ -120,10 +120,7 @@ for nativemni=nm % switch between native and mni space atlases.
     for atlas=1:length(atlases.names)
         [~,sidestr]=detsides(atlases.types(atlas));
         for side=detsides(atlases.types(atlas))
-            
             if isnumeric(atlases.pixdim{atlas,side})
-                %fv=atlases.fv{atlas,side};
-
                 % breathe life into stored ea_roi
                 atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
                 atlases.roi{atlas,side}.htH=ht; % attach to tooltip menu
@@ -132,12 +129,10 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
                 colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
-                % show atlas label
 
-                
                 centroid=mean(atlases.roi{atlas,side}.fv.vertices(:,1:3));
                 set(0,'CurrentFigure',resultfig);
-                
+
                 atlases.roi{atlas,side}.Visible='on';
                 if isfield(atlases,'presets')
                     if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
@@ -160,7 +155,6 @@ for nativemni=nm % switch between native and mni space atlases.
                     labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
                 end
                 % make fv compatible for stats
-
                 caxis([1 64]);
 
                 % gather contact statistics
@@ -175,7 +169,6 @@ for nativemni=nm % switch between native and mni space atlases.
 
                         for el=1:length(elstruct)
                             [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
-                            %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
 
                             ea_stats.conmat{el,side}(:,atlas)=D;
                             Dh=D;
@@ -194,11 +187,10 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
 
-                %                set Tags
+                % set Tags
                 try
                     set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
                     atlassurfs{atlascnt,1}.Tag=[thislabel,'_',sidestr{side}];
-                    %set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlascnt))
                 catch
                     keyboard
                 end
@@ -206,7 +198,6 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 set(gcf,'Renderer','OpenGL')
                 axis off
-                % set(gcf,'color','w');
                 axis equal
 
                 if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
@@ -399,7 +390,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
                     drawnow
                 end
-                
+
             elseif strcmp(atlases.pixdim{atlas,side}, 'discfibers')
                 tractPath = [ea_space([],'atlases'),options.atlasset,filesep,getsidec(side,sidestr)];
                 tractName = ea_stripext(atlases.names{atlas});
