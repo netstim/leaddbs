@@ -25,9 +25,13 @@ switch varargin{1}
         else
             icn_color=zeros(varargin{3},varargin{3},3);
         end
-        icn_color(:,:,1)=varargin{2}(1);
-        icn_color(:,:,2)=varargin{2}(2);
-        icn_color(:,:,3)=varargin{2}(3);
+        col=varargin{2};
+        if ischar(col) % none
+            col=[1,1,1];
+        end
+        icn_color(:,:,1)=col(1);
+        icn_color(:,:,2)=col(2);
+        icn_color(:,:,3)=col(3);
         
     otherwise
         icn_color = imread(fullfile(ea_getearoot,'icons',[varargin{1},'.png']));

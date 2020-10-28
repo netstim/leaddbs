@@ -22,7 +22,7 @@ function varargout = ea_roicontrol(varargin)
 
 % Edit the above text to modify the response to help ea_roicontrol
 
-% Last Modified by GUIDE v2.5 26-Jul-2019 12:43:33
+% Last Modified by GUIDE v2.5 28-Oct-2020 12:27:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,6 +70,10 @@ set(0,'CurrentFigure',handles.roicontrol);
 set(handles.roicontrol,'CurrentAxes',handles.histax);
 axis off
 
+    handles.showhide.Value=ea_bool2onoff(obj.Visible);
+
+    handles.solidcolor.Visible=ea_bool2onoff(~obj.binary);
+    
 if ~obj.binary
     hist(nzeros);
     h=findobj(handles.histax,'Type','patch');
@@ -82,7 +86,24 @@ else
     set(handles.threshtxt,'Visible','off');
 end
 % button
-set(handles.colorchange,'BackgroundColor',obj.color);
+if ischar(obj.color) % none
+    set(handles.colorchange,'BackgroundColor',[1,1,1]);
+    setappdata(handles.colorchange,'facecolor',[1,1,1]);
+    handles.facecolor.Value=0;
+else
+    set(handles.colorchange,'BackgroundColor',obj.color);
+    setappdata(handles.colorchange,'facecolor',obj.color);
+    handles.facecolor.Value=1;
+end
+if ischar(obj.edgecolor) % none
+    set(handles.edgecolorchange,'BackgroundColor',[1,1,1]);
+    setappdata(handles.edgecolorchange,'edgecolor',[1,1,1]);
+    handles.edgecolor.Value=0;
+else
+    set(handles.edgecolorchange,'BackgroundColor',obj.edgecolor);
+    setappdata(handles.edgecolorchange,'edgecolor',obj.edgecolor);
+    handles.edgecolor.Value=1;
+end
 set(0,'CurrentFigure',handles.roicontrol);
 set(handles.roicontrol,'name',obj.name);
 %% sliders:
@@ -178,8 +199,12 @@ function colorchange_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 obj=getappdata(handles.roicontrol,'obj');
-obj.color = ea_uisetcolor;
-set(handles.colorchange,'BackgroundColor',obj.color);
+col = ea_uisetcolor;
+setappdata(handles.colorchange,'facecolor',col);
+set(handles.colorchange,'BackgroundColor',col);
+if handles.facecolor.Value
+    obj.color=getappdata(handles.colorchange,'facecolor');
+end
 
 
 % --- Executes on button press in showhide.
@@ -207,3 +232,46 @@ function solidcolor_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of solidcolor
 obj=getappdata(handles.roicontrol,'obj');
 obj.usesolidcolor=get(hObject,'Value');
+
+
+% --- Executes on button press in facecolor.
+function facecolor_Callback(hObject, eventdata, handles)
+% hObject    handle to facecolor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of facecolor
+obj=getappdata(handles.roicontrol,'obj');
+if handles.facecolor.Value
+    obj.color=getappdata(handles.colorchange,'facecolor');
+else
+   obj.color='none';
+end
+
+% --- Executes on button press in edgecolorchange.
+function edgecolorchange_Callback(hObject, eventdata, handles)
+% hObject    handle to edgecolorchange (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+obj=getappdata(handles.roicontrol,'obj');
+col = ea_uisetcolor;
+setappdata(handles.edgecolorchange,'edgecolor',col);
+set(handles.edgecolorchange,'BackgroundColor',col);
+if handles.edgecolor.Value
+    obj.color=getappdata(handles.edgecolorchange,'edgecolor');
+end
+
+
+% --- Executes on button press in edgecolor.
+function edgecolor_Callback(hObject, eventdata, handles)
+% hObject    handle to edgecolor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of edgecolor
+obj=getappdata(handles.roicontrol,'obj');
+if handles.edgecolor.Value
+    obj.edgecolor=getappdata(handles.edgecolorchange,'edgecolor');
+else
+    obj.edgecolor='none';
+end

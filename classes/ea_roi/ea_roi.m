@@ -8,7 +8,8 @@ classdef ea_roi < handle
         niftiFilename % original nifti filename
         nii % nifti loaded
         threshold % threshold to visualize
-        color % color of patch
+        color % facecolor of patch
+        edgecolor='none' % edgecolor of patch
         usesolidcolor=1 % whether to use isocolors or a solid manually defined color
         alpha=0.7 % alpha of patch
         fv % faces and vertices of patch
@@ -27,6 +28,10 @@ classdef ea_roi < handle
         toggleH % toggle handle
         htH % handle for toggle toolbar
         Tag % tag of ROI can be used in multi-roi scenes
+        SpecularColorReflectance=1 % patch property
+        SpecularExponent=3 % patch property
+        SpecularStrength=0.3 % patch property
+        DiffuseStrength=0.4 % patch property
     end
 
     methods(Static)
@@ -161,6 +166,17 @@ classdef ea_roi < handle
                 @changeevent);
             addlistener(obj,'alpha','PostSet',...
                 @changeevent);
+            addlistener(obj,'SpecularColorReflectance','PostSet',...
+                @changeevent);
+            addlistener(obj,'SpecularExponent','PostSet',...
+                @changeevent);
+            addlistener(obj,'SpecularStrength','PostSet',...
+                @changeevent);
+            addlistener(obj,'DiffuseStrength','PostSet',...
+                @changeevent);
+            addlistener(obj,'edgecolor','PostSet',...
+                @changeevent);
+            
             if isempty(obj.toggleH)
                 obj.toggleH=uitoggletool(obj.htH);
             end
@@ -232,9 +248,13 @@ classdef ea_roi < handle
             % show atlas.
             set(0,'CurrentFigure',obj.plotFigureH);
 
+            if isempty(obj.edgecolor)
+                obj.edgecolor='none';
+            end
+            
             set(obj.patchH,...
-                {'Faces','Vertices','FaceAlpha','EdgeColor','FaceLighting','Visible'},...
-                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,'none','phong',obj.Visible});
+                {'Faces','Vertices','FaceAlpha','EdgeColor','FaceLighting','Visible','SpecularColorReflectance','SpecularExponent','SpecularStrength','DiffuseStrength'},...
+                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'phong',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength});
             if obj.binary || obj.usesolidcolor
                 set(obj.patchH,...
                     {'FaceColor'},...
