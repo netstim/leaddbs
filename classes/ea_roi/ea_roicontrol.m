@@ -258,7 +258,7 @@ col = ea_uisetcolor;
 setappdata(handles.edgecolorchange,'edgecolor',col);
 set(handles.edgecolorchange,'BackgroundColor',col);
 if handles.edgecolor.Value
-    obj.color=getappdata(handles.edgecolorchange,'edgecolor');
+    obj.edgecolor=getappdata(handles.edgecolorchange,'edgecolor');
 end
 
 
