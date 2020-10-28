@@ -359,6 +359,8 @@ switch opt
         sides=1:2;
     case 5  % midline
         sides=1;
+    case 6 % probabilistic
+        sides=1:2;
 end
 
 
