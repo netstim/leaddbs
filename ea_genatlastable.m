@@ -164,11 +164,11 @@ if checkrebuild(atlases,options,root,mifix)
                             cdat=atlases.colormap(round(atlas*(maxcolor/length(atlases.names))),:);
                         end
                         structure.color=cdat;
-                     
+
                         % keep XYZ
                         [xx,yy,zz]=ind2sub(size(structure.nii.img),find(structure.nii.img>0)); % find 3D-points that have correct value.
                         vv=structure.nii.img(structure.nii.img(:)>0);
-                        
+
                         if ~isempty(xx)
                             XYZ.vx=[xx,yy,zz]; % concatenate points to one matrix.
                             XYZ.val=vv;
@@ -180,12 +180,12 @@ if checkrebuild(atlases,options,root,mifix)
                             XYZ.mm=[];
                             XYZ.dims=structure.nii.voxsize;
                         end
-                        
-                        
-                        
-                    
+
+
+
+
                     ea_addnii2lf(atlases,atlas,structure.nii.img,options,root,mifix)
-                   
+
                     iroi{atlas,side}=structure; % later stored
                     ifv{atlas,side} = [];
                     ipixdim{atlas,side}=structure.nii.voxsize(1:3); % later stored
@@ -245,7 +245,7 @@ if checkrebuild(atlases,options,root,mifix)
             ea_crop_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
 
             clear X V
-            
+
             ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[0.3,0.3,0.3],0,0,1,[],[],3);
             spm_smooth([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[1,1,1]);
             gzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
@@ -293,14 +293,14 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
                 [pth,f,ext]=fileparts(fname);
                 fname=fullfile(pth,[f,'_r',ext]);
         end
-        
+
     end
     warning('off');
     ea_crop_nii(fname);
     pobj.color=[1,1,1];
     test=ea_open_vol(fname);
     warning('on');
-    
+
     if ~all(abs(test.voxsize)<=0.8)
         ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,0,0,[],[],1);
     end
@@ -310,12 +310,12 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
         delete(fullfile(pth,[f,'_r',ext]));
         delete(fullfile(pth,[f,'_l',ext]));
     end
-    
+
     if wasgzip
-        
+
         gzip(origfname);
         delete(origfname); % since gunzip makes a copy of the zipped file.
-     
+
     end
 elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
     [fibers,idx]=ea_loadfibertracts(fname,1);
@@ -391,13 +391,10 @@ if ~isfield(atlases,'version')
    reb=1;
 else
     if atlases.version<2
-       reb=1; 
+       reb=1;
     end
 end
 
-% if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file');
-%     reb=1;
-% end
 try
     if atlases.rebuild
         reb=1;
@@ -478,7 +475,7 @@ for atl=1:length(atlnames)
     clear matlabbatch
 
     if wasgzip
-        gzip(atlname); 
+        gzip(atlname);
         delete(atlname); % since gunzip makes a copy of the zipped file.
     end
 end
