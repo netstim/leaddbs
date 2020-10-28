@@ -129,6 +129,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
                 atlases.roi{atlas,side}.htH=ht; % attach to tooltip menu
                 atlases.roi{atlas,side}.breathelife;
+                atlases.roi{atlas,side}.smooth=options.prefs.hullsmooth;
                 atlases.roi{atlas,side}.update_roi;
 
                 atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
