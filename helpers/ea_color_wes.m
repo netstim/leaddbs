@@ -1,4 +1,4 @@
-function colors=ea_color_wes(set, len)
+function colors=ea_color_wes(set, colnum)
 % source: http://opencolor.tools/palettes/wesanderson/
 % similar or same palettes found in R here: https://github.com/karthik/wesanderson
 % different sets here https://prafter.com/color/
@@ -59,3 +59,13 @@ switch set
         colors(4,:)=ea_hex2rgb('#27223C');
         colors(5,:)=ea_hex2rgb('#D1362F');
 end
+
+% Set number of colors
+if exist('len', 'var')
+    if colnum > size(colors,1)
+        % Repeat colors in case pre-defined ones are not enough
+        colors = repmat(colors, ceil(colnum/size(colors,1)),1);
+    end
+    colors = colors(1:colnum,:);
+end
+
