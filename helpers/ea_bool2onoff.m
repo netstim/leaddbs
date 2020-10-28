@@ -7,7 +7,7 @@ if ischar(b)
         case 'off'
             onoff=0;
     end
-else
+else % isnumeric(b)
     if b
         onoff='on';
     else

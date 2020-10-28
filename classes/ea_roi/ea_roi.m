@@ -32,6 +32,7 @@ classdef ea_roi < handle
         SpecularExponent=3 % patch property
         SpecularStrength=0.3 % patch property
         DiffuseStrength=0.4 % patch property
+        AmbientStrength=0.3 % patch property
     end
 
     methods(Static)
@@ -174,6 +175,8 @@ classdef ea_roi < handle
                 @changeevent);
             addlistener(obj,'DiffuseStrength','PostSet',...
                 @changeevent);
+            addlistener(obj,'AmbientStrength','PostSet',...
+                @changeevent);
             addlistener(obj,'edgecolor','PostSet',...
                 @changeevent);
             
@@ -253,8 +256,8 @@ classdef ea_roi < handle
             end
             
             set(obj.patchH,...
-                {'Faces','Vertices','FaceAlpha','EdgeColor','FaceLighting','Visible','SpecularColorReflectance','SpecularExponent','SpecularStrength','DiffuseStrength'},...
-                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'phong',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength});
+                {'Faces','Vertices','FaceAlpha','EdgeColor','EdgeLighting','FaceLighting','Visible','SpecularColorReflectance','SpecularExponent','SpecularStrength','DiffuseStrength','AmbientStrength'},...
+                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'gouraud','gouraud',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength,obj.AmbientStrength});
             if obj.binary || obj.usesolidcolor
                 set(obj.patchH,...
                     {'FaceColor'},...
