@@ -138,10 +138,13 @@ if checkrebuild(atlases,options,root,mifix)
                     rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],'unmix_r');
                 case 5 % midline atlas (one file with both sides information).
                     structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
+                case 6 % probabilistic atlas, two files
+                    lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
+                    rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
             end
 
             for side=detsides(atlases.types(atlas))
-                if ismember(atlases.types(atlas),[3,4]) % both-sides atlas composed of 2 files.
+                if ismember(atlases.types(atlas),[3,4,6]) % both-sides atlas composed of 2 files.
                     if side==1
                         structure=rstructure;
                     elseif side==2
@@ -416,6 +419,9 @@ switch atlases.types(atlas)
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
     case 5 % midline atlas (one file with both sides information.
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
+    case 6 % probabilistic atlas, 2 files.
+        atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
+        atlnames{2}=[root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
 end
 [options] = ea_assignpretra(options);
 for atl=1:length(atlnames)
