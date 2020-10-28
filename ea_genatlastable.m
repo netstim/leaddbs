@@ -110,7 +110,7 @@ if checkrebuild(atlases,options,root,mifix)
     if ~isfield(atlases,'colormap')
         atlases.colormap=ea_color_wes('all');
     end
-    maxcolor=length(atlases.colormap); % change to 45 to avoid red / 64 to use all colors
+    maxcolor=length(atlases.colormap);
 
     for nativemni=nm % switch between native and mni space atlases.
         switch nativemni
