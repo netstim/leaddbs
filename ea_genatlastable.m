@@ -353,12 +353,12 @@ switch opt
         sides=1;
     case 2 % right hemispheric atlas
         sides=2;
-    case 3
+    case 3 % both
         sides=1:2;
-    case 4
+    case 4 % mixed
         sides=1:2;
-    case 5
-        sides=1; % midline
+    case 5  % midline
+        sides=1;
 end
 
 
