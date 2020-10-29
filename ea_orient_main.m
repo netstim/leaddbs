@@ -21,7 +21,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     % z position of the centers of level1, level2 and marker
     level1center = tipInsulationlength + electrodespacing + contactlength/2;
     level2center = tipInsulationlength + electrodespacing*2 + contactlength/2;
-    markercenter = options.elspec.markerpos + options.elspec.markerlen/2;
+    markercenter = options.elspec.markerpos;
 
     % z position of the centers of level1, level2 and marker relative to
     % head position
@@ -29,7 +29,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     level2centerRelative = level2center-contactlength/2-tipInsulationlength;
     markercenterRelative = markercenter-contactlength/2-tipInsulationlength;
 
-    load(options.elspec.matfname)
+    load(options.elspec.matfname);
 
     %% import CTs and choose which CT to use
     if exist([folder options.prefs.ctnii_coregistered],'file') == 2
