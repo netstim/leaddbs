@@ -173,7 +173,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
 
                         if any(slice(:));
                             centr=mean(xyatlmm(valatl>thresh,:));%ea_centroid(logical(slice));
-                            an=sub2space(atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1));
+                            an=ea_sub2space(atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1));
 
                             try
                                 set(0,'CurrentFigure',cuts)

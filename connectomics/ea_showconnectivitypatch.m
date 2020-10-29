@@ -83,7 +83,7 @@ if showlabels
         centr_vx=[mean(XYZ,1),1]';
         centr_mm=pV.mat*centr_vx;
 
-        labels(lab)=text(centr_mm(1),centr_mm(2),centr_mm(3),sub2space(atlaslegend{atlasindices(lab)}));
+        labels(lab)=text(centr_mm(1),centr_mm(2),centr_mm(3),ea_sub2space(atlaslegend{atlasindices(lab)}));
     end
 end
 
