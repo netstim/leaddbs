@@ -146,7 +146,8 @@ classdef ea_sweetspot_hemi < handle
                 obj.nii.img(:)=sum(obj.nii.X.*repmat(obj.fmix,1,size(obj.nii.X,2)));
                 [~,idx]=ea_nanmax(obj.nii.img(:));
                 [x,y,z]=ind2sub(size(obj.nii.img),idx);
-                obj.peak=obj.nii.mat*[x;y;z;1]; obj.peak=obj.peak(1:3);
+                obj.peak=obj.nii.mat*[x;y;z;1];
+                obj.peak=obj.peak(1:3);
                 bb=[1,1,1;size(obj.nii.img)];
                 bb=ea_vox2mm(bb,obj.nii.mat);
                 gv=cell(3,1);
