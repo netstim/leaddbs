@@ -200,7 +200,7 @@ classdef ea_roi < handle
                 obj.patchH=patch;
             end
             if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) % need to recalc fv here:
-                bb=[0,0,0;size(obj.nii.img)];
+                bb = [1,1,1;size(obj.nii.img)];
                 bb=map_coords_proxy(bb,obj.nii);
                 gv=cell(3,1);
                 for dim=1:3
@@ -225,7 +225,6 @@ classdef ea_roi < handle
                     obj.sfv=reducepatch(obj.sfv,simplify);
                 else
                     if obj.hullsimplify<1 && obj.hullsimplify>0
-
                         obj.sfv=reducepatch(obj.sfv,obj.hullsimplify);
                     elseif obj.hullsimplify>1
                         simplify=obj.hullsimplify/length(obj.fv.faces);
