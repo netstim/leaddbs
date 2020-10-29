@@ -1,6 +1,6 @@
 function varargout=ea_calc_distance(varargin)
 % Example:
-% [normfactor,dist_mm,dist_vox]=calc_distance(priordist,trajectory,mat,img)
+% [normfactor,dist_mm,dist_vox]=calc_distance(priordist,trajectory,mat,nii)
 % priordist is the distance in real-life in mm
 % trajectory is the vector on which the electrodes lie
 % mat is the transformation matrix that has been used to change the
@@ -24,14 +24,10 @@ varargout{1}=normfactor;
 
 % calculate voxel distances if nargin > 3.
 if nargin>3
-    img=varargin{4};
-    V=spm_vol(img);
-    XYZ_mm=[0,0,0,1;trajvector,1]';
+    nii=varargin{4};
+    XYZ_vx = ea_mm2vox([0,0,0;trajvector], nii);
 
-    XYZ_vx = V.mat \ XYZ_mm;
-    XYZ_vx = XYZ_vx(1:3,:);
-
-    trajvox=diff(XYZ_vx')';
+    trajvox=diff(XYZ_vx)';
 
     worldtovoxfactor=norm(trajvox)/norm(trajvector);
     dist_vox=priordist*worldtovoxfactor*normfactor;
