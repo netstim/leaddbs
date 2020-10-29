@@ -98,8 +98,6 @@ if ~isfield(atlases,'tissuetypes')
 end
 
 if checkrebuild(atlases,options,root,mifix)
-    %% build iXYZ tables:
-
     nm=1:2; % native and mni
     try
         nmind=[options.atl.can,options.atl.ptnative]; % which shall be performed?
@@ -120,11 +118,9 @@ if checkrebuild(atlases,options,root,mifix)
                 root=[options.root,options.patientname,filesep,'atlases'];
         end
 
-
         % iterate through atlases, visualize them and write out stats.
         disp('Building atlas table...');
         for atlas=1:length(atlases.names)
-            %ea_dispercent(atlas/length(atlases.names));
             switch atlases.types(atlas)
                 case 1 % right hemispheric atlas.
                     structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
@@ -157,32 +153,29 @@ if checkrebuild(atlases,options,root,mifix)
                 colorc=colornames(1);
                 colorc=rgb(colorc);
                 if isa(structure,'ea_roi') % volumetric atlas
-                        % set cdata
-                        try % check if explicit color info for this atlas is available.
-                            cdat=atlases.colormap(atlases.colors(atlas),:);
-                        catch
-                            cdat=atlases.colormap(round(atlas*(maxcolor/length(atlases.names))),:);
-                        end
-                        structure.color=cdat;
+                    % set cdata
+                    try % check if explicit color info for this atlas is available.
+                        cdat=atlases.colormap(atlases.colors(atlas),:);
+                    catch
+                        cdat=atlases.colormap(round(atlas*(maxcolor/length(atlases.names))),:);
+                    end
+                    structure.color=cdat;
 
-                        % keep XYZ
-                        [xx,yy,zz]=ind2sub(size(structure.nii.img),find(structure.nii.img>0)); % find 3D-points that have correct value.
-                        vv=structure.nii.img(structure.nii.img(:)>0);
+                    % keep XYZ
+                    [xx,yy,zz]=ind2sub(size(structure.nii.img),find(structure.nii.img>0)); % find 3D-points that have correct value.
+                    vv=structure.nii.img(structure.nii.img(:)>0);
 
-                        if ~isempty(xx)
-                            XYZ.vx=[xx,yy,zz]; % concatenate points to one matrix.
-                            XYZ.val=vv;
-                            XYZ.mm=ea_vox2mm(XYZ.vx,structure.nii.mat); % map to mm-space
-                            XYZ.dims=structure.nii.voxsize;
-                        else
-                            XYZ.vx=[];
-                            XYZ.val=[];
-                            XYZ.mm=[];
-                            XYZ.dims=structure.nii.voxsize;
-                        end
-
-
-
+                    if ~isempty(xx)
+                        XYZ.vx=[xx,yy,zz]; % concatenate points to one matrix.
+                        XYZ.val=vv;
+                        XYZ.mm=ea_vox2mm(XYZ.vx,structure.nii.mat); % map to mm-space
+                        XYZ.dims=structure.nii.voxsize;
+                    else
+                        XYZ.vx=[];
+                        XYZ.val=[];
+                        XYZ.mm=[];
+                        XYZ.dims=structure.nii.voxsize;
+                    end
 
                     ea_addnii2lf(atlases,atlas,structure.nii.img,options,root,mifix)
 
@@ -229,8 +222,6 @@ if checkrebuild(atlases,options,root,mifix)
             end
         end
 
-        %ea_dispercent(1,'end');
-
         % finish gm_mask file for leadfield computation.
         try % fibertract only atlases dont have a gm_mask
             V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
@@ -253,13 +244,13 @@ if checkrebuild(atlases,options,root,mifix)
         end
 
         % save table information that has been generated from nii files (on first run with this atlas set).
-        try        atlases.fv=ifv; end
-        try        atlases.cdat=icdat; end
-        try        atlases.XYZ=iXYZ; end
-        try        atlases.pixdim=ipixdim; end
-        try        atlases.colorc=icolorc; end
-        try        atlases.normals=normals; end
-        try        atlases.roi=iroi; end
+        try atlases.fv=ifv; end
+        try atlases.cdat=icdat; end
+        try atlases.XYZ=iXYZ; end
+        try atlases.pixdim=ipixdim; end
+        try atlases.colorc=icolorc; end
+        try atlases.normals=normals; end
+        try atlases.roi=iroi; end
         atlases.version=2; % crude versioning introduced (anything without a version tag is considered version 1).
         atlases.rebuild=0; % always reset rebuild flag.
         try atlases=rmfield(atlases,'cdat'); end % redundancy cleanup
@@ -312,10 +303,8 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     end
 
     if wasgzip
-
         gzip(origfname);
         delete(origfname); % since gunzip makes a copy of the zipped file.
-
     end
 elseif strcmp(fname(end-3:end),'.trk') % tracts in trk format
     [fibers,idx]=ea_loadfibertracts(fname,1);
@@ -412,7 +401,9 @@ switch atlases.types(atlas)
         atlnames{1}=[root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
         atlnames{2}=[root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
 end
-[options] = ea_assignpretra(options);
+
+options = ea_assignpretra(options);
+
 for atl=1:length(atlnames)
     atlname=atlnames{atl};
 
@@ -461,9 +452,11 @@ for atl=1:length(atlnames)
     matlabbatch{1}.spm.util.imcalc.options.mask = 0;
     matlabbatch{1}.spm.util.imcalc.options.interp = 1;
     matlabbatch{1}.spm.util.imcalc.options.dtype = 16;
+
     if atlases.tissuetypes(atlas)==1
         spm_jobman('run',{matlabbatch});
     end
+
     clear matlabbatch
 
     if wasgzip
@@ -471,5 +464,3 @@ for atl=1:length(atlnames)
         delete(atlname); % since gunzip makes a copy of the zipped file.
     end
 end
-
-%figure, patch(afv)
