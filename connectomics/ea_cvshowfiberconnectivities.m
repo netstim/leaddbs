@@ -711,14 +711,6 @@ switch val
 end
 
 
-function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';
-
-
 function hn=ea_arrow3(p1,p2,s,w,h,ip,alpha,beta)
 % ARROW3 (R13)
 %   ARROW3(P1,P2) draws lines from P1 to P2 with directional arrowheads.

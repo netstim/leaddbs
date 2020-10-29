@@ -14,7 +14,6 @@ if ~isempty(xx)
     XYZ=ea_vox2mm(XYZ,nii.mat); % map to mm-space
 end
 
-
 bb=[0,0,0;size(nii.img)];
 
 bb=ea_vox2mm(bb,nii.mat);
@@ -31,14 +30,3 @@ fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
 fv.vertices=[fv.vertices;fvc.vertices];
-
-
-
-
-
-function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';

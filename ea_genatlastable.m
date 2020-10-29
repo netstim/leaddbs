@@ -367,14 +367,6 @@ switch opt
 end
 
 
-function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';
-
-
 function C=rgb(C) % returns rgb values for the colors.
 
 C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);

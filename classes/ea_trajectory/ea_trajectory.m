@@ -177,7 +177,7 @@ classdef ea_trajectory < handle
             % Get the underlying java object using findobj
             if strcmp(obj.plotFigureH.Visible,'on') % only needed if figure is really visible (when calling from lead group it could be hidden).
                 jtoggle = findjobj(obj.toggleH);
-                
+
                 % Specify a callback to be triggered on any mouse release event
                 set(jtoggle, 'MouseReleasedCallback', {@rightcallback,obj})
                 addlistener(obj, 'showPlanning', 'PostSet', @ea_trajectory.changeevent);
@@ -534,14 +534,6 @@ end
 
 function ea_roivisible(Hobj,evt,onoff,obj)
     obj.visible=onoff;
-end
-
-
-function coords=map_coords_proxy(XYZ,V)
-    XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-    coords=V.mat*XYZ;
-    coords=coords(1:3,:)';
 end
 
 

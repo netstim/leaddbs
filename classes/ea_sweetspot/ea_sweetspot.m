@@ -300,13 +300,6 @@ function ea_sweetspotvisible(Hobj,evt,onoff,obj)
 end
 
 
-function coords = map_coords_proxy(XYZ,V)
-    XYZ = [XYZ';ones(1,size(XYZ,1))];
-    coords = V.mat*XYZ;
-    coords = coords(1:3,:)';
-end
-
-
 function fn = stripext(fn)
     [~,fn] = fileparts(fn);
 end
