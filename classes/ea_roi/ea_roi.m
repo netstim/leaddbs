@@ -201,7 +201,7 @@ classdef ea_roi < handle
             end
             if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) % need to recalc fv here:
                 bb = [1,1,1;size(obj.nii.img)];
-                bb=map_coords_proxy(bb,obj.nii);
+                bb = ea_vox2mm(bb, obj.nii.mat);
                 gv=cell(3,1);
                 for dim=1:3
                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));

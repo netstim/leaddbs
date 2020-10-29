@@ -11,13 +11,13 @@ nii.img(isnan(nii.img))=0;
 
 if ~isempty(xx)
     XYZ=[xx,yy,zz]; % concatenate points to one matrix.
-    XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
+    XYZ=ea_vox2mm(XYZ,nii.mat); % map to mm-space
 end
 
 
 bb=[0,0,0;size(nii.img)];
 
-bb=map_coords_proxy(bb,nii);
+bb=ea_vox2mm(bb,nii.mat);
 gv=cell(3,1);
 for dim=1:3
     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));

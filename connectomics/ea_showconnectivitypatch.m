@@ -12,7 +12,7 @@ if showregs
 
     bb=[0,0,0;size(mX)];
 
-    bb=map_coords_proxy(bb,pV);
+    bb=ea_vox2mm(bb,pV.mat);
     gv=cell(3,1);
     for dim=1:3
         gv{dim}=linspace(bb(1,dim),bb(2,dim),size(mX,dim));

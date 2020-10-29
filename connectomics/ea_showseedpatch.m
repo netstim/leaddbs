@@ -4,7 +4,7 @@ function [seedsurf]=ea_showseedpatch(resultfig,pV,sX,options)
 set(0,'CurrentFigure',resultfig)
 bb=[0,0,0;size(sX)];
 
-bb=map_coords_proxy(bb,pV);
+bb=ea_vox2mm(bb,pV.mat);
 gv=cell(3,1);
 for dim=1:3
     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(sX,dim));

@@ -172,7 +172,7 @@ if checkrebuild(atlases,options,root,mifix)
                         if ~isempty(xx)
                             XYZ.vx=[xx,yy,zz]; % concatenate points to one matrix.
                             XYZ.val=vv;
-                            XYZ.mm=map_coords_proxy(XYZ.vx,structure.nii); % map to mm-space
+                            XYZ.mm=ea_vox2mm(XYZ.vx,structure.nii.mat); % map to mm-space
                             XYZ.dims=structure.nii.voxsize;
                         else
                             XYZ.vx=[];

@@ -160,7 +160,7 @@ nii.img(isinf(nii.img))=0;
 
 if ~isempty(xx)
     XYZ=[xx,yy,zz]; % concatenate points to one matrix.
-    XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
+    XYZ=ea_vox2mm(XYZ,nii.mat); % map to mm-space
 end
 
 %% old approach, with meshgrid based on boundingbox -> does not work for Niftis with rotated coordinate system
