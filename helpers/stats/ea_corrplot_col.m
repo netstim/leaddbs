@@ -75,7 +75,7 @@ set(h,'color','k');
 ax=gca;
 
 title([description,' (R=',sprintf('%.3f',R_upd),', p=',sprintf('%.3f',p_upd),').'],'FontSize',16,'FontName','Helvetica');
-xlabel(ea_sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
+xlabel(ea_underscore2space(labels{1}),'FontSize',16,'FontName','Helvetica');
 ylabel(labels{2},'FontSize',16,'FontName','Helvetica');
 axis square
 % spacing=mean([nanvar(X(:,1)),nanvar(X(:,area+1))]);

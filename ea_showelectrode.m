@@ -61,7 +61,7 @@ for side=options.sides
         ap=[trajectory{side}(1,1),trajectory{side}(1,2),trajectory{side}(1,3)];
         lp=lp+(lp-ap);
 
-        ellabel=text(lp(1),lp(2),lp(3),ea_sub2space(elstruct.name),'Color',[1,1,1]);
+        ellabel=text(lp(1),lp(2),lp(3),ea_underscore2space(elstruct.name),'Color',[1,1,1]);
 
         % draw trajectory
         cnt=1;
