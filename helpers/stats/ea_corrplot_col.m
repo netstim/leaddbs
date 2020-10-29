@@ -25,7 +25,6 @@ end
 
 disp(description);
 
-
 % support for nans
 nnans=isnan(sum([X,Y],2));
 X(nnans,:)=[];
@@ -47,7 +46,6 @@ switch corrtype
         p_upd=p(2:end,1);
 end
 
-
 %labels=M.stats(1).ea_stats.atlases.names(lidx);
 edgecolor='w';
     jetlist=lines;
@@ -57,40 +55,29 @@ if exist('groupfiducial','var')
 end
 
 %jetlist(groups,:);
-    %% plot areas:
-    f=figure('color','w','name',description,'Position',[100 100 550 550]);
-    g=gca;
-    if exist('color','var')
-        scatter(g,X,Y,[],'o','MarkerEdgeColor',edgecolor,'MarkerFaceColor',color);
-    else
-        hold on
-        for group2=unique(groupfiducial)'
-            edgecolor=jetlist(group2,:);
-            scatter(g,X(groupfiducial==group2),Y(groupfiducial==group2),[],'o','MarkerEdgeColor',edgecolor,'MarkerFaceColor',jetlist(groupcolor(groupfiducial==group2),:));
-        end
-%         catch
-%         scatter(g,X,Y,[],jetlist(groupcolor,:),'filled');
-%             
-%         end
-%         
+% plot areas:
+f=figure('color','w','name',description,'Position',[100 100 550 550]);
+g=gca;
+if exist('color','var')
+    scatter(g,X,Y,[],'o','MarkerEdgeColor',edgecolor,'MarkerFaceColor',color);
+else
+    hold on
+    for group2=unique(groupfiducial)'
+        edgecolor=jetlist(group2,:);
+        scatter(g,X(groupfiducial==group2),Y(groupfiducial==group2),[],'o','MarkerEdgeColor',edgecolor,'MarkerFaceColor',jetlist(groupcolor(groupfiducial==group2),:));
     end
-    
-    h=lsline;
-    set(h,'color','k');
-    %axis square
-    
-    ax=gca;
+end
 
-    title([description,' (R=',sprintf('%.3f',R_upd),', p=',sprintf('%.3f',p_upd),').'],'FontSize',16,'FontName','Helvetica');
-    xlabel(sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
-    ylabel(labels{2},'FontSize',16,'FontName','Helvetica');
-    axis square
-    %   spacing=mean([nanvar(X(:,1)),nanvar(X(:,area+1))]);
-    %   xlim([nanmin(X(:,1))-spacing,nanmax(X(:,2))+spacing]);
-    %   ylim([nanmin(X(:,area+1))-spacing,nanmax(X(:,area+1))+spacing]);
+h=lsline;
+set(h,'color','k');
+%axis square
 
+ax=gca;
 
-
-
-function str=sub2space(str) % replaces subscores with spaces
-str(str=='_')=' ';
+title([description,' (R=',sprintf('%.3f',R_upd),', p=',sprintf('%.3f',p_upd),').'],'FontSize',16,'FontName','Helvetica');
+xlabel(ea_sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
+ylabel(labels{2},'FontSize',16,'FontName','Helvetica');
+axis square
+% spacing=mean([nanvar(X(:,1)),nanvar(X(:,area+1))]);
+% xlim([nanmin(X(:,1))-spacing,nanmax(X(:,2))+spacing]);
+% ylim([nanmin(X(:,area+1))-spacing,nanmax(X(:,area+1))+spacing]);

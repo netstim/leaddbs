@@ -35,7 +35,7 @@ if nargin==1
     elstruct=ea_elstruct_match_and_nanfill(elstruct);
     clear coords_mm
     ave_coords_mm=ea_ave_elstruct(elstruct,options);
-        
+
 elseif nargin>1 % elstruct has been supplied, this is a group visualization
     if isstruct(varargin{2})
         elstruct=varargin{2};
@@ -143,7 +143,7 @@ for iside=1:length(options.sides)
                 %there was no electrode here, skip this slice
                 continue;
             end
-            
+
             cont=1;
             try                cont=evalin('base','custom_cont'); end
             offs=1;
@@ -691,14 +691,3 @@ else
         elstruct(c).activecontacts{2}=zeros(elspec.numel,1);
     end
 end
-
-function str=sub2space(str) % replaces subscores with spaces
-str(str=='_')=' ';
-
-
-
-
-
-
-
-

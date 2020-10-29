@@ -47,10 +47,7 @@ R_upd=R(2:end,1);
 p_upd=p(2:end,1);
 end
 
-
 % support for nans
-
-
 %labels=M.stats(1).ea_stats.atlases.names(lidx);
 edgecolor='w';
 if size(groups,2)>1
@@ -68,46 +65,37 @@ for area=1:length(R_upd)
         scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor',edgecolor,'MarkerFaceColor',color);
     else
         try
-        scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor',edgecolors,'MarkerFaceColor',jetlist(groups,:));
+            scatter(g,X(:,1),X(:,area+1),[],'o','MarkerEdgeColor',edgecolors,'MarkerFaceColor',jetlist(groups,:));
         catch
-        scatter(g,X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
-            
+            scatter(g,X(:,1),X(:,area+1),[],jetlist(groups,:),'filled');
         end
-        
     end
-    
+
     h=lsline;
     set(h,'color','k');
     %axis square
-    
+
     ax=gca;
-% ax.YTick=[-20:20:90];
-% ax.YLim=[-15,90];
-% ax.XTick=[-20:10:90];
-% ax.XLim=[25,65];
-[~,fn]=fileparts(labels{area+1});
-if length(fn)>4
-    if strcmp(fn(end-3:end),'.nii')
-        [~,fn]=fileparts(fn);
+
+    [~,fn]=fileparts(labels{area+1});
+    if length(fn)>4
+        if strcmp(fn(end-3:end),'.nii')
+            [~,fn]=fileparts(fn);
+        end
     end
-end
+
     title([description,' (R=',sprintf('%.3f',R_upd(area)),', p=',sprintf('%.3f',p_upd(area)),').'],'FontSize',16,'FontName','Helvetica');
     xlabel(ea_sub2space(labels{1}),'FontSize',16,'FontName','Helvetica');
     ylabel(labels{2},'FontSize',16,'FontName','Helvetica');
     axis square
- %   spacing=mean([nanvar(X(:,1)),nanvar(X(:,area+1))]);
- %   xlim([nanmin(X(:,1))-spacing,nanmax(X(:,2))+spacing]);
- %   ylim([nanmin(X(:,area+1))-spacing,nanmax(X(:,area+1))+spacing]);
+    % spacing=mean([nanvar(X(:,1)),nanvar(X(:,area+1))]);
+    % xlim([nanmin(X(:,1))-spacing,nanmax(X(:,2))+spacing]);
+    % ylim([nanmin(X(:,area+1))-spacing,nanmax(X(:,area+1))+spacing]);
     if nargin>3
         if ~isempty(varargin{4})
-        odir=get(handles.groupdir_choosebox,'String');
-        ofname=[odir,description,'_',fn,'_',labels{1},'.png'];
-        ea_screenshot(ofname);
+            odir=get(handles.groupdir_choosebox,'String');
+            ofname=[odir,description,'_',fn,'_',labels{1},'.png'];
+            ea_screenshot(ofname);
         end
     end
 end
-
-
-
-function str=sub2space(str) % replaces subscores with spaces
-str(str=='_')=' ';

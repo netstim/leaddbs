@@ -86,7 +86,3 @@ if showlabels
         labels(lab)=text(centr_mm(1),centr_mm(2),centr_mm(3),ea_sub2space(atlaslegend{atlasindices(lab)}));
     end
 end
-
-
-function str=sub2space(str) % replaces subscores with spaces
-str(str=='_')=' ';

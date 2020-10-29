@@ -477,10 +477,6 @@ function C=rgb(C) % returns rgb values for the colors.
 C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
 
 
-function str=sub2space(str) % replaces subscores with spaces
-str(str=='_')=' ';
-
-
 function in = inhull(testpts,xyz,tess,tol)
 
 % Copyright (c) 2009, John D'Errico

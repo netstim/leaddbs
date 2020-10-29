@@ -48,14 +48,14 @@ for atlas=showidx
     for side=detsides(atlases.types(atlas))
         planemm=[boundboxmm{1}(:),boundboxmm{2}(:),boundboxmm{3}(:)];
         %planemm=round(planemm);
-        
+
         try
             thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
         catch % fibertracts
             thresh=0.5;
         end
         atlmm=atlases.XYZ{atlas,side}.mm(:,1:3);
-        
+
         %ratlmm=round(atlmm);
         try
             atlvx=atlases.XYZ{atlas,side}.vx;
@@ -67,7 +67,7 @@ for atlas=showidx
             end
             atlval=ones(size(atlmm,1),1);
         end
-        
+
         atlhts=atlmm(:,ea_intersecdim(tracor));
         planehts=planemm(:,ea_intersecdim(tracor));
         dists=abs(atlhts-planehts(1));
@@ -76,12 +76,12 @@ for atlas=showidx
         catch % fibertracts
             dists=dists<1*1;
         end
-        
+
         if any(dists) % only if intersection exists plot the atlas.
             xyatl=atlvx(dists,ea_planesdim(tracor));
             xyatlmm=atlmm(dists,ea_planesdim(tracor));
             valatl=atlval(dists);
-            
+
             for d=1:2
                 [~,minix]=min(xyatl(:,d));
                 [~,maxix]=max(xyatl(:,d));
@@ -91,18 +91,18 @@ for atlas=showidx
                     keyboard
                 end
             end
-            
+
             xyatl(:,1)=xyatl(:,1)-min(xyatl(:,1))+1;
             xyatl(:,2)=xyatl(:,2)-min(xyatl(:,2))+1;
             slice=zeros(max(xyatl(:,1)),max(xyatl(:,2)));
-            
+
             slice(sub2ind(size(slice),xyatl(:,1),xyatl(:,2)))=valatl;
             if ~any(size(slice)==1) % exception for problems with onedimensional slices
                 slice=interp2(slice,3);
-                
+
                 slice(slice<thresh)=0;
                 slice=slice';
-                
+
                 maxcolor=64;
                 try
                     jetlist=atlases.colormap;
@@ -123,34 +123,34 @@ for atlas=showidx
                     atlases.colors(atlas)=1;
                 end
                 try % see if there is explicit color information for this atlas
-                    
+
                     atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:)); % color for toggle button icon
                 catch
                     atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                     atlasc=squeeze(jetlist(round(atlases.colors(atlas)),:)); % color for toggle button icon
-                    
+
                 end
-                
+
                 colorf=zeros(size(slice,1),size(slice,2),3);
                 colorf(:,:,1)=atlasc(1);
                 colorf(:,:,2)=atlasc(2);
                 colorf(:,:,3)=atlasc(3);
-                
+
                 %% color_overlay:
                 if options.d2.col_overlay
                     set(0,'CurrentFigure',cuts)
                     cof = image(colorf);
-                    
+
                     set(cof,'XData',linspace(atlbb(1,1),atlbb(1,2)),'YData',linspace(atlbb(2,1),atlbb(2,2)));
                     slice=slice./max(slice(:));
                     slice=slice*options.d2.atlasopacity;
-                    
+
                     set(cof, 'AlphaData', slice)
                 end
                 %% contour overlay:
                 if  options.d2.con_overlay
                     if any(slice(:));
-                        
+
                         try
                             bw=bwconncomp(slice);
                         catch % no image toolbox available.
@@ -160,22 +160,22 @@ for atlas=showidx
                             slice(:)=0;
                             slice(bw.PixelIdxList{cp})=1;
                             [c] = contourc(ea_zeroframe(slice),1);
-                            
+
                             c=c(:,2:end);
                             [~,yy]=find(c<1);
                             c(:,yy)=[];
-                            
+
                             dd=sum(abs(diff(c'))');
                             ix=[];
                             if any(dd>3) % detect jumps in contour (=inner holes)
                                 ix=find(dd>3);
                                 ix=[ix,size(c,2)];
                             end
-                            
+
                             cscale=c;
                             for dim=1:2
                                 cscale(dim,:)=((c(dim,:)/size(slice',dim))*(atlbb(dim,2)-atlbb(dim,1)))+atlbb(dim,1);
-                                
+
                             end
                             set(0,'CurrentFigure',cuts)
                             if isempty(ix)
@@ -199,7 +199,7 @@ for atlas=showidx
                         end
                     end
                 end
-                
+
                 if options.d2.lab_overlay
                     if any(slice(:))
                         centr=mean(xyatlmm(valatl>thresh,:));%ea_centroid(logical(slice));
@@ -208,22 +208,15 @@ for atlas=showidx
                             set(0,'CurrentFigure',cuts)
                             text(centr(1),centr(2),an,'color',options.d2.con_color,'VerticalAlignment','middle','HorizontalAlignment','center');
                         catch
-                            
+
                         end
                     end
                 end
             end
         end
     end
-    
+
 end
-
-
-
-
-%axis off
-
-% save table information
 
 
 function sides=detsides(opt)
@@ -239,8 +232,9 @@ switch opt
         sides=1:2;
     case 5
         sides=1; % midline
-        
+
 end
+
 
 function in=ea_intersecdim(tracor)
 
@@ -252,6 +246,7 @@ switch tracor
     case 3
         in=1;
 end
+
 
 function pl=ea_planesdim(tracor)
 
@@ -269,7 +264,3 @@ function fslice=ea_zeroframe(slice)
 
 fslice=zeros(size(slice)+[2,2]);
 fslice(2:end-1,2:end-1)=slice;
-
-
-function str=sub2space(str) % replaces subscores with spaces
-str(str=='_')=' ';
