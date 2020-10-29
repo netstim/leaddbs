@@ -10,8 +10,7 @@ if showregs
         tmX=smooth3(tmX,'gaussian',options.prefs.hullsmooth);
     end
 
-    bb=[0,0,0;size(mX)];
-
+    bb=[1,1,1;size(mX)];
     bb=ea_vox2mm(bb,pV.mat);
     gv=cell(3,1);
     for dim=1:3
@@ -76,7 +75,6 @@ if showregs
     set(matsurf,'SpecularStrength',0.1)
     set(matsurf,'FaceAlpha',0.2);
 end
-
 
 if showlabels
     for lab=1:length(atlasindices)

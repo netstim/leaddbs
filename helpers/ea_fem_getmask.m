@@ -24,8 +24,7 @@ end
 XYZ = [xx,yy,zz]; % concatenate points to one matrix.
 XYZ = ea_vox2mm(XYZ,nii.mat);
 
-bb=[0,0,0,1;size(nii.img),1];
-
+bb=[1,1,1;size(nii.img)];
 bb=ea_vox2mm(bb,nii.mat);
 gv=cell(3,1);
 for dim=1:3

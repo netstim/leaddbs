@@ -1,8 +1,7 @@
 function [seedsurf]=ea_showseedpatch(resultfig,pV,sX,options)
 
 set(0,'CurrentFigure',resultfig)
-bb=[0,0,0;size(sX)];
-
+bb=[1,1,1;size(sX)];
 bb=ea_vox2mm(bb,pV.mat);
 gv=cell(3,1);
 for dim=1:3

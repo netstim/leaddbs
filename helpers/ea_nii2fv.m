@@ -14,8 +14,7 @@ if ~isempty(xx)
     XYZ=ea_vox2mm(XYZ,nii.mat); % map to mm-space
 end
 
-bb=[0,0,0;size(nii.img)];
-
+bb=[1,1,1;size(nii.img)];
 bb=ea_vox2mm(bb,nii.mat);
 gv=cell(3,1);
 for dim=1:3
