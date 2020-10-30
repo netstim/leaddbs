@@ -63,6 +63,16 @@ for side=options.sides
 
     offset=size(reco.(usenative).trajectory{side},1);
     reco.mni.trajectory{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
+
+    if ~isempty(reco.mni.markers(side).head)
+        % Calc X and Y marker coordinates
+        [xunitv, yunitv] = ea_calcxy(reco.mni.markers(side).head, reco.mni.markers(side).tail);
+        reco.mni.markers(side).x = reco.mni.markers(side).head + xunitv*(options.elspec.lead_diameter/2);
+        reco.mni.markers(side).y = reco.mni.markers(side).head + yunitv*(options.elspec.lead_diameter/2);
+    else
+        reco.mni.markers(side).x=[];
+        reco.mni.markers(side).y=[];
+    end
 end
 
 save([directory,filesep,'ea_reconstruction.mat'],'reco');
