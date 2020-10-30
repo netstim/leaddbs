@@ -88,7 +88,13 @@ for side=options.elside
     yvec(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
     yvec(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
 
-    [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, yvec);
+    trajvector = diff([markers(options.elside).head; markers(options.elside).tail]);
+    normtrajvector = trajvector/norm(trajvector);
+
+    xvec = cross(yvec,[0 0 1]); % [1 0 0] rotated by rotation
+    xvec = xvec - dot(xvec,normtrajvector) * normtrajvector; % x is projected down the trajectory
+    xunitv = xvec ./ norm(xvec);
+    yunitv = -cross(xvec,normtrajvector);
 
     markers(side).x = markers(side).head + (xunitv * (options.elspec.lead_diameter/2));
     markers(side).y = markers(side).head + (yunitv * (options.elspec.lead_diameter/2));
