@@ -166,20 +166,23 @@ try delete(captions); end
 % Plot spacing distance info text and correct inhomogeneous spacings.
 %emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
 clear emp_eldist
-if strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)')  || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
-    for side=options.sides
-        coords_temp{side}(1,:) = coords_mm{side}(1,:);
-        coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
-        coords_temp{side}(3,:) = mean(coords_mm{side}(5:7,:));
-        coords_temp{side}(4,:) = coords_mm{side}(8,:);
-        A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
-        emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
-    end
-else
-    for side=options.sides
-        A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
-        emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
-    end
+switch options.elmodel
+    case {'Boston Scientific Vercise Directed'
+          'St. Jude Directed 6172 (short)'
+          'St. Jude Directed 6173 (long)'}
+        for side=options.sides
+            coords_temp{side}(1,:) = coords_mm{side}(1,:);
+            coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
+            coords_temp{side}(3,:) = mean(coords_mm{side}(5:7,:));
+            coords_temp{side}(4,:) = coords_mm{side}(8,:);
+            A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
+            emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
+        end
+    otherwise
+        for side=options.sides
+            A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
+            emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
+        end
 end
 memp_eldist=mean([emp_eldist{:}]);
 [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
