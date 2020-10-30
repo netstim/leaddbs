@@ -24,14 +24,6 @@ end
 
 for iside=1:length(options.sides)
     side=options.sides(iside);
-    
-    %{
-    if length(elecmodels) == 1 % fix in case only left electrode
-        side2 = 1;
-    else
-        side2 = side;
-    end
-    %}
 
     coords_mm{side}=[tmat*[elecmodels{iside}.getContactPositions3D,ones(size(elecmodels{iside}.getContactPositions3D,1),1)]']';%#ok<NBRAK,AGROW>
     coords_mm{side}=coords_mm{side}(:,1:3);%#ok<AGROW>

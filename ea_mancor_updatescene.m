@@ -14,6 +14,7 @@ if isempty(offset)
     offset=0.3;
 end
 setappdata(mcfig,'offset',offset); setappdata(mcfig,'contrast',contrast);
+
 %% inputs:
 options=getappdata(mcfig,'options');
 if ~isfield(options,'visible')
@@ -59,7 +60,6 @@ end
 
 %% rotation functionality
 % rotation is measured with respect to the y-axis ([0 1 0]) of native space
-
 rotation=getappdata(gcf,'rotation');
 if isempty(rotation)
     rotation = cell(max(options.sides),1);
@@ -125,11 +125,6 @@ end
 try
     movedheadtail(2,:)=[get(mplot(2),'xdata'),get(mplot(2),'ydata'),get(mplot(2),'zdata')];
 end
-
-% xdata = cell2mat(get(mplot,'xdata'));
-% ydata = cell2mat(get(mplot,'ydata'));
-% zdata = cell2mat(get(mplot,'zdata'));
-% movedmarkers=[xdata,ydata,zdata];
 
 if selectrode
     [markers]=ea_mancor_updatecoords(coordhandle,markers,trajectory,movedheadtail,options,mcfig);
@@ -313,7 +308,6 @@ for doxx=0:1
         meantrajectory(end,:)-spanvector;...
         meantrajectory(end,:)+spanvector];
 
-
     xx=[boundingbox(1,1),boundingbox(2,1);boundingbox(3,1),boundingbox(4,1)];
     yy=[boundingbox(1,2),boundingbox(2,2);boundingbox(3,2),boundingbox(4,2)];
     zz=[boundingbox(1,3),boundingbox(2,3);boundingbox(3,3),boundingbox(4,3)];
@@ -345,9 +339,6 @@ for doxx=0:1
                     end
                 end
             end
-            % disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
-
-
         end
         caxis([0,1]);
         setappdata(mcfig,'planecset',1);
@@ -429,31 +420,11 @@ for subpl=getsuplots(1)
             tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
             tvecs=tvecs(1:3,:);
             Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,res);
-            %iXr(:,:,cnt)=ea_sample_slice(Vtra,'tra',wsize,'vox',mrks,subpl);
             cnt=cnt+1;
         end
         Xr=smooth3(Xr,'gaussian',[11,11,1]);
         slice=mean(Xr,3);
     else
-%         otraj=zeros(41,3); icnt=1;
-%         for i=-wsize:0.5:wsize
-%             otraj(icnt,:)=[mks(subpl,:)+xvec_unrot*i]';
-%             icnt=icnt+1;
-%         end
-%         tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
-%         tvecs=tvecs(1:3,:);
-%         slice=ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
-%
-%
-%         otraj=zeros(41,3); icnt=1;
-%         for i=-wsize:0.5:wsize
-%             otraj(icnt,:)=[mks(subpl,:)+yvec_unrot*i]';
-%             icnt=icnt+1;
-%         end
-        %tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
-        %tvecs=tvecs(1:3,:);
-        %slice=slice+ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
-
         slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     end
     slice=ea_contrast(slice,contrast,offset);
@@ -538,10 +509,6 @@ if isempty(legplot)
 end
 
 %% outputs
-
-% try
-%     setappdata(resultfig,'realcoords_plot',realcoords_plot);
-% end
 set(mcfig,'CurrentAxes',mainax1);
 %  axis equal
 
@@ -568,8 +535,6 @@ setappdata(mcfig,'viewtext',viewtext);
 setappdata(mcfig,'elplot',elplot);
 setappdata(mcfig,'mplot',mplot);
 setappdata(mcfig,'movedel',movedel);
-      %  set(mainax1, 'LooseInset', [0,0,0,0]);
-      %  set(mainax2, 'LooseInset', [0,0,0,0]);
 
 if isfield(options,'hybridsave')
     options=rmfield(options,'hybridsave');
@@ -577,13 +542,9 @@ end
 
 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
-%setappdata(mcfig,'markers',markers);
-% try
-%     setappdata(resultfig,'realcoords_plot',realcoords_plot);
-% end
 setappdata(mcfig,'trajectory_plot',trajectory_plot);
 setappdata(mcfig,'planes',planes);
-%ea_tightfig(mcfig);
+
 
 function sp=getsuplots(sides)
 if isequal(sides,[1:2])
@@ -593,6 +554,7 @@ elseif isequal(sides,1)
 elseif isequal(sides,2)
     sp=3:4;
 end
+
 
 function hdtrajectory=genhd_inside(trajectory)
 
@@ -659,8 +621,11 @@ switch options.modality
             end
         end
 end
+
+
 function fn=stripext(fn)
 [~,fn]=fileparts(fn);
+
 
 function col=getbgsidecol(options)
 
