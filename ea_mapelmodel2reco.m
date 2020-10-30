@@ -19,9 +19,17 @@ end
 if redomarkers
     for iside=1:length(options.sides)
         side=options.sides(iside);
-        
+
         elstruct.markers(side).head=elstruct.coords_mm{side}(1,:);
-        elstruct.markers(side).tail=elstruct.coords_mm{side}(4,:);
+
+        switch options.elmodel
+            case {'Boston Scientific Vercise Directed'
+                  'St. Jude Directed 6172 (short)'
+                  'St. Jude Directed 6173 (long)'}
+                elstruct.markers(side).tail=elstruct.coords_mm{side}(8,:);
+            otherwise
+                elstruct.markers(side).tail=elstruct.coords_mm{side}(4,:);
+        end
 
         [xunitv, yunitv] = ea_calcxy(elstruct.markers(side).head, elstruct.markers(side).tail);
         elstruct.markers(side).x = elstruct.coords_mm{side}(1,:) + xunitv*(options.elspec.lead_diameter/2);
