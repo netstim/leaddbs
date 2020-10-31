@@ -52,6 +52,8 @@ for rev=1:length(revs)
     options.sides=1:length(reco.mni.markers);
     [reco.mni.coords_mm,reco.mni.trajectory,reco.mni.markers]=ea_resolvecoords(reco.mni.markers,options,0);
     delete([directory,'ea_reconstruction.mat']);
-    ea_save_reconstruction(reco.mni.coords_mm, reco.mni.trajectory, reco.mni.markers, reco.props(1).elmodel, 1, options)
+
+    elmodel=ea_get_first_notempty_elmodel(reco.props);
+    ea_save_reconstruction(reco.mni.coords_mm, reco.mni.trajectory, reco.mni.markers, elmodel, 1, options)
 end
 

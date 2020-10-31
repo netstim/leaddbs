@@ -28,7 +28,7 @@ end
 if exist([directory,filesep,'ea_reconstruction.mat'],'file')
     load([directory,filesep,'ea_reconstruction.mat']);
     try
-        options.elmodel=reco.props(1).elmodel;
+        options.elmodel=ea_get_first_notempty_elmodel(reco.props);
     catch
         options.elmodel='Medtronic 3389';
     end

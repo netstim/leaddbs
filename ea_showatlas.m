@@ -103,6 +103,33 @@ for nativemni=nm % switch between native and mni space atlases.
 
     % prepare stats fields
     if options.writeoutstats
+        %reset previous stats
+        ea_stats.conmat={};
+        ea_stats.conmat_inside_vox={};
+        ea_stats.conmat_inside_hull={};
+        ea_stats.patname={};
+        ea_stats.atlases.names={};
+        ea_stats.atlases.types={};
+        ea_stats.electrodes=[];
+        
+        for el=1:length(elstruct)
+            miss_side=2;%check only if L side is missing. 
+            if ea_arenopoints4side(elstruct(el).coords_mm, miss_side)
+                %if the right side is missing, it will be already be "filled" with an empty or NaN array
+                %force to have empty values if side is not present (e.g. in R only case)
+                elstruct(el).coords_mm{miss_side}=[];
+                elstruct(el).coords_acpc{miss_side}=[];
+                elstruct(el).trajectory{miss_side}=[];
+                
+                %this will create a second structure
+                elstruct(el).markers(miss_side).head=[];
+                elstruct(el).markers(miss_side).tail=[];
+                elstruct(el).markers(miss_side).x=[];
+                elstruct(el).markers(miss_side).y=[];
+            end
+        end
+        
+        %fill with appropriate values or create placeholders (filled with NaNs)
         for el=1:length(elstruct)
             for iside=1:length(elstruct(el).coords_mm)
                 % In this case side is iside, as it is not iterating the
@@ -170,19 +197,30 @@ for nativemni=nm % switch between native and mni space atlases.
                         end
 
                         for el=1:length(elstruct)
-                            [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
+                            if ea_arenopoints4side(ea_stats.electrodes(el).coords_mm,side)
+                                warning_printf=@(str_in) fprintf(['ATTENTION!! : ' str_in '\n']);%this is less obnoxious, as it is not too important
+                                if side==1
+                                    warning_printf(['Statistics for right ' atlases.names{atlas} ' will not be computed as there is no lead in the right side.']);
+                                elseif side==2
+                                    warning_printf(['Statistics for left ' atlases.names{atlas} ' side will not be computed as there is no lead in the left side.']);
+                                else
+                                    warning_printf(['Statistics for this structure(' atlases.names{atlas} ', on side=' num2str(side) ') will not be computed as there is no lead in it.']);
+                                end
+                            else
+                                [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
 
-                            ea_stats.conmat{el,side}(:,atlas)=D;
-                            Dh=D;
+                                ea_stats.conmat{el,side}(:,atlas)=D;
+                                Dh=D;
 
-                            try
-                                in=inhull(ea_stats.electrodes(el).coords_mm{side},atlases.roi{atlas,side}.fv.vertices,atlases.roi{atlas,side}.fv.faces,1.e-13*mean(abs(atlases.roi{atlas,side}.fv.vertices(:))));
-                                Dh(in)=0;
+                                try
+                                    in=inhull(ea_stats.electrodes(el).coords_mm{side},atlases.roi{atlas,side}.fv.vertices,atlases.roi{atlas,side}.fv.faces,1.e-13*mean(abs(atlases.roi{atlas,side}.fv.vertices(:))));
+                                    Dh(in)=0;
+                                end
+                                ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
+
+                                D(D<mean(atlases.pixdim{atlas,side}))=0; % using mean here but assuming isotropic atlases in general..
+                                ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
                             end
-                            ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
-
-                            D(D<mean(atlases.pixdim{atlas,side}))=0; % using mean here but assuming isotropic atlases in general..
-                            ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
                         end
                     catch
                         warning('Statistics for tract atlas parts are not implemented yet.');
