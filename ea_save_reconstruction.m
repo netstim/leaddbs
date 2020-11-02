@@ -119,12 +119,12 @@ if ~reco.props(options.sides(1)).manually_corrected
             plot3(reco.mni.markers(side).y(:,1),reco.mni.markers(side).y(:,2),reco.mni.markers(side).y(:,3),'g*');
         end
 
-        if reco.mni.markers(side).head(2)>reco.mni.markers(side).y(2) % FIX ME need to check whether > or < is correct here.
+        if reco.mni.markers(side).head(2)>reco.mni.markers(side).y(2) % Flip y marker if head is anterior to y marker.
             reco.mni.markers(side).y=reco.mni.markers(side).head+(reco.mni.markers(side).head-reco.mni.markers(side).y); % 180 deg flip
             corrected=1;
         end
 
-        if reco.mni.markers(side).head(1)>reco.mni.markers(side).x(1) % FIX ME need to check whether > or < is correct here.
+        if reco.mni.markers(side).head(1)>reco.mni.markers(side).x(1) % Flip x marker if head is right to x marker.
             reco.mni.markers(side).x=reco.mni.markers(side).head+(reco.mni.markers(side).head-reco.mni.markers(side).x);
             corrected=1;
         end
