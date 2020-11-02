@@ -82,8 +82,8 @@ if exist('reco','var')
         manually_corrected=reco.props(options.elside).manually_corrected;
         elmodel=reco.props(options.elside).elmodel;
     catch % legacy
-        manually_corrected=reco.props(1).manually_corrected;
-        elmodel=reco.props(1).elmodel;
+        [elmodel,first_notempty_side]=ea_get_first_notempty_elmodel(reco.props);
+        manually_corrected=reco.props(first_notempty_side).manually_corrected;
     end
 
     %if elmodel is empty, search for the first available side that has a model

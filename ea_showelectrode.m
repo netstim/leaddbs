@@ -72,7 +72,9 @@ for side=options.sides
             if ~err
                 break
             else
-                try
+                try                
+                    %recalculate as the tolerance/precision was not
+                    %satisfactory for this use case (will be loaded at tries==2)
                     if ~isfield(options,'patient_list') % single subject mode
                         [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.root,options.patientname]);
                     else
@@ -82,12 +84,20 @@ for side=options.sides
                     elstruct.coords_mm=coords_mm;
                     elstruct.trajectory=trajectory;
                 catch
-                    warning(['There seems to be some inconsistency with the reconstruction of ',options.patientname,' that could not be automatically resolved. Please check data of this patient.']);
+                    if ~isfield(options,'patient_list') % single subject mode
+                        warning(['There seems to be some inconsistency with the reconstruction of ',options.patientname,' that could not be automatically resolved. Please check data of this patient.']);
+                    else
+                        warning(['There seems to be some inconsistency with the reconstruction of ',options.patient_list{pt},' that could not be automatically resolved. Please check data of this patient.']);
+                    end
                 end
             end
         end
         if err
-            warning(['There seems to be some inconsistency with the reconstruction of ',options.patientname,' that could not be automatically resolved. Please check data of this patient.']);
+            if ~isfield(options,'patient_list') % single subject mode
+                warning(['There seems to be some inconsistency with the reconstruction of ',options.patientname,' that could not be automatically resolved. Please check data of this patient.']);
+            else
+                warning(['There seems to be some inconsistency with the reconstruction of ',options.patient_list{pt},' that could not be automatically resolved. Please check data of this patient.']);
+            end
         end
         if options.d3.elrendering==2 % show a transparent electrode.
             aData=0.1;
