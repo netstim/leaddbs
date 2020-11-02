@@ -13,7 +13,7 @@ function electrode=ea_elspec_stjude_directed_05(varargin)
 electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
-for k = 1:18
+for k = 1:17
     filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_05_Components',filesep,'Insulations',filesep,'ins',num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
     electrode.insulation(k).vertices = node;
