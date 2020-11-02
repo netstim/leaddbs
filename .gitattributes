@@ -1,0 +1,8 @@
+*.edge binary
+*.ele binary
+*.face binary
+*.mesh binary
+*.node binary
+*.mtr binary
+*.smesh binary
+

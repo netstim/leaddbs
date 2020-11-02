@@ -25,7 +25,6 @@ coverage_html/
 
 # dev only
 ea_make_release.m
-.gitattributes
 
 # OS generated files #
 ######################
