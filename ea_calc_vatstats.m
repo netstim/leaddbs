@@ -180,51 +180,53 @@ for iside=1:length(options.sides)
                 end
 
                 atlasName = options.atlasset;
-                load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
+                if ~strcmp(atlasName, 'Use none')
+                    load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
 
-                for atlas=1:length(atlases.names)
-                    if any(S.amplitude{side}) % stimulation on
-                        switch atlases.types(atlas)
-                            case 1 % right hemispheric atlas.
-                                atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
-                            case 2 % left hemispheric atlas.
-                                atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
-                            case 3 % both-sides atlas composed of 2 files.
-                                switch sidec
-                                    case 'right'
-                                        atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
-                                    case 'left'
-                                        atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
-                                end
-                            case 4 % mixed atlas (one file with both sides information).
-                                atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
-                            case 5 % midline atlas (one file with both sides information.
-                                atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
-                        end
+                    for atlas=1:length(atlases.names)
+                        if any(S.amplitude{side}) % stimulation on
+                            switch atlases.types(atlas)
+                                case 1 % right hemispheric atlas.
+                                    atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
+                                case 2 % left hemispheric atlas.
+                                    atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
+                                case 3 % both-sides atlas composed of 2 files.
+                                    switch sidec
+                                        case 'right'
+                                            atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
+                                        case 'left'
+                                            atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
+                                    end
+                                case 4 % mixed atlas (one file with both sides information).
+                                    atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
+                                case 5 % midline atlas (one file with both sides information.
+                                    atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
+                            end
 
-                        if endsWith(atlasfile, {'.nii','.nii.gz'})
-                            atlasfile = ea_niigz(atlasfile);
-                        else % Skip fiber atlas
+                            if endsWith(atlasfile, {'.nii','.nii.gz'})
+                                atlasfile = ea_niigz(atlasfile);
+                            else % Skip fiber atlas
+                                ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
+                                ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
+                                continue;
+                            end
+
+                            vatfile = ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_',sidec]);
+                            voxsize = prod(ea_detvoxsize(vatfile));
+
+                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vatfile,atlasfile,sidec).*voxsize;
+                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
+
+                            % now also add efield overlap:
+                            if exist(vefieldfile,'var')
+                                ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vefieldfile,atlasfile,sidec);
+                                ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
+                                    ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)./sum(Vefield.img(:));
+                            end
+                        else % no stimulation, simply set vi to zero.
                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
-                            continue;
                         end
-
-                        vatfile = ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_',sidec]);
-                        voxsize = prod(ea_detvoxsize(vatfile));
-
-                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vatfile,atlasfile,sidec).*voxsize;
-                        ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
-
-                        % now also add efield overlap:
-                        if exist(vefieldfile,'var')
-                            ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vefieldfile,atlasfile,sidec);
-                            ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
-                                ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)./sum(Vefield.img(:));
-                        end
-                    else % no stimulation, simply set vi to zero.
-                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
-                        ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
                     end
                 end
 
