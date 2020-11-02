@@ -170,25 +170,26 @@ for side=options.sides
             end
             cnt=cnt+1;
         end
-        %% arrows for directional leads
+
+        % arrows for directional leads
         if isfield(options.prefs.d3,'showdirarrows') && options.prefs.d3.showdirarrows
             switch options.elmodel
-                case 'Boston Scientific Vercise Directed'
-                    markerposition = 11;
-                    dothearrows = 1;
-                case 'St. Jude Directed 6172 (short)'
-                    markerposition = 9.75;
-                    dothearrows = 1;
-                case 'St. Jude Directed 6173 (long)'
-                    markerposition = 12.75;
+                case {'Boston Scientific Vercise Directed'
+                      'St. Jude Directed 6172 (short)'
+                      'St. Jude Directed 6173 (long)'}
+                    % Marker position relative to head position along z axis
+                    markerposRel = options.elspec.markerpos-electrode.head_position(3);
                     dothearrows = 1;
                 otherwise
                     dothearrows = 0;
             end
             if dothearrows
+                % Calc stretch factor since lead could be stretched due to non-linear transformation
+                stretchfactor = norm(elstruct.markers(side).tail - elstruct.markers(side).head) / (electrode.tail_position(3)-electrode.head_position(3));
+                % Direction of the lead
                 unitvector = (elstruct.markers(side).tail - elstruct.markers(side).head) / norm(elstruct.markers(side).tail - elstruct.markers(side).head);
-                stretchfactor = norm(elstruct.markers(side).tail - elstruct.markers(side).head) / 6;
-                stxmarker = elstruct.markers(side).head + (stretchfactor * markerposition * unitvector);
+                % Calc stick location
+                stxmarker = elstruct.markers(side).head + stretchfactor * markerposRel * unitvector;
                 arrowtip = stxmarker + 5 * (elstruct.markers(side).y - elstruct.markers(side).head);
                 elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.3 .3 .3],'tipWidth',0.2,'tipLength',0,'stemWidth',0.2);
                 specsurf(elrender(cnt),[.3 .3 .3],1);
