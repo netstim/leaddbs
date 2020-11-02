@@ -163,11 +163,21 @@ for iside=1:length(options.sides)
             if options.writeoutstats
                 ea_dispt('Writing out stats...');
                 load([options.root,options.patientname,filesep,'ea_stats']);
+                ea_stats.stimulation(thisstim).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
                 ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).contact=vat;
                 ea_stats.stimulation(thisstim).vat(side,vat).side=side;
-                ea_stats.stimulation(thisstim).label=S.label;
+
+                % VTA volume and efield volume
+                ea_stats.stimulation(thisstim).vat(side,vat).volume=stimparams(1,side).volume(vat);
+                if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_efield_',sidec]),'file')
+                    vefieldfile=ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_efield_',sidec]);
+                    Vefield=load_untouch_nii(vefieldfile);
+                    efiedthreshold = options.prefs.machine.vatsettings.horn_ethresh*10^3;
+                    Vefield.img(Vefield.img<=efiedthreshold) = 0;
+                    ea_stats.stimulation(thisstim).efield(side,vat).volume=sum(Vefield.img(:));
+                end
 
                 atlasName = options.atlasset;
                 load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
@@ -205,19 +215,12 @@ for iside=1:length(options.sides)
 
                         ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vatfile,atlasfile,sidec).*voxsize;
                         ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
-                        ea_stats.stimulation(thisstim).vat(side,vat).volume=stimparams(1,side).volume(vat);
 
                         % now also add efield overlap:
-                        if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
-                                S.label,filesep,'vat_efield_',sidec]),'file')
-                            vefieldfile=ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_efield_',sidec]);
-                            Vefield=load_untouch_nii(vefieldfile);
-                            efiedthreshold = options.prefs.machine.vatsettings.horn_ethresh*10^3;
-                            Vefield.img(Vefield.img<=efiedthreshold) = 0;
+                        if exist(vefieldfile,'var')
                             ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vefieldfile,atlasfile,sidec);
                             ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
                                 ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)./sum(Vefield.img(:));
-                            ea_stats.stimulation(thisstim).efield(side,vat).volume=sum(Vefield.img(:));
                         end
                     else % no stimulation, simply set vi to zero.
                         ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
