@@ -16,7 +16,7 @@ if ~nargin
         'SDE-08 S8', 'SDE-08 S10', 'SDE-08 S12', 'SDE-08 S16', ...
         '2069-EPC-05C-35', '2069-EPC-15C-35', 'NeuroPace DL-344-3.5', 'NeuroPace DL-344-10', ...
         'DIXI D08-05AM', 'DIXI D08-08AM', 'DIXI D08-10AM', 'DIXI D08-12AM', 'DIXI D08-15AM', 'DIXI D08-18AM', ...
-        'AdTech SD10R-SP05X Choi', 'AdTech RD10R-SP03X', 'AdTech BF08R-SP05X'}';
+        'AdTech SD10R-SP05X Choi', 'AdTech RD10R-SP03X', 'AdTech BF08R-SP05X', 'ELAINE Rat Electrode'}';
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
         'boston_vercise', 'boston_vercise_directed', ...
         'stjude_activetip_2mm','stjude_activetip_3mm', ...
@@ -26,7 +26,7 @@ if ~nargin
         'sde_08_s8', 'sde_08_s10', 'sde_08_s12', 'sde_08_s16', ...
         'epc_05c', 'epc_15c', 'neuropace_dl_344_35', ...
         'dixi_d08_05am', 'dixi_d08_08am', 'dixi_d08_10am', 'dixi_d08_12am', 'dixi_d08_15am', 'dixi_d08_18am', ...
-        'adtech_sd10r_sp05x_choi', 'adtech_rd10r_sp03x', 'adtech_bf08r_sp05x'}';
+        'adtech_sd10r_sp05x_choi', 'adtech_rd10r_sp03x', 'adtech_bf08r_sp05x', 'elaine_rat_electrode'}';
     return
 else
     options=varargin{1};
@@ -693,6 +693,25 @@ switch elmodel
         elspec.tipiscontact=0;
         elspec.contactnames={'K0 (R)','K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)',...
             'K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=1;
+    case 'ELAINE Rat Electrode'
+        elspec.matfname='elaine_rat_electrode';
+        elspec.lead_diameter=225/1000;
+        elspec.lead_color=0.7;
+        elspec.contact_length=0;
+        elspec.contact_diameter=225/1000;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=225/1000;
+        elspec.tip_color=0.7;
+        elspec.tip_length=112.5/1000;
+        elspec.contact_spacing=0;
+        elspec.numel=1;
+        elspec.tipiscontact=1;
+        elspec.contactnames={'K0 (R)','K0 (L)'};
         elspec.isdirected=0;
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
