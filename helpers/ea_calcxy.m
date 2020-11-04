@@ -18,6 +18,8 @@ end
 trajvector = diff([head; tail]); % z axis, poiting to the top of the lead
 normtrajvector = trajvector/norm(trajvector); % Unit vector along z axis
 if isnumeric(y)
+    % Here we need to first calc the x marker unit vector and then the y
+    % marker unit vector.
     x = cross(y/norm(y),[0 0 1]); % [1 0 0] rotated according to y
     x = x - dot(x,normtrajvector) * normtrajvector; % Project x down to the trajectory
     xunitv = x/norm(x); % Calculate unit vector along x axis
