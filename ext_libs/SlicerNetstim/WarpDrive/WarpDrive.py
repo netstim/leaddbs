@@ -120,10 +120,11 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeAddedEvent, dataControlTree.updateTree)
 
     # check dependencies
-    if LeadDBSCall.checkExtensionInstall(extensionName = 'SlicerRT'):
-      return
-    if LeadDBSCall.checkExtensionInstall(extensionName = 'MarkupsToModel'):
-      return
+    if slicer.app.mainApplicationName != 'SlicerCustom':
+      if LeadDBSCall.checkExtensionInstall(extensionName = 'SlicerRT'):
+        return
+      if LeadDBSCall.checkExtensionInstall(extensionName = 'MarkupsToModel'):
+        return
 
     # Lead-DBS call
     if LeadDBSCall.updateParameterNodeFromArgs(self._parameterNode): # was called from command line

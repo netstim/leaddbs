@@ -48,3 +48,5 @@ Thumbs.db
 !common/ea_prefs_default.json
 
 /slicer.py
+
+/ext_libs/SlicerCustom*
