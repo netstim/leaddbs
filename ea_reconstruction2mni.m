@@ -66,8 +66,8 @@ for side=options.sides
 
     if ~isempty(reco.mni.markers(side).head)
         % Correct the distance from x and y markers to head marker
-        xunitv = (reco.mni.markers(side).x-reco.mni.markers(side).head)/norm((reco.mni.markers(side).x-reco.mni.markers(side).head));
-        yunitv = (reco.mni.markers(side).y-reco.mni.markers(side).head)/norm((reco.mni.markers(side).y-reco.mni.markers(side).head));
+        [~, yvec] = ea_calc_rotation(reco.native.markers(side).y,reco.native.markers(side).head);
+        [xunitv, yunitv] = ea_calcxy(reco.mni.markers(side).head, reco.mni.markers(side).tail, yvec);
         reco.mni.markers(side).x = reco.mni.markers(side).head + xunitv*(options.elspec.lead_diameter/2);
         reco.mni.markers(side).y = reco.mni.markers(side).head + yunitv*(options.elspec.lead_diameter/2);
     else
