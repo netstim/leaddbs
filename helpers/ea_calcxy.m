@@ -19,7 +19,7 @@ if isnumeric(y)
     x = cross(y/norm(y),[0 0 1]); % [1 0 0] rotated according to y
     x = x - dot(x,normtrajvector) * normtrajvector; % Project x down to the trajectory
     xunitv = x/norm(x); % Calculate unit vector along x axis
-    yunitv = -cross(x,normtrajvector); % Calculate unit vector along y axis
+    yunitv = -cross(xunitv,normtrajvector); % Calculate unit vector along y axis
 elseif ischar(y)
     switch y
         case 'anterior' % Force y axis pointing anterior
