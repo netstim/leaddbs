@@ -64,6 +64,7 @@ rotation=getappdata(gcf,'rotation');
 if isempty(rotation)
     rotation = cell(max(options.sides),1);
 end
+
 for side=options.sides
     if manually_corrected == 1 && isempty(rotation{side}) % rotation angles are determined from y-marker
         initialrotation = ea_calc_rotation(markers(side).y, markers(side).head);
