@@ -66,13 +66,7 @@ if isempty(rotation)
 end
 for side=options.sides
     if manually_corrected == 1 && isempty(rotation{side}) % rotation angles are determined from y-marker
-        tempvec = markers(side).y - markers(side).head;
-        tempvec(3) = 0;
-        tempvec = tempvec ./ norm(tempvec);
-        initialrotation = rad2deg(atan2(norm(cross([0 1 0],tempvec)),dot([0 1 0],tempvec)));
-        if markers(side).y(1) > markers(side).head(1)
-            initialrotation = - initialrotation;
-        end
+        initialrotation = ea_calc_rotation(markers(side).y, markers(side).head);
         rotation{side} = initialrotation;
         setappdata(gcf,'rotation',rotation);
     elseif manually_corrected == 0 && isempty(rotation{side})
