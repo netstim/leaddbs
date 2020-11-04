@@ -3,7 +3,9 @@ function [xunitv, yunitv] = ea_calcxy(head, tail, y)
 %
 % head and tail coordinates should be accurate. The rotation/orientation of
 % the y marker in the x-y plane is more important than the absolute
-% coordinate. It will be recalculated/adjusted.
+% coordinate (it will be recalculated/adjusted). Here input y should be the
+% [unit] vector in x-y plane which indicates the rotation of the y marker
+% (see the second output of 'ea_calc_rotation').
 %
 % If y is not available, can choose whether to force y axis pointing
 % anterior, or to calculate x and y axes using null function (orthonormal
