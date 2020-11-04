@@ -65,7 +65,8 @@ for side=options.sides
     reco.mni.trajectory{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
 
     if ~isempty(reco.mni.markers(side).head)
-        % Correct the distance from x and y markers to head marker
+        % Enforce the rotation of x and y markers in MNI space. Use the
+        % rotation of y marker calculated from native coordination.
         [~, yvec] = ea_calc_rotation(reco.native.markers(side).y,reco.native.markers(side).head);
         [xunitv, yunitv] = ea_calcxy(reco.mni.markers(side).head, reco.mni.markers(side).tail, yvec);
         reco.mni.markers(side).x = reco.mni.markers(side).head + xunitv*(options.elspec.lead_diameter/2);
