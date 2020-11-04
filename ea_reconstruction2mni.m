@@ -37,8 +37,6 @@ for side=options.sides
     towarp{end+1}=reco.(usenative).coords_mm{side};
     towarp{end+1}=reco.(usenative).markers(side).head;
     towarp{end+1}=reco.(usenative).markers(side).tail;
-    towarp{end+1}=reco.(usenative).markers(side).x;
-    towarp{end+1}=reco.(usenative).markers(side).y;
     towarp{end+1}=reco.(usenative).trajectory{side};
 end
 towarp=cell2mat(towarp');
@@ -54,12 +52,6 @@ for side=options.sides
 
     offset=size(reco.(usenative).markers(side).tail,1);
     reco.mni.markers(side).tail=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-
-    offset=size(reco.(usenative).markers(side).x,1);
-    reco.mni.markers(side).x=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-
-    offset=size(reco.(usenative).markers(side).y,1);
-    reco.mni.markers(side).y=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
 
     offset=size(reco.(usenative).trajectory{side},1);
     reco.mni.trajectory{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
