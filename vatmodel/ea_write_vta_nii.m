@@ -308,9 +308,10 @@ outliers=any(outliers,2);
 
 
 function r=maedler12_eq3(U,Im)
-% This function radius of Volume of Activated Tissue for stimulation settings U and Ohm. See Maedler 2012 for details.
-% Clinical measurements of DBS electrode impedance typically range from
-% 500?1500 Ohm (Butson 2006).
+% This function calculates the  radius of Volume of Activated Tissue for
+% stimulation settings U (Kuncel 2008). Clinical measurements of DBS
+% electrode impedance typically range from 500-1500 Ohm (Butson 2006).
+
 r=0; %
 if U %(U>0)
     k1=-1.0473;

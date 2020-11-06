@@ -124,9 +124,9 @@ varargout{3}=radius;
 
 
 function r=ea_kuncel(U)
-% This function radius of Volume of Activated Tissue for stimulation settings U. See Kuncel 2008 for details.
-% Clinical measurements of DBS electrode impedance typically range from
-% 500?1500 Ohm (Butson 2006).
+% This function calculates the  radius of Volume of Activated Tissue for
+% stimulation settings U (Kuncel 2008). Clinical measurements of DBS
+% electrode impedance typically range from 500-1500 Ohm (Butson 2006).
 
 r=0; %
 if U %(U>0)
