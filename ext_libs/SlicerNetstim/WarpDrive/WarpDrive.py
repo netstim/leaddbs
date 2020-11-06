@@ -95,7 +95,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # so that when the scene is saved and reloaded, these settings are restored.
     self.logic = WarpDriveLogic()
     self.ui.parameterNodeSelector.addAttribute("vtkMRMLScriptedModuleNode", "ModuleName", self.moduleName)
-    self.setParameterNode(self.logic.getParameterNode())
+    self.initializeParameterNode()
 
     # Connections
     self.ui.parameterNodeSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.setParameterNode)
@@ -117,6 +117,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # MRML Scene
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
+    self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeAddedEvent, dataControlTree.updateTree)
 
     # check dependencies
@@ -130,6 +131,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if LeadDBSCall.updateParameterNodeFromArgs(self._parameterNode): # was called from command line
       self.showSingleModule()
       slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
+
 
     # Initial GUI update
     self.updateGUIFromParameterNode()
@@ -154,7 +156,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # customize mouse mode
     mouseModeToolBar = slicer.util.mainWindow().findChild('QToolBar', 'MouseModeToolBar')
     mouseModeToolBar.setVisible(1)
-    mouseModeToolBar.removeAction(mouseModeToolBar.actions()[2]) # remove place markups
+    list(map(lambda a: mouseModeToolBar.removeAction(a), filter(lambda a: a.text=="Place Fiducial", mouseModeToolBar.actions())))
 
     # viewers
     viewersToolBar = slicer.util.mainWindow().findChild('QToolBar', 'ViewersToolBar')
@@ -201,6 +203,13 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def exit(self):
     self.cleanTools()
 
+  def enter(self):
+    """
+    Called each time the user opens this module.
+    """
+    # Make sure parameter node exists and observed
+    self.initializeParameterNode()
+
   def onSceneStartClose(self, caller=None, event=None):
     self.cleanTools()
         
@@ -211,6 +220,23 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         child.setAutoExclusive(False)
         child.setChecked(False)
         child.setAutoExclusive(True)
+
+  def onSceneEndClose(self, caller, event):
+    """
+    Called just after the scene is closed.
+    """
+    # If this module is shown while the scene is closed then recreate a new parameter node immediately
+    if self.parent.isEntered:
+      self.initializeParameterNode()
+
+  def initializeParameterNode(self):
+    """
+    Ensure parameter node exists and observed.
+    """
+    # Parameter node stores all user choices in parameter values, node selections, etc.
+    # so that when the scene is saved and reloaded, these settings are restored.
+
+    self.setParameterNode(self.logic.getParameterNode())
 
   def setParameterNode(self, inputParameterNode):
     """
@@ -225,10 +251,6 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     wasBlocked = self.ui.parameterNodeSelector.blockSignals(True)
     self.ui.parameterNodeSelector.setCurrentNode(inputParameterNode)
     self.ui.parameterNodeSelector.blockSignals(wasBlocked)
-
-    if inputParameterNode == self._parameterNode:
-      # No change
-      return
 
     # Unobserve previusly selected parameter node and add an observer to the newly selected.
     # Changes of parameter node are observed so that whenever parameters are changed by a script or any other module
@@ -378,6 +400,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     stiffness = float(self._parameterNode.GetParameter("Stiffness"))
     # mask
     maskVolume = WarpDriveUtil.getMaskVolume(auxVolumeNode)
+
+    # save current state if leadDBS call in case of error
+    if self._parameterNode.GetParameter("subjectPath") != '':
+      LeadDBSCall.saveCurrentScene(self._parameterNode.GetParameter("subjectPath"))
 
     # unset current warp
     self._parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(None)
