@@ -117,9 +117,11 @@ for nativemni=nm % switch between native and mni space atlases.
             if ea_arenopoints4side(elstruct(el).coords_mm, miss_side)
                 %if the right side is missing, it will be already be "filled" with an empty or NaN array
                 %force to have empty values if side is not present (e.g. in R only case)
-                elstruct(el).coords_mm{miss_side}=[];
-                elstruct(el).coords_acpc{miss_side}=[];
-                elstruct(el).trajectory{miss_side}=[];
+                elstruct(el).coords_mm{miss_side}={};
+                if ~isnan(elstruct(el).coords_acpc)
+                    elstruct(el).coords_acpc{miss_side}={};
+                end
+                elstruct(el).trajectory{miss_side}={};
                 
                 %this will create a second structure
                 elstruct(el).markers(miss_side).head=[];
