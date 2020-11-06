@@ -192,7 +192,14 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     modelNodes.UnRegister(slicer.mrmlScene)
     for i in range(modelNodes.GetNumberOfItems()):
       slicer.mrmlScene.RemoveNode(modelNodes.GetItemAsObject(i))
-    
+    # delete fiducials
+    fiducialNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsFiducialNode')
+    fiducialNodes.UnRegister(slicer.mrmlScene)
+    for i in range(fiducialNodes.GetNumberOfItems()):
+      fiducialNode = fiducialNodes.GetItemAsObject(i)
+      if 'correction' not in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(fiducialNode)):
+        slicer.mrmlScene.RemoveNode(fiducialNode)
+
     # load atlas
     if atlasName is not None:
       ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName))
@@ -246,6 +253,8 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
     if WarpDriveUtil.getPointsFromAttribute('source').GetNumberOfPoints(): # corrections made
       LeadDBSCall.applyChanges(subjectPath, self.parameterNode.GetNodeReference("InputNode"), self.parameterNode.GetNodeReference("ImageNode")) # save changes
+      LeadDBSCall.setTargetFiducialsAsFixed() # change target fiducial as fixed
+      LeadDBSCall.saveCurrentScene(subjectPath) # save scene
     else:
       if not LeadDBSCall.queryUserApproveSubject(subjectPath):
         return # user canceled 

@@ -70,7 +70,7 @@ def checkExtensionInstall(extensionName):
 def updateParameterNodeFromArgs(parameterNode): 
   if parameterNode.GetParameter("MNIPath") != '':
     return # was already called
-    
+
   args = sys.argv
   if (len(sys.argv) > 2) and os.path.isfile(os.path.join(sys.argv[1],'lead.m')):
     pathsSeparator = uuid.uuid4().hex
@@ -158,8 +158,31 @@ def applyChanges(subjectPath, inputNode, imageNode):
   # delete aux node
   slicer.mrmlScene.RemoveNode(outNode)
   
+  # back to original
+  inputNode.Inverse()
+  imageNode.SetAndObserveTransformNodeID(inputNode.GetID())
+  
   qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
 
+
+def setTargetFiducialsAsFixed():
+  shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+  fiducialNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsFiducialNode')
+  fiducialNodes.UnRegister(slicer.mrmlScene)
+  for i in range(fiducialNodes.GetNumberOfItems()):
+    fiducialNode = fiducialNodes.GetItemAsObject(i)
+    if 'target' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(fiducialNode)):
+      # get parent folder
+      parentFolder = shNode.GetItemDataNode(shNode.GetItemParent(shNode.GetItemByDataNode(fiducialNode)))
+      parentFolderName = parentFolder.GetName()
+      # remove target attribute
+      shNode.RemoveItemAttribute(shNode.GetItemByDataNode(fiducialNode), 'target')
+      # add as fixed point
+      WarpDriveUtil.addFixedPoint(fiducialNode)
+      # remove correction
+      removeNodeAndChildren(parentFolder)
+      # change fixed point name
+      fiducialNode.SetName(parentFolderName)
 
 def saveCurrentScene(subjectPath):
   """
