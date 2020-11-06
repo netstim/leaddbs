@@ -58,7 +58,7 @@ for source=S.sources
     end
     U=stimsource.amp;
 
-    radius(source)=ea_kuncel(U);
+    radius(source)=kuncel08_eq1(U);
     volume(source)=(4/3)*pi*radius(source)^3;
 
     VAT{source}=[xx*radius(source)+coords{side}(Acnt,1);...
@@ -123,7 +123,7 @@ varargout{2}=volume;
 varargout{3}=radius;
 
 
-function r=ea_kuncel(U)
+function r=kuncel08_eq1(U)
 % This function calculates the  radius of Volume of Activated Tissue for
 % stimulation settings U (Kuncel 2008).
 
