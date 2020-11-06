@@ -15,14 +15,11 @@ if nargin>=5
     options=varargin{4};
     stimname=varargin{5};
 elseif nargin==1
-    
     if ischar(varargin{1}) % return name of method.
         varargout{1}='Kuncel 2008';
         return
     end
 end
-
-
 
 switch side
     case 1
@@ -33,7 +30,6 @@ switch side
         cnts={'k8','k9','k10','k11','k12','k13','k14','k15'};
 end
 
-
 [xx,yy,zz]=psphere(100);
 
 try
@@ -43,35 +39,38 @@ try
 end
 
 radius=repmat(1.5,options.elspec.numel,1); % some default setting.
+
 %try % if stimparams are set.
 if ~isfield(S, 'sources')
     S.sources=1:4;
 end
+
 for source=S.sources
-    
+
     stimsource=S.([sidec,'s',num2str(source)]);
-    
+
     for cnt=1:length(cnts)
-        U(cnt)=stimsource.(cnts{cnt}).perc; 
+        U(cnt)=stimsource.(cnts{cnt}).perc;
     end
     Acnt=find(U>0);
     if length(Acnt)>1
         ea_error('In the Maedler and Kuncel models, only one active contact can be selected in each source');
     end
     U=stimsource.amp;
-  
+
     radius(source)=ea_kuncel(U);
     volume(source)=(4/3)*pi*radius(source)^3;
-    
+
     VAT{source}=[xx*radius(source)+coords{side}(Acnt,1);...
         yy*radius(source)+coords{side}(Acnt,2);...
         zz*radius(source)+coords{side}(Acnt,3)]';
     K{source}=convhulln(VAT{source}+randn(size(VAT{source}))*0.000001); % create triangulation.
-    
+
     for dim=1:3
         ivx(source,dim,:)=[min(VAT{source}(:,dim)),max(VAT{source}(:,dim))];
     end
 end
+
 aivx=zeros(3,2);
 aivx(:,1)=min(ivx(:,:,1));
 aivx(:,2)=max(ivx(:,:,2));
@@ -93,7 +92,6 @@ for source=S.sources
     voxspace(sub2ind(size(voxspace),XYZv(1,in),XYZv(2,in),XYZv(3,in)))=1;
 end
 
-
 % write nifti of VAT
 Vvat.mat=mat;
 %voxspace=permute(voxspace,[2,1,3]);
@@ -108,7 +106,6 @@ end
 
 mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname]);
 %S(side).volume=sum(volume);
-
 
 if side == 1
     Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.nii'];
@@ -125,20 +122,18 @@ varargout{1}=VAT;
 varargout{2}=volume;
 varargout{3}=radius;
 
+
 function r=ea_kuncel(U)
 % This function radius of Volume of Activated Tissue for stimulation settings U. See Kuncel 2008 for details.
 % Clinical measurements of DBS electrode impedance typically range from
 % 500?1500 Ohm (Butson 2006).
+
 r=0; %
 if U %(U>0)
-    
     k=0.22;
     Uo=0.1;
-    
     r=sqrt((U-Uo)/k);
 end
-
-
 
 
 function [x,y,z,avgr] = psphere(n,rad)
@@ -191,8 +186,6 @@ function [x,y,z,avgr] = psphere(n,rad)
 %
 % You may freely distribute this code. I only ask that you give credit
 % where credit is due.
-%
-
 
 %Since rand produces number from 0 to 1, subtract off -0.5 so that
 %the points are centered about (0,0,0).
@@ -219,65 +212,60 @@ s = 1;
 warning off
 
 while not_done
-    
     for i = 1:n
-        
         %Calculate the i,j,k vectors for the direction of the repulsive forces.
         ii = x(i) - x;
         jj = y(i) - y;
         kk = z(i) - z;
-        
+
         rm_new(i,:) = sqrt(ii.^2 + jj.^2 + kk.^2);
-        
+
         ii = ii./rm_new(i,:);
         jj = jj./rm_new(i,:);
         kk = kk./rm_new(i,:);
-        
+
         %Take care of the self terms.
         ii(i) = 0;
         jj(i) = 0;
         kk(i) = 0;
-        
+
         %Use a 1/r^2 repulsive force, but add 0.01 to the denominator to
         %avoid a 0 * Inf below. The self term automatically disappears since
         %the ii,jj,kk vectors were set to zero for self terms.
         f = 1./(0.01 + rm_new(i,:).^2);
-        
+
         %Sum the forces.
         fi = sum(f.*ii);
         fj = sum(f.*jj);
         fk = sum(f.*kk);
-        
+
         %Find magnitude
         fn = sqrt(fi.^2 + fj.^2 + fk.^2);
-        
+
         %Find the unit direction of repulsion.
         fi = fi/fn;
         fj = fj/fn;
         fk = fk/fn;
-        
+
         %Step a distance s in the direciton of repulsion
         x(i) = x(i) + s.*fi;
         y(i) = y(i) + s.*fj;
         z(i) = z(i) + s.*fk;
-        
+
         %Scale the coordinates back down to the unit sphere.
         r = sqrt(x(i).^2 + y(i).^2 + z(i).^2);
-        
+
         x(i) = x(i)/r;
         y(i) = y(i)/r;
         z(i) = z(i)/r;
-        
     end
-    
-    
+
     %Check convergence
     diff = abs(rm_new - rm_old);
-    
+
     not_done = any(diff(:) > 0.01);
-    
+
     rm_old = rm_new;
-    
 end %while
 
 %Find the smallest distance between neighboring points. To do this
@@ -290,7 +278,3 @@ avgr = min(tmp(indices));
 
 %Turn back on the default warning state.
 warning backtrace
-
-
-
-
