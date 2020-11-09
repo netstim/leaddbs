@@ -1,2 +1,2 @@
 *.newtpm
-!/standard_efields/*/*.mat
+!/standard_efields/*.mat
