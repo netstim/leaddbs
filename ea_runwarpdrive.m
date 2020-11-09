@@ -40,7 +40,12 @@ else
     elseif ispc
         % TODO
     end
-    save_log = [' >> ' fullfile(d.folder,d.name,[char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt'])];
+    % set up to save log file
+    log_path = fullfile(d.folder, d.name, 'log');
+    if ~isfolder(log_path)
+        mkdir(log_path)
+    end
+    save_log = [' >> ' fullfile(log_path, [char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt'])];
 end
 
 % aditional modules
