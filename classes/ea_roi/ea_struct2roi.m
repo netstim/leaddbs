@@ -6,9 +6,6 @@ roi=ea_roi;
 props = fieldnames(s);
 for p = 1:numel(props)
     if ~ismember(props{p},{'controlH','plotFigureH','patchH','toggleH','htH','Tag'})
-    roi.(props{p})=s.(props{p});
+        roi.(props{p})=s.(props{p});
     end
 end
-
-
-

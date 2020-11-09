@@ -3,6 +3,7 @@ function atlases=ea_loadatlas(atlname,resultfig,ht)
 if ~exist('resultfig','var')
     resultfig=gcf;
 end
+
 if ~exist('ht','var')
     ht=[];
 end
@@ -15,5 +16,3 @@ for atl=1:size(atlases.roi,1)
         end
     end
 end
-
-
