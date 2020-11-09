@@ -1,11 +1,9 @@
 function varargout=ea_genvat_fastfield(varargin)
 
-%prefs.machine.vatsettings.fastfield_cb=0.1;
-%prefs.machine.vatsettings.fastfield_ethresh=0.2;
-
+% prefs.machine.vatsettings.fastfield_cb=0.1;
+% prefs.machine.vatsettings.fastfield_ethresh=0.2;
 
 useSI = 1;
-
 
 if nargin==5
     acoords=varargin{1};
@@ -13,9 +11,8 @@ if nargin==5
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-   % thresh=options.prefs.machine.vatsettings.fastfield_ethresh; %0.2;
-     thresh=options.prefs.machine.vatsettings.fastfield_ethresh; %0.2;
-    
+    thresh=options.prefs.machine.vatsettings.fastfield_ethresh; %0.2;
+
 elseif nargin==7
     acoords=varargin{1};
     S=varargin{2};
@@ -24,7 +21,7 @@ elseif nargin==7
     stimname=varargin{5};
     thresh=varargin{6};
     lgfigure=varargin{7};
-    
+
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}= 'Fastfield (Baniasadi 2020)';
@@ -32,8 +29,7 @@ elseif nargin==1
     end
 end
 
-
-%thresh=0.2;
+% thresh=0.2;
 if useSI
     thresh=thresh.*(10^3);
 end
@@ -48,7 +44,6 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-
 resultfig=getappdata(lgfigure,'resultfig');
 elstruct=getappdata(resultfig,'elstruct');
 options=getappdata(resultfig,'options');
@@ -58,7 +53,7 @@ coords=acoords{side};
 setappdata(resultfig,'elstruct',elstruct);
 
 % conductivity = 0.16;
-%conductivity = options.prefs.machine.vatsettings.horn_cwm;
+% conductivity = options.prefs.machine.vatsettings.horn_cwm;
 conductivity = options.prefs.machine.vatsettings.fastfield_cb;
 
 switch side
@@ -74,21 +69,17 @@ if ~isfield(S, 'sources')
     S.sources=1:4;
 end
 
-
 options=ea_resolve_elspec(options);
 Electrode_type = elspec.matfname;
 
-
-
 Efield_all=zeros(100,100,100);
 for source=S.sources
-    
+
     stimsource=S.([sidec,'s',num2str(source)]);
     % constvol is 1 for constant voltage and 0 for constant current.
     amp1 = stimsource.amp;
     if amp1>0
         load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' Electrode_type '.mat']);
-        %load([ea_getearoot,'templates',filesep,'standard_efields',filesep,Electrode_type,filesep,'standard_efield_' Electrode_type '_' amp_mode '.mat'])
         count1=1;
         for cnt=1:length(cnts)
             perc(cnt) = stimsource.(cnts{cnt}).perc;
@@ -97,7 +88,7 @@ for source=S.sources
                 count1=count1+1;
             end
         end
-        
+
         constvol=stimsource.va==1;
         if constvol
             amp_mode = 'V';
@@ -106,35 +97,20 @@ for source=S.sources
             amp_mode = 'mA';
             impedence = [];
         end
-        
-        [Efield2] = get_efield(perc,standard_efield,amp1,conductivity,amp_mode,impedence);
-        %[Efield2] = get_efield(perc,standard_efield,amp1,conductivity,amp_mode);
-        Efield_all=Efield_all+Efield2;
-%         Efield_all = permute(Efield_all,[2 1 3]);
-        
-    end
 
-    %amp = stimsource.amp;
+        [Efield2] = get_efield(perc,standard_efield,amp1,conductivity,amp_mode,impedence);
+        Efield_all=Efield_all+Efield2;
+    end
 end
 
-
-
-
-
-
-
 Efield = Efield_all;
-%[Efield] = get_efield(perc,standard_efield,amp,conductivity);
-
 
 electrode_patient = elstruct;
 load([ea_getearoot,'templates',filesep,'electrode_models',filesep,Electrode_type '.mat']);
 
 [trans_mat,~,xg,yg,zg] = get_trans_mat(electrode,electrode_patient,grid_vec,side);
 
-gv=grid_vec; 
-
-
+gv=grid_vec;
 
 ea_dispt('Creating nifti header for export...');
 % create nifti
@@ -155,7 +131,6 @@ eg=eeg;
 eg=eg>thresh;
 % binary e-field - "vat"
 
-
 neeg=eeg;
 neeg(~eg)=nan;
 
@@ -164,10 +139,9 @@ neeg(neeg>0)=ea_normal(neeg(neeg>0),1,0,' ',0,1,'TRUE');%
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
 neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed.
 
-%[xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
+% [xg,yg,zg] = meshgrid(gv{1},gv{2},gv{3});
 
-
-%eg=smooth3(eg,'gaussian',[25 25 25]);
+% eg=smooth3(eg,'gaussian',[25 25 25]);
 ea_dispt('Calculating volume...');
 
 for t=1:3
@@ -175,8 +149,6 @@ for t=1:3
 end
 vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
 S.volume(side)=vatvolume;
-
-
 
 ea_dispt('Writing files...');
 
@@ -197,7 +169,8 @@ switch side
         Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_left.nii'];
         Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_gauss_left.nii'];
 end
-%save(stimfile,'S');
+
+% save(stimfile,'S');
 ea_savestimulation(S,options);
 % setappdata(lgfigure,'curS',S);
 
@@ -223,7 +196,6 @@ caps=isocaps(xg,yg,zg,Vvat.img,0.5);
 vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
 vatfv.vertices=[vatfv.vertices;caps.vertices];
 
-
 try
     vatfv=ea_smoothpatch(vatfv,1,35);
 catch
@@ -237,6 +209,7 @@ catch
         warndlg('Patch could not be smoothed. Please supply a compatible Matlab compiler to smooth VTAs.');
     end
 end
+
 % new save by Till to save VAT and quiver in seperate .mat-file for quick
 % visualization
 switch side
@@ -257,8 +230,7 @@ ea_write_nii(Vvat);
 
 varargout{1}=vatfv;
 varargout{2}=vatvolume;
-%varargout{3}=radius;
-ea_dispt(''); 
+ea_dispt('');
 
 end
 
