@@ -9,7 +9,7 @@ import numpy as np
 import importlib
 import glob
 
-from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool
+from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool
 from WarpDriveLib.Helpers import GridNodeHelper, WarpDriveUtil, LeadDBSCall
 from WarpDriveLib.Widgets import TreeView, Toolbar
 
@@ -78,12 +78,11 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     toolWidgets = [NoneTool.NoneToolWidget(),
                    SmudgeTool.SmudgeToolWidget(),
-                   DrawTool.DrawToolWidget()]
+                   DrawTool.DrawToolWidget(),
+                   PointToPointTool.PointToPointToolWidget()]
 
     for toolWidget in toolWidgets:
       toolsLayout.addWidget(toolWidget.effectButton)
-
-    toolsLayout.addStretch(0)
 
     # Add Tree View
     dataControlTree = TreeView.WarpDriveTreeView()
