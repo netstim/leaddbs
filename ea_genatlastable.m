@@ -251,13 +251,13 @@ if checkrebuild(atlases,options,root,mifix)
         try atlases.colorc=icolorc; end
         try atlases.normals=normals; end
         try atlases.roi=iroi; end
-        atlases.version=2; % crude versioning introduced (anything without a version tag is considered version 1).
+        atlases.version=2.1; % crude versioning introduced (anything without a version tag is considered version 1).
         atlases.rebuild=0; % always reset rebuild flag.
         try atlases=rmfield(atlases,'cdat'); end % redundancy cleanup
         try atlases=rmfield(atlases,'colorc'); end % redundancy cleanup
         try atlases=rmfield(atlases,'normals'); end % redundancy cleanup
-
-        save([root,filesep,mifix,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
+        ea_saveatlas(options.atlasset,atlases);
+        
     end
 end
 
@@ -371,7 +371,7 @@ end
 if ~isfield(atlases,'version')
    reb=1;
 else
-    if atlases.version<2
+    if atlases.version<2.1
        reb=1;
     end
 end

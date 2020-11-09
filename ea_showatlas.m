@@ -40,11 +40,13 @@ for nativemni=nm % switch between native and mni space atlases.
 
     atlascnt=1;
     set(0,'CurrentFigure',resultfig)
+    ht=getappdata(resultfig,'atlht');
 
     if ~exist([adir,'atlas_index.mat'],'file')
         atlases=ea_genatlastable([],ea_space(options,'atlases'),options,mifix,resultfig);
     else
-        load([adir,'atlas_index.mat']);
+        atlases=ea_loadatlas(options.atlasset,resultfig,ht);
+        %load([adir,'atlas_index.mat']);
         atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options,mifix);
     end
 
@@ -85,7 +87,6 @@ for nativemni=nm % switch between native and mni space atlases.
 
     setinterpol=1;
 
-    ht=getappdata(resultfig,'atlht');
     if ~isempty(ht) % sweep nonempty atlases toolbar
         % delete(ht.Children(:));
     else

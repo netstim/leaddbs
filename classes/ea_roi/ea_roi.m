@@ -82,6 +82,9 @@ classdef ea_roi < handle
 
                 try
                     obj.htH=pobj.htH;
+                    if isempty(obj.htH)
+                        obj.htH=getappdata(obj.plotFigureH,'addht');
+                    end
                 catch
                     obj.htH=getappdata(obj.plotFigureH,'addht');
                 end
@@ -102,6 +105,10 @@ classdef ea_roi < handle
                     obj.color = ea_uisetcolor;
                 end
 
+                try
+                    obj.binary=pobj.binary;
+                end
+                
                 try
                     obj.nii=pobj.nii;
                 catch
