@@ -47,7 +47,8 @@ class SmudgeToolEffect(AbstractCircleEffect):
       self.auxTransformArray = slicer.util.array(self.auxTransformNode.GetID())
       self.previousPoint = self.xyToRAS(self.interactor.GetEventPosition())
       self.interactionPoints.InsertNextPoint(self.previousPoint)
-    elif event == 'LeftButtonReleaseEvent':
+
+    elif event == 'LeftButtonReleaseEvent' and self.smudging:
       self.smudging = False
       # resample
       self.resamplePoints()
@@ -63,6 +64,12 @@ class SmudgeToolEffect(AbstractCircleEffect):
       self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)
       self.auxTransformNode.Modified()
       # qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
+
+    elif (event == 'RightButtonPressEvent' or (event == 'KeyPressEvent' and self.interactor.GetKeySym()=='Escape')) and self.smudging:
+      self.smudging = False
+      self.interactionPoints = vtk.vtkPoints()
+      self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)
+      self.auxTransformNode.Modified()
 
     elif event == 'MouseMoveEvent':
       if self.smudging:

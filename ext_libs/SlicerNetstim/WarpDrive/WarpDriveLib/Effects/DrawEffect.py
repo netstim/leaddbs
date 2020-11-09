@@ -71,6 +71,10 @@ class AbstractDrawEffect(AbstractCircleEffect):
         self.addPoint(self.xyToRAS(xy))
         self.abortEvent(event)
 
+    elif event == 'RightButtonPressEvent' or (event == 'KeyPressEvent' and self.interactor.GetKeySym()=='Escape'):
+      self.resetPolyData()
+      self.actionState = None
+
     self.positionActors()
 
 

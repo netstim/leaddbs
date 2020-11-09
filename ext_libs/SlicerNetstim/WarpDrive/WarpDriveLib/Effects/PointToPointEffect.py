@@ -63,6 +63,11 @@ class AbstractPointToPointEffect(AbstractCircleEffect):
         p.InsertNextPoint(self.xyToRAS(xy))
         self.transform.SetTargetLandmarks(p)
 
+    elif event == 'RightButtonPressEvent' or (event == 'KeyPressEvent' and self.interactor.GetKeySym()=='Escape'):
+      self.removeAuxNodes()
+      self.resetPoints()
+      self.actionState = None
+
     # self.positionActors()
     self.sliceView.scheduleRender()
 
