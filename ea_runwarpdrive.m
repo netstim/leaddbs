@@ -31,6 +31,7 @@ do_pts_dirs = options.uipatdirs(do_pts);
 d = dir(fullfile(ea_getearoot,'ext_libs','SlicerCustom*'));
 if isempty(d)
     slicer_path = ea_runslicer(options, 5);
+    save_log = '';
 else
     if ismac
         slicer_path = fullfile(d.folder,d.name,'SlicerCustom.app','Contents','MacOS','SlicerCustom');
@@ -39,6 +40,7 @@ else
     elseif ispc
         % TODO
     end
+    save_log = [' >> ' fullfile(d.folder,d.name,[char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt'])];
 end
 
 % aditional modules
@@ -50,7 +52,7 @@ command = [slicer_path ...
            ' --python-code "slicer.util.selectModule(''WarpDrive'')" ' ...  % Change to WarpDrive module
            ea_getearoot ' "' strjoin(do_pts_dirs,'" "') '"'];               % Additional args with leadroot and pts dir
        
-system([command ' &']); % with & return control to Matlab
+system([command save_log ' &']); % with & return control to Matlab
 disp('Running WarpDrive in Slicer');
 
 end
