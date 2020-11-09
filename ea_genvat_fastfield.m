@@ -87,7 +87,7 @@ for source=S.sources
     % constvol is 1 for constant voltage and 0 for constant current.
     amp1 = stimsource.amp;
     if amp1>0
-        load([ea_getearoot,'templates',filesep,'standard_efields',filesep, Electrode_type filesep 'standard_efield_' Electrode_type '.mat']);
+        load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' Electrode_type '.mat']);
         %load([ea_getearoot,'templates',filesep,'standard_efields',filesep,Electrode_type,filesep,'standard_efield_' Electrode_type '_' amp_mode '.mat'])
         count1=1;
         for cnt=1:length(cnts)
