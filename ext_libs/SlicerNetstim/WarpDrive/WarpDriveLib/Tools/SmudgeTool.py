@@ -42,11 +42,11 @@ class SmudgeToolEffect(AbstractCircleEffect):
     AbstractCircleEffect.processEvent(self, caller, event)
 
     if event == 'LeftButtonPressEvent':
-      self.smudging = True
       self.parameterNode.GetNodeReference("OutputGridTransform").SetAndObserveTransformNodeID(self.auxTransformNode.GetID())    
       self.auxTransformArray = slicer.util.array(self.auxTransformNode.GetID())
       self.previousPoint = self.xyToRAS(self.interactor.GetEventPosition())
       self.interactionPoints.InsertNextPoint(self.previousPoint)
+      self.smudging = True
 
     elif event == 'LeftButtonReleaseEvent' and self.smudging:
       self.smudging = False
@@ -66,32 +66,33 @@ class SmudgeToolEffect(AbstractCircleEffect):
       # qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
 
     elif (event == 'RightButtonPressEvent' or (event == 'KeyPressEvent' and self.interactor.GetKeySym()=='Escape')) and self.smudging:
-      self.smudging = False
-      self.interactionPoints = vtk.vtkPoints()
-      self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)
+      self.cancelSmudging()
+
+    elif event == 'MouseMoveEvent' and self.smudging:
+
+      r = int(round(float(self.parameterNode.GetParameter("Spread")) / self.auxTransformNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0])) # Asume isotropic!
+      sphereResult = self.createSphere(r)
+      currentPoint = self.xyToRAS(self.interactor.GetEventPosition())
+      currentIndex = self.getCurrentIndex(r, currentPoint, self.auxTransfromRASToIJK)
+      self.interactionPoints.InsertNextPoint(currentPoint)
+
+      # apply to transform array
+      try:
+        self.auxTransformArray[currentIndex] += np.stack([(sphereResult) * i for i in (np.array(self.previousPoint) - np.array(currentPoint))],3) # original
+      except ValueError: # error when modifing outside the grid
+        self.cancelSmudging()
+
+      # update view
       self.auxTransformNode.Modified()
+      # update previous point
+      self.previousPoint = currentPoint
 
-    elif event == 'MouseMoveEvent':
-      if self.smudging:
 
-        r = int(round(float(self.parameterNode.GetParameter("Spread")) / self.auxTransformNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0])) # Asume isotropic!
-        sphereResult = self.createSphere(r)
-        currentPoint = self.xyToRAS(self.interactor.GetEventPosition())
-        currentIndex = self.getCurrentIndex(r, currentPoint, self.auxTransfromRASToIJK)
-        self.interactionPoints.InsertNextPoint(currentPoint)
-
-        # apply to transform array
-        try:
-          self.auxTransformArray[currentIndex] += np.stack([(sphereResult) * i for i in (np.array(self.previousPoint) - np.array(currentPoint))],3) # original
-        except ValueError:
-          # qt.QMessageBox.warning(qt.QWidget(), '', 'Out of bounds.')
-          self.smudging = False
-          self.cursorOn()
-
-        # update view
-        self.auxTransformNode.Modified()
-        # update previous point
-        self.previousPoint = currentPoint
+  def cancelSmudging(self):
+    self.smudging = False
+    self.interactionPoints = vtk.vtkPoints()
+    self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)
+    self.auxTransformNode.Modified()
 
   def resamplePoints(self):
     # resample points 
