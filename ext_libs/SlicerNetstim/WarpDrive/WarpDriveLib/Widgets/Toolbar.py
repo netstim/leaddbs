@@ -81,13 +81,20 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.addWidget(self.subjectNameLabel)
 
     #
+    # Harden Changes
+    #
+    self.addSeparator()
+    self.hardenChangesCheckBox = qt.QCheckBox("Harden Changes")
+    self.addWidget(self.hardenChangesCheckBox)
+
+    #
     # Save
     #
-    self.saveButton = qt.QPushButton("Finish and Exit")
-    self.saveButton.setFixedWidth(200)
-    self.saveButton.setStyleSheet("background-color: green")
-    self.addWidget(self.saveButton)
-    self.saveButton.connect("clicked(bool)", self.onSaveButton)
+    self.nextButton = qt.QPushButton("Exit")
+    self.nextButton.setFixedWidth(75)
+    self.nextButton.setStyleSheet("background-color: green")
+    self.addWidget(self.nextButton)
+    self.nextButton.connect("clicked(bool)", self.onNextButton)
 
     #
     # Update
@@ -242,19 +249,22 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     subjectN = int(self.parameterNode.GetParameter("subjectN"))
     subjectPaths = self.parameterNode.GetParameter("subjectPaths").split(self.parameterNode.GetParameter("separator"))
     self.subjectNameLabel.text = 'Subject: ' + os.path.split(os.path.abspath(self.parameterNode.GetParameter("subjectPath")))[-1]
-    self.saveButton.text = 'Finish and Exit' if subjectN == len(subjectPaths)-1 else 'Finish and Next'
+    self.nextButton.text = 'Exit' if subjectN == len(subjectPaths)-1 else 'Next'
     # modality
     self.modalityComboBox.setCurrentText(self.parameterNode.GetParameter("modality"))
 
 
-  def onSaveButton(self):
+  def onNextButton(self):
     ToolWidget.AbstractToolWidget.cleanEffects()
     subjectPath = self.parameterNode.GetParameter("subjectPath")
 
     if WarpDriveUtil.getPointsFromAttribute('source').GetNumberOfPoints(): # corrections made
-      LeadDBSCall.applyChanges(subjectPath, self.parameterNode.GetNodeReference("InputNode"), self.parameterNode.GetNodeReference("ImageNode")) # save changes
-      LeadDBSCall.setTargetFiducialsAsFixed() # change target fiducial as fixed
-      LeadDBSCall.saveCurrentScene(subjectPath) # save scene
+      if self.hardenChangesCheckBox.checked:
+        LeadDBSCall.applyChanges(subjectPath, self.parameterNode.GetNodeReference("InputNode"), self.parameterNode.GetNodeReference("ImageNode")) # save changes
+        LeadDBSCall.setTargetFiducialsAsFixed() # change target fiducial as fixed
+        LeadDBSCall.saveCurrentScene(subjectPath) # save scene
+      else:
+        LeadDBSCall.saveCurrentScene(subjectPath)
     else:
       if not LeadDBSCall.queryUserApproveSubject(subjectPath):
         return # user canceled 
