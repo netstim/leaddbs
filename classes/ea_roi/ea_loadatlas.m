@@ -8,11 +8,13 @@ if ~exist('ht','var')
     ht=[];
 end
 
-load([ea_space([],'atlases'),atlname,filesep,'atlas_index.mat']);
-for atl=1:size(atlases.roi,1)
-    for side=1:2
-        if ~isa(atlases.roi{atl,side},'ea_roi')
-            atlases.roi{atl,side}=ea_struct2roi(atlases.roi{atl,side},resultfig,ht);
+load([ea_space([],'atlases'),atlname,filesep,'atlas_index.mat'], 'atlases');
+if isfield(atlases, 'roi')
+    for atl=1:size(atlases.roi,1)
+        for side=1:2
+            if ~isa(atlases.roi{atl,side},'ea_roi')
+                atlases.roi{atl,side}=ea_struct2roi(atlases.roi{atl,side},resultfig,ht);
+            end
         end
     end
 end
