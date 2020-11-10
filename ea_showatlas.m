@@ -46,7 +46,6 @@ for nativemni=nm % switch between native and mni space atlases.
         atlases=ea_genatlastable([],ea_space(options,'atlases'),options,mifix,resultfig);
     else
         atlases=ea_loadatlas(options.atlasset,resultfig,ht);
-        %load([adir,'atlas_index.mat']);
         atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options,mifix);
     end
 
