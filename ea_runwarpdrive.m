@@ -34,7 +34,7 @@ if isempty(d)
     save_log = '';
 else
     if ismac
-        slicer_path = fullfile(d.folder,d.name,'SlicerCustom.app','Contents','MacOS','SlicerCustom');
+        slicer_path = fullfile(d(1).folder,d(1).name,'SlicerCustom.app','Contents','MacOS','SlicerCustom');
     elseif isunix
         % TODO
     elseif ispc
@@ -45,7 +45,7 @@ else
     if ~isfolder(log_path)
         mkdir(log_path)
     end
-    save_log = [' >> ' fullfile(log_path, [char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt'])];
+    save_log = [' >> "' fullfile(log_path, [char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt']) '"'];
 end
 
 % aditional modules
