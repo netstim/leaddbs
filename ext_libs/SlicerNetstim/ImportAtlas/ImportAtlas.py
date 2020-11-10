@@ -230,7 +230,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
   
     with h5py.File(os.path.join(atlasPath,'atlas_index.mat'),'r') as atlasFile:
       # get .mat data
-      fv = atlasFile['atlases']['fv']
+      roi = atlasFile['atlases']['roi']
       colors = atlasFile['atlases']['colors'][()]   
       try:
         colormap = atlasFile['atlases']['colormap'][()].transpose()
@@ -262,10 +262,10 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
 
         for sideIndex,sideName in zip(range(len(subName)),subName):
           # get faces and vertices data
-          ref = fv[sideIndex][index]
-          b = atlasFile[ref]
-          vertices = b['vertices'][()].transpose()
-          faces = b['faces'][()].transpose()
+          ref = roi[sideIndex][index]
+          fv = atlasFile[ref]['fv']
+          vertices = fv['vertices'][()].transpose()
+          faces = fv['faces'][()].transpose()
           # create polydata
           structurePolyData = self.createPolyData(vertices, faces)          
           # add model node
