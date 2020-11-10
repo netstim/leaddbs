@@ -27,11 +27,37 @@ end
 
 do_pts_dirs = options.uipatdirs(do_pts);
 
-slicer_path = ea_runslicer(options,5);
-d = dir(fullfile(ea_getearoot,'ext_libs','SlicerNetstim','*','CMakeLists.txt')); % aditional modules
+% get slicer / slicer custom executable
+d = dir(fullfile(ea_getearoot,'ext_libs','SlicerCustom*'));
+if isempty(d)
+    slicer_path = ea_runslicer(options, 5);
+    save_log = '';
+else
+    if ismac
+        slicer_path = fullfile(d.folder,d.name,'SlicerCustom.app','Contents','MacOS','SlicerCustom');
+    elseif isunix
+        % TODO
+    elseif ispc
+        % TODO
+    end
+    % set up to save log file
+    log_path = fullfile(d.folder, d.name, 'log');
+    if ~isfolder(log_path)
+        mkdir(log_path)
+    end
+    save_log = [' >> ' fullfile(log_path, [char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt'])];
+end
 
-command = [slicer_path ' --no-splash --additional-module-paths ' strjoin({d.folder},' ') ' --python-code "slicer.util.selectModule(''WarpDrive'')" ' ea_getearoot ' "' strjoin(do_pts_dirs,'" "') '"'];
-system([command ' &']); % with & return control to Matlab
+% aditional modules
+d = dir(fullfile(ea_getearoot,'ext_libs','SlicerNetstim','*','CMakeLists.txt')); 
+
+command = ['"' slicer_path '"' ...
+           ' --no-splash'...
+           ' --additional-module-paths "' strjoin({d.folder},'" "') '"' ...        % SlicerNetstim modules 
+           ' --python-code "slicer.util.selectModule(''WarpDrive'')" ' ...  % Change to WarpDrive module
+           ea_getearoot ' "' strjoin(do_pts_dirs,'" "') '"'];               % Additional args with leadroot and pts dir
+       
+system([command save_log ' &']); % with & return control to Matlab
 disp('Running WarpDrive in Slicer');
 
 end

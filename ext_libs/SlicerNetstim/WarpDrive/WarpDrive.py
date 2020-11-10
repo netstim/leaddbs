@@ -9,7 +9,7 @@ import numpy as np
 import importlib
 import glob
 
-from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool
+from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool
 from WarpDriveLib.Helpers import GridNodeHelper, WarpDriveUtil, LeadDBSCall
 from WarpDriveLib.Widgets import TreeView, Toolbar
 
@@ -54,7 +54,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     VTKObservationMixin.__init__(self)  # needed for parameter node observation
     self.logic = None
     self._parameterNode = None
-
+    self._updatingGUIFromParameterNode = False
 
   def setup(self):
     """
@@ -67,38 +67,33 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.layout.addWidget(uiWidget)
     self.ui = slicer.util.childWidgetVariables(uiWidget)
 
-    # Set scene in MRML widgets. Make sure that in Qt designer
-    # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
-    # "setMRMLScene(vtkMRMLScene*)" slot.
-    uiWidget.setMRMLScene(slicer.mrmlScene)
-
-
     # Add tools buttons
     toolsLayout = qt.QHBoxLayout(self.ui.toolsFrame)
 
     toolWidgets = [NoneTool.NoneToolWidget(),
                    SmudgeTool.SmudgeToolWidget(),
-                   DrawTool.DrawToolWidget()]
+                   DrawTool.DrawToolWidget(),
+                   PointToPointTool.PointToPointToolWidget()]
 
     for toolWidget in toolWidgets:
       toolsLayout.addWidget(toolWidget.effectButton)
-
-    toolsLayout.addStretch(0)
 
     # Add Tree View
     dataControlTree = TreeView.WarpDriveTreeView()
     dataControlLayout = qt.QVBoxLayout(self.ui.dataControlFrame)
     dataControlLayout.addWidget(dataControlTree)
 
+    # Set scene in MRML widgets. Make sure that in Qt designer
+    # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
+    # "setMRMLScene(vtkMRMLScene*)" slot.
+    uiWidget.setMRMLScene(slicer.mrmlScene)
+
     # Create a new parameterNode
     # This parameterNode stores all user choices in parameter values, node selections, etc.
     # so that when the scene is saved and reloaded, these settings are restored.
     self.logic = WarpDriveLogic()
-    self.ui.parameterNodeSelector.addAttribute("vtkMRMLScriptedModuleNode", "ModuleName", self.moduleName)
-    self.setParameterNode(self.logic.getParameterNode())
 
     # Connections
-    self.ui.parameterNodeSelector.connect('currentNodeChanged(vtkMRMLNode*)', self.setParameterNode)
     self.ui.calculateButton.connect('clicked(bool)', self.onCalculateButton)
     self.ui.spacingSameAsInputCheckBox.toggled.connect(lambda b: self.ui.spacingSpinBox.setEnabled(not b))
     self.ui.autoRBFRadiusCheckBox.toggled.connect(lambda b: self.ui.RBFRadiusSpinBox.setEnabled(not b))
@@ -117,18 +112,15 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # MRML Scene
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
+    self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.NodeAddedEvent, dataControlTree.updateTree)
 
     # check dependencies
-    if LeadDBSCall.checkExtensionInstall(extensionName = 'SlicerRT'):
-      return
-    if LeadDBSCall.checkExtensionInstall(extensionName = 'MarkupsToModel'):
-      return
-
-    # Lead-DBS call
-    if LeadDBSCall.updateParameterNodeFromArgs(self._parameterNode): # was called from command line
-      self.showSingleModule()
-      slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
+    if slicer.app.mainApplicationName != 'SlicerCustom':
+      if LeadDBSCall.checkExtensionInstall(extensionName = 'SlicerRT'):
+        return
+      if LeadDBSCall.checkExtensionInstall(extensionName = 'MarkupsToModel'):
+        return
 
     # Initial GUI update
     self.updateGUIFromParameterNode()
@@ -153,7 +145,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # customize mouse mode
     mouseModeToolBar = slicer.util.mainWindow().findChild('QToolBar', 'MouseModeToolBar')
     mouseModeToolBar.setVisible(1)
-    mouseModeToolBar.removeAction(mouseModeToolBar.actions()[2]) # remove place markups
+    list(map(lambda a: mouseModeToolBar.removeAction(a), filter(lambda a: a.text=="Place Fiducial", mouseModeToolBar.actions())))
 
     # viewers
     viewersToolBar = slicer.util.mainWindow().findChild('QToolBar', 'ViewersToolBar')
@@ -169,8 +161,6 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # inputs area
     self.ui.IOCollapsibleButton.setVisible(not singleModule)
-    self.ui.parameterNodeSelector.setVisible(not singleModule)
-    self.ui.parameterSetLabel.setVisible(not singleModule)
 
     if self.developerMode:
       self.reloadCollapsibleButton.setVisible(not singleModule)
@@ -198,9 +188,30 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.removeObservers()
 
   def exit(self):
+    """
+    Called each time the user opens a different module.
+    """
+    # Do not react to parameter node changes (GUI wlil be updated when the user enters into the module)
+    self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
     self.cleanTools()
 
+  def enter(self):
+    """
+    Called each time the user opens this module.
+    """
+    # Make sure parameter node exists and observed
+    self.initializeParameterNode()
+    # Lead-DBS call
+    if LeadDBSCall.updateParameterNodeFromArgs(self._parameterNode): # was called from command line
+      self.showSingleModule()
+      slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
+
   def onSceneStartClose(self, caller=None, event=None):
+    """
+    Called just before the scene is closed.
+    """
+    # Parameter node will be reset, do not use it anymore
+    self.setParameterNode(None)
     self.cleanTools()
         
   def cleanTools(self):
@@ -211,6 +222,23 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         child.setChecked(False)
         child.setAutoExclusive(True)
 
+  def onSceneEndClose(self, caller, event):
+    """
+    Called just after the scene is closed.
+    """
+    # If this module is shown while the scene is closed then recreate a new parameter node immediately
+    if self.parent.isEntered:
+      self.initializeParameterNode()
+
+  def initializeParameterNode(self):
+    """
+    Ensure parameter node exists and observed.
+    """
+    # Parameter node stores all user choices in parameter values, node selections, etc.
+    # so that when the scene is saved and reloaded, these settings are restored.
+
+    self.setParameterNode(self.logic.getParameterNode())
+
   def setParameterNode(self, inputParameterNode):
     """
     Adds observers to the selected parameter node. Observation is needed because when the
@@ -219,15 +247,6 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     if inputParameterNode:
       self.logic.setDefaultParameters(inputParameterNode)
-
-    # Set parameter node in the parameter node selector widget
-    wasBlocked = self.ui.parameterNodeSelector.blockSignals(True)
-    self.ui.parameterNodeSelector.setCurrentNode(inputParameterNode)
-    self.ui.parameterNodeSelector.blockSignals(wasBlocked)
-
-    if inputParameterNode == self._parameterNode:
-      # No change
-      return
 
     # Unobserve previusly selected parameter node and add an observer to the newly selected.
     # Changes of parameter node are observed so that whenever parameters are changed by a script or any other module
@@ -247,46 +266,27 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     The module GUI is updated to show the current state of the parameter node.
     """
 
-    # Disable all sections if no parameter node is selected
-    self.ui.IOCollapsibleButton.enabled = self._parameterNode is not None
-    self.ui.toolsCollapsibleButton.enabled = self._parameterNode is not None
-    self.ui.dataControlCollapsibleButton.enabled = self._parameterNode is not None
-    self.ui.outputCollapsibleButton.enabled = self._parameterNode is not None
-    if self._parameterNode is None:
-      self.cleanTools()
+    if self._parameterNode is None or self._updatingGUIFromParameterNode:
       return
+
+    # Make sure GUI changes do not call updateParameterNodeFromGUI (it could cause infinite loop)
+    self._updatingGUIFromParameterNode = True
 
     # Update each widget from parameter node
     # Need to temporarily block signals to prevent infinite recursion (MRML node update triggers
     # GUI update, which triggers MRML node update, which triggers GUI update, ...)
 
-    wasBlocked = self.ui.inputSelector.blockSignals(True)
     self.ui.inputSelector.setCurrentNode(self._parameterNode.GetNodeReference("InputNode"))
-    self.ui.inputSelector.blockSignals(wasBlocked)
-
-    wasBlocked = self.ui.outputSelector.blockSignals(True)
     self.ui.outputSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputGridTransform"))
-    self.ui.outputSelector.blockSignals(wasBlocked)
 
-    wasBlocked = self.ui.spreadSlider.blockSignals(True)
     spread = float(self._parameterNode.GetParameter("Spread"))
     self.ui.spreadSlider.value = spread
     if spread < self.ui.spreadSlider.minimum or spread > self.ui.spreadSlider.maximum:
       self.updateParameterNodeFromGUI()
-    self.ui.spreadSlider.blockSignals(wasBlocked)
 
-    wasBlocked = self.ui.spacingSpinBox.blockSignals(True)
     self.ui.spacingSpinBox.value = float(self._parameterNode.GetParameter("Spacing"))
-    self.ui.spacingSpinBox.blockSignals(wasBlocked)
-
-    wasBlocked = self.ui.RBFRadiusSpinBox.blockSignals(True)
     self.ui.RBFRadiusSpinBox.value = float(self._parameterNode.GetParameter("RBFRadius"))
-    self.ui.RBFRadiusSpinBox.blockSignals(wasBlocked)
-
-    wasBlocked = self.ui.stiffnessSpinBox.blockSignals(True)
     self.ui.stiffnessSpinBox.value = float(self._parameterNode.GetParameter("Stiffness"))
-    self.ui.stiffnessSpinBox.blockSignals(wasBlocked)
-
 
     self.ui.outputSelector.enabled = self._parameterNode.GetNodeReference("InputNode")
     self.ui.toolsCollapsibleButton.enabled = self._parameterNode.GetNodeReference("InputNode") and self._parameterNode.GetNodeReference("OutputGridTransform")
@@ -298,14 +298,19 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.ui.calculateButton.animateClick()
       self._parameterNode.SetParameter("Update", "false")
 
+    # All the GUI updates are done
+    self._updatingGUIFromParameterNode = False
+
   def updateParameterNodeFromGUI(self, caller=None, event=None):
     """
     This method is called when the user makes any change in the GUI.
     The changes are saved into the parameter node (so that they are restored when the scene is saved and loaded).
     """
 
-    if self._parameterNode is None:
+    if self._parameterNode is None or self._updatingGUIFromParameterNode:
       return
+
+    wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
     self._parameterNode.SetNodeReferenceID("InputNode", self.ui.inputSelector.currentNodeID)
     self._parameterNode.SetNodeReferenceID("OutputGridTransform", self.ui.outputSelector.currentNodeID)
@@ -323,6 +328,9 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     else:
       radius = self.ui.RBFRadiusSpinBox.value
     self._parameterNode.SetParameter("RBFRadius", str(radius))    
+
+    self._parameterNode.EndModify(wasModified)
+
 
   def onOutputNodeChanged(self):
     # unset if output is the same as input
@@ -377,6 +385,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     stiffness = float(self._parameterNode.GetParameter("Stiffness"))
     # mask
     maskVolume = WarpDriveUtil.getMaskVolume(auxVolumeNode)
+
+    # save current state if leadDBS call in case of error
+    if self._parameterNode.GetParameter("subjectPath") != '':
+      LeadDBSCall.saveCurrentScene(self._parameterNode.GetParameter("subjectPath"))
 
     # unset current warp
     self._parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(None)

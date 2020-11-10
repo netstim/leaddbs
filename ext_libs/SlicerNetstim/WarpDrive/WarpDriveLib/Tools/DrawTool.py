@@ -25,13 +25,9 @@ class DrawToolEffect(AbstractDrawEffect):
 
     AbstractDrawEffect.processEvent(self, caller, event) 
 
-    if event == 'LeftButtonReleaseEvent' and not self.actionState:
+    if event == 'LeftButtonReleaseEvent':
 
-      # create source and target fiducials from points or drawing
-      if self.rasPoints.GetNumberOfPoints() == 1:
-        sourceFiducial, targetFiducial = self.getSourceTargetFromPoints()
-      else:
-        sourceFiducial, targetFiducial = self.getSourceTargetFromDrawing()
+      sourceFiducial, targetFiducial = self.getSourceTargetFromDrawing()
 
       # reset
       self.resetPolyData()
@@ -50,19 +46,6 @@ class DrawToolEffect(AbstractDrawEffect):
 
       self.parameterNode.SetParameter("Update","true")
  
-
-  def getSourceTargetFromPoints(self):
-    # get clicked points from the vtk thinplate transform
-    # source
-    sourceFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-    sourceFiducial.SetControlPointPositionsWorld(self.transform.GetSourceLandmarks())
-    sourceFiducial.GetDisplayNode().SetVisibility(0)
-    # target
-    targetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
-    targetFiducial.SetControlPointPositionsWorld(self.transform.GetTargetLandmarks())
-    targetFiducial.GetDisplayNode().SetVisibility(0)
-    targetFiducial.SetName(slicer.mrmlScene.GenerateUniqueName('Point'))
-    return sourceFiducial, targetFiducial
 
   def getSourceTargetFromDrawing(self):
     # get smplae distance

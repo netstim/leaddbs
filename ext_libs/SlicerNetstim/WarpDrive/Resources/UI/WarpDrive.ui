@@ -6,40 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>327</width>
-    <height>478</height>
+    <width>361</width>
+    <height>755</height>
    </rect>
   </property>
   <layout class="QFormLayout" name="formLayout">
-   <item row="0" column="0">
-    <widget class="QLabel" name="parameterSetLabel">
-     <property name="text">
-      <string>Paremeter set: </string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="qMRMLNodeComboBox" name="parameterNodeSelector">
-     <property name="toolTip">
-      <string>Pick node to store parameter set</string>
-     </property>
-     <property name="nodeTypes">
-      <stringlist>
-       <string>vtkMRMLScriptedModuleNode</string>
-      </stringlist>
-     </property>
-     <property name="showHidden">
-      <bool>true</bool>
-     </property>
-     <property name="baseName">
-      <string>WarpDrive</string>
-     </property>
-     <property name="renameEnabled">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0" colspan="2">
+   <item row="2" column="0" colspan="2">
     <widget class="ctkCollapsibleButton" name="IOCollapsibleButton">
      <property name="text">
       <string>I / O</string>
@@ -65,6 +37,9 @@
         </property>
         <property name="showChildNodeTypes">
          <bool>false</bool>
+        </property>
+        <property name="noneEnabled">
+         <bool>true</bool>
         </property>
         <property name="addEnabled">
          <bool>false</bool>
@@ -114,7 +89,7 @@
      </layout>
     </widget>
    </item>
-   <item row="4" column="0" colspan="2">
+   <item row="3" column="0" colspan="2">
     <widget class="ctkCollapsibleButton" name="toolsCollapsibleButton">
      <property name="text">
       <string>Tools</string>
@@ -174,7 +149,7 @@
      </layout>
     </widget>
    </item>
-   <item row="8" column="0" colspan="2">
+   <item row="7" column="0" colspan="2">
     <widget class="ctkCollapsibleButton" name="dataControlCollapsibleButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -205,7 +180,7 @@
      </layout>
     </widget>
    </item>
-   <item row="11" column="0" colspan="2">
+   <item row="10" column="0" colspan="2">
     <widget class="ctkCollapsibleButton" name="outputCollapsibleButton">
      <property name="text">
       <string>Output</string>
@@ -375,7 +350,7 @@
      </layout>
     </widget>
    </item>
-   <item row="12" column="0" colspan="2">
+   <item row="11" column="0" colspan="2">
     <widget class="QPushButton" name="calculateButton">
      <property name="enabled">
       <bool>true</bool>
@@ -392,17 +367,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ctkCollapsibleButton</class>
-   <extends>QWidget</extends>
-   <header>ctkCollapsibleButton.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ctkSliderWidget</class>
-   <extends>QWidget</extends>
-   <header>ctkSliderWidget.h</header>
-  </customwidget>
-  <customwidget>
    <class>qMRMLNodeComboBox</class>
    <extends>QWidget</extends>
    <header>qMRMLNodeComboBox.h</header>
@@ -413,25 +377,20 @@
    <header>qMRMLWidget.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkSliderWidget</class>
+   <extends>QWidget</extends>
+   <header>ctkSliderWidget.h</header>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
-  <connection>
-   <sender>WarpDrive</sender>
-   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>parameterNodeSelector</receiver>
-   <slot>setMRMLScene(vtkMRMLScene*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>28</x>
-     <y>267</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>192</x>
-     <y>18</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>WarpDrive</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
