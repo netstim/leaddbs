@@ -294,7 +294,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.calculateButton.enabled = self._parameterNode.GetNodeReference("InputNode") and self._parameterNode.GetNodeReference("OutputGridTransform")
 
     # calculate warp
-    if self._parameterNode.GetParameter("Update") == "true":
+    if self._parameterNode.GetParameter("Update") == "true" and self.ui.autoUpdateCheckBox.checked:
       self.ui.calculateButton.animateClick()
       self._parameterNode.SetParameter("Update", "false")
 
