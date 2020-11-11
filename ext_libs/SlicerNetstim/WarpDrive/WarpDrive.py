@@ -78,6 +78,8 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     for toolWidget in toolWidgets:
       toolsLayout.addWidget(toolWidget.effectButton)
 
+    self.ui.drawModeMenu = toolWidgets[2].effectButton.menu()
+
     # Add Tree View
     dataControlTree = TreeView.WarpDriveTreeView()
     dataControlLayout = qt.QVBoxLayout(self.ui.dataControlFrame)
@@ -109,7 +111,8 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.autoRBFRadiusCheckBox.connect("toggled(bool)", self.updateParameterNodeFromGUI)
     self.ui.RBFRadiusSpinBox.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
     self.ui.stiffnessSpinBox.connect("valueChanged(double)", self.updateParameterNodeFromGUI)
-
+    self.ui.drawModeMenu.triggered.connect(self.updateParameterNodeFromGUI)
+    
     # MRML Scene
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
     self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
@@ -293,6 +296,8 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.outputCollapsibleButton.enabled = self._parameterNode.GetNodeReference("InputNode") and self._parameterNode.GetNodeReference("OutputGridTransform")
     self.ui.calculateButton.enabled = self._parameterNode.GetNodeReference("InputNode") and self._parameterNode.GetNodeReference("OutputGridTransform")
 
+    next(filter(lambda a: a.text == self._parameterNode.GetParameter("DrawMode"), self.ui.drawModeMenu.actions())).setChecked(True)
+
     # calculate warp
     if self._parameterNode.GetParameter("Update") == "true" and self.ui.autoUpdateCheckBox.checked:
       self.ui.calculateButton.animateClick()
@@ -314,6 +319,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     self._parameterNode.SetNodeReferenceID("InputNode", self.ui.inputSelector.currentNodeID)
     self._parameterNode.SetNodeReferenceID("OutputGridTransform", self.ui.outputSelector.currentNodeID)
+    self._parameterNode.SetParameter("DrawMode", next(filter(lambda a: a.checked, self.ui.drawModeMenu.actions())).text)
     self._parameterNode.SetParameter("Spread", str(self.ui.spreadSlider.value))
     self._parameterNode.SetParameter("Stiffness", str(self.ui.stiffnessSpinBox.value))
     # spacing
@@ -461,6 +467,8 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
       parameterNode.SetParameter("RBFRadius", "30")
     if not parameterNode.GetParameter("Stiffness"):
       parameterNode.SetParameter("Stiffness", "0.1")
+    if not parameterNode.GetParameter("DrawMode"):
+      parameterNode.SetParameter("DrawMode", 'To Nearest Model')
 
   def run(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness, maskVolume):
 

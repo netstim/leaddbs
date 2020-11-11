@@ -218,6 +218,9 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     outputNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
     self.parameterNode.SetNodeReferenceID("OutputGridTransform", outputNode.GetID())
 
+    # in case one not set
+    WarpDrive.WarpDriveLogic().setDefaultParameters(self.parameterNode)
+
     self.parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(outputNode.GetID())
 
 
