@@ -50,10 +50,20 @@ for i=1:size(center,1)
     [xgrid, ygrid, zgrid] = meshgrid(1:xspan,1:yspan,1:zspan);
     S = sqrt((xgrid-r/voxsize(1)).^2+(ygrid-r/voxsize(2)).^2+(zgrid-r/voxsize(3)).^2)<=r/mean(voxsize);
 
-    % Convert grid to indices in the image space
+    % Relocate grid in the image space
     xgrid = xgrid + round(c(1)-r/voxsize(1)-1);
     ygrid = ygrid + round(c(2)-r/voxsize(2)-1);
     zgrid = zgrid + round(c(3)-r/voxsize(3)-1);
+
+    % Fix grid outside of the image space
+    xgrid(xgrid<1) = 1;
+    xgrid(xgrid>size(ref.img,1)) = size(ref.img,1);
+    ygrid(ygrid<1) = 1;
+    ygrid(ygrid>size(ref.img,2)) = size(ref.img,2);
+    zgrid(zgrid<1) = 1;
+    zgrid(zgrid>size(ref.img,3)) = size(ref.img,3);
+
+    % Convert grid to indices in the image space
     gridInd = sub2ind(size(ref.img), xgrid, ygrid, zgrid);
 
     % Find image indices within the sphere
