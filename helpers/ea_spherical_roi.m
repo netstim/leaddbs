@@ -30,7 +30,7 @@ end
 
 % Preset background
 if ~exist('bg','var')
-    ref.img(:) = nan;
+    ref.img(:) = 0;
 else
     ref.img = bg;
 end
