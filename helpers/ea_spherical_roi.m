@@ -1,14 +1,18 @@
 function ea_spherical_roi(fname,mni,r,crop,template,bg)
+
+% Crop the generate ROI image or not
 if ~exist('crop','var')
     crop=1;
 end
 
+% Reference template image, use MNI t1 by default
 if exist('template','var')
     Vol=ea_load_nii(template);
 else
     Vol=ea_load_nii([ea_space,'t1.nii']);
 end
 
+% Preset background
 if ~exist('bg','var')
     Vol.img(:)=nan;
 else
@@ -46,6 +50,8 @@ for a=1:size(mni,1)
             end
         end
     end
+
+    % Write out NIfTI
     Vol.img(Vol.img~=1)=0;
     Vol.dt =[16,0];
     Vol.fname=fname;
@@ -53,6 +59,7 @@ for a=1:size(mni,1)
     ea_write_nii(Vol);
 end
 
+% Crop ROI image
 if crop
     ea_crop_nii(fname)
 end
