@@ -1,4 +1,4 @@
-function ea_spherical_roi(fname,mni,r,crop,template,bg)
+function roi = ea_spherical_roi(fname,center,r,crop,ref,bg)
 
 % Crop the generate ROI image or not
 if ~exist('crop','var')
@@ -7,24 +7,22 @@ end
 
 % Reference template image, use MNI t1 by default
 if exist('template','var')
-    Vol=ea_load_nii(template);
+    ref = ea_load_nii(ref);
 else
-    Vol=ea_load_nii([ea_space,'t1.nii']);
+    ref = ea_load_nii([ea_space,'t1.nii']);
 end
 
 % Preset background
 if ~exist('bg','var')
-    Vol.img(:)=nan;
+    ref.img(:)=nan;
 else
-    Vol.img(:)=bg;
+    ref.img(:)=bg;
 end
 
-voxmm = Vol.voxsize;
-for a=1:size(mni,1)
-    X= mni(a,1); Y = mni(a,2); Z = mni(a,3);
-    XYZ=[X,Y,Z,ones(length(X),1)]';
-    XYZ=Vol.mat\XYZ; % to voxel space.
-    XYZ=(XYZ(1:3,:)');
+voxmm = ref.voxsize;
+for i=1:size(center,1)
+    % mm to voxel conversion
+    XYZ = ea_mm2vox(center(i,:), ref.mat);
 
     xe = XYZ(1)-round(2*r/voxmm(1)):XYZ(1)+round(2*r/voxmm(1));
     ye = XYZ(2)-round(2*r/voxmm(2)):XYZ(2)+round(2*r/voxmm(2));
@@ -38,13 +36,13 @@ for a=1:size(mni,1)
     ziz=squeeze(zz(1,1,:)+round(XYZ(3)-2*r/voxmm(1)));
 
     try
-        Vol.img(xix,yiy,ziz)=S;
+        ref.img(xix,yiy,ziz)=S;
     catch % negative indices.
         for xxx=1:length(xix)
             for yyy=1:length(yiy)
                 for zzz=1:length(ziz)
                     try
-                        Vol.img(xix(xxx),yiy(yyy),ziz(zzz))=S(xxx,yyy,zzz);
+                        ref.img(xix(xxx),yiy(yyy),ziz(zzz))=S(xxx,yyy,zzz);
                     end
                 end
             end
@@ -52,11 +50,11 @@ for a=1:size(mni,1)
     end
 
     % Write out NIfTI
-    Vol.img(Vol.img~=1)=0;
-    Vol.dt =[16,0];
-    Vol.fname=fname;
-    Vol.img=Vol.img(1:Vol.dim(1),1:Vol.dim(2),1:Vol.dim(3));
-    ea_write_nii(Vol);
+    ref.img(ref.img~=1) = 0;
+    ref.dt = [16,0];
+    ref.img = ref.img(1:ref.dim(1),1:ref.dim(2),1:ref.dim(3));
+    ref.fname = fname;
+    ea_write_nii(ref);
 end
 
 % Crop ROI image
