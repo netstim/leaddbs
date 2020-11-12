@@ -11,7 +11,7 @@ end
 if size(center,1)>1
     if length(radius)==1
         radius = repmat(radius, 1, size(center,1));
-    else
+    elseif size(center,1)~=length(radius)
         error('Length of centers doesn''t match length of radius!');
     end
 end
