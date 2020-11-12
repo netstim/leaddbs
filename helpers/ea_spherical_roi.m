@@ -30,9 +30,9 @@ end
 
 % Preset background
 if ~exist('bg','var')
-    ref.img(:)=nan;
+    ref.img(:) = nan;
 else
-    ref.img(:)=bg;
+    ref.img = bg;
 end
 
 voxsize = ref.voxsize;
@@ -73,9 +73,8 @@ for i=1:size(center,1)
     ref.img(sphereInd) = 1;
 end
 
-% Set ROI NIfTI structure
+% Adapt ROI NIfTI structure
 ref.dt = [16,0];
-ref.img = ref.img(1:ref.dim(1),1:ref.dim(2),1:ref.dim(3));
 ref.fname = fname;
 
 roi = ref;
