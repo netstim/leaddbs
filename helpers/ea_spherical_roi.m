@@ -46,11 +46,11 @@ for i=1:size(center,1)
     ze = XYZ(3)-round(r/voxsize(3)):XYZ(3)+round(r/voxsize(3));
 
     [xx, yy, zz] = meshgrid(1:length(xe),1:length(ye),1:length(ze));
-    S = sqrt((xx-r/voxsize(1)).^2+(yy-r/voxsize(2)).^2+(zz-r/voxsize(3)).^2)<=r/voxsize(1);
+    S = sqrt((xx-r/voxsize(1)).^2+(yy-r/voxsize(2)).^2+(zz-r/voxsize(3)).^2)<=r/mean(voxsize);
 
-    xix=squeeze(xx(1,:,1)+round(XYZ(1)-r/voxsize(1)))';
-    yiy=squeeze(yy(:,1,1)+round(XYZ(2)-r/voxsize(1)));
-    ziz=squeeze(zz(1,1,:)+round(XYZ(3)-r/voxsize(1)));
+    xix=squeeze(xx(1,:,1)+round(XYZ(1)-r/voxsize(1)-1))';
+    yiy=squeeze(yy(:,1,1)+round(XYZ(2)-r/voxsize(2)-1));
+    ziz=squeeze(zz(1,1,:)+round(XYZ(3)-r/voxsize(3)-1));
 
     try
         ref.img(xix,yiy,ziz)=S;
