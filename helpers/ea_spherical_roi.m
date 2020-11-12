@@ -22,7 +22,7 @@ if ~exist('crop','var')
 end
 
 % Reference template image, use MNI t1 by default
-if exist('template','var')
+if exist('ref','var')
     ref = ea_load_nii(ref);
 else
     ref = ea_load_nii([ea_space,'t1.nii']);
