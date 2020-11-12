@@ -80,6 +80,6 @@ if writeoutNii
     ea_write_nii(ref);
     % Crop ROI image
     if crop
-        ea_crop_nii(fname)
+        ea_autocrop(fname)
     end
 end
