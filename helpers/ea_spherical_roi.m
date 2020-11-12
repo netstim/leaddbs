@@ -48,7 +48,7 @@ for i=1:size(center,1)
 
     % Create grid, Contruct sphere within the grid
     [xgrid, ygrid, zgrid] = meshgrid(1:xspan,1:yspan,1:zspan);
-    S = sqrt((xgrid-r/voxsize(1)).^2+(ygrid-r/voxsize(2)).^2+(zgrid-r/voxsize(3)).^2)<=r/mean(voxsize);
+    S = sqrt((xgrid-1-r/voxsize(1)).^2+(ygrid-1-r/voxsize(2)).^2+(zgrid-1-r/voxsize(3)).^2)<=r/mean(voxsize);
 
     % Relocate grid in the image space
     xgrid = xgrid + round(c(1)-r/voxsize(1)-1);
