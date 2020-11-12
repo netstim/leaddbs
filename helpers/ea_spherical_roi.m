@@ -74,7 +74,6 @@ for i=1:size(center,1)
 end
 
 % Set ROI NIfTI structure
-ref.img(ref.img~=1) = 0;
 ref.dt = [16,0];
 ref.img = ref.img(1:ref.dim(1),1:ref.dim(2),1:ref.dim(3));
 ref.fname = fname;
