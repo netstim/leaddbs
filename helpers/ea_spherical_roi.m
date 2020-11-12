@@ -38,19 +38,19 @@ end
 voxsize = ref.voxsize;
 for i=1:size(center,1)
     % mm to voxel conversion
-    XYZ = ea_mm2vox(center(i,:), ref.mat);
+    c = ea_mm2vox(center(i,:), ref.mat);
     r = radius(i);
 
-    xe = XYZ(1)-round(r/voxsize(1)):XYZ(1)+round(r/voxsize(1));
-    ye = XYZ(2)-round(r/voxsize(2)):XYZ(2)+round(r/voxsize(2));
-    ze = XYZ(3)-round(r/voxsize(3)):XYZ(3)+round(r/voxsize(3));
+    xspan = round(r/voxsize(1))*2 + 1;
+    yspan = round(r/voxsize(2))*2 + 1;
+    zspan = round(r/voxsize(3))*2 + 1;
 
-    [xx, yy, zz] = meshgrid(1:length(xe),1:length(ye),1:length(ze));
-    S = sqrt((xx-r/voxsize(1)).^2+(yy-r/voxsize(2)).^2+(zz-r/voxsize(3)).^2)<=r/mean(voxsize);
+    [xgrid, ygrid, zgrid] = meshgrid(1:xspan,1:yspan,1:zspan);
+    S = sqrt((xgrid-r/voxsize(1)).^2+(ygrid-r/voxsize(2)).^2+(zgrid-r/voxsize(3)).^2)<=r/mean(voxsize);
 
-    xix=squeeze(xx(1,:,1)+round(XYZ(1)-r/voxsize(1)-1))';
-    yiy=squeeze(yy(:,1,1)+round(XYZ(2)-r/voxsize(2)-1));
-    ziz=squeeze(zz(1,1,:)+round(XYZ(3)-r/voxsize(3)-1));
+    xix=squeeze(xgrid(1,:,1)+round(c(1)-r/voxsize(1)-1))';
+    yiy=squeeze(ygrid(:,1,1)+round(c(2)-r/voxsize(2)-1));
+    ziz=squeeze(zgrid(1,1,:)+round(c(3)-r/voxsize(3)-1));
 
     try
         ref.img(xix,yiy,ziz)=S;
