@@ -8,8 +8,12 @@ else
 end
 
 % Expand radius in case multiple centers specified
-if size(center,1)>1 && length(radius)==1
-    radius = repmat(radius, 1, size(center,1));
+if size(center,1)>1
+    if length(radius)==1
+        radius = repmat(radius, 1, size(center,1));
+    else
+        error('Length of centers doesn''t match length of radius!');
+    end
 end
 
 % Crop the generate ROI image or not
