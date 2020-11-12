@@ -41,30 +41,26 @@ for i=1:size(center,1)
     c = ea_mm2vox(center(i,:), ref.mat);
     r = radius(i);
 
+    % Span along axes
     xspan = round(r/voxsize(1))*2 + 1;
     yspan = round(r/voxsize(2))*2 + 1;
     zspan = round(r/voxsize(3))*2 + 1;
 
+    % Create grid, Contruct sphere within the grid
     [xgrid, ygrid, zgrid] = meshgrid(1:xspan,1:yspan,1:zspan);
     S = sqrt((xgrid-r/voxsize(1)).^2+(ygrid-r/voxsize(2)).^2+(zgrid-r/voxsize(3)).^2)<=r/mean(voxsize);
 
-    xix=squeeze(xgrid(1,:,1)+round(c(1)-r/voxsize(1)-1))';
-    yiy=squeeze(ygrid(:,1,1)+round(c(2)-r/voxsize(2)-1));
-    ziz=squeeze(zgrid(1,1,:)+round(c(3)-r/voxsize(3)-1));
+    % Convert grid to indices in the image space
+    xgrid = xgrid + round(c(1)-r/voxsize(1)-1);
+    ygrid = ygrid + round(c(2)-r/voxsize(2)-1);
+    zgrid = zgrid + round(c(3)-r/voxsize(3)-1);
+    gridInd = sub2ind(size(ref.img), xgrid, ygrid, zgrid);
 
-    try
-        ref.img(xix,yiy,ziz)=S;
-    catch % negative indices.
-        for xxx=1:length(xix)
-            for yyy=1:length(yiy)
-                for zzz=1:length(ziz)
-                    try
-                        ref.img(xix(xxx),yiy(yyy),ziz(zzz))=S(xxx,yyy,zzz);
-                    end
-                end
-            end
-        end
-    end
+    % Find image indices within the sphere
+    sphereInd = unique(gridInd(S));
+
+    % Set sphere ROI in image
+    ref.img(sphereInd) = 1;
 end
 
 % Set ROI NIfTI structure
