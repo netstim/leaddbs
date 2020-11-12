@@ -1,10 +1,13 @@
 function roi = ea_spherical_roi(fname,center,radius,crop,ref,bg)
 
+% Write out NIfTI or not
 if isempty(fname)
     writeoutNii = 0;
 else
     writeoutNii = 1;
 end
+
+% Expand radius in case multiple centers specified
 if size(center,1)>1 && length(radius)==1
     radius = repmat(radius, 1, size(center,1));
 end
