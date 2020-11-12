@@ -1,5 +1,10 @@
 function roi = ea_spherical_roi(fname,center,r,crop,ref,bg)
 
+if isempty(fname)
+    writeoutNii = 0;
+else
+    writeoutNii = 1;
+end
 % Crop the generate ROI image or not
 if ~exist('crop','var')
     crop=1;
@@ -55,8 +60,14 @@ ref.img(ref.img~=1) = 0;
 ref.dt = [16,0];
 ref.img = ref.img(1:ref.dim(1),1:ref.dim(2),1:ref.dim(3));
 ref.fname = fname;
-ea_write_nii(ref);
-% Crop ROI image
-if crop
-    ea_crop_nii(fname)
+
+roi = ref;
+
+% Write out NIfTI
+if writeoutNii
+    ea_write_nii(ref);
+    % Crop ROI image
+    if crop
+        ea_crop_nii(fname)
+    end
 end
