@@ -1,10 +1,14 @@
-function roi = ea_spherical_roi(fname,center,r,crop,ref,bg)
+function roi = ea_spherical_roi(fname,center,radius,crop,ref,bg)
 
 if isempty(fname)
     writeoutNii = 0;
 else
     writeoutNii = 1;
 end
+if size(center,1)>1 && length(radius)==1
+    radius = repmat(radius, 1, size(center,1));
+end
+
 % Crop the generate ROI image or not
 if ~exist('crop','var')
     crop=1;
@@ -28,6 +32,7 @@ voxmm = ref.voxsize;
 for i=1:size(center,1)
     % mm to voxel conversion
     XYZ = ea_mm2vox(center(i,:), ref.mat);
+    r = radius(i);
 
     xe = XYZ(1)-round(2*r/voxmm(1)):XYZ(1)+round(2*r/voxmm(1));
     ye = XYZ(2)-round(2*r/voxmm(2)):XYZ(2)+round(2*r/voxmm(2));
