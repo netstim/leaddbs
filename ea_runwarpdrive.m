@@ -33,6 +33,7 @@ if isempty(d)
     slicer_path = ea_runslicer(options, 5);
     save_log = '';
 else
+    d = d([d.isdir]); % keep directories only
     if ismac
         slicer_path = fullfile(d(1).folder,d(1).name,'SlicerCustom.app','Contents','MacOS','SlicerCustom');
     elseif isunix
@@ -41,7 +42,7 @@ else
         % TODO
     end
     % set up to save log file
-    log_path = fullfile(d.folder, d.name, 'log');
+    log_path = fullfile(d(1).folder, d(1).name, 'log');
     if ~isfolder(log_path)
         mkdir(log_path)
     end
@@ -56,7 +57,7 @@ command = ['"' slicer_path '"' ...
            ' --ignore-slicerrc'...
            ' --additional-module-paths "' strjoin({d.folder},'" "') '"' ...        % SlicerNetstim modules 
            ' --python-code "slicer.util.selectModule(''WarpDrive'')" ' ...  % Change to WarpDrive module
-           ea_getearoot ' "' strjoin(do_pts_dirs,'" "') '"'];               % Additional args with leadroot and pts dir
+           ' "' strjoin([ea_getearoot; do_pts_dirs],'" "') '"'];               % Additional args with leadroot and pts dir
        
 system([command save_log ' &']); % with & return control to Matlab
 disp('Running WarpDrive in Slicer');
