@@ -112,6 +112,7 @@ if ~obj.binary
     ea_javacomponent(jSlider{1},[0,130,handles.roicontrol.Position(3)-1,45]);
     set(jSlider{1}, 'Value', getmaxminthresh(obj), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
     hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
+    hjSlider{1}.Background=javax.swing.plaf.ColorUIResource(1,1,1);
     set(hjSlider{1}, 'MouseReleasedCallback', {@sliderthresholdchange,obj,handles});  %alternative
     set(hjSlider{1}, 'StateChangedCallback', {@sliderthresholdchangetxt,obj,handles});  %alternative
 else
@@ -124,6 +125,7 @@ jSlider{2} = javax.swing.JSlider(0,100);
 ea_javacomponent(jSlider{2},[0,65,handles.roicontrol.Position(3)-1,45]);
 set(jSlider{2}, 'Value', obj.alpha*100, 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
 hjSlider{2} = handle(jSlider{2}, 'CallbackProperties');
+hjSlider{2}.Background=javax.swing.plaf.ColorUIResource(1,1,1);
 set(hjSlider{2}, 'StateChangedCallback', {@slideralphachange,obj,handles});  %alternative
 
 % smooth
@@ -132,6 +134,7 @@ jSlider{3} = javax.swing.JSlider(0,100);
 ea_javacomponent(jSlider{3},[0,0,handles.roicontrol.Position(3)-1,45]);
 set(jSlider{3}, 'Value', round(obj.smooth*2), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
 hjSlider{3} = handle(jSlider{3}, 'CallbackProperties');
+hjSlider{3}.Background=javax.swing.plaf.ColorUIResource(1,1,1);
 set(hjSlider{3}, 'StateChangedCallback', {@slidersmoothchangetxt,obj,handles});  %alternative
 set(hjSlider{3}, 'MouseReleasedCallback', {@slidersmoothchange,obj,handles});  %alternative
 set(0,'CurrentFigure',obj.plotFigureH);
