@@ -109,7 +109,7 @@ set(handles.roicontrol,'name',obj.name);
 if ~obj.binary
     % threshold
     jSlider{1} = javax.swing.JSlider(0,100);
-    ea_javacomponent(jSlider{1},[0,130,200,45]);
+    ea_javacomponent(jSlider{1},[0,130,handles.roicontrol.Position(3)-1,45]);
     set(jSlider{1}, 'Value', getmaxminthresh(obj), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
     hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
     set(hjSlider{1}, 'MouseReleasedCallback', {@sliderthresholdchange,obj,handles});  %alternative
@@ -121,7 +121,7 @@ end
 % alpha
 set(0,'CurrentFigure',handles.roicontrol);
 jSlider{2} = javax.swing.JSlider(0,100);
-ea_javacomponent(jSlider{2},[0,65,200,45]);
+ea_javacomponent(jSlider{2},[0,65,handles.roicontrol.Position(3)-1,45]);
 set(jSlider{2}, 'Value', obj.alpha*100, 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
 hjSlider{2} = handle(jSlider{2}, 'CallbackProperties');
 set(hjSlider{2}, 'StateChangedCallback', {@slideralphachange,obj,handles});  %alternative
@@ -129,7 +129,7 @@ set(hjSlider{2}, 'StateChangedCallback', {@slideralphachange,obj,handles});  %al
 % smooth
 set(0,'CurrentFigure',handles.roicontrol);
 jSlider{3} = javax.swing.JSlider(0,100);
-ea_javacomponent(jSlider{3},[0,0,200,45]);
+ea_javacomponent(jSlider{3},[0,0,handles.roicontrol.Position(3)-1,45]);
 set(jSlider{3}, 'Value', round(obj.smooth*2), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
 hjSlider{3} = handle(jSlider{3}, 'CallbackProperties');
 set(hjSlider{3}, 'StateChangedCallback', {@slidersmoothchangetxt,obj,handles});  %alternative
