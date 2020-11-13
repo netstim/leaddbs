@@ -70,9 +70,8 @@ set(0,'CurrentFigure',handles.roicontrol);
 set(handles.roicontrol,'CurrentAxes',handles.histax);
 axis off
 
-    handles.showhide.Value=ea_bool2onoff(obj.Visible);
-
-    handles.solidcolor.Visible=ea_bool2onoff(~obj.binary);
+handles.showhide.Value=ea_bool2onoff(obj.Visible);
+handles.solidcolor.Visible=ea_bool2onoff(~obj.binary);
     
 if ~obj.binary
     hist(nzeros);
@@ -108,15 +107,15 @@ set(0,'CurrentFigure',handles.roicontrol);
 set(handles.roicontrol,'name',obj.name);
 %% sliders:
 if ~obj.binary
-% threshold
-jSlider{1} = javax.swing.JSlider(0,100);
-ea_javacomponent(jSlider{1},[0,130,200,45]);
-set(jSlider{1}, 'Value', getmaxminthresh(obj), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
-hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
-set(hjSlider{1}, 'MouseReleasedCallback', {@sliderthresholdchange,obj,handles});  %alternative
-set(hjSlider{1}, 'StateChangedCallback', {@sliderthresholdchangetxt,obj,handles});  %alternative
+    % threshold
+    jSlider{1} = javax.swing.JSlider(0,100);
+    ea_javacomponent(jSlider{1},[0,130,200,45]);
+    set(jSlider{1}, 'Value', getmaxminthresh(obj), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+    hjSlider{1} = handle(jSlider{1}, 'CallbackProperties');
+    set(hjSlider{1}, 'MouseReleasedCallback', {@sliderthresholdchange,obj,handles});  %alternative
+    set(hjSlider{1}, 'StateChangedCallback', {@sliderthresholdchangetxt,obj,handles});  %alternative
 else
-   obj.threshold=obj.max/2;
+    obj.threshold=obj.max/2;
 end
 
 % alpha
