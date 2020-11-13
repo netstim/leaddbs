@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 23-Mar-2020 14:04:53
+% Last Modified by GUIDE v2.5 13-Nov-2020 13:22:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1706,16 +1706,6 @@ function specify3doptions_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 ea_lg_3dsetting(handles.leadfigure)
-
-
-% --- Executes on button press in targetreport.
-function targetreport_Callback(hObject, eventdata, handles)
-% hObject    handle to targetreport (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ea_refresh_lg(handles);
-M=getappdata(gcf,'M');
-ea_gentargetreport(M);
 
 
 % --- Executes on button press in exportstats.
