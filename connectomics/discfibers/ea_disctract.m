@@ -31,6 +31,7 @@ classdef ea_disctract < handle
         % results.(connectomename).spearman_peak.fibsval % connection weights for each fiber to each VTA
         % results.(connectomename).spearman_5peak.fibsval % connection weights for each fiber to each VTA
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
+        basepredictionon = 'mean of scores';
         fiberdrawn % struct contains fibercell and vals drawn in the resultfig
         drawobject % actual streamtube handle
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
@@ -277,16 +278,33 @@ classdef ea_disctract < handle
                     if ~isempty(vals{1,side})
                         switch obj.statmetric % also differentiate between methods in the prediction part.
                             case 1 % ttests
-                                Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)));
-                            case 2 % efields
-                                switch lower(obj.efieldmetric)
-                                    case 'mean'
+                                switch lower(obj.basepredictionon)
+                                    case 'mean of scores'
                                         Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
-                                    case 'sum'
+                                    case 'sum of scores'
                                         Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
-                                    case 'peak'
+                                    case 'peak of scores'
                                         Ihat(test,side) = ea_nanmax(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
-                                    case 'peak 5%'
+                                    case 'peak 5% of scores'
+                                        ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test));
+                                        ihatvals=sort(ihatvals);
+                                        Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                end
+                            case 2 % efields
+                                switch lower(obj.basepredictionon)
+                                    case 'profile of scores: spearman'
+                                        Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','spearman'));
+                                    case 'profile of scores: pearson'
+                                        Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','pearson'));
+                                   case 'profile of scores: bend'
+                                        Ihat(test,side) = atanh(ea_bendcorr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test))));
+                                    case 'mean of scores'
+                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'sum of scores'
+                                        Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak of scores'
+                                        Ihat(test,side) = ea_nanmax(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak 5% of scores'
                                         ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test));
                                         ihatvals=sort(ihatvals);
                                         Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
