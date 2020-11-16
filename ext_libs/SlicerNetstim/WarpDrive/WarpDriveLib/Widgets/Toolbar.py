@@ -153,6 +153,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
   def initFromScene(self):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     subjectPaths = self.parameterNode.GetParameter("subjectPaths")
+    subjectPath = self.parameterNode.GetParameter("subjectPath")
     subjectPathSep = self.parameterNode.GetParameter("separator")
     MNIPath = self.parameterNode.GetParameter("MNIPath")
     MNIAtlasPath = self.parameterNode.GetParameter("MNIAtlasPath")
@@ -163,29 +164,21 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       slicer.util.loadScene(os.path.join(self.parameterNode.GetParameter("subjectPath"),'WarpDrive','WarpDriveScene.mrml'))
     except:
       pass
+
     # set input node
     gridTransformNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLGridTransformNode')
     gridTransformNodes.UnRegister(slicer.mrmlScene)
     for i in range(gridTransformNodes.GetNumberOfItems()):
       gridTransformNode = gridTransformNodes.GetItemAsObject(i)
-      if  gridTransformNode.GetStorageNode() \
-          and gridTransformNode.GetStorageNode().GetFileName() \
-          and (os.path.split(gridTransformNode.GetStorageNode().GetFileName())[0] == self.parameterNode.GetParameter("subjectPath")):
-        self.parameterNode.SetNodeReferenceID("InputNode", gridTransformNode.GetID())
-      else:
+      if gridTransformNode.GetID() != self.parameterNode.GetNodeReferenceID("InputNode"):
         slicer.mrmlScene.RemoveNode(gridTransformNode)
     # set image and template
     volumeNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLVolumeNode')
     volumeNodes.UnRegister(slicer.mrmlScene)
     for i in range(volumeNodes.GetNumberOfItems()):
       volumeNode = volumeNodes.GetItemAsObject(i)
-      if volumeNode.GetStorageNode() and (os.path.split(volumeNode.GetStorageNode().GetFileName())[0] == self.parameterNode.GetParameter("subjectPath")):
-        self.parameterNode.SetNodeReferenceID("ImageNode", volumeNode.GetID())
-      elif volumeNode.GetStorageNode() and (os.path.split(volumeNode.GetStorageNode().GetFileName())[0] == self.parameterNode.GetParameter("MNIPath")):
-        self.parameterNode.SetNodeReferenceID("TemplateNode", volumeNode.GetID())
-      elif 'correction' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(volumeNode)):
-        pass
-      else:
+      if volumeNode.GetID() not in [self.parameterNode.GetNodeReferenceID("ImageNode"), self.parameterNode.GetNodeReferenceID("TemplateNode")] and \
+        'correction' not in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(volumeNode)):
         slicer.mrmlScene.RemoveNode(volumeNode)
     # get atlas name and delete folders
     atlasName = None
@@ -212,6 +205,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
     # restore parameters
     self.parameterNode.SetParameter("subjectPaths", subjectPaths)
+    self.parameterNode.SetParameter("subjectPath", subjectPath)
     self.parameterNode.SetParameter("separator", subjectPathSep)
     self.parameterNode.SetParameter("MNIPath", MNIPath)
     self.parameterNode.SetParameter("MNIAtlasPath", MNIAtlasPath)
