@@ -154,7 +154,10 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     subjectPaths = self.parameterNode.GetParameter("subjectPaths")
     subjectPathSep = self.parameterNode.GetParameter("separator")
-    
+    MNIPath = self.parameterNode.GetParameter("MNIPath")
+    MNIAtlasPath = self.parameterNode.GetParameter("MNIAtlasPath")
+    antsApplyTransformsPath = self.parameterNode.GetParameter("antsApplyTransformsPath")
+
     # load previous scene
     try:
       slicer.util.loadScene(os.path.join(self.parameterNode.GetParameter("subjectPath"),'WarpDrive','WarpDriveScene.mrml'))
@@ -207,12 +210,16 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       if 'correction' not in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(fiducialNode)):
         slicer.mrmlScene.RemoveNode(fiducialNode)
 
-    # load atlas
-    if atlasName is not None:
-      ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName))
-
+    # restore parameters
     self.parameterNode.SetParameter("subjectPaths", subjectPaths)
     self.parameterNode.SetParameter("separator", subjectPathSep)
+    self.parameterNode.SetParameter("MNIPath", MNIPath)
+    self.parameterNode.SetParameter("MNIAtlasPath", MNIAtlasPath)
+    self.parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
+
+    # load atlas
+    if atlasName is not None and os.path.isdir(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName)):
+      ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName))
 
     # init output
     outputNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
