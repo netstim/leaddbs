@@ -12,12 +12,16 @@ classdef ea_disctract < handle
         shownegamount = [25 25] % two entries for right and left
         connthreshold = 20
         efieldthreshold = 2500
-        statmetric = 1 % stats metric to use, 1 = ttest, 2 = spearman
+        statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations
+        corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [1,0,0] % positive main color
         negcolor = [0,0,1] % negative main color
         splitbygroup = 0
-
+        showsignificantonly = 0
+        alphalevel = 0.05
+        multcompstrategy = 'FDR'; % could be 'Bonferroni'
+        
         results
         % Subfields:
         % results.(connectomename).fibcell: cell of all fibers connected, sorted by side
@@ -26,7 +30,8 @@ classdef ea_disctract < handle
         % results.(connectomename).spearman_mean.fibsval % connection weights for each fiber to each VTA
         % results.(connectomename).spearman_peak.fibsval % connection weights for each fiber to each VTA
         % results.(connectomename).spearman_5peak.fibsval % connection weights for each fiber to each VTA
-
+        cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
+        basepredictionon = 'mean of scores';
         fiberdrawn % struct contains fibercell and vals drawn in the resultfig
         drawobject % actual streamtube handle
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
@@ -35,7 +40,6 @@ classdef ea_disctract < handle
         mirrorsides = 0 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
         responsevar % response variable
         responsevarlabel % label of response variable
-        multresponsevarneg = 0 % multiply response variable by -1
         covars = {} % covariates
         covarlabels = {} % covariate labels
         analysispath % where to store results
@@ -253,18 +257,69 @@ classdef ea_disctract < handle
                 end
 
                 if ~exist('Iperm', 'var')
-                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+                    if obj.cvlivevisualize
+                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+                        obj.draw(vals,fibcell);
+                        drawnow;
+                    else
+                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+                    end
                 else
-                    [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
+                    if obj.cvlivevisualize
+                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
+                        obj.draw(vals,fibcell);
+                        drawnow;
+                    else
+                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
+                    end
                 end
 
                 for side=1:2
                     if ~isempty(vals{1,side})
-                    	Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)));
+                        switch obj.statmetric % also differentiate between methods in the prediction part.
+                            case 1 % ttests
+                                switch lower(obj.basepredictionon)
+                                    case 'mean of scores'
+                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'sum of scores'
+                                        Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak of scores'
+                                        Ihat(test,side) = ea_nanmax(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak 5% of scores'
+                                        ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test));
+                                        ihatvals=sort(ihatvals);
+                                        Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                end
+                            case 2 % efields
+                                switch lower(obj.basepredictionon)
+                                    case 'profile of scores: spearman'
+                                        Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','spearman'));
+                                    case 'profile of scores: pearson'
+                                        Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','pearson'));
+                                   case 'profile of scores: bend'
+                                        Ihat(test,side) = atanh(ea_bendcorr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test))));
+                                    case 'mean of scores'
+                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'sum of scores'
+                                        Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak of scores'
+                                        Ihat(test,side) = ea_nanmax(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak 5% of scores'
+                                        ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test));
+                                        ihatvals=sort(ihatvals);
+                                        Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                end
+                        end
                     end
                 end
             end
 
+            
+            % restore original view in case of live drawing
+            if obj.cvlivevisualize
+                obj.draw;
+            end
+            
             if cvp.NumTestSets == 1
                 Ihat = Ihat(test,:);
                 I = I(test);
@@ -332,8 +387,10 @@ classdef ea_disctract < handle
             obj.drawobject=rd;
         end
 
-        function draw(obj)
-            [vals,fibcell]=ea_discfibers_calcstats(obj);
+        function draw(obj,vals,fibcell)
+            if ~exist('vals','var')
+                [vals,fibcell]=ea_discfibers_calcstats(obj);
+            end
             obj.fiberdrawn.fibcell = fibcell;
             obj.fiberdrawn.vals = vals;
 

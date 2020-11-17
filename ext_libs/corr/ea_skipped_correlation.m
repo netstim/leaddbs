@@ -70,7 +70,6 @@ end
 gval = sqrt(chi2inv(0.975,2)); % in fact depends on size(X,2) but here always = 2
 
 %% compute
-ea_dispercent(0,'Iterating voxels');
 for column = 1:p
     
     % get the centre of the bivariate distributions
@@ -141,6 +140,4 @@ for column = 1:p
         end
    
         %disp(num2str(r(column)));
-        ea_dispercent(column/p);
 end
-ea_dispercent(1,'end');
