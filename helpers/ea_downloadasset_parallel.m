@@ -4,7 +4,7 @@ downloadaborted = false;
 wbhandle = waitbar(0, 'Starting parallel worker...', ...
         'Name', sprintf('Downloading %s', assetname), ..., 
         'CreateCancelBtn', @(obj, event) ea_canceldownload());
-a = b;    
+    
 delete(gcp('nocreate'))         % delete any existing parallel workers
 p = parpool(2);                 % create 2 workers
 q = parallel.pool.DataQueue;    % create data queue so we can send data from the parallel workers
@@ -19,6 +19,8 @@ wait(f(1));
 if ~downloadaborted
     waitbar(1, wbhandle, 'Finished downloading');  
     ea_cleanup();
+else
+    error('Parallel download unsuccessful')
 end
 
     function ea_checkprogress(q, filename, targetFilesize) 
@@ -55,6 +57,6 @@ end
 
     function ea_canceldownload()
         delete(gcp('nocreate'));  
-        downloadaborted = 1;   
+        downloadaborted = true;   
     end
 end
