@@ -1,14 +1,15 @@
 function ea_downloadasset_parallel(downloadurl, assetname, destination, id, fsize)
 
 downloadaborted = false;
-wbhandle = waitbar(0, 'Starting parallel worker...', ...
-        'Name', sprintf('Downloading %s', assetname), ..., 
-        'CreateCancelBtn', @(obj, event) ea_canceldownload());
-    
+
 delete(gcp('nocreate'))         % delete any existing parallel workers
 p = parpool(2);                 % create 2 workers
 q = parallel.pool.DataQueue;    % create data queue so we can send data from the parallel workers
 
+wbhandle = waitbar(0, 'Starting download...', ...
+        'Name', sprintf('Downloading %s', assetname), ...
+        'CreateCancelBtn', @(obj, event) ea_canceldownload());
+    
 f(1) = parfeval(p, @ea_startwebsave, 0, destination, downloadurl, id);                 % start the download
 f(2) = parfeval(p, @ea_checkprogress, 0, q, destination, fsize);    % start monitoring of file size
 afterEach(q, @(i) waitbar(i/100, wbhandle, ...
