@@ -283,24 +283,57 @@ if strcmp(assetname,'Lead Datafiles')
 else
     downloadurl = 'https://www.lead-dbs.org/release/download.php';
     success=1;
-    disp(['Downloading ',assetname,'...'])
+    
     if ~exist(fileparts(destination), 'dir')
         mkdir(fileparts(destination));
     end
+    
+    % get the file size and display it to inform user of size
     try
-        disp('Trying ''websave''.');
-        webopts=weboptions('Timeout',Inf);
-        % uncomment this if you encounter problems with certificate validation
-        % (see https://www.mathworks.com/matlabcentral/answers/400086-how-to-read-data-form-website-url)
-        %webopts.CertificateFilename=('');
-        websave(destination,downloadurl,'id',id,webopts);
+        fsize = ea_getassetfilesize(id);    % get the filesize in bytes from the server
+        fprintf('Downloading %s with a size of %.2f GB\nFilename: %s\n', assetname, fsize*1e-9, destination);
     catch
+        fprintf('Downloading %s\nFilename: %s\n', assetname, destination);
+    end
+    
+    % first see if parallel toolbox is installed and can be utilized to
+    % download in the backgroung
+    if license('test', 'Distrib_Computing_Toolbox') % check if parallel toolbox is installed
+        disp('Parallel toolbox detected, downloading via background worker')
         try
-            disp('''websave'' failed, trying ''urlwrite''.');
-            urlwrite([downloadurl,'?id=',id],destination,'Timeout',Inf);
+            ea_downloadasset_parallel(downloadurl, assetname, destination, id, fsize);
         catch
-            disp('''urlwrite'' failed.');
-            success=0;
+            try
+                delete(findall(0,'type','figure','tag','TMWWaitbar'));      % delete waitbar if error occured
+                disp('Download using parallel toolbox failed, trying websave...')
+                webopts=weboptions('Timeout',Inf);
+                websave(destination,downloadurl,'id',id,webopts);
+            catch
+                try
+                    disp('''websave'' failed, trying ''urlwrite''.');
+                    urlwrite([downloadurl,'?id=',id],destination,'Timeout',Inf);
+                catch
+                    disp('''urlwrite'' failed.');
+                    success=0;
+                end
+            end
+        end
+    else
+        try
+            disp('Trying ''websave''.');
+            webopts=weboptions('Timeout',Inf);
+            % uncomment this if you encounter problems with certificate validation
+            % (see https://www.mathworks.com/matlabcentral/answers/400086-how-to-read-data-form-website-url)
+            %webopts.CertificateFilename=('');
+            websave(destination,downloadurl,'id',id,webopts);
+        catch
+            try
+                disp('''websave'' failed, trying ''urlwrite''.');
+                urlwrite([downloadurl,'?id=',id],destination,'Timeout',Inf);
+            catch
+                disp('''urlwrite'' failed.');
+                success=0;
+            end
         end
     end
 
