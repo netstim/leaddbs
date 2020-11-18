@@ -102,7 +102,7 @@ coords_mm = ea_resolvecoords(markers, options);
 settings.Implantation_coordinate = nan(length(coords_mm), 3);
 for i=1:length(coords_mm)
     if ~isempty(coords_mm{i})
-        settings.Implantation_coordinate = [settings.Implantation_coordinate; coords_mm{i}(1,:)];
+        settings.Implantation_coordinate(i,:) = coords_mm{i}(1,:);
     end
 end
 
@@ -110,7 +110,7 @@ end
 settings.Second_coordinate = nan(length(coords_mm), 3);
 for i=1:length(coords_mm)
     if ~isempty(coords_mm{i})
-        settings.Second_coordinate = [settings.Second_coordinate; coords_mm{i}(end,:)];
+        settings.Second_coordinate(i,:) = coords_mm{i}(end,:);
     end
 end
 
