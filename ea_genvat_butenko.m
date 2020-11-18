@@ -126,13 +126,19 @@ for i=1:eleNum
     end
 end
 
-% 0 - VC; 1 - CC
-settings.current_control = [];
-if ~isempty(source{1})
-    settings.current_control = [settings.current_control; uint8(~eval(['S.Rs', num2str(source{1}), '.va']))];
-end
-if ~isempty(source{2})
-    settings.current_control = [settings.current_control; uint8(~eval(['S.Ls', num2str(source{2}), '.va']))];
+% 0 - Voltage Control; 1 - Current Control
+settings.current_control = nan(eleNum,1);
+for i=1:eleNum
+   	switch i
+        case 1
+            sideCode = 'R';
+        case 2
+            sideCode = 'L';
+    end
+
+    if ~isnan(source(i))
+        settings.current_control(i) = uint8(~S.([sideCode, 's', num2str(source(i))]).va);
+    end
 end
 
 % Signal vector: give an amplitude. If CC; 0.0 refers to 0 V (ground)
