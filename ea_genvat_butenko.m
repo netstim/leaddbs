@@ -163,8 +163,8 @@ settings.Phi_vector = nan(eleNum,options.elspec.numel);
 % Initialize grounding
 settings.Case_grounding = zeros(eleNum,1);
 
-for side = 1:2
-    switch side
+for i = 1:eleNum
+    switch i
         case 1
             sideCode = 'R';
             cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
@@ -173,19 +173,21 @@ for side = 1:2
             cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
     end
 
-    stimSource = S.([sideCode, 's', num2str(source(side))]);
-    for cnt = 1:options.elspec.numel
-        if S.activecontacts{side}(cnt)
-            switch stimSource.(cntlabel{cnt}).pol
-                case 1 % Negative, cathode
-                    settings.Phi_vector(side, cnt) = -amp(side)*stimSource.(cntlabel{cnt}).perc/100;
-                case 2 % Postive, anode
-                    settings.Phi_vector(side, cnt) = amp(side)*stimSource.(cntlabel{cnt}).perc/100;
+    if ~isnan(source(i))
+        stimSource = S.([sideCode, 's', num2str(source(i))]);
+        for cnt = 1:options.elspec.numel
+            if S.activecontacts{i}(cnt)
+                switch stimSource.(cntlabel{cnt}).pol
+                    case 1 % Negative, cathode
+                        settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                    case 2 % Postive, anode
+                        settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                end
             end
         end
-    end
-    if stimSource.case.perc == 100
-        settings.Case_grounding(side) = 1;
+        if stimSource.case.perc == 100
+            settings.Case_grounding(i) = 1;
+        end
     end
 end
 
