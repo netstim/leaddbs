@@ -293,6 +293,7 @@ else
         fsize = ea_getassetfilesize(id);    % get the filesize in bytes from the server
         fprintf('Downloading %s with a size of %.2f GB\nFilename: %s\n', assetname, fsize*1e-9, destination);
     catch
+        fsize = 0;
         fprintf('Downloading %s\nFilename: %s\n', assetname, destination);
     end
     

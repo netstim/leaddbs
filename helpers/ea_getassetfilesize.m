@@ -12,7 +12,7 @@ switch id
     case 'macroscalehc'
         servername = 'Macroscale_Human_Connectome_Atlas_Yeh_2018.zip';
     case 'group2013'
-        servername = 'groupconnectome_horn_2013.zip'
+        servername = 'groupconnectome_horn_2013.zip';
     case 'group2016'
         servername = 'groupconnectome_nki_169_horn_2016.zip';
     case 'group2017'
@@ -26,13 +26,13 @@ end
 
 if exist('servername', 'var')
     webdata = webread('https://filedn.com/lsPIJ4ragTWjjmV6PvlDQLu/data/');  % read html content
-    split_webdata = regexp(webdata, '{', 'split');
+    split_webdata = regexp(webdata, '{', 'split');                          % split based on curly brackets
     
     % now go through all the lines and find the matching name
     for i=1:length(split_webdata)
         idx_name = regexp(split_webdata{i}, servername);
         if ~isempty(idx_name)
-            fsize_unclean = regexp(split_webdata{i}, '\s\d+\x2C', 'match'); % this but with a comma at the end
+            fsize_unclean = regexp(split_webdata{i}, '\s\d+\x2C', 'match'); % file size in byte but with a comma at the end
             fsize = str2double(strip(fsize_unclean{1}, 'right', ','));      % clean up size from the comma
         end
     end
