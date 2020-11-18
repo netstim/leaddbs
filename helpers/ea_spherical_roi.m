@@ -1,4 +1,5 @@
 function roi = ea_spherical_roi(fname,center,radius,crop,ref,bg)
+% Create sphere ROI based on specified center and radius (both in mm)
 
 % Write out NIfTI or not
 if isempty(fname)
