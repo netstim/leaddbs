@@ -99,7 +99,7 @@ settings.Electrode_type = options.elmodel;
 coords_mm = ea_resolvecoords(markers, options);
 
 % Head
-settings.Implantation_coordinate = [];
+settings.Implantation_coordinate = nan(length(coords_mm), 3);
 for i=1:length(coords_mm)
     if ~isempty(coords_mm{i})
         settings.Implantation_coordinate = [settings.Implantation_coordinate; coords_mm{i}(1,:)];
@@ -107,7 +107,7 @@ for i=1:length(coords_mm)
 end
 
 % Tail
-settings.Second_coordinate = [];
+settings.Second_coordinate = nan(length(coords_mm), 3);
 for i=1:length(coords_mm)
     if ~isempty(coords_mm{i})
         settings.Second_coordinate = [settings.Second_coordinate; coords_mm{i}(end,:)];
