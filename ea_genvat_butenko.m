@@ -97,18 +97,19 @@ settings.Electrode_type = options.elmodel;
 % Reload reco since we need to decide whether to use native or MNI coordinates.
 [~, ~, markers] = ea_load_reconstruction(options);
 coords_mm = ea_resolvecoords(markers, options);
+eleNum = length(coords_mm); % Number of electrodes
 
 % Head
-settings.Implantation_coordinate = nan(length(coords_mm), 3);
-for i=1:length(coords_mm)
+settings.Implantation_coordinate = nan(eleNum, 3);
+for i=1:eleNum
     if ~isempty(coords_mm{i})
         settings.Implantation_coordinate(i,:) = coords_mm{i}(1,:);
     end
 end
 
 % Tail
-settings.Second_coordinate = nan(length(coords_mm), 3);
-for i=1:length(coords_mm)
+settings.Second_coordinate = nan(eleNum, 3);
+for i=1:eleNum
     if ~isempty(coords_mm{i})
         settings.Second_coordinate(i,:) = coords_mm{i}(end,:);
     end
@@ -118,8 +119,8 @@ end
 settings.Rotation_Z = 0.0;
 
 %% Stimulation Information
-source = nan(size(S.amplitude));
-for i=1:length(S.amplitude)
+source = nan(eleNum,1);
+for i=1:eleNum
     if any(S.amplitude{i})
         source(i) = find(S.amplitude{i},1);
     end
