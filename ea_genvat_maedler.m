@@ -21,7 +21,7 @@ elseif nargin==1
     end
 end
 
-switch options.sides(side)
+switch side
     case 1
         sidec='R';
         cnts={'k0','k1','k2','k3','k4','k5','k6','k7'};

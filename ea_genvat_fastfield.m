@@ -22,8 +22,8 @@ elseif nargin==1
     end
 end
 
-conductivity = options.prefs.machine.vatsettings.fastfield_cb;  %0.1;
-thresh = options.prefs.machine.vatsettings.fastfield_ethresh; %0.2;
+conductivity = options.prefs.machine.vatsettings.fastfield_cb;  % 0.1;
+thresh = options.prefs.machine.vatsettings.fastfield_ethresh; % 0.2;
 
 if useSI
     thresh=thresh.*(10^3);
@@ -92,8 +92,6 @@ for source=S.sources
         [Efield2] = get_efield(perc,standard_efield,amp1,conductivity,amp_mode,impedence);
         Efield_all=Efield_all+Efield2;
     end
-
-    %amp = stimsource.amp;
 end
 
 Efield = Efield_all;
