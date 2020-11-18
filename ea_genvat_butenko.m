@@ -141,12 +141,27 @@ for i=1:eleNum
     end
 end
 
-% Signal vector: give an amplitude. If CC; 0.0 refers to 0 V (ground)
-% other numbers are in mA. None is for floating potentials
-amp = [S.amplitude{1}(source(1))
-    S.amplitude{2}(source(2))];
-settings.Phi_vector = nan(2,options.elspec.numel);
-settings.Case_grounding = zeros(2,1);
+% Set grounding
+settings.Case_grounding = nan(eleNum,1);
+for i=1:eleNum
+    if ~isnan(source(i))
+        settings.Case_grounding(i) = 0;
+    end
+end
+
+% Get stimulation amplitude
+amp = nan(eleNum,1);
+for i=1:eleNum
+    if ~isnan(source(i))
+        amp(i) = S.amplitude{i}(source(i));
+    end
+end
+
+% Initalize Phi vector
+settings.Phi_vector = nan(eleNum,options.elspec.numel);
+
+% Initialize grounding
+settings.Case_grounding = zeros(eleNum,1);
 
 for side = 1:2
     switch side
