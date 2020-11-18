@@ -118,7 +118,12 @@ end
 settings.Rotation_Z = 0.0;
 
 %% Stimulation Information
-source = {find(S.amplitude{1},1), find(S.amplitude{2},1)};
+source = nan(size(S.amplitude));
+for i=1:length(S.amplitude)
+    if any(S.amplitude{i})
+        source(i) = find(S.amplitude{i},1);
+    end
+end
 
 % 0 - VC; 1 - CC
 settings.current_control = [];
