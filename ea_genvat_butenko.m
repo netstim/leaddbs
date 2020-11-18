@@ -118,10 +118,16 @@ end
 settings.Rotation_Z = 0.0;
 
 %% Stimulation Information
-source = [find(S.amplitude{1},1), find(S.amplitude{2},1)];
+source = {find(S.amplitude{1},1), find(S.amplitude{2},1)};
+
 % 0 - VC; 1 - CC
-settings.current_control = uint8([~eval(['S.Rs', num2str(source(1)), '.va'])
-    ~eval(['S.Ls', num2str(source(2)), '.va'])]);
+settings.current_control = [];
+if ~isempty(source{1})
+    settings.current_control = [settings.current_control; uint8(~eval(['S.Rs', num2str(source{1}), '.va']))];
+end
+if ~isempty(source{2})
+    settings.current_control = [settings.current_control; uint8(~eval(['S.Ls', num2str(source{2}), '.va']))];
+end
 
 % Signal vector: give an amplitude. If CC; 0.0 refers to 0 V (ground)
 % other numbers are in mA. None is for floating potentials
