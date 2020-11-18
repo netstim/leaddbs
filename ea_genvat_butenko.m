@@ -99,10 +99,20 @@ settings.Electrode_type = options.elmodel;
 coords_mm = ea_resolvecoords(markers, options);
 
 % Head
-settings.Implantation_coordinate = [coords_mm{1}(1,:);coords_mm{2}(1,:)];
+settings.Implantation_coordinate = [];
+for i=1:length(coords_mm)
+    if ~isempty(coords_mm{i})
+        settings.Implantation_coordinate = [settings.Implantation_coordinate; coords_mm{i}(1,:)];
+    end
+end
 
 % Tail
-settings.Second_coordinate = [coords_mm{1}(end,:);coords_mm{2}(end,:)];
+settings.Second_coordinate = [];
+for i=1:length(coords_mm)
+    if ~isempty(coords_mm{i})
+        settings.Second_coordinate = [settings.Second_coordinate; coords_mm{i}(end,:)];
+    end
+end
 
 % Rotation around the lead axis in degrees
 settings.Rotation_Z = 0.0;
