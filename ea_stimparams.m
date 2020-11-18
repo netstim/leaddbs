@@ -204,7 +204,7 @@ if ~strcmp(options.leadprod, 'group')
             stimparams(1,1).volume = vatvolume;
         elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
             load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
-            %For consistency, left is always on 2nd element of stimparams 
+            %For consistency, left is always on 2nd element of stimparams
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
         else
@@ -226,7 +226,7 @@ if ~strcmp(options.leadprod, 'group')
                 nii = ea_load_nii([directory,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
     %             vatfv = ea_smoothpatch(vatfv,1,35);
-                %For consistency, left is always on 2nd element of stimparams 
+                %For consistency, left is always on 2nd element of stimparams
                 stimparams(1,2).VAT.VAT = vatfv;
             else
                 visualizeVAT = 0;
@@ -3269,7 +3269,7 @@ switch model
         ea_vatsettings_horn;
     case 'Dembek 2017'
         ea_vatsettings_dembek;
-     case 'Fastfield (Baniasadi 2020)'
+    case 'Fastfield (Baniasadi 2020)'
         ea_vatsettings_fastfield;
 end
 % ea_vatsettings_horn;
