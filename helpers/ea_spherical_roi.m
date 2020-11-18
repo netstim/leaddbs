@@ -36,41 +36,25 @@ else
 end
 
 voxsize = ref.voxsize;
+dim = ref.dim;
+
 for i=1:size(center,1)
     % mm to voxel conversion
     c = ea_mm2vox(center(i,:), ref.mat);
-    r = radius(i);
+    r = radius(i)./voxsize;
 
-    % Span along axes
-    xspan = round(r/voxsize(1))*2 + 1;
-    yspan = round(r/voxsize(2))*2 + 1;
-    zspan = round(r/voxsize(3))*2 + 1;
+    % Construct voxel grid for the sphere of cencter c and radius r
+    bboxlim = [max([1 1 1; ceil(c-r)]); min([dim; floor(c+r)])];
+    [xgrid, ygrid, zgrid] = meshgrid(bboxlim(1,1):bboxlim(2,1),...
+                                     bboxlim(1,2):bboxlim(2,2),...
+                                     bboxlim(1,3):bboxlim(2,3));
 
-    % Create grid, Contruct sphere within the grid
-    [xgrid, ygrid, zgrid] = meshgrid(1:xspan,1:yspan,1:zspan);
-    S = sqrt((xgrid-1-r/voxsize(1)).^2+(ygrid-1-r/voxsize(2)).^2+(zgrid-1-r/voxsize(3)).^2)<=r/mean(voxsize);
+    % Flatten voxel grid to x, y and z subscripts
+    xyz = [xgrid(:), ygrid(:), zgrid(:)];
 
-    % Relocate grid in the image space
-    xgrid = xgrid + round(c(1)-r/voxsize(1)-1);
-    ygrid = ygrid + round(c(2)-r/voxsize(2)-1);
-    zgrid = zgrid + round(c(3)-r/voxsize(3)-1);
-
-    % Fix grid outside of the image space
-    xgrid(xgrid<1) = 1;
-    xgrid(xgrid>size(ref.img,1)) = size(ref.img,1);
-    ygrid(ygrid<1) = 1;
-    ygrid(ygrid>size(ref.img,2)) = size(ref.img,2);
-    zgrid(zgrid<1) = 1;
-    zgrid(zgrid>size(ref.img,3)) = size(ref.img,3);
-
-    % Convert grid to indices in the image space
-    gridInd = sub2ind(size(ref.img), xgrid, ygrid, zgrid);
-
-    % Find image indices within the sphere
-    sphereInd = unique(gridInd(S));
-
-    % Set sphere ROI in image
-    ref.img(sphereInd) = 1;
+    % Find voxels within the sphere
+    xyz = xyz(sqrt(sum(((xyz - c) .* voxsize) .^ 2, 2)) <= radius(i), :);
+    ref.img(sub2ind(dim, xyz(:,1), xyz(:,2), xyz(:,3))) = 1;
 end
 
 % Adapt ROI NIfTI structure
@@ -84,6 +68,6 @@ if writeoutNii
     ea_write_nii(ref);
     % Crop ROI image
     if crop
-        ea_autocrop(fname)
+        ea_autocrop(fname);
     end
 end
