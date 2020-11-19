@@ -1,5 +1,6 @@
 function ea_lg_setguid(lgfile, guid, outputfolder)
-% Helper function to set a new guid for Lead group analysis
+% Helper function to create a new Lead group analysis by setting a new guid
+% to the input group analysis
 
 % Check M struct
 if isstruct(lgfile)
