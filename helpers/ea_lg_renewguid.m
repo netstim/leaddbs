@@ -1,4 +1,4 @@
-function ea_lg_setguid(lgfile, guid, outputfolder)
+function ea_lg_renewguid(lgfile, guid, outputfolder)
 % Helper function to create a new Lead group analysis by setting a new guid
 % to the input group analysis
 
