@@ -85,6 +85,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     dataControlLayout = qt.QVBoxLayout(self.ui.dataControlFrame)
     dataControlLayout.addWidget(dataControlTree)
 
+    # add plastimatch progress bar
+    self.ui.landwarpWidget = slicer.modules.plastimatch_slicer_landwarp.createNewWidgetRepresentation()
+    self.ui.calculateFrame.layout().addWidget(self.ui.landwarpWidget.children()[3], 2, 0, 1, 2) # progress bar
+
     # Set scene in MRML widgets. Make sure that in Qt designer
     # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
     # "setMRMLScene(vtkMRMLScene*)" slot.
@@ -299,9 +303,11 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     next(filter(lambda a: a.text == self._parameterNode.GetParameter("DrawMode"), self.ui.drawModeMenu.actions())).setChecked(True)
 
     # calculate warp
-    if self._parameterNode.GetParameter("Update") == "true" and self.ui.autoUpdateCheckBox.checked:
+    if self._parameterNode.GetParameter("Update") == "true" and self._parameterNode.GetParameter("Running") == "false" and self.ui.autoUpdateCheckBox.checked:
       self.ui.calculateButton.animateClick()
-      self._parameterNode.SetParameter("Update", "false")
+    
+    # set update to false
+    self._parameterNode.SetParameter("Update", "false")
 
     # All the GUI updates are done
     self._updatingGUIFromParameterNode = False
@@ -328,7 +334,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     else:
       spacing = [self.ui.spacingSpinBox.value]
     self._parameterNode.SetParameter("Spacing", str(spacing[0]))
-    # # RBF radius
+    # RBF radius
     if self.ui.autoRBFRadiusCheckBox.checked:
       radius = WarpDriveUtil.getMaxSpread()
     else:
@@ -381,11 +387,6 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     auxVolumeNode = GridNodeHelper.emptyVolume([int(s) for s in size], origin, userSpacing)
     # output
     outputNode = self._parameterNode.GetNodeReference("OutputGridTransform")
-    if outputNode.GetDisplayNode():
-      visibility = outputNode.GetDisplayNode().GetVisibility()
-      outputNode.GetDisplayNode().SetVisibility(0)
-    else:
-      visibility = None
     # params
     RBFRadius = float(self._parameterNode.GetParameter("Spread"))
     stiffness = float(self._parameterNode.GetParameter("Stiffness"))
@@ -403,25 +404,39 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     visualizationNode = WarpDriveUtil.previewWarp(sourceFiducial, targetFiducial, outputNode)
 
     # run
-    self.logic.run(auxVolumeNode, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness, maskVolume)
+    self._parameterNode.SetParameter("Running", "true")
+    cliNode = self.logic.run(auxVolumeNode, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness, maskVolume)
+    self.ui.landwarpWidget.setCurrentCommandLineModuleNode(cliNode)
 
-    # set new warp
-    self._parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(outputNode.GetID())
-    # set visibility
-    if visibility:
-      outputNode.GetDisplayNode().SetVisibility(visibility)
-
-    # remove aux
-    slicer.mrmlScene.RemoveNode(maskVolume) 
-    slicer.mrmlScene.RemoveNode(visualizationNode)
-    slicer.mrmlScene.RemoveNode(sourceFiducial)
-    slicer.mrmlScene.RemoveNode(targetFiducial)
-    slicer.mrmlScene.RemoveNode(auxVolumeNode)
+    cliNode.AddObserver(slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, \
+      lambda c,e,o=outputNode,m=maskVolume,v=visualizationNode,s=sourceFiducial,t=targetFiducial,a=auxVolumeNode: self.onStatusModifiedEvent(c,o,m,v,s,t,a))
 
     # cursor
     qt.QApplication.setOverrideCursor(qt.Qt.ArrowCursor)
     
-    
+  
+  def onStatusModifiedEvent(self, caller, outputNode, maskVolume, visualizationNode, sourceFiducial, targetFiducial, auxVolumeNode):
+    if caller.GetStatusString() == 'Completed':
+
+      # apply mask
+      self.logic.applyMask(outputNode, maskVolume)
+
+      # set new warp
+      self._parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(outputNode.GetID())
+      self._parameterNode.GetNodeReference("InputNode").Modified()
+
+      # remove aux
+      slicer.mrmlScene.RemoveNode(maskVolume) 
+      slicer.mrmlScene.RemoveNode(visualizationNode)
+      slicer.mrmlScene.RemoveNode(sourceFiducial)
+      slicer.mrmlScene.RemoveNode(targetFiducial)
+      slicer.mrmlScene.RemoveNode(auxVolumeNode)
+
+      # set parameter
+      self._parameterNode.SetParameter("Running", "false")
+
+      # delete cli Node
+      qt.QTimer.singleShot(1000, lambda: slicer.mrmlScene.RemoveNode(caller))
 
 
 #
@@ -469,26 +484,27 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
       parameterNode.SetParameter("Stiffness", "0.1")
     if not parameterNode.GetParameter("DrawMode"):
       parameterNode.SetParameter("DrawMode", 'To Nearest Model')
+    if not parameterNode.GetParameter("Running"):
+      parameterNode.SetParameter("Running", "false")
 
   def run(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness, maskVolume):
 
     # run landmark registration if points available
     if sourceFiducial.GetNumberOfControlPoints():
-      self.computeWarp(referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness)
+      cliNode = self.computeWarp(referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness)
     else:
       GridNodeHelper.emptyGridTransform(referenceVolume.GetImageData().GetDimensions(), referenceVolume.GetOrigin(), referenceVolume.GetSpacing(), outputNode)
       return
+    return cliNode
 
+  def applyMask(self, node, maskVolumeNode):
     # get arrays
-    transformArray = slicer.util.array(outputNode.GetID())
-    maskArray = slicer.util.array(maskVolume.GetID())
+    transformArray = slicer.util.array(node.GetID())
+    maskArray = slicer.util.array(maskVolumeNode.GetID())
     # mask
     transformArray[:] = np.stack([transformArray[:,:,:,i] * maskArray for i in range(3)], 3).squeeze()
-
     # modified
-    outputNode.Modified()
-    referenceVolume.Modified()
-
+    node.Modified()
 
   def computeWarp(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness):
     """
@@ -504,8 +520,6 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
     if not referenceVolume or not outputNode:
       raise ValueError("Input or output is invalid")
 
-    logging.info('Processing started')
-
     # Compute the warp with plastimatch landwarp
     cliParams = {
       "plmslc_landwarp_fixed_volume" : referenceVolume.GetID(),
@@ -518,9 +532,9 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
       "plmslc_landwarp_stiffness" : stiffness,
       } 
 
-    cliNode = slicer.cli.run(slicer.modules.plastimatch_slicer_landwarp, None, cliParams, wait_for_completion=True, update_display=False)
+    cliNode = slicer.cli.run(slicer.modules.plastimatch_slicer_landwarp, None, cliParams, wait_for_completion=False, update_display=False)
 
-    logging.info('Processing completed')
+    return cliNode
 
 
 
