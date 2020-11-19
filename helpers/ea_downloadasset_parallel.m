@@ -1,8 +1,20 @@
 function ea_downloadasset_parallel(downloadurl, assetname, destination, id, fsize)
-% ea_downloadasset_parallel downloads stuff
-%   Test 
-%   This should display some help
 
+%% doc
+% EA_DOWNLOADASSET_PARALLEL utilizes the parallel toolbox to download a
+% file and display its progress with a waitbar in parallel
+%
+%   input arguments:
+%       downloadurl: str, url to be passed to websave
+%       assetname: str, name of the asset to be downloaded, will be displayed in
+%       the title of the waitbar figure
+%       destination: str, location at which the file is to be saved
+%       id: str, id of the file to be downloaded, passed to websave
+%       fsize: double, file size in byte
+%
+%   Author: Johannes Achtzehn, 19.11.2020, johannes.achtzehn@charite.de
+
+%% code
 downloadaborted = false;        % this stays false if download is succesful, if waitbar is cancelled this will switch to true
 
 % init 2 parallel workers, one for downloading, one for checking the
