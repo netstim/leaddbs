@@ -33,12 +33,8 @@ switch id
     case 'group2017_ppmi'
         servername = 'groupconnectome_ppmi_85_ewert_2017.zip';
     case 'fgroup2017_ppmi'
-        servername = 'functional_groupconnectome_ppmi_74_15_horn_2017.zip';
-    case 'MNI_ICBM_2009b_NLIN_ASYM'
-        servername = 
-        
+        servername = 'functional_groupconnectome_ppmi_74_15_horn_2017.zip';        
 end
-
 
 if exist('servername', 'var')
     webdata = webread('https://filedn.com/lsPIJ4ragTWjjmV6PvlDQLu/data/');  % read html content
