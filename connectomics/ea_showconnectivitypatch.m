@@ -3,7 +3,7 @@ matsurf=[];
 labels=[];
 
 if showregs
-    tmX=mX>thresh;
+    tmX=abs(mX)>thresh;
 
     options.prefs=ea_prefs('');
     if options.prefs.hullsmooth
