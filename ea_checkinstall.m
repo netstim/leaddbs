@@ -291,10 +291,15 @@ else
     % get the file size and display it to inform user of size
     try
         fsize = ea_getassetfilesize(id);    % get the filesize in bytes from the server
-        fprintf('Downloading %s with a size of %.2f GB\nFilename: %s\n', assetname, fsize*1e-9, destination);
     catch
         fsize = 0;
-        fprintf('Downloading %s\nFilename: %s\n', assetname, destination);
+    end
+    
+    if fsize ~= 0
+        fprintf('Downloading %s with a size of %.2f GB\nFilename: %s\n', ea_getspace, fsize*1e-9, destination);
+    else
+        fprintf('Downloading %s\nFilename: %s\n', ea_getspace, destination);
+        disp('This could take a while...');
     end
     
     % first see if parallel toolbox is installed and can be utilized to
@@ -310,6 +315,7 @@ else
                 webopts=weboptions('Timeout',Inf);
                 websave(destination,downloadurl,'id',id,webopts);
             catch
+                disp('Parallel toolbox not detected, downloading via websave...')
                 try
                     disp('''websave'' failed, trying ''urlwrite''.');
                     urlwrite([downloadurl,'?id=',id],destination,'Timeout',Inf);

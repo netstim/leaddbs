@@ -34,6 +34,9 @@ switch id
         servername = 'groupconnectome_ppmi_85_ewert_2017.zip';
     case 'fgroup2017_ppmi'
         servername = 'functional_groupconnectome_ppmi_74_15_horn_2017.zip';
+    case 'MNI_ICBM_2009b_NLIN_ASYM'
+        servername = 
+        
 end
 
 
