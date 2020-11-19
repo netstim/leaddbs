@@ -1,6 +1,6 @@
 function ea_lg_renameguid(lgfile, guid, outputfolder)
 % Helper function to rename the input Lead group analysis by changing the
-% guid
+% guid. Stimulation folders will also be renamed.
 
 % Check M struct
 if isstruct(lgfile)
