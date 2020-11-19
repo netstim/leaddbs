@@ -165,6 +165,14 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     except:
       pass
 
+
+    # restore parameters
+    self.parameterNode.SetParameter("subjectPaths", subjectPaths)
+    self.parameterNode.SetParameter("separator", subjectPathSep)
+    self.parameterNode.SetParameter("MNIPath", MNIPath)
+    self.parameterNode.SetParameter("MNIAtlasPath", MNIAtlasPath)
+    self.parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
+
     # set input node
     gridTransformNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLGridTransformNode')
     gridTransformNodes.UnRegister(slicer.mrmlScene)
@@ -202,14 +210,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       fiducialNode = fiducialNodes.GetItemAsObject(i)
       if 'correction' not in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(fiducialNode)):
         slicer.mrmlScene.RemoveNode(fiducialNode)
-
-    # restore parameters
-    self.parameterNode.SetParameter("subjectPaths", subjectPaths)
-    self.parameterNode.SetParameter("subjectPath", subjectPath)
-    self.parameterNode.SetParameter("separator", subjectPathSep)
-    self.parameterNode.SetParameter("MNIPath", MNIPath)
-    self.parameterNode.SetParameter("MNIAtlasPath", MNIAtlasPath)
-    self.parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
 
     # load atlas
     if atlasName is not None and os.path.isdir(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName)):
