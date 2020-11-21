@@ -180,6 +180,11 @@ disp('Iterating through subjects...');
 for i=1:numseed %iterate through each seed in roi list
     seedFilename = seedfn{i};
     patName = regexp(sfile{i}, ['(?<=',filesep, '?)[^',filesep,']+(?=', filesep, 'stimulations)'], 'match', 'once');
+    if ~isempty(patName)
+        patStr = ['Patient ', patName, ', '];
+    else
+        patStr = '';
+    end
 
     swidxl = {}; swidxr = {};
     swidxmxl = {}; swidxmxr = {};
@@ -203,7 +208,7 @@ for i=1:numseed %iterate through each seed in roi list
 
     parfor subj = 1:numSubUse % iterate across subjects
         mcfi = usesubjects(subj);
-        disp(['Patient ', patName, ', Connectome Subject ', num2str(mcfi, '%04d'),'/',num2str(numSubUse,'%04d'),'...']);
+        disp([patStr, 'Connectome Subject ', num2str(mcfi, '%04d'),'/',num2str(numSubUse,'%04d'),'...']);
 
         howmanyruns = ea_cs_dethowmanyruns(dataset,mcfi);
         thiscorr = nan(numVoxUse,howmanyruns);
