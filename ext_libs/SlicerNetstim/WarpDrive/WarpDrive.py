@@ -406,37 +406,46 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # run
     self._parameterNode.SetParameter("Running", "true")
     cliNode = self.logic.run(auxVolumeNode, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness, maskVolume)
-    self.ui.landwarpWidget.setCurrentCommandLineModuleNode(cliNode)
 
-    cliNode.AddObserver(slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, \
-      lambda c,e,o=outputNode,m=maskVolume,v=visualizationNode,s=sourceFiducial,t=targetFiducial,a=auxVolumeNode: self.onStatusModifiedEvent(c,o,m,v,s,t,a))
+    if cliNode is not None:
+      # set up for UI
+      self.ui.landwarpWidget.setCurrentCommandLineModuleNode(cliNode)
+      # add observer
+      cliNode.AddObserver(slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, \
+        lambda c,e,o=outputNode,m=maskVolume,v=visualizationNode,s=sourceFiducial,t=targetFiducial,a=auxVolumeNode: self.onStatusModifiedEvent(c,o,m,v,s,t,a))
+    else:
+      self.onStatusModifiedEvent(None,outputNode,maskVolume,visualizationNode,sourceFiducial,targetFiducial,auxVolumeNode)
 
     # cursor
     qt.QApplication.setOverrideCursor(qt.Qt.ArrowCursor)
     
   
   def onStatusModifiedEvent(self, caller, outputNode, maskVolume, visualizationNode, sourceFiducial, targetFiducial, auxVolumeNode):
-    if caller.GetStatusString() == 'Completed':
+    
+    if isinstance(caller, slicer.vtkMRMLCommandLineModuleNode):
+      if caller.GetStatusString() == 'Completed':
+        # apply mask
+        self.logic.applyMask(outputNode, maskVolume)
+        # delete cli Node
+        qt.QTimer.singleShot(1000, lambda: slicer.mrmlScene.RemoveNode(caller))
+      else:
+        return
 
-      # apply mask
-      self.logic.applyMask(outputNode, maskVolume)
+    # set new warp
+    self._parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(outputNode.GetID())
+    self._parameterNode.GetNodeReference("InputNode").Modified()
 
-      # set new warp
-      self._parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(outputNode.GetID())
-      self._parameterNode.GetNodeReference("InputNode").Modified()
+    # remove aux
+    slicer.mrmlScene.RemoveNode(maskVolume) 
+    slicer.mrmlScene.RemoveNode(visualizationNode)
+    slicer.mrmlScene.RemoveNode(sourceFiducial)
+    slicer.mrmlScene.RemoveNode(targetFiducial)
+    slicer.mrmlScene.RemoveNode(auxVolumeNode)
 
-      # remove aux
-      slicer.mrmlScene.RemoveNode(maskVolume) 
-      slicer.mrmlScene.RemoveNode(visualizationNode)
-      slicer.mrmlScene.RemoveNode(sourceFiducial)
-      slicer.mrmlScene.RemoveNode(targetFiducial)
-      slicer.mrmlScene.RemoveNode(auxVolumeNode)
+    # set parameter
+    self._parameterNode.SetParameter("Running", "false")
 
-      # set parameter
-      self._parameterNode.SetParameter("Running", "false")
-
-      # delete cli Node
-      qt.QTimer.singleShot(1000, lambda: slicer.mrmlScene.RemoveNode(caller))
+      
 
 
 #

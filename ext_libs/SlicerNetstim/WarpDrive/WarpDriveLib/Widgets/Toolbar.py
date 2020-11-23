@@ -122,7 +122,8 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       self.initFromScene()
     else:
       self.initFromRaw()
-      self.onModalityPressed([],self.modalityComboBox.currentText)
+    
+    self.onModalityPressed([],self.modalityComboBox.currentText)
 
     # load default atlas if there is none in scene
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
@@ -165,9 +166,9 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     except:
       pass
 
-
     # restore parameters
     self.parameterNode.SetParameter("subjectPaths", subjectPaths)
+    self.parameterNode.SetParameter("subjectPath", subjectPath)
     self.parameterNode.SetParameter("separator", subjectPathSep)
     self.parameterNode.SetParameter("MNIPath", MNIPath)
     self.parameterNode.SetParameter("MNIAtlasPath", MNIAtlasPath)
@@ -185,8 +186,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     volumeNodes.UnRegister(slicer.mrmlScene)
     for i in range(volumeNodes.GetNumberOfItems()):
       volumeNode = volumeNodes.GetItemAsObject(i)
-      if volumeNode.GetID() not in [self.parameterNode.GetNodeReferenceID("ImageNode"), self.parameterNode.GetNodeReferenceID("TemplateNode")] and \
-        'correction' not in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(volumeNode)):
+      if 'correction' not in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(volumeNode)):
         slicer.mrmlScene.RemoveNode(volumeNode)
     # get atlas name and delete folders
     atlasName = None
@@ -221,8 +221,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
     # in case one not set
     WarpDrive.WarpDriveLogic().setDefaultParameters(self.parameterNode)
-
-    self.parameterNode.GetNodeReference("InputNode").SetAndObserveTransformNodeID(outputNode.GetID())
 
 
   def onModalityPressed(self, item, modality=None):
