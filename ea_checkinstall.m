@@ -296,7 +296,7 @@ else
     end
     
     if fsize ~= 0
-        fprintf('Downloading %s with a size of %.2f GB\nFilename: %s\n', ea_getspace, fsize*1e-9, destination);
+        fprintf('Downloading %s with a size of %.2f GB\nFilename: %s\n', assetname, fsize*1e-9, destination);
     else
         fprintf('Downloading %s\nFilename: %s\n', ea_getspace, destination);
         disp('This could take a while...');
