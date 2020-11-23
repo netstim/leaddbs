@@ -51,6 +51,7 @@ classdef ea_disctract < handle
         % stats: (how many fibers available and shown etc for GUI)
         stats
         % additional settings:
+        rngseed = 'default';
         Nperm = 1000 % how many permutations in leave-nothing-out permtest strategy
         kfold = 5 % divide into k sets when doing k-fold CV
         Nsets = 5 % divide into N sets when doing Custom (random) set test
@@ -189,6 +190,7 @@ classdef ea_disctract < handle
         end
 
         function [I, Ihat] = loocv(obj)
+            rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
             [I, Ihat] = crossval(obj, cvp);
         end
@@ -202,11 +204,13 @@ classdef ea_disctract < handle
         end
 
         function [I, Ihat] = kfoldcv(obj)
+            rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
             [I, Ihat] = crossval(obj, cvp);
         end
 
         function [I, Ihat] = lno(obj, Iperm)
+            rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
             if ~exist('Iperm', 'var')
                 [I, Ihat] = crossval(obj, cvp);
@@ -342,7 +346,7 @@ classdef ea_disctract < handle
 
             numPerm = obj.Nperm;
 
-            Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection)';
+            Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection, obj.rngseed)';
             Iperm = [obj.responsevar, Iperm];
             Ihat = cell(numPerm+1, 1);
 
