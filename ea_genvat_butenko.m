@@ -197,7 +197,7 @@ settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_et
 %% Save settings for OSS-DBS
 parameterFile = [directory, 'stimulations', filesep, ea_nt(options.native), S.label, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings', '-7.3');
-W
+
 %% Run OSS-DBS
 cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
 system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', parameterFile]);
