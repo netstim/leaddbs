@@ -647,7 +647,7 @@ options=getappdata(handles.atlasselect,'options');
 % surfaces
 atlassurfs=getappdata(resultfig,'atlassurfs');
 for atl=1:numel(atlassurfs)
-    delete(atlassurfs(atl))
+    delete(atlassurfs{atl});
 end
 
 % labels
