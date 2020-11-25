@@ -30,9 +30,11 @@ else
     varargin = lower(varargin);
 end
 
+idx = [];
 for i = 1:length(atlassurfs)
     atlasTag = regexprep(lower(atlassurfs{i}.Tag), '_(left|right|midline|mixed)$', '');
     if strcmp(varargin{1}, 'on') || any(contains(varargin, atlasTag))
+        idx = [idx, i];
         atlassurfs{i}.Visible = 'on';
         colorbuttons(i).State = 'on';
     else
@@ -40,3 +42,6 @@ for i = 1:length(atlassurfs)
         colorbuttons(i).State = 'off';
     end
 end
+
+atlassurfs = atlassurfs(idx);
+
