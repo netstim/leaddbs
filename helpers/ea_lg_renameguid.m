@@ -49,6 +49,7 @@ for i=1:length(M.patient.list)
         stimFolder = [M.patient.list{i}, filesep, 'stimulations', filesep, ea_nt(nt)];
         if isfolder([stimFolder, 'gs_', oldGUID])
             if ~isfolder([stimFolder, 'gs_', guid])
+                fprintf('Moving stimulation folder to:\n%s\n', [stimFolder, 'gs_', guid])
                 movefile([stimFolder, 'gs_', oldGUID], [stimFolder, 'gs_', guid]);
             else
                 warning('off', 'backtrace');
