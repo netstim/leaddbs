@@ -644,6 +644,10 @@ ea_busyaction('on',handles.atlasselect,'atlcontrol');
 resultfig=getappdata(handles.atlasselect,'resultfig');
 options=getappdata(handles.atlasselect,'options');
 
+% Clear atlas toolbar
+atlastoolbar = getappdata(resultfig,'atlht');
+arrayfun(@delete, atlastoolbar.Children);
+
 % surfaces
 atlassurfs=getappdata(resultfig,'atlassurfs');
 for atl=1:numel(atlassurfs)
