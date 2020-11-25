@@ -21,7 +21,7 @@ try isvalid(varagin{1})
     end
 catch
     H = findall(0,'type','figure');
-    resultfig = H(~cellfun(@isempty,strfind({H(:).Name},{'Electrode-Scene'})));
+    resultfig = H(contains({H(:).Name},{'Electrode-Scene'}));
 end
 
 if isempty(varargin) || isempty(varargin{1}) || strcmpi(varargin{1},'on') || ...
