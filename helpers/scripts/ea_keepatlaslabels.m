@@ -1,4 +1,4 @@
-function [atlassurfs] = ea_keepatlaslabels(varargin)
+function atlassurfs = ea_keepatlaslabels(varargin)
 %
 % Small function to keep atlas labels given string
 %
@@ -23,24 +23,20 @@ set(0,'CurrentFigure',resultfig)
 atlassurfs = getappdata(resultfig,'atlassurfs');
 colorbuttons = getappdata(resultfig,'colorbuttons');
 
-if isempty(varargin) || isempty(varargin{1}) || strcmpi(varargin{1},'on') || ...
-        ( length(varargin)==2 && isempty(varargin{2}) )
-    varargin{1}='right';
-    varargin{2}='left';
+% Show all atlases in case no input parameter
+if isempty(varargin)
+    varargin{1} = 'on';
+else
+    varargin = lower(varargin);
 end
 
-idx=zeros(length(atlassurfs),1);
-for i = 1:length(varargin)
-    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_left']);
-    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_right']);
-    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_midline']);
-    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_mixed']);
+for i = 1:length(atlassurfs)
+    atlasTag = regexprep(lower(atlassurfs{i}.Tag), '_(left|right|midline|mixed)$', '');
+    if strcmp(varargin{1}, 'on') || any(contains(varargin, atlasTag))
+        atlassurfs{i}.Visible = 'on';
+        colorbuttons(i).State = 'on';
+    else
+        atlassurfs{i}.Visible = 'off';
+        colorbuttons(i).State = 'off';
+    end
 end
-
-set(colorbuttons(idx==0),'State','off')
-set(atlassurfs(idx==0),'Visible','off')
-
-set(colorbuttons(idx>0),'State','on')
-set(atlassurfs(idx>0),'Visible','on')
-    
-atlassurfs = atlassurfs(idx>0);
