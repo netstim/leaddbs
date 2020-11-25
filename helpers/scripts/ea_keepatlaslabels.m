@@ -25,15 +25,18 @@ colorbuttons = getappdata(resultfig,'colorbuttons');
 
 % Show all atlases in case no input parameter
 if isempty(varargin)
-    varargin{1} = 'on';
+    atlasToggle = {'on'};
 else
-    varargin = lower(varargin);
+    atlasToggle = lower(varargin);
 end
 
 idx = [];
 for i = 1:length(atlassurfs)
-    atlasTag = regexprep(lower(atlassurfs{i}.Tag), '_(left|right|midline|mixed)$', '');
-    if strcmp(varargin{1}, 'on') || any(contains(varargin, atlasTag))
+    atlasTag = lower(atlassurfs{i}.Tag);
+    atlasName = regexprep(atlasTag, '_(left|right|midline|mixed)$', '');
+    if strcmp(atlasToggle{1}, 'on') ... % Turn on all atlases
+            || ismember(atlasTag, atlasToggle) ... % Match exactly
+            || ismember(atlasName, atlasToggle) % Match name regardless of side
         idx = [idx, i];
         atlassurfs{i}.Visible = 'on';
         colorbuttons(i).State = 'on';
@@ -44,4 +47,3 @@ for i = 1:length(atlassurfs)
 end
 
 atlassurfs = atlassurfs(idx);
-
