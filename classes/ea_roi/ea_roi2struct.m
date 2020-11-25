@@ -8,3 +8,6 @@ for p = 1:numel(props)
         s.(props{p})=[];
     end
 end
+if ~exist('s','var')
+    s=[];
+end
