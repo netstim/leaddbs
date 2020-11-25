@@ -20,7 +20,10 @@ set_log_active(False)   #turns off debugging info
 
 def choose_solver_for_me(EQS_mode,float_conductors):
     if float_conductors != -1:   #that means we have floating conductors 
-        return('MUMPS')    # maybe for QS with only one floating conductor we could use GMRES
+        if EQS_mode=='EQS':
+            return('MUMPS')    # maybe for QS with only one floating conductor we could use GMRES
+        else:
+            return('GMRES')
     else:
         if EQS_mode=='EQS':
             return('BiCGSTAB')   

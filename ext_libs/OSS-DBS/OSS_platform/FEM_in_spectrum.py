@@ -106,6 +106,7 @@ def get_solution_space_and_Dirichlet_BC(external_grounding,current_controlled,me
             bc.append(DirichletBC(V.sub(1), Constant(0.0), boundaries,Contacts_indices[bc_i]))         # the imaginary part is set to 0 for the initial computation
         else:
             bc.append(DirichletBC(V, Phi_vector[bc_i], boundaries,Contacts_indices[bc_i]))
+
         if Phi_vector[bc_i]==0.0:       #we must have ground in every simulation
             ground_index=bc_i            
     
