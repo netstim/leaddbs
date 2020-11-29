@@ -1,39 +1,28 @@
-classdef ea_disctract < handle
-    % Discriminative fiber class to handle visualizations of discriminative fibers in lead dbs resultfig / 3D Matlab figures
+classdef ea_networkmapping < handle
+    % DBS network mapping class to handle visualizations of DBS network mapping analyses in lead dbs resultfig / 3D Matlab figures
     % A. Horn
 
     properties (SetObservable)
         M % content of lead group project
         resultfig % figure handle to plot results
         ID % name / ID of discriminative fibers object
-        posvisible = 1 % pos tract visible
-        negvisible = 0 % neg tract visible
+        posvisible = 1 % pos voxels visible
+        negvisible = 0 % neg voxels visible
         showposamount = [25 25] % two entries for right and left
         shownegamount = [25 25] % two entries for right and left
-        connthreshold = 20
-        efieldthreshold = 2500
-        statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations
+        statmetric = 'Correlations (R-map)' % Statistical model to use 
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
-        efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [0.99,0.75,0.06] % positive main color
         negcolor = [0.15,0.77,0.95] % negative main color
-        splitbygroup = 0
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
         
-        results
-        % Subfields:
-        % results.(connectomename).fibcell: cell of all fibers connected, sorted by side
-        % results.(connectomename).ttests.fibsval % connection status for each fiber to each VTA
-        % results.(connectomename).spearman_sum.fibsval % connection weights for each fiber to each VTA
-        % results.(connectomename).spearman_mean.fibsval % connection weights for each fiber to each VTA
-        % results.(connectomename).spearman_peak.fibsval % connection weights for each fiber to each VTA
-        % results.(connectomename).spearman_5peak.fibsval % connection weights for each fiber to each VTA
+        results % stores fingerprints
+
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
-        basepredictionon = 'mean of scores';
-        fiberdrawn % struct contains fibercell and vals drawn in the resultfig
-        drawobject % actual streamtube handle
+        basepredictionon = 'Spearman Correlations';
+        surfdrawn % struct contains surface resultfig
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
         setlabels={};
         setselections={};
@@ -116,16 +105,11 @@ classdef ea_disctract < handle
                 end
             end
 
-            cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
             vatlist = ea_discfibers_getvats(obj);
-            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile);
+            [AllX] = ea_networkmapping_calcvals(vatlist, obj.connectome);
 
-            obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
-            obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
-            obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
-            obj.results.(ea_conn2connid(obj.connectome)).('spearman_peak').fibsval = fibsvalPeak;
-            obj.results.(ea_conn2connid(obj.connectome)).('spearman_5peak').fibsval = fibsval5Peak;
-            obj.results.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
+            obj.results.(ea_conn2connid(obj.connectome)).connval = AllX;
+
         end
 
         function Amps = getstimamp(obj)
@@ -377,20 +361,17 @@ classdef ea_disctract < handle
         end
 
         function save(obj)
-            tractset=obj;
-            pth = fileparts(tractset.leadgroup);
-            tractset.analysispath=[pth,filesep,'disctracts',filesep,obj.ID,'.mat'];
-            ea_mkdir([pth,filesep,'disctracts']);
+            networkmapping=obj;
+            pth = fileparts(networkmapping.leadgroup);
+            networkmapping.analysispath=[pth,filesep,'networkmapping',filesep,obj.ID,'.mat'];
+            ea_mkdir([pth,filesep,'networkmapping']);
             rf=obj.resultfig; % need to stash fig handle for saving.
-            rd=obj.drawobject; % need to stash handle of drawing before saving.
             try % could be figure is already closed.
-                setappdata(rf,['dt_',tractset.ID],rd); % store handle of tract to figure.
+                setappdata(rf,['dt_',networkmapping.ID],rd); % store handle of tract to figure.
             end
-            tractset.resultfig=[]; % rm figure handle before saving.
-            tractset.drawobject=[]; % rm drawobject.
-            save(tractset.analysispath,'tractset','-v7.3');
+            networkmapping.resultfig=[]; % rm figure handle before saving.
+            save(networkmapping.analysispath,'networkmapping','-v7.3');
             obj.resultfig=rf;
-            obj.drawobject=rd;
         end
 
         function draw(obj,vals,fibcell)
