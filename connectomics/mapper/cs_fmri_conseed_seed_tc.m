@@ -1,4 +1,4 @@
-function cs_fmri_conseed_seed_tc(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
+function cs_fmri_conseed_seed_tc(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,exportgmtc)
 
 tic
 
@@ -15,6 +15,7 @@ else
     end
 end
 
+
 if ~exist('dfold','var')
     dfold=''; % assume all data needed is stored here.
 else
@@ -25,13 +26,11 @@ end
 
 disp(['Connectome dataset: ',cname,'.']);
 ocname=cname;
-
 if ismember('>',cname)
     delim=strfind(cname,'>');
     subset=cname(delim+1:end);
     cname=cname(1:delim-1);
 end
-
 prefs=ea_prefs;
 dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
 dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
@@ -100,7 +99,7 @@ for s=1:size(sfile,1)
         end
         if ~isequal(seed{s,lr}.mat,dataset.vol.space.mat) && (~dealingwithsurface)
             oseedfname=seed{s,lr}.fname;
-
+            
             try
                 seed{s,lr}=ea_conformseedtofmri(dataset,seed{s,lr});
             catch
@@ -108,7 +107,7 @@ for s=1:size(sfile,1)
             end
             seed{s,lr}.fname=oseedfname; % restore original filename if even unneccessary at present.
         end
-
+        
         [~,seedfn{s,lr}]=fileparts(sfile{s,lr});
         if dealingwithsurface
             sweights=seed{s,lr}.img(:);
@@ -117,10 +116,10 @@ for s=1:size(sfile,1)
         end
         sweights(isnan(sweights))=0;
         sweights(isinf(sweights))=0; %
-
+        
         sweights(abs(sweights)<0.0001)=0;
         sweights=double(sweights);
-
+        
         try
             options=evalin('caller','options');
         end
@@ -132,7 +131,7 @@ for s=1:size(sfile,1)
         % assure sum of sweights is 1
         %sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
         sweightmx=repmat(sweights,1,1);
-
+        
         sweightidx{s,lr}=find(sweights);
         sweightidxmx{s,lr}=double(sweightmx(sweightidx{s,lr},:));
     end
@@ -150,10 +149,13 @@ end
 
 disp([num2str(numseed),' seeds, command = ',cmd,'.']);
 
-numSubUse=length(dataset.vol.subIDs);
+
+pixdim=length(dataset.vol.outidx);
+
+numsub=length(dataset.vol.subIDs);
 
 if ~exist('subset','var') % use all subjects
-    usesubjects = 1:numSubUse;
+    usesubjects=1:numsub;
 else
     for ds=1:length(dataset.subsets)
         if strcmp(subset,dataset.subsets(ds).name)
@@ -161,138 +163,75 @@ else
             break
         end
     end
-    numSubUse = length(usesubjects);
+    numsub=length(usesubjects);
 end
 
-isSurfAvail = isfield(dataset,'surf');
-includeSurf = prefs.lcm.includesurf;
-
-numVoxUse = length(omaskidx);
 
 % init vars:
 for s=1:numseed
-    fX{s}=nan(numVoxUse,numSubUse);
-    rhfX{s}=nan(10242,numSubUse);
-    lhfX{s}=nan(10242,numSubUse);
+    fX{s}=nan(length(omaskidx),numsub);
+    rhfX{s}=nan(10242,numsub);
+    lhfX{s}=nan(10242,numsub);
 end
-
-disp('Iterating through subjects...');
-for i=1:numseed %iterate through each seed in roi list
-    seedFilename = seedfn{i};
-    patName = regexp(sfile{i}, ['(?<=',filesep, '?)[^',filesep,']+(?=', filesep, 'stimulations)'], 'match', 'once');
-    if ~isempty(patName)
-        patStr = ['Patient ', patName, ', '];
-    else
-        patStr = '';
-    end
-
-    swidxl = {}; swidxr = {};
-    swidxmxl = {}; swidxmxr = {};
-
-    swidx = {};
-    swidxmx = {};
-
-    if size(sfile(i,:),2)>1
-        isROISurf = true;
-        swidxl = sweightidx{i,1}; swidxr = sweightidx{i,2};
-        swidxmxl = sweightidxmx{i,1}; swidxmxr = sweightidxmx{i,2};
-    else
-        isROISurf = false;
-        swidx = sweightidx{i};
-        swidxmx = sweightidxmx{i};
-    end
-
-    fXi = nan(numVoxUse,numSubUse);
-    lh_fXi = nan(10242,numSubUse);
-    rh_fXi = nan(10242,numSubUse);
-
-    parfor subj = 1:numSubUse % iterate across subjects
-        mcfi = usesubjects(subj);
-        disp([patStr, 'Connectome Subject ', num2str(mcfi, '%04d'),'/',num2str(numSubUse,'%04d'),'...']);
-
-        howmanyruns = ea_cs_dethowmanyruns(dataset,mcfi);
-        thiscorr = nan(numVoxUse,howmanyruns);
-        lsThisCorr = nan(10242,howmanyruns); %may need more sophisticated way of allocating rows, also safeguard on vol/surf?
-        rsThisCorr = nan(10242,howmanyruns);
-
-        subIDVol = dataset.vol.subIDs{mcfi};
-
-        if isSurfAvail && includeSurf
-            subIDSurfL = dataset.surf.l.subIDs{mcfi};
-            subIDSurfR = dataset.surf.r.subIDs{mcfi};
-        end
-
-        for run=1:howmanyruns % load data
-            gmtcstruc = load([dfoldvol,subIDVol{run+1}]);
-            gmtc = single(gmtcstruc.gmtc);
-            if isSurfAvail && includeSurf
-                ls_struc=load([dfoldsurf,subIDSurfL{run+1}]);
-                rs_struc=load([dfoldsurf,subIDSurfR{run+1}]);
-                ls_gmtc=single(ls_struc.gmtc);
-                rs_gmtc=single(rs_struc.gmtc);
-            end
-
-            if isROISurf % dealing with surface seed
-                stc=mean([ls_gmtc(swidxl,:).*repmat(swidxmxl,1,size(ls_gmtc,2));...
-                          rs_gmtc(swidxr,:).*repmat(swidxmxr,1,size(rs_gmtc,2))],1); % seed time course
-            else % volume seed
-                stc=mean(gmtc(swidx,:).*repmat(swidxmx,1,size(gmtc,2)),1); % seed time course
-            end
-
-            thiscorr(:,run)=corr(stc',gmtc(maskuseidx,:)','type','Pearson');
-            if isSurfAvail && includeSurf
+ea_dispercent(0,'Iterating through subjects');
+for sub=1:numsub % iterate across subjects
+    howmanyruns=ea_cs_dethowmanyruns(dataset,usesubjects(sub));
+    r=cell(howmanyruns,1);
+    for run=1:howmanyruns % load data
+        r{run}=load([dfoldvol,dataset.vol.subIDs{usesubjects(sub)}{run+1}],'gmtc');
+        r{run}.gmtc=single(r{run}.gmtc);
+        if isfield(dataset,'surf') && prefs.lcm.includesurf
+            if ~exist('ls','var')
                 % include surface:
-                lsThisCorr(:,run)=corr(stc',ls_gmtc','type','Pearson');
-                rsThisCorr(:,run)=corr(stc',rs_gmtc','type','Pearson');
+                r{run}.ls=load([dfoldsurf,dataset.surf.l.subIDs{usesubjects(sub)}{run+1}]);
+                r{run}.rs=load([dfoldsurf,dataset.surf.r.subIDs{usesubjects(sub)}{run+1}]);
+                r{run}.ls.gmtc=single(r{run}.ls.gmtc); r{run}.rs.gmtc=single(r{run}.rs.gmtc);
             end
         end
+    end
 
-       fXi(:,subj) = mean(thiscorr,2);
-        if isSurfAvail && includeSurf
-            lh_fXi(:,subj) = mean(lsThisCorr,2);
-            rh_fXi(:,subj) = mean(rsThisCorr,2);
+    for s=1:numseed
+        thiscorr=zeros(length(omaskidx),howmanyruns);
+        if isfield(dataset,'surf') && prefs.lcm.includesurf
+            lsthiscorr=zeros(10242,howmanyruns);
+            rsthiscorr=zeros(10242,howmanyruns);
         end
-
+        for run=1:howmanyruns
+            if size(sfile(s,:),2)>1 % dealing with surface seed
+                stc=mean([r{run}.ls.gmtc(sweightidx{s,1},:).*repmat(sweightidxmx{s,1},1,size(r{run}.ls.gmtc,2));...
+                    r{run}.rs.gmtc(sweightidx{s,2},:).*repmat(sweightidxmx{s,2},1,size(r{run}.ls.gmtc,2))],1); % seed time course
+            else % volume seed
+                stc=mean(r{run}.gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(r{run}.gmtc,2)),1); % seed time course
+            end
+            thiscorr(:,run)=corr(stc',r{run}.gmtc(maskuseidx,:)','type','Pearson');
+            if isfield(dataset,'surf') && prefs.lcm.includesurf
+                % include surface:
+                lsthiscorr(:,run)=corr(stc',r{run}.ls.gmtc','type','Pearson');
+                rsthiscorr(:,run)=corr(stc',r{run}.rs.gmtc','type','Pearson');
+            end
+        end
+        fX{s}(:,sub)=mean(thiscorr,2);
+        if isfield(dataset,'surf') && prefs.lcm.includesurf
+            lhfX{s}(:,sub)=mean(lsthiscorr,2);
+            rhfX{s}(:,sub)=mean(rsthiscorr,2);
+        end
         if writeoutsinglefiles
-            ccmap=dataset.vol.space;
-            ccmap.fname=[outputfolder,seedFilename,'_',subIDVol{1},'_corr.nii'];
-            ccmap.img=single(ccmap.img);
-            ccmap.img(omaskidx) = fXi(:,subj);
-            ccmap.dt=[16,0];
-            spm_write_vol(ccmap,ccmap.img);
-
-            % surfs, too:
-            if isSurfAvail && includeSurf
-                ccmap=dataset.surf.l.space;
-                ccmap.fname=[outputfolder,seedFilename{s},'_',subIDVol{1},'_corr_surf_lh.nii'];
-                ccmap.img=single(ccmap.img);
-                ccmap.img(:,:,:,2:end)=[];
-                ccmap.img(:) = lh_fXi(:,subj);
-                ccmap.dt=[16,0];
-                spm_write_vol(ccmap,ccmap.img);
-
-                ccmap=dataset.surf.r.space;
-                ccmap.fname=[outputfolder,seedFilename{s},'_',subIDVol{1},'_corr_surf_rh.nii'];
-                ccmap.img=single(ccmap.img);
-                ccmap.img(:,:,:,2:end)=[];
-                ccmap.img(:) = rh_fXi(:,subj);
-                ccmap.dt=[16,0];
-                spm_write_vol(ccmap,ccmap.img);
+            if isfield(dataset,'surf') && prefs.lcm.includesurf
+                writeoutsinglefiles(dataset,outputfolder,seedfn,s,usesubjects(sub),thiscorr,omaskidx,lsthiscorr,rsthiscorr)
+            else
+                writeoutsinglefiles(dataset,outputfolder,seedfn,s,usesubjects(sub),thiscorr,omaskidx)
             end
         end
     end
 
-    fX{i} = fXi;
-    if isSurfAvail
-        lhfX{i} = lh_fXi;
-        rhfX{i} = rh_fXi;
-    end
+    ea_dispercent(sub/numsub);
 end
-disp('Done.');
+ea_dispercent(1,'end');
+
 
 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     if owasempty
-        outputfolder=ea_getoutputfolder(sfile(s),ocname);
+        outputfolder=ea_getoutputfolder({sfile{s}},ocname);
     end
     % export mean
     M=ea_nanmean(fX{s}',1);
@@ -301,14 +240,14 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     mmap.img(:)=0;
     mmap.img=single(mmap.img);
     mmap.img(omaskidx)=M;
-
+    
     mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
     ea_write_nii(mmap);
     if usegzip
         gzip(mmap.fname);
         delete(mmap.fname);
     end
-
+    
     % export variance
     M=ea_nanvar(fX{s}');
     mmap=dataset.vol.space;
@@ -316,15 +255,15 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     mmap.img(:)=0;
     mmap.img=single(mmap.img);
     mmap.img(omaskidx)=M;
-
+    
     mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
     ea_write_nii(mmap);
     if usegzip
         gzip(mmap.fname);
         delete(mmap.fname);
     end
-
-    if isSurfAvail && includeSurf
+    
+    if isfield(dataset,'surf') && prefs.lcm.includesurf
         % lh surf
         lM=ea_nanmean(lhfX{s}');
         lmmap=dataset.surf.l.space;
@@ -338,7 +277,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             gzip(lmmap.fname);
             delete(lmmap.fname);
         end
-
+        
         % rh surf
         rM=ea_nanmean(rhfX{s}');
         rmmap=dataset.surf.r.space;
@@ -353,15 +292,15 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             delete(rmmap.fname);
         end
     end
-
+    
     % fisher-transform:
     fX{s}=atanh(fX{s});
-    if isSurfAvail && includeSurf
+    if isfield(dataset,'surf') && prefs.lcm.includesurf
         lhfX{s}=atanh(lhfX{s});
         rhfX{s}=atanh(rhfX{s});
     end
     % export fz-mean
-
+    
     M=nanmean(fX{s}');
     mmap=dataset.vol.space;
     mmap.dt=[16,0];
@@ -374,7 +313,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         gzip(mmap.fname);
         delete(mmap.fname);
     end
-    if isSurfAvail && includeSurf
+    if isfield(dataset,'surf') && prefs.lcm.includesurf
         % lh surf
         lM=nanmean(lhfX{s}');
         lmmap=dataset.surf.l.space;
@@ -388,7 +327,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             gzip(lmmap.fname);
             delete(lmmap.fname);
         end
-
+        
         % rh surf
         rM=nanmean(rhfX{s}');
         rmmap=dataset.surf.r.space;
@@ -403,25 +342,25 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             delete(rmmap.fname);
         end
     end
-
+    
     % export T
-
+    
     [~,~,~,tstat]=ttest(fX{s}');
     tmap=dataset.vol.space;
     tmap.img(:)=0;
     tmap.dt=[16,0];
     tmap.img=single(tmap.img);
-
+    
     tmap.img(omaskidx)=tstat.tstat;
-
+    
     tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
     spm_write_vol(tmap,tmap.img);
     if usegzip
         gzip(tmap.fname);
         delete(tmap.fname);
     end
-
-    if isSurfAvail && includeSurf
+    
+    if isfield(dataset,'surf') && prefs.lcm.includesurf
         % lh surf
         [~,~,~,ltstat]=ttest(lhfX{s}');
         lmmap=dataset.surf.l.space;
@@ -435,7 +374,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             gzip(lmmap.fname);
             delete(lmmap.fname);
         end
-
+        
         % rh surf
         [~,~,~,rtstat]=ttest(rhfX{s}');
         rmmap=dataset.surf.r.space;
@@ -450,10 +389,51 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             delete(rmmap.fname);
         end
     end
-
+    
 end
 
 toc
+
+
+
+function writeoutsinglefiles(dataset,outputfolder,seedfn,s,mcfi,thiscorr,omaskidx,lsthiscorr,rsthiscorr)
+ccmap=dataset.vol.space;
+ccmap.img=single(ccmap.img);
+ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr.nii'];
+ccmap.img(omaskidx)=mean(thiscorr,2);
+ccmap.dt=[16,0];
+spm_write_vol(ccmap,ccmap.img);
+
+% surfs, too:
+if isfield(dataset,'surf') && prefs.lcm.includesurf
+    ccmap=dataset.surf.l.space;
+    ccmap.img=single(ccmap.img);
+    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr_surf_lh.nii'];
+    ccmap.img(:,:,:,2:end)=[];
+    ccmap.img(:)=mean(lsthiscorr,2);
+    ccmap.dt=[16,0];
+    spm_write_vol(ccmap,ccmap.img);
+    
+    ccmap=dataset.surf.r.space;
+    ccmap.img=single(ccmap.img);
+    ccmap.img(:,:,:,2:end)=[];
+    ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_corr_surf_rh.nii'];
+    ccmap.img(:)=mean(rsthiscorr,2);
+    ccmap.dt=[16,0];
+    spm_write_vol(ccmap,ccmap.img);
+end
+
+function s=ea_conformseedtofmri(dataset,s)
+td=tempdir;
+dataset.vol.space.fname=[td,'tmpspace.nii'];
+ea_write_nii(dataset.vol.space);
+s.fname=[td,'tmpseed.nii'];
+ea_write_nii(s);
+
+ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
+s=ea_load_nii(s.fname);
+delete([td,'tmpspace.nii']);
+delete([td,'tmpseed.nii']);
 
 
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)
@@ -462,3 +442,19 @@ if strcmp(dataset.type,'fMRI_matrix')
 else
     howmanyruns=length(dataset.vol.subIDs{mcfi})-1;
 end
+
+function X=addone(X)
+X=[ones(size(X,1),1),X];
+
+function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
+
+rightmat=(idx-1)/chunk;
+rightmat=floor(rightmat);
+rightmat=rightmat*chunk;
+if rightmat==loaded;
+    return
+end
+
+load([datadir,num2str(rightmat),'.mat']);
+loaded=rightmat;
+
