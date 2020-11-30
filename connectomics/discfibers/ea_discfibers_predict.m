@@ -41,7 +41,7 @@ end
 switch lower(mode)
     case 'bin'
         score = scoreBin;
-    case 'sun'
+    case 'sum'
         score = scoreSum;
     case 'mean'
         score = scoreMean;
