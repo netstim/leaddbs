@@ -1,19 +1,23 @@
+import Header as Header
+import ast
 import os
 import sys
-import ast
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
+
 from GUI import Ui_MainWindow
-import Header as Header
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QMainWindow
+from functionalities import Functionalities
 from pop_up_control.cpe_active import PopUpCPEActive
 from pop_up_control.external_neuron_arrray import PopUpExternalNeuronArray
 from pop_up_control.full_field_ifft import PopUpFullFieldIFFT
 from pop_up_control.mesh_refinement import PopUpMeshRefinement
-from functionalities import Functionalities
 from temp_dict import Dictionary
 
 APPLICATION_STATE = False
 
 import subprocess
+
 from threading import Thread
 
 
@@ -199,7 +203,7 @@ class MainWindow(Functionalities):
         # Load/Save/Reset/Run to dictionary
         self.ui.pushButton_Run.clicked.connect(lambda: self.dict_write(self.output_dict(), self.current_file_name))
         # Modification to run a subprocess on another thread when Run button is clicked.
-        self.ui.pushButton_Run.clicked.connect(lambda: self.run_thread())   
+        self.ui.pushButton_Run.clicked.connect(lambda: self.run_thread())
 
         self.ui.pushButton_SaveAs.clicked.connect(lambda: self.save_as())
         self.ui.pushButton_Load.clicked.connect(lambda: self.load_dict())
@@ -211,7 +215,7 @@ class MainWindow(Functionalities):
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
         #subprocess.run(['sudo', 'docker', 'run', '--name', 'OSS_docker', '--volume', '/home/butenko/oss_platform:/opt/oss_platform', '--cap-add=SYS_PTRACE', '-it', '--rm gitlab.elaine.uni-rostock.de:4567/kb589/oss_platform:platform', 'python3', 'Launcher_OSS_lite.py'])
-        #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial. 
+        #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
         home_dir=os.path.expanduser("~")
         #subprocess.run(['gnome-terminal', '-x','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])#
         #OSS_DBS_path=os.getcwd()
@@ -221,7 +225,13 @@ class MainWindow(Functionalities):
         output=subprocess.run(['xterm','-hold','-e','docker', 'run', '--volume', dir_code':/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
         #output=subprocess.run(['xterm','-e','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.DEVNULL)#
         output.check_returncode
-        print(output.returncode)
+        #print(output.returncode)
+
+        if output.returncode==0:
+            subprocess.call(['touch', self.path_to_patient+'/success.txt'])
+        else:
+            subprocess.call(['touch', self.path_to_patient+'/fail.txt'])
+
 
         #print(self.path_to_patient)
         #prepare screenshots
@@ -230,7 +240,7 @@ class MainWindow(Functionalities):
 
         try:
             subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
-        except:        
+        except:
             subprocess.run(['python','Visualization_files/Paraview_connections_processed.py',self.path_to_patient])
 
         try:
@@ -250,7 +260,7 @@ class MainWindow(Functionalities):
         #substitute tilda
         #subprocess.run([
         """add the command you use to run OSS-DBS here (as shown above)"""
- 
+
 
     def run_thread(self):
         t = Thread(target=self.run_command)
