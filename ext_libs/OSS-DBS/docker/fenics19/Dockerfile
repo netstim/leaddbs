@@ -8,6 +8,8 @@
 # Stage 1
 FROM sfbelaine/oss_dbs:base_latest as fenics_dep
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 WORKDIR /tmp
 
 # Update current instance
