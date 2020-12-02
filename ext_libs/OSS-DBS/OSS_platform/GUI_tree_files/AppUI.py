@@ -222,7 +222,7 @@ class MainWindow(Functionalities):
         os.chdir("..")
         dir_code=os.getcwd()            #stupid but simple
         os.chdir("OSS_platform/")
-        output=subprocess.run(['xterm','-hold','-e','docker', 'run', '--volume', dir_code':/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
+        output=subprocess.run(['xterm','-hold','-e','docker', 'run', '--volume', dir_code+':/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
         #output=subprocess.run(['xterm','-e','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.DEVNULL)#
         output.check_returncode
         #print(output.returncode)
