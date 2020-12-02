@@ -6,7 +6,6 @@ else
     uipatdirs=getappdata(handles.leadfigure,'uipatdir');
 end
 
-
 options.native=1;
 
 for pt=1:length(uipatdirs)

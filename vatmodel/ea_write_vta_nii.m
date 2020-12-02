@@ -1,13 +1,15 @@
 function [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
 
-
 vatgrad=getappdata(resultfig,'vatgrad');
 if isempty(vatgrad)
     clear('vatgrad');
 end
 
 % define midpoints of quiver field
-vatgrad(side).x=midpts(indices,1); vatgrad(side).y=midpts(indices,2); vatgrad(side).z=midpts(indices,3);
+vatgrad(side).x=midpts(indices,1);
+vatgrad(side).y=midpts(indices,2);
+vatgrad(side).z=midpts(indices,3);
+
 vizz=0;
 gradvis=gradient(indices,:);
 mag_gradvis=sqrt(sum(gradvis'.^2,1))';
@@ -20,12 +22,11 @@ nmag_gradvis=nmag_gradvis/5; % largest grad vector will be 1/50 mm long
 gradvis=gradvis.*repmat(nmag_gradvis,1,3);
 gradvis=gradvis./repmat(mag_gradvis,1,3);
 
-
-
-vatgrad(side).qx=gradvis(:,1); vatgrad(side).qy=gradvis(:,2); vatgrad(side).qz=gradvis(:,3);
+vatgrad(side).qx=gradvis(:,1);
+vatgrad(side).qy=gradvis(:,2);
+vatgrad(side).qz=gradvis(:,3);
 
 %figure, quiver3(midpts(:,1),midpts(:,2),midpts(:,3),gradient(:,1),gradient(:,2),gradient(:,3))
-
 
 % calculate electric field ET by calculating midpoints of each
 % mesh-connection and setting difference of voltage to these points.
@@ -38,6 +39,7 @@ setappdata(resultfig,'vatgrad',vatgrad);
 
 ngrad=sqrt(sum(gradient'.^2,1));
 vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
+
 % reload elstruct to make sure to take correct one (native vs. template)
 [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 elstruct(1).coords_mm=coords_mm;
@@ -48,24 +50,23 @@ elstruct(1).markers=markers;
 if options.prefs.machine.vatsettings.horn_removeElectrode
     vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec);
 end
+
 ea_dispt('Preparing VAT...');
 
 vat.tET=vat.ET>thresh;
 vat.tpos=vat.pos(vat.tET,:);
-%nvat.tpos=nvat.pos(vat.tET,:);
 outliers=ea_removeoutliers(vat.tpos,mean(dpvx,1),voltix,constvol);
 vat.tpos(outliers,:)=[];
-%nvat.tpos(outliers,:)=[];
 if vizz
     figure, plot3(vat.tpos(:,1),vat.tpos(:,2),vat.tpos(:,3),'r.');
     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
     hold on
     plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'k*');
-     plot3(nvat.tpos(:,1),nvat.tpos(:,2),nvat.tpos(:,3),'m.');
-     toptions=options; toptions.native=1;
-         [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(toptions);
+    plot3(nvat.tpos(:,1),nvat.tpos(:,2),nvat.tpos(:,3),'m.');
+    toptions=options;
+    toptions.native=1;
+    [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(toptions);
     plot3(trajectory{side}(:,1),trajectory{side}(:,2),trajectory{side}(:,3),'g*');
-
 end
 
 % the following will be used for volume 2 isosurf creation as well as
@@ -78,9 +79,6 @@ res=100;
 gv=cell(3,1); spacing=zeros(3,1);
 try
     for dim=1:3
-%         maxdist=max([dpvx(dim)-(min(round(vat.tpos(:,dim)))-3);...
-%         (max(round(vat.tpos(:,dim)))+3)-dpvx(dim)]);
-%         gv{dim}=linspace(dpvx(dim)-maxdist,dpvx(dim)+maxdist,res);
         gv{dim}=linspace(min(round(vat.tpos(:,dim)))-5,max(round(vat.tpos(:,dim)))+5,res);
         spacing(dim)=abs(gv{dim}(1)-gv{dim}(2));
     end
@@ -108,21 +106,20 @@ eeg = F(gv);
 eeg(isnan(eeg))=0;
 eeg(eeg>options.prefs.vat.efieldmax)=options.prefs.vat.efieldmax; % upperlimit files to 10000.
 
-%figure, plot3(F.Points(:,1),F.Points(:,2),F.Points(:,3),'r.')
-%hold on
-%plot3(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),'b.')
-% e-field in matrix form.
+% figure, plot3(F.Points(:,1),F.Points(:,2),F.Points(:,3),'r.')
+% hold on
+% plot3(vat.pos(:,1),vat.pos(:,2),vat.pos(:,3),'b.')
 
 ea_dispt('Calculating output file data...');
+
+% binary e-field - "vat"
 eg=eeg;
 eg=eg>thresh;
-% binary e-field - "vat"
 
+% normalized e-field (zscored).
 neeg=eeg;
 neeg(~eg)=nan;
-
 neeg(neeg>0)=ea_normal(neeg(neeg>0),1,0,' ',0,1,'TRUE');%
-% normalized e-field (zscored).
 neeg(~isnan(neeg))=neeg(~isnan(neeg))-min(neeg(~isnan(neeg)));
 neeg(~isnan(neeg))=neeg(~isnan(neeg))/sum(neeg(~isnan(neeg))); % 0-1 distributed.
 
@@ -135,14 +132,10 @@ catch
     keyboard
 end
 
-
-%eg=smooth3(eg,'gaussian',[25 25 25]);
 ea_dispt('Calculating volume...');
 
 vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
 S.volume(side)=vatvolume;
-
-
 
 ea_dispt('Writing files...');
 
@@ -163,11 +156,8 @@ switch side
         Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_left.nii'];
         Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_gauss_left.nii'];
 end
-%save(stimfile,'S');
-ea_savestimulation(S,options);
-% setappdata(lgfigure,'curS',S);
 
-%spm_write_vol(Vvat,flipdim(eg,3));
+ea_savestimulation(S,options);
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);
 Vvate.dt=[16,0];
@@ -186,7 +176,6 @@ caps=isocaps(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.5);
 
 vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
 vatfv.vertices=[vatfv.vertices;caps.vertices];
-
 
 try
     vatfv=ea_smoothpatch(vatfv,1,35);
@@ -300,6 +289,7 @@ end
 
 vat.pos = vat.pos';
 
+
 function outliers=ea_removeoutliers(pointcloud,dpvx,voltix,constvol)
 % using the heuristic Maedler/Coenen model to detect outliers
 vmax=max(abs(voltix));
@@ -312,20 +302,20 @@ r=r*4.5;
 mp=dpvx;
 
 D=pointcloud-repmat(mp,size(pointcloud,1),1);
-S=[r,r,r];%std(D,[],1); % fixed 50 cm
+S=[r,r,r];
 outliers=D>repmat(S,size(D,1),1);
 outliers=any(outliers,2);
 
+
 function r=maedler12_eq3(U,Im)
-% This function radius of Volume of Activated Tissue for stimulation settings U and Ohm. See Maedler 2012 for details.
-% Clinical measurements of DBS electrode impedance typically range from
-% 500?1500 Ohm (Butson 2006).
+% This function calculates the  radius of Volume of Activated Tissue for
+% stimulation settings U (Maedler 2012). Clinical measurements of DBS
+% electrode impedance typically range from 500-1500 Ohm (Butson 2006).
+
 r=0; %
 if U %(U>0)
-
     k1=-1.0473;
     k3=0.2786;
     k4=0.0009856;
-
-    r=-(k4*Im-sqrt(k4^2*Im^2  +   2*k1*k4*Im    +   k1^2 +   4*k3*U)   +   k1)/(2*k3);
+    r=-(k4*Im-sqrt(k4^2*Im^2 + 2*k1*k4*Im + k1^2 + 4*k3*U) + k1)/(2*k3);
 end

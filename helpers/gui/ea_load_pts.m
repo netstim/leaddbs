@@ -54,7 +54,8 @@ try
           end
        end
        try
-           [~,locb] = ismember({reco.props(1).elmodel},handles.electrode_model_popup.String);
+           elmodel=ea_get_first_notempty_elmodel(reco.props);
+           [~,locb] = ismember({elmodel},handles.electrode_model_popup.String);
            set(handles.electrode_model_popup,'Value',locb);
            clear locb
        end

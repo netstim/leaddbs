@@ -28,19 +28,18 @@ function [coords_mm,trajectory,markers] = ea_runmanualslicer(options)
     F = textscan(fid, '%*s %f %f %f %*f %*f %*f %*f %*f %*f %*f %*s %*c %*s', 'HeaderLines', 3, 'Delimiter', ',');
     fclose(fid);
     F = cell2mat(F);
-    
+
     for side = options.sides
         idx = side*2-1;
         markers(side).head = F(idx,:);
         markers(side).tail = F(idx+1,:);
-        
+
         % add x and y (copied from ea_runmanual.m)
-        normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-        orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-        markers(side).x=markers(side).head+orth(:,1)';
-        markers(side).y=markers(side).head+orth(:,2)';
+        [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);
+        markers(side).x = markers(side).head +  xunitv*(options.elspec.lead_diameter/2);
+        markers(side).y = markers(side).head + yunitv*(options.elspec.lead_diameter/2);
     end
-    
+
     [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,0);
     disp('Manual reconstruction completed.');
 end

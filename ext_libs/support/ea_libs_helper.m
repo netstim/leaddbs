@@ -1,9 +1,15 @@
-function ea_libs_helper(libpath)
+function ea_libs_helper(libpath, setpath)
 
-% add shared libraries to search path
+% add/remove shared libraries to search path
 
-if nargin < 1
+% Use current folder as libpath by default
+if nargin < 1 || isempty(libpath)
     libpath = fileparts(mfilename('fullpath'));
+end
+
+% set path by default
+if nargin < 2
+    setpath = 1;
 end
 
 if ispc
@@ -16,6 +22,12 @@ end
 
 env = getenv(envname);
 
-if ~contains(env, libpath)
-    setenv(envname, [libpath, ';', env]);
+switch setpath
+    case {1, 'set'}
+        if ~contains(env, libpath)
+            setenv(envname, [libpath, ';', env]);
+        end
+    case {0, 'unset'}
+        env = regexprep(env, [libpath,'[;:]'], '');
+        setenv(envname, env);
 end

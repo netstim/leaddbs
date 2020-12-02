@@ -1,7 +1,11 @@
-function ea_ftr2trk(ftrfile, specs)
+function ea_ftr2trk(ftrfile, specs, LPS)
 % export FTR matrix to TrackVis trk format
 %
-% specs can also be the path of the nifti file which defines the space.
+% specs can also be the path of the nifti file which defines the space. If
+% not specified or empty, MNI space T1 will be used as reference.
+%
+% If the trk is going to be visualized in Surf-Ice, LPS should be set to 1
+% to fix the orientation.
 
 [directory, ftrname, ext] = fileparts(ftrfile);
 if isempty(directory)
@@ -23,7 +27,7 @@ end
 %% set header
 header = ea_trk_read([ea_getearoot,'ext_libs',filesep,'example.trk']);
 
-if ~exist('specs','var') % Use MNI T1 as reference space by default.
+if ~exist('specs','var') || isempty(specs) % Use MNI T1 as reference space by default.
     disp('Header from MNI t1.nii ...');
     refhdr = ea_fslhd([ea_space,'t1.nii']);
     specs.origin = [0,0,0];
@@ -34,7 +38,7 @@ elseif isstruct(specs)
     % Suppose that the affine matrix is from SPM
     specs.affine(:,4) = specs.affine(:,4) + sum(specs.affine(:,1:3),2);
     header.pad2 = [ea_aff2axcodes(specs.affine), char(0)];
-else % Use the specified nifti as reference space.
+elseif isfile(specs) % Use the specified nifti as reference space.
     disp(['Header from ',specs,' ...']);
     refimage = specs;
     refhdr = ea_fslhd(refimage);
@@ -83,6 +87,10 @@ if strcmp(voxmm,'mm') % have to retranspose to vox
     for i=1:length(tracks)
         tracks(i).matrix = [tracks(i).matrix,ones(size(tracks(i).matrix,1),1)]';
         tracks(i).matrix = specs.affine\tracks(i).matrix;
+        if exist('LPS', 'var') && LPS
+            tracks(i).matrix(1,:) = refhdr.dim1-1-tracks(i).matrix(1,:);
+            tracks(i).matrix(2,:) = refhdr.dim2-1-tracks(i).matrix(2,:);
+        end
         tracks(i).matrix = tracks(i).matrix(1:3,:)';
     end
 end

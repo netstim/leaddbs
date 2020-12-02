@@ -1,4 +1,4 @@
-function [h,R,p,g]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm,colors)
+function [h,R,p,g]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm,colors,markers)
 % Wrapper for gramm to produce a simple correlation plot.
 % Group1 denotes colors, Group2 Markers.
 % Can also specify custom colors
@@ -72,6 +72,16 @@ else
     colorOptions = {'map', map, 'n_color', size(map,1), 'n_lightness', 1};
 end
 
+if exist('markers', 'var') && ~isempty(markers)
+    if ~isempty(group2)
+        if numel(markers) < numel(unique(group2.idx))
+            error('Number of custom markers is less than number of categories!');
+        end
+    end
+else
+    markers = {'o' 's' 'd' '^' 'v' '>' '<' 'p' 'h' '*' '+' 'x'};
+end
+
 switch corrtype
     case {'permutation_spearman','permutation'}
         for tries=1:3
@@ -84,10 +94,10 @@ switch corrtype
         end
     case 'permutation_pearson'
         for tries=1:3
-
             try
                 [R,p]=ea_permcorr(X,Y,'pearson');
             end
+
             if exist('R','var')
                 break
             end
@@ -100,9 +110,11 @@ end
 g=gramm('x',X,'y',Y);
 if isempty(group1) && isempty(group2)
     g.geom_point();
+    g.set_color_options(colorOptions{:});
 else
     g.set_color_options('chroma',0,'lightness',30);
 end
+g.set_point_options('markers', markers, 'base_size', 7);
 g.stat_glm();
 
 pv=p;

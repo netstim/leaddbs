@@ -83,6 +83,8 @@ else
     spm_jobman('run',{matlabbatch});
 end
 
+ea_delete([fileparts(ea_niifileparts(moving)), filesep, 'spm*.ps']);
+
 [~, mov] = ea_niifileparts(moving);
 [~, fix] = ea_niifileparts(fixed);
 

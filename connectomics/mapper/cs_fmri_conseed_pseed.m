@@ -189,6 +189,12 @@ includeSurf = prefs.lcm.includesurf;
 disp('Iterating through subjects...');
 for i=1:numseed
     seedFilename = seedfn{i};
+    patName = regexp(sfile{i}, ['(?<=',filesep, '?)[^',filesep,']+(?=', filesep, 'stimulations)'], 'match', 'once');
+    if ~isempty(patName)
+        patStr = ['Patient ', patName, ', '];
+    else
+        patStr = '';
+    end
 
     if size(sfile(i,:),2)>1
         isROISurf = true;
@@ -202,7 +208,7 @@ for i=1:numseed
 
     parfor subj = 1:numSubUse % iterate across subjects
         mcfi = usesubjects(subj);
-        disp(['Subject ', num2str(mcfi, '%04d'),'/',num2str(numSubUse,'%04d'),'...']);
+        disp([patStr, 'Connectome Subject ', num2str(mcfi, '%04d'),'/',num2str(numSubUse,'%04d'),'...']);
         howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
         thiscorr = nan(numVoxUse,howmanyruns);
         lsThisCorr = nan(10242,howmanyruns);
@@ -460,19 +466,6 @@ end
 
 
 toc
-
-
-function s=ea_conformseedtofmri(dataset,s)
-td=tempdir;
-dataset.vol.space.fname=[td,'tmpspace.nii'];
-ea_write_nii(dataset.vol.space);
-s.fname=[td,'tmpseed.nii'];
-ea_write_nii(s);
-
-ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
-s=ea_load_nii(s.fname);
-delete([td,'tmpspace.nii']);
-delete([td,'tmpseed.nii']);
 
 
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)

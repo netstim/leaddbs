@@ -237,9 +237,9 @@ for mcfi=usesubjects % iterate across subjects
 
                             if ~exist('db','var')
                                 try
-                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,dataset.vol.matfilename]);
+                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,dataset.vol.matfilename],'Writable',false);
                                 catch
-                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
+                                    db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat'],'Writable',false);
                                 end
                             end
 
@@ -663,19 +663,6 @@ switch dataset.type
 end
 
 toc
-
-
-function s=ea_conformseedtofmri(dataset,s)
-td=tempdir;
-dataset.vol.space.fname=[td,'tmpspace.nii'];
-ea_write_nii(dataset.vol.space);
-s.fname=[td,'tmpseed.nii'];
-ea_write_nii(s);
-
-ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
-s=ea_load_nii(s.fname);
-delete([td,'tmpspace.nii']);
-delete([td,'tmpseed.nii']);
 
 
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)

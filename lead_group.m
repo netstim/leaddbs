@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 23-Mar-2020 14:04:53
+% Last Modified by GUIDE v2.5 13-Nov-2020 13:22:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -551,7 +551,7 @@ resultfig=ea_elvis(options,M.elstruct(ptidx));
 try % zoom on coordinates.
     coords={M.elstruct(:).coords_mm};
     for c=1:length(coords)
-        call(c,:)=mean([coords{c}{1};coords{c}{2}]);
+        call(c,:)=nanmean([coords{c}{1};coords{c}{2}]);
     end
     ea_zoomcenter(resultfig.CurrentAxes, mean(call), 5);
 catch
@@ -868,22 +868,12 @@ end
 
 for pt=selection
     % set pt specific options
-
-    % own fileparts to support windows/mac/linux slashes even if they come
-    % from a different OS.
-    if ~contains(M.patient.list{pt},'/')
-        lookfor='\';
+    if M.ui.detached
+        options.patientname = M.patient.list{pt};
+        options.root = M.ui.groupdir;
     else
-        lookfor='/';
-    end
-
-    slashes=strfind(M.patient.list{pt},lookfor);
-    if ~isempty(slashes)
-        options.patientname=M.patient.list{pt}(slashes(end)+1:end);
-        options.root=M.patient.list{pt}(1:slashes(end));
-    else
-        options.patientname=M.patient.list{pt};
-        options.root='';
+        [options.root, options.patientname] = fileparts(M.patient.list{pt});
+        options.root = [options.root, filesep];
     end
 
     fprintf('\nProcessing %s...\n\n', options.patientname);
@@ -908,6 +898,17 @@ for pt=selection
         options.d3.isomatrix=M.isomatrix;
     catch
         options.d3.isomatrix={};
+    end
+    try
+        options.d3.isomatrix_name=M.isomatrix_name;
+    catch
+        options.d3.isomatrix_name={};
+    end
+    options.normregressor=M.ui.normregpopup;
+    for reg=1:length(options.d3.isomatrix)
+        try
+            options.d3.isomatrix{reg}=ea_reformat_isomatrix(options.d3.isomatrix{reg},M,options);
+        end
     end
 
     options.d3.isovscloud=M.ui.isovscloudpopup;
@@ -1021,14 +1022,14 @@ for pt=selection
             setappdata(resultfig,'elstruct',M.elstruct(pt));
             setappdata(resultfig,'elspec',options.elspec);
 
-            if options.native % port to native
-               transmitcoords=ea_load_reconstruction(options);
+            if options.native % Reload native space coordinates
+                coords = ea_load_reconstruction(options);
             else
-                transmitcoords=M.elstruct(pt).coords_mm;
+                coords = M.elstruct(pt).coords_mm;
             end
 
             try
-                [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,transmitcoords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
+                [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
                 vatCalcPassed(side) = 1;
             catch
                 volume=0;
@@ -1045,9 +1046,13 @@ for pt=selection
     if all(vatCalcPassed)
         ea_calc_vatstats(resultfig,options);
     else
-        ea_error(sprintf(['An error occured when building the VTA mesh/headmodel for %s.\n',...
-            'Try re-calculating this VTA with a different atlas or with no atlas.'],...
-            options.patientname));
+        try
+            ea_error(sprintf(['An error occured when building the VTA mesh/headmodel for %s.\n',...
+                'Try re-calculating this VTA with a different atlas or with no atlas.'],...
+                options.patientname));
+        catch
+            continue;
+        end
     end
 
     % Step 3: Re-calculate connectivity from VAT to rest of the brain.
@@ -1448,11 +1453,7 @@ switch choice
         M=getappdata(gcf,'M');
         ea_dispercent(0,'Detaching group file');
         for pt=1:length(M.patient.list)
-            slashes=strfind(M.patient.list{pt},'/');
-            if isempty(slashes)
-                slashes=strfind(M.patient.list{pt},'\');
-            end
-            ptname=M.patient.list{pt}(max(slashes)+1:end);
+            [~, ptname] = fileparts(M.patient.list{pt});
             if strcmp('Yes and copy localizations/VTAs please.',choice)
                 odir=[M.ui.groupdir,ptname,filesep];
                 ea_mkdir([odir,'stimulations']);
@@ -1707,16 +1708,6 @@ function specify3doptions_Callback(hObject, eventdata, handles)
 ea_lg_3dsetting(handles.leadfigure)
 
 
-% --- Executes on button press in targetreport.
-function targetreport_Callback(hObject, eventdata, handles)
-% hObject    handle to targetreport (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ea_refresh_lg(handles);
-M=getappdata(gcf,'M');
-ea_gentargetreport(M);
-
-
 % --- Executes on button press in exportstats.
 function exportstats_Callback(hObject, eventdata, handles)
 % hObject    handle to exportstats (see GCBO)
@@ -1724,5 +1715,7 @@ function exportstats_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M = getappdata(gcf,'M');
 [file, path] = uiputfile('*.mat','Export DBS Stats as...', [M.root, 'ea_stats_export.mat']);
-ea_lg_exportstats(M, [path, file]);
-fprintf('\nDBS Stats exported to:\n%s\n\n', [path, file]);
+if file % make sure user didnt press cancel
+    ea_lg_exportstats(M, [path, file]);
+    fprintf('\nDBS Stats exported to:\n%s\n\n', [path, file]);
+end

@@ -173,7 +173,7 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
 
                         if any(slice(:));
                             centr=mean(xyatlmm(valatl>thresh,:));%ea_centroid(logical(slice));
-                            an=sub2space(atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1));
+                            an=ea_underscore2space(atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1));
 
                             try
                                 set(0,'CurrentFigure',cuts)
@@ -188,13 +188,6 @@ function cuts=ea_add_overlay(boundboxmm,cuts,tracor,options)
         end
 
     end
-
-
-
-
-    %axis off
-
-    % save table information
 
 
 function sides=detsides(opt)
@@ -213,6 +206,7 @@ switch opt
 
 end
 
+
 function in=ea_intersecdim(tracor)
 
 switch tracor
@@ -223,6 +217,7 @@ switch tracor
     case 3
         in=1;
 end
+
 
 function pl=ea_planesdim(tracor)
 
@@ -240,7 +235,3 @@ function fslice=ea_zeroframe(slice)
 
 fslice=zeros(size(slice)+[2,2]);
 fslice(2:end-1,2:end-1)=slice;
-
-
-function str=sub2space(str) % replaces subscores with spaces
-str(str=='_')=' ';

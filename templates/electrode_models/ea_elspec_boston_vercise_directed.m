@@ -10,10 +10,9 @@ function electrode=ea_elspec_boston_vercise_directed(varargin)
 
 elemodelPath = fileparts(mfilename('fullpath'));
 
-% The segmented contacts are anti-clockwise arranged seen from the top view.
-% But they are clockwise ordered in the models in the components folder. So
-% We need to reoder it here.
-electrodeorder = [1 2 4 3 5 7 6 8 9];
+% The segmented contacts are counter-clockwise arranged seen from the top
+% view, the same as in the models in the components folder.
+electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
 for k = 1:16
@@ -35,25 +34,34 @@ for k = 1:numel(electrodeorder)
 end
 
 %% other specifications
-electrode.electrode_model = 'Boston Scientific Vercise Directed';
+options.elmodel = 'Boston Scientific Vercise Directed';
+options = ea_resolve_elspec(options);
+elspec = options.elspec;
+
+electrode.electrode_model = options.elmodel;
 electrode.head_position = [0 0 0.75];
 electrode.tail_position = [0 0 6.75];
-electrode.x_position = [0.65 0 0.75];
-electrode.y_position = [0 0.65 0.75];
+electrode.x_position = [elspec.lead_diameter/2, 0, 0.75];
+electrode.y_position = [0, elspec.lead_diameter/2, 0.75];
 electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 
 % The segmented contact in the null model are also anti-clockwise arranged
 % from the top view.
+cx = elspec.lead_diameter/2*cos(pi/6);
+cy = elspec.lead_diameter/2*sin(pi/6);
+
 electrode.coords_mm(1,:)=[0 0 0.75];
-electrode.coords_mm(2,:)=[0 0 2.75]+[-0.66,0,0];
-electrode.coords_mm(3,:)=[0 0 2.75]+[0.33,-0.66,0];
-electrode.coords_mm(4,:)=[0 0 2.75]+[0.33,0.66,0];
-electrode.coords_mm(5,:)=[0 0 4.75]+[-0.66,0,0];
-electrode.coords_mm(6,:)=[0 0 4.75]+[0.33,-0.66,0];
-electrode.coords_mm(7,:)=[0 0 4.75]+[0.33,0.66,0];
+electrode.coords_mm(2,:)=[0 0 2.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(3,:)=[0 0 2.75]+[-cx, -cy, 0];
+electrode.coords_mm(4,:)=[0 0 2.75]+[cx, -cy, 0];
+electrode.coords_mm(5,:)=[0 0 4.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(6,:)=[0 0 4.75]+[-cx,-cy, 0];
+electrode.coords_mm(7,:)=[0 0 4.75]+[cx,-cy, 0];
 electrode.coords_mm(8,:)=[0 0 6.75];
+
+electrode.isdirected = 1;
 
 %% saving electrode struct
 save([elemodelPath, filesep, 'boston_vercise_directed.mat'],'electrode');
@@ -70,10 +78,6 @@ if nargin
 else
     vizz=1;
 end
-
-options.elmodel = 'Boston Scientific Vercise Directed';
-options = ea_resolve_elspec(options);
-elspec = options.elspec;
 
 if vizz
     X = eye(4);

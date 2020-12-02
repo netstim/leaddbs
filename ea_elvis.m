@@ -183,7 +183,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     if isfield(plans,'plan')
                         for plan=1:length(plans)
                             pobj=ea_load_electrode(directory,side+plan);
-                            ea_add_trajectory([],[],options,pobj);
+                            ea_add_trajectory([],[],options,pobj,side+plan);
                         end
                     end
                 end
@@ -193,7 +193,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                vizstruct=struct('faces',[],'vertices',[],'colors',[]);
 
                cnt=1;
-                for side=1:length(options.sides)
+                for iside=1:length(options.sides)
+                    side=options.sides(iside);
                     extract=1:length(el_render(side).elpatch);
                     for ex=extract
                         tp=el_render(side).elpatch(ex);
@@ -362,35 +363,11 @@ v = prefs.machine.view;
 ea_view(v);
 
 % Show atlas data
-if options.d3.writeatlases
+if options.d3.writeatlases && ~strcmp(options.atlasset, 'Use none')
     atlases = ea_showatlas(resultfig,elstruct,options);
 
     if ~strcmp(options.d3.verbose,'off') && ~atlases.discfibersonly
         ea_openatlascontrol([],[],atlases,resultfig,options);
-    end
-
-    if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
-        try % see if electrode has been defined.
-            cnt=length(vizstruct);
-        catch
-            cnt=0;
-        end
-        % export vizstruct
-        try
-            for side=1:length(options.sides)
-                for atl=1:length(atlases.fv)
-                    if isfield(atlases.fv{atl,side},'faces')
-                        vizstruct(cnt+1).faces=atlases.fv{atl,side}.faces;
-                        vizstruct(cnt+1).vertices=atlases.fv{atl,side}.vertices;
-                        vizstruct(cnt+1).normals=atlases.normals{atl,side};
-                        vizstruct(cnt+1).colors=[...
-                            squeeze(ind2rgb(round(atlases.cdat{atl,side}),atlases.colormap)),...
-                            repmat(0.7,size(atlases.normals{atl,side},1),1)];
-                        cnt=cnt+1;
-                    end
-                end
-            end
-        end
     end
 else
     colormap(gray)
@@ -422,22 +399,21 @@ hold on
 ea_show_light(resultfig,1);
 % set(lightbulb, 'Visible', 'off');
 
-lightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('lightbulb'),...
-    'TooltipString','Camera Lightbulb',...
-    'OnCallback',{@objvisible,getappdata(resultfig,'cam_lamp')},...
-    'OffCallback',{@objinvisible,getappdata(resultfig,'cam_lamp')},'State','on');
-clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb'),...
-    'TooltipString','Ceiling Lightbulb',...
-    'OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},...
-    'OffCallback',{@objinvisible,getappdata(resultfig,'ceiling_lamp')},'State','on');
-llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb'),...
-    'TooltipString','Left Lightbulb',...
-    'OnCallback',{@objvisible,getappdata(resultfig,'left_lamp')},...
-    'OffCallback',{@objinvisible,getappdata(resultfig,'left_lamp')},'State','on');
-rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb'),...
-    'TooltipString','Right Lightbulb',...
-    'OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},...
-    'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
+lightbulbbutton=uipushtool(ht,'CData',ea_get_icn('lightbulb'),...
+     'TooltipString','Set Lighting',...
+     'ClickedCallback',{@ea_launch_setlighting,resultfig});
+% clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb'),...
+%     'TooltipString','Ceiling Lightbulb',...
+%     'OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},...
+%     'OffCallback',{@objinvisible,getappdata(resultfig,'ceiling_lamp')},'State','on');
+% llightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('llightbulb'),...
+%     'TooltipString','Left Lightbulb',...
+%     'OnCallback',{@objvisible,getappdata(resultfig,'left_lamp')},...
+%     'OffCallback',{@objinvisible,getappdata(resultfig,'left_lamp')},'State','on');
+% rlightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('rlightbulb'),...
+%     'TooltipString','Right Lightbulb',...
+%     'OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},...
+%     'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
 
 % Initialize HD-Export button
 dumpscreenshotbutton=uipushtool(ht,'CData',ea_get_icn('dump'),...
@@ -522,6 +498,9 @@ ax = findobj(resultfig.Children,'Type','axes');
 set(findobj(ax.Children,'Type','surface'),'HitTest','off');
 ea_mouse_camera(resultfig);
 
+
+function ea_launch_setlighting(~,~,resultfig)
+ea_set_lighting(resultfig);
 
 % --- Drag and drop callback to load patdir.
 function DropFcn(~, event, resultfig)
@@ -659,10 +638,11 @@ if(getappdata(gcf,'altpressed'))
     eltog=getappdata(hobj.Parent.Parent,'eltog');
     set(eltog,'State',onoff);
     for el=1:length(atls)
-        for side=1:length(options.sides)
-           try
+        for iside=1:length(options.sides)
+            side=options.sides(iside);
+            try
                set(atls(el).el_render{side}, 'Visible', onoff);
-           end
+            end
         end
     end
 else

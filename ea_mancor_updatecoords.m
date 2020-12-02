@@ -14,7 +14,7 @@ switch movel
         cchangecoord=1;
         usefit=options.elside;
         spin=-1;
-        
+
         refpt=markers(options.elside).tail;
         movedpt=movedheadtail(1,:);
         move='head';
@@ -23,7 +23,7 @@ switch movel
         cchangecoord=2;
         usefit=options.elside;
         spin=1;
-        
+
         refpt=markers(options.elside).head;
         movedpt=movedheadtail(2,:);
         move='tail';
@@ -69,8 +69,8 @@ nutrajectory{usefit}=sortrows(nutrajectory{usefit},-3); % Make sure that traject
 
 function movedel=whichelmoved(coordhandle,mcfig)
 try
-mplot = getappdata(mcfig,'mplot');
-options = getappdata(mcfig,'options');
+    mplot = getappdata(mcfig,'mplot');
+    options = getappdata(mcfig,'options');
     for el=1:2
         if coordhandle==mplot(el,1)
             movedel=sub2ind([2,2],el,1);
@@ -79,5 +79,3 @@ options = getappdata(mcfig,'options');
 catch
     keyboard
 end
-    
-    

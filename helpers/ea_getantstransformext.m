@@ -1,4 +1,4 @@
-function ext=ea_getantstransformext(directory,options)
+function ext=ea_getantstransformext(directory)
 
 gz=dir([directory,'glanatComposite.nii.gz']);
 h5=dir([directory,'glanatComposite.h5']);

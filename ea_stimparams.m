@@ -121,9 +121,8 @@ setappdata(handles.stimfig,'stimparams',stimparams); % store stimulation setting
 % setup modelselect popup
 
 cnt=1;
-earoot=[ea_getearoot];
 
-ndir=dir([earoot,'ea_genvat_*.m']);
+ndir=dir([ea_getearoot,'ea_genvat_*.m']);
 if strcmp(options.leadprod, 'group')
     isdirected=0; % for now allow everything in lead group
 else
@@ -179,49 +178,56 @@ set(handles.stimfig,'position',[51,51,pos(3),pos(4)]);
 ea_refreshguisp(handles,options);
 
 if ~strcmp(options.leadprod, 'group')
+    directory = [options.root,options.patientname,filesep];
     visualizeVAT = 1;
     if visualizeVAT
         labels=get(handles.stimlabel,'String');
         label=labels{get(handles.stimlabel,'Value')};
         label(strfind(label,' '))='';
-        if exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2 && exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
-            load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+        if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
+            load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = vatvolume;
-            vatgradtemp(1) = vatgrad;
-            load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+            if exist('vatgrad','var')
+                vatgradtemp(1) = vatgrad;
+            end
+            load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
-            vatgradtemp(2) = vatgrad;
-            vatgrad = vatgradtemp;
-        elseif  exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
-            load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+            if exist('vatgrad','var')
+                vatgradtemp(2) = vatgrad;
+                vatgrad = vatgradtemp;
+            end
+        elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
+            load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = vatvolume;
-        elseif  exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
-            load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
-            stimparams(1,1).VAT.VAT = vatfv;
-            stimparams(1,1).volume = vatvolume;
+        elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
+            load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+            %For consistency, left is always on 2nd element of stimparams
+            stimparams(1,2).VAT.VAT = vatfv;
+            stimparams(1,2).volume = vatvolume;
         else
-            if exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-                nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+            if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
+                nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
     %             vatfv = ea_smoothpatch(vatfv,1,35);
                 stimparams(1,1).VAT.VAT = vatfv;
-                nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
+                nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
     %             vatfv = ea_smoothpatch(vatfv,1,35);
                 stimparams(1,2).VAT.VAT = vatfv;
-            elseif exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2
-                nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+            elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2
+                nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
     %             vatfv = ea_smoothpatch(vatfv,1,35);
                 stimparams(1,1).VAT.VAT = vatfv;
-            elseif exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-                nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
+            elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
+                nii = ea_load_nii([directory,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
     %             vatfv = ea_smoothpatch(vatfv,1,35);
-                stimparams(1,1).VAT.VAT = vatfv;
+                %For consistency, left is always on 2nd element of stimparams
+                stimparams(1,2).VAT.VAT = vatfv;
             else
                 visualizeVAT = 0;
             end
@@ -1048,13 +1054,20 @@ ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
 stimname=S.label;
 
 for el=1:length(elstruct)
-    for side=1:length(elstruct.coords_mm)
+    for iside=1:length(options.sides)%length(elstruct.coords_mm)
+        side=options.sides(iside);
+
         if isfield(elstruct,'group') % group analysis, more than one electrode set
             % this should not happen, in this case the stim button is
             % hidden.
             keyboard
         else % single patient
-            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,elstruct(el).coords_mm,getappdata(handles.stimfig,'S'),side,options,stimname,options.prefs.machine.vatsettings.horn_ethresh,handles.stimfig);
+            if options.native % Reload native space coordinates
+                coords = ea_load_reconstruction(options);
+            else
+                coords = elstruct(el).coords_mm;
+            end
+            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,options.prefs.machine.vatsettings.horn_ethresh,handles.stimfig);
             stimparams(1,side).volume=volume;
             flix=1;
         end
@@ -1677,6 +1690,7 @@ function stimlabel_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of stimlabel as a double
 S=getappdata(handles.stimfig,'S');
 options=getappdata(handles.stimfig,'options');
+directory = [options.root,options.patientname,filesep];
 sel=get(handles.stimlabel,'String');
 sel=sel{get(handles.stimlabel,'Value')};
 if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
@@ -1698,8 +1712,12 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             [~,ix]=ismember(stimlabel,get(handles.stimlabel,'String'));
             set(handles.stimlabel,'Value',ix);
             stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimlabel});
-
-            movefile([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimlabel],[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimc{1}]);
+            if isfolder([directory,'stimulations',filesep,ea_nt(0),stimlabel])
+                movefile([directory,'stimulations',filesep,ea_nt(0),stimlabel],[directory,'stimulations',filesep,ea_nt(0),stimc{1}]);
+            end
+            if isfolder([directory,'stimulations',filesep,ea_nt(1),stimlabel])
+                movefile([directory,'stimulations',filesep,ea_nt(1),stimlabel],[directory,'stimulations',filesep,ea_nt(1),stimc{1}]);
+            end
             slabelc=get(handles.stimlabel,'String');
             slabelc{ix}=stimc{1};
             set(handles.stimlabel,'String',slabelc);
@@ -1714,7 +1732,8 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             if strcmp(answ,'No')
                 set(handles.stimlabel,'Value',1);
             else % truly delete Stimulation parameters
-                rmdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label],'s');
+                ea_delete([directory,'stimulations',filesep,ea_nt(0),S.label]);
+                ea_delete([directory,'stimulations',filesep,ea_nt(1),S.label]);
                 S=[]; % this will create the prompt to generate a new S.
                 setappdata(handles.stimfig,'S',S);
                 set(handles.stimlabel,'Value',1);
@@ -1743,48 +1762,47 @@ else
     % available the vat_xxx.nii is loaded and visualized
 
     visualizeVAT = 1;
-    if exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2 && exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
-        load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+    if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
+        load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
         vatgradtemp(1) = vatgrad;
-        load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+        load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
         stimparams(1,2).VAT.VAT = vatfv;
         stimparams(1,2).volume = vatvolume;
         vatgradtemp(2) = vatgrad;
         vatgrad = vatgradtemp;
-    elseif  exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
-        load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+    elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
+        load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
-    elseif  exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
-        load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+    elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
+        load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
     else
-        if exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-            nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+        if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
+            nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
 %             vatfv = ea_smoothpatch(vatfv,1,35);
             stimparams(1,1).VAT.VAT = vatfv;
-            nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
+            nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
 %             vatfv = ea_smoothpatch(vatfv,1,35);
             stimparams(1,2).VAT.VAT = vatfv;
-        elseif exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2
-            nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+        elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2
+            nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
 %             vatfv = ea_smoothpatch(vatfv,1,35);
             stimparams(1,1).VAT.VAT = vatfv;
-        elseif exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-            nii = ea_load_nii([options.root,options.patientname,filesep,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
+        elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
+            nii = ea_load_nii([directory,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
 %             vatfv = ea_smoothpatch(vatfv,1,35);
             stimparams(1,1).VAT.VAT = vatfv;
         else
             visualizeVAT = 0;
         end
-
     end
 
     if visualizeVAT
@@ -1805,7 +1823,6 @@ else
     else
         disp('VAT, cannot be visualized please recalculate')
     end
-
 end
 
 
@@ -1865,7 +1882,6 @@ if groupmode
                 keyboard
             end
             setappdata(handles.stimfig,'gSv',gSv);
-
         else
             [~,ind]=ismember(gSv.vatmodel,get(handles.modelselect,'String'));
             set(handles.modelselect,'Value',ind);
@@ -1905,37 +1921,27 @@ if groupmode
     end
 end
 
-if ~isempty(S) % initialization
-    if ~isempty(S.model) % call from lead group
-        [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
-        if ~ix
-            ea_error('The model of the selected stimulation is not available.');
-        else
-            set(handles.modelselect,'Value',ix);
-        end
-    end
-end
-
 stimlabel=getappdata(handles.stimfig,'stimlabel');
 
 if isempty(S)
-    wasempty=1;
     S=ea_initializeS(stimlabel,options,handles);
     setappdata(handles.stimfig,'stimlabel',S.label);
 else
-    wasempty=0;
     if isempty(S.Rs1)
         S=ea_initializeS(stimlabel,options,handles);
         setappdata(handles.stimfig,'stimlabel',S.label);
     end
 end
-if ~wasempty
-    if isfield(S, 'model')
-        [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
-        set(handles.modelselect,'Value',ix);
+
+if isfield(S, 'model')
+    [~,ix]=ismember(S.model,get(handles.modelselect,'String'));
+    if ~ix
+        ea_error('The model of the selected stimulation is not available.');
     else
-        set(handles.modelselect,'Value',1);
+        set(handles.modelselect,'Value',ix);
     end
+else
+    set(handles.modelselect,'Value',1);
 end
 
 Ractive=S.active(1);
@@ -2153,6 +2159,9 @@ axis equal;
 %% check consistency with chosen VAT model.
 %% check consistency with chosen electrode model.
 if ~isfield(options,'elspec')
+    if isempty(elstruct(actpt).elmodel)
+        error('Model is empty. Was the electrode segmentation fully executed in single patient mode?')
+    end
     toptions=ea_resolve_elspec(elstruct(actpt));
     try
         options.elspec=toptions.elspec;
@@ -2211,7 +2220,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
-      case 'fastfield'
+      case 'Fastfield (Baniasadi 2020)'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=0;
@@ -2232,6 +2241,20 @@ if get(handles.(['Ls',num2str(Ractive),'va']),'Value')==1 % Volt
 else % Ampere
     ea_show_percent(handles,options,2,'on'); % left hemisphere
 end
+
+% enable/disable panel based on sides that are present
+is_side_present=arrayfun(@(xside) ~ea_arenopoints4side(elstruct(actpt).trajectory, xside), [1,2]);%First element is R, second is L
+if is_side_present(1)>0%check if R side is present
+    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'on')
+else
+    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'off')
+end
+if is_side_present(2)>0%check if L side is present
+    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'on')
+else
+    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
+end
+
 
 ea_savestimulation(S,options);
 setappdata(handles.stimfig,'S',S);
@@ -2281,10 +2304,12 @@ set(handles.kohmtext4,'visible',cmd);
 function ea_disable_vas(handles,options)
 
 RL={'R','L'};
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
+
     for Rva=1:4
-        set(handles.([RL{options.sides(side)},'s',num2str(Rva),'va']),'enable','off');
-        set(handles.([RL{options.sides(side)},'s',num2str(Rva),'va']),'value',1);
+        set(handles.([RL{side},'s',num2str(Rva),'va']),'enable','off');
+        set(handles.([RL{side},'s',num2str(Rva),'va']),'value',1);
     end
 end
 
@@ -2292,9 +2317,11 @@ end
 function ea_enable_vas(handles,options)
 
 RL={'R','L'};
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
+
     for Rva=1:4
-        set(handles.([RL{options.sides(side)},'s',num2str(Rva),'va']),'enable','on');
+        set(handles.([RL{side},'s',num2str(Rva),'va']),'enable','on');
     end
 end
 
@@ -3242,7 +3269,7 @@ switch model
         ea_vatsettings_horn;
     case 'Dembek 2017'
         ea_vatsettings_dembek;
-     case 'fastfield'
+    case 'Fastfield (Baniasadi 2020)'
         ea_vatsettings_fastfield;
 end
 % ea_vatsettings_horn;

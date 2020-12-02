@@ -36,7 +36,7 @@ if ~exist('orientation', 'var') || isempty(orientation)
     orientation = 'v';
 end
 
-if ~exist('titletxt', 'var')
+if ~exist('titletxt', 'var') || isempty(titletxt)
     titletxt = '';
 end
 
@@ -51,7 +51,9 @@ switch lower(orientation)
         set(gca,'YAxisLocation','right')
         if exist('tick', 'var')
             set(gca, 'ytick', tick);
-            if exist('ticklabel', 'var')
+            if isempty(tick)
+                set(target, 'yticklabel', []);
+            elseif exist('ticklabel', 'var')
                 if length(tick) == length(ticklabel)
                     set(target, 'yticklabel', ticklabel);
                 else

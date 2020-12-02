@@ -57,19 +57,19 @@ for side=options.sides
     for electrode=2:4
         coords_mm{side}(electrode,:)=coords_mm{side}(1,:)-normtrajvector{side}.*((electrode-1)*distmm);
     end
+
     markers(side).head=coords_mm{side}(1,:);
     markers(side).tail=coords_mm{side}(4,:);
 
-    orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
-
-    markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
-    markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+    [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);
+    markers(side).x = coords_mm{side}(1,:) + xunitv*(options.elspec.lead_diameter/2);
+    markers(side).y = coords_mm{side}(1,:) + yunitv*(options.elspec.lead_diameter/2);
 
     coords_mm=ea_resolvecoords(markers,options);
 end
 
 % transform trajectory to mm space:
-for side=1:length(options.sides)
+for side=options.sides
     try
         if ~isempty(trajectory{side})
             trajectory{side}=ea_map_coords(trajectory{side}', [directory,'lpost.nii'])';

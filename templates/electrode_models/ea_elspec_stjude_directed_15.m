@@ -10,19 +10,20 @@ function electrode=ea_elspec_stjude_directed_15(varargin)
 
 % The segmented contacts are clockwise arranged seen from the top view, the
 % same as in the models in the components folder.
-% electrodeorder = [1 2 3 4 5 6 7 8 9];
+electrodeorder = [1 2 3 4 5 6 7 8 9];
 
 %% import insulations and contacts from subfolder
-for k = 1:18
-    filename = [fileparts(mfilename('fullpath')),'/StJude_Directed_15_Components/Insulations/ins', num2str(k),'.1'];
+for k = 1:17
+    filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins', num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
     electrode.insulation(k).vertices = node;
     electrode.insulation(k).faces = face(:,1:3);
     clear face node filename
 end
 
-for k = 1:9
-    filename = [fileparts(mfilename('fullpath')),'/StJude_Directed_15_Components/Contacts/con',num2str(k),'.1'];
+for k = 1:numel(electrodeorder)
+    filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',...
+        filesep,'Contacts',filesep,'con',num2str(electrodeorder(k)),'.1'];
     [node,~,face]=readtetgen(filename);
     electrode.contacts(k).vertices = node;
     electrode.contacts(k).faces = face(:,1:3);
@@ -30,34 +31,40 @@ for k = 1:9
 end
 
 %% other specifications
-electrode.electrode_model = 'St. Jude Directed 6173 (long)';
-electrode.head_position = [0 0 0.75];
-electrode.tail_position = [0 0 6.75];
-electrode.x_position = [0.65 0 0.75];
-electrode.y_position = [0 0.65 0.75];
+options.elmodel = 'St. Jude Directed 6173 (long)';
+options = ea_resolve_elspec(options);
+elspec = options.elspec;
+
+electrode.electrode_model = options.elmodel;
+electrode.head_position = [0 0 1.75];
+electrode.tail_position = [0 0 10.75];
+electrode.x_position = [elspec.lead_diameter/2 0 1.75];
+electrode.y_position = [0 elspec.lead_diameter/2 1.75];
 electrode.numel = 8;
 electrode.contact_color = 0.3;
 electrode.lead_color = 0.7;
 
-% The segmented contacts in the null model are clockwise arranged from the
-% top view.
-electrode.coords_mm(1,:)=[0 0 0.75];
-electrode.coords_mm(2,:)=[0 0 3.75]+[-0.66,0,0];
-electrode.coords_mm(3,:)=[0 0 3.75]+[0.33,0.66,0];
-electrode.coords_mm(4,:)=[0 0 3.75]+[0.33,-0.66,0];
-electrode.coords_mm(5,:)=[0 0 6.75]+[-0.66,0,0];
-electrode.coords_mm(6,:)=[0 0 6.75]+[0.33,0.66,0];
-electrode.coords_mm(7,:)=[0 0 6.75]+[0.33,-0.66,0];
-electrode.coords_mm(8,:)=[0 0 9.75];
+cx = elspec.lead_diameter/2*cos(pi/6);
+cy = elspec.lead_diameter/2*sin(pi/6);
 
+electrode.coords_mm(1,:)=[0 0 1.75];
+electrode.coords_mm(2,:)=[0 0 4.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(3,:)=[0 0 4.75]+[cx, -cy, 0];
+electrode.coords_mm(4,:)=[0 0 4.75]+[-cx, -cy, 0];
+electrode.coords_mm(5,:)=[0 0 7.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(6,:)=[0 0 7.75]+[cx, -cy, 0];
+electrode.coords_mm(7,:)=[0 0 7.75]+[-cx, -cy, 0];
+electrode.coords_mm(8,:)=[0 0 10.75];
+
+electrode.isdirected = 1;
 
 %% saving electrode struct
-save([fileparts(mfilename('fullpath')),'stjude_directed_15.mat'],'electrode');
+save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_15.mat'],'electrode');
 
 %% create and save _vol file
-filename = [fileparts(mfilename('fullpath')),'/StJude_Directed_15_Components/final.1'];
+filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'final.1'];
 [node,~,face]=readtetgen(filename);
-save([fileparts(mfilename('fullpath')),'/stjude_directed_15_vol.mat'],'face','node')
+save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_15_vol.mat'],'face','node')
 clear node face
 
 %% visualize

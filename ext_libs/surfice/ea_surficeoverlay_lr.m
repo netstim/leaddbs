@@ -50,16 +50,14 @@ if ~autothresh
     end
 end
 
- sidest={'r','l','cb'};
-
-
+sidest={'r','l','cb'};
 
 % get thresholds
 if autothresh
-threshs=ea_sfc_getautothresh(fis);
+    threshs=ea_sfc_getautothresh(fis);
 end
+
 for side=sides
-        
     if side <3
         if smoothed
             mesh = [ea_space,'surf_',sidest{side},'_smoothed.mz3'];
@@ -68,40 +66,44 @@ for side=sides
         end
     else
         mesh = [ea_space,'mni152_2009.mz3'];
-        
     end
 
     if ~exist(mesh,'file')
         ea_gensurfice_temps;
     end
+
     script=['BEGIN;',...
-        ' RESETDEFAULTS;'];
+        ' RESETDEFAULTS;'...
+        ' ORIENTCUBEVISIBLE(FALSE);'];
+
     for fi=1:length(fis)
         [pth,fn]=fileparts(fis{fi});
         expfn_medial{fi}=fullfile(pth,[fn,'_',sidest{side},'_med.png']);
         expfn_lateral{fi}=fullfile(pth,[fn,'_',sidest{side},'_lat.png']);
         expfn_cb{fi}=fullfile(pth,[fn,'_',sidest{side},'.png']);
-        
+
         script=[script,...
             ' MESHLOAD(''',mesh,''');',...
             ' MESHCOLOR(255,255,255);',...
             ' OVERLAYLOAD(''',ea_path_helper(fis{fi}),''');',...
             ' OVERLAYCOLORNAME(1, ''Red-Yellow'');',...
-            ' OVERLAYMINMAX(1,',num2str(threshs(fi,1)),',',num2str(threshs(fi,2)),');']; 
+            ' OVERLAYMINMAX(1,',num2str(threshs(fi,1)),',',num2str(threshs(fi,2)),');'];
+
         if ~isnan(threshs(fi,3)) % has a negative threshold as well
             script=[script,...
                 ' OVERLAYLOAD(''',ea_path_helper(fis{fi}),''');',...
                 ' OVERLAYCOLORNAME(2, ''Blue-Green'');',...
                 ' OVERLAYMINMAX(2,',num2str(threshs(fi,3)),',',num2str(threshs(fi,4)),');'];
         end
+
         if side<3
-        script=[script,...
-            ' COLORBARVISIBLE(',colorbar,');',...
-            ' AZIMUTHELEVATION(',num2str(90+(180*side-1)),', 0);',...
-            ' SAVEBMP(''',ea_path_helper(expfn_medial{fi}),''');',...
-            ' AZIMUTHELEVATION(',num2str(270+(180*side-1)),', 0);',...
-            ' SAVEBMP(''',ea_path_helper(expfn_lateral{fi}),''');',...
-            ' OVERLAYCLOSEALL;'];
+            script=[script,...
+                ' COLORBARVISIBLE(',colorbar,');',...
+                ' AZIMUTHELEVATION(',num2str(90+(180*side)),', 0);',...
+                ' SAVEBMP(''',ea_path_helper(expfn_medial{fi}),''');',...
+                ' AZIMUTHELEVATION(',num2str(-90+(180*side)),', 0);',...
+                ' SAVEBMP(''',ea_path_helper(expfn_lateral{fi}),''');',...
+                ' OVERLAYCLOSEALL;'];
         else
             script=[script,...
                 ' COLORBARVISIBLE(',colorbar,');',...
@@ -110,11 +112,11 @@ for side=sides
                 ' OVERLAYCLOSEALL;'];
         end
     end
+
     script=[script,...
         ' QUIT',...
         ' END.'];
-    
-   
+
     ea_surfice_script(script);
     pause(0.5);
     % crop files
@@ -123,7 +125,7 @@ for side=sides
         [im,~,transp]=imread(expfn_medial{fi});
         [im,transp]=crop_img(im,transp);
         imwrite(im,expfn_medial{fi},'Alpha',transp);
-        
+
         [im,~,transp]=imread(expfn_lateral{fi});
         [im,transp]=crop_img(im,transp);
         imwrite(im,expfn_lateral{fi},'Alpha',transp);
@@ -136,41 +138,35 @@ for side=sides
 end
 
 
-
-
-
-
-
-
 function [img2,transp] = crop_img(img,transp)
-% 
+%
 % Crop image by removing edges with homogeneous intensity
-% 
-% 
+%
+%
 %USAGE
 %-----
 % img2 = crop_img(img)
 % img2 = crop_img(img,border)
-% 
-% 
+%
+%
 %INPUT
 %-----
 % - IMG: MxNxC matrix, where MxN is the size of the image and C is the
 %   number of color layers
 % - BORDER: maximum number of pixels at the borders (default: 0)
-% 
-% 
+%
+%
 %OUPUT
 %-----
 % - IMG2: cropped image
-% 
-% 
+%
+%
 %EXAMPLE
 %-------
 % >> img  = imread('my_pic.png');
 % >> img2 = crop_img(img,0);
 % >> imwrite(img2,'my_cropped_pic.png')
-% 
+%
 
 % Guilherme Coco Beltramini (guicoco@gmail.com)
 % 2013-May-29, 12:29 pm
@@ -193,15 +189,15 @@ edge_row   = edge_col;    % image edges (rows)
 % Find the edges
 %==========================================================================
 for cc=1:CC % loop for the colors
-    
-    
+
+
     % Top left corner
     %================
-    
+
     % Find the background
     %--------------------
     img_bg = img(:,:,cc) == img(1,1,cc);
-    
+
     % Columns
     %--------
     cols = sum(img_bg,1);
@@ -215,7 +211,7 @@ for cc=1:CC % loop for the colors
     else % no background
         edge_col(1,cc) = 1;
     end
-    
+
     % Rows
     %-----
     rows = sum(img_bg,2);
@@ -229,15 +225,15 @@ for cc=1:CC % loop for the colors
     else % no background
         edge_row(1,cc) = 1;
     end
-    
-    
+
+
     % Bottom right corner
     %====================
-    
+
     % Find the background
     %--------------------
     img_bg = img(:,:,cc) == img(MM,NN,cc);
-    
+
     % Columns
     %--------
     cols = sum(img_bg,1);
@@ -251,7 +247,7 @@ for cc=1:CC % loop for the colors
     else % no background
         edge_col(2,cc) = NN;
     end
-    
+
     % Rows
     %-----
     rows = sum(img_bg,2);
@@ -265,8 +261,8 @@ for cc=1:CC % loop for the colors
     else % no background
         edge_row(2,cc) = MM;
     end
-    
-    
+
+
     % Identify homogeneous color layers
     %==================================
     if edge_col(1,cc)==1 && edge_col(2,cc)==NN && ...
@@ -275,8 +271,8 @@ for cc=1:CC % loop for the colors
         edge_col(:,cc) = [NN;1];
         edge_row(:,cc) = [MM;1]; % => ignore layer
     end
-    
-    
+
+
 end
 
 
@@ -314,8 +310,3 @@ for cc=1:CC % loop for the colors
     img2(:,:,cc) = img(edge_row(1):edge_row(2),edge_col(1):edge_col(2),cc);
 end
 transp=transp(edge_row(1):edge_row(2),edge_col(1):edge_col(2));
-
-
-    
-
-

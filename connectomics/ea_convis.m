@@ -1199,14 +1199,6 @@ function rvatcheck_Callback(hObject, eventdata, handles)
 refreshcv(handles);
 
 
-function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';
-
-
 function wmatthresh_Callback(hObject, eventdata, handles)
 % hObject    handle to wmatthresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB

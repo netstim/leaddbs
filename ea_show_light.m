@@ -7,16 +7,16 @@ if nargin<2
 end
 
 set(0,'CurrentFigure',resultfig);
-cam_lamp=camlight('headlight'); % not modifiable, infinite light.
+CamLight=camlight('headlight'); % not modifiable, infinite light.
 %set(cam_lamp,'Color',[1,1,1]);
-ceiling_lamp=light('Position',[0 0 100]); % not modifiable, infinite light.
+CeilingLight=light('Position',[0 0 100]); % not modifiable, infinite light.
 
 %set(ceiling_lamp,'Color',[0.5,0.5,0.5]);
 
-right_lamp=light('Position',[-100 0 0]); % not modifiable, infinite light.
+RightLight=light('Position',[-100 0 0]); % not modifiable, infinite light.
 %set(right_lamp,'Color',[0.5,0.3,0.5]);
 
-left_lamp=light('Position',[100 0 0]); % not modifiable, infinite light.
+LeftLight=light('Position',[100 0 0]); % not modifiable, infinite light.
 %set(left_lamp,'Color',[0.5,0.5,0.3]);
 
 %lightobj=light('Position',[30 30 30],'Style','local');
@@ -25,16 +25,16 @@ left_lamp=light('Position',[100 0 0]); % not modifiable, infinite light.
 %setappdata(resultfig,'lightobj',lightobj);
 
 if ~viz
-    set(cam_lamp,'Visible','off')
-    set(ceiling_lamp,'Visible','off')
-    set(right_lamp,'Visible','off')
-    set(left_lamp,'Visible','off')
+    set(CamLight,'Visible','off')
+    set(CeilingLight,'Visible','off')
+    set(RightLight,'Visible','off')
+    set(LeftLight,'Visible','off')
 end
 
-setappdata(resultfig,'right_lamp',right_lamp);
-setappdata(resultfig,'left_lamp',left_lamp);
-setappdata(resultfig,'ceiling_lamp',ceiling_lamp);
-setappdata(resultfig,'cam_lamp',cam_lamp);
+setappdata(resultfig,'RightLight',RightLight);
+setappdata(resultfig,'LeftLight',LeftLight);
+setappdata(resultfig,'CeilingLight',CeilingLight);
+setappdata(resultfig,'CamLight',CamLight);
 
 %ea_draggable(lightbulb,@movelight);
 

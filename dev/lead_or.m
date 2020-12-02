@@ -58,7 +58,7 @@ earoot=ea_getearoot;
 % add recent patients...
 ea_initrecentpatients(handles, 'patients');
 
-set(handles.vizspacepopup,'String',{[ea_sub2space(ea_getspace), ' Space'];'Native Patient Space'});
+set(handles.vizspacepopup,'String',{[ea_underscore2space(ea_getspace), ' Space'];'Native Patient Space'});
 
 ea_dispbn;
 

@@ -1,3 +1,4 @@
+
 function ea_addobj(src, evt, resultfig, obj, options)
 
 addht = getappdata(resultfig,'addht');
@@ -159,17 +160,15 @@ nii.img(isinf(nii.img))=0;
 
 if ~isempty(xx)
     XYZ=[xx,yy,zz]; % concatenate points to one matrix.
-    XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
+    XYZ=ea_vox2mm(XYZ,nii.mat); % map to mm-space
 end
 
-bb=[0,0,0;size(nii.img)];
-
-bb=map_coords_proxy(bb,nii);
-gv=cell(3,1);
+%% new approach with meshgrid based on voxels, then transformed to Nifti coordinatesystem -> should work for all Niftis
 for dim=1:3
-    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
+    gv{dim}=[1:size(nii.img,dim)];
 end
 [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
+
 if options.prefs.hullsmooth
     nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
 end
@@ -178,6 +177,10 @@ fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
 fv.vertices=[fv.vertices;fvc.vertices];
+
+tmp_vertices = nii.mat * [fv.vertices,ones(size(fv.vertices,1),1)]';
+fv.vertices = tmp_vertices(1:3,:)';
+%%
 
 if ischar(options.prefs.hullsimplify)
     % get to 700 faces
@@ -281,31 +284,6 @@ if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete a
     thisset=thisset(selectedfibs); % choose selected fibers.
 end
 
-%% OLD visualization part:
-% fibmax=length(thisset);
-% keyboard
-% for fib=1:fibmax
-%     dispercent(fib/fibmax);
-%
-%     if size(thisset{fib},1)~=3
-%         thisset{fib}=thisset{fib}';
-%     end
-%     try
-%     thisset{fib}(4,:)=detcolor(thisset{fib}); % add coloring information to the 4th column.
-%     catch
-%         thisset{fib}(4,:)=0; % fiber has only one entry.
-%     end
-%     for dim=1:4
-%         thisfib(dim,:)=double(interp1q([1:size(thisset{fib},2)]',thisset{fib}(dim,:)',[1:0.1:size(thisset{fib},2)]')');
-%     end
-%     addobjr(fib)=surface([thisfib(1,:);thisfib(1,:)],...
-%         [thisfib(2,:);thisfib(2,:)],...
-%         [thisfib(3,:);thisfib(3,:)],...
-%         [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
-%     clear thisfib
-%
-% end
-
 %% new visualization part
 c = ea_uisetcolor;
 if c == 0
@@ -344,7 +322,6 @@ if isempty(AL) % initialize AL
     AL.MENU=struct;
     AL.GUI=struct;
 end
-
 
 switch type
     case 'tract'
@@ -432,14 +409,6 @@ str='off';
 if bin
     str='on';
 end
-
-
-function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';
 
 
 function indcol=detcolor(mat) % determine color based on traversing direction.

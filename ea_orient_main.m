@@ -9,22 +9,28 @@ if  options.modality == 1 % check for electrode type and postoperative imaging
     choice = questdlg(msg,'No postoperative CT!','Abort','Abort');
     roll_out = [];
 elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)') || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
-    if strcmp(options.elmodel,'St. Jude Directed 6172 (short)')
+    if ismember(options.elmodel,{'St. Jude Directed 6172 (short)','St. Jude Directed 6173 (long)'})
         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
-        markerposition = 9;
-        electrodespacing = 2;
-    elseif strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
-        disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
-        markerposition = 12;
-        electrodespacing = 3;
-    elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed')
-        markerposition = 10.25;
-        electrodespacing = 2;
-    else
-        keyboard
     end
-    %%
-    load(options.elspec.matfname)
+
+    % Get specs from elspec struct
+    electrodespacing = options.elspec.contact_length+options.elspec.contact_spacing;
+    contactlength = options.elspec.contact_length;
+    tipInsulationlength = options.elspec.tip_length*~options.elspec.tipiscontact;
+
+    % z position of the centers of level1, level2 and marker
+    level1center = tipInsulationlength + electrodespacing + contactlength/2;
+    level2center = tipInsulationlength + electrodespacing*2 + contactlength/2;
+    markercenter = options.elspec.markerpos;
+
+    % z position of the centers of level1, level2 and marker relative to
+    % head position
+    level1centerRelative = level1center-contactlength/2-tipInsulationlength;
+    level2centerRelative = level2center-contactlength/2-tipInsulationlength;
+    markercenterRelative = markercenter-contactlength/2-tipInsulationlength;
+
+    load(options.elspec.matfname);
+
     %% import CTs and choose which CT to use
     if exist([folder options.prefs.ctnii_coregistered],'file') == 2
         ct_reg = ea_load_nii([folder options.prefs.ctnii_coregistered]);
@@ -125,9 +131,9 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         %% determine location of the stereotactic marker and the directional
         % levels
         unitvector_mm = (tail_mm - head_mm)/norm(tail_mm - head_mm);
-        marker_mm = round(head_mm + (markerposition .* unitvector_mm));
-        dirlevel1_mm = round(head_mm + (electrodespacing .* unitvector_mm));
-        dirlevel2_mm = round(head_mm + (2 * electrodespacing .* unitvector_mm));
+        marker_mm = round(head_mm + (markercenterRelative .* unitvector_mm));
+        dirlevel1_mm = round(head_mm + (level1centerRelative .* unitvector_mm));
+        dirlevel2_mm = round(head_mm + (level2centerRelative .* unitvector_mm));
 
         % transform to vx
         marker_vx = round(tmat_vx2mm\marker_mm);
@@ -712,9 +718,9 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         tempvec = [0; 1; 0];
         temp3x3 = ea_orient_rollpitchyaw(-tempangle,0,0);
         tempvec = temp3x3 * tempvec;
-        text(tempvec(1),tempvec(2),markerposition + 0.75,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-        text(tempvec(1),tempvec(2),0.75 + electrodespacing,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-        text(tempvec(1),tempvec(2),0.75 + (2*electrodespacing),'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        text(tempvec(1),tempvec(2),markercenter,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        text(tempvec(1),tempvec(2),level1center,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+        text(tempvec(1),tempvec(2),level2center,'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
         clear tempangle
 
         set(ax_elec,'Position',[-0.16 0.21 0.43 0.73])
@@ -775,43 +781,35 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             elseif strcmp(CTname,[filesep 'rpostop_ct.nii'])
                 y = y;
             end
-            y = y(1:3)';
+
             head = head_native(1:3)';
             tail = tail_native(1:3)';
-            y = y - head;
+            y = y(1:3)' - head;
 
-            %% project y down on t and calculate x
-            y = y/norm(y);
-            t = diff([head;tail])/norm(diff([head;tail]));
-            y = y - (dot(y,t) / (norm(t) ^2)) * t;
-            y = y/norm(y);
-            x = cross(y,t);
+            %% Calculate direction of x and y markers
+            [xunitv, yunitv] = ea_calcxy(head, tail, y);
 
-            y = (y / norm(y)) * (options.elspec.lead_diameter / 2);
-            x = (x / norm(x)) * (options.elspec.lead_diameter / 2);
-            head = head_native(1:3)';
-            y_out = y;
-            y = head + y;
-            x = head + x;
+            y = head + yunitv * (options.elspec.lead_diameter / 2);
+            x = head + xunitv * (options.elspec.lead_diameter / 2);
 
             reco.native.markers(side).y = y;
             reco.native.markers(side).x = x;
+
             %% for direct saving into manual reconstruction
             [coords,trajectory,markers]=ea_resolvecoords(reco.native.markers,options);
             ea_save_reconstruction(coords,trajectory,markers,options.elmodel,1,options)
 
             % %% for transfering to ea_manualreconstruction
-            y_out(3) = 0;
-            y_out = y_out / norm(y_out);
-            roll_out = rad2deg(atan2(norm(cross([0 1 0],y_out)),dot([0 1 0],y_out)));
+            yunitv(3) = 0;
+            roll_out = rad2deg(atan2(norm(cross([0 1 0],yunitv)),dot([0 1 0],yunitv)));
             if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
                 roll_out = - roll_out;
             end
             disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' deg, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
             %% methods dump:
             ea_methods(options,...
-                ['Rotation of directional DBS leads was determined using the algorithm published by Hellerbach et al. 2018 as implemented in Lead-DBS software.'],...
-                {'A. Hellerbach, T.A. Dembek, M. Hoevels, J.A. Holz, A. Gierich, K. Luyken, M.T. Barbe, J. Wirths, V. Visser-Vandewalle, & H. Treuer (2018). DiODe: Directional Orientation Detection of Segmented Deep Brain Stimulation Leads: A Sequential Algorithm Based on CT Imaging. Stereotact. Funct. Neurosurg. 96. doi:10.1159/000494738.'});
+                ['Orientation of directional DBS leads was determined using the algorithm published by Dembek et al. 2019 as implemented in Lead-DBS software.'],...
+                {'T.A. Dembek, M. Hoevels, A. Hellerbach, A. Horn, J.N. Petry-Schmelzer, J. Borggrefe, J. Wirths, H.S. Dafsari, M.T. Barbe, V. Visser-Vandewalle & H. Treuer (2019). Directional DBS leads show large deviations from their intended implantation orientation. Parkinsonism Relat Disord. 2019 Oct;67:117-121. doi: 10.1016/j.parkreldis.2019.08.017.'});
         elseif retrystate == 0
             disp(['Changes to rotation not saved'])
             roll_out = [];
@@ -827,9 +825,8 @@ else  % check for electrode type and postoperative imaging
     choice = questdlg(msg,'No Directional Lead!','Abort','Abort');
     roll_out = [];
 end
-end
+
 
 function buttonPress(hObject,eventdata)
 hObject.UserData = 1;
 uiresume
-end

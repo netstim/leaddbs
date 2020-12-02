@@ -173,6 +173,7 @@ function varargout =  ea_runslicer(options, task)
     fprintf(fid, ['slicer.util.loadScene("', strrep(scene_path, '\', '/'), '")\r\n']);
     fclose(fid);
     disp('Loading up 3D Slicer...');
+    ea_libs_helper('', 'unset');
     if (task > 0)
         system(['"', SLICER, '" --no-splash --python-script "', script_path, '" &']);
         % the trailing '&' returns control back to matlab without waiting for slicer to close

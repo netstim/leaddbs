@@ -194,7 +194,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
 
             M.elstruct(pt).groupcolors=M.groups.color;
             M.elstruct(pt).groups=M.groups.group;
-            
+
             options.sides=1:2;
             options.native=0;
             try
@@ -231,12 +231,15 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
 
                     if ~exist('markers','var') % backward compatibility to old recon format
                         for side=1:2
-                            markers(side).head=coords_mm{side}(1,:);
-                            markers(side).tail=coords_mm{side}(4,:);
-                            normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-                            orth=null(normtrajvector)*(options.elspec.lead_diameter/2);
-                            markers(side).x=coords_mm{side}(1,:)+orth(:,1)';
-                            markers(side).y=coords_mm{side}(1,:)+orth(:,2)'; % corresponding points in reality
+                            try
+                                %if side is present, process the old recon format
+                                markers(side).head=coords_mm{side}(1,:);
+                                markers(side).tail=coords_mm{side}(4,:);
+                                [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);
+                                markers(side).x = markers(side).head +  xunitv*(options.elspec.lead_diameter/2);
+                                markers(side).y = markers(side).head + yunitv*(options.elspec.lead_diameter/2);
+                            catch
+                            end
                         end
                     end
                     M.elstruct(pt).markers=markers;
@@ -249,6 +252,32 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                         warning(['No reconstruction present for ',patientname,'. Please check.']);
                         end
                     end
+                end
+            end
+        end
+        
+        %uniform the data (by checking the missing sides and filling them)
+        num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
+        for pt=1:length(M.patient.list)
+            if length(M.elstruct(pt).coords_mm)>num_sides
+                num_sides=M.elstruct(pt).coords_mm;
+            end
+        end
+        for pt=1:length(M.patient.list)
+            for check_side=1:num_sides %options.sides
+                if ea_arenopoints4side(M.elstruct(pt).coords_mm, check_side)
+                    %force to have empty values if side is not present
+                    M.elstruct(pt).coords_mm{check_side}={};
+                    if ~isnan(M.elstruct(pt).coords_acpc)
+                        M.elstruct(pt).coords_acpc{check_side}={};
+                    end
+                    M.elstruct(pt).trajectory{check_side}={};
+                
+                    %this will create the missing structure
+                    M.elstruct(pt).markers(check_side).head=[];
+                    M.elstruct(pt).markers(check_side).tail=[];
+                    M.elstruct(pt).markers(check_side).x=[];
+                    M.elstruct(pt).markers(check_side).y=[];
                 end
             end
         end

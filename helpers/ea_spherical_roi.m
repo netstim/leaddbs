@@ -1,57 +1,74 @@
-function ea_spherical_roi(fname,mni,r,crop,template,bg)
+function roi = ea_spherical_roi(fname,center,radius,crop,ref,bg)
+% Create sphere ROI based on specified center and radius (both in mm)
+
+% Write out NIfTI or not
+if isempty(fname)
+    writeoutNii = 0;
+else
+    writeoutNii = 1;
+end
+
+% Expand radius in case multiple centers specified
+if size(center,1)>1
+    if length(radius)==1
+        radius = repmat(radius, 1, size(center,1));
+    elseif size(center,1)~=length(radius)
+        error('Length of centers doesn''t match length of radius!');
+    end
+end
+
+% Crop the generate ROI image or not
 if ~exist('crop','var')
     crop=1;
 end
-if exist('template','var')
-    Vol=ea_load_nii(template);
+
+% Reference template image, use MNI t1 by default
+if exist('ref','var')
+    ref = ea_load_nii(ref);
 else
-    Vol=ea_load_nii([ea_space,'t1.nii']);
+    ref = ea_load_nii([ea_space,'t1.nii']);
 end
+
+% Preset background
 if ~exist('bg','var')
-    Vol.img(:)=nan;
+    ref.img(:) = 0;
 else
-    Vol.img(:)=bg;
+    ref.img = bg;
 end
-voxmm = Vol.voxsize;
-for a=1:size(mni,1)
-    X= mni(a,1); Y = mni(a,2); Z = mni(a,3);
-    XYZ=[X,Y,Z,ones(length(X),1)]';
-    XYZ=Vol.mat\XYZ; % to voxel space.
-    XYZ=(XYZ(1:3,:)');
-    
-    xe = XYZ(1)-round(2*r/voxmm(1)):XYZ(1)+round(2*r/voxmm(1));
-    ye = XYZ(2)-round(2*r/voxmm(2)):XYZ(2)+round(2*r/voxmm(2));
-    ze = XYZ(3)-round(2*r/voxmm(3)):XYZ(3)+round(2*r/voxmm(3));
-    
-    
 
-    [xx yy zz] = meshgrid(1:length(xe),1:length(ye),1:length(ze));
-    S = round(sqrt((xx-2*r/voxmm(1)).^2+(yy-2*r/voxmm(2)).^2+(zz-2*r/voxmm(3)).^2)<=r/voxmm(1));
-    
-    xix=squeeze(xx(1,:,1)+round(XYZ(1)-2*r/voxmm(1)))';
-    yiy=squeeze(yy(:,1,1)+round(XYZ(2)-2*r/voxmm(1)));
-    ziz=squeeze(zz(1,1,:)+round(XYZ(3)-2*r/voxmm(1)));
-    
-    try
-        Vol.img(xix,yiy,ziz)=S;
-    catch % negative indices.
-        for xxx=1:length(xix)
-            for yyy=1:length(yiy)
-                for zzz=1:length(ziz)
-                    try
-                   Vol.img(xix(xxx),yiy(yyy),ziz(zzz))=S(xxx,yyy,zzz); 
-                    end
-                end
-            end
-        end 
+voxsize = ref.voxsize;
+dim = ref.dim;
+
+for i=1:size(center,1)
+    % mm to voxel conversion
+    c = ea_mm2vox(center(i,:), ref.mat);
+    r = radius(i)./voxsize;
+
+    % Construct voxel grid for the sphere of cencter c and radius r
+    bboxlim = [max([1 1 1; ceil(c-r)]); min([dim; floor(c+r)])];
+    [xgrid, ygrid, zgrid] = meshgrid(bboxlim(1,1):bboxlim(2,1),...
+                                     bboxlim(1,2):bboxlim(2,2),...
+                                     bboxlim(1,3):bboxlim(2,3));
+
+    % Flatten voxel grid to x, y and z subscripts
+    xyz = [xgrid(:), ygrid(:), zgrid(:)];
+
+    % Find voxels within the sphere
+    xyz = xyz(sqrt(sum(((xyz - c) .* voxsize) .^ 2, 2)) <= radius(i), :);
+    ref.img(sub2ind(dim, xyz(:,1), xyz(:,2), xyz(:,3))) = 1;
+end
+
+% Adapt ROI NIfTI structure
+ref.dt = [16,0];
+ref.fname = fname;
+
+roi = ref;
+
+% Write out NIfTI
+if writeoutNii
+    ea_write_nii(ref);
+    % Crop ROI image
+    if crop
+        ea_autocrop(fname);
     end
-    Vol.img(Vol.img~=1)=0;
-    Vol.dt =[16,0];
-    Vol.fname=fname;
-    Vol.img=Vol.img(1:Vol.dim(1),1:Vol.dim(2),1:Vol.dim(3));
-    ea_write_nii(Vol);
-end
-
-if crop
-    ea_crop_nii(fname)
 end

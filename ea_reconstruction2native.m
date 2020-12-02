@@ -20,7 +20,6 @@ if ~ismember(whichnormmethod,ea_getantsnormfuns)
     end
 end
 
-
 if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
     usenative='scrf';
 else
@@ -45,22 +44,19 @@ cnt=1;
 for side=options.sides
     offset=size(reco.mni.coords_mm{side},1);
     reco.(usenative).coords_mm{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
+
     offset=size(reco.mni.markers(side).head,1);
     reco.(usenative).markers(side).head=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
-    offset=size(reco.mni.markers(side).tail,1);    
+
+    offset=size(reco.mni.markers(side).tail,1);
     reco.(usenative).markers(side).tail=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
+
     offset=size(reco.mni.trajectory{side},1);
     reco.(usenative).trajectory{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
-    normtrajvector{side}=mean(diff(reco.(usenative).trajectory{side}))/norm(mean(diff(reco.(usenative).trajectory{side})));
-    orth=null(normtrajvector{side})*(1.27/2);
-    
-    reco.(usenative).markers(side).x=reco.(usenative).markers(side).head+orth(:,1)';
-    reco.(usenative).markers(side).y=reco.(usenative).markers(side).head+orth(:,2)'; % corresponding points in reality
-    
+
+    [xunitv, yunitv] = ea_calcxy(reco.(usenative).markers(side).head, reco.(usenative).markers(side).tail);
+    reco.(usenative).markers(side).x = reco.(usenative).markers(side).head+xunitv*(options.elspec.lead_diameter/2);
+    reco.(usenative).markers(side).y = reco.(usenative).markers(side).head+yunitv*(options.elspec.lead_diameter/2);
 end
 
 
