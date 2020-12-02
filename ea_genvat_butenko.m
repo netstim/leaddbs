@@ -203,6 +203,10 @@ save(parameterFile, 'settings', '-v7.3');
 cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
 system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', parameterFile]);
 
+while ~isfile([outputPath, filesep, 'success.txt']) && ~isfile([outputPath, filesep, 'fail.txt'])
+    continue;
+end
+
 %% Save results
 % Convert the unit from V/mm to V/m for efield VTA (to be consistent as in Lead-DBS)
 efieldVAT = {'vat_efield_right.nii', 'vat_efield_left.nii'};
