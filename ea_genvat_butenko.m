@@ -202,9 +202,11 @@ save(parameterFile, 'settings', '-v7.3');
 %% Run OSS-DBS
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
+currentpath = pwd; % Store current path before switch path
 cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
 system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', parameterFile]);
 setenv('LD_LIBRARY_PATH', libpath); % Restore LD_LIBRARY_PATH
+cd(currentpath); % Restore current path
 
 while ~isfile([outputPath, filesep, 'success.txt']) && ~isfile([outputPath, filesep, 'fail.txt'])
     continue;
