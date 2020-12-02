@@ -2306,6 +2306,14 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
+    case 'OSS-DBS (Butenko 2020)'
+        ea_hide_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','on');
+        S.monopolarmodel=0;
+        ea_enable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','on');
+
 end
 S.model=model;
 
