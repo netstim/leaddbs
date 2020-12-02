@@ -65,7 +65,7 @@ def get_input_from_LeadDBS(index_side,settings_location):     # 0 - rhs, 1 - lhs
 
     #file = tables.open_file('oss-dbs_parameters.mat')     #hardwired
     #file = tables.open_file('oss-dbs_parameters.mat')     #hardwired
-    print("Input from ",settings_location)
+    print("Input from",settings_location)
     file = h5py.File(str(settings_location), 'r')
     #file = h5py.File('oss-dbs_parameters.mat')
 
@@ -214,7 +214,7 @@ def get_input_from_LeadDBS(index_side,settings_location):     # 0 - rhs, 1 - lhs
                 save_as_dict.write("    '{}': '{}',\n".format(key, d[key]))
         save_as_dict.write("}\n")
 
-    print(path_to_patient)
+    # print(path_to_patient)
     return path_to_patient
 
 
