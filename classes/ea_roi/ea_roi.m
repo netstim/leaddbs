@@ -25,6 +25,7 @@ classdef ea_roi < handle
         controlH % handle to color / threshold control figure
         plotFigureH % handle of figure on which to plot
         patchH % handle of patch
+        colormap % for nonbinary ROI
         toggleH % toggle handle
         htH % handle for toggle toolbar
         Tag % tag of ROI can be used in multi-roi scenes
@@ -238,15 +239,17 @@ classdef ea_roi < handle
                         obj.sfv=reducepatch(obj.sfv,simplify);
                     end
                 end
-                jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]); % default blue to red colormap
 
                 if obj.binary || obj.usesolidcolor
                     obj.cdat=abs(repmat(obj.color,length(obj.sfv.vertices),1) ... % C-Data for surface
                         +randn(length(obj.sfv.vertices),1)*2)';
                 else
+                    if isempty(obj.colormap) % make sure some colormap is set.
+                        obj.colormap = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]); % default blue to red colormap
+                    end
                     obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
                     obj.cdat=round((ea_contrast(obj.cdat).*(length(gray)-1))+1);
-                    obj.cdat=jetlist(obj.cdat,:);
+                    obj.cdat=obj.colormap(obj.cdat,:);
                 end
             end
 

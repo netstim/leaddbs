@@ -34,20 +34,34 @@ ea_run('run', options);
 
 %% Load in nifti files as matrix
 for s=1:size(vatlist,1)
+<<<<<<< Updated upstream
     for side=1:2
         [pth,fn,ext]=fileparts(vatlist{s,side});
+=======
+
+        [pth,fn,ext]=fileparts(vatlist{s});
+>>>>>>> Stashed changes
         switch sf(ix)
             case 1 % structural
                 suffix='_struc_seed';
             case 2 % functional
                 suffix='_func_seed_AvgR_Fz';
         end
+<<<<<<< Updated upstream
         nii=ea_load_nii(fullfile(pth,cfile,[fn,suffix,ext]));
         if ~exist('AllX','var')
            AllX=zeros(size(vatlist,1),2,numel(nii.img)); 
         end
         AllX(s,side,:)=nii.img(:);
     end
+=======
+        nii=ea_load_nii(fullfile(pth,strrep(cfile,' > ','_'),[fn,suffix,ext]));
+        if ~exist('AllX','var')
+           AllX=zeros(size(vatlist,1),numel(nii.img)); 
+        end
+        AllX(s,:)=nii.img(:);
+
+>>>>>>> Stashed changes
 end
 
 
