@@ -51,7 +51,7 @@ end
 % Remove dummpy patch
 isDummyPatch = arrayfun(@(p) isequal(p.Faces, [1 2 3]) && ...
                              isequal(p.Vertices, [0 1;1 1;0 0]) || ...
-                             size(p.Faces, 2) ~= 3, sh);
+                             strcmp(p.Tag,'DirectionMarker'), sh);
 sh = sh(~isDummyPatch);
 
 if isempty(sh)
