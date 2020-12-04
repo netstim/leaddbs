@@ -74,6 +74,8 @@ classdef ea_roi < handle
                     [~,obj.name]=ea_niifileparts(obj.niftiFilename);
                 end
 
+                obj.Tag = obj.name;
+
                 try
                     obj.plotFigureH=pobj.plotFigureH;
                 catch
