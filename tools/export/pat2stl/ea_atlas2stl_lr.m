@@ -1,4 +1,4 @@
-function cfv=ea_atlas2stl(atlasnames,ofn)
+function cfv=ea_atlas2stl_lr(atlasnames,ofn)
 
 if ~iscell(atlasnames)
     ea_error('Please specify atlas(es) in a cellstring');
@@ -11,11 +11,11 @@ for atl=1:length(atlasnames)
         cnt=1;
         clear cfv
     for mesh=1:length(atlases.names)
-        cfv(cnt).vertices=atlases.fv{mesh,side}.vertices;
-        cfv(cnt).faces=atlases.fv{mesh,side}.faces;
-        cfv(cnt).facevertexcdata=atlases.cdat{mesh,side}';
+        cfv(cnt).vertices=atlases.roi{mesh,side}.fv.vertices;
+        cfv(cnt).faces=atlases.roi{mesh,side}.fv.faces;
+        cfv(cnt).facevertexcdata=atlases.roi{mesh,side}.cdat';
         if isempty(cfv(cnt).facevertexcdata) % fiber atlas
-            cfv(cnt).facevertexcdata=repmat(atlases.colors(mesh),size(cfv(cnt).faces,1),1);
+            cfv(cnt).facevertexcdata=repmat(atlases.roi(mesh,side).color,size(cfv(cnt).faces,1),1);
         end
 
         cnt=cnt+1;
