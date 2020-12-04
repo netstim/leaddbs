@@ -71,7 +71,7 @@ classdef ea_roi < handle
                 try
                     obj.name=pobj.name;
                 catch
-                    [~,obj.name]=fileparts(obj.niftiFilename);
+                    [~,obj.name]=ea_niifileparts(obj.niftiFilename);
                 end
 
                 try
