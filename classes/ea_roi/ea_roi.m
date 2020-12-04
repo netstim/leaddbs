@@ -110,7 +110,7 @@ classdef ea_roi < handle
                 try
                     obj.binary=pobj.binary;
                 end
-                
+
                 try
                     obj.nii=pobj.nii;
                 catch
@@ -188,7 +188,7 @@ classdef ea_roi < handle
                 @changeevent);
             addlistener(obj,'edgecolor','PostSet',...
                 @changeevent);
-            
+
             if isempty(obj.toggleH)
                 obj.toggleH=uitoggletool(obj.htH);
             end
@@ -262,10 +262,17 @@ classdef ea_roi < handle
             if isempty(obj.edgecolor)
                 obj.edgecolor='none';
             end
-            
+
+            % Set obj Tag
+            if ~isempty(obj.Tag)
+                roiTag = obj.Tag;
+            else
+                roiTag = obj.name;
+            end
+
             set(obj.patchH,...
                 {'Faces','Vertices','FaceAlpha','EdgeColor','EdgeLighting','FaceLighting','Visible','SpecularColorReflectance','SpecularExponent','SpecularStrength','DiffuseStrength','AmbientStrength','Tag'},...
-                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'gouraud','gouraud',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength,obj.AmbientStrength,obj.Tag});
+                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'gouraud','gouraud',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength,obj.AmbientStrength,roiTag});
             if obj.binary || obj.usesolidcolor
                 set(obj.patchH,...
                     {'FaceColor'},...
@@ -279,7 +286,7 @@ classdef ea_roi < handle
             % add toggle button:
             set(obj.toggleH,...
                 {'Parent','CData','TooltipString','OnCallback','OffCallback','State','Tag'},...
-                {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,obj.Tag});
+                {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,roiTag});
         end
     end
 end
