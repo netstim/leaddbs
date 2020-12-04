@@ -250,9 +250,9 @@ if strcmp(h.Label,'ALL')
     end
     pixdim=pixdim{1};
 else
-    [~,six]=ismember(h.Label,ea_rmext(atlases.names));
-    roi=atlases.roi(six,:);
-    pixdim=atlases.pixdim(six,:);
+    [~,idx]=ismember(h.Label,ea_rmext(atlases.names));
+    roi=atlases.roi(idx,:);
+    pixdim=atlases.pixdim(idx,:);
     if length(roi)>1
         xyz=[];
         for i=1:numel(roi)
