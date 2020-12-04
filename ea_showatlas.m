@@ -154,6 +154,15 @@ for nativemni=nm % switch between native and mni space atlases.
         [~,sidestr]=detsides(atlases.types(atlas));
         for side=detsides(atlases.types(atlas))
             if isnumeric(atlases.pixdim{atlas,side})
+                % Get ROI Tag
+                if ~isempty(atlases.roi{atlas,side}.Tag)
+                    roiTag = atlases.roi{atlas,side}.Tag;
+                else
+                    roiTag = atlases.roi{atlas,side}.name;
+                end
+
+                atlases.roi{atlas,side}.Tag = [roiTag,'_',sidestr{side}];
+
                 % breathe life into stored ea_roi
                 atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
                 atlases.roi{atlas,side}.htH=ht; % attach to tooltip menu
@@ -172,13 +181,6 @@ for nativemni=nm % switch between native and mni space atlases.
                     if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
                         atlases.roi{atlas,side}.Visible='off';
                     end
-                end
-
-                % Get ROI Tag
-                if ~isempty(atlases.roi{atlas,side}.Tag)
-                    roiTag = atlases.roi{atlas,side}.Tag;
-                else
-                    roiTag = atlases.roi{atlas,side}.name;
                 end
 
                 % Set atlaslabel
