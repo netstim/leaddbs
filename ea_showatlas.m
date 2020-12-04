@@ -174,11 +174,17 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
 
-                % set atlaslabel
-                [~,thislabel] = ea_niifileparts(atlases.names{atlas});
+                % Get ROI Tag
+                if ~isempty(atlases.roi{atlas,side}.Tag)
+                    roiTag = atlases.roi{atlas,side}.Tag;
+                else
+                    roiTag = atlases.roi{atlas,side}.name;
+                end
+
+                % Set atlaslabel
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
-                    ea_underscore2space(thislabel),...
-                    'Tag', [thislabel,'_',sidestr{side}],...
+                    ea_underscore2space(roiTag),...
+                    'Tag', [roiTag,'_',sidestr{side}],...
                     'VerticalAlignment', 'Baseline',...
                     'HorizontalAlignment', 'Center',...
                     'FontWeight', 'bold',...
@@ -231,8 +237,8 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 % set Tags
                 try
-                    set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
-                    atlassurfs{atlascnt,1}.Tag=[thislabel,'_',sidestr{side}];
+                    set(colorbuttons(atlascnt),'tag',[roiTag,'_',sidestr{side}])
+                    atlassurfs{atlascnt,1}.Tag=[roiTag,'_',sidestr{side}];
                 catch
                     keyboard
                 end
