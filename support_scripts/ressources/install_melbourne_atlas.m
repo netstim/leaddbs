@@ -103,7 +103,8 @@ for structure=1:length(atlases.names)
 end
 
 atlases.names=atlases.names(reorder);
-atlases.fv=atlases.fv(reorder,:);
+try atlases.fv=atlases.fv(order,:); end
+try atlases.roi=atlases.roi(order,:); end
 atlases.normals=atlases.normals(reorder,:);
 atlases.pixdim=atlases.pixdim(reorder,:);
 atlases.tissuetypes=atlases.tissuetypes(reorder);
