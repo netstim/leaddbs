@@ -20,7 +20,11 @@ for atl=1:length(atlasnames)
         views=viewsets.(target).plyview;
         presets=resolveviews(views(1).structures,atlases);
     else
-        presets=atlases.presets(1).show;
+        if isfield(atlases,'presets')
+            presets=atlases.presets(1).show;
+        else
+            presets=1:length(atlases.names);
+        end
     end
     for side=1:2
         for i=1:length(presets)
