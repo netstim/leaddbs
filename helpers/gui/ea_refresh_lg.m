@@ -277,8 +277,17 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 if ea_arenopoints4side(M.elstruct(pt).coords_mm, check_side)
                     %force to have empty values if side is not present
                     M.elstruct(pt).coords_mm{check_side}={};
-                    if ~isnan(M.elstruct(pt).coords_acpc)
-                        M.elstruct(pt).coords_acpc{check_side}={};
+                    if isfield(M.elstruct(pt),'coords_acpc') 
+                        %this is to take care of the cases where
+                        %coords_acpc is NaN, or is a cell array (of N=sides
+                        %elements) which needs to be checked if empty or nan
+                        if iscell(M.elstruct(pt).coords_acpc)
+                            if ea_arenopoints4side(M.elstruct(pt).coords_acpc, check_side)
+                                M.elstruct(pt).coords_acpc{check_side}={};
+                            end
+                        elseif ~isnan(M.elstruct(pt).coords_acpc)
+                            M.elstruct(pt).coords_acpc{check_side}={};
+                        end
                     end
                     M.elstruct(pt).trajectory{check_side}={};
                 
