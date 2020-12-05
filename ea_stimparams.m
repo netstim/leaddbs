@@ -1864,6 +1864,11 @@ if groupmode
         if length(actpt)>1 % more than one entry selected
             actpt=1;
         end
+        %to ensure active patient is non empty
+        %this can happen if you delete a patient, then add a new one, without clicking on the patient window
+        if isempty(actpt) 
+            actpt=1;
+        end
         setappdata(handles.stimfig,'actpt',actpt);
         % set grouploaded true is being done below.
     end
@@ -2906,6 +2911,12 @@ actpt=getappdata(handles.stimfig,'actpt');
 elstruct=getappdata(handles.stimfig,'elstruct');
 options=getappdata(handles.stimfig,'options');
 
+%to ensure active patient is non empty
+%this can happen if you delete a patient, then add a new one, without clicking on the patient window
+if isempty(actpt) 
+    actpt=1;
+end
+        
 if isempty(gS)
     clear gS
 end
@@ -2946,6 +2957,13 @@ gS=getappdata(handles.stimfig,'gS');
 actpt=getappdata(handles.stimfig,'actpt');
 elstruct=getappdata(handles.stimfig,'elstruct');
 options=getappdata(handles.stimfig,'options');
+
+%to ensure active patient is non empty
+%this can happen if you delete a patient, then add a new one, without clicking on the patient window
+if isempty(actpt) 
+    actpt=1;
+end
+
 if isempty(gS)
     clear gS
 end
