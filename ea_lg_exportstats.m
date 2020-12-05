@@ -26,7 +26,11 @@ end
 atlases = dir([ea_space,'atlases']);
 atlases = {atlases(cell2mat({atlases.isdir})).name};
 atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));
-export.atlas = atlases{M.ui.atlassetpopup};
+if isnumeric(M.ui.atlassetpopup) % Old format, atlassetpopup is numeric
+    export.atlas = atlases{M.ui.atlassetpopup};
+else % New format, atlassetpopup is atlas name
+    export.atlas = M.ui.atlassetpopup;
+end
 export.atlasNames = regexprep(M.vilist', '\.nii(\.gz)?$', '');
 
 % Parcellation and connectome information

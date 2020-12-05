@@ -49,8 +49,6 @@ M.ui.groupdir = get(handles.groupdir_choosebox,'String');
 
 disp('Refreshing selections on VI / FC Lists...');
 
-
-
 try set(handles.labelpopup,'Value',M.ui.labelpopup); end
 
 disp('Adding graph metrics to connectome popup...');
@@ -132,16 +130,27 @@ try set(handles.highlightactivecontcheck,'Value',M.ui.hlactivecontcheck); end
 try set(handles.showisovolumecheck,'Value',M.ui.showisovolumecheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
 
-% update selectboxes:
-try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
-
+% update atlas selectboxes
+atlasset = get(handles.atlassetpopup,'String');
 if ~isfield(M.ui,'atlassetpopup')
-    M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
-end
-
-if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
-    M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
-    set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
+    M.ui.atlassetpopup = atlasset{get(handles.atlassetpopup,'Value')};
+else
+    if isnumeric(M.ui.atlassetpopup) % Compatible with old lead group file
+        try
+            set(handles.atlassetpopup,'Value',M.ui.atlassetpopup);
+        catch % Set to default atlas in case index out of range
+            defaultAtlas = options.prefs.atlases.default;
+            set(handles.atlassetpopup,'Value',find(ismember(atlasset, defaultAtlas)));
+        end
+    else % New lead group file in which atlassetpopup is the name of the atlas
+        atlasInd = find(ismember(atlasset, M.ui.atlassetpopup), 1);
+        if ~isempty(atlasInd)
+            set(handles.atlassetpopup,'Value',atlasInd);
+        else
+            defaultAtlas = options.prefs.atlases.default;
+            set(handles.atlassetpopup,'Value',find(ismember(atlasset, defaultAtlas)));
+        end
+    end
 end
 
 fiberspopup = get(handles.fiberspopup,'String');

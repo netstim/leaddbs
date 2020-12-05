@@ -1195,14 +1195,20 @@ function atlassetpopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from atlassetpopup
 M=getappdata(gcf,'M');
 
-if isfield(M.ui, 'atlassetpopup') && ...
-   eventdata.Source.Value == M.ui.atlassetpopup
-    atlasChanged = 0;
-else
-    atlasChanged = 1;
+atlasChanged = 1;
+if isfield(M.ui, 'atlassetpopup')
+    if isnumeric(M.ui.atlassetpopup) % Old format, atlassetpopup is numeric
+        if eventdata.Source.Value == M.ui.atlassetpopup
+            atlasChanged = 0;
+        end
+    else % New format, atlassetpopup is atlas name
+        if strcmp(eventdata.Source.String{eventdata.Source.Value}, M.ui.atlassetpopup)
+            atlasChanged = 0;
+        end
+    end
 end
 
-M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
+M.ui.atlassetpopup = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
