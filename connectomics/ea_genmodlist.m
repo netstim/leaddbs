@@ -29,7 +29,7 @@ for fdf=1:length(fc)
 end
 
 % patientspecific part
-if exist('directory','var')
+if exist('directory','var') && ~isempty(directory)
     % check if pat-specific fibertracts are present:
     if exist([directory,'connectomes',filesep,'dMRI',filesep,options.prefs.FTR_normalized],'file')
         modlist{cnt}='Patient''s fiber tracts';
