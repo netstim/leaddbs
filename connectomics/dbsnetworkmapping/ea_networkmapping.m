@@ -10,10 +10,6 @@ classdef ea_networkmapping < handle
         negvisible = 0 % neg voxels visible
         showposamount = [25 25] % two entries for right and left
         shownegamount = [25 25] % two entries for right and left
-<<<<<<< Updated upstream
-=======
-        splitbygroup = 0;
->>>>>>> Stashed changes
         statmetric = 'Correlations (R-map)' % Statistical model to use 
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         poscolor = [0.99,0.75,0.06] % positive main color
@@ -21,20 +17,18 @@ classdef ea_networkmapping < handle
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
+        splitbygroup = 0;
+        vizmode='Regions'; % way to plot results
+        model='Smoothed'; % in case of surface above, on which surface to plot.
+        modelLH=1; % show left hemisphere
+        modelRH=1; % show right hemisphere
         
         results % stores fingerprints
-<<<<<<< Updated upstream
-
-        cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
-        basepredictionon = 'Spearman Correlations';
-        surfdrawn % struct contains surface resultfig
-=======
         outputspace = '222';
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
         basepredictionon = 'Spearman Correlations';
         surfdrawn % struct contains data that is actually drawn.
         drawobject % handle to surface drawn on figure
->>>>>>> Stashed changes
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
         setlabels={};
         setselections={};
@@ -91,21 +85,13 @@ classdef ea_networkmapping < handle
                 obj.patientselection = obj.M.ui.listselect;
                 obj.responsevarlabel = obj.M.clinical.labels{1};
                 obj.covarlabels={'Stimulation Amplitude'};
-<<<<<<< Updated upstream
-            elseif  isfield(D, 'tractset')  % Saved tractset class loaded
-                props = properties(D.tractset);
-                for p =  1:length(props) %copy all public properties
-                    if ~(strcmp(props{p}, 'analysispath') && ~isempty(obj.analysispath) ...
-                            || strcmp(props{p}, 'ID') && ~isempty(obj.ID))
-                        obj.(props{p}) = D.tractset.(props{p});
-=======
             elseif  isfield(D, 'networkmapping')  % Saved networkmapping class loaded
                 props = properties(D.networkmapping);
                 for p =  1:length(props) %copy all public properties
                     if ~(strcmp(props{p}, 'analysispath') && ~isempty(obj.analysispath) ...
                             || strcmp(props{p}, 'ID') && ~isempty(obj.ID))
                         obj.(props{p}) = D.networkmapping.(props{p});
->>>>>>> Stashed changes
+
                     end
                 end
                 clear D
@@ -126,11 +112,8 @@ classdef ea_networkmapping < handle
                 end
             end
 
-<<<<<<< Updated upstream
-            vatlist = ea_discfibers_getvats(obj);
-=======
+
             vatlist = ea_networkmapping_getvats(obj);
->>>>>>> Stashed changes
             [AllX] = ea_networkmapping_calcvals(vatlist, obj.connectome);
 
             obj.results.(ea_conn2connid(obj.connectome)).connval = AllX;
@@ -399,19 +382,7 @@ classdef ea_networkmapping < handle
             obj.resultfig=rf;
         end
 
-<<<<<<< Updated upstream
-        function draw(obj,vals,fibcell)
-            if ~exist('vals','var')
-                [vals,fibcell]=ea_discfibers_calcstats(obj);
-            end
-            obj.fiberdrawn.fibcell = fibcell;
-            obj.fiberdrawn.vals = vals;
 
-            obj.stats.pos.shown(1)=sum(vals{1,1}>0);
-            obj.stats.neg.shown(1)=sum(vals{1,1}<0);
-            obj.stats.pos.shown(2)=sum(vals{1,2}>0);
-            obj.stats.neg.shown(2)=sum(vals{1,2}<0);
-=======
         function draw(obj,vals)
             if ~exist('vals','var')
                 [vals,usedidx]=ea_networkmapping_calcstats(obj);
@@ -421,7 +392,6 @@ classdef ea_networkmapping < handle
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
 
->>>>>>> Stashed changes
 
             set(0,'CurrentFigure',obj.resultfig);
 
@@ -430,11 +400,6 @@ classdef ea_networkmapping < handle
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
             end
-<<<<<<< Updated upstream
-            for tract=1:numel(obj.drawobject)
-                delete(obj.drawobject{tract});
-            end
-=======
             for s=1:numel(obj.drawobject)
                 for ins=1:numel(obj.drawobject{s})
                     try delete(obj.drawobject{s}{ins}.toggleH); end
@@ -443,7 +408,6 @@ classdef ea_networkmapping < handle
                 end
             end
             obj.drawobject={};
->>>>>>> Stashed changes
 
             % reset colorbar
             obj.colorbar=[];
@@ -451,16 +415,10 @@ classdef ea_networkmapping < handle
                 return
             end
 
-<<<<<<< Updated upstream
-            for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
-                % Contruct default blue to red colormap
-                allvals = vertcat(vals{group,:});
-=======
             space=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Contruct default blue to red colormap
                 allvals = horzcat(vals{group,:})';
->>>>>>> Stashed changes
                 if isempty(allvals)
                     continue;
                 end
@@ -474,21 +432,13 @@ classdef ea_networkmapping < handle
                 if dogroups
                     if obj.posvisible && ~obj.negvisible
                         cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-<<<<<<< Updated upstream
-                        fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
-=======
                         voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
->>>>>>> Stashed changes
                         cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = ones(size(allvals));
                         % alphaind = normalize(allvals, 'range');
                     elseif ~obj.posvisible && obj.negvisible
                         cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
-<<<<<<< Updated upstream
-                        fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
-=======
                         voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
->>>>>>> Stashed changes
                         cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = ones(size(allvals));
                         % alphaind = normalize(-allvals, 'range');
@@ -503,11 +453,7 @@ classdef ea_networkmapping < handle
                         cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
                         cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.poscolor);
                         cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.poscolor);
-<<<<<<< Updated upstream
-                        fibcmap{group} = [cmapLeft;cmapRight];
-=======
                         voxcmap{group} = [cmapLeft;cmapRight];
->>>>>>> Stashed changes
                         cmapind = ones(size(allvals))*gradientLevel/2;
                         cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
                         cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
@@ -516,59 +462,26 @@ classdef ea_networkmapping < handle
                         % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
                     elseif obj.posvisible
                         cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
-<<<<<<< Updated upstream
-                        fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
-=======
                         voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
->>>>>>> Stashed changes
                         cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = ones(size(allvals));
                         % alphaind = normalize(1./(1+exp(-allvals)), 'range');
                     elseif obj.negvisible
                         cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
-<<<<<<< Updated upstream
-                        fibcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
-=======
                         voxcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
->>>>>>> Stashed changes
                         cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = ones(size(allvals));
                         % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
                     end
                 end
-<<<<<<< Updated upstream
-                setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
-
-                cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
-                alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
-
-                for side=1:2
-                    if dogroups % introduce small jitter for visualization
-                        fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.01);
-                    end
-
-                    % Plot fibers if any survived
-                    if ~isempty(fibcell{group,side})
-                        obj.drawobject{group,side}=streamtube(fibcell{group,side},0.2);
-
-                        nones=repmat({'none'},size(fibcell{group,side}));
-                        [obj.drawobject{group,side}.EdgeColor]=nones{:};
-
-                        % Calulate fiber colors alpha values
-                        fibcolor = mat2cell(fibcmap{group}(cmapind{side},:), ones(size(fibcell{group,side})));
-                        fibalpha = mat2cell(alphaind{side},ones(size(fibcell{group,side})));
-
-                        % Set fiber colors and alphas
-                        [obj.drawobject{group,side}.FaceColor]=fibcolor{:};
-                        [obj.drawobject{group,side}.FaceAlpha]=fibalpha{:};
-                    end
-                end
-=======
                 setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
 
                 cmapind = mat2cell(cmapind, numel(vals{group}))';
                 alphaind = mat2cell(alphaind, numel(vals{group}))';
                 
+                
+                switch obj.vizmode
+                    case 'Regions'
                 % Plot voxels if any survived
                 if ~isempty(usedidx{group})
                     if obj.posvisible
@@ -581,7 +494,11 @@ classdef ea_networkmapping < handle
                         pobj.name='Positive';
                         pobj.niftiFilename='Positive.nii';
                         pobj.binary=0;
+                        pobj.usesolidcolor=0;
                         pobj.color=obj.poscolor;
+                        pobj.colormap=ea_colorgradient(length(gray), [1,1,1], obj.poscolor);
+                        pobj.smooth=10;
+                        pobj.hullsimplify=0.5;
                         obj.drawobject{group}{1}=ea_roi('Positive.nii',pobj);
                         
                     end
@@ -596,42 +513,73 @@ classdef ea_networkmapping < handle
                         pobj.name='Negative';
                         pobj.niftiFilename='Negative.nii';
                         pobj.binary=0;
+                        pobj.usesolidcolor=0;
                         pobj.color=obj.negcolor;
+                        pobj.colormap=ea_colorgradient(length(gray), obj.negcolor, [1,1,1]);
+                        pobj.smooth=10;
+                        pobj.hullsimplify=0.5;
                         obj.drawobject{group}{2}=ea_roi('Negative.nii',pobj);
                     end
                 end
+                    case 'Surface (Elvis)'
+                        % first draw correct surface
+                        switch obj.model
+                            case 'Smoothed'
+                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_r_smoothed.obj']); end
+                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_l_smoothed.obj']); end
+                            case 'Full'
+                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_r.obj']); end
+                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end                            
+                        end
+                        cmap=ea_colorgradient(256,obj.negcolor,[1,1,1],obj.poscolor);
+                        % get colors for surface:
+                        bb=space.mat*[1,size(space.img,1);1,size(space.img,2);1,size(space.img,3);1,1];
+                        [X,Y,Z]=meshgrid(linspace(bb(2,1),bb(2,2),size(space.img,2)),...
+                            linspace(bb(1,1),bb(1,2),size(space.img,1)),...
+                            linspace(bb(3,1),bb(3,2),size(space.img,3)));
+                        space.img(usedidx{group})=vals{group};
+                        if ~obj.posvisible
+                            space.img(space.img>0)=0;
+                        end
+                        if ~obj.negvisible
+                            space.img(space.img<0)=0;
+                        end
+                        if obj.modelRH
+                            rh_nc=round(ea_contrast(isocolors(X,Y,Z,space.img,rh.vertices))*255+1);
+                            rh_nc(isnan(rh_nc))=128; % set to white for now
+                            obj.drawobject{group}{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(rh_nc,:),...
+                                'SpecularStrength',0.45,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.55,'FaceLighting','gouraud');
+                        end
+                        if obj.modelLH
+                            lh_nc=round(ea_contrast(isocolors(X,Y,Z,space.img,lh.vertices))*255+1);
+                            lh_nc(isnan(lh_nc))=128; % set to white for now
+                            obj.drawobject{group}{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(lh_nc,:),...
+                                'SpecularStrength',0.45,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.55,'FaceLighting','gouraud');
+                        end
+                    case 'Surface (Surfice)'
+                        keyboard
+                        
+                end
+                
                 
                 setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject); % store handle of surf to figure.
 
->>>>>>> Stashed changes
 
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
                     if obj.posvisible && obj.negvisible
-<<<<<<< Updated upstream
-                        tick{group} = [1, length(fibcmap{group})];
-=======
                         tick{group} = [1, length(voxcmap{group})];
->>>>>>> Stashed changes
                         poscbvals = sort(allvals(allvals>0));
                         negcbvals = sort(allvals(allvals<0));
                         ticklabel{group} = [negcbvals(1), poscbvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     elseif obj.posvisible
-<<<<<<< Updated upstream
-                        tick{group} = [1, length(fibcmap{group})];
-=======
                         tick{group} = [1, length(voxcmap{group})];
->>>>>>> Stashed changes
                         posvals = sort(allvals(allvals>0));
                         ticklabel{group} = [posvals(1), posvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     elseif obj.negvisible
-<<<<<<< Updated upstream
-                        tick{group} = [1, length(fibcmap{group})];
-=======
                         tick{group} = [1, length(voxcmap{group})];
->>>>>>> Stashed changes
                         negvals = sort(allvals(allvals<0));
                         ticklabel{group} = [negvals(1), negvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
@@ -641,11 +589,7 @@ classdef ea_networkmapping < handle
 
             % store colorbar in object
             if exist('fibcmap','var') % could be no fibers present at all.
-<<<<<<< Updated upstream
-                obj.colorbar.cmap = fibcmap;
-=======
                 obj.colorbar.cmap = voxcmap;
->>>>>>> Stashed changes
                 obj.colorbar.tick = tick;
                 obj.colorbar.ticklabel = ticklabel;
             end

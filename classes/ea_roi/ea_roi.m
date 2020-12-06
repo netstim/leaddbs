@@ -109,6 +109,12 @@ classdef ea_roi < handle
                 try
                     obj.binary=pobj.binary;
                 end
+                try
+                    obj.usesolidcolor=pobj.usesolidcolor;
+                end
+                try
+                    obj.colormap=pobj.colormap;
+                end
                 
                 try
                     obj.nii=pobj.nii;
@@ -143,9 +149,16 @@ classdef ea_roi < handle
                         obj.threshold=obj.max-0.5*maxmindiff;
                     end
                 end
-
-                obj.smooth=options.prefs.hullsmooth;
-                obj.hullsimplify=options.prefs.hullsimplify;
+                try
+                    obj.smooth=pobj.smooth;
+                catch
+                    obj.smooth=options.prefs.hullsmooth;
+                end
+                try
+                    obj.hullsimplify=pobj.hullsimplify;
+                catch
+                    obj.hullsimplify=options.prefs.hullsimplify;
+                end
                 set(0,'CurrentFigure',obj.plotFigureH);
                 obj.patchH=patch;
 
