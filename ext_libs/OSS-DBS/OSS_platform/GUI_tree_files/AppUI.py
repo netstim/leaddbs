@@ -218,14 +218,40 @@ class MainWindow(Functionalities):
         #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
         home_dir=os.path.expanduser("~")
         #subprocess.run(['gnome-terminal', '-x','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])#
-        #OSS_DBS_path=os.getcwd()
+        OSS_DBS_path=os.getcwd()
+
+        #output=subprocess.run(['xterm','-hold','-e','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
+        #output=subprocess.run(['xterm','-e','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.DEVNULL)#
+
+
+        #output=subprocess.run(['xterm','-hold','-e','docker', 'run', '--volume', '~/Documents/MATLAB_files/leaddbs-oss-dbs/ext_libs/OSS-DBS:/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'sfbelaine/oss_dbs:platform_latest', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
+        #output=subprocess.run(['docker', 'run', '--volume', '~/Documents/MATLAB_files/leaddbs-oss-dbs/ext_libs/OSS-DBS:/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'sfbelaine/oss_dbs:platform_latest', 'python3', 'Launcher_OSS_lite.py'], shell=True, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
+        #print(home_dir+self.path_to_patient+':/opt/Patient')
+        #output=subprocess.run(['open', '-W','-a', 'Terminal', '-n', '--args','docker', 'run', '--volume', '~/Documents/MATLAB_files/leaddbs-oss-dbs/ext_libs/OSS-DBS:/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'sfbelaine/oss_dbs:platform_latest', 'python3', 'Launcher_OSS_lite.py'], shell=True, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
         os.chdir("..")
         dir_code=os.getcwd()            #stupid but simple
         os.chdir("OSS_platform/")
-        output=subprocess.run(['xterm','-hold','-e','docker', 'run', '--volume', dir_code+':/opt/OSS-DBS','--volume',self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
-        #output=subprocess.run(['xterm','-e','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.DEVNULL)#
-        output.check_returncode
-        #print(output.returncode)
+        dir_code_OSS_platform = os.getcwd()
+        if sys.platform=='linux' or sys.platform=='Linux':
+            output = subprocess.run(
+                ['xterm', '-hold', '-e', 'docker', 'run', '--volume', dir_code + ':/opt/OSS-DBS',
+                 '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
+                 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #
+        elif sys.platform == 'darwin' or sys.platform=='Darwin':
+            patient_dir_full = self.path_to_patient + ':/opt/Patient'
+            # directories=[]
+            print(patient_dir_full)
+            output = subprocess.run(['open', 'script.sh', patient_dir_full, dir_code], executable='/bin/bash')   # in this case we use a bash script that calls Applescript
+        elif sys.platform=='win32' or sys.platform=='win32':
+            print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
+            raise SystemExit
+        else:
+            print("The system's OS does not support OSS-DBS")
+            raise SystemExit
+        #output=subprocess.run(['open', '-W','-a', 'Terminal', '-n', '--args','script.sh'])
+        #output=subprocess.run(['open', '-W','-a', 'Terminal', '-n', '--args', 'script.sh','dummy.py'],shell=True)
+
+
 
         if output.returncode==0:
             subprocess.call(['touch', self.path_to_patient+'/success.txt'])
@@ -233,23 +259,29 @@ class MainWindow(Functionalities):
             subprocess.call(['touch', self.path_to_patient+'/fail.txt'])
 
 
+        print(output.returncode)
+
+        # the commands below work only with a properly installed Paraview (supporting from paraview.simple import *)
+
+
         #print(self.path_to_patient)
         #prepare screenshots
         #we need to insert the correct path here (use the already written python scripts)
         #with open(os.devnull, 'w') as FNULL: subprocess.call(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient], shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
-        try:
-            subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
-        except:
-            subprocess.run(['python','Visualization_files/Paraview_connections_processed.py',self.path_to_patient])
+        # try:
+        #     subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
+        # except:
+        #     subprocess.run(['python','Visualization_files/Paraview_connections_processed.py',self.path_to_patient])
 
-        try:
-            subprocess.run(['python','Visualization_files/Paraview_csv_activation.py.py',self.path_to_patient])
-        except:
-            subprocess.run(['python','Visualization_files/Paraview_connections_activation.py',self.path_to_patient])
+        # try:
+        #     subprocess.run(['python','Visualization_files/Paraview_csv_activation.py.py',self.path_to_patient])
+        # except:
+        #     subprocess.run(['python','Visualization_files/Paraview_connections_activation.py',self.path_to_patient])
 
-        subprocess.run(['python','Visualization_files/Paraview_CSFref.py',self.path_to_patient])
-        subprocess.run(['python','Visualization_files/Paraview_adapted.py',self.path_to_patient])
+        # subprocess.run(['python','Visualization_files/Paraview_CSFref.py',self.path_to_patient])
+        # subprocess.run(['python','Visualization_files/Paraview_adapted.py',self.path_to_patient])
+
         #subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
 
         #subprocess.run(['xterm','-hold','-e','ls'])

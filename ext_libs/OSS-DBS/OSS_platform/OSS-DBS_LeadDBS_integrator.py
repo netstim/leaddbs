@@ -222,7 +222,16 @@ def get_input_from_LeadDBS(index_side,settings_location):     # 0 - rhs, 1 - lhs
 if __name__ == '__main__':
 
     path_to_patient=get_input_from_LeadDBS(0,*sys.argv[1:])
-    dir_code=os.getcwd()
-    #subprocess.run(['open','script_for_GUI.sh',path_to_patient,dir_code],executable='/bin/bash'). # this is for macOS
-    subprocess.run(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient])
+
+    if sys.platform == 'linux' or sys.platform == 'Linux':
+        subprocess.run(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient])
+    elif sys.platform == 'darwin' or sys.platform == 'Darwin':
+        dir_code = os.getcwd()
+        subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, dir_code], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
+    elif sys.platform == 'win32' or sys.platform == 'win32':
+        print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
+        raise SystemExit
+    else:
+        print("The system's OS does not support OSS-DBS")
+        raise SystemExit
 
