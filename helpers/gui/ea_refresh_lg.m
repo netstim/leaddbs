@@ -276,11 +276,13 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             for check_side=1:num_sides %options.sides
                 if ea_arenopoints4side(M.elstruct(pt).coords_mm, check_side)
                     %force to have empty values if side is not present
-                    M.elstruct(pt).coords_mm{check_side}={};
-                    if ~isnan(M.elstruct(pt).coords_acpc)
-                        M.elstruct(pt).coords_acpc{check_side}={};
+                    M.elstruct(pt).coords_mm{check_side}=[];
+                    if isfield(M.elstruct(pt),'coords_acpc') && iscell(M.elstruct(pt).coords_acpc)
+                        if ea_arenopoints4side(M.elstruct(pt).coords_acpc, check_side)
+                            M.elstruct(pt).coords_acpc{check_side}=[];
+                        end
                     end
-                    M.elstruct(pt).trajectory{check_side}={};
+                    M.elstruct(pt).trajectory{check_side}=[];
                 
                     %this will create the missing structure
                     M.elstruct(pt).markers(check_side).head=[];
