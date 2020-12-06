@@ -69,19 +69,22 @@ thisparc=thisparc{useparc};
 cnt=1;
 options.prefs=ea_prefs('');
 options.earoot=ea_getearoot;
-try
-    directory=[M.patient.list{1},filesep];
-    [modlist, type] = ea_genmodlist(directory,thisparc,options);
-    modlist = modlist(type==1); % Only keep dMRI connectome
-    modlist(strncmp(modlist, 'Patient''s fMRI', length('Patient''s fMRI'))) = [];
-    if ~ismember('Patient''s fiber tracts' ,modlist)
-        modlist{end+1}='Patient''s fiber tracts';
-    end
-    modlist{end+1}='Do not calculate connectivity stats';
-    set(handles.fiberspopup,'String',modlist);
-    if get(handles.fiberspopup,'Value') > length(modlist)
-        set(handles.fiberspopup,'Value',1);
-    end
+
+if ~isempty(M.patient.list)
+    patientDirectory = [M.patient.list{1},filesep];
+else
+    patientDirectory = [];
+end
+[modlist, type] = ea_genmodlist(patientDirectory,thisparc,options);
+modlist = modlist(type==1); % Only keep dMRI connectome
+modlist(strncmp(modlist, 'Patient''s fMRI', length('Patient''s fMRI'))) = [];
+if ~ismember('Patient''s fiber tracts' ,modlist)
+    modlist{end+1}='Patient''s fiber tracts';
+end
+modlist{end+1}='Do not calculate connectivity stats';
+set(handles.fiberspopup,'String',modlist);
+if get(handles.fiberspopup,'Value') > length(modlist)
+    set(handles.fiberspopup,'Value',1);
 end
 
 % update UI
