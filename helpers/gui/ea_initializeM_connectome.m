@@ -9,7 +9,6 @@ M.clinical.labels={};
 M.ui=struct;
 M.ui.listselect=1;
 M.ui.clinicallist=1;
-M.ui.fiberspopup=3;
 M.ui.labelpopup=1;
 M.ui.normregpopup=1;
 M.ui.lc.graphmetric=1;

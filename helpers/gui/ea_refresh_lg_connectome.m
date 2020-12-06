@@ -96,10 +96,18 @@ try set(handles.lc_smooth,'Value',M.ui.lc.smooth); end
 
 % update selectboxes:
 connectomes = get(handles.fiberspopup,'String');
+defaultConnectomeIdx = length(connectomes);
 if ~(ischar(connectomes) && strcmp(connectomes, 'Fibers'))
-    connectomeIdx = find(ismember(connectomes, M.ui.connectomename),1);
-    if ~isempty(connectomeIdx)
-        set(handles.fiberspopup,'Value',connectomeIdx);
+    if ~isfield(M.ui, 'connectomename')
+        set(handles.fiberspopup,'Value',defaultConnectomeIdx);
+        M.ui.connectomename = connectomes{defaultConnectomeIdx};
+    else
+        connectomeIdx = find(ismember(connectomes, M.ui.connectomename),1);
+        if ~isempty(connectomeIdx)
+            set(handles.fiberspopup,'Value',connectomeIdx);
+        else
+            set(handles.fiberspopup,'Value',defaultConnectomeIdx);
+        end
     end
 end
 

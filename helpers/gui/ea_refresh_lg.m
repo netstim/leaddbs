@@ -156,15 +156,19 @@ else
     end
 end
 
-fiberspopup = get(handles.fiberspopup,'String');
-if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
-    if M.ui.fiberspopup > length(fiberspopup)
-        try set(handles.fiberspopup,'Value',length(fiberspopup)); end
+connectomes = get(handles.fiberspopup,'String');
+defaultConnectomeIdx = length(connectomes);
+if ~(ischar(connectomes) && strcmp(connectomes, 'Fibers'))
+    if ~isfield(M.ui, 'connectomename')
+        set(handles.fiberspopup,'Value',defaultConnectomeIdx);
+        M.ui.connectomename = connectomes{defaultConnectomeIdx};
     else
-        try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
-    end
-    try
-    M.ui.connectomename = fiberspopup{M.ui.fiberspopup};
+        connectomeIdx = find(ismember(connectomes, M.ui.connectomename),1);
+        if ~isempty(connectomeIdx)
+            set(handles.fiberspopup,'Value',connectomeIdx);
+        else
+            set(handles.fiberspopup,'Value',defaultConnectomeIdx);
+        end
     end
 end
 
@@ -267,7 +271,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 end
             end
         end
-        
+
         %uniform the data (by checking the missing sides and filling them)
         num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
         for pt=1:length(M.patient.list)
@@ -286,7 +290,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                         end
                     end
                     M.elstruct(pt).trajectory{check_side}=[];
-                
+
                     %this will create the missing structure
                     M.elstruct(pt).markers(check_side).head=[];
                     M.elstruct(pt).markers(check_side).tail=[];

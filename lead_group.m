@@ -1117,9 +1117,9 @@ else
     connChanged = 1;
 end
 
-M.ui.fiberspopup=get(handles.fiberspopup,'Value');
-M.ui.connectomename=get(handles.fiberspopup,'String');
-M.ui.connectomename=M.ui.connectomename{M.ui.fiberspopup};
+connectomes = get(handles.fiberspopup,'String');
+connectomeIdx = get(handles.fiberspopup,'Value');
+M.ui.connectomename = connectomes{connectomeIdx};
 setappdata(gcf,'M',M);
 
 ea_refresh_lg(handles);

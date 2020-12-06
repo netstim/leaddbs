@@ -530,7 +530,9 @@ function fiberspopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns fiberspopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from fiberspopup
 M=getappdata(gcf,'M');
-M.ui.fiberspopup=get(handles.fiberspopup,'Value');
+connectomes = get(handles.fiberspopup,'String');
+connectomeIdx = get(handles.fiberspopup,'Value');
+M.ui.connectomename = connectomes{connectomeIdx};
 setappdata(gcf,'M',M);
 ea_refresh_lg_connectome(handles);
 
@@ -712,7 +714,7 @@ for sub=1:length(M.patient.list)
             ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii'], normflag);
         end
     end
-    
+
     tn=ea_load_nii([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,cpair{1},'.nii']);
    if any(tn.voxsize>2)
        if twosample
@@ -726,9 +728,9 @@ for sub=1:length(M.patient.list)
        end
        normflag=['re',normflag];
    end
-    
-    
-    
+
+
+
     if M.ui.lc.smooth
         smoothflag = 's';
         if twosample
@@ -746,7 +748,7 @@ if twosample
 else
     fis{sub} = [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,smoothflag,normflag,gecs,'.nii'];
 end
-    
+
 end
 
 spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,smoothsuffix,filesep,'SPM'];
