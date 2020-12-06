@@ -69,17 +69,21 @@ end
 cnt=1;
 options.prefs=ea_prefs('');
 options.earoot=ea_getearoot;
-try
-    directory=[M.patient.list{1},filesep];
-    modlist=ea_genmodlist(directory,thisparc,options);
-    if ~ismember('Patient''s fiber tracts' ,modlist)
-        modlist{end+1}='Patient''s fiber tracts';
-    end
-    modlist{end+1}='Do not calculate connectivity stats';
-    set(handles.fiberspopup,'String',modlist);
-    if get(handles.fiberspopup,'Value') > length(modlist)
-        set(handles.fiberspopup,'Value',1);
-    end
+
+if ~isempty(M.patient.list)
+    patientDirectory = [M.patient.list{1},filesep];
+else
+    patientDirectory = [];
+end
+
+modlist=ea_genmodlist(patientDirectory,thisparc,options);
+if ~ismember('Patient''s fiber tracts' ,modlist)
+    modlist{end+1}='Patient''s fiber tracts';
+end
+modlist{end+1}='Do not calculate connectivity stats';
+set(handles.fiberspopup,'String',modlist);
+if get(handles.fiberspopup,'Value') > length(modlist)
+    set(handles.fiberspopup,'Value',1);
 end
 
 % update UI
@@ -91,9 +95,12 @@ try set(handles.lc_normalization,'Value',M.ui.lc.normalization); end
 try set(handles.lc_smooth,'Value',M.ui.lc.smooth); end
 
 % update selectboxes:
-fiberspopup = get(handles.fiberspopup,'String');
-if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
-    try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
+connectomes = get(handles.fiberspopup,'String');
+if ~(ischar(connectomes) && strcmp(connectomes, 'Fibers'))
+    connectomeIdx = find(ismember(connectomes, M.ui.connectomename),1);
+    if ~isempty(connectomeIdx)
+        set(handles.fiberspopup,'Value',connectomeIdx);
+    end
 end
 
 lc_graphmetric = get(handles.lc_graphmetric,'String');
