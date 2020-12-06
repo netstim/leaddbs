@@ -1,11 +1,7 @@
-function [modlist, sf] = ea_genmodlist(directory,selectedparc,options,vat)
+function [modlist, sf] = ea_genmodlist(directory,selectedparc,options)
 cnt=1;
 modlist=cell(0);
 sf=[];
-
-if ~exist('vat','var')
-    vat=0;
-end
 
 % check for canonical fiber sets
 fdfibs=dir(ea_getconnectomebase('dmri'));
