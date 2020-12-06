@@ -4,7 +4,33 @@ function ea_libs_helper(libpath, setpath)
 
 % Use current folder as libpath by default
 if nargin < 1 || isempty(libpath)
+    %load prefs for platform specific handling
+    prefs = ea_prefs;
+    
     libpath = fileparts(mfilename('fullpath'));
+    %load system specific needded libs
+    if ispc
+        if prefs.platform.pcwin.load_shipped_libstdcpp6
+            libpath = fullfile(libpath,'pcwin');
+        else
+            %nothing to do, exit
+            return;
+        end
+    elseif ismac
+        if prefs.platform.mac.load_shipped_libstdcpp6
+            libpath = fullfile(libpath,'mac');
+        else
+            %nothing to do, exit
+            return;
+        end
+    elseif isunix
+        if prefs.platform.unix.load_shipped_libstdcpp6
+            libpath = fullfile(libpath,'unix');
+        else
+            %nothing to do, exit
+            return;
+        end
+    end 
 end
 
 % set path by default
@@ -25,7 +51,11 @@ env = getenv(envname);
 switch setpath
     case {1, 'set'}
         if ~contains(env, libpath)
-            setenv(envname, [libpath, ';', env]);
+            if ispc()
+                setenv(envname, [libpath, ';', env]);%for pc is ";"
+            else
+                setenv(envname, [libpath, ':', env]);%for unix (including mac, is ":")
+            end
         end
     case {0, 'unset'}
         env = regexprep(env, [libpath,'[;:]'], '');
