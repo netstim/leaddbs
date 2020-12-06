@@ -75,9 +75,7 @@ if ~isempty(M.patient.list)
 else
     patientDirectory = [];
 end
-[modlist, type] = ea_genmodlist(patientDirectory,thisparc,options);
-modlist = modlist(type==1); % Only keep dMRI connectome
-modlist(strncmp(modlist, 'Patient''s fMRI', length('Patient''s fMRI'))) = [];
+modlist = ea_genmodlist(patientDirectory,thisparc,options,'dmri');
 if ~ismember('Patient''s fiber tracts' ,modlist)
     modlist{end+1}='Patient''s fiber tracts';
 end

@@ -134,8 +134,7 @@ catch    % reinitialize using third entry.
 end
 
 % Set connectome popup
-[modlist, type] = ea_genmodlist([],[],options);
-modlist = modlist(type==1); % Only keep dMRI connectome
+modlist = ea_genmodlist([],[],options,'dmri');
 modlist{end+1}='Do not calculate connectivity stats';
 set(handles.fiberspopup,'String',modlist);
 set(handles.fiberspopup,'Value',length(modlist));
