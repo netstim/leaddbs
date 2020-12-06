@@ -100,6 +100,13 @@ catch    % reinitialize using third entry.
     set(handles.labelpopup,'Value',1);
 end
 
+% Set connectome popup
+[modlist, type] = ea_genmodlist([],[],options);
+modlist = modlist(type==1); % Only keep dMRI connectome
+modlist{end+1}='Do not calculate connectivity stats';
+set(handles.fiberspopup,'String',modlist);
+set(handles.fiberspopup,'Value',length(modlist));
+
 % set version text:
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
