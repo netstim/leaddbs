@@ -62,7 +62,7 @@ guidata(hObject, handles);
 % uiwait(handles.leadfigure);
 
 options.earoot = ea_getearoot;
-options.prefs = ea_prefs('');
+options.prefs = ea_prefs;
 setappdata(handles.leadfigure,'earoot',options.earoot);
 
 % set background image
@@ -90,7 +90,7 @@ labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
 set(handles.labelpopup,'String', labeling);
 
 % Initialize parcellation popupmenu
-defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+defaultParc = options.prefs.lg.defaultParcellation;
 set(handles.labelpopup,'Value',find(ismember(labeling, defaultParc)));
 
 % Set connectome popup

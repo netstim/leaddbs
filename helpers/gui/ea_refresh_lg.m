@@ -1,6 +1,10 @@
 function ea_refresh_lg(handles)
 
 ea_busyaction('on',handles.leadfigure,'group');
+
+options.prefs=ea_prefs;
+options.earoot=ea_getearoot;
+
 % get model data
 disp('Getting model data...');
 M=getappdata(handles.leadfigure,'M');
@@ -57,7 +61,7 @@ else
         try
             set(handles.labelpopup,'Value',M.ui.labelpopup);
         catch % Set to default parcellation in case index out of range
-            defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+            defaultParc = options.prefs.lg.defaultParcellation;
             set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
         end
     else
@@ -65,7 +69,7 @@ else
         if ~isempty(parcInd)
             set(handles.labelpopup,'Value',parcInd);
         else
-            defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+            defaultParc = options.prefs.lg.defaultParcellation;
             set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
         end
     end
@@ -74,10 +78,6 @@ end
 thisparc = parcellations{get(handles.labelpopup,'Value')};
 
 % dMRI:
-cnt=1;
-options.prefs=ea_prefs('');
-options.earoot=ea_getearoot;
-
 if ~isempty(M.patient.list)
     patientDirectory = [M.patient.list{1},filesep];
 else
