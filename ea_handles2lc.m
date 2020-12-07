@@ -1,9 +1,8 @@
 function lc=ea_handles2lc(handles)
 
 % General settings
-lc.general.parcellation=getappdata(gcf,'parcellation');
-lc.general.parcellation=lc.general.parcellation{get(handles.parcellation,'Value')};
-lc.general.parcellationn=get(handles.parcellation,'Value');
+parcellations = get(handles.parcellation, 'String');
+lc.general.parcellation = parcellations{get(handles.parcellation,'Value')};
 
 
 % Graph options:

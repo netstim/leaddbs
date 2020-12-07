@@ -5,13 +5,12 @@ if nargin>1
     lc=varargin{2};
 else
     if isempty(varargin{1})
-        h=lead_connectome;
+        handles=lead_connectome;
     else
-        h=varargin{1};
+        handles=varargin{1};
     end
-    lc.general.parcellation=getappdata(h,'parcellation');
-    lc.general.parcellationn=1;
-    lc.general.parcellation=lc.general.parcellation{lc.general.parcellationn};
+    defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+    lc.general.parcellation = defaultParc;
     lc.graph.degree_centrality=0;
     lc.graph.eigenvector_centrality=0;
     lc.graph.nodal_efficiency=0;

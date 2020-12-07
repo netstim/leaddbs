@@ -60,15 +60,17 @@ axis off;
 axis equal;
 set(handles.leadfigure,'name','Lead Connectome','color','w');
 
-% add parcellation atlases to menu:
-ll=dir([ea_space([],'labeling'),'*.nii']);
-parcellation={};
-for lab=1:length(ll)
-    [~,n]=fileparts(ll(lab).name);
-    parcellation{lab}=n;
+% Add parcellations to menu:
+parcFiles = dir([ea_space([],'labeling'),'*.nii']);
+parcellations = cell(1,length(parcFiles));
+for i=1:length(parcFiles)
+    [~,n]=fileparts(parcFiles(i).name);
+    parcellations{i}=n;
 end
-setappdata(handles.leadfigure,'parcellation',parcellation);
-set(handles.parcellation,'String',parcellation);
+set(handles.parcellation,'String',parcellations);
+
+defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+set(handles.parcellation,'Value',find(ismember(parcellations,defaultParc)));
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
@@ -303,14 +305,14 @@ ftmethod=ftmethod{get(handles.ftmethod,'Value')};
 if strcmp(ftmethod, gqiUItxt)
     set(handles.fiber_count, 'Visible', 'on');
     set(handles.fiber_count_txt, 'Visible', 'on');
-    
+
     if ismember(get(handles.upsamplingfactor,'value'),[3,5])
         set(handles.use_internal_upsampling,'enable','on');
     else
         set(handles.use_internal_upsampling,'enable','off');
         set(handles.use_internal_upsampling,'Value',0);
     end
-    
+
 else
     set(handles.use_internal_upsampling,'enable','off');
     set(handles.use_internal_upsampling,'Value',0);
@@ -422,10 +424,13 @@ function compute_GM_struc_Callback(hObject, eventdata, handles)
 function handles=lc2handles(lc,handles)
 
 % General settings
-
-try set(handles.parcellation,'Value',lc.general.parcellationn); end
-if get(handles.parcellation,'Value')>length(get(handles.parcellation,'String'))
-    set(handles.parcellation,'Value',length(get(handles.parcellation,'String')));
+parcellations = get(handles.parcellation,'String');
+parcIdx = find(ismember(parcellations, lc.general.parcellation), 1);
+if ~isempty(parcIdx)
+    set(handles.parcellation,'Value',parcIdx);
+else
+    defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+    set(handles.parcellation,'Value',find(ismember(parcellations, defaultParc)));
 end
 
 % Graph options:

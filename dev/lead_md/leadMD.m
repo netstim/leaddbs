@@ -613,8 +613,7 @@ options.colormap = [0 0 0.5625
                     0.5625 0 0];
 %%
 options.dolc = 0;
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -754,8 +753,7 @@ options.colormap = [0 0 0
                     1 1 1];
 %%
 options.dolc = 0;
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -896,8 +894,7 @@ options.colormap = [0 0 0.5625
                     0.5625 0 0];
 %%
 options.dolc = 0;
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -1043,8 +1040,7 @@ options.colormap = [0 0 0
                     1 1 1];
 %%
 options.dolc = 0;
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -1189,8 +1185,7 @@ options.colormap = [0 0 0.5625
 %%
 options.dolc = 0;
 options.uipatdirs = [];
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -1340,8 +1335,7 @@ options.colormap = [0 0 0.5625
 %%
 options.dolc = 0;
 options.uipatdirs = [];
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;

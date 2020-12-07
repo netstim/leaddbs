@@ -160,7 +160,6 @@ options.leadprod = 'dbs';
 options.prefs=ea_prefs;
 
 options.lc.general.parcellation = 'Cortical Area Parcellation from Resting-State Correlations (Gordon 2014)';
-options.lc.general.parcellationn = 11;
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;

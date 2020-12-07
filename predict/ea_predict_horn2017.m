@@ -252,7 +252,6 @@ options.lcm.cmd = 1;
 options.uipatdirs = {''};
 
 options.lc.general.parcellation = 'AICHA reordered (Joliot 2015)';
-options.lc.general.parcellationn = 2;
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
