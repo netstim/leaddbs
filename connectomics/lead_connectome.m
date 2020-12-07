@@ -69,7 +69,8 @@ for i=1:length(parcFiles)
 end
 set(handles.parcellation,'String',parcellations);
 
-defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+options.prefs = ea_prefs;
+defaultParc = options.prefs.machine.lc.general.parcellation;
 set(handles.parcellation,'Value',find(ismember(parcellations,defaultParc)));
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -95,7 +96,6 @@ setappdata(gcf,'ftmethods',ftmethods);
 set(handles.ftmethod,'String',fdc);
 
 % add normmethods to menu
-options.prefs=ea_prefs('');
 ea_addnormmethods(handles,options,'normmethod');
 
 % add recent patients...
@@ -429,7 +429,8 @@ parcIdx = find(ismember(parcellations, lc.general.parcellation), 1);
 if ~isempty(parcIdx)
     set(handles.parcellation,'Value',parcIdx);
 else
-    defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+    options.prefs = ea_prefs;
+    defaultParc = options.prefs.machine.lc.general.parcellation;
     set(handles.parcellation,'Value',find(ismember(parcellations, defaultParc)));
 end
 

@@ -9,8 +9,8 @@ else
     else
         handles=varargin{1};
     end
-    defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
-    lc.general.parcellation = defaultParc;
+    prefs = ea_prefs;
+    lc.general.parcellation = prefs.machine.lc.general.parcellation;
     lc.graph.degree_centrality=0;
     lc.graph.eigenvector_centrality=0;
     lc.graph.nodal_efficiency=0;
