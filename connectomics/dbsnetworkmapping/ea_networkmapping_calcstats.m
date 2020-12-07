@@ -82,13 +82,13 @@ for group=groups
                     [R,ps]=corr(I(gpatsel),(AllX(gpatsel,:)),'rows','pairwise','type',obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
                     R=ea_corrsignan(vals{group},ps',obj);
                     A=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
-                    bidir=(R'.*A)>0; % check for entries that are either positive or negative in both maps
+                    bidir=(R.*A)>0; % check for entries that are either positive or negative in both maps
                     A(~bidir)=nan;
                     vals{group}=A;
                 else
                     R=corr(I(gpatsel),(AllX(gpatsel,:)),'rows','pairwise','type',obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
                     A=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
-                    bidir=(R'.*A)>0; % check for entries that are either positive or negative in both maps
+                    bidir=(R.*A)>0; % check for entries that are either positive or negative in both maps
                     A(~bidir)=nan;
                     vals{group}=A;
                 end
