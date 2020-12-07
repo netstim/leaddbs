@@ -39,20 +39,24 @@ end
 
 % Parcellation
 parcellations = get(handles.labelpopup,'String');
-if isnumeric(M.ui.labelpopup)
-    try
-        set(handles.labelpopup,'Value',M.ui.labelpopup);
-    catch % Set to default parcellation in case index out of range
-        defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
-        set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
-    end
+if ~isfield(M.ui,'labelpopup')
+    M.ui.labelpopup = parcellations{get(handles.labelpopup,'Value')};
 else
-    parcInd = find(ismember(parcellations, M.ui.labelpopup), 1);
-    if ~isempty(parcInd)
-        set(handles.labelpopup,'Value',parcInd);
+    if isnumeric(M.ui.labelpopup)
+        try
+            set(handles.labelpopup,'Value',M.ui.labelpopup);
+        catch % Set to default parcellation in case index out of range
+            defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+            set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
+        end
     else
-        defaultAtlas = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
-        set(handles.labelpopup,'Value',find(ismember(parcellations, defaultAtlas)));
+        parcInd = find(ismember(parcellations, M.ui.labelpopup), 1);
+        if ~isempty(parcInd)
+            set(handles.labelpopup,'Value',parcInd);
+        else
+            defaultAtlas = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+            set(handles.labelpopup,'Value',find(ismember(parcellations, defaultAtlas)));
+        end
     end
 end
 
