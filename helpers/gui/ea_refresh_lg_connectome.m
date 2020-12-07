@@ -54,8 +54,8 @@ else
         if ~isempty(parcInd)
             set(handles.labelpopup,'Value',parcInd);
         else
-            defaultAtlas = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
-            set(handles.labelpopup,'Value',find(ismember(parcellations, defaultAtlas)));
+            defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+            set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
         end
     end
 end
