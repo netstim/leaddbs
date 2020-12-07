@@ -264,7 +264,6 @@ options.lc.func.prefs.TR = 2.69;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
 options.lc.struc.ft.method = 'ea_ft_mesotracking_reisert';
-options.lc.struc.ft.methodn = 1;
 options.lc.struc.ft.do = 1;
 options.lc.struc.ft.normalize = 0;
 options.exportedJob = 1;

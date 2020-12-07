@@ -172,7 +172,6 @@ options.lc.func.prefs.TR = 2.69;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
 options.lc.struc.ft.method = 'ea_ft_gqi_yeh';
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 0;
 options.lc.struc.ft.dsistudio.fiber_count = 200000;

@@ -625,7 +625,6 @@ options.lc.func.compute_GM = 0;
 options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
@@ -765,7 +764,6 @@ options.lc.func.compute_GM = 0;
 options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
@@ -907,7 +905,6 @@ options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
 options.lc.struc.ft.method = 'ea_ft_gqi_yeh';
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
@@ -1053,7 +1050,6 @@ options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
 options.lc.struc.ft.method = 'ea_ft_gqi_yeh';
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
@@ -1198,7 +1194,6 @@ options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
 options.lc.struc.ft.method = 'ea_ft_gqi_yeh';
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 options.native=1;
@@ -1347,7 +1342,6 @@ options.lc.func.compute_GM = 0;
 options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 

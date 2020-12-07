@@ -23,12 +23,10 @@ else
     lc.struc.compute_CM=0;
     lc.struc.compute_GM=0;
     lc.struc.ft.do=0;
-    ftmethods=getappdata(h,'ftmethods');
     if isempty(varargin{1})
         close(h)
     end
     lc.struc.ft.method='ea_ft_gqi_yeh';
-    lc.struc.ft.methodn=find(ismember(ftmethods, 'ea_ft_gqi_yeh'));
     lc.struc.ft.dsistudio.fiber_count=200000;
     lc.struc.ft.normalize=0;
 end
