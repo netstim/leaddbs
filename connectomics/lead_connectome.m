@@ -425,13 +425,19 @@ function handles=lc2handles(lc,handles)
 
 % General settings
 parcellations = get(handles.parcellation,'String');
-parcIdx = find(ismember(parcellations, lc.general.parcellation), 1);
-if ~isempty(parcIdx)
-    set(handles.parcellation,'Value',parcIdx);
-else
+if ~isfield(lc.general, 'parcellation')
     options.prefs = ea_prefs;
     defaultParc = options.prefs.lc.defaultParcellation;
     set(handles.parcellation,'Value',find(ismember(parcellations, defaultParc)));
+else
+    parcIdx = find(ismember(parcellations, lc.general.parcellation), 1);
+    if ~isempty(parcIdx)
+        set(handles.parcellation,'Value',parcIdx);
+    else
+        options.prefs = ea_prefs;
+        defaultParc = options.prefs.lc.defaultParcellation;
+        set(handles.parcellation,'Value',find(ismember(parcellations, defaultParc)));
+    end
 end
 
 % Graph options:
