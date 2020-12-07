@@ -536,9 +536,7 @@ function fiberspopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns fiberspopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from fiberspopup
 M=getappdata(gcf,'M');
-connectomes = get(handles.fiberspopup,'String');
-connectomeIdx = get(handles.fiberspopup,'Value');
-M.ui.connectomename = connectomes{connectomeIdx};
+M.ui.connectomename = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg_connectome(handles);
 

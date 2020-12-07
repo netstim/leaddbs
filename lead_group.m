@@ -1123,9 +1123,7 @@ else
     connChanged = 1;
 end
 
-connectomes = get(handles.fiberspopup,'String');
-connectomeIdx = get(handles.fiberspopup,'Value');
-M.ui.connectomename = connectomes{connectomeIdx};
+M.ui.connectomename = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 
 ea_refresh_lg(handles);
