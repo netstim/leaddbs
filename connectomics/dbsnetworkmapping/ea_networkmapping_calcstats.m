@@ -1,4 +1,4 @@
-function [vals,usedidx] = ea_networkmapping_calcstats(obj,patsel,Iperm)
+function [vals] = ea_networkmapping_calcstats(obj,patsel,Iperm)
 
 if ~exist('Iperm','var')
     I=obj.responsevar;
@@ -66,44 +66,38 @@ for group=groups
                         [vals{group}]=corr(I(gpatsel),(AllX(gpatsel,:)),'rows','pairwise','type',obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
                     end
                 end
-            case 'Weighted ave..' % check
-                keyboard
+            case 'Weighted Average (A-map)' % check
+                % check if covariates exist:
+                if exist('covars', 'var')
+                    % they do:
+                    keyboard % need to add in
+                else
+                    % no covariates exist:
+      
+                    [vals{group}]=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
+                    
+                end
+            case 'Combined (C-map)'
+                if obj.showsignificantonly
+                    [R,ps]=corr(I(gpatsel),(AllX(gpatsel,:)),'rows','pairwise','type',obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
+                    R=ea_corrsignan(vals{group},ps',obj);
+                    A=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
+                    bidir=(R'.*A)>0; % check for entries that are either positive or negative in both maps
+                    A(~bidir)=nan;
+                    vals{group}=A;
+                else
+                    R=corr(I(gpatsel),(AllX(gpatsel,:)),'rows','pairwise','type',obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
+                    A=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
+                    bidir=(R'.*A)>0; % check for entries that are either positive or negative in both maps
+                    A(~bidir)=nan;
+                    vals{group}=A;
+                end
         end
                 
         obj.stats.pos.available=sum(vals{1}>0); % only collected for first group (positives)
         obj.stats.neg.available=sum(vals{1}<0);
-        usedidx{group}=find(~isnan(vals{group}));
-        vals{group}=vals{group}(usedidx{group}); % final weights for surviving fibers    
-%         allvals = vertcat(vals{group,:});
-%         posvals = sort(allvals(allvals>0),'descend');
-%         negvals = sort(allvals(allvals<0),'ascend');
-%         
-%         if ~obj.posvisible || ~obj.showposamount || isempty(posvals)
-%             posthresh = inf;
-%         else
-%             posrange = posvals(1) - posvals(end);
-%             posthresh = posvals(1) - obj.showposamount/100 * posrange;
-%             
-%             if posrange == 0
-%                 posthresh = posthresh - eps*10;
-%             end
-%         end
-%         
-%         if ~obj.negvisible || ~obj.shownegamount || isempty(negvals)
-%             negthresh = -inf;
-%         else
-%             negrange = negvals(1) - negvals(end);
-%             negthresh = negvals(1) - obj.shownegamount/100 * negrange;
-%             
-%             if negrange == 0
-%                 negthresh = negthresh + eps*10;
-%             end
-%         end
-%         
-%         % Remove vals and fibers outside the thresholding range
-%         remove = logical(logical(vals{group}<posthresh) .* logical(vals{group}>negthresh));
-%         vals{group}(remove)=[];
-%         usedidx{group}(remove)=[];
+
+
     
 end
 

@@ -1,7 +1,7 @@
 classdef ea_networkmapping < handle
     % DBS network mapping class to handle visualizations of DBS network mapping analyses in lead dbs resultfig / 3D Matlab figures
     % A. Horn
-
+    
     properties (SetObservable)
         M % content of lead group project
         resultfig % figure handle to plot results
@@ -10,7 +10,7 @@ classdef ea_networkmapping < handle
         negvisible = 0 % neg voxels visible
         showposamount = [25 25] % two entries for right and left
         shownegamount = [25 25] % two entries for right and left
-        statmetric = 'Correlations (R-map)' % Statistical model to use 
+        statmetric = 'Correlations (R-map)' % Statistical model to use
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         poscolor = [0.99,0.75,0.06] % positive main color
         negcolor = [0.15,0.77,0.95] % negative main color
@@ -39,6 +39,7 @@ classdef ea_networkmapping < handle
         responsevarlabel % label of response variable
         covars = {} % covariates
         covarlabels = {} % covariate labels
+        cvmask = 'Gray Matter';
         analysispath % where to store results
         leadgroup % redundancy protocol only, path to original lead group project
         connectome % redundancy protocol only, name of underlying connectome
@@ -52,11 +53,11 @@ classdef ea_networkmapping < handle
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
     end
-
+    
     properties (Access = private)
         switchedFromSpace=3 % if switching space, this will protocol where from
     end
-
+    
     methods
         function obj=ea_disctract(analysispath) % class constructor
             if exist('analysispath', 'var') && ~isempty(analysispath)
@@ -65,13 +66,13 @@ classdef ea_networkmapping < handle
                 obj.ID = ID;
             end
         end
-
+        
         function initialize(obj,datapath,resultfig)
             D = load(datapath);
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
                 obj.leadgroup = datapath;
-
+                
                 testID = obj.M.guid;
                 ea_mkdir([fileparts(obj.leadgroup),filesep,'disctracts',filesep]);
                 id = 1;
@@ -91,7 +92,7 @@ classdef ea_networkmapping < handle
                     if ~(strcmp(props{p}, 'analysispath') && ~isempty(obj.analysispath) ...
                             || strcmp(props{p}, 'ID') && ~isempty(obj.ID))
                         obj.(props{p}) = D.networkmapping.(props{p});
-
+                        
                     end
                 end
                 clear D
@@ -100,26 +101,26 @@ classdef ea_networkmapping < handle
                 return
             end
         end
-
+        
         function calculate(obj)
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
-                        answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
-                        if ~strcmp(answ,'Yes')
-                            return
-                        end
+                    answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
+                    if ~strcmp(answ,'Yes')
+                        return
+                    end
                 end
             end
-
-
+            
+            
             vatlist = ea_networkmapping_getvats(obj);
             [AllX] = ea_networkmapping_calcvals(vatlist, obj.connectome);
-
+            
             obj.results.(ea_conn2connid(obj.connectome)).connval = AllX;
-
+            
         end
-
+        
         function Amps = getstimamp(obj)
             Amps=zeros(length(obj.M.patient.list),2);
             for pt=1:length(obj.M.patient.list)
@@ -130,10 +131,10 @@ classdef ea_networkmapping < handle
                 end
             end
         end
-
+        
         function VTAvolumes = getvtavolumes(obj)
             if ~isfield(obj.M.stats(1).ea_stats.stimulation.vat(1),'volume')
-               VTAvolumes = obj.getstimamp;
+                VTAvolumes = obj.getstimamp;
                 warning('No VTA volumes found. Using stimulation amplitudes instead. Re-run stats in Lead-group to obtain volumes.');
                 return
             end
@@ -144,7 +145,7 @@ classdef ea_networkmapping < handle
                 end
             end
         end
-
+        
         function Efieldmags = getefieldmagnitudes(obj)
             if ~isfield(obj.M.stats(1).ea_stats.stimulation.efield(1),'volume')
                 Efieldmags = obj.getstimamp;
@@ -169,24 +170,24 @@ classdef ea_networkmapping < handle
         end
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
-               msgbox('LEAD_groupanalysis file has vanished. Please select file.');
-               [fn,pth]=uigetfile();
-               obj.leadgroup=fullfile(pth,fn);
+                msgbox('LEAD_groupanalysis file has vanished. Please select file.');
+                [fn,pth]=uigetfile();
+                obj.leadgroup=fullfile(pth,fn);
             end
             D = load(obj.leadgroup);
             obj.M = D.M;
         end
-
+        
         function coh = getcohortregressor(obj)
             coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
         end
-
+        
         function [I, Ihat] = loocv(obj)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
             [I, Ihat] = crossval(obj, cvp);
         end
-
+        
         function [I, Ihat] = lococv(obj)
             if length(unique(obj.M.patient.group(obj.patientselection))) == 1
                 ea_error(sprintf(['Only one cohort in the analysis.\n', ...
@@ -194,13 +195,13 @@ classdef ea_networkmapping < handle
             end
             [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
         end
-
+        
         function [I, Ihat] = kfoldcv(obj)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
             [I, Ihat] = crossval(obj, cvp);
         end
-
+        
         function [I, Ihat] = lno(obj, Iperm)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
@@ -210,7 +211,7 @@ classdef ea_networkmapping < handle
                 [I, Ihat] = crossval(obj, cvp, Iperm);
             end
         end
-
+        
         function [I, Ihat] = crossval(obj, cvp, Iperm)
             if isnumeric(cvp) % cvp is crossvalind
                 cvIndices = cvp;
@@ -222,30 +223,30 @@ classdef ea_networkmapping < handle
                     cvp.test{i} = cvIndices==cvID(i);
                 end
             end
-
+            
             % Check if patients are selected in the custom training/test list
             if isempty(obj.customselection)
                 patientsel = obj.patientselection;
             else
                 patientsel = obj.customselection;
             end
-
+            
             if ~exist('Iperm', 'var') || isempty(Iperm)
                 I = obj.responsevar(patientsel);
             else
                 I = Iperm(patientsel);
             end
-
+            
             % Ihat is the estimate of improvements (not scaled to real improvements)
-            Ihat = nan(length(patientsel),2);
-
-            fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
-
+            Ihat = nan(length(patientsel),1);
+            
+            connval = full(obj.results.(ea_conn2connid(obj.connectome)).connval);
+            
             for c=1:cvp.NumTestSets
                 if cvp.NumTestSets ~= 1
                     fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
                 end
-
+                
                 if isobject(cvp)
                     training = cvp.training(c);
                     test = cvp.test(c);
@@ -253,65 +254,41 @@ classdef ea_networkmapping < handle
                     training = cvp.training{c};
                     test = cvp.test{c};
                 end
-
+                
                 if ~exist('Iperm', 'var')
                     if obj.cvlivevisualize
-                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
-                        obj.draw(vals,fibcell);
+                        [vals] = ea_networkmapping_calcstats(obj, patientsel(training));
+                        obj.draw(vals);
                         drawnow;
                     else
-                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+                        [vals] = ea_networkmapping_calcstats(obj, patientsel(training));
                     end
                 else
                     if obj.cvlivevisualize
-                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
-                        obj.draw(vals,fibcell);
+                        [vals] = ea_networkmapping_calcstats(obj, patientsel(training), Iperm);
+                        obj.draw(vals);
                         drawnow;
                     else
-                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
+                        [vals] = ea_networkmapping_calcstats(obj, patientsel(training), Iperm);
                     end
                 end
-
-                for side=1:2
-                    if ~isempty(vals{1,side})
-                        switch obj.statmetric % also differentiate between methods in the prediction part.
-                            case 1 % ttests
-                                switch lower(obj.basepredictionon)
-                                    case 'mean of scores'
-                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
-                                    case 'sum of scores'
-                                        Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
-                                    case 'peak of scores'
-                                        Ihat(test,side) = ea_nanmax(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
-                                    case 'peak 5% of scores'
-                                        ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test));
-                                        ihatvals=sort(ihatvals);
-                                        Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                end
-                            case 2 % efields
-                                switch lower(obj.basepredictionon)
-                                    case 'profile of scores: spearman'
-                                        Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','spearman'));
-                                    case 'profile of scores: pearson'
-                                        Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','pearson'));
-                                   case 'profile of scores: bend'
-                                        Ihat(test,side) = atanh(ea_bendcorr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test))));
-                                    case 'mean of scores'
-                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
-                                    case 'sum of scores'
-                                        Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
-                                    case 'peak of scores'
-                                        Ihat(test,side) = ea_nanmax(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
-                                    case 'peak 5% of scores'
-                                        ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test));
-                                        ihatvals=sort(ihatvals);
-                                        Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                end
-                        end
-                    end
+                
+                switch lower(obj.basepredictionon)
+                    case 'spearman correlations'
+                        Ihat(test) = corr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
+                            connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))','rows','pairwise','type','Spearman');
+                    case 'pearson correlations'
+                        Ihat(test) = corr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
+                            connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))','rows','pairwise','type','Pearson');
+                    case 'bend correlations'
+                        Ihat(test) = ea_bendcorr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
+                            connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))');
                 end
+                
+                
+                
             end
-
+            
             
             % restore original view in case of live drawing
             if obj.cvlivevisualize
@@ -322,7 +299,7 @@ classdef ea_networkmapping < handle
                 Ihat = Ihat(test,:);
                 I = I(test);
             end
-
+            
             if size(obj.responsevar,2)==2 % hemiscores
                 Ihat = Ihat(:); % compare hemiscores (electrode wise)
                 I = I(:);
@@ -330,18 +307,68 @@ classdef ea_networkmapping < handle
                 Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
             end
         end
-
+        
+        function maskn=ea_mask2maskn(obj)
+            switch obj.cvmask
+                case 'Gray Matter'
+                    switch obj.outputspace
+                        case '222'
+                            maskn='gray';
+                        case '111'
+                            maskn='gray_hd';
+                        case '555'
+                            maskn='gray_5';
+                    end
+                case 'Brain'
+                    switch obj.outputspace
+                        case '222'
+                            maskn='brain';
+                        case '111'
+                            maskn='brain_hd';
+                        case '555'
+                            maskn='brain_5';
+                    end
+                case 'Cortex & Cerebellum'
+                    switch obj.outputspace
+                        case '222'
+                            maskn='cortexcb';
+                        case '111'
+                            maskn='cortexcb_hd';
+                        case '555'
+                            ea_error('Cortex & Cerebellum Mask not supported for 0.5 mm resolution space');
+                    end
+                case 'Cortex'
+                    switch obj.outputspace
+                        case '222'
+                            maskn='cortex';
+                        case '111'
+                            maskn='cortex_hd';
+                        case '555'
+                            maskn='cortex_5';
+                    end
+                case 'Cerebellum'
+                    switch obj.outputspace
+                        case '222'
+                            maskn='cb';
+                        case '111'
+                            maskn='cb_hd';
+                        case '555'
+                            ea_error('Cerebellum Mask not supported for 0.5 mm resolution space');
+                    end
+            end
+        end
+        
         function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
             if ~exist('corrType', 'var')
                 corrType = 'Spearman';
             end
-
+            
             numPerm = obj.Nperm;
-
+            
             Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection, obj.rngseed)';
             Iperm = [obj.responsevar, Iperm];
             Ihat = cell(numPerm+1, 1);
-
+            
             R = zeros(numPerm+1, 1);
             
             for perm=1:numPerm+1
@@ -352,10 +379,10 @@ classdef ea_networkmapping < handle
                     fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
                     [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
                 end
-
+                
                 R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
             end
-
+            
             % generate null distribution
             R1 = R(1);
             R0 = sort(abs(R(2:end)),'descend');
@@ -363,11 +390,11 @@ classdef ea_networkmapping < handle
             v = ea_searchclosest(R0, R1);
             pperm = v/numPerm;
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
-
+            
             % Return only selected I
             Iperm = Iperm(obj.patientselection,:);
         end
-
+        
         function save(obj)
             networkmapping=obj;
             pth = fileparts(networkmapping.leadgroup);
@@ -381,20 +408,20 @@ classdef ea_networkmapping < handle
             save(networkmapping.analysispath,'networkmapping','-v7.3');
             obj.resultfig=rf;
         end
-
-
+        
+        
         function draw(obj,vals)
             if ~exist('vals','var')
-                [vals,usedidx]=ea_networkmapping_calcstats(obj);
+                [vals]=ea_networkmapping_calcstats(obj);
             end
             obj.surfdrawn.vals=vals;
-
+            
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
-
-
+            
+            
             set(0,'CurrentFigure',obj.resultfig);
-
+            
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
             linecols=obj.M.groups.color;
             if isempty(obj.drawobject) % check if prior object has been stored
@@ -408,13 +435,13 @@ classdef ea_networkmapping < handle
                 end
             end
             obj.drawobject={};
-
+            
             % reset colorbar
             obj.colorbar=[];
             if ~any([obj.posvisible,obj.negvisible])
                 return
             end
-
+            
             space=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Contruct default blue to red colormap
@@ -475,52 +502,51 @@ classdef ea_networkmapping < handle
                     end
                 end
                 setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
-
+                
                 cmapind = mat2cell(cmapind, numel(vals{group}))';
                 alphaind = mat2cell(alphaind, numel(vals{group}))';
                 
                 
                 switch obj.vizmode
                     case 'Regions'
-                % Plot voxels if any survived
-                if ~isempty(usedidx{group})
-                    if obj.posvisible
-                        % plot positives:
-                        posvox=space;
-                        posvox.img(:)=0;
-                        posvox.img(usedidx{group}(vals{group}>0))=vals{group}(vals{group}>0);
+                        % Plot voxels if any survived
+                            if obj.posvisible
+                                % plot positives:
+                                posvox=space;
+                                posvox.img(:)=0;
+                                posvox.img(usedidx{group}(vals{group}>0))=vals{group}(vals{group}>0);
+                                
+                                pobj.nii=posvox;
+                                pobj.name='Positive';
+                                pobj.niftiFilename='Positive.nii';
+                                pobj.binary=0;
+                                pobj.usesolidcolor=0;
+                                pobj.color=obj.poscolor;
+                                pobj.colormap=ea_colorgradient(length(gray), [1,1,1], obj.poscolor);
+                                pobj.smooth=10;
+                                pobj.hullsimplify=0.5;
+                                obj.drawobject{group}{1}=ea_roi('Positive.nii',pobj);
+                                
+                            end
+                            
+                            if obj.negvisible
+                                % plot negatives:
+                                negvox=space;
+                                negvox.img(:)=0;
+                                negvox.img(usedidx{group}(vals{group}<0))=-vals{group}(vals{group}<0);
+                                
+                                pobj.nii=negvox;
+                                pobj.name='Negative';
+                                pobj.niftiFilename='Negative.nii';
+                                pobj.binary=0;
+                                pobj.usesolidcolor=0;
+                                pobj.color=obj.negcolor;
+                                pobj.colormap=ea_colorgradient(length(gray), obj.negcolor, [1,1,1]);
+                                pobj.smooth=10;
+                                pobj.hullsimplify=0.5;
+                                obj.drawobject{group}{2}=ea_roi('Negative.nii',pobj);
+                            end
                         
-                        pobj.nii=posvox;
-                        pobj.name='Positive';
-                        pobj.niftiFilename='Positive.nii';
-                        pobj.binary=0;
-                        pobj.usesolidcolor=0;
-                        pobj.color=obj.poscolor;
-                        pobj.colormap=ea_colorgradient(length(gray), [1,1,1], obj.poscolor);
-                        pobj.smooth=10;
-                        pobj.hullsimplify=0.5;
-                        obj.drawobject{group}{1}=ea_roi('Positive.nii',pobj);
-                        
-                    end
-                    
-                    if obj.negvisible
-                        % plot negatives:
-                        negvox=space;
-                        negvox.img(:)=0;
-                        negvox.img(usedidx{group}(vals{group}<0))=-vals{group}(vals{group}<0);
-                        
-                        pobj.nii=negvox;
-                        pobj.name='Negative';
-                        pobj.niftiFilename='Negative.nii';
-                        pobj.binary=0;
-                        pobj.usesolidcolor=0;
-                        pobj.color=obj.negcolor;
-                        pobj.colormap=ea_colorgradient(length(gray), obj.negcolor, [1,1,1]);
-                        pobj.smooth=10;
-                        pobj.hullsimplify=0.5;
-                        obj.drawobject{group}{2}=ea_roi('Negative.nii',pobj);
-                    end
-                end
                     case 'Surface (Elvis)'
                         % first draw correct surface
                         switch obj.model
@@ -529,7 +555,7 @@ classdef ea_networkmapping < handle
                                 if obj.modelLH; lh=ea_readObj([ea_space,'surf_l_smoothed.obj']); end
                             case 'Full'
                                 if obj.modelRH; rh=ea_readObj([ea_space,'surf_r.obj']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end                            
+                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end
                         end
                         cmap=ea_colorgradient(256,obj.negcolor,[1,1,1],obj.poscolor);
                         % get colors for surface:
@@ -537,7 +563,7 @@ classdef ea_networkmapping < handle
                         [X,Y,Z]=meshgrid(linspace(bb(2,1),bb(2,2),size(space.img,2)),...
                             linspace(bb(1,1),bb(1,2),size(space.img,1)),...
                             linspace(bb(3,1),bb(3,2),size(space.img,3)));
-                        space.img(usedidx{group})=vals{group};
+                        space.img(:)=vals{group};
                         if ~obj.posvisible
                             space.img(space.img>0)=0;
                         end
@@ -548,13 +574,13 @@ classdef ea_networkmapping < handle
                             rh_nc=round(ea_contrast(isocolors(X,Y,Z,space.img,rh.vertices))*255+1);
                             rh_nc(isnan(rh_nc))=128; % set to white for now
                             obj.drawobject{group}{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(rh_nc,:),...
-                                'SpecularStrength',0.45,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.55,'FaceLighting','gouraud');
+                                'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
                         end
                         if obj.modelLH
                             lh_nc=round(ea_contrast(isocolors(X,Y,Z,space.img,lh.vertices))*255+1);
                             lh_nc(isnan(lh_nc))=128; % set to white for now
                             obj.drawobject{group}{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(lh_nc,:),...
-                                'SpecularStrength',0.45,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.55,'FaceLighting','gouraud');
+                                'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
                         end
                     case 'Surface (Surfice)'
                         keyboard
@@ -563,8 +589,8 @@ classdef ea_networkmapping < handle
                 
                 
                 setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject); % store handle of surf to figure.
-
-
+                
+                
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
                     if obj.posvisible && obj.negvisible
@@ -586,7 +612,7 @@ classdef ea_networkmapping < handle
                     end
                 end
             end
-
+            
             % store colorbar in object
             if exist('fibcmap','var') % could be no fibers present at all.
                 obj.colorbar.cmap = voxcmap;
@@ -595,7 +621,7 @@ classdef ea_networkmapping < handle
             end
         end
     end
-
+    
     methods (Static)
         function changeevent(~,event)
             update_trajectory(event.AffectedObject,event.Source.Name);
