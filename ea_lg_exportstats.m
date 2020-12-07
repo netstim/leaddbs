@@ -35,9 +35,13 @@ export.atlasNames = regexprep(M.vilist', '\.nii(\.gz)?$', '');
 
 % Parcellation and connectome information
 if ~isempty(M.fclist)
-    labeling = dir([ea_space,'labeling',filesep,'*.nii']);
-    labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
-    export.parcellation = labeling{M.ui.labelpopup};
+    if isnumeric(M.ui.labelpopup) % Old format, labelpopup is numeric
+        labeling = dir([ea_space,'labeling',filesep,'*.nii']);
+        labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
+        export.parcellation = labeling{M.ui.labelpopup};
+    else % New format, labelpopup is parcellation name
+        export.parcellation = M.ui.labelpopup;
+    end
     export.parcellationNames = M.fclist;
     if ~strcmp(M.ui.connectomename, 'Use none')
         export.connectome = M.ui.connectomename;

@@ -16,7 +16,6 @@ M.ui.showpassivecontcheck=1;
 M.ui.showactivecontcheck=1;
 M.ui.showisovolumecheck=0;
 M.ui.isovscloudpopup=1;
-M.ui.labelpopup=1;
 M.ui.volumeintersections=1;
 M.ui.fibercounts=1;
 M.ui.elrendering=1;

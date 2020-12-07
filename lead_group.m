@@ -122,16 +122,9 @@ labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
 
 set(handles.labelpopup,'String', labeling);
 
-try
-    priorselection = find(ismember(labeling, stimparams.labelatlas)); % retrieve prior selection of fiberset.
-    if length(priorselection) == 1
-        set(handles.labelpopup,'Value',priorselection); % set to prior selection
-    else % if priorselection was a cell array with more than one entry, set to use all
-        set(handles.labelpopup,'Value',lab+1); % set to use all
-    end
-catch    % reinitialize using third entry.
-    set(handles.labelpopup,'Value',1);
-end
+% Initialize parcellation popupmenu
+defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+set(handles.labelpopup,'Value',find(ismember(labeling, defaultParc)));
 
 % Set connectome popup
 modlist = ea_genmodlist([],[],options,'dmri');
@@ -1158,14 +1151,20 @@ function labelpopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from labelpopup
 M=getappdata(gcf,'M');
 
-if isfield(M.ui, 'labelpopup') && ...
-   eventdata.Source.Value == M.ui.labelpopup
-    labelChanged = 0;
-else
-    labelChanged = 1;
+labelChanged = 1;
+if isfield(M.ui, 'labelpopup')
+    if isnumeric(M.ui.labelpopup) % Old format, labelpopup is numeric
+        if eventdata.Source.Value == M.ui.labelpopup
+            labelChanged = 0;
+        end
+    else % New format, labelpopup is labeling parcellation name
+        if strcmp(eventdata.Source.String{eventdata.Source.Value}, M.ui.labelpopup)
+            labelChanged = 0;
+        end
+    end
 end
 
-M.ui.labelpopup=get(handles.labelpopup,'Value');
+M.ui.labelpopup = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 

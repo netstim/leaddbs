@@ -37,19 +37,29 @@ if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
     set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
 end
 
-try set(handles.labelpopup,'Value',M.ui.labelpopup); end
+% Parcellation
+parcellations = get(handles.labelpopup,'String');
+if isnumeric(M.ui.labelpopup)
+    try
+        set(handles.labelpopup,'Value',M.ui.labelpopup);
+    catch % Set to default parcellation in case index out of range
+        defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+        set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
+    end
+else
+    parcInd = find(ismember(parcellations, M.ui.labelpopup), 1);
+    if ~isempty(parcInd)
+        set(handles.labelpopup,'Value',parcInd);
+    else
+        defaultAtlas = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+        set(handles.labelpopup,'Value',find(ismember(parcellations, defaultAtlas)));
+    end
+end
+
+thisparc = parcellations{get(handles.labelpopup,'Value')};
 
 disp('Adding graph metrics to connectome popup...');
 % add graph metrics to connectome graph-metrics popup:
-thisparc=get(handles.labelpopup,'String');
-
-if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'))
-    useparc=length(get(handles.labelpopup,'String'));
-else
-    useparc=get(handles.labelpopup,'Value');
-end
-
-thisparc=thisparc{useparc};
 try
     gms = dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
     gms = cellfun(@(x) {strrep(x, '.nii', '')}, {gms.name});

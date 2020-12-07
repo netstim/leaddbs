@@ -49,21 +49,25 @@ M.ui.groupdir = get(handles.groupdir_choosebox,'String');
 
 disp('Refreshing selections on VI / FC Lists...');
 
-try set(handles.labelpopup,'Value',M.ui.labelpopup); end
-
-disp('Adding graph metrics to connectome popup...');
-% add graph metrics to connectome graph-metrics popup:
-thisparc=get(handles.labelpopup,'String');
-
-if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'))
-    useparc=length(get(handles.labelpopup,'String'));
+parcellations = get(handles.labelpopup,'String');
+if isnumeric(M.ui.labelpopup)
+    try
+        set(handles.labelpopup,'Value',M.ui.labelpopup);
+    catch % Set to default parcellation in case index out of range
+        defaultParc = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+        set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
+    end
 else
-    useparc=get(handles.labelpopup,'Value');
+    parcInd = find(ismember(parcellations, M.ui.labelpopup), 1);
+    if ~isempty(parcInd)
+        set(handles.labelpopup,'Value',parcInd);
+    else
+        defaultAtlas = 'Automated Anatomical Labeling 3 (Rolls 2020)'; % Hard-coded for now
+        set(handles.labelpopup,'Value',find(ismember(parcellations, defaultAtlas)));
+    end
 end
 
-thisparc=thisparc{useparc};
-
-% modalities for VAT metrics:
+thisparc = parcellations{get(handles.labelpopup,'Value')};
 
 % dMRI:
 cnt=1;
