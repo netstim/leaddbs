@@ -10,7 +10,7 @@ else
         handles=varargin{1};
     end
     prefs = ea_prefs;
-    lc.general.parcellation = prefs.machine.lc.general.parcellation;
+    lc.general.parcellation = prefs.lc.defaultParcellation;
     lc.graph.degree_centrality=0;
     lc.graph.eigenvector_centrality=0;
     lc.graph.nodal_efficiency=0;

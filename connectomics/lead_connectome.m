@@ -70,7 +70,7 @@ end
 set(handles.parcellation,'String',parcellations);
 
 options.prefs = ea_prefs;
-defaultParc = options.prefs.machine.lc.general.parcellation;
+defaultParc = options.prefs.lc.defaultParcellation;
 set(handles.parcellation,'Value',find(ismember(parcellations,defaultParc)));
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -430,7 +430,7 @@ if ~isempty(parcIdx)
     set(handles.parcellation,'Value',parcIdx);
 else
     options.prefs = ea_prefs;
-    defaultParc = options.prefs.machine.lc.general.parcellation;
+    defaultParc = options.prefs.lc.defaultParcellation;
     set(handles.parcellation,'Value',find(ismember(parcellations, defaultParc)));
 end
 

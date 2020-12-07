@@ -116,6 +116,10 @@ prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for 
 %% Atlas-Sets:
 prefs.atlases.default='DISTAL Minimal (Ewert 2017)';
 
+%% Default parcellation setting for LeadConn and LeadGroup
+prefs.lc.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';
+prefs.lg.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';
+
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
 prefs.hullsmooth=5; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
