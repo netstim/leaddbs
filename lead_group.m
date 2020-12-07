@@ -972,8 +972,6 @@ for pt=selection
     resultfig=ea_elvis(options,M.elstruct(pt));
 
     % save scene as matlab figure
-
-
     options.modality=ea_checkctmrpresent(M.patient.list{pt});
     volumespresent=1;
     if options.modality(1) % prefer MR
@@ -1121,7 +1119,7 @@ setappdata(gcf,'M',M);
 
 ea_refresh_lg(handles);
 
-if connChanged
+if ~isempty(M.patient.list) && connChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
     set(handles.exportstats, 'Enable', 'off');
@@ -1168,7 +1166,7 @@ M.ui.labelpopup = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
-if labelChanged
+if ~isempty(M.patient.list) && labelChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
     set(handles.exportstats, 'Enable', 'off');
@@ -1215,7 +1213,7 @@ M.ui.atlassetpopup = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
-if atlasChanged
+if ~isempty(M.patient.list) && atlasChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
     set(handles.exportstats, 'Enable', 'off');
