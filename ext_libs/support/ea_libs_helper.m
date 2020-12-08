@@ -6,31 +6,15 @@ function ea_libs_helper(libpath, setpath)
 if nargin < 1 || isempty(libpath)
     %load prefs for platform specific handling
     prefs = ea_prefs;
-    
-    libpath = fileparts(mfilename('fullpath'));
-    %load system specific needded libs
-    if ispc
-        if prefs.platform.pcwin.load_shipped_libstdcpp6
-            libpath = fullfile(libpath,'pcwin');
-        else
-            %nothing to do, exit
-            return;
-        end
-    elseif ismac
-        if prefs.platform.mac.load_shipped_libstdcpp6
-            libpath = fullfile(libpath,'mac');
-        else
-            %nothing to do, exit
-            return;
-        end
-    elseif isunix
-        if prefs.platform.unix.load_shipped_libstdcpp6
-            libpath = fullfile(libpath,'unix');
-        else
-            %nothing to do, exit
-            return;
-        end
-    end 
+
+    % Check and load runtime libs when needed
+    arch = computer('arch');
+    if eval(['prefs.platform.', arch, '.load_shipped_runtime'])
+        libpath = fullfile(fileparts(mfilename('fullpath')), arch);
+    else
+        % Nothing to do, exit
+        return;
+    end
 end
 
 % set path by default
