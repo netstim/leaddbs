@@ -1,4 +1,3 @@
-
 function ea_addobj(src, evt, resultfig, obj, options)
 
 addht = getappdata(resultfig,'addht');
@@ -16,7 +15,6 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
         pobj.plotFigureH = resultfig;
         pobj.htH = addht;
         for i=1:length(obj)
-            % addroi(obj{i}, resultfig, addht, options);
             pobj.color = ea_uisetcolor;
             ea_roi(obj{i}, pobj);
         end
@@ -43,16 +41,20 @@ else  % uigetfile, 'obj' is the type of the files to be selected
             end
         case 'roi' % atlas
             % open dialog
-            [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-            if iscell(fina) % multiple files
-                for fi=1:length(fina)
-                    addroi([pana,fina{fi}],resultfig,addht,options);
-                end
+            [roiName, roiPath] = uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            if isnumeric(roiName) % User pressed cancel, roiName is 0
+                return
             else
-                if ~fina % user pressed cancel.
-                    return
+                if ischar(roiName)
+                    roiName = {roiName};
                 end
-                addroi([pana,fina],resultfig,addht,options);
+
+                pobj.plotFigureH = resultfig;
+                pobj.htH = addht;
+                for fi=1:length(roiName)
+                    pobj.color = ea_uisetcolor;
+                    ea_roi([roiPath, roiName{fi}], pobj);
+                end
             end
         case 'tractmap'
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
