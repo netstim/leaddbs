@@ -25,19 +25,17 @@ else  % uigetfile, 'obj' is the type of the files to be selected
     switch obj
         case 'tract'
             % open dialog
-            [fina,pana]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-            if isempty(fina) % user pressed cancel.
+            [tractName,tractPath]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            if isnumeric(tractName) % User pressed cancel, tractName is 0
                 return
-            end
-            if iscell(fina)
-                for fi=1:length(fina)
-                    addfibertract([pana,fina{fi}],resultfig,addht,[],0,options);
-                end
             else
-                if ~fina % user pressed cancel
-                    return
+                if ischar(tractName)
+                    tractName = {tractName};
                 end
-                addfibertract([pana,fina],resultfig,addht,[],0,options);
+
+                for fi=1:length(tractName)
+                    addfibertract([tractPath,tractName{fi}],resultfig,addht,[],0,options);
+                end
             end
         case 'roi' % atlas
             % open dialog
