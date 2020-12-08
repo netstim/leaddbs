@@ -214,3 +214,14 @@ prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in 
 
 %% genetics
 prefs.genetics.dbdir=[ea_space,'genetics',filesep];
+
+
+%% platform specific (if changed, needs to restart Matlab)
+% Set to true this line if libstdc++.so.6 is needed.
+% However it is preferrable to fix it at system level (e.g. using package build-essentials). 
+% Additionally, install the matlab-support package and choose to use the system libraries for gcc.
+% If set to true it will add this path: fullfile(earoot,'ext_libs\support\unix') (or any other 
+% system dependent) to the LD_LIBRARY_PATH;
+prefs.platform.unix.load_shipped_libstdcpp6=false;  %for UNIX/LINUX default is NOT loaded (using system libs)
+prefs.platform.mac.load_shipped_libstdcpp6=true;    %for MAC default is loaded
+prefs.platform.pcwin.load_shipped_libstdcpp6=false;  %for PC/WINDOWS default is NOT loaded
