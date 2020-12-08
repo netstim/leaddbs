@@ -1,4 +1,4 @@
 libstdc++.so.6
-    From CentOS Docker image (centos:7)
-    CentOS Linux release 7.7.1908 (Core)
-    /usr/lib64/libstdc++.so.6.0.19
+    From Ubuntu Docker image (ubuntu:20.04)
+    20.04.1 LTS (Focal Fossa)
+    /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28
