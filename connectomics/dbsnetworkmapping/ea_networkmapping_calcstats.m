@@ -31,6 +31,10 @@ if ~isempty(obj.covars)
     end
 end
 
+if exist('covars', 'var')
+   I = ea_resid(cell2mat(covars),I);
+end
+
 if obj.splitbygroup
     groups=unique(obj.M.patient.group)';
     dogroups=1;
@@ -51,48 +55,34 @@ for group=groups
     end
     
 
-        switch obj.statmetric
-            case 'Correlations (R-map)' 
-                % check if covariates exist:
-                if exist('covars', 'var')
-                    % they do:
-                    keyboard % need to add in
-                else
-                    % no covariates exist:
-                    if obj.showsignificantonly
-                        [vals{group},ps]=corr(I(gpatsel),(AllX(gpatsel,:)),'rows','pairwise','type',obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
-                        vals{group}=ea_corrsignan(vals{group},ps',obj);
-                    else
-                        [vals{group}]=corr(I(gpatsel),(AllX(gpatsel,:)),'rows','pairwise','type',obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
-                    end
-                end
-            case 'Weighted Average (A-map)' % check
-                % check if covariates exist:
-                if exist('covars', 'var')
-                    % they do:
-                    keyboard % need to add in
-                else
-                    % no covariates exist:
-      
-                    [vals{group}]=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
-                    
-                end
-            case 'Combined (C-map)'
-                if obj.showsignificantonly
-                    [R,ps]=corr(I(gpatsel),(AllX(gpatsel,:)),'rows','pairwise','type',obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
-                    R=ea_corrsignan(vals{group},ps',obj);
-                    A=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
-                    bidir=(R.*A)>0; % check for entries that are either positive or negative in both maps
-                    A(~bidir)=nan;
-                    vals{group}=A;
-                else
-                    R=corr(I(gpatsel),(AllX(gpatsel,:)),'rows','pairwise','type',obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
-                    A=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
-                    bidir=(R.*A)>0; % check for entries that are either positive or negative in both maps
-                    A(~bidir)=nan;
-                    vals{group}=A;
-                end
-        end
+    switch obj.statmetric
+        case 'Correlations (R-map)'
+            % no covariates exist:
+            if obj.showsignificantonly
+                [vals{group},ps]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype);
+                vals{group}=ea_corrsignan(vals{group},ps',obj);
+            else
+                [vals{group}]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
+            end
+        case 'Weighted Average (A-map)' % check
+            % no covariates exist:
+            [vals{group}]=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
+        case 'Combined (C-map)'
+            if obj.showsignificantonly
+                [R,ps]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
+                R=ea_corrsignan(vals{group},ps',obj);
+                A=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
+                bidir=(R.*A)>0; % check for entries that are either positive or negative in both maps
+                A(~bidir)=nan;
+                vals{group}=A;
+            else
+                R=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
+                A=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
+                bidir=(R.*A)>0; % check for entries that are either positive or negative in both maps
+                A(~bidir)=nan;
+                vals{group}=A;
+            end
+    end
                 
         obj.stats.pos.available=sum(vals{1}>0); % only collected for first group (positives)
         obj.stats.neg.available=sum(vals{1}<0);

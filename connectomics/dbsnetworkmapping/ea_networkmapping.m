@@ -26,7 +26,7 @@ classdef ea_networkmapping < handle
         results % stores fingerprints
         outputspace = '222';
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
-        basepredictionon = 'Spearman Correlations';
+        basepredictionon = 'Spatial Correlations (Spearman)';
         surfdrawn % struct contains data that is actually drawn.
         drawobject % handle to surface drawn on figure
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
@@ -274,13 +274,13 @@ classdef ea_networkmapping < handle
                 end
                 
                 switch lower(obj.basepredictionon)
-                    case 'spearman correlations'
+                    case 'spatial correlations (spearman)'
                         Ihat(test) = corr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
                             connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))','rows','pairwise','type','Spearman');
-                    case 'pearson correlations'
+                    case 'spatial correlations (pearson)'
                         Ihat(test) = corr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
                             connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))','rows','pairwise','type','Pearson');
-                    case 'bend correlations'
+                    case 'spatial correlations (bend)'
                         Ihat(test) = ea_bendcorr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
                             connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))');
                 end
@@ -514,7 +514,7 @@ classdef ea_networkmapping < handle
                                 % plot positives:
                                 posvox=space;
                                 posvox.img(:)=0;
-                                posvox.img(usedidx{group}(vals{group}>0))=vals{group}(vals{group}>0);
+                                posvox.img(vals{group}>0)=vals{group}(vals{group}>0);
                                 
                                 pobj.nii=posvox;
                                 pobj.name='Positive';
@@ -533,7 +533,7 @@ classdef ea_networkmapping < handle
                                 % plot negatives:
                                 negvox=space;
                                 negvox.img(:)=0;
-                                negvox.img(usedidx{group}(vals{group}<0))=-vals{group}(vals{group}<0);
+                                negvox.img(vals{group}<0)=-vals{group}(vals{group}<0);
                                 
                                 pobj.nii=negvox;
                                 pobj.name='Negative';
@@ -571,16 +571,28 @@ classdef ea_networkmapping < handle
                             space.img(space.img<0)=0;
                         end
                         if obj.modelRH
-                            rh_nc=round(ea_contrast(isocolors(X,Y,Z,space.img,rh.vertices))*255+1);
+                            ic=isocolors(X,Y,Z,space.img,rh.vertices);
+                            if any(~isnan(ic))
+                            rh_nc=round(ea_contrast(ic)*255+1);
                             rh_nc(isnan(rh_nc))=128; % set to white for now
+                            else
+                                rh_nc=repmat(128,size(rh.vertices,1),1);
+                            end
                             obj.drawobject{group}{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(rh_nc,:),...
                                 'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
+                            obj.drawobject{group}{1}.Tag=['LH_surf',obj.model];
                         end
                         if obj.modelLH
-                            lh_nc=round(ea_contrast(isocolors(X,Y,Z,space.img,lh.vertices))*255+1);
-                            lh_nc(isnan(lh_nc))=128; % set to white for now
+                            ic=isocolors(X,Y,Z,space.img,lh.vertices);
+                            if any(~isnan(ic))
+                                lh_nc=round(ea_contrast(ic)*255+1);
+                                lh_nc(isnan(lh_nc))=128; % set to white for now
+                            else
+                                lh_nc=repmat(128,size(lh.vertices,1),1);
+                            end
                             obj.drawobject{group}{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(lh_nc,:),...
                                 'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
+                            obj.drawobject{group}{1}.Tag=['RH_surf',obj.model];
                         end
                     case 'Surface (Surfice)'
                         keyboard
