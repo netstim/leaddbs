@@ -1,0 +1,4 @@
+libstdc++.so.6
+    From CentOS Docker image (centos:7)
+    CentOS Linux release 7.7.1908 (Core)
+    /usr/lib64/libstdc++.so.6.0.19
