@@ -410,7 +410,7 @@ classdef ea_networkmapping < handle
         end
         
         
-        function draw(obj,vals)
+        function res=draw(obj,vals)
             if ~exist('vals','var')
                 [vals]=ea_networkmapping_calcstats(obj);
             end
@@ -442,7 +442,8 @@ classdef ea_networkmapping < handle
                 return
             end
             
-            space=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+            res=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+            res.dt=[16,1];
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Contruct default blue to red colormap
                 allvals = horzcat(vals{group,:})';
@@ -512,7 +513,7 @@ classdef ea_networkmapping < handle
                         % Plot voxels if any survived
                             if obj.posvisible
                                 % plot positives:
-                                posvox=space;
+                                posvox=res;
                                 posvox.img(:)=0;
                                 posvox.img(vals{group}>0)=vals{group}(vals{group}>0);
                                 
@@ -531,7 +532,7 @@ classdef ea_networkmapping < handle
                             
                             if obj.negvisible
                                 % plot negatives:
-                                negvox=space;
+                                negvox=res;
                                 negvox.img(:)=0;
                                 negvox.img(vals{group}<0)=-vals{group}(vals{group}<0);
                                 
@@ -546,7 +547,8 @@ classdef ea_networkmapping < handle
                                 pobj.hullsimplify=0.5;
                                 obj.drawobject{group}{2}=ea_roi('Negative.nii',pobj);
                             end
-                        
+                            
+                        res.img(:)=vals{group};
                     case 'Surface (Elvis)'
                         % first draw correct surface
                         switch obj.model
@@ -559,19 +561,19 @@ classdef ea_networkmapping < handle
                         end
                         cmap=ea_colorgradient(256,obj.negcolor,[1,1,1],obj.poscolor);
                         % get colors for surface:
-                        bb=space.mat*[1,size(space.img,1);1,size(space.img,2);1,size(space.img,3);1,1];
-                        [X,Y,Z]=meshgrid(linspace(bb(2,1),bb(2,2),size(space.img,2)),...
-                            linspace(bb(1,1),bb(1,2),size(space.img,1)),...
-                            linspace(bb(3,1),bb(3,2),size(space.img,3)));
-                        space.img(:)=vals{group};
+                        bb=res.mat*[1,size(res.img,1);1,size(res.img,2);1,size(res.img,3);1,1];
+                        [X,Y,Z]=meshgrid(linspace(bb(1,1),bb(1,2),size(res.img,1)),...
+                            linspace(bb(2,1),bb(2,2),size(res.img,2)),...
+                            linspace(bb(3,1),bb(3,2),size(res.img,3)));
+                        res.img(:)=vals{group};
                         if ~obj.posvisible
-                            space.img(space.img>0)=0;
+                            res.img(res.img>0)=0;
                         end
                         if ~obj.negvisible
-                            space.img(space.img<0)=0;
+                            res.img(res.img<0)=0;
                         end
                         if obj.modelRH
-                            ic=isocolors(X,Y,Z,space.img,rh.vertices);
+                            ic=isocolors(X,Y,Z,permute(res.img,[2,1,3]),rh.vertices);
                             if any(~isnan(ic))
                             rh_nc=round(ea_contrast(ic)*255+1);
                             rh_nc(isnan(rh_nc))=128; % set to white for now
@@ -583,7 +585,7 @@ classdef ea_networkmapping < handle
                             obj.drawobject{group}{1}.Tag=['LH_surf',obj.model];
                         end
                         if obj.modelLH
-                            ic=isocolors(X,Y,Z,space.img,lh.vertices);
+                            ic=isocolors(X,Y,Z,permute(res.img,[2,1,3]),lh.vertices);
                             if any(~isnan(ic))
                                 lh_nc=round(ea_contrast(ic)*255+1);
                                 lh_nc(isnan(lh_nc))=128; % set to white for now
@@ -595,8 +597,56 @@ classdef ea_networkmapping < handle
                             obj.drawobject{group}{1}.Tag=['RH_surf',obj.model];
                         end
                     case 'Surface (Surfice)'
-                        keyboard
+                        res.img(:)=vals{group};
+                        res.fname=[fileparts(obj.leadgroup),filesep,'model.nii'];
+                        if ~obj.posvisible
+                            res.img(res.img>0)=0;
+                        end
+                        if ~obj.negvisible
+                            res.img(res.img<0)=0;
+                        end
+                        ea_write_nii(res);
+                        % det mesh to plot:
+                        switch obj.model
+                            case 'Smoothed'
+                                if obj.modelRH && ~obj.modelLH; mesh=([ea_space,'surf_r_smoothed.obj']); side=1; end
+                                if obj.modelLH && ~obj.modelRH; mesh=([ea_space,'surf_l_smoothed.obj']); side=2; end
+                                if obj.modelRH && obj.modelLH; mesh=([ea_space,'surf_smoothed.obj']); side=1; end
+                                if ~obj.modelRH && ~obj.modelLH; ea_error('Please switch on at least one hemisphere'); end
+                            case 'Full'
+                                if obj.modelRH && ~obj.modelLH; mesh=([ea_space,'surf_r.obj']); side=1; end
+                                if obj.modelLH && ~obj.modelRH; mesh=([ea_space,'surf_l.obj']); side=2; end
+                                if obj.modelRH && obj.modelLH; mesh=([ea_space,'surf.obj']); side=1; end
+                                if ~obj.modelRH && ~obj.modelLH; ea_error('Please switch on at least one hemisphere'); end
+                        end
+                        threshs=ea_sfc_getautothresh({res.fname});
+                        script=['BEGIN;',...
+                            ' RESETDEFAULTS;'...
+                            ' ORIENTCUBEVISIBLE(FALSE);'];
+                        script=[script,...
+                            ' MESHLOAD(''',mesh,''');',...
+                            ' MESHCOLOR(255,255,255);'];
+                        cnt=1;
+                        if ~any(isnan(threshs(1,1:2)))
+                            script=[script,...
+                            ' OVERLAYLOAD(''',ea_path_helper(res.fname),''');',...
+                            ' OVERLAYCOLORNAME(',num2str(cnt),', ''Red-Yellow'');',...
+                            ' OVERLAYMINMAX(',num2str(cnt),',',num2str(threshs(1,1)),',',num2str(threshs(1,2)),');'];
+                        cnt=cnt+1;
+                        end
+                        if ~any(isnan(threshs(1,3:4)))
+                        script=[script,...
+                            ' OVERLAYLOAD(''',ea_path_helper(res.fname),''');',...
+                            ' OVERLAYCOLORNAME(',num2str(cnt),', ''Blue-Green'');',...
+                            ' OVERLAYMINMAX(',num2str(cnt),',',num2str(threshs(1,3)),',',num2str(threshs(1,4)),');'];
+                        end
+                        script=[script,...
+                            ' COLORBARVISIBLE(','false',');',...
+                            ' AZIMUTHELEVATION(',num2str(90+(180*side)),', 0);'];
                         
+                        script=[script,...
+                            ' END.'];
+                        ea_surfice_script(script,0);
                 end
                 
                 

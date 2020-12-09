@@ -18,3 +18,6 @@ function threshs=ea_sfc_getautothresh(fis)
         end
         
     end
+    if ~any(nii.img(:)>0)
+       threshs(fi,1:2)=nan; 
+    end
