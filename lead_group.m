@@ -65,7 +65,7 @@ guidata(hObject, handles);
 % uiwait(handles.leadfigure);
 
 options.earoot = ea_getearoot;
-options.prefs = ea_prefs('');
+options.prefs = ea_prefs;
 setappdata(handles.leadfigure,'earoot',options.earoot);
 
 % Build popup tables:
@@ -122,16 +122,15 @@ labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
 
 set(handles.labelpopup,'String', labeling);
 
-try
-    priorselection = find(ismember(labeling, stimparams.labelatlas)); % retrieve prior selection of fiberset.
-    if length(priorselection) == 1
-        set(handles.labelpopup,'Value',priorselection); % set to prior selection
-    else % if priorselection was a cell array with more than one entry, set to use all
-        set(handles.labelpopup,'Value',lab+1); % set to use all
-    end
-catch    % reinitialize using third entry.
-    set(handles.labelpopup,'Value',1);
-end
+% Initialize parcellation popupmenu
+defaultParc = options.prefs.lg.defaultParcellation;
+set(handles.labelpopup,'Value',find(ismember(labeling, defaultParc)));
+
+% Set connectome popup
+modlist = ea_genmodlist([],[],options,'dmri');
+modlist{end+1}='Do not calculate connectivity stats';
+set(handles.fiberspopup,'String',modlist);
+set(handles.fiberspopup,'Value',length(modlist));
 
 % set version text:
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -973,8 +972,6 @@ for pt=selection
     resultfig=ea_elvis(options,M.elstruct(pt));
 
     % save scene as matlab figure
-
-
     options.modality=ea_checkctmrpresent(M.patient.list{pt});
     volumespresent=1;
     if options.modality(1) % prefer MR
@@ -1117,14 +1114,12 @@ else
     connChanged = 1;
 end
 
-M.ui.fiberspopup=get(handles.fiberspopup,'Value');
-M.ui.connectomename=get(handles.fiberspopup,'String');
-M.ui.connectomename=M.ui.connectomename{M.ui.fiberspopup};
+M.ui.connectomename = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 
 ea_refresh_lg(handles);
 
-if connChanged
+if ~isempty(M.patient.list) && connChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
     set(handles.exportstats, 'Enable', 'off');
@@ -1154,18 +1149,24 @@ function labelpopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from labelpopup
 M=getappdata(gcf,'M');
 
-if isfield(M.ui, 'labelpopup') && ...
-   eventdata.Source.Value == M.ui.labelpopup
-    labelChanged = 0;
-else
-    labelChanged = 1;
+labelChanged = 1;
+if isfield(M.ui, 'labelpopup')
+    if isnumeric(M.ui.labelpopup) % Old format, labelpopup is numeric
+        if eventdata.Source.Value == M.ui.labelpopup
+            labelChanged = 0;
+        end
+    else % New format, labelpopup is labeling parcellation name
+        if strcmp(eventdata.Source.String{eventdata.Source.Value}, M.ui.labelpopup)
+            labelChanged = 0;
+        end
+    end
 end
 
-M.ui.labelpopup=get(handles.labelpopup,'Value');
+M.ui.labelpopup = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
-if labelChanged
+if ~isempty(M.patient.list) && labelChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
     set(handles.exportstats, 'Enable', 'off');
@@ -1195,18 +1196,24 @@ function atlassetpopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from atlassetpopup
 M=getappdata(gcf,'M');
 
-if isfield(M.ui, 'atlassetpopup') && ...
-   eventdata.Source.Value == M.ui.atlassetpopup
-    atlasChanged = 0;
-else
-    atlasChanged = 1;
+atlasChanged = 1;
+if isfield(M.ui, 'atlassetpopup')
+    if isnumeric(M.ui.atlassetpopup) % Old format, atlassetpopup is numeric
+        if eventdata.Source.Value == M.ui.atlassetpopup
+            atlasChanged = 0;
+        end
+    else % New format, atlassetpopup is atlas name
+        if strcmp(eventdata.Source.String{eventdata.Source.Value}, M.ui.atlassetpopup)
+            atlasChanged = 0;
+        end
+    end
 end
 
-M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
+M.ui.atlassetpopup = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
-if atlasChanged
+if ~isempty(M.patient.list) && atlasChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
     set(handles.exportstats, 'Enable', 'off');

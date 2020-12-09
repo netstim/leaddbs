@@ -62,7 +62,7 @@ guidata(hObject, handles);
 % uiwait(handles.leadfigure);
 
 options.earoot = ea_getearoot;
-options.prefs = ea_prefs('');
+options.prefs = ea_prefs;
 setappdata(handles.leadfigure,'earoot',options.earoot);
 
 % set background image
@@ -89,16 +89,15 @@ labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
 
 set(handles.labelpopup,'String', labeling);
 
-try
-    priorselection = find(ismember(labeling, stimparams.labelatlas)); % retrieve prior selection of fiberset.
-    if length(priorselection) == 1
-        set(handles.labelpopup,'Value',priorselection); % set to prior selection
-    else % if priorselection was a cell array with more than one entry, set to use all
-        set(handles.labelpopup,'Value',lab+1); % set to use all
-    end
-catch    % reinitialize using third entry.
-    set(handles.labelpopup,'Value',1);
-end
+% Initialize parcellation popupmenu
+defaultParc = options.prefs.lg.defaultParcellation;
+set(handles.labelpopup,'Value',find(ismember(labeling, defaultParc)));
+
+% Set connectome popup
+modlist = ea_genmodlist([],[],options,'dmri');
+modlist{end+1}='Do not calculate connectivity stats';
+set(handles.fiberspopup,'String',modlist);
+set(handles.fiberspopup,'Value',length(modlist));
 
 % set version text:
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -530,7 +529,7 @@ function fiberspopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns fiberspopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from fiberspopup
 M=getappdata(gcf,'M');
-M.ui.fiberspopup=get(handles.fiberspopup,'Value');
+M.ui.connectomename = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg_connectome(handles);
 
@@ -557,7 +556,7 @@ function labelpopup_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns labelpopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from labelpopup
 M=getappdata(gcf,'M');
-M.ui.labelpopup=get(handles.labelpopup,'Value');
+M.ui.labelpopup = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg_connectome(handles);
 
@@ -712,7 +711,7 @@ for sub=1:length(M.patient.list)
             ea_histnormalize([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,gecs,'.nii'], normflag);
         end
     end
-    
+
     tn=ea_load_nii([M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,cpair{1},'.nii']);
    if any(tn.voxsize>2)
        if twosample
@@ -726,9 +725,9 @@ for sub=1:length(M.patient.list)
        end
        normflag=['re',normflag];
    end
-    
-    
-    
+
+
+
     if M.ui.lc.smooth
         smoothflag = 's';
         if twosample
@@ -746,7 +745,7 @@ if twosample
 else
     fis{sub} = [M.patient.list{sub},filesep,'connectomics',filesep,parc,filesep,'graph',filesep,smoothflag,normflag,gecs,'.nii'];
 end
-    
+
 end
 
 spmdir = [M.ui.groupdir,'connectomics',filesep,parc,filesep,'graph',filesep,normflag,gecs,smoothsuffix,filesep,'SPM'];

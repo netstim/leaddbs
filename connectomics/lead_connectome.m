@@ -60,40 +60,42 @@ axis off;
 axis equal;
 set(handles.leadfigure,'name','Lead Connectome','color','w');
 
-% add parcellation atlases to menu:
-ll=dir([ea_space([],'labeling'),'*.nii']);
-parcellation={};
-for lab=1:length(ll)
-    [~,n]=fileparts(ll(lab).name);
-    parcellation{lab}=n;
+% Add parcellations to menu:
+parcFiles = dir([ea_space([],'labeling'),'*.nii']);
+parcellations = cell(1,length(parcFiles));
+for i=1:length(parcFiles)
+    [~,n]=fileparts(parcFiles(i).name);
+    parcellations{i}=n;
 end
-setappdata(handles.leadfigure,'parcellation',parcellation);
-set(handles.parcellation,'String',parcellation);
+set(handles.parcellation,'String',parcellations);
+
+options.prefs = ea_prefs;
+defaultParc = options.prefs.lc.defaultParcellation;
+set(handles.parcellation,'Value',find(ismember(parcellations,defaultParc)));
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
 % add ft methods to menu
 cnt=1;
 ndir=dir([earoot,'connectomics',filesep,'ea_ft_*.m']);
-ftmethods=cell(0);
-fdc=cell(0);
+ftFunctions=cell(0);
+ftMethods=cell(0);
 for nd=length(ndir):-1:1
     [~,methodf]=fileparts(ndir(nd).name);
     try
         [thisndc,spmvers]=eval([methodf,'(','''prompt''',')']);
         if ismember(spm('ver'),spmvers)
-            fdc{cnt}=thisndc;
-            ftmethods{cnt}=methodf;
+            ftMethods{cnt}=thisndc;
+            ftFunctions{cnt}=methodf;
             cnt=cnt+1;
         end
     end
 end
 
-setappdata(gcf,'ftmethods',ftmethods);
-set(handles.ftmethod,'String',fdc);
+setappdata(gcf,'ftFunctions',ftFunctions);
+set(handles.ftmethod,'String',ftMethods);
 
 % add normmethods to menu
-options.prefs=ea_prefs('');
 ea_addnormmethods(handles,options,'normmethod');
 
 % add recent patients...
@@ -303,14 +305,14 @@ ftmethod=ftmethod{get(handles.ftmethod,'Value')};
 if strcmp(ftmethod, gqiUItxt)
     set(handles.fiber_count, 'Visible', 'on');
     set(handles.fiber_count_txt, 'Visible', 'on');
-    
+
     if ismember(get(handles.upsamplingfactor,'value'),[3,5])
         set(handles.use_internal_upsampling,'enable','on');
     else
         set(handles.use_internal_upsampling,'enable','off');
         set(handles.use_internal_upsampling,'Value',0);
     end
-    
+
 else
     set(handles.use_internal_upsampling,'enable','off');
     set(handles.use_internal_upsampling,'Value',0);
@@ -422,10 +424,20 @@ function compute_GM_struc_Callback(hObject, eventdata, handles)
 function handles=lc2handles(lc,handles)
 
 % General settings
-
-try set(handles.parcellation,'Value',lc.general.parcellationn); end
-if get(handles.parcellation,'Value')>length(get(handles.parcellation,'String'))
-    set(handles.parcellation,'Value',length(get(handles.parcellation,'String')));
+parcellations = get(handles.parcellation,'String');
+if ~isfield(lc.general, 'parcellation')
+    options.prefs = ea_prefs;
+    defaultParc = options.prefs.lc.defaultParcellation;
+    set(handles.parcellation,'Value',find(ismember(parcellations, defaultParc)));
+else
+    parcIdx = find(ismember(parcellations, lc.general.parcellation), 1);
+    if ~isempty(parcIdx)
+        set(handles.parcellation,'Value',parcIdx);
+    else
+        options.prefs = ea_prefs;
+        defaultParc = options.prefs.lc.defaultParcellation;
+        set(handles.parcellation,'Value',find(ismember(parcellations, defaultParc)));
+    end
 end
 
 % Graph options:
@@ -446,11 +458,14 @@ try set(handles.TR,'String',num2str(lc.func.prefs.TR)); end
 % structural options:
 try set(handles.compute_CM_struc,'Value',lc.struc.compute_CM); end
 try set(handles.compute_GM_struc,'Value',lc.struc.compute_GM); end
-ftmethods = getappdata(handles.leadfigure, 'ftmethods');
-methodn = find(ismember(ftmethods, lc.struc.ft.method));
-try set(handles.ftmethod,'Value',methodn); end
-if methodn>length(get(handles.ftmethod,'String'))
-    set(handles.ftmethod,'Value',1);
+ftFunctions = getappdata(handles.leadfigure, 'ftFunctions');
+ftMethodIdx = find(ismember(ftFunctions, lc.struc.ft.method));
+if ~isempty(ftMethodIdx)
+    set(handles.ftmethod,'Value',ftMethodIdx);
+else
+    options.prefs = ea_prefs;
+    defaultftMethod = options.prefs.machine.lc.struc.ft.method;
+    set(handles.ftmethod,'Value',find(ismember(ftFunctions, defaultftMethod)));
 end
 
 if strcmp(lc.struc.ft.method, 'ea_ft_gqi_yeh')

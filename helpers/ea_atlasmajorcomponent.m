@@ -1,17 +1,17 @@
 function atlases=ea_atlasmajorcomponent(atlases,toclean)
 % from specified component, only preserve largest component
 
-for c=toclean 
+for c=toclean
    for side=1:2
-       % figure, patch(atlases.fv{c,side},'FaceColor','none')
-       
-       fvsplit=splitFV(atlases.fv{c,side}.faces,atlases.fv{c,side}.vertices);
+       % figure, patch(atlases.roi{c,side}.fv,'FaceColor','none')
+
+       fvsplit=splitFV(atlases.roi{c,side}.fv.faces,atlases.roi{c,side}.fv.vertices);
        for comp=1:length(fvsplit)
            lengths(comp)=length(fvsplit(comp).faces);
        end
        [~,ix]=max(lengths);
-       atlases.fv{c,side}.faces=fvsplit(ix).faces;
-       atlases.fv{c,side}.vertices=fvsplit(ix).vertices;
+       atlases.roi{c,side}.fv.faces=fvsplit(ix).faces;
+       atlases.roi{c,side}.fv.vertices=fvsplit(ix).vertices;
    end
 end
 
@@ -69,7 +69,7 @@ while any(fSets==0)
     openVertices = f(nextAvailFace,:);
     while ~isempty(openVertices)
         availFaceInds = find(fSets==0);
-        [availFaceSub, ~] = find(ismember(f(availFaceInds,:), openVertices)); 
+        [availFaceSub, ~] = find(ismember(f(availFaceInds,:), openVertices));
         fSets(availFaceInds(availFaceSub)) = currentSet;
         openVertices = f(availFaceInds(availFaceSub),:);
     end

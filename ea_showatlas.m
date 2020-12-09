@@ -117,11 +117,13 @@ for nativemni=nm % switch between native and mni space atlases.
             if ea_arenopoints4side(elstruct(el).coords_mm, miss_side)
                 %if the right side is missing, it will be already be "filled" with an empty or NaN array
                 %force to have empty values if side is not present (e.g. in R only case)
-                elstruct(el).coords_mm{miss_side}={};
-                if isfield(elstruct(el),'coords_acpc') && ~isnan(elstruct(el).coords_acpc)
-                    elstruct(el).coords_acpc{miss_side}={};
+                elstruct(el).coords_mm{miss_side}=[];
+                if isfield(elstruct(el),'coords_acpc') && iscell(elstruct(el).coords_acpc)
+                    if ea_arenopoints4side(elstruct(el).coords_acpc, miss_side)
+                        elstruct(el).coords_acpc{miss_side}=[];
+                    end
                 end
-                elstruct(el).trajectory{miss_side}={};
+                elstruct(el).trajectory{miss_side}=[];
                 
                 %this will create a second structure
                 elstruct(el).markers(miss_side).head=[];
@@ -154,6 +156,15 @@ for nativemni=nm % switch between native and mni space atlases.
         [~,sidestr]=detsides(atlases.types(atlas));
         for side=detsides(atlases.types(atlas))
             if isnumeric(atlases.pixdim{atlas,side})
+                % Get ROI Tag
+                if ~isempty(atlases.roi{atlas,side}.Tag)
+                    roiTag = atlases.roi{atlas,side}.Tag;
+                else
+                    roiTag = atlases.roi{atlas,side}.name;
+                end
+
+                atlases.roi{atlas,side}.Tag = [roiTag,'_',sidestr{side}];
+
                 % breathe life into stored ea_roi
                 atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
                 atlases.roi{atlas,side}.htH=ht; % attach to tooltip menu
@@ -174,11 +185,10 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
 
-                % set atlaslabel
-                [~,thislabel] = ea_niifileparts(atlases.names{atlas});
+                % Set atlaslabel
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
-                    ea_underscore2space(thislabel),...
-                    'Tag', [thislabel,'_',sidestr{side}],...
+                    ea_underscore2space(roiTag),...
+                    'Tag', [roiTag,'_',sidestr{side}],...
                     'VerticalAlignment', 'Baseline',...
                     'HorizontalAlignment', 'Center',...
                     'FontWeight', 'bold',...
@@ -231,8 +241,8 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 % set Tags
                 try
-                    set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
-                    atlassurfs{atlascnt,1}.Tag=[thislabel,'_',sidestr{side}];
+                    set(colorbuttons(atlascnt),'tag',[roiTag,'_',sidestr{side}])
+                    atlassurfs{atlascnt,1}.Tag=[roiTag,'_',sidestr{side}];
                 catch
                     keyboard
                 end
@@ -319,10 +329,10 @@ for nativemni=nm % switch between native and mni space atlases.
                     atlassurfs{atlascnt,1}=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
                 end
 
-                thislabel = regexp(atlases.names{atlas},['[^',filesep,']+?(?=\.[^.]*$|$)'],'match','once');
+                fibTag = regexp(atlases.names{atlas},['[^',filesep,']+?(?=\.[^.]*$|$)'],'match','once');
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
-                    ea_underscore2space(thislabel),...
-                    'Tag', [thislabel,'_',sidestr{side}],...
+                    ea_underscore2space(fibTag),...
+                    'Tag', [fibTag,'_',sidestr{side}],...
                     'VerticalAlignment', 'Baseline',...
                     'HorizontalAlignment', 'Center',...
                     'FontWeight', 'bold',...
@@ -398,8 +408,8 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 % set Tags
                 try
-                    set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
-                    set(atlassurfs{atlascnt,1},'tag',[thislabel,'_',sidestr{side}])
+                    set(colorbuttons(atlascnt),'tag',[fibTag,'_',sidestr{side}])
+                    set(atlassurfs{atlascnt,1},'tag',[fibTag,'_',sidestr{side}])
                     set(atlassurfs{atlascnt,1},'UserData',atlaslabels(atlascnt))
                 catch
                     keyboard
