@@ -137,100 +137,6 @@ drawnow
 disp('Done.');
 
 
-function addroi(addobj,resultfig,addht,options)
-
-% set cdata
-c = ea_uisetcolor;
-
-if numel(c)==1 && c==0
-    return;
-end
-
-% load nifti
-nii=ea_load_nii(addobj);
-nii.img(isnan(nii.img))=0;
-nii.img(isinf(nii.img))=0;
-% if ~all(abs(nii.voxsize)<=1)
-%     ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],0,[],3);
-%     nii=ea_load_nii(addobj);
-% end
-% nii.img=round(nii.img);
-
-[xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
-
-if ~isempty(xx)
-    XYZ=[xx,yy,zz]; % concatenate points to one matrix.
-    XYZ=ea_vox2mm(XYZ,nii.mat); % map to mm-space
-end
-
-%% new approach with meshgrid based on voxels, then transformed to Nifti coordinatesystem -> should work for all Niftis
-for dim=1:3
-    gv{dim}=[1:size(nii.img,dim)];
-end
-[X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-
-if options.prefs.hullsmooth
-    nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-end
-
-fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
-fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
-fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
-fv.vertices=[fv.vertices;fvc.vertices];
-
-tmp_vertices = nii.mat * [fv.vertices,ones(size(fv.vertices,1),1)]';
-fv.vertices = tmp_vertices(1:3,:)';
-%%
-
-if ischar(options.prefs.hullsimplify)
-    % get to 700 faces
-    simplify=700/length(fv.faces);
-    fv=reducepatch(fv,simplify);
-else
-    if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-        fv=reducepatch(fv,options.prefs.hullsimplify);
-    elseif options.prefs.hullsimplify>1
-        simplify=options.prefs.hullsimplify/length(fv.faces);
-        fv=reducepatch(fv,simplify);
-    end
-end
-
-try
-    fv=ea_smoothpatch(fv,1,35);
-catch
-    try
-        cd([ea_getearoot,'ext_libs',filesep,'smoothpatch']);
-        mex ea_smoothpatch_curvature_double.c -v
-        mex ea_smoothpatch_inversedistance_double.c -v
-        mex ea_vertex_neighbours_double.c -v
-        fv=ea_smoothpatch(fv);
-    catch
-        warndlg('Patch could not be smoothed. Please supply a compatible Matlab compiler to smooth VTAs.');
-    end
-end
-
-%?atlasc=59; %rand*64;
-jetlist=jet;
-
-co=ones(1,1,3);
-co(1,1,:)=c;
-atlasc=double(rgb2ind(co,jetlist));
-
-cdat=abs(repmat(atlasc,length(fv.vertices),1) ... % C-Data for surface
-    +randn(length(fv.vertices),1)*2)';
-
-% show atlas.
-set(0,'CurrentFigure',resultfig);
-addobjr=patch(fv,'CData',cdat,'FaceColor',c,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-%ea_spec_atlas(addobjr,'',jetlist,1);
-
-% add toggle button:
-[~, fina] = fileparts(addobj);
-addbutn=uitoggletool(addht,'CData',ea_get_icn('atlas',c),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
-storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
-drawnow
-
-
 function addfibertract(addobj,resultfig,addht,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
     if strfind(addobj,'.mat')
@@ -408,38 +314,6 @@ function str=binary2onoff(bin)
 str='off';
 if bin
     str='on';
-end
-
-
-function indcol=detcolor(mat) % determine color based on traversing direction.
-
-xyz=abs(diff(mat,1,2));
-rgb=xyz/max(xyz(:));
-
-rgb=[rgb,rgb(:,end)];
-rgbim=zeros(1,size(rgb,2),3);
-rgbim(1,:,:)=rgb';
-indcol=double(rgb2ind(rgbim,jet));
-
-
-function  dispercent(varargin)
-%
-percent=round(varargin{1}*100);
-
-if nargin==2
-    if strcmp(varargin{2},'end')
-        fprintf('\n')
-        fprintf('\n')
-
-        fprintf('\n')
-
-    else
-        fprintf(1,[varargin{2},':     ']);
-
-
-    end
-else
-    fprintf(1,[repmat('\b',1,(length(num2str(percent))+1)),'%d','%%'],percent);
 end
 
 
@@ -640,7 +514,7 @@ blocks = max(1,floor(n/(memblock/nt)));
 aNr = repmat(aN,1,length(1:blocks:n));
 for i = 1:blocks
     j = i:blocks:n;
-    if size(aNr,2) ~= length(j),
+    if size(aNr,2) ~= length(j)
         aNr = repmat(aN,1,length(j));
     end
     in(j) = all((nrmls*testpts(j,:)' - aNr) >= -tol,1)';
