@@ -10,6 +10,6 @@ d = {
     't_step_end': 1200,
     'VTA_from_divE': 0,
     'VTA_from_NEURON': 0,
-    'VTA_from_E': 0,
+    'VTA_from_E': 1,
     'Activation_threshold_VTA': 0.2,
     }
