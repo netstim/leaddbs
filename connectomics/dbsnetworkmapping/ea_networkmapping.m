@@ -12,8 +12,11 @@ classdef ea_networkmapping < handle
         shownegamount = [25 25] % two entries for right and left
         statmetric = 'Correlations (R-map)' % Statistical model to use
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
-        poscolor = [0.99,0.75,0.06] % positive main color
-        negcolor = [0.15,0.77,0.95] % negative main color
+        poscolor = [0.99,0.6,0.06] % positive main color
+        poscolor2 = [0.99,0.9,0.06] % positive peak color
+
+        negcolor = [0.15,0.6,0.95] % negative main color
+        negcolor2 = [0.15,0.9,0.95] % negative peak color
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
@@ -523,7 +526,7 @@ classdef ea_networkmapping < handle
                                 pobj.binary=0;
                                 pobj.usesolidcolor=0;
                                 pobj.color=obj.poscolor;
-                                pobj.colormap=ea_colorgradient(length(gray), [1,1,1], obj.poscolor);
+                                pobj.colormap=ea_colorgradient(length(gray), obj.poscolor, obj.poscolor2);
                                 pobj.smooth=10;
                                 pobj.hullsimplify=0.5;
                                 obj.drawobject{group}{1}=ea_roi('Positive.nii',pobj);
@@ -542,7 +545,7 @@ classdef ea_networkmapping < handle
                                 pobj.binary=0;
                                 pobj.usesolidcolor=0;
                                 pobj.color=obj.negcolor;
-                                pobj.colormap=ea_colorgradient(length(gray), obj.negcolor, [1,1,1]);
+                                pobj.colormap=ea_colorgradient(length(gray), obj.negcolor2, obj.negcolor);
                                 pobj.smooth=10;
                                 pobj.hullsimplify=0.5;
                                 obj.drawobject{group}{2}=ea_roi('Negative.nii',pobj);
@@ -559,7 +562,9 @@ classdef ea_networkmapping < handle
                                 if obj.modelRH; rh=ea_readObj([ea_space,'surf_r.obj']); end
                                 if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end
                         end
-                        cmap=ea_colorgradient(256,obj.negcolor,[1,1,1],obj.poscolor);
+                        cmap1=ea_colorgradient(128,obj.poscolor, obj.poscolor2);
+                        cmap2=ea_colorgradient(128,obj.negcolor2,obj.negcolor);
+                        cmap=[cmap1;cmap2];
                         % get colors for surface:
                         bb=res.mat*[1,size(res.img,1);1,size(res.img,2);1,size(res.img,3);1,1];
                         [X,Y,Z]=meshgrid(linspace(bb(1,1),bb(1,2),size(res.img,1)),...
