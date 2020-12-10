@@ -15,7 +15,7 @@ for sub=1:numPatient % Original VAT E-field
     vatlist{sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
         ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_fMRI_efield.nii'];
     if ~exist(vatlist{sub},'file') % create joint VTA
-        rungenlocalmapper(obj.allpatients{sub},['gs_',obj.M.guid])
+        rungenlocalmapper(obj,sub)
     end
 end
 
@@ -31,7 +31,10 @@ for sub=1:numPatient % Mirrored VAT E-field
 end
 
 
-function rungenlocalmapper(ptdir,guid)
+function rungenlocalmapper(obj,sub)
+
+ptdir=obj.allpatients{sub};
+guid=['gs_',obj.M.guid];
 
 options = getoptslocal;
 options.lcm.seeds = guid;
@@ -39,11 +42,11 @@ options.lcm.seeddef = 'vats';
 options.lcm.odir = [];
 options.lcm.omask = [];
 options.lcm.struc.do = 0;
-options.lcm.struc.connectome = 'Basal_Ganglia_Pathway_Atlas (Petersen 2019)';
+options.lcm.struc.connectome = obj.connectome;
 options.lcm.struc.espace = 1;
 options.lcm.func.do = 0;
 options.lcm.func.exportgmtc = 0;
-options.lcm.func.connectome = '';
+options.lcm.func.connectome = strrep(obj.connectome,' > ','>');
 options.lcm.cmd = 1;
 options.lcm.onlygenvats=1; % force to only create VTAs (do not create network maps)
 options.ecog.extractsurface.do = 0;
