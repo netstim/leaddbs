@@ -45,6 +45,7 @@ options.lcm.func.do = 0;
 options.lcm.func.exportgmtc = 0;
 options.lcm.func.connectome = '';
 options.lcm.cmd = 1;
+options.lcm.onlygenvats=1; % force to only create VTAs (do not create network maps)
 options.ecog.extractsurface.do = 0;
 options.uivatdirs = {ptdir};
 options.uipatdirs = {''};

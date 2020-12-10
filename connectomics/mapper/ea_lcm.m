@@ -242,7 +242,7 @@ for suffix=dowhich
 
                         if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                             if ~strcmp(cname,'No functional connectome found.')
-                                if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
+                                if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') && ~isfield(options.lcm,'onlygenvats') % patient specific rs-fMRI
                                     nii(cnt) = ea_warp_vat2rest(cname,vatdir,sidec,options);
                                 else
                                     nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'], [vatdir,'vat',addstr,'_',sidec,'.nii']);
