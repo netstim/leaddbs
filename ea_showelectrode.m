@@ -352,8 +352,12 @@ set(surfc,'AlphaDataMapping','none');
 
 set(surfc,'FaceLighting','phong');
 set(surfc,'SpecularColorReflectance',0);
-set(surfc,'SpecularExponent',10);
 set(surfc,'EdgeColor','none')
+
+set(surfc,'SpecularExponent',3) % patch property
+set(surfc,'SpecularStrength',0.21) % patch property
+set(surfc,'DiffuseStrength',0.4) % patch property
+set(surfc,'AmbientStrength',0.3) % patch property
 
 if nargin==3
     set(surfc,'FaceAlpha',aData);

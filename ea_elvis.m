@@ -263,6 +263,21 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'disctracts',filesep,di(d).name],resultfig});
             end
             
+            % add discriminative voxel explorer button.
+            discvoxeladd = uipushtool(ht, 'CData', ea_get_icn('connectivities'),...
+                'TooltipString', ['Add DBS network mapping analysis'],...
+                'Tag', ['Add DBS network mapping analysis'],...
+                'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
+            
+            di=dir([options.root,options.patientname,filesep,'networkmapping',filesep,'*.mat']);
+            for d=1:length(di)
+                uipushtool(ht, 'CData', ea_get_icn('connectivities'),...
+                    'TooltipString', ['Explore DBS network mapping analysis ',ea_stripext(di(d).name)],...
+                    'Tag', ['Explore DBS network mapping analysis ',ea_stripext(di(d).name)],...
+                    'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'networkmapping',filesep,di(d).name],resultfig});
+            end
+            
+            
             % Move the group toggle forward
             tractToggleInd = 1:length(di)+1;
             eleGroupToggleInd = length(tractToggleInd)+1:length(tractToggleInd)+numel(unique(elstructGroupID));

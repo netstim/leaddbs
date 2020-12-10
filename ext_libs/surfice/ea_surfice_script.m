@@ -1,4 +1,4 @@
-function ea_surfice(script,hold)
+function ea_surfice_script(script,hold)
 % calls surfice
 
 if ~exist('hold','var')
