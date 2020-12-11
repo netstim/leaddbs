@@ -476,7 +476,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 elseif isfield(disctract.info, 'NegAmount')
                     disp(['Fiber colors: Negative (T = ',num2str(max(allvals)),' ~ ',num2str(min(allvals)), ')']);
                     cmap = ea_colorgradient(gradientLevel, fibcolor(1,:), [1,1,1]);
-                    fibcmap{group} = ea_colorgradient(gradientLevel, fibcolor(1,:), cmap(shiftedCmapEnd,:));
+                    fibcmap = ea_colorgradient(gradientLevel, fibcolor(1,:), cmap(shiftedCmapEnd,:));
                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                     alphaind = ones(size(allvals));
                     % alphaind = normalize(-allvals, 'range');
