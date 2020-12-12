@@ -442,7 +442,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
 
                 allvals = vertcat(vals{:});
-                alphas = cell(size(vals));
 
                 % Contruct colormap
                 gradientLevel = 1024;
