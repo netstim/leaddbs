@@ -437,6 +437,10 @@ for nativemni=nm % switch between native and mni space atlases.
                     fibcell = {fibcell};
                 end
 
+                for s=1:length(fibcell)
+                    fibcell{s} = ea_discfibers_addjitter(fibcell{s}, 0.01);
+                end
+
                 if ~iscell(vals)
                     vals = {vals};
                 end
