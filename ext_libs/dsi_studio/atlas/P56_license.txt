@@ -1,0 +1,18 @@
+https://scalablebrainatlas.incf.org/mouse/ABA_v3
+
+About this atlas
+
+
+The Allen Reference Atlas is created by the Allen Institute for Brain Science. It is published on the web (3D Coronal version) and in print: H.W. Dong, The Allen Reference Atlas, (Book + CD-ROM): A Digital Color Brain Atlas of the C57BL/6J Male Mouse, Wiley, 2008.
+
+The digital version of the atlas has been symmetrized with respect to the midline, and has been through two stages of refinement since its initial conception. This is the third version of the atlas, known as Common Coordinate Framework version 3 (white paper), downloaded in 2017. The raw data file was converted to a Nifti file in RAS-orientation with voxel dimensions of 0.025 mm. The Allen Institute does not define an origin for its atlases, and therefore we took the freedom to set it as close as possible to the origin of the Waxholm mouse atlas. It is set to voxel [229,314,114] (where the first voxel has index 1 in each dimension).
+
+The original, manually annotated sections can be viewed using the "AllenAtlas" plugin.
+
+The volumetric atlas also features in Allen Brain Institute's stand-alone software package BrainExplorer.
+
+Terms of use
+The Scalable Brain Atlas does not "own" any of its templates. To ensure that the atlas makers receive proper credit, you must abide by our citation policy.
+In brief, always (1) cite each data source that contributed to your analysis, and (2) cite the Scalable Brain Atlas main publication and plugin references where appropriate.
+The defining citations for this atlas template are:
+Lein ES, Hawrylycz MJ, Ao N, et al. (2007) "Genome-wide atlas of gene expression in the adult mouse brain." Nature 445(7124):168-76. [doi 10.1038/nature05453]
