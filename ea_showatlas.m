@@ -111,9 +111,9 @@ for nativemni=nm % switch between native and mni space atlases.
         ea_stats.atlases.names={};
         ea_stats.atlases.types={};
         ea_stats.electrodes=[];
-        
+
         for el=1:length(elstruct)
-            miss_side=2;%check only if L side is missing. 
+            miss_side=2;%check only if L side is missing.
             if ea_arenopoints4side(elstruct(el).coords_mm, miss_side)
                 %if the right side is missing, it will be already be "filled" with an empty or NaN array
                 %force to have empty values if side is not present (e.g. in R only case)
@@ -124,7 +124,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
                 elstruct(el).trajectory{miss_side}=[];
-                
+
                 %this will create a second structure
                 elstruct(el).markers(miss_side).head=[];
                 elstruct(el).markers(miss_side).tail=[];
@@ -132,7 +132,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 elstruct(el).markers(miss_side).y=[];
             end
         end
-        
+
         %fill with appropriate values or create placeholders (filled with NaNs)
         for el=1:length(elstruct)
             for iside=1:length(elstruct(el).coords_mm)
@@ -495,6 +495,15 @@ for nativemni=nm % switch between native and mni space atlases.
 
                     % Plot fibers
                     h = streamtube(fibcell{fibside},0.2);
+
+                    for fib=1:length(h)
+                        if vals{fibside}(fib)>0
+                            h(fib).Tag = 'PositiveFiber';
+                        elseif vals{fibside}(fib)<0
+                            h(fib).Tag = 'NegativeFiber';
+                        end
+                    end
+
                     nones = repmat({'none'},size(fibcell{fibside}));
                     [h.EdgeColor] = nones{:};
 
@@ -549,6 +558,22 @@ for nativemni=nm % switch between native and mni space atlases.
                 fprintf('Colorbar exported as:\n%s\n\n', [tractPath, filesep, tractName, '_colorbar.svg']);
             end
         end
+    end
+
+    % Add toggles for positive and negative fibers when existing
+    posdiscfiberset = findobj(resultfig, 'Type', 'Surface', 'Tag', 'PositiveFiber');
+    if ~isempty(posdiscfiberset)
+        uitoggletool(ht, 'CData', ea_get_icn('discfiber'),...
+                'TooltipString', 'Positive fibers',...
+                'Tag', 'ShowPositiveToggle',...
+                'OnCallback', {@showfiber, posdiscfiberset},'OffCallback', {@hidefiber, posdiscfiberset}, 'State', 'on');
+    end
+    negdiscfiberset = findobj(resultfig, 'Type', 'Surface', 'Tag', 'NegativeFiber');
+    if ~isempty(negdiscfiberset)
+        uitoggletool(ht, 'CData', ea_get_icn('discfiber'),...
+                'TooltipString', 'Positive fibers',...
+                'Tag', 'ShowPositiveToggle',...
+                'OnCallback', {@showfiber, negdiscfiberset},'OffCallback', {@hidefiber, negdiscfiberset}, 'State', 'on');
     end
 
     % configure label button to work properly and hide labels as default.
