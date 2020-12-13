@@ -298,6 +298,14 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     structure=ea_roi(fname,pobj);
 
     if exist('unmix','var')
+        switch unmix
+            case 'unmix_l'
+                structure.name=strrep(structure.name,'_l',''); % important to remove suffixes again for later indexing.
+                structure.Tag=strrep(structure.Tag,'_l','');
+            case 'unmix_r'
+                structure.name=strrep(structure.name,'_r','');
+                structure.Tag=strrep(structure.Tag,'_r','');
+        end
         delete(fullfile(pth,[f,'_r',ext]));
         delete(fullfile(pth,[f,'_l',ext]));
     end
