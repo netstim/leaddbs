@@ -162,7 +162,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 else
                     roiTag = atlases.roi{atlas,side}.name;
                 end
-
                 atlases.roi{atlas,side}.Tag = [roiTag,'_',sidestr{side}];
 
                 % breathe life into stored ea_roi
