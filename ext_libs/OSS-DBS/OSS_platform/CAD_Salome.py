@@ -74,10 +74,10 @@ def build_final_geometry(d,MRI_param,Brain_shape_name,ROI_radius,cc_multicontact
     
     if cc_multicontact==True:           #here we will also create floating volumes for active contacts with assigned currents
         Electrode_profile=d["Electrode_type"]+'_floating_profile.py'
-        position_script_name=d["Electrode_type"]+"_floating_position.py"
+        position_script_name="/opt/Patient/"+d["Electrode_type"]+"_floating_position.py"
     else:
         Electrode_profile=d["Electrode_type"]+'_profile.py'
-        position_script_name=d["Electrode_type"]+"_position.py"
+        position_script_name="/opt/Patient/"+d["Electrode_type"]+"_position.py"
     
     create_geometry_script(d["Phi_vector"],Brain_link,Electrode_profile,d["Implantation_coordinate_X"],d["Implantation_coordinate_Y"],d["Implantation_coordinate_Z"],d["Second_coordinate_X"],d["Second_coordinate_Y"],d["Second_coordinate_Z"],d["Rotation_Z"],0.0,0.0,0.0,0.0,0.0,0.0,d["encap_thickness"],ROI_radius,MRI_param.x_shift,MRI_param.y_shift,MRI_param.z_shift,False,False)
     

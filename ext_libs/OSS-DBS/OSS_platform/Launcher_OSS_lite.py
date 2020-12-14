@@ -350,6 +350,8 @@ def run_full_model(master_dict):
         Max_signal_for_point=get_IFFT_on_VTA_array(d['number_of_processors'],name_sorted_solution,d,FR_vector_signal,Xs_signal_norm,t_vector,d["T"],inx_start_octv,arrays_shape)
 
         get_VTA(d,VTA_full_name,Max_signal_for_point,arrays_shape,VTA_edge,VTA_resolution)
+        #home_dir=os.path.expanduser("~")
+        subprocess.call(['touch', '/opt/Patient/success.txt'])
         
         return True
         
@@ -493,6 +495,9 @@ def run_full_model(master_dict):
     secnds=int(time.time() - start_simulation_run)-minutes*60
     total_seconds=time.time() - start_simulation_run
     print("---Simulation run took ",minutes," min ",secnds," s ")  
+
+    #home_dir=os.path.expanduser("~")
+    subprocess.call(['touch', '/opt/Patient/success.txt'])
     
     return True
 

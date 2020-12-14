@@ -217,26 +217,20 @@ class MainWindow(Functionalities):
         #subprocess.run(['sudo', 'docker', 'run', '--name', 'OSS_docker', '--volume', '/home/butenko/oss_platform:/opt/oss_platform', '--cap-add=SYS_PTRACE', '-it', '--rm gitlab.elaine.uni-rostock.de:4567/kb589/oss_platform:platform', 'python3', 'Launcher_OSS_lite.py'])
         #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
         home_dir=os.path.expanduser("~")
-        #subprocess.run(['gnome-terminal', '-x','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])#
         OSS_DBS_path=os.getcwd()
-
-        #output=subprocess.run(['xterm','-hold','-e','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
-        #output=subprocess.run(['xterm','-e','docker', 'run', '--volume', home_dir+'/OSS-DBS:/opt/OSS-DBS', '--cap-add=SYS_PTRACE', '-it', '--rm', 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.DEVNULL)#
-
-
-        #output=subprocess.run(['xterm','-hold','-e','docker', 'run', '--volume', '~/Documents/MATLAB_files/leaddbs-oss-dbs/ext_libs/OSS-DBS:/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'sfbelaine/oss_dbs:platform_latest', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
-        #output=subprocess.run(['docker', 'run', '--volume', '~/Documents/MATLAB_files/leaddbs-oss-dbs/ext_libs/OSS-DBS:/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'sfbelaine/oss_dbs:platform_latest', 'python3', 'Launcher_OSS_lite.py'], shell=True, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
-        #print(home_dir+self.path_to_patient+':/opt/Patient')
-        #output=subprocess.run(['open', '-W','-a', 'Terminal', '-n', '--args','docker', 'run', '--volume', '~/Documents/MATLAB_files/leaddbs-oss-dbs/ext_libs/OSS-DBS:/opt/OSS-DBS','--volume',home_dir+self.path_to_patient+':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm', 'sfbelaine/oss_dbs:platform_latest', 'python3', 'Launcher_OSS_lite.py'], shell=True, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)#
         os.chdir("..")
         dir_code=os.getcwd()            #stupid but simple
         os.chdir("OSS_platform/")
         dir_code_OSS_platform = os.getcwd()
         if sys.platform=='linux' or sys.platform=='Linux':
+            #output = subprocess.run(
+            #    ['xterm', '-hold', '-e', 'docker', 'run', '--volume', dir_code + ':/opt/OSS-DBS',
+            #     '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
+            #     'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #
             output = subprocess.run(
-                ['xterm', '-hold', '-e', 'docker', 'run', '--volume', dir_code + ':/opt/OSS-DBS',
+                ['docker', 'run','--name','OSS_container', '--volume', dir_code + ':/opt/OSS-DBS',
                  '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
-                 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #
+                 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])  #
         elif sys.platform == 'darwin' or sys.platform=='Darwin':
             patient_dir_full = self.path_to_patient + ':/opt/Patient'
             # directories=[]
@@ -248,14 +242,8 @@ class MainWindow(Functionalities):
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
-        #output=subprocess.run(['open', '-W','-a', 'Terminal', '-n', '--args','script.sh'])
-        #output=subprocess.run(['open', '-W','-a', 'Terminal', '-n', '--args', 'script.sh','dummy.py'],shell=True)
 
-
-
-        if output.returncode==0:
-            subprocess.call(['touch', self.path_to_patient+'/success.txt'])
-        else:
+        if not os.path.exists(self.path_to_patient+'/success.txt'):
             subprocess.call(['touch', self.path_to_patient+'/fail.txt'])
 
 

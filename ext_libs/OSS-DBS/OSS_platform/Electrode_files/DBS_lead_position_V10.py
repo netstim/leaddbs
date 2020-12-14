@@ -19,7 +19,7 @@ def create_geometry_script (Phi_vector,Brain_map,electrode_profile,Xt,Yt,Zt,X_2n
        print ("ERROR: DBS lead profile name should be a string ends with _profile.py")
    else:
        f3=open("Electrode_files/"+electrode_profile,'r')                        
-       f2=open(electrode_profile[:name_idx-11] + '_position.py','w+') # new file with new position
+       f2=open("/opt/Patient/"+electrode_profile[:name_idx-11] + '_position.py','w+') # new file with new position
        #print(electrode_profile[:name_idx-11] + '_position.py')
        for index,line in enumerate(f3):  
                line_replace = False;
