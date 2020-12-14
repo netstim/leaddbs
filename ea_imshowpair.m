@@ -138,6 +138,8 @@ WVFntSz = 9;
 BtnSz = 10;
 ChBxSz = 10;
 
+magnFactor = .1;    % standard magnification value that is used then left mouse button is clicked for the first time
+
 [Rmin Rmax] = WL2R(Win, LevV);
 
 hdl_im = axes('position',[0,0,1,1]);
@@ -196,6 +198,7 @@ set(gcf,'WindowButtonUpFcn', @mouseRelease)
 set(gcf,'ResizeFcn', @figureResized)
 set(gcf,'WindowButtonMotionFcn', @ButtonMotionCallback)
 set(gcf,'KeyPressFcn', @KeyPressCallback);
+
 
 % -=< Figure resize callback function >=-
     function figureResized(object, eventdata)
@@ -295,7 +298,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 'Pointer','crosshair', ...
                 'CurrentAxes',a2);
             set(a2, ...
-                'UserData',[1,0.1], ...  %magnification, frame size
+                'UserData',[1,magnFactor], ...  %magnification, frame size
                 'Color',get(a1,'Color'), ...
                 'Box','on');
             set(i2,'CData',Img(XImage,YImage,S,2));
@@ -382,13 +385,12 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         if ~isempty(H)
             f1 = H(1); a1 = H(2); a2 = H(3);
-            a2_param = get(a2,'UserData');
             if (strcmp(get(f1,'CurrentCharacter'),'<') | strcmp(get(f1,'CurrentCharacter'),','))
-                a2_param(2) = a2_param(2)/1.2;
+                magnFactor = magnFactor/1.2;
             elseif (strcmp(get(f1,'CurrentCharacter'),'>') | strcmp(get(f1,'CurrentCharacter'),'.'))
-                a2_param(2) = a2_param(2)*1.2;
+                magnFactor = magnFactor*1.2;
             end
-            set(a2,'UserData',a2_param);
+            set(a2,'UserData',[1, magnFactor]);
         end
 
         if (strcmp(eventdata.Key,'leftarrow') || strcmp(eventdata.Key,'downarrow'))
@@ -408,7 +410,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         elseif ~isnan(str2double(eventdata.Character))
             SwitchModality(eventdata.Key,eventdata.Modifier)
         elseif (strcmpi(eventdata.Key,'x'))
-            if MainImage(1)==1
+            xcif MainImage(1)==1
                 MainImage=wiresIX;
             elseif MainImage(1)==wiresIX(1)
                 MainImage=1;
