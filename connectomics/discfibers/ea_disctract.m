@@ -78,9 +78,9 @@ classdef ea_disctract < handle
                 obj.leadgroup = datapath;
 
                 testID = obj.M.guid;
-                ea_mkdir([fileparts(obj.leadgroup),filesep,'disctracts',filesep]);
+                ea_mkdir([fileparts(obj.leadgroup),filesep,'fiberfiltering',filesep]);
                 id = 1;
-                while exist([fileparts(obj.leadgroup),filesep,'disctracts',filesep,testID,'.mat'],'file')
+                while exist([fileparts(obj.leadgroup),filesep,'fiberfiltering',filesep,testID,'.fibfilt'],'file')
                     testID = [obj.M.guid, '_', num2str(id)];
                     id = id + 1;
                 end
@@ -379,8 +379,8 @@ classdef ea_disctract < handle
         function save(obj)
             tractset=obj;
             pth = fileparts(tractset.leadgroup);
-            tractset.analysispath=[pth,filesep,'disctracts',filesep,obj.ID,'.mat'];
-            ea_mkdir([pth,filesep,'disctracts']);
+            tractset.analysispath=[pth,filesep,'fiberfiltering',filesep,obj.ID,'.fibfilt'];
+            ea_mkdir([pth,filesep,'fiberfiltering']);
             rf=obj.resultfig; % need to stash fig handle for saving.
             rd=obj.drawobject; % need to stash handle of drawing before saving.
             try % could be figure is already closed.

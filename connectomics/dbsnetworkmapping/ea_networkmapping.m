@@ -12,11 +12,11 @@ classdef ea_networkmapping < handle
         shownegamount = [25 25] % two entries for right and left
         statmetric = 'Correlations (R-map)' % Statistical model to use
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
-        poscolor = [0.99,0.6,0.06] % positive main color
-        poscolor2 = [0.99,0.9,0.06] % positive peak color
+        poscolor = [1,1,1] % positive main color
+        poscolor2 = [0.99,0.6,0.06] % positive peak color
 
-        negcolor = [0.15,0.6,0.95] % negative main color
-        negcolor2 = [0.15,0.9,0.95] % negative peak color
+        negcolor = [1,1,1] % negative main color
+        negcolor2 = [0.15,0.6,0.95] % negative peak color
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
@@ -79,7 +79,7 @@ classdef ea_networkmapping < handle
                 testID = obj.M.guid;
                 ea_mkdir([fileparts(obj.leadgroup),filesep,'disctracts',filesep]);
                 id = 1;
-                while exist([fileparts(obj.leadgroup),filesep,'disctracts',filesep,testID,'.mat'],'file')
+                while exist([fileparts(obj.leadgroup),filesep,'disctracts',filesep,testID,'.netmap'],'file')
                     testID = [obj.M.guid, '_', num2str(id)];
                     id = id + 1;
                 end
@@ -99,6 +99,7 @@ classdef ea_networkmapping < handle
                     end
                 end
                 clear D
+                keyboard
             else
                 ea_error('You have opened a file of unknown type.')
                 return
@@ -401,7 +402,7 @@ classdef ea_networkmapping < handle
         function save(obj)
             networkmapping=obj;
             pth = fileparts(networkmapping.leadgroup);
-            networkmapping.analysispath=[pth,filesep,'networkmapping',filesep,obj.ID,'.mat'];
+            networkmapping.analysispath=[pth,filesep,'networkmapping',filesep,obj.ID,'.netmap'];
             ea_mkdir([pth,filesep,'networkmapping']);
             rf=obj.resultfig; % need to stash fig handle for saving.
             try % could be figure is already closed.
@@ -564,7 +565,7 @@ classdef ea_networkmapping < handle
                         end
                         cmap1=ea_colorgradient(128,obj.poscolor, obj.poscolor2);
                         cmap2=ea_colorgradient(128,obj.negcolor2,obj.negcolor);
-                        cmap=[cmap1;cmap2];
+                        cmap=[cmap2;cmap1];
                         % get colors for surface:
                         bb=res.mat*[1,size(res.img,1);1,size(res.img,2);1,size(res.img,3);1,1];
                         [X,Y,Z]=meshgrid(linspace(bb(1,1),bb(1,2),size(res.img,1)),...

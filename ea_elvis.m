@@ -255,12 +255,12 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 'Tag', ['Add discriminative fibertract'],...
                 'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
             
-            di=dir([options.root,options.patientname,filesep,'disctracts',filesep,'*.mat']);
+            di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
                     'TooltipString', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
                     'Tag', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
-                    'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'disctracts',filesep,di(d).name],resultfig});
+                    'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'fiberfiltering',filesep,di(d).name],resultfig});
             end
             
             % add discriminative voxel explorer button.
@@ -269,7 +269,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 'Tag', ['Add DBS network mapping analysis'],...
                 'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
             
-            di=dir([options.root,options.patientname,filesep,'networkmapping',filesep,'*.mat']);
+            di=dir([options.root,options.patientname,filesep,'networkmapping',filesep,'*.netmap']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('connectivities'),...
                     'TooltipString', ['Explore DBS network mapping analysis ',ea_stripext(di(d).name)],...
