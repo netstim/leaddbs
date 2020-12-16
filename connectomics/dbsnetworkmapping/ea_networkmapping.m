@@ -77,18 +77,27 @@ classdef ea_networkmapping < handle
                 obj.leadgroup = datapath;
                 
                 testID = obj.M.guid;
-                ea_mkdir([fileparts(obj.leadgroup),filesep,'disctracts',filesep]);
+                ea_mkdir([fileparts(obj.leadgroup),filesep,'networkmapping',filesep]);
                 id = 1;
-                while exist([fileparts(obj.leadgroup),filesep,'disctracts',filesep,testID,'.netmap'],'file')
+                while exist([fileparts(obj.leadgroup),filesep,'networkmapping',filesep,testID,'.netmap'],'file')
                     testID = [obj.M.guid, '_', num2str(id)];
                     id = id + 1;
                 end
                 obj.ID = testID;
                 obj.resultfig = resultfig;
-                obj.allpatients = obj.M.patient.list;
-                obj.patientselection = obj.M.ui.listselect;
-                obj.responsevarlabel = obj.M.clinical.labels{1};
-                obj.covarlabels={'Stimulation Amplitude'};
+                if isfield(obj.M,'pseudoM')
+                    obj.allpatients = obj.M.ROI.list;
+                    obj.patientselection = 1:length(obj.M.ROI.list);
+                    obj.M = ea_map_pseudoM(obj.M);
+                    obj.M.patient.list=obj.M.ROI.list; % copies
+                    obj.M.patient.group=obj.M.ROI.group; % copies
+                else
+                    obj.allpatients = obj.M.patient.list;
+                    obj.patientselection = obj.M.ui.listselect;
+                end
+                    obj.responsevarlabel = obj.M.clinical.labels{1};
+                    obj.covarlabels={'Stimulation Amplitude'};
+                
             elseif  isfield(D, 'networkmapping')  % Saved networkmapping class loaded
                 props = properties(D.networkmapping);
                 for p =  1:length(props) %copy all public properties
@@ -117,8 +126,11 @@ classdef ea_networkmapping < handle
                 end
             end
             
-            
-            vatlist = ea_networkmapping_getvats(obj);
+            if isfield(obj.M,'pseudoM')
+                vatlist = obj.M.ROI.list;
+            else
+                vatlist = ea_networkmapping_getvats(obj);
+            end
             [AllX] = ea_networkmapping_calcvals(vatlist, obj.connectome);
             
             obj.results.(ea_conn2connid(obj.connectome)).connval = AllX;
@@ -427,6 +439,10 @@ classdef ea_networkmapping < handle
             set(0,'CurrentFigure',obj.resultfig);
             
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
+            if ~isfield(obj.M,'groups')
+                obj.M.groups.group=ones(length(obj.M.patient.list),1);
+                obj.M.groups.color=ea_color_wes('all');
+            end
             linecols=obj.M.groups.color;
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
@@ -563,9 +579,17 @@ classdef ea_networkmapping < handle
                                 if obj.modelRH; rh=ea_readObj([ea_space,'surf_r.obj']); end
                                 if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end
                         end
-                        cmap1=ea_colorgradient(128,obj.poscolor, obj.poscolor2);
-                        cmap2=ea_colorgradient(128,obj.negcolor2,obj.negcolor);
-                        cmap=[cmap2;cmap1];
+                        if obj.posvisible && obj.negvisible
+                            cmap1=ea_colorgradient(128,obj.poscolor, obj.poscolor2);
+                            cmap2=ea_colorgradient(128,obj.negcolor2,obj.negcolor);
+                            cmap=[cmap2;cmap1];
+                        elseif obj.posvisible && ~obj.negvisible
+                            cmap=ea_colorgradient(256,obj.poscolor, obj.poscolor2);
+                        elseif ~obj.posvisible && obj.negvisible
+                            cmap=ea_colorgradient(256,obj.negcolor2, obj.negcolor);
+                        else
+                            return
+                        end
                         % get colors for surface:
                         bb=res.mat*[1,size(res.img,1);1,size(res.img,2);1,size(res.img,3);1,1];
                         [X,Y,Z]=meshgrid(linspace(bb(1,1),bb(1,2),size(res.img,1)),...

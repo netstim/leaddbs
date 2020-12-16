@@ -42,7 +42,7 @@ for s=1:size(vatlist,1)
             case 2 % functional
                 suffix='_func_seed_AvgR_Fz';
         end
-        nii=ea_load_nii(fullfile(pth,strrep(cfile,' > ','_'),[fn,suffix,ext]));
+        nii=ea_load_nii(ea_niigz(fullfile(pth,strrep(cfile,' > ','_'),[fn,suffix,ext])));
         if ~exist('AllX','var')
            AllX=zeros(size(vatlist,1),numel(nii.img)); 
         end

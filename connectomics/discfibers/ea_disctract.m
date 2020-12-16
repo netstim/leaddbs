@@ -86,10 +86,21 @@ classdef ea_disctract < handle
                 end
                 obj.ID = testID;
                 obj.resultfig = resultfig;
-                obj.allpatients = obj.M.patient.list;
-                obj.patientselection = obj.M.ui.listselect;
+                
+                if isfield(obj.M,'pseudoM')
+                    obj.allpatients = obj.M.ROI.list;
+                    obj.patientselection = 1:length(obj.M.ROI.list);
+                    obj.M = ea_map_pseudoM(obj.M);
+                    obj.M.root = fileparts(datapath);
+                    obj.M.patient.list=obj.M.ROI.list; % copies
+                    obj.M.patient.group=obj.M.ROI.group; % copies
+                else
+                    obj.allpatients = obj.M.patient.list;
+                    obj.patientselection = obj.M.ui.listselect;
+                end
+ 
                 obj.responsevarlabel = obj.M.clinical.labels{1};
-                obj.covarlabels={'Stimulation Amplitude'};
+                obj.covarlabels={};
             elseif  isfield(D, 'tractset')  % Saved tractset class loaded
                 props = properties(D.tractset);
                 for p =  1:length(props) %copy all public properties
@@ -117,8 +128,13 @@ classdef ea_disctract < handle
             end
 
             cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
-            vatlist = ea_discfibers_getvats(obj);
-            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile);
+            if isfield(obj.M,'pseudoM')
+                vatlist = obj.M.ROI.list;
+                [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, 0); % consider all voxels > 0
+            else
+                vatlist = ea_discfibers_getvats(obj);
+                [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile);
+            end
 
             obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
@@ -280,7 +296,7 @@ classdef ea_disctract < handle
                     end
                 end
 
-                for side=1:2
+                for side=1:numel(vals)
                     if ~isempty(vals{1,side})
                         switch obj.statmetric % also differentiate between methods in the prediction part.
                             case 1 % ttests
@@ -402,12 +418,17 @@ classdef ea_disctract < handle
 
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
+            if numel(vals)>1 % bihemispheric usual case
             obj.stats.pos.shown(2)=sum(vals{1,2}>0);
             obj.stats.neg.shown(2)=sum(vals{1,2}<0);
-
+            end
             set(0,'CurrentFigure',obj.resultfig);
 
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
+            if ~isfield(obj.M,'groups')
+                obj.M.groups.group=1;
+                obj.M.groups.color=ea_color_wes('all');
+            end
             linecols=obj.M.groups.color;
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
@@ -482,10 +503,14 @@ classdef ea_disctract < handle
                 end
                 setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
 
-                cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
-                alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
-
-                for side=1:2
+                if numel(vals)>1 % standard case
+                    cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
+                    alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
+                else % potential scripting case, only one side
+                    cmapind = mat2cell(cmapind, numel(vals{group,1}))';
+                    alphaind = mat2cell(alphaind, numel(vals{group,1}))';
+                end
+                for side=1:numel(vals)
                     if dogroups % introduce small jitter for visualization
                         fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.01);
                     end

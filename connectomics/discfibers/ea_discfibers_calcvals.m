@@ -1,12 +1,13 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, thresh)
 % Calculate fiber connection values based on the VATs and the connectome
 
 disp('Load Connectome...');
 load(cfile, 'fibers', 'idx');
 
 prefs = ea_prefs;
-thresh = prefs.machine.vatsettings.horn_ethresh*1000;
-
+if ~exist('thresh','var')
+    thresh = prefs.machine.vatsettings.horn_ethresh*1000;
+end
 [numPatient, numSide] = size(vatlist);
 
 fibsvalBin = cell(1, numSide);
