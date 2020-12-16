@@ -22,7 +22,7 @@ function varargout = ea_vatsettings_butenko(varargin)
 
 % Edit the above text to modify the response to help ea_vatsettings_butenko
 
-% Last Modified by GUIDE v2.5 17-Jun-2020 13:23:24
+% Last Modified by GUIDE v2.5 16-Dec-2020 10:14:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,7 +62,19 @@ guidata(hObject, handles);
 set(handles.setfig,'name','OSS-DBS setting');
 
 prefs=ea_prefs('');
-set(handles.ethresh,'String',num2str(prefs.machine.vatsettings.butenko_ethresh));
+set(handles.calcAxonActivation,'Value',prefs.machine.vatsettings.butenko_calcAxonActivation);
+
+connectomes = ea_genmodlist([], [], [], 'dmri');
+set(handles.connectomes,'String',connectomes);
+connIdx = find(ismember(connectomes,prefs.machine.vatsettings.butenko_connectome));
+if ~isempty(connIdx)
+    set(handles.connectomes,'Value',connIdx);
+else
+    set(handles.connectomes,'Value',1);
+end
+
+set(handles.minFiberLength,'String',num2str(prefs.machine.vatsettings.butenko_minFiberLength));
+set(handles.fiberDiameter,'String',num2str(prefs.machine.vatsettings.butenko_fiberDiameter));
 
 etv={'E-Field Threshold Presets:',nan
     'Approximation by D [um] and PW [us] (Proverbio & Husch 2019)',nan
@@ -103,6 +115,8 @@ etv={'E-Field Threshold Presets:',nan
 set(handles.ethreshpresets,'String',etv(:,1));
 setappdata(handles.ethreshpresets,'data',etv);
 
+set(handles.ethresh,'String',num2str(prefs.machine.vatsettings.butenko_ethresh));
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_vatsettings_butenko_OutputFcn(hObject, eventdata, handles)
@@ -123,6 +137,11 @@ function savebutn_Callback(hObject, eventdata, handles)
 prefs=ea_prefs('');
 
 vatsettings = prefs.machine.vatsettings;
+vatsettings.butenko_calcAxonActivation = get(handles.calcAxonActivation,'Value');
+connectomes = get(handles.connectomes,'String');
+vatsettings.butenko_connectome = connectomes(get(handles.connectomes,'Value'));
+vatsettings.butenko_minFiberLength = str2double(get(handles.minFiberLength,'String'));
+vatsettings.butenko_fiberDiameter = str2double(get(handles.fiberDiameter,'String'));
 vatsettings.butenko_ethresh = str2double(get(handles.ethresh,'String'));
 ea_setprefs('vatsettings',vatsettings);
 
@@ -165,13 +184,13 @@ if isnan(thresh)
     if(strcmp(data{get(hObject,'Value'),1}, ...
             'Approximation by D [um] and PW [us] (Proverbio & Husch 2019)'))
         % Prompt an input dialog
-%         prompt = {'Enter D [um]:','Enter PW [us]:'};
-%         dlgtitle = 'Specify fiber diamter D and pulse width PW';
-%         dims = [1 60];
-%         definput = {'3.5','60'};
-%         values = inputdlg(prompt,dlgtitle,dims,definput);
-%         load activation_model_3v.mat;
-%         thresh = activation_model_3v(str2num(values{2}),str2num(values{1})); % get approximation
+        % prompt = {'Enter D [um]:','Enter PW [us]:'};
+        % dlgtitle = 'Specify fiber diamter D and pulse width PW';
+        % dims = [1 60];
+        % definput = {'3.5','60'};
+        % values = inputdlg(prompt,dlgtitle,dims,definput);
+        % load activation_model_3v.mat;
+        % thresh = activation_model_3v(str2num(values{2}),str2num(values{1})); % get approximation
         f = approxonGui;
         uiwait(f); % setting thresh
         thresh = getappdata(f, 'thresh');
@@ -187,6 +206,84 @@ set(hObject,'value',1);
 % --- Executes during object creation, after setting all properties.
 function ethreshpresets_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to ethreshpresets (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function fiberDiameter_Callback(hObject, eventdata, handles)
+% hObject    handle to fiberDiameter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of fiberDiameter as text
+%        str2double(get(hObject,'String')) returns contents of fiberDiameter as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function fiberDiameter_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to fiberDiameter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function minFiberLength_Callback(hObject, eventdata, handles)
+% hObject    handle to minFiberLength (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of minFiberLength as text
+%        str2double(get(hObject,'String')) returns contents of minFiberLength as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function minFiberLength_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to minFiberLength (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in calcAxonActivation.
+function calcAxonActivation_Callback(hObject, eventdata, handles)
+% hObject    handle to calcAxonActivation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of calcAxonActivation
+
+
+% --- Executes on selection change in connectomes.
+function connectomes_Callback(hObject, eventdata, handles)
+% hObject    handle to connectomes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns connectomes contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from connectomes
+
+
+% --- Executes during object creation, after setting all properties.
+function connectomes_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to connectomes (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
