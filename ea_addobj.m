@@ -18,6 +18,14 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
             pobj.color = ea_uisetcolor;
             ea_roi(obj{i}, pobj);
         end
+    elseif all(cellfun(@numel, regexp(obj, '(\.fibfilt)$', 'match', 'once')))
+        for i=1:length(obj)
+            ea_discfiberexplorer(obj{i}, resultfig);
+        end
+    elseif all(cellfun(@numel, regexp(obj, '(\.netmap)$', 'match', 'once')))
+        for i=1:length(obj)
+            ea_networkmappingexplorer(obj{i}, resultfig);
+        end
     else
         warndlg('Unsupported file(s) found!');
     end
