@@ -410,7 +410,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         elseif ~isnan(str2double(eventdata.Character))
             SwitchModality(eventdata.Key,eventdata.Modifier)
         elseif (strcmpi(eventdata.Key,'x'))
-            xcif MainImage(1)==1
+            if MainImage(1)==1
                 MainImage=wiresIX;
             elseif MainImage(1)==wiresIX(1)
                 MainImage=1;
