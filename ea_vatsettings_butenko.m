@@ -62,7 +62,7 @@ guidata(hObject, handles);
 set(handles.setfig,'name','OSS-DBS setting');
 
 prefs=ea_prefs('');
-set(handles.ethresh,'String',num2str(prefs.machine.vatsettings.horn_ethresh));
+set(handles.ethresh,'String',num2str(prefs.machine.vatsettings.butenko_ethresh));
 
 etv={'E-Field Threshold Presets:',nan
     'Approximation by D [um] and PW [us] (Proverbio & Husch 2019)',nan
