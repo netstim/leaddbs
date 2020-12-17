@@ -194,8 +194,40 @@ end
 % Threshold for Astrom VTA (V/mm)
 settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_ethresh;
 
-%% Save settings for OSS-DBS
+% Set output path
 outputPath = [directory, 'stimulations', filesep, ea_nt(options.native), S.label];
+
+% Axon activation setting
+settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcAxonActivation;
+if settings.calcAxonActivation
+    settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
+    settings.minFiberLength = options.prefs.machine.vatsettings.butenko_minFiberLength;
+    settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
+    conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
+    if options.native
+        % Convert connectome fibers from MNI space to anchor space
+        fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, 't1.nii'])';
+        conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
+            [ea_space, 't1.nii'], ...
+            [directory, 'y_ea_normparams.nii'], ...
+            [directory, options.prefs.prenii_unnormalized])';
+    end
+
+    % Filter fibers based on the spherical ROI
+    fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel');
+
+    % Filter fibers based on the minimal length
+    fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.minFiberLength, coords_mm, S);
+
+    settings.connectomePath = [outputPath, filesep, settings.connectome];
+    ea_mkdir(settings.connectomePath);
+    for i=1:length(fiberFiltered)
+        buffer = fiberFiltered{i};
+        save([settings.connectomePath, filesep, 'data', num2str(i), '.mat'], '-struct', 'buffer');
+    end
+end
+
+%% Save settings for OSS-DBS
 parameterFile = [outputPath, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings', '-v7.3');
 
