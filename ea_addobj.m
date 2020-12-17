@@ -147,7 +147,7 @@ disp('Done.');
 
 function addfibertract(addobj,resultfig,addht,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
-    if strfind(addobj,'.mat')
+    if endsWith(addobj, '.mat')
         load(addobj);
         if exist('fibsin', 'var')
             fibers = fibsin;
@@ -171,8 +171,7 @@ if ischar(addobj) % filename is given ? load fibertracts.
         else
             error('No fiber tracts found!');
         end
-    elseif strfind(addobj,'.trk')
-        fileOut = [addobj(1:end-3) 'mat'];
+    elseif endsWith(addobj, '.trk')
         disp('Converting .trk to ftr.')
         [thisset,fibidx] = ea_trk2ftr(addobj);
         thisset = thisset';
