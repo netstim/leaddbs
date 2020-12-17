@@ -78,8 +78,10 @@ for i=1:length(radius)
 end
 
 % Load fiber connectome
-disp('Loading fibers...');
-ftr = load(ftr);
+if ischar(ftr)
+    disp('Loading fibers...');
+    ftr = load(ftr);
+end
 
 % Convert voxel coordinates to mm in case needed
 if isfield(ftr, 'voxmm') && strcmp(ftr.voxmm, 'vox')
