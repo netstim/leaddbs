@@ -163,7 +163,7 @@ if ischar(addobj) % filename is given ? load fibertracts.
                 fibidx = accumarray(idx,1);
             elseif size(fibers,2) == 3
                 thisset = fibers;
-                fibidx = idx;
+                fibidx = ones(size(fibers,1),1);
             else
                 error('Wrong input fiber tracts format!');
             end
