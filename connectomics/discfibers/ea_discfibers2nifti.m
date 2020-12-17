@@ -12,10 +12,14 @@ load(discfiber, 'vals')
 
 if size(fibcell,2) == 2
     fibcell = vertcat(fibcell{:});
+elseif size(fibcell,2) == 1
+    fibcell = fibcell{:};
 end
 
 if iscell(vals) && size(vals,2) == 2
     vals = vertcat(vals{:});
+elseif iscell(vals) && size(vals,2) == 1
+    vals = vals{:};
 end
 
 if ~exist('threshold', 'var')

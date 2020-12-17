@@ -51,7 +51,7 @@ for group=groups
         gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
     
-    for side=1:2
+    for side=1:numel(gfibsval)
         % check connthreshold
         switch obj.statmetric
             case 1
@@ -199,7 +199,7 @@ for group=groups
     posvals = sort(allvals(allvals>0),'descend');
     negvals = sort(allvals(allvals<0),'ascend');
     
-    for side=1:2
+    for side=1:numel(gfibsval)
         if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
             posthresh = inf;
         else

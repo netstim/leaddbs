@@ -88,11 +88,11 @@ if hmchanged
                 if ~isfield(atlases,'tissuetypes')
                     atlases.tissuetypes=ones(length(atlases.names),1);
                 end
-                for atlas=1:numel(atlases.fv)
-                    if isempty(atlases.fv{atlas}) || (atlases.tissuetypes~=1)
+                for atlas=1:numel(atlases.roi)
+                    if isempty(atlases.roi{atlas}.fv) || (atlases.tissuetypes~=1)
                         continue
                     end
-                    fv(cnt)=atlases.fv{atlas};
+                    fv(cnt)=atlases.roi{atlas}.fv;
 
                     ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
                     %tissuetype(cnt)=1;

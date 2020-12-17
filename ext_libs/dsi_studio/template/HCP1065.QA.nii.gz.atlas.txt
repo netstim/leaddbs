@@ -3,6 +3,7 @@ FreeSurferDKT
 FreeSurferSeg
 HCP-MMP
 AAL2
+aal1
 AAL3_1mm
 Brainnectome
 ATAG_basal_ganglia

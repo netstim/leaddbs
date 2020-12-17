@@ -22,6 +22,7 @@ fprintf(fID,'%s\n','\usepackage[dvipdfmx]{media9}');
 fprintf(fID,'%s\n','\usepackage{graphicx}');
 fprintf(fID,'%s\n','\usepackage{float}');
 fprintf(fID,'%s\n\n','\usepackage{hyperref}');
+fprintf(fID,'%s\n\n','\usepackage{bookmark}');
 
 fprintf(fID,'%s\n','\hypersetup{');
 fprintf(fID,'%s\n','    colorlinks,');

@@ -116,6 +116,10 @@ prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for 
 %% Atlas-Sets:
 prefs.atlases.default='DISTAL Minimal (Ewert 2017)';
 
+%% Default parcellation setting for LeadConn and LeadGroup
+prefs.lc.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';
+prefs.lg.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';
+
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
 prefs.hullsmooth=5; % set to smooth hulldata. Only applies if isosurface is used. Only odd numbers allowed. Set to 0 if you don't want to smooth.
@@ -210,3 +214,15 @@ prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in 
 
 %% genetics
 prefs.genetics.dbdir=[ea_space,'genetics',filesep];
+
+
+%% platform specific (if changed, needs to restart Matlab)
+
+% Set to true this line if libstdc++.so.6 is needed.
+% However it is preferrable to fix it at system level (e.g. using package build-essentials). 
+% Additionally, install the matlab-support package and choose to use the system libraries for gcc.
+% If set to true it will add this path: fullfile(earoot,'ext_libs\support\glnxa64') to the LD_LIBRARY_PATH;
+prefs.platform.glnxa64.load_shipped_runtime=false;  % for Linux default is NOT loaded (using system libs)
+
+prefs.platform.maci64.load_shipped_runtime=false;    % for macOS default is NOT loaded
+prefs.platform.win64.load_shipped_runtime=false;  % for Windows default is NOT loaded

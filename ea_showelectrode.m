@@ -72,7 +72,7 @@ for side=options.sides
             if ~err
                 break
             else
-                try                
+                try
                     %recalculate as the tolerance/precision was not
                     %satisfactory for this use case (will be loaded at tries==2)
                     if ~isfield(options,'patient_list') % single subject mode
@@ -191,7 +191,7 @@ for side=options.sides
                 % Calc stick location
                 stxmarker = elstruct.markers(side).head + stretchfactor * markerposRel * unitvector;
                 arrowtip = stxmarker + 5 * (elstruct.markers(side).y - elstruct.markers(side).head);
-                elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.3 .3 .3],'tipWidth',0.2,'tipLength',0,'stemWidth',0.2);
+                elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.3 .3 .3],'tipWidth',0.2,'tipLength',0,'stemWidth',0.2,'Tag','DirectionMarker');
                 specsurf(elrender(cnt),[.3 .3 .3],1);
                 cnt = cnt+1;
             end
@@ -352,8 +352,12 @@ set(surfc,'AlphaDataMapping','none');
 
 set(surfc,'FaceLighting','phong');
 set(surfc,'SpecularColorReflectance',0);
-set(surfc,'SpecularExponent',10);
 set(surfc,'EdgeColor','none')
+
+set(surfc,'SpecularExponent',3) % patch property
+set(surfc,'SpecularStrength',0.21) % patch property
+set(surfc,'DiffuseStrength',0.4) % patch property
+set(surfc,'AmbientStrength',0.3) % patch property
 
 if nargin==3
     set(surfc,'FaceAlpha',aData);
