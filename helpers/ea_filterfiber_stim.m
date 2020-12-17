@@ -78,7 +78,7 @@ for i=1:length(radius)
 end
 
 % Load fiber connectome
-if ischar(ftr)
+if ischar(ftr) && isfile(ftr)
     disp('Loading fibers...');
     ftr = load(ftr);
 end
