@@ -6,7 +6,7 @@ if ischar(S) && isfile(S)
     load(S, 'S');
 end
 
-disp('Collecting stimulation parameters...')
+fprintf('\nCollecting stimulation parameters...\n')
 
 % Active contacts indices
 activeContacts = cell(size(S.activecontacts));
@@ -140,7 +140,7 @@ for i=1:length(radius)
     end
 end
 
-disp('Finished!');
+fprintf('Finished!\n\n');
 
 
 function r = kuncel08_eq1(U)
