@@ -217,7 +217,7 @@ if settings.calcAxonActivation
     fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel');
 
     % Filter fibers based on the minimal length
-    fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.minFiberLength, coords_mm, S);
+    fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.minFiberLength);
 
     settings.connectomePath = [outputPath, filesep, settings.connectome];
     ea_mkdir(settings.connectomePath);
