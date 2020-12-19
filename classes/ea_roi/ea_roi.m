@@ -239,7 +239,12 @@ classdef ea_roi < handle
                 obj.fv.vertices=[obj.fv.vertices;fvc.vertices];
 
                 if obj.smooth
-                    obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
+                    if ~isempty(obj.fv.vertices) && ~isempty(obj.fv.faces)
+                        
+                        obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
+                    else
+                        return
+                    end
                 else
                     obj.sfv=obj.fv;
                 end

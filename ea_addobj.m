@@ -26,6 +26,10 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
         for i=1:length(obj)
             ea_networkmappingexplorer(obj{i}, resultfig);
         end
+    elseif all(cellfun(@numel, regexp(obj, '(\.sweetspot)$', 'match', 'once')))
+        for i=1:length(obj)
+            ea_sweetspotexplorer(obj{i}, resultfig);
+        end
     else
         warndlg('Unsupported file(s) found!');
     end

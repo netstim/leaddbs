@@ -1,5 +1,8 @@
 function varargout=ea_corr(X,Y,corrtype)
 % wrapper for different correlation types
+if ~exist('corrtype','var')
+    corrtype='pearson';
+end
 switch lower(corrtype)
     case 'pearson'
         [varargout{1},varargout{2}]=corr(X,Y,'rows','pairwise','type','Pearson');
