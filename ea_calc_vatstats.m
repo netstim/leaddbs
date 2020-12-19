@@ -218,7 +218,7 @@ for iside=1:length(options.sides)
                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
 
                             % now also add efield overlap:
-                            if exist(vefieldfile,'var')
+                            if exist('vefieldfile','var')
                                 ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vefieldfile,atlasfile,sidec);
                                 ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
                                     ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)./sum(Vefield.img(:));
