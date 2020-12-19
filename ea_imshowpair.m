@@ -418,6 +418,24 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 MainImage=wiresIX;
             end
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
+            
+%             try % image toolbox
+%                 ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+%             catch
+%                 ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+%             end
+%             showhelptext(callingfunction);
+%             
+%             caxis([Rmin Rmax])
+%            
+%             if PostOpView && options.modality==1
+%                 SwitchPostop('update');
+%             else
+%                 set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
+%             end
+%             
+%             set(ImHndl,'ButtonDownFcn', @mouseClick);
+            
         elseif (strcmpi(eventdata.Key,'g'))
             if size(Img,4)==4 && strfind(callingfunction,'normalization') % only do if grid is available.
                 if MainImage(1)==1
@@ -703,10 +721,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
 
         try % image toolbox
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-        end;
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
+        end
         showhelptext(callingfunction);
 
         if sno > 1
@@ -727,8 +745,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         end
-
-        set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
 
@@ -756,10 +772,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         hdl_im = axes('position',[0,0,1,1]);
 
         try % image toolbox
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-        end;
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
+        end
         showhelptext(callingfunction);
 
         if sno > 1
@@ -780,7 +796,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
         end
-        set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
 
@@ -809,10 +824,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         hdl_im = axes('position',[0,0,1,1]);
 
         try % image toolbox
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-        end;
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
+        end
         showhelptext(callingfunction);
 
         if sno > 1
@@ -829,7 +844,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         end
-        set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
 end
