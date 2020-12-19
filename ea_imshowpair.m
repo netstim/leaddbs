@@ -288,11 +288,15 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             f1 = get(a1,'Parent');
 
             a2 = copyobj(a1,f1, 'legacy');
-
+            % helptext is also copied, we delete it here so it is not
+            % duplicated when when magnifying
+            delete(findall(a2,'Type','text')); 
+            
             i2 = get(a2,'Children');
             try
             i2=i2(2);
             end
+
             set(f1, ...
                 'UserData',[f1,a1,a2], ...
                 'Pointer','crosshair', ...
@@ -302,11 +306,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 'Color',get(a1,'Color'), ...
                 'Box','on');
             set(i2,'CData',Img(XImage,YImage,S,2));
-            xlabel(''); ylabel(''); zlabel(''); title('');
-            set(a1, ...
-                'Color',get(a1,'Color')*0.95);
-            set(f1, ...
-                'CurrentAxes',a1);
             set(f1,'WindowButtonMotionFcn', @ButtonMotionCallback)
             ButtonMotionCallback(f1);
 
@@ -418,24 +417,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 MainImage=wiresIX;
             end
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
-            
-%             try % image toolbox
-%                 ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-%             catch
-%                 ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-%             end
-%             showhelptext(callingfunction);
-%             
-%             caxis([Rmin Rmax])
-%            
-%             if PostOpView && options.modality==1
-%                 SwitchPostop('update');
-%             else
-%                 set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
-%             end
-%             
-%             set(ImHndl,'ButtonDownFcn', @mouseClick);
-            
+                        
         elseif (strcmpi(eventdata.Key,'g'))
             if size(Img,4)==4 && strfind(callingfunction,'normalization') % only do if grid is available.
                 if MainImage(1)==1
