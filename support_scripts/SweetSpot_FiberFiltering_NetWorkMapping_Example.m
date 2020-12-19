@@ -42,6 +42,9 @@ M.guid='My_Analysis'; % give your analysis a name
 
 save('Analysis_Input_Data.mat','M'); % store data of analysis to file
 
+% Open up the Sweetspot Explorer
+ea_sweetspotexplorer(fullfile(pwd,'Analysis_Input_Data.mat'),resultfig);
+
 % Open up the Network Mapping Explorer
 ea_networkmappingexplorer(fullfile(pwd,'Analysis_Input_Data.mat'),resultfig);
 
