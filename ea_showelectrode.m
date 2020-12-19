@@ -71,10 +71,10 @@ for side=options.sides
             [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig);
             if ~err
                 break
-            else
+            elseif ~options.d3.mirrorsides
                 try
-                    %recalculate as the tolerance/precision was not
-                    %satisfactory for this use case (will be loaded at tries==2)
+                    % Recalculate as the tolerance/precision was not
+                    % satisfactory for this use case (will be loaded at tries==2)
                     if ~isfield(options,'patient_list') % single subject mode
                         [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.root,options.patientname]);
                     else

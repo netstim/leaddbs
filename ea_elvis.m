@@ -104,18 +104,17 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             multiplemode=1;
 
             % mer development
-%             if isstruct(varargin{2})
-%                 elstruct=varargin{2}.elstruct;
-%                 merstruct=varargin{2}.merstruct;
-%             else
+            % if isstruct(varargin{2})
+            %     elstruct=varargin{2}.elstruct;
+            %     merstruct=varargin{2}.merstruct;
+            % else
                 elstruct=varargin{2};
-%             end
+            % end
 
             if options.d3.mirrorsides
                 elstruct=ea_mirrorsides(elstruct);
                 try options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
             end
-
         else
             multiplemode=0;
             options.loadrecoforviz=1; % add flag to load scrf entry if in native mode.
@@ -253,7 +252,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 'TooltipString', ['Add sweetspot analysis'],...
                 'Tag', ['Add sweetspot analysis'],...
                 'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
-            
+
             di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
@@ -261,13 +260,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'Tag', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
                     'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'fiberfiltering',filesep,di(d).name],resultfig});
             end
-            
+
             % add discriminative fiber explorer button.
             discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber_add'),...
                 'TooltipString', ['Add fiber filtering analysis'],...
                 'Tag', ['Add fiber filtering analysis'],...
                 'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
-            
+
             di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
@@ -275,13 +274,13 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'Tag', ['Explore fiber filtering analysis ',ea_stripext(di(d).name)],...
                     'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'fiberfiltering',filesep,di(d).name],resultfig});
             end
-            
+
             % add networkmapping explorer button.
             netmapadd = uipushtool(ht, 'CData', ea_get_icn('networkmapping_add'),...
                 'TooltipString', ['Add DBS network mapping analysis'],...
                 'Tag', ['Add DBS network mapping analysis'],...
                 'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
-            
+
             di=dir([options.root,options.patientname,filesep,'networkmapping',filesep,'*.netmap']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('networkmapping'),...
@@ -289,14 +288,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'Tag', ['Explore DBS network mapping analysis ',ea_stripext(di(d).name)],...
                     'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'networkmapping',filesep,di(d).name],resultfig});
             end
-            
-            
+
+
             % Move the group toggle forward
             tractToggleInd = 1:length(di)+1;
             eleGroupToggleInd = length(tractToggleInd)+1:length(tractToggleInd)+numel(unique(elstructGroupID));
             isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
             eleToggleInd = length(tractToggleInd)+length(eleGroupToggleInd)+1:find(isEleToggle,1,'last');
-            ht.Children=ht.Children([eleToggleInd, eleGroupToggleInd, tractToggleInd, find(isEleToggle,1,'last')+1:end]);   
+            ht.Children=ht.Children([eleToggleInd, eleGroupToggleInd, tractToggleInd, find(isEleToggle,1,'last')+1:end]);
         end
 
         try
