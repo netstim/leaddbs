@@ -137,7 +137,7 @@ for i=1:eleNum
     end
 
     if ~isnan(source(i))
-        settings.current_control(i) = uint8(~S.([sideCode, 's', num2str(source(i))]).va);
+        settings.current_control(i) = uint8(S.([sideCode, 's', num2str(source(i))]).va==2);
     end
 end
 
