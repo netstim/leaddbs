@@ -1,33 +1,30 @@
-import Header as Header
-import ast
 import os
 import sys
-
+import ast
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from GUI import Ui_MainWindow
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtWidgets import QMainWindow
-from functionalities import Functionalities
+import Header as Header
 from pop_up_control.cpe_active import PopUpCPEActive
 from pop_up_control.external_neuron_arrray import PopUpExternalNeuronArray
 from pop_up_control.full_field_ifft import PopUpFullFieldIFFT
 from pop_up_control.mesh_refinement import PopUpMeshRefinement
+from functionalities import Functionalities
 from temp_dict import Dictionary
 
 APPLICATION_STATE = False
 
 import subprocess
-
 from threading import Thread
 
 
 class MainWindow(Functionalities):
-    def __init__(self,path_to_patient):
+    def __init__(self,path_to_patient,index_side):
         self.main_win = QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.main_win)
 
         self.path_to_patient=path_to_patient
+        self.index_side=int(index_side)
 
         self.rel_folder = self.rel_folder()
 
@@ -203,7 +200,7 @@ class MainWindow(Functionalities):
         # Load/Save/Reset/Run to dictionary
         self.ui.pushButton_Run.clicked.connect(lambda: self.dict_write(self.output_dict(), self.current_file_name))
         # Modification to run a subprocess on another thread when Run button is clicked.
-        self.ui.pushButton_Run.clicked.connect(lambda: self.run_thread())
+        self.ui.pushButton_Run.clicked.connect(lambda: self.run_thread())   
 
         self.ui.pushButton_SaveAs.clicked.connect(lambda: self.save_as())
         self.ui.pushButton_Load.clicked.connect(lambda: self.load_dict())
@@ -215,7 +212,7 @@ class MainWindow(Functionalities):
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
         #subprocess.run(['sudo', 'docker', 'run', '--name', 'OSS_docker', '--volume', '/home/butenko/oss_platform:/opt/oss_platform', '--cap-add=SYS_PTRACE', '-it', '--rm gitlab.elaine.uni-rostock.de:4567/kb589/oss_platform:platform', 'python3', 'Launcher_OSS_lite.py'])
-        #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
+        #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial. 
         home_dir=os.path.expanduser("~")
         OSS_DBS_path=os.getcwd()
         os.chdir("..")
@@ -230,24 +227,52 @@ class MainWindow(Functionalities):
             output = subprocess.run(
                 ['docker', 'run','--name','OSS_container', '--volume', dir_code + ':/opt/OSS-DBS',
                  '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
-                 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])  #
+                 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])  #   
         elif sys.platform == 'darwin' or sys.platform=='Darwin':
             patient_dir_full = self.path_to_patient + ':/opt/Patient'
             # directories=[]
             print(patient_dir_full)
             output = subprocess.run(['open', 'script.sh', patient_dir_full, dir_code], executable='/bin/bash')   # in this case we use a bash script that calls Applescript
-        elif sys.platform=='win32' or sys.platform=='win32':
+        elif sys.platform=='win32':
             print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
             raise SystemExit
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
+            
 
-        if not os.path.exists(self.path_to_patient+'/success.txt'):
-            subprocess.call(['touch', self.path_to_patient+'/fail.txt'])
+        # does not work on macOS
+        #out2 = subprocess.run(['docker','logs','OSS_container'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #  
+        #stdout_as_str = out2.stdout.decode("utf-8")
+        
+        #text_file = open(self.path_to_patient+"/Docker_log.txt", "wt")
+        #n = text_file.write(stdout_as_str)
+        #text_file.close()
 
+        #print(output.returncode)
+        
+        #if not os.path.exists(self.path_to_patient+'/success.txt'):
+        #    subprocess.call(['touch', self.path_to_patient+'/fail.txt']) 
+        #    print("Error occurred, check the terminal")
+        #else:
+        #    print("Simulation is completed")
+        #    self.closeWindow()
 
-        print(output.returncode)
+        if self.index_side==0:
+            if not os.path.exists(self.path_to_patient+'/success_rh.txt'):
+                subprocess.call(['touch', self.path_to_patient+'/fail_rh.txt']) 
+                print("Error occurred when simulating rh, check the terminal")
+            else:
+                print("Simulation is completed")
+                self.closeWindow()
+        else:
+            if not os.path.exists(self.path_to_patient+'/success_lh.txt'):
+                subprocess.call(['touch', self.path_to_patient+'/fail_lh.txt']) 
+                print("Error occurred when simulating lh, check the terminal")  
+            else:
+                print("Simulation is completed")
+                self.closeWindow()                
+        
 
         # the commands below work only with a properly installed Paraview (supporting from paraview.simple import *)
 
@@ -259,7 +284,7 @@ class MainWindow(Functionalities):
 
         # try:
         #     subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
-        # except:
+        # except:        
         #     subprocess.run(['python','Visualization_files/Paraview_connections_processed.py',self.path_to_patient])
 
         # try:
@@ -269,7 +294,7 @@ class MainWindow(Functionalities):
 
         # subprocess.run(['python','Visualization_files/Paraview_CSFref.py',self.path_to_patient])
         # subprocess.run(['python','Visualization_files/Paraview_adapted.py',self.path_to_patient])
-
+        
         #subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
 
         #subprocess.run(['xterm','-hold','-e','ls'])
@@ -280,7 +305,7 @@ class MainWindow(Functionalities):
         #substitute tilda
         #subprocess.run([
         """add the command you use to run OSS-DBS here (as shown above)"""
-
+ 
 
     def run_thread(self):
         t = Thread(target=self.run_command)

@@ -66,9 +66,18 @@ def run_full_model(master_dict):
    
     #=========Check the simulation setup and state, load the corresponding data=========#
 
+
+    if d["Stim_side"]==0:
+        print("Processing right hemisphere")
+    else:
+        print("Processing left hemipshere")
+
     if d["current_control"]==1 and d["CPE_activ"]==1:
         d["CPE_activ"]=0
         print("Disabling CPE for current-controlled simulation")
+        
+        
+    d["Aprox_geometry_center"]=[d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z']]
 
     Phi_vector_active_non_zero=[x for x in d["Phi_vector"] if (x is not None) and (x!=0.0)]
     cc_multicontact=False
@@ -252,10 +261,11 @@ def run_full_model(master_dict):
 
 #=============================CSF_refinement==================================#
 
-    if d["external_grounding"]==1:
-        d["external_grounding"]==True
-        from Ext_ground_preref import refine_external_ground
-        refine_external_ground(Domains)
+    if d["Parallel_comp_ready"]==0:
+        if d["external_grounding"]==1:
+            d["external_grounding"]==True
+            from Ext_ground_preref import refine_external_ground
+            refine_external_ground(Domains)
 
     '''if we want to skip CSF and adaptive mesh refinement'''
     if d["Skip_mesh_refinement"]==1:
@@ -351,7 +361,10 @@ def run_full_model(master_dict):
 
         get_VTA(d,VTA_full_name,Max_signal_for_point,arrays_shape,VTA_edge,VTA_resolution)
         #home_dir=os.path.expanduser("~")
-        subprocess.call(['touch', '/opt/Patient/success.txt'])
+        if d["Stim_side"]==0:
+            subprocess.call(['touch', '/opt/Patient/success_rh.txt'])
+        else:
+            subprocess.call(['touch', '/opt/Patient/success_lh.txt'])
         
         return True
         
@@ -425,7 +438,7 @@ def run_full_model(master_dict):
         if d["spectrum_trunc_method"]=='Octave Band Method':
             if isinstance(d["n_Ranvier"],list):             #if different populations
                 last_point=0
-                hf = h5py.File(d["Name_prepared_neuron_array"], 'r')
+                hf = h5py.File('/opt/patient/'+d["Name_prepared_neuron_array"], 'r')
                 lst_population_names=list(hf.keys())
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
@@ -466,7 +479,7 @@ def run_full_model(master_dict):
         Number_of_activated=0
         last_point=0
         for i in range(len(d["n_Ranvier"])):
-            Number_of_activated_population=run_simulation_with_NEURON(last_point,i,d["diam_fib"][i],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"][i],N_models[i],d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d["Name_prepared_neuron_array"])
+            Number_of_activated_population=run_simulation_with_NEURON(last_point,i,d["diam_fib"][i],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"][i],N_models[i],d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d["Stim_side"],d["Name_prepared_neuron_array"])
             Number_of_activated=Number_of_activated+Number_of_activated_population
             os.chdir("Axon_files/")
             if d["Axon_Model_Type"] == 'Reilly2016':
@@ -476,7 +489,7 @@ def run_full_model(master_dict):
         if d["Axon_Model_Type"] == 'Reilly2016':
             os.chdir("..")
     else:
-        Number_of_activated=run_simulation_with_NEURON(0,-1,d["diam_fib"],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"],N_models,d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"])
+        Number_of_activated=run_simulation_with_NEURON(0,-1,d["diam_fib"],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"],N_models,d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d["Stim_side"])
     
     #if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
         #with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_connections_activation.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
@@ -497,7 +510,10 @@ def run_full_model(master_dict):
     print("---Simulation run took ",minutes," min ",secnds," s ")  
 
     #home_dir=os.path.expanduser("~")
-    subprocess.call(['touch', '/opt/Patient/success.txt'])
+    if d["Stim_side"]==0:
+        subprocess.call(['touch', '/opt/Patient/success_rh.txt'])
+    else:
+        subprocess.call(['touch', '/opt/Patient/success_lh.txt'])
     
     return True
 
@@ -591,4 +607,5 @@ def run_master_study():
 
 master_dict={}          #you can implement UQ or optimization by adding a function that will create master_dict with entries to be optimized. Name of entries should be the same as in GUI_inp_dict.py
 run_full_model(master_dict) 
+
 

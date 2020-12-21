@@ -41,6 +41,8 @@ def create_VTA_array(Xt,Yt,Zt):    #in mm, in MRI space
     #hf.create_dataset('VTA_default', data=VTA_array)
     #hf.close()      
     
+    
+    
     np.savetxt('/opt/Patient/VTA_default_array.csv', VTA_array, delimiter=" ")
            
     return(x_vector.shape[0],'VTA_default_array.csv',VTA_res)
@@ -246,10 +248,11 @@ def get_VTA(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,V
     
     print("vox_along_axis :",vox_along_axis)
     
-    for k in range(vox_along_axis):  #go over all voxels
+    for i in range(vox_along_axis):  #go over all voxels
         for j in range(vox_along_axis):  #go over all voxels
-            for i in range(vox_along_axis):  #go over all voxels
-                total_counter=i+j*vox_along_axis+k*vox_along_axis*vox_along_axis
+            for k in range(vox_along_axis):  #go over all voxels
+                #total_counter=i+j*vox_along_axis+k*vox_along_axis*vox_along_axis
+                total_counter=k+j*vox_along_axis+i*vox_along_axis*vox_along_axis
                 
                 if np.all(np.round(VTA_affected_MRI_space[counter_truncated,:3],6)==np.round(Array_full_coord[total_counter,:],6)):            # if coordinates match, then
                     VTA_nifti[i,j,k]=int(VTA_affected_MRI_space[counter_truncated,3])
@@ -263,23 +266,51 @@ def get_VTA(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,V
         print("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
         raise SystemExit
                 
-                
+                   
+           
     affine_info=np.eye(4)    
     affine_info[0,0]=VTA_res   # always isotropic voxels for VTA array
     affine_info[1,1]=VTA_res
     affine_info[2,2]=VTA_res
-    affine_info[:3,3]=VTA_affected_MRI_space[0,:3]
+    affine_info[0,3]=VTA_affected_MRI_space[0,0]-VTA_res*0.5
+    affine_info[1,3]=VTA_affected_MRI_space[0,1]-VTA_res*0.5
+    affine_info[2,3]=VTA_affected_MRI_space[0,2]-VTA_res*0.5
 
 
     import os
     example_filename = os.path.join('/opt/Patient/'+d['MRI_data_name'])
     img = nib.load(example_filename)
-        
+
+
+
+    
+    
     img3 = nib.Nifti1Image(VTA_nifti, affine_info,img.header)
-    nib.save(img3, '/opt/Patient/VTA_solution.nii.gz')
+    if d['Stim_side']==0:
+        nib.save(img3, '/opt/Patient/Results_rh/VTA_solution.nii')
+    else:
+        nib.save(img3, '/opt/Patient/Results_lh/VTA_solution.nii')
     
     img4 = nib.Nifti1Image(E_field_nifti, affine_info,img.header)
-    nib.save(img4, '/opt/Patient/E_field_solution.nii.gz')
+    if d['Stim_side']==0:
+        nib.save(img4, '/opt/Patient/Results_rh/E_field_solution.nii')
+    else:
+        nib.save(img4, '/opt/Patient/Results_lh/E_field_solution.nii')
+    #nib.save(img4, '/opt/Patient/E_field_solution.nii.gz')
+
+
+    # to check the transformation
+    # VTA_nifti[:,:,:]=1    
+    # affine_check=np.eye(4)
+    # affine_check[0,0]=VTA_res   # always isotropic voxels for VTA array
+    # affine_check[1,1]=VTA_res
+    # affine_check[2,2]=VTA_res
+    # affine_check[0,3]=d['Second_coordinate_X']-2.5-VTA_res*0.5   # because we need to shift to the corner   
+    # affine_check[1,3]=d['Second_coordinate_Y']-2.5-VTA_res*0.5   # because we need to shift to the corner   
+    # affine_check[2,3]=d['Second_coordinate_Z']-2.5-VTA_res*0.5   # because we need to shift to the corner 
+    # img_check = nib.Nifti1Image(VTA_nifti, affine_check,img.header)
+    # nib.save(img_check, '/opt/Patient/VTA_check.nii')
+
                 
     return True
                 

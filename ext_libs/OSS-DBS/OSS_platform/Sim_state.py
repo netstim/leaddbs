@@ -90,6 +90,17 @@ def manage_folders(d):
     if os.path.isdir('/opt/Patient/Field_solutions/Activation'):     # we always re-run NEURON simulation
         shutil.rmtree('/opt/Patient/Field_solutions/Activation')
         os.makedirs('/opt/Patient/Field_solutions/Activation')
+        
+    if d['Stim_side']==0:     
+        if os.path.isdir('/opt/Patient/Results_rh'):    
+            shutil.rmtree('/opt/Patient/Results_rh')
+        os.makedirs('/opt/Patient/Results_rh')          
+
+    if d['Stim_side']==1:     
+        if os.path.isdir('/opt/Patient/Results_lh'):    
+            shutil.rmtree('/opt/Patient/Results_lh')
+        os.makedirs('/opt/Patient/Results_lh')          
+                                   
     
     return True
 
