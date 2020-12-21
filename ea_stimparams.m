@@ -127,7 +127,7 @@ if strcmp(options.leadprod, 'group')
     isdirected=0; % for now allow everything in lead group
 else
     e=load(fullfile(ea_getearoot,'templates','electrode_models',options.elspec.matfname));
-    directed_funs={'ea_genvat_horn','ea_genvat_fastfield','ea_genvat_butenko'};
+    directed_funs={'ea_genvat_horn','ea_genvat_fastfield'};
     if isfield(e.electrode,'isdirected')
         isdirected=e.electrode.isdirected;
     else
