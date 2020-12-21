@@ -11,7 +11,11 @@ classdef ea_sweetspot < handle
         
         efieldthreshold = 200
         statlevel = 'VTAs' % stats metric to use, 1 = active coordinates, 2 = efields, 3 = vtas
-        statconcept = 'T-Tests (Normalized Data)' % correlation strategy in case of statmetric == 2.
+        stattest = 'T-Test';
+        stat0hypothesis = 'Zero';
+        statimpthreshold = 0;
+        statNthreshold = 0;
+        statamplitudecorrection = 'None';
         corrtype = 'Spearman' % correlation strategy in case of using E-Fields.
         coverthreshold = 20; % of vtas needed to cover a single voxel to be considered
         poscolor = [1,1,1] % positive main color
@@ -21,9 +25,9 @@ classdef ea_sweetspot < handle
         negcolor2 = [0.15,0.6,0.95] % negative peak color
         
         splitbygroup = 0
-        showsignificantonly = 0
+        showsignificantonly = 1
         alphalevel = 0.05
-        multcompstrategy = 'FDR'; % could be 'Bonferroni'
+        multcompstrategy = 'Uncorrected'; % could be 'Bonferroni'
         
         autorefresh=1;
         
