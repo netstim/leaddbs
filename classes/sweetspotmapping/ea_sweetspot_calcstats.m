@@ -31,8 +31,19 @@ if ~isempty(obj.covars)
     end
 end
 
-if exist('covars', 'var') % for now take care of covariates by cleaning main variable only.
-    I = ea_resid(cell2mat(covars),I);
+for side=1:size(I,2)
+    switch obj.statnormalization
+        case 'van Albada 2017'
+            I(:,side)=ea_normal(I(:,side));
+        case 'z-score'
+            I(:,side)=ea_nanzscore(I(:,side));
+    end
+    
+    
+    if exist('covars', 'var') % for now take care of covariates by cleaning main variable only.
+        I(:,side) = ea_resid(cell2mat(covars),I(:,side));
+    end
+    
 end
 
 if obj.splitbygroup
