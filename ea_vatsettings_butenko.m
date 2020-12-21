@@ -22,7 +22,7 @@ function varargout = ea_vatsettings_butenko(varargin)
 
 % Edit the above text to modify the response to help ea_vatsettings_butenko
 
-% Last Modified by GUIDE v2.5 16-Dec-2020 10:14:34
+% Last Modified by GUIDE v2.5 21-Dec-2020 14:49:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,7 +73,7 @@ else
     set(handles.connectomes,'Value',1);
 end
 
-set(handles.minFiberLength,'String',num2str(prefs.machine.vatsettings.butenko_minFiberLength));
+set(handles.axonLength,'String',num2str(prefs.machine.vatsettings.butenko_axonLength));
 set(handles.fiberDiameter,'String',num2str(prefs.machine.vatsettings.butenko_fiberDiameter));
 
 etv={'E-Field Threshold Presets:',nan
@@ -140,7 +140,7 @@ vatsettings = prefs.machine.vatsettings;
 vatsettings.butenko_calcAxonActivation = get(handles.calcAxonActivation,'Value');
 connectomes = get(handles.connectomes,'String');
 vatsettings.butenko_connectome = connectomes{get(handles.connectomes,'Value')};
-vatsettings.butenko_minFiberLength = str2double(get(handles.minFiberLength,'String'));
+vatsettings.butenko_axonLength = str2double(get(handles.axonLength,'String'));
 vatsettings.butenko_fiberDiameter = str2double(get(handles.fiberDiameter,'String'));
 vatsettings.butenko_ethresh = str2double(get(handles.ethresh,'String'));
 ea_setprefs('vatsettings',vatsettings);
@@ -240,18 +240,18 @@ end
 
 
 
-function minFiberLength_Callback(hObject, eventdata, handles)
-% hObject    handle to minFiberLength (see GCBO)
+function axonLength_Callback(hObject, eventdata, handles)
+% hObject    handle to axonLength (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of minFiberLength as text
-%        str2double(get(hObject,'String')) returns contents of minFiberLength as a double
+% Hints: get(hObject,'String') returns contents of axonLength as text
+%        str2double(get(hObject,'String')) returns contents of axonLength as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function minFiberLength_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to minFiberLength (see GCBO)
+function axonLength_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to axonLength (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

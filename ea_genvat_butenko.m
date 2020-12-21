@@ -202,7 +202,7 @@ outputPath = [directory, 'stimulations', filesep, ea_nt(options.native), S.label
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcAxonActivation;
 if settings.calcAxonActivation
     settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
-    settings.minFiberLength = options.prefs.machine.vatsettings.butenko_minFiberLength;
+    settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
     conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
     if options.native
@@ -218,7 +218,7 @@ if settings.calcAxonActivation
     fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel');
 
     % Filter fibers based on the minimal length
-    fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.minFiberLength);
+    fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength);
 
     settings.connectomePath = [outputPath, filesep, settings.connectome];
     ea_mkdir(settings.connectomePath);
