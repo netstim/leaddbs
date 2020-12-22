@@ -185,9 +185,11 @@ if checkrebuild(atlases,options,root,mifix)
                     iXYZ{atlas,side}=XYZ; % later stored
                     try
                         atlases.colors(atlas); % check if predefined color exists
+                        
                     catch
                         atlases.colors(atlas)=atlas*(maxcolor/length(atlases.names));
                     end
+                
                 elseif isfield(structure, 'fibers') % fibertract
                     % concat fibers to one patch object
                     addobjr=ea_showfiber(structure.fibers,structure.idx,colorc);
@@ -242,7 +244,7 @@ if checkrebuild(atlases,options,root,mifix)
             gzip([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
         end
-
+        
         % save table information that has been generated from nii files (on first run with this atlas set).
         try atlases.fv=ifv; end
         try atlases.cdat=icdat; end
@@ -256,6 +258,7 @@ if checkrebuild(atlases,options,root,mifix)
         try atlases=rmfield(atlases,'cdat'); end % redundancy cleanup
         try atlases=rmfield(atlases,'colorc'); end % redundancy cleanup
         try atlases=rmfield(atlases,'normals'); end % redundancy cleanup
+        
         ea_saveatlas(options.atlasset,atlases);
         
     end
