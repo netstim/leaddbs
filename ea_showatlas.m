@@ -48,7 +48,7 @@ for nativemni=nm % switch between native and mni space atlases.
         atlases=ea_loadatlas(options.atlasset,resultfig,ht);
         atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options,mifix);
     end
-
+    
     isdiscfibers = cellfun(@(x) ischar(x) && strcmp(x, 'discfibers'), atlases.pixdim);
     if all(sum(isdiscfibers,2))
         atlases.discfibersonly = 1;
@@ -68,11 +68,13 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if isfield(atlases,'colormap')
+        
         try
             jetlist=eval(atlases.colormap);
         catch
             jetlist=atlases.colormap;
         end
+    disp(jetlist)
     else
         try
             jetlist=options.colormap;
