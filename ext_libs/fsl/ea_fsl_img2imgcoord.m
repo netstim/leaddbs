@@ -80,6 +80,6 @@ else
 end
 
 % Delete tmp file
-if exist(uuid, 'var')
+if exist('uuid', 'var')
     delete(incoords);
 end

@@ -26,6 +26,10 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
         for i=1:length(obj)
             ea_networkmappingexplorer(obj{i}, resultfig);
         end
+    elseif all(cellfun(@numel, regexp(obj, '(\.sweetspot)$', 'match', 'once')))
+        for i=1:length(obj)
+            ea_sweetspotexplorer(obj{i}, resultfig);
+        end
     else
         warndlg('Unsupported file(s) found!');
     end
@@ -147,7 +151,7 @@ disp('Done.');
 
 function addfibertract(addobj,resultfig,addht,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
-    if strfind(addobj,'.mat')
+    if endsWith(addobj, '.mat')
         load(addobj);
         if exist('fibsin', 'var')
             fibers = fibsin;
@@ -163,7 +167,7 @@ if ischar(addobj) % filename is given ? load fibertracts.
                 fibidx = accumarray(idx,1);
             elseif size(fibers,2) == 3
                 thisset = fibers;
-                fibidx = idx;
+                fibidx = ones(size(fibers,1),1);
             else
                 error('Wrong input fiber tracts format!');
             end
@@ -171,8 +175,7 @@ if ischar(addobj) % filename is given ? load fibertracts.
         else
             error('No fiber tracts found!');
         end
-    elseif strfind(addobj,'.trk')
-        fileOut = [addobj(1:end-3) 'mat'];
+    elseif endsWith(addobj, '.trk')
         disp('Converting .trk to ftr.')
         [thisset,fibidx] = ea_trk2ftr(addobj);
         thisset = thisset';

@@ -121,6 +121,11 @@ for s=1:length(sfile)
             fiberstrength(nzz)=fiberstrength(nzz)./fiberstrengthn(nzz); % now each fiber has a strength mediated by the seed.
             ea_dispercent(1,'end');
 
+            if isempty(find(fiberstrength, 1))
+                warning('No connected fibers found for seed:\n%s', sfile{s});
+                continue;
+            end
+
             ea_dispercent(0, ['Iterating fibers (', num2str(s), '/', num2str(length(sfile)), ')']);
             cfibers=find(fiberstrength);
 

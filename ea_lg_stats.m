@@ -73,11 +73,20 @@ if ~isempty(M.clinical.labels)
 end
 
 % Disable group comparison button for variables per hemisphere or
-% non-logical variable
-clinicvar = M.clinical.vars{get(handles.clinicalvars, 'Value')};
-if size(clinicvar,2)==2 || numel(unique(clinicvar(~isnan(clinicvar))))~=2
+% non-logical variable, or when no clinical variable exists
+if isempty(M.clinical.vars)
+    set(handles.clinicalvars, 'Enable', 'off');
+    set(handles.corrbutton_vta, 'Enable', 'off');
     set(handles.ttestbutton_vta, 'Enable', 'off');
+    set(handles.fclist, 'Enable', 'off');
+    set(handles.corrbutton_ft, 'Enable', 'off');
     set(handles.ttestbutton_ft, 'Enable', 'off');
+else
+    clinicvar = M.clinical.vars{get(handles.clinicalvars, 'Value')};
+    if size(clinicvar,2)==2 || numel(unique(clinicvar(~isnan(clinicvar))))~=2
+        set(handles.ttestbutton_vta, 'Enable', 'off');
+        set(handles.ttestbutton_ft, 'Enable', 'off');
+    end
 end
 
 % refresh UI

@@ -192,6 +192,8 @@ for suffix=dowhich
                             nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                             nii(cnt).img(isnan(nii(cnt).img))=0;
                             cnt=cnt+1;
+                        else
+                            error('Seed file %s doesn''t exist!', [vatdir,'vat',addstr,'_',sidec,'.nii']);
                         end
                     end
 

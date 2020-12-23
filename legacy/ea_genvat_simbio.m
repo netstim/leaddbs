@@ -5603,7 +5603,7 @@ end
 % get the optional input arguments
 output  = ea_ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombined'
 
-if ~exist(type, 'var')
+if ~exist('type', 'var')
     error('the requested sensor type "%s" is not supported', type);
 
 elseif isempty(eval(type))

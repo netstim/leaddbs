@@ -580,13 +580,13 @@ classdef ea_networkmapping < handle
                                 if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end
                         end
                         if obj.posvisible && obj.negvisible
-                            cmap1=ea_colorgradient(128,obj.poscolor, obj.poscolor2);
-                            cmap2=ea_colorgradient(128,obj.negcolor2,obj.negcolor);
+                            cmap1=ea_colorgradient(length(gray)/2,obj.poscolor, obj.poscolor2);
+                            cmap2=ea_colorgradient(length(gray)/2,obj.negcolor2,obj.negcolor);
                             cmap=[cmap2;cmap1];
                         elseif obj.posvisible && ~obj.negvisible
-                            cmap=ea_colorgradient(256,obj.poscolor, obj.poscolor2);
+                            cmap=ea_colorgradient(length(gray),obj.poscolor, obj.poscolor2);
                         elseif ~obj.posvisible && obj.negvisible
-                            cmap=ea_colorgradient(256,obj.negcolor2, obj.negcolor);
+                            cmap=ea_colorgradient(length(gray),obj.negcolor2, obj.negcolor);
                         else
                             return
                         end
