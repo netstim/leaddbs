@@ -120,14 +120,19 @@ for group=groups
                         vals{group,side} = Nmap;
                         vals{group,side}(vals{group,side} < round(numel(tmpind)*(obj.statNthreshold/100))) = NaN;
                     case 'T-Test'
+                        gval{side} = double(gval{side});
+                        gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
+                        
                         switch obj.statamplitudecorrection
                             case 'Amplitude'
                                 I(gpatsel,side) = I(gpatsel,side) ./ amps(gpatsel,side);
                             case 'VTA Size'
                                 I(gpatsel,side) = I(gpatsel,side) ./ VTAsize(gpatsel,side);
                         end
-                        thisvals=double(gval{side}(gpatsel,:)).*repmat(I(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
-                        Nmap=ea_nansum(double(gval{side}(gpatsel,:)));
+                        
+                        thisvals=gval{side}(gpatsel,:).*repmat(I(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
+                        
+                        Nmap=nansum(gval{side}(gpatsel,:));                        
                         nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
                         thisvals(:,nanidx)=nan;
                         
@@ -144,19 +149,25 @@ for group=groups
                         vals{group,side}=nan(size(thisvals,2),1);
                         vals{group,side}(~nanidx)=stats.tstat;
                     case 'Wilcoxon-Test'
+                        gval{side} = double(gval{side});
+                        gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
+                        
                         switch obj.statamplitudecorrection
                             case 'Amplitude'
                                 I(gpatsel,side) = I(gpatsel,side) ./ amps(gpatsel,side);
                             case 'VTA Size'
                                 I(gpatsel,side) = I(gpatsel,side) ./ VTAsize(gpatsel,side);
                         end
-                        thisvals=double(gval{side}(gpatsel,:)).*repmat(I(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
-                        Nmap=ea_nansum(double(gval{side}(gpatsel,:)));
+                        
+                        thisvals=gval{side}(gpatsel,:).*repmat(I(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
+                        
+                        Nmap=nansum(gval{side}(gpatsel,:));
                         nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
                         thisvals(:,nanidx)=nan;
                         meanvals = nanmean(thisvals,1);                        
                         meanvals = meanvals(~nanidx);
                         tmpvals = thisvals(:,~nanidx);
+                        
                         if numel(H0) ~= 1 %in case H0 is different for each setting
                             H0vals = double(gval{side}(gpatsel,:)).*repmat(H0(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
                             H0vals = H0vals(:,~nanidx);
