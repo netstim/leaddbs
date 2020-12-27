@@ -16,14 +16,14 @@ classdef ea_sweetspot < handle
         statimpthreshold = 0;
         statNthreshold = 0;
         statamplitudecorrection = 'None';
-        statnormalization = 'None';
+        statnormalization = 'van Albada 2017';
         corrtype = 'Spearman' % correlation strategy in case of using E-Fields.
         coverthreshold = 20; % of vtas needed to cover a single voxel to be considered
-        poscolor = [1,1,1] % positive main color
-        poscolor2 = [0.99,0.6,0.06] % positive peak color
+        poscolor = [0.99,0.6,0.06] % positive main color
+        poscolor2 = [0.99,0.85,0.06] % positive peak color
 
-        negcolor = [1,1,1] % negative main color
-        negcolor2 = [0.15,0.6,0.95] % negative peak color
+        negcolor = [0.15,0.6,0.95] % negative main color
+        negcolor2 = [0.15,0.85,0.95] % negative peak color
         
         splitbygroup = 0
         showsignificantonly = 1
@@ -35,7 +35,7 @@ classdef ea_sweetspot < handle
         results
         % Subfields:
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
-        basepredictionon = 'mean of scores';
+        basepredictionon = 'Mean of Scores';
         spotdrawn % struct contains sweetspot drawn in the resultfig
         drawobject % actual streamtube handle
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
@@ -534,7 +534,7 @@ classdef ea_sweetspot < handle
                         pobj.niftiFilename='Positive.nii';
                         pobj.binary=0;
                         pobj.usesolidcolor=0;
-                        pobj.color=obj.poscolor;
+                        pobj.color=obj.poscolor2;
                         pobj.colormap=ea_colorgradient(length(gray), obj.poscolor, obj.poscolor2);
                         pobj.smooth=10;
                         pobj.hullsimplify=0.5;
@@ -555,7 +555,7 @@ classdef ea_sweetspot < handle
                         pobj.niftiFilename='Negative.nii';
                         pobj.binary=0;
                         pobj.usesolidcolor=0;
-                        pobj.color=obj.negcolor;
+                        pobj.color=obj.negcolor2;
                         pobj.colormap=ea_colorgradient(length(gray), obj.negcolor2, obj.negcolor);
                         pobj.smooth=10;
                         pobj.hullsimplify=0.5;
@@ -569,34 +569,34 @@ classdef ea_sweetspot < handle
                 end
                 setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject); % store handle of surf to figure.
 
-%                 % Set colorbar tick positions and labels
-%                 if ~isempty(allvals)
-%                     if obj.posvisible && obj.negvisible
-%                         tick{group} = [1, length(fibcmap{group})];
-%                         poscbvals = sort(allvals(allvals>0));
-%                         negcbvals = sort(allvals(allvals<0));
-%                         ticklabel{group} = [negcbvals(1), poscbvals(end)];
-%                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-%                     elseif obj.posvisible
-%                         tick{group} = [1, length(fibcmap{group})];
-%                         posvals = sort(allvals(allvals>0));
-%                         ticklabel{group} = [posvals(1), posvals(end)];
-%                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-%                     elseif obj.negvisible
-%                         tick{group} = [1, length(fibcmap{group})];
-%                         negvals = sort(allvals(allvals<0));
-%                         ticklabel{group} = [negvals(1), negvals(end)];
-%                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-%                     end
-%                 end
+                % Set colorbar tick positions and labels
+                if ~isempty(allvals)
+                    if obj.posvisible && obj.negvisible
+                        tick{group} = [1, length(voxcmap{group})];
+                        poscbvals = sort(allvals(allvals>0));
+                        negcbvals = sort(allvals(allvals<0));
+                        ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                    elseif obj.posvisible
+                        tick{group} = [1, length(voxcmap{group})];
+                        posvals = sort(allvals(allvals>0));
+                        ticklabel{group} = [posvals(1), posvals(end)];
+                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                    elseif obj.negvisible
+                        tick{group} = [1, length(voxcmap{group})];
+                        negvals = sort(allvals(allvals<0));
+                        ticklabel{group} = [negvals(1), negvals(end)];
+                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                    end
+                end
             end
 
-%             % store colorbar in object
-%             if exist('fibcmap','var') % could be no fibers present at all.
-%                 obj.colorbar.cmap = fibcmap;
-%                 obj.colorbar.tick = tick;
-%                 obj.colorbar.ticklabel = ticklabel;
-%             end
+            % store colorbar in object
+            if exist('fibcmap','var') % could be no fibers present at all.
+                obj.colorbar.cmap = voxcmap;
+                obj.colorbar.tick = tick;
+                obj.colorbar.ticklabel = ticklabel;
+            end
         end
     end
 

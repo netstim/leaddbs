@@ -111,7 +111,7 @@ for group=groups
                         Nmap=ea_nansum(double(gval{side}(gpatsel,:)));
                         nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
                         thisvals(:,nanidx)=nan;
-                        vals{group,side} = nanmean(thisvals);
+                        vals{group,side} = ea_nanmean(thisvals);
                         vals{group,side}(vals{group,side} < obj.statimpthreshold) = NaN;
                     case 'N-Image'
                         tmpind = find(I(gpatsel,side) > obj.statimpthreshold);
@@ -136,7 +136,7 @@ for group=groups
                         nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
                         thisvals(:,nanidx)=nan;
                         
-                        if numel(H0) ~= 1 %in case H0 is different for each setting
+                        if numel(H0) ~= 1 % in case H0 is different for each setting
                             H0vals = double(gval{side}(gpatsel,:)).*repmat(H0(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
                             [~,ps,~,stats]=ttest(thisvals(:,~nanidx),H0vals(:,~nanidx));
                         else
@@ -148,6 +148,7 @@ for group=groups
                         end
                         vals{group,side}=nan(size(thisvals,2),1);
                         vals{group,side}(~nanidx)=stats.tstat;
+                        
                     case 'Wilcoxon-Test'
                         gval{side} = double(gval{side});
                         gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
@@ -186,26 +187,10 @@ for group=groups
                         vals{group,side}=nan(size(thisvals,2),1);
                         vals{group,side}(~nanidx)=meanvals;
                 end
-                %                 switch obj.statconcept
-                %                     case 'T-Tests (Normalized Data)'%
-                %                         thisvals=double(gval{side}(gpatsel,:)).*repmat(ea_normal(I(gpatsel,side)),1,size(gval{side}(gpatsel,:),2));
-                %                         Nmap=ea_nansum(double(gval{side}(gpatsel,:)));
-                %                         nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
-                %                         thisvals(:,nanidx)=nan;
-                %
-                %                         [~,ps,~,stats]=ttest(thisvals(:,~nanidx));
-                %
-                %                         if obj.showsignificantonly
-                %                             stats.tstat=ea_corrsignan(stats.tstat',ps',obj);
-                %                         end
-                %                         vals{group,side}=nan(size(thisvals,2),1);
-                %                         vals{group,side}(~nanidx)=stats.tstat;
-                %                     otherwise
-                %                         keyboard % for Till to fill :)
-                %                 end
+
             case 'E-Fields'
-                switch obj.statconcept
-                    case 'R-Map'
+                switch obj.stattest
+                    case 'Correlations'
                         
                         thisvals=gval{side}(gpatsel,:);
                         Nmap=ea_nansum(~isnan(thisvals));
