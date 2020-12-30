@@ -1,4 +1,4 @@
-function ea_error(msg, title, backtrace)
+function ea_error(msg, title, backtrace, showdlg)
 % The general error message function.
 % 
 % set backtrace to 'dbstack' if needed.
@@ -7,10 +7,16 @@ function ea_error(msg, title, backtrace)
 % Andreas Horn
 
 if ~exist('title', 'var') || isempty(title)
-    title = '';
+    title = 'Error';
 end
 
-errordlg(msg, title);
+if ~exist('showdlg', 'var')
+    showdlg = 1;
+end
+
+if showdlg
+    errordlg(msg, title);
+end
 
 if ~exist('backtrace', 'var') % simple mode
     error(msg);
