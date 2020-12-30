@@ -94,7 +94,7 @@ figtitle=get(gcf,'Name');
 set(gcf,'Name',[figtitle,'...building...']);
 axis equal
 axis fill
-
+prefs=ea_prefs;
 % colormap('gray')
 
 %% Patient specific part (skipped if no patient is selected or no reco available):
