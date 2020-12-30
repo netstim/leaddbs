@@ -33,8 +33,6 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     #index_side=1
     #settings_location,index_side=side_and_settings[:]
     index_side=int(index_side)
-    print(index_side)
-    print(settings_location)
     
     #these are input from Lead-DBS
     input_dict = {
@@ -230,14 +228,12 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
             else:
                 save_as_dict.write("    '{}': '{}',\n".format(key, d[key]))
         save_as_dict.write("}\n")
-    
-    print(path_to_patient)
+
     return path_to_patient,index_side
 
 
 
 if __name__ == '__main__':
-    print(*sys.argv[1:])
     #path_to_patient=get_input_from_LeadDBS(0,*sys.argv[1:])
     path_to_patient,side=get_input_from_LeadDBS(*sys.argv[1:])
     process_1=-1
