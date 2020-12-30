@@ -233,25 +233,56 @@ parameterFile = [outputPath, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings', '-v7.3');
 
 %% Run OSS-DBS
+currentPath = pwd;
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
-cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
-system(['cd "', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform";', ...
-        'python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', parameterFile, ...
-        ';cd -']);
-setenv('LD_LIBRARY_PATH', libpath); % Restore LD_LIBRARY_PATH
 
-while ~isfile([outputPath, filesep, 'success.txt']) && ~isfile([outputPath, filesep, 'fail.txt'])
-    continue;
+% Delete flag files before running
+ea_delete([outputPath, filesep, 'success_rh.txt']);
+ea_delete([outputPath, filesep, 'fail_rh.txt']);
+ea_delete([outputPath, filesep, 'success_lh.txt']);
+ea_delete([outputPath, filesep, 'fail_lh.txt']);
+
+% Iterate sides
+for side=0:1
+    cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
+    system(['cd "', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform";', ...
+            'python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
+            parameterFile,' ', num2str(side)]);	% 0 is right side, 1 is the left side here
+    while ~isfile([outputPath, filesep, 'success_rh.txt']) ...
+            && ~isfile([outputPath, filesep, 'fail_rh.txt']) ...
+            && ~isfile([outputPath, filesep, 'success_lh.txt']) ...
+            && ~isfile([outputPath, filesep, 'fail_lh.txt'])
+        continue;
+    end
 end
 
-%% Save results
-% Convert the unit from V/mm to V/m for efield VTA (to be consistent as in Lead-DBS)
-efieldVAT = {'vat_efield_right.nii', 'vat_efield_left.nii'};
-for f=1:length(efieldVAT)
-    efield = ea_load_nii([outputPath, filesep, efieldVAT{f}]);
-    efield.img = efield.img*1000;
-    ea_write_nii(efield);
+% Restore working directory and env
+cd(currentPath);
+setenv('LD_LIBRARY_PATH', libpath);
+
+% if connectome is provided, launch a docker command
+
+% in terminal it would be for example "docker run --volume $HOME/Documents/MATLAB_files/leaddbs-oss-dbs/ext_libs/OSS-DBS:/opt/OSS-DBS --volume $HOME/Documents/MATLAB_files/Clover/Custom_patient/stimulations/MNI_ICBM_2009b_NLIN_ASYM/20201213214916:/opt/patient -it --rm sfbelaine/oss_dbs:platform_latest python3 Axon_allocation.py index_side"
+% index side: 0 - rh , 1 - lh
+
+% if it is too difficult to call docker from here, we could write an
+% intermediate python file as we already know how to deal with it (see ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py)
+
+%% Copy results
+if isfile([outputPath, filesep, 'Results_rh', filesep, 'E_field_solution.nii'])
+    copyfile([outputPath, filesep, efieldVAT{i}], [outputPath, filesep, 'vat_efield_right.nii'])
 end
 
-% ea_axonact2ftr([outputPath, filesep, Activation]);
+if isfile([outputPath, filesep, 'Results_rh', filesep, 'VTA_solution.nii'])
+    copyfile([outputPath, filesep, efieldVAT{i}], [outputPath, filesep, 'vat_right.nii'])
+end
+
+if isfile([outputPath, filesep, 'Results_lh', filesep, 'E_field_solution.nii'])
+    copyfile([outputPath, filesep, efieldVAT{i}], [outputPath, filesep, 'vat_efield_left.nii'])
+end
+
+if isfile([outputPath, filesep, 'Results_lh', filesep, 'VTA_solution.nii'])
+    copyfile([outputPath, filesep, efieldVAT{i}], [outputPath, filesep, 'vat_left.nii'])
+end
+
