@@ -268,15 +268,22 @@ for side=0:1
         continue;
     end
 
-    % Copy VAT files
-    if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
-        copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'], ...
-                 [outputPath, filesep, 'vat_efield_', sideStr, '.nii'])
-    end
+    if isfile([outputPath, filesep, 'success_', sideCode, '.txt'])
+        disp('OSS-DBS calculation succeeded!')
+        % Copy VAT files
+        if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
+            copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'], ...
+                     [outputPath, filesep, 'vat_efield_', sideStr, '.nii'])
+        end
 
-    if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'])
-        copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'], ...
-                 [outputPath, filesep, 'vat_', sideStr, '.nii'])
+        if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'])
+            copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'], ...
+                     [outputPath, filesep, 'vat_', sideStr, '.nii'])
+        end
+    elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
+        warning('off', 'backtrace');
+        warning('OSS-DBS calculation failed for %s side!', sideStr);
+        warning('on', 'backtrace');
     end
 end
 
