@@ -93,7 +93,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         input_dict['current_control']=1
         Phi_vector=Phi_vector*0.001     # because Lead-DBS uses mA as the input
 
-    print(type(Phi_vector))
+    # print(type(Phi_vector))
     if all(v is None for v in Phi_vector):
         print("No stimulation defined for this hemisphere")
         return -1
