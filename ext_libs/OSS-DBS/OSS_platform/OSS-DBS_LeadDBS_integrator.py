@@ -73,7 +73,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     #file = tables.open_file('oss-dbs_parameters.mat')     #hardwired
     #file = tables.open_file('oss-dbs_parameters.mat')     #hardwired
     print("Input from ",settings_location)
-    file = h5py.File(str(settings_location))
+    file = h5py.File(str(settings_location), 'r')
     #file = h5py.File('oss-dbs_parameters.mat')
 
     #if file.root.settings.current_control[0][0]!=file.root.settings.current_control[0][1]:
