@@ -245,15 +245,38 @@ ea_delete([outputPath, filesep, 'fail_lh.txt']);
 
 % Iterate sides
 for side=0:1
+    switch side
+        case 0
+            disp('Running OSS-DBS for right side stimulation...');
+            sideCode = 'rh';
+            sideStr = 'right';
+        case 1
+            disp('Running OSS-DBS for left side stimulation...');
+            sideCode = 'lh';
+            sideStr = 'left';
+    end
+
+    % Call OSS-DBS GUI to start calculation
     cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
     system(['cd "', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform";', ...
             'python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
             parameterFile,' ', num2str(side)]);	% 0 is right side, 1 is the left side here
-    while ~isfile([outputPath, filesep, 'success_rh.txt']) ...
-            && ~isfile([outputPath, filesep, 'fail_rh.txt']) ...
-            && ~isfile([outputPath, filesep, 'success_lh.txt']) ...
-            && ~isfile([outputPath, filesep, 'fail_lh.txt'])
+
+    % Check if OSS-DBS calculation is finished
+    while ~isfile([outputPath, filesep, 'success_', sideCode, '.txt']) ...
+            && ~isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
         continue;
+    end
+
+    % Copy VAT files
+    if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
+        copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'], ...
+                 [outputPath, filesep, 'vat_efield_', sideStr, '.nii'])
+    end
+
+    if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'])
+        copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'], ...
+                 [outputPath, filesep, 'vat_', sideStr, '.nii'])
     end
 end
 
@@ -268,21 +291,4 @@ setenv('LD_LIBRARY_PATH', libpath);
 
 % if it is too difficult to call docker from here, we could write an
 % intermediate python file as we already know how to deal with it (see ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py)
-
-%% Copy results
-if isfile([outputPath, filesep, 'Results_rh', filesep, 'E_field_solution.nii'])
-    copyfile([outputPath, filesep, efieldVAT{i}], [outputPath, filesep, 'vat_efield_right.nii'])
-end
-
-if isfile([outputPath, filesep, 'Results_rh', filesep, 'VTA_solution.nii'])
-    copyfile([outputPath, filesep, efieldVAT{i}], [outputPath, filesep, 'vat_right.nii'])
-end
-
-if isfile([outputPath, filesep, 'Results_lh', filesep, 'E_field_solution.nii'])
-    copyfile([outputPath, filesep, efieldVAT{i}], [outputPath, filesep, 'vat_efield_left.nii'])
-end
-
-if isfile([outputPath, filesep, 'Results_lh', filesep, 'VTA_solution.nii'])
-    copyfile([outputPath, filesep, efieldVAT{i}], [outputPath, filesep, 'vat_left.nii'])
-end
 
