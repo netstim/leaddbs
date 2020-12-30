@@ -22,7 +22,7 @@ function varargout = ea_vatsettings_butenko(varargin)
 
 % Edit the above text to modify the response to help ea_vatsettings_butenko
 
-% Last Modified by GUIDE v2.5 21-Dec-2020 14:49:17
+% Last Modified by GUIDE v2.5 30-Dec-2020 15:00:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -117,6 +117,8 @@ setappdata(handles.ethreshpresets,'data',etv);
 
 set(handles.ethresh,'String',num2str(prefs.machine.vatsettings.butenko_ethresh));
 
+set(handles.interactive,'Value',prefs.machine.vatsettings.butenko_interactive);
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_vatsettings_butenko_OutputFcn(hObject, eventdata, handles)
@@ -143,6 +145,7 @@ vatsettings.butenko_connectome = connectomes{get(handles.connectomes,'Value')};
 vatsettings.butenko_axonLength = str2double(get(handles.axonLength,'String'));
 vatsettings.butenko_fiberDiameter = str2double(get(handles.fiberDiameter,'String'));
 vatsettings.butenko_ethresh = str2double(get(handles.ethresh,'String'));
+vatsettings.butenko_interactive = get(handles.interactive,'Value');
 ea_setprefs('vatsettings',vatsettings);
 
 delete(handles.setfig);
@@ -292,3 +295,12 @@ function connectomes_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in interactive.
+function interactive_Callback(hObject, eventdata, handles)
+% hObject    handle to interactive (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of interactive
