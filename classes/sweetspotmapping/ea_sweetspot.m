@@ -19,12 +19,12 @@ classdef ea_sweetspot < handle
         statnormalization = 'van Albada 2017';
         corrtype = 'Spearman' % correlation strategy in case of using E-Fields.
         coverthreshold = 20; % of vtas needed to cover a single voxel to be considered
-        poscolor = [0.99,0.6,0.06] % positive main color
-        poscolor2 = [0.99,0.85,0.06] % positive peak color
+        posBaseColor = [0.99,0.6,0.06] % positive main color
+        posPeakColor = [0.99,0.85,0.06] % positive peak color
 
-        negcolor = [0.15,0.6,0.95] % negative main color
-        negcolor2 = [0.15,0.85,0.95] % negative peak color
-        
+        negBaseColor = [0.15,0.6,0.95] % negative main color
+        negPeakColor = [0.15,0.85,0.95] % negative peak color
+
         splitbygroup = 0
         showsignificantonly = 1
         alphalevel = 0.05
@@ -487,10 +487,10 @@ classdef ea_sweetspot < handle
                     end
                 else
                     if obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
-                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
-                        cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.poscolor);
-                        cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.poscolor);
+                        cmap = ea_colorgradient(gradientLevel/2, obj.negBaseColor, [1,1,1]);
+                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negBaseColor, cmap(shiftedCmapLeftEnd,:));
+                        cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.posBaseColor);
+                        cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.posBaseColor);
                         voxcmap{group} = [cmapLeft;cmapRight];
                         cmapind = ones(size(allvals))*gradientLevel/2;
                         cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
@@ -499,14 +499,14 @@ classdef ea_sweetspot < handle
                         % alphaind(allvals<0) = normalize(-1./(1+exp(-allvals(allvals<0))), 'range');
                         % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
                     elseif obj.posvisible
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
+                        cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.posBaseColor);
+                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.posBaseColor);
                         cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = ones(size(allvals));
                         % alphaind = normalize(1./(1+exp(-allvals)), 'range');
                     elseif obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
+                        cmap = ea_colorgradient(gradientLevel, obj.negBaseColor, [1,1,1]);
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negBaseColor, cmap(shiftedCmapEnd,:));
                         cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = ones(size(allvals));
                         % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
@@ -534,8 +534,8 @@ classdef ea_sweetspot < handle
                         pobj.niftiFilename='Positive.nii';
                         pobj.binary=0;
                         pobj.usesolidcolor=0;
-                        pobj.color=obj.poscolor2;
-                        pobj.colormap=ea_colorgradient(length(gray), obj.poscolor, obj.poscolor2);
+                        pobj.color=obj.posPeakColor;
+                        pobj.colormap=ea_colorgradient(length(gray), obj.posBaseColor, obj.posPeakColor);
                         pobj.smooth=10;
                         pobj.hullsimplify=0.5;
                         pobj.threshold=0;
@@ -555,8 +555,8 @@ classdef ea_sweetspot < handle
                         pobj.niftiFilename='Negative.nii';
                         pobj.binary=0;
                         pobj.usesolidcolor=0;
-                        pobj.color=obj.negcolor2;
-                        pobj.colormap=ea_colorgradient(length(gray), obj.negcolor2, obj.negcolor);
+                        pobj.color=obj.negPeakColor;
+                        pobj.colormap=ea_colorgradient(length(gray), obj.negPeakColor, obj.negBaseColor);
                         pobj.smooth=10;
                         pobj.hullsimplify=0.5;
                         pobj.threshold=0;

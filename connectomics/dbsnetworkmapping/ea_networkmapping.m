@@ -12,11 +12,11 @@ classdef ea_networkmapping < handle
         shownegamount = [25 25] % two entries for right and left
         statmetric = 'Correlations (R-map)' % Statistical model to use
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
-        poscolor = [1,1,1] % positive main color
-        poscolor2 = [0.99,0.6,0.06] % positive peak color
+        posBaseColor = [1,1,1] % positive main color
+        posPeakColor = [0.99,0.6,0.06] % positive peak color
 
-        negcolor = [1,1,1] % negative main color
-        negcolor2 = [0.15,0.6,0.95] % negative peak color
+        negBaseColor = [1,1,1] % negative main color
+        negPeakColor = [0.15,0.6,0.95] % negative peak color
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
@@ -499,8 +499,8 @@ classdef ea_networkmapping < handle
                     if obj.posvisible && obj.negvisible
                         cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
                         cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
-                        cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.poscolor);
-                        cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.poscolor);
+                        cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.posBaseColor);
+                        cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.posBaseColor);
                         voxcmap{group} = [cmapLeft;cmapRight];
                         cmapind = ones(size(allvals))*gradientLevel/2;
                         cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
@@ -509,8 +509,8 @@ classdef ea_networkmapping < handle
                         % alphaind(allvals<0) = normalize(-1./(1+exp(-allvals(allvals<0))), 'range');
                         % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
                     elseif obj.posvisible
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
+                        cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.posBaseColor);
+                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.posBaseColor);
                         cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = ones(size(allvals));
                         % alphaind = normalize(1./(1+exp(-allvals)), 'range');
@@ -542,8 +542,8 @@ classdef ea_networkmapping < handle
                                 pobj.niftiFilename='Positive.nii';
                                 pobj.binary=0;
                                 pobj.usesolidcolor=0;
-                                pobj.color=obj.poscolor;
-                                pobj.colormap=ea_colorgradient(length(gray), obj.poscolor, obj.poscolor2);
+                                pobj.color=obj.posBaseColor;
+                                pobj.colormap=ea_colorgradient(length(gray), obj.posBaseColor, obj.posPeakColor);
                                 pobj.smooth=10;
                                 pobj.hullsimplify=0.5;
                                 obj.drawobject{group}{1}=ea_roi('Positive.nii',pobj);
@@ -561,8 +561,8 @@ classdef ea_networkmapping < handle
                                 pobj.niftiFilename='Negative.nii';
                                 pobj.binary=0;
                                 pobj.usesolidcolor=0;
-                                pobj.color=obj.negcolor;
-                                pobj.colormap=ea_colorgradient(length(gray), obj.negcolor2, obj.negcolor);
+                                pobj.color=obj.negBaseColor;
+                                pobj.colormap=ea_colorgradient(length(gray), obj.negPeakColor, obj.negBaseColor);
                                 pobj.smooth=10;
                                 pobj.hullsimplify=0.5;
                                 obj.drawobject{group}{2}=ea_roi('Negative.nii',pobj);
@@ -580,13 +580,13 @@ classdef ea_networkmapping < handle
                                 if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end
                         end
                         if obj.posvisible && obj.negvisible
-                            cmap1=ea_colorgradient(length(gray)/2,obj.poscolor, obj.poscolor2);
-                            cmap2=ea_colorgradient(length(gray)/2,obj.negcolor2,obj.negcolor);
+                            cmap1=ea_colorgradient(length(gray)/2,obj.posBaseColor,obj.posPeakColor);
+                            cmap2=ea_colorgradient(length(gray)/2,obj.negPeakColor,obj.negBaseColor);
                             cmap=[cmap2;cmap1];
                         elseif obj.posvisible && ~obj.negvisible
-                            cmap=ea_colorgradient(length(gray),obj.poscolor, obj.poscolor2);
+                            cmap=ea_colorgradient(length(gray),obj.posBaseColor,obj.posPeakColor);
                         elseif ~obj.posvisible && obj.negvisible
-                            cmap=ea_colorgradient(length(gray),obj.negcolor2, obj.negcolor);
+                            cmap=ea_colorgradient(length(gray),obj.negPeakColor,obj.negBaseColor);
                         else
                             return
                         end
