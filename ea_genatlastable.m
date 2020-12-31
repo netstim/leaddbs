@@ -123,20 +123,20 @@ if checkrebuild(atlases,options,root,mifix)
         for atlas=1:length(atlases.names)
             switch atlases.types(atlas)
                 case 1 % right hemispheric atlas.
-                    structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
+                    structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],atlases,atlas);
                 case 2 % left hemispheric atlas.
-                    structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
+                    structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],atlases,atlas);
                 case 3 % both-sides atlas composed of 2 files.
-                    lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
-                    rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
+                    lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],atlases,atlas);
+                    rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],atlases,atlas);
                 case 4 % mixed atlas (one file with both sides information).
-                    lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],'unmix_l');
-                    rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],'unmix_r');
+                    lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],atlases,atlas,'unmix_l');
+                    rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}],atlases,atlas,'unmix_r');
                 case 5 % midline atlas (one file with both sides information).
-                    structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}]);
+                    structure=load_structure([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,atlases.names{atlas}],atlases,atlas);
                 case 6 % probabilistic atlas, two files
-                    lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}]);
-                    rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}]);
+                    lstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,atlases.names{atlas}],atlases,atlas);
+                    rstructure=load_structure([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}],atlases,atlas);
             end
 
             for side=detsides(atlases.types(atlas))
@@ -265,7 +265,7 @@ if checkrebuild(atlases,options,root,mifix)
 end
 
 
-function structure=load_structure(fname,unmix)
+function structure=load_structure(fname,atlases,atlas,unmix)
 
 if strcmp(fname(end-2:end),'.gz')
     wasgzip=1;
@@ -298,6 +298,10 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
     if ~all(abs(test.voxsize)<=0.8)
         ea_reslice_nii(fname,fname,[0.4,0.4,0.4],0,0,0,[],[],1);
     end
+    % preload image to determine threshold
+    atl=ea_load_nii(fname);
+    pobj.threshold=ea_detthresh(atlases,atlas,atl.img);
+    
     structure=ea_roi(fname,pobj);
 
     if exist('unmix','var')

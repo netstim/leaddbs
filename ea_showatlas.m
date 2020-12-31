@@ -175,8 +175,15 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
                 colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
-
-                centroid=mean(atlases.roi{atlas,side}.fv.vertices(:,1:3));
+                
+                while 1
+                    try
+                        centroid=mean(atlases.roi{atlas,side}.fv.vertices(:,1:3));
+                        break
+                    catch
+                        atlases.roi{atlas,side}.threshold=atlases.roi{atlas,side}.threshold./2;
+                    end
+                end
                 set(0,'CurrentFigure',resultfig);
 
                 atlases.roi{atlas,side}.Visible='on';
