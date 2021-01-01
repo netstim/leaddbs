@@ -470,8 +470,8 @@ classdef ea_sweetspot < handle
                         cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
                         voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
                     else
-                        warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                            '\nShow both positive and negative fibers is not supported when "Color by Group Variable" is on.']));
+                        warndlg(sprintf(['Please choose either "Show Positive Regions" or "Show Negative Regions".',...
+                            '\nShow both positive and negative regions is not supported when "Color by Group Variable" is on.']));
                         return;
                     end
                 else

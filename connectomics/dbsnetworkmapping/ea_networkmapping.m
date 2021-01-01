@@ -301,11 +301,7 @@ classdef ea_networkmapping < handle
                         Ihat(test) = ea_bendcorr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
                             connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))');
                 end
-
-
-
             end
-
 
             % restore original view in case of live drawing
             if obj.cvlivevisualize
@@ -484,8 +480,8 @@ classdef ea_networkmapping < handle
                         cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
                         voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
                     else
-                        warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                            '\nShow both positive and negative fibers is not supported when "Color by Group Variable" is on.']));
+                        warndlg(sprintf(['Please choose either "Show Positive Regions" or "Show Negative Regions".',...
+                            '\nShow both positive and negative regions is not supported when "Color by Group Variable" is on.']));
                         return;
                     end
                 else
