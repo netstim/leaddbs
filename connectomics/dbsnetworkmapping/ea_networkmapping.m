@@ -497,8 +497,8 @@ classdef ea_networkmapping < handle
                     end
                 else
                     if obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
-                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
+                        cmap = ea_colorgradient(gradientLevel/2, obj.negPeakColor, [1,1,1]);
+                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negPeakColor, cmap(shiftedCmapLeftEnd,:));
                         cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.posBaseColor);
                         cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.posBaseColor);
                         voxcmap{group} = [cmapLeft;cmapRight];
@@ -515,8 +515,8 @@ classdef ea_networkmapping < handle
                         alphaind = ones(size(allvals));
                         % alphaind = normalize(1./(1+exp(-allvals)), 'range');
                     elseif obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
+                        cmap = ea_colorgradient(gradientLevel, obj.negPeakColor, [1,1,1]);
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negPeakColor, cmap(shiftedCmapEnd,:));
                         cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                         alphaind = ones(size(allvals));
                         % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
