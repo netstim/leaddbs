@@ -1,21 +1,14 @@
 function [AllX] = ea_networkmapping_calcvals(vatlist,cfile)
 
-
-
 %% Run Lead Mapper:
 % --------------------------------------
-
 options = getoptslocal;
 options.prefs=ea_prefs;
-
 options.lcm.seeds = vatlist(:);
 %%
-
 % determine whether connectome of use is structural or functional:
 [mdl,sf]=ea_genmodlist;
 [~,ix]=ismember(cfile,mdl);
-
-
 
 options.lcm.seeddef = 'manual';
 options.lcm.odir = [];
@@ -29,8 +22,6 @@ options.lcm.func.connectome = strrep(cfile,' > ','>');
 options.lcm.cmd = 1;
 %%
 ea_run('run', options);
-
-
 
 %% Load in nifti files as matrix
 for s=1:size(vatlist,1)
@@ -47,9 +38,7 @@ for s=1:size(vatlist,1)
            AllX=zeros(size(vatlist,1),numel(nii.img)); 
         end
         AllX(s,:)=nii.img(:);
-
 end
-
 
 
 function options = getoptslocal
@@ -180,9 +169,7 @@ options.colormap = [0.2422 0.1504 0.6603
                     0.9769 0.9839 0.0805];
 %%
 options.dolc = 0;
-
 %%
-
 options.ecog.extractsurface.do = 0;
 %%
 options.uivatdirs = {};
@@ -210,5 +197,3 @@ options.lc.struc.ft.dsistudio.fiber_count = 5000;
 options.lc.struc.ft.upsample.factor = 1;
 options.lc.struc.ft.upsample.how = 0;
 options.exportedJob = 1;
-
-

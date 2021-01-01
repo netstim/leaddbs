@@ -50,10 +50,10 @@ for group=groups
     else
         gpatsel=patsel;
     end
+
     if obj.mirrorsides
         gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
-    
 
     switch obj.statmetric
         case 'Correlations (R-map)'
@@ -84,13 +84,10 @@ for group=groups
             end
     end
                 
-        obj.stats.pos.available=sum(vals{1}>0); % only collected for first group (positives)
-        obj.stats.neg.available=sum(vals{1}<0);
+    obj.stats.pos.available=sum(vals{1}>0); % only collected for first group (positives)
+    obj.stats.neg.available=sum(vals{1}<0);
 
-
-    
 end
-
 
 
 function vals=ea_corrsignan(vals,ps,obj)
@@ -114,17 +111,3 @@ switch lower(obj.multcompstrategy)
 end
 ps(~nnanidx)=1;
 vals(ps>obj.alphalevel)=nan; % delete everything nonsignificant.
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -435,7 +435,6 @@ classdef ea_networkmapping < handle
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
 
-
             set(0,'CurrentFigure',obj.resultfig);
 
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
@@ -481,15 +480,9 @@ classdef ea_networkmapping < handle
                     if obj.posvisible && ~obj.negvisible
                         cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
                         voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(allvals, 'range');
                     elseif ~obj.posvisible && obj.negvisible
                         cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
                         voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(-allvals, 'range');
                     else
                         warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
                             '\nShow both positive and negative fibers is not supported when "Color by Group Variable" is on.']));
@@ -502,31 +495,15 @@ classdef ea_networkmapping < handle
                         cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.posBaseColor);
                         cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.posBaseColor);
                         voxcmap{group} = [cmapLeft;cmapRight];
-                        cmapind = ones(size(allvals))*gradientLevel/2;
-                        cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
-                        cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind(allvals<0) = normalize(-1./(1+exp(-allvals(allvals<0))), 'range');
-                        % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
                     elseif obj.posvisible
                         cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.posBaseColor);
                         voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.posBaseColor);
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(1./(1+exp(-allvals)), 'range');
                     elseif obj.negvisible
                         cmap = ea_colorgradient(gradientLevel, obj.negPeakColor, [1,1,1]);
                         voxcmap{group} = ea_colorgradient(gradientLevel, obj.negPeakColor, cmap(shiftedCmapEnd,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
                     end
                 end
                 setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
-
-                cmapind = mat2cell(cmapind, numel(vals{group}))';
-                alphaind = mat2cell(alphaind, numel(vals{group}))';
-
 
                 switch obj.vizmode
                     case 'Regions'
