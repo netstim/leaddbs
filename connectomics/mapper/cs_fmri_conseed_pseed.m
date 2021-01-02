@@ -226,7 +226,7 @@ for mcfi=usesubjects % iterate across subjects
                         rs.thiscorr(:,run)=corr(stc',rs.gmtc','type','Pearson');
                     end
             end
-            clear gmtc ls rs
+            clear gmtc
         end
 
         fX{s}(:,scnt)=mean(thiscorr,2);
