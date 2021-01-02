@@ -449,6 +449,12 @@ classdef ea_sweetspot < handle
             end
             obj.drawobject={};
 
+            % reset colorbar
+            obj.colorbar=[];
+            if ~any([obj.posvisible,obj.negvisible])
+                return
+            end
+
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Contruct default blue to red colormap
                 allvals = horzcat(vals{group,:})';
