@@ -462,19 +462,13 @@ classdef ea_sweetspot < handle
                 end
 
                 colormap(gray);
-                gradientLevel = 1024;
-                cmapShiftRatio = 0.5;
-                shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
-                shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
-                shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
-                shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
+                gradientLevel = length(gray);
+
                 if dogroups
                     if obj.posvisible && ~obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.posBaseColor, linecols(group,:));
                     elseif ~obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
+                        voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), obj.negBaseColor);
                     else
                         warndlg(sprintf(['Please choose either "Show Positive Regions" or "Show Negative Regions".',...
                             '\nShow both positive and negative regions is not supported when "Color by Group Variable" is on.']));
@@ -482,17 +476,13 @@ classdef ea_sweetspot < handle
                     end
                 else
                     if obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel/2, obj.negBaseColor, [1,1,1]);
-                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negBaseColor, cmap(shiftedCmapLeftEnd,:));
-                        cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.posBaseColor);
-                        cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.posBaseColor);
+                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negPeakColor, obj.negBaseColor);
+                        cmapRight = ea_colorgradient(gradientLevel/2, obj.posBaseColor, obj.posPeakColor);
                         voxcmap{group} = [cmapLeft;cmapRight];
                     elseif obj.posvisible
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.posBaseColor);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.posBaseColor);
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.posBaseColor, obj.posPeakColor);
                     elseif obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, obj.negBaseColor, [1,1,1]);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negBaseColor, cmap(shiftedCmapEnd,:));
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negPeakColor, obj.negBaseColor);
                     end
                 end
 
@@ -513,7 +503,7 @@ classdef ea_sweetspot < handle
                         pobj.binary=0;
                         pobj.usesolidcolor=0;
                         pobj.color=obj.posPeakColor;
-                        pobj.colormap=ea_colorgradient(length(gray), obj.posBaseColor, obj.posPeakColor);
+                        pobj.colormap=ea_colorgradient(gradientLevel, obj.posBaseColor, obj.posPeakColor);
                         pobj.smooth=10;
                         pobj.hullsimplify=0.5;
                         pobj.threshold=0;
@@ -534,7 +524,7 @@ classdef ea_sweetspot < handle
                         pobj.binary=0;
                         pobj.usesolidcolor=0;
                         pobj.color=obj.negPeakColor;
-                        pobj.colormap=ea_colorgradient(length(gray), obj.negPeakColor, obj.negBaseColor);
+                        pobj.colormap=ea_colorgradient(gradientLevel, obj.negPeakColor, obj.negBaseColor);
                         pobj.smooth=10;
                         pobj.hullsimplify=0.5;
                         pobj.threshold=0;
