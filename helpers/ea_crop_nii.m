@@ -71,10 +71,11 @@ end
 bbim=[min(xx),max(xx)
     min(yy),max(yy)
     min(zz),max(zz)];
+
 offset=[min(xx)-rim-1
     min(yy)-rim-1
     min(zz)-rim-1];
-  
+
 switch nstring
     case 'nz'
         X=zeros((bbim(1,2)-bbim(1,1))+1+2*rim,(bbim(2,2)-bbim(2,1))+1+2*rim,(bbim(3,2)-bbim(3,1))+1+2*rim);

@@ -1,4 +1,4 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, thresh)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_sweetspot_calcvals(vatlist, cfile, thresh)
 % Calculate fiber connection values based on the VATs and the connectome
 
 disp('Load Connectome...');
