@@ -1,4 +1,4 @@
-function cs_fmri_conseed_matrix(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,exportgmtc)
+function cs_fmri_conseed_matrix(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,exportgmtc)
 
 tic
 
