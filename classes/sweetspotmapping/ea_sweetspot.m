@@ -428,7 +428,6 @@ classdef ea_sweetspot < handle
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
 
-
             set(0,'CurrentFigure',obj.resultfig);
 
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
@@ -461,6 +460,7 @@ classdef ea_sweetspot < handle
                 if isempty(allvals)
                     continue;
                 end
+
                 colormap(gray);
                 gradientLevel = 1024;
                 cmapShiftRatio = 0.5;
@@ -494,10 +494,6 @@ classdef ea_sweetspot < handle
                         cmap = ea_colorgradient(gradientLevel, obj.negBaseColor, [1,1,1]);
                         voxcmap{group} = ea_colorgradient(gradientLevel, obj.negBaseColor, cmap(shiftedCmapEnd,:));
                     end
-                end
-
-                if exist('voxcmap','var')
-                    setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
                 end
 
                 for side=1:size(vals,2)
@@ -550,8 +546,6 @@ classdef ea_sweetspot < handle
                     export{side}=res;
                 end
 
-                setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject); % store handle of surf to figure.
-
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
                     if obj.posvisible && obj.negvisible
@@ -574,8 +568,11 @@ classdef ea_sweetspot < handle
                 end
             end
 
+            setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject); % store handle of surf to figure.
+
             % store colorbar in object
-            if exist('fibcmap','var') % could be no fibers present at all.
+            if exist('voxcmap','var')
+                setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
                 obj.colorbar.cmap = voxcmap;
                 obj.colorbar.tick = tick;
                 obj.colorbar.ticklabel = ticklabel;
