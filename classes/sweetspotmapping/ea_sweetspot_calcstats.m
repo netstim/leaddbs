@@ -115,7 +115,6 @@ for group=groups
                         vals{group,side}(vals{group,side} < obj.statimpthreshold) = NaN;
                     case 'N-Image'
                         tmpind = find(I(gpatsel,side) > obj.statimpthreshold);
-                        %                         thisvals=double(gval{side}(tmpind,:)).*repmat(I(tmpind,side),1,size(gval{side}(tmpind,:),2));
                         Nmap=ea_nansum(double(gval{side}(tmpind,:)));
                         vals{group,side} = Nmap;
                         vals{group,side}(vals{group,side} < round(numel(tmpind)*(obj.statNthreshold/100))) = NaN;

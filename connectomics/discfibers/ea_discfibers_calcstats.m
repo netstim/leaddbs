@@ -50,7 +50,7 @@ for group=groups
     if obj.mirrorsides
         gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
-    
+
     for side=1:numel(gfibsval)
         % check connthreshold
         switch obj.statmetric
@@ -67,7 +67,7 @@ for group=groups
         if obj.statmetric==1
             gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
         end
-        
+
         switch obj.statmetric
             case 1 % t-tests
                 % check if covariates exist:
@@ -114,18 +114,16 @@ for group=groups
                     if obj.showsignificantonly
                         vals{group,side}=ea_corrsignan(vals{group,side},ps',obj);
                     end
-                    
+
                     %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                 end
             case 2 % correlations
-                
                 if ismember(lower(obj.corrtype),{'pearson','spearman'})
                     conventionalcorr=1;
                 else
                     conventionalcorr=0;
                 end
-                
-                
+
                 nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
                 invals=gfibsval{side}(nonempty,gpatsel)';
                 vals{group,side}=nan(size(gfibsval{side},1),1);
@@ -178,50 +176,50 @@ for group=groups
                                         outvals=ea_skipped_correlation(full(invals),I(gpatsel,side),'Spearman'); % generate optimality values on all but left out patients
                                     end
                             end
-                            
+
                         end
                     end
-                    
+
                     vals{group,side}(nonempty)=outvals;
                 end
         end
-        
+
         fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));
         % Remove vals and fibers outside the thresholding range
-        
+
         obj.stats.pos.available(side)=sum(vals{1,side}>0); % only collected for first group (positives)
         obj.stats.neg.available(side)=sum(vals{1,side}<0);
         usedidx{group,side}=find(~isnan(vals{group,side}));
         vals{group,side}=vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
     end
-    
+
     allvals = vertcat(vals{group,:});
     posvals = sort(allvals(allvals>0),'descend');
     negvals = sort(allvals(allvals<0),'ascend');
-    
+
     for side=1:numel(gfibsval)
         if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
             posthresh = inf;
         else
             posrange = posvals(1) - posvals(end);
             posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-            
+
             if posrange == 0
                 posthresh = posthresh - eps*10;
             end
         end
-        
+
         if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
             negthresh = -inf;
         else
             negrange = negvals(1) - negvals(end);
             negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-            
+
             if negrange == 0
                 negthresh = negthresh + eps*10;
             end
         end
-        
+
         % Remove vals and fibers outside the thresholding range
         remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
         vals{group,side}(remove)=[];
@@ -229,7 +227,6 @@ for group=groups
         usedidx{group,side}(remove)=[];
     end
 end
-
 
 
 function vals=ea_corrsignan(vals,ps,obj)
@@ -243,7 +240,7 @@ switch lower(obj.multcompstrategy)
         [psort,idx]=sort(pnnan);
         pranks=zeros(length(psort),1);
         for rank=1:length(pranks)
-           pranks(idx(rank))=rank; 
+            pranks(idx(rank))=rank;
         end
         pnnan=pnnan.*numtests;
         pnnan=pnnan./pranks;
@@ -253,17 +250,3 @@ switch lower(obj.multcompstrategy)
 end
 ps(~nnanidx)=1;
 vals(ps>obj.alphalevel)=nan; % delete everything nonsignificant.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
