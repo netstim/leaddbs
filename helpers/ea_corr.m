@@ -21,5 +21,7 @@ switch lower(corrtype)
         [varargout{1}]=ea_skipped_correlation(X,Y,'Spearman');
     case 'skipped pearson'
         [varargout{1}]=ea_skipped_correlation(X,Y,'Pearson');
+    case {'dist','distance'}
+        [varargout{1}]=ea_distcorr(X,Y);
 end
 
