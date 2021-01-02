@@ -31,47 +31,22 @@ if ismember('>',cname)
     cname=cname(1:delim-1);
 end
 
-prefs=ea_prefs;
 dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
 dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
 
 d=load([dfold,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
 dataset=d.dataset;
 clear d;
-if exist('outputmask','var')
-    if ~isempty(outputmask)
-        omask=ea_load_nii(outputmask);
-        omaskidx=find(omask.img(:));
-        [~,maskuseidx]=ismember(omaskidx,dataset.vol.outidx);
-    else
-        omaskidx=dataset.vol.outidx;
-        maskuseidx=1:length(dataset.vol.outidx);
-    end
-else
-    omaskidx=dataset.vol.outidx; % use all.
-    maskuseidx=1:length(dataset.vol.outidx);
-end
 
-owasempty=0;
 if ~exist('outputfolder','var')
     outputfolder=ea_getoutputfolder(sfile,ocname);
-    owasempty=1;
 else
     if isempty(outputfolder) % from shell wrapper.
         outputfolder=ea_getoutputfolder(sfile,ocname);
-        owasempty=1;
     end
     if ~strcmp(outputfolder(end),filesep)
         outputfolder=[outputfolder,filesep];
     end
-end
-
-if strcmp(sfile{1}(end-2:end),'.gz')
-    %gunzip(sfile)
-    %sfile=sfile(1:end-3);
-    usegzip=1;
-else
-    usegzip=0;
 end
 
 for s=1:size(sfile,1)
@@ -215,13 +190,12 @@ for mcfi=usesubjects % iterate across subjects
         switch cmd
             case 'matrix'
                 X=corrcoef(stc');
-
             case 'pmatrix'
                 X=partialcorr(stc');
         end
         thiscorr(:,run)=X(:);
-
     end
+    
     thiscorr=mean(thiscorr,2);
     X(:)=thiscorr;
     fX(:,scnt)=X(logical(triu(ones(numseed),1)));

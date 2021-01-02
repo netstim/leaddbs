@@ -128,7 +128,7 @@ for s=1:size(sfile,1)
             end
         end
         % assure sum of sweights is 1
-        %sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
+        % sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
         sweightmx=repmat(sweights,1,1);
 
         sweightidx{s,lr}=find(sweights);
@@ -191,7 +191,7 @@ for mcfi=usesubjects % iterate across subjects
         for run=1:howmanyruns
             switch dataset.type
                 case 'fMRI_matrix'
-                        ea_error('Cannot run partial seed on fMRI Matrix dataset.');
+                    ea_error('Command partial seed is not supported for matrix type datasets.')
                 case 'fMRI_timecourses'
                     if ~exist('gmtc','var')
                         load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}],'gmtc')
@@ -268,23 +268,7 @@ ea_dispercent(1,'end');
 
 switch dataset.type
     case 'fMRI_matrix'
-        switch cmd
-            case {'seed'}
-                mmap=dataset.vol.space;
-                mmap.dt=[16,0];
-                mmap.img(:)=0;
-                mmap.img=single(mmap.img);
-                mmap.img(omaskidx)=Rw;
-                mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
-                ea_write_nii(mmap);
-                if usegzip
-                    gzip(mmap.fname);
-                    delete(mmap.fname);
-                end
-            otherwise
-                ea_error(['Command ',cmd,' in combination with an fMRI-matrix not (yet) supported.']);
-        end
-
+        ea_error('Command partial seed is not supported for matrix type datasets.')
     case 'fMRI_timecourses'
         for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             if owasempty
