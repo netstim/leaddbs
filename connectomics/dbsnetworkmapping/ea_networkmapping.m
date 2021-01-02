@@ -505,7 +505,7 @@ classdef ea_networkmapping < handle
                             pobj.niftiFilename='Positive.nii';
                             pobj.binary=0;
                             pobj.usesolidcolor=0;
-                            pobj.color=obj.posBaseColor;
+                            pobj.color=obj.posPeakColor;
                             pobj.colormap=ea_colorgradient(gradientLevel, obj.posBaseColor, obj.posPeakColor);
                             pobj.smooth=10;
                             pobj.hullsimplify=0.5;
@@ -523,7 +523,7 @@ classdef ea_networkmapping < handle
                             pobj.niftiFilename='Negative.nii';
                             pobj.binary=0;
                             pobj.usesolidcolor=0;
-                            pobj.color=obj.negBaseColor;
+                            pobj.color=obj.negPeakColor;
                             pobj.colormap=ea_colorgradient(gradientLevel, obj.negPeakColor, obj.negBaseColor);
                             pobj.smooth=10;
                             pobj.hullsimplify=0.5;
