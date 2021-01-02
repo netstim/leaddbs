@@ -698,7 +698,7 @@ classdef ea_networkmapping < handle
             setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject);
 
             % store colorbar in object
-            if exist('fibcmap','var') % could be no fibers present at all.
+            if exist('voxcmap','var') % could be no fibers present at all.
                 obj.colorbar.cmap = voxcmap;
                 obj.colorbar.tick = tick;
                 obj.colorbar.ticklabel = ticklabel;
