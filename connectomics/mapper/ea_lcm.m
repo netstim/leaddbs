@@ -61,8 +61,8 @@ end
 % convert VTA seeds also if neither func or struc conn is chosen.
 if (~options.lcm.func.do) && (~options.lcm.struc.do)
     if strcmp(options.lcm.seeddef,'vats')
-        ea_resolvevatseeds(options,'dMRI');
-        ea_resolvevatseeds(options,'fMRI');
+        try ea_resolvevatseeds(options,'dMRI'); end
+        try ea_resolvevatseeds(options,'fMRI'); end
     end
 end
 
@@ -174,7 +174,7 @@ for suffix=dowhich
                     bbfile = [ea_space,'bb.nii'];
                 end
 
-                %if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
+                if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -209,7 +209,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                %end
+                end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
                 end
@@ -232,7 +232,7 @@ for suffix=dowhich
                 else
                     nativeprefix='';
                 end
-                %if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -267,7 +267,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                %end
+                end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end
