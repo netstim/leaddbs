@@ -694,11 +694,11 @@ classdef ea_networkmapping < handle
                 end
             end
 
-            setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
             setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject);
 
             % store colorbar in object
-            if exist('voxcmap','var') % could be no fibers present at all.
+            if exist('voxcmap','var')
+                setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
                 obj.colorbar.cmap = voxcmap;
                 obj.colorbar.tick = tick;
                 obj.colorbar.ticklabel = ticklabel;
