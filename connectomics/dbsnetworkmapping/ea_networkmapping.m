@@ -1,7 +1,7 @@
 classdef ea_networkmapping < handle
     % DBS network mapping class to handle visualizations of DBS network mapping analyses in lead dbs resultfig / 3D Matlab figures
     % A. Horn
-    
+
     properties (SetObservable)
         M % content of lead group project
         resultfig % figure handle to plot results
@@ -12,11 +12,11 @@ classdef ea_networkmapping < handle
         shownegamount = [25 25] % two entries for right and left
         statmetric = 'Correlations (R-map)' % Statistical model to use
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
-        poscolor = [1,1,1] % positive main color
-        poscolor2 = [0.99,0.6,0.06] % positive peak color
+        posBaseColor = [1,1,1] % positive main color
+        posPeakColor = [0.99,0.6,0.06] % positive peak color
 
-        negcolor = [1,1,1] % negative main color
-        negcolor2 = [0.15,0.6,0.95] % negative peak color
+        negBaseColor = [1,1,1] % negative main color
+        negPeakColor = [0.15,0.6,0.95] % negative peak color
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
@@ -25,7 +25,7 @@ classdef ea_networkmapping < handle
         model='Smoothed'; % in case of surface above, on which surface to plot.
         modelLH=1; % show left hemisphere
         modelRH=1; % show right hemisphere
-        
+
         results % stores fingerprints
         outputspace = '222';
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
@@ -56,11 +56,11 @@ classdef ea_networkmapping < handle
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
     end
-    
+
     properties (Access = private)
         switchedFromSpace=3 % if switching space, this will protocol where from
     end
-    
+
     methods
         function obj=ea_disctract(analysispath) % class constructor
             if exist('analysispath', 'var') && ~isempty(analysispath)
@@ -69,13 +69,13 @@ classdef ea_networkmapping < handle
                 obj.ID = ID;
             end
         end
-        
+
         function initialize(obj,datapath,resultfig)
             D = load(datapath);
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
                 obj.leadgroup = datapath;
-                
+
                 testID = obj.M.guid;
                 ea_mkdir([fileparts(obj.leadgroup),filesep,'networkmapping',filesep]);
                 id = 1;
@@ -97,14 +97,14 @@ classdef ea_networkmapping < handle
                 end
                     obj.responsevarlabel = obj.M.clinical.labels{1};
                     obj.covarlabels={'Stimulation Amplitude'};
-                
+
             elseif  isfield(D, 'networkmapping')  % Saved networkmapping class loaded
                 props = properties(D.networkmapping);
                 for p =  1:length(props) %copy all public properties
                     if ~(strcmp(props{p}, 'analysispath') && ~isempty(obj.analysispath) ...
                             || strcmp(props{p}, 'ID') && ~isempty(obj.ID))
                         obj.(props{p}) = D.networkmapping.(props{p});
-                        
+
                     end
                 end
                 clear D
@@ -114,7 +114,7 @@ classdef ea_networkmapping < handle
                 return
             end
         end
-        
+
         function calculate(obj)
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
@@ -125,18 +125,18 @@ classdef ea_networkmapping < handle
                     end
                 end
             end
-            
+
             if isfield(obj.M,'pseudoM')
                 vatlist = obj.M.ROI.list;
             else
                 vatlist = ea_networkmapping_getvats(obj);
             end
             [AllX] = ea_networkmapping_calcvals(vatlist, obj.connectome);
-            
+
             obj.results.(ea_conn2connid(obj.connectome)).connval = AllX;
-            
+
         end
-        
+
         function Amps = getstimamp(obj)
             Amps=zeros(length(obj.M.patient.list),2);
             for pt=1:length(obj.M.patient.list)
@@ -147,7 +147,7 @@ classdef ea_networkmapping < handle
                 end
             end
         end
-        
+
         function VTAvolumes = getvtavolumes(obj)
             if ~isfield(obj.M.stats(1).ea_stats.stimulation.vat(1),'volume')
                 VTAvolumes = obj.getstimamp;
@@ -161,7 +161,7 @@ classdef ea_networkmapping < handle
                 end
             end
         end
-        
+
         function Efieldmags = getefieldmagnitudes(obj)
             if ~isfield(obj.M.stats(1).ea_stats.stimulation.efield(1),'volume')
                 Efieldmags = obj.getstimamp;
@@ -184,6 +184,7 @@ classdef ea_networkmapping < handle
                 end
             end
         end
+
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
                 msgbox('LEAD_groupanalysis file has vanished. Please select file.');
@@ -193,17 +194,17 @@ classdef ea_networkmapping < handle
             D = load(obj.leadgroup);
             obj.M = D.M;
         end
-        
+
         function coh = getcohortregressor(obj)
             coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
         end
-        
+
         function [I, Ihat] = loocv(obj)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
             [I, Ihat] = crossval(obj, cvp);
         end
-        
+
         function [I, Ihat] = lococv(obj)
             if length(unique(obj.M.patient.group(obj.patientselection))) == 1
                 ea_error(sprintf(['Only one cohort in the analysis.\n', ...
@@ -211,13 +212,13 @@ classdef ea_networkmapping < handle
             end
             [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
         end
-        
+
         function [I, Ihat] = kfoldcv(obj)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
             [I, Ihat] = crossval(obj, cvp);
         end
-        
+
         function [I, Ihat] = lno(obj, Iperm)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
@@ -227,7 +228,7 @@ classdef ea_networkmapping < handle
                 [I, Ihat] = crossval(obj, cvp, Iperm);
             end
         end
-        
+
         function [I, Ihat] = crossval(obj, cvp, Iperm)
             if isnumeric(cvp) % cvp is crossvalind
                 cvIndices = cvp;
@@ -239,30 +240,30 @@ classdef ea_networkmapping < handle
                     cvp.test{i} = cvIndices==cvID(i);
                 end
             end
-            
+
             % Check if patients are selected in the custom training/test list
             if isempty(obj.customselection)
                 patientsel = obj.patientselection;
             else
                 patientsel = obj.customselection;
             end
-            
+
             if ~exist('Iperm', 'var') || isempty(Iperm)
                 I = obj.responsevar(patientsel);
             else
                 I = Iperm(patientsel);
             end
-            
+
             % Ihat is the estimate of improvements (not scaled to real improvements)
             Ihat = nan(length(patientsel),1);
-            
+
             connval = full(obj.results.(ea_conn2connid(obj.connectome)).connval);
-            
+
             for c=1:cvp.NumTestSets
                 if cvp.NumTestSets ~= 1
                     fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
                 end
-                
+
                 if isobject(cvp)
                     training = cvp.training(c);
                     test = cvp.test(c);
@@ -270,7 +271,7 @@ classdef ea_networkmapping < handle
                     training = cvp.training{c};
                     test = cvp.test{c};
                 end
-                
+
                 if ~exist('Iperm', 'var')
                     if obj.cvlivevisualize
                         [vals] = ea_networkmapping_calcstats(obj, patientsel(training));
@@ -288,7 +289,7 @@ classdef ea_networkmapping < handle
                         [vals] = ea_networkmapping_calcstats(obj, patientsel(training), Iperm);
                     end
                 end
-                
+
                 switch lower(obj.basepredictionon)
                     case 'spatial correlations (spearman)'
                         Ihat(test) = corr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
@@ -300,22 +301,18 @@ classdef ea_networkmapping < handle
                         Ihat(test) = ea_bendcorr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
                             connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))');
                 end
-                
-                
-                
             end
-            
-            
+
             % restore original view in case of live drawing
             if obj.cvlivevisualize
                 obj.draw;
             end
-            
+
             if cvp.NumTestSets == 1
                 Ihat = Ihat(test,:);
                 I = I(test);
             end
-            
+
             if size(obj.responsevar,2)==2 % hemiscores
                 Ihat = Ihat(:); % compare hemiscores (electrode wise)
                 I = I(:);
@@ -323,7 +320,7 @@ classdef ea_networkmapping < handle
                 Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
             end
         end
-        
+
         function maskn=ea_mask2maskn(obj)
             switch obj.cvmask
                 case 'Gray Matter'
@@ -373,20 +370,20 @@ classdef ea_networkmapping < handle
                     end
             end
         end
-        
+
         function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
             if ~exist('corrType', 'var')
                 corrType = 'Spearman';
             end
-            
+
             numPerm = obj.Nperm;
-            
+
             Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection, obj.rngseed)';
             Iperm = [obj.responsevar, Iperm];
             Ihat = cell(numPerm+1, 1);
-            
+
             R = zeros(numPerm+1, 1);
-            
+
             for perm=1:numPerm+1
                 if perm==1
                     fprintf('Calculating without permutation\n\n');
@@ -395,10 +392,10 @@ classdef ea_networkmapping < handle
                     fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
                     [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
                 end
-                
+
                 R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
             end
-            
+
             % generate null distribution
             R1 = R(1);
             R0 = sort(abs(R(2:end)),'descend');
@@ -406,11 +403,11 @@ classdef ea_networkmapping < handle
             v = ea_searchclosest(R0, R1);
             pperm = v/numPerm;
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
-            
+
             % Return only selected I
             Iperm = Iperm(obj.patientselection,:);
         end
-        
+
         function save(obj)
             networkmapping=obj;
             pth = fileparts(networkmapping.leadgroup);
@@ -424,20 +421,18 @@ classdef ea_networkmapping < handle
             save(networkmapping.analysispath,'networkmapping','-v7.3');
             obj.resultfig=rf;
         end
-        
-        
+
         function res=draw(obj,vals)
             if ~exist('vals','var')
                 [vals]=ea_networkmapping_calcstats(obj);
             end
             obj.surfdrawn.vals=vals;
-            
+
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
-            
-            
+
             set(0,'CurrentFigure',obj.resultfig);
-            
+
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
             if ~isfield(obj.M,'groups')
                 obj.M.groups.group=ones(length(obj.M.patient.list),1);
@@ -455,13 +450,13 @@ classdef ea_networkmapping < handle
                 end
             end
             obj.drawobject={};
-            
+
             % reset colorbar
             obj.colorbar=[];
             if ~any([obj.posvisible,obj.negvisible])
                 return
             end
-            
+
             res=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
             res.dt=[16,1];
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
@@ -470,104 +465,71 @@ classdef ea_networkmapping < handle
                 if isempty(allvals)
                     continue;
                 end
+
                 colormap(gray);
-                gradientLevel = 1024;
-                cmapShiftRatio = 0.5;
-                shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
-                shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
-                shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
-                shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
+                gradientLevel = length(gray);
+
                 if dogroups
                     if obj.posvisible && ~obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(allvals, 'range');
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.posBaseColor, linecols(group,:));
                     elseif ~obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(-allvals, 'range');
+                        voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), obj.negBaseColor);
                     else
-                        warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                            '\nShow both positive and negative fibers is not supported when "Color by Group Variable" is on.']));
+                        warndlg(sprintf(['Please choose either "Show Positive Regions" or "Show Negative Regions".',...
+                            '\nShow both positive and negative regions is not supported when "Color by Group Variable" is on.']));
                         return;
                     end
                 else
                     if obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
-                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
-                        cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.poscolor);
-                        cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.poscolor);
+                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negPeakColor, obj.negBaseColor);
+                        cmapRight = ea_colorgradient(gradientLevel/2, obj.posBaseColor, obj.posPeakColor);
                         voxcmap{group} = [cmapLeft;cmapRight];
-                        cmapind = ones(size(allvals))*gradientLevel/2;
-                        cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
-                        cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind(allvals<0) = normalize(-1./(1+exp(-allvals(allvals<0))), 'range');
-                        % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
                     elseif obj.posvisible
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(1./(1+exp(-allvals)), 'range');
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.posBaseColor, obj.posPeakColor);
                     elseif obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negPeakColor, obj.negBaseColor);
                     end
                 end
-                setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
-                
-                cmapind = mat2cell(cmapind, numel(vals{group}))';
-                alphaind = mat2cell(alphaind, numel(vals{group}))';
-                
-                
+
                 switch obj.vizmode
                     case 'Regions'
                         % Plot voxels if any survived
-                            if obj.posvisible
-                                % plot positives:
-                                posvox=res;
-                                posvox.img(:)=0;
-                                posvox.img(vals{group}>0)=vals{group}(vals{group}>0);
-                                
-                                pobj.nii=posvox;
-                                pobj.name='Positive';
-                                pobj.niftiFilename='Positive.nii';
-                                pobj.binary=0;
-                                pobj.usesolidcolor=0;
-                                pobj.color=obj.poscolor;
-                                pobj.colormap=ea_colorgradient(length(gray), obj.poscolor, obj.poscolor2);
-                                pobj.smooth=10;
-                                pobj.hullsimplify=0.5;
-                                obj.drawobject{group}{1}=ea_roi('Positive.nii',pobj);
-                                
-                            end
-                            
-                            if obj.negvisible
-                                % plot negatives:
-                                negvox=res;
-                                negvox.img(:)=0;
-                                negvox.img(vals{group}<0)=-vals{group}(vals{group}<0);
-                                
-                                pobj.nii=negvox;
-                                pobj.name='Negative';
-                                pobj.niftiFilename='Negative.nii';
-                                pobj.binary=0;
-                                pobj.usesolidcolor=0;
-                                pobj.color=obj.negcolor;
-                                pobj.colormap=ea_colorgradient(length(gray), obj.negcolor2, obj.negcolor);
-                                pobj.smooth=10;
-                                pobj.hullsimplify=0.5;
-                                obj.drawobject{group}{2}=ea_roi('Negative.nii',pobj);
-                            end
-                            
+                        if obj.posvisible
+                            % plot positives:
+                            posvox=res;
+                            posvox.img(:)=0;
+                            posvox.img(vals{group}>0)=vals{group}(vals{group}>0);
+
+                            pobj.nii=posvox;
+                            pobj.name='Positive';
+                            pobj.niftiFilename='Positive.nii';
+                            pobj.binary=0;
+                            pobj.usesolidcolor=0;
+                            pobj.color=obj.posPeakColor;
+                            pobj.colormap=ea_colorgradient(gradientLevel, obj.posBaseColor, obj.posPeakColor);
+                            pobj.smooth=10;
+                            pobj.hullsimplify=0.5;
+                            obj.drawobject{group}{1}=ea_roi('Positive.nii',pobj);
+                        end
+
+                        if obj.negvisible
+                            % plot negatives:
+                            negvox=res;
+                            negvox.img(:)=0;
+                            negvox.img(vals{group}<0)=-vals{group}(vals{group}<0);
+
+                            pobj.nii=negvox;
+                            pobj.name='Negative';
+                            pobj.niftiFilename='Negative.nii';
+                            pobj.binary=0;
+                            pobj.usesolidcolor=0;
+                            pobj.color=obj.negPeakColor;
+                            pobj.colormap=ea_colorgradient(gradientLevel, obj.negPeakColor, obj.negBaseColor);
+                            pobj.smooth=10;
+                            pobj.hullsimplify=0.5;
+                            obj.drawobject{group}{2}=ea_roi('Negative.nii',pobj);
+                        end
+
                         res.img(:)=vals{group};
                     case 'Surface (Elvis)'
                         % first draw correct surface
@@ -579,117 +541,144 @@ classdef ea_networkmapping < handle
                                 if obj.modelRH; rh=ea_readObj([ea_space,'surf_r.obj']); end
                                 if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end
                         end
-                        if obj.posvisible && obj.negvisible
-                            cmap1=ea_colorgradient(length(gray)/2,obj.poscolor, obj.poscolor2);
-                            cmap2=ea_colorgradient(length(gray)/2,obj.negcolor2,obj.negcolor);
-                            cmap=[cmap2;cmap1];
-                        elseif obj.posvisible && ~obj.negvisible
-                            cmap=ea_colorgradient(length(gray),obj.poscolor, obj.poscolor2);
-                        elseif ~obj.posvisible && obj.negvisible
-                            cmap=ea_colorgradient(length(gray),obj.negcolor2, obj.negcolor);
+
+                        % Check cmap
+                        if exist('voxcmap','var') && ~isempty(voxcmap{group})
+                            defaultColor = [1 1 1]; % Default color for nan values
+                            cmap = [voxcmap{group}; defaultColor];
                         else
+                            warning('Colormap not defined!')
                             return
                         end
+
                         % get colors for surface:
                         bb=res.mat*[1,size(res.img,1);1,size(res.img,2);1,size(res.img,3);1,1];
                         [X,Y,Z]=meshgrid(linspace(bb(1,1),bb(1,2),size(res.img,1)),...
                             linspace(bb(2,1),bb(2,2),size(res.img,2)),...
                             linspace(bb(3,1),bb(3,2),size(res.img,3)));
                         res.img(:)=vals{group};
+
                         if ~obj.posvisible
                             res.img(res.img>0)=0;
                         end
+
                         if ~obj.negvisible
                             res.img(res.img<0)=0;
                         end
+
                         if obj.modelRH
                             ic=isocolors(X,Y,Z,permute(res.img,[2,1,3]),rh.vertices);
                             if any(~isnan(ic))
-                            rh_nc=round(ea_contrast(ic)*255+1);
-                            rh_nc(isnan(rh_nc))=128; % set to white for now
+                                CInd = round(ea_contrast(ic)*gradientLevel+1);
+                                CInd(isnan(CInd)) = gradientLevel + 1; % set to white for now
+                                rhCData = cmap(CInd,:);
                             else
-                                rh_nc=repmat(128,size(rh.vertices,1),1);
+                                rhCData = repmat(defaultColor, size(rh.vertices,1), 1);
                             end
-                            obj.drawobject{group}{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(rh_nc,:),...
+                            obj.drawobject{group}{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',rhCData,...
                                 'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
                             obj.drawobject{group}{1}.Tag=['LH_surf',obj.model];
                         end
+
                         if obj.modelLH
                             ic=isocolors(X,Y,Z,permute(res.img,[2,1,3]),lh.vertices);
                             if any(~isnan(ic))
-                                lh_nc=round(ea_contrast(ic)*255+1);
-                                lh_nc(isnan(lh_nc))=128; % set to white for now
+                                CInd = round(ea_contrast(ic)*gradientLevel+1);
+                                CInd(isnan(CInd)) = gradientLevel + 1; % set to white for now
+                                lhCData = cmap(CInd,:);
                             else
-                                lh_nc=repmat(128,size(lh.vertices,1),1);
+                                lhCData = repmat(defaultColor, size(lh.vertices,1), 1);
                             end
-                            obj.drawobject{group}{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(lh_nc,:),...
+                            obj.drawobject{group}{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',lhCData,...
                                 'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
                             obj.drawobject{group}{1}.Tag=['RH_surf',obj.model];
                         end
                     case 'Surface (Surfice)'
                         res.img(:)=vals{group};
                         res.fname=[fileparts(obj.leadgroup),filesep,'model.nii'];
+
                         if ~obj.posvisible
                             res.img(res.img>0)=0;
                         end
+
                         if ~obj.negvisible
                             res.img(res.img<0)=0;
                         end
+
                         ea_write_nii(res);
                         % det mesh to plot:
                         switch obj.model
                             case 'Smoothed'
-                                if obj.modelRH && ~obj.modelLH; mesh=([ea_space,'surf_r_smoothed.obj']); side=1; end
-                                if obj.modelLH && ~obj.modelRH; mesh=([ea_space,'surf_l_smoothed.obj']); side=2; end
-                                if obj.modelRH && obj.modelLH; mesh=([ea_space,'surf_smoothed.obj']); side=1; end
-                                if ~obj.modelRH && ~obj.modelLH; ea_error('Please switch on at least one hemisphere'); end
+                                if obj.modelRH && ~obj.modelLH
+                                    mesh=([ea_space,'surf_r_smoothed.obj']);
+                                    side=1;
+                                elseif obj.modelLH && ~obj.modelRH
+                                    mesh=([ea_space,'surf_l_smoothed.obj']);
+                                    side=2;
+                                elseif obj.modelRH && obj.modelLH
+                                    mesh=([ea_space,'surf_smoothed.obj']);
+                                    side=1;
+                                elseif ~obj.modelRH && ~obj.modelLH
+                                    ea_error('Please switch on at least one hemisphere');
+                                end
                             case 'Full'
-                                if obj.modelRH && ~obj.modelLH; mesh=([ea_space,'surf_r.obj']); side=1; end
-                                if obj.modelLH && ~obj.modelRH; mesh=([ea_space,'surf_l.obj']); side=2; end
-                                if obj.modelRH && obj.modelLH; mesh=([ea_space,'surf.obj']); side=1; end
-                                if ~obj.modelRH && ~obj.modelLH; ea_error('Please switch on at least one hemisphere'); end
+                                if obj.modelRH && ~obj.modelLH
+                                    mesh=([ea_space,'surf_r.obj']);
+                                    side=1;
+                                elseif obj.modelLH && ~obj.modelRH
+                                    mesh=([ea_space,'surf_l.obj']);
+                                    side=2;
+                                elseif obj.modelRH && obj.modelLH
+                                    mesh=([ea_space,'surf.obj']);
+                                    side=1;
+                                elseif ~obj.modelRH && ~obj.modelLH
+                                    ea_error('Please switch on at least one hemisphere');
+                                end
                         end
+
                         threshs=ea_sfc_getautothresh({res.fname});
+
                         script=['BEGIN;',...
                             ' RESETDEFAULTS;'...
                             ' ORIENTCUBEVISIBLE(FALSE);'];
+
                         script=[script,...
                             ' MESHLOAD(''',mesh,''');',...
                             ' MESHCOLOR(255,255,255);'];
+
                         cnt=1;
                         if ~any(isnan(threshs(1,1:2)))
                             script=[script,...
                             ' OVERLAYLOAD(''',ea_path_helper(res.fname),''');',...
                             ' OVERLAYCOLORNAME(',num2str(cnt),', ''Red-Yellow'');',...
                             ' OVERLAYMINMAX(',num2str(cnt),',',num2str(threshs(1,1)),',',num2str(threshs(1,2)),');'];
-                        cnt=cnt+1;
+                            cnt=cnt+1;
                         end
+
                         if ~any(isnan(threshs(1,3:4)))
-                        script=[script,...
-                            ' OVERLAYLOAD(''',ea_path_helper(res.fname),''');',...
-                            ' OVERLAYCOLORNAME(',num2str(cnt),', ''Blue-Green'');',...
-                            ' OVERLAYMINMAX(',num2str(cnt),',',num2str(threshs(1,3)),',',num2str(threshs(1,4)),');'];
+                            script=[script,...
+                                ' OVERLAYLOAD(''',ea_path_helper(res.fname),''');',...
+                                ' OVERLAYCOLORNAME(',num2str(cnt),', ''Blue-Green'');',...
+                                ' OVERLAYMINMAX(',num2str(cnt),',',num2str(threshs(1,3)),',',num2str(threshs(1,4)),');'];
                         end
+
                         script=[script,...
                             ' COLORBARVISIBLE(','false',');',...
                             ' AZIMUTHELEVATION(',num2str(90+(180*side)),', 0);'];
-                        
+
                         script=[script,...
                             ' END.'];
+
                         ea_surfice_script(script,0);
                 end
-                
-                
-                setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject); % store handle of surf to figure.
-                
-                
+
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
                     if obj.posvisible && obj.negvisible
-                        tick{group} = [1, length(voxcmap{group})];
+                        tick{group} = [1, gradientLevel/2-10, gradientLevel/2+11, length(voxcmap{group})];
                         poscbvals = sort(allvals(allvals>0));
                         negcbvals = sort(allvals(allvals<0));
-                        ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                        ticklabel{group} = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     elseif obj.posvisible
                         tick{group} = [1, length(voxcmap{group})];
@@ -704,16 +693,19 @@ classdef ea_networkmapping < handle
                     end
                 end
             end
-            
+
+            setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject);
+
             % store colorbar in object
-            if exist('fibcmap','var') % could be no fibers present at all.
+            if exist('voxcmap','var')
+                setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
                 obj.colorbar.cmap = voxcmap;
                 obj.colorbar.tick = tick;
                 obj.colorbar.ticklabel = ticklabel;
             end
         end
     end
-    
+
     methods (Static)
         function changeevent(~,event)
             update_trajectory(event.AffectedObject,event.Source.Name);

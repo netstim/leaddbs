@@ -10,10 +10,19 @@ end
 numPatient = length(obj.allpatients);
 vatlist = cell(numPatient*2,1);
 
+[modlist,sf]=ea_genmodlist;
+[~,ix]=ismember(obj.connectome,modlist);
+if ~ix
+    ea_error('Something went wrong, connectome disappeared?');
+end
+sf=sf(ix);
+sfstrings={'dMRI','fMRI'};
+sfstring=sfstrings{sf};
+
 disp('Construct VAT list...')
 for sub=1:numPatient % Original VAT E-field
     vatlist{sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_fMRI_efield.nii'];
+        ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_',sfstring,'_efield.nii'];
     if ~exist(vatlist{sub},'file') % create joint VTA
         rungenlocalmapper(obj,sub)
     end
@@ -21,12 +30,12 @@ end
 
 for sub=1:numPatient % Mirrored VAT E-field
     vatlist{numPatient+sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), ['gs_',obj.M.guid],filesep, 'fl_vat_seed_compound_fMRI_efield.nii'];
+        ea_nt(0), ['gs_',obj.M.guid],filesep, 'fl_vat_seed_compound_',sfstring,'_efield.nii'];
     if ~exist(vatlist{numPatient+sub,1},'file')
         ea_flip_lr_nonlinear([pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-            ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_fMRI_efield.nii'],...
+            ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_',sfstring,'_efield.nii'],...
             [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-            ea_nt(0), ['gs_',obj.M.guid],filesep, 'fl_vat_seed_compound_fMRI_efield.nii'],0);
+            ea_nt(0), ['gs_',obj.M.guid],filesep, 'fl_vat_seed_compound_',sfstring,'_efield.nii'],0);
     end
 end
 
@@ -34,6 +43,11 @@ end
 function rungenlocalmapper(obj,sub)
 
 ptdir=obj.allpatients{sub};
+if ~isfield(obj.M,'pseudoM') % could be M is not properly defined when using scripting (in this case there will be a pseudoM flag). See this as an optional correction step.
+    if obj.M.ui.detached
+        ptdir=fullfile(fileparts(obj.leadgroup),ptdir);
+    end
+end
 guid=['gs_',obj.M.guid];
 
 options = getoptslocal;
