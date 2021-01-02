@@ -542,15 +542,12 @@ classdef ea_networkmapping < handle
                                 if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end
                         end
 
-                        if obj.posvisible && obj.negvisible
-                            cmap1=ea_colorgradient(length(gray)/2,obj.posBaseColor,obj.posPeakColor);
-                            cmap2=ea_colorgradient(length(gray)/2,obj.negPeakColor,obj.negBaseColor);
-                            cmap=[cmap2;cmap1];
-                        elseif obj.posvisible && ~obj.negvisible
-                            cmap=ea_colorgradient(length(gray),obj.posBaseColor,obj.posPeakColor);
-                        elseif ~obj.posvisible && obj.negvisible
-                            cmap=ea_colorgradient(length(gray),obj.negPeakColor,obj.negBaseColor);
+                        % Check cmap
+                        if exist('voxcmap','var') && ~isempty(voxcmap{group})
+                            defaultColor = [1 1 1]; % Default color for nan values
+                            cmap = [voxcmap{group}; defaultColor];
                         else
+                            warning('Colormap not defined!')
                             return
                         end
 
@@ -572,12 +569,13 @@ classdef ea_networkmapping < handle
                         if obj.modelRH
                             ic=isocolors(X,Y,Z,permute(res.img,[2,1,3]),rh.vertices);
                             if any(~isnan(ic))
-                            rh_nc=round(ea_contrast(ic)*255+1);
-                            rh_nc(isnan(rh_nc))=128; % set to white for now
+                                CInd = round(ea_contrast(ic)*gradientLevel+1);
+                                CInd(isnan(CInd)) = gradientLevel + 1; % set to white for now
+                                rhCData = cmap(CInd,:);
                             else
-                                rh_nc=repmat(128,size(rh.vertices,1),1);
+                                rhCData = repmat(defaultColor, size(rh.vertices,1), 1);
                             end
-                            obj.drawobject{group}{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(rh_nc,:),...
+                            obj.drawobject{group}{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',rhCData,...
                                 'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
                             obj.drawobject{group}{1}.Tag=['LH_surf',obj.model];
                         end
@@ -585,12 +583,13 @@ classdef ea_networkmapping < handle
                         if obj.modelLH
                             ic=isocolors(X,Y,Z,permute(res.img,[2,1,3]),lh.vertices);
                             if any(~isnan(ic))
-                                lh_nc=round(ea_contrast(ic)*255+1);
-                                lh_nc(isnan(lh_nc))=128; % set to white for now
+                                CInd = round(ea_contrast(ic)*gradientLevel+1);
+                                CInd(isnan(CInd)) = gradientLevel + 1; % set to white for now
+                                lhCData = cmap(CInd,:);
                             else
-                                lh_nc=repmat(128,size(lh.vertices,1),1);
+                                lhCData = repmat(defaultColor, size(lh.vertices,1), 1);
                             end
-                            obj.drawobject{group}{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',cmap(lh_nc,:),...
+                            obj.drawobject{group}{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',lhCData,...
                                 'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
                             obj.drawobject{group}{1}.Tag=['RH_surf',obj.model];
                         end
