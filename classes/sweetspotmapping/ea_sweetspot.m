@@ -539,10 +539,10 @@ classdef ea_sweetspot < handle
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
                     if obj.posvisible && obj.negvisible
-                        tick{group} = [1, length(voxcmap{group})];
+                        tick{group} = [1, gradientLevel/2-10, gradientLevel/2+11, length(voxcmap{group})];
                         poscbvals = sort(allvals(allvals>0));
                         negcbvals = sort(allvals(allvals<0));
-                        ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                        ticklabel{group} = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     elseif obj.posvisible
                         tick{group} = [1, length(voxcmap{group})];
