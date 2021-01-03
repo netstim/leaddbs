@@ -297,13 +297,9 @@ if settings.calcAxonActivation
     for side=0:1
         switch side
             case 0
-                disp('Running OSS-DBS for right side stimulation...');
-                sideCode = 'rh';
-                sideStr = 'right';
+                fprintf('Calculating axon activation for right side stimulation...\n');
             case 1
-                disp('Running OSS-DBS for left side stimulation...');
-                sideCode = 'lh';
-                sideStr = 'left';
+                fprintf('Calculating axon activation for left side stimulation...\n');
         end
 
         system(['docker run ', ...
