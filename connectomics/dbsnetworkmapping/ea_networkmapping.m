@@ -13,10 +13,10 @@ classdef ea_networkmapping < handle
         statmetric = 'Correlations (R-map)' % Statistical model to use
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         posBaseColor = [1,1,1] % positive main color
-        posPeakColor = [0.99,0.6,0.06] % positive peak color
+        posPeakColor = [0.2824,0.6157,0.9725] % positive peak color
 
         negBaseColor = [1,1,1] % negative main color
-        negPeakColor = [0.15,0.6,0.95] % negative peak color
+        negPeakColor = [0.9176,0.2000,0.1373] % negative peak color
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'

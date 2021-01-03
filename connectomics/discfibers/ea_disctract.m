@@ -15,8 +15,8 @@ classdef ea_disctract < handle
         statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
-        poscolor = [0.99,0.75,0.06] % positive main color
-        negcolor = [0.15,0.77,0.95] % negative main color
+        poscolor = [0.9176,0.2000,0.1373] % positive main color
+        negcolor = [0.2824,0.6157,0.9725] % negative main color
         splitbygroup = 0
         showsignificantonly = 0
         alphalevel = 0.05
