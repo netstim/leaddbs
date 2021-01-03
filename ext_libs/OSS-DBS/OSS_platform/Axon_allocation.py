@@ -461,7 +461,7 @@ if __name__ == '__main__':
     axon_dict['diam_fib']=diams_fib
     
     
-    print('/opt/patient/'+Name_to_save+'.h5')
+    #print('/opt/patient/'+Name_to_save+'.h5')
     if os.path.exists('/opt/patient/'+Name_to_save+'.h5'):
         print("Axon file with this name was already created, skipping")
         n_Ranviers_per_projection=np.genfromtxt('/opt/patient/'+Name_to_save+'_N_nodes.csv', delimiter=' ')
