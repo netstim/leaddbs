@@ -256,6 +256,22 @@ for side=0:1
             sideStr = 'left';
     end
 
+    % Calculate axon allocation when option enabled
+    if settings.calcAxonActivation
+            switch side
+                case 0
+                    fprintf('Calculating axon allocation for right side stimulation...\n');
+                case 1
+                    fprintf('Calculating axon allocation for left side stimulation...\n');
+            end
+
+            system(['docker run ', ...
+                    '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+                    '--volume ', outputPath, ':/opt/Patient ', ...
+                    '-it --rm sfbelaine/oss_dbs:python_latest ', ...
+                    'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py ', num2str(side)]);
+    end
+
     % Call OSS-DBS GUI to start calculation
     cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
     system(['cd "', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform";', ...
@@ -290,22 +306,3 @@ end
 % Restore working directory and env
 cd(currentPath);
 setenv('LD_LIBRARY_PATH', libpath);
-
-% Calculate axon activation when option enabled
-if settings.calcAxonActivation
-    % Iterate sides, index side: 0 - rh , 1 - lh
-    for side=0:1
-        switch side
-            case 0
-                fprintf('\nCalculating axon activation for right side stimulation...\n');
-            case 1
-                fprintf('Calculating axon activation for left side stimulation...\n');
-        end
-
-        system(['docker run ', ...
-                '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
-                '--volume ', outputPath, ':/opt/Patient ', ...
-                '-it --rm sfbelaine/oss_dbs:python_latest ', ...
-                'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py ', num2str(side)]);
-    end
-end
