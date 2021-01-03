@@ -495,7 +495,7 @@ if __name__ == '__main__':
     from GUI_tree_files.GUI_tree_files.default_dict import d
     d.update(axon_dict)
     
-    with open('GUI_tree_files/GUI_tree_files/default_dict.py', 'w') as save_as_dict:
+    with open('/opt/OSS-DBS/OSS_platform/GUI_tree_files/GUI_tree_files/default_dict.py', 'w') as save_as_dict:
         save_as_dict.write('"""@author: trieu,butenko"""\n')
         #save_as_dict.write('\n')
         save_as_dict.write("d = {\n")
@@ -507,6 +507,4 @@ if __name__ == '__main__':
         save_as_dict.write("}\n")
 
 #return True
-    
 
-    
