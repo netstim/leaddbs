@@ -243,7 +243,7 @@ ea_delete([outputPath, filesep, 'fail_rh.txt']);
 ea_delete([outputPath, filesep, 'success_lh.txt']);
 ea_delete([outputPath, filesep, 'fail_lh.txt']);
 
-% Iterate sides
+% Iterate sides, index side: 0 - rh , 1 - lh
 for side=0:1
     switch side
         case 0
@@ -291,11 +291,25 @@ end
 cd(currentPath);
 setenv('LD_LIBRARY_PATH', libpath);
 
-% if connectome is provided, launch a docker command
+% Calculate axon activation when option enabled
+if settings.calcAxonActivation
+    % Iterate sides, index side: 0 - rh , 1 - lh
+    for side=0:1
+        switch side
+            case 0
+                disp('Running OSS-DBS for right side stimulation...');
+                sideCode = 'rh';
+                sideStr = 'right';
+            case 1
+                disp('Running OSS-DBS for left side stimulation...');
+                sideCode = 'lh';
+                sideStr = 'left';
+        end
 
-% in terminal it would be for example "docker run --volume $HOME/Documents/MATLAB_files/leaddbs-oss-dbs/ext_libs/OSS-DBS:/opt/OSS-DBS --volume $HOME/Documents/MATLAB_files/Clover/Custom_patient/stimulations/MNI_ICBM_2009b_NLIN_ASYM/20201213214916:/opt/patient -it --rm sfbelaine/oss_dbs:platform_latest python3 Axon_allocation.py index_side"
-% index side: 0 - rh , 1 - lh
-
-% if it is too difficult to call docker from here, we could write an
-% intermediate python file as we already know how to deal with it (see ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py)
-
+        system(['docker run ', ...
+                '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+                '--volume ', outputPath, ':/opt/patient ', ...
+                '-it --rm sfbelaine/oss_dbs:python_latest ', ...
+                'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py ', num2str(side)]);
+    end
+end
