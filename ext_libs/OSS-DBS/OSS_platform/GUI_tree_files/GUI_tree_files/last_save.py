@@ -39,7 +39,7 @@ d = {
     'n_Ranvier': [20],
     'v_init': -80.0,
     'Neuron_model_array_prepared': 0,
-    'Name_prepared_neuron_array': 'Test.h5',
+    'Name_prepared_neuron_array': '',
     'EQS_core': 'QS',
     'Skip_mesh_refinement': 1,
     'el_order': 2,
