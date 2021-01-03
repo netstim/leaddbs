@@ -134,13 +134,13 @@ for i=1:length(radius)
         % Binary fiber connection matrix for the T-test method
         fibConn(trimmedFiberInd(connected), i)=1;
 
-        fprintf('%d out of %d fibers found...\n\n', sum(fibConn(:,i)), length(ftr.idx));
+        fprintf('%d out of %d fibers found...\n', sum(fibConn(:,i)), length(ftr.idx));
         fiberFiltered{i}.fibers = ftr.fibers(ismember(ftr.fibers(:,4), find(fibConn(:,i))), :);
         fiberFiltered{i}.idx = ftr.idx(logical(fibConn(:,i)));
     end
 end
 
-fprintf('Finished!\n\n');
+fprintf('\nFinished!\n\n');
 
 
 function r = kuncel08_eq1(U)

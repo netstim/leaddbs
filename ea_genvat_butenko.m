@@ -297,7 +297,7 @@ if settings.calcAxonActivation
     for side=0:1
         switch side
             case 0
-                fprintf('Calculating axon activation for right side stimulation...\n');
+                fprintf('\nCalculating axon activation for right side stimulation...\n');
             case 1
                 fprintf('Calculating axon activation for left side stimulation...\n');
         end
