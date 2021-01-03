@@ -456,7 +456,7 @@ classdef ea_sweetspot < handle
 
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Vertcat all values for colorbar construction
-                allvals = vertcat(vals{group,:});
+                allvals = horzcat(vals{group,:});
                 if isempty(allvals)
                     continue;
                 end
