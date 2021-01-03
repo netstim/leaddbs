@@ -9,19 +9,19 @@ Created on Wed Jun 20 10:55:09 2018
 from Electrode_files.Profile_Process_V6 import words_detect
 
 def create_geometry_script (Phi_vector,Brain_map,electrode_profile,Xt,Yt,Zt,X_2nd,Y_2nd,Z_2nd,OZ_angle,Xt2,Yt2,Zt2,OX_angle2,OY_angle2,OZ_angle2,encap_thickness,ROI_radial,Xm,Ym,Zm,Vertice_enable,Lead2nd_Enable):
-    
+
    #electrode_position=electrode_profile
-   electrode_profile=electrode_profile	 
+   electrode_profile=electrode_profile
    # check parameters inputs
    name_idx=len(electrode_profile)
    check_profile_name = words_detect ('_profile.py', "Electrode_files/"+electrode_profile);
    if ( check_profile_name[0] == False):
        print ("ERROR: DBS lead profile name should be a string ends with _profile.py")
    else:
-       f3=open("Electrode_files/"+electrode_profile,'r')                        
+       f3=open("Electrode_files/"+electrode_profile,'r')
        f2=open("/opt/Patient/"+electrode_profile[:name_idx-11] + '_position.py','w+') # new file with new position
        #print(electrode_profile[:name_idx-11] + '_position.py')
-       for index,line in enumerate(f3):  
+       for index,line in enumerate(f3):
                line_replace = False;
                var_list = words_detect("##### VARIABLE LIST #####",line)
                if (var_list[0]):
@@ -51,8 +51,8 @@ def create_geometry_script (Phi_vector,Brain_map,electrode_profile,Xt,Yt,Zt,X_2n
                        +'   OY_angle2 = {}\n'.format(OY_angle2)
                        +'   OZ_angle2 = {}\n'.format(OZ_angle2)
                          );
-            
-               if(line_replace == False): f2.write(line);      
+
+               if(line_replace == False): f2.write(line);
        f2.close();
        f3.close();
 

@@ -34,7 +34,7 @@ Z_tip=-10.8173
 
 ##################
 geompy = geomBuilder.New(theStudy)
-print"brain modle file is saved at"+ os.getcwd()+"/Brain_substitute.brep" 
+print"brain modle file is saved at"+ os.getcwd()+"/Brain_substitute.brep"
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
 OY = geompy.MakeVectorDXDYDZ(0, 1, 0)
@@ -89,6 +89,6 @@ smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
 
 #if salome.sg.hasDesktop():
 #  salome.sg.updateObjBrowser(True)
-  
+
 import killSalome
 killSalome.killAllPorts()

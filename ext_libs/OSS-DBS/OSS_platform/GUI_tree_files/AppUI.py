@@ -200,7 +200,7 @@ class MainWindow(Functionalities):
         # Load/Save/Reset/Run to dictionary
         self.ui.pushButton_Run.clicked.connect(lambda: self.dict_write(self.output_dict(), self.current_file_name))
         # Modification to run a subprocess on another thread when Run button is clicked.
-        self.ui.pushButton_Run.clicked.connect(lambda: self.run_thread())   
+        self.ui.pushButton_Run.clicked.connect(lambda: self.run_thread())
 
         self.ui.pushButton_SaveAs.clicked.connect(lambda: self.save_as())
         self.ui.pushButton_Load.clicked.connect(lambda: self.load_dict())
@@ -212,7 +212,7 @@ class MainWindow(Functionalities):
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
         #subprocess.run(['sudo', 'docker', 'run', '--name', 'OSS_docker', '--volume', '/home/butenko/oss_platform:/opt/oss_platform', '--cap-add=SYS_PTRACE', '-it', '--rm gitlab.elaine.uni-rostock.de:4567/kb589/oss_platform:platform', 'python3', 'Launcher_OSS_lite.py'])
-        #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial. 
+        #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
         home_dir=os.path.expanduser("~")
         OSS_DBS_path=os.getcwd()
         os.chdir("..")
@@ -227,7 +227,7 @@ class MainWindow(Functionalities):
             output = subprocess.run(
                 ['docker', 'run','--name','OSS_container', '--volume', dir_code + ':/opt/OSS-DBS',
                  '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
-                 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])  #   
+                 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])  #
         elif sys.platform == 'darwin' or sys.platform=='Darwin':
             patient_dir_full = self.path_to_patient + ':/opt/Patient'
             # directories=[]
@@ -239,20 +239,20 @@ class MainWindow(Functionalities):
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
-            
+
 
         # does not work on macOS
-        #out2 = subprocess.run(['docker','logs','OSS_container'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #  
+        #out2 = subprocess.run(['docker','logs','OSS_container'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #
         #stdout_as_str = out2.stdout.decode("utf-8")
-        
+
         #text_file = open(self.path_to_patient+"/Docker_log.txt", "wt")
         #n = text_file.write(stdout_as_str)
         #text_file.close()
 
         #print(output.returncode)
-        
+
         #if not os.path.exists(self.path_to_patient+'/success.txt'):
-        #    subprocess.call(['touch', self.path_to_patient+'/fail.txt']) 
+        #    subprocess.call(['touch', self.path_to_patient+'/fail.txt'])
         #    print("Error occurred, check the terminal")
         #else:
         #    print("Simulation is completed")
@@ -260,19 +260,19 @@ class MainWindow(Functionalities):
 
         if self.index_side==0:
             if not os.path.exists(self.path_to_patient+'/success_rh.txt'):
-                subprocess.call(['touch', self.path_to_patient+'/fail_rh.txt']) 
+                subprocess.call(['touch', self.path_to_patient+'/fail_rh.txt'])
                 print("Error occurred when simulating rh, check the terminal")
             else:
                 print("Simulation is completed")
                 self.closeWindow()
         else:
             if not os.path.exists(self.path_to_patient+'/success_lh.txt'):
-                subprocess.call(['touch', self.path_to_patient+'/fail_lh.txt']) 
-                print("Error occurred when simulating lh, check the terminal")  
+                subprocess.call(['touch', self.path_to_patient+'/fail_lh.txt'])
+                print("Error occurred when simulating lh, check the terminal")
             else:
                 print("Simulation is completed")
-                self.closeWindow()                
-        
+                self.closeWindow()
+
 
         # the commands below work only with a properly installed Paraview (supporting from paraview.simple import *)
 
@@ -284,7 +284,7 @@ class MainWindow(Functionalities):
 
         # try:
         #     subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
-        # except:        
+        # except:
         #     subprocess.run(['python','Visualization_files/Paraview_connections_processed.py',self.path_to_patient])
 
         # try:
@@ -294,7 +294,7 @@ class MainWindow(Functionalities):
 
         # subprocess.run(['python','Visualization_files/Paraview_CSFref.py',self.path_to_patient])
         # subprocess.run(['python','Visualization_files/Paraview_adapted.py',self.path_to_patient])
-        
+
         #subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
 
         #subprocess.run(['xterm','-hold','-e','ls'])
@@ -305,7 +305,7 @@ class MainWindow(Functionalities):
         #substitute tilda
         #subprocess.run([
         """add the command you use to run OSS-DBS here (as shown above)"""
- 
+
 
     def run_thread(self):
         t = Thread(target=self.run_command)

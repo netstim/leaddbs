@@ -2,7 +2,7 @@
 
 ###
 ### This file is generated automatically by SALOME v8.3.0 with dump python functionality
-###### Run with DPS_lead_position_V9.py 
+###### Run with DPS_lead_position_V9.py
 
 import sys
 import salome
@@ -159,7 +159,7 @@ Fuse_all_lead_encap_ROI_no_internal_face = geompy.RemoveInternalFaces(Fuse_all_l
 #################################################### Geometry and extra code interface ###############################################################
 VolumeObject1 = [ encap_outer_ROI,ROI,encap_inner_ROI]         # Declare objects included to partition, encap_outer_ROI always @1st position
 Volume_name1  = ['encap_outer_ROI1','ROI1','encap_inner_ROI1'] # Declare name of the group in the partition for volume
-ContactObject1 = [Contact_1,Contact_2]   
+ContactObject1 = [Contact_1,Contact_2]
 Contact_name1 = ['Contact1_1','Contact1_2']
 
 if(Lead2nd_Enable): ##################  2nd LEAD ###############################################
@@ -191,8 +191,8 @@ if(Lead2nd_Enable): ##################  2nd LEAD ###############################
   cut_outer_ROI = geompy.MakeCutList(VolumeObject2[0], [brain_solid], True)
   VolumeObject2[0] = geompy.MakeCutList(VolumeObject2[0], [cut_outer_ROI], True)
   print "Cut ROI2 with brain\n"
-  VolumeObject2[1] = geompy.MakeCommonList([VolumeObject2[1], brain_solid], True) 
-  print "Group 2nd:volume and area extraction for group ID identification process\n"       
+  VolumeObject2[1] = geompy.MakeCommonList([VolumeObject2[1], brain_solid], True)
+  print "Group 2nd:volume and area extraction for group ID identification process\n"
   Volume2_Pro = [geompy.BasicProperties( VolumeObject2[0])]*len(VolumeObject2)
   Contact2_Pro = [geompy.BasicProperties( ContactObject2[0])]*len(ContactObject2)
   for i in range(0,len(VolumeObject2)):
@@ -237,7 +237,7 @@ cut_outer_ROI = geompy.MakeCutList(VolumeObject1[0], [brain_solid], True)
 VolumeObject1[0] = geompy.MakeCutList(VolumeObject1[0], [cut_outer_ROI], True)
 print "Cut ROI1 with brain\n"
 VolumeObject1[1] = geompy.MakeCommonList([VolumeObject1[1], brain_solid], True)
-print "Group 1st:volume and area extraction for group ID identification process\n" 
+print "Group 1st:volume and area extraction for group ID identification process\n"
 
 Volume1_Pro = [geompy.BasicProperties( VolumeObject1[0])]*len(VolumeObject1)
 Contact1_Pro = [geompy.BasicProperties( ContactObject1[0])]*len(ContactObject1)
@@ -250,35 +250,35 @@ for i in range(0,len(ContactObject1)):
 print "Create reference groups for ID identification process\n"
 
 if(Lead2nd_Enable):
-  
+
   Rest = geompy.MakeCutList(brain_solid, [Fuse_all_lead_encap_ROI_no_internal_face,Fuse_all_lead_encap_ROI_no_internal_face2], True)
   Partition_profile = geompy.MakePartition(VolumeObject1+VolumeObject2+ContactObject1+ContactObject2, [], [], [], geompy.ShapeType["SOLID"], 0, [], 0)
-  
-###reference_volume 
+
+###reference_volume
   reference_volume = VolumeObject1 + VolumeObject2
   reference_volume_Pro = Volume1_Pro + Volume2_Pro
   Volume_name = Volume_name1+Volume_name2
-### reference_area 
+### reference_area
   reference_surface = ContactObject1 + ContactObject2
   reference_surface_Pro = Contact1_Pro + Contact2_Pro
   Contact_name = Contact_name1+Contact_name2
   Group_volume  = [geompy.CreateGroup(Partition_profile, geompy.ShapeType["SOLID"])] * (len(VolumeObject1)+len(VolumeObject2)+1) # +1 is Rest Group
   Group_surface = [geompy.CreateGroup(Partition_profile, geompy.ShapeType["FACE"])] * (len(ContactObject1)+len(ContactObject2))
 else:
-  
+
   Rest = geompy.MakeCutList(brain_solid, [Fuse_all_lead_encap_ROI_no_internal_face], True)
   Partition_profile = geompy.MakePartition(VolumeObject1+ContactObject1, [], [], [], geompy.ShapeType["SOLID"], 0, [], 0)
-###reference_volume 
-  reference_volume = VolumeObject1 
-  reference_volume_Pro = Volume1_Pro 
+###reference_volume
+  reference_volume = VolumeObject1
+  reference_volume_Pro = Volume1_Pro
   Volume_name = Volume_name1
-### reference_area 
-  reference_surface = ContactObject1 
-  reference_surface_Pro = Contact1_Pro 
+### reference_area
+  reference_surface = ContactObject1
+  reference_surface_Pro = Contact1_Pro
   Contact_name = Contact_name1
   Group_volume  = [geompy.CreateGroup(Partition_profile, geompy.ShapeType["SOLID"])] * (len(VolumeObject1)+1) # +1 is Rest Group
   Group_surface = [geompy.CreateGroup(Partition_profile, geompy.ShapeType["FACE"])] * len(ContactObject1)
-### find out subshape and subshape ID 
+### find out subshape and subshape ID
 
 Group_surface_ListIDs =[]
 Group_volume_ListIDs =[]
@@ -295,11 +295,11 @@ for ref_ind in range (0, len(reference_volume)):
 		subshape = geompy.GetSubShape(Partition_profile, [Partition_volume_IDsList[sub_ind]]) # get subshape
 		subshape_Pro = geompy.BasicProperties(subshape)       # extract volume of subshape
 		Common_volume = geompy.MakeCommonList([subshape, reference_volume[ref_ind]], True) # check common intersection
-		Common_volume_Pro = geompy.BasicProperties(Common_volume) 
+		Common_volume_Pro = geompy.BasicProperties(Common_volume)
 		print "volume difference",abs(Common_volume_Pro[2]-subshape_Pro[2]),"/",abs(Common_volume_Pro[2]-reference_volume_Pro[ref_ind][2])
 		# if ( common volume = subshape) and (common volume = ref volume) => ref volume = sub shape
 		if (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.00001) and (abs(Common_volume_Pro[2]-reference_volume_Pro[ref_ind][2])<0.00001):
-		
+
 			Group_partition_volume.append([Volume_name[ref_ind],Partition_volume_IDsList[sub_ind]])
 		# if ( common volume = subshape) and (common volume < ref volume) => sub shape belong to ref volume
 		elif (abs(Common_volume_Pro[2]-subshape_Pro[2])< 0.00001) and ((Common_volume_Pro[2] - reference_volume_Pro[ref_ind][2])<-0.00001):
@@ -320,20 +320,20 @@ for reff_ind in range (0, len (reference_surface)):
 	for subf_ind in range (0, len(Partition_surface_IDsList)):
 		subshapef = geompy.GetSubShape(Partition_profile, [Partition_surface_IDsList[subf_ind]]) # get subshape
 		Common_face = geompy.MakeCommonList([subshapef, reference_surface[reff_ind]], True) # check common intersection
-		Common_face_Pro = geompy.BasicProperties(Common_face) 
+		Common_face_Pro = geompy.BasicProperties(Common_face)
 		subshapef_Pro = geompy.BasicProperties(subshapef) # extract volume of subshape
 		print "area difference",abs(Common_face_Pro[1]-subshapef_Pro[1]),"/",abs(Common_face_Pro[1]-reference_surface_Pro[reff_ind][1])
 		# if ( common face = subface) and (common face = ref face) => ref face = sub face
-		if (abs(Common_face_Pro[1]-subshapef_Pro[1])<0.000001 )and (abs(Common_face_Pro[1]-reference_surface_Pro[reff_ind][1])<0.000001): 
+		if (abs(Common_face_Pro[1]-subshapef_Pro[1])<0.000001 )and (abs(Common_face_Pro[1]-reference_surface_Pro[reff_ind][1])<0.000001):
 			Group_partition_surface.append([ Contact_name[reff_ind],Partition_surface_IDsList[subf_ind] ])
-		# if ( common face = subface) and (common face < ref face) => sub face belong to ref face 
+		# if ( common face = subface) and (common face < ref face) => sub face belong to ref face
 		elif (abs(Common_face_Pro[1]-subshapef_Pro[1])<0.000001 ) and ((Common_face_Pro[1] - reference_surface_Pro[reff_ind][1])<-0.000001):
 			temp_surface.append(Partition_surface_IDsList[subf_ind])
 	if len(temp_surface) >1 : # the face is devided
-		Group_partition_surface.append( [Contact_name[reff_ind],temp_surface ])		
+		Group_partition_surface.append( [Contact_name[reff_ind],temp_surface ])
 		print Contact_name[reff_ind]," is devided and has sub IDs:{}\n".format(temp_surface)
 if len(reference_surface) != len(Group_partition_surface): #+len(Group_partition_Multi_surface):
-	print "Geometry-Surface error please check ROI diameter and DBS lead Position ",len(reference_surface),len(Group_partition_surface),'\n' 
+	print "Geometry-Surface error please check ROI diameter and DBS lead Position ",len(reference_surface),len(Group_partition_surface),'\n'
 
 print 'Group_partition_surface',Group_partition_surface,'\n'
 
@@ -527,7 +527,7 @@ NETGEN_3D_Parameters_4.SetQuadAllowed( 0 )
 isDone = Mesh_1.SetMeshOrder( [ [ Sub_mesh_1, Sub_mesh_2, Sub_mesh_3, Sub_mesh_4, Sub_mesh_5 ] ])
 
 
-if(Lead2nd_Enable):	
+if(Lead2nd_Enable):
 	NETGEN_1D_2D_1lead2 = Mesh_1.Triangle(algo=smeshBuilder.NETGEN_1D2D,geom=Contact2_1)
 	Sub_mesh_1_2 = NETGEN_1D_2D_1lead2.GetSubMesh()
 	NETGEN_2D_Parameters_1lead2 = NETGEN_1D_2D_1lead2.Parameters()

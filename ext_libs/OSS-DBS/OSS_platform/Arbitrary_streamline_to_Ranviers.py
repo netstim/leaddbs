@@ -120,43 +120,43 @@ def index_for_length(xyz,req_length, along=True): #from Dipy (https://dipy.org/)
         if along:
             return np.array([0])
         return 0
-        
+
     dists = np.sqrt((np.diff(xyz, axis=0)**2).sum(axis=1))
 
     if along:
         cummulated_lengths=np.cumsum(dists)
         idx,value=find_nearest(cummulated_lengths, req_length)
         if value>req_length:
-            idx=idx-1            
-                        
+            idx=idx-1
+
         return idx,cummulated_lengths[idx]
     return idx,cummulated_lengths[idx]
-    
+
 def resample_streamline_for_Ranvier(streamline_array,axon_length,n_Ranviers):
     cut_index,cummulated_length=index_for_length(streamline_array,axon_length)        #after this index we cut the streamline
-    
+
     streamline_array_Ranvier=np.zeros((cut_index+1+1+1,3),float)         #check notes in Cicero! Don't mix up sums and positions. +1 for the last Ranvier node, +1 for the sum, +1 for index
     last_segment_length=axon_length-cummulated_length
-    
+
     #print "Last_point_from_the_streamline: ",streamline_array[cut_index+1,0],streamline_array[cut_index+1,1],streamline_array[cut_index+1,2]
-    
+
     x_vect=streamline_array[cut_index+1+1,0]-streamline_array[cut_index+1,0]    #check in between the last taken and the next one
     y_vect=streamline_array[cut_index+1+1,1]-streamline_array[cut_index+1,1]
     z_vect=streamline_array[cut_index+1+1,2]-streamline_array[cut_index+1,2]
     v=np.array([x_vect,y_vect,z_vect])
-    
+
     v_hat = v / (v**2).sum()**0.5
-    
+
     streamline_array_Ranvier[:cut_index+1+1,:]=streamline_array[:cut_index+1+1,:]
-    
+
     streamline_array_Ranvier[cut_index+1+1,:]=last_segment_length*v_hat+streamline_array[cut_index+1,:]
-    
+
     #print streamline_array_Ranvier
-    
+
     #from dipy.tracking.streamline import set_number_of_points
     from streamlinespeed import set_number_of_points
-    
+
     streamline_resampled = set_number_of_points(streamline_array_Ranvier, nb_points=n_Ranviers)
     #streamline_resampled =seq_sampling(streamline_array_Ranvier, res=n_Ranviers)
-    
+
     return streamline_resampled

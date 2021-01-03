@@ -7,11 +7,11 @@ Created on Sat Dec  8 23:15:08 2018
 from Electrode_files.Profile_Process_V6 import words_detect
 
 def get_Para_Array_name (vtu_file_name):
-    f=open(vtu_file_name,'r');  
-    for index,line in enumerate(f):      
+    f=open(vtu_file_name,'r');
+    for index,line in enumerate(f):
         var_list = words_detect('Scalars=',line);
         if (var_list[0]):
-            word=line[var_list[1]+8::];###  <PointData  Scalars="f_127"> 
+            word=line[var_list[1]+8::];###  <PointData  Scalars="f_127">
             return (str(word[:len(word)-3]));
             break;
     f.close();

@@ -1,6 +1,6 @@
 #### import the simple module from the paraview
 from paraview.simple import *
-#from paraview_find_arrayname import get_Para_Array_name 
+#from paraview_find_arrayname import get_Para_Array_name
 #### disable automatic camera reset on 'Show'
 paraview.simple._DisableFirstRenderCameraReset()
 

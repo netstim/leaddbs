@@ -1240,9 +1240,9 @@ class Ui_MainWindow(object):
         self.gridLayout_33.addWidget(self.label_6, 2, 0, 1, 1)
 
         self.checkBox_external_grounding = QtWidgets.QCheckBox(self.groupBoxXXX)
-        
+
         #self.checkBox_Show_Paraview_Screenshots = QtWidgets.QCheckBox(self.groupBoxXXX)
-        font = QtGui.QFont()      
+        font = QtGui.QFont()
         self.checkBox_external_grounding.setFont(font)
         self.checkBox_external_grounding.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.checkBox_external_grounding.setText("")

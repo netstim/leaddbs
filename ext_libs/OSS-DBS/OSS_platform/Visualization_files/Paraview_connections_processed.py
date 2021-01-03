@@ -8,7 +8,7 @@ from paraview.simple import *
 paraview.simple._DisableFirstRenderCameraReset()
 
 # create a new 'CSV Reader'
-#get this list using arr_srt = [str(r) for r in list(hf.keys())] 
+#get this list using arr_srt = [str(r) for r in list(hf.keys())]
 
 list_of_connections=['Direct_upsampled_GPi_Str', 'Direct_upsampled_SN_Str', 'HDP', 'HDP_STN_GPi_upsampled_30', 'HDP_STN_SN_10', 'Indirect_upsampled_STN_GPe', 'Indirect_upsampled_STN_SN_10']
 
@@ -27,64 +27,64 @@ def make_a_screenshot(path_to_insert):
 	index_population=0
 
 	for connection in list_of_connections:
-	    
+
 	    connection_csv = CSVReader(FileName=[home_dir+path_to_insert+'/Neuron_model_arrays/'+connection+'.csv'])
 
 
 	    #gPi_mask_GPe_mask_5_Indirect_Branch_MC_Str_GPe_GPicsv = CSVReader(FileName=['/home/konstantin/Documents/brukerMRI-master/Classified_by_Sosoho/Segment/GPi_mask_GPe_mask_5_Indirect_Branch_MC_Str_GPe_GPi.csv'])
-	    
+
 	    # Properties modified on gPi_mask_GPe_mask_5_Indirect_Branch_MC_Str_GPe_GPicsv
 	    connection_csv.HaveHeaders = 0
 	    connection_csv.FieldDelimiterCharacters = ' '
-	    
+
 	    # get active view
 	    renderView1 = GetActiveViewOrCreate('RenderView')
 	    viewLayout1 = GetLayout()
-	    
+
 	    # Create a new 'SpreadSheet View'
 	    spreadSheetView1 = CreateView('SpreadSheetView')
 	    spreadSheetView1.BlockSize = 1024L
 	    spreadSheetView1.ColumnToSort = ''
 	    viewLayout1.AssignView(2, spreadSheetView1)
-	    
+
 	    # show data in view
 	    connection_csvDisplay = Show(connection_csv, spreadSheetView1)
 	    # trace defaults for the display properties.
 	    connection_csvDisplay.FieldAssociation = 'Row Data'
-	    
-	    # create a new 'Table To Points'
-	    #tableToPoints1 = TableToPoints(Input=neuron_model_results_STN_mask_GPe_mask_20_Excitatory_stn2gpe_asscsv)   
-	    ## rename source object
-	    #RenameSource('Nmodels', tableToPoints1)   
 
-	    globals()[connection+'_table']= TableToPoints(Input=connection_csv)        #very bad way, but it is just a standalone script    
+	    # create a new 'Table To Points'
+	    #tableToPoints1 = TableToPoints(Input=neuron_model_results_STN_mask_GPe_mask_20_Excitatory_stn2gpe_asscsv)
+	    ## rename source object
+	    #RenameSource('Nmodels', tableToPoints1)
+
+	    globals()[connection+'_table']= TableToPoints(Input=connection_csv)        #very bad way, but it is just a standalone script
 	    globals()[connection+'_table'].XColumn = 'Field 0'
 	    globals()[connection+'_table'].YColumn = 'Field 1'
 	    globals()[connection+'_table'].ZColumn = 'Field 2'
-		
+
 	#    tableToPoints1 = TableToPoints(Input=connection_csv)
 	#    tableToPoints1.XColumn = 'Field 0'
 	#    tableToPoints1.YColumn = 'Field 0'
 	#    tableToPoints1.ZColumn = 'Field 0'
-	#    
+	#
 	#    # Properties modified on tableToPoints1
 	#    tableToPoints1.YColumn = 'Field 1'
 	#    tableToPoints1.ZColumn = 'Field 2'
-	    
+
 	    # show data in view
-	    #tableToPoints1Display = Show(tableToPoints1, spreadSheetView1)  
+	    #tableToPoints1Display = Show(tableToPoints1, spreadSheetView1)
 	    globals()[connection+'_tableDisplay']= Show(globals()[connection+'_table'], spreadSheetView1)
-	    RenameSource(connection,globals()[connection+'_table'])  
+	    RenameSource(connection,globals()[connection+'_table'])
 	    # hide data in view
 	    Hide(connection_csv, spreadSheetView1)
-	    
+
 	    # set active view
 	    SetActiveView(renderView1)
-	    
+
 	    # set active source
 	    #SetActiveSource(tableToPoints1)
 	    SetActiveSource(globals()[connection+'_table'])
-	    
+
 	    ## show data in view
 	    #tableToPoints1Display_1 = Show(tableToPoints1, renderView1)
 	    ## trace defaults for the display properties.
@@ -95,23 +95,23 @@ def make_a_screenshot(path_to_insert):
 	    # trace defaults for the display properties.
 	    globals()[connection+'_tableDisplay_1'].ColorArrayName = [None, '']
 	    globals()[connection+'_tableDisplay_1'].GlyphType = 'Arrow'
-	    
+
 	    # reset view to fit data
 	    renderView1.ResetCamera()
-	    
+
 	    # set active view
 	    SetActiveView(spreadSheetView1)
-	    
+
 	    # destroy spreadSheetView1
 	    Delete(spreadSheetView1)
 	    del spreadSheetView1
-	    
+
 	    # close an empty frame
 	    viewLayout1.Collapse(2)
-	    
+
 	    # set active view
 	    SetActiveView(renderView1)
-	    
+
 	    ## change solid color
 	    ##tableToPoints1Display_1.DiffuseColor = [0.6196078431372549, 1.0, 0.12549019607843137]
 	    #if "Indirect" in connection:
@@ -122,7 +122,7 @@ def make_a_screenshot(path_to_insert):
 	    #    globals()[connection+'_tableDisplay_1'].DiffuseColor = [0.12156862745098039, 0.5843137254901961, 0.8941176470588236]
 	    #else:
 	    #    globals()[connection+'_tableDisplay_1'].DiffuseColor = [1.0,1.0,1.0]
-	    
+
 	    globals()[connection+'_tableDisplay_1'].DiffuseColor = list(viridis(index_population))[:3]
 	    index_population=index_population+1
 
@@ -264,7 +264,7 @@ def make_a_screenshot(path_to_insert):
 	renderView1.ViewSize = [1600, 1000]
 	renderView1.ResetCamera()
 	SaveScreenshot(home_dir+path_to_insert+'/Images/Axon_connections.png', magnification=1, quality=100, view=renderView1)
-	    
+
 	    #### uncomment the following to render all views
 	    # RenderAllViews()
 	    # alternatively, if you want to write images, you can use SaveScreenshot(...).

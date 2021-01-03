@@ -16,7 +16,7 @@ def read_mesh_indicies(dictionary):
     en_con = 0;
     roi = 0;
     flt=-1;
-    
+
     list_of_contacts=[]
     for index,line in enumerate(f1):
         C1_1 = words_detect("C1_1",line)
@@ -27,13 +27,13 @@ def read_mesh_indicies(dictionary):
         C1_6 = words_detect("C1_6",line)
         C1_7 = words_detect("C1_7",line)
         C1_8 = words_detect("C1_8",line)
-        
+
         en_rest = words_detect("Encap_rest",line)
         en_contact = words_detect("Encap_contact",line)
         ROI = words_detect("RegOfInt",line)
         Rst = words_detect("Rst",line)
         Flt_cnt = words_detect("Flt_cnt",line)
-        
+
         if (C1_1[0]):
             c1 = int(line[C1_1[1]-4:C1_1[1]-2]);
             list_of_contacts.insert(0,c1)
@@ -48,18 +48,18 @@ def read_mesh_indicies(dictionary):
             list_of_contacts.insert(3,c4)
         if (C1_5[0]):
             c5 = int(line[C1_5[1]-4:C1_5[1]-2]);
-            list_of_contacts.insert(4,c5) 
+            list_of_contacts.insert(4,c5)
         if (C1_6[0]):
             c6 = int(line[C1_6[1]-4:C1_6[1]-2]);
-            list_of_contacts.insert(5,c6)            
+            list_of_contacts.insert(5,c6)
         if (C1_7[0]):
             c7 = int(line[C1_7[1]-4:C1_7[1]-2]);
-            list_of_contacts.insert(6,c7)            
+            list_of_contacts.insert(6,c7)
         if (C1_8[0]):
             c8 = int(line[C1_8[1]-4:C1_8[1]-2]);
-            list_of_contacts.insert(7,c8)           
-            
-            
+            list_of_contacts.insert(7,c8)
+
+
         if (en_rest [0]):
             en = int(line[en_rest[1]-4:en_rest[1]-2]);
 #            print 'Encap_Rest:{}\n'.format(en)
@@ -74,7 +74,7 @@ def read_mesh_indicies(dictionary):
         if (Flt_cnt[0]):
             flt = int(line[Flt_cnt[1]-4:Flt_cnt[1]-2]);
  #           print 'Rst:{}\n'.format(rst)
-            
+
     dictionary['Tis_ind']     = [rst,en];
     #print("Tis ind: ", dictionary['Tis_ind'])
     dictionary['ROI_ind']     = roi;
@@ -83,7 +83,7 @@ def read_mesh_indicies(dictionary):
     dictionary['Flt_cnt']     = flt;
     dictionary['Encup_ind']   = [en,en_con];
     dictionary['Contacts']   = list_of_contacts;
-    f1.close();    
+    f1.close();
 
     #print(dictionary)
 
@@ -97,7 +97,7 @@ def read_mesh_indicies_extended(dictionary):
     en_con = 0;
     roi = 0;
     flt=-1;
-    
+
     list_of_contacts=[]                     #this contains indices of contacts in gmsh
     list_of_floating=[]                     #this contains indices of floatin in gmsh
     N_contacts_on_lead=[]                    #contains numbers of the contacts on the lead that are active   (starting from 1)
@@ -142,20 +142,20 @@ def read_mesh_indicies_extended(dictionary):
             N_contacts_on_lead.append(4)
         if (C1_5[0]):
             c5 = int(line[C1_5[1]-4:C1_5[1]-2]);
-            list_of_contacts.insert(4,c5) 
+            list_of_contacts.insert(4,c5)
             N_contacts_on_lead.append(5)
         if (C1_6[0]):
             c6 = int(line[C1_6[1]-4:C1_6[1]-2]);
-            list_of_contacts.insert(5,c6) 
+            list_of_contacts.insert(5,c6)
             N_contacts_on_lead.append(6)
         if (C1_7[0]):
             c7 = int(line[C1_7[1]-4:C1_7[1]-2]);
-            list_of_contacts.insert(6,c7) 
+            list_of_contacts.insert(6,c7)
             N_contacts_on_lead.append(7)
         if (C1_8[0]):
             c8 = int(line[C1_8[1]-4:C1_8[1]-2]);
-            list_of_contacts.insert(7,c8) 
-            N_contacts_on_lead.append(8)             
+            list_of_contacts.insert(7,c8)
+            N_contacts_on_lead.append(8)
         if (en_rest [0]):
             en = int(line[en_rest[1]-4:en_rest[1]-2]);
 #            print 'Encap_Rest:{}\n'.format(en)
@@ -167,7 +167,7 @@ def read_mesh_indicies_extended(dictionary):
  #           print 'ROI:{}\n'.format(roi)
         if (Rst[0]):
             rst = int(line[Rst[1]-4:Rst[1]-2]);
-        
+
         if (Flt_cnt1[0]):
             flt1 = int(line[Flt_cnt1[1]-4:Flt_cnt1[1]-2]);
             list_of_floating.insert(0,flt1)
@@ -199,12 +199,12 @@ def read_mesh_indicies_extended(dictionary):
         if (Flt_cnt8[0]):
             flt8 = int(line[Flt_cnt8[1]-4:Flt_cnt8[1]-2]);
             list_of_floating.insert(7,flt8)
-            N_floats_on_lead.append(8)            
+            N_floats_on_lead.append(8)
 
 
 
  #           print 'Rst:{}\n'.format(rst)
-            
+
     dictionary['Tis_ind']     = [rst,en];
     #print("Tis ind: ", dictionary['Tis_ind'])
     dictionary['ROI_ind']     = roi;
@@ -215,6 +215,6 @@ def read_mesh_indicies_extended(dictionary):
     dictionary['Contacts']   = list_of_contacts;
     dictionary['Active_contacts_on_lead']   = N_contacts_on_lead;
     dictionary['Float_contacts_on_lead']   = N_floats_on_lead;
-    f1.close();         
-            
+    f1.close();
+
     #print(dictionary)

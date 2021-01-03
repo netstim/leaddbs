@@ -11,60 +11,60 @@ import fileinput
 def paste_to_hoc_python3(axonnodes,paranodes1,paranodes2,axoninter,axontotal,v_init,fiberD,paralength1,paralength2,nodelength,nodeD,axonD,paraD1,paraD2,deltax,nl,steps_per_ms):
     #end=" "
     axonnodes_line="axonnodes="
-    axonnodes_input="axonnodes={}\n".format(axonnodes)            
-    
+    axonnodes_input="axonnodes={}\n".format(axonnodes)
+
     paranodes1_line="paranodes1="
-    paranodes1_input="paranodes1={}\n".format(paranodes1)            
-    
+    paranodes1_input="paranodes1={}\n".format(paranodes1)
+
     paranodes2_line="paranodes2="
     paranodes2_input="paranodes2={}\n".format(paranodes2)
-    
+
     axoninter_line="axoninter="
     axoninter_input="axoninter={}\n".format(axoninter)
 
     axontotal_line="axontotal="
-    axontotal_input="axontotal={}\n".format(axontotal)           
-    
+    axontotal_input="axontotal={}\n".format(axontotal)
+
     nv_init_line="v_init="
     nv_init_input="v_init={}\n".format(v_init)            #normally, -80mv
-    
+
     fiberD_line="fiberD="
     fiberD_input="fiberD={}\n".format(fiberD)            #fiber diameter
-    
+
     paralength1_line="paralength1="
-    paralength1_input="paralength1={}\n".format(paralength1)            
-    
+    paralength1_input="paralength1={}\n".format(paralength1)
+
     paralength2_line="paralength2="
     paralength2_input="paralength2={}\n".format(paralength2)
-    
+
     nodelength_line="nodelength="
     nodelength_input="nodelength={}\n".format(nodelength)
-    
+
     nodeD_line="nodeD="
-    nodeD_input="nodeD={}\n".format(nodeD)            
-    
+    nodeD_input="nodeD={}\n".format(nodeD)
+
     axonD_line="axonD="
-    axonD_input="axonD={}\n".format(axonD)            
-    
+    axonD_input="axonD={}\n".format(axonD)
+
     paraD1_line="paraD1="
-    paraD1_input="paraD1={}\n".format(paraD1)            
-    
+    paraD1_input="paraD1={}\n".format(paraD1)
+
     paraD2_line="paraD2="
-    paraD2_input="paraD2={}\n".format(paraD2)            
-    
+    paraD2_input="paraD2={}\n".format(paraD2)
+
     deltax_line="deltax="
-    deltax_input="deltax={}\n".format(deltax)            
-    
+    deltax_input="deltax={}\n".format(deltax)
+
     nl_line="nl="
-    nl_input="nl={}\n".format(nl)            
+    nl_input="nl={}\n".format(nl)
 
     steps_per_ms_line="steps_per_ms="
-    steps_per_ms_input="steps_per_ms={}\n".format(steps_per_ms)       
+    steps_per_ms_input="steps_per_ms={}\n".format(steps_per_ms)
 
     #trial_line="Tis_max"
     #input_line="Tis_max={}\n".format(Tis_max)
-    
-    
+
+
     #x = fileinput.input(files="Axon_files/axon4pyfull.hoc", inplace=1)
     x = fileinput.input(files="axon4pyfull.hoc", inplace=1)
     for line in x:
@@ -88,7 +88,7 @@ def paste_to_hoc_python3(axonnodes,paranodes1,paranodes2,axoninter,axontotal,v_i
             line = paralength2_input
         if line.startswith(nodelength_line):
             line = nodelength_input
-            
+
         if line.startswith(nodeD_line):
             line = nodeD_input
         if line.startswith(axonD_line):
@@ -102,10 +102,10 @@ def paste_to_hoc_python3(axonnodes,paranodes1,paranodes2,axoninter,axontotal,v_i
         if line.startswith(nl_line):
             line = nl_input
         if line.startswith(steps_per_ms_line):
-            line = steps_per_ms_input            
+            line = steps_per_ms_input
         print(line,end="")
     x.close()
-    
+
     return True
 
 def paste_paraview_vis_python3(Points_on_model,N_comp_in_between):
@@ -124,5 +124,5 @@ def paste_paraview_vis_python3(Points_on_model,N_comp_in_between):
             line = N_comp_in_between_input
         print(line,end="")
     fl.close()
-    
+
     return True

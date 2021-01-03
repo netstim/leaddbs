@@ -33,7 +33,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     #index_side=1
     #settings_location,index_side=side_and_settings[:]
     index_side=int(index_side)
-    
+
     #these are input from Lead-DBS
     input_dict = {
         'MRI_data_name': "name_MRI.nii.gz",     #segmented MRI data
@@ -42,7 +42,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         'WM_index': 0.0,
         'GM_index': 0.0,
         'default_material': 'GM',     # GM, WM or CSF
-        'Electrode_type': 'St_Jude6148',     
+        'Electrode_type': 'St_Jude6148',
         'Implantation_coordinate_X': -10000000000.0,    # in mm in the MRI data space
         'Implantation_coordinate_Y': -10000000000.0,
         'Implantation_coordinate_Z': -10000000000.0,
@@ -51,23 +51,23 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         'Second_coordinate_Z': -10000000000.0,
         'Rotation_Z': 0.0,              # rotation around the lead axis in degrees
         'current_control': 0,           # 0 - VC, 1 - CC
-        'Phi_vector': [None, None, None, None],     #Signal vector: give an amplitude. If CC, 0.0 refers to 0 V (ground), other numbers are in A. None is for floating potentials  
-        'Activation_threshold_VTA': 0.0 ,    # threshold for Astrom VTA (V/mm), compute using the Lead-DBS function.        
+        'Phi_vector': [None, None, None, None],     #Signal vector: give an amplitude. If CC, 0.0 refers to 0 V (ground), other numbers are in A. None is for floating potentials
+        'Activation_threshold_VTA': 0.0 ,    # threshold for Astrom VTA (V/mm), compute using the Lead-DBS function.
         'Full_Field_IFFT': 0,
         'external_grounding': False,
         'VTA_from_E': 1,
         'VTA_from_divE': 0,
         'Stim_side': 0, # 0 - rh, 1 - lh
-        'Neuron_model_array_prepared': 0,           
+        'Neuron_model_array_prepared': 0,
     }
-    
+
     #should add for 'Name_prepared_neuron_array' (you need only the name of the file, not the whole path)
     #if 'Name_prepared_neuron_array'!='':
         # 'Neuron_model_array_prepared'=1
     #the same for the 'Brain_shape_name'
     #also we need to choose whether the IFFT will be on neurons or VTA array (currently controlled by 'Full_Field_IFFT')
     # and if VTA, then E-field threshold???
-    
+
     #file = tables.open_file('oss-dbs_parameters.mat')     #hardwired
     #file = tables.open_file('oss-dbs_parameters.mat')     #hardwired
     print("Input from ",settings_location)
@@ -75,10 +75,10 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     #file = h5py.File('oss-dbs_parameters.mat')
 
     #if file.root.settings.current_control[0][0]!=file.root.settings.current_control[0][1]:
-    if file['settings']['current_control'][0][0] != file['settings']['current_control'][0][1]: 
+    if file['settings']['current_control'][0][0] != file['settings']['current_control'][0][1]:
         print("Simultaneous use of VC and CC is not allowed for safety reasons!")
         raise SystemExit
- 
+
     input_dict['Stim_side']=index_side
     #Phi_vector=file.root.settings.Phi_vector[:,index_side]
     Phi_vector=file['settings']['Phi_vector'][:,index_side]
@@ -88,7 +88,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     for i in range(len(Phi_vector)):
         if math.isnan(Phi_vector[i]):
             Phi_vector[i]=None
-               
+
     if file['settings']['current_control'][0][0]==1:
         input_dict['current_control']=1
         Phi_vector=Phi_vector*0.001     # because Lead-DBS uses mA as the input
@@ -98,52 +98,52 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         print("No stimulation defined for this hemisphere")
         return -1
 
-    input_dict['Phi_vector']=Phi_vector 
- 
-        
-    # convert ascii from Matlab struct to a string    
-    #array_ascii=file.root.settings.MRI_data_name[:] 
-    array_ascii=file['settings']['MRI_data_name'][:]               
-    list_ascii=[]    
+    input_dict['Phi_vector']=Phi_vector
+
+
+    # convert ascii from Matlab struct to a string
+    #array_ascii=file.root.settings.MRI_data_name[:]
+    array_ascii=file['settings']['MRI_data_name'][:]
+    list_ascii=[]
     for i in range(array_ascii.shape[0]):
-        list_ascii.append(array_ascii[i][0])        
-   # list_ascii = map(lambda s: s.strip(), list_ascii)        
+        list_ascii.append(array_ascii[i][0])
+   # list_ascii = map(lambda s: s.strip(), list_ascii)
     name_split=''.join(chr(i) for i in list_ascii)
     input_dict['MRI_data_name']=name_split.rsplit('/',1)[-1]
 
-    
+
     path_to_patient=name_split.rsplit('/',1)[:-1]
     path_to_patient=path_to_patient[0]
- 
-    
-   # array_ascii=file.root.settings.DTI_data_name[:]  
-    array_ascii=file['settings']['DTI_data_name'][:]               
-    list_ascii=[]  
+
+
+   # array_ascii=file.root.settings.DTI_data_name[:]
+    array_ascii=file['settings']['DTI_data_name'][:]
+    list_ascii=[]
     if array_ascii[0]==0:
         input_dict['DTI_data_name']=''
     else:
         for i in range(array_ascii.shape[0]):
-            list_ascii.append(array_ascii[i][0])        
-        #list_ascii = map(lambda s: s.strip(), list_ascii)        
+            list_ascii.append(array_ascii[i][0])
+        #list_ascii = map(lambda s: s.strip(), list_ascii)
         input_dict['DTI_data_name']=''.join(chr(i) for i in list_ascii)
 
-        
+
     input_dict['CSF_index']=file['settings']['CSF_index'][0][0]
     input_dict['WM_index']=file['settings']['WM_index'][0][0]
     input_dict['GM_index']=file['settings']['GM_index'][0][0]
-    
+
     #input_dict['CSF_index']=file.root.settings.CSF_index[0][0]
     #input_dict['WM_index']=file.root.settings.WM_index[0][0]
     # input_dict['GM_index']=file.root.settings.GM_index[0][0]
 
-    #array_ascii=file.root.settings.default_material[:]                
-    array_ascii=file['settings']['default_material'][:] 
-    list_ascii=[]    
+    #array_ascii=file.root.settings.default_material[:]
+    array_ascii=file['settings']['default_material'][:]
+    list_ascii=[]
     for i in range(array_ascii.shape[0]):
-        list_ascii.append(array_ascii[i][0])        
-    #list_ascii = map(lambda s: s.strip(), list_ascii)            
+        list_ascii.append(array_ascii[i][0])
+    #list_ascii = map(lambda s: s.strip(), list_ascii)
     default_material=''.join(chr(i) for i in list_ascii)
-    
+
     if default_material=='GM':
         input_dict['default_material']=3
     elif default_material=='WM':
@@ -153,21 +153,21 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     else:
         print("Unrecognized default material")
 
-        
-    #array_ascii=file.root.settings.Electrode_type[:]  
-    array_ascii=file['settings']['Electrode_type'][:]              
-    list_ascii=[]    
+
+    #array_ascii=file.root.settings.Electrode_type[:]
+    array_ascii=file['settings']['Electrode_type'][:]
+    list_ascii=[]
     for i in range(array_ascii.shape[0]):
-        list_ascii.append(array_ascii[i][0])        
-    #list_ascii = map(lambda s: s.strip(), list_ascii)            
+        list_ascii.append(array_ascii[i][0])
+    #list_ascii = map(lambda s: s.strip(), list_ascii)
     Electrode_type=''.join(chr(i) for i in list_ascii)
-    
+
     if Electrode_type == 'Medtronic 3389':
         input_dict['Electrode_type']="Medtronic3389"#1
     elif Electrode_type == 'Medtronic 3387':
         input_dict['Electrode_type']="Medtronic3387"#1
     elif Electrode_type == 'Medtronic 3391':
-        input_dict['Electrode_type']="Medtronic3391"#1        
+        input_dict['Electrode_type']="Medtronic3391"#1
     elif Electrode_type == 'St. Jude Directed 6172 (short)' or Electrode_type == 'St. Jude Directed 6180':  #just different marker colors
         input_dict['Electrode_type']="St_Jude6180"#1
     elif Electrode_type == 'St. Jude Directed 6173 (long)':
@@ -176,15 +176,15 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         input_dict['Electrode_type']="St_Jude6142"
     elif Electrode_type == 'St. Jude ActiveTip (6146-6149)':    # just different tail lenghts, but it does not matter here
         input_dict['Electrode_type']="St_Jude6148"     #1
-    elif Electrode_type == 'Boston Scientific Vercise':    
+    elif Electrode_type == 'Boston Scientific Vercise':
         input_dict['Electrode_type']="Boston_Scientific_Vercise" #1
-    elif Electrode_type == 'Boston Scientific Vercise Directed':  
+    elif Electrode_type == 'Boston Scientific Vercise Directed':
         input_dict['Electrode_type']="Boston_Scientific_Vercise_Cartesia" #1
-    elif Electrode_type == 'PINS Medical L301':   
+    elif Electrode_type == 'PINS Medical L301':
         input_dict['Electrode_type']="PINS_L301"
-    elif Electrode_type == 'PINS Medical L302':   
+    elif Electrode_type == 'PINS Medical L302':
         input_dict['Electrode_type']="PINS_L302"
-    elif Electrode_type == 'PINS Medical L303':    
+    elif Electrode_type == 'PINS Medical L303':
         input_dict['Electrode_type']="PINS_L303"
     else:
         print("The electrode is not yet implemented, but we will be happy to add it. Contact us via konstantin.butenko@uni-rostock.de")
@@ -202,7 +202,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     input_dict['Activation_threshold_VTA']=file['settings']['Activation_threshold_VTA'][0][0] #threshold is the same for both hemispheres
     input_dict['external_grounding']=bool(file['settings']['Case_grounding'][:,index_side][0])
     input_dict['Neuron_model_array_prepared']=int(file['settings']['calcAxonActivation'][0][0])    # external model (e.g. from fiber tractograpy)
-    
+
     if input_dict['Neuron_model_array_prepared']!=1:
         input_dict['Full_Field_IFFT']=1 # for now we have only these two options
 
@@ -217,7 +217,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 
     from GUI_tree_files.GUI_tree_files.default_dict import d
     d.update(input_dict)
-    
+
     with open('GUI_tree_files/GUI_tree_files/default_dict.py', 'w') as save_as_dict:
         save_as_dict.write('"""@author: trieu,butenko"""\n')
         #save_as_dict.write('\n')
@@ -253,10 +253,10 @@ if __name__ == '__main__':
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
-            
-            
 
-  
+
+
+
     # path_to_patient=get_input_from_LeadDBS(1,*sys.argv[1:])
     # if path_to_patient!=-1:
     #     if sys.platform == 'linux' or sys.platform == 'Linux':

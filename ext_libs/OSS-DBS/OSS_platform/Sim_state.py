@@ -21,7 +21,7 @@ def copy_rename(old_file_name, new_file_name):
         dst_dir= os.path.join(os.curdir , "subfolder")
         src_file = os.path.join(src_dir, old_file_name)
         shutil.copy(src_file,dst_dir)
-        
+
         dst_file = os.path.join(dst_dir, old_file_name)
         new_dst_file_name = os.path.join(dst_dir, new_file_name)
         os.rename(dst_file, new_dst_file_name)
@@ -39,13 +39,13 @@ def manage_folders(d):
 
     if not os.path.isdir('/opt/Patient/Tensors'):
         os.makedirs('/opt/Patient/Tensors')
-        
+
     if not os.path.isdir('/opt/Patient/Images'):
         os.makedirs('/opt/Patient/Images')
     elif d["Init_neuron_model_ready"]==0:   # a totally new simulation, old images can be deleted
         shutil.rmtree('/opt/Patient/Images')
         os.makedirs('/opt/Patient/Images')
-        
+
     if d["voxel_arr_MRI"]==0 and d["voxel_arr_DTI"]==0:
         if os.path.isdir('/opt/Patient/MRI_DTI_derived_data'):
             shutil.rmtree('/opt/Patient/MRI_DTI_derived_data')
@@ -90,26 +90,26 @@ def manage_folders(d):
     if os.path.isdir('/opt/Patient/Field_solutions/Activation'):     # we always re-run NEURON simulation
         shutil.rmtree('/opt/Patient/Field_solutions/Activation')
         os.makedirs('/opt/Patient/Field_solutions/Activation')
-        
-    if d['Stim_side']==0:     
-        if os.path.isdir('/opt/Patient/Results_rh'):    
-            shutil.rmtree('/opt/Patient/Results_rh')
-        os.makedirs('/opt/Patient/Results_rh')          
 
-    if d['Stim_side']==1:     
-        if os.path.isdir('/opt/Patient/Results_lh'):    
+    if d['Stim_side']==0:
+        if os.path.isdir('/opt/Patient/Results_rh'):
+            shutil.rmtree('/opt/Patient/Results_rh')
+        os.makedirs('/opt/Patient/Results_rh')
+
+    if d['Stim_side']==1:
+        if os.path.isdir('/opt/Patient/Results_lh'):
             shutil.rmtree('/opt/Patient/Results_lh')
-        os.makedirs('/opt/Patient/Results_lh')          
-                                   
-    
+        os.makedirs('/opt/Patient/Results_lh')
+
+
     return True
 
 
 def check_state(d):
-      
+
     if d["IFFT_ready"]==1:
-        d["voxel_arr_MRI"]=1     
-        d["Init_mesh_ready"]=1        
+        d["voxel_arr_MRI"]=1
+        d["Init_mesh_ready"]=1
         d["Init_neuron_model_ready"]=1
         d["Adjusted_neuron_model_ready"]=1
         d["CSF_mesh_ready"]=1
@@ -117,43 +117,43 @@ def check_state(d):
         d["Parallel_comp_ready"]=1
         d["signal_generation_ready"]=1
     if d["Parallel_comp_ready"]==1:
-        d["voxel_arr_MRI"]=1     
-        d["Init_mesh_ready"]=1        
+        d["voxel_arr_MRI"]=1
+        d["Init_mesh_ready"]=1
         d["Init_neuron_model_ready"]=1
         d["Adjusted_neuron_model_ready"]=1
         d["CSF_mesh_ready"]=1
         d["Adapted_mesh_ready"]=1
         d["signal_generation_ready"]=1
-#    if d["signal_generation_ready"]==1:        
+#    if d["signal_generation_ready"]==1:
 #        d["Adapted_mesh_ready"]=1
-#        d["voxel_arr_MRI"]=1     
-#        d["Init_mesh_ready"]=1        
+#        d["voxel_arr_MRI"]=1
+#        d["Init_mesh_ready"]=1
 #        d["Init_neuron_model_ready"]=1
 #        d["Adjusted_neuron_model_ready"]=1
 #        d["CSF_mesh_ready"]=1
     if d["Adapted_mesh_ready"]==1:
-        d["voxel_arr_MRI"]=1     
-        d["Init_mesh_ready"]=1        
+        d["voxel_arr_MRI"]=1
+        d["Init_mesh_ready"]=1
         d["Init_neuron_model_ready"]=1
         d["Adjusted_neuron_model_ready"]=1
         d["CSF_mesh_ready"]=1
     if d["CSF_mesh_ready"]==1:
-        d["voxel_arr_MRI"]=1     
-        d["Init_mesh_ready"]=1        
+        d["voxel_arr_MRI"]=1
+        d["Init_mesh_ready"]=1
         d["Init_neuron_model_ready"]=1
         d["Adjusted_neuron_model_ready"]=1
     if d["Adjusted_neuron_model_ready"]==1:
         d["voxel_arr_MRI"]=1
-        d["Init_neuron_model_ready"]=1        
+        d["Init_neuron_model_ready"]=1
         d["Init_mesh_ready"]=1
     if d["Init_mesh_ready"]==1:
-        d["Init_neuron_model_ready"]=1        
-        d["voxel_arr_MRI"]=1        
+        d["Init_neuron_model_ready"]=1
+        d["voxel_arr_MRI"]=1
     if d["Init_neuron_model_ready"]==1:
-        d["voxel_arr_MRI"]=1     
-        
-    manage_folders(d)    
-    
+        d["voxel_arr_MRI"]=1
+
+    manage_folders(d)
+
     print("Folders were adjusted\n")
 
     return True
