@@ -37,4 +37,4 @@ for i=1:length(ftr)
     end
 end
 
-fprintf('Finished!\n\n');
+fprintf('\nFinished!\n\n');

@@ -64,10 +64,10 @@ end
 switch lower(type)
     case 'kuncel'
         calcr = @(U) kuncel08_eq1(U);
-        disp('Estimating radius based on Kuncel et al. 2008...');
+        fprintf('\nEstimating radius based on Kuncel et al. 2008...\n');
     case 'maedler'
         calcr = @(U) maedler12_eq3(U);
-        disp('Estimating radius based on Maedler et al. 2012...')
+        fprintf('\nEstimating radius based on Maedler et al. 2012...\n')
 end
 
 % Calculate radius
@@ -79,13 +79,13 @@ end
 
 % Load fiber connectome
 if ischar(ftr) && isfile(ftr)
-    disp('Loading fibers...');
+    fprintf('\nLoading fibers...\n');
     ftr = load(ftr);
 end
 
 % Convert voxel coordinates to mm in case needed
 if isfield(ftr, 'voxmm') && strcmp(ftr.voxmm, 'vox')
-    disp('Converting voxel coordinates to mm...')
+    fprintf('\nConverting voxel coordinates to mm...\n')
     if isfield(ftr, 'mat')
         ftr.fibers(:,1:3) = ea_vox2mm(ftr.fibers(:,1:3), ftr.mat);
     else
@@ -100,7 +100,7 @@ for i=1:length(radius)
     if ~radius{i}
         disp('No stimulation found, skipping...');
     else
-        disp('Constructing spherical ROI...');
+        fprintf('\nConstructing spherical ROI...\n');
         sphereROI = ea_spherical_roi([],stimCoords{i}, radius{i}, 0);
 
         % Find indices within sphere ROI region
@@ -134,7 +134,7 @@ for i=1:length(radius)
         % Binary fiber connection matrix for the T-test method
         fibConn(trimmedFiberInd(connected), i)=1;
 
-        disp([num2str(sum(fibConn(:,i))), ' out of ', num2str(length(ftr.idx)),' fibers found...'])
+        fprintf('%d out of %d fibers found...\n\n', sum(fibConn(:,i)), length(ftr.idx));
         fiberFiltered{i}.fibers = ftr.fibers(ismember(ftr.fibers(:,4), find(fibConn(:,i))), :);
         fiberFiltered{i}.idx = ftr.idx(logical(fibConn(:,i)));
     end
