@@ -368,35 +368,35 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
         print(np.round(Activated_models/float(Number_of_axons_initially)*100,2),"% activation (including damaged neurons)\n")
         if stim_side==0:
             #np.savetxt('/opt/Patient/Field_solutions/Activation/Last_run.csv', List_of_activated, delimiter=" ")
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
-            np.save('/opt/Patient/Results_rh/'+stim_folder+'Connection_status',Axon_status)
-            #np.save('/opt/Patient/Results_rh/'+stim_folder+'Network_status',Vert_full_status) 
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Network_status.csv', Vert_full_status, delimiter=" ")  #Ningfei prefers .csv
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")   
+            np.savetxt('/opt/Patient/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
+            np.save('/opt/Patient/'+stim_folder+'Connection_status',Axon_status)
+            #np.save('/opt/Patient/'+stim_folder+'Network_status',Vert_full_status) 
+            np.savetxt('/opt/Patient/'+stim_folder+'Network_status.csv', Vert_full_status, delimiter=" ")  #Ningfei prefers .csv
+            np.savetxt('/opt/Patient/'+stim_folder+'Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")   
         else:
             #np.savetxt('/opt/Patient/Field_solutions/Activation/Last_run.csv', List_of_activated, delimiter=" ")
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
-            np.save('/opt/Patient/Results_lh/'+stim_folder+'Connection_status',Axon_status)
-            #np.save('/opt/Patient/Results_lh/'+stim_folder+'Network_status',Vert_full_status) 
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Network_status.csv', Vert_full_status, delimiter=" ")  #Ningfei prefers .csv
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")   
+            np.savetxt('/opt/Patient/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
+            np.save('/opt/Patient/'+stim_folder+'Connection_status',Axon_status)
+            #np.save('/opt/Patient/'+stim_folder+'Network_status',Vert_full_status) 
+            np.savetxt('/opt/Patient/'+stim_folder+'Network_status.csv', Vert_full_status, delimiter=" ")  #Ningfei prefers .csv
+            np.savetxt('/opt/Patient/'+stim_folder+'Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")   
             
     else:
         print(np.round(Activated_models/float(Number_of_axons_initially)*100,2),"% activation in ",lst[population_index], "(including damaged neurons)\n")
         if stim_side==0:
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
-            np.save('/opt/Patient/Results_rh/'+stim_folder+'Connection_status_'+str(lst[population_index]),Axon_status)    
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
+            np.savetxt('/opt/Patient/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
+            np.save('/opt/Patient/'+stim_folder+'Connection_status_'+str(lst[population_index]),Axon_status)    
+            np.savetxt('/opt/Patient/'+stim_folder+'Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
         
-            hf = h5py.File('/opt/Patient/Results_rh/'+stim_folder+'Network_status.h5', 'a')
+            hf = h5py.File('/opt/Patient/'+stim_folder+'Network_status.h5', 'a')
             hf.create_dataset(str(lst[population_index]), data=Vert_full_status)
             hf.close()
         else:
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
-            np.save('/opt/Patient/Results_lh/'+stim_folder+'Connection_status_'+str(lst[population_index]),Axon_status)    
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
+            np.savetxt('/opt/Patient/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
+            np.save('/opt/Patient/'+stim_folder+'Connection_status_'+str(lst[population_index]),Axon_status)    
+            np.savetxt('/opt/Patient/'+stim_folder+'Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
         
-            hf = h5py.File('/opt/Patient/Results_lh/'+stim_folder+'Network_status.h5', 'a')
+            hf = h5py.File('/opt/Patient/'+stim_folder+'Network_status.h5', 'a')
             hf.create_dataset(str(lst[population_index]), data=Vert_full_status)
             hf.close()            
                 
