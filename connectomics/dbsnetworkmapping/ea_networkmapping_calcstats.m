@@ -50,13 +50,14 @@ for group=groups
     else
         gpatsel=patsel;
     end
+
     if obj.mirrorsides
         gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
-    
 
     switch obj.statmetric
         case 'Correlations (R-map)'
+            disp(['Correlation type: ', obj.corrtype, '. Calculating R-map...'])
             % no covariates exist:
             if obj.showsignificantonly
                 [vals{group},ps]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype);
@@ -65,9 +66,11 @@ for group=groups
                 [vals{group}]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
             end
         case 'Weighted Average (A-map)' % check
+            disp('Calculating A-map...')
             % no covariates exist:
             [vals{group}]=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
         case 'Combined (C-map)'
+            disp(['Correlation type: ', obj.corrtype, '. Calculating C-map...'])
             if obj.showsignificantonly
                 [R,ps]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
                 R=ea_corrsignan(vals{group},ps',obj);
@@ -84,13 +87,9 @@ for group=groups
             end
     end
                 
-        obj.stats.pos.available=sum(vals{1}>0); % only collected for first group (positives)
-        obj.stats.neg.available=sum(vals{1}<0);
-
-
-    
+    obj.stats.pos.available=sum(vals{1}>0); % only collected for first group (positives)
+    obj.stats.neg.available=sum(vals{1}<0);
 end
-
 
 
 function vals=ea_corrsignan(vals,ps,obj)
@@ -114,17 +113,3 @@ switch lower(obj.multcompstrategy)
 end
 ps(~nnanidx)=1;
 vals(ps>obj.alphalevel)=nan; % delete everything nonsignificant.
-
-
-
-
-
-
-
-
-
-
-
-
-
-

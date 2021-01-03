@@ -13,7 +13,7 @@ if isfield(atlases, 'roi')
     end
 
     for atl=1:size(atlases.roi,1)
-        for side=1:2
+        for side=1:size(atlases.roi,2)
             if ~isa(atlases.roi{atl,side},'ea_roi')
                 atlases.roi{atl,side}=ea_struct2roi(atlases.roi{atl,side},resultfig,ht);
             end

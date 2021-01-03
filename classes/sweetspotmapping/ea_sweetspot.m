@@ -8,7 +8,7 @@ classdef ea_sweetspot < handle
         ID % name / ID of sweetspot object
         posvisible = 1 % sweetspot visible
         negvisible = 0 % sourspot visible
-        
+
         efieldthreshold = 200
         statlevel = 'VTAs' % stats metric to use, 1 = active coordinates, 2 = efields, 3 = vtas
         stattest = 'T-Test';
@@ -19,19 +19,19 @@ classdef ea_sweetspot < handle
         statnormalization = 'van Albada 2017';
         corrtype = 'Spearman' % correlation strategy in case of using E-Fields.
         coverthreshold = 20; % of vtas needed to cover a single voxel to be considered
-        poscolor = [0.99,0.6,0.06] % positive main color
-        poscolor2 = [0.99,0.85,0.06] % positive peak color
+        posBaseColor = [0.99,0.6,0.06] % positive main color
+        posPeakColor = [0.99,0.85,0.06] % positive peak color
 
-        negcolor = [0.15,0.6,0.95] % negative main color
-        negcolor2 = [0.15,0.85,0.95] % negative peak color
-        
+        negBaseColor = [0.15,0.6,0.95] % negative main color
+        negPeakColor = [0.15,0.85,0.95] % negative peak color
+
         splitbygroup = 0
         showsignificantonly = 1
         alphalevel = 0.05
         multcompstrategy = 'Uncorrected'; % could be 'Bonferroni'
-        
+
         autorefresh=1;
-        
+
         results
         % Subfields:
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
@@ -89,7 +89,7 @@ classdef ea_sweetspot < handle
                 end
                 obj.ID = testID;
                 obj.resultfig = resultfig;
-                
+
                 if isfield(obj.M,'pseudoM')
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
@@ -101,7 +101,7 @@ classdef ea_sweetspot < handle
                     obj.allpatients = obj.M.patient.list;
                     obj.patientselection = obj.M.ui.listselect;
                 end
- 
+
                 obj.responsevarlabel = obj.M.clinical.labels{1};
                 obj.covarlabels={};
             elseif  isfield(D, 'sweetspot')  % Saved sweetspot class loaded
@@ -125,7 +125,7 @@ classdef ea_sweetspot < handle
             % gather all E-Fields. To keep consistency of the logic with
             % discfiberexplorer and networkmappingexplorer, we will keep
             % the same name (calculate) for the function, nonetheless.
-            
+
             % check that results aren't already there
             if ~isempty(obj.results) % vtas already gathered in
                 return
@@ -140,7 +140,7 @@ classdef ea_sweetspot < handle
 
             obj.results.efield = AllX;
             obj.results.space = space;
-            
+
             if ~isfield(obj.M,'pseudoM')
                 % get active coordinates, as well
                 for pt=1:length(obj.M.patient.list)
@@ -153,7 +153,7 @@ classdef ea_sweetspot < handle
                     obj.results.activecnt{side}=[obj.results.activecnt{side};ea_flip_lr_nonlinear(obj.results.activecnt{side})];
                 end
             end
-            
+
         end
 
         function Amps = getstimamp(obj)
@@ -203,6 +203,7 @@ classdef ea_sweetspot < handle
                 end
             end
         end
+
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
                msgbox('LEAD_groupanalysis file has vanished. Please select file.');
@@ -275,8 +276,6 @@ classdef ea_sweetspot < handle
             % Ihat is the estimate of improvements (not scaled to real improvements)
             Ihat = nan(length(patientsel),2);
 
-
-
             for c=1:cvp.NumTestSets
                 if cvp.NumTestSets ~= 1
                     fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
@@ -307,6 +306,7 @@ classdef ea_sweetspot < handle
                         [vals] = ea_sweetspot_calcstats(obj, patientsel(training), Iperm);
                     end
                 end
+
                 for side=1:numel(vals)
                     if ~isempty(vals{1,side})
                         switch obj.statlevel % also differentiate between methods in the prediction part.
@@ -347,12 +347,11 @@ classdef ea_sweetspot < handle
                 end
             end
 
-            
             % restore original view in case of live drawing
             if obj.cvlivevisualize
                 obj.draw;
             end
-            
+
             if cvp.NumTestSets == 1
                 Ihat = Ihat(test,:);
                 I = I(test);
@@ -378,7 +377,7 @@ classdef ea_sweetspot < handle
             Ihat = cell(numPerm+1, 1);
 
             R = zeros(numPerm+1, 1);
-            
+
             for perm=1:numPerm+1
                 if perm==1
                     fprintf('Calculating without permutation\n\n');
@@ -425,13 +424,12 @@ classdef ea_sweetspot < handle
                 [vals]=ea_sweetspot_calcstats(obj);
             end
             obj.spotdrawn.vals=vals;
-            
+
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
-            
-            
+
             set(0,'CurrentFigure',obj.resultfig);
-            
+
             dogroups=size(vals,1)>1; % if color by groups is set will be positive.
             if ~isfield(obj.M,'groups')
                 obj.M.groups.group=ones(length(obj.M.patient.list),1);
@@ -450,74 +448,44 @@ classdef ea_sweetspot < handle
             end
             obj.drawobject={};
 
-           
-            
-            
-            
+            % reset colorbar
+            obj.colorbar=[];
+            if ~any([obj.posvisible,obj.negvisible])
+                return
+            end
+
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
-                % Contruct default blue to red colormap
-                allvals = horzcat(vals{group,:})';
+                % Vertcat all values for colorbar construction
+                allvals = vertcat(vals{group,:});
                 if isempty(allvals)
                     continue;
                 end
+
                 colormap(gray);
-                gradientLevel = 1024;
-                cmapShiftRatio = 0.5;
-                shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
-                shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
-                shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
-                shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
+                gradientLevel = length(gray);
+
                 if dogroups
                     if obj.posvisible && ~obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(allvals, 'range');
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.posBaseColor, linecols(group,:));
                     elseif ~obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(-allvals, 'range');
+                        voxcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), obj.negBaseColor);
                     else
-                        warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                            '\nShow both positive and negative fibers is not supported when "Color by Group Variable" is on.']));
+                        warndlg(sprintf(['Please choose either "Show Positive Regions" or "Show Negative Regions".',...
+                            '\nShow both positive and negative regions is not supported when "Color by Group Variable" is on.']));
                         return;
                     end
                 else
                     if obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
-                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
-                        cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.poscolor);
-                        cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.poscolor);
+                        cmapLeft = ea_colorgradient(gradientLevel/2, obj.negPeakColor, obj.negBaseColor);
+                        cmapRight = ea_colorgradient(gradientLevel/2, obj.posBaseColor, obj.posPeakColor);
                         voxcmap{group} = [cmapLeft;cmapRight];
-                        cmapind = ones(size(allvals))*gradientLevel/2;
-                        cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
-                        cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind(allvals<0) = normalize(-1./(1+exp(-allvals(allvals<0))), 'range');
-                        % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
                     elseif obj.posvisible
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(1./(1+exp(-allvals)), 'range');
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.posBaseColor, obj.posPeakColor);
                     elseif obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
-                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
+                        voxcmap{group} = ea_colorgradient(gradientLevel, obj.negPeakColor, obj.negBaseColor);
                     end
                 end
-                if exist('voxcmap','var')
-                setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
-                end
-                %cmapind = mat2cell(cmapind, numel(vals{group}))';
-                %alphaind = mat2cell(alphaind, numel(vals{group}))';
-                
+
                 for side=1:size(vals,2)
                     res=obj.results.space{side};
                     res.dt=[16,1];
@@ -528,54 +496,53 @@ classdef ea_sweetspot < handle
                         posvox=res;
                         posvox.img(:)=0;
                         posvox.img(vals{group,side}>0)=vals{group,side}(vals{group,side}>0);
-                        
+
                         pobj.nii=posvox;
                         pobj.name='Positive';
                         pobj.niftiFilename='Positive.nii';
                         pobj.binary=0;
                         pobj.usesolidcolor=0;
-                        pobj.color=obj.poscolor2;
-                        pobj.colormap=ea_colorgradient(length(gray), obj.poscolor, obj.poscolor2);
+                        pobj.color=obj.posPeakColor;
+                        pobj.colormap=ea_colorgradient(gradientLevel, obj.posBaseColor, obj.posPeakColor);
                         pobj.smooth=10;
                         pobj.hullsimplify=0.5;
                         pobj.threshold=0;
                         obj.drawobject{group,side}{1}=ea_roi('Positive.nii',pobj);
-                        
+
                         res=posvox; % keep copy for export
                     end
-                    
+
                     if obj.negvisible
                         % plot negatives:
                         negvox=res;
                         negvox.img(:)=0;
                         negvox.img(vals{group,side}<0)=-vals{group,side}(vals{group,side}<0);
-                        
+
                         pobj.nii=negvox;
                         pobj.name='Negative';
                         pobj.niftiFilename='Negative.nii';
                         pobj.binary=0;
                         pobj.usesolidcolor=0;
-                        pobj.color=obj.negcolor2;
-                        pobj.colormap=ea_colorgradient(length(gray), obj.negcolor2, obj.negcolor);
+                        pobj.color=obj.negPeakColor;
+                        pobj.colormap=ea_colorgradient(gradientLevel, obj.negPeakColor, obj.negBaseColor);
                         pobj.smooth=10;
                         pobj.hullsimplify=0.5;
                         pobj.threshold=0;
                         obj.drawobject{group,side}{2}=ea_roi('Negative.nii',pobj);
-                        
+
                         res.img(:)=nansum([res.img(:),negvox.img(:)],2); % keep copy for export.
                     end
-                    
+
                     export{side}=res;
                 end
-                setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject); % store handle of surf to figure.
 
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
                     if obj.posvisible && obj.negvisible
-                        tick{group} = [1, length(voxcmap{group})];
+                        tick{group} = [1, gradientLevel/2-10, gradientLevel/2+11, length(voxcmap{group})];
                         poscbvals = sort(allvals(allvals>0));
                         negcbvals = sort(allvals(allvals<0));
-                        ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                        ticklabel{group} = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     elseif obj.posvisible
                         tick{group} = [1, length(voxcmap{group})];
@@ -591,8 +558,11 @@ classdef ea_sweetspot < handle
                 end
             end
 
+            setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject); % store handle of surf to figure.
+
             % store colorbar in object
-            if exist('fibcmap','var') % could be no fibers present at all.
+            if exist('voxcmap','var')
+                setappdata(obj.resultfig, ['voxcmap',obj.ID], voxcmap);
                 obj.colorbar.cmap = voxcmap;
                 obj.colorbar.tick = tick;
                 obj.colorbar.ticklabel = ticklabel;

@@ -48,7 +48,7 @@ for nativemni=nm % switch between native and mni space atlases.
         atlases=ea_loadatlas(options.atlasset,resultfig,ht);
         atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options,mifix);
     end
-
+    
     isdiscfibers = cellfun(@(x) ischar(x) && strcmp(x, 'discfibers'), atlases.pixdim);
     if all(sum(isdiscfibers,2))
         atlases.discfibersonly = 1;
@@ -68,11 +68,13 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if isfield(atlases,'colormap')
+        
         try
             jetlist=eval(atlases.colormap);
         catch
             jetlist=atlases.colormap;
         end
+    disp(jetlist)
     else
         try
             jetlist=options.colormap;
@@ -173,8 +175,15 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
                 colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
-
-                centroid=mean(atlases.roi{atlas,side}.fv.vertices(:,1:3));
+                
+                while 1
+                    try
+                        centroid=mean(atlases.roi{atlas,side}.fv.vertices(:,1:3));
+                        break
+                    catch
+                        atlases.roi{atlas,side}.threshold=atlases.roi{atlas,side}.threshold./2;
+                    end
+                end
                 set(0,'CurrentFigure',resultfig);
 
                 atlases.roi{atlas,side}.Visible='on';

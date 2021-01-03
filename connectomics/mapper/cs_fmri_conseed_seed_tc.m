@@ -1,4 +1,4 @@
-function cs_fmri_conseed_seed_tc(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask,exportgmtc)
+function cs_fmri_conseed_seed_tc(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,outputmask)
 
 tic
 
@@ -99,7 +99,7 @@ for s=1:size(sfile,1)
         end
         if ~isequal(seed{s,lr}.mat,dataset.vol.space.mat) && (~dealingwithsurface)
             oseedfname=seed{s,lr}.fname;
-            
+
             try
                 seed{s,lr}=ea_conformseedtofmri(dataset,seed{s,lr});
             catch
@@ -107,7 +107,7 @@ for s=1:size(sfile,1)
             end
             seed{s,lr}.fname=oseedfname; % restore original filename if even unneccessary at present.
         end
-        
+
         [~,seedfn{s,lr}]=fileparts(sfile{s,lr});
         if dealingwithsurface
             sweights=seed{s,lr}.img(:);
@@ -116,10 +116,10 @@ for s=1:size(sfile,1)
         end
         sweights(isnan(sweights))=0;
         sweights(isinf(sweights))=0; %
-        
+
         sweights(abs(sweights)<0.0001)=0;
         sweights=double(sweights);
-        
+
         try
             options=evalin('caller','options');
         end
@@ -131,7 +131,7 @@ for s=1:size(sfile,1)
         % assure sum of sweights is 1
         %sweights(logical(sweights))=sweights(logical(sweights))/abs(sum(sweights(logical(sweights))));
         sweightmx=repmat(sweights,1,1);
-        
+
         sweightidx{s,lr}=find(sweights);
         sweightidxmx{s,lr}=double(sweightmx(sweightidx{s,lr},:));
     end
@@ -165,7 +165,6 @@ else
     end
     numsub=length(usesubjects);
 end
-
 
 % init vars:
 for s=1:numseed
@@ -231,7 +230,7 @@ ea_dispercent(1,'end');
 
 for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     if owasempty
-        outputfolder=ea_getoutputfolder({sfile{s}},ocname);
+        outputfolder=ea_getoutputfolder(sfile(s),ocname);
     end
     % export mean
     M=ea_nanmean(fX{s}',1);
@@ -240,14 +239,14 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     mmap.img(:)=0;
     mmap.img=single(mmap.img);
     mmap.img(omaskidx)=M;
-    
+
     mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
     ea_write_nii(mmap);
     if usegzip
         gzip(mmap.fname);
         delete(mmap.fname);
     end
-    
+
     % export variance
     M=ea_nanvar(fX{s}');
     mmap=dataset.vol.space;
@@ -255,14 +254,14 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     mmap.img(:)=0;
     mmap.img=single(mmap.img);
     mmap.img(omaskidx)=M;
-    
+
     mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
     ea_write_nii(mmap);
     if usegzip
         gzip(mmap.fname);
         delete(mmap.fname);
     end
-    
+
     if isfield(dataset,'surf') && prefs.lcm.includesurf
         % lh surf
         lM=ea_nanmean(lhfX{s}');
@@ -277,7 +276,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             gzip(lmmap.fname);
             delete(lmmap.fname);
         end
-        
+
         % rh surf
         rM=ea_nanmean(rhfX{s}');
         rmmap=dataset.surf.r.space;
@@ -292,15 +291,15 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             delete(rmmap.fname);
         end
     end
-    
+
     % fisher-transform:
     fX{s}=atanh(fX{s});
     if isfield(dataset,'surf') && prefs.lcm.includesurf
         lhfX{s}=atanh(lhfX{s});
         rhfX{s}=atanh(rhfX{s});
     end
+
     % export fz-mean
-    
     M=nanmean(fX{s}');
     mmap=dataset.vol.space;
     mmap.dt=[16,0];
@@ -309,10 +308,12 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     mmap.img(omaskidx)=M;
     mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
     spm_write_vol(mmap,mmap.img);
+
     if usegzip
         gzip(mmap.fname);
         delete(mmap.fname);
     end
+
     if isfield(dataset,'surf') && prefs.lcm.includesurf
         % lh surf
         lM=nanmean(lhfX{s}');
@@ -327,7 +328,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             gzip(lmmap.fname);
             delete(lmmap.fname);
         end
-        
+
         % rh surf
         rM=nanmean(rhfX{s}');
         rmmap=dataset.surf.r.space;
@@ -342,24 +343,23 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             delete(rmmap.fname);
         end
     end
-    
+
     % export T
-    
     [~,~,~,tstat]=ttest(fX{s}');
     tmap=dataset.vol.space;
     tmap.img(:)=0;
     tmap.dt=[16,0];
     tmap.img=single(tmap.img);
-    
+
     tmap.img(omaskidx)=tstat.tstat;
-    
+
     tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
     spm_write_vol(tmap,tmap.img);
     if usegzip
         gzip(tmap.fname);
         delete(tmap.fname);
     end
-    
+
     if isfield(dataset,'surf') && prefs.lcm.includesurf
         % lh surf
         [~,~,~,ltstat]=ttest(lhfX{s}');
@@ -374,7 +374,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             gzip(lmmap.fname);
             delete(lmmap.fname);
         end
-        
+
         % rh surf
         [~,~,~,rtstat]=ttest(rhfX{s}');
         rmmap=dataset.surf.r.space;
@@ -389,11 +389,9 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
             delete(rmmap.fname);
         end
     end
-    
 end
 
 toc
-
 
 
 function writeoutsinglefiles(dataset,outputfolder,seedfn,s,mcfi,thiscorr,omaskidx,lsthiscorr,rsthiscorr)
@@ -413,7 +411,7 @@ if isfield(dataset,'surf') && prefs.lcm.includesurf
     ccmap.img(:)=mean(lsthiscorr,2);
     ccmap.dt=[16,0];
     spm_write_vol(ccmap,ccmap.img);
-    
+
     ccmap=dataset.surf.r.space;
     ccmap.img=single(ccmap.img);
     ccmap.img(:,:,:,2:end)=[];
@@ -423,18 +421,6 @@ if isfield(dataset,'surf') && prefs.lcm.includesurf
     spm_write_vol(ccmap,ccmap.img);
 end
 
-function s=ea_conformseedtofmri(dataset,s)
-td=tempdir;
-dataset.vol.space.fname=[td,'tmpspace.nii'];
-ea_write_nii(dataset.vol.space);
-s.fname=[td,'tmpseed.nii'];
-ea_write_nii(s);
-
-ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
-s=ea_load_nii(s.fname);
-delete([td,'tmpspace.nii']);
-delete([td,'tmpseed.nii']);
-
 
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)
 if strcmp(dataset.type,'fMRI_matrix')
@@ -443,8 +429,10 @@ else
     howmanyruns=length(dataset.vol.subIDs{mcfi})-1;
 end
 
+
 function X=addone(X)
 X=[ones(size(X,1),1),X];
+
 
 function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
 
@@ -457,4 +445,3 @@ end
 
 load([datadir,num2str(rightmat),'.mat']);
 loaded=rightmat;
-
