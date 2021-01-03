@@ -101,5 +101,5 @@ d = {
     'Truncate_the_obtained_full_solution': 0,
     'Show_paraview_screenshots': 0,
     'external_grounding': True,
-    'Stim_side': 1,
+    'Stim_side': 0,
 }

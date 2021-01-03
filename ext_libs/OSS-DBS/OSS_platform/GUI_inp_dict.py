@@ -68,7 +68,7 @@ d = {
     'trunc_param': 1000.0,
     'Truncate_the_obtained_full_solution': 0,
     'external_grounding': 1,
-    'Stim_side': 1,
+    'Stim_side': 0,
 
     'beta': 0.0,
     'K_A': 0.0,
