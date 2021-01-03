@@ -368,8 +368,8 @@ def fibers_to_axons(name_of_combined_file,name_of_fiber_file,projection_name,axo
     #hf.create_dataset(projection_name, data=Array_coord_platform)
     #hf.close()
     
-    #let's save it in /opt/patient/
-    hf = h5py.File('/opt/patient/'+name_of_combined_file + '.h5', 'a')
+    #let's save it in /opt/Patient/
+    hf = h5py.File('/opt/Patient/'+name_of_combined_file + '.h5', 'a')
     hf.create_dataset(projection_name, data=Array_coord_platform)
     hf.close()
 
@@ -385,7 +385,7 @@ if __name__ == '__main__':
     
     index_side=int(sys.argv[1:][0])
     
-    file_inp=h5py.File('/opt/patient/oss-dbs_parameters.mat')
+    file_inp=h5py.File('/opt/Patient/oss-dbs_parameters.mat')
     
     array_ascii=file_inp['settings']['connectome'][:]              
     list_ascii=[]    
@@ -396,7 +396,7 @@ if __name__ == '__main__':
 
     #right now we pass 
     
-    # Full_paths=['/opt/patient/'+name_of_the_connectome+'/data'+str(index_side+1)+'.mat','/opt/patient/'+name_of_the_connectome+'/data'+str(2)+'.mat']   # In Lead-DBS 1 is for rh, 2 for lh, that's why we add 1; data2 is for lh example, will be imported from Lead-DBS
+    # Full_paths=['/opt/Patient/'+name_of_the_connectome+'/data'+str(index_side+1)+'.mat','/opt/Patient/'+name_of_the_connectome+'/data'+str(2)+'.mat']   # In Lead-DBS 1 is for rh, 2 for lh, that's why we add 1; data2 is for lh example, will be imported from Lead-DBS
     # Name_to_save='Test2'
     # Axon_model='McIntyre2002'
     # axon_length=[9.0,5.0]   # as much as .mat files to process
@@ -404,8 +404,8 @@ if __name__ == '__main__':
     # Active_contact_coordinates=[np.array([10.92957028, -12.11697637, -7.697]),np.array([-10.92957028, -12.11697637, -7.697])]   # STN for now, should be changed
     
     
-    Full_paths=['/opt/patient/'+Path_to_files+'/data'+str(index_side+1)+'.mat']   # In Lead-DBS 1 is for rh, 2 for lh, that's why we add 1; data2 is for lh example, will be imported from Lead-DBS
-    #Full_paths=['/opt/patient/'+Path_to_files+'.mat']   # In Lead-DBS 1 is for rh, 2 for lh, that's why we add 1; data2 is for lh example, will be imported from Lead-DBS
+    Full_paths=['/opt/Patient/'+Path_to_files+'/data'+str(index_side+1)+'.mat']   # In Lead-DBS 1 is for rh, 2 for lh, that's why we add 1; data2 is for lh example, will be imported from Lead-DBS
+    #Full_paths=['/opt/Patient/'+Path_to_files+'.mat']   # In Lead-DBS 1 is for rh, 2 for lh, that's why we add 1; data2 is for lh example, will be imported from Lead-DBS
     Name_to_save='Allocated_axons'  #should be the name of the connectome later?
     Axon_model='McIntyre2002'
     axon_length=[file_inp['settings']['axonLength'][:][0][0]]
@@ -461,10 +461,10 @@ if __name__ == '__main__':
     axon_dict['diam_fib']=diams_fib
     
     
-    #print('/opt/patient/'+Name_to_save+'.h5')
-    if os.path.exists('/opt/patient/'+Name_to_save+'.h5'):
+    #print('/opt/Patient/'+Name_to_save+'.h5')
+    if os.path.exists('/opt/Patient/'+Name_to_save+'.h5'):
         print("Axon file with this name was already created, skipping")
-        n_Ranviers_per_projection=np.genfromtxt('/opt/patient/'+Name_to_save+'_N_nodes.csv', delimiter=' ')
+        n_Ranviers_per_projection=np.genfromtxt('/opt/Patient/'+Name_to_save+'_N_nodes.csv', delimiter=' ')
         
         if len(Fiber_names)==1:
             print("Projection ",Fiber_names[0]," seeded with ",n_Ranviers_per_projection, "nodes of Ranvier")
@@ -479,12 +479,12 @@ if __name__ == '__main__':
             n_Ranviers_per_projection[i]=fibers_to_axons(Name_to_save,Full_paths[i],Fiber_names[i],Axon_model,diams_fib[i],axon_length[i],Active_contact_coordinates)
             print("Projection ",Fiber_names[i]," seeded with ",n_Ranviers_per_projection[i], "nodes of Ranvier")
             
-        np.savetxt('/opt/patient/'+Name_to_save+'_N_nodes.csv', n_Ranviers_per_projection, delimiter=" ") 
+        np.savetxt('/opt/Patient/'+Name_to_save+'_N_nodes.csv', n_Ranviers_per_projection, delimiter=" ") 
     
         
-    if len(Fiber_names)==1 and not os.path.exists('/opt/patient/'+Name_to_save+'.h5'):            #stupid way
+    if len(Fiber_names)==1 and not os.path.exists('/opt/Patient/'+Name_to_save+'.h5'):            #stupid way
         n_Ranviers_per_projection_list=[n_Ranviers_per_projection[0]]
-    elif len(Fiber_names)==1 and os.path.exists('/opt/patient/'+Name_to_save+'.h5'):            #stupid way
+    elif len(Fiber_names)==1 and os.path.exists('/opt/Patient/'+Name_to_save+'.h5'):            #stupid way
         n_Ranviers_per_projection_list=[int(n_Ranviers_per_projection+0)] # stupid trick  
     else:    
         n_Ranviers_per_projection_list=list(n_Ranviers_per_projection)    

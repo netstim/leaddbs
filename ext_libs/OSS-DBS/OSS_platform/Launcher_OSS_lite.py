@@ -438,7 +438,7 @@ def run_full_model(master_dict):
         if d["spectrum_trunc_method"]=='Octave Band Method':
             if isinstance(d["n_Ranvier"],list):             #if different populations
                 last_point=0
-                hf = h5py.File('/opt/patient/'+d["Name_prepared_neuron_array"], 'r')
+                hf = h5py.File('/opt/Patient/'+d["Name_prepared_neuron_array"], 'r')
                 lst_population_names=list(hf.keys())
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
