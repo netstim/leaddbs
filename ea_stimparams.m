@@ -1044,20 +1044,17 @@ end
 
 ea_savestimulation(S,options);
 setappdata(handles.stimfig,'S',S);
-if isfield(elstruct,'group')
-    gcnt=ones(length(elstruct(1).groups),1);
-end
-
-% assign correct .m-file to function.
-genvatfunctions=getappdata(handles.stimfig,'genvatfunctions');
-ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
-stimname=S.label;
 
 if isfield(elstruct,'group') % group analysis, more than one electrode set
     % this should not happen, in this case the stim button is
     % hidden.
     keyboard
 end
+
+% assign correct .m-file to function.
+genvatfunctions=getappdata(handles.stimfig,'genvatfunctions');
+ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
+stimname=S.label;
 
 for el=1:length(elstruct)
     % Load stim coordinates
