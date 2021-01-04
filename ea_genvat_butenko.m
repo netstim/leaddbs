@@ -310,6 +310,25 @@ for side=0:1
             copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'], ...
                      [outputPath, filesep, 'vat_', sideStr, '.nii'])
         end
+
+        if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'Axon_state_data',num2str(side),'.mat'])
+            % Get fiber id and state from OSS-DBS result
+            ftr = load([outputPath, filesep, 'Results_', sideCode, filesep, 'Axon_state_data',num2str(side+1),'.mat']);
+            [fibId, ind] = unique(ftr.fibers(:,4));
+            fibState = ftr.fibers(ind,5);
+
+            % Restore full length fiber (as in original filtered fiber)
+            ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
+            ftr.fibers = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
+
+            % Set fiber state
+            for f=1:length(fibId)
+                ftr.fibers(ftr.fibers(:,4)==fibId(f),5) = fibState(f);
+            end
+
+            % Save result for visualization
+            save([outputPath, filesep, 'Results_', sideCode, filesep,'axonActivation.mat'], '-struct',ftr);
+        end
     elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
         warning('off', 'backtrace');
         fprintf('\n')
