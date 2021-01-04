@@ -1,4 +1,8 @@
 function vatfv = ea_niiVAT2fvVAT(nii)
+if ischar(nii) && isfile(nii)
+    nii = ea_load_nii(nii);
+end
+
 start = nii.mat * [1;1;1;1];
 niisize = size(nii.img);
 stop = nii.mat * [niisize,1]';
