@@ -308,6 +308,11 @@ for side=0:1
         if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'])
             copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'], ...
                      [outputPath, filesep, 'vat_', sideStr, '.nii'])
+
+            % Return vat fv and volume
+            vat = ea_load_nii([outputPath, filesep, 'vat_', sideStr, '.nii']);
+            varargout{1} = ea_niiVAT2fvVAT(vat);
+            varargout{2} = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
         end
 
         if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'Axon_state_data',num2str(side),'.mat'])
