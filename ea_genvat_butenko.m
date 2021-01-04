@@ -269,8 +269,8 @@ for side=0:1
 
             % Make sure to clean up, useful in manually interruption
             ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
-            ea_delete([outputPath, filesep,'Allocated_axons_N_nodes.csv']);
             ea_delete([outputPath, filesep,'Allocated_axons.h5']);
+            ea_delete([outputPath, filesep,'*.csv']);
             ea_delete([outputPath, filesep,'*.py']);
 
             system(['docker run ', ...
@@ -348,8 +348,8 @@ for side=0:1
 
     % Clean up
     ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
-    ea_delete([outputPath, filesep,'Allocated_axons_N_nodes.csv']);
     ea_delete([outputPath, filesep,'Allocated_axons.h5']);
+    ea_delete([outputPath, filesep,'*.csv']);
     ea_delete([outputPath, filesep,'*.py']);
 end
 
