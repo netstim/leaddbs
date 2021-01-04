@@ -326,7 +326,7 @@ for side=0:1
             end
 
             % Save result for visualization
-            save([outputPath, filesep, 'Results_', sideCode, filesep,'axonActivation.mat'], '-struct',ftr);
+            save([outputPath, filesep, 'Results_', sideCode, filesep,'axonActivation.mat'], '-struct', 'ftr');
 
             % Visualize axon activation
             if exist('resultfig', 'var')
