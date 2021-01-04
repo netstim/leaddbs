@@ -265,6 +265,12 @@ for side=0:1
                     fprintf('Calculating axon allocation for left side stimulation...\n\n');
             end
 
+            % Make sure to clean up, useful in manually interruption
+            ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
+            ea_delete([outputPath, filesep,'Allocated_axons_N_nodes.csv']);
+            ea_delete([outputPath, filesep,'Allocated_axons.h5']);
+            ea_delete([outputPath, filesep,'*.py']);
+
             system(['docker run ', ...
                     '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
                     '--volume ', outputPath, ':/opt/Patient ', ...
