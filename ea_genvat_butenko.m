@@ -305,8 +305,8 @@ for side=0:1
                      [outputPath, filesep, 'vat_efield_', sideStr, '.nii'])
         end
 
-        if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'])
-            copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VAT_solution.nii'], ...
+        if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'])
+            copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
                      [outputPath, filesep, 'vat_', sideStr, '.nii'])
 
             % Return vat fv and volume
