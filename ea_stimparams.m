@@ -1067,11 +1067,19 @@ for el=1:length(elstruct)
         coords = elstruct(el).coords_mm;
     end
 
-    for iside=1:length(options.sides)
-        side=options.sides(iside);
-        [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,handles.stimfig);
-        stimparams(1,side).volume=volume;
-        flix=1;
+    if strcmp(S.model, 'OSS-DBS (Butenko 2020)') % For OSS-DBS, side iteration is within the genvat function
+        if options.prefs.machine.vatsettings.butenko_calcAxonActivation
+            feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
+        else
+            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
+        end
+    else
+        for iside=1:length(options.sides)
+            side=options.sides(iside);
+            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,handles.stimfig);
+            stimparams(1,side).volume=volume;
+            flix=1;
+        end
     end
 end
 options.native=options.orignative;

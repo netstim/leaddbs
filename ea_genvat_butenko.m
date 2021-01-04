@@ -1,19 +1,13 @@
 function varargout = ea_genvat_butenko(varargin)
 % Wrapper for OSS-DBS for VTA calculation
 
-if nargin==5
-    acoords=varargin{1};
-    S=varargin{2};
-    side=varargin{3};
-    options=varargin{4};
-    stimname=varargin{5};
-elseif nargin==6
-    acoords=varargin{1};
-    S=varargin{2};
-    side=varargin{3};
-    options=varargin{4};
-    stimname=varargin{5};
-    lgfigure=varargin{6};
+if nargin==2
+    S=varargin{1};
+    options=varargin{2};
+elseif nargin==3
+    S=varargin{1};
+    options=varargin{2};
+    lgfigure=varargin{3};
 elseif nargin==1 && ischar(varargin{1}) % return name of method.
     varargout{1} = 'OSS-DBS (Butenko 2020)';
     return
