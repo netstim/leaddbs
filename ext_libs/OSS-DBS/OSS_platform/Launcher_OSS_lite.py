@@ -475,7 +475,7 @@ def run_full_model(master_dict):
         with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         from Axon_files.Reilly2016.NEURON_Reilly2016 import run_simulation_with_NEURON
 
-    if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
+    if isinstance(d["n_Ranvier"],list):
         Number_of_activated=0
         last_point=0
         for i in range(len(d["n_Ranvier"])):

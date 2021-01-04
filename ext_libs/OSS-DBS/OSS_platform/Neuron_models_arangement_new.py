@@ -822,12 +822,10 @@ def cut_models_by_domain(d,Brain_shape_name,name_prepared_neuron_array):
         return True
 
     if name_prepared_neuron_array[-3:]=='.h5':
-
-        if isinstance(d["diam_fib"],list):
-            diam_of_populations=d["diam_fib"]
-        else:
-            diam_of_populations=[d["diam_fib"]]
+        if not isinstance(d["diam_fib"],list):
+            d["diam_fib"]=[d["diam_fib"]]
             d["n_Ranvier"]=[d["n_Ranvier"]]
+        diam_of_populations=d["diam_fib"]
 
         hf = h5py.File('/opt/Patient/'+name_prepared_neuron_array, 'r')
         lst=list(hf.keys())
