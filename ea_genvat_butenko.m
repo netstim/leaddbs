@@ -247,11 +247,11 @@ ea_delete([outputPath, filesep, 'fail_lh.txt']);
 for side=0:1
     switch side
         case 0
-            disp('Running OSS-DBS for right side stimulation...');
+            fprintf('Running OSS-DBS for right side stimulation...\n\n');
             sideCode = 'rh';
             sideStr = 'right';
         case 1
-            disp('Running OSS-DBS for left side stimulation...');
+            fprintf('Running OSS-DBS for left side stimulation...\n\n');
             sideCode = 'lh';
             sideStr = 'left';
     end
@@ -260,9 +260,9 @@ for side=0:1
     if settings.calcAxonActivation
             switch side
                 case 0
-                    fprintf('Calculating axon allocation for right side stimulation...\n');
+                    fprintf('Calculating axon allocation for right side stimulation...\n\n');
                 case 1
-                    fprintf('Calculating axon allocation for left side stimulation...\n');
+                    fprintf('Calculating axon allocation for left side stimulation...\n\n');
             end
 
             system(['docker run ', ...
@@ -285,7 +285,7 @@ for side=0:1
     end
 
     if isfile([outputPath, filesep, 'success_', sideCode, '.txt'])
-        disp('OSS-DBS calculation succeeded!')
+        fprintf('\nOSS-DBS calculation succeeded!\n\n')
         % Copy VAT files
         if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
             copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'], ...
@@ -298,7 +298,8 @@ for side=0:1
         end
     elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
         warning('off', 'backtrace');
-        warning('OSS-DBS calculation failed for %s side!', sideStr);
+        fprintf('\n')
+        warning('OSS-DBS calculation failed for %s side!\n', sideStr);
         warning('on', 'backtrace');
     end
 

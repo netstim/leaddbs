@@ -92,7 +92,7 @@ def fibers_to_axons(name_of_combined_file,name_of_fiber_file,projection_name,axo
 
         n_total=(n_Ranviers-1)*n_comp+1   #total incl. Ranvier
 
-        print(n_Ranviers,axon_length,node_step)
+        # print(n_Ranviers,axon_length,node_step)
 
     elif axon_model == 'Reilly2016':
         n_comp=2        #only nodes and one internodal per segment
