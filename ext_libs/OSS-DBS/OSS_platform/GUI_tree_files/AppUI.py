@@ -446,6 +446,7 @@ class MainWindow(Functionalities):
         # from pop_up_control.dictionaries import dict_cpe_active, dict_external_neuron_array, dict_full_field_ifft, \
         #     dict_mesh_refinement
         output_dict = Dictionary(self).output_dict()
+        output_dict['Stim_side'] = self.index_side
 
         # # concatenate various dictionaries
         # output_dict.update(dict_cpe_active.d)
