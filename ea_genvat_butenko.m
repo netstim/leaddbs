@@ -292,6 +292,11 @@ for side=0:1
         continue;
     end
 
+    % Get resultfig handle
+    if exist('lgfigure', 'var')
+        resultfig = getappdata(lgfigure,'resultfig');
+    end
+
     if isfile([outputPath, filesep, 'success_', sideCode, '.txt'])
         fprintf('\nOSS-DBS calculation succeeded!\n\n')
         % Copy VAT files
@@ -322,6 +327,12 @@ for side=0:1
 
             % Save result for visualization
             save([outputPath, filesep, 'Results_', sideCode, filesep,'axonActivation.mat'], '-struct',ftr);
+
+            % Visualize axon activation
+            if exist('resultfig', 'var')
+                set(0, 'CurrentFigure', resultfig);
+                ea_axon_viz([outputPath, filesep, 'Results_', sideCode, filesep,'axonActivation.mat'], resultfig);
+            end
         end
     elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
         warning('off', 'backtrace');
