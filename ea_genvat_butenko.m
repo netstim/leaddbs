@@ -301,6 +301,12 @@ for side=0:1
         warning('OSS-DBS calculation failed for %s side!', sideStr);
         warning('on', 'backtrace');
     end
+
+    % Clean up
+    ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
+    ea_delete([outputPath, filesep,'Allocated_axons_N_nodes.csv']);
+    ea_delete([outputPath, filesep,'Allocated_axons.h5']);
+    ea_delete([outputPath, filesep,'*.py']);
 end
 
 % Restore working directory and env
