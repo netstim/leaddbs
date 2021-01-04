@@ -460,27 +460,11 @@ if __name__ == '__main__':
     axon_dict['Name_prepared_neuron_array']=Name_to_save+'.h5'
     axon_dict['diam_fib']=diams_fib
 
-
-    #print('/opt/Patient/'+Name_to_save+'.h5')
-    if os.path.exists('/opt/Patient/'+Name_to_save+'.h5'):
-        print("Axon file with this name was already created, skipping")
-        n_Ranviers_per_projection=np.genfromtxt('/opt/Patient/'+Name_to_save+'_N_nodes.csv', delimiter=' ')
-
-        if len(Fiber_names)==1:
-            print("Projection ",Fiber_names[0]," seeded with ",n_Ranviers_per_projection, "nodes of Ranvier")
-        else:
-            for i in range(len(Fiber_names)):
-                print("Projection ",Fiber_names[i]," seeded with ",n_Ranviers_per_projection[i], "nodes of Ranvier")
-
-    else:
-        n_Ranviers_per_projection=np.zeros(len(axon_length),int)
-        for i in range(len(Fiber_names)):
-
-            n_Ranviers_per_projection[i]=fibers_to_axons(Name_to_save,Full_paths[i],Fiber_names[i],Axon_model,diams_fib[i],axon_length[i],Active_contact_coordinates)
-            print("Projection ",Fiber_names[i]," seeded with ",n_Ranviers_per_projection[i], "nodes of Ranvier")
-
-        np.savetxt('/opt/Patient/'+Name_to_save+'_N_nodes.csv', n_Ranviers_per_projection, delimiter=" ")
-
+    n_Ranviers_per_projection=np.zeros(len(axon_length),int)
+    for i in range(len(Fiber_names)):
+        n_Ranviers_per_projection[i]=fibers_to_axons(Name_to_save,Full_paths[i],Fiber_names[i],Axon_model,diams_fib[i],axon_length[i],Active_contact_coordinates)
+        print("Projection ",Fiber_names[i]," seeded with ",n_Ranviers_per_projection[i], "nodes of Ranvier")
+    np.savetxt('/opt/Patient/'+Name_to_save+'_N_nodes.csv', n_Ranviers_per_projection, delimiter=" ")
 
     if len(Fiber_names)==1 and not os.path.exists('/opt/Patient/'+Name_to_save+'.h5'):            #stupid way
         n_Ranviers_per_projection_list=[n_Ranviers_per_projection[0]]
