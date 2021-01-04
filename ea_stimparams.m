@@ -1053,24 +1053,25 @@ genvatfunctions=getappdata(handles.stimfig,'genvatfunctions');
 ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
 stimname=S.label;
 
-for el=1:length(elstruct)
-    for iside=1:length(options.sides)%length(elstruct.coords_mm)
-        side=options.sides(iside);
+if isfield(elstruct,'group') % group analysis, more than one electrode set
+    % this should not happen, in this case the stim button is
+    % hidden.
+    keyboard
+end
 
-        if isfield(elstruct,'group') % group analysis, more than one electrode set
-            % this should not happen, in this case the stim button is
-            % hidden.
-            keyboard
-        else % single patient
-            if options.native % Reload native space coordinates
-                coords = ea_load_reconstruction(options);
-            else
-                coords = elstruct(el).coords_mm;
-            end
-            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,handles.stimfig);
-            stimparams(1,side).volume=volume;
-            flix=1;
-        end
+for el=1:length(elstruct)
+    % Load stim coordinates
+    if options.native % Reload native space coordinates
+        coords = ea_load_reconstruction(options);
+    else
+        coords = elstruct(el).coords_mm;
+    end
+
+    for iside=1:length(options.sides)
+        side=options.sides(iside);
+        [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,handles.stimfig);
+        stimparams(1,side).volume=volume;
+        flix=1;
     end
 end
 options.native=options.orignative;
