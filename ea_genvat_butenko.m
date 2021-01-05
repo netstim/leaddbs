@@ -321,6 +321,7 @@ for side=0:1
             copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
                      [outputPath, filesep, 'vat_', sideStr, '.nii'])
 
+            vatToViz = [outputPath, filesep, 'vat_', sideStr, '.nii'];
             if options.native % Transform to MNI space
                 ea_apply_normalization_tofile(options,...
                     [outputPath, filesep, 'vat_', sideStr, '.nii'],... % from
@@ -331,16 +332,13 @@ for side=0:1
                     [ea_space, 't1.nii']);
                 ea_autocrop([MNIoutputPath, filesep, 'vat_', sideStr, '.nii']);
 
-                if options.orignative % Choose vta of which space to load
-                    vat = ea_load_nii([outputPath, filesep, 'vat_', sideStr, '.nii']);
-                else
-                    vat = ea_load_nii([MNIoutputPath, filesep, 'vat_', sideStr, '.nii']);
+                if ~options.orignative % Visualize MNI space VTA
+                    vatToViz = [MNIoutputPath, filesep, 'vat_', sideStr, '.nii'];
                 end
-            else % Load result directly
-                vat = ea_load_nii([outputPath, filesep, 'vat_', sideStr, '.nii']);
             end
 
             % Calc vat fv and volume
+            vat = ea_load_nii(vatToViz);
             vatfv = ea_niiVAT2fvVAT(vat);
             vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
             save([outputPath, filesep, 'vat_', sideStr, '.mat'], 'vatfv', 'vatvolume');
