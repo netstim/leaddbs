@@ -321,7 +321,7 @@ for side=0:1
             stimparams(side+1).volume = vatvolume;
         end
 
-        if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'Axon_state_data',num2str(side),'.mat'])
+        if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'Axon_state_data',num2str(side+1),'.mat'])
             % Get fiber id and state from OSS-DBS result
             ftr = load([outputPath, filesep, 'Results_', sideCode, filesep, 'Axon_state_data',num2str(side+1),'.mat']);
             [fibId, ind] = unique(ftr.fibers(:,4));
