@@ -3,6 +3,8 @@ function ea_axon_viz(axons, resultfig)
 [~, fname] = fileparts(axons);
 axons = load(axons, 'fibers');
 
+set(0, 'CurrentFigure', resultfig);
+
 % Check and creat toolbox if needed
 PL = getappdata(resultfig,'PL');
 if isempty(PL) || ~isfield(PL, 'ht') || ~isvalid(PL.ht)
