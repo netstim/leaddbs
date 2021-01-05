@@ -68,13 +68,11 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if isfield(atlases,'colormap')
-        
         try
             jetlist=eval(atlases.colormap);
         catch
             jetlist=atlases.colormap;
         end
-    disp(jetlist)
     else
         try
             jetlist=options.colormap;
