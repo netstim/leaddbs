@@ -12,7 +12,13 @@ if isempty(PL) || ~isfield(PL, 'ht') || ~isvalid(PL.ht)
 end
 
 toolbar = PL.ht;
-PL.axon = cell(3,1);
+
+if isfield(PL, 'axon')
+    axonInd = length(PL.axon);
+else
+    PL.axon = cell(3,1);
+    axonInd = 0;
+end
 
 prefs = ea_prefs;
 
@@ -21,21 +27,21 @@ Ind = axons.fibers(:,5)==1;
 fibers = axons.fibers(Ind,1:3);
 [~,~,idx] = unique(axons.fibers(Ind,4));
 idx = accumarray(idx,1);
-PL.axon{1} = showAxons(fibers, idx, prefs.d3.axon_activated_color, [fname, '_Activated'], toolbar);
+PL.axon{axonInd+1} = showAxons(fibers, idx, prefs.d3.axon_activated_color, [fname, '_Activated'], toolbar);
 
 % Non-activated fibers
 Ind = axons.fibers(:,5)==0;
 fibers = axons.fibers(Ind,1:3);
 [~,~,idx] = unique(axons.fibers(Ind,4));
 idx = accumarray(idx,1);
-PL.axon{2} = showAxons(fibers, idx, prefs.d3.axon_nonactivated_color, [fname, '_Nonactivated'], toolbar);
+PL.axon{axonInd+2} = showAxons(fibers, idx, prefs.d3.axon_nonactivated_color, [fname, '_Nonactivated'], toolbar);
 
 % Damaged fibers
 Ind = axons.fibers(:,5)==-1;
 fibers = axons.fibers(Ind,1:3);
 [~,~,idx] = unique(axons.fibers(Ind,4));
 idx = accumarray(idx,1);
-PL.axon{3} = showAxons(fibers, idx, prefs.d3.axon_damaged_color, [fname, '_Damaged'], toolbar);
+PL.axon{axonInd+3} = showAxons(fibers, idx, prefs.d3.axon_damaged_color, [fname, '_Damaged'], toolbar);
 
 setappdata(resultfig, 'PL', PL);
 
