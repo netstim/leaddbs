@@ -236,6 +236,34 @@ if ~strcmp(options.leadprod, 'group')
             end
         end
 
+        if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat']) ...
+                && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+            resultfig = getappdata(handles.stimfig,'resultfig');
+            PL=getappdata(resultfig,'PL');
+            for group=1:length(PL)
+                deletePL(PL(group));
+            end
+            clear PL
+            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
+            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
+        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'])
+            resultfig = getappdata(handles.stimfig,'resultfig');
+            PL=getappdata(resultfig,'PL');
+            for group=1:length(PL)
+                deletePL(PL(group));
+            end
+            clear PL
+            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
+        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+            resultfig = getappdata(handles.stimfig,'resultfig');
+            PL=getappdata(resultfig,'PL');
+            for group=1:length(PL)
+                deletePL(PL(group));
+            end
+            clear PL
+            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
+        end
+
         if visualizeVAT
             setappdata(handles.stimfig,'stimparams',stimparams);
             resultfig = getappdata(handles.stimfig,'resultfig');
@@ -1826,6 +1854,37 @@ else
         end
     end
 
+    visualizeAxon = 1;
+    if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat']) ...
+            && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+        resultfig = getappdata(handles.stimfig,'resultfig');
+        PL=getappdata(resultfig,'PL');
+        for group=1:length(PL)
+            deletePL(PL(group));
+        end
+        clear PL
+        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
+        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
+    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'])
+        resultfig = getappdata(handles.stimfig,'resultfig');
+        PL=getappdata(resultfig,'PL');
+        for group=1:length(PL)
+            deletePL(PL(group));
+        end
+        clear PL
+        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
+    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+        resultfig = getappdata(handles.stimfig,'resultfig');
+        PL=getappdata(resultfig,'PL');
+        for group=1:length(PL)
+            deletePL(PL(group));
+        end
+        clear PL
+        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
+    else
+        visualizeAxon = 0;
+    end
+
     if visualizeVAT
         setappdata(handles.stimfig,'stimparams',stimparams);
         resultfig = getappdata(handles.stimfig,'resultfig');
@@ -1841,8 +1900,14 @@ else
         setappdata(resultfig,'curS',S(1))
         options.writeoutstats = 1;
         ea_calc_vatstats(resultfig,options);
-    else
-        disp('VAT cannot be visualized please recalculate!')
+    end
+
+    if ~visualizeVAT && ~visualizeAxon
+       	fprintf('\n');
+        warning('off', 'backtrace');
+        warning('Nothing to be visualized, please rerun stimulation!!');
+        warning('on', 'backtrace');
+        fprintf('\n');
     end
 end
 
