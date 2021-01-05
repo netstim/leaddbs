@@ -116,6 +116,9 @@ setappdata(handles.stimfig,'resultfig',resultfig);
 setappdata(handles.stimfig,'options',options);
 
 stimparams=getappdata(resultfig,'stimparams'); % get info from resultfig.
+if isempty(stimparams)
+    stimparams = struct();
+end
 setappdata(handles.stimfig,'stimparams',stimparams); % store stimulation settings from resultfig to stim (this) fig for subroutines.
 
 % setup modelselect popup
@@ -1775,6 +1778,7 @@ else
     % available the vat_xxx.nii is loaded and visualized
 
     visualizeVAT = 1;
+    stimparams = struct();
     if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
         load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
@@ -1802,7 +1806,7 @@ else
             nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,1).VAT.VAT = vatfv;
-            stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);`
+            stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
             nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,2).VAT.VAT = vatfv;
