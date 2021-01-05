@@ -76,7 +76,6 @@ for but=1:length(togglenames)
     end
 
     setappdata(resultfig,togglenames{but},eval(togglenames{but}));
-
 end
 clear expand
 

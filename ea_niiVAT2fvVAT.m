@@ -1,4 +1,4 @@
-function vatfv = ea_niiVAT2fvVAT(nii)
+function vatfv = ea_niiVAT2fvVAT(nii, smooth)
 if ischar(nii) && isfile(nii)
     nii = ea_load_nii(nii);
 end
@@ -17,16 +17,22 @@ caps=isocaps(xg,yg,zg,permute(nii.img,[2,1,3]),0.5);
 vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
 vatfv.vertices=[vatfv.vertices;caps.vertices];
 
-try
-    vatfv=ea_smoothpatch(vatfv,1,35);
-catch
+if nargin<2
+    smooth = 1;
+end
+
+if smooth
     try
-        cd([ea_getearoot,'ext_libs',filesep,'smoothpatch']);
-        mex ea_smoothpatch_curvature_double.c -v
-        mex ea_smoothpatch_inversedistance_double.c -v
-        mex ea_vertex_neighbours_double.c -v
-        vatfv=ea_smoothpatch(vatfv);
+        vatfv=ea_smoothpatch(vatfv,1,35);
     catch
-        warndlg('Patch could not be smoothed. Please supply a compatible Matlab compiler to smooth VTAs.');
+        try
+            cd([ea_getearoot,'ext_libs',filesep,'smoothpatch']);
+            mex ea_smoothpatch_curvature_double.c -v
+            mex ea_smoothpatch_inversedistance_double.c -v
+            mex ea_vertex_neighbours_double.c -v
+            vatfv=ea_smoothpatch(vatfv);
+        catch
+            warndlg('Patch could not be smoothed. Please supply a compatible Matlab compiler to smooth VTAs.');
+        end
     end
 end
