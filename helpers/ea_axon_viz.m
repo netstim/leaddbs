@@ -5,7 +5,7 @@ axons = load(axons, 'fibers');
 
 % Check and creat toolbox if needed
 PL = getappdata(resultfig,'PL');
-if isempty(PL) || ~isfield(PL, 'ht')
+if isempty(PL) || ~isfield(PL, 'ht') || ~isvalid(PL.ht)
     PL.ht = uitoolbar(resultfig);
     setappdata(resultfig, 'PL', PL);
 end
