@@ -337,12 +337,12 @@ for side=0:1
             end
 
             % Save result for visualization
-            save([outputPath, filesep, 'Results_', sideCode, filesep,'axonActivation.mat'], '-struct', 'ftr');
+            save([outputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'ftr');
 
             % Visualize axon activation
             if exist('resultfig', 'var')
                 set(0, 'CurrentFigure', resultfig);
-                ea_axon_viz([outputPath, filesep, 'Results_', sideCode, filesep,'axonActivation.mat'], resultfig);
+                ea_axon_viz([outputPath, filesep, 'axonActivation_', sideStr, '.mat'], resultfig);
             end
         end
     elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
