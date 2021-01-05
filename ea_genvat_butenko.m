@@ -191,6 +191,10 @@ settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_et
 
 % Set output path
 outputPath = [directory, 'stimulations', filesep, ea_nt(options.native), S.label];
+if options.native
+    MNIoutputPath = [directory, 'stimulations', filesep, ea_nt(0), S.label];
+    ea_mkdir(MNIoutputPath);
+end
 
 % Axon activation setting
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcAxonActivation;
@@ -301,14 +305,42 @@ for side=0:1
         if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
             copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'], ...
                      [outputPath, filesep, 'vat_efield_', sideStr, '.nii'])
+            if options.native % Transform to MNI space
+                ea_apply_normalization_tofile(options,...
+                    [outputPath, filesep, 'vat_efield_', sideStr, '.nii'],... % from
+                    [MNIoutputPath, filesep, 'vat_efield_', sideStr, '.nii'],... % to
+                    directory,... % patient directory
+                    0, ... % useinverse is 0
+                    1, ... % linear interpolation
+                    [ea_space, 't1.nii']);
+                ea_autocrop([MNIoutputPath, filesep, 'vat_efield_', sideStr, '.nii']);
+            end
         end
 
         if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'])
             copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
                      [outputPath, filesep, 'vat_', sideStr, '.nii'])
 
+            if options.native % Transform to MNI space
+                ea_apply_normalization_tofile(options,...
+                    [outputPath, filesep, 'vat_', sideStr, '.nii'],... % from
+                    [MNIoutputPath, filesep, 'vat_', sideStr, '.nii'],... % to
+                    directory,... % patient directory
+                    0, ... % useinverse is 0
+                    0, ... % nn interpolation
+                    [ea_space, 't1.nii']);
+                ea_autocrop([MNIoutputPath, filesep, 'vat_', sideStr, '.nii']);
+
+                if options.orignative % Choose vta of which space to load
+                    vat = ea_load_nii([outputPath, filesep, 'vat_', sideStr, '.nii']);
+                else
+                    vat = ea_load_nii([MNIoutputPath, filesep, 'vat_', sideStr, '.nii']);
+                end
+            else % Load result directly
+                vat = ea_load_nii([outputPath, filesep, 'vat_', sideStr, '.nii']);
+            end
+
             % Calc vat fv and volume
-            vat = ea_load_nii([outputPath, filesep, 'vat_', sideStr, '.nii']);
             vatfv = ea_niiVAT2fvVAT(vat);
             vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
             save([outputPath, filesep, 'vat_', sideStr, '.mat'], 'vatfv', 'vatvolume');
