@@ -1067,6 +1067,8 @@ for el=1:length(elstruct)
     if strcmp(S.model, 'OSS-DBS (Butenko 2020)') % For OSS-DBS, side iteration is within the genvat function
         if options.prefs.machine.vatsettings.butenko_calcAxonActivation
             feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
+            ea_busyaction('off',handles.stimfig,'stim');
+            return;
         else
             [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
         end
@@ -1079,6 +1081,7 @@ for el=1:length(elstruct)
         end
     end
 end
+
 options.native=options.orignative;
 PL=getappdata(resultfig,'PL');
 for group=1:length(PL)
@@ -1106,6 +1109,7 @@ for group=flix
     end
 end
 setappdata(resultfig,'PL',PL);
+
 ea_busyaction('off',handles.stimfig,'stim');
 
 
