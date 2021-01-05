@@ -1743,6 +1743,12 @@ sel=sel{get(handles.stimlabel,'Value')};
 if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
     switch sel(5:end)
         case 'New stimulation'
+            resultfig = getappdata(handles.stimfig,'resultfig');
+            PL=getappdata(resultfig,'PL');
+            for group=1:length(PL)
+                deletePL(PL(group));
+            end
+            clear PL
             ea_savestimulation(S,options);
             S=[]; % this will create the prompt to generate a new S.
             options.gen_newstim=1;
@@ -1779,6 +1785,12 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             if strcmp(answ,'No')
                 set(handles.stimlabel,'Value',1);
             else % truly delete Stimulation parameters
+                resultfig = getappdata(handles.stimfig,'resultfig');
+                PL=getappdata(resultfig,'PL');
+                for group=1:length(PL)
+                    deletePL(PL(group));
+                end
+                clear PL
                 ea_delete([directory,'stimulations',filesep,ea_nt(0),S.label]);
                 ea_delete([directory,'stimulations',filesep,ea_nt(1),S.label]);
                 S=[]; % this will create the prompt to generate a new S.
