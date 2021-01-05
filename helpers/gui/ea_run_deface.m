@@ -1,25 +1,25 @@
-function ea_run_deface(hobj,evt,handles)
+function ea_run_deface(hobj, evt, handles)
 
-answ=questdlg('Do you really want to deface base files in selected patients? This is not undoable. It''''s advised to do so on copies of the patient folders.',...
-    'Really Deface?','Sure','No, stop.','No, stop.');
-if strcmp(answ,'Sure')
-    dirs=getappdata(handles.leadfigure,'uipatdir');
-    prefs=ea_prefs;
+answ=questdlg('Do you want to run brain extraction or defacing?', ...
+    'Deface base files', ...
+    'Extract','Deface','Cancel', 'Cancel');
+
+if ~strcmp(answ,'Cancel')   
+    dirs=getappdata(handles.leadfigure,'uipatdir');     % get current list of patients loaded in the gui
+    
     for pt=1:length(dirs)
-        ea_run_deface_pt(dirs{pt});
+        ea_run_deface_pt(dirs{pt}, answ);               % run deface function with desired methode (deface or brain extract)
     end
 end
 
-function ea_run_deface_pt(directory)
+function ea_run_deface_pt(directory, method)
 
 options=ea_getptopts(directory);
 options.coregmr.method='ANTs'; % hardcode for now.
 [~,presentfiles] = ea_assignpretra(options);
 presentfiles=stripstn(presentfiles);
 
-
 presentfiles=ea_addpostops(presentfiles,options);
-
 
 if ~strcmp(directory(end),filesep)
     directory=[directory,filesep];
