@@ -8,7 +8,6 @@ if ~exist('fiberalpha','var')
     fiberalpha=0.2;
 end
 
-
 if ~(size(fibers,1)==4)
     fibers=fibers';
 end
