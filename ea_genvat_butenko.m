@@ -262,12 +262,7 @@ for side=0:1
 
     % Calculate axon allocation when option enabled
     if settings.calcAxonActivation
-            switch side
-                case 0
-                    fprintf('Calculating axon allocation for right side stimulation...\n\n');
-                case 1
-                    fprintf('Calculating axon allocation for left side stimulation...\n\n');
-            end
+            fprintf('Calculating axon allocation for %s side stimulation...\n\n', sideStr);
 
             % Make sure to clean up, useful in manually interruption
             ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
