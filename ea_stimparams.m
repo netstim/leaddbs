@@ -1795,8 +1795,8 @@ else
         stimparams(1,1).volume = vatvolume;
     elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
         load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
-        stimparams(1,1).VAT.VAT = vatfv;
-        stimparams(1,1).volume = vatvolume;
+        stimparams(1,2).VAT.VAT = vatfv;
+        stimparams(1,2).volume = vatvolume;
     else
         if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
             nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
@@ -1815,8 +1815,8 @@ else
         elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
             nii = ea_load_nii([directory,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
-            stimparams(1,1).VAT.VAT = vatfv;
-            stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
+            stimparams(1,2).VAT.VAT = vatfv;
+            stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
         else
             visualizeVAT = 0;
         end
