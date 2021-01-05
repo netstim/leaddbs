@@ -246,6 +246,7 @@ ea_delete([outputPath, filesep, 'success_lh.txt']);
 ea_delete([outputPath, filesep, 'fail_lh.txt']);
 
 % Iterate sides, index side: 0 - rh , 1 - lh
+stimparams = struct();
 for side=0:1
     switch side
         case 0
@@ -309,10 +310,13 @@ for side=0:1
             copyfile([outputPath, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
                      [outputPath, filesep, 'vat_', sideStr, '.nii'])
 
-            % Return vat fv and volume
+            % Calc vat fv and volume
             vat = ea_load_nii([outputPath, filesep, 'vat_', sideStr, '.nii']);
-            varargout{1} = ea_niiVAT2fvVAT(vat);
-            varargout{2} = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
+            vatfv = ea_niiVAT2fvVAT(vat);
+            vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
+            save([outputPath, filesep, 'vat_', sideStr, '.mat'], 'vatfv', 'vatvolume');
+            stimparams(side+1).VAT.VAT = vatfv;
+            stimparams(side+1).volume = vatvolume;
         end
 
         if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'Axon_state_data',num2str(side),'.mat'])
@@ -351,6 +355,10 @@ for side=0:1
     ea_delete([outputPath, filesep,'Allocated_axons.h5']);
     ea_delete([outputPath, filesep,'*.csv']);
     ea_delete([outputPath, filesep,'*.py']);
+end
+
+if ~settings.calcAxonActivation && exist('stimparams', 'var')
+    varargout{1} = stimparams;
 end
 
 % Restore working directory and env

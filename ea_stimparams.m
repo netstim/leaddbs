@@ -1070,13 +1070,16 @@ for el=1:length(elstruct)
             ea_busyaction('off',handles.stimfig,'stim');
             return;
         else
-            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
+            stimparams = feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
+            flix=1;
         end
     else
+        stimparams = struct();
         for iside=1:length(options.sides)
             side=options.sides(iside);
-            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,handles.stimfig);
-            stimparams(1,side).volume=volume;
+            [vatfv, vatvolume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,handles.stimfig);
+            stimparams(1,side).VAT(el).VAT = vatfv;
+            stimparams(1,side).volume = vatvolume;
             flix=1;
         end
     end
