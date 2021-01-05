@@ -1204,6 +1204,9 @@ else
         if isfield(PL(p),'ht')
             delete(PL(p).ht);
         end
+        if isfield(PL(p),'axon')
+            cellfun(@delete, PL(p).axon);
+        end
     end
 end
 
