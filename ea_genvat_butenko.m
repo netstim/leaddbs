@@ -246,6 +246,7 @@ ea_delete([outputPath, filesep, 'success_lh.txt']);
 ea_delete([outputPath, filesep, 'fail_lh.txt']);
 
 % Iterate sides, index side: 0 - rh , 1 - lh
+runStatus = [0 0]; % Succeed or not
 stimparams = struct();
 for side=0:1
     switch side
@@ -299,6 +300,7 @@ for side=0:1
     end
 
     if isfile([outputPath, filesep, 'success_', sideCode, '.txt'])
+        runStatus(side+1) = 1;
         fprintf('\nOSS-DBS calculation succeeded!\n\n')
         % Copy VAT files
         if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
@@ -344,8 +346,8 @@ for side=0:1
             end
         end
     elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
-        warning('off', 'backtrace');
         fprintf('\n')
+        warning('off', 'backtrace');
         warning('OSS-DBS calculation failed for %s side!\n', sideStr);
         warning('on', 'backtrace');
     end
@@ -357,8 +359,10 @@ for side=0:1
     ea_delete([outputPath, filesep,'*.py']);
 end
 
+varargout{1} = runStatus;
+
 if ~settings.calcAxonActivation && exist('stimparams', 'var')
-    varargout{1} = stimparams;
+    varargout{2} = stimparams;
 end
 
 % Restore working directory and env
