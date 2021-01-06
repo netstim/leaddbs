@@ -205,6 +205,7 @@ if settings.calcAxonActivation
     fprintf('Loading connectome: %s ...\n\n', settings.connectome);
     conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
     if options.native
+        originalFib = conn.fibers;
         % Convert connectome fibers from MNI space to anchor space
         fprintf('Convert connectome into native space...\n\n');
         fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, 't1.nii'])';
@@ -376,8 +377,8 @@ for side=0:1
             axonToViz = [outputPath, filesep, 'axonActivation_', sideStr, '.mat'];
 
             if options.native % Generate axon activation file in MNI space
-                fprintf('Loading connectome: %s ...\n\n', settings.connectome);
-                conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat'], 'fibers', 'idx');
+                fprintf('Restore connectome in MNI space: %s ...\n\n', settings.connectome);
+                conn.fibers = originalFib;
 
                 fprintf('Convert axon activation result into MNI space...\n\n');
                 conn.fibers = conn.fibers(ismember(conn.fibers(:,4), connFibID), :);
