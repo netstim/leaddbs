@@ -267,7 +267,15 @@ for side=0:1
             sideStr = 'left';
     end
 
+    if isnan(settings.current_control(side+1))
+        warning('off', 'backtrace');
+        warning('No stimulation exists for %s side! Skipping...\n', sideStr);
+        warning('on', 'backtrace');
+        continue;
+    end
+
     fprintf('Running OSS-DBS for %s side stimulation...\n\n', sideStr);
+
     % Calculate axon allocation when option enabled
     if settings.calcAxonActivation
             fprintf('Calculating axon allocation for %s side stimulation...\n\n', sideStr);
