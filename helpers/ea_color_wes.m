@@ -58,18 +58,6 @@ switch set
         colors(3,:)=ea_hex2rgb('#2E604A');
         colors(4,:)=ea_hex2rgb('#27223C');
         colors(5,:)=ea_hex2rgb('#D1362F');
-    case 'TOR_probmap'
-        colors(1,:)=ea_hex2rgb('#DDA0DD'); %dystonia coldspot -- light purple
-        colors(2,:)=ea_hex2rgb('#8B008B'); %dystonia hotspot -- dark purple
-        colors(3,:)=ea_hex2rgb('#F8DF4F'); %PD_GPi coldspot -- light yellow
-        colors(4,:)=ea_hex2rgb('#BDB76B'); %PD_GPi hotspot -- dark yellow
-        colors(5,:)=ea_hex2rgb('#F24D29'); %PD_STN coldspot -- light red
-        colors(6,:)=ea_hex2rgb('#8B0000'); %PD_STN hotspot -- dark red
-        colors(7,:)=ea_hex2rgb('#7CFC00'); %PSYCH_SCC coldspot -- light green
-        colors(8,:)=ea_hex2rgb('#006400'); %PYSCH_SCC hotspot -- dark green
-        colors(9,:)=ea_hex2rgb('#1DACE8'); %Tremor_VIM coldspot -- light blue
-        colors(10,:)=ea_hex2rgb('#191970'); %Tremor_VIM hotspot -- dark blue
-        
 end
 
 % Set number of colors
