@@ -1968,7 +1968,7 @@ if groupmode
 
         %ensure active patient is non empty
         %this can happen if you delete a patient, then add a new one, without clicking on the patient window
-        if isempty(actpt) 
+        if isempty(actpt)
             actpt=1;
         end
         setappdata(handles.stimfig,'actpt',actpt);
@@ -3116,7 +3116,7 @@ elstruct=getappdata(handles.stimfig,'elstruct');
 options=getappdata(handles.stimfig,'options');
 
 %ensure active patient is non empty
-if isempty(actpt) 
+if isempty(actpt)
     actpt=1;
 end
 
