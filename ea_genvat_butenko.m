@@ -258,15 +258,14 @@ stimparams = struct();
 for side=0:1
     switch side
         case 0
-            fprintf('Running OSS-DBS for right side stimulation...\n\n');
             sideCode = 'rh';
             sideStr = 'right';
         case 1
-            fprintf('Running OSS-DBS for left side stimulation...\n\n');
             sideCode = 'lh';
             sideStr = 'left';
     end
 
+    fprintf('Running OSS-DBS for %s side stimulation...\n\n', sideStr);
     % Calculate axon allocation when option enabled
     if settings.calcAxonActivation
             fprintf('Calculating axon allocation for %s side stimulation...\n\n', sideStr);
