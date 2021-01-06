@@ -157,8 +157,14 @@ for nd=length(ndir):-1:1
         end
     end
 end
-setappdata(gcf,'genvatfunctions',genvatfunctions);
 
+if ~options.prefs.env.dev
+    ossdbsInd = find(contains(ndc,'OSS-DBS'));
+    genvatfunctions(ossdbsInd) = [];
+    ndc(ossdbsInd) = [];
+end
+
+setappdata(gcf,'genvatfunctions',genvatfunctions);
 set(handles.modelselect,'String',ndc);
 
 % if ~isempty(stimparams) % stimfigure has been used before..

@@ -95,6 +95,12 @@ for nd=length(ndir):-1:1
     end
 end
 
+if ~options.prefs.env.dev
+    ossdbsInd = find(contains(ndc,'OSS-DBS'));
+    genvatfunctions(ossdbsInd) = [];
+    ndc(ossdbsInd) = [];
+end
+
 setappdata(handles.leadfigure,'genvatfunctions',genvatfunctions);
 setappdata(handles.leadfigure,'vatfunctionnames',ndc);
 
