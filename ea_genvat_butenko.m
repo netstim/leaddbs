@@ -223,10 +223,12 @@ if settings.calcAxonActivation
 
     % Move original fiber id to the 5th column, the 4th column will be 1:N
     for i=1:length(fiberFiltered)
-        fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
-        fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
-        fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
-        fiberFiltered{i}.fibers = fibers;
+        if ~isempty(fiberFiltered{i}.fibers)
+            fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
+            fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
+            fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
+            fiberFiltered{i}.fibers = fibers;
+        end
     end
 
     settings.connectomePath = [outputPath, filesep, settings.connectome];
