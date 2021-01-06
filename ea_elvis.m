@@ -248,6 +248,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             end
             
             % add sweetspot explorer button.
+            di=dir([options.root,options.patientname,filesep,'sweetspots',filesep,'*.sweetspot']);
             if prefs.env.dev
                 % add sweetspot explorer button.
                 sweetspotadd = uipushtool(ht, 'CData', ea_get_icn('sweetspot_add'),...
@@ -255,10 +256,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'Tag', ['Add sweetspot analysis'],...
                     'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});        di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);
                 for d=1:length(di)
-                    uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
+                    uipushtool(ht, 'CData', ea_get_icn('sweetspot'),...
                         'TooltipString', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
                         'Tag', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
-                        'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'fiberfiltering',filesep,di(d).name],resultfig});
+                        'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'sweetspots',filesep,di(d).name],resultfig});
                 end
             end
             di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);

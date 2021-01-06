@@ -106,7 +106,7 @@ if checkrebuild(atlases,options,root,mifix)
     end
     nm=nm(logical(nmind)); % select which shall be performed.
     if ~isfield(atlases,'colormap')
-        atlases.colormap=ea_color_wes('TOR_probmap',length(atlases.names));
+        atlases.colormap=ea_color_wes('all',length(atlases.names));
     end
     maxcolor=length(atlases.colormap);
 

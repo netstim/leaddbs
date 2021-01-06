@@ -461,6 +461,24 @@ classdef ea_sweetspot < handle
                     continue;
                 end
 
+                if obj.posvisible && all(allvals<0)
+                    obj.posvisible = 0;
+                    fprintf('\n')
+                    warning('off', 'backtrace');
+                    warning('No positive values found, posvisible is set to 0 now!');
+                    warning('on', 'backtrace');
+                    fprintf('\n')
+                end
+
+                if obj.negvisible && all(allvals>0)
+                    obj.negvisible = 0;
+                    fprintf('\n')
+                    warning('off', 'backtrace');
+                    warning('No negative values found, negvisible is set to 0 now!');
+                    warning('on', 'backtrace');
+                    fprintf('\n')
+                end
+
                 colormap(gray);
                 gradientLevel = length(gray);
 
