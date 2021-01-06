@@ -202,9 +202,11 @@ if settings.calcAxonActivation
     settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
     settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
+    fprintf('Loading connectome: %s ...\n\n', settings.connectome);
     conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
     if options.native
         % Convert connectome fibers from MNI space to anchor space
+        fprintf('Convert connectome into native space...\n\n');
         fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, 't1.nii'])';
         conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
             [ea_space, 't1.nii'], ...
@@ -356,18 +358,52 @@ for side=0:1
             ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
             ftr.fibers = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
 
+            % Extract original conn fiber id, needed in case calculation is
+            % done in native space
+            [connFibID, idx] = unique(ftr.fibers(:,5));
+
             % Set fiber state
             for f=1:length(fibId)
                 ftr.fibers(ftr.fibers(:,4)==fibId(f),5) = fibState(f);
             end
 
+            % Extract state of original conn fiber, needed in case
+            % calculation is  done in native space
+            connFibState = ftr.fibers(idx, 5);
+
             % Save result for visualization
             save([outputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'ftr');
+            axonToViz = [outputPath, filesep, 'axonActivation_', sideStr, '.mat'];
+
+            if options.native % Generate axon activation file in MNI space
+                fprintf('Loading connectome: %s ...\n\n', settings.connectome);
+                conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat'], 'fibers', 'idx');
+
+                fprintf('Convert axon activation result into MNI space...\n\n');
+                conn.fibers = conn.fibers(ismember(conn.fibers(:,4), connFibID), :);
+                % Set fiber state
+                conn.fibers = [conn.fibers, zeros(size(conn.fibers,1),1)];
+                for f=1:length(connFibID)
+                    conn.fibers(conn.fibers(:,4)==connFibID(f),5) = connFibState(f);
+                end
+
+                % Recreate fiber id and idx
+                [~, ~, idx] = unique(conn.fibers(:,4), 'stable');
+                conn.fibers(:,4) = idx;
+                conn.idx = accumarray(idx,1);
+
+                % Save MNI space axon activation result
+                save([MNIoutputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'conn');
+
+                if ~options.orignative % Visualize MNI space result
+                    axonToViz = [MNIoutputPath, filesep, 'axonActivation_', sideStr, '.mat'];
+                end
+            end
 
             % Visualize axon activation
             if exist('resultfig', 'var')
                 set(0, 'CurrentFigure', resultfig);
-                ea_axon_viz([outputPath, filesep, 'axonActivation_', sideStr, '.mat'], resultfig);
+                ea_axon_viz(axonToViz, resultfig);
             end
         end
     elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
