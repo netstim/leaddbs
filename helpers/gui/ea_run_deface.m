@@ -1,28 +1,48 @@
 function ea_run_deface(hobj, evt, handles)
 
-answ=questdlg('Do you want to run brain extraction or defacing?', ...
-    'Deface base files', ...
-    'Extract','Deface','Cancel', 'Cancel');
+answ=questdlg(['Warning: this method only works for the MNI ICBM 2009b NLIN ASYM Space!' sprintf('\n\n') 'Do you want to run brain masking or defacing to anonymize patient data?'], ...
+    'Anonymize base files', ...
+    'Mask','Deface','Cancel', 'Cancel');
 
-if ~strcmp(answ,'Cancel')   
-    dirs=getappdata(handles.leadfigure,'uipatdir');     % get current list of patients loaded in the gui
+if ~strcmp(answ,'Cancel')
     
-    for pt=1:length(dirs)
-        ea_run_deface_pt(dirs{pt}, answ);               % run deface function with desired methode (deface or brain extract)
+    if ~strcmp(ea_gespace, 'MNI_ICBM_2009b_NLIN_ASYM')      % check if space is actually MNI ICBM 2009b
+        dirs=getappdata(handles.leadfigure,'uipatdir');                 % get current list of patients loaded in the gui
+
+        for pt=1:length(dirs)
+
+            [whichnormmethod, template] = ea_whichnormmethod(dirs{pt});
+            options=ea_getptopts(dirs{pt});
+            switch whichnormmethod                   % before running, check whether patient has been normalized or not
+                case ''
+                    fprintf('\nAnonymization not possible for patient %s, because normalization was not performed!\nPlease perform normalization first.\n', options.patientname);
+                otherwise
+                    ea_run_anonymize_pt(dirs{pt}, answ, options);               % run deface function with desired methode (deface or brain extract)
+            end
+
+        end
+    else
+        fprintf('Space is %s, please switch to MNI_ICBM_2009b_NLIN_ASYM space to enable anonymization of patient data!', ea_gespace)
     end
 end
 
-function ea_run_deface_pt(directory, method)
+function  ea_run_anonymize_pt(directory, method, options)
 
-options=ea_getptopts(directory);
-options.coregmr.method='ANTs'; % hardcode for now.
-[~,presentfiles] = ea_assignpretra(options);
-presentfiles=stripstn(presentfiles);
+[~,presentfiles] = ea_assignpretra(options);     % get present pre-op files
+presentfiles=stripstn(presentfiles);                    % strip stn files if present
+a = ea_getspace;
 
-presentfiles=ea_addpostops(presentfiles,options);
+presentfiles=ea_add_postop_files(presentfiles, options);   % add postop files
 
-if ~strcmp(directory(end),filesep)
-    directory=[directory,filesep];
+if ~strcmp(directory(end), filesep)
+    directory=[directory, filesep];
+end
+
+switch method
+    
+    % simple brain masking using the MNI ICBM 2009b brain mask
+    case 'Mask'
+        
 end
 
 tempdir=ea_getleadtempdir;
@@ -75,15 +95,17 @@ function presentfiles=stripstn(presentfiles)
 [mem,ix]=ismember(presentfiles,{'anat_STN.nii','anat_RN.nii','anat_GPi.nii','anat_GPe.nii'});
 presentfiles=presentfiles(~mem);
 
-function presentfiles=ea_addpostops(presentfiles,options)
+function presentfiles=ea_add_postop_files(presentfiles,options)
 
 switch options.modality
     case 1 % MR
+        % postop MR
         presentfiles{end+1}=options.prefs.tranii_unnormalized;
         presentfiles{end+1}=options.prefs.cornii_unnormalized;
         presentfiles{end+1}=options.prefs.sagnii_unnormalized;
     case 2 % CT
-        presentfiles{end+1}=options.prefs.ctnii_coregistered;
+        % postop CT
+        presentfiles{end+1}=options.prefs.tp_ctnii_coregistered;
 end
                         
                         
