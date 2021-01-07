@@ -75,9 +75,10 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     #file = h5py.File('oss-dbs_parameters.mat')
 
     #if file.root.settings.current_control[0][0]!=file.root.settings.current_control[0][1]:
-    if file['settings']['current_control'][0][0] != file['settings']['current_control'][0][1]:
-        print("Simultaneous use of VC and CC is not allowed for safety reasons!")
-        raise SystemExit
+    if all(~np.isnan(file['settings']['current_control'][0])):
+        if file['settings']['current_control'][0][0] != file['settings']['current_control'][0][1]:
+            print("Simultaneous use of VC and CC is not allowed for safety reasons!")
+            raise SystemExit
 
     input_dict['Stim_side']=index_side
     #Phi_vector=file.root.settings.Phi_vector[:,index_side]
