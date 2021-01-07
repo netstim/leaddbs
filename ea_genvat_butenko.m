@@ -202,7 +202,7 @@ if settings.calcAxonActivation
     settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
     settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
-    fprintf('Loading connectome: %s ...\n\n', settings.connectome);
+    fprintf('Loading connectome: %s ...\n', settings.connectome);
     conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
     if options.native
         originalFib = conn.fibers;
