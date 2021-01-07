@@ -1,17 +1,23 @@
-function ea_screenshot(outn,method)
+function ea_screenshot(outn, method, figure_handle)
+
 if ~exist('method','var')
     method='exportfig';
 end
+
+if ~exist('figure_handle', 'var')
+    figure_handle = gcf;
+end
+
 switch method
     case {'exportfig','ld','hd','transparent'}
         warning('off');
         if strcmp(method,'ld')
-            export_fig(outn,'-m1','-a4');
+            export_fig(figure_handle, outn,'-m1','-a4');
         else
             if  strcmp(method,'transparent')
-                export_fig(outn,'-m2.5','-a4','-transparent');
+                export_fig(figure_handle, outn,'-m2.5','-a4','-transparent');
             else
-                export_fig(outn,'-m2.5','-a4');
+                export_fig(figure_handle, outn,'-m2.5','-a4');
             end
         end
         warning('on');
