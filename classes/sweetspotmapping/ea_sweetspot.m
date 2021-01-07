@@ -20,10 +20,10 @@ classdef ea_sweetspot < handle
         corrtype = 'Spearman' % correlation strategy in case of using E-Fields.
         coverthreshold = 20; % of vtas needed to cover a single voxel to be considered
         posBaseColor = [1,1,1] % positive main color
-        posPeakColor = [0.2824,0.6157,0.9725] % positive peak color
+        posPeakColor = [0.9176,0.2000,0.1373] % positive peak color
 
         negBaseColor = [1,1,1] % negative main color
-        negPeakColor = [0.9176,0.2000,0.1373] % negative peak color
+        negPeakColor = [0.2824,0.6157,0.9725] % negative peak color
 
         splitbygroup = 0
         showsignificantonly = 1
