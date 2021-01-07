@@ -4,6 +4,7 @@ if ~exist('method','var')
     method='exportfig';
 end
 
+% if figure_handle is not passed as input, default to gcf
 if ~exist('figure_handle', 'var')
     figure_handle = gcf;
 end
