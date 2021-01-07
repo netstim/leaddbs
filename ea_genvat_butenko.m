@@ -239,6 +239,9 @@ if settings.calcAxonActivation
     end
 end
 
+% Interactive mode setting
+settings.interactiveMode = options.prefs.machine.vatsettings.butenko_interactive;
+
 %% Save settings for OSS-DBS
 parameterFile = [outputPath, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings', '-v7.3');
