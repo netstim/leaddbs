@@ -14,4 +14,4 @@
 #osascript -e 'tell application "Terminal" to activate' -e 'tell application "Terminal" to do script "cd Documents/MATLAB_files/leaddbs-oss-dbs/ext_libs/OSS-DBS/OSS_platform/"' -e 'tell application "Terminal" to do script "python3 GUI_tree_files/AppUI.py \"$1\""'
 #osascript -e 'tell application "Terminal" to activate' -e 'tell application "Terminal" to do script "cd  \"$2\"" & " ; " & " python3 GUI_tree_files/AppUI.py \"$1\""'
 #osascript -e "tell application \"Terminal\" to do script \"cd $2; python3 GUI_tree_files/AppUI.py $1\""
-osascript -e "tell application \"Terminal\" to do script \"cd $2; python3 GUI_tree_files/AppUI.py $1 $3\""
+osascript -e "tell application \"Terminal\" to do script \"cd $2; python3 GUI_tree_files/AppUI.py $1 $3 $4\""
