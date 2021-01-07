@@ -158,10 +158,20 @@ for nd=length(ndir):-1:1
     end
 end
 
-if ~options.prefs.env.dev
-    ossdbsInd = find(contains(ndc,'OSS-DBS'));
-    genvatfunctions(ossdbsInd) = [];
-    ndc(ossdbsInd) = [];
+% Hide OSS-DBS option in case non-dev env or elmodel not available
+if strcmp(options.leadprod, 'dbs')
+    if ~options.prefs.env.dev || ~ismember(options.elmodel,ea_ossdbs_elmodel)
+        ossdbsInd = find(contains(ndc,'OSS-DBS'));
+        genvatfunctions(ossdbsInd) = [];
+        ndc(ossdbsInd) = [];
+    end
+else % Call in lead 'group'
+    prefs = ea_prefs;
+    if ~prefs.env.dev
+        ossdbsInd = find(contains(ndc,'OSS-DBS'));
+        genvatfunctions(ossdbsInd) = [];
+        ndc(ossdbsInd) = [];
+    end
 end
 
 setappdata(gcf,'genvatfunctions',genvatfunctions);
