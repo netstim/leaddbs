@@ -70,9 +70,13 @@ end
         % now go through all the files and multiply them with the mask to
         % create brain extracted images
         for fi = 1:length(presentfiles)
-            applyMask(fullfile(directory, presentfiles{fi}), fullfile(exportfolder, [presentfiles_fnames{fi}, anonymized_file_suffix, '.nii']), mask_file_pt_space);
-            gzip(fullfile(exportfolder, [presentfiles_fnames{fi}, anonymized_file_suffix, '.nii']));
-            delete(fullfile(exportfolder, [presentfiles_fnames{fi}, anonymized_file_suffix, '.nii']));
+            if exist(fullfile(directory, presentfiles{fi}), 'file')
+                applyMask(fullfile(directory, presentfiles{fi}), fullfile(exportfolder, [presentfiles_fnames{fi}, anonymized_file_suffix, '.nii']), mask_file_pt_space);
+                gzip(fullfile(exportfolder, [presentfiles_fnames{fi}, anonymized_file_suffix, '.nii']));
+                delete(fullfile(exportfolder, [presentfiles_fnames{fi}, anonymized_file_suffix, '.nii']));
+            else
+                fprintf('Did not find file %s, skipping.\n', fullfile(directory, presentfiles{fi}));
+            end
         end
     end
 end
