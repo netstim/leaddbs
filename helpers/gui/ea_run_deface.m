@@ -5,9 +5,8 @@ answ=questdlg(['Warning: this method only works for the MNI ICBM 2009b NLIN ASYM
     'Mask','Deface','Cancel', 'Cancel');
 
 if ~strcmp(answ,'Cancel')
-    
-    if ~strcmp(ea_gespace, 'MNI_ICBM_2009b_NLIN_ASYM')      % check if space is actually MNI ICBM 2009b
-        dirs=getappdata(handles.leadfigure,'uipatdir');                 % get current list of patients loaded in the gui
+    if strcmp( ea_getspace, 'MNI_ICBM_2009b_NLIN_ASYM')      % check if space is actually MNI ICBM 2009b
+        dirs=getappdata(handles.leadfigure, 'uipatdir');                 % get current list of patients loaded in the gui
 
         for pt=1:length(dirs)
 
@@ -22,7 +21,7 @@ if ~strcmp(answ,'Cancel')
 
         end
     else
-        fprintf('Space is %s, please switch to MNI_ICBM_2009b_NLIN_ASYM space to enable anonymization of patient data!', ea_gespace)
+        fprintf('Space is %s, please switch to MNI_ICBM_2009b_NLIN_ASYM space to enable anonymization of patient data!\n', ea_getspace)
     end
 end
 
@@ -30,7 +29,6 @@ function  ea_run_anonymize_pt(directory, method, options)
 
 [~,presentfiles] = ea_assignpretra(options);     % get present pre-op files
 presentfiles=stripstn(presentfiles);                    % strip stn files if present
-a = ea_getspace;
 
 presentfiles=ea_add_postop_files(presentfiles, options);   % add postop files
 
@@ -38,11 +36,25 @@ if ~strcmp(directory(end), filesep)
     directory=[directory, filesep];
 end
 
+% make export directory if it does not exist
+exportfolder = fullfile(directory, 'export');
+
+if ~exist(exportfolder, 'dir')
+    mkdir(fullfile(directory, 'export'))
+end
+
+
 switch method
     
     % simple brain masking using the MNI ICBM 2009b brain mask
     case 'Mask'
+        mask_file = fullfile(options.earoot, 'templates', 'space', ea_getspace, 'brainmask.nii.gz');
         
+        % normalize MNI brainmask to patient space
+        ea_apply_normalization(options, mask_file, fullfile(ea_getleadtempdir, 'brainmask_'))
+        for fi = 1:length(presentfiles)
+            ea_apply_normalization_tofile(options, )
+        end
 end
 
 tempdir=ea_getleadtempdir;
