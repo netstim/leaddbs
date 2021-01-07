@@ -50,10 +50,15 @@ function ea_run_deface(hobj, evt, handles)
         end
 
         switch method
-
             % simple brain masking using the MNI ICBM 2009b brain mask
             case 'Mask'
                 mask_file = fullfile(options.earoot, 'templates', 'space', ea_getspace, 'brainmask.nii.gz');
+                anonymized_file_suffix = '_brain_mask';
+            % defacing by defaced MNI ICBM 2009b brain mask
+            case 'Deface'
+                mask_file = fullfile(options.earoot, 'templates', 'space', ea_getspace, 'brainmask_defaced.nii.gz');
+                anonymized_file_suffix = '_defaced_mask';
+        end
                 mask_file_pt_space = fullfile(exportfolder, 'brainmask_defaced_pt_space.nii.gz');
                 % normalize MNI brainmask to patient space
                 ea_apply_normalization_tofile(options, mask_file, mask_file_pt_space, directory, 1, 0, fullfile(directory, presentfiles{1}));
@@ -61,10 +66,8 @@ function ea_run_deface(hobj, evt, handles)
                 % now go through all the files and multiply them with the mask to
                 % create brain extracted images
                 for fi = 1:length(presentfiles)
-                    applyMask(fullfile(directory, presentfiles{fi}), fullfile(exportfolder, [presentfiles_fnames{fi}, '_anonymized.nii']), mask_file_pt_space);
+                    applyMask(fullfile(directory, presentfiles{fi}), fullfile(exportfolder, [presentfiles_fnames{fi}, anonymized_file_suffix, '.nii.gz']), mask_file_pt_space);
                 end
-            case 'Deface'
-
         end
     end
 
@@ -98,8 +101,6 @@ function ea_run_deface(hobj, evt, handles)
                 presentfiles{end+1}=options.prefs.tp_ctnii_coregistered;
         end
     end    
-
-end
                              
      
                         
