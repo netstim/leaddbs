@@ -449,6 +449,25 @@ classdef ea_disctract < handle
                 if isempty(allvals)
                     continue;
                 end
+
+                if obj.posvisible && all(allvals<0)
+                    obj.posvisible = 0;
+                    fprintf('\n')
+                    warning('off', 'backtrace');
+                    warning('No positive values found, posvisible is set to 0 now!');
+                    warning('on', 'backtrace');
+                    fprintf('\n')
+                end
+
+                if obj.negvisible && all(allvals>0)
+                    obj.negvisible = 0;
+                    fprintf('\n')
+                    warning('off', 'backtrace');
+                    warning('No negative values found, negvisible is set to 0 now!');
+                    warning('on', 'backtrace');
+                    fprintf('\n')
+                end
+
                 colormap(gray);
                 gradientLevel = 1024;
                 cmapShiftRatio = 0.5;
@@ -456,6 +475,7 @@ classdef ea_disctract < handle
                 shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
                 shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
                 shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
+
                 if dogroups
                     if obj.posvisible && ~obj.negvisible
                         cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));

@@ -35,7 +35,7 @@ for view=1:length(views)
     set(0,'CurrentFigure',resultfig);
     ea_view(views(view).v,resultfig);
     set(0,'CurrentFigure',resultfig);
-    ea_screenshot([options.root,options.patientname,filesep,'export',filesep,'views',filesep,'view_',sprintf('%03.0f',view),'.png'],'ld');
+    ea_screenshot([options.root,options.patientname,filesep,'export',filesep,'views',filesep,'view_',sprintf('%03.0f',view),'.png'],'ld', resultfig);
 % if view==4
 %    keyboard 
 % end
