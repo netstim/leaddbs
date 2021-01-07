@@ -13,6 +13,11 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     return
 end
 
+% Double check if lead is supported by OSS-DBS.
+if ~ismember(options.elmodel, ea_ossdbs_elmodel)
+    ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], 'Error', dbstack)
+end
+
 directory = [options.root, options.patientname, filesep];
 
 if ~exist([directory,'stimulations',filesep,ea_nt(options.native),S.label],'dir')
