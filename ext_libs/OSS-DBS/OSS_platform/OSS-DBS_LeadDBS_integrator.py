@@ -230,23 +230,24 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
                 save_as_dict.write("    '{}': '{}',\n".format(key, d[key]))
         save_as_dict.write("}\n")
 
-    return path_to_patient,index_side
+    interactive_mode = int(file['settings']['interactiveMode'][0][0])
 
+    return path_to_patient,index_side,interactive_mode
 
 
 if __name__ == '__main__':
     #path_to_patient=get_input_from_LeadDBS(0,*sys.argv[1:])
-    path_to_patient,side=get_input_from_LeadDBS(*sys.argv[1:])
+    path_to_patient,side,interactive_mode=get_input_from_LeadDBS(*sys.argv[1:])
     process_1=-1
     if path_to_patient!=-1:
         if sys.platform == 'linux' or sys.platform == 'Linux':
-            output = subprocess.run(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side)])
+            output = subprocess.run(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
             #subprocess.check_output(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient])
         elif sys.platform == 'darwin' or sys.platform == 'Darwin':
             dir_code = os.getcwd()
             #subprocess.check_output(['open', 'script_for_GUI.sh', path_to_patient, dir_code], executable='/bin/bash')
-            output = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, dir_code,str(side)], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
-            #process_1 = subprocess.check_call(['open', 'script_for_GUI.sh', path_to_patient, dir_code,str(side)], executable='/bin/bash')
+            output = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, dir_code, str(side), str(interactive_mode)], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
+            #process_1 = subprocess.check_call(['open', 'script_for_GUI.sh', path_to_patient, dir_code, str(side)], executable='/bin/bash')
             #process.wait()
         elif sys.platform == 'win32':
             print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
@@ -254,9 +255,6 @@ if __name__ == '__main__':
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
-
-
-
 
     # path_to_patient=get_input_from_LeadDBS(1,*sys.argv[1:])
     # if path_to_patient!=-1:

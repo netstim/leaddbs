@@ -18,13 +18,14 @@ from threading import Thread
 
 
 class MainWindow(Functionalities):
-    def __init__(self,path_to_patient,index_side):
+    def __init__(self,path_to_patient,index_side,interactive_mode):
         self.main_win = QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.main_win)
 
         self.path_to_patient=path_to_patient
         self.index_side=int(index_side)
+        self.interactive_mode=int(interactive_mode)
 
         self.rel_folder = self.rel_folder()
 
@@ -208,6 +209,9 @@ class MainWindow(Functionalities):
 
     def show(self):
         self.main_win.show()
+        if not self.interactive_mode:
+            self.save_as(os.path.join(os.path.abspath(os.getcwd()),'GUI_inp_dict.py'))
+            self.run_thread()
 
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
@@ -490,13 +494,18 @@ class MainWindow(Functionalities):
                     last_save.write("    '{}': {},\n".format(x, output_dict[x]))
                 last_save.write("    }\n")
 
-            self.info("Run", "Setup state has been written to {}.".format(filename))
+            if self.interactive_mode:
+                self.info("Run", "Setup state has been written to {}.".format(filename))
+            else:
+                print("Setup state has been written to {}".format(filename))
 
-    def save_as(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        filename, _ = QFileDialog.getSaveFileName(None, "Save State", "",
-                                                  "All Files (*);;Text Files (*.txt)", options=options)
+    def save_as(self, filename=""):
+        if filename == "":
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
+            filename, _ = QFileDialog.getSaveFileName(None, "Save State", "",
+                                                      "All Files (*);;Text Files (*.txt)", options=options)
+
         if filename != "":
             filename = self.py_check(filename)
             if "default_dict.py" in filename or "last_save.py" in filename:
@@ -536,7 +545,10 @@ class MainWindow(Functionalities):
 
                     last_save.write("}\n")
 
-                self.info("Run", "Setup state has been written to {}.".format(filename))
+                if self.interactive_mode:
+                    self.info("Run", "Setup state has been written to {}.".format(filename))
+                else:
+                    print("Setup state has been written to {}".format(filename))
                 self.set_current_file_name(filename)
 
     def set_load_state(self, d):
