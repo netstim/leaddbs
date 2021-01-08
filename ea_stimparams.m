@@ -963,10 +963,10 @@ if groupmode
     choice = questdlg('Changing VAT model will delete stimulation parameters of all patients! Continue?', ...
         'Warning', ...
         'Yes, sure','No','No');
+            gSv=getappdata(handles.stimfig,'gSv');
 
     switch choice
         case 'No'
-            gSv=getappdata(handles.stimfig,'gSv');
             ochoice=ismember(get(hObject,'String'),gSv.vatmodel);
             setappdata(hObject,'Value',ochoice);
             return
@@ -1931,10 +1931,12 @@ stimlabel=getappdata(handles.stimfig,'stimlabel');
 
 if isempty(S)
     S=ea_initializeS(stimlabel,options,handles);
+    try S.model=gSv.vatmodel; end
     setappdata(handles.stimfig,'stimlabel',S.label);
 else
     if isempty(S.Rs1)
         S=ea_initializeS(stimlabel,options,handles);
+        try S.model=gSv.vatmodel; end
         setappdata(handles.stimfig,'stimlabel',S.label);
     end
 end
@@ -2197,44 +2199,6 @@ end
 %    ea_error('VTA modeling for directed leads is not yet supported.');
 %end
 
-switch model
-    case 'SimBio/FieldTrip (see Horn 2017)'
-        ea_hide_impedance(handles);
-        set(handles.estimateInTemplate,'Visible','on');
-        S.monopolarmodel=0;
-        ea_enable_vas(handles,options);
-        set(handles.betawarning,'visible','on');
-        set(handles.settings,'visible','on');
-    case 'Maedler 2012'
-        ea_show_impedance(handles);
-        set(handles.estimateInTemplate,'Visible','off');
-        S.monopolarmodel=1;
-        ea_disable_vas(handles,options);
-        set(handles.betawarning,'visible','off');
-        set(handles.settings,'visible','off');
-    case 'Kuncel 2008'
-        ea_hide_impedance(handles);
-        set(handles.estimateInTemplate,'Visible','off');
-        S.monopolarmodel=1;
-        ea_disable_vas(handles,options);
-        set(handles.betawarning,'visible','off');
-        set(handles.settings,'visible','off');
-    case 'Dembek 2017'
-        ea_show_impedance(handles);
-        set(handles.estimateInTemplate,'Visible','off');
-        S.monopolarmodel=1;
-        ea_enable_vas(handles,options);
-        set(handles.betawarning,'visible','off');
-        set(handles.settings,'visible','on');
-      case 'Fastfield (Baniasadi 2020)'
-        ea_show_impedance(handles);
-        set(handles.estimateInTemplate,'Visible','off');
-        S.monopolarmodel=0;
-        ea_enable_vas(handles,options);
-        set(handles.betawarning,'visible','off');
-        set(handles.settings,'visible','on');
-end
-S.model=model;
 
 
 if get(handles.(['Rs',num2str(Ractive),'va']),'Value')==1 % Volt
@@ -2303,6 +2267,47 @@ if is_side_present(2)>0%check if L side is present
 else
     set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
 end
+
+
+
+switch model
+    case 'SimBio/FieldTrip (see Horn 2017)'
+        ea_hide_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','on');
+        S.monopolarmodel=0;
+        ea_enable_vas(handles,options);
+        set(handles.betawarning,'visible','on');
+        set(handles.settings,'visible','on');
+    case 'Maedler 2012'
+        ea_show_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','off');
+        S.monopolarmodel=1;
+        ea_disable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','off');
+    case 'Kuncel 2008'
+        ea_hide_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','off');
+        S.monopolarmodel=1;
+        ea_disable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','off');
+    case 'Dembek 2017'
+        ea_show_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','off');
+        S.monopolarmodel=1;
+        ea_enable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','on');
+      case 'Fastfield (Baniasadi 2020)'
+        ea_show_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','off');
+        S.monopolarmodel=0;
+        ea_enable_vas(handles,options);
+        set(handles.betawarning,'visible','off');
+        set(handles.settings,'visible','on');
+end
+S.model=model;
 
 
 ea_savestimulation(S,options);
@@ -2981,7 +2986,7 @@ else
 end
 try
     setappdata(handles.stimfig,'S',gS(setto));
-catch
+catch % S for this next pt not defined yet.
     setappdata(handles.stimfig,'S',[]);
 end
 setappdata(handles.stimfig,'actpt',setto);
