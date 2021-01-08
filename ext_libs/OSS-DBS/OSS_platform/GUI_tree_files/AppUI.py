@@ -233,10 +233,7 @@ class MainWindow(Functionalities):
                  '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
                  'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])  #
         elif sys.platform == 'darwin' or sys.platform=='Darwin':
-            patient_dir_full = self.path_to_patient + ':/opt/Patient'
-            # directories=[]
-            print(patient_dir_full)
-            output = subprocess.run(['open', 'script.sh', patient_dir_full, dir_code], executable='/bin/bash')   # in this case we use a bash script that calls Applescript
+            output = subprocess.run(['open', 'script.sh', self.path_to_patient, dir_code], executable='/bin/bash')   # in this case we use a bash script that calls Applescript
         elif sys.platform=='win32':
             print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
             raise SystemExit
