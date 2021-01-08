@@ -5,26 +5,26 @@ function varargout=ea_genvat_horn(varargin)
 useSI=1;
 vizz=0;
 if nargin==5
-    % acoords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
+    % coords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
-elseif nargin==7
-    % acoords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
+elseif nargin==6
+    % coords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=varargin{6};
-    lgfigure=varargin{7};
+    lgfigure=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='SimBio/FieldTrip (see Horn 2017)';
         return
     end
 end
+
+thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
 
 if useSI
     thresh=thresh.*(10^3);

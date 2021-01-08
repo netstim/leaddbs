@@ -95,6 +95,12 @@ for nd=length(ndir):-1:1
     end
 end
 
+if ~options.prefs.env.dev
+    ossdbsInd = find(contains(ndc,'OSS-DBS'));
+    genvatfunctions(ossdbsInd) = [];
+    ndc(ossdbsInd) = [];
+end
+
 setappdata(handles.leadfigure,'genvatfunctions',genvatfunctions);
 setappdata(handles.leadfigure,'vatfunctionnames',ndc);
 
@@ -1003,7 +1009,6 @@ for pt=selection
             keyboard
         end
 
-
         options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
 
         options.orignative=options.native; % backup
@@ -1012,27 +1017,43 @@ for pt=selection
             warning(['You chose to process VTAs in native space but patient-data cannot be found for ',M.patient.list{pt},'. Proceeding with VTA calculation directly in template space.']);
             options.native=0;
         end
+
         setappdata(handles.leadfigure,'resultfig',resultfig);
+        setappdata(resultfig,'elstruct',M.elstruct(pt));
+        setappdata(resultfig,'elspec',options.elspec);
+
+        if options.native % Reload native space coordinates
+            coords = ea_load_reconstruction(options);
+        else
+            coords = M.elstruct(pt).coords_mm;
+        end
 
         vatCalcPassed = [0 0];
-        for side=1:2
-            setappdata(resultfig,'elstruct',M.elstruct(pt));
-            setappdata(resultfig,'elspec',options.elspec);
-
-            if options.native % Reload native space coordinates
-                coords = ea_load_reconstruction(options);
+        stimparams = struct();
+        if strcmp(M.S(pt).model, 'OSS-DBS (Butenko 2020)')
+            if options.prefs.machine.vatsettings.butenko_calcAxonActivation
+                feval(ea_genvat,M.S(pt),options);
+                fprintf('\n');
+                warning('off', 'backtrace');
+                warning('OSS-DBS axon activation mode detect, skipping calc stats for %s!\n', options.patientname);
+                warning('on', 'backtrace');
+                continue;
             else
-                coords = M.elstruct(pt).coords_mm;
+                [vatCalcPassed, stimparams] = feval(ea_genvat,M.S(pt),options);
             end
-
-            try
-                [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
-                vatCalcPassed(side) = 1;
-            catch
-                volume=0;
-                vatCalcPassed(side) = 0;
+        else
+            for side=1:2
+                try
+                    [vtafv,vtavolume] = feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],handles.leadfigure);
+                    vatCalcPassed(side) = 1;
+                catch
+                    vtafv=[];
+                    vtavolume=0;
+                    vatCalcPassed(side) = 0;
+                end
+                stimparams(1,side).VAT(1).VAT = vtafv;
+                stimparams(1,side).volume = vtavolume;
             end
-            stimparams(1,side).volume=volume;
         end
 
         options.native=options.orignative; % restore
@@ -1085,7 +1106,9 @@ for pt=selection
         setappdata(gcf,'M',M);
 
         save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M','-v7.3');
-        try	movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']); end
+        try
+            movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']);
+        end
         %rmdir([M.ui.groupdir,'tmp'],'s');
     end
 end

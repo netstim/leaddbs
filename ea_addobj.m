@@ -70,6 +70,9 @@ else  % uigetfile, 'obj' is the type of the files to be selected
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
             [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
             addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,options)
+        case 'axonactivation'
+            [fileName,filePath]=uigetfile('*.mat','Choose axon activation to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
+            ea_axon_viz([filePath,fileName],resultfig)
     end
 end
 

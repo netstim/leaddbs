@@ -8,12 +8,11 @@ if isstruct(options)
         case 0
             estring=[ea_getspace,filesep];
     end
-elseif isnumeric(options)
-    switch options
-        case 1
-            estring=['native',filesep];
-        case 0
-            estring=[ea_getspace,filesep];
+elseif isnumeric(options) || islogical(options)
+    if options
+    	estring=['native',filesep];
+    else
+    	estring=[ea_getspace,filesep];
     end
 elseif ischar(options)
     switch options
