@@ -301,6 +301,10 @@ for side=0:1
             ea_delete([outputPath, filesep,'*.csv']);
             ea_delete([outputPath, filesep,'*.py']);
 
+            % Delete this folder in MATLAB since shutil.rmtree may raise
+            % I/O error
+            ea_delete([outputPath, filesep,'Points_in_time']);
+
             system(['docker run ', ...
                     '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
                     '--volume ', outputPath, ':/opt/Patient ', ...
@@ -443,6 +447,10 @@ for side=0:1
     ea_delete([outputPath, filesep,'Allocated_axons.h5']);
     ea_delete([outputPath, filesep,'*.csv']);
     ea_delete([outputPath, filesep,'*.py']);
+
+    % Delete this folder in MATLAB since shutil.rmtree may raise
+    % I/O error
+    ea_delete([outputPath, filesep,'Points_in_time']);
 end
 
 varargout{1} = runStatus;
