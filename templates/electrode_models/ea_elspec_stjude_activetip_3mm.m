@@ -28,12 +28,13 @@ jetlist=othercolor('BuOr_12');
 %   jetlist=jet;
 N=200; % resolution of electrode points
 
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
     %% nullmodel:
-    coords_mm{side}=[0,0,elspec.tip_length+(elspec.contact_length/2);...
-        0,0,elspec.tip_length+(elspec.contact_length/2)+1*(elspec.contact_spacing+elspec.contact_length);...
-        0,0,elspec.tip_length+(elspec.contact_length/2)+2*(elspec.contact_spacing+elspec.contact_length);...
-        0,0,elspec.tip_length+(elspec.contact_length/2)+3*(elspec.contact_spacing+elspec.contact_length)];
+    coords_mm{side}=[0,0,elspec.tip_length/2;...
+        0,0,elspec.tip_length+(elspec.contact_length/2)+1*elspec.contact_spacing+0*elspec.contact_length;...
+        0,0,elspec.tip_length+(elspec.contact_length/2)+2*elspec.contact_spacing+1*elspec.contact_length;...
+        0,0,elspec.tip_length+(elspec.contact_length/2)+3*elspec.contact_spacing+2*elspec.contact_length];
 
     trajectory{side}=[zeros(30,2),linspace(30,0,30)'];
     %%
@@ -154,7 +155,7 @@ for side=1:length(options.sides)
     end
 
     % draw trajectory between contacts
-    for cntct=1:elspec.numel-1
+    for cntct=2:elspec.numel
         set(0,'CurrentFigure',resultfig);
         diams=repmat(elspec.lead_diameter/2,1,2);
         [cX,cY,cZ] = ea_singlecylinder((diams),N);
@@ -162,7 +163,7 @@ for side=1:length(options.sides)
         cZ=cZ.*(elspec.contact_spacing); % scale to fit tip-diameter
         htd=(max(cZ(:))/2);
         cZ=cZ-htd;
-        hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing/2;
+        hait=coords_mm{side}(cntct,3)-elspec.contact_length/2-elspec.contact_spacing/2;
         cZ=cZ+hait;
 
         p=surf2patch(surf(cX,cY,cZ),'triangles');
@@ -174,15 +175,15 @@ for side=1:length(options.sides)
         cZ=cZ.*(elspec.contact_spacing); % scale to fit tip-diameter
         htd=(max(cZ(:))/2);
         cZ=cZ-htd;
-        hait=coords_mm{side}(cntct,3)+elspec.contact_length/2+elspec.contact_spacing/2;
+        hait=coords_mm{side}(cntct,3)-elspec.contact_length/2-elspec.contact_spacing/2;
         cZ=cZ+hait;
 
         a=surf2patch(surf(cX,cY,cZ));
         a=ea_reordercylinder(a,2);
-        meshel.ins{cntct+1}.faces=a.faces;
-        meshel.ins{cntct+1}.vertices=a.vertices;
-        ndiv=length(meshel.ins{cntct+1}.vertices)/2;
-        meshel.ins{cntct+1}.endplates=[1:ndiv;ndiv+1:2*ndiv];
+        meshel.ins{cntct}.faces=a.faces;
+        meshel.ins{cntct}.vertices=a.vertices;
+        ndiv=length(meshel.ins{cntct}.vertices)/2;
+        meshel.ins{cntct}.endplates=[1:ndiv;ndiv+1:2*ndiv];
 
 
         % add endplates:
@@ -200,16 +201,7 @@ for side=1:length(options.sides)
         cnt=cnt+1;
     end
 
-
-
-
-
-
-
-
-
     % draw tip
-
     if isfield(elstruct,'group')
         usecolor=elstruct.groupcolors(elstruct.group,:);
     else
@@ -217,20 +209,15 @@ for side=1:length(options.sides)
     end
     set(0,'CurrentFigure',resultfig);
 
-    tipdiams=repmat(elspec.tip_diameter/2,1,19)-([10:-0.5:1].^10/10^10)*(elspec.tip_diameter/2);
+    tipdiams=repmat(elspec.tip_diameter/2,1,37)-([10:-0.25:1].^10/10^10)*(elspec.tip_diameter/2);
     tipdiams(end+1)=elspec.tip_diameter/2;
     [cX,cY,cZ] = ea_singlecylinder((tipdiams),N);
 
-    cZ=cZ.*(elspec.tip_length+elspec.contact_length); % scale to fit tip-diameter
+    cZ=cZ.*elspec.tip_length; % scale to fit tip-diameter
 
     % define two points to define cylinder.
-    X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
+    X1=coords_mm{side}(1,:)-trajvector*(elspec.tip_length/2);
     X2=X1+trajvector*elspec.tip_length;
-
-
-    cX=cX+X1(1);
-    cY=cY+X1(2);
-    cZ=cZ-(2*elspec.tip_length)/2+X1(3);
 
     p=surf2patch(surf(cX,cY,cZ),'triangles');
 
@@ -238,16 +225,12 @@ for side=1:length(options.sides)
 
     [cX,cY,cZ] = ea_singlecylinder((tipdiams),20);
 
-    cZ=cZ.*(elspec.tip_length+elspec.contact_length); % scale to fit tip-diameter
+    cZ=cZ.*elspec.tip_length; % scale to fit tip-diameter
 
     % define two points to define cylinder.
-    X1=coords_mm{side}(1,:)+trajvector*(elspec.contact_length/2);
+    X1=coords_mm{side}(1,:)-trajvector*(elspec.tip_length/2);
     X2=X1+trajvector*elspec.tip_length;
 
-
-    cX=cX+X1(1);
-    cY=cY+X1(2);
-    cZ=cZ-(2*elspec.tip_length)/2+X1(3);
     a=surf2patch(surf(cX,cY,cZ));
 
     a=ea_reordercylinder(a,20);
@@ -327,11 +310,11 @@ end
 ea_dispercent(1,'end');
 
 electrode.electrode_model=elstruct.name;
-electrode.head_position=[0,0,elspec.tip_length+0.5*elspec.contact_length];
-electrode.tail_position=[0,0,elspec.tip_length+elspec.numel*elspec.contact_length+(elspec.numel-1)*elspec.contact_spacing-0.5*elspec.contact_length];
+electrode.head_position=[0,0,elspec.tip_length/2];
+electrode.tail_position=[0,0,elspec.tip_length+(elspec.numel-1)*elspec.contact_length+(elspec.numel-1)*elspec.contact_spacing-0.5*elspec.contact_length];
 
-electrode.x_position=[elspec.lead_diameter/2,0,elspec.tip_length+0.5*elspec.contact_length];
-electrode.y_position=[0,elspec.lead_diameter/2,elspec.tip_length+0.5*elspec.contact_length];
+electrode.x_position=[elspec.lead_diameter/2,0,elspec.tip_length/2];
+electrode.y_position=[0,elspec.lead_diameter/2,elspec.tip_length/2];
 
 electrode.numel=elspec.numel;
 electrode.contact_color=elspec.contact_color;

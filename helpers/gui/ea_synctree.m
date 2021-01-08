@@ -32,8 +32,8 @@ branchsel=[];
                     else
                         set(h.sgsub{branch}{leaf},'SelectionState',SelectionState.MIXED)
                     end
-                    if ~strcmp(h.atlassurfs(ixs).Visible,'on'); % also make sure surface is right
-                        h.atlassurfs(ixs).Visible='on';
+                    if ~strcmp(h.atlassurfs{ixs}.Visible,'on'); % also make sure surface is right
+                        h.atlassurfs{ixs}.Visible='on';
                     end
 
                 case 'off'
@@ -53,11 +53,11 @@ branchsel=[];
                     else
                         set(h.sgsub{branch}{leaf},'SelectionState',SelectionState.MIXED)
                     end
-                    if ~strcmp(h.atlassurfs(ixs).Visible,'on'); % also make sure surface is right
-                        h.atlassurfs(ixs).Visible='on';
+                    if ~strcmp(h.atlassurfs{ixs}.Visible,'on'); % also make sure surface is right
+                        h.atlassurfs{ixs}.Visible='on';
                     end
-                    if ~strcmp(h.atlassurfs(ixs).Visible,'off'); % also make sure surface is right
-                        h.atlassurfs(ixs).Visible='off';
+                    if ~strcmp(h.atlassurfs{ixs}.Visible,'off'); % also make sure surface is right
+                        h.atlassurfs{ixs}.Visible='off';
                     end
 
             end

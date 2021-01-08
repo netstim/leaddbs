@@ -25,27 +25,30 @@ catch
 end
 nm=nm(logical(nmind)); % select which shall be performed.
 
+colormap(gray);
+
 for nativemni=nm % switch between native and mni space atlases.
 
     switch nativemni
-        case 1
+        case 1 % mni
             adir=[ea_space(options,'atlases'),options.atlasset,filesep];
             mifix='';
-        case 2
+        case 2 % native
             adir=[[options.root,options.patientname,filesep],'atlases',filesep,options.atlasset,filesep];
             mifix='';
     end
 
     atlascnt=1;
     set(0,'CurrentFigure',resultfig)
+    ht=getappdata(resultfig,'atlht');
 
     if ~exist([adir,'atlas_index.mat'],'file')
-        atlases=ea_genatlastable([],ea_space(options,'atlases'),options,mifix);
+        atlases=ea_genatlastable([],ea_space(options,'atlases'),options,mifix,resultfig);
     else
-        load([adir,'atlas_index.mat']);
+        atlases=ea_loadatlas(options.atlasset,resultfig,ht);
         atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options,mifix);
     end
-
+    
     isdiscfibers = cellfun(@(x) ischar(x) && strcmp(x, 'discfibers'), atlases.pixdim);
     if all(sum(isdiscfibers,2))
         atlases.discfibersonly = 1;
@@ -70,7 +73,6 @@ for nativemni=nm % switch between native and mni space atlases.
         catch
             jetlist=atlases.colormap;
         end
-        %colormap(atlases.colormap);
     else
         try
             jetlist=options.colormap;
@@ -84,9 +86,8 @@ for nativemni=nm % switch between native and mni space atlases.
 
     setinterpol=1;
 
-    ht=getappdata(resultfig,'atlht');
     if ~isempty(ht) % sweep nonempty atlases toolbar
-        delete(ht.Children(:));
+        % delete(ht.Children(:));
     else
         ht=uitoolbar(resultfig);
     end
@@ -95,10 +96,50 @@ for nativemni=nm % switch between native and mni space atlases.
         atlcntbutton=uipushtool(ht,'CData',ea_get_icn('atlases'),'Tag','Atlas Control','TooltipString','Atlas Control Figure','ClickedCallback',{@ea_openatlascontrol,atlases,resultfig,options});
     end
 
+    if ~exist('labelbutton','var')
+        labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
+        labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
+    end
+
     % prepare stats fields
     if options.writeoutstats
+        %reset previous stats
+        ea_stats.conmat={};
+        ea_stats.conmat_inside_vox={};
+        ea_stats.conmat_inside_hull={};
+        ea_stats.patname={};
+        ea_stats.atlases.names={};
+        ea_stats.atlases.types={};
+        ea_stats.electrodes=[];
+
         for el=1:length(elstruct)
-            for side=1:length(elstruct(el).coords_mm)
+            miss_side=2;%check only if L side is missing.
+            if ea_arenopoints4side(elstruct(el).coords_mm, miss_side)
+                %if the right side is missing, it will be already be "filled" with an empty or NaN array
+                %force to have empty values if side is not present (e.g. in R only case)
+                elstruct(el).coords_mm{miss_side}=[];
+                if isfield(elstruct(el),'coords_acpc') && iscell(elstruct(el).coords_acpc)
+                    if ea_arenopoints4side(elstruct(el).coords_acpc, miss_side)
+                        elstruct(el).coords_acpc{miss_side}=[];
+                    end
+                end
+                elstruct(el).trajectory{miss_side}=[];
+
+                %this will create a second structure
+                elstruct(el).markers(miss_side).head=[];
+                elstruct(el).markers(miss_side).tail=[];
+                elstruct(el).markers(miss_side).x=[];
+                elstruct(el).markers(miss_side).y=[];
+            end
+        end
+
+        %fill with appropriate values or create placeholders (filled with NaNs)
+        for el=1:length(elstruct)
+            for iside=1:length(elstruct(el).coords_mm)
+                % In this case side is iside, as it is not iterating the
+                % options.sides vector
+                side=iside;
+
                 ea_stats.conmat{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
                 ea_stats.conmat_inside_vox{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
                 ea_stats.conmat_inside_hull{el,side}=nan(size(elstruct(el).coords_mm{side},1),length(atlases.names));
@@ -114,7 +155,113 @@ for nativemni=nm % switch between native and mni space atlases.
     for atlas=1:length(atlases.names)
         [~,sidestr]=detsides(atlases.types(atlas));
         for side=detsides(atlases.types(atlas))
-            if isnumeric(atlases.pixdim{atlas,side}) || strcmp(atlases.pixdim{atlas,side}, 'fibers')
+            if isnumeric(atlases.pixdim{atlas,side})
+                % Get ROI Tag
+                if ~isempty(atlases.roi{atlas,side}.Tag)
+                    roiTag = atlases.roi{atlas,side}.Tag;
+                else
+                    roiTag = atlases.roi{atlas,side}.name;
+                end
+                atlases.roi{atlas,side}.Tag = [roiTag,'_',sidestr{side}];
+
+                % breathe life into stored ea_roi
+                atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
+                atlases.roi{atlas,side}.htH=ht; % attach to tooltip menu
+                atlases.roi{atlas,side}.breathelife;
+                atlases.roi{atlas,side}.smooth=options.prefs.hullsmooth;
+                atlases.roi{atlas,side}.update_roi;
+
+                atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
+                colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
+                
+                while 1
+                    try
+                        centroid=mean(atlases.roi{atlas,side}.fv.vertices(:,1:3));
+                        break
+                    catch
+                        atlases.roi{atlas,side}.threshold=atlases.roi{atlas,side}.threshold./2;
+                    end
+                end
+                set(0,'CurrentFigure',resultfig);
+
+                atlases.roi{atlas,side}.Visible='on';
+                if isfield(atlases,'presets')
+                    if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
+                        atlases.roi{atlas,side}.Visible='off';
+                    end
+                end
+
+                % Set atlaslabel
+                atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
+                    ea_underscore2space(roiTag),...
+                    'Tag', [roiTag,'_',sidestr{side}],...
+                    'VerticalAlignment', 'Baseline',...
+                    'HorizontalAlignment', 'Center',...
+                    'FontWeight', 'bold',...
+                    'FontSize', 12,...
+                    'Color', 'w');
+
+                % make fv compatible for stats
+                caxis([1 64]);
+
+                % gather contact statistics
+                if options.writeoutstats
+                    try
+                        if isfield(atlases.XYZ{atlas,side},'val') % volumetric atlas
+                            thresh=ea_detthresh(atlases,atlas,atlases.XYZ{atlas,side}.val);
+                            atsearch=KDTreeSearcher(atlases.XYZ{atlas,side}.mm(atlases.XYZ{atlas,side}.val>thresh,:));
+                        else % fibertract
+                            atsearch=KDTreeSearcher(atlases.XYZ{atlas,side}.mm(:,1:3));
+                        end
+
+                        for el=1:length(elstruct)
+                            if ea_arenopoints4side(ea_stats.electrodes(el).coords_mm,side)
+                                warning_printf=@(str_in) fprintf(['ATTENTION!! : ' str_in '\n']);%this is less obnoxious, as it is not too important
+                                if side==1
+                                    warning_printf(['Statistics for right ' atlases.names{atlas} ' will not be computed as there is no lead in the right side.']);
+                                elseif side==2
+                                    warning_printf(['Statistics for left ' atlases.names{atlas} ' side will not be computed as there is no lead in the left side.']);
+                                else
+                                    warning_printf(['Statistics for this structure(' atlases.names{atlas} ', on side=' num2str(side) ') will not be computed as there is no lead in it.']);
+                                end
+                            else
+                                [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
+
+                                ea_stats.conmat{el,side}(:,atlas)=D;
+                                Dh=D;
+
+                                try
+                                    in=inhull(ea_stats.electrodes(el).coords_mm{side},atlases.roi{atlas,side}.fv.vertices,atlases.roi{atlas,side}.fv.faces,1.e-13*mean(abs(atlases.roi{atlas,side}.fv.vertices(:))));
+                                    Dh(in)=0;
+                                end
+                                ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
+
+                                D(D<mean(atlases.pixdim{atlas,side}))=0; % using mean here but assuming isotropic atlases in general..
+                                ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
+                            end
+                        end
+                    catch
+                        warning('Statistics for tract atlas parts are not implemented yet.');
+                    end
+                end
+
+                % set Tags
+                try
+                    set(colorbuttons(atlascnt),'tag',[roiTag,'_',sidestr{side}])
+                    atlassurfs{atlascnt,1}.Tag=[roiTag,'_',sidestr{side}];
+                catch
+                    keyboard
+                end
+                atlascnt=atlascnt+1;
+
+                set(gcf,'Renderer','OpenGL')
+                axis off
+                axis equal
+
+                if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
+                    drawnow
+                end
+            elseif strcmp(atlases.pixdim{atlas,side}, 'fibers')
                 fv=atlases.fv{atlas,side};
 
                 if ischar(options.prefs.hullsimplify)   % for 'auto' hullsimplify
@@ -132,15 +279,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
 
-                rndfactor=1;
-                try
-                    switch atlases.names{atlas,side}(end-2:end)
-                        case 'nii'
-                            rndfactor=2;
-                        case {'trk','mat'}
-                            rndfactor=0.2;
-                    end
-                end
+                rndfactor=0.2;
 
                 try
                     if ~options.prefs.d3.colorjitter
@@ -163,8 +302,6 @@ for nativemni=nm % switch between native and mni space atlases.
                 XYZ=atlases.XYZ{atlas,side};
                 pixdim=atlases.pixdim{atlas,side};
                 colorc=nan;
-
-                % show atlas label
 
                 if size(XYZ.mm,1)>1 % exception for single-coordinate atlases...
                     try
@@ -195,23 +332,18 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
                 end
                 if ~(atlases.types(atlas)>5)
-                    atlassurfs(atlascnt,1)=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
+                    atlassurfs{atlascnt,1}=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
                 end
-                % export label and labelbutton
 
-                [~,thislabel]=fileparts(atlases.names{atlas});
-                % try % use try here because filename might be shorter than .nii
-                %     if strcmp(thislabel(end-3:end),'.nii') % if it was .nii.gz, fileparts will only remove .gz
-                        [~,thislabel]=fileparts(thislabel);
-                %     end
-                % end
-                atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),ea_sub2space(thislabel),'Tag',[thislabel,'_',sidestr{side}],'VerticalAlignment','Baseline','HorizontalAlignment','Center','Color','w');
-
-                if ~exist('labelbutton','var')
-                    labelbutton=uitoggletool(ht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
-                    labelcolorbutton=uipushtool(ht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
-                end
-                % make fv compatible for stats
+                fibTag = regexp(atlases.names{atlas},['[^',filesep,']+?(?=\.[^.]*$|$)'],'match','once');
+                atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
+                    ea_underscore2space(fibTag),...
+                    'Tag', [fibTag,'_',sidestr{side}],...
+                    'VerticalAlignment', 'Baseline',...
+                    'HorizontalAlignment', 'Center',...
+                    'FontWeight', 'bold',...
+                    'FontSize', 12,...
+                    'Color','w');
 
                 caxis([1 64]);
 
@@ -237,29 +369,38 @@ for nativemni=nm % switch between native and mni space atlases.
                         end
 
                         for el=1:length(elstruct)
-                            [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
-                            %s_ix=sideix(side,size(elstruct(el).coords_mm{side},1));
+                            if ea_arenopoints4side(ea_stats.electrodes(el).coords_mm,side)
+                                warning_printf=@(str_in) fprintf(['ATTENTION!! : ' str_in '\n']);%this is less obnoxious, as it is not too important
+                                if side==1
+                                    warning_printf(['Statistics for right ' atlases.names{atlas} ' will not be computed as there is no lead in the right side.']);
+                                elseif side==2
+                                    warning_printf(['Statistics for left ' atlases.names{atlas} ' side will not be computed as there is no lead in the left side.']);
+                                else
+                                    warning_printf(['Statistics for this structure(' atlases.names{atlas} ', on side=' num2str(side) ') will not be computed as there is no lead in it.']);
+                                end
+                            else
+                                [~,D]=knnsearch(atsearch,ea_stats.electrodes(el).coords_mm{side});
 
-                            ea_stats.conmat{el,side}(:,atlas)=D;
-                            Dh=D;
+                                ea_stats.conmat{el,side}(:,atlas)=D;
+                                Dh=D;
 
-                            try
-                                in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
-                                Dh(in)=0;
+                                try
+                                    in=inhull(ea_stats.electrodes(el).coords_mm{side},fv.vertices,fv.faces,1.e-13*mean(abs(fv.vertices(:))));
+                                    Dh(in)=0;
+                                end
+                                ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
+
+                                D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
+                                ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
                             end
-                            ea_stats.conmat_inside_hull{el,side}(:,atlas)=Dh;
-
-                            D(D<mean(pixdim))=0; % using mean here but assuming isotropic atlases in general..
-                            ea_stats.conmat_inside_vox{el,side}(:,atlas)=D;
                         end
                     catch
                         warning('Statistics for tract atlas parts are not implemented yet.');
                     end
                 end
 
-                %normals{atlas,side}=get(atlassurfs(atlascnt),'VertexNormals');
                 if ~(atlases.types(atlas)>5)
-                    ea_spec_atlas(atlassurfs(atlascnt,1),atlases.names{atlas},atlases.colormap,setinterpol);
+                    ea_spec_atlas(atlassurfs{atlascnt,1},atlases.names{atlas},atlases.colormap,setinterpol);
                 else
                     pobj.plotFigureH=resultfig;
                     pobj.color=atlasc;
@@ -267,15 +408,15 @@ for nativemni=nm % switch between native and mni space atlases.
                     pobj.openedit=1;
                     pobj.htH=ht;
                     obj=ea_roi([ea_space([],'atlases'),options.atlasset,filesep,getsidec(side),filesep,atlases.names{atlas}],pobj);
-                    atlassurfs(atlascnt,1)=obj.patchH;
+                    atlassurfs{atlascnt,1}=obj.patchH;
                     colorbuttons(atlascnt)=obj.toggleH;
                 end
 
                 % set Tags
                 try
-                    set(colorbuttons(atlascnt),'tag',[thislabel,'_',sidestr{side}])
-                    set(atlassurfs(atlascnt,1),'tag',[thislabel,'_',sidestr{side}])
-                    set(atlassurfs(atlascnt,1),'UserData',atlaslabels(atlascnt))
+                    set(colorbuttons(atlascnt),'tag',[fibTag,'_',sidestr{side}])
+                    set(atlassurfs{atlascnt,1},'tag',[fibTag,'_',sidestr{side}])
+                    set(atlassurfs{atlascnt,1},'UserData',atlaslabels(atlascnt))
                 catch
                     keyboard
                 end
@@ -283,7 +424,6 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 set(gcf,'Renderer','OpenGL')
                 axis off
-                % set(gcf,'color','w');
                 axis equal
 
                 if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
@@ -303,15 +443,17 @@ for nativemni=nm % switch between native and mni space atlases.
                     fibcell = {fibcell};
                 end
 
+                for s=1:length(fibcell)
+                    fibcell{s} = ea_discfibers_addjitter(fibcell{s}, 0.01);
+                end
+
                 if ~iscell(vals)
                     vals = {vals};
                 end
 
                 allvals = vertcat(vals{:});
-                alphas = cell(size(vals));
 
                 % Contruct colormap
-                colormap(gray);
                 gradientLevel = 1024;
                 cmapShiftRatio = 0.4;
                 shiftedCmapStart = round(gradientLevel*cmapShiftRatio)+1;
@@ -343,7 +485,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 elseif isfield(disctract.info, 'NegAmount')
                     disp(['Fiber colors: Negative (T = ',num2str(max(allvals)),' ~ ',num2str(min(allvals)), ')']);
                     cmap = ea_colorgradient(gradientLevel, fibcolor(1,:), [1,1,1]);
-                    fibcmap{group} = ea_colorgradient(gradientLevel, fibcolor(1,:), cmap(shiftedCmapEnd,:));
+                    fibcmap = ea_colorgradient(gradientLevel, fibcolor(1,:), cmap(shiftedCmapEnd,:));
                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                     alphaind = ones(size(allvals));
                     % alphaind = normalize(-allvals, 'range');
@@ -359,6 +501,15 @@ for nativemni=nm % switch between native and mni space atlases.
 
                     % Plot fibers
                     h = streamtube(fibcell{fibside},0.2);
+
+                    for fib=1:length(h)
+                        if vals{fibside}(fib)>0
+                            h(fib).Tag = 'PositiveFiber';
+                        elseif vals{fibside}(fib)<0
+                            h(fib).Tag = 'NegativeFiber';
+                        end
+                    end
+
                     nones = repmat({'none'},size(fibcell{fibside}));
                     [h.EdgeColor] = nones{:};
 
@@ -415,6 +566,22 @@ for nativemni=nm % switch between native and mni space atlases.
         end
     end
 
+    % Add toggles for positive and negative fibers when existing
+    posdiscfiberset = findobj(resultfig, 'Type', 'Surface', 'Tag', 'PositiveFiber');
+    if ~isempty(posdiscfiberset)
+        uitoggletool(ht, 'CData', ea_get_icn('discfiber'),...
+                'TooltipString', 'Positive fibers',...
+                'Tag', 'ShowPositiveToggle',...
+                'OnCallback', {@showfiber, posdiscfiberset},'OffCallback', {@hidefiber, posdiscfiberset}, 'State', 'on');
+    end
+    negdiscfiberset = findobj(resultfig, 'Type', 'Surface', 'Tag', 'NegativeFiber');
+    if ~isempty(negdiscfiberset)
+        uitoggletool(ht, 'CData', ea_get_icn('discfiber'),...
+                'TooltipString', 'Positive fibers',...
+                'Tag', 'ShowPositiveToggle',...
+                'OnCallback', {@showfiber, negdiscfiberset},'OffCallback', {@hidefiber, negdiscfiberset}, 'State', 'on');
+    end
+
     % configure label button to work properly and hide labels as default.
     if ~atlases.discfibersonly % Doesn't exist for pure discfibers atlas
         atlabelsvisible([],[],atlaslabels(:),'off');
@@ -433,20 +600,13 @@ for nativemni=nm % switch between native and mni space atlases.
         setappdata(resultfig,'atlaslabels',atlaslabels);
     end
 
-    % save table information that has been generated from nii files (on first run with this atlas set).
-    % try
-    %     atlases.fv=ifv;
-    %     atlases.cdat=icdat;
-    %     atlases.XYZ=iXYZ;
-    %     atlases.pixdim=ipixdim;
-    %     atlases.colorc=icolorc;
-    %     atlases.normals=normals;
-    % end
+    % Remove empty toolbar
+    toolbars = findobj(resultfig.Children,'Type', 'uitoolbar');
+    emptyToolbar = arrayfun(@(tb) isempty(tb.Children), toolbars);
+    delete(toolbars(emptyToolbar));
 
     try
         setappdata(resultfig,'atlases',atlases);
-        % setappdata(resultfig,'iXYZ',atlases.XYZ);
-        % setappdata(resultfig,'ipixdim',atlases.pixdim);
     end
 
     try
@@ -479,9 +639,10 @@ end
 
 % open up atlas control viewer
 function setlabelcolor(hobj,ev,robject)
-
 co = ea_uisetcolor;
-set(robject,'Color',co);
+if ~numel(co)==1
+    set(robject,'Color',co);
+end
 
 
 function atlasvisible(hobj,ev,resultfig,atlscnt,onoff)

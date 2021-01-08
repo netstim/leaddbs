@@ -8,7 +8,6 @@ if ~exist('fiberalpha','var')
     fiberalpha=0.2;
 end
 
-
 if ~(size(fibers,1)==4)
     fibers=fibers';
 end
@@ -41,6 +40,7 @@ end
 fibhandle = streamtube(fibersnew,0.25);
 set(fibhandle(:),'CDataMapping','direct')
 
+fprintf('\n');
 if isnan(col)    
     ea_dispercent(0,'Adding color information');
     for k = 1:length(fibhandle)

@@ -1,14 +1,7 @@
 function ea_methods(options,parsestr,refs)
-% function that dumps a methods text to patient directory
-% options can either be a leadsuite options struct or a string with the
-% patient directory.
-
-if ~isstruct(options)
-    options=ea_getptopts(options); % direct supply of directory string, options in brackets will be just a string with the directory in this case.
-end
-
-
-directory=[options.root,options.patientname,filesep];
+% Show method text and dump it to patient directory if possible
+%
+% options can either be a struct or a string with the patient directory.
 
 h=dbstack;
 try
@@ -29,10 +22,10 @@ if exist('refs','var') % add refs
     end
 end
 
-
 expstr=[expstr,'\n***\n\n'];
 
-if options.prefs.machine.methods_show
+prefs = ea_prefs;
+if prefs.machine.methods_show
     try
         ea_methodsdisp({expstr});
     end
@@ -40,12 +33,15 @@ else
     fprintf(expstr);
 end
 
-if exist('directory','var')
-    try
-    metfile=fopen([directory,'ea_methods.txt'],'a');
+if ~isempty(options)
+    if ischar(options)
+        options=ea_getptopts(options);
+    end
 
-    fprintf(metfile,expstr);
-    fclose(metfile);
+    % Use try...catch since options may not have root and patientname field
+    try
+        methodfile=fopen([options.root,options.patientname,filesep,'ea_methods.txt'],'a');
+        fprintf(methodfile,expstr);
+        fclose(methodfile);
     end
 end
-

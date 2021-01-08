@@ -29,7 +29,7 @@ end
 try
     S.label = labels{get(handles.stimlabel,'Value')};
 catch
-        S.label = labels{1};
+    S.label = labels{1};
 end
 
 if preexist

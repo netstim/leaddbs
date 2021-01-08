@@ -15,9 +15,20 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
         pobj.plotFigureH = resultfig;
         pobj.htH = addht;
         for i=1:length(obj)
-            % addroi(obj{i}, resultfig, addht, options);
             pobj.color = ea_uisetcolor;
             ea_roi(obj{i}, pobj);
+        end
+    elseif all(cellfun(@numel, regexp(obj, '(\.fibfilt)$', 'match', 'once')))
+        for i=1:length(obj)
+            ea_discfiberexplorer(obj{i}, resultfig);
+        end
+    elseif all(cellfun(@numel, regexp(obj, '(\.netmap)$', 'match', 'once')))
+        for i=1:length(obj)
+            ea_networkmappingexplorer(obj{i}, resultfig);
+        end
+    elseif all(cellfun(@numel, regexp(obj, '(\.sweetspot)$', 'match', 'once')))
+        for i=1:length(obj)
+            ea_sweetspotexplorer(obj{i}, resultfig);
         end
     else
         warndlg('Unsupported file(s) found!');
@@ -26,37 +37,42 @@ else  % uigetfile, 'obj' is the type of the files to be selected
     switch obj
         case 'tract'
             % open dialog
-            [fina,pana]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-            if isempty(fina) % user pressed cancel.
+            [tractName,tractPath]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            if isnumeric(tractName) % User pressed cancel, tractName is 0
                 return
-            end
-            if iscell(fina)
-                for fi=1:length(fina)
-                    addfibertract([pana,fina{fi}],resultfig,addht,[],0,options);
-                end
             else
-                if ~fina % user pressed cancel
-                    return
+                if ischar(tractName)
+                    tractName = {tractName};
                 end
-                addfibertract([pana,fina],resultfig,addht,[],0,options);
+
+                for fi=1:length(tractName)
+                    addfibertract([tractPath,tractName{fi}],resultfig,addht,[],0,options);
+                end
             end
         case 'roi' % atlas
             % open dialog
-            [fina,pana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
-            if iscell(fina) % multiple files
-                for fi=1:length(fina)
-                    addroi([pana,fina{fi}],resultfig,addht,options);
-                end
+            [roiName, roiPath] = uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            if isnumeric(roiName) % User pressed cancel, roiName is 0
+                return
             else
-                if ~fina % user pressed cancel.
-                    return
+                if ischar(roiName)
+                    roiName = {roiName};
                 end
-                addroi([pana,fina],resultfig,addht,options);
+
+                pobj.plotFigureH = resultfig;
+                pobj.htH = addht;
+                for fi=1:length(roiName)
+                    pobj.color = ea_uisetcolor;
+                    ea_roi([roiPath, roiName{fi}], pobj);
+                end
             end
         case 'tractmap'
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
             [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
             addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,options)
+        case 'axonactivation'
+            [fileName,filePath]=uigetfile('*.mat','Choose axon activation to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
+            ea_axon_viz([filePath,fileName],resultfig)
     end
 end
 
@@ -136,101 +152,9 @@ drawnow
 disp('Done.');
 
 
-function addroi(addobj,resultfig,addht,options)
-
-% set cdata
-c = ea_uisetcolor;
-
-if numel(c)==1 && c==0
-    return;
-end
-
-% load nifti
-nii=ea_load_nii(addobj);
-nii.img(isnan(nii.img))=0;
-nii.img(isinf(nii.img))=0;
-% if ~all(abs(nii.voxsize)<=1)
-%     ea_reslice_nii(addobj,addobj,[0.5,0.5,0.5],0,[],3);
-%     nii=ea_load_nii(addobj);
-% end
-% nii.img=round(nii.img);
-
-[xx,yy,zz]=ind2sub(size(nii.img),find(nii.img>0)); %(mean(nii.img(nii.img~=0))/3))); % find 3D-points that have correct value.
-
-if ~isempty(xx)
-    XYZ=[xx,yy,zz]; % concatenate points to one matrix.
-    XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
-end
-
-bb=[0,0,0;size(nii.img)];
-
-bb=map_coords_proxy(bb,nii);
-gv=cell(3,1);
-for dim=1:3
-    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
-end
-[X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-if options.prefs.hullsmooth
-    nii.img = smooth3(nii.img,'gaussian',options.prefs.hullsmooth);
-end
-
-fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
-fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
-fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
-fv.vertices=[fv.vertices;fvc.vertices];
-
-if ischar(options.prefs.hullsimplify)
-    % get to 700 faces
-    simplify=700/length(fv.faces);
-    fv=reducepatch(fv,simplify);
-else
-    if options.prefs.hullsimplify<1 && options.prefs.hullsimplify>0
-        fv=reducepatch(fv,options.prefs.hullsimplify);
-    elseif options.prefs.hullsimplify>1
-        simplify=options.prefs.hullsimplify/length(fv.faces);
-        fv=reducepatch(fv,simplify);
-    end
-end
-
-try
-    fv=ea_smoothpatch(fv,1,35);
-catch
-    try
-        cd([ea_getearoot,'ext_libs',filesep,'smoothpatch']);
-        mex ea_smoothpatch_curvature_double.c -v
-        mex ea_smoothpatch_inversedistance_double.c -v
-        mex ea_vertex_neighbours_double.c -v
-        fv=ea_smoothpatch(fv);
-    catch
-        warndlg('Patch could not be smoothed. Please supply a compatible Matlab compiler to smooth VTAs.');
-    end
-end
-
-%?atlasc=59; %rand*64;
-jetlist=jet;
-
-co=ones(1,1,3);
-co(1,1,:)=c;
-atlasc=double(rgb2ind(co,jetlist));
-
-cdat=abs(repmat(atlasc,length(fv.vertices),1) ... % C-Data for surface
-    +randn(length(fv.vertices),1)*2)';
-
-% show atlas.
-set(0,'CurrentFigure',resultfig);
-addobjr=patch(fv,'CData',cdat,'FaceColor',c,'facealpha',0.7,'EdgeColor','none','facelighting','phong');
-%ea_spec_atlas(addobjr,'',jetlist,1);
-
-% add toggle button:
-[~, fina] = fileparts(addobj);
-addbutn=uitoggletool(addht,'CData',ea_get_icn('atlas',c),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
-storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
-drawnow
-
-
 function addfibertract(addobj,resultfig,addht,connect,ft,options)
 if ischar(addobj) % filename is given ? load fibertracts.
-    if strfind(addobj,'.mat')
+    if endsWith(addobj, '.mat')
         load(addobj);
         if exist('fibsin', 'var')
             fibers = fibsin;
@@ -246,7 +170,7 @@ if ischar(addobj) % filename is given ? load fibertracts.
                 fibidx = accumarray(idx,1);
             elseif size(fibers,2) == 3
                 thisset = fibers;
-                fibidx = idx;
+                fibidx = ones(size(fibers,1),1);
             else
                 error('Wrong input fiber tracts format!');
             end
@@ -254,8 +178,7 @@ if ischar(addobj) % filename is given ? load fibertracts.
         else
             error('No fiber tracts found!');
         end
-    elseif strfind(addobj,'.trk')
-        fileOut = [addobj(1:end-3) 'mat'];
+    elseif endsWith(addobj, '.trk')
         disp('Converting .trk to ftr.')
         [thisset,fibidx] = ea_trk2ftr(addobj);
         thisset = thisset';
@@ -280,31 +203,6 @@ if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete a
     thisset=mat2cell(thisset,fibidx,3)';
     thisset=thisset(selectedfibs); % choose selected fibers.
 end
-
-%% OLD visualization part:
-% fibmax=length(thisset);
-% keyboard
-% for fib=1:fibmax
-%     dispercent(fib/fibmax);
-%
-%     if size(thisset{fib},1)~=3
-%         thisset{fib}=thisset{fib}';
-%     end
-%     try
-%     thisset{fib}(4,:)=detcolor(thisset{fib}); % add coloring information to the 4th column.
-%     catch
-%         thisset{fib}(4,:)=0; % fiber has only one entry.
-%     end
-%     for dim=1:4
-%         thisfib(dim,:)=double(interp1q([1:size(thisset{fib},2)]',thisset{fib}(dim,:)',[1:0.1:size(thisset{fib},2)]')');
-%     end
-%     addobjr(fib)=surface([thisfib(1,:);thisfib(1,:)],...
-%         [thisfib(2,:);thisfib(2,:)],...
-%         [thisfib(3,:);thisfib(3,:)],...
-%         [thisfib(4,:);thisfib(4,:)],'facecol','no','edgecol','interp','linew',1.5);
-%     clear thisfib
-%
-% end
 
 %% new visualization part
 c = ea_uisetcolor;
@@ -344,7 +242,6 @@ if isempty(AL) % initialize AL
     AL.MENU=struct;
     AL.GUI=struct;
 end
-
 
 switch type
     case 'tract'
@@ -431,46 +328,6 @@ function str=binary2onoff(bin)
 str='off';
 if bin
     str='on';
-end
-
-
-function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';
-
-
-function indcol=detcolor(mat) % determine color based on traversing direction.
-
-xyz=abs(diff(mat,1,2));
-rgb=xyz/max(xyz(:));
-
-rgb=[rgb,rgb(:,end)];
-rgbim=zeros(1,size(rgb,2),3);
-rgbim(1,:,:)=rgb';
-indcol=double(rgb2ind(rgbim,jet));
-
-
-function  dispercent(varargin)
-%
-percent=round(varargin{1}*100);
-
-if nargin==2
-    if strcmp(varargin{2},'end')
-        fprintf('\n')
-        fprintf('\n')
-
-        fprintf('\n')
-
-    else
-        fprintf(1,[varargin{2},':     ']);
-
-
-    end
-else
-    fprintf(1,[repmat('\b',1,(length(num2str(percent))+1)),'%d','%%'],percent);
 end
 
 
@@ -671,7 +528,7 @@ blocks = max(1,floor(n/(memblock/nt)));
 aNr = repmat(aN,1,length(1:blocks:n));
 for i = 1:blocks
     j = i:blocks:n;
-    if size(aNr,2) ~= length(j),
+    if size(aNr,2) ~= length(j)
         aNr = repmat(aN,1,length(j));
     end
     in(j) = all((nrmls*testpts(j,:)' - aNr) >= -tol,1)';

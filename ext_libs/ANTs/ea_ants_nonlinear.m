@@ -71,7 +71,7 @@ if slabsupport
                     try
                         AllMX = AllMX.*mnii.img;
                     catch
-                        ea_error('Multispectral acquisitions are not co-registered & resliced to anchor-modality. Please run co-registration first!');
+                        ea_error(sprintf('Multispectral acquisitions are not co-registered & resliced to anchor-modality. Please run co-registration first!\n%s', movingimage{mov}));
                     end
                 end
                 sums(mov) = sum(mnii.img(:));

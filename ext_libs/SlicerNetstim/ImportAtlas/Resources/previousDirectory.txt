@@ -1,1 +1,0 @@
-/Users/simon/Documents/MATLAB/leaddbs/templates/space/MNI_ICBM_2009b_NLIN_ASYM/atlases

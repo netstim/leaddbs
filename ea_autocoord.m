@@ -215,7 +215,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if options.normalize.refine
         if options.prefs.env.dev
-            ea_runsmudgemodule(options);
+            ea_runwarpdrive(options);
         else
             ea_checkstructures(options);
         end

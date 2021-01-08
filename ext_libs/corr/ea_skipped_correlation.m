@@ -70,25 +70,30 @@ end
 gval = sqrt(chi2inv(0.975,2)); % in fact depends on size(X,2) but here always = 2
 
 %% compute
-ea_dispercent(0,'Iterating voxels');
 for column = 1:p
     
     % get the centre of the bivariate distributions
     X = [x(:,column) y(:,column)];
-    result=ea_mcdcov(X,'cor',1,'plots',0,'h',floor((n+size(X,2)*2+1)/2));
+    X = X(~logical(sum(isnan(X),2)),:); % Remove NAN
+    N = size(X,1); % New row number after removing NAN
+    if N < 10 % Check again after removing NAN
+        error('robust effects can''t be computed with less than 10 observations')
+    end
+
+    result=ea_mcdcov(X,'cor',1,'plots',0,'h',floor((N+size(X,2)*2+1)/2));
     center = result.center;
 
     % orthogonal projection to the lines joining the center
     % followed by outlier detection using mad median rule
     
-    vec=1:n;
-    for i=1:n % for each row
-        dis=NaN(n,1);
+    vec=1:N;
+    for i=1:N % for each row
+        dis=NaN(N,1);
         B = (X(i,:)-center)';
         BB = B.^2;
         bot = sum(BB);
         if bot~=0
-            for j=1:n
+            for j=1:N
                 A = (X(j,:)-center)';
                 dis(j)= norm(A'*B/bot.*B); 
             end
@@ -102,11 +107,11 @@ for column = 1:p
     end
     
     try
-        flag = nan(n,1);
+        flag = nan(N,1);
         flag = sum(cell2mat(record),2); % if any point is flagged
         
     catch ME  % this can happen to have an empty cell so loop
-        flag = nan(n,size(record,2));
+        flag = nan(N,size(record,2));
         index = 1;
         for s=1:size(record,2)
           if ~isempty(record{s})
@@ -127,20 +132,18 @@ for column = 1:p
     keep=vec(~flag);
     
     %% Pearson/Spearman correlation
-        a = x(keep,column);
-        b = y(keep,column);
-        
-        switch lower(type)
-            case 'pearson'
-                r(column) = sum(detrend(a,'constant').*detrend(b,'constant')) ./ ...
-                    (sum(detrend(a,'constant').^2).*sum(detrend(b,'constant').^2)).^(1/2);
-            case 'spearman'
-                xrank = tiedrank(a,0); yrank = tiedrank(b,0);
-                r(column) = sum(detrend(xrank,'constant').*detrend(yrank,'constant')) ./ ...
-                    (sum(detrend(xrank,'constant').^2).*sum(detrend(yrank,'constant').^2)).^(1/2);
-        end
-   
-        %disp(num2str(r(column)));
-        ea_dispercent(column/p);
+    a = X(keep,1);
+    b = X(keep,2);
+
+    switch lower(type)
+        case 'pearson'
+            r(column) = sum(detrend(a,'constant').*detrend(b,'constant')) ./ ...
+                (sum(detrend(a,'constant').^2).*sum(detrend(b,'constant').^2)).^(1/2);
+        case 'spearman'
+            xrank = tiedrank(a,0); yrank = tiedrank(b,0);
+            r(column) = sum(detrend(xrank,'constant').*detrend(yrank,'constant')) ./ ...
+                (sum(detrend(xrank,'constant').^2).*sum(detrend(yrank,'constant').^2)).^(1/2);
+    end
+
+    %disp(num2str(r(column)));
 end
-ea_dispercent(1,'end');

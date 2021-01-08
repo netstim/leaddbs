@@ -6,10 +6,6 @@ else % used in permutation based statistics - in this case the real improvement 
     I=Iperm;
 end
 
-if obj.multresponsevarneg % flag to multiply response var by -1
-    I=-I;
-end
-
 fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
 
 % quickly recalc stats:
@@ -55,7 +51,7 @@ for group=groups
         gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
 
-    for side=1:2
+    for side=1:numel(gfibsval)
         % check connthreshold
         switch obj.statmetric
             case 1
@@ -113,23 +109,78 @@ for group=groups
                     fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
                     nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
                     nfibsimpval(logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all connected values
-                    [~,~,~,stats]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
+                    [~,ps,~,stats]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
                     vals{group,side}=stats.tstat';
+                    if obj.showsignificantonly
+                        vals{group,side}=ea_corrsignan(vals{group,side},ps',obj);
+                    end
+
                     %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                 end
-            case 2 % spearmans correlations
-                 if exist('covars', 'var')
-                    usecovars=[];
-                    for cv=1:length(covars)
-                        thiscv=covars{cv}(gpatsel,:);
-                        if (size(thiscv,2)==2)
-                            thiscv=thiscv(:,side);
-                        end
-                        usecovars=[usecovars,thiscv];
-                    end
-                    vals{group,side}=partialcorr(gfibsval{side}(:,gpatsel)',I(gpatsel,side),usecovars,'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
+            case 2 % correlations
+                if ismember(lower(obj.corrtype),{'pearson','spearman'})
+                    conventionalcorr=1;
                 else
-                    vals{group,side}=corr(gfibsval{side}(:,gpatsel)',I(gpatsel,side),'rows','pairwise','type','Spearman'); % generate optimality values on all but left out patients
+                    conventionalcorr=0;
+                end
+
+                nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
+                invals=gfibsval{side}(nonempty,gpatsel)';
+                vals{group,side}=nan(size(gfibsval{side},1),1);
+                if ~isempty(invals)
+                    if exist('covars', 'var') && conventionalcorr % partial corrs only implemented for Pearson & Spearman
+                        usecovars=[];
+                        for cv=1:length(covars)
+                            thiscv=covars{cv}(gpatsel,:);
+                            if (size(thiscv,2)==2)
+                                thiscv=thiscv(:,side);
+                            end
+                            usecovars=[usecovars,thiscv];
+                        end
+                        if obj.showsignificantonly
+                            outvals=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
+                        else % no need to calc p-val here
+                            [outvals,ps]=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
+                            outvals=ea_corrsignan(outvals,ps,obj);
+                        end
+                    else
+                        if conventionalcorr
+                            if obj.showsignificantonly
+                                [outvals,ps]=corr(invals,I(gpatsel,side),'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
+                                outvals=ea_corrsignan(outvals,ps,obj);
+                            else % no need to calc p-val here
+                                outvals=corr(invals,I(gpatsel,side),'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
+                            end
+                        else
+                            if exist('covars', 'var')
+                                ea_error('Inclusion of covariates not implemented for this type of correlation');
+                            end
+                            switch lower(obj.corrtype)
+                                case 'bend'
+                                    if obj.showsignificantonly
+                                        [outvals,ps]=ea_bendcorr(invals,I(gpatsel,side)); % generate optimality values on all but left out patients
+                                        outvals=ea_corrsignan(outvals,ps,obj);
+                                    else % no need to calc p-val here
+                                        outvals=ea_bendcorr(invals,I(gpatsel,side)); % generate optimality values on all but left out patients
+                                    end
+                                case 'skipped pearson'
+                                    if obj.showsignificantonly
+                                        ea_error('Significance not implemented for Skipped correlations');
+                                    else
+                                        outvals=ea_skipped_correlation(full(invals),I(gpatsel,side),'Pearson'); % generate optimality values on all but left out patients
+                                    end
+                                case 'skipped spearman'
+                                    if obj.showsignificantonly
+                                        ea_error('Significance not implemented for Skipped correlations');
+                                    else
+                                        outvals=ea_skipped_correlation(full(invals),I(gpatsel,side),'Spearman'); % generate optimality values on all but left out patients
+                                    end
+                            end
+
+                        end
+                    end
+
+                    vals{group,side}(nonempty)=outvals;
                 end
         end
 
@@ -144,32 +195,30 @@ for group=groups
 
     allvals = vertcat(vals{group,:});
     posvals = sort(allvals(allvals>0),'descend');
-    posrange = posvals(1) - posvals(end);
     negvals = sort(allvals(allvals<0),'ascend');
-    negrange = negvals(1) - negvals(end);
 
-    for side=1:2
-        if ~obj.posvisible
-            posthresh = posvals(1);
+    for side=1:numel(gfibsval)
+        if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
+            posthresh = inf;
         else
-            try
-                posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-            catch
-                posthresh = posvals(1);
+            posrange = posvals(1) - posvals(end);
+            posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
+
+            if posrange == 0
+                posthresh = posthresh - eps*10;
             end
         end
-        posthresh = posthresh + eps*10;
 
-        if ~obj.negvisible
-            negthresh = negvals(1);
+        if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
+            negthresh = -inf;
         else
-            try
-                negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-            catch
-                negthresh = negvals(1);
+            negrange = negvals(1) - negvals(end);
+            negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
+
+            if negrange == 0
+                negthresh = negthresh + eps*10;
             end
         end
-        negthresh = negthresh - eps*10;
 
         % Remove vals and fibers outside the thresholding range
         remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
@@ -178,3 +227,26 @@ for group=groups
         usedidx{group,side}(remove)=[];
     end
 end
+
+
+function vals=ea_corrsignan(vals,ps,obj)
+
+nnanidx=~isnan(vals);
+numtests=sum(nnanidx);
+
+switch lower(obj.multcompstrategy)
+    case 'fdr'
+        pnnan=ps(nnanidx);
+        [psort,idx]=sort(pnnan);
+        pranks=zeros(length(psort),1);
+        for rank=1:length(pranks)
+            pranks(idx(rank))=rank;
+        end
+        pnnan=pnnan.*numtests;
+        pnnan=pnnan./pranks;
+        ps(nnanidx)=pnnan;
+    case 'bonferroni'
+        ps(nnanidx)=ps(nnanidx).*numtests;
+end
+ps(~nnanidx)=1;
+vals(ps>obj.alphalevel)=nan; % delete everything nonsignificant.

@@ -6,7 +6,7 @@ spaces=dir([ea_getearoot,'templates',filesep,'space',filesep]);
 for space=1:length(spaces)
     if ~strcmp(spaces(space).name(1),'.')
         spacename=spaces(space).name;
-        sspacename=ea_sub2space(spacename);
+        sspacename=ea_underscore2space(spacename);
         c=uimenu(s,'Label',sspacename,'Callback',{@ea_switchspace,spacename});
         if strcmp(spacename,ea_getspace)
             c.Checked='on';
@@ -22,7 +22,7 @@ for space=1:length(spaces)
         if strcmp(spacename,ea_getspace)
             continue
         end
-        sspacename=ea_sub2space(spacename);
+        sspacename=ea_underscore2space(spacename);
         c=uimenu(k1,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'atlases'});
     end
 end
@@ -34,7 +34,7 @@ for space=1:length(spaces)
         if strcmp(spacename,ea_getspace)
             continue
         end
-        sspacename=ea_sub2space(spacename);
+        sspacename=ea_underscore2space(spacename);
         c=uimenu(k2,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'labeling'});
     end
 end
@@ -46,7 +46,7 @@ for space=1:length(spaces)
         if strcmp(spacename,ea_getspace)
             continue
         end
-        sspacename=ea_sub2space(spacename);
+        sspacename=ea_underscore2space(spacename);
         c=uimenu(k3,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'both'});
     end
 end
@@ -58,7 +58,7 @@ for space=1:length(spaces)
         if strcmp(spacename,ea_getspace)
             continue
         end
-        sspacename=ea_sub2space(spacename);
+        sspacename=ea_underscore2space(spacename);
         c=uimenu(k3,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'custom'});
     end
 end

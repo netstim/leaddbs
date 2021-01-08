@@ -166,7 +166,7 @@ else
 end
 
 if ~exist('db','var')
-    db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat']);
+    db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat'],'Writable',false);
 end
 
 disp('Iterating through subjects...');
@@ -176,13 +176,28 @@ for subj = 1:numSubUse % iterate across subjects
 
     for s=1:numseed
         for run=1:howmanyruns
-            Rw=nan(length(sweightidx{s}),pixdim);
-
-            for ix=1:length(sweightidx{s})
-                Rw(ix,:)=db.X(sweightidx{s}(ix),:);
+            Rw=nan(pixdim,length(sweightidx{s}));
+            ea_dispercent(0,'Parsing connectome');
+            queryfrom=1;
+            while 1 % only possible via loop given matfile mapping restrictions, querying as efficiently as possible.
+                for queryinterval=1:length(sweightidx{s})-queryfrom
+                    if ~isequal(sweightidx{s}(queryfrom)+queryinterval,sweightidx{s}(queryfrom+queryinterval)) % check if continuous
+                       break
+                    end
+                    queryuntil=queryfrom+queryinterval;
+                end
+                Rw(:,queryfrom:queryuntil)=db.X(1:pixdim,sweightidx{s}(queryfrom:queryuntil));
+                ea_dispercent(queryuntil/length(sweightidx{s}));
+                queryfrom=queryuntil+1;
+                if queryfrom>length(sweightidx{s})
+                    break
+                end
             end
-            Rw=mean(Rw,1);
-            Rw=Rw/(2^15);
+            ea_dispercent(1,'end');
+            Rw=Rw/(2^15); % convert to actual R values
+
+            Rw=Rw.*repmat(sweightidx{s}',pixdim,1); % map weights of seed to entries
+            Rw=mean(Rw,2);
         end
 
         mmap=dataset.vol.space;
@@ -201,19 +216,6 @@ end
 disp('Done.');
 
 toc
-
-
-function s=ea_conformseedtofmri(dataset,s)
-td=tempdir;
-dataset.vol.space.fname=[td,'tmpspace.nii'];
-ea_write_nii(dataset.vol.space);
-s.fname=[td,'tmpseed.nii'];
-ea_write_nii(s);
-
-ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
-s=ea_load_nii(s.fname);
-delete([td,'tmpspace.nii']);
-delete([td,'tmpseed.nii']);
 
 
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)

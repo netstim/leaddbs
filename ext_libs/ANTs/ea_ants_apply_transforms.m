@@ -47,7 +47,6 @@ if nargin >= 7
                 interp='GenericLabel';
             otherwise
                 interp='BSpline';
-
         end
     end
 else
@@ -56,6 +55,25 @@ else
     else
         interp = 'LanczosWindowedSinc';
     end
+end
+
+if nargin >= 8
+    imageDim = varargin{8};
+    if isnumeric(imageDim)
+        imageDim = num2str(imageDim);
+    end
+else
+    imageDim = '3';
+end
+
+% Image type (-e 0/1/2/3/4): scalar/vector/tensor/time-series/multichannel
+if nargin == 9
+    imageType = varargin{9};
+    if isnumeric(imageType)
+        imageType = num2str(imageType);
+    end
+else
+    imageType = '0';
 end
 
 if ~isempty(options) && ~isempty(fieldnames(options))
@@ -119,7 +137,9 @@ for fi = 1:length(fis)
 
 	cmd = [applyTransforms, ...
            ' --verbose 1' ...
-           ' --dimensionality 3 --float 1' ...
+           ' --dimensionality ', imageDim, ...
+           ' --input-image-type ', imageType, ...
+           ' --float 1' ...
            ' --input ',ea_path_helper(fis{fi}), ...
            ' --output ',ea_path_helper(ofis{fi})];
 

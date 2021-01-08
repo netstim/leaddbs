@@ -61,8 +61,8 @@ end
 % convert VTA seeds also if neither func or struc conn is chosen.
 if (~options.lcm.func.do) && (~options.lcm.struc.do)
     if strcmp(options.lcm.seeddef,'vats')
-        ea_resolvevatseeds(options,'dMRI');
-        ea_resolvevatseeds(options,'fMRI');
+        try ea_resolvevatseeds(options,'dMRI'); end
+        try ea_resolvevatseeds(options,'fMRI'); end
     end
 end
 
@@ -127,7 +127,6 @@ switch modality
         end
 end
 
-
 % % load in txt
 % fid=fopen(fullfile(fileparts(options.lcm.seeds{1}),[ea_stripext(ea_stripext(options.lcm.seeds{1})),'.txt']),'r');
 % A=textscan(fid,'%f %s\n');
@@ -175,7 +174,7 @@ for suffix=dowhich
                     bbfile = [ea_space,'bb.nii'];
                 end
 
-                %if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
+                if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -193,6 +192,8 @@ for suffix=dowhich
                             nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                             nii(cnt).img(isnan(nii(cnt).img))=0;
                             cnt=cnt+1;
+                        else
+                            error('Seed file %s doesn''t exist!', [vatdir,'vat',addstr,'_',sidec,'.nii']);
                         end
                     end
 
@@ -208,7 +209,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                %end
+                end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
                 end
@@ -231,8 +232,7 @@ for suffix=dowhich
                 else
                     nativeprefix='';
                 end
-                %if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
-
+                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -243,32 +243,19 @@ for suffix=dowhich
                         end
 
                         if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
-                            copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
-                            tnii=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
-                            tnii.dt=[16,0];
-                            ea_write_nii(tnii);
-
                             if ~strcmp(cname,'No functional connectome found.')
-                                if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
-                                    ea_warp_vat2rest(cname,vatdir,sidec,options);
-
+                                if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') && ~isfield(options.lcm,'onlygenvats') % patient specific rs-fMRI
+                                    nii(cnt) = ea_warp_vat2rest(cname,vatdir,sidec,options);
                                 else
-                                    d=load([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']);
-                                    d.dataset.vol.space.fname=[vatdir,'tmp_space.nii'];
-                                    d.dataset.vol.space.dt=[16,0];
-                                    ea_write_nii(d.dataset.vol.space);
-                                    ea_conformspaceto(d.dataset.vol.space.fname,[vatdir,'tmp_',sidec,'.nii'],1);
+                                    nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'], [vatdir,'vat',addstr,'_',sidec,'.nii']);
                                 end
-                                nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                                 nii(cnt).img(isnan(nii(cnt).img))=0;
                                 if ~any(nii(cnt).img(:))
                                     msgbox(['Created empty VTA for ',options.patientname,'(',options.uivatdirs{pt},'), ',sidec,' hemisphere.']);
                                 end
                             end
                             cnt=cnt+1;
-
                         end
-
                     end
                     Cnii=nii(1);
                     for n=2:length(nii)
@@ -280,17 +267,16 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                %end
+                end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end
             end
-
     end
 end
 
 
-function ea_warp_vat2rest(cname,vatdir,sidec,options)
+function vatseed = ea_warp_vat2rest(cname,vatdir,sidec,options)
 
 if strncmp(cname, 'Patient''s fMRI - ', length('Patient''s fMRI - '))
     restfname = cname(length('Patient''s fMRI - ')+1:end);
@@ -383,3 +369,5 @@ if ~any(rest_vat.img(:)) % image empty, at least set original peak to 1.
         msgbox(['Attempted to manually set peak voxel to ''',rest_vat.fname,''', but it seems to reside out of bounds.']);
     end
 end
+
+vatseed = ea_load_nii([vatdir,'tmp_',sidec,'.nii']);

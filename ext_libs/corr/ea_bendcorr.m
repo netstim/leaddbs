@@ -1,4 +1,4 @@
-function [r] = ea_bendcorr(X,Y)
+function [r,p] = ea_bendcorr(X,Y)
 
 % Computes the percentage bend correlation along with the bootstrap CI
 %
@@ -65,16 +65,17 @@ n = length(X);
 %% compute
 % --------
 
-    [r] = bend_compute(X,beta);
+    [r,p] = bend_compute(X,beta);
 
 
-
+r=r';
+p=p';
  
 
 
 end
 
-function [r] = bend_compute(X,beta)
+function [r,p] = bend_compute(X,beta)
 
 H= []; pH = [];
 
@@ -94,7 +95,7 @@ P = (X-M)./ repmat(omega,size(X,1),1);
 P(isnan(P)) = 0; P(isinf(P)) = 0; % correct if omega = 0
 comb = [(1:size(X,2)/2)',((1:size(X,2)/2)+size(X,2)/2)']; % all pairs of columns
 r = NaN(size(comb,1),1); 
-
+t = r; p = t;
 for j = 1:size(comb,1)
     
     % column 1
@@ -121,8 +122,11 @@ for j = 1:size(comb,1)
      a(a<=-1) = -1; a(a>=1) = 1; 
      b(b<=-1) = -1; b(b>=1) = 1; 
      
-     % get r
+     % get r & p
      r(j) = sum(a.*b)/sqrt(sum(a.^2)*sum(b.^2));
+     t(j) = r(j)*sqrt((size(X,1) - 2)/(1 - r(j).^2));
+     p(j) = 2*(1 - tcdf(abs(t(j)),size(X,1)-2));
+
 end
 
 

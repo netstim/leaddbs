@@ -14,6 +14,7 @@ if isempty(offset)
     offset=0.3;
 end
 setappdata(mcfig,'offset',offset); setappdata(mcfig,'contrast',contrast);
+
 %% inputs:
 options=getappdata(mcfig,'options');
 if ~isfield(options,'visible')
@@ -59,20 +60,14 @@ end
 
 %% rotation functionality
 % rotation is measured with respect to the y-axis ([0 1 0]) of native space
-
 rotation=getappdata(gcf,'rotation');
 if isempty(rotation)
     rotation = cell(max(options.sides),1);
 end
+
 for side=options.sides
     if manually_corrected == 1 && isempty(rotation{side}) % rotation angles are determined from y-marker
-        tempvec = markers(side).y - markers(side).head;
-        tempvec(3) = 0;
-        tempvec = tempvec ./ norm(tempvec);
-        initialrotation = rad2deg(atan2(norm(cross([0 1 0],tempvec)),dot([0 1 0],tempvec)));
-        if markers(side).y(1) > markers(side).head(1)
-            initialrotation = - initialrotation;
-        end
+        initialrotation = ea_calc_rotation(markers(side).y, markers(side).head);
         rotation{side} = initialrotation;
         setappdata(gcf,'rotation',rotation);
     elseif manually_corrected == 0 && isempty(rotation{side})
@@ -83,25 +78,18 @@ end
 
 for side=options.elside
     rotation=getappdata(gcf,'rotation');
-    normtrajvector=(markers(side).tail-markers(side).head)./norm(markers(side).tail-markers(side).head);
-    normtrajvector2 = normtrajvector;
 
     yvec(1) = -cos(0) * sin(ea_deg2rad(rotation{side})); % [0 1 0] rotated by rotation
     yvec(2) = (cos(0) * cos(ea_deg2rad(rotation{side}))) + (sin(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
     yvec(3) = (-sin(0) * cos(ea_deg2rad(rotation{side}))) + (cos(0) * sin(ea_deg2rad(rotation{side})) * sin(0)); % [0 1 0] rotated by rotation
 
-    xvec = cross(yvec,[0 0 1]); % [1 0 0] rotated by rotation
-
-    xvec = xvec - (dot(xvec,normtrajvector) / (norm(normtrajvector) ^2)) * normtrajvector;     % x is projected down the trajectory
-    xvec = xvec ./ norm(xvec);
-    yvec = -cross(xvec,normtrajvector);
-
-%     markers(side).x = markers(side).head + xvec;
-%     markers(side).y = markers(side).head + yvec;
-    markers(side).x = markers(side).head + (xvec * (options.elspec.lead_diameter/2));
-    markers(side).y = markers(side).head + (yvec * (options.elspec.lead_diameter/2));
+    [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail, yvec);
+    markers(side).x = markers(side).head + (xunitv * (options.elspec.lead_diameter/2));
+    markers(side).y = markers(side).head + (yunitv * (options.elspec.lead_diameter/2));
 end
 
+trajvector = diff([markers(options.elside).head; markers(options.elside).tail]);
+normtrajvector = trajvector/norm(trajvector);
 xvec_unrot=cross(normtrajvector,[1,0,0]); % orthogonal vectors used for x-ray mode
 xvec_unrot=xvec_unrot./norm(xvec_unrot);
 yvec_unrot=cross(normtrajvector,[0,1,0]); % orthogonal vectors used for x-ray mode
@@ -131,11 +119,6 @@ end
 try
     movedheadtail(2,:)=[get(mplot(2),'xdata'),get(mplot(2),'ydata'),get(mplot(2),'zdata')];
 end
-
-% xdata = cell2mat(get(mplot,'xdata'));
-% ydata = cell2mat(get(mplot,'ydata'));
-% zdata = cell2mat(get(mplot,'zdata'));
-% movedmarkers=[xdata,ydata,zdata];
 
 if selectrode
     [markers]=ea_mancor_updatecoords(coordhandle,markers,trajectory,movedheadtail,options,mcfig);
@@ -172,20 +155,23 @@ try delete(captions); end
 % Plot spacing distance info text and correct inhomogeneous spacings.
 %emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
 clear emp_eldist
-if strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)')  || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
-    for side=options.sides
-        coords_temp{side}(1,:) = coords_mm{side}(1,:);
-        coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
-        coords_temp{side}(3,:) = mean(coords_mm{side}(5:7,:));
-        coords_temp{side}(4,:) = coords_mm{side}(8,:);
-        A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
-        emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
-    end
-else
-    for side=options.sides
-        A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
-        emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
-    end
+switch options.elmodel
+    case {'Boston Scientific Vercise Directed'
+          'St. Jude Directed 6172 (short)'
+          'St. Jude Directed 6173 (long)'}
+        for side=options.sides
+            coords_temp{side}(1,:) = coords_mm{side}(1,:);
+            coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
+            coords_temp{side}(3,:) = mean(coords_mm{side}(5:7,:));
+            coords_temp{side}(4,:) = coords_mm{side}(8,:);
+            A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
+            emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
+        end
+    otherwise
+        for side=options.sides
+            A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
+            emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
+        end
 end
 memp_eldist=mean([emp_eldist{:}]);
 [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
@@ -316,7 +302,6 @@ for doxx=0:1
         meantrajectory(end,:)-spanvector;...
         meantrajectory(end,:)+spanvector];
 
-
     xx=[boundingbox(1,1),boundingbox(2,1);boundingbox(3,1),boundingbox(4,1)];
     yy=[boundingbox(1,2),boundingbox(2,2);boundingbox(3,2),boundingbox(4,2)];
     zz=[boundingbox(1,3),boundingbox(2,3);boundingbox(3,3),boundingbox(4,3)];
@@ -348,9 +333,6 @@ for doxx=0:1
                     end
                 end
             end
-            % disp(['Lthresh: ',num2str(lthresh),'; Uthresh: ',num2str(uthresh),'.']);
-
-
         end
         caxis([0,1]);
         setappdata(mcfig,'planecset',1);
@@ -432,31 +414,11 @@ for subpl=getsuplots(1)
             tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
             tvecs=tvecs(1:3,:);
             Xr(:,:,cnt)=ea_resample_planes(Vtra,tvecs,wsize,2,res);
-            %iXr(:,:,cnt)=ea_sample_slice(Vtra,'tra',wsize,'vox',mrks,subpl);
             cnt=cnt+1;
         end
         Xr=smooth3(Xr,'gaussian',[11,11,1]);
         slice=mean(Xr,3);
     else
-%         otraj=zeros(41,3); icnt=1;
-%         for i=-wsize:0.5:wsize
-%             otraj(icnt,:)=[mks(subpl,:)+xvec_unrot*i]';
-%             icnt=icnt+1;
-%         end
-%         tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
-%         tvecs=tvecs(1:3,:);
-%         slice=ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
-%
-%
-%         otraj=zeros(41,3); icnt=1;
-%         for i=-wsize:0.5:wsize
-%             otraj(icnt,:)=[mks(subpl,:)+yvec_unrot*i]';
-%             icnt=icnt+1;
-%         end
-        %tvecs=Vtra.mat*[otraj,ones(size(otraj,1),1)]';
-        %tvecs=tvecs(1:3,:);
-        %slice=slice+ea_resample_planes(Vtra,tvecs,wsize,2,0.5);
-
         slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     end
     slice=ea_contrast(slice,contrast,offset);
@@ -541,10 +503,6 @@ if isempty(legplot)
 end
 
 %% outputs
-
-% try
-%     setappdata(resultfig,'realcoords_plot',realcoords_plot);
-% end
 set(mcfig,'CurrentAxes',mainax1);
 %  axis equal
 
@@ -571,8 +529,6 @@ setappdata(mcfig,'viewtext',viewtext);
 setappdata(mcfig,'elplot',elplot);
 setappdata(mcfig,'mplot',mplot);
 setappdata(mcfig,'movedel',movedel);
-      %  set(mainax1, 'LooseInset', [0,0,0,0]);
-      %  set(mainax2, 'LooseInset', [0,0,0,0]);
 
 if isfield(options,'hybridsave')
     options=rmfield(options,'hybridsave');
@@ -580,13 +536,9 @@ end
 
 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
-%setappdata(mcfig,'markers',markers);
-% try
-%     setappdata(resultfig,'realcoords_plot',realcoords_plot);
-% end
 setappdata(mcfig,'trajectory_plot',trajectory_plot);
 setappdata(mcfig,'planes',planes);
-%ea_tightfig(mcfig);
+
 
 function sp=getsuplots(sides)
 if isequal(sides,[1:2])
@@ -596,6 +548,7 @@ elseif isequal(sides,1)
 elseif isequal(sides,2)
     sp=3:4;
 end
+
 
 function hdtrajectory=genhd_inside(trajectory)
 
@@ -662,8 +615,11 @@ switch options.modality
             end
         end
 end
+
+
 function fn=stripext(fn)
 [~,fn]=fileparts(fn);
+
 
 function col=getbgsidecol(options)
 

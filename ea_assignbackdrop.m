@@ -20,12 +20,12 @@ if strcmp(bdstring, 'list')
     if ~exist('options','var')
         options.patientname='';
     end
-    
+
     % by default assuming patient mode, preop and postop images exist.
     nopatientmode=0;
     haspreop=1;
     haspostop=1;
-    
+
     % check patient mode
     if isfield(options,'groupmode')
         nopatientmode=options.groupmode;
@@ -34,7 +34,7 @@ if strcmp(bdstring, 'list')
     elseif strcmp(options.patientname,'No Patient Selected')
         nopatientmode=1;
     end
-    
+
     % check if preop and postop images exist
     if ~nopatientmode
         if isempty(dir([options.root,options.patientname,filesep,'anat_*.nii']))
@@ -51,7 +51,7 @@ if strcmp(bdstring, 'list')
     if ~haspostop && ~haspreop
         nopatientmode=1;
     end
-    
+
     if nopatientmode
         varargout{1}=[ea_standardspacelist];
     else
@@ -72,19 +72,19 @@ if strcmp(bdstring, 'list')
         end
 
     end
-    
+
     if ~native
         % check for additional template backdrops
             for bd=1:length(BDlist{1})
                 varargout{1}=[varargout{1},...
                     BDlist{2}{bd}];
-            end    
+            end
     end
-    
+
     % add manual choose:
     varargout{1}=[varargout{1},...
                 {'Choose...'}];
-    
+
 elseif regexp(bdstring, ['^', subpat,' Pre-OP \(.*\)$'])    % pattern: "Patient Pre-OP (*)"
     whichpreop=lower(regexp(bdstring, ['(?<=^', subpat,' Pre-OP \()(.*)(?=\))'],'match','once'));
     options=ea_tempswitchoptstopre(options, native, whichpreop);
@@ -181,10 +181,10 @@ end
 
 function BDlist=getbdlist
 BDlist=[{[]},{[]}]; % empty.
-if exist([ea_space,'backdrops',filesep,'backdrops.txt'],'file')    
+if exist([ea_space,'backdrops',filesep,'backdrops.txt'],'file')
     fid=fopen([ea_space,'backdrops',filesep,'backdrops.txt']);
     BDlist=textscan(fid,'%s %s');
-    BDlist{2}=ea_sub2space(BDlist{2});
+    BDlist{2}=ea_underscore2space(BDlist{2});
 end
 
 

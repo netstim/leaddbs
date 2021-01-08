@@ -1,4 +1,4 @@
-function [atlassurfs] = ea_keepatlaslabels(varargin)
+function atlassurfs = ea_keepatlaslabels(varargin)
 %
 % Small function to keep atlas labels given string
 %
@@ -10,47 +10,40 @@ function [atlassurfs] = ea_keepatlaslabels(varargin)
 %   ea_keepatlaslabels('STN','RN','GPi','GPe')
 %   atlassurfs = ea_keepatlaslabels('STN','RN','GP')
 
-% __________________________________________________________________________________
+% _________________________________________________________________________
 % Copyright (C) 2017 University of Pittsburgh, Brain Modulation Lab
 %
 % Ari Kappel
 
-try isvalid(varagin{1})
-    if ~isvalid(varargin{1})
-        ea_warning('Figure handle not valid')
-    end
-catch
-    H = findall(0,'type','figure');
-    resultfig = H(~cellfun(@isempty,strfind({H(:).Name},{'Electrode-Scene'})));
-end
-
-if isempty(varargin) || isempty(varargin{1}) || strcmpi(varargin{1},'on') || ...
-        ( length(varargin)==2 && isempty(varargin{2}) )
-    varargin{1}='right';
-    varargin{2}='left';
-end
-
-resultfig=resultfig(1); % take the first if there are more.
+H = findall(0,'type','figure');
+resultfig = H(contains({H(:).Name},{'Electrode-Scene'}));
+resultfig=resultfig(1); % Take the first if there are more.
+set(0,'CurrentFigure',resultfig)
 
 atlassurfs = getappdata(resultfig,'atlassurfs');
 colorbuttons = getappdata(resultfig,'colorbuttons');
-set(0,'CurrentFigure',resultfig)
-idx=zeros(length(atlassurfs),1);
-for i = 1:length(varargin)
-    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_left']);
-    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_right']);
-    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_midline']);
-    idx = idx+ismember(get(atlassurfs(:),'Tag'),[varargin{i},'_mixed']);
+
+% Show all atlases in case no input parameter
+if isempty(varargin)
+    atlasToggle = {'on'};
+else
+    atlasToggle = lower(varargin);
 end
-    set(colorbuttons(idx==0),'State','off')
-    set(atlassurfs(idx==0),'Visible','off')
-    
-    set(colorbuttons(idx>0),'State','on')
-    set(atlassurfs(idx>0),'Visible','on')
-    
-atlassurfs = atlassurfs(idx>0);
 
+idx = [];
+for i = 1:length(atlassurfs)
+    atlasTag = lower(atlassurfs{i}.Tag);
+    atlasName = regexprep(atlasTag, '_(left|right|midline|mixed)$', '');
+    if strcmp(atlasToggle{1}, 'on') ... % Turn on all atlases
+            || ismember(atlasTag, atlasToggle) ... % Match exactly
+            || ismember(atlasName, atlasToggle) % Match name regardless of side
+        idx = [idx, i];
+        atlassurfs{i}.Visible = 'on';
+        colorbuttons(i).State = 'on';
+    else
+        atlassurfs{i}.Visible = 'off';
+        colorbuttons(i).State = 'off';
+    end
+end
 
-% view(0,90) %Z-axis view(180,-90)
-% view(90,0) %X-axis
-% view(180,0) %Y-axis view(0,0) (COR)
+atlassurfs = atlassurfs(idx);

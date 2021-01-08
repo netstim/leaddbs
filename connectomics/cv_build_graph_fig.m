@@ -309,12 +309,3 @@ fv.vertices = v;
 %         disp(lasterr)
 %     end
 % end
-
-
-
-function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';

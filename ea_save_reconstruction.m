@@ -14,20 +14,19 @@ if options.native
     reco.native.markers=markers;
     checkxy = 1;
     if checkxy % checks for problems with the length of markers x and y - could be removed at some point
-       for numleads = 1:length(reco.native.markers)
-        x =  reco.native.markers(numleads).x - reco.native.markers(numleads).head;
-        y =  reco.native.markers(numleads).y - reco.native.markers(numleads).head;
-        x = (x./norm(x)) .* (options.elspec.lead_diameter/2);
-        y = (y./norm(y)) .* (options.elspec.lead_diameter/2);
-        reco.native.markers(numleads).x = reco.native.markers(numleads).head + x;
-        reco.native.markers(numleads).y = reco.native.markers(numleads).head + y;
-        clear x y
-       end        
+        for numleads = 1:length(reco.native.markers)
+            x =  reco.native.markers(numleads).x - reco.native.markers(numleads).head;
+            y =  reco.native.markers(numleads).y - reco.native.markers(numleads).head;
+            x = (x./norm(x)) .* (options.elspec.lead_diameter/2);
+            y = (y./norm(y)) .* (options.elspec.lead_diameter/2);
+            reco.native.markers(numleads).x = reco.native.markers(numleads).head + x;
+            reco.native.markers(numleads).y = reco.native.markers(numleads).head + y;
+            clear x y
+        end
     end
     save([options.root,options.patientname,filesep,outfname],'reco');
     if isfield(options,'hybridsave')
         ea_dispt('Warping fiducials to template space');
-
         ea_reconstruction2mni(options);
         if options.prefs.reco.saveACPC
             ea_dispt('Mapping fiducials to AC/PC space');
@@ -77,17 +76,23 @@ if length(reco.mni.coords_mm)==2 && ~any(cellfun(@isempty,reco.mni.coords_mm))
     if mean(reco.mni.coords_mm{1}(:,1))<mean(reco.mni.coords_mm{2}(:,1)) % RL swapped
         % swap RL:
         options.hybridsave=1;
-        ncoords_mm{1}=reco.mni.coords_mm{2};    ncoords_mm{2}=reco.mni.coords_mm{1};
-        ntrajectory{1}=reco.mni.trajectory{2};    ntrajectory{2}=reco.mni.trajectory{1};
-        nmarkers(1)=reco.mni.markers(2); nmarkers(2)=reco.mni.markers(1);
+        ncoords_mm{1}=reco.mni.coords_mm{2};
+        ncoords_mm{2}=reco.mni.coords_mm{1};
+        ntrajectory{1}=reco.mni.trajectory{2};
+        ntrajectory{2}=reco.mni.trajectory{1};
+        nmarkers(1)=reco.mni.markers(2);
+        nmarkers(2)=reco.mni.markers(1);
 
         reco.mni.coords_mm=ncoords_mm;
         reco.mni.trajectory=ntrajectory;
         reco.mni.markers=nmarkers;
 
-        ncoords_mm{1}=reco.native.coords_mm{2};    ncoords_mm{2}=reco.native.coords_mm{1};
-        ntrajectory{1}=reco.native.trajectory{2};    ntrajectory{2}=reco.native.trajectory{1};
-        nmarkers(1)=reco.native.markers(2); nmarkers(2)=reco.native.markers(1);
+        ncoords_mm{1}=reco.native.coords_mm{2};
+        ncoords_mm{2}=reco.native.coords_mm{1};
+        ntrajectory{1}=reco.native.trajectory{2};
+        ntrajectory{2}=reco.native.trajectory{1};
+        nmarkers(1)=reco.native.markers(2);
+        nmarkers(2)=reco.native.markers(1);
 
         reco.native.coords_mm=ncoords_mm;
         reco.native.trajectory=ntrajectory;
@@ -114,12 +119,12 @@ if ~reco.props(options.sides(1)).manually_corrected
             plot3(reco.mni.markers(side).y(:,1),reco.mni.markers(side).y(:,2),reco.mni.markers(side).y(:,3),'g*');
         end
 
-        if reco.mni.markers(side).head(2)<reco.mni.markers(side).y(2) % FIX ME need to check whether > or < is correct here.
+        if reco.mni.markers(side).head(2)>reco.mni.markers(side).y(2) % Flip y marker if head is anterior to y marker.
             reco.mni.markers(side).y=reco.mni.markers(side).head+(reco.mni.markers(side).head-reco.mni.markers(side).y); % 180 deg flip
             corrected=1;
         end
 
-        if reco.mni.markers(side).head(1)>reco.mni.markers(side).x(1) % FIX ME need to check whether > or < is correct here.
+        if reco.mni.markers(side).head(1)>reco.mni.markers(side).x(1) % Flip x marker if head is right to x marker.
             reco.mni.markers(side).x=reco.mni.markers(side).head+(reco.mni.markers(side).head-reco.mni.markers(side).x);
             corrected=1;
         end

@@ -30,10 +30,14 @@ if isfield(atlases,'threshold')
             end
         case 'percentage_vector'
             sso=sort(img(img>0));
-            try
-                thresh=sso(round(length(sso)*(1-atlases.threshold.value(atlas)))); % preserve % of voxels.
-            catch
-                thresh=sso(1);
+            if atlases.threshold.value(atlas)==1 % include everything
+                thresh=sso(end)-eps;
+            else
+                try
+                    thresh=sso(round(length(sso)*(1-atlases.threshold.value(atlas)))); % preserve % of voxels.
+                catch
+                    thresh=sso(1);
+                end
             end
         case 'relative_intensity'
             thresh=max(img(:))*(1-atlases.threshold.value);

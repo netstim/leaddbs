@@ -20,11 +20,8 @@ include(${Slicer_USE_FILE})
 #-----------------------------------------------------------------------------
 # Extension modules
 add_subdirectory(ImportAtlas)
-add_subdirectory(DrawRefine)
-add_subdirectory(TransformsUtil)
-add_subdirectory(SmudgeModule)
-add_subdirectory(Test)
 add_subdirectory(ImportSubject)
+add_subdirectory(WarpDrive)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------

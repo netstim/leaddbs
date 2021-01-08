@@ -13,7 +13,11 @@
 *.zip
 *.6
 *.pyc
+.idea
+__pycache__
 CMakeLists.txt
+
+/ea_prefs_*.m
 
 gibsconnect*.mat
 fibers/
@@ -25,7 +29,6 @@ coverage_html/
 
 # dev only
 ea_make_release.m
-.gitattributes
 
 # OS generated files #
 ######################
@@ -45,7 +48,9 @@ Thumbs.db
 !ea_logo.png
 !segjob*.mat
 !ea_prefs_default.mat
-!ext_libs/support/libstdc++.so.6
+!ext_libs/support/**/*
 !common/ea_prefs_default.json
 
 /slicer.py
+
+/ext_libs/SlicerCustom*

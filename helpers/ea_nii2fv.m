@@ -11,13 +11,11 @@ nii.img(isnan(nii.img))=0;
 
 if ~isempty(xx)
     XYZ=[xx,yy,zz]; % concatenate points to one matrix.
-    XYZ=map_coords_proxy(XYZ,nii); % map to mm-space
+    XYZ=ea_vox2mm(XYZ,nii.mat); % map to mm-space
 end
 
-
-bb=[0,0,0;size(nii.img)];
-
-bb=map_coords_proxy(bb,nii);
+bb=[1,1,1;size(nii.img)];
+bb=ea_vox2mm(bb,nii.mat);
 gv=cell(3,1);
 for dim=1:3
     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(nii.img,dim));
@@ -31,14 +29,3 @@ fv=isosurface(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
 fv.vertices=[fv.vertices;fvc.vertices];
-
-
-
-
-
-function coords=map_coords_proxy(XYZ,V)
-
-XYZ=[XYZ';ones(1,size(XYZ,1))];
-
-coords=V.mat*XYZ;
-coords=coords(1:3,:)';

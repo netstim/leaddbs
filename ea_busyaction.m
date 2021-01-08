@@ -72,7 +72,7 @@ try
                 offfigtit='Manual reconstruction';
             case 'stim'
                 sz=get(fighandle,'Position');
-                pos=[sz(3)-50 sz(4)-37 50 50];
+                pos=[sz(3)-50 sz(4)-39 50 50];
                 onfigtit='Stimulation Parameters (busy...)';
                 offfigtit='Stimulation Parameters';
             case 'wavelet'

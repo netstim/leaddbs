@@ -1,0 +1,20 @@
+*.edge binary
+*.ele binary
+*.face binary
+*.mesh binary
+*.node binary
+*.mtr binary
+*.smesh binary
+
+*.glnxa64 binary
+*.maci64 binary
+*.exe binary
+
+*.mat binary
+*.nii binary
+*.nii.gz binary
+
+*.obj binary
+*.ply binary
+*.stl binary
+*.mz3 binary

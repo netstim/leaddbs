@@ -67,11 +67,15 @@ for but=1:length(togglenames)
     eval([togglenames{but},'=getappdata(resultfig,''',togglenames{but},''');']);
     expand=1;
     if isempty(eval(togglenames{but}))
-        eval([togglenames{but},'=repmat(1,expand,length(options.sides));']);
+        %eval([togglenames{but},'=repmat(1,expand,length(options.sides));']);
+        %changed to max, as to include for sure the array as large as the maximum side used, 
+        %as this code was intended for the bilateral cases
+        %maybe will have to change it to minimum have two elements, to always include at least R and L sides
+        %For example, before if the side was only Left, the multiplier would have been only 1
+        eval([togglenames{but},'=repmat(1,expand,max(options.sides));']);
     end
 
     setappdata(resultfig,togglenames{but},eval(togglenames{but}));
-
 end
 clear expand
 
@@ -87,9 +91,10 @@ end
 
 [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,S);
 
-if isstruct(VAT{1}.VAT) || isstruct(VAT{2}.VAT) % e.g. simbio model used
+if (isfield(VAT{1},'VAT') && isstruct(VAT{1}.VAT)) || ((length(VAT)>1) && isfield(VAT{2},'VAT') && isstruct(VAT{2}.VAT)) % e.g. simbio model used
     vat=1;
-    for side=1:length(options.sides)
+    for iside=1:length(options.sides)
+        side=options.sides(iside);
         try
             nVAT{side}.VAT{vat}=VAT{side}.VAT.vertices;
             K(side).K{vat}=VAT{side}.VAT.faces;
@@ -101,7 +106,8 @@ if isstruct(VAT{1}.VAT) || isstruct(VAT{2}.VAT) % e.g. simbio model used
     VAT=nVAT;
 end
 
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
     switch side
         case 1
             sidec='right';
@@ -156,57 +162,70 @@ for side=1:length(options.sides)
             if options.writeoutstats
                 ea_dispt('Writing out stats...');
                 load([options.root,options.patientname,filesep,'ea_stats']);
+                ea_stats.stimulation(thisstim).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
                 ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).contact=vat;
                 ea_stats.stimulation(thisstim).vat(side,vat).side=side;
-                ea_stats.stimulation(thisstim).label=S.label;
 
-                vatfv.faces=K(side).K{vat}; vatfv.vertices=VAT{side}.VAT{vat};
-                vatfv=reducepatch(vatfv,0.05);
-                Vcent=mean(vatfv.vertices);
+                % VTA volume and efield volume
+                ea_stats.stimulation(thisstim).vat(side,vat).volume=stimparams(1,side).volume(vat);
+                if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_efield_',sidec]),'file')
+                    vefieldfile=ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_efield_',sidec]);
+                    Vefield=load_untouch_nii(vefieldfile);
+                    efiedthreshold = options.prefs.machine.vatsettings.horn_ethresh*10^3;
+                    Vefield.img(Vefield.img<=efiedthreshold) = 0;
+                    ea_stats.stimulation(thisstim).efield(side,vat).volume=sum(Vefield.img(:));
+                end
 
                 atlasName = options.atlasset;
-                load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
-                for atlas=1:size(atlases.XYZ,1)
-                    if stimparams(side).volume(vat)>0 % stimulation on in this VAT,
-                        clear thisatl
+                if ~strcmp(atlasName, 'Use none')
+                    load([ea_space(options,'atlases'),atlasName,filesep,'atlas_index.mat']);
 
-                        try % for midline or combined atlases, only the right side atlas is used.
-                            if isempty(atlases.XYZ{atlas,side}) % for midline or combined atlases, only the right side atlas is used.
-                                thisatl=atlases.XYZ{atlas,1}.mm;
-                                tpd=atlases.pixdim{atlas,1};
-                            else
-                                thisatl=atlases.XYZ{atlas,side}.mm;
-                                tpd=atlases.pixdim{atlas,side};
+                    for atlas=1:length(atlases.names)
+                        if any(S.amplitude{side}) % stimulation on
+                            switch atlases.types(atlas)
+                                case 1 % right hemispheric atlas.
+                                    atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
+                                case 2 % left hemispheric atlas.
+                                    atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
+                                case 3 % both-sides atlas composed of 2 files.
+                                    switch sidec
+                                        case 'right'
+                                            atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
+                                        case 'left'
+                                            atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
+                                    end
+                                case 4 % mixed atlas (one file with both sides information).
+                                    atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'mixed',filesep,atlases.names{atlas}];
+                                case 5 % midline atlas (one file with both sides information.
+                                    atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'midline',filesep,atlases.names{atlas}];
                             end
-                        catch
-                            thisatl=atlases.XYZ{atlas,1}.mm;
-                            tpd=atlases.pixdim{atlas,1};
+
+                            if endsWith(atlasfile, {'.nii','.nii.gz'})
+                                atlasfile = ea_niigz(atlasfile);
+                            else % Skip fiber atlas
+                                ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
+                                ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
+                                continue;
+                            end
+
+                            vatfile = ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_',sidec]);
+                            voxsize = prod(ea_detvoxsize(vatfile));
+
+                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vatfile,atlasfile,sidec).*voxsize;
+                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
+
+                            % now also add efield overlap:
+                            if exist('vefieldfile','var')
+                                ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vefieldfile,atlasfile,sidec);
+                                ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
+                                    ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)./sum(Vefield.img(:));
+                            end
+                        else % no stimulation, simply set vi to zero.
+                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
+                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
                         end
-
-                        tpv=abs(tpd(1))*abs(tpd(2))*abs(tpd(3)); % volume of one voxel in mm^3.
-
-                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=sum(ea_intriangulation(vatfv.vertices,vatfv.faces,thisatl))*tpv;
-                        ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
-                        ea_stats.stimulation(thisstim).vat(side,vat).volume=stimparams(1,side).volume(vat);
-
-                        % now also add efield overlap:
-                        if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
-                                S.label,filesep,'vat_efield_',sidec]),'file')
-                            Vefield=ea_load_nii(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)...
-                                S.label,filesep,'vat_efield_',sidec]));
-                            atlasvoxels=Vefield.mat\[thisatl,ones(length(thisatl),1)]';
-                            ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=...
-                                mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1));
-                            ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
-                                mean(spm_sample_vol(Vefield,atlasvoxels(1,:),atlasvoxels(2,:),atlasvoxels(3,:),1))./...
-                                sum(Vefield.img(:));
-                            ea_stats.stimulation(thisstim).efield(side,vat).volume=sum(Vefield.img(:));
-                        end
-                    else % no voltage on this vat, simply set vi to zero.
-                        ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
-                        ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
                     end
                 end
 
@@ -222,7 +241,8 @@ for side=1:length(options.sides)
 end
 
 % correct togglestates
-for side=1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
     if ~vaton(side)
         try
             objvisible([],[],PL.vatsurfs(side,:),resultfig,'vaton',[],side,0)

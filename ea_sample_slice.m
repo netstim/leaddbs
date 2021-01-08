@@ -19,14 +19,14 @@ if strcmp(voxmm,'mm')
     probe=vol.mat\probe;
     wsize=abs(round(probe(1,1)-probe(1,2)));
     clear probe
-    %
 end
+
 if iscell(coords)
-allc=[];
-for side=1:length(coords)
-    allc=[allc;coords{side}];
-end
-coords=allc;
+    allc=[];
+    for side=1:length(coords)
+        allc=[allc;coords{side}];
+    end
+    coords=allc;
 end
 
 if length(coords)==1 % scalar input, only a height is defined. convert to mm space.
@@ -34,6 +34,14 @@ if length(coords)==1 % scalar input, only a height is defined. convert to mm spa
 else
     getfullframe=0;
 end
+
+if any(isnan(coords(el,:)))
+    %set all to nan and return
+    %this is because there was no electrode here (nan coordinate)
+    [slice,boundbox,boundboxmm,sampleheight]=deal(nan);
+    return
+end
+
 switch tracor
     case 'tra'
         if getfullframe
@@ -51,10 +59,8 @@ switch tracor
         sampleheight=vol.mat*sampleheight;
         sampleheight=sampleheight(3);
 
-
         ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
-
         %slice=fliplr(slice);
     case 'cor'
         if getfullframe
@@ -97,14 +103,9 @@ switch tracor
         %slice=fliplr(slice);
 end
 
-
-
-
-   boundboxmm{1}=vol.mat*[boundbox{1};ones(3,length(boundbox{1}))];
-   boundboxmm{1}=boundboxmm{1}(1,:);
-   boundboxmm{2}=vol.mat*[ones(1,length(boundbox{1}));boundbox{2};ones(2,length(boundbox{2}))];
-   boundboxmm{2}=boundboxmm{2}(2,:);
-   boundboxmm{3}=vol.mat*[ones(2,length(boundbox{1}));boundbox{3};ones(1,length(boundbox{3}))];
-   boundboxmm{3}=boundboxmm{3}(3,:);
-
-
+boundboxmm{1}=vol.mat*[boundbox{1};ones(3,length(boundbox{1}))];
+boundboxmm{1}=boundboxmm{1}(1,:);
+boundboxmm{2}=vol.mat*[ones(1,length(boundbox{1}));boundbox{2};ones(2,length(boundbox{2}))];
+boundboxmm{2}=boundboxmm{2}(2,:);
+boundboxmm{3}=vol.mat*[ones(2,length(boundbox{1}));boundbox{3};ones(1,length(boundbox{3}))];
+boundboxmm{3}=boundboxmm{3}(3,:);

@@ -5,27 +5,26 @@ function varargout=ea_genvat_horn(varargin)
 useSI=1;
 vizz=0;
 if nargin==5
-    acoords=varargin{1};
+    % coords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
-
-elseif nargin==7
-    acoords=varargin{1};
+elseif nargin==6
+    % coords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=varargin{6};
-    lgfigure=varargin{7};
+    lgfigure=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='SimBio/FieldTrip (see Horn 2017)';
         return
     end
 end
+
+thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
 
 if useSI
     thresh=thresh.*(10^3);
@@ -42,9 +41,7 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
     return
 end
 
-
 %% get electrodes handles // initial parameters:
-
 resultfig=getappdata(lgfigure,'resultfig');
 
 % Important to load in reco from a new since we need to decide whether to
@@ -60,7 +57,7 @@ elstruct(1).markers=markers;
 
 elspec=getappdata(resultfig,'elspec');
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
-coords=acoords{side};
+coords = coords_mm{side};
 setappdata(resultfig,'elstruct',elstruct);
 
 % Add stretchfactor to elstruct simply for purpose of checking if headmodel
@@ -91,11 +88,11 @@ if hmchanged
                 if ~isfield(atlases,'tissuetypes')
                     atlases.tissuetypes=ones(length(atlases.names),1);
                 end
-                for atlas=1:numel(atlases.fv)
-                    if isempty(atlases.fv{atlas}) || (atlases.tissuetypes~=1)
+                for atlas=1:numel(atlases.roi)
+                    if isempty(atlases.roi{atlas}.fv) || (atlases.tissuetypes~=1)
                         continue
                     end
-                    fv(cnt)=atlases.fv{atlas};
+                    fv(cnt)=atlases.roi{atlas}.fv;
 
                     ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
                     %tissuetype(cnt)=1;
@@ -103,13 +100,6 @@ if hmchanged
                 end
             case 'tpm'
                 c1=ea_load_nii([ea_space(options),'TPM.nii,1']);
-                %                 voxnbcyl=c1.mat\[nbcyl,ones(length(nbcyl),1)]';
-                %                 voxnbcyl=voxnbcyl(1:3,:)';
-                %                 cyl=surf2vol(voxnbcyl,fbcyl,1:size(c1.img,2),1:size(c1.img,1),1:size(c1.img,3));
-                %                 cyl=imfill(cyl,'holes');
-                %
-                %                 cyl=double(smooth3(cyl,'gaussian',[3 3 3]));
-                %                 c1.img=c1.img.*permute(cyl,[2,1,3]);
                 fv=isosurface(c1.img,0.5,'noshare');
                 fv.vertices=c1.mat*[fv.vertices,ones(length(fv.vertices),1)]';
                 fv.vertices=fv.vertices(1:3,:)';
@@ -120,48 +110,45 @@ if hmchanged
         fv=[];
     end
 
-
     [elfv,ntissuetype,Y,electrode]=ea_buildelfv(elspec,elstruct,side);
-    Ymod=Y+(randn(4)/1000);
+    Ymod=Y;
     success=0;
-    for precision=[0,100,1000,50] % iterate different precision values (0 = no change to original data)
-
-        for attempt=1:4 % allow four attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
-            
-            try
-                [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Ymod,elspec,precision);
-                if ~isempty(mesh.tet)
-                    success=1;
-                    break
+    for attempt=1:4 % allow four attempts with really small jitters in case scene generates intersecting faces FIX ME this needs a better solution
+        try
+            [mesh.tet,mesh.pnt,activeidx,wmboundary,centroids,tissuetype]=ea_mesh_electrode(fv,elfv,ntissuetype,electrode,options,S,side,electrode.numel,Ymod,elspec);
+            if ~isempty(mesh.tet)
+                success=1;
+                break
+            end
+        catch
+            % The VTA model has led to an intersection of meshes, which
+            % can sometimes happen. We will introduce a small jitter to
+            % the electrode and try again.
+            Ymod=Y+(randn(4)/700); % Very small jitter on transformation which will be used on electrode. - should not exceed ~700. Use vizz below to see effects.
+            if vizz
+                h=figure;
+                telfv=elfv;
+                for c=1:length(elfv)
+                       telfv(c).vertices=Y*[telfv(c).vertices,ones(size(telfv(c).vertices,1),1)]';
+                    telfv(c).vertices=telfv(c).vertices(1:3,:)';
+                patch(telfv(c),'edgecolor','m','facecolor','none');
                 end
-            catch
-                % The VTA model has led to an intersection of meshes, which
-                % can sometimes happen. We will introduce a small jitter to
-                % the electrode and try again.
-                Ymod=Y+(randn(4)/700); % Very small jitter on transformation which will be used on electrode. - should not exceed ~700. Use vizz below to see effects.
-                if vizz
-                    h=figure
-                    telfv=elfv;
-                    for c=1:length(elfv)
-                           telfv(c).vertices=Y*[telfv(c).vertices,ones(size(telfv(c).vertices,1),1)]';
-                        telfv(c).vertices=telfv(c).vertices(1:3,:)';
-                    patch(telfv(c),'edgecolor','m','facecolor','none');
-                    end
-                    telfv=elfv;
-                    for c=1:length(elfv)
-                        telfv(c).vertices=Ymod*[telfv(c).vertices,ones(size(telfv(c).vertices,1),1)]';
-                        telfv(c).vertices=telfv(c).vertices(1:3,:)';
-                        patch(telfv(c),'edgecolor','g','facecolor','none');
-                    end
-                    axis equal
-                    view(0,0)
-                    h.Position=[1000          85         253        1253];
+                telfv=elfv;
+                for c=1:length(elfv)
+                    telfv(c).vertices=Ymod*[telfv(c).vertices,ones(size(telfv(c).vertices,1),1)]';
+                    telfv(c).vertices=telfv(c).vertices(1:3,:)';
+                    patch(telfv(c),'edgecolor','g','facecolor','none');
                 end
+                axis equal
+                view(0,0)
+                h.Position=[1000          85         253        1253];
             end
         end
-        if success
-            break
-        end
+        ea_kill('name', ['tetgen', getexeext]);
+    end
+
+    if ~success
+       ea_error('Despite all attempts the VTA model could not be created. Ideas: try estimating the VTA model directly in template space and/or without using an atlas to define gray matter.');
     end
 
     % replace wmboundary
@@ -182,7 +169,6 @@ if hmchanged
     wmboundary = unique(faces(:))';
     % end replace.
 
-
     if vizz
         figure
         hold on
@@ -202,7 +188,7 @@ if hmchanged
         mesh.pnt=mesh.pnt/1000; % in meter
         mesh.unit='m';
     end
- %   plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'c.');
+	% plot3(mesh.pnt(:,1),mesh.pnt(:,2),mesh.pnt(:,3),'c.');
     %% calculate volume conductor
     ea_dispt('Creating volume conductor...');
 
@@ -225,17 +211,15 @@ if hmchanged
         mesh.unit='mm';
     end
     if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)],'dir')
-       mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
+        mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
     end
     save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
     ea_save_hmprotocol(options,side,elstruct,1);
-
 else
     % simply load vol.
     ea_dispt('Loading headmodel...');
     load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat']);
     activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
-
 end
 
 switch side
@@ -266,10 +250,9 @@ for source=S.sources
         end
     end
 
-    Acnt=find(U); % active contact
-    if ~isempty(Acnt)
-
-        dpvx=coords(Acnt,:);
+    actInd=find(U); % active contact indices
+    if ~isempty(actInd)
+        actContact=coords(actInd,:);
 
         volts=U(U~=0);
 
@@ -282,7 +265,6 @@ for source=S.sources
         end
         %ix=knnsearch(vol.pos,dpvx/SIfx); % add dpvx/1000 for m
 
-
         if any(volts>0)
             unipolar=0;
             U=U/2;
@@ -294,17 +276,16 @@ for source=S.sources
         voltix=[];
 
         cnt=1;
-        for ac=Acnt
+        for ac=actInd
             ix=[ix;activeidx(source).con(ac).ix];
             voltix=[voltix;repmat(U(ac),length(activeidx(source).con(ac).ix),1),...
                 repmat(cnt,length(activeidx(source).con(ac).ix),1)];
             cnt=cnt+1;
-
         end
 
         if isempty(ix)
             rmdir([options.root,options.patientname,filesep,'current_headmodel'],'s'); % the least I can do at this point is to clean up the faulty headmodel.
-           ea_error('Something went wrong. Active vertex index not found.');
+            ea_error('Something went wrong. Active vertex index not found.');
         end
 
         if ~constvol
@@ -336,22 +317,19 @@ for source=S.sources
         tmp = sort(abs(gradient{source}),'descend');
         gradient{source}(elec_tet_ix,:) = repmat(mean(tmp(1:ceil(length(tmp(:,1))*0.001),:)),[length(elec_tet_ix),1]); % choose mean of highest 0.1% as new efield value
         clear tmp
-
     else % empty source..
         gradient{source}=zeros(size(vol.tet,1),3);
     end
-
 end
 
 gradient=gradient{1}+gradient{2}+gradient{3}+gradient{4}; % combined gradient from all sources.
 
 vol.pos=vol.pos*SIfx; % convert back to mm.
 
+% midpts can be in either MNI or native space depending on options.native
 midpts=mean(cat(3,vol.pos(vol.tet(:,1),:),vol.pos(vol.tet(:,2),:),vol.pos(vol.tet(:,3),:),vol.pos(vol.tet(:,4),:)),3); % midpoints of each pyramid
 
-
 reduc=10;
-
 
 % generate flowfield visualization:
 % generate a jittered indices vector to be used to reduce flowfield
@@ -368,45 +346,42 @@ indices=unique(indices(2:end-1));
 indices(indices==0)=[];
 indices(indices>length(midpts))=[];
 
+if ~options.native % VTA calculated in MNI space directly
+    [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
+    varargout{1}=vatfv;
+    varargout{2}=vatvolume;
+    varargout{3}=radius;
+    ea_dispt('');
+else % VTA calculated in native space and then transformed back to MNI
+        % Write out native space VTA
+        [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
 
+        % If visualizing in native space -> output native space results first before conversion to MNI
+        if options.orignative==1
+            varargout{1}=vatfv;
+            varargout{2}=vatvolume;
+            varargout{3}=radius;
+            ea_dispt('');
+        end
 
+        % Convert midpts and actContact from native space to MNI space
+        [~,anatpresent] = ea_assignpretra(options);
+        ptsvx_native = ea_mm2vox([midpts;actContact], [options.root,options.patientname,filesep,anatpresent{1}])';
+        ptsmm_mni = ea_map_coords(ptsvx_native, [options.root,options.patientname,filesep,anatpresent{1}], ...
+            [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], '')';
+        midpts_mni = ptsmm_mni(1:size(midpts,1),:);
+        actContact_mni = ptsmm_mni(size(midpts,1)+1:end,:);
+        options.native=0; % go back to template space for export
+        [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts_mni,indices,elspec,actContact_mni,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
+        options.native=options.orignative; % go back to originally set space
 
-[vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
-% transform midpts to template if necessary:
-if options.native==1 % if we calculated in native space -> now transform back to MNI
-    if options.orignative==1 % if we are displaying in native space -> export native space results as function outputs before conversion to MNI
-        % define function outputs
-        varargout{1}=vatfv;
-        varargout{2}=vatvolume;
-        varargout{3}=radius;
-        ea_dispt(''); % stop chain of timed processes.        
-    end
-    % convert to MNI    
-    [~,anatpresent] = ea_assignpretra(options);
-    c = ea_mm2vox([dpvx;midpts], [options.root,options.patientname,filesep,anatpresent{1}]);
-    c = ea_map_coords(c', [options.root,options.patientname,filesep,anatpresent{1}], ...
-        [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], '');
-    dpvx = c(:,1:size(dpvx,1))';
-    midpts = c(:,size(dpvx,1)+1:end)';
-    options.native=0; % go back to template space for export
-    [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
-    options.native=options.orignative; % go back to originally set space
-
-    if options.orignative==0 % case if we are visualizing in MNI but calculated VTA in native space -> define MNI vta as function output
-        % define function outputs
-        varargout{1}=vatfv;
-        varargout{2}=vatvolume;
-        varargout{3}=radius;
-        ea_dispt(''); % stop chain of timed processes.
-    end
-    
-else % calculated in MNI space directly
-            % define function outputs
-        varargout{1}=vatfv;
-        varargout{2}=vatvolume;
-        varargout{3}=radius;
-        ea_dispt(''); % stop chain of timed processes.
-
+        % If visualizing in MNI space -> output MNI space results
+        if options.orignative==0
+            varargout{1}=vatfv;
+            varargout{2}=vatvolume;
+            varargout{3}=radius;
+            ea_dispt('');
+        end
 end
 
 
@@ -414,7 +389,6 @@ function changed=ea_headmodel_changed(options,side,elstruct)
 % function that checked if anything (user settings) has changed and
 % headmodel needs to be recalculated..
 changed=1; % in doubt always reconstruct headmodel
-
 
 if isequaln(ea_load_hmprotocol(options,side),ea_save_hmprotocol(options,side,elstruct,0)) % important to use isequaln if not nans are treated as not equal...
     changed=0;
@@ -469,7 +443,6 @@ if constvol
     dirival = zeros(size(vol.pos,1),1);
     dirival(elec) = val(:,1);
 else
-
     if unipolar
         dirinodes = boundarynodes;
     else
@@ -483,13 +456,11 @@ else
         elec_center_id = ea_find_elec_center(elec,vol.pos);
         rhs(elec_center_id) = val(1,1);
     else
-
         for v=1:length(uvals)
         elec_center_id = ea_find_elec_center(elec(val(:,2)==uvals(v)),vol.pos);
         thesevals=val(val(:,2)==uvals(v),1);
         rhs(elec_center_id) = thesevals(1);
         end
-
         %warning('Bipolar constant current stimulation currently not implemented!');
     end
 end
@@ -506,11 +477,6 @@ center = mean(pos(elec,:));
 dist_center = sqrt(sum((pos(elec,:)-repmat(center,length(elec),1)).^2,2));
 [dist, elec_id] = min(dist_center);
 center_id = elec(elec_id);
-
-
-
-
-
 
 
 function [stiff,rhs] = ea_dbs(stiff,rhs,dirinodes,dirival)
@@ -4235,7 +4201,7 @@ end
 % get the optional input arguments
 output  = ea_ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombined'
 
-if ~exist(type, 'var')
+if ~exist('type', 'var')
     error('the requested sensor type "%s" is not supported', type);
 
 elseif isempty(eval(type))

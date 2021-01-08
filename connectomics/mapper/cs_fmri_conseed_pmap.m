@@ -15,7 +15,6 @@ else
     end
 end
 
-
 if ~exist('dfold','var')
     dfold=''; % assume all data needed is stored here.
 else
@@ -31,9 +30,8 @@ if ismember('>',cname)
     subset=cname(delim+1:end);
     cname=cname(1:delim-1);
 end
-prefs=ea_prefs;
-dfoldsurf=[dfold,'fMRI',filesep,cname,filesep,'surf',filesep];
-dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to /vol subdir.
+
+dfoldvol=[dfold,'fMRI',filesep,cname,filesep,'vol',filesep]; % expand to vol subdir.
 
 d=load([dfold,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
 dataset=d.dataset;
@@ -42,14 +40,11 @@ if exist('outputmask','var')
     if ~isempty(outputmask)
         omask=ea_load_nii(outputmask);
         omaskidx=find(omask.img(:));
-        [~,maskuseidx]=ismember(omaskidx,dataset.vol.outidx);
     else
         omaskidx=dataset.vol.outidx;
-        maskuseidx=1:length(dataset.vol.outidx);
     end
 else
     omaskidx=dataset.vol.outidx; % use all.
-    maskuseidx=1:length(dataset.vol.outidx);
 end
 
 owasempty=0;
@@ -80,6 +75,7 @@ for s=1:size(sfile,1)
     else
         dealingwithsurface=0;
     end
+
     for lr=1:size(sfile(s,:),2)
         if exist(ea_niigz(sfile{s,lr}),'file')
             seed{s,lr}=ea_load_nii(ea_niigz(sfile{s,lr}));
@@ -149,10 +145,12 @@ end
 
 disp([num2str(numseed),' seeds, command = ',cmd,'.']);
 
-numSubUse = length(dataset.vol.subIDs);
+pixdim=length(dataset.vol.outidx);
+
+numsub=length(dataset.vol.subIDs);
 
 if ~exist('subset','var') % use all subjects
-    usesubjects = 1:numSubUse;
+    usesubjects=1:numsub;
 else
     for ds=1:length(dataset.subsets)
         if strcmp(subset,dataset.subsets(ds).name)
@@ -160,32 +158,35 @@ else
             break
         end
     end
-    numSubUse = length(usesubjects);
+    numsub=length(usesubjects);
 end
-
-numVoxUse = length(omaskidx);
 
 % init vars:
 for s=1:numseed-1
-    fX{s}=nan(numVoxUse,numSubUse);
+    fX{s}=nan(length(omaskidx),numsub);
 end
 
 ea_dispercent(0,'Iterating through subjects');
-for subj = 1:numSubUse % iterate across subjects
-    mcfi = usesubjects(subj);
+
+scnt=1;
+for mcfi=usesubjects % iterate across subjects
     howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi);
-
-    subIDVol = dataset.vol.subIDs{mcfi};
-
     targetix=sweightidx{1};
     clear stc
-    thiscorr=zeros(numVoxUse,howmanyruns);
-
+    thiscorr=cell(numseed-1,1);
+    for s=1:numseed-1
+        thiscorr{s}=zeros(length(omaskidx),howmanyruns);
+    end
     for run=1:howmanyruns
-        gmtcstruc = load([dfoldvol,subIDVol{run+1}]);
-        gmtc = single(gmtcstruc.gmtc);
         for s=2:numseed
-            stc(:,s-1)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)));
+            switch dataset.type
+                case 'fMRI_matrix'
+                    ea_error('Command partial map is not supported for matrix type datasets.')
+                case 'fMRI_timecourses'
+                    load([dfoldvol,dataset.vol.subIDs{mcfi}{run+1}])
+                    gmtc=single(gmtc);
+                    stc(:,s-1)=mean(gmtc(sweightidx{s},:).*repmat(sweightidxmx{s},1,size(gmtc,2)));
+            end
         end
 
         % now we have all seeds, need to iterate across voxels of
@@ -196,108 +197,104 @@ for subj = 1:numSubUse % iterate across subjects
             otherstc(:,s)=[];
 
             targtc=gmtc(targetix,:);
-            thiscorr(targetix,run)=partialcorr(targtc',seedstc,otherstc);
+            thiscorr{s}(targetix,run)=partialcorr(targtc',seedstc,otherstc);
+
         end
     end
 
     for s=1:size(stc,2)
-        fX{s}(:,subj)=mean(thiscorr,2);
+        fX{s}(:,scnt)=mean(thiscorr{s},2);
         if writeoutsinglefiles
             ccmap=dataset.vol.space;
-            ccmap.fname=[outputfolder,seedfn{s},'_',subIDVol{1},'_pmap.nii'];
             ccmap.dt=[16 0];
             ccmap.img=single(ccmap.img);
-            ccmap.img(omaskidx)=fX{s}(:,subj);
+            ccmap.fname=[outputfolder,seedfn{s},'_',dataset.vol.subIDs{mcfi}{1},'_pmap.nii'];
+            ccmap.img(omaskidx)=fX{s}(:,scnt);
             spm_write_vol(ccmap,ccmap.img);
         end
     end
-    ea_dispercent(subj/numSubUse);
+
+    ea_dispercent(scnt/numsub);
+    scnt=scnt+1;
 end
 ea_dispercent(1,'end');
 seedfn(1)=[]; % delete first seed filename (which is target).
 
-for s=1:size(seedfn,1) % subtract 1 in case of pmap command
-    if owasempty
-        outputfolder=ea_getoutputfolder(sfile(s),ocname);
-    end
-    % export mean
-    M=ea_nanmean(fX{s}',1);
-    mmap=dataset.vol.space;
-    mmap.dt=[16,0];
-    mmap.img(:)=0;
-    mmap.img=single(mmap.img);
-    mmap.img(omaskidx)=M;
+switch dataset.type
+    case 'fMRI_matrix'
+        ea_error('Command partial map is not supported for matrix type datasets.')
+    case 'fMRI_timecourses'
+        for s=1:size(seedfn,1) % subtract 1 in case of pmap command
+            if owasempty
+                outputfolder=ea_getoutputfolder(sfile(s),ocname);
+            end
 
-    mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
-    ea_write_nii(mmap);
-    if usegzip
-        gzip(mmap.fname);
-        delete(mmap.fname);
-    end
+            % export mean
+            M=ea_nanmean(fX{s}',1);
+            mmap=dataset.vol.space;
+            mmap.dt=[16,0];
+            mmap.img(:)=0;
+            mmap.img=single(mmap.img);
+            mmap.img(omaskidx)=M;
 
-    % export variance
-    M=ea_nanvar(fX{s}');
-    mmap=dataset.vol.space;
-    mmap.dt=[16,0];
-    mmap.img(:)=0;
-    mmap.img=single(mmap.img);
-    mmap.img(omaskidx)=M;
+            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
+            ea_write_nii(mmap);
+            if usegzip
+                gzip(mmap.fname);
+                delete(mmap.fname);
+            end
 
-    mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
-    ea_write_nii(mmap);
-    if usegzip
-        gzip(mmap.fname);
-        delete(mmap.fname);
-    end
+            % export variance
+            M=ea_nanvar(fX{s}');
+            mmap=dataset.vol.space;
+            mmap.dt=[16,0];
+            mmap.img(:)=0;
+            mmap.img=single(mmap.img);
+            mmap.img(omaskidx)=M;
 
-    % fisher-transform:
-    fX{s}=atanh(fX{s});
+            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
+            ea_write_nii(mmap);
+            if usegzip
+                gzip(mmap.fname);
+                delete(mmap.fname);
+            end
 
-    % export fz-mean
-    M=nanmean(fX{s}');
-    mmap=dataset.vol.space;
-    mmap.dt=[16,0];
-    mmap.img(:)=0;
-    mmap.img=single(mmap.img);
-    mmap.img(omaskidx)=M;
-    mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
-    spm_write_vol(mmap,mmap.img);
-    if usegzip
-        gzip(mmap.fname);
-        delete(mmap.fname);
-    end
+            % fisher-transform:
+            fX{s}=atanh(fX{s});
 
-    % export T
-    [~,~,~,tstat]=ttest(fX{s}');
-    tmap=dataset.vol.space;
-    tmap.img(:)=0;
-    tmap.dt=[16,0];
-    tmap.img=single(tmap.img);
+            % export fz-mean
+            M=nanmean(fX{s}');
+            mmap=dataset.vol.space;
+            mmap.dt=[16,0];
+            mmap.img(:)=0;
+            mmap.img=single(mmap.img);
+            mmap.img(omaskidx)=M;
+            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
+            spm_write_vol(mmap,mmap.img);
+            if usegzip
+                gzip(mmap.fname);
+                delete(mmap.fname);
+            end
 
-    tmap.img(omaskidx)=tstat.tstat;
+            % export T
+            [~,~,~,tstat]=ttest(fX{s}');
+            tmap=dataset.vol.space;
+            tmap.img(:)=0;
+            tmap.dt=[16,0];
+            tmap.img=single(tmap.img);
 
-    tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
-    spm_write_vol(tmap,tmap.img);
-    if usegzip
-        gzip(tmap.fname);
-        delete(tmap.fname);
-    end
+            tmap.img(omaskidx)=tstat.tstat;
+
+            tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
+            spm_write_vol(tmap,tmap.img);
+            if usegzip
+                gzip(tmap.fname);
+                delete(tmap.fname);
+            end
+        end
 end
 
 toc
-
-
-function s=ea_conformseedtofmri(dataset,s)
-td=tempdir;
-dataset.vol.space.fname=[td,'tmpspace.nii'];
-ea_write_nii(dataset.vol.space);
-s.fname=[td,'tmpseed.nii'];
-ea_write_nii(s);
-
-ea_conformspaceto([td,'tmpspace.nii'],[td,'tmpseed.nii']);
-s=ea_load_nii(s.fname);
-delete([td,'tmpspace.nii']);
-delete([td,'tmpseed.nii']);
 
 
 function howmanyruns=ea_cs_dethowmanyruns(dataset,mcfi)
@@ -307,18 +304,18 @@ else
     howmanyruns=length(dataset.vol.subIDs{mcfi})-1;
 end
 
+
 function X=addone(X)
 X=[ones(size(X,1),1),X];
 
-function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
 
+function [mat,loaded]=ea_getmat(mat,loaded,idx,chunk,datadir)
 rightmat=(idx-1)/chunk;
 rightmat=floor(rightmat);
 rightmat=rightmat*chunk;
-if rightmat==loaded;
+if rightmat==loaded
     return
 end
 
 load([datadir,num2str(rightmat),'.mat']);
 loaded=rightmat;
-

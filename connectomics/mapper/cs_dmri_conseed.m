@@ -55,43 +55,38 @@ switch cmd
                 end
             end
 
-            Vseed{s}=ea_load_nii(sfile{s});
+            Vseed=ea_load_nii(sfile{s});
 
-            maxdist{s}=mean(abs(Vseed{s}.voxsize))/2;
+            maxdist=mean(abs(Vseed.voxsize))/2;
 
-            Vseed{s}.img(isnan(Vseed{s}.img))=0;
+            Vseed.img(isnan(Vseed.img))=0;
 
-            ixs{s}=find(Vseed{s}.img);
+            ixs=find(Vseed.img);
             % subtract nan values from these
 
-            ixvals{s}=Vseed{s}.img(ixs{s});
-            if sum(abs(ixvals{s}-double(logical(ixvals{s}))))<0.0001
-                allbinary{s}=1;
-            else
-                allbinary{s}=0;
-            end
+            ixvals=Vseed.img(ixs);
 
             % now have all seeds and connectome - for each seed find fibers
             % connected to it:
 
-            [xx,yy,zz]=ind2sub(size(Vseed{s}.img),ixs{s});
+            [xx,yy,zz]=ind2sub(size(Vseed.img),ixs);
             XYZvx=[xx,yy,zz,ones(length(xx),1)]';
-            XYZmm{s}=Vseed{s}.mat*XYZvx;
-            XYZmm{s}=XYZmm{s}(1:3,:)';
+            XYZmm=Vseed.mat*XYZvx;
+            XYZmm=XYZmm(1:3,:)';
             if ~exist('tree','var') || redotree % only compute for first seed.
                 tree=KDTreeSearcher(fibers(:,1:3));
             end
-            ids{s}=rangesearch(tree,XYZmm{s},maxdist{s},'distance','chebychev');
+            ids=rangesearch(tree,XYZmm,maxdist,'distance','chebychev');
 
             % select fibers for each ix
             ea_dispercent(0, ['Iterating voxels (', num2str(s), '/', num2str(length(sfile)), ')']);
-            ixdim=length(ixvals{s});
+            ixdim=length(ixvals);
             fiberstrength{s}=zeros(size(fidx,1),1); % in this var we will store a mean value for each fiber (not fiber segment) traversing through seed
             fiberstrengthn{s}=zeros(size(fidx,1),1); % counting variable to average strengths
-            for ix=find(cellfun(@length,ids{s}))' % iterate through voxels that found something
+            for ix=find(cellfun(@length,ids))' % iterate through voxels that found something
                 % assign fibers on map with this weighted value.
-                fibnos=unique(fibers(ids{s}{ix},4)); % these fiber ids go through this particular voxel.
-                fiberstrength{s}(fibnos)=fiberstrength{s}(fibnos)+ixvals{s}(ix);
+                fibnos=unique(fibers(ids{ix},4)); % these fiber ids go through this particular voxel.
+                fiberstrength{s}(fibnos)=fiberstrength{s}(fibnos)+ixvals(ix);
                 fiberstrengthn{s}(fibnos)=fiberstrengthn{s}(fibnos)+1;
                 % ea_dispercent(ix/ixdim);
             end

@@ -146,9 +146,10 @@ classdef ea_sweetspot_hemi < handle
                 obj.nii.img(:)=sum(obj.nii.X.*repmat(obj.fmix,1,size(obj.nii.X,2)));
                 [~,idx]=ea_nanmax(obj.nii.img(:));
                 [x,y,z]=ind2sub(size(obj.nii.img),idx);
-                obj.peak=obj.nii.mat*[x;y;z;1]; obj.peak=obj.peak(1:3);
-                bb=[0,0,0;size(obj.nii.img)];
-                bb=map_coords_proxy(bb,obj.nii);
+                obj.peak=obj.nii.mat*[x;y;z;1];
+                obj.peak=obj.peak(1:3);
+                bb=[1,1,1;size(obj.nii.img)];
+                bb=ea_vox2mm(bb,obj.nii.mat);
                 gv=cell(3,1);
                 for dim=1:3
                     gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));
@@ -297,13 +298,6 @@ end
 
 function ea_sweetspotvisible(Hobj,evt,onoff,obj)
     obj.visible = onoff;
-end
-
-
-function coords = map_coords_proxy(XYZ,V)
-    XYZ = [XYZ';ones(1,size(XYZ,1))];
-    coords = V.mat*XYZ;
-    coords = coords(1:3,:)';
 end
 
 

@@ -283,33 +283,85 @@ if strcmp(assetname,'Lead Datafiles')
 else
     downloadurl = 'https://www.lead-dbs.org/release/download.php';
     success=1;
-    disp(['Downloading ',assetname,'...'])
+    
     if ~exist(fileparts(destination), 'dir')
         mkdir(fileparts(destination));
     end
+    
+    % get the file size and display it to inform user of size
     try
-        webopts=weboptions('Timeout',Inf);
-        websave(destination,downloadurl,'id',id,webopts);
+        fsize = ea_getassetfilesize(id);    % get the filesize in bytes from the server
     catch
+        fsize = 0;
+    end
+    
+    if fsize ~= 0
+        fprintf('Downloading %s with a size of %.2f GB\nFilename: %s\n', assetname, fsize*1e-9, destination);
+    else
+        fprintf('Downloading %s\nFilename: %s\n', ea_getspace, destination);
+        disp('This could take a while...');
+    end
+    
+    % first see if parallel toolbox is installed and can be utilized to
+    % download in the backgroung
+    if license('test', 'Distrib_Computing_Toolbox') % check if parallel toolbox is installed
+        disp('Parallel toolbox detected, downloading via background worker')
         try
-            urlwrite([downloadurl,'?id=',id],destination,'Timeout',Inf);
+            ea_downloadasset_parallel(downloadurl, assetname, destination, id, fsize);
         catch
-            success=0;
+            try
+                delete(findall(0,'type','figure','tag','TMWWaitbar'));      % delete waitbar if error occured
+                disp('Download using parallel toolbox failed, trying websave...')
+                webopts=weboptions('Timeout',Inf);
+                websave(destination,downloadurl,'id',id,webopts);
+            catch
+                disp('Parallel toolbox not detected, downloading via websave...')
+                try
+                    disp('''websave'' failed, trying ''urlwrite''.');
+                    urlwrite([downloadurl,'?id=',id],destination,'Timeout',Inf);
+                catch
+                    disp('''urlwrite'' failed.');
+                    success=0;
+                end
+            end
+        end
+    else
+        try
+            disp('Trying ''websave''.');
+            webopts=weboptions('Timeout',Inf);
+            % uncomment this if you encounter problems with certificate validation
+            % (see https://www.mathworks.com/matlabcentral/answers/400086-how-to-read-data-form-website-url)
+            %webopts.CertificateFilename=('');
+            websave(destination,downloadurl,'id',id,webopts);
+        catch
+            try
+                disp('''websave'' failed, trying ''urlwrite''.');
+                urlwrite([downloadurl,'?id=',id],destination,'Timeout',Inf);
+            catch
+                disp('''urlwrite'' failed.');
+                success=0;
+            end
         end
     end
 
     [loc,~,ext] = fileparts(destination);
     if success
         disp(['Installing ',assetname,'...'])
-        if strcmp(ext,'.gz')
-            gunzip(destination, loc);
-            ea_delete(destination);
-        elseif strcmp(ext,'.zip')
-            unzip(destination, loc);
-            ea_delete(destination);
+        try
+            if strcmp(ext,'.gz')
+                gunzip(destination, loc);
+                ea_delete(destination);
+            elseif strcmp(ext,'.zip')
+                unzip(destination, loc);
+                ea_delete(destination);
+            end
+        catch
+            disp('Installation failed.');
+            success=0;
         end
-    else
-        fprintf(['\nDownload error! You may try to download the file manually from:\n',...
+    end
+    if ~success
+        fprintf(['\nDownload / install error! You may try to download the file manually from:\n',...
                  '%s\nand then extract it into %s.\n\n'], [downloadurl,'?id=',id], loc);
         msgbox('Please check the command window for more information.','Download error!','Error')
         return

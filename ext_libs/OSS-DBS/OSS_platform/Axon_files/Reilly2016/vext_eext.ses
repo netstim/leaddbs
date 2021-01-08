@@ -1,0 +1,34 @@
+objectvar save_window_, rvp_
+objectvar scene_vector_[8]
+objectvar ocbox_, ocbox_list_, scene_, scene_list_
+{ocbox_list_ = new List()  scene_list_ = new List()}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,100000,0,120)
+scene_vector_[5] = save_window_
+{save_window_.view(0, 0, 100000, 120, 652, 286, 300.48, 200.32)}
+flush_list.append(save_window_)
+save_window_.save_name("flush_list.")
+objectvar rvp_
+rvp_ = new RangeVarPlot("vext")
+node[0] rvp_.begin(1)
+node[100] rvp_.end(1)
+rvp_.origin(2.5)
+save_window_.addobject(rvp_, 2, 1, 0.8, 0.9)
+}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,100000,-1,1)
+scene_vector_[6] = save_window_
+{save_window_.view(0, -1, 100000, 2, 652, 547, 300.48, 200.32)}
+flush_list.append(save_window_)
+save_window_.save_name("flush_list.")
+objectvar rvp_
+rvp_ = new RangeVarPlot("e_extracellular")
+node[0] rvp_.begin(1)
+node[100] rvp_.end(1)
+rvp_.origin(2.5)
+save_window_.addobject(rvp_, 2, 1, 0.595527, 0.890415)
+}
+objectvar scene_vector_[1]
+{doNotify()}

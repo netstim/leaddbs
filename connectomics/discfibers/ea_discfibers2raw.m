@@ -5,7 +5,16 @@ function ea_discfibers2raw(discfiber, patientdir)
 %     patientdir: patient directory
 
 % Load discfibers in MNI space
-load(discfiber);
+load(discfiber, 'fibcell')
+load(discfiber, 'vals')
+
+if size(fibcell,2) == 2
+    fibcell = vertcat(fibcell{:});
+end
+
+if iscell(vals) && size(vals,2) == 2
+    vals = vertcat(vals{:});
+end
 
 % Set reference images
 refMNI = [ea_space, 't1.nii'];
@@ -55,4 +64,4 @@ fibcellRawAnchor = cellfun(@(x) fibersRawAnchor(x,:), fibIndex, 'Uni', 0);
 % Save discfibers in anchor space
 fibcell = fibcellRawAnchor;
 outputMAT = regexprep(discfiber, '\.mat$', 'RawAnchor.mat');
-save(outputMAT, 'fibcell', 'opts', 'vals');
+save(outputMAT, 'fibcell', 'vals');

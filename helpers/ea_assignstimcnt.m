@@ -1,6 +1,6 @@
 function [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,S)
-    thisstim=1;
-    
+thisstim=1;
+
 if isfield(ea_stats,'stimulation')
     if ~isfield(ea_stats.stimulation,'label') % legacy, delete older stimulations
         ea_stats=rmfield(ea_stats,'stimulation');

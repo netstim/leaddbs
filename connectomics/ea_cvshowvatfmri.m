@@ -57,7 +57,8 @@ else
     end
 end
 
-for side = 1:length(options.sides)
+for iside=1:length(options.sides)
+    side=options.sides(iside);
     seedcon=cm(side,:);
     seedcon=seedcon(3:end);
     thresh=get(handles.vatthresh,'String');

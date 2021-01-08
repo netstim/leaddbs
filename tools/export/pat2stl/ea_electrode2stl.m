@@ -3,12 +3,7 @@ function fv=ea_electrode2stl(directory,side,handles)
 options=ea_handles2options(handles);
 if exist([directory,'ea_reconstruction.mat'],'file')
     load([directory,'ea_reconstruction.mat']);
-    options.elmodel=reco.props(1).elmodel;
-    if isempty(options.elmodel)
-        try
-            options.elmodel=reco.props(2).elmodel;
-        end
-    end
+    options.elmodel=ea_get_first_notempty_elmodel(reco.props);
 end
 options=ea_resolve_elspec(options);
 [options.root,options.patientname]=fileparts(directory);

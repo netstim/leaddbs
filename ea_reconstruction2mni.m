@@ -37,8 +37,6 @@ for side=options.sides
     towarp{end+1}=reco.(usenative).coords_mm{side};
     towarp{end+1}=reco.(usenative).markers(side).head;
     towarp{end+1}=reco.(usenative).markers(side).tail;
-    towarp{end+1}=reco.(usenative).markers(side).x;
-    towarp{end+1}=reco.(usenative).markers(side).y;
     towarp{end+1}=reco.(usenative).trajectory{side};
 end
 towarp=cell2mat(towarp');
@@ -48,52 +46,23 @@ cnt=1;
 for side=options.sides
     offset=size(reco.(usenative).coords_mm{side},1);
     reco.mni.coords_mm{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
+
     offset=size(reco.(usenative).markers(side).head,1);
     reco.mni.markers(side).head=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
+
     offset=size(reco.(usenative).markers(side).tail,1);
     reco.mni.markers(side).tail=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
-    offset=size(reco.(usenative).markers(side).x,1);
-    reco.mni.markers(side).x=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
-    offset=size(reco.(usenative).markers(side).y,1);
-    reco.mni.markers(side).y=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
+
     offset=size(reco.(usenative).trajectory{side},1);
     reco.mni.trajectory{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
-    
-    normtrajvector{side}=diff([reco.mni.markers(side).head;...
-        reco.mni.markers(side).tail])/...
-        norm(diff([reco.mni.markers(side).head;...
-        reco.mni.markers(side).tail]));
-    orth=null(normtrajvector{side})*(options.elspec.lead_diameter/2);
 
     if ~isempty(reco.mni.markers(side).head)
-        % calculates x and y using the warped marker.y, projecting it onto
-        % the perpendicular plane to normtrajvector and then finding x via
-        % the crossproduct.
-        y =  reco.mni.markers(side).y - reco.mni.markers(side).head;
-        y = y/norm(y);
-        t = normtrajvector{side};
-        y = y - (dot(y,t) / (norm(t) ^2)) * t;
-        x = -cross(y,t);
-        reco.mni.markers(side).x = reco.mni.markers(side).head + (x * (options.elspec.lead_diameter/2));
-        reco.mni.markers(side).y = reco.mni.markers(side).head + (y * (options.elspec.lead_diameter/2));
-        %         if strcmp(options.elspec.orientation,'anterior')
-        %             % new version which makes y point strictly anterior ~TD
-        %             y = [0 normtrajvector{side}(3) -normtrajvector{side}(2)];
-        %             x = cross(normtrajvector{side},y);
-        %
-        %             y = (y/norm(y)) * 0.65;
-        %             x = (x/norm(x)) * 0.65;
-        %             reco.mni.markers(side).x=reco.mni.markers(side).head + x;
-        %             reco.mni.markers(side).y=reco.mni.markers(side).head + y;
-        %         else
-        %                 reco.mni.markers(side).x=reco.mni.markers(side).head+orth(:,1)';
-        %                 reco.mni.markers(side).y=reco.mni.markers(side).head+orth(:,2)'; % corresponding points in reality
-        %         end
+        % Enforce the rotation of x and y markers in MNI space. Use the
+        % rotation of y marker calculated from native coordination.
+        [~, yvec] = ea_calc_rotation(reco.native.markers(side).y,reco.native.markers(side).head);
+        [xunitv, yunitv] = ea_calcxy(reco.mni.markers(side).head, reco.mni.markers(side).tail, yvec);
+        reco.mni.markers(side).x = reco.mni.markers(side).head + xunitv*(options.elspec.lead_diameter/2);
+        reco.mni.markers(side).y = reco.mni.markers(side).head + yunitv*(options.elspec.lead_diameter/2);
     else
         reco.mni.markers(side).x=[];
         reco.mni.markers(side).y=[];
@@ -101,7 +70,6 @@ for side=options.sides
 end
 
 save([directory,filesep,'ea_reconstruction.mat'],'reco');
-
 
 
 function c=ea_warpcoord(c,nii,options)
