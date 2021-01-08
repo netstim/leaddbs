@@ -21,9 +21,9 @@ env = getenv(envname);
 for i=1:length(runtimePath)
     if ~contains(env, runtimePath{i})
         if ispc()
-            env = [env, ';', runtimePath{i}];%for pc is ";"
+            env = [env, ';', runtimePath{i}]; % For pc is ";"
         else
-            env = [env, ':', runtimePath{i}];%for unix (including mac, is ":")
+            env = [env, ':', runtimePath{i}]; % For unix (including mac, is ":")
         end
     end
 end

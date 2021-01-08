@@ -36,9 +36,9 @@ switch setpath
     case {1, 'set'}
         if ~contains(env, libpath)
             if ispc()
-                setenv(envname, [libpath, ';', env]);%for pc is ";"
+                setenv(envname, [libpath, ';', env]); % For pc is ";"
             else
-                setenv(envname, [libpath, ':', env]);%for unix (including mac, is ":")
+                setenv(envname, [libpath, ':', env]); % For unix (including mac, is ":")
             end
         end
     case {0, 'unset'}
