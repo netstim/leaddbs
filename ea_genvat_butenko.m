@@ -256,6 +256,13 @@ currentPath = pwd;
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
 
+% Prefix /usr/local/bin to PATH environment variable for macOS to use
+% docker and python3 from Homebrew
+if ismac
+    binPath = getenv('PATH');
+    setenv('PATH', ['/usr/local/bin:', binPath]);
+end
+
 % Delete flag files before running
 ea_delete([outputPath, filesep, 'success_rh.txt']);
 ea_delete([outputPath, filesep, 'fail_rh.txt']);
@@ -447,3 +454,8 @@ end
 % Restore working directory and env
 cd(currentPath);
 setenv('LD_LIBRARY_PATH', libpath);
+
+% Restore PATH environment variable
+if ismac
+    setenv('PATH', binPath);
+end
