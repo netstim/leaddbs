@@ -174,29 +174,28 @@ class MainWindow(Functionalities):
                           "pop_up_control/dictionaries/dict_full_field_ifft.py",
                           "pop_up_control/dictionaries/dict_mesh_refinement.py"]
 
-        home_dir=os.path.expanduser("~")
         # Display Images
         self.ui.pushButton_Placed_Neurons.clicked.connect(lambda: self.display(self.ui.label_Image_Placed_Neurons,
-                                                                               home_dir+self.path_to_patient+'/Images/Axon_connections.png',
-                                                                               home_dir+self.path_to_patient+'/Images/Placed_neurons.png'))
+                                                                               self.path_to_patient+'/Images/Axon_connections.png',
+                                                                               self.path_to_patient+'/Images/Placed_neurons.png'))
 
         self.ui.pushButton_Signal_Recovered.clicked.connect(lambda: self.display(self.ui.label_Image_Signal_Recovered,
-                                                                                 home_dir+self.path_to_patient+'/Images/Signal_recovered_shape.png',
-                                                                                 home_dir+self.path_to_patient+'/Images/Signal_recovered_shape.png'))
+                                                                                 self.path_to_patient+'/Images/Signal_recovered_shape.png',
+                                                                                 self.path_to_patient+'/Images/Signal_recovered_shape.png'))
         self.ui.pushButton_CSF_Full_Refinement.clicked.connect(
             lambda: self.display(self.ui.label_Image_CSF_Full_Refinement,
-                                 home_dir+self.path_to_patient+'/Images/CSF_full_refinement.png',
-                                 home_dir+self.path_to_patient+'/Images/CSF_full_refinement.png'))
+                                 self.path_to_patient+'/Images/CSF_full_refinement.png',
+                                 self.path_to_patient+'/Images/CSF_full_refinement.png'))
         self.ui.pushButton_Adapted_Mesh.clicked.connect(lambda: self.display(self.ui.label_Image_Adapted_Mesh,
-                                                                             home_dir+self.path_to_patient+'/Images/Adapted_mesh.png',
-                                                                             home_dir+self.path_to_patient+'/Images/Adapted_mesh.png'))
+                                                                             self.path_to_patient+'/Images/Adapted_mesh.png',
+                                                                             self.path_to_patient+'/Images/Adapted_mesh.png'))
         self.ui.pushButton_Signal_Convoluted_1st_Point.clicked.connect(
             lambda: self.display(self.ui.label_Image_Signal_Convoluted_1st_Point,
-                                 home_dir+self.path_to_patient+'/Images/Signal_convoluted_1st_point.png',
-                                 home_dir+self.path_to_patient+'/Images/Signal_convoluted_1st_point.png'))
+                                 self.path_to_patient+'/Images/Signal_convoluted_1st_point.png',
+                                 self.path_to_patient+'/Images/Signal_convoluted_1st_point.png'))
         self.ui.pushButton_Axon_Activation.clicked.connect(lambda: self.display(self.ui.label_Image_Axon_Activation,
-                                                                                home_dir+self.path_to_patient+'/Images/Axon_activation.png',
-                                                                                home_dir+self.path_to_patient+'/Images/Activated_neurons.png'))
+                                                                                self.path_to_patient+'/Images/Axon_activation.png',
+                                                                                self.path_to_patient+'/Images/Activated_neurons.png'))
 
         # Load/Save/Reset/Run to dictionary
         self.ui.pushButton_Run.clicked.connect(lambda: self.dict_write(self.output_dict(), self.current_file_name))
@@ -217,17 +216,12 @@ class MainWindow(Functionalities):
         """The subprocess takes the terminal command as a list."""
         #subprocess.run(['sudo', 'docker', 'run', '--name', 'OSS_docker', '--volume', '/home/butenko/oss_platform:/opt/oss_platform', '--cap-add=SYS_PTRACE', '-it', '--rm gitlab.elaine.uni-rostock.de:4567/kb589/oss_platform:platform', 'python3', 'Launcher_OSS_lite.py'])
         #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
-        home_dir=os.path.expanduser("~")
         OSS_DBS_path=os.getcwd()
         os.chdir("..")
         dir_code=os.getcwd()            #stupid but simple
         os.chdir("OSS_platform/")
         dir_code_OSS_platform = os.getcwd()
         if sys.platform=='linux' or sys.platform=='Linux':
-            #output = subprocess.run(
-            #    ['xterm', '-hold', '-e', 'docker', 'run', '--volume', dir_code + ':/opt/OSS-DBS',
-            #     '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
-            #     'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #
             output = subprocess.run(
                 ['docker', 'run','--name','OSS_container', '--volume', dir_code + ':/opt/OSS-DBS',
                  '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
@@ -240,7 +234,6 @@ class MainWindow(Functionalities):
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
-
 
         # does not work on macOS
         #out2 = subprocess.run(['docker','logs','OSS_container'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #
@@ -274,9 +267,7 @@ class MainWindow(Functionalities):
                 print("Simulation is completed")
                 self.closeWindow()
 
-
         # the commands below work only with a properly installed Paraview (supporting from paraview.simple import *)
-
 
         #print(self.path_to_patient)
         #prepare screenshots
