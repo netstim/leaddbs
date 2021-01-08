@@ -2425,7 +2425,7 @@ switch model
         set(handles.estimateInTemplate,'Visible','on');
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);
-        set(handles.betawarning,'visible','off');
+        set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
 
 end
