@@ -1010,7 +1010,8 @@ if groupmode
     choice = questdlg('Changing VAT model will delete stimulation parameters of all patients! Continue?', ...
         'Warning', ...
         'Yes, sure','No','No');
-            gSv=getappdata(handles.stimfig,'gSv');
+
+    gSv=getappdata(handles.stimfig,'gSv');
 
     switch choice
         case 'No'
@@ -1934,7 +1935,7 @@ else
     end
 
     if ~visualizeVAT && ~visualizeAxon
-       	fprintf('\n');
+        fprintf('\n');
         warning('off', 'backtrace');
         warning('Nothing to be visualized, please rerun stimulation!!');
         warning('on', 'backtrace');
@@ -2316,8 +2317,6 @@ end
 %    ea_error('VTA modeling for directed leads is not yet supported.');
 %end
 
-
-
 if get(handles.(['Rs',num2str(Ractive),'va']),'Value')==1 % Volt
     ea_show_percent(handles,options,1,'off'); % right hemisphere
 else % Ampere
@@ -2385,8 +2384,6 @@ else
     set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
 end
 
-
-
 switch model
     case 'SimBio/FieldTrip (see Horn 2017)'
         ea_hide_impedance(handles);
@@ -2433,7 +2430,6 @@ switch model
 
 end
 S.model=model;
-
 
 ea_savestimulation(S,options);
 setappdata(handles.stimfig,'S',S);
