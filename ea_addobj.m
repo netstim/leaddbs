@@ -168,7 +168,10 @@ if ischar(obj) % addobj
             end
 
             % Check fiber format
-            if size(fibers,2) == 4 % with index
+            if size(fibers,2) == 5 && contains(obj,'axonActivation') % axon activation result loaded
+                ea_axon_viz(obj, resultfig);
+                return;
+            elseif size(fibers,2) == 4 % with index
                 thisset = fibers(:,1:3);
                 [~,~,idx] = unique(fibers(:,4));
                 fibidx = accumarray(idx,1);
