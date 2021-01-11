@@ -386,9 +386,10 @@ for side=0:1
             % Restore full length fiber (as in original filtered fiber)
             ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
             ftr.fibers = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
+            originalFibID = ftr.fibers(:,5);
 
-            % Extract original conn fiber id, needed in case calculation is
-            % done in native space
+            % Extract original conn fiber id and idx, needed in case
+            % calculation is done in native space
             [connFibID, idx] = unique(ftr.fibers(:,5));
 
             % Set fiber state
@@ -399,6 +400,9 @@ for side=0:1
             % Extract state of original conn fiber, needed in case
             % calculation is  done in native space
             connFibState = ftr.fibers(idx, 5);
+
+            % Reset original fiber id as in the connectome
+            ftr.fibers(:,4) = originalFibID;
 
             % Save result for visualization
             save([outputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'ftr');
@@ -416,10 +420,12 @@ for side=0:1
                     conn.fibers(conn.fibers(:,4)==connFibID(f),5) = connFibState(f);
                 end
 
-                % Recreate fiber id and idx
+                % Recreate fiber idx
                 [~, ~, idx] = unique(conn.fibers(:,4), 'stable');
-                conn.fibers(:,4) = idx;
                 conn.idx = accumarray(idx,1);
+
+                % Reset original fiber id as in the connectome
+                ftr.fibers(:,4) = originalFibID;
 
                 % Save MNI space axon activation result
                 save([MNIoutputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'conn');
