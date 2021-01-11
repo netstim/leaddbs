@@ -152,23 +152,27 @@ drawnow
 disp('Done.');
 
 
-function addfibertract(addobj,resultfig,addht,connect,ft,options)
-if ischar(addobj) % filename is given ? load fibertracts.
-    if endsWith(addobj, '.mat')
-        load(addobj);
+function addfibertract(obj,resultfig,addht,connect,ft,options)
+if ischar(obj) % addobj
+    if endsWith(obj, '.mat')
+        load(obj);
         if exist('fibsin', 'var')
             fibers = fibsin;
             clear fibsin
         end
+
         if exist('fibers', 'var')
+            % 3xN column vectors detected, transpose
             if size(fibers,1) < size(fibers,2)
                 fibers = fibers';
             end
-            if size(fibers,2) == 4
+
+            % Check fiber format
+            if size(fibers,2) == 4 % with index
                 thisset = fibers(:,1:3);
                 [~,~,idx] = unique(fibers(:,4));
                 fibidx = accumarray(idx,1);
-            elseif size(fibers,2) == 3
+            elseif size(fibers,2) == 3 % without index
                 thisset = fibers;
                 fibidx = ones(size(fibers,1),1);
             else
@@ -178,44 +182,45 @@ if ischar(addobj) % filename is given ? load fibertracts.
         else
             error('No fiber tracts found!');
         end
-    elseif endsWith(addobj, '.trk')
+    elseif endsWith(obj, '.trk')
         disp('Converting .trk to ftr.')
-        [thisset,fibidx] = ea_trk2ftr(addobj);
+        [thisset,fibidx] = ea_trk2ftr(obj);
         thisset = thisset';
     else
         error('File is neither a .mat nor .trk!')
     end
 else % fibers are already loaded and stored in figure.
-    thisset=addobj.fibs;
-    fibidx=addobj.idx;
+    thisset = obj.fibers;
+    fibidx = obj.idx;
 end
 
 fib_copy.fibs=thisset; % backup of whole original fiberset will be stored in figure.
 fib_copy.idx=fibidx;
 
 if ~isempty(connect) % select fibers based on connecting roi info (i.e. delete all other fibers).
+    selectedfibs = cell(1,length(connect.rois));
     for roi=1:length(connect.rois) % check connectivities
-        in=inhull(thisset,connect.xyz{roi})';
+        in = inhull(thisset,connect.xyz{roi})';
         idxv = repelem(1:numel(fibidx), fibidx)';
-        selectedfibs{roi}=unique(idxv(in));
+        selectedfibs{roi} = unique(idxv(in));
     end
-    selectedfibs=unique(cell2mat(selectedfibs(:)));
-    thisset=mat2cell(thisset,fibidx,3)';
-    thisset=thisset(selectedfibs); % choose selected fibers.
+    selectedfibs = unique(cell2mat(selectedfibs(:)));
+    thisset = mat2cell(thisset,fibidx,3)';
+    thisset = thisset(selectedfibs); % choose selected fibers.
 end
 
 %% new visualization part
 c = ea_uisetcolor;
 if c == 0
-    c=NaN;
+    c = NaN;
 end
-addobjr=ea_showfiber(thisset,fibidx,c);
+addobjr = ea_showfiber(thisset,fibidx,c);
 
 axis fill
 
-[~, fina] = fileparts(addobj);
-addbutn=uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
-storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
+[~, fina] = fileparts(obj);
+addbutn = uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',fina,'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
+storeinfigure(resultfig,addht,addbutn,addobjr,obj,fina,'tract',fib_copy,ft,options); % store rendering in figure.
 
 
 function storeinfigure(resultfig,addht,addbutn,obj,path,name,type,data,replace,options)
