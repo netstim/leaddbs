@@ -61,7 +61,7 @@ switch set
 end
 
 % Set number of colors
-if exist('len', 'var')
+if exist('colnum', 'var')
     if colnum > size(colors,1)
         % Repeat colors in case pre-defined ones are not enough
         colors = repmat(colors, ceil(colnum/size(colors,1)),1);
