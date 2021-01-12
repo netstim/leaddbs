@@ -28,6 +28,13 @@ if strcmp(answ,'Sure')
     end
     ea_storemachineprefs('view', spacedef.view);
 
+    % Check if there's space specific default atlas setting
+    if ~isfield(spacedef, 'defaultatlas') % Fallback
+        mnispace = [ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM'];
+        load([mnispace, filesep, 'ea_space_def.mat'], 'spacedef');
+    end
+    ea_storemachineprefs('defaultatlas', spacedef.defaultatlas);
+
     if ~exist('mute','var')
         disp('Restarting Lead Neuroimaging Suite...');
         close all force
