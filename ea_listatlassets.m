@@ -35,7 +35,7 @@ catch
     keyboard
 end
 
-[~,defix]=ismember(options.prefs.machine.atlases.default,[atlases,natlases]);
+[~,defix]=ismember(options.prefs.machine.defaultatlas,[atlases,natlases]);
 if defix
     set(handles.atlassetpopup,'Value',defix);
 end

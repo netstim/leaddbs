@@ -148,7 +148,7 @@ else
         try
             set(handles.atlassetpopup,'Value',M.ui.atlassetpopup);
         catch % Set to default atlas in case index out of range
-            defaultAtlas = options.prefs.machine.atlases.default;
+            defaultAtlas = options.prefs.machine.defaultatlas;
             set(handles.atlassetpopup,'Value',find(ismember(atlasset, defaultAtlas)));
         end
     else % New lead group file in which atlassetpopup is the name of the atlas
@@ -156,7 +156,7 @@ else
         if ~isempty(atlasInd)
             set(handles.atlassetpopup,'Value',atlasInd);
         else
-            defaultAtlas = options.prefs.machine.atlases.default;
+            defaultAtlas = options.prefs.machine.defaultatlas;
             set(handles.atlassetpopup,'Value',find(ismember(atlasset, defaultAtlas)));
         end
     end
