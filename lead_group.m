@@ -77,7 +77,7 @@ atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));
 atlases{end+1} = 'Use none';
 
 set(handles.atlassetpopup,'String', atlases);
-[~, defix]=ismember(options.prefs.atlases.default, atlases);
+[~, defix]=ismember(options.prefs.machine.atlases.default, atlases);
 if defix
     set(handles.atlassetpopup,'Value',defix);
 end

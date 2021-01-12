@@ -79,7 +79,7 @@ atlases{end+1} = 'Use none';
 set(handles.atlassetpopup, 'String', atlases);
 
 set(handles.atlassetpopup, 'String', atlases);
-[~,defix]=ismember(options.prefs.atlases.default, atlases);
+[~,defix]=ismember(options.prefs.machine.atlases.default, atlases);
 set(handles.atlassetpopup, 'Value', defix);
 
 set(handles.versiontxt, 'String', ['v', ea_getvsn('local')]);

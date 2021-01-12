@@ -113,9 +113,6 @@ prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregis
 %% Subcortical refine (Post to Pre):
 prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for brainshift correction (default = 'tp_').
 
-%% Atlas-Sets:
-prefs.atlases.default='DISTAL Minimal (Ewert 2017)';
-
 %% Default parcellation setting for LeadConn and LeadGroup
 prefs.lc.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';
 prefs.lg.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';
@@ -222,7 +219,7 @@ prefs.genetics.dbdir=[ea_space,'genetics',filesep];
 %% platform specific (if changed, needs to restart Matlab)
 
 % Set to true this line if libstdc++.so.6 is needed.
-% However it is preferrable to fix it at system level (e.g. using package build-essentials). 
+% However it is preferrable to fix it at system level (e.g. using package build-essentials).
 % Additionally, install the matlab-support package and choose to use the system libraries for gcc.
 % If set to true it will add this path: fullfile(earoot,'ext_libs\support\glnxa64') to the LD_LIBRARY_PATH;
 prefs.platform.glnxa64.load_shipped_runtime=false;  % for Linux default is NOT loaded (using system libs)
