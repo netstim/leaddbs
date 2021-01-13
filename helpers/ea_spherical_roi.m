@@ -33,7 +33,13 @@ end
 if ~exist('bg','var')
     ref.img(:) = 0;
 else
-    ref.img = bg;
+    if isscalar(bg)
+        ref.img(:) = bg;
+    elseif isequal(size(ref.img), size(bg))
+        ref.img = bg;
+    else
+        error('Background should be either a scalar value or of the same size as the reference image!');
+    end
 end
 
 voxsize = ref.voxsize;
