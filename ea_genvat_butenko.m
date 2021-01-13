@@ -256,18 +256,15 @@ currentPath = pwd;
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
 
-prefs=ea_prefs;
-
 % Check python3, h5py and PyQt5 installations
 if isunix
-    % Environment variables are set based on the terminal from which Matlab
-    % is executed. If App was doubleclicked (e.g. on macOS) it does not
-    % have the system wide environment variables. Hence, an option for
-    % users to store the PATH variable in prefs.env.systempath is given
-    if isfield(prefs.env,'systempath')
-        setenv('PATH',prefs.env.systempath)
-    end
     binPath = getenv('PATH'); % Backup current PATH
+
+    % Check if there's user defined python path
+    if isfield(options.prefs.env, 'pythonPath')
+        pythonPath = options.prefs.env.pythonPath;
+        setenv('PATH', [pythonPath, ':', binPath]);
+    end
 
     % Check python3
     [status, pythonPath] = system('which python3');
@@ -276,6 +273,9 @@ if isunix
     else
         pythonPath = strip(pythonPath);
         fprintf('python3 detected: %s\n', pythonPath);
+        fprintf(['To use a different python (for example the one from Conda), please\n', ...
+                 'set prefs.env.pythonPath (the folder contains python) ', ...
+                 'in your preferences file.\n']);
     end
 
     % Check h5py
@@ -501,11 +501,7 @@ if ~settings.calcAxonActivation && exist('stimparams', 'var')
     varargout{2} = stimparams;
 end
 
-% Restore working directory and env
+% Restore working directory and environment variables
 cd(currentPath);
 setenv('LD_LIBRARY_PATH', libpath);
-
-% Restore PATH environment variable
-if ismac
-    setenv('PATH', binPath);
-end
+setenv('PATH', binPath);
