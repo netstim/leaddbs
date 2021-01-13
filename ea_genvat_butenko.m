@@ -256,8 +256,17 @@ currentPath = pwd;
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
 
+prefs=ea_prefs;
+
 % Check python3, h5py and PyQt5 installations
 if isunix
+    % Environment variables are set based on the terminal from which Matlab
+    % is executed. If App was doubleclicked (e.g. on macOS) it does not
+    % have the system wide environment variables. Hence, an option for
+    % users to store the PATH variable in prefs.env.systempath is given
+    if isfield(prefs.env,'systempath')
+        setenv('PATH',prefs.env.systempath)
+    end
     binPath = getenv('PATH'); % Backup current PATH
 
     % Check python3
