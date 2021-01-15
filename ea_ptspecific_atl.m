@@ -16,6 +16,10 @@ if ~exist(ea_niigz([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask'])
             generate_local_tpm(troot,aroot,proot,0,options)
         case 'inverse'
             ea_warp_atlas_to_native(troot,aroot,proot,0,options)
+            load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']); % generates atlases variable
+            options.atl.can=0;
+            options.atl.ptnative=1;
+            ea_genatlastable(atlases,[proot,'atlases',filesep],options);
     end
 end
 
