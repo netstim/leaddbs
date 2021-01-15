@@ -95,6 +95,12 @@ settings.Electrode_type = options.elmodel;
 
 % Reload reco since we need to decide whether to use native or MNI coordinates.
 [~, ~, markers] = ea_load_reconstruction(options);
+settings.yMarker = nan(length(markers), 3);
+for i=1:length(markers)
+    if ~isempty(markers(i).y)
+    	settings.yMarker(i,:) = markers(i).y;
+    end
+end
 coords_mm = ea_resolvecoords(markers, options);
 settings.contactLocation = coords_mm;
 eleNum = length(coords_mm); % Number of electrodes
