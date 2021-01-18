@@ -233,12 +233,14 @@ if settings.calcAxonActivation
     fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength);
 
     % Move original fiber id to the 5th column, the 4th column will be 1:N
+    fibersFound = zeros(size(fiberFiltered));
     for i=1:length(fiberFiltered)
         if ~isempty(fiberFiltered{i}.fibers)
             fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
             fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
             fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
             fiberFiltered{i}.fibers = fibers;
+            fibersFound(i) = 1;
         end
     end
 
@@ -308,8 +310,10 @@ end
 % Delete flag files before running
 ea_delete([outputPath, filesep, 'success_rh.txt']);
 ea_delete([outputPath, filesep, 'fail_rh.txt']);
+ea_delete([outputPath, filesep, 'skip_rh.txt']);
 ea_delete([outputPath, filesep, 'success_lh.txt']);
 ea_delete([outputPath, filesep, 'fail_lh.txt']);
+ea_delete([outputPath, filesep, 'skip_lh.txt']);
 
 % Iterate sides, index side: 0 - rh , 1 - lh
 runStatus = [0 0]; % Succeed or not
@@ -328,6 +332,15 @@ for side=0:1
         warning('off', 'backtrace');
         warning('No stimulation exists for %s side! Skipping...\n', sideStr);
         warning('on', 'backtrace');
+        fclose(fopen([outputPath, filesep, 'skip_', sideCode, '.txt'], 'w'));
+        continue;
+    end
+
+    if ~fibersFound(side+1)
+        warning('off', 'backtrace');
+        warning('No fibers found for %s side! Skipping...\n', sideStr);
+        warning('on', 'backtrace');
+        fclose(fopen([outputPath, filesep, 'skip_', sideCode, '.txt'], 'w'));
         continue;
     end
 
