@@ -258,15 +258,14 @@ class MainWindow(Functionalities):
                 print("Error occurred when simulating rh, check the terminal")
             else:
                 print("Simulation is completed")
-                self.closeWindow()
         else:
             if not os.path.exists(self.path_to_patient+'/success_lh.txt'):
                 subprocess.call(['touch', self.path_to_patient+'/fail_lh.txt'])
                 print("Error occurred when simulating lh, check the terminal")
             else:
                 print("Simulation is completed")
-                self.closeWindow()
 
+        self.closeWindow()
         # the commands below work only with a properly installed Paraview (supporting from paraview.simple import *)
 
         #print(self.path_to_patient)
