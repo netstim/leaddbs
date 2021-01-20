@@ -24,8 +24,14 @@ for thr=0:1
             try
                 distances(:,pt)=[M.stats(M.ui.listselect(pt)).ea_stats.conmat{1}(:,M.ui.volumeintersections(target));... % right side
                     M.stats(M.ui.listselect(pt)).ea_stats.conmat{2}(:,M.ui.volumeintersections(target))];
-            catch
-                ea_error('Please run DBS stats for all patients first.');
+            catch ME
+                if strcmp(ME.identifier, 'MATLAB:subsassigndimmismatch')
+                    ea_error('Number of contacts not consistent across patients!')
+                elseif strcmp(ME.identifier, 'MATLAB:nonExistentField')
+                    ea_error('Please calculate DBS stats for all patients first!');
+                else
+                    ea_error(ME.message);
+                end
             end
         end
 
