@@ -930,7 +930,7 @@ for pt=selection
 
     if M.ui.detached
         processlocal=1;
-        mkdir([M.ui.groupdir,options.patientname]);
+        ea_mkdir([M.ui.groupdir,options.patientname]);
         options.root=M.ui.groupdir;
         %    options.patientname='tmp';
         try
