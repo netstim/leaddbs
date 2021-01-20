@@ -95,15 +95,30 @@ settings.Electrode_type = options.elmodel;
 
 % Reload reco since we need to decide whether to use native or MNI coordinates.
 [~, ~, markers] = ea_load_reconstruction(options);
-settings.yMarker = nan(length(markers), 3);
-for i=1:length(markers)
-    if ~isempty(markers(i).y)
-    	settings.yMarker(i,:) = markers(i).y;
-    end
-end
 coords_mm = ea_resolvecoords(markers, options);
 settings.contactLocation = coords_mm;
 eleNum = length(coords_mm); % Number of electrodes
+
+% Save both native and MNI space y and head markers for OSS-DBS
+settings.yMarkerNative = nan(eleNum, 3);
+settings.yMarkerMNI = nan(eleNum, 3);
+settings.headNative = nan(eleNum, 3);
+settings.headMNI = nan(eleNum, 3);
+[markersNative, markersMNI] = ea_get_markers(options);
+for i=1:eleNum
+    if ~isempty(markersNative(i).y)
+    	settings.yMarkerNative(i,:) = markersNative(i).y;
+    end
+    if ~isempty(markersMNI(i).y)
+    	settings.yMarkerMNI(i,:) = markersMNI(i).y;
+    end
+    if ~isempty(markersNative(i).head)
+    	settings.headNative(i,:) = markersNative(i).head;
+    end
+    if ~isempty(markersMNI(i).head)
+    	settings.headMNI(i,:) = markersMNI(i).head;
+    end
+end
 
 % Head
 settings.Implantation_coordinate = nan(eleNum, 3);
@@ -524,3 +539,13 @@ end
 cd(currentPath);
 setenv('LD_LIBRARY_PATH', libpath);
 setenv('PATH', binPath);
+
+
+%% Helper function to get markers in bothe native and MNI space
+function [markersNative, markersMNI] = ea_get_markers(options)
+options.native = 1;
+[~, ~, markersNative] = ea_load_reconstruction(options);
+
+options.native = 0;
+[~, ~, markersMNI] = ea_load_reconstruction(options);
+
