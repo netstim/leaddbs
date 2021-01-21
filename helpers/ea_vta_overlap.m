@@ -29,6 +29,10 @@ prefs = ea_prefs;
 efiedthreshold = prefs.machine.vatsettings.horn_ethresh*10^3;
 if contains(vta, 'efield')
     vtanii.img(vtanii.img<=efiedthreshold)=0;
+else
+    %make the VTA image as binary (for comparing overlap in the following code)
+    threshold_vta=max(vtanii.img(:)) * 0.5;
+    vtanii.img=double(vtanii.img>threshold_vta);
 end
 
 % Check if atlas is nifti file or xyz coordinates
@@ -51,6 +55,8 @@ switch side
 end
 
 if ~isempty(xyz)
+
+
     % Map XYZ coordinates into VTA image
     vox = round(ea_mm2vox(xyz, vta));
     filter = all(vox>[0,0,0],2) & all(vox<=size(vtanii.img),2); % Remove voxel out of bbox
