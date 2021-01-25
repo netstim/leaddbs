@@ -65,12 +65,23 @@ prefs=ea_prefs('');
 set(handles.calcAxonActivation,'Value',prefs.machine.vatsettings.butenko_calcAxonActivation);
 
 connectomes = ea_genmodlist([], [], [], 'dmri');
-set(handles.connectomes,'String',connectomes);
-connIdx = find(ismember(connectomes,prefs.machine.vatsettings.butenko_connectome));
-if ~isempty(connIdx)
-    set(handles.connectomes,'Value',connIdx);
+if isempty(connectomes)
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('No connectome found!');
+    warning('on', 'backtrace');
+    set(handles.calcAxonActivation,'Value',0);
+    set(handles.calcAxonActivation,'Enable','off');
+    set(handles.connectomes,'String','No connectome found!');
+    set(handles.connectomes,'Enable','off');
 else
-    set(handles.connectomes,'Value',1);
+    set(handles.connectomes,'String',connectomes);
+    connIdx = find(ismember(connectomes,prefs.machine.vatsettings.butenko_connectome));
+    if ~isempty(connIdx)
+        set(handles.connectomes,'Value',connIdx);
+    else
+        set(handles.connectomes,'Value',1);
+    end
 end
 
 set(handles.axonLength,'String',num2str(prefs.machine.vatsettings.butenko_axonLength));
