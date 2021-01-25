@@ -151,8 +151,10 @@ prefs=ea_prefs('');
 
 vatsettings = prefs.machine.vatsettings;
 vatsettings.butenko_calcAxonActivation = get(handles.calcAxonActivation,'Value');
-connectomes = get(handles.connectomes,'String');
-vatsettings.butenko_connectome = connectomes{get(handles.connectomes,'Value')};
+if strcmp(get(handles.connectomes,'Enable'), 'on')
+    connectomes = get(handles.connectomes,'String');
+    vatsettings.butenko_connectome = connectomes{get(handles.connectomes,'Value')};
+end
 vatsettings.butenko_axonLength = str2double(get(handles.axonLength,'String'));
 vatsettings.butenko_fiberDiameter = str2double(get(handles.fiberDiameter,'String'));
 vatsettings.butenko_ethresh = str2double(get(handles.ethresh,'String'));
