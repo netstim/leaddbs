@@ -106,16 +106,16 @@ settings.headNative = nan(eleNum, 3);
 settings.headMNI = nan(eleNum, 3);
 [markersNative, markersMNI] = ea_get_markers(options);
 for i=1:eleNum
-    if ~isempty(markersNative(i).y)
+    if ~isempty(markersNative) && ~isempty(markersNative(i).y)
     	settings.yMarkerNative(i,:) = markersNative(i).y;
     end
-    if ~isempty(markersMNI(i).y)
+    if ~isempty(markersMNI) && ~isempty(markersMNI(i).y)
     	settings.yMarkerMNI(i,:) = markersMNI(i).y;
     end
-    if ~isempty(markersNative(i).head)
+    if ~isempty(markersNative) && ~isempty(markersNative(i).head)
     	settings.headNative(i,:) = markersNative(i).head;
     end
-    if ~isempty(markersMNI(i).head)
+    if ~isempty(markersMNI) && ~isempty(markersMNI(i).head)
     	settings.headMNI(i,:) = markersMNI(i).head;
     end
 end
@@ -544,8 +544,23 @@ setenv('PATH', binPath);
 %% Helper function to get markers in bothe native and MNI space
 function [markersNative, markersMNI] = ea_get_markers(options)
 options.native = 1;
-[~, ~, markersNative] = ea_load_reconstruction(options);
+try
+    [~, ~, markersNative] = ea_load_reconstruction(options);
+catch
+    markersNative = [];
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('Failed to load native reconstruction!');
+    warning('on', 'backtrace');
+end
 
 options.native = 0;
-[~, ~, markersMNI] = ea_load_reconstruction(options);
-
+try
+    [~, ~, markersMNI] = ea_load_reconstruction(options);
+catch
+    markersMNI = [];
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('Failed to load MNI reconstruction!');
+    warning('on', 'backtrace');
+end
