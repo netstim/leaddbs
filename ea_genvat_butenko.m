@@ -351,7 +351,7 @@ for side=0:1
         continue;
     end
 
-    if ~fibersFound(side+1)
+    if settings.calcAxonActivation && ~fibersFound(side+1)
         warning('off', 'backtrace');
         warning('No fibers found for %s side! Skipping...\n', sideStr);
         warning('on', 'backtrace');
