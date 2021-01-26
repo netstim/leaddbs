@@ -1023,6 +1023,7 @@ for pt=selection
         setappdata(resultfig,'elspec',options.elspec);
 
         if options.native % Reload native space coordinates
+            options.loadrecoforviz = 1;
             coords = ea_load_reconstruction(options);
         else
             coords = M.elstruct(pt).coords_mm;
