@@ -76,9 +76,13 @@ for side=options.sides
                     % Recalculate as the tolerance/precision was not
                     % satisfactory for this use case (will be loaded at tries==2)
                     if ~isfield(options,'patient_list') % single subject mode
-                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.root,options.patientname]);
+                        % Recalc then reload depending on options.native flag
+                        ea_recalc_reco([],[],[options.root,options.patientname]);
+                        [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
                     else
-                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.patient_list{pt},filesep]);
+                        % Recalc then reload depending on options.native flag
+                        ea_recalc_reco([],[],[options.patient_list{pt},filesep]);
+                        [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
                     end
                     elstruct.markers=markers;
                     elstruct.coords_mm=coords_mm;
