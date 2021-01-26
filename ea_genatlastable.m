@@ -259,7 +259,7 @@ if checkrebuild(atlases,options,root,mifix)
         try atlases=rmfield(atlases,'colorc'); end % redundancy cleanup
         try atlases=rmfield(atlases,'normals'); end % redundancy cleanup
         
-        ea_saveatlas(options.atlasset,atlases);
+        ea_saveatlas(root,options.atlasset,atlases);
         
     end
 end

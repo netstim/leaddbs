@@ -1,4 +1,4 @@
-function ea_saveatlas(atlname,atlases)
+function ea_saveatlas(atlasFolder,atlasName,atlases)
 
 if isfield(atlases, 'roi')
      % disp(atlases.roi)
@@ -9,4 +9,4 @@ if isfield(atlases, 'roi')
     end
 end
 
-save([ea_space([],'atlases'),atlname,filesep,'atlas_index.mat'],'atlases','-v7.3');
+save([atlasFolder,filesep,atlasName,filesep,'atlas_index.mat'],'atlases','-v7.3');
