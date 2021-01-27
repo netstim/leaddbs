@@ -22,7 +22,9 @@ sumlength = @(x) sum(sqrt(sum(diff(x).^2,2)));
 
 disp('Removing short fibers...');
 for i=1:length(ftr)
-    if ~isempty(ftr{i}.idx)
+    if isempty(ftr{i}) || isempty(ftr{i}.idx)
+        disp('No fibers found, skipping...');
+    else
         % Prepare stard and end index of each fiber
         endIndex = cumsum(ftr{i}.idx);
         startIndex = [1;endIndex+1];
@@ -34,8 +36,6 @@ for i=1:length(ftr)
         disp([num2str(sum(fibLen>=minFibLen)), ' out of ', num2str(length(ftr{i}.idx)),' fibers retained...'])
         fiberFiltered{i}.fibers = ftr{i}.fibers(cell2mat(fibIndex(fibLen>=minFibLen)), :);
         fiberFiltered{i}.idx = ftr{i}.idx(fibLen>=minFibLen);
-    else
-        disp('No fibers found, skipping...');
     end
 end
 

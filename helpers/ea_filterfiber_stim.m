@@ -115,6 +115,7 @@ for i=1:length(radius)
 
         % Skip further calculation in case VAT is totally not connected
         if ~any(filter)
+            disp('No fibers found, skipping...');
             continue;
         end
 
