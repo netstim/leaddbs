@@ -1,7 +1,7 @@
 function ea_reconstruction2native(options)
 
 directory=[options.root,options.patientname,filesep];
-load([directory,filesep,'ea_reconstruction.mat']);
+load([directory,filesep,'ea_reconstruction.mat'],'reco');
 
 if ~exist('reco','var') % old format
     reco.mni.coords_mm=coords_mm;
