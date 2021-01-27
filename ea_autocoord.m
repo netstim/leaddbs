@@ -267,6 +267,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                     ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,0,options);
                     [coords_mm,trajectory,markers] = ea_refinecoords(poptions); % experimental fiducial marker refine method
                     options.native = 1;
+
                 case 'TRAC/CORE (Horn 2015)' % TRAC/CORE
                     [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
                     options.native=0;

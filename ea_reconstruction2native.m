@@ -59,7 +59,6 @@ for side=options.sides
     reco.(usenative).markers(side).y = reco.(usenative).markers(side).head+yunitv*(options.elspec.lead_diameter/2);
 end
 
-
 % apply scrf to native matrix if available
 if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
     d=load([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat']);

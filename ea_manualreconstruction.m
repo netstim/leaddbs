@@ -52,7 +52,6 @@ c_step=2;
 prevlead=uipushtool(ht,'CData',ea_get_icn('prevlead'),'TooltipString','Previous Electrode [<]','ClickedCallback',{@sequenceelectrode,mcfig,'prev'});
 nextlead=uipushtool(ht,'CData',ea_get_icn('nextlead'),'TooltipString','Next Electrode [>]','ClickedCallback',{@sequenceelectrode,mcfig,'next'});
 
-
 hf=uitoggletool(ht,'CData',ea_get_icn('hidefid'),'TooltipString','Show/Hide Fiducials','State','off','OnCallback',{@hidefid,mcfig},'OffCallback',{@showfid,mcfig});
 setappdata(mcfig,'hf',hf);
 
@@ -89,7 +88,7 @@ autorotation=uipushtool(ht,'CData',ea_get_icn('autorot'),'TooltipString','Detect
 rotationcw=uipushtool(ht,'CData',ea_get_icn('cw'),'TooltipString','Rotate lead clockwise','ClickedCallback',{@ea_rotate,'clockwise',mcfig});
 rotationccw=uipushtool(ht,'CData',ea_get_icn('ccw'),'TooltipString','Rotate lead counterclockwise','ClickedCallback',{@ea_rotate,'counterclockwise',mcfig});
 
-%mni=uitoggletool(ht,'CData',ea_get_icn('mninative'),'TooltipString','Toggle MNI vs. Native space','State','off','OnCallback',{@ea_mancor_updatescene,mcfig,'mni'},'OffCallback',{@ea_mancor_updatescene,mcfig,'native'});
+% mni=uitoggletool(ht,'CData',ea_get_icn('mninative'),'TooltipString','Toggle MNI vs. Native space','State','off','OnCallback',{@ea_mancor_updatescene,mcfig,'mni'},'OffCallback',{@ea_mancor_updatescene,mcfig,'native'});
 
 finish_mc=uipushtool(ht,'CData',ea_get_icn('done'),'TooltipString','Finish manual corrections [space]','ClickedCallback',{@robotSpace});
 
@@ -108,7 +107,6 @@ end
 trajectory_plot=getappdata(mcfig,'trajectory_plot');
 planes=getappdata(mcfig,'planes');
 
-
 %% Manual height correction here:
 %set(mcfig,'Position',[10 400 700 500])
 
@@ -120,8 +118,6 @@ disp('Manual correction: Press arrows to adjust, space to end adjustment. For mo
 %% export variables to figure
 setappdata(mcfig,'eltog',eltog);
 setappdata(mcfig,'markers',markers);
-
-
 
 
 function ea_endfcn(mcfig)
@@ -142,14 +138,7 @@ ea_save_reconstruction(coords_mm,trajectory,markers,options.elmodel,1,options);
 options=getappdata(mcfig,'origoptions');
 try options=rmfield(options,'hybridsave'); end
 ea_busyaction('off',mcfig,'reco');
-close(mcfig)
-
-% save results
-%coords_mm=ea_resolvecoords(markers,options);
-%elmodel=options.elmodel;
-% ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-
-%disp('Done.');
+close(mcfig);
 
 if options.autoimprove
     disp('Storing results in template.');
@@ -436,8 +425,6 @@ switch lower(commnd)
         if ismember(event.Key,{'rightarrow','leftarrow','uparrow','downarrow'}) || ismember(event.Character,{'+','-','*','_'})
             selectrode=getappdata(mcfig,'selectrode');
             if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory or increase/decrease spacing.
-                %markers=getappdata(mcfig,'markers');
-                %trajectory=getappdata(mcfig,'trajectory');
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
                 markers=ea_correctcoords(markers,trajectory,event,options);
@@ -446,30 +433,21 @@ switch lower(commnd)
                 end
                 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
-                % setappdata(mcfig,'markers',markers);
                 ea_mancor_updatescene([],[],mcfig);
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
-                % markers=getappdata(mcfig,'markers');
             else % electrode is highlighted. Move in xy dirs.
-
-                %             markers=getappdata(mcfig,'markers');
-                %             trajectory=getappdata(mcfig,'trajectory');
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
                 movedcoords=moveonecoord(markers,selectrode,event,options); % move the correct coord to the correct direction.
 
                 set(mplot(1,1),'XData',movedcoords(options.elside).head(1),'YData',movedcoords(options.elside).head(2),'ZData',movedcoords(options.elside).head(3))
                 set(mplot(2,1),'XData',movedcoords(options.elside).tail(1),'YData',movedcoords(options.elside).tail(2),'ZData',movedcoords(options.elside).tail(3))
-                %            setappdata(mcfig,'markers',markers);
+
                 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
 
                 ea_mancor_updatescene([],[],mcfig);
-                %markers=getappdata(mcfig,'markers');
-                [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
-                %update_coords(elplot(selectrode),markers,trajectory,movedcoords); % refresh scene view (including update for all other electrodes).
-                %setappdata(gcf,'markers',markers);
-                %setappdata(mcfig,'trajectory',trajectory);
+                [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
             end
         end
 end
@@ -477,7 +455,6 @@ end
 cnt=1;
 options=getappdata(mcfig,'options');
 coords_mm=ea_resolvecoords(markers,options);
-% [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
 set(mplot(1,1),'XData',markers(options.elside).head(1),'YData',markers(options.elside).head(2),'ZData',markers(options.elside).head(3));
 set(mplot(2,1),'XData',markers(options.elside).tail(1),'YData',markers(options.elside).tail(2),'ZData',markers(options.elside).tail(3));
@@ -488,6 +465,7 @@ end
 refreshdata(elplot,'caller')
 drawnow
 
+
 function showhidefid(m,n,mcfig)
 options=getappdata(mcfig,'options');
 if options.visible
@@ -495,6 +473,7 @@ if options.visible
 else
     showfid([],[],mcfig);
 end
+
 
 function hidefid(m,n,mcfig)
 options=getappdata(mcfig,'options');
@@ -504,6 +483,7 @@ setappdata(mcfig,'options',options);
 ea_mancor_updatescene([],[],mcfig);
 set(hf,'State','on');
 
+
 function showfid(m,n,mcfig)
 options=getappdata(mcfig,'options');
 options.visible=1;
@@ -511,6 +491,7 @@ hf=getappdata(mcfig,'hf');
 setappdata(mcfig,'options',options);
 ea_mancor_updatescene([],[],mcfig);
 set(hf,'State','off');
+
 
 function xrayswitch(hf,t,mcfig)
 options=getappdata(mcfig,'options');
@@ -520,6 +501,7 @@ else
     xrayon(hf,t,mcfig);
 end
 
+
 function xrayoff(hf,t,mcfig)
 options=getappdata(mcfig,'options');
 options.xray=0;
@@ -528,6 +510,7 @@ setappdata(mcfig,'options',options);
 ea_mancor_updatescene([],[],mcfig);
 set(xt,'State','off');
 
+
 function xrayon(hf,t,mcfig)
 options=getappdata(mcfig,'options');
 options.xray=1;
@@ -535,7 +518,6 @@ xt=getappdata(mcfig,'xt');
 setappdata(mcfig,'options',options);
 ea_mancor_updatescene([],[],mcfig);
 set(xt,'State','on');
-
 
 
 function sequenceelectrode(m,n,mcfig,what)
@@ -570,12 +552,7 @@ elseif isequal(sides,1)
 elseif isequal(sides,2)
     sp=3:4;
 end
-
 %setappdata(mcfig,['C',ID,addon],C);
-
-
-
-
 
 
 function markers=moveonecoord(markers,selectrode,command,options)
@@ -629,19 +606,15 @@ end
 setappdata(gcf,'rotation',rotation);
 ea_mancor_updatescene([],[],mcfig);
 
+
 function ea_autorotate(hobj,ev,ccw,mcfig)
 options = getappdata(gcf,'options');
 rotation=getappdata(gcf,'rotation'); % rotation angle in degrees
 orientation = ea_orient_main(options,0);
 rotation{options.elside} = [];
-% [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-% if ~isempty(orientation)
-%     rotation{options.elside} = rad2deg(orientation);
-% end
-figure(mcfig)
+figure(mcfig);
 setappdata(gcf,'rotation',rotation);
 ea_mancor_updatescene([],[],mcfig);
-
 
 
 function setcontrast(hobj,ev,key,modifier,mcfig)
@@ -675,7 +648,7 @@ end
 % if offset<=0
 %     offset=0;
 % end
-if contrast<0.1;
+if contrast<0.1
     contrast=0.1;
 end
 setappdata(mcfig,'contrast',contrast);
@@ -723,88 +696,9 @@ set(mplot(2,1),'MarkerEdgeColor','g');
 setappdata(gcf,'selectrode',0);
 
 
-function ea_view(hobj,ev,commnd)
-switch commnd
-    case 'p'
-        view(0,0);
-    case {'a'}
-        view(180,0);
-    case {'r'}
-        view(90,0);
-    case 'l'
-        view(270,0);
-end
-ea_mancor_updatescene([],[],gcf);
-
-
-function ea_finish(hobj,ev)
-disp('Manual correction done.');
-
-
 function robotSpace(hobj,ev) % simulates key presses using Java.
 import java.awt.Robot;
 import java.awt.event.*;
 SimKey=Robot;
 SimKey.keyPress(KeyEvent.VK_SPACE)
 SimKey.keyRelease(KeyEvent.VK_SPACE)
-
-
-function y = ea_nanmean(varargin)
-if nargin==2
-    x=varargin{1};
-    dim=varargin{2};
-elseif nargin==1
-    x=varargin{1};
-    dim=1;
-end
-
-N = sum(~isnan(x), dim);
-y = ea_nansum(x, dim) ./ N;
-
-
-function trajectory=ea_prolong_traj(trajectory)
-maxv=max([length(trajectory{1}),length(trajectory{2})]);
-for side=1:length(trajectory)
-    for long=1:maxv-length(trajectory{side})+20
-        trajectory{side}(end+1,:)=trajectory{side}(end,:)+(trajectory{side}(end,:)-trajectory{side}(end-1,:));
-    end
-end
-
-
-function M = ea_nmi(X,Y)
-% function M = MI_GG(X,Y)
-% Compute the mutual information of two images: X and Y, having
-% integer values.
-%
-% INPUT:
-% X --> first image
-% Y --> second image (same size of X)
-%
-% OUTPUT:
-% M --> mutual information of X and Y
-%
-% Written by GIANGREGORIO Generoso.
-% DATE: 04/05/2012
-% E-MAIL: ggiangre@unisannio.it
-%__________________________________________________________________________
-
-X = double(X);
-Y = double(Y);
-
-X_norm = X - min(X(:)) +1;
-Y_norm = Y - min(Y(:)) +1;
-
-matAB(:,1) = X_norm(:);
-matAB(:,2) = Y_norm(:);
-h = accumarray(matAB+1, 1); % joint histogram
-
-hn = h./sum(h(:)); % normalized joint histogram
-y_marg=sum(hn,1);
-x_marg=sum(hn,2);
-
-Hy = - sum(y_marg.*log2(y_marg + (y_marg == 0))); % Entropy of Y
-Hx = - sum(x_marg.*log2(x_marg + (x_marg == 0))); % Entropy of X
-
-arg_xy2 = hn.*(log2(hn+(hn==0)));
-h_xy = sum(-arg_xy2(:)); % joint entropy
-M = Hx + Hy - h_xy; % mutual information

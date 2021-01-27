@@ -14,11 +14,8 @@ function  [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=
 
 coords_acpc=nan; % make sure the output is there.
 if isstruct(varargin{1})
-
     options=varargin{1};
-
     directory=[options.root,options.patientname,filesep];
-
 else
     directory=varargin{1};
     if ~strcmp(directory(end),filesep)
