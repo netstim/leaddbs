@@ -129,6 +129,7 @@ function varargout =  ea_runslicer(options, task)
 
         case 4 % show electrode localization
             if exist([patient_path,filesep,'ea_reconstruction.mat'],'file')
+                options.native = 0; % Export fiducial only in MNI space
                 ea_exportfiducials(options, 'ElectrodeFiducials.fcsv');
             else
                 warning('Please run reconstruction first...');
