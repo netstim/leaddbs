@@ -264,7 +264,7 @@ if settings.calcAxonActivation
     ea_mkdir(settings.connectomePath);
     for i=1:length(fiberFiltered)
         buffer = fiberFiltered{i};
-        save([settings.connectomePath, filesep, 'data', num2str(i), '.mat'], '-struct', 'buffer');
+        save([settings.connectomePath, filesep, 'data', num2str(i), '.mat'], '-struct', 'buffer', '-v7.3');
     end
 end
 
