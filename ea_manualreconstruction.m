@@ -616,7 +616,7 @@ function ea_autorotate(hobj,ev,ccw,mcfig)
 options = getappdata(gcf,'options');
 rotation=getappdata(gcf,'rotation'); % rotation angle in degrees
 orientation = ea_orient_main(options,0);
-rotation{options.elside} = [];
+rotation{options.elside} = orientation;
 figure(mcfig);
 setappdata(gcf,'rotation',rotation);
 ea_mancor_updatescene([],[],mcfig);
