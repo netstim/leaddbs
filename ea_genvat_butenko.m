@@ -94,7 +94,6 @@ settings.default_material = 'GM'; % GM, WM or CSF
 settings.Electrode_type = options.elmodel;
 
 % Reload reco since we need to decide whether to use native or MNI coordinates.
-options.loadrecoforviz = 1;
 [~, ~, markers] = ea_load_reconstruction(options);
 coords_mm = ea_resolvecoords(markers, options);
 settings.contactLocation = coords_mm;

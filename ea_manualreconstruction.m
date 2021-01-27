@@ -27,6 +27,7 @@ setappdata(mcfig,'patientname',patientname);
 setappdata(mcfig,'origoptions',options); % store original options for further processing.
 
 options.native=1;
+options.loadnativereco = 1; % Load native reco intead of scrf
 options.xray=0;
 setappdata(mcfig,'options',options);
 
@@ -132,7 +133,8 @@ options=getappdata(mcfig,'origoptions');
 
 options.hybridsave=1;
 options.native=1;
-[coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
+options.loadnativereco = 1; % Load native reco intead of scrf
+[coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 
 ea_save_reconstruction(coords_mm,trajectory,markers,options.elmodel,1,options);
 options=getappdata(mcfig,'origoptions');
@@ -193,7 +195,8 @@ elplot=getappdata(mcfig,'elplot');
 mplot=getappdata(mcfig,'mplot');
 
 % load the current parameters
-[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+options.loadnativereco = 1;  % Load native reco intead of scrf
+[coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
 % update markers according to manually specified positions
 mRH=str2num(get(userData.tvRH,'String'));
 mRT=str2num(get(userData.tvRT,'String'));
@@ -250,7 +253,9 @@ if ~exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'fi
     close(mcfig);
     return
 end
-[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
+
+options.loadnativereco = 1;  % Load native reco intead of scrf
+[~,~,markers]=ea_load_reconstruction(options);
 
 commnd=event.Character;
 switch lower(commnd)

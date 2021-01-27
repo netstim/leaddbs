@@ -38,11 +38,12 @@ if exist('reco','var')
     end
 
     if options.native
-        if isfield(options, 'loadrecoforviz') && isfield(reco, 'scrf')
-            % if loading reco for visualization, should return scrf.
-            space_type = 'scrf';
-        else
+        if isfield(options, 'loadnativereco') && options.loadnativereco || ~isfield(reco, 'scrf')
+            % Load native reco for recalculation or manual reconstruction
             space_type = 'native';
+        else
+            % Load scrf reco by default
+            space_type = 'scrf';
         end
     else
         space_type = 'mni';

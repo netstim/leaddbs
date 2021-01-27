@@ -47,7 +47,6 @@ resultfig=getappdata(lgfigure,'resultfig');
 % Important to load in reco from a new since we need to decide whether to
 % use native or template coordinates. Even when running in template space,
 % the native coordinates are sometimes used (VTA is then calculated in native space and ported to template).
-options.loadrecoforviz=1;
 [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 elstruct(1).coords_mm=coords_mm;
 elstruct(1).coords_mm=ea_resolvecoords(markers,options);

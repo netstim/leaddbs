@@ -23,7 +23,6 @@ end
 set(mcfig,'color',getbgsidecol(options));
 
 patientname=getappdata(mcfig,'patientname');
-%markers=getappdata(mcfig,'markers');
 
 if nargin==4
     ea_busyaction('on',gcf,'reco');
@@ -46,6 +45,7 @@ switch space
         options.native=0;
     case 'native'
         options.native=1;
+        options.loadnativereco = 1; % Load native reco intead of scrf
 end
 
 setappdata(mcfig,'options',options);

@@ -198,6 +198,7 @@ function WriteReconstructionFiducialFile(options)
     counter = 0;
     if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
         options.native = 1;
+        options.loadnativereco = 1; % Load native reco intead of scrf
         [~,~,markers] = ea_load_reconstruction(options);
         for side = options.sides
             h = markers(side).head;
