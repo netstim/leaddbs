@@ -1,6 +1,7 @@
 function  ea_pat2pdf(uipatdir,handles)
 
 options=ea_handles2options(handles);
+options.native=0; % MNI space only
 
 [options.root,options.patientname]=fileparts(uipatdir);
 options.root=[options.root,filesep];

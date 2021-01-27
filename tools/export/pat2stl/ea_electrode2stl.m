@@ -1,6 +1,7 @@
 function fv=ea_electrode2stl(directory,side,handles)
 
 options=ea_handles2options(handles);
+options.native=0; % MNI space only
 if exist([directory,'ea_reconstruction.mat'],'file')
     load([directory,'ea_reconstruction.mat']);
     options.elmodel=ea_get_first_notempty_elmodel(reco.props);
