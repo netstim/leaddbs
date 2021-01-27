@@ -3,6 +3,7 @@ function [coords_mm,trajectory,markers]=ea_runtraccore(options)
 directory = [options.root,options.patientname,filesep];
 
 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+    options.native = 0; % Load MNI reco
     [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 end
 
