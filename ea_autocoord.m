@@ -261,6 +261,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             switch options.reconmethod
                 case 'Refined TRAC/CORE' % refined TRAC/CORE
                     [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
+                    options.native = 0; % Output in template space
                     options.hybridsave=1; % save output of TRAC/CORE before progressing
                     options.elside=options.sides(1);
                     elmodel=options.elmodel;
