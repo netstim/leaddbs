@@ -26,7 +26,7 @@ for pt=1:length(uipatdir)
         options=ea_getptopts(uipatdir{pt});
         options.sides=1:2;
         options.native=1;
-        [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
+        [~,~,~,~,manually_corrected]=ea_load_reconstruction(options);
         exptxt=[exptxt,'DBS electrodes were automatically (pre-)localized.\n'];
         if manually_corrected
             exptxt=[exptxt,'DBS electrodes were manually localized.\n'];

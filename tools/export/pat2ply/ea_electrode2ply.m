@@ -1,10 +1,10 @@
 function fv=ea_electrode2ply(directory,side,handles)
 
 options=ea_handles2options(handles);
-if exist([directory,'ea_reconstruction.mat'],'file')
-    load([directory,'ea_reconstruction.mat']);
 options.native=0; % MNI space only
 
+if exist([directory,'ea_reconstruction.mat'],'file')
+    load([directory,'ea_reconstruction.mat'],'reco');
     options.elmodel=ea_get_first_notempty_elmodel(reco.props);
 end
 options=ea_resolve_elspec(options);
