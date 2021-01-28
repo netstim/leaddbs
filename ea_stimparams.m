@@ -1021,10 +1021,9 @@ if groupmode
         case 'Yes, sure'
             setappdata(handles.stimfig,'gS',[]);
 
-            nms=get(hObject,'String');
-            nms=nms{get(hObject,'Value')};
-            gSv.vatmodel=nms;
-
+            % Set new model
+            models = get(hObject,'String');
+            gSv.vatmodel = models{get(hObject,'Value')};
             setappdata(handles.stimfig,'gSv',gSv);
     end
 end
