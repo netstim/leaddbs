@@ -187,10 +187,10 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
 
             if cc_multicontact==True:
                 import FEM_in_spectrum_multicontact
-                processes=mp.Process(target=FEM_in_spectrum_multicontact.solve_Laplace_multicontact,args=(Sim_setup,Solver_type,Vertices,Domains,j,d["Full_Field_IFFT"],output))
+                processes=mp.Process(target=FEM_in_spectrum_multicontact.solve_Laplace_multicontact,args=(Sim_setup,Solver_type,Vertices,Domains,j,Field_on_VTA,output))
             else:
                 import FEM_in_spectrum
-                processes=mp.Process(target=FEM_in_spectrum.solve_Laplace,args=(Sim_setup,Solver_type,Vertices,Domains,j,d["Full_Field_IFFT"],output))
+                processes=mp.Process(target=FEM_in_spectrum.solve_Laplace,args=(Sim_setup,Solver_type,Vertices,Domains,j,Field_on_VTA,output))
 
             proc.append(processes)
 

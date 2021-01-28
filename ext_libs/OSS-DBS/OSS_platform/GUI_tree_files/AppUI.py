@@ -438,6 +438,7 @@ class MainWindow(Functionalities):
         #     dict_mesh_refinement
         output_dict = Dictionary(self).output_dict()
         output_dict['Stim_side'] = self.index_side
+        output_dict['stretch'] = self.stretch
 
         # # concatenate various dictionaries
         # output_dict.update(dict_cpe_active.d)
@@ -539,6 +540,8 @@ class MainWindow(Functionalities):
                 self.set_current_file_name(filename)
 
     def set_load_state(self, d):
+
+        self.stretch=d['stretch']
         self.ui.checkBox_Voxel_orr_MRI.setCheckState(self.anti_corrector(d['voxel_arr_MRI']))
         self.ui.checkBox_Voxel_orr_DTI.setCheckState(----self.anti_corrector(d['voxel_arr_DTI']))
         self.ui.checkBox_Init_Neuron_Model_Ready.setCheckState(self.anti_corrector(d['Init_neuron_model_ready']))

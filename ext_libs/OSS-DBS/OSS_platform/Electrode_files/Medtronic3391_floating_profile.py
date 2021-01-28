@@ -84,11 +84,15 @@ OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
 OY = geompy.MakeVectorDXDYDZ(0, 1, 0)
 OZ = geompy.MakeVectorDXDYDZ(0, 0, 1)
 Circle_1 = geompy.MakeCircle(O, OZ, 0.635)
-Contact_1 = geompy.MakePrismVecH(Circle_1, OZ, 3.0)
+Contact_1 = geompy.MakePrismVecH(Circle_1, OZ, 1.5*stretch+1.5)
 geompy.TranslateDXDYDZ(Contact_1, 0, 0, 0.865)
-Contact_2 = geompy.MakeTranslation(Contact_1, 0, 0, 7)
-Contact_3 = geompy.MakeTranslation(Contact_1, 0, 0, 14)
-Contact_4 = geompy.MakeTranslation(Contact_1, 0, 0, 21)
+
+Contact_1_full = geompy.MakePrismVecH(Circle_1, OZ, 3.0*stretch)
+geompy.TranslateDXDYDZ(Contact_1_full, 0, 0, 0.865)
+
+Contact_2 = geompy.MakeTranslation(Contact_1_full, 0, 0, 1.5+5.5*stretch)
+Contact_3 = geompy.MakeTranslation(Contact_1_full, 0, 0, 1.5+12.5*stretch)
+Contact_4 = geompy.MakeTranslation(Contact_1, 0, 0, 1.5+19.5*stretch)
 Cylinder_1 = geompy.MakeCylinderRH(0.635, 149.365)
 Sphere_1 = geompy.MakeSphereR(0.635)
 Fuse_1 = geompy.MakeFuseList([Cylinder_1, Sphere_1], True, True)
@@ -114,11 +118,15 @@ encap_inner_ROI = geompy.MakeCutList(encap_layer, [encap_outer_ROI], True)
 Fuse_all_lead_encap_ROI = geompy.MakeFuseList([Sphere_ROI, Fuse_2], True, True)
 ROI = geompy.MakeCutList(Sphere_ROI, [Fuse_2], True)
 
-CV1 = geompy.MakeCylinderRH(0.635, 3.0)
+CV1 = geompy.MakeCylinderRH(0.635, 1.5+1.5*stretch)
 geompy.TranslateDXDYDZ(CV1, 0, 0, 1.5)
-CV2 = geompy.MakeTranslation(CV1, 0, 0, 7)
-CV3 = geompy.MakeTranslation(CV1, 0, 0, 14)
-CV4 = geompy.MakeTranslation(CV1, 0, 0, 21)
+CV1_full = geompy.MakeCylinderRH(0.635, 3.0*stretch)
+geompy.TranslateDXDYDZ(CV1_full, 0, 0, 1.5)
+
+
+CV2 = geompy.MakeTranslation(CV1_full, 0, 0, 1.5+5.5*stretch)
+CV3 = geompy.MakeTranslation(CV1_full, 0, 0, 1.5+12.5*stretch)
+CV4 = geompy.MakeTranslation(CV1, 0, 0, 1.5+19.5*stretch)
 ##################################################################################################################
 ########################################### extra code 2 V10 15/12/18#############################################
 print " Load brain image \n"

@@ -408,7 +408,7 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
             Pv_amp = TrialFunction(W_amp)
             E_amp_real = Function(W_amp)
             a_local = inner(w_amp, Pv_amp) * dx
-            L_local = inner(w_amp, sqrt(dot(E_field_r,E_field_r))) * dx
+            L_local = inner(w_amp, sqrt(dot(E_field_real,E_field_real))) * dx
             A_local, b_local = assemble_system(a_local, L_local, bcs=[])
 
             local_solver = PETScKrylovSolver('bicgstab')

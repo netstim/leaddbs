@@ -28,9 +28,9 @@ DX_MRI=100.0
 DY_MRI=100.0
 DZ_MRI=100.0
 
-X_tip=-11.0729
-Y_tip=-14.261
-Z_tip=-10.8173
+X_tip=11.7816
+Y_tip=-13.5587
+Z_tip=-8.5489
 
 ##################
 geompy = geomBuilder.New(theStudy)
