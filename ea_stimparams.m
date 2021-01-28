@@ -1014,8 +1014,9 @@ if groupmode
 
     switch choice
         case 'No'
-            ochoice=ismember(get(hObject,'String'),gSv.vatmodel);
-            setappdata(hObject,'Value',ochoice);
+            % Keep current model
+            currentModelInd = find(ismember(get(hObject,'String'),gSv.vatmodel),1);
+            set(hObject,'Value',currentModelInd);
             return
         case 'Yes, sure'
             setappdata(handles.stimfig,'gS',[]);
