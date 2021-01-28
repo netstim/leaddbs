@@ -1025,6 +1025,9 @@ if groupmode
             models = get(hObject,'String');
             gSv.vatmodel = models{get(hObject,'Value')};
             setappdata(handles.stimfig,'gSv',gSv);
+
+            % Clear stimulation parameters
+            setappdata(handles.stimfig,'S',[]);
     end
 end
 
