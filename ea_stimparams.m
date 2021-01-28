@@ -1006,7 +1006,6 @@ function modelselect_Callback(hObject, eventdata, handles)
 
 groupmode=getappdata(handles.stimfig,'groupmode');
 if groupmode
-
     choice = questdlg('Changing VAT model will delete stimulation parameters of all patients! Continue?', ...
         'Warning', ...
         'Yes, sure','No','No');
@@ -1983,8 +1982,8 @@ if groupmode
             actpt=1;
         end
 
-        %ensure active patient is non empty
-        %this can happen if you delete a patient, then add a new one, without clicking on the patient window
+        % Ensure active patient is non empty
+        % This can happen if you delete a patient, then add a new one, without clicking on the patient window
         if isempty(actpt)
             actpt=1;
         end
@@ -2019,6 +2018,7 @@ if groupmode
         end
         setappdata(handles.stimfig,'gSv',gSv);
     end
+
     % load gS - updated with each refresh:
     gS=getappdata(handles.stimfig,'gS');
     if isempty(grouploaded)
@@ -2035,12 +2035,12 @@ if groupmode
             % if gS is defined but group has just now been loaded
             try
                 if ~isempty(gS(actpt).Rs1) % current patient is defined -> set S to gS of this patient.
-                    S=gS(actpt);
+                    S = gS(actpt);
                 end
             end
         end
-        % now tell everyone that the figure has been opened for a while
-        % already:
+
+        % now tell everyone that the figure has been opened for a while already:
         setappdata(handles.stimfig,'grouploaded',1);
     end
 end
@@ -2085,8 +2085,7 @@ if nargin==3
                     S.(['Rs',num2str(Ractive)]).case.pol=2;
                     S=ea_redistribute_voltage(S,varargin{3});
                     for k=0:7
-
-                        if  S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+                        if S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
                             S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
                             S=ea_redistribute_voltage(S,['k',num2str(k)]);
                         end
@@ -2100,7 +2099,7 @@ if nargin==3
                     S.(['Ls',num2str(Lactive)]).case.pol=2;
                     S=ea_redistribute_voltage(S,varargin{3});
                     for k=8:15
-                        if  S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+                        if S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
                             S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
                             S=ea_redistribute_voltage(S,['k',num2str(k)]);
                         end
@@ -2119,7 +2118,6 @@ if nargin==3
                     S.([sidec,'s',num2str(S.active(side))]).case.pol=0;
                     S=ea_redistribute_voltage(S,[sidec,'case']);
                 end
-
         end
     else
         S=ea_redistribute_voltage(S,varargin{3});
@@ -2134,7 +2132,6 @@ for source=1:4
 
     set(eval(['handles.Rs',num2str(source),'am']),'String',num2str(S.amplitude{1}(source)));
     set(eval(['handles.Rs',num2str(source),'va']),'Value',eval(['S.Rs',num2str(source),'.va']));
-
 
     %if eval(['S.Rs',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
@@ -2156,7 +2153,6 @@ for source=1:4
         eval(['S.Rs',num2str(source),'.case.perc=100;']);
     end
     %end
-
 end
 
 for source=1:4
@@ -2165,7 +2161,7 @@ for source=1:4
     set(eval(['handles.Ls',num2str(source),'am']),'String',num2str(S.amplitude{2}(source)));
     set(eval(['handles.Ls',num2str(source),'va']),'Value',eval(['S.Ls',num2str(source),'.va']));
 
-    %   if eval(['S.Ls',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
+    % if eval(['S.Ls',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
     for k=8:15
         if eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol==1'])
@@ -2183,7 +2179,7 @@ for source=1:4
         eval(['S.Ls',num2str(source),'.case.pol=2;']);
         eval(['S.Ls',num2str(source),'.case.perc=100;']);
     end
-    %   end
+    % end
 end
 
 %% model to handles: all GUI elements.
