@@ -120,9 +120,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         else
             multiplemode=0;
             [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
-
             elstruct(1).coords_mm=coords_mm;
-            elstruct(1).coords_mm=ea_resolvecoords(markers,options);
             elstruct(1).trajectory=trajectory;
             elstruct(1).name=options.patientname;
             elstruct(1).markers=markers;

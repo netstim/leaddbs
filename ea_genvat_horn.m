@@ -49,7 +49,6 @@ resultfig=getappdata(lgfigure,'resultfig');
 % the native coordinates are sometimes used (VTA is then calculated in native space and ported to template).
 [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 elstruct(1).coords_mm=coords_mm;
-elstruct(1).coords_mm=ea_resolvecoords(markers,options);
 elstruct(1).trajectory=trajectory;
 elstruct(1).name=options.patientname;
 elstruct(1).markers=markers;
