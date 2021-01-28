@@ -60,6 +60,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         'Stim_side': 0, # 0 - rh, 1 - lh
         'Neuron_model_array_prepared': 0,
         'stretch': 1.0,
+        'number_of_processors': 0,
     }
 
     #should add for 'Name_prepared_neuron_array' (you need only the name of the file, not the whole path)

@@ -106,7 +106,13 @@ def manage_folders(d):
 
 
 def check_state(d):
-
+    if d['number_of_processors']==0:
+        physical_cores=os.popen("""lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l""").read()[:-1]
+        d['number_of_processors']=int(physical_cores)     # this option is only active if Docker App is used (on macOS and Windows)
+        print("Number of cores available for Docker: ",d['number_of_processors'])      
+    
+    print("Number of processors used: ",d['number_of_processors'])
+    
     if d["IFFT_ready"]==1:
         d["voxel_arr_MRI"]=1
         d["Init_mesh_ready"]=1
