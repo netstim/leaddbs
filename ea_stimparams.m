@@ -1004,6 +1004,13 @@ function modelselect_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns modelselect contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from modelselect
 
+% Set model
+S = getappdata(handles.stimfig,'S');
+models = get(handles.modelselect,'String');
+S.model = models{get(handles.modelselect,'Value')};
+setappdata(handles.stimfig,'S',S);
+
+% Handle special case for call from LeadGroup
 groupmode=getappdata(handles.stimfig,'groupmode');
 if groupmode
     choice = questdlg('Changing VAT model will delete stimulation parameters of all patients! Continue?', ...
@@ -1031,24 +1038,16 @@ if groupmode
     end
 end
 
-options=getappdata(handles.stimfig,'options');
-S=getappdata(handles.stimfig,'S');
-models=get(handles.modelselect,'String');
-model=models{get(handles.modelselect,'Value')};
-S.model=model;
+% Refresh GUI
+options = getappdata(handles.stimfig,'options');
+ea_refreshguisp(handles,options);
 
-ea_savestimulation(S,options);
-setappdata(handles.stimfig,'S',S);
-ea_refreshguisp(handles,options);
-S=getappdata(handles.stimfig,'S');
-for a=1:4
-    S.active=repmat(a,1,2);
-    S=ea_redistribute_voltage(S,'k1');
-    S=ea_redistribute_voltage(S,'k9');
+% Save stimulation parameters
+if ~groupmode
+    S = getappdata(handles.stimfig,'S');
+    ea_savestimulation(S,options);
 end
-S.active=[1,1];
-setappdata(handles.stimfig,'S',S);
-ea_refreshguisp(handles,options);
+
 
 % --- Executes during object creation, after setting all properties.
 function modelselect_CreateFcn(hObject, eventdata, handles)
