@@ -74,7 +74,9 @@ end
 radius = cell(size(stimAmplitudes));
 for i=1:length(radius)
     radius{i} = calcr(stimAmplitudes{i});
-    display(['Radius (mm): ', num2str(radius{i})]);
+    disp(['Radius (mm): ', num2str(radius{i}), ' x 3']);
+    % Triple the radius since the model tends to underestimate activation
+    radius{i} = radius{i}*3;
 end
 
 % Load fiber connectome
