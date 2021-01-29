@@ -39,7 +39,7 @@ switch lower(whichPrefs)
 
         try % may not have write permissions
             fid = fopen([ea_gethome,'.ea_prefs.m'], 'w');
-            fprintf(fid, prefs);
+            fwrite(fid, prefs);
             fclose(fid);
         catch
             warning('Could not save preferences to user home directory. Please check permission.');
