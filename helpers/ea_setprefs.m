@@ -31,7 +31,12 @@ switch lower(whichPrefs)
         % Replace prefs in .ea_prefs.m
         prefs = fileread([ea_gethome,'.ea_prefs.m']);
         pattern = [strrep(['prefs.',key], '.', '\.'), ' *= *.*?;'];
-        prefs = regexprep(prefs, pattern, ['prefs.',key,' = ',value,';']);
+        if ~isempty(regexp(prefs, pattern,'once')) % Key exists
+            prefs = regexprep(prefs, pattern, ['prefs.',key,' = ',value,';']);
+        else % New key added
+            prefs = [prefs, sprintf(['\nprefs.',key,' = ',value,';\n'])];
+        end
+
         try % may not have write permissions
             fid = fopen([ea_gethome,'.ea_prefs.m'], 'w');
             fprintf(fid, prefs);
