@@ -145,7 +145,12 @@ prefs.d3.axon_nonactivated_color = [1 1 1];
 prefs.d3.axon_damaged_color = [0.5 0 0.5];
 
 %% Video export
-prefs.video.path=[-90,10;-110,10;-180,80;-250,10;-360,10;-450,10];
+prefs.video.path=[-90,10
+                  -110,10
+                  -180,80
+                  -250,10
+                  -360,10
+                  -450,10];
 prefs.video.opts.FrameRate=24;
 prefs.video.opts.Duration=30;
 prefs.video.opts.Periodic=true;
@@ -169,7 +174,7 @@ prefs.mer.tract_info = struct(...
                 [0.5,0.5,0],...     Olive
                 [0,0.5,0],...       Green
                 [0.5,0,0.5],...     Purple
-                [0,0.5,0.5]},...    Teal; 0,0,0.5 Navy
+                [0,0.5,0.5]},...    Teal
     'position', {  [ 0,  0, 0],...
                     [ 0,  1, 0],...
                     [ 0, -1, 0],...
