@@ -13,6 +13,18 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     return
 end
 
+% Check OSS-DBS installation, set env
+if ~options.prefs.machine.vatsettings.oss_dbs.installed
+    ea_checkOSSDBSInstall;
+else
+    pythonPath = options.prefs.env.pythonPath;
+    if isunix
+        setenv('PATH', [pythonPath, ':', binPath]);
+    else
+        setenv('PATH', [pythonPath, ';', binPath]);
+    end
+end
+
 % Double check if lead is supported by OSS-DBS.
 if ~ismember(options.elmodel, ea_ossdbs_elmodel)
     ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], 'Error', dbstack)
@@ -277,49 +289,6 @@ save(parameterFile, 'settings', '-v7.3');
 currentPath = pwd;
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
-
-% Check python3, h5py and PyQt5 installations
-if isunix
-    binPath = getenv('PATH'); % Backup current PATH
-
-    % Check if there's user defined python path
-    if isfield(options.prefs.env, 'pythonPath')
-        pythonPath = options.prefs.env.pythonPath;
-        setenv('PATH', [pythonPath, ':', binPath]);
-    end
-
-    % Check python3
-    [status, pythonPath] = system('which python3');
-    if status
-        ea_error('python3 not found!', 'Error', dbstack, 0);
-    else
-        pythonPath = strip(pythonPath);
-        fprintf('python3 detected: %s\n', pythonPath);
-        fprintf(['To use a different python (for example the one from Conda), please\n', ...
-                 'set prefs.env.pythonPath (the folder contains python) ', ...
-                 'in your preferences file.\n']);
-    end
-
-    % Check h5py
-    [status, h5pyPath] = system('python3 -c "import h5py;print(h5py.__file__)"');
-    if status
-        ea_error('h5py not found! Please run ''pip3 install h5py'' in your terminal.', 'Error', dbstack, 0);
-    else
-        fprintf('h5py detected: %s\n', fileparts(h5pyPath));
-    end
-
-    % Check PyQt5
-    [status, pyqt5Path] = system('python3 -c "import PyQt5;print(PyQt5.__file__)"');
-    if status
-        ea_error('PyQt5 not found! Please run ''pip3 install PyQt5'' in your terminal.', 'Error', dbstack, 0);
-    else
-        fprintf('PyQt5 detected: %s\n', fileparts(pyqt5Path));
-    end
-
-    % All passed, set PATH
-    fprintf('set PATH environment variable.\n\n');
-    setenv('PATH', [fileparts(pythonPath), ':', binPath]);
-end
 
 % Delete flag files before running
 ea_delete([outputPath, filesep, 'success_rh.txt']);

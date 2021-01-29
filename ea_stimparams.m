@@ -3456,25 +3456,6 @@ switch model
     case 'Fastfield (Baniasadi 2020)'
         ea_vatsettings_fastfield;
     case 'OSS-DBS (Butenko 2020)'
-        prefs = ea_prefs;
-        if ~prefs.machine.vatsettings.oss_dbs.installed
-            answer = questdlg('Please make sure you have already installed OSS-DBS properly!',...
-                'OSS-DBS seems not installed...',...
-                'Yes, it''s already installed.',...
-                'Okay, show me how to install it.',...
-                'Okay, show me how to install it.');
-            switch answer
-                case 'Yes, it''s already installed.'
-                    vatsettings = prefs.machine.vatsettings;
-                    vatsettings.oss_dbs.installed = 1;
-                    ea_setprefs('vatsettings', vatsettings);
-                case 'Okay, show me how to install it.'
-                    web('https://github.com/SFB-ELAINE/OSS-DBS', '-browser');
-                    return;
-                otherwise
-                    return
-            end
-        end
         ea_vatsettings_butenko;
 end
 
