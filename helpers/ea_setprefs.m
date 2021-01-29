@@ -12,7 +12,7 @@ switch lower(whichPrefs)
     case 'machine'
         prefs = ea_prefs;
         machine = prefs.machine;
-        eval(['machine.', itemname, ' = value;']);
+        eval(['machine.', key, ' = value;']);
         try % may not have write permissions
             save([ea_gethome,'.ea_prefs.mat'],'machine');
         catch
