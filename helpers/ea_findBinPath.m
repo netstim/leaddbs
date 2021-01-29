@@ -9,8 +9,9 @@ else
 end
 
 [status, binPath] = system([cmd, ' ', bin]);
-if status
-    binPath = ''; % Not found
-else
-    binPath = fileparts(strip(binPath)); % Found, return the path
+if status % Not found
+    binPath = '';
+else % Found, return the path
+    binPath = splitlines(strip(binPath));
+    binPath = fileparts(binPath{1}); % Only return first entry
 end
