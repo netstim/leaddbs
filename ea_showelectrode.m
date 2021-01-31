@@ -240,7 +240,7 @@ for side=options.sides
         for cntct=1:elspec.numel-shifthalfup
             if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})))
                 if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
-                    useedgecolor=[0.8,0.5,0.5];
+                    useedgecolor=[0.9,0.9,0.7];
                     ms=10;
                 elseif options.d3.hlactivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})) % make inactive grey and smaller contact without transparency
                     useedgecolor='none';
@@ -281,13 +281,16 @@ for side=options.sides
                 if ~any(isnan(usefacecolor))
                     set(0,'CurrentFigure',resultfig);
                     if ~shifthalfup
-                        elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        %                         elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        elrender(pcnt)=ea_plotsphere(coords_mm{side}(cntct,:), ms/10, usefacecolor, useedgecolor);
                         pcnt=pcnt+1;
                     else
-                        elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
-                            mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
-                            mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
-                            'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        %                         elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
+                        %                             mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
+                        %                             mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
+                        %                             'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        %
+                        elrender(pcnt)=ea_plotsphere(mean([coords_mm{side}(cntct,:);coords_mm{side}(cntct+1,:)],1), ms/10, usefacecolor, useedgecolor);
                         drawnow
                         pcnt=pcnt+1;
                     end
