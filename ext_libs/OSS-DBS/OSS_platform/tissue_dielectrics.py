@@ -6,6 +6,10 @@ Copyright 2017
 This file is part of FanPy
 """
 
+"""
+Adjusted and included to OSS-DBS (Butenko et al 2020)
+
+"""
 import numpy as np
 from enum import Enum
 
@@ -19,6 +23,12 @@ class DielectricProperties:
     Gabriel S, Lau R W, Gabriel C, 1996, The dielectric properties of
     biological tissue: III. Parametric models for the dielectric spectrum of
     tissues, Phys Med Biol, vol. 41, pp. 2271-2293    
+
+
+    Static conductivity self.sig is adjusted using 
+    Koessler L et al. (2017). In-vivo measurements of human brain tissue conductivity
+    using focal electrical current injection through intracerebral multicontact 
+    electrodes. Hum. Brain Mapp. 38, 974–986. doi: 10.1002/hbm.23431
     
     Parameters
     ----------
@@ -71,6 +81,13 @@ class DielectricProperties:
             PERMITTIVITY: float or numpy.array
                 relative permittivity values
     
+
+         MODIFIED: alpha dispersion is disabled according to CC3 model from Zimmermann and van Rienen "Ambiguity in the interpretation of the low-frequency dielectric properties of biological tissues", Preprint submitted to Bioelectrochemistry.
+
+         Main point: Electrical double layer might have been mistaken for alpha dispersion.
+
+         Static conductivity is adjusted to match means of CC3 (static cond. as in HN model) and Koessler2017 at 50 kHz
+
         """
         isVector = isinstance(frequencies, (list, tuple, np.ndarray))
         freq = frequencies
@@ -84,6 +101,8 @@ class DielectricProperties:
         # order of the parameter vectors is flipped to be sorted from
         # low frequency pole to high frequency pole
         for i in range(3, (4-self.poles)-1, -1):
+            if i==3:
+                continue   #skip alpha dispersion
             su = su + \
                 self.params.de[i]/(1 +
                                    (2j*np.pi*freq*self.params.t[i]) **
@@ -141,14 +160,15 @@ class ColeColeParams:
         if tissue == 3:
             self.name = 'Brain (Grey Matter)'
             self.einf = 4.000
-            self.sig = 0.020
+            self.sig = 0.1675  #scaled to match the mean of adjusted Gabriel1996 (no alpha dispersion) and Koessler2017 at 50 kHz (0.2 S/m)  
             self.de = np.array([45.00, 400, 2.00e+5, 4.50e+7])
             self.a = np.array([0.100, 0.150, 0.220, 0.000])
             self.t = np.array([7.958e-12, 15.915e-9, 106.103e-6, 5.305e-3])
         elif tissue == 2:
             self.name = 'Brain (White Matter)'
             self.einf = 4.000
-            self.sig = 0.020
+            self.sig = 0.1195 #scaled to match the mean of adjusted Gabriel1996 (no alpha dispersion) and Koessler2017 at 50 kHz (0.13157 S/m)  
+            #self.sig = 0.020
             self.de = np.array([32.00, 100, 4.00e+4, 3.50e+7])
             self.a = np.array([0.100, 0.100, 0.300, 0.020])
             self.t = np.array([7.958e-12, 7.958e-9, 53.052e-6, 7.958e-3])
