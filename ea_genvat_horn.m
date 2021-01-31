@@ -103,6 +103,7 @@ if hmchanged
                 fv.vertices=fv.vertices(1:3,:)';
             case 'mask'
                 fv=ea_fem_getmask(options);
+                %figure, patch('faces',fv.faces,'vertices',fv.vertices)
         end
     else
         fv=[];
@@ -123,6 +124,9 @@ if hmchanged
             % can sometimes happen. We will introduce a small jitter to
             % the electrode and try again.
             Ymod=Y+(randn(4)/700); % Very small jitter on transformation which will be used on electrode. - should not exceed ~700. Use vizz below to see effects.
+            if attempt>2
+                fv=ea_fem_getmask(options,1); % try no surface smoothing for atlas fv - in rare cases this has led to conflicts for tetgen.
+            end
             if vizz
                 h=figure;
                 telfv=elfv;
