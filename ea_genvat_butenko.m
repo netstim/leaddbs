@@ -17,6 +17,7 @@ end
 if ~options.prefs.machine.vatsettings.oss_dbs.installed
     ea_checkOSSDBSInstall;
 else
+    binPath = getenv('PATH'); % Current PATH
     pythonPath = options.prefs.env.pythonPath;
     if isunix
         setenv('PATH', [pythonPath, ':', binPath]);
