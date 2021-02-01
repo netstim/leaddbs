@@ -16,7 +16,7 @@ if isfile([axonActivationFolder, filesep, 'axonActivation_right.mat'])
 end
 
 % Load pathway lookup table
-if ~exist(pathwayTable, 'var')
+if ~exist('pathwayTable', 'var')
     pathwayTable = [ea_getconnectomebase, 'dMRI', filesep, 'McIntyre', filesep, 'pathway.mat'];
 end
 load(pathwayTable, 'pathway')
