@@ -1,8 +1,7 @@
 function ea_checkOSSDBSInstall
 % Check if OSS-DBS dependencies have been properly configured
 
-% Check python3, h5py and PyQt5 installations
-binPath = getenv('PATH'); % Backup current PATH
+binPath = getenv('PATH'); % Current PATH
 
 % Check docker installation
 dockerPath = ea_findBinPath('docker');
