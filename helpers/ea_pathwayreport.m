@@ -19,24 +19,32 @@ end
 if ~exist('pathwayTable', 'var')
     pathwayTable = [ea_getconnectomebase, 'dMRI', filesep, 'McIntyre', filesep, 'pathway.mat'];
 end
-load(pathwayTable, 'pathway')
+load(pathwayTable, 'pathway');
+
+totalAxon = length(unique(axons(:,4)));
 
 % Show activated pathways
 axonIdx = unique(axons(axons(:,5)==1,4));
-activated = unique(pathway(axonIdx));
-fprintf('\nActivated pathways:\n');
-fprintf('%s\n',activated{:});
+[activated, ~, ic] = unique(pathway(axonIdx));
+axonCount = accumarray(ic,1);
+activatedTable = table(string(activated),axonCount, 'VariableNames', ...
+    {'Activated Pathways',['Axon Counts (',num2str(length(axonIdx)),'/',num2str(totalAxon),')']});
+disp(activatedTable);
 
 % Show non-activated pathways
 axonIdx = unique(axons(axons(:,5)==0,4));
-nonactivated = unique(pathway(axonIdx));
-fprintf('\nNon-activated pathways:\n');
-fprintf('%s\n',nonactivated{:});
+[nonactivated, ~, ic] = unique(pathway(axonIdx));
+axonCount = accumarray(ic,1);
+nonactivatedTable = table(string(nonactivated),axonCount, 'VariableNames', ...
+    {'Non-activated Pathways',['Axon Counts (',num2str(length(axonIdx)),'/',num2str(totalAxon),')']});
+disp(nonactivatedTable);
 
 % Show damaged pathways
 axonIdx = unique(axons(axons(:,5)==-1,4));
-damaged = unique(pathway(axonIdx));
-fprintf('\nDamaged pathways:\n');
-fprintf('%s\n',damaged{:});
+[damaged, ~, ic] = unique(pathway(axonIdx));
+axonCount = accumarray(ic,1);
+damagedTable = table(string(damaged),axonCount, 'VariableNames', ...
+    {'Damaged Pathways',['Axon Counts (',num2str(length(axonIdx)),'/',num2str(totalAxon),')']});
+disp(damagedTable);
 
 fprintf('\n');
