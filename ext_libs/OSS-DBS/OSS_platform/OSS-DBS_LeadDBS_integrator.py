@@ -59,6 +59,8 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         'VTA_from_divE': 0,
         'Stim_side': 0, # 0 - rh, 1 - lh
         'Neuron_model_array_prepared': 0,
+        'stretch': 1.0,
+        'number_of_processors': 0,
     }
 
     #should add for 'Name_prepared_neuron_array' (you need only the name of the file, not the whole path)
@@ -68,11 +70,8 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     #also we need to choose whether the IFFT will be on neurons or VTA array (currently controlled by 'Full_Field_IFFT')
     # and if VTA, then E-field threshold???
 
-    #file = tables.open_file('oss-dbs_parameters.mat')     #hardwired
-    #file = tables.open_file('oss-dbs_parameters.mat')     #hardwired
     print("Input from ",settings_location)
     file = h5py.File(str(settings_location), 'r')
-    #file = h5py.File('oss-dbs_parameters.mat')
 
     #if file.root.settings.current_control[0][0]!=file.root.settings.current_control[0][1]:
     if all(~np.isnan(file['settings']['current_control'][0])):
@@ -80,19 +79,25 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
             print("Simultaneous use of VC and CC is not allowed for safety reasons!")
             raise SystemExit
 
+    #IMPORTANT: it is actually not native but scrf!
+    head_native=file['settings']['headNative'][:,index_side]
+    y=file['settings']['yMarkerNative'][:,index_side] - head_native
+    y_postop = y/np.linalg.norm(y)
+    phi = np.arctan2(-y_postop[0],y_postop[1])
+    input_dict["Rotation_Z"]=phi*180.0/np.pi
+
     input_dict['Stim_side']=index_side
     #Phi_vector=file.root.settings.Phi_vector[:,index_side]
     Phi_vector=file['settings']['Phi_vector'][:,index_side]
-    Phi_vector=list(Phi_vector)
+    if file['settings']['current_control'][0][0]==1:
+        input_dict['current_control']=1
+        Phi_vector=Phi_vector*0.001     # because Lead-DBS uses mA as the input
 
+    Phi_vector=list(Phi_vector)
     import math
     for i in range(len(Phi_vector)):
         if math.isnan(Phi_vector[i]):
             Phi_vector[i]=None
-
-    if file['settings']['current_control'][0][0]==1:
-        input_dict['current_control']=1
-        Phi_vector=Phi_vector*0.001     # because Lead-DBS uses mA as the input
 
     # print(type(Phi_vector))
     if all(v is None for v in Phi_vector):
@@ -165,28 +170,41 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 
     if Electrode_type == 'Medtronic 3389':
         input_dict['Electrode_type']="Medtronic3389"#1
+        normal_array_length=6.0 # center of the first to the center of the last
     elif Electrode_type == 'Medtronic 3387':
+        normal_array_length=9.0
         input_dict['Electrode_type']="Medtronic3387"#1
     elif Electrode_type == 'Medtronic 3391':
         input_dict['Electrode_type']="Medtronic3391"#1
+        normal_array_length=21.0
     elif Electrode_type == 'St. Jude Directed 6172 (short)' or Electrode_type == 'St. Jude Directed 6180':  #just different marker colors
         input_dict['Electrode_type']="St_Jude6180"#1
+        normal_array_length=6.0
     elif Electrode_type == 'St. Jude Directed 6173 (long)':
+        normal_array_length=9.0
         input_dict['Electrode_type']="St_Jude6173"#1
     elif Electrode_type == 'St. Jude ActiveTip (6142-6145)':    # just different tail lenghts, but it does not matter here
         input_dict['Electrode_type']="St_Jude6142"
+        normal_array_length=9.75
     elif Electrode_type == 'St. Jude ActiveTip (6146-6149)':    # just different tail lenghts, but it does not matter here
         input_dict['Electrode_type']="St_Jude6148"     #1
+        normal_array_length=6.75
     elif Electrode_type == 'Boston Scientific Vercise':
         input_dict['Electrode_type']="Boston_Scientific_Vercise" #1
+        normal_array_length=6.0   # still the 4th level. BEWARE: Stretch is defined between the 1st and the 4th, but applied between 1st and 8th!!!
+        normal_array_length=14.0 
     elif Electrode_type == 'Boston Scientific Vercise Directed':
         input_dict['Electrode_type']="Boston_Scientific_Vercise_Cartesia" #1
+        normal_array_length=6.0
     elif Electrode_type == 'PINS Medical L301':
         input_dict['Electrode_type']="PINS_L301"
+        normal_array_length=6.0
     elif Electrode_type == 'PINS Medical L302':
         input_dict['Electrode_type']="PINS_L302"
+        normal_array_length=9.0
     elif Electrode_type == 'PINS Medical L303':
         input_dict['Electrode_type']="PINS_L303"
+        normal_array_length=18.0
     else:
         print("The electrode is not yet implemented, but we will be happy to add it. Contact us via konstantin.butenko@uni-rostock.de")
 
@@ -196,10 +214,18 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     input_dict['Implantation_coordinate_X'],input_dict['Implantation_coordinate_Y'],input_dict['Implantation_coordinate_Z'] = file['settings']['Implantation_coordinate'][:,index_side]
     input_dict['Second_coordinate_X'],input_dict['Second_coordinate_Y'],input_dict['Second_coordinate_Z'] = file['settings']['Second_coordinate'][:,index_side]
 
+    el_array_length=np.sqrt((input_dict['Implantation_coordinate_X']-input_dict['Second_coordinate_X'])**2+(input_dict['Implantation_coordinate_Y']-input_dict['Second_coordinate_Y'])**2+(input_dict['Implantation_coordinate_Z']-input_dict['Second_coordinate_Z'])**2)
+    stretch=el_array_length/normal_array_length
+    
+    if abs(stretch-1.0)<0.01:   #if 1% tolerance
+        input_dict["stretch"]=1.0
+    else:
+        input_dict["stretch"]=stretch
+
     #input_dict['Rotation_Z']=file.root.settings.Rotation_Z[0][0]
     #input_dict['Activation_threshold_VTA']=file.root.settings.Activation_threshold_VTA[0][0]
 
-    input_dict['Rotation_Z']=file['settings']['Rotation_Z'][0][0] # this is not implemented, we need to extract rotation angles from markers
+    #input_dict['Rotation_Z']=file['settings']['Rotation_Z'][0][0] # this is not implemented, we need to extract rotation angles from markers
     input_dict['Activation_threshold_VTA']=file['settings']['Activation_threshold_VTA'][0][0] #threshold is the same for both hemispheres
     input_dict['external_grounding']=bool(file['settings']['Case_grounding'][:,index_side][0])
     input_dict['Neuron_model_array_prepared']=int(file['settings']['calcAxonActivation'][0][0])    # external model (e.g. from fiber tractograpy)

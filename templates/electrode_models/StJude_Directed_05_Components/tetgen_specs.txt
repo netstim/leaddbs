@@ -1,1 +1,0 @@
->tetgen -pq -aA -g final.smesh

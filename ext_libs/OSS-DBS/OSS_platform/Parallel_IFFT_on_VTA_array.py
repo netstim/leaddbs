@@ -75,7 +75,7 @@ def ifft_on_VTA_array(Xs_signal_normalized,num_freqs,N_freq_octv,FR_vec_sign_oct
          plt.xlim(0.000,T*5)
          plt.grid(True)
          plt.xlabel('t, sec')
-         plt.ylabel('Potential, V')
+         plt.ylabel('|E|, V/mm')
          plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
          plt.savefig('/opt/Patient/Images/Signal_convoluted_1st_point.png', format='png', dpi=500)
 

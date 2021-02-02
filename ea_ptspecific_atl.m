@@ -9,12 +9,17 @@ end
 troot=[options.earoot,'templates',filesep];
 aroot=[ea_space(options,'atlases'),options.atlasset,filesep];
 proot=[options.root,options.patientname,filesep];
+
 if ~exist(ea_niigz([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask']),'file') % check rebuild needed
     switch options.prefs.normalize.inverse.warp
         case 'tpm'
             generate_local_tpm(troot,aroot,proot,0,options)
         case 'inverse'
             ea_warp_atlas_to_native(troot,aroot,proot,0,options)
+            load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']); % generates atlases variable
+            options.atl.can=0;
+            options.atl.ptnative=1;
+            ea_genatlastable(atlases,[proot,'atlases',filesep],options);
     end
 end
 
@@ -29,12 +34,13 @@ end
 if ~exist([proot,'atlases'], 'dir')
     mkdir([proot,'atlases']);
 end
+
 copyfile(aroot, [proot,'atlases',filesep,options.atlasset]);
 p=load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
 p.atlases.rebuild=1;
 save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'-struct','p');
-ea_delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii']);
-ea_delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii.gz']);
+
+ea_delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii*']);
 
 if ismember(options.prefs.dev.profile,{'se'})
     interp=0;
@@ -58,7 +64,6 @@ for atlas=1:length(atlases.names)
             patlf=[proot,'atlases',filesep,options.atlasset,filesep,'midline',filesep];
     end
 
-
     if atlases.types(atlas)==3
         ea_apply_normalization_tofile(options,{ea_niigz([pratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
         ea_apply_normalization_tofile(options,{ea_niigz([platlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
@@ -70,13 +75,6 @@ for atlas=1:length(atlases.names)
         ea_crop_nii(ea_niigz([patlf,atlases.names{atlas}]));
     end
 end
-
-load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
-options.atl.can=0;
-options.atl.ptnative=1;
-atlases=ea_genatlastable(atlases,[options.root,options.patientname,filesep,'atlases',filesep],options,'');
-save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
-
 
 
 function generate_local_tpm(troot,aroot,proot,force,options)

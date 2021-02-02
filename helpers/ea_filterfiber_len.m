@@ -22,7 +22,9 @@ sumlength = @(x) sum(sqrt(sum(diff(x).^2,2)));
 
 disp('Removing short fibers...');
 for i=1:length(ftr)
-    if ~isempty(ftr{i})
+    if isempty(ftr{i}) || isempty(ftr{i}.idx)
+        disp('No fibers found, skipping...');
+    else
         % Prepare stard and end index of each fiber
         endIndex = cumsum(ftr{i}.idx);
         startIndex = [1;endIndex+1];

@@ -52,7 +52,7 @@ classdef MERState < handle
             obj.Config.vis.markersize = options.prefs.mer.markersize;
             obj.Config.uipatdirs = options.uipatdirs;
             obj.Config.native = options.native;
-            obj.Config.loadrecoforviz = options.loadrecoforviz;
+            obj.Config.loadnativereco = options.loadnativereco;
             obj.Config.root = options.root;
             obj.Config.patientname = options.patientname;
             obj.Config.sides = options.sides;

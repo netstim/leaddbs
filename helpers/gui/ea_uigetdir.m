@@ -1,4 +1,4 @@
-function [pathname] = ea_uigetdir(start_path, dialog_title)
+function pathname = ea_uigetdir(start_path, dialog_title)
 % Pick a directory with the Java widgets instead of uigetdir
 
 import javax.swing.JFileChooser;
@@ -23,6 +23,9 @@ if status == JFileChooser.APPROVE_OPTION
     pathname{size(jFile, 1)}=[];
     for i=1:size(jFile, 1)
         pathname{i} = char(jFile(i).getAbsolutePath);
+        if isfile(pathname{i})
+            pathname{i} = fileparts(pathname{i});
+        end
     end
 
 elseif status == JFileChooser.CANCEL_OPTION

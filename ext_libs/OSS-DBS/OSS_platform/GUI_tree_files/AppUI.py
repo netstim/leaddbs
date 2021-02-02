@@ -258,15 +258,14 @@ class MainWindow(Functionalities):
                 print("Error occurred when simulating rh, check the terminal")
             else:
                 print("Simulation is completed")
-                self.closeWindow()
         else:
             if not os.path.exists(self.path_to_patient+'/success_lh.txt'):
                 subprocess.call(['touch', self.path_to_patient+'/fail_lh.txt'])
                 print("Error occurred when simulating lh, check the terminal")
             else:
                 print("Simulation is completed")
-                self.closeWindow()
 
+        self.closeWindow()
         # the commands below work only with a properly installed Paraview (supporting from paraview.simple import *)
 
         #print(self.path_to_patient)
@@ -439,6 +438,7 @@ class MainWindow(Functionalities):
         #     dict_mesh_refinement
         output_dict = Dictionary(self).output_dict()
         output_dict['Stim_side'] = self.index_side
+        output_dict['stretch'] = self.stretch
 
         # # concatenate various dictionaries
         # output_dict.update(dict_cpe_active.d)
@@ -540,6 +540,16 @@ class MainWindow(Functionalities):
                 self.set_current_file_name(filename)
 
     def set_load_state(self, d):
+        self.stretch=d['stretch']
+
+        # default choice of processors
+        if sys.platform=='linux' or sys.platform=='Linux':
+            physical_cores=os.popen("""lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l""").read()[:-1]
+            d['number_of_processors']=int(int(physical_cores)*0.5)     # leave some
+            print("Number of cores drawn by default: ",d['number_of_processors'])
+        else:
+            print("All cores available for Docker will be drawn")
+
         self.ui.checkBox_Voxel_orr_MRI.setCheckState(self.anti_corrector(d['voxel_arr_MRI']))
         self.ui.checkBox_Voxel_orr_DTI.setCheckState(----self.anti_corrector(d['voxel_arr_DTI']))
         self.ui.checkBox_Init_Neuron_Model_Ready.setCheckState(self.anti_corrector(d['Init_neuron_model_ready']))

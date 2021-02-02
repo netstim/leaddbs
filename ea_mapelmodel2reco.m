@@ -1,7 +1,7 @@
 function [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig)
 err=0;
 
-load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'.mat'])
+load([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname,'.mat'],'electrode')
 A = [electrode.head_position,1;
      electrode.tail_position,1
      electrode.x_position,1
@@ -44,14 +44,29 @@ B = [elstruct.markers(side).head,1;
 setappdata(resultfig,'elstruct',elstruct);
 setappdata(resultfig,'elspec',elspec);
 
-X=mldivide(A,B);
+X = mldivide(A,B);
+
+% Check precision using native coords instead of scrf coords
+if options.native && exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
+    load([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'], 'mat');
+    Btest = B/mat';
+    Xtest = mldivide(A,Btest);
+elseif options.native && exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file') % legacy
+    mat = ea_getscrfmat([options.root,options.patientname,filesep]);
+    save([directory,'scrf',filesep,'scrf_converted.mat'],'mat');
+    Btest = B/mat';
+    Xtest = mldivide(A,Btest);
+else
+    Btest = B;
+    Xtest = X;
+end
 
 % perform tests if A has been transformed to B correctly.
 % First we will make sure that the projection from A to B (Ab)
 % results in something very similar to B.
-Ab=A*X;
+Ab=A*Xtest;
 vizprec=0.01;
-if sum(abs(Ab(:)-B(:)))>vizprec % visualization precision in sums of millimeters.
+if sum(abs(Ab(:)-Btest(:)))>vizprec % visualization precision in sums of millimeters.
     err=1;
 end
 

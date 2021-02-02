@@ -43,10 +43,10 @@ for nativemni=nm % switch between native and mni space atlases.
     ht=getappdata(resultfig,'atlht');
 
     if ~exist([adir,'atlas_index.mat'],'file')
-        atlases=ea_genatlastable([],ea_space(options,'atlases'),options,mifix,resultfig);
+        atlases = ea_genatlastable([],adir,options,mifix,resultfig);
     else
-        atlases=ea_loadatlas(options.atlasset,resultfig,ht);
-        atlases=ea_genatlastable(atlases,ea_space(options,'atlases'),options,mifix);
+        atlases = ea_loadatlas([adir,'atlas_index.mat'],resultfig,ht);
+        atlases = ea_genatlastable(atlases,adir,options,mifix);
     end
     
     isdiscfibers = cellfun(@(x) ischar(x) && strcmp(x, 'discfibers'), atlases.pixdim);

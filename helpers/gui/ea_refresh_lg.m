@@ -58,9 +58,9 @@ if ~isfield(M.ui,'labelpopup')
     M.ui.labelpopup = parcellations{get(handles.labelpopup,'Value')};
 else
     if isnumeric(M.ui.labelpopup)
-        try
+        if M.ui.labelpopup>0 && M.ui.labelpopup<=length(parcellations)
             set(handles.labelpopup,'Value',M.ui.labelpopup);
-        catch % Set to default parcellation in case index out of range
+        else % Set to default parcellation in case index out of range
             defaultParc = options.prefs.lg.defaultParcellation;
             set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
         end
@@ -145,10 +145,10 @@ if ~isfield(M.ui,'atlassetpopup')
     M.ui.atlassetpopup = atlasset{get(handles.atlassetpopup,'Value')};
 else
     if isnumeric(M.ui.atlassetpopup) % Compatible with old lead group file
-        try
+        if M.ui.atlassetpopup>0 && M.ui.atlassetpopup<=length(atlasset)
             set(handles.atlassetpopup,'Value',M.ui.atlassetpopup);
-        catch % Set to default atlas in case index out of range
-            defaultAtlas = options.prefs.atlases.default;
+        else % Set to default atlas in case index out of range
+            defaultAtlas = options.prefs.machine.defaultatlas;
             set(handles.atlassetpopup,'Value',find(ismember(atlasset, defaultAtlas)));
         end
     else % New lead group file in which atlassetpopup is the name of the atlas
@@ -156,7 +156,7 @@ else
         if ~isempty(atlasInd)
             set(handles.atlassetpopup,'Value',atlasInd);
         else
-            defaultAtlas = options.prefs.atlases.default;
+            defaultAtlas = options.prefs.machine.defaultatlas;
             set(handles.atlassetpopup,'Value',find(ismember(atlasset, defaultAtlas)));
         end
     end

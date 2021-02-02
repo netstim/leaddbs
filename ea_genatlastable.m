@@ -108,7 +108,7 @@ if checkrebuild(atlases,options,root,mifix)
     if ~isfield(atlases,'colormap')
         atlases.colormap=ea_color_wes('all',length(atlases.names));
     end
-    maxcolor=length(atlases.colormap);
+    maxcolor = size(atlases.colormap,1);
 
     for nativemni=nm % switch between native and mni space atlases.
         switch nativemni
@@ -259,7 +259,7 @@ if checkrebuild(atlases,options,root,mifix)
         try atlases=rmfield(atlases,'colorc'); end % redundancy cleanup
         try atlases=rmfield(atlases,'normals'); end % redundancy cleanup
         
-        ea_saveatlas(options.atlasset,atlases);
+        ea_saveatlas(root,options.atlasset,atlases);
         
     end
 end

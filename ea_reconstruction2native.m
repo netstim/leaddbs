@@ -1,7 +1,7 @@
 function ea_reconstruction2native(options)
 
 directory=[options.root,options.patientname,filesep];
-load([directory,filesep,'ea_reconstruction.mat']);
+load([directory,filesep,'ea_reconstruction.mat'],'reco');
 
 if ~exist('reco','var') % old format
     reco.mni.coords_mm=coords_mm;
@@ -58,7 +58,6 @@ for side=options.sides
     reco.(usenative).markers(side).x = reco.(usenative).markers(side).head+xunitv*(options.elspec.lead_diameter/2);
     reco.(usenative).markers(side).y = reco.(usenative).markers(side).head+yunitv*(options.elspec.lead_diameter/2);
 end
-
 
 % apply scrf to native matrix if available
 if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')

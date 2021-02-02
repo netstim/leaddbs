@@ -46,9 +46,9 @@ if ~isfield(M.ui,'labelpopup')
     M.ui.labelpopup = parcellations{get(handles.labelpopup,'Value')};
 else
     if isnumeric(M.ui.labelpopup)
-        try
+        if M.ui.labelpopup>0 && M.ui.labelpopup<=length(parcellations)
             set(handles.labelpopup,'Value',M.ui.labelpopup);
-        catch % Set to default parcellation in case index out of range
+        else % Set to default parcellation in case index out of range
             defaultParc = options.prefs.lg.defaultParcellation;
             set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
         end

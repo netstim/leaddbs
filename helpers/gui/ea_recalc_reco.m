@@ -10,7 +10,8 @@ options.native=1;
 
 for pt=1:length(uipatdirs)
     options=ea_getptopts(uipatdirs{pt},options);
-    options.native=1; % crucial to repeat here.
+    options.loadnativereco = 1; % Load native reco intead of scrf
+    options.native = 1;
     options.hybridsave=1;
     disp(['Re-propagating reconstruction from native (postop) -> native (preop) -> template space: ', options.patientname]);
     [~,~,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);

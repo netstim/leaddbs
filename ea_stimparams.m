@@ -130,7 +130,7 @@ if strcmp(options.leadprod, 'group')
     isdirected=0; % for now allow everything in lead group
 else
     e=load(fullfile(ea_getearoot,'templates','electrode_models',options.elspec.matfname));
-    directed_funs={'ea_genvat_horn','ea_genvat_fastfield'};
+    directed_funs={'ea_genvat_horn','ea_genvat_fastfield','ea_genvat_butenko'};
     if isfield(e.electrode,'isdirected')
         isdirected=e.electrode.isdirected;
     else
@@ -1004,9 +1004,15 @@ function modelselect_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns modelselect contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from modelselect
 
+% Set model
+S = getappdata(handles.stimfig,'S');
+models = get(handles.modelselect,'String');
+S.model = models{get(handles.modelselect,'Value')};
+setappdata(handles.stimfig,'S',S);
+
+% Handle special case for call from LeadGroup
 groupmode=getappdata(handles.stimfig,'groupmode');
 if groupmode
-
     choice = questdlg('Changing VAT model will delete stimulation parameters of all patients! Continue?', ...
         'Warning', ...
         'Yes, sure','No','No');
@@ -1015,38 +1021,33 @@ if groupmode
 
     switch choice
         case 'No'
-            ochoice=ismember(get(hObject,'String'),gSv.vatmodel);
-            setappdata(hObject,'Value',ochoice);
+            % Keep current model
+            currentModelInd = find(ismember(get(hObject,'String'),gSv.vatmodel),1);
+            set(hObject,'Value',currentModelInd);
             return
         case 'Yes, sure'
             setappdata(handles.stimfig,'gS',[]);
 
-            nms=get(hObject,'String');
-            nms=nms{get(hObject,'Value')};
-            gSv.vatmodel=nms;
-
+            % Set new model
+            models = get(hObject,'String');
+            gSv.vatmodel = models{get(hObject,'Value')};
             setappdata(handles.stimfig,'gSv',gSv);
+
+            % Clear stimulation parameters
+            setappdata(handles.stimfig,'S',[]);
     end
 end
 
-options=getappdata(handles.stimfig,'options');
-S=getappdata(handles.stimfig,'S');
-models=get(handles.modelselect,'String');
-model=models{get(handles.modelselect,'Value')};
-S.model=model;
+% Refresh GUI
+options = getappdata(handles.stimfig,'options');
+ea_refreshguisp(handles,options);
 
-ea_savestimulation(S,options);
-setappdata(handles.stimfig,'S',S);
-ea_refreshguisp(handles,options);
-S=getappdata(handles.stimfig,'S');
-for a=1:4
-    S.active=repmat(a,1,2);
-    S=ea_redistribute_voltage(S,'k1');
-    S=ea_redistribute_voltage(S,'k9');
+% Save stimulation parameters
+if ~groupmode
+    S = getappdata(handles.stimfig,'S');
+    ea_savestimulation(S,options);
 end
-S.active=[1,1];
-setappdata(handles.stimfig,'S',S);
-ea_refreshguisp(handles,options);
+
 
 % --- Executes during object creation, after setting all properties.
 function modelselect_CreateFcn(hObject, eventdata, handles)
@@ -1983,8 +1984,8 @@ if groupmode
             actpt=1;
         end
 
-        %ensure active patient is non empty
-        %this can happen if you delete a patient, then add a new one, without clicking on the patient window
+        % Ensure active patient is non empty
+        % This can happen if you delete a patient, then add a new one, without clicking on the patient window
         if isempty(actpt)
             actpt=1;
         end
@@ -2019,6 +2020,7 @@ if groupmode
         end
         setappdata(handles.stimfig,'gSv',gSv);
     end
+
     % load gS - updated with each refresh:
     gS=getappdata(handles.stimfig,'gS');
     if isempty(grouploaded)
@@ -2035,12 +2037,12 @@ if groupmode
             % if gS is defined but group has just now been loaded
             try
                 if ~isempty(gS(actpt).Rs1) % current patient is defined -> set S to gS of this patient.
-                    S=gS(actpt);
+                    S = gS(actpt);
                 end
             end
         end
-        % now tell everyone that the figure has been opened for a while
-        % already:
+
+        % now tell everyone that the figure has been opened for a while already:
         setappdata(handles.stimfig,'grouploaded',1);
     end
 end
@@ -2085,8 +2087,7 @@ if nargin==3
                     S.(['Rs',num2str(Ractive)]).case.pol=2;
                     S=ea_redistribute_voltage(S,varargin{3});
                     for k=0:7
-
-                        if  S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+                        if S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
                             S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
                             S=ea_redistribute_voltage(S,['k',num2str(k)]);
                         end
@@ -2100,7 +2101,7 @@ if nargin==3
                     S.(['Ls',num2str(Lactive)]).case.pol=2;
                     S=ea_redistribute_voltage(S,varargin{3});
                     for k=8:15
-                        if  S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+                        if S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
                             S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
                             S=ea_redistribute_voltage(S,['k',num2str(k)]);
                         end
@@ -2119,7 +2120,6 @@ if nargin==3
                     S.([sidec,'s',num2str(S.active(side))]).case.pol=0;
                     S=ea_redistribute_voltage(S,[sidec,'case']);
                 end
-
         end
     else
         S=ea_redistribute_voltage(S,varargin{3});
@@ -2134,7 +2134,6 @@ for source=1:4
 
     set(eval(['handles.Rs',num2str(source),'am']),'String',num2str(S.amplitude{1}(source)));
     set(eval(['handles.Rs',num2str(source),'va']),'Value',eval(['S.Rs',num2str(source),'.va']));
-
 
     %if eval(['S.Rs',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
@@ -2156,7 +2155,6 @@ for source=1:4
         eval(['S.Rs',num2str(source),'.case.perc=100;']);
     end
     %end
-
 end
 
 for source=1:4
@@ -2165,7 +2163,7 @@ for source=1:4
     set(eval(['handles.Ls',num2str(source),'am']),'String',num2str(S.amplitude{2}(source)));
     set(eval(['handles.Ls',num2str(source),'va']),'Value',eval(['S.Ls',num2str(source),'.va']));
 
-    %   if eval(['S.Ls',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
+    % if eval(['S.Ls',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
     for k=8:15
         if eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol==1'])
@@ -2183,7 +2181,7 @@ for source=1:4
         eval(['S.Ls',num2str(source),'.case.pol=2;']);
         eval(['S.Ls',num2str(source),'.case.perc=100;']);
     end
-    %   end
+    % end
 end
 
 %% model to handles: all GUI elements.
@@ -3458,25 +3456,6 @@ switch model
     case 'Fastfield (Baniasadi 2020)'
         ea_vatsettings_fastfield;
     case 'OSS-DBS (Butenko 2020)'
-        prefs = ea_prefs;
-        if ~prefs.machine.vatsettings.oss_dbs.installed
-            answer = questdlg('Please make sure you have already installed OSS-DBS properly!',...
-                'OSS-DBS seems not installed...',...
-                'Yes, it''s already installed.',...
-                'Okay, show me how to install it.',...
-                'Okay, show me how to install it.');
-            switch answer
-                case 'Yes, it''s already installed.'
-                    vatsettings = prefs.machine.vatsettings;
-                    vatsettings.oss_dbs.installed = 1;
-                    ea_setprefs('vatsettings', vatsettings);
-                case 'Okay, show me how to install it.'
-                    web('https://github.com/SFB-ELAINE/OSS-DBS', '-browser');
-                    return;
-                otherwise
-                    return
-            end
-        end
         ea_vatsettings_butenko;
 end
 

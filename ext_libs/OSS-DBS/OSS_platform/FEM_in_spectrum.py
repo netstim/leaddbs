@@ -92,6 +92,8 @@ def get_solution_space_and_Dirichlet_BC(external_grounding,current_controlled,me
     if not(0.0 in Phi_vector):
         if external_grounding==True:
             ground_index=-1 #will be assigned later
+        elif current_controlled==0:
+            ground_index=0 # does not matter which one, we have only two active contacts in VC with CPE, or we don't use it at all
         else:
             print("No Dirichlet BC for grounding was found. It is mandatory for current-controlled mode")
             raise SystemExit
@@ -600,39 +602,41 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
     if VTA_IFFT==1:
         Sim_type='Astrom' #   fixed for now
         if Sim_type=='Astrom' or Sim_type=='Butson':
+            if Sim_setup.c_c==1:
             # Solve for rescaled
-            Dirichlet_bc_scaled=[]
-            for bc_i in range(len(Domains.Contacts)):          #CPE estimation is valid only for one activa and one ground contact configuration
-                if Sim_setup.Laplace_eq == 'EQS':
-                    if Domains.fi[bc_i]==0.0:
-                        Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
-                        Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
+                Dirichlet_bc_scaled=[]
+                for bc_i in range(len(Domains.Contacts)):          #CPE estimation is valid only for one activa and one ground contact configuration
+                    if Sim_setup.Laplace_eq == 'EQS':
+                        if Domains.fi[bc_i]==0.0:
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
+                        else:
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), np.imag((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
                     else:
-                        Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
-                        Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), np.imag((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
-                else:
-                    if Domains.fi[bc_i]==0.0:
-                        Dirichlet_bc_scaled.append(DirichletBC(V_space, 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
+                        if Domains.fi[bc_i]==0.0:
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space, 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
+                        else:
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space, np.real((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
+    
+                if Sim_setup.external_grounding==True:
+                    if Sim_setup.Laplace_eq == 'EQS':
+                        Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0),0.0,facets,1))
+                        Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1),0.0,facets,1))
                     else:
-                        Dirichlet_bc_scaled.append(DirichletBC(V_space, np.real((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
+                        Dirichlet_bc_scaled.append(DirichletBC(V_space,0.0,facets,1))
 
+                phi_sol_check=define_variational_form_and_solve(V_space,Dirichlet_bc_scaled,kappa,Sim_setup.Laplace_eq,Cond_tensor,Solver_type)
 
-            if Sim_setup.external_grounding==True:
-                if Sim_setup.Laplace_eq == 'EQS':
-                    Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0),0.0,facets,1))
-                    Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1),0.0,facets,1))
+                if Sim_setup.Laplace_eq=='EQS':
+                    (phi_r_check,phi_i_check)=phi_sol_check.split(deepcopy=True)
                 else:
-                    Dirichlet_bc_scaled.append(DirichletBC(V_space,0.0,facets,1))
-
-            phi_sol_check=define_variational_form_and_solve(V_space,Dirichlet_bc_scaled,kappa,Sim_setup.Laplace_eq,Cond_tensor,Solver_type)
-
-            if Sim_setup.Laplace_eq=='EQS':
-                (phi_r_check,phi_i_check)=phi_sol_check.split(deepcopy=True)
+                    phi_r_check=phi_sol_check
+                    phi_i_check=Function(V_space)
+                    phi_i_check.vector()[:] = 0.0
             else:
-                phi_r_check=phi_sol_check
-                phi_i_check=Function(V_space)
-                phi_i_check.vector()[:] = 0.0
-
+                phi_r_check,phi_i_check=(phi_r,phi_i)   # no need to recompute
+       
             J_ground,E_field_r,E_field_im=get_current(Sim_setup.mesh,facets,Sim_setup.boundaries,Sim_setup.element_order,Sim_setup.Laplace_eq,Domains.Contacts,kappa,Cond_tensor,phi_r_check,phi_i_check,ground_index,get_E_field=True)
 
             if Sim_type=='Astrom':
@@ -696,11 +700,11 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
 
                     #if Sim_setup.c_c==1:
                     if Sim_type=='Butson':
-                        Phi_ROI[inx,3]=Second_deriv(pnt)   # already scaled
-                        Phi_ROI[inx,4]=Second_deriv_imag(pnt)    # already scaled
+                        Phi_ROI[inx,3]=Second_deriv(pnt)   
+                        Phi_ROI[inx,4]=Second_deriv_imag(pnt)    
                     elif Sim_type=='Astrom':
-                        Phi_ROI[inx,3]=E_amp_real(pnt)   # already scaled
-                        Phi_ROI[inx,4]=E_amp_imag(pnt)    # already scaled
+                        Phi_ROI[inx,3]=E_amp_real(pnt)  # if VC, they are already scaled here and the signal will be unit
+                        Phi_ROI[inx,4]=E_amp_imag(pnt)  # if CC, they will be scaled as the signal (only one contact and ground here, so ok)
 
                     #if Sim_setup.sine_freq==Sim_setup.signal_freq and abs(Phi_ROI[inx,3])>=0.3:
                     #    VTA+=0.1**3
@@ -756,10 +760,16 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
 
         #J_ground=get_current(Sim_setup.mesh,Sim_setup.boundaries,Sim_setup.element_order,Sim_setup.Laplace_eq,Domains.Contacts,kappa,Cond_tensor,phi_r_check,phi_i_check,ground_index)
         if Sim_setup.sine_freq==Sim_setup.signal_freq:
-            print("Current through the ground after normalizing to 1 A at the signal freq.: ",J_ground)
+            if Sim_setup.c_c==1:
+                print("Current through the ground after normalizing to 1 A at the signal freq.: ",J_ground)
+                file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r_1A.pvd')
+                file<<phi_r_check
+            else:
+                file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r.pvd')
+                file<<phi_r_check                
 
-            file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r_1A.pvd')
-            file<<phi_r_check
+            file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_E_amp_real.pvd')
+            file<<E_amp_real          
 
         output.put(1)
 

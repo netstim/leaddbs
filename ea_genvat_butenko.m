@@ -13,6 +13,19 @@ elseif nargin==1 && ischar(varargin{1}) % return name of method.
     return
 end
 
+% Check OSS-DBS installation, set env
+if ~options.prefs.machine.vatsettings.oss_dbs.installed
+    ea_checkOSSDBSInstall;
+else
+    binPath = getenv('PATH'); % Current PATH
+    pythonPath = options.prefs.env.pythonPath;
+    if isunix
+        setenv('PATH', [pythonPath, ':', binPath]);
+    else
+        setenv('PATH', [pythonPath, ';', binPath]);
+    end
+end
+
 % Double check if lead is supported by OSS-DBS.
 if ~ismember(options.elmodel, ea_ossdbs_elmodel)
     ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], 'Error', dbstack)
@@ -94,10 +107,30 @@ settings.default_material = 'GM'; % GM, WM or CSF
 settings.Electrode_type = options.elmodel;
 
 % Reload reco since we need to decide whether to use native or MNI coordinates.
-[~, ~, markers] = ea_load_reconstruction(options);
-coords_mm = ea_resolvecoords(markers, options);
+coords_mm = ea_load_reconstruction(options);
 settings.contactLocation = coords_mm;
 eleNum = length(coords_mm); % Number of electrodes
+
+% Save both native and MNI space y and head markers for OSS-DBS
+settings.yMarkerNative = nan(eleNum, 3);
+settings.yMarkerMNI = nan(eleNum, 3);
+settings.headNative = nan(eleNum, 3);
+settings.headMNI = nan(eleNum, 3);
+[markersNative, markersMNI] = ea_get_markers(options);
+for i=1:eleNum
+    if ~isempty(markersNative) && ~isempty(markersNative(i).y)
+    	settings.yMarkerNative(i,:) = markersNative(i).y;
+    end
+    if ~isempty(markersMNI) && ~isempty(markersMNI(i).y)
+    	settings.yMarkerMNI(i,:) = markersMNI(i).y;
+    end
+    if ~isempty(markersNative) && ~isempty(markersNative(i).head)
+    	settings.headNative(i,:) = markersNative(i).head;
+    end
+    if ~isempty(markersMNI) && ~isempty(markersMNI(i).head)
+    	settings.headMNI(i,:) = markersMNI(i).head;
+    end
+end
 
 % Head
 settings.Implantation_coordinate = nan(eleNum, 3);
@@ -227,12 +260,14 @@ if settings.calcAxonActivation
     fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength);
 
     % Move original fiber id to the 5th column, the 4th column will be 1:N
+    fibersFound = zeros(size(fiberFiltered));
     for i=1:length(fiberFiltered)
         if ~isempty(fiberFiltered{i}.fibers)
             fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
             fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
             fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
             fiberFiltered{i}.fibers = fibers;
+            fibersFound(i) = 1;
         end
     end
 
@@ -240,7 +275,7 @@ if settings.calcAxonActivation
     ea_mkdir(settings.connectomePath);
     for i=1:length(fiberFiltered)
         buffer = fiberFiltered{i};
-        save([settings.connectomePath, filesep, 'data', num2str(i), '.mat'], '-struct', 'buffer');
+        save([settings.connectomePath, filesep, 'data', num2str(i), '.mat'], '-struct', 'buffer', '-v7.3');
     end
 end
 
@@ -256,18 +291,13 @@ currentPath = pwd;
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
 
-% Prefix /usr/local/bin to PATH environment variable for macOS to use
-% docker and python3 from Homebrew
-if ismac
-    binPath = getenv('PATH');
-    setenv('PATH', ['/usr/local/bin:', binPath]);
-end
-
 % Delete flag files before running
 ea_delete([outputPath, filesep, 'success_rh.txt']);
 ea_delete([outputPath, filesep, 'fail_rh.txt']);
+ea_delete([outputPath, filesep, 'skip_rh.txt']);
 ea_delete([outputPath, filesep, 'success_lh.txt']);
 ea_delete([outputPath, filesep, 'fail_lh.txt']);
+ea_delete([outputPath, filesep, 'skip_lh.txt']);
 
 % Iterate sides, index side: 0 - rh , 1 - lh
 runStatus = [0 0]; % Succeed or not
@@ -286,6 +316,15 @@ for side=0:1
         warning('off', 'backtrace');
         warning('No stimulation exists for %s side! Skipping...\n', sideStr);
         warning('on', 'backtrace');
+        fclose(fopen([outputPath, filesep, 'skip_', sideCode, '.txt'], 'w'));
+        continue;
+    end
+
+    if settings.calcAxonActivation && ~fibersFound(side+1)
+        warning('off', 'backtrace');
+        warning('No fibers found for %s side! Skipping...\n', sideStr);
+        warning('on', 'backtrace');
+        fclose(fopen([outputPath, filesep, 'skip_', sideCode, '.txt'], 'w'));
         continue;
     end
 
@@ -386,9 +425,10 @@ for side=0:1
             % Restore full length fiber (as in original filtered fiber)
             ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
             ftr.fibers = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
+            originalFibID = ftr.fibers(:,5);
 
-            % Extract original conn fiber id, needed in case calculation is
-            % done in native space
+            % Extract original conn fiber id and idx, needed in case
+            % calculation is done in native space
             [connFibID, idx] = unique(ftr.fibers(:,5));
 
             % Set fiber state
@@ -399,6 +439,9 @@ for side=0:1
             % Extract state of original conn fiber, needed in case
             % calculation is  done in native space
             connFibState = ftr.fibers(idx, 5);
+
+            % Reset original fiber id as in the connectome
+            ftr.fibers(:,4) = originalFibID;
 
             % Save result for visualization
             save([outputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'ftr');
@@ -416,10 +459,12 @@ for side=0:1
                     conn.fibers(conn.fibers(:,4)==connFibID(f),5) = connFibState(f);
                 end
 
-                % Recreate fiber id and idx
+                % Recreate fiber idx
                 [~, ~, idx] = unique(conn.fibers(:,4), 'stable');
-                conn.fibers(:,4) = idx;
                 conn.idx = accumarray(idx,1);
+
+                % Reset original fiber id as in the connectome
+                ftr.fibers(:,4) = originalFibID;
 
                 % Save MNI space axon activation result
                 save([MNIoutputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'conn');
@@ -459,11 +504,32 @@ if ~settings.calcAxonActivation && exist('stimparams', 'var')
     varargout{2} = stimparams;
 end
 
-% Restore working directory and env
+% Restore working directory and environment variables
 cd(currentPath);
 setenv('LD_LIBRARY_PATH', libpath);
+setenv('PATH', binPath);
 
-% Restore PATH environment variable
-if ismac
-    setenv('PATH', binPath);
+
+%% Helper function to get markers in bothe native and MNI space
+function [markersNative, markersMNI] = ea_get_markers(options)
+options.native = 1;
+try
+    [~, ~, markersNative] = ea_load_reconstruction(options);
+catch
+    markersNative = [];
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('Failed to load native reconstruction!');
+    warning('on', 'backtrace');
+end
+
+options.native = 0;
+try
+    [~, ~, markersMNI] = ea_load_reconstruction(options);
+catch
+    markersMNI = [];
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('Failed to load MNI reconstruction!');
+    warning('on', 'backtrace');
 end

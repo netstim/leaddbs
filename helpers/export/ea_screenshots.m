@@ -1,4 +1,4 @@
-function ea_screenshots(uipatdir,handles,target)
+function ea_screenshots(uipatdir,target)
 % Wrapper of ea_screenshot used for exporting ZIP
 
 options=ea_getptopts(uipatdir);
@@ -7,10 +7,10 @@ options.d3.verbose='on';
 options.native=0;
 options=ea_detsides(options);
 
-[coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
+[~,~,~,elmodel]=ea_load_reconstruction(options);
 options.leadprod='dbs';
 options.elmodel=elmodel;
-[options]=ea_resolve_elspec(options);
+options=ea_resolve_elspec(options);
 options=ea_detsides(options);
 options.d3.elrendering=1;
 options.d3.hlactivecontacts=0;
@@ -36,8 +36,5 @@ for view=1:length(views)
     ea_view(views(view).v,resultfig);
     set(0,'CurrentFigure',resultfig);
     ea_screenshot([options.root,options.patientname,filesep,'export',filesep,'views',filesep,'view_',sprintf('%03.0f',view),'.png'],'ld', resultfig);
-% if view==4
-%    keyboard 
-% end
 end
 close(resultfig);

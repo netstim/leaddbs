@@ -45,8 +45,8 @@ try
         uprefs = jsondecode(fread(fid,'*char')'); fclose(fid);
         umachine = load([home, '.ea_prefs.mat']);
     end
-catch
-    warning('User preferences file could not be read. Please set write permissions to Lead-DBS install directory accordingly.');
+catch ME
+    warning(ME.message);
     return
 end
 

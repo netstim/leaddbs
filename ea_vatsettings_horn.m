@@ -68,7 +68,7 @@ set(handles.ethresh,'String',num2str(prefs.machine.vatsettings.horn_ethresh));
 set(handles.useatlas,'Value',prefs.machine.vatsettings.horn_useatlas);
 ea_refreshgmwm(handles);
 options=ea_defaultoptions;
-options.prefs.atlases.default=prefs.machine.vatsettings.horn_atlasset;
+options.prefs.machine.defaultatlas=prefs.machine.vatsettings.horn_atlasset;
 ea_listatlassets(options,handles,1);
 
 set(handles.removeElectrode,'Value',prefs.machine.vatsettings.horn_removeElectrode);

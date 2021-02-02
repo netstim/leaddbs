@@ -1,7 +1,7 @@
 function ea_reconstruction2mni(options)
 
 directory=[options.root,options.patientname,filesep];
-load([directory,filesep,'ea_reconstruction.mat']);
+load([directory,filesep,'ea_reconstruction.mat'],'reco');
 
 %[~,template]=ea_whichnormmethod(directory);
 options=ea_assignpretra(options);

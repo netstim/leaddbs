@@ -25,23 +25,44 @@ prefs = ea_prefs;
 % Activated fibers
 Ind = axons.fibers(:,5)==1;
 fibers = axons.fibers(Ind,1:3);
-[~,~,idx] = unique(axons.fibers(Ind,4));
-idx = accumarray(idx,1);
-PL.axon{axonInd+1} = showAxons(fibers, idx, prefs.d3.axon_activated_color, [fname, '_Activated'], toolbar);
+if ~isempty(fibers)
+    [~,~,idx] = unique(axons.fibers(Ind,4));
+    idx = accumarray(idx,1);
+    PL.axon{axonInd+1} = showAxons(fibers, idx, prefs.d3.axon_activated_color, [fname, '_Activated'], toolbar);
+else
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('No activated fiber found!\n');
+    warning('on', 'backtrace');
+end
 
 % Non-activated fibers
 Ind = axons.fibers(:,5)==0;
 fibers = axons.fibers(Ind,1:3);
-[~,~,idx] = unique(axons.fibers(Ind,4));
-idx = accumarray(idx,1);
-PL.axon{axonInd+2} = showAxons(fibers, idx, prefs.d3.axon_nonactivated_color, [fname, '_Nonactivated'], toolbar);
+if ~isempty(fibers)
+    [~,~,idx] = unique(axons.fibers(Ind,4));
+    idx = accumarray(idx,1);
+    PL.axon{axonInd+2} = showAxons(fibers, idx, prefs.d3.axon_nonactivated_color, [fname, '_Nonactivated'], toolbar);
+else
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('No non-activated fiber found!\n');
+    warning('on', 'backtrace');
+end
 
 % Damaged fibers
 Ind = axons.fibers(:,5)==-1;
 fibers = axons.fibers(Ind,1:3);
-[~,~,idx] = unique(axons.fibers(Ind,4));
-idx = accumarray(idx,1);
-PL.axon{axonInd+3} = showAxons(fibers, idx, prefs.d3.axon_damaged_color, [fname, '_Damaged'], toolbar);
+if ~isempty(fibers)
+    [~,~,idx] = unique(axons.fibers(Ind,4));
+    idx = accumarray(idx,1);
+    PL.axon{axonInd+3} = showAxons(fibers, idx, prefs.d3.axon_damaged_color, [fname, '_Damaged'], toolbar);
+else
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('No damaged fiber found!\n');
+    warning('on', 'backtrace');
+end
 
 setappdata(resultfig, 'PL', PL);
 

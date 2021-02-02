@@ -74,6 +74,7 @@ for group=groups
                 if exist('covars', 'var')
                     % they do:
                     vals{group,side}=nan(size(gfibsval{side},1),1);
+                    ps{group,side}=nan(size(gfibsval{side},1),1);
                     nixfib=find(any(gfibsval{side}(:,gpatsel)').*~all(gfibsval{side}(:,gpatsel)'));
                     warning('off', 'stats:classreg:regr:lmeutils:StandardLinearMixedModel:Message_PerfectFit');
                     ea_dispercent(0,['Side ',num2str(side),': Calculating T-values (taking covariates into account)']);
@@ -97,11 +98,15 @@ for group=groups
                         end
                         mdl = fitlme(data,formula);
                         vals{group,side}(nixfib(fib))=mdl.Coefficients.tStat(2);
+                        ps{group,side}(nixfib(fib))=mdl.Coefficients.pValue(2);
                         ea_dispercent(fib/length(nixfib));
                     end
                     ea_dispercent(1,'end');
                     fprintf('\b');
                     warning('on', 'stats:classreg:regr:lmeutils:StandardLinearMixedModel:Message_PerfectFit');
+                    if obj.showsignificantonly
+                        vals{group,side}=ea_corrsignan(vals{group,side},ps{group,side},obj);
+                    end
                 else
                     % no covariates exist:
                     allvals=repmat(I(gpatsel,side)',size(gfibsval{side}(:,gpatsel),1),1); % improvement values (taken from Lead group file or specified in line 12).

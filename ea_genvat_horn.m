@@ -47,10 +47,8 @@ resultfig=getappdata(lgfigure,'resultfig');
 % Important to load in reco from a new since we need to decide whether to
 % use native or template coordinates. Even when running in template space,
 % the native coordinates are sometimes used (VTA is then calculated in native space and ported to template).
-options.loadrecoforviz=1;
 [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 elstruct(1).coords_mm=coords_mm;
-elstruct(1).coords_mm=ea_resolvecoords(markers,options);
 elstruct(1).trajectory=trajectory;
 elstruct(1).name=options.patientname;
 elstruct(1).markers=markers;
@@ -105,6 +103,7 @@ if hmchanged
                 fv.vertices=fv.vertices(1:3,:)';
             case 'mask'
                 fv=ea_fem_getmask(options);
+                %figure, patch('faces',fv.faces,'vertices',fv.vertices)
         end
     else
         fv=[];
@@ -125,6 +124,9 @@ if hmchanged
             % can sometimes happen. We will introduce a small jitter to
             % the electrode and try again.
             Ymod=Y+(randn(4)/700); % Very small jitter on transformation which will be used on electrode. - should not exceed ~700. Use vizz below to see effects.
+            if attempt>2
+                fv=ea_fem_getmask(options,1); % try no surface smoothing for atlas fv - in rare cases this has led to conflicts for tetgen.
+            end
             if vizz
                 h=figure;
                 telfv=elfv;

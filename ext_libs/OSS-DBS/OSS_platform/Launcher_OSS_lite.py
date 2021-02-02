@@ -125,7 +125,7 @@ def run_full_model(master_dict):
 
     if d["Full_Field_IFFT"] == 1:       # for this case, we use a neuron array that matches the VTA array in dimensions
         d['Axon_Model_Type']='Reilly2016'
-        d['x_seed'],d['y_seed'],d['z_seed']=(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z'])
+        d['x_seed'],d['y_seed'],d['z_seed']=(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y']+3.0,d['Implantation_coordinate_Z']+5.0)  # it makes sense to shift it a bit from the tip 
         d['diam_fib']=5.0
         d['n_Ranvier']=22
         d['x_step'],d['y_step'],d['z_step']=(1.0,1.0,1.0)
@@ -220,7 +220,7 @@ def run_full_model(master_dict):
     #if IFFT_on_VTA_array == 1:
         #if we create internally
         from VTA_from_array import create_VTA_array,resave_as_verts,get_VTA
-        VTA_edge,VTA_full_name,VTA_resolution= create_VTA_array(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z'])
+        VTA_edge,VTA_full_name,VTA_resolution= create_VTA_array(d['x_seed'],d['y_seed'],d['z_seed'])
         arrays_shape = resave_as_verts(VTA_full_name)
         number_of_points=sum(arrays_shape)
 
@@ -312,7 +312,6 @@ def run_full_model(master_dict):
 
 #==========Calculate freq in parallel and rearrange field array===============#
     if d["Parallel_comp_ready"]==0:
-
         if ["Parallel_comp_interrupted"]==1:
             if not (os.path.isfile('/opt/Patient/Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile('/opt/Patient/Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations
                 print("There were no previous computations, 'Parallel_comp_interrupted' is put to 0")

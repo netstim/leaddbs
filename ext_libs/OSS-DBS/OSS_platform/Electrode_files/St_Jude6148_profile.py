@@ -87,7 +87,7 @@ Circle_1 = geompy.MakeCircle(O, OZ, 0.635)
 
 
 
-Contact_1_prism = geompy.MakePrismVecH(Circle_1, OZ, 1.5+0.865)
+Contact_1_prism = geompy.MakePrismVecH(Circle_1, OZ, 1.5*stretch+0.865)
 Vertex_1 = geompy.MakeVertex(0, 0.635, 0)
 Vertex_2 = geompy.MakeVertex(0, -0.635, 0)
 Vertex_3 = geompy.MakeVertex(0.635, 0, 0)
@@ -97,12 +97,15 @@ Contact_1 = geompy.MakeFuseList([Contact_1_prism, Revolution_1], True, True)
 #geompy.TranslateDXDYDZ(Contact_1, 0, 0, 0.865)
 
 
-Contact_1_fake = geompy.MakePrismVecH(Circle_1, OZ, 1.5)
+Contact_1_fake = geompy.MakePrismVecH(Circle_1, OZ, 0.75*stretch+0.75)
 geompy.TranslateDXDYDZ(Contact_1_fake, 0, 0, 0.865)
 
-Contact_2 = geompy.MakeTranslation(Contact_1_fake, 0, 0, 2)
-Contact_3 = geompy.MakeTranslation(Contact_1_fake, 0, 0, 4)
-Contact_4 = geompy.MakeTranslation(Contact_1_fake, 0, 0, 6)
+Contact_1_large = geompy.MakePrismVecH(Circle_1, OZ, 1.5*stretch)
+geompy.TranslateDXDYDZ(Contact_1_large, 0, 0, 0.865)
+
+Contact_2 = geompy.MakeTranslation(Contact_1_large, 0, 0, 2*stretch)
+Contact_3 = geompy.MakeTranslation(Contact_1_large, 0, 0, 4*stretch)
+Contact_4 = geompy.MakeTranslation(Contact_1_fake, 0, 0, 6*stretch)
 
 Cylinder_1 = geompy.MakeCylinderRH(0.635, 149.365)
 Sphere_1 = geompy.MakeSphereR(0.635)
@@ -130,15 +133,19 @@ Fuse_all_lead_encap_ROI = geompy.MakeFuseList([Sphere_ROI, Fuse_2], True, True)
 ROI = geompy.MakeCutList(Sphere_ROI, [Fuse_2], True)
 
 Sphere_cyl = geompy.MakeSphereR(0.635)
-CV1_cyl= geompy.MakeCylinderRH(0.635, 3.0-0.635)
+CV1_cyl= geompy.MakeCylinderRH(0.635, 1.5*stretch+1.5-0.635)
 CV1 = geompy.MakeFuseList([CV1_cyl, Sphere_cyl], True, True)
 geompy.TranslateDXDYDZ(CV1, 0, 0, 0.635)
 
-CV1_fake = geompy.MakeCylinderRH(0.635, 1.5)
+CV1_fake = geompy.MakeCylinderRH(0.635, 0.75*stretch+0.75)
 geompy.TranslateDXDYDZ(CV1_fake, 0, 0, 1.5)
-CV2 = geompy.MakeTranslation(CV1_fake, 0, 0, 2)
-CV3 = geompy.MakeTranslation(CV1_fake, 0, 0, 4)
-CV4 = geompy.MakeTranslation(CV1_fake, 0, 0, 6)
+
+CV1_large = geompy.MakeCylinderRH(0.635, 1.5*stretch)
+geompy.TranslateDXDYDZ(CV1_large, 0, 0, 1.5)
+
+CV2 = geompy.MakeTranslation(CV1_large, 0, 0, 2*stretch)
+CV3 = geompy.MakeTranslation(CV1_large, 0, 0, 4*stretch)
+CV4 = geompy.MakeTranslation(CV1_fake, 0, 0, 6*stretch)
 ##################################################################################################################
 ########################################### extra code 2 V10 15/12/18#############################################
 print " Load brain image \n"
