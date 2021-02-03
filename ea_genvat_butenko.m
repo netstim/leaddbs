@@ -174,14 +174,6 @@ for i=1:eleNum
     end
 end
 
-% Set grounding
-settings.Case_grounding = nan(eleNum,1);
-for i=1:eleNum
-    if ~isnan(source(i))
-        settings.Case_grounding(i) = 0;
-    end
-end
-
 % Get stimulation amplitude
 amp = nan(eleNum,1);
 for i=1:eleNum
