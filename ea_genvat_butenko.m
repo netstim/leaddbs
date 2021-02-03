@@ -291,6 +291,12 @@ ea_delete([outputPath, filesep, 'success_lh.txt']);
 ea_delete([outputPath, filesep, 'fail_lh.txt']);
 ea_delete([outputPath, filesep, 'skip_lh.txt']);
 
+if ispc || ismac
+    dockerImage = 'sfbelaine/oss_dbs:python_latest';
+else % Linux
+    dockerImage = 'custom_oss_platform';
+end
+
 % Iterate sides, index side: 0 - rh , 1 - lh
 runStatus = [0 0]; % Succeed or not
 stimparams = struct();
@@ -339,7 +345,7 @@ for side=0:1
             system(['docker run ', ...
                     '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
                     '--volume ', outputPath, ':/opt/Patient ', ...
-                    '-it --rm sfbelaine/oss_dbs:python_latest ', ...
+                    '-it --rm ', dockerImage, ' ', ...
                     'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py ', num2str(side)]);
     end
 
