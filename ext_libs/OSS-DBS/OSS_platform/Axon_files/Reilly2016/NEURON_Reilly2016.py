@@ -155,9 +155,9 @@ def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl
     #if  we have a model for Reilly
     os.chdir("..")
     os.chdir("..")
-    
+
     n_segments=n_Ranvier*2-1
-    
+
     #nodes=[]
 #    for point_inx in range(n_segments):
 #
@@ -173,10 +173,10 @@ def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl
 #        V_art[i,:]=nodes[(i*t_steps):((i*t_steps)+t_steps)]
 
     #to distinguish axons in different populations, we indexed them with the global index of the last compartment
-    axon_in_time=np.load('Axons_in_time/Signal_t_conv'+str(n_segments-1+N_index*n_segments+last_point)+'.npy')        
-    V_art=np.zeros((n_segments,t_steps),float)    
+    axon_in_time=np.load('/opt/Patient/Axons_in_time/Signal_t_conv'+str(n_segments-1+N_index*n_segments+last_point)+'.npy')
+    V_art=np.zeros((n_segments,t_steps),float)
     for i in range(n_segments):
-        V_art[i,:]=axon_in_time[i,:]*(1000)*Ampl_scale   #convert to mV  
+        V_art[i,:]=axon_in_time[i,:]*(1000)*Ampl_scale   #convert to mV
 
     #only if we want to save potential in time on axons
     #np.save('Field_on_axons_in_time/'+str(population_name)+'axon_'+str(N_index_glob), V_art)
