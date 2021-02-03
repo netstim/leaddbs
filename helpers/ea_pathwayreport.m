@@ -1,21 +1,21 @@
-function ea_pathwayreport(axonActivationFolder, sortPathway, pathwayTable)
+function ea_pathwayreport(stimFolder, sortPathway, pathwayTable)
 % Generate pathway activation report
 
-axons = [];
+fibers = [];
 
 % Load result from left side
-if isfile([axonActivationFolder, filesep, 'axonActivation_left.mat'])
-    load([axonActivationFolder, filesep, 'axonActivation_left.mat'], 'fibers');
-    axons = [axons;fibers];
+if isfile([stimFolder, filesep, 'fiberActivation_left.mat'])
+    result = load([stimFolder, filesep, 'fiberActivation_left.mat'], 'fibers');
+    fibers = [fibers;result.fibers];
 end
 
 % Load result from right side
-if isfile([axonActivationFolder, filesep, 'axonActivation_right.mat'])
-    load([axonActivationFolder, filesep, 'axonActivation_right.mat'], 'fibers');
-    axons = [axons;fibers];
+if isfile([stimFolder, filesep, 'fiberActivation_right.mat'])
+    result = load([stimFolder, filesep, 'fiberActivation_right.mat'], 'fibers');
+    fibers = [fibers;result.fibers];
 end
 
-% Sort pathway according to the axon counts orr not
+% Sort pathway according to the fiber counts or not
 if ~exist('sortPathway', 'var')
     sortPathway = 1;
 end
@@ -26,47 +26,47 @@ if ~exist('pathwayTable', 'var')
 end
 load(pathwayTable, 'pathway');
 
-totalAxon = length(unique(axons(:,4)));
+totalFiber = length(unique(fibers(:,4)));
 
 fprintf('\n\n');
 
 % Show activated pathways
-axonIdx = unique(axons(axons(:,5)==1,4));
-[activated, ~, ic] = unique(pathway(axonIdx));
+fiberIdx = unique(fibers(fibers(:,5)==1,4));
+[activated, ~, ic] = unique(pathway(fiberIdx));
 if sortPathway
-    [axonCount, sortInd] = sort(accumarray(ic,1), 'descend');
+    [fiberCount, sortInd] = sort(accumarray(ic,1), 'descend');
     activated = activated(sortInd);
 else
-    axonCount = accumarray(ic,1);
+    fiberCount = accumarray(ic,1);
 end
-activatedTable = table(string(activated),axonCount, 'VariableNames', ...
-    {'Activated Pathways',['Axon Counts (',num2str(length(axonIdx)),'/',num2str(totalAxon),')']});
+activatedTable = table(string(activated),fiberCount, 'VariableNames', ...
+    {'Activated Pathways',['Fiber Counts (',num2str(length(fiberIdx)),'/',num2str(totalFiber),')']});
 disp(activatedTable);
 
 % Show non-activated pathways
-axonIdx = unique(axons(axons(:,5)==0,4));
-[nonactivated, ~, ic] = unique(pathway(axonIdx));
+fiberIdx = unique(fibers(fibers(:,5)==0,4));
+[nonactivated, ~, ic] = unique(pathway(fiberIdx));
 if sortPathway
-    [axonCount, sortInd] = sort(accumarray(ic,1), 'descend');
+    [fiberCount, sortInd] = sort(accumarray(ic,1), 'descend');
     nonactivated = nonactivated(sortInd);
 else
-    axonCount = accumarray(ic,1);
+    fiberCount = accumarray(ic,1);
 end
-nonactivatedTable = table(string(nonactivated),axonCount, 'VariableNames', ...
-    {'Non-activated Pathways',['Axon Counts (',num2str(length(axonIdx)),'/',num2str(totalAxon),')']});
+nonactivatedTable = table(string(nonactivated),fiberCount, 'VariableNames', ...
+    {'Non-activated Pathways',['Fiber Counts (',num2str(length(fiberIdx)),'/',num2str(totalFiber),')']});
 disp(nonactivatedTable);
 
 % Show damaged pathways
-axonIdx = unique(axons(axons(:,5)==-1,4));
-[damaged, ~, ic] = unique(pathway(axonIdx));
+fiberIdx = unique(fibers(fibers(:,5)==-1,4));
+[damaged, ~, ic] = unique(pathway(fiberIdx));
 if sortPathway
-    [axonCount, sortInd] = sort(accumarray(ic,1), 'descend');
+    [fiberCount, sortInd] = sort(accumarray(ic,1), 'descend');
     damaged = damaged(sortInd);
 else
-    axonCount = accumarray(ic,1);
+    fiberCount = accumarray(ic,1);
 end
-damagedTable = table(string(damaged),axonCount, 'VariableNames', ...
-    {'Damaged Pathways',['Axon Counts (',num2str(length(axonIdx)),'/',num2str(totalAxon),')']});
+damagedTable = table(string(damaged),fiberCount, 'VariableNames', ...
+    {'Damaged Pathways',['Fiber Counts (',num2str(length(fiberIdx)),'/',num2str(totalFiber),')']});
 disp(damagedTable);
 
 fprintf('\n');

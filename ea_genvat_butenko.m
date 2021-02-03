@@ -342,7 +342,7 @@ for side=0:1
 
             % Delete this folder in MATLAB since shutil.rmtree may raise
             % I/O error
-            ea_delete([outputPath, filesep,'Points_in_time']);
+            ea_delete([outputPath, filesep,'Axons_in_time']);
 
             system(['docker run ', ...
                     '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
@@ -444,14 +444,14 @@ for side=0:1
             ftr.fibers(:,4) = originalFibID;
 
             % Save result for visualization
-            save([outputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'ftr');
-            axonToViz = [outputPath, filesep, 'axonActivation_', sideStr, '.mat'];
+            save([outputPath, filesep, 'fiberActivation_', sideStr, '.mat'], '-struct', 'ftr');
+            fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
 
-            if options.native % Generate axon activation file in MNI space
+            if options.native % Generate fiber activation file in MNI space
                 fprintf('Restore connectome in MNI space: %s ...\n\n', settings.connectome);
                 conn.fibers = originalFib;
 
-                fprintf('Convert axon activation result into MNI space...\n\n');
+                fprintf('Convert fiber activation result into MNI space...\n\n');
                 conn.fibers = conn.fibers(ismember(conn.fibers(:,4), connFibID), :);
                 % Set fiber state
                 conn.fibers = [conn.fibers, zeros(size(conn.fibers,1),1)];
@@ -466,18 +466,18 @@ for side=0:1
                 % Reset original fiber id as in the connectome
                 ftr.fibers(:,4) = originalFibID;
 
-                % Save MNI space axon activation result
-                save([MNIoutputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'conn');
+                % Save MNI space fiber activation result
+                save([MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'], '-struct', 'conn');
 
                 if ~options.orignative % Visualize MNI space result
-                    axonToViz = [MNIoutputPath, filesep, 'axonActivation_', sideStr, '.mat'];
+                    fiberActivation = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
                 end
             end
 
-            % Visualize axon activation
+            % Visualize fiber activation
             if exist('resultfig', 'var')
                 set(0, 'CurrentFigure', resultfig);
-                ea_axon_viz(axonToViz, resultfig);
+                ea_fiberactivation_viz(fiberActivation, resultfig);
             end
         end
     elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
@@ -495,7 +495,7 @@ for side=0:1
 
     % Delete this folder in MATLAB since shutil.rmtree may raise
     % I/O error
-    ea_delete([outputPath, filesep,'Points_in_time']);
+    ea_delete([outputPath, filesep,'Axons_in_time']);
 end
 
 varargout{1} = runStatus;

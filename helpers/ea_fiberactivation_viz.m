@@ -1,7 +1,7 @@
-function ea_axon_viz(axons, resultfig)
+function ea_fiberactivation_viz(fiberActivation, resultfig)
 
-[~, fname] = fileparts(axons);
-axons = load(axons, 'fibers');
+[~, fname] = fileparts(fiberActivation);
+fiberActivation = load(fiberActivation, 'fibers');
 
 set(0, 'CurrentFigure', resultfig);
 
@@ -13,22 +13,22 @@ end
 
 toolbar = PL.ht;
 
-if isfield(PL, 'axon')
-    axonInd = length(PL.axon);
+if isfield(PL, 'fiberActivation')
+    fiberInd = length(PL.fiberActivation);
 else
-    PL.axon = cell(3,1);
-    axonInd = 0;
+    PL.fiberActivation = cell(3,1);
+    fiberInd = 0;
 end
 
 prefs = ea_prefs;
 
 % Activated fibers
-Ind = axons.fibers(:,5)==1;
-fibers = axons.fibers(Ind,1:3);
+Ind = fiberActivation.fibers(:,5)==1;
+fibers = fiberActivation.fibers(Ind,1:3);
 if ~isempty(fibers)
-    [~,~,idx] = unique(axons.fibers(Ind,4));
+    [~,~,idx] = unique(fiberActivation.fibers(Ind,4));
     idx = accumarray(idx,1);
-    PL.axon{axonInd+1} = showAxons(fibers, idx, prefs.d3.axon_activated_color, [fname, '_Activated'], toolbar);
+    PL.fiberActivation{fiberInd+1} = showFibers(fibers, idx, prefs.d3.fiber_activated_color, [fname, '_Activated'], toolbar);
 else
     fprintf('\n')
     warning('off', 'backtrace');
@@ -37,12 +37,12 @@ else
 end
 
 % Non-activated fibers
-Ind = axons.fibers(:,5)==0;
-fibers = axons.fibers(Ind,1:3);
+Ind = fiberActivation.fibers(:,5)==0;
+fibers = fiberActivation.fibers(Ind,1:3);
 if ~isempty(fibers)
-    [~,~,idx] = unique(axons.fibers(Ind,4));
+    [~,~,idx] = unique(fiberActivation.fibers(Ind,4));
     idx = accumarray(idx,1);
-    PL.axon{axonInd+2} = showAxons(fibers, idx, prefs.d3.axon_nonactivated_color, [fname, '_Nonactivated'], toolbar);
+    PL.fiberActivation{fiberInd+2} = showFibers(fibers, idx, prefs.d3.fiber_nonactivated_color, [fname, '_Nonactivated'], toolbar);
 else
     fprintf('\n')
     warning('off', 'backtrace');
@@ -51,12 +51,12 @@ else
 end
 
 % Damaged fibers
-Ind = axons.fibers(:,5)==-1;
-fibers = axons.fibers(Ind,1:3);
+Ind = fiberActivation.fibers(:,5)==-1;
+fibers = fiberActivation.fibers(Ind,1:3);
 if ~isempty(fibers)
-    [~,~,idx] = unique(axons.fibers(Ind,4));
+    [~,~,idx] = unique(fiberActivation.fibers(Ind,4));
     idx = accumarray(idx,1);
-    PL.axon{axonInd+3} = showAxons(fibers, idx, prefs.d3.axon_damaged_color, [fname, '_Damaged'], toolbar);
+    PL.fiberActivation{fiberInd+3} = showFibers(fibers, idx, prefs.d3.fiber_damaged_color, [fname, '_Damaged'], toolbar);
 else
     fprintf('\n')
     warning('off', 'backtrace');
@@ -67,7 +67,7 @@ end
 setappdata(resultfig, 'PL', PL);
 
 
-function objs = showAxons(fibers, idx, color, name, toolbar)
+function objs = showFibers(fibers, idx, color, name, toolbar)
 objs = ea_showfiber(fibers, idx, color);
 axis fill;
 
