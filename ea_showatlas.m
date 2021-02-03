@@ -31,10 +31,10 @@ for nativemni=nm % switch between native and mni space atlases.
 
     switch nativemni
         case 1 % mni
-            adir=[ea_space(options,'atlases'),options.atlasset,filesep];
+            atlasFolder = ea_space(options,'atlases');
             mifix='';
         case 2 % native
-            adir=[[options.root,options.patientname,filesep],'atlases',filesep,options.atlasset,filesep];
+            atlasFolder = [options.root,options.patientname,filesep,'atlases',filesep];
             mifix='';
     end
 
@@ -42,11 +42,11 @@ for nativemni=nm % switch between native and mni space atlases.
     set(0,'CurrentFigure',resultfig)
     ht=getappdata(resultfig,'atlht');
 
-    if ~exist([adir,'atlas_index.mat'],'file')
-        atlases = ea_genatlastable([],adir,options,mifix,resultfig);
+    if ~exist([atlasFolder,options.atlasset,filesep,'atlas_index.mat'],'file')
+        atlases = ea_genatlastable([],atlasFolder,options,mifix,resultfig);
     else
-        atlases = ea_loadatlas([adir,'atlas_index.mat'],resultfig,ht);
-        atlases = ea_genatlastable(atlases,adir,options,mifix);
+        atlases = ea_loadatlas([atlasFolder,options.atlasset,filesep,'atlas_index.mat'],resultfig,ht);
+        atlases = ea_genatlastable(atlases,atlasFolder,options,mifix);
     end
     
     isdiscfibers = cellfun(@(x) ischar(x) && strcmp(x, 'discfibers'), atlases.pixdim);
@@ -611,7 +611,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
     try
         atlases.rebuild=0; % always reset rebuild flag.
-        save([adir,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
+        save([atlasFolder,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
     end
 
     if isfield(atlases, 'citation')
