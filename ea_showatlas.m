@@ -158,11 +158,15 @@ for nativemni=nm % switch between native and mni space atlases.
             if isnumeric(atlases.pixdim{atlas,side})
                 % Get ROI Tag
                 if ~isempty(atlases.roi{atlas,side}.Tag)
-                    roiTag = atlases.roi{atlas,side}.Tag;
+                    % Check if roi Tag has proper sidestr
+                    if endsWith(atlases.roi{atlas,side}.Tag, ['_',sidestr{side}])
+                        roiTag = atlases.roi{atlas,side}.Tag;
+                    else
+                        roiTag = [atlases.roi{atlas,side}.Tag, '_', sidestr{side}];
+                    end
                 else
-                    roiTag = atlases.roi{atlas,side}.name;
+                    roiTag = [atlases.roi{atlas,side}.name,'_',sidestr{side}];
                 end
-                atlases.roi{atlas,side}.Tag = [roiTag,'_',sidestr{side}];
 
                 % breathe life into stored ea_roi
                 atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
@@ -194,7 +198,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 % Set atlaslabel
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
                     ea_underscore2space(roiTag),...
-                    'Tag', [roiTag,'_',sidestr{side}],...
+                    'Tag', roiTag,...
                     'VerticalAlignment', 'Baseline',...
                     'HorizontalAlignment', 'Center',...
                     'FontWeight', 'bold',...
@@ -247,8 +251,8 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 % set Tags
                 try
-                    set(colorbuttons(atlascnt),'tag',[roiTag,'_',sidestr{side}])
-                    atlassurfs{atlascnt,1}.Tag=[roiTag,'_',sidestr{side}];
+                    set(colorbuttons(atlascnt),'Tag', roiTag)
+                    atlassurfs{atlascnt,1}.Tag = roiTag;
                 catch
                     keyboard
                 end
