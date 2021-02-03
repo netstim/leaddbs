@@ -111,41 +111,6 @@ def connection_visualizator(Activated_models,Initial_number,population_name,iter
 
     return True
 
-def get_one_internodal(N_index,n_segments,last_point,n_Ranvier,Ampl_scale,fiberD):
-    os.chdir("..")
-    os.chdir("..")
-    nodes=[]
-    #here we need to load potential only on Ranviers and middle STIN
-    if fiberD>3.0:         #load 5th and 6th compartment (middle STINs) and take average
-        for point_inx in range(n_segments):
-            if point_inx%11==0:
-                loc_index=0
-                nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
-                nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
-            elif loc_index%6==0 and loc_index!=0:
-                nodes_point_in_time_left=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point-1)+'.npy')
-                nodes_point_in_time_right=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
-
-                #nodes_point_in_time_left=np.asarray(nodes_point_in_time_left)
-                #nodes_point_in_time_left = nodes_point_in_time_left.ravel()
-
-                #nodes_point_in_time_right=np.asarray(nodes_point_in_time_right)
-                #nodes_point_in_time_right = nodes_point_in_time_right.ravel()
-
-                nodes_point_in_time=(nodes_point_in_time_left[:]+nodes_point_in_time_right[:])/2
-
-                nodes.append((nodes_point_in_time)*(1000)*Ampl_scale)    #convert to mV
-            loc_index+=1
-    else:
-        for point_inx in range(n_segments):     #take every forth compartment (either Ranvier or middle STIN)
-            if point_inx%4==0:
-                nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
-                nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
-
-    nodes=np.asarray(nodes)
-    nodes = nodes.ravel()
-
-    return nodes
 
 def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl_scale,t_steps,n_segments,dt,tstop,n_pulse,v_init,n_Ranvier,output):
 
@@ -190,20 +155,28 @@ def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl
     #if  we have a model for Reilly
     os.chdir("..")
     os.chdir("..")
-    nodes=[]
+    
     n_segments=n_Ranvier*2-1
-    for point_inx in range(n_segments):
+    
+    #nodes=[]
+#    for point_inx in range(n_segments):
+#
+#        nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')   #get solution for each compartment in time for one neuron
+#        nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
+#
+#    nodes=np.asarray(nodes)
+#    nodes = nodes.ravel()
+#
+#    V_art=np.zeros((n_segments,t_steps),float)
+#
+#    for i in range(n_segments):
+#        V_art[i,:]=nodes[(i*t_steps):((i*t_steps)+t_steps)]
 
-        nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')   #get solution for each compartment in time for one neuron
-        nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
-
-    nodes=np.asarray(nodes)
-    nodes = nodes.ravel()
-
-    V_art=np.zeros((n_segments,t_steps),float)
-
+    #to distinguish axons in different populations, we indexed them with the global index of the last compartment
+    axon_in_time=np.load('Axons_in_time/Signal_t_conv'+str(n_segments-1+N_index*n_segments+last_point)+'.npy')        
+    V_art=np.zeros((n_segments,t_steps),float)    
     for i in range(n_segments):
-        V_art[i,:]=nodes[(i*t_steps):((i*t_steps)+t_steps)]
+        V_art[i,:]=axon_in_time[i,:]*(1000)*Ampl_scale   #convert to mV  
 
     #only if we want to save potential in time on axons
     #np.save('Field_on_axons_in_time/'+str(population_name)+'axon_'+str(N_index_glob), V_art)

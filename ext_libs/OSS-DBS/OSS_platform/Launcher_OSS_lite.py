@@ -125,7 +125,7 @@ def run_full_model(master_dict):
 
     if d["Full_Field_IFFT"] == 1:       # for this case, we use a neuron array that matches the VTA array in dimensions
         d['Axon_Model_Type']='Reilly2016'
-        d['x_seed'],d['y_seed'],d['z_seed']=(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y']+3.0,d['Implantation_coordinate_Z']+5.0)  # it makes sense to shift it a bit from the tip 
+        d['x_seed'],d['y_seed'],d['z_seed']=(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y']+3.0,d['Implantation_coordinate_Z']+5.0)  # it makes sense to shift it a bit from the tip
         d['diam_fib']=5.0
         d['n_Ranvier']=22
         d['x_step'],d['y_step'],d['z_step']=(1.0,1.0,1.0)
@@ -374,7 +374,7 @@ def run_full_model(master_dict):
     #     from Full_IFFT_field_function import get_field_in_time
 
     #     VTA_size = get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector)        # also uses data from Field_solutions_functions/ and if spectrum truncation is applied, than data from Stim_Signal/
-    #                                                                 # if VTA_from_NEURON is enabled, will save pointwise solutions in Points_in_time/
+    #
     #     d["IFFT_ready"] = 1               #modification of dictionary
 
     #     if d["VTA_from_divE"]==True or d["VTA_from_E"]==True:           #else it will just jump to NEURON_direct_run.py

@@ -125,6 +125,8 @@ def convolute_and_ifft(last_point,Ind_trunc1,trunc_method,post_truncation,i_axon
     global t_vect
     global FREQ_vector_signal
 
+    Signal_t_conv=np.zeros((num_segments,t_vect.shape[0]),float)
+
     for i_point in range(int(num_segments)):
         global_i_point=int(num_segments*i_axon+i_point)
         Xs_Tr=np.vectorize(complex)(solution_sort[(global_i_point)*N_freq:(global_i_point*N_freq+N_freq),3],solution_sort[global_i_point*N_freq:(global_i_point*N_freq+N_freq),4])         #real and im parts for the first point in VTA
@@ -176,11 +178,11 @@ def convolute_and_ifft(last_point,Ind_trunc1,trunc_method,post_truncation,i_axon
             fv_conj = np.conjugate(Xs_conv[-2:0:-1])
 
         Y = np.concatenate((Xs_conv, fv_conj), axis=0)
-        Signal_t_conv=np.fft.ifft(Y).real
+        Signal_t_conv[i_point,:]=np.fft.ifft(Y).real
 
         if global_i_point+last_point==0:
             plt.figure(11111234)
-            plt.plot(t_vect,Signal_t_conv)
+            plt.plot(t_vect,Signal_t_conv[i_point,:])
             plt.xlim(0.000,T*5)
             plt.grid(True)
             plt.xlabel('t, sec')
@@ -188,7 +190,8 @@ def convolute_and_ifft(last_point,Ind_trunc1,trunc_method,post_truncation,i_axon
             plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.savefig('/opt/Patient/Images/Signal_convoluted_1st_point.png', format='png', dpi=1000)
 
-        np.save('/opt/Patient/Points_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv.real)
+    # Number is the global point index of the last compartment on the neuron
+    np.save('/opt/Patient/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv)
 
     output.put(i_axon)
 
@@ -200,6 +203,8 @@ def convolute_and_ifft_octaves(last_point,i_axon,num_segments,N_freq,N_freq_octv
     global t_vect
     global FREQ_vector_signal
     global FR_vec_sign_octv
+
+    Signal_t_conv=np.zeros((num_segments,t_vect.shape[0]),float)
 
     for i_point in range(int(num_segments)):
         global_i_point=int(num_segments*i_axon+i_point)
@@ -235,11 +240,12 @@ def convolute_and_ifft_octaves(last_point,i_axon,num_segments,N_freq,N_freq_octv
 
         Y = np.concatenate((Xs_conv, fv_conj), axis=0)
 
-        Signal_t_conv=np.fft.ifft(Y).real
+        #Signal_t_conv=np.fft.ifft(Y).real\
+        Signal_t_conv[i_point,:]=np.fft.ifft(Y).real
 
         if global_i_point+last_point==0:
             plt.figure(11111234)
-            plt.plot(t_vect,Signal_t_conv)
+            plt.plot(t_vect,Signal_t_conv[i_point,:])
             plt.xlim(0.000,T*5)
             plt.grid(True)
             plt.xlabel('t, sec')
@@ -247,7 +253,9 @@ def convolute_and_ifft_octaves(last_point,i_axon,num_segments,N_freq,N_freq_octv
             plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.savefig('/opt/Patient/Images/Signal_convoluted_1st_point.png', format='png', dpi=500)
 
-        np.save('/opt/Patient/Points_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv.real)
+        #np.save('Points_in_time/Signal_t_conv'+str(i_axon), Signal_t_conv)
+    # Number is the global point index of the last compartment on the neuron
+    np.save('/opt/Patient/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv)
 
     output.put(i_axon)
 
