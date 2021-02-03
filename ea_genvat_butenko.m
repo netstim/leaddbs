@@ -301,6 +301,14 @@ end
 runStatus = [0 0]; % Succeed or not
 stimparams = struct();
 for side=0:1
+    % Stop and Remove running container on start
+    [~, containerID] = system(['docker ps -qf ancestor=', dockerImage]);
+    if ~isempty(containerID)
+        containerID = join(strsplit(strip(containerID)), ' ');
+        system(['docker stop ', containerID]);
+        system(['docker rm ', containerID]);
+    end
+
     switch side
         case 0
             sideCode = 'rh';
