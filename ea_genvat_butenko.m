@@ -305,8 +305,8 @@ for side=0:1
     [~, containerID] = system(['docker ps -qf ancestor=', dockerImage]);
     if ~isempty(containerID)
         containerID = join(strsplit(strip(containerID)), ' ');
-        system(['docker stop ', containerID]);
-        system(['docker rm ', containerID]);
+        system(['docker stop ', containerID{:}]);
+        system(['docker rm ', containerID{:}]);
     end
 
     switch side
