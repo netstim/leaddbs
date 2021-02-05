@@ -267,8 +267,11 @@ if __name__ == '__main__':
     process_1=-1
     if path_to_patient!=-1:
         if sys.platform == 'linux' or sys.platform == 'Linux':
-            output = subprocess.run(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
-            #subprocess.check_output(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient])
+            if os.environ.get('SINGULARITY_NAME'):
+                os.environ['PATIENTDIR'] = path_to_patient
+                output = subprocess.run(['python3','GUI_tree_files/AppUI.py',os.environ['PATIENTDIR'],str(side),str(interactive_mode)])
+            else:
+                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
         elif sys.platform == 'darwin' or sys.platform == 'Darwin':
             dir_code = os.getcwd()
             #subprocess.check_output(['open', 'script_for_GUI.sh', path_to_patient, dir_code], executable='/bin/bash')

@@ -383,7 +383,10 @@ def fibers_to_axons(name_of_combined_file,name_of_fiber_file,projection_name,axo
 
 if __name__ == '__main__':
 
-    index_side=int(sys.argv[1:][0])
+    patient_dir = sys.argv[1:][0]
+    index_side = int(sys.argv[1:][1])
+
+    os.environ['PATIENTDIR'] = patient_dir
 
     file_inp=h5py.File(os.environ['PATIENTDIR']+'/oss-dbs_parameters.mat')
 
