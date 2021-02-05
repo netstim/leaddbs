@@ -1,6 +1,6 @@
 access-token.txt
 local-build.sh
 OSS_platform/test.out
-/OSS_platform/salomePort.txt
+OSS_platform/salomePort.txt
 *.sif
 
