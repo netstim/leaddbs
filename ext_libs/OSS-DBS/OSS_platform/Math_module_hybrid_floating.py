@@ -9,7 +9,7 @@ Created on Sun Aug 19 13:23:54 2018
 from dolfin import *
 from pandas import read_csv
 import numpy as np
-import os.path
+import os
 import time as tm
 
 import warnings

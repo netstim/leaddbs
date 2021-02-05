@@ -24,6 +24,7 @@ from multiprocessing import sharedctypes
 from functools import partial
 
 import time as time_lib
+import os
 
 # parallelized IFFT on VTA array
 

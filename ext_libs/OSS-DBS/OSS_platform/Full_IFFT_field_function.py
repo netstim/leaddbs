@@ -15,7 +15,7 @@ Created on Wed Mar 13 15:41:38 2019
 
 from dolfin import *
 import numpy as np
-import os.path
+import os
 from pandas import read_csv
 import pickle
 

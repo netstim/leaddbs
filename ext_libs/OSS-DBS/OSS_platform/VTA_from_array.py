@@ -12,6 +12,7 @@ from dolfin import *
 import matplotlib.pyplot as plt
 from pandas import read_csv
 import time as time_lib
+import os
 
 import nibabel as nib
 

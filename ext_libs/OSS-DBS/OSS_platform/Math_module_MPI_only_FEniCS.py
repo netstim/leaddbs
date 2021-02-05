@@ -9,7 +9,7 @@ from dolfin import *
 from pandas import read_csv
 from tissue_dielectrics import DielectricProperties
 import numpy as np
-import os.path
+import os
 import subprocess
 import pickle
 

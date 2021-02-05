@@ -9,6 +9,7 @@ Created on Tue Jul  7 11:03:09 2020
 # this sript prerefines cells where the external grounding will be used
 from dolfin import *
 import numpy as np
+import os
 
 def simple_mesh_refiner(mesh_old,boundaries,subdomains_assigned,cell_markers):
     parameters['linear_algebra_backend']='PETSc'

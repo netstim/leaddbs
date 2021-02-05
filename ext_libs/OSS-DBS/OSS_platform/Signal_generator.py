@@ -7,6 +7,7 @@ Created on Sat Sep 29 22:50:08 2018
 import matplotlib.pyplot as plt
 import numpy as np
 import time as time_lib
+import os
 
 from multiprocessing import Pool #  Process pool
 from multiprocessing import sharedctypes

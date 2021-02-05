@@ -11,6 +11,7 @@ from dolfin import *
 import numpy as np
 import time
 import pickle
+import os
 
 from tissue_dielectrics import DielectricProperties
 
@@ -618,7 +619,7 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
                             Dirichlet_bc_scaled.append(DirichletBC(V_space, 0.0, Sim_setup.boundaries,Domains.Contacts[bc_i]))
                         else:
                             Dirichlet_bc_scaled.append(DirichletBC(V_space, np.real((Domains.fi[bc_i])/J_ground),Sim_setup.boundaries,Domains.Contacts[bc_i]))
-    
+
                 if Sim_setup.external_grounding==True:
                     if Sim_setup.Laplace_eq == 'EQS':
                         Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0),0.0,facets,1))
@@ -636,7 +637,7 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
                     phi_i_check.vector()[:] = 0.0
             else:
                 phi_r_check,phi_i_check=(phi_r,phi_i)   # no need to recompute
-       
+
             J_ground,E_field_r,E_field_im=get_current(Sim_setup.mesh,facets,Sim_setup.boundaries,Sim_setup.element_order,Sim_setup.Laplace_eq,Domains.Contacts,kappa,Cond_tensor,phi_r_check,phi_i_check,ground_index,get_E_field=True)
 
             if Sim_type=='Astrom':
@@ -700,8 +701,8 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
 
                     #if Sim_setup.c_c==1:
                     if Sim_type=='Butson':
-                        Phi_ROI[inx,3]=Second_deriv(pnt)   
-                        Phi_ROI[inx,4]=Second_deriv_imag(pnt)    
+                        Phi_ROI[inx,3]=Second_deriv(pnt)
+                        Phi_ROI[inx,4]=Second_deriv_imag(pnt)
                     elif Sim_type=='Astrom':
                         Phi_ROI[inx,3]=E_amp_real(pnt)  # if VC, they are already scaled here and the signal will be unit
                         Phi_ROI[inx,4]=E_amp_imag(pnt)  # if CC, they will be scaled as the signal (only one contact and ground here, so ok)
@@ -766,10 +767,10 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
                 file<<phi_r_check
             else:
                 file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r.pvd')
-                file<<phi_r_check                
+                file<<phi_r_check
 
             file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_E_amp_real.pvd')
-            file<<E_amp_real          
+            file<<E_amp_real
 
         output.put(1)
 

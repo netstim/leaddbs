@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 from dolfin import *
 from pandas import read_csv
 import numpy as np
-import os.path
+import os
 import subprocess
 import pickle
 import time as tm

@@ -13,6 +13,7 @@ from dolfin import *
 import numpy as np
 import time
 import pickle
+import os
 
 class MRI_info:
     def __init__(self,MRI_n,Mx,My,Mz,voxel_size_x,voxel_size_y,voxel_size_z,x_min,y_min,z_min,x_max,y_max,z_max,x_shift,y_shift,z_shift):

@@ -6,6 +6,7 @@ Created on Sun Nov  4 16:14:19 2018
 """
 
 from Electrode_files.Profile_Process_V6 import words_detect
+import os
 
 def read_mesh_indicies(dictionary):
     f1=open('/opt/Patient/Meshes/Mesh_unref.msh','r')
