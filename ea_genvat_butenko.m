@@ -305,9 +305,11 @@ for side=0:1
     if isempty(getenv('SINGULARITY_NAME')) % Only do it when using docker
         [~, containerID] = system(['docker ps -qf ancestor=', dockerImage]);
         if ~isempty(containerID)
-            containerID = join(strsplit(strip(containerID)), ' ');
-            system(['docker stop ', containerID{:}]);
-            system(['docker rm ', containerID{:}]);
+            containerID = strsplit(strip(containerID));
+            fprintf('\nStop running container...\n')
+            cellfun(@(id) system(['docker stop ', id, newline]), containerID);
+            fprintf('\nClean up running container...\n')
+            cellfun(@(id) system(['docker rm ', id, newline]), containerID);
         end
     end
 
@@ -336,7 +338,7 @@ for side=0:1
         continue;
     end
 
-    fprintf('Running OSS-DBS for %s side stimulation...\n\n', sideStr);
+    fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
 
     % Calculate axon allocation when option enabled
     if settings.calcAxonActivation
