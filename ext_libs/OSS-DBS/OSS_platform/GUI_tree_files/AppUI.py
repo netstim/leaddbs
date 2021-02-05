@@ -97,7 +97,6 @@ class MainWindow(Functionalities):
         self.ui.checkBox_Neuron_Model_Array_Prepared.stateChanged.connect(
             lambda: self.show_menu_item_on_checkbox_click(self.ui.checkBox_Neuron_Model_Array_Prepared,
                                                           self.ui.widget_Name_Of_External_Neuron_Array_3))
-
         # PopUps
         self.ui.checkBox_Neuron_Model_Array_Prepared.stateChanged.connect(
             lambda: self.pop_up_reverse(self.ui.checkBox_Neuron_Model_Array_Prepared, self.externalNeuronArray,
@@ -581,6 +580,7 @@ class MainWindow(Functionalities):
             self.get_lineedit_entry(d['Approximating_Dimensions'], self.ui.lineEdit_Approximating_Dimensions)
         except:
             pass
+
         self.ui.doubleSpinBox_Implantation_Coordinate_X.setValue(d['Implantation_coordinate_X'])
         self.ui.doubleSpinBox_Implantation_Coordinate_Y.setValue(d['Implantation_coordinate_Y'])
         self.ui.doubleSpinBox_Implantation_Coordinate_Z.setValue(d['Implantation_coordinate_Z'])

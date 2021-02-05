@@ -210,16 +210,16 @@ def get_scaled_cond_tensor(mesh,subdomains,sine_freq,signal_freq,unscaled_tensor
 
 
     if plot_tensors==True:
-        file=File('/opt/Patient/Tensors/c00_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c00_mapped.pvd')
         file<<c00,mesh
-        file=File('/opt/Patient/Tensors/c11_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c11_mapped.pvd')
         file<<c11,mesh
-        file=File('/opt/Patient/Tensors/c22_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c22_mapped.pvd')
         file<<c22,mesh
-        file=File('/opt/Patient/Tensors/c01_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c01_mapped.pvd')
         file<<c01,mesh
 
-        file=File('/opt/Patient/Tensors/Anis_cells.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/Anis_cells.pvd')
         file<<cell_Anis,mesh
 
 
@@ -232,7 +232,7 @@ def get_scaled_cond_tensor(mesh,subdomains,sine_freq,signal_freq,unscaled_tensor
                        c00=c_unscaled00, c01=c_unscaled01, c02=c_unscaled02, c11=c_unscaled11, c12=c_unscaled12, c22=c_unscaled22, degree=0)
         tensor= as_tensor([[c_unscaled[0], c_unscaled[1], c_unscaled[2]], [c_unscaled[1], c_unscaled[3], c_unscaled[4]],[c_unscaled[2],c_unscaled[4],c_unscaled[5]]])
         f_vector_repr=project(tensor,TensorFunctionSpace(mesh, "Lagrange", 1),solver_type="cg", preconditioner_type="amg")
-        file=File('/opt/Patient/Tensors/Ellipsoids_unscaled_at_'+str(signal_freq)+'_Hz.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/Ellipsoids_unscaled_at_'+str(signal_freq)+'_Hz.pvd')
         file<<f_vector_repr
 
     return C_tensor
@@ -503,10 +503,10 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
     # to get conductivity (and permittivity if EQS formulation) mapped accrodingly to the subdomains. k_val_r is just a list of conductivities (S/mm!) in a specific order to scale the cond. tensor
     kappa,k_val_r=get_dielectric_properties_from_subdomains(Sim_setup.mesh,Sim_setup.subdomains,Sim_setup.Laplace_eq,Domains.Float_contacts,Sim_setup.conductivities,Sim_setup.rel_permittivities,Sim_setup.sine_freq)
     if int(Sim_setup.sine_freq)==int(Sim_setup.signal_freq):
-        file=File('/opt/Patient/Field_solutions/Conductivity_map_'+str(Sim_setup.signal_freq)+'Hz.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Field_solutions/Conductivity_map_'+str(Sim_setup.signal_freq)+'Hz.pvd')
         file<<kappa[0]
         if Sim_setup.Laplace_eq == 'EQS':
-            file=File('/opt/Patient/Field_solutions/Permittivity_map_'+str(Sim_setup.signal_freq)+'Hz.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Field_solutions/Permittivity_map_'+str(Sim_setup.signal_freq)+'Hz.pvd')
             file<<kappa[1]
 
     # to get tensor scaled by the conductivity map
@@ -532,10 +532,10 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
 
     #save unscaled real solution for plotting
     if int(Sim_setup.sine_freq)==int(Sim_setup.signal_freq):
-        file=File('/opt/Patient/Field_solutions/Phi_real_unscaled_'+str(Sim_setup.signal_freq)+'Hz.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_unscaled_'+str(Sim_setup.signal_freq)+'Hz.pvd')
         file<<phi_r,Sim_setup.mesh
         if Sim_setup.external_grounding==True:
-            file=File('/opt/Patient/Field_solutions/ground_facets'+str(Sim_setup.signal_freq)+'Hz.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Field_solutions/ground_facets'+str(Sim_setup.signal_freq)+'Hz.pvd')
             file<<facets
         print("DoFs on the mesh for "+Sim_setup.Laplace_eq+" : ", (max(V_space.dofmap().dofs())+1))
 
@@ -570,7 +570,7 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
 
             Dirichlet_bc_with_CPE,total_impedance=get_CPE_corrected_Dirichlet_BC(Sim_setup.external_grounding,facets,Sim_setup.boundaries,Sim_setup.CPE_param,Sim_setup.Laplace_eq,Sim_setup.sine_freq,Sim_setup.signal_freq,Domains.Contacts,Domains.fi,V_across,Z_tissue,V_space)
 
-            f=open('/opt/Patient/Field_solutions/Impedance'+str(core)+'.csv','ab')
+            f=open(os.environ['PATIENTDIR']+'/Field_solutions/Impedance'+str(core)+'.csv','ab')
             np.savetxt(f, total_impedance, delimiter=" ")
             f.close()
 
@@ -589,13 +589,13 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
             phi_sol,phi_r,phi_i,J_ground=(phi_sol_CPE,phi_r_CPE,phi_i_CPE,J_ground_CPE)
 
     # if Full_IFFT==1:
-    #     Hdf=HDF5File(Sim_setup.mesh.mpi_comm(), "/opt/Patient/Field_solutions_functions/solution"+str(np.round(Sim_setup.sine_freq,6))+".h5", "w")
+    #     Hdf=HDF5File(Sim_setup.mesh.mpi_comm(), os.environ['PATIENTDIR']+"/Field_solutions_functions/solution"+str(np.round(Sim_setup.sine_freq,6))+".h5", "w")
     #     Hdf.write(Sim_setup.mesh, "mesh")
     #     if Sim_setup.CPE_status!=1:
     #         Hdf.write(phi_sol, "solution_full")
 
     #     if Sim_setup.c_c==1:
-    #         with open('/opt/Patient/Field_solutions_functions/current_scale'+str(np.round(Sim_setup.sine_freq,6))+'.file', 'wb') as f:
+    #         with open(os.environ['PATIENTDIR']+'/Field_solutions_functions/current_scale'+str(np.round(Sim_setup.sine_freq,6))+'.file', 'wb') as f:
     #             pickle.dump(np.array([np.real(J_ground),np.imag(J_ground)]), f)
     #     Hdf.close()
 
@@ -721,7 +721,7 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
             fre_vector=[Sim_setup.sine_freq]*Phi_ROI.shape[0]
             comb=np.vstack((Phi_ROI[:,0],Phi_ROI[:,1],Phi_ROI[:,2],Phi_ROI[:,3],Phi_ROI[:,4],fre_vector)).T
 
-            f = h5py.File('/opt/Patient/Field_solutions/sol_cor'+str(core)+'.h5','a')
+            f = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(core)+'.h5','a')
             f.create_dataset(str(Sim_setup.sine_freq), data=comb)
             f.close()
 
@@ -729,7 +729,7 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
 
         if Sim_setup.c_c==1:
             comb_Z=np.vstack((np.real(Z_tissue),np.imag(Z_tissue),Sim_setup.sine_freq)).T
-            f=open('/opt/Patient/Field_solutions/Impedance'+str(core)+'.csv','ab')
+            f=open(os.environ['PATIENTDIR']+'/Field_solutions/Impedance'+str(core)+'.csv','ab')
             np.savetxt(f, comb_Z, delimiter=" ")
             f.close()
 
@@ -763,13 +763,13 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
         if Sim_setup.sine_freq==Sim_setup.signal_freq:
             if Sim_setup.c_c==1:
                 print("Current through the ground after normalizing to 1 A at the signal freq.: ",J_ground)
-                file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r_1A.pvd')
+                file=File(os.environ['PATIENTDIR']+'/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r_1A.pvd')
                 file<<phi_r_check
             else:
-                file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r.pvd')
+                file=File(os.environ['PATIENTDIR']+'/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r.pvd')
                 file<<phi_r_check
 
-            file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_E_amp_real.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_E_amp_real.pvd')
             file<<E_amp_real
 
         output.put(1)
@@ -800,13 +800,13 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
         fre_vector=[Sim_setup.sine_freq]*Phi_ROI.shape[0]
         comb=np.vstack((Phi_ROI[:,0],Phi_ROI[:,1],Phi_ROI[:,2],Phi_ROI[:,3],Phi_ROI[:,4],fre_vector)).T
 
-        f = h5py.File('/opt/Patient/Field_solutions/sol_cor'+str(core)+'.h5','a')
+        f = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(core)+'.h5','a')
         f.create_dataset(str(Sim_setup.sine_freq), data=comb)
         f.close()
 
         if Sim_setup.c_c==1:
             comb_Z=np.vstack((np.real(Z_tissue),np.imag(Z_tissue),Sim_setup.sine_freq)).T
-            f=open('/opt/Patient/Field_solutions/Impedance'+str(core)+'.csv','ab')
+            f=open(os.environ['PATIENTDIR']+'/Field_solutions/Impedance'+str(core)+'.csv','ab')
             np.savetxt(f, comb_Z, delimiter=" ")
             f.close()
 
@@ -846,7 +846,7 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
             J_ground=get_current(Sim_setup.mesh,facets,Sim_setup.boundaries,Sim_setup.element_order,Sim_setup.Laplace_eq,Domains.Contacts,kappa,Cond_tensor,phi_r_check,phi_i_check,ground_index)
             print("Current through the ground after normalizing to 1 A at the signal freq.: ",J_ground)
 
-            file=File('/opt/Patient/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r_1A.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Field_solutions/'+str(Sim_setup.Laplace_eq)+str(Sim_setup.signal_freq)+'_phi_r_1A.pvd')
             file<<phi_r_check
 
         output.put(1)

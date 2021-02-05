@@ -52,8 +52,8 @@ def ifft_on_VTA_array(Xs_signal_normalized,num_freqs,N_freq_octv,FR_vec_sign_oct
             stepper=stepper+1
 
     if i_point==0:
-        np.savetxt('/opt/Patient/Field_solutions/Xs_Tr_full_real.csv', Xs_Tr_full_real, delimiter=" ")
-        np.savetxt('/opt/Patient/Field_solutions/Xs_Tr_full_imag.csv', Xs_Tr_full_imag, delimiter=" ")
+        np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Xs_Tr_full_real.csv', Xs_Tr_full_real, delimiter=" ")
+        np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Xs_Tr_full_imag.csv', Xs_Tr_full_imag, delimiter=" ")
 
     Xs_Tr_full_complex=np.vectorize(complex)(Xs_Tr_full_real,Xs_Tr_full_imag)
 
@@ -78,7 +78,7 @@ def ifft_on_VTA_array(Xs_signal_normalized,num_freqs,N_freq_octv,FR_vec_sign_oct
          plt.xlabel('t, sec')
          plt.ylabel('|E|, V/mm')
          plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-         plt.savefig('/opt/Patient/Images/Signal_convoluted_1st_point.png', format='png', dpi=500)
+         plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_convoluted_1st_point.png', format='png', dpi=500)
 
     #np.save('Points_in_time/Signal_t_conv'+str(i_point), Signal_t_conv.real)
 
@@ -102,8 +102,8 @@ def get_IFFT_on_VTA_array(num_of_proc,name_sol,d,FREQ_vector_signal,Xs_signal_no
     shared_array = sharedctypes.RawArray(Max_field_on_VTA_array._type_, Max_field_on_VTA_array)
 
 
-    Fr_corresp_ar = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-    FR_vec_sign_octv = np.genfromtxt('/opt/Patient/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+    Fr_corresp_ar = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+    FR_vec_sign_octv = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
 
     Fr_corresp_ar=np.round(Fr_corresp_ar,6)
     N_freq_octv=(FR_vec_sign_octv.shape[0])

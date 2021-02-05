@@ -65,7 +65,7 @@ def prerefine_ground(mesh,subdomains_assigned,boundaries,Domains):
     Ground_surface=assemble(1.0*dss(1))
     print("Ground_surface: ",Ground_surface)
 
-    file=File('/opt/Patient/Results_adaptive/grounding_cells.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Results_adaptive/grounding_cells.pvd')
     file<<cells_to_ref
 
     mesh_refined,boundaries_refined,subdomains_assigned_refined=simple_mesh_refiner(mesh,boundaries,subdomains_assigned,cells_to_ref)
@@ -74,9 +74,9 @@ def prerefine_ground(mesh,subdomains_assigned,boundaries,Domains):
 
 def refine_external_ground(Domains):        #if we want to skip adaptive mesh refinement
 
-    mesh = Mesh("/opt/Patient/Meshes/Mesh_unref.xml")
-    boundaries = MeshFunction('size_t',mesh,'/opt/Patient/Meshes/Mesh_unref_facet_region.xml')
-    subdomains_assigned=MeshFunction('size_t',mesh,"/opt/Patient/Meshes/Mesh_unref_physical_region.xml")
+    mesh = Mesh(os.environ['PATIENTDIR']+"/Meshes/Mesh_unref.xml")
+    boundaries = MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/Meshes/Mesh_unref_facet_region.xml')
+    subdomains_assigned=MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+"/Meshes/Mesh_unref_physical_region.xml")
 
     print("Before ground ref: ",mesh.num_cells())
 
@@ -94,9 +94,9 @@ def refine_external_ground(Domains):        #if we want to skip adaptive mesh re
 
     print("After ground ref: ",mesh.num_cells())
 
-    mesh_file=File('/opt/Patient/Results_adaptive/mesh_adapt.xml.gz')
-    boundaries_file = File('/opt/Patient/Results_adaptive/boundaries_adapt.xml')
-    subdomains_assigned_file=File('/opt/Patient/Results_adaptive/subdomains_assigned_adapt.xml')
+    mesh_file=File(os.environ['PATIENTDIR']+'/Results_adaptive/mesh_adapt.xml.gz')
+    boundaries_file = File(os.environ['PATIENTDIR']+'/Results_adaptive/boundaries_adapt.xml')
+    subdomains_assigned_file=File(os.environ['PATIENTDIR']+'/Results_adaptive/subdomains_assigned_adapt.xml')
 
     mesh_file<<mesh
     boundaries_file<<boundaries

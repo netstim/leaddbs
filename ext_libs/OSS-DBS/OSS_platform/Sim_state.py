@@ -34,72 +34,72 @@ def manage_folders(d):
     #    print("exiting")
     #    raise Exception('exit')
 
-    if os.path.isdir('/opt/Patient/Tensors') and d["Parallel_comp_ready"]!=1:
-        shutil.rmtree('/opt/Patient/Tensors')
+    if os.path.isdir(os.environ['PATIENTDIR']+'/Tensors') and d["Parallel_comp_ready"]!=1:
+        shutil.rmtree(os.environ['PATIENTDIR']+'/Tensors')
 
-    if not os.path.isdir('/opt/Patient/Tensors'):
-        os.makedirs('/opt/Patient/Tensors')
+    if not os.path.isdir(os.environ['PATIENTDIR']+'/Tensors'):
+        os.makedirs(os.environ['PATIENTDIR']+'/Tensors')
 
-    if not os.path.isdir('/opt/Patient/Images'):
-        os.makedirs('/opt/Patient/Images')
+    if not os.path.isdir(os.environ['PATIENTDIR']+'/Images'):
+        os.makedirs(os.environ['PATIENTDIR']+'/Images')
     elif d["Init_neuron_model_ready"]==0:   # a totally new simulation, old images can be deleted
-        shutil.rmtree('/opt/Patient/Images')
-        os.makedirs('/opt/Patient/Images')
+        shutil.rmtree(os.environ['PATIENTDIR']+'/Images')
+        os.makedirs(os.environ['PATIENTDIR']+'/Images')
 
     if d["voxel_arr_MRI"]==0 and d["voxel_arr_DTI"]==0:
-        if os.path.isdir('/opt/Patient/MRI_DTI_derived_data'):
-            shutil.rmtree('/opt/Patient/MRI_DTI_derived_data')
-        os.makedirs('/opt/Patient/MRI_DTI_derived_data')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data')
+        os.makedirs(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data')
     if d["Init_mesh_ready"]!=1:
-        if os.path.isdir('/opt/Patient/Meshes'):
-            shutil.rmtree('/opt/Patient/Meshes')
-        os.makedirs('/opt/Patient/Meshes')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Meshes'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Meshes')
+        os.makedirs(os.environ['PATIENTDIR']+'/Meshes')
     if d["CSF_mesh_ready"]!=1:
-        if os.path.isdir('/opt/Patient/CSF_ref'):
-            shutil.rmtree('/opt/Patient/CSF_ref')
-        os.makedirs('/opt/Patient/CSF_ref')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/CSF_ref'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/CSF_ref')
+        os.makedirs(os.environ['PATIENTDIR']+'/CSF_ref')
     if d["Adapted_mesh_ready"]!=1:
-        if os.path.isdir('/opt/Patient/Results_adaptive'):
-            shutil.rmtree('/opt/Patient/Results_adaptive')
-        os.makedirs('/opt/Patient/Results_adaptive')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Results_adaptive'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Results_adaptive')
+        os.makedirs(os.environ['PATIENTDIR']+'/Results_adaptive')
     if d["signal_generation_ready"]!=1:
-        if os.path.isdir('/opt/Patient/Stim_Signal'):
-            shutil.rmtree('/opt/Patient/Stim_Signal')
-        os.makedirs('/opt/Patient/Stim_Signal')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Stim_Signal'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Stim_Signal')
+        os.makedirs(os.environ['PATIENTDIR']+'/Stim_Signal')
     if d["Parallel_comp_ready"]!=1 and d["Parallel_comp_interrupted"]!=1:
-        if os.path.isdir('/opt/Patient/Field_solutions'):
-            shutil.rmtree('/opt/Patient/Field_solutions')
-        os.makedirs('/opt/Patient/Field_solutions')
-        os.makedirs('/opt/Patient/Field_solutions/Activation')
-        os.makedirs('/opt/Patient/Field_solutions/Animation_files')
-        if os.path.isdir('/opt/Patient/Field_solutions_functions'):
-            shutil.rmtree('/opt/Patient/Field_solutions_functions')
-        os.makedirs('/opt/Patient/Field_solutions_functions')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Field_solutions'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Field_solutions')
+        os.makedirs(os.environ['PATIENTDIR']+'/Field_solutions')
+        os.makedirs(os.environ['PATIENTDIR']+'/Field_solutions/Activation')
+        os.makedirs(os.environ['PATIENTDIR']+'/Field_solutions/Animation_files')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Field_solutions_functions'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Field_solutions_functions')
+        os.makedirs(os.environ['PATIENTDIR']+'/Field_solutions_functions')
     if d["IFFT_ready"]!=1:
-        if os.path.isdir('/opt/Patient/Axons_in_time'):
-            shutil.rmtree('/opt/Patient/Axons_in_time')
-        os.makedirs('/opt/Patient/Axons_in_time')
-        if os.path.isdir('/opt/Patient/Animation_Field_in_time'):
-            shutil.rmtree('/opt/Patient/Animation_Field_in_time')
-        os.makedirs('/opt/Patient/Animation_Field_in_time')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Axons_in_time'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Axons_in_time')
+        os.makedirs(os.environ['PATIENTDIR']+'/Axons_in_time')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Animation_Field_in_time'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Animation_Field_in_time')
+        os.makedirs(os.environ['PATIENTDIR']+'/Animation_Field_in_time')
     if (d["Init_neuron_model_ready"]==0 and d["Adjusted_neuron_model_ready"]==0):
-        if os.path.isdir('/opt/Patient/Neuron_model_arrays'):
-            shutil.rmtree('/opt/Patient/Neuron_model_arrays')
-        os.makedirs('/opt/Patient/Neuron_model_arrays')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Neuron_model_arrays'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Neuron_model_arrays')
+        os.makedirs(os.environ['PATIENTDIR']+'/Neuron_model_arrays')
 
-    if os.path.isdir('/opt/Patient/Field_solutions/Activation'):     # we always re-run NEURON simulation
-        shutil.rmtree('/opt/Patient/Field_solutions/Activation')
-        os.makedirs('/opt/Patient/Field_solutions/Activation')
+    if os.path.isdir(os.environ['PATIENTDIR']+'/Field_solutions/Activation'):     # we always re-run NEURON simulation
+        shutil.rmtree(os.environ['PATIENTDIR']+'/Field_solutions/Activation')
+        os.makedirs(os.environ['PATIENTDIR']+'/Field_solutions/Activation')
 
     if d['Stim_side']==0:
-        if os.path.isdir('/opt/Patient/Results_rh'):
-            shutil.rmtree('/opt/Patient/Results_rh')
-        os.makedirs('/opt/Patient/Results_rh')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Results_rh'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Results_rh')
+        os.makedirs(os.environ['PATIENTDIR']+'/Results_rh')
 
     if d['Stim_side']==1:
-        if os.path.isdir('/opt/Patient/Results_lh'):
-            shutil.rmtree('/opt/Patient/Results_lh')
-        os.makedirs('/opt/Patient/Results_lh')
+        if os.path.isdir(os.environ['PATIENTDIR']+'/Results_lh'):
+            shutil.rmtree(os.environ['PATIENTDIR']+'/Results_lh')
+        os.makedirs(os.environ['PATIENTDIR']+'/Results_lh')
 
 
     return True
@@ -109,10 +109,10 @@ def check_state(d):
     if d['number_of_processors']==0:
         physical_cores=os.popen("""lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l""").read()[:-1]
         d['number_of_processors']=int(physical_cores)     # this option is only active if Docker App is used (on macOS and Windows)
-        print("Number of cores available for Docker: ",d['number_of_processors'])      
-    
+        print("Number of cores available for Docker: ",d['number_of_processors'])
+
     print("Number of processors used: ",d['number_of_processors'])
-    
+
     if d["IFFT_ready"]==1:
         d["voxel_arr_MRI"]=1
         d["Init_mesh_ready"]=1

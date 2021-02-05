@@ -53,8 +53,8 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
 
     if from_grid_txt==True:
         #kicks out strings with comments
-        infile = open('/opt/Patient/'+MRI_name,'r').readlines()
-        with open('/opt/Patient/MRI_DTI_derived_data/Filtered_'+MRI_name,'w') as outfile:
+        infile = open(os.environ['PATIENTDIR']+'/'+MRI_name,'r').readlines()
+        with open(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Filtered_'+MRI_name,'w') as outfile:
             for index,line in enumerate(infile):
                 #if index != 0 and index != 4 and index != 5:      #Waxholm atlas space
                 if index != 0 and index != 4:           #here, 1st and 5th line are comments (tissue_full.txt)
@@ -66,7 +66,7 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
         spc=' '
 
         #extracts vectors and values in MRI slices
-        with open('/opt/Patient/MRI_DTI_derived_data/Filtered_'+MRI_name, 'r') as f:
+        with open(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Filtered_'+MRI_name, 'r') as f:
             for index,line in enumerate(f):
                 if index==0:
                     line=line.rstrip()
@@ -99,7 +99,7 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
         import nibabel as nib      #nibabel should be installed
         import os
 
-        example_filename = os.path.join('/opt/Patient/'+MRI_name)
+        example_filename = os.path.join(os.environ['PATIENTDIR']+'/'+MRI_name)
         img = nib.load(example_filename)
         img.shape
         tissue_array = img.get_fdata()
@@ -158,7 +158,7 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
     # i=0
 
     #np.savetxt('MRI_DTI_derived_data/Tissue_array_MRI.csv', voxel_arr.astype(int), fmt='%i', delimiter=" ")
-    np.save('/opt/Patient/MRI_DTI_derived_data/Tissue_array_MRI', voxel_arr.astype('b'), allow_pickle=False, fix_imports=False)
+    np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Tissue_array_MRI', voxel_arr.astype('b'), allow_pickle=False, fix_imports=False)
     del voxel_arr,voxel_array_temp
 
     if MRI_data_in_m==1:        #switch to mm if the MRI data is in m
@@ -179,9 +179,9 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
     y_vector_MRI_Box[:] = [round(y_i-min(y_arr)+voxel_size_y,6) for y_i in y_arr]
     z_vector_MRI_Box[:] = [round(z_i-min(z_arr)+voxel_size_z,6) for z_i in z_arr]
 
-    np.savetxt('/opt/Patient/MRI_DTI_derived_data/x_vector_MRI_Box.csv', x_vector_MRI_Box, delimiter=" ")
-    np.savetxt('/opt/Patient/MRI_DTI_derived_data/y_vector_MRI_Box.csv', y_vector_MRI_Box, delimiter=" ")
-    np.savetxt('/opt/Patient/MRI_DTI_derived_data/z_vector_MRI_Box.csv', z_vector_MRI_Box, delimiter=" ")
+    np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/x_vector_MRI_Box.csv', x_vector_MRI_Box, delimiter=" ")
+    np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/y_vector_MRI_Box.csv', y_vector_MRI_Box, delimiter=" ")
+    np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/z_vector_MRI_Box.csv', z_vector_MRI_Box, delimiter=" ")
 
     print("----- Preparation of MRI data took %s seconds -----" % (time.clock() - start_voxel))
 
@@ -194,8 +194,8 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
 
     if from_grid_txt==True:
 
-        infile = open('/opt/Patient/'+DTI_name,'r').readlines()
-        with open('/opt/Patient/MRI_DTI_derived_data/Filtered_'+DTI_name,'w') as outfile:
+        infile = open(os.environ['PATIENTDIR']+'/'+DTI_name,'r').readlines()
+        with open(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Filtered_'+DTI_name,'w') as outfile:
 
             #first, we check the length of z and y vectors (one line of DTI data corresponds to the same y and z coordinate, directions are separated by a comment)
             for index,line in enumerate(infile):
@@ -220,7 +220,7 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
         z_vector=[]
         spc=' '
 
-        with open('/opt/Patient/MRI_DTI_derived_data/Filtered_'+DTI_name, 'r') as f:
+        with open(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Filtered_'+DTI_name, 'r') as f:
             for index,line in enumerate(f):
                 if index==0:
                     line=line.rstrip()
@@ -313,7 +313,7 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
         import nibabel as nib      #nibabel should be installed
         import os
 
-        example_filename = os.path.join('/opt/Patient/'+DTI_name)
+        example_filename = os.path.join(os.environ['PATIENTDIR']+'/'+DTI_name)
         img = nib.load(example_filename)
         img.shape
         tissue_array = img.get_fdata()
@@ -356,9 +356,9 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
     y_vector_DTI_Box[:] = [round(y_i-min(y_arr)+voxel_size_y,6) for y_i in y_arr]
     z_vector_DTI_Box[:] = [round(z_i-min(z_arr)+voxel_size_z,6) for z_i in z_arr]
 
-    np.savetxt('/opt/Patient/MRI_DTI_derived_data/x_vector_DTI_Box.csv', x_vector_DTI_Box, delimiter=" ")
-    np.savetxt('/opt/Patient/MRI_DTI_derived_data/y_vector_DTI_Box.csv', y_vector_DTI_Box, delimiter=" ")
-    np.savetxt('/opt/Patient/MRI_DTI_derived_data/z_vector_DTI_Box.csv', z_vector_DTI_Box, delimiter=" ")
+    np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/x_vector_DTI_Box.csv', x_vector_DTI_Box, delimiter=" ")
+    np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/y_vector_DTI_Box.csv', y_vector_DTI_Box, delimiter=" ")
+    np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/z_vector_DTI_Box.csv', z_vector_DTI_Box, delimiter=" ")
 
 
     i=0
@@ -383,7 +383,7 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
     #voxel_array = voxel_array[voxel_array[:,2].argsort(kind='mergesort')]
 
     #np.savetxt('MRI_DTI_derived_data/Tensor_array_DTI.csv', Tensor_array, delimiter=" ")
-    np.save('/opt/Patient/MRI_DTI_derived_data/Tensor_array_DTI', Tensor_array)
+    np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Tensor_array_DTI', Tensor_array)
 
     del Tensor_array,voxel_arr_c11,voxel_arr_c21,voxel_arr_c31,voxel_arr_c22,voxel_arr_c32,voxel_arr_c33
 
@@ -408,16 +408,16 @@ def obtain_MRI_class(inp_dict):
 
         '''Save meta data for the future simulations with the current MRI data set'''
         MRI_misc=np.array([Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z])
-        np.savetxt('/opt/Patient/MRI_DTI_derived_data/MRI_misc.csv', MRI_misc, delimiter=" ")
+        np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', MRI_misc, delimiter=" ")
         print("--- MRI meta data were created\n")
     else:
-        [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
+        [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
         print("--- MRI meta data were loaded\n")
 
     x_shift,y_shift,z_shift=(-1*(x_min),-1*(y_min),-1*(z_min))  #shift of MRI to have it in the positive octant and start in (0,0,0)
 
     MRI_param=MRI_info(inp_dict["MRI_data_name"],Mx_mri,My_mri,Mz_mri,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z,x_min,y_min,z_min,x_max,y_max,z_max,x_shift,y_shift,z_shift)
-    with open('/opt/Patient/MRI_DTI_derived_data/MRI_class.file', "wb") as f:
+    with open(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_class.file', "wb") as f:
         pickle.dump(MRI_param, f, pickle.HIGHEST_PROTOCOL)
 
     return MRI_param
@@ -440,15 +440,15 @@ def obtain_DTI_class(inp_dict,MRI_param):
 
         DTI_misc=np.array([Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti])
         '''Save meta data for the future simulations with the current MRI data set'''
-        np.savetxt('/opt/Patient/MRI_DTI_derived_data/DTI_misc.csv', DTI_misc, delimiter=" ")
+        np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/DTI_misc.csv', DTI_misc, delimiter=" ")
         print("--- DTI meta data were created\n")
 
     if inp_dict["voxel_arr_DTI"]==1:
-        [Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti]=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/DTI_misc.csv', delimiter=' ')
+        [Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/DTI_misc.csv', delimiter=' ')
         print("--- DTI meta data were loaded\n")
 
     DTI_param=DTI_info(inp_dict["DTI_data_name"],Mx_dti,My_dti,Mz_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti)
-    with open('/opt/Patient/MRI_DTI_derived_data/DTI_class.file', "wb") as f:
+    with open(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/DTI_class.file', "wb") as f:
         pickle.dump(DTI_param, f, pickle.HIGHEST_PROTOCOL)
 
     return DTI_param

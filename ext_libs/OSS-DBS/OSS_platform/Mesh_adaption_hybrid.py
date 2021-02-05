@@ -41,16 +41,16 @@ class Field_calc_parameters:
         self.Solver_type=Solver
 
 def load_mesh(mesh_designation):
-    mesh = Mesh('/opt/Patient/Results_adaptive/mesh_'+mesh_designation+'.xml.gz')
-    boundaries = MeshFunction('size_t',mesh,'/opt/Patient/Results_adaptive/boundaries_'+mesh_designation+'.xml')
-    subdomains = MeshFunction('size_t',mesh,'/opt/Patient/Results_adaptive/subdomains_assigned_'+mesh_designation+'.xml')
+    mesh = Mesh(os.environ['PATIENTDIR']+'/Results_adaptive/mesh_'+mesh_designation+'.xml.gz')
+    boundaries = MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/Results_adaptive/boundaries_'+mesh_designation+'.xml')
+    subdomains = MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/Results_adaptive/subdomains_assigned_'+mesh_designation+'.xml')
 
     return mesh, boundaries, subdomains
 
 def save_mesh(mesh_designation,mesh,boundaries,subdomains):
-    mesh_file=File("/opt/Patient/Results_adaptive/mesh_"+mesh_designation+".xml.gz")
-    boundaries_file = File('/opt/Patient/Results_adaptive/boundaries_'+mesh_designation+'.xml')
-    subdomains_assigned_file=File('/opt/Patient/Results_adaptive/subdomains_assigned_'+mesh_designation+'.xml')
+    mesh_file=File(os.environ['PATIENTDIR']+"/Results_adaptive/mesh_"+mesh_designation+".xml.gz")
+    boundaries_file = File(os.environ['PATIENTDIR']+'/Results_adaptive/boundaries_'+mesh_designation+'.xml')
+    subdomains_assigned_file=File(os.environ['PATIENTDIR']+'/Results_adaptive/subdomains_assigned_'+mesh_designation+'.xml')
     mesh_file<<mesh
     boundaries_file<<boundaries
     subdomains_assigned_file<<subdomains
@@ -78,15 +78,15 @@ def save_mesh_and_kappa_to_h5(mesh_to_h5,subdomains_to_h5,boundaries_to_h5,Field
     help = np.asarray(subdomains_to_h5.array(), dtype=np.int32)
     kappa_r.vector()[:] = np.choose(help, k_val_r)
 
-    hdf = HDF5File(mesh_to_h5.mpi_comm(), '/opt/Patient/Results_adaptive/Mesh_to_solve.h5', 'w')
+    hdf = HDF5File(mesh_to_h5.mpi_comm(), os.environ['PATIENTDIR']+'/Results_adaptive/Mesh_to_solve.h5', 'w')
     hdf.write(mesh_to_h5, "/mesh")
     hdf.write(subdomains_to_h5, "/subdomains")
     hdf.write(boundaries_to_h5, "/boundaries")
     hdf.write(kappa_r, "/kappa_r")
 
-    file=File('/opt/Patient/Results_adaptive/Last_subdomains_map.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_subdomains_map.pvd')
     file<<subdomains_to_h5
-    file=File('/opt/Patient/Results_adaptive/Last_conductivity_map.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_conductivity_map.pvd')
     file<<kappa_r
 
     if Field_calc_param.EQS_mode == 'EQS':
@@ -98,7 +98,7 @@ def save_mesh_and_kappa_to_h5(mesh_to_h5,subdomains_to_h5,boundaries_to_h5,Field
         kappa_i.vector()[:] = np.choose(help, k_val_i)
 
         hdf.write(kappa_i, "/kappa_i")
-        file=File('/opt/Patient/Results_adaptive/Last_permittivity_map.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_permittivity_map.pvd')
         file<<kappa_i
 
     if Field_calc_param.anisotropy == 1:
@@ -111,7 +111,7 @@ def save_mesh_and_kappa_to_h5(mesh_to_h5,subdomains_to_h5,boundaries_to_h5,Field
         c12 = MeshFunction("double", mesh_to_h5, 3, 0.0)
         c22 = MeshFunction("double", mesh_to_h5, 3, 0.0)
 
-        hdf2 = HDF5File(mesh_to_h5.mpi_comm(), "/opt/Patient/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_to_h5.num_cells())+".h5", "r")
+        hdf2 = HDF5File(mesh_to_h5.mpi_comm(), os.environ['PATIENTDIR']+"/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_to_h5.num_cells())+".h5", "r")
         hdf2.read(c00, "/c00")
         hdf2.read(c01, "/c01")
         hdf2.read(c02, "/c02")
@@ -138,20 +138,20 @@ def save_mesh_and_kappa_to_h5(mesh_to_h5,subdomains_to_h5,boundaries_to_h5,Field
             c22[cell]=c22[cell]*scale_cond
 
 
-        file=File('/opt/Patient/Tensors/c00_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c00_mapped.pvd')
         file<<c00,mesh_to_h5
-        file=File('/opt/Patient/Tensors/c01_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c01_mapped.pvd')
         file<<c01,mesh_to_h5
-        file=File('/opt/Patient/Tensors/c02_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c02_mapped.pvd')
         file<<c02,mesh_to_h5
-        file=File('/opt/Patient/Tensors/c11_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c11_mapped.pvd')
         file<<c11,mesh_to_h5
-        file=File('/opt/Patient/Tensors/c12_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c12_mapped.pvd')
         file<<c12,mesh_to_h5
-        file=File('/opt/Patient/Tensors/c22_mapped.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/c22_mapped.pvd')
         file<<c22,mesh_to_h5
 
-        file=File('/opt/Patient/Tensors/Anis_cells.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Tensors/Anis_cells.pvd')
         file<<cell_Anis,mesh_to_h5
 
         hdf.write(c00, "/c00")
@@ -202,19 +202,19 @@ def mark_cells(ext_ground,mesh_for_ref,ref_mode,Field_r,Field_im,Field_r_new,Fie
 
 
     print("Av. dev. on the neuron segments: ",Div_sum/Ampl_p.shape[0], "V")
-    with open('/opt/Patient/Results_adaptive/Av_dev.txt','a') as f:
+    with open(os.environ['PATIENTDIR']+'/Results_adaptive/Av_dev.txt','a') as f:
         f.write(str(Div_sum/float(Ampl_p.shape[0])))
         f.write('\n')
 
     print("Max dev. on the neuron segments:", max_div,"V")
-    with open('/opt/Patient/Results_adaptive/Max_dev.txt','a') as f:
+    with open(os.environ['PATIENTDIR']+'/Results_adaptive/Max_dev.txt','a') as f:
         f.write(str(max_div))
         f.write('\n')
 
     print("Absolute error threshold on neuron compartments:",phi_error)
 
     if np.any(affected_points!=0.0):
-        np.savetxt('/opt/Patient/Results_adaptive/affected_points.csv', affected_points, delimiter=" ")
+        np.savetxt(os.environ['PATIENTDIR']+'/Results_adaptive/affected_points.csv', affected_points, delimiter=" ")
 
     cell_counter=0
     cell_counter_total=mesh_for_ref.num_cells()
@@ -261,7 +261,7 @@ def mark_cells(ext_ground,mesh_for_ref,ref_mode,Field_r,Field_im,Field_r_new,Fie
             if Field_diff_L2/np.linalg.norm(Field_new[:])>rel_error and np.linalg.norm(Field_new[:])>max_E_best*E_max_scaler:
                 cell_ref[cell]=True
 
-    file=File('/opt/Patient/Results_adaptive/Last_Marked_cells.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_Marked_cells.pvd')
     file<<cell_ref
 
     return cell_ref
@@ -284,7 +284,7 @@ def mark_cells_start(mesh_for_ref,ref_mode,subdomains_imp,Domains):
                 if ref_mode==2: #inside ROI
                     cell_ref[cell]=True
 
-    file=File('/opt/Patient/Results_adaptive/Marked_cells_start_ref_mode'+str(ref_mode)+'.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Marked_cells_start_ref_mode'+str(ref_mode)+'.pvd')
     file<<cell_ref
 
     return cell_ref
@@ -388,11 +388,11 @@ def mark_cell_loc_J(ext_ground,subdomains_imp,j_real,j_im,j_real_new,j_im_new,me
     if ref_iteration==1:
         #mesh_old_new = refine(mesh_old, int_cell_ref)
         #print("N cells in new mesh after refinement for current: ", mesh_old_new.num_cells())
-        file=File('/opt/Patient/Results_adaptive/Last_marked_cell_current_ref.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_marked_cell_current_ref.pvd')
         file<<int_cell_ref
         return int_cell_ref
     else:
-        file=File('/opt/Patient/Results_adaptive/Last_marked_cell_current_ref_on_new_mesh.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_marked_cell_current_ref_on_new_mesh.pvd')
         file<<int_cell_ref_new
         return int_cell_ref_new
 
@@ -539,8 +539,8 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
                 elif ref_it==2:
                     cells_ref=mark_cell_loc_J(Field_calc_param.external_grounding,subdomains_assigned_initial,j_dens_real,j_dens_im,j_dens_real_new,j_dens_im_new,mesh_initial,mesh_new,ref_mode,2,Domains,d["rel_div_current"])
                 else:
-                    mesh_old = Mesh("/opt/Patient/Results_adaptive/mesh_adapt.xml.gz")
-                    subdomains_assigned_old = MeshFunction('size_t',mesh_old,'/opt/Patient/Results_adaptive/subdomains_assigned_adapt.xml')
+                    mesh_old = Mesh(os.environ['PATIENTDIR']+"/Results_adaptive/mesh_adapt.xml.gz")
+                    subdomains_assigned_old = MeshFunction('size_t',mesh_old,os.environ['PATIENTDIR']+'/Results_adaptive/subdomains_assigned_adapt.xml')
                     if ref_due_to_phi_dev==0:   #if previous refinement due to current, refine on mesh_new
                         cells_ref=mark_cell_loc_J(Field_calc_param.external_grounding,subdomains_assigned_old,j_dens_real,j_dens_im,j_dens_real_new,j_dens_im_new,mesh_old,mesh_new,ref_mode,2,Domains,d["rel_div_current"])
                     else:                       #else, refine on mesh
@@ -580,7 +580,7 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
             cells_ref=mark_cells_start(mesh,ref_mode,subdomains_assigned, Domains)
             [mesh_uni,boundaries_uni,subdomains_assigned_uni]=mesh_refiner(mesh,boundaries,subdomains_assigned,cells_ref,Domains,cc_multicontact)
 
-            if not(os.path.isfile('/opt/Patient/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5')):     #check whether calculations for this uniform refinement were already conducted
+            if not(os.path.isfile(os.environ['PATIENTDIR']+'/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5')):     #check whether calculations for this uniform refinement were already conducted
                 if anisotropy==1:
                     subdomains_uni=get_cellmap_tensors(mesh_uni,subdomains_assigned_uni,Domains,MRI_param,DTI_param,d["default_material"])
                 else:
@@ -602,23 +602,23 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
                 Phi_amp_on_neuron_uni=get_field_on_points(Phi_r_uni,Phi_im_uni,d["current_control"],J_r_uni,J_im_uni)
                 cells_ref=mark_cells(Field_calc_param.external_grounding,mesh,ref_mode,Field_real,Field_imag,Field_real_uni,Field_imag_uni,Phi_amp_on_neuron_uni,Phi_amp_on_neuron,max_E_uni,d["rel_div"],phi_error,subdomains_assigned,Domains)
 
-                hdf = HDF5File(mesh.mpi_comm(), '/opt/Patient/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5', 'w')
+                hdf = HDF5File(mesh.mpi_comm(), os.environ['PATIENTDIR']+'/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5', 'w')
                 hdf.write(cells_ref, "/cells_ref_after_uni")
                 hdf.close()
-                np.savetxt('/opt/Patient/Results_adaptive/current_in_uni_ref_'+str(mesh_uni.num_cells())+'.csv', np.array([J_r_uni,J_im_uni]), delimiter=" ")
+                np.savetxt(os.environ['PATIENTDIR']+'/Results_adaptive/current_in_uni_ref_'+str(mesh_uni.num_cells())+'.csv', np.array([J_r_uni,J_im_uni]), delimiter=" ")
             else:       #the field was already computed for this uniform refinement
                 print("Cells for refinement after uniform check were loaded from the previous iteration\n")
-                hdf = HDF5File(mesh.mpi_comm(), '/opt/Patient/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5', 'r')
+                hdf = HDF5File(mesh.mpi_comm(), os.environ['PATIENTDIR']+'/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5', 'r')
                 cells_ref = MeshFunction('bool', mesh,3)
                 hdf.read(cells_ref, "/cells_ref_after_uni")
                 hdf.close()
 
-                [J_r_uni,J_im_uni]=np.genfromtxt('/opt/Patient/Results_adaptive/current_in_uni_ref_'+str(mesh_uni.num_cells())+'.csv', delimiter=' ')
+                [J_r_uni,J_im_uni]=np.genfromtxt(os.environ['PATIENTDIR']+'/Results_adaptive/current_in_uni_ref_'+str(mesh_uni.num_cells())+'.csv', delimiter=' ')
 
             mesh_check=refine(mesh, cells_ref)   #we need to check whether it leads to mesh_new
             num_cells_mesh_check=mesh_check.num_cells()
 
-            file=File('/opt/Patient/Results_adaptive/cells_ref_after_uni.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Results_adaptive/cells_ref_after_uni.pvd')
             file<<cells_ref
 
             del mesh_check
@@ -626,7 +626,7 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
             if mesh_new.num_cells()<num_cells_mesh_check or (ref_due_to_phi_dev==0 and mesh_new.num_cells()!=num_cells_mesh_check):   #use mesh to refine further (for this you will have to resave it as mesh_new)
                 Phi_r_new,Phi_im_new,J_r_new,J_im_new,j_dens_real_new,j_dens_im_new,Field_real_new,Field_imag_new,Phi_amp_on_neuron_new,max_E_new=(Phi_r,Phi_im,J_r,J_im,j_dens_real,j_dens_im,Field_real,Field_imag,Phi_amp_on_neuron,max_E)
                 del mesh_new,boundaries_new,subdomains_assigned_new
-                hdf = HDF5File(mesh.mpi_comm(), '/opt/Patient/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5', 'r')
+                hdf = HDF5File(mesh.mpi_comm(), os.environ['PATIENTDIR']+'/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5', 'r')
                 cells_ref = MeshFunction('bool', mesh,3)
                 hdf.read(cells_ref, "/cells_ref_after_uni")
                 hdf.close()
@@ -687,10 +687,10 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
                         current_checked=0
 
                 #save field solution
-                hdf = HDF5File(mesh.mpi_comm(), '/opt/Patient/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5', 'w')
+                hdf = HDF5File(mesh.mpi_comm(), os.environ['PATIENTDIR']+'/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5', 'w')
                 hdf.write(cells_ref, "/cells_ref_after_uni")
                 hdf.close()
-                np.savetxt('/opt/Patient/Results_adaptive/current_in_uni_ref_'+str(mesh_uni.num_cells())+'.csv', np.array([J_r_uni,J_im_uni]), delimiter=" ")
+                np.savetxt(os.environ['PATIENTDIR']+'/Results_adaptive/current_in_uni_ref_'+str(mesh_uni.num_cells())+'.csv', np.array([J_r_uni,J_im_uni]), delimiter=" ")
 
                 if not (cells_ref.where_equal(True)):
                     previous_results = [Phi_r_new,Phi_im_new,Field_real_new,Field_imag_new,J_r_new,J_im_new,j_dens_real_new,j_dens_im_new,Phi_amp_on_neuron_new,max_E_new]
@@ -790,7 +790,7 @@ def stupid_prerefiner(mesh_old,boundaries,subdomains_assigned):
     inflow = Ref_box()
     inflow.mark(sub_domains, True)
 
-    file=File('/opt/Patient/Results_adaptive/sub_domains.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Results_adaptive/sub_domains.pvd')
     file<<sub_domains
 
     mesh_new = refine(mesh_old, sub_domains)
@@ -807,16 +807,16 @@ def mesh_adapter(MRI_param,DTI_param,Scaling,Domains,d,anisotropy,cc_multicontac
     for i in range(len(ref_freqs)):     # go over the refinement frequencies
         print("At frequency: ",ref_freqs[i])
         if i==0:    # load mesh after the CSF refinement
-            mesh = Mesh('/opt/Patient/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
-            boundaries = MeshFunction('size_t',mesh,'/opt/Patient/CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
-            subdomains_assigned = MeshFunction('size_t',mesh,'/opt/Patient/CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'.xml')
+            mesh = Mesh(os.environ['PATIENTDIR']+'/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
+            boundaries = MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
+            subdomains_assigned = MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'.xml')
             save_mesh('for_ref',mesh,boundaries,subdomains_assigned)
         else:       # load mesh after the adaptive ref. at the previous frequency
             mesh,boundaries,subdomains_assigned=load_mesh('adapt')          #the output accepted mesh is always saved with 'adapt'
 
         Field_calc_param=Field_calc_parameters(d["default_material"],d["el_order"],anisotropy,d["current_control"],d["CPE_activ"],ref_freqs[i],d["EQS_core"],d["external_grounding"],d["Solver_Type"])
         if d['FEniCS_MPI']==True:
-            with open('/opt/Patient/Results_adaptive/Field_calc_param.file', "wb") as f:
+            with open(os.environ['PATIENTDIR']+'/Results_adaptive/Field_calc_param.file', "wb") as f:
                 pickle.dump(Field_calc_param, f, pickle.HIGHEST_PROTOCOL)
 
         ref_regions=['it_outside_ROI','it_on_contact','it_in_ROI']
@@ -838,10 +838,10 @@ def mesh_adapter(MRI_param,DTI_param,Scaling,Domains,d,anisotropy,cc_multicontac
                 mesh,boundaries,subdomains_assigned=load_mesh(region)
 
     print("Mesh was adapted, stored as mesh_adapt.xml.gz in Results_adaptive/")
-    mesh_fin = Mesh("/opt/Patient/Results_adaptive/mesh_it_in_ROI.xml.gz")
+    mesh_fin = Mesh(os.environ['PATIENTDIR']+"/Results_adaptive/mesh_it_in_ROI.xml.gz")
     print("number of elements: ", mesh_fin.num_cells())
     Field_real = previous_results[0]
-    file=File('/opt/Patient/Results_adaptive/Adapted_Field_real.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Adapted_Field_real.pvd')
     file<<Field_real
 
     minutes=int((time_lib.clock() - start_adapt)/60)

@@ -105,12 +105,12 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     # to get conductivity (and permittivity if EQS formulation) mapped accrodingly to the subdomains. k_val_r is just a list of conductivities (S/mm!) in a specific order to scale the cond. tensor
     from FEM_in_spectrum import get_dielectric_properties_from_subdomains
     kappa,k_val_r=get_dielectric_properties_from_subdomains(mesh_sol,subdomains,Field_calc_param.EQS_mode,Domains.Float_contacts,conductivities,rel_permittivities,Field_calc_param.frequenc)
-    file=File('/opt/Patient/Results_adaptive/Last_subdomains_map.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_subdomains_map.pvd')
     file<<subdomains
-    file=File('/opt/Patient/Results_adaptive/Last_conductivity_map.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_conductivity_map.pvd')
     file<<kappa[0]
     if Field_calc_param.EQS_mode == 'EQS':
-        file=File('/opt/Patient/Results_adaptive/Last_permittivity_map.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_permittivity_map.pvd')
         file<<kappa[1]
 
 
@@ -124,7 +124,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
         c22 = MeshFunction("double", mesh_sol, 3, 0.0)
 
         # load the diffusion tensor (should be normalized beforehand)
-        hdf = HDF5File(mesh_sol.mpi_comm(), "/opt/Patient/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_sol.num_cells())+".h5", "r")
+        hdf = HDF5File(mesh_sol.mpi_comm(), os.environ['PATIENTDIR']+"/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_sol.num_cells())+".h5", "r")
         hdf.read(c00, "/c00")
         hdf.read(c01, "/c01")
         hdf.read(c02, "/c02")
@@ -210,7 +210,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     V_across=V_max-V_min   # this can be negative
 
 
-    Vertices_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+    Vertices_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
     Vertices_array=Vertices_get.values
 
     Phi_ROI=np.zeros((Vertices_array.shape[0],4),float)
@@ -228,7 +228,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
         else:
             Phi_ROI[inx,3]=np.sqrt(phi_r_sol(pnt)*phi_r_sol(pnt)+phi_i_sol(pnt)*phi_i_sol(pnt))
 
-    np.savetxt('/opt/Patient/Results_adaptive/Phi_'+str(Field_calc_param.frequenc)+'.csv',  Phi_ROI, delimiter=" ")      # this is amplitude, actually
+    np.savetxt(os.environ['PATIENTDIR']+'/Results_adaptive/Phi_'+str(Field_calc_param.frequenc)+'.csv',  Phi_ROI, delimiter=" ")      # this is amplitude, actually
 
 #    #Probe_of_potential
 #    probe_z=np.zeros((100,4),float)
@@ -296,12 +296,12 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
             E_norm=project(sqrt(inner(E_field_CPE,E_field_CPE)+inner(E_field_im_CPE,E_field_im_CPE)),V_normE,solver_type="cg", preconditioner_type="amg")
             max_E=E_norm.vector().max()
 
-            file=File('/opt/Patient/Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<E_norm,mesh_sol
-            file=File('/opt/Patient/Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<phi_r_CPE,mesh_sol
             if Field_calc_param.EQS_mode=='EQS':
-                file=File('/opt/Patient/Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+                file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
                 file<<phi_i_CPE,mesh_sol
 
             return phi_r_CPE,phi_i_CPE,E_field_CPE,E_field_im_CPE,max_E,J_real_unscaled,J_im_unscaled,j_dens_real_unscaled,j_dens_im_unscaled
@@ -353,12 +353,12 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
             E_norm=project(sqrt(inner(E_field_scaled,E_field_scaled)+inner(E_field_im_scaled,E_field_im_scaled)),V_normE,solver_type="cg", preconditioner_type="amg")
             max_E=E_norm.vector().max()
 
-            file=File('/opt/Patient/Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<E_norm,mesh_sol
-            file=File('/opt/Patient/Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<phi_r_sol_scaled,mesh_sol
             if Field_calc_param.EQS_mode=='EQS':
-                file=File('/opt/Patient/Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+                file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
                 file<<phi_i_sol_scaled,mesh_sol
 
             return phi_r_sol_scaled,phi_i_sol_scaled,E_field_scaled,E_field_im_scaled,max_E,J_real_unscaled,J_im_unscaled,j_dens_real_unscaled,j_dens_im_unscaled
@@ -366,19 +366,19 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     else:
         E_norm=project(sqrt(inner(E_field,E_field)+inner(E_field_im,E_field_im)),V_normE,solver_type="cg", preconditioner_type="amg")
         max_E=E_norm.vector().max()
-        file=File('/opt/Patient/Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Results_adaptive/E_ampl_'+str(Field_calc_param.EQS_mode)+'.pvd')
         file<<E_norm,mesh_sol
-        file=File('/opt/Patient/Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_Phi_r_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
         file<<phi_r_sol,mesh_sol
         if Field_calc_param.EQS_mode=='EQS':
-            file=File('/opt/Patient/Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_Phi_im_field_'+str(Field_calc_param.EQS_mode)+'.pvd')
             file<<phi_i_sol,mesh_sol
 
         return phi_r_sol,phi_i_sol,E_field,E_field_im,max_E,J_real_unscaled,J_im_unscaled,j_dens_real_unscaled,j_dens_im_unscaled
 
 def get_field_on_points(phi_r,phi_i,c_c,J_r,J_i):
 
-    Vertices_neur_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+    Vertices_neur_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
     Vertices_neur=Vertices_neur_get.values
 
     Ampl_ROI=np.zeros((Vertices_neur.shape[0],4),float)

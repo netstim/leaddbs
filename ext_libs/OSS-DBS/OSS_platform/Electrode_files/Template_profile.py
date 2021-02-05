@@ -709,7 +709,7 @@ if(Lead2nd_Enable):
 	smesh.SetName(Sub_mesh_4_2, 'Sub-mesh_4_2')
 
 #to export the mesh
-Mesh_1.ExportMED('/opt/Patient/Meshes/Mesh_unref.med')
+Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med')
 
 
 if salome.sg.hasDesktop():

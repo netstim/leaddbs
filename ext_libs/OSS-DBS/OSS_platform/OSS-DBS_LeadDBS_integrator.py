@@ -192,7 +192,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     elif Electrode_type == 'Boston Scientific Vercise':
         input_dict['Electrode_type']="Boston_Scientific_Vercise" #1
         normal_array_length=6.0   # still the 4th level. BEWARE: Stretch is defined between the 1st and the 4th, but applied between 1st and 8th!!!
-        normal_array_length=14.0 
+        normal_array_length=14.0
     elif Electrode_type == 'Boston Scientific Vercise Directed':
         input_dict['Electrode_type']="Boston_Scientific_Vercise_Cartesia" #1
         normal_array_length=6.0
@@ -216,7 +216,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 
     el_array_length=np.sqrt((input_dict['Implantation_coordinate_X']-input_dict['Second_coordinate_X'])**2+(input_dict['Implantation_coordinate_Y']-input_dict['Second_coordinate_Y'])**2+(input_dict['Implantation_coordinate_Z']-input_dict['Second_coordinate_Z'])**2)
     stretch=el_array_length/normal_array_length
-    
+
     if abs(stretch-1.0)<0.01:   #if 1% tolerance
         input_dict["stretch"]=1.0
     else:

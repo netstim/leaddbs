@@ -9,7 +9,7 @@ from Electrode_files.Profile_Process_V6 import words_detect
 import os
 
 def read_mesh_indicies(dictionary):
-    f1=open('/opt/Patient/Meshes/Mesh_unref.msh','r')
+    f1=open(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh','r')
     rst = 0;
     ot = 0;
     co = 0;
@@ -90,7 +90,7 @@ def read_mesh_indicies(dictionary):
 
 
 def read_mesh_indicies_extended(dictionary):
-    f1=open('/opt/Patient/Meshes/Mesh_unref.msh','r')
+    f1=open(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh','r')
     rst = 0;
     ot = 0;
     co = 0;

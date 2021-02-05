@@ -352,10 +352,10 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
     from FEM_in_spectrum import get_dielectric_properties_from_subdomains
     kappa,k_val_r=get_dielectric_properties_from_subdomains(Sim_setup.mesh,Sim_setup.subdomains,Sim_setup.Laplace_eq,Domains.Float_contacts,Sim_setup.conductivities,Sim_setup.rel_permittivities,Sim_setup.sine_freq)
     if int(Sim_setup.sine_freq)==int(Sim_setup.signal_freq):
-        file=File('/opt/Patient/Field_solutions/Conductivity_map_'+str(Sim_setup.signal_freq)+'Hz.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Field_solutions/Conductivity_map_'+str(Sim_setup.signal_freq)+'Hz.pvd')
         file<<kappa[0]
         if Sim_setup.Laplace_eq == 'EQS':
-            file=File('/opt/Patient/Field_solutions/Permittivity_map_'+str(Sim_setup.signal_freq)+'Hz.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Field_solutions/Permittivity_map_'+str(Sim_setup.signal_freq)+'Hz.pvd')
             file<<kappa[1]
 
     # to get tensor scaled by the conductivity map
@@ -378,7 +378,7 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
 
     # the system was solved for already scaled potential, but to check the scaling accuracy, we will assess the currents through the contacts
     if int(Sim_setup.sine_freq)==int(Sim_setup.signal_freq):
-        file=File('/opt/Patient/Field_solutions/Phi_real_scaled_'+str(Sim_setup.signal_freq)+'Hz.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_scaled_'+str(Sim_setup.signal_freq)+'Hz.pvd')
         file<<phi_r,Sim_setup.mesh
         print("DoFs on the mesh for "+Sim_setup.Laplace_eq+" : ", (max(V_space.dofmap().dofs())+1))
 
@@ -391,11 +391,11 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
         # J_currents_imag is a zero array if 'QS' mode
 
         print("Complex currents on contacts at the base frequency (signal repetition rate): ",J_currents_real,J_currents_imag)
-        file=File('/opt/Patient/Field_solutions/E_real_scaled_'+str(Sim_setup.sine_freq)+'Hz.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Field_solutions/E_real_scaled_'+str(Sim_setup.sine_freq)+'Hz.pvd')
         file<<E_field,Sim_setup.mesh
 
     #if Full_IFFT==1:
-    #    Hdf=HDF5File(Sim_setup.mesh.mpi_comm(), "/opt/Patient/Field_solutions_functions/solution"+str(np.round(Sim_setup.sine_freq,6))+".h5", "w")
+    #    Hdf=HDF5File(Sim_setup.mesh.mpi_comm(), os.environ['PATIENTDIR']+"/Field_solutions_functions/solution"+str(np.round(Sim_setup.sine_freq,6))+".h5", "w")
     #    Hdf.write(Sim_setup.mesh, "mesh")
     #    Hdf.write(phi_sol, "solution_full")
     #    Hdf.close()
@@ -459,7 +459,7 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
         fre_vector=[Sim_setup.sine_freq]*Phi_ROI.shape[0]
         comb=np.vstack((Phi_ROI[:,0],Phi_ROI[:,1],Phi_ROI[:,2],Phi_ROI[:,3],Phi_ROI[:,4],fre_vector)).T
 
-        f = h5py.File('/opt/Patient/Field_solutions/sol_cor'+str(core)+'.h5','a')
+        f = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(core)+'.h5','a')
         f.create_dataset(str(Sim_setup.sine_freq), data=comb)
         f.close()
 
@@ -487,7 +487,7 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
         comb=np.vstack((Phi_ROI[:,0],Phi_ROI[:,1],Phi_ROI[:,2],Phi_ROI[:,3],Phi_ROI[:,4],fre_vector)).T
 
 
-        f = h5py.File('/opt/Patient/Field_solutions/sol_cor'+str(core)+'.h5','a')
+        f = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(core)+'.h5','a')
         f.create_dataset(str(Sim_setup.sine_freq), data=comb)
         f.close()
 
