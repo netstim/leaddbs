@@ -301,12 +301,14 @@ end
 runStatus = [0 0]; % Succeed or not
 stimparams = struct();
 for side=0:1
-    % Stop and Remove running container on start
-    [~, containerID] = system(['docker ps -qf ancestor=', dockerImage]);
-    if ~isempty(containerID)
-        containerID = join(strsplit(strip(containerID)), ' ');
-        system(['docker stop ', containerID{:}]);
-        system(['docker rm ', containerID{:}]);
+    % Stop and Remove running docker container on start
+    if isempty(getenv('SINGULARITY_NAME')) % Only do it when using docker
+        [~, containerID] = system(['docker ps -qf ancestor=', dockerImage]);
+        if ~isempty(containerID)
+            containerID = join(strsplit(strip(containerID)), ' ');
+            system(['docker stop ', containerID{:}]);
+            system(['docker rm ', containerID{:}]);
+        end
     end
 
     switch side
@@ -350,11 +352,13 @@ for side=0:1
             % I/O error
             ea_delete([outputPath, filesep,'Axons_in_time']);
 
-            system(['docker run ', ...
-                    '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
-                    '--volume ', outputPath, ':/opt/Patient ', ...
-                    '-it --rm ', dockerImage, ' ', ...
-                    'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py ', num2str(side)]);
+            if isempty(getenv('SINGULARITY_NAME'))
+                system(['docker run ', ...
+                        '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+                        '--volume ', outputPath, ':/opt/Patient ', ...
+                        '-it --rm ', dockerImage, ' ', ...
+                        'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side)]);
+            end
     end
 
     % Call OSS-DBS GUI to start calculation

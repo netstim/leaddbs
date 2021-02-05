@@ -268,9 +268,10 @@ if __name__ == '__main__':
     if path_to_patient!=-1:
         if sys.platform == 'linux' or sys.platform == 'Linux':
             if os.environ.get('SINGULARITY_NAME'):
-                os.environ['PATIENTDIR'] = path_to_patient
-                output = subprocess.run(['python3','GUI_tree_files/AppUI.py',os.environ['PATIENTDIR'],str(side),str(interactive_mode)])
+                os.environ['PATIENTDIR'] = path_to_patient # Use real path for singularity
+                output = subprocess.run(['python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
             else:
+                os.environ['PATIENTDIR'] = '/opt/Patient' # Use fixed mount path for docker
                 output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
         elif sys.platform == 'darwin' or sys.platform == 'Darwin':
             dir_code = os.getcwd()
