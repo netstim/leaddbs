@@ -33,7 +33,7 @@ Check out the function before you use it. By default, it tries to match absolute
 run_full_model(master_dict) governs the simulation flow taking master_dict as the input that will modify the input dictionary (defined in GUI_inp_dict.py)
 
 '''
-print("\n\n\nOSS-DBS by K.Butenko --- version 0.3")
+print("\nOSS-DBS by K.Butenko --- version 0.3")
 print("Butenko K, Bahls C, Schroeder M, Koehling R, van Rienen U (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.' PLoS Comput Biol 16(7): e1008023. https://doi.org/10.1371/journal.pcbi.1008023")
 print("____________________________________\n")
 

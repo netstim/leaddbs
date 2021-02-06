@@ -279,7 +279,6 @@ parameterFile = [outputPath, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings', '-v7.3');
 
 %% Run OSS-DBS
-currentPath = pwd;
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
 
@@ -517,7 +516,6 @@ if ~settings.calcAxonActivation && exist('stimparams', 'var')
 end
 
 % Restore working directory and environment variables
-cd(currentPath);
 setenv('LD_LIBRARY_PATH', libpath);
 setenv('PATH', binPath);
 

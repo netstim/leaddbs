@@ -264,7 +264,6 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 if __name__ == '__main__':
 
     oss_dbs_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
-    print(oss_dbs_folder)
     os.chdir(oss_dbs_folder)
 
     path_to_patient,side,interactive_mode=get_input_from_LeadDBS(*sys.argv[1:])
