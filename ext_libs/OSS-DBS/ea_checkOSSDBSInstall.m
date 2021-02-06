@@ -1,6 +1,21 @@
 function ea_checkOSSDBSInstall
 % Check if OSS-DBS dependencies have been properly configured
 
+if ~isempty(getenv('SINGULARITY_NAME')) % Singularity
+    % Set pythonPath
+    pythonPath = ea_findBinPath('python3');
+    ea_setprefs('env.pythonPath', pythonPath, 'user');
+
+    % Set installed flag
+    prefs = ea_prefs;
+    vatsettings = prefs.machine.vatsettings;
+    vatsettings.oss_dbs.installed = 1;
+    ea_setprefs('vatsettings', vatsettings);
+
+    fprintf('OSS-DBS dependencies have been properly configured.\n');
+    return
+end
+
 binPath = getenv('PATH'); % Current PATH
 
 % Check docker installation
