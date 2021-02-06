@@ -383,6 +383,10 @@ def fibers_to_axons(name_of_combined_file,name_of_fiber_file,projection_name,axo
 
 if __name__ == '__main__':
 
+    oss_dbs_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
+    print(oss_dbs_folder)
+    os.chdir(oss_dbs_folder)
+
     patient_dir = sys.argv[1:][0]
     index_side = int(sys.argv[1:][1])
 

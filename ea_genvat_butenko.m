@@ -354,22 +354,19 @@ for side=0:1
             % I/O error
             ea_delete([outputPath, filesep,'Axons_in_time']);
 
-            cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
             if isempty(getenv('SINGULARITY_NAME')) % Docker
                 system(['docker run ', ...
                         '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
                         '--volume ', outputPath, ':/opt/Patient ', ...
                         '-it --rm ', dockerImage, ' ', ...
-                        'python3 Axon_allocation.py /opt/Patient ', num2str(side)]);
+                        'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side)]);
             else % Singularity
-                system(['python3 Axon_allocation.py ', outputPath, ' ', num2str(side)]);
+                system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputPath, ' ', num2str(side)]);
             end
     end
 
     % Call OSS-DBS GUI to start calculation
-    cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
-    system(['cd "', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform";', ...
-            'python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
+    system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
             parameterFile, ' ', num2str(side)]);	% 0 is right side, 1 is the left side here
 
     % Check if OSS-DBS calculation is finished
