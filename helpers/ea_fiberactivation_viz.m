@@ -32,7 +32,7 @@ if ~isempty(fibers)
 else
     fprintf('\n')
     warning('off', 'backtrace');
-    warning('No activated fiber found!\n');
+    warning('No activated fiber found!');
     warning('on', 'backtrace');
 end
 
@@ -46,7 +46,7 @@ if ~isempty(fibers)
 else
     fprintf('\n')
     warning('off', 'backtrace');
-    warning('No non-activated fiber found!\n');
+    warning('No non-activated fiber found!');
     warning('on', 'backtrace');
 end
 
@@ -60,7 +60,7 @@ if ~isempty(fibers)
 else
     fprintf('\n')
     warning('off', 'backtrace');
-    warning('No damaged fiber found!\n');
+    warning('No damaged fiber found!');
     warning('on', 'backtrace');
 end
 
