@@ -354,12 +354,14 @@ for side=0:1
             % I/O error
             ea_delete([outputPath, filesep,'Axons_in_time']);
 
-            if isempty(getenv('SINGULARITY_NAME'))
+            if isempty(getenv('SINGULARITY_NAME')) % Docker
                 system(['docker run ', ...
                         '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
                         '--volume ', outputPath, ':/opt/Patient ', ...
                         '-it --rm ', dockerImage, ' ', ...
                         'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side)]);
+            else % Singularity
+                system(['python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py ', outputPath, ' ', num2str(side)]);
             end
     end
 
