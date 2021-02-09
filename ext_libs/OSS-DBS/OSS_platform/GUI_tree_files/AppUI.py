@@ -214,11 +214,7 @@ class MainWindow(Functionalities):
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
         #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
-        OSS_DBS_path=os.getcwd()
-        os.chdir("..")
-        dir_code=os.getcwd() #stupid but simple
-        os.chdir("OSS_platform/")
-        dir_code_OSS_platform = os.getcwd()
+        dir_code=os.path.dirname(os.getcwd()) # OSS-DBS folder to be mount, NOT OSS_platform folder
         if sys.platform=='linux' or sys.platform=='Linux':
             if os.environ.get('SINGULARITY_NAME'):
                 output = subprocess.run(['python3', 'Launcher_OSS_lite.py'])
