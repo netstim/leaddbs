@@ -284,8 +284,7 @@ if __name__ == '__main__':
             dir_code = os.getcwd()
             output = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, dir_code, str(side), str(interactive_mode)], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
         elif sys.platform == 'win32':
-            print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
-            raise SystemExit
+            output = subprocess.run(['start','cmd','/k','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)], shell = True)
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
