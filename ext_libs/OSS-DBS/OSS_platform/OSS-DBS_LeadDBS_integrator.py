@@ -278,29 +278,10 @@ if __name__ == '__main__':
                 output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
         elif sys.platform == 'darwin' or sys.platform == 'Darwin':
             dir_code = os.getcwd()
-            #subprocess.check_output(['open', 'script_for_GUI.sh', path_to_patient, dir_code], executable='/bin/bash')
             output = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, dir_code, str(side), str(interactive_mode)], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
-            #process_1 = subprocess.check_call(['open', 'script_for_GUI.sh', path_to_patient, dir_code, str(side)], executable='/bin/bash')
-            #process.wait()
         elif sys.platform == 'win32':
             print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
             raise SystemExit
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
-
-    # path_to_patient=get_input_from_LeadDBS(1,*sys.argv[1:])
-    # if path_to_patient!=-1:
-    #     if sys.platform == 'linux' or sys.platform == 'Linux':
-    #         output2 = subprocess.run(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient])
-    #         #subprocess.check_output(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient])
-    #     elif sys.platform == 'darwin' or sys.platform == 'Darwin':
-    #         dir_code = os.getcwd()
-    #         output2 = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, dir_code], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
-    #     elif sys.platform == 'win32' or sys.platform == 'win32':
-    #         print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
-    #         raise SystemExit
-    #     else:
-    #         print("The system's OS does not support OSS-DBS")
-    #         raise SystemExit
-

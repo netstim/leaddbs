@@ -213,7 +213,6 @@ class MainWindow(Functionalities):
 
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
-        #subprocess.run(['sudo', 'docker', 'run', '--name', 'OSS_docker', '--volume', '/home/butenko/oss_platform:/opt/oss_platform', '--cap-add=SYS_PTRACE', '-it', '--rm gitlab.elaine.uni-rostock.de:4567/kb589/oss_platform:platform', 'python3', 'Launcher_OSS_lite.py'])
         #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
         OSS_DBS_path=os.getcwd()
         os.chdir("..")
@@ -761,8 +760,6 @@ class MainWindow(Functionalities):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    #print(sys.argv)
-    #path_to_patient_import='/home/John_Doe/'
     main_win = MainWindow(*sys.argv[1:])
     main_win.show()
     sys.exit(app.exec_())
