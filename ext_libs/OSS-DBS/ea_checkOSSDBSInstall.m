@@ -65,7 +65,13 @@ if isfield(prefs.env, 'pythonPath')
 end
 
 % Check python3
-pythonPath = ea_findBinPath('python3');
+if ispc
+    pythonBinName = 'python';
+else
+    pythonBinName = 'python3';
+end
+pythonPath = ea_findBinPath(pythonBinName);
+
 if isempty(pythonPath)
     ea_error('python3 not found!', 'Error', dbstack, 0);
 else
@@ -88,25 +94,25 @@ else
 end
 
 % python3 executable
-pythonBin = [pythonPath, filesep, 'python3'];
-fprintf('python3 detected: %s\n', pythonBin);
+pythonBinPath = [pythonPath, filesep, pythonBinName];
+fprintf('python3 detected: %s\n', pythonBinPath);
 
 % Check h5py
-[status, h5pyPath] = system([pythonBin, ' -c "import h5py;print(h5py.__file__)"']);
+[status, h5pyPath] = system([pythonBinPath, ' -c "import h5py;print(h5py.__file__)"']);
 if status
-    ea_error(sprintf(['h5py not found! Please run ''', ...
-             pythonBin,' -m pip install h5py',...
-             ''' in your terminal.']), 'Error', dbstack, 0);
+    ea_error(['h5py not found! Please run ''', ...
+             pythonBinPath,' -m pip install h5py',...
+             ''' in your terminal.'], 'Error', dbstack, 0);
 else
     fprintf('h5py detected: %s\n', fileparts(h5pyPath));
 end
 
 % Check PyQt5
-[status, pyqt5Path] = system([pythonBin, ' -c "import PyQt5;print(PyQt5.__file__)"']);
+[status, pyqt5Path] = system([pythonBinPath, ' -c "import PyQt5;print(PyQt5.__file__)"']);
 if status
-    ea_error(sprintf(['PyQt5 not found! Please run ''', ...
-             pythonBin,' -m pip install PyQt5',...
-             ''' in your terminal.']), 'Error', dbstack, 0);
+    ea_error(['PyQt5 not found! Please run ''', ...
+             pythonBinPath,' -m pip install PyQt5',...
+             ''' in your terminal.'], 'Error', dbstack, 0);
 else
     fprintf('PyQt5 detected: %s\n', fileparts(pyqt5Path));
 end
