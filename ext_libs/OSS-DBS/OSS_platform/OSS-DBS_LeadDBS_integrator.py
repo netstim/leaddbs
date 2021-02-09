@@ -115,10 +115,10 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         list_ascii.append(array_ascii[i][0])
    # list_ascii = map(lambda s: s.strip(), list_ascii)
     name_split=''.join(chr(i) for i in list_ascii)
-    input_dict['MRI_data_name']=name_split.rsplit('/',1)[-1]
+    input_dict['MRI_data_name']=name_split.rsplit(os.sep,1)[-1]
 
 
-    path_to_patient=name_split.rsplit('/',1)[:-1]
+    path_to_patient=name_split.rsplit(os.sep,1)[:-1]
     path_to_patient=path_to_patient[0]
 
 
