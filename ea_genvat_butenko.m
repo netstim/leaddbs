@@ -21,8 +21,10 @@ else
     pythonPath = options.prefs.env.pythonPath;
     if isunix
         setenv('PATH', [pythonPath, ':', binPath]);
+        pythonBinName = 'python3';
     else
         setenv('PATH', [pythonPath, ';', binPath]);
+        pythonBinName = 'python';
     end
 end
 
@@ -365,7 +367,7 @@ for side=0:1
     end
 
     % Call OSS-DBS GUI to start calculation
-    system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
+    system([pythonBinName, ' ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
             parameterFile, ' ', num2str(side)]);	% 0 is right side, 1 is the left side here
 
     % Check if OSS-DBS calculation is finished
