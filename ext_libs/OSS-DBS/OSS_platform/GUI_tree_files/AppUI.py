@@ -696,7 +696,7 @@ class MainWindow(Functionalities):
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d = ast.literal_eval(content)
+                d = ast.literal_eval(content.strip())
                 self.set_load_state(d)
 
             self.info("Run", "{} has been loaded successfully.".format(filename))
@@ -708,7 +708,7 @@ class MainWindow(Functionalities):
             num = f.read().find('{')
             f.seek(num)
             content = f.read()
-            d = ast.literal_eval(content)
+            d = ast.literal_eval(content.strip())
             self.set_load_state(d)
         # self.set_current_file_name(filename)
 
