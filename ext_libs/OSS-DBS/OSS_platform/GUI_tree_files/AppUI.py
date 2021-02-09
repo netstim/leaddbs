@@ -225,15 +225,15 @@ class MainWindow(Functionalities):
             else:
                 output = subprocess.run(
                     ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
-                     '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
-                     'custom_oss-dbs', 'python3', 'Launcher_OSS_lite.py'])  #
+                     '--volume', self.path_to_patient + ':/opt/Patient',
+                     '-it', '--rm', 'custom_oss-dbs', 'python3', 'Launcher_OSS_lite.py'])  #
         elif sys.platform == 'darwin' or sys.platform=='Darwin':
             output = subprocess.run(['open', 'script.sh', self.path_to_patient, dir_code], executable='/bin/bash')   # in this case we use a bash script that calls Applescript
         elif sys.platform=='win32':
             output = subprocess.run(
-                ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS', '--volume', self.path_to_patient + ':/opt/Patient',
-                 '--workdir', '/opt/OSS-DBS/OSS_platform', '--cap-add=SYS_PTRACE', '-it', '--rm',
-                 'ningfei/oss-dbs', 'python3', 'Launcher_OSS_lite.py'])
+                ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
+                '--volume', self.path_to_patient + ':/opt/Patient',
+                '-it', '--rm', 'ningfei/oss-dbs', 'python3', 'Launcher_OSS_lite.py'])
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit

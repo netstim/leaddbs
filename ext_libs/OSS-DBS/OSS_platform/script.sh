@@ -1,6 +1,3 @@
 #!/bin/bash
-# My example bash script
-#DIRECTORY=`dirname $0`
-#echo $DIRECTORY
 
-docker run --volume $2:/opt/OSS-DBS --volume $1:/opt/Patient -it --rm ningfei/oss-dbs python3 Launcher_OSS_lite.py
+docker run -e PATIENTDIR --volume $1:/opt/Patient --volume $2:/opt/OSS-DBS -it --rm ningfei/oss-dbs python3 Launcher_OSS_lite.py
