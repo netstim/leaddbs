@@ -232,7 +232,7 @@ class MainWindow(Functionalities):
         elif sys.platform=='win32':
             output = subprocess.run(
                 ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS', '--volume', self.path_to_patient + ':/opt/Patient',
-                 '--workdir', '/opt/OSS-DBS/OSS_Platform', '--cap-add=SYS_PTRACE', '--rm',
+                 '--workdir', '/opt/OSS-DBS/OSS_platform', '--cap-add=SYS_PTRACE', '--rm',
                  'sfbelaine/oss_dbs:python_latest', 'python3', 'Launcher_OSS_lite.py'])
         else:
             print("The system's OS does not support OSS-DBS")
