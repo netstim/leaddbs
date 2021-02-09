@@ -295,7 +295,7 @@ ea_delete([outputPath, filesep, 'skip_lh.txt']);
 if ispc || ismac
     dockerImage = 'sfbelaine/oss_dbs:python_latest';
 else % Linux
-    dockerImage = 'custom_oss_platform';
+    dockerImage = 'custom_oss_dbs';
 end
 
 % Iterate sides, index side: 0 - rh , 1 - lh

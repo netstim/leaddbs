@@ -216,7 +216,7 @@ class MainWindow(Functionalities):
         #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
         OSS_DBS_path=os.getcwd()
         os.chdir("..")
-        dir_code=os.getcwd()            #stupid but simple
+        dir_code=os.getcwd() #stupid but simple
         os.chdir("OSS_platform/")
         dir_code_OSS_platform = os.getcwd()
         if sys.platform=='linux' or sys.platform=='Linux':
@@ -224,9 +224,9 @@ class MainWindow(Functionalities):
                 output = subprocess.run(['python3', 'Launcher_OSS_lite.py'])
             else:
                 output = subprocess.run(
-                    ['docker', 'run','--name','OSS_container', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
+                    ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
                      '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
-                     'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])  #
+                     'custom_oss_dbs', 'python3', 'Launcher_OSS_lite.py'])  #
         elif sys.platform == 'darwin' or sys.platform=='Darwin':
             output = subprocess.run(['open', 'script.sh', self.path_to_patient, dir_code], executable='/bin/bash')   # in this case we use a bash script that calls Applescript
         elif sys.platform=='win32':

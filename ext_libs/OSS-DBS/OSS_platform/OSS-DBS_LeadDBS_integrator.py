@@ -70,7 +70,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     #also we need to choose whether the IFFT will be on neurons or VTA array (currently controlled by 'Full_Field_IFFT')
     # and if VTA, then E-field threshold???
 
-    print("Input from ",settings_location, "\n")
+    print("\nInput from ",settings_location, "\n")
     file = h5py.File(str(settings_location), 'r')
 
     #if file.root.settings.current_control[0][0]!=file.root.settings.current_control[0][1]:

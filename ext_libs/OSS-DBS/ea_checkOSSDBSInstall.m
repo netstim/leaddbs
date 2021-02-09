@@ -40,14 +40,14 @@ else
             system('docker pull sfbelaine/oss_dbs:python_latest');
         end
     else % Use local built image
-        [~, id] = system('docker images -q custom_oss_platform');
+        [~, id] = system('docker images -q custom_oss_dbs');
         if ~isempty(id)
-            fprintf('docker image found: custom_oss_platform\n');
+            fprintf('docker image found: custom_oss_dbs\n');
         else
             fprintf('Building docker image...\n');
             currentPath = pwd;
             cd([ea_getearoot, 'ext_libs/OSS-DBS']);
-            system('docker build --build-arg OSS_UID=$(id -u) --build-arg OSS_GID=$(id -g) -t custom_oss_platform .');
+            system('docker build --build-arg OSS_UID=$(id -u) --build-arg OSS_GID=$(id -g) -t custom_oss_dbs .');
             cd(currentPath);
         end
     end
