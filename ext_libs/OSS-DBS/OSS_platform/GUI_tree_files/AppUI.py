@@ -472,10 +472,8 @@ class MainWindow(Functionalities):
                 for dict_filename in self.dict_list:
                     dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
                     with open(dict_filename, 'r') as f:
-                        num_start = f.read().find('{')
-                        f.seek(num_start + 1)
-                        content = f.read().split('}')[0]
-                        test_dict.write(content)
+                        content = f.read().split('{')[1].split('}')[0]
+                        test_dict.write(content.strip())
 
                 test_dict.write("}\n")
 
@@ -513,10 +511,8 @@ class MainWindow(Functionalities):
                     for dict_filename in self.dict_list:
                         dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
                         with open(dict_filename, 'r') as f:
-                            num_start = f.read().find('{')
-                            f.seek(num_start + 1)
-                            content = f.read().split('}')[0]
-                            save_as_dict.write(content)
+                            content = f.read().split('{')[1].split('}')[0]
+                            save_as_dict.write(content.strip())
 
                     save_as_dict.write("}\n")
 
@@ -529,10 +525,8 @@ class MainWindow(Functionalities):
                     for dict_filename in self.dict_list:
                         dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
                         with open(dict_filename, 'r') as f:
-                            num_start = f.read().find('{')
-                            f.seek(num_start + 1)
-                            content = f.read().split('}')[0]
-                            last_save.write(content)
+                            content = f.read().split('{')[1].split('}')[0]
+                            last_save.write(content.strip())
 
                     last_save.write("}\n")
 
