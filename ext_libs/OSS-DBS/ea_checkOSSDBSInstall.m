@@ -35,21 +35,22 @@ else
         [~, id] = system('docker images -q ningfei/oss-dbs');
         if ~isempty(id)
             fprintf('docker image found: ningfei/oss-dbs\n');
-        else
-            fprintf('Pulling docker image...\n');
-            system('docker pull ningfei/oss-dbs');
         end
+        fprintf('\nPulling docker image...\n'); % Always pull to update local image
+        system('docker pull ningfei/oss-dbs:latest');
     else % Use local built image
         [~, id] = system('docker images -q custom_oss-dbs');
         if ~isempty(id)
             fprintf('docker image found: custom_oss-dbs\n');
+            fprintf('\nRebuilding docker image...\n');
         else
-            fprintf('Building docker image...\n');
-            currentPath = pwd;
-            cd([ea_getearoot, 'ext_libs/OSS-DBS']);
-            system('docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t custom_oss-dbs .');
-            cd(currentPath);
+            fprintf('\nBuilding docker image...\n');
         end
+        currentPath = pwd;
+        cd([ea_getearoot, 'ext_libs/OSS-DBS']);
+        system('docker pull ningfei/oss-dbs:latest'); % Pull to update base image
+        system('docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t custom_oss-dbs .');
+        cd(currentPath);
     end
 end
 
@@ -72,6 +73,7 @@ else
 end
 pythonPath = ea_findBinPath(pythonBinName);
 
+fprintf('\n');
 if isempty(pythonPath)
     ea_error('python3 not found!', 'Error', dbstack, 0);
 else
@@ -130,4 +132,4 @@ vatsettings = prefs.machine.vatsettings;
 vatsettings.oss_dbs.installed = 1;
 ea_setprefs('vatsettings', vatsettings);
 
-fprintf('OSS-DBS dependencies have been properly configured.\n');
+fprintf('\nOSS-DBS dependencies have been properly configured.\n');
