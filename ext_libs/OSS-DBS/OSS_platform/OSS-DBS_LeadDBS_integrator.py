@@ -283,7 +283,7 @@ if __name__ == '__main__':
         elif sys.platform == 'darwin' or sys.platform == 'Darwin':
             output = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, str(side), str(interactive_mode)], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
         elif sys.platform == 'win32':
-            output = subprocess.run(['start','cmd','/k','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)], shell = True)
+            output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)], shell = True)
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
