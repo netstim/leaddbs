@@ -616,7 +616,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
     try
         atlases.rebuild=0; % always reset rebuild flag.
-        save([atlasFolder,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
+        ea_saveatlas(atlasFolder,options.atlasset,atlases);
     end
 
     if isfield(atlases, 'citation')
