@@ -220,8 +220,10 @@ rigidstage = [' --transform Rigid[0.25]' ... % bit faster gradient step (see htt
     ' --masks [',fixedmask,',',movingmask,']'];
 
 for fi = 1:length(fixedimage)
+    if ~(weights(fi)>=3) % fiducial or segmentation, do not include here
         rigidstage = [rigidstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+    end
 end
 
 affinestage = [' --transform Affine[0.15]'... % bit faster gradient step (see https://github.com/stnava/ANTs/wiki/Anatomy-of-an-antsRegistration-call)
@@ -231,8 +233,10 @@ affinestage = [' --transform Affine[0.15]'... % bit faster gradient step (see ht
     ' --masks [',fixedmask,',',movingmask,']'];
 
 for fi = 1:length(fixedimage)
-    affinestage = [affinestage,...
-        ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+    if ~(weights(fi)>=3) % fiducial or segmentation, do not include here
+        affinestage = [affinestage,...
+            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+    end
 end
 
 synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
@@ -244,8 +248,10 @@ synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
 
 for fi = 1:length(fixedimage)
     if weights(fi)>=3 % fiducial or segmentation
-        synstage = [synstage,...
-            ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
+        if ~slabspresent % only add in fiducial / segmentation if no slabstage is added later.
+            synstage = [synstage,...
+                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
+        end
     else
         synstage = [synstage,...
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
