@@ -281,7 +281,9 @@ if __name__ == '__main__':
             else:
                 output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
         elif sys.platform == 'darwin':
-            output = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, str(side), str(interactive_mode)], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
+            open_terminal = 'tell application "Terminal" to do script "cd \''+oss_dbs_folder+'\';'
+            open_gui = ' '.join(['python3 GUI_tree_files/AppUI.py', path_to_patient, str(side), str(interactive_mode), ';exit'])
+            output = subprocess.run(['osascript', '-e', open_terminal+open_gui])
         elif sys.platform == 'win32':
             output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)], shell = True)
         else:
