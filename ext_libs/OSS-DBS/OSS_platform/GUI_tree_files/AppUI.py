@@ -215,7 +215,7 @@ class MainWindow(Functionalities):
         """The subprocess takes the terminal command as a list."""
         #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
         dir_code=os.path.dirname(os.getcwd()) # OSS-DBS folder to be mount, NOT OSS_platform folder
-        if sys.platform=='linux' or sys.platform=='Linux':
+        if sys.platform=='linux':
             if os.environ.get('SINGULARITY_NAME'):
                 output = subprocess.run(['python3', 'Launcher_OSS_lite.py'])
             else:
@@ -223,7 +223,7 @@ class MainWindow(Functionalities):
                     ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
                      '--volume', self.path_to_patient + ':/opt/Patient',
                      '-it', '--rm', 'custom_oss-dbs', 'python3', 'Launcher_OSS_lite.py'])  #
-        elif sys.platform == 'darwin' or sys.platform=='Darwin':
+        elif sys.platform == 'darwin':
             output = subprocess.run(['open', 'script.sh', self.path_to_patient, dir_code], executable='/bin/bash')   # in this case we use a bash script that calls Applescript
         elif sys.platform=='win32':
             output = subprocess.run(
@@ -536,7 +536,7 @@ class MainWindow(Functionalities):
         self.stretch=d['stretch']
 
         # default choice of processors
-        if sys.platform=='linux' or sys.platform=='Linux':
+        if sys.platform=='linux':
             physical_cores=os.popen("""lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l""").read()[:-1]
             d['number_of_processors']=int(int(physical_cores)*0.5)     # leave some
             print("Number of cores drawn by default: ",d['number_of_processors'])

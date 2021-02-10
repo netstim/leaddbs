@@ -275,12 +275,12 @@ if __name__ == '__main__':
 
     process_1=-1
     if path_to_patient!=-1:
-        if sys.platform == 'linux' or sys.platform == 'Linux':
+        if sys.platform == 'linux':
             if os.environ.get('SINGULARITY_NAME'):
                 output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
             else:
                 output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
-        elif sys.platform == 'darwin' or sys.platform == 'Darwin':
+        elif sys.platform == 'darwin':
             output = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, str(side), str(interactive_mode)], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
         elif sys.platform == 'win32':
             output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)], shell = True)
