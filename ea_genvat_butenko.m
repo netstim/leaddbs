@@ -309,8 +309,8 @@ for side=0:1
             containerID = strsplit(strip(containerID));
             fprintf('\nStop running container...\n')
             cellfun(@(id) system(['docker stop ', id, newline]), containerID);
-            fprintf('\nClean up running container...\n')
-            cellfun(@(id) system(['docker rm ', id, newline]), containerID);
+            % fprintf('\nClean up running container...\n')
+            % cellfun(@(id) system(['docker rm ', id, newline]), containerID);
         end
     end
 
