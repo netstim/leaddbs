@@ -47,7 +47,7 @@ else
             fprintf('Building docker image...\n');
             currentPath = pwd;
             cd([ea_getearoot, 'ext_libs/OSS-DBS']);
-            system('docker build --build-arg OSS_UID=$(id -u) --build-arg OSS_GID=$(id -g) -t custom_oss-dbs .');
+            system('docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t custom_oss-dbs .');
             cd(currentPath);
         end
     end
