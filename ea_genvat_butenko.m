@@ -21,8 +21,10 @@ else
     pythonPath = options.prefs.env.pythonPath;
     if isunix
         setenv('PATH', [pythonPath, ':', binPath]);
+        pythonBinName = 'python3';
     else
         setenv('PATH', [pythonPath, ';', binPath]);
+        pythonBinName = 'python';
     end
 end
 
@@ -174,14 +176,6 @@ for i=1:eleNum
     end
 end
 
-% Set grounding
-settings.Case_grounding = nan(eleNum,1);
-for i=1:eleNum
-    if ~isnan(source(i))
-        settings.Case_grounding(i) = 0;
-    end
-end
-
 % Get stimulation amplitude
 amp = nan(eleNum,1);
 for i=1:eleNum
@@ -254,7 +248,7 @@ if settings.calcAxonActivation
     end
 
     % Filter fibers based on the spherical ROI
-    fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel');
+    fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2);
 
     % Filter fibers based on the minimal length
     fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength);
@@ -287,7 +281,6 @@ parameterFile = [outputPath, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings', '-v7.3');
 
 %% Run OSS-DBS
-currentPath = pwd;
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
 
@@ -299,10 +292,28 @@ ea_delete([outputPath, filesep, 'success_lh.txt']);
 ea_delete([outputPath, filesep, 'fail_lh.txt']);
 ea_delete([outputPath, filesep, 'skip_lh.txt']);
 
+if ispc || ismac
+    dockerImage = 'ningfei/oss-dbs';
+else % Linux
+    dockerImage = 'custom_oss-dbs';
+end
+
 % Iterate sides, index side: 0 - rh , 1 - lh
 runStatus = [0 0]; % Succeed or not
 stimparams = struct();
 for side=0:1
+    % Stop and Remove running docker container on start
+    if isempty(getenv('SINGULARITY_NAME')) % Only do it when using docker
+        [~, containerID] = system(['docker ps -qf ancestor=', dockerImage]);
+        if ~isempty(containerID)
+            containerID = strsplit(strip(containerID));
+            fprintf('\nStop running container...\n')
+            cellfun(@(id) system(['docker stop ', id, newline]), containerID);
+            % fprintf('\nClean up running container...\n')
+            % cellfun(@(id) system(['docker rm ', id, newline]), containerID);
+        end
+    end
+
     switch side
         case 0
             sideCode = 'rh';
@@ -328,7 +339,7 @@ for side=0:1
         continue;
     end
 
-    fprintf('Running OSS-DBS for %s side stimulation...\n\n', sideStr);
+    fprintf('\nRunning OSS-DBS for %s side stimulation...\n\n', sideStr);
 
     % Calculate axon allocation when option enabled
     if settings.calcAxonActivation
@@ -342,19 +353,21 @@ for side=0:1
 
             % Delete this folder in MATLAB since shutil.rmtree may raise
             % I/O error
-            ea_delete([outputPath, filesep,'Points_in_time']);
+            ea_delete([outputPath, filesep,'Axons_in_time']);
 
-            system(['docker run ', ...
-                    '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
-                    '--volume ', outputPath, ':/opt/Patient ', ...
-                    '-it --rm sfbelaine/oss_dbs:python_latest ', ...
-                    'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py ', num2str(side)]);
+            if isempty(getenv('SINGULARITY_NAME')) % Docker
+                system(['docker run ', ...
+                        '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+                        '--volume ', outputPath, ':/opt/Patient ', ...
+                        '--rm ', dockerImage, ' ', ...
+                        'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side)]);
+            else % Singularity
+                system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputPath, ' ', num2str(side)]);
+            end
     end
 
     % Call OSS-DBS GUI to start calculation
-    cd([ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform']);
-    system(['cd "', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform";', ...
-            'python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
+    system([pythonBinName, ' ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
             parameterFile, ' ', num2str(side)]);	% 0 is right side, 1 is the left side here
 
     % Check if OSS-DBS calculation is finished
@@ -444,14 +457,14 @@ for side=0:1
             ftr.fibers(:,4) = originalFibID;
 
             % Save result for visualization
-            save([outputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'ftr');
-            axonToViz = [outputPath, filesep, 'axonActivation_', sideStr, '.mat'];
+            save([outputPath, filesep, 'fiberActivation_', sideStr, '.mat'], '-struct', 'ftr');
+            fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
 
-            if options.native % Generate axon activation file in MNI space
+            if options.native % Generate fiber activation file in MNI space
                 fprintf('Restore connectome in MNI space: %s ...\n\n', settings.connectome);
                 conn.fibers = originalFib;
 
-                fprintf('Convert axon activation result into MNI space...\n\n');
+                fprintf('Convert fiber activation result into MNI space...\n\n');
                 conn.fibers = conn.fibers(ismember(conn.fibers(:,4), connFibID), :);
                 % Set fiber state
                 conn.fibers = [conn.fibers, zeros(size(conn.fibers,1),1)];
@@ -466,18 +479,18 @@ for side=0:1
                 % Reset original fiber id as in the connectome
                 ftr.fibers(:,4) = originalFibID;
 
-                % Save MNI space axon activation result
-                save([MNIoutputPath, filesep, 'axonActivation_', sideStr, '.mat'], '-struct', 'conn');
+                % Save MNI space fiber activation result
+                save([MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'], '-struct', 'conn');
 
                 if ~options.orignative % Visualize MNI space result
-                    axonToViz = [MNIoutputPath, filesep, 'axonActivation_', sideStr, '.mat'];
+                    fiberActivation = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
                 end
             end
 
-            % Visualize axon activation
+            % Visualize fiber activation
             if exist('resultfig', 'var')
                 set(0, 'CurrentFigure', resultfig);
-                ea_axon_viz(axonToViz, resultfig);
+                ea_fiberactivation_viz(fiberActivation, resultfig);
             end
         end
     elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
@@ -495,7 +508,7 @@ for side=0:1
 
     % Delete this folder in MATLAB since shutil.rmtree may raise
     % I/O error
-    ea_delete([outputPath, filesep,'Points_in_time']);
+    ea_delete([outputPath, filesep,'Axons_in_time']);
 end
 
 varargout{1} = runStatus;
@@ -505,7 +518,6 @@ if ~settings.calcAxonActivation && exist('stimparams', 'var')
 end
 
 % Restore working directory and environment variables
-cd(currentPath);
 setenv('LD_LIBRARY_PATH', libpath);
 setenv('PATH', binPath);
 

@@ -1,35 +1,17 @@
-# Dockerfile to build the OSS DBS environment
-#
-# Author:
-# Max Schroeder <max.schroeder@uni-rostock.de>
+FROM ningfei/oss-dbs:latest
 
+ARG UNAME=OSS-DBS
 
-###############################################################################
-# Stage 1
-FROM sfbelaine/oss_dbs:python_latest as user_creation
+ARG UID=1000
 
-ARG OSS_UID="1000"
-ARG OSS_GID="1000"
+ARG GID=1000
 
-ENV OSS_UID=$OSS_UID \
-    OSS_GID=$OSS_GID
+# Create user and group
+RUN groupadd -g $GID $UNAME && \
+    useradd -m -s /bin/bash -u $UID -g $GID $UNAME
 
-# Create a new user and group in order to run processes as non-root
-RUN groupadd -g ${OSS_GID} OSS-DBS
-RUN useradd -m -s /bin/bash -g ${OSS_GID} -u ${OSS_UID} OSS-DBS
+# Change owner of /opt/OSS-DBS
+RUN chown -R $UID:$GID /opt/OSS-DBS
 
-RUN chown -R ${OSS_UID}:${OSS_GID} /opt/OSS-DBS
-
-# switch user
-USER $OSS_UID
-
-###############################################################################
-# Stage 2
-FROM user_creation as app
-
-# Copy all from the current source code repository
-COPY --chown=OSS-DBS:OSS-DBS . /opt/OSS-DBS
-
-WORKDIR /opt/OSS-DBS/OSS_platform
-
-CMD [ "/bin/bash" ]
+# Switch user
+USER $UNAME

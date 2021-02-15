@@ -34,7 +34,7 @@ switch lower(whichPrefs)
         if ~isempty(regexp(prefs, pattern,'once')) % Key exists
             prefs = regexprep(prefs, pattern, ['prefs.',key,' = ',value,';']);
         else % New key added
-            prefs = [prefs, sprintf(['\nprefs.',key,' = ',value,';\n'])];
+            prefs = [prefs, sprintf('\nprefs.%s = %s;\n',key,value)];
         end
 
         try % may not have write permissions

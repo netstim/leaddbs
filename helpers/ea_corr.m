@@ -10,11 +10,11 @@ Y(isinf(Y)) = nan;
 
 switch lower(corrtype)
     case 'pearson'
-        [varargout{1},varargout{2}]=corr(X,Y,'rows','complete','type','Pearson');
+        [varargout{1},varargout{2}]=corr(X,Y,'rows','pairwise','type','Pearson');
     case 'spearman'
-        [varargout{1},varargout{2}]=corr(X,Y,'rows','complete','type','Spearman');
+        [varargout{1},varargout{2}]=corr(X,Y,'rows','pairwise','type','Spearman');
     case 'kendall'
-        [varargout{1},varargout{2}]=corr(X,Y,'rows','complete','type','Kendall');
+        [varargout{1},varargout{2}]=corr(X,Y,'rows','pairwise','type','Kendall');
     case 'bend'
         [varargout{1},varargout{2}]=ea_bendcorr(X,Y);
     case {'skipped spearman','skipped'}

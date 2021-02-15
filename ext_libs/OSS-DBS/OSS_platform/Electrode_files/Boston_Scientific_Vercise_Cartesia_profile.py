@@ -614,10 +614,10 @@ NETGEN_3D_Parameters_4.SetQuadAllowed( 0 )
 NETGEN_1D_2D_3D_4 = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D,geom=Rest_1)
 Sub_mesh_8 = NETGEN_1D_2D_3D_4.GetSubMesh()
 NETGEN_3D_Parameters_5 = NETGEN_1D_2D_3D_4.Parameters()
-NETGEN_3D_Parameters_5.SetMaxSize( 25.4615 )
+NETGEN_3D_Parameters_5.SetMaxSize( 2.5 )
 NETGEN_3D_Parameters_5.SetSecondOrder( 0 )
 NETGEN_3D_Parameters_5.SetOptimize( 1 )
-NETGEN_3D_Parameters_5.SetFineness( 1 )
+NETGEN_3D_Parameters_5.SetFineness( 2 )
 NETGEN_3D_Parameters_5.SetMinSize( 0.000374134 )
 NETGEN_3D_Parameters_5.SetUseSurfaceCurvature( 1 )
 NETGEN_3D_Parameters_5.SetFuseEdges( 1 )
@@ -716,7 +716,7 @@ smesh.SetName(Sub_mesh_8, 'Sub-mesh_8')
 smesh.SetName(Sub_mesh_9, 'Sub-mesh_9')
 
 
-Mesh_1.ExportMED('/opt/Patient/Meshes/Mesh_unref.med')
+Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med')
 
 #if salome.sg.hasDesktop():
 #  salome.sg.updateObjBrowser(True)

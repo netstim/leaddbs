@@ -279,7 +279,7 @@ mzsag=mean(xyz);
 vmzsag=abs(max(xyz)-min(xyz));
 
 setappdata(handles.checkstructures,'h',h);
-setappdata(handles.checkstructures,'fv',fv);
+setappdata(handles.checkstructures,'roi',roi);
 setappdata(handles.checkstructures,'atlases',atlases);
 setappdata(handles.checkstructures,'pixdim',pixdim);
 setappdata(handles.checkstructures,'mz',mz);
@@ -293,7 +293,7 @@ end
 
 
 function ea_updateviews(options,handles,cortrasag)
-fv=getappdata(handles.checkstructures,'fv');
+fv=getappdata(handles.checkstructures,'roi');
 atlases=getappdata(handles.checkstructures,'atlases');
 pixdim=getappdata(handles.checkstructures,'pixdim');
 mz=getappdata(handles.checkstructures,'mz');
@@ -620,7 +620,7 @@ end
 map3d=0;
 if map3d % this could be used to map in 3D instead of 2D - then could be incongruent to visualization which is in 2D
     % map points to closest point on atlas:
-    atlfv=getappdata(handles.checkstructures,'fv'); % get current atlas
+    atlfv=getappdata(handles.checkstructures,'roi'); % get current atlas
     allatlcoords=[];
     for entry=1:length(atlfv)
         try allatlcoords=[allatlcoords;atlfv{entry}.vertices]; end

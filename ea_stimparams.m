@@ -252,32 +252,32 @@ if ~strcmp(options.leadprod, 'group')
             end
         end
 
-        if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat']) ...
-                && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+        if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat']) ...
+                && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
-            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
-        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'])
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
+        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
-        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
         end
 
         if visualizeVAT
@@ -1222,8 +1222,8 @@ else
         if isfield(PL(p),'ht')
             delete(PL(p).ht);
         end
-        if isfield(PL(p),'axon')
-            cellfun(@delete, PL(p).axon);
+        if isfield(PL(p),'fiberActivation')
+            cellfun(@delete, PL(p).fiberActivation);
         end
     end
 end
@@ -1887,35 +1887,35 @@ else
         end
     end
 
-    visualizeAxon = 1;
-    if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat']) ...
-            && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+    visualizeFiberActivation = 1;
+    if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat']) ...
+            && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
-        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
-    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'])
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
+    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
-    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
     else
-        visualizeAxon = 0;
+        visualizeFiberActivation = 0;
     end
 
     if visualizeVAT
@@ -1935,7 +1935,7 @@ else
         ea_calc_vatstats(resultfig,options);
     end
 
-    if ~visualizeVAT && ~visualizeAxon
+    if ~visualizeVAT && ~visualizeFiberActivation
         fprintf('\n');
         warning('off', 'backtrace');
         warning('Nothing to be visualized, please rerun stimulation!!');

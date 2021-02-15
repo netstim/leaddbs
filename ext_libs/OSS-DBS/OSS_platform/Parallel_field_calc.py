@@ -57,13 +57,13 @@ def sort_full_solution(d,FR_vector,full_solution,number_of_points):
 
     if d["spectrum_trunc_method"]=='No Truncation':
 
-        hf = h5py.File('/opt/Patient/Field_solutions/sorted_solution.h5', 'w')
+        hf = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution.h5', 'w')
         hf.create_dataset('dataset_1', data=solution_sort)
         hf.close()
 
     else:
 
-        hf = h5py.File('/opt/Patient/Field_solutions/sorted_solution_'+str(d["spectrum_trunc_method"])+'_'+str(d["trunc_param"])+'.h5', 'w')
+        hf = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution_'+str(d["spectrum_trunc_method"])+'_'+str(d["trunc_param"])+'.h5', 'w')
         hf.create_dataset('dataset_1', data=solution_sort)
         hf.close()
 
@@ -85,12 +85,12 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
         d["Full_Field_IFFT"]=0
 
     #load adapted mesh
-    mesh = Mesh('/opt/Patient/Results_adaptive/mesh_adapt.xml.gz')
-    boundaries = MeshFunction('size_t',mesh,'/opt/Patient/Results_adaptive/boundaries_adapt.xml')
-    subdomains_assigned=MeshFunction('size_t',mesh,'/opt/Patient/Results_adaptive/subdomains_assigned_adapt.xml')
+    mesh = Mesh(os.environ['PATIENTDIR']+'/Results_adaptive/mesh_adapt.xml.gz')
+    boundaries = MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/Results_adaptive/boundaries_adapt.xml')
+    subdomains_assigned=MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/Results_adaptive/subdomains_assigned_adapt.xml')
 
     #load the neuron array
-    Vertices_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+    Vertices_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
     Vertices=Vertices_get.values
 
     #load CPE parameters if necessary
@@ -114,7 +114,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
         c12 = MeshFunction("double", mesh, 3, 0.0)
         c22 = MeshFunction("double", mesh, 3, 1.0)
 
-        hdf = HDF5File(mesh.mpi_comm(), "/opt/Patient/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh.num_cells())+".h5", "r")
+        hdf = HDF5File(mesh.mpi_comm(), os.environ['PATIENTDIR']+"/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh.num_cells())+".h5", "r")
         hdf.read(c00, "/c00")
         hdf.read(c01, "/c01")
         hdf.read(c02, "/c02")
@@ -130,7 +130,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
         DTI_tensor=[0,0,0,0,0,0]       #initiating
 
     print("Subdomains file for parallel is saved in Field_solutions/parallel_Subdomains.pvd")
-    file=File('/opt/Patient/Field_solutions/parallel_Subdomains.pvd')
+    file=File(os.environ['PATIENTDIR']+'/Field_solutions/parallel_Subdomains.pvd')
     file<<subdomains,mesh
 
     # choose solver
@@ -148,7 +148,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
 
     # this snippet will check at which frequency the FFEM computations were interrupted
     if d["Parallel_comp_interrupted"] == 1:
-        pack_to_start_after=np.genfromtxt('/opt/Patient/Field_solutions/last_completed_pack.csv', delimiter=' ')
+        pack_to_start_after=np.genfromtxt(os.environ['PATIENTDIR']+'/Field_solutions/last_completed_pack.csv', delimiter=' ')
         if pack_to_start_after.size == 1:
             rslt=np.where(freq_list == pack_to_start_after)
             i=rslt[0][0]+1
@@ -202,7 +202,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
             p.join()
 
         last_completed_pack=np.asarray(freq_pack)
-        np.savetxt('/opt/Patient/Field_solutions/last_completed_pack.csv', last_completed_pack, delimiter=" ")       #to recover the last frequency of FFEM was interrupted
+        np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/last_completed_pack.csv', last_completed_pack, delimiter=" ")       #to recover the last frequency of FFEM was interrupted
         if d["freq"] in freq_pack:
             print("Processed frequencies: ")
         print(freq_pack)
@@ -217,14 +217,14 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
         cnt_freq=0
         for core in range(n_files):
             if (d["CPE_activ"]==1 or d["current_control"]==1) and cc_multicontact==False:
-                impedance_get=read_csv('/opt/Patient/Field_solutions/Impedance'+str(core)+'.csv', delimiter=' ', header=None)
+                impedance_get=read_csv(os.environ['PATIENTDIR']+'/Field_solutions/Impedance'+str(core)+'.csv', delimiter=' ', header=None)
                 impedance=impedance_get.values
                 complete_impedance[cnt_freq:cnt_freq+impedance.shape[0],:]
                 cnt_freq=cnt_freq+impedance.shape[0]
 
         if (d["CPE_activ"]==1 or d["current_control"]==1) and cc_multicontact==False:           # we calculate impedance with FFEM only for these cases
             sorted_impedance=complete_impedance[complete_impedance[:,2].argsort(axis=0)]      #sort by freq
-            np.savetxt('/opt/Patient/Field_solutions/sorted_impedance.csv', sorted_impedance, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/sorted_impedance.csv', sorted_impedance, delimiter=" ")
 
         minutes=int((tm.time() - start_paral)/60)
         secnds=int(tm.time() - start_paral)-minutes*60
@@ -236,7 +236,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
         complete_solution=np.zeros((freq_list.shape[0]*Vertices.shape[0],6),float)
         cnt_freq=0
         for core in range(n_files):
-            hf = h5py.File('/opt/Patient/Field_solutions/sol_cor'+str(core)+'.h5', 'r')
+            hf = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(core)+'.h5', 'r')
             lst=list(hf.keys())
             result_total=[]
             for i in lst:
@@ -249,14 +249,14 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
             complete_solution[inx_compl_sol:inx_compl_sol+result.shape[0],:]=result
             inx_compl_sol=inx_compl_sol+result.shape[0]
             if (d["CPE_activ"]==1 or d["current_control"]==1) and cc_multicontact==False:   # we calculate impedance with FFEM only for these cases
-                impedance_get=read_csv('/opt/Patient/Field_solutions/Impedance'+str(core)+'.csv', delimiter=' ', header=None)
+                impedance_get=read_csv(os.environ['PATIENTDIR']+'/Field_solutions/Impedance'+str(core)+'.csv', delimiter=' ', header=None)
                 impedance=impedance_get.values
                 complete_impedance[cnt_freq:cnt_freq+impedance.shape[0],:]=impedance
                 cnt_freq=cnt_freq+impedance.shape[0]
 
         if (d["CPE_activ"]==1 or d["current_control"]==1) and cc_multicontact==False:   # we calculate impedance with FFEM only for these cases
             sorted_impedance=complete_impedance[complete_impedance[:,2].argsort(axis=0)]      #sort by freq
-            np.savetxt('/opt/Patient/Field_solutions/sorted_impedance.csv', sorted_impedance, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/sorted_impedance.csv', sorted_impedance, delimiter=" ")
             plt.figure(101010)
             plt.plot(sorted_impedance[:,0],sorted_impedance[:,1],marker='o')
             #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, mode="expand", borderaxespad=0.)
@@ -264,7 +264,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
             plt.xlabel(r'Re(Z), $\Omega$')
             plt.ylabel(r'Im(Z), $\Omega$')
             plt.grid(True)
-            plt.savefig('/opt/Patient/Images/Imp_plot.eps', format='eps', dpi=1000)
+            plt.savefig(os.environ['PATIENTDIR']+'/Images/Imp_plot.eps', format='eps', dpi=1000)
 
             Ampl_imp=np.zeros(sorted_impedance.shape[0],dtype=float)
             for i_fr in range(sorted_impedance.shape[0]):
@@ -275,7 +275,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
             plt.xlabel('f, Hz')
             plt.ylabel(r'Ampl(Z), $\Omega$')
             plt.grid(True)
-            plt.savefig('/opt/Patient/Images/Imp_Ampl_plot.eps', format='eps', dpi=1000)
+            plt.savefig(os.environ['PATIENTDIR']+'/Images/Imp_Ampl_plot.eps', format='eps', dpi=1000)
 
         minutes=int((tm.time() - start_paral)/60)
         secnds=int(tm.time() - start_paral)-minutes*60

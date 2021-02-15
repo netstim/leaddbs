@@ -1,4 +1,4 @@
-function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type)
+function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type, factor)
 % Filter fibers based on the active contacts and stimulation amplitudes
 
 % Load stimparameters in case needed
@@ -71,12 +71,15 @@ switch lower(type)
 end
 
 % Calculate radius
+if ~exist('factor', 'var')
+    factor = 1;  % Multiply the radius from the estimation by a fixed factor
+end
 radius = cell(size(stimAmplitudes));
 for i=1:length(radius)
     radius{i} = calcr(stimAmplitudes{i});
-    disp(['Radius (mm): ', num2str(radius{i}), ' x 3']);
+    disp(['Radius (mm): ', num2str(radius{i}), ' x ', num2str(factor)]);
     % Triple the radius since the model tends to underestimate activation
-    radius{i} = radius{i}*3;
+    radius{i} = radius{i} * factor;
 end
 
 % Load fiber connectome

@@ -70,7 +70,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     #also we need to choose whether the IFFT will be on neurons or VTA array (currently controlled by 'Full_Field_IFFT')
     # and if VTA, then E-field threshold???
 
-    print("Input from ",settings_location)
+    print("\nInput from ",settings_location, "\n")
     file = h5py.File(str(settings_location), 'r')
 
     #if file.root.settings.current_control[0][0]!=file.root.settings.current_control[0][1]:
@@ -115,10 +115,10 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         list_ascii.append(array_ascii[i][0])
    # list_ascii = map(lambda s: s.strip(), list_ascii)
     name_split=''.join(chr(i) for i in list_ascii)
-    input_dict['MRI_data_name']=name_split.rsplit('/',1)[-1]
+    input_dict['MRI_data_name']=name_split.rsplit(os.sep,1)[-1]
 
 
-    path_to_patient=name_split.rsplit('/',1)[:-1]
+    path_to_patient=name_split.rsplit(os.sep,1)[:-1]
     path_to_patient=path_to_patient[0]
 
 
@@ -192,7 +192,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     elif Electrode_type == 'Boston Scientific Vercise':
         input_dict['Electrode_type']="Boston_Scientific_Vercise" #1
         normal_array_length=6.0   # still the 4th level. BEWARE: Stretch is defined between the 1st and the 4th, but applied between 1st and 8th!!!
-        normal_array_length=14.0 
+        normal_array_length=14.0
     elif Electrode_type == 'Boston Scientific Vercise Directed':
         input_dict['Electrode_type']="Boston_Scientific_Vercise_Cartesia" #1
         normal_array_length=6.0
@@ -216,7 +216,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 
     el_array_length=np.sqrt((input_dict['Implantation_coordinate_X']-input_dict['Second_coordinate_X'])**2+(input_dict['Implantation_coordinate_Y']-input_dict['Second_coordinate_Y'])**2+(input_dict['Implantation_coordinate_Z']-input_dict['Second_coordinate_Z'])**2)
     stretch=el_array_length/normal_array_length
-    
+
     if abs(stretch-1.0)<0.01:   #if 1% tolerance
         input_dict["stretch"]=1.0
     else:
@@ -262,38 +262,30 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 
 
 if __name__ == '__main__':
-    #path_to_patient=get_input_from_LeadDBS(0,*sys.argv[1:])
+
+    oss_dbs_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
+    os.chdir(oss_dbs_folder)
+
     path_to_patient,side,interactive_mode=get_input_from_LeadDBS(*sys.argv[1:])
+
+    if os.environ.get('SINGULARITY_NAME'):
+        os.environ['PATIENTDIR'] = path_to_patient # Use real path for singularity
+    else:
+        os.environ['PATIENTDIR'] = '/opt/Patient' # Use fixed mount path for docker
+
     process_1=-1
     if path_to_patient!=-1:
-        if sys.platform == 'linux' or sys.platform == 'Linux':
-            output = subprocess.run(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
-            #subprocess.check_output(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient])
-        elif sys.platform == 'darwin' or sys.platform == 'Darwin':
-            dir_code = os.getcwd()
-            #subprocess.check_output(['open', 'script_for_GUI.sh', path_to_patient, dir_code], executable='/bin/bash')
-            output = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, dir_code, str(side), str(interactive_mode)], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
-            #process_1 = subprocess.check_call(['open', 'script_for_GUI.sh', path_to_patient, dir_code, str(side)], executable='/bin/bash')
-            #process.wait()
+        if sys.platform == 'linux':
+            if os.environ.get('SINGULARITY_NAME'):
+                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
+            else:
+                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
+        elif sys.platform == 'darwin':
+            open_terminal = 'tell application "Terminal" to do script "cd \''+oss_dbs_folder+'\';'
+            open_gui = ' '.join(['python3 GUI_tree_files/AppUI.py', path_to_patient, str(side), str(interactive_mode), ';exit"'])
+            output = subprocess.run(['osascript', '-e', open_terminal+open_gui])
         elif sys.platform == 'win32':
-            print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
-            raise SystemExit
+            output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)], shell = True)
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
-
-    # path_to_patient=get_input_from_LeadDBS(1,*sys.argv[1:])
-    # if path_to_patient!=-1:
-    #     if sys.platform == 'linux' or sys.platform == 'Linux':
-    #         output2 = subprocess.run(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient])
-    #         #subprocess.check_output(['xterm', '-e','python3','GUI_tree_files/AppUI.py',path_to_patient])
-    #     elif sys.platform == 'darwin' or sys.platform == 'Darwin':
-    #         dir_code = os.getcwd()
-    #         output2 = subprocess.run(['open', 'script_for_GUI.sh', path_to_patient, dir_code], executable='/bin/bash')  # in this case we use a bash script that calls Applescript
-    #     elif sys.platform == 'win32' or sys.platform == 'win32':
-    #         print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
-    #         raise SystemExit
-    #     else:
-    #         print("The system's OS does not support OSS-DBS")
-    #         raise SystemExit
-

@@ -668,7 +668,7 @@ if(Lead2nd_Enable):
 	smesh.SetName(Sub_mesh_4_2, 'Sub-mesh_4_2')
 
 
-Mesh_1.ExportMED('/opt/Patient/Meshes/Mesh_unref.med')
+Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med')
 
 print("Mesh was saved\n")
 print(os.getcwd())

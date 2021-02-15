@@ -140,9 +140,9 @@ prefs.d3.fiberdiameter=0.1; % diameter of fibers ? only works in all ML versions
 prefs.d3.maxfibers=200; % set to inf to show all fibers (but this could lead to crashes).
 prefs.d3.colorjitter=0; % set to 0 to show no color jitter at all.
 prefs.d3.showdirarrows = 0;
-prefs.d3.axon_activated_color = [1 0 0];
-prefs.d3.axon_nonactivated_color = [1 1 1];
-prefs.d3.axon_damaged_color = [0.5 0 0.5];
+prefs.d3.fiber_activated_color = [1 0 0];
+prefs.d3.fiber_nonactivated_color = [1 1 1];
+prefs.d3.fiber_damaged_color = [0.5 0 0.5];
 
 %% Video export
 prefs.video.path=[-90,10
