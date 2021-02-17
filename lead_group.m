@@ -1059,7 +1059,6 @@ for pt=selection
         options.native=options.orignative; % restore
         setappdata(resultfig,'stimparams',stimparams(1,:));
     end
-
     % Calc VAT stats (atlas intersection and volume)
     if all(vatCalcPassed)
         ea_calc_vatstats(resultfig,options);
