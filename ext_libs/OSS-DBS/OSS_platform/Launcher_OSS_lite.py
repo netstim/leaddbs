@@ -91,6 +91,8 @@ def run_full_model(master_dict):
         print("MRI data is new, the DTI data will be reprocessed")
         d["voxel_arr_DTI"]==0
 
+    import os    
+        
     #loading of meta data depending on the simulatation setup and state
     if d["Init_neuron_model_ready"]==1:
         [ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib,n_Ranvier,ROI_radius,N_segm]=np.genfromtxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_model_misc.csv', delimiter=' ')
@@ -109,7 +111,6 @@ def run_full_model(master_dict):
         with open(os.environ['PATIENTDIR']+'/Meshes/Mesh_ind.file', "rb") as f:
             Domains = pickle.load(f)
 
-    import os
     #========================Formating MRI and DTI data=======================#
     from MRI_DTI_prep_new import obtain_MRI_class
     MRI_param=obtain_MRI_class(d)       #also creates 'MRI_DTI_derived_data/Tissue_array_MRI.csv' and meta data
