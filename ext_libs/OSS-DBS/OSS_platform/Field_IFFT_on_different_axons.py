@@ -125,7 +125,7 @@ def convolute_and_ifft(last_point,Ind_trunc1,trunc_method,post_truncation,i_axon
     global t_vect
     global FREQ_vector_signal
 
-    Signal_t_conv=np.zeros((num_segments,t_vect.shape[0]),float)
+    Signal_t_conv=np.zeros((int(num_segments),t_vect.shape[0]),float)
 
     for i_point in range(int(num_segments)):
         global_i_point=int(num_segments*i_axon+i_point)
@@ -204,7 +204,7 @@ def convolute_and_ifft_octaves(last_point,i_axon,num_segments,N_freq,N_freq_octv
     global FREQ_vector_signal
     global FR_vec_sign_octv
 
-    Signal_t_conv=np.zeros((num_segments,t_vect.shape[0]),float)
+    Signal_t_conv=np.zeros((int(num_segments),t_vect.shape[0]),float)
 
     for i_point in range(int(num_segments)):
         global_i_point=int(num_segments*i_axon+i_point)
