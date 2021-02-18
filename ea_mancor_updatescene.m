@@ -215,7 +215,7 @@ if selectrode
     set(mplot(selectrode,1),'MarkerEdgeColor','y');
 end
 try
-    midpt=markers(options.elside).head;
+    midpt=double(markers(options.elside).head);
 catch
     midpt=[0 0 0];
 end
