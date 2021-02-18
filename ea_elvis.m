@@ -71,6 +71,11 @@ uibjs.slide3dtog=uitoggletool(ht, 'CData', ea_get_icn('quiver'),...
 %     'OffCallback', {@ea_pan,'off'}, 'State', 'off');
 setappdata(resultfig,'uibjs',uibjs);
 
+% Initialize Sliceview-Button
+slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
+    'TooltipString','Slice Control Figure',...
+    'ClickedCallback',{@opensliceviewer,resultfig,options});
+
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract',...
     'Callback',{@ea_addobj,resultfig,'tract',options});
@@ -306,6 +311,17 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 'TooltipString', 'Electrode Labels',...
                 'OnCallback', {@objvisible,ellabel},...
                 'OffCallback', {@objinvisible,ellabel}, 'State','off');
+
+            % Move eleLabel toggle to front
+            if strcmp(options.leadprod,'dbs')
+                eleToggleTagPattern = '^Patient: ';
+            elseif strcmp(options.leadprod,'group')
+                eleToggleTagPattern = '^Group: \d+';
+            end
+            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, eleToggleTagPattern, 'once')), allchild(ht));
+            eleToggleInd = find(isEleToggle);
+            otherToggleInd = (find(isEleToggle,1,'last')+1:numel(ht.Children))';
+            ht.Children=ht.Children([eleToggleInd;1;otherToggleInd]);
         end
 
         cnt=1;
@@ -358,13 +374,7 @@ else
     elstruct=struct;
 end
 
-% Initialize Sliceview-Button
-slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
-    'TooltipString','Slice Control Figure',...
-    'ClickedCallback',{@opensliceviewer,resultfig,options});
-
 % Initialize MER-Button
-
 if ~strcmp(options.leadprod, 'group')
     merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
         'TooltipString','MER Control Figure',...
@@ -478,6 +488,15 @@ uipushtool(ht, 'CData',ea_get_icn('defaultviewsave'),...
 uipushtool(ht, 'CData',ea_get_icn('defaultviewset'),...
     'TooltipString', 'Display default view',...
     'ClickedCallback',@set_defaultview_callback);
+
+% Reorder toggles to move eleToggle to the end
+if strcmp(options.leadprod,'group')
+    isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+', 'once')), allchild(ht));
+    eleToggleInd = find(isEleToggle);
+    eleLabelToggleInd = eleToggleInd(end) + 1;
+    otherToggleInd = setdiff((1:numel(ht.Children))', [eleToggleInd;eleLabelToggleInd]);
+    ht.Children=ht.Children([eleToggleInd;eleLabelToggleInd;otherToggleInd]);
+end
 
 hold off
 
