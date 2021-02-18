@@ -247,13 +247,12 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             end
 
             % add sweetspot explorer button.
-
-            di=dir([options.root,options.patientname,filesep,'sweetspots',filesep,'*.sweetspot']);
-            % add sweetspot explorer button.
             sweetspotadd = uipushtool(ht, 'CData', ea_get_icn('sweetspot_add'),...
                 'TooltipString', ['Add sweetspot analysis'],...
                 'Tag', ['Add sweetspot analysis'],...
                 'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});        
+
+            di=dir([options.root,options.patientname,filesep,'sweetspots',filesep,'*.sweetspot']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('sweetspot'),...
                     'TooltipString', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
@@ -291,12 +290,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             end
 
 
-            % Move the group toggle forward
-            tractToggleInd = 1:length(di)+1;
-            eleGroupToggleInd = length(tractToggleInd)+1:length(tractToggleInd)+numel(unique(elstructGroupID));
-            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
-            eleToggleInd = length(tractToggleInd)+length(eleGroupToggleInd)+1:find(isEleToggle,1,'last');
-            ht.Children=ht.Children([eleToggleInd, eleGroupToggleInd, tractToggleInd, find(isEleToggle,1,'last')+1:end]);
+            % Move the group toggles and app toggles forward
+            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+,', 'once')), allchild(ht));
+            eleToggleInd = find(isEleToggle);
+            isEleGroupToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+$', 'once')), allchild(ht));
+            eleGroupToggleInd = find(isEleGroupToggle);
+            otherToggleInd = (find(isEleToggle,1,'last')+1:numel(ht.Children))';
+            appToggleInd = (1:find(isEleGroupToggle,1)-1)';
+            ht.Children=ht.Children([eleToggleInd;eleGroupToggleInd;appToggleInd;otherToggleInd]);
         end
 
         try
