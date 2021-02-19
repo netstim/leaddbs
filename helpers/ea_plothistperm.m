@@ -1,6 +1,9 @@
-function h=ea_plothistperm(title,similarities,idlabels,ids,cols)
+function h=ea_plothistperm(title,similarities,idlabels,ids,cols,onesided)
 if ~exist('cols','var')
    cols=ones(length(ids),1);
+end
+if ~exist('onesided','var')
+    onesided=0;
 end
 
 % remove true sims from similarities:
@@ -41,10 +44,13 @@ ax=gr(1).facet_axes_handles;
 % plot textboxes
 for g=1:length(idlabels)
     thissims=similarities(ids{g});
-
-    ssims=sort(abs(R0similarities),'descend');
-
-    ssims=ssims>abs(mean(thissims));
+    if onesided
+        ssims=sort((R0similarities),'descend');
+        ssims=ssims>(mean(thissims));
+    else
+        ssims=sort(abs(R0similarities),'descend');
+        ssims=ssims>abs(mean(thissims)); 
+    end
     p=sum(ssims)/numel(ssims);
     if mean(thissims)>0
         text(double(mean(thissims)),(ax.YLim(2))-(g*(0.07*ax.YLim(2))),[' \leftarrow ',ea_underscore2space(idlabels{g}),' [p = ',sprintf('%.4f',p),']'],'Color',ccode(cols(g),:),'FontSize',14,'FontWeight','bold','HorizontalAlignment','left','BackgroundColor','w');
