@@ -77,7 +77,6 @@ def manage_folders(d):
         os.makedirs(os.environ['PATIENTDIR']+'/Field_solutions_functions')
     if d["IFFT_ready"]!=1:
         if os.path.isdir(os.environ['PATIENTDIR']+'/Axons_in_time'):
-            shutil.rmtree(os.environ['PATIENTDIR']+'/Axons_in_time')
             os.system('rm -fr '+os.environ['PATIENTDIR']+'/Axons_in_time')
         os.makedirs(os.environ['PATIENTDIR']+'/Axons_in_time')
         if os.path.isdir(os.environ['PATIENTDIR']+'/Animation_Field_in_time'):
