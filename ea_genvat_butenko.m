@@ -28,6 +28,13 @@ else
     end
 end
 
+% docker image name
+if ispc || ismac
+    dockerImage = 'ningfei/oss-dbs';
+else % Linux
+    dockerImage = 'custom_oss-dbs';
+end
+
 % Double check if lead is supported by OSS-DBS.
 if ~ismember(options.elmodel, ea_ossdbs_elmodel)
     ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], 'Error', dbstack)
@@ -37,6 +44,13 @@ directory = [options.root, options.patientname, filesep];
 
 if ~exist([directory,'stimulations',filesep,ea_nt(options.native),S.label],'dir')
     mkdir([directory,'stimulations',filesep,ea_nt(options.native),S.label]);
+end
+
+% Set output path
+outputPath = [directory, 'stimulations', filesep, ea_nt(options.native), S.label];
+if options.native
+    MNIoutputPath = [directory, 'stimulations', filesep, ea_nt(0), S.label];
+    ea_mkdir(MNIoutputPath);
 end
 
 options = ea_assignpretra(options);
@@ -92,11 +106,11 @@ settings.Estimate_In_Template = options.prefs.machine.vatsettings.estimateInTemp
 
 %% Set MRI path
 % Put the MRI file in stimulation folder
-copyfile([segMaskDir, 'segmask.nii'], [directory,'stimulations',filesep,ea_nt(options.native),S.label]);
-settings.MRI_data_name = [directory,'stimulations',filesep,ea_nt(options.native),S.label,filesep,'segmask.nii'];
-
 %% Scaled tensor data
 settings.DTI_data_name = ''; % 'dti_tensor.nii';
+copyfile([segMaskDir, 'segmask.nii'], outputPath);
+settings.MRI_data_name = [outputPath,filesep,'segmask.nii'];
+
 
 %% Index of the tissue in the segmented MRI data
 settings.GM_index = 1;
@@ -221,13 +235,6 @@ end
 % Threshold for Astrom VTA (V/mm)
 settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_ethresh;
 
-% Set output path
-outputPath = [directory, 'stimulations', filesep, ea_nt(options.native), S.label];
-if options.native
-    MNIoutputPath = [directory, 'stimulations', filesep, ea_nt(0), S.label];
-    ea_mkdir(MNIoutputPath);
-end
-
 % Axon activation setting
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcAxonActivation;
 if settings.calcAxonActivation
@@ -291,12 +298,6 @@ ea_delete([outputPath, filesep, 'skip_rh.txt']);
 ea_delete([outputPath, filesep, 'success_lh.txt']);
 ea_delete([outputPath, filesep, 'fail_lh.txt']);
 ea_delete([outputPath, filesep, 'skip_lh.txt']);
-
-if ispc || ismac
-    dockerImage = 'ningfei/oss-dbs';
-else % Linux
-    dockerImage = 'custom_oss-dbs';
-end
 
 % Iterate sides, index side: 0 - rh , 1 - lh
 runStatus = [0 0]; % Succeed or not
