@@ -119,17 +119,17 @@ settings.DTI_data_name = '';
 
 if isfile([outputPath,filesep,scaledTensorName])
     % Scaled tensor data found in stimulation folder
-    settings.DTI_data_name = [outputPath,filesep,scaledTensorName];
+    settings.DTI_data_name = scaledTensorName;
 
 elseif ~options.native && isfile([ea_space,filesep,scaledTensorName])
     % MNI mode, scaled tensor data found in MNI space folder
     copyfile([ea_space,filesep,scaledTensorName], outputPath);
-    settings.DTI_data_name = [outputPath,filesep,scaledTensorName];
+    settings.DTI_data_name = scaledTensorName;
 
 elseif options.native && isfile([directory,filesep,scaledTensorName])
     % native mode, scaled tensor data found in patient folder
     copyfile([directory,filesep,scaledTensorName], outputPath);
-    settings.DTI_data_name = [outputPath,filesep,scaledTensorName];
+    settings.DTI_data_name = scaledTensorName;
 
 else
     if ~options.native
@@ -179,12 +179,12 @@ else
 
         % Copy scaled tensor data to stimulation directory, update setting
         copyfile([tensorDir, scaledTensorName], outputPath);
-        settings.DTI_data_name = [outputPath,filesep,scaledTensorName];
+        settings.DTI_data_name = scaledTensorName;
     end
 end
 
 if ~isempty(settings.DTI_data_name)
-    fprintf('Scaled tensor data added:\n%s\n\n', settings.DTI_data_name)
+    fprintf('Scaled tensor data added: %s\n\n', settings.DTI_data_name)
 end
 
 %% Index of the tissue in the segmented MRI data
