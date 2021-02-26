@@ -183,7 +183,7 @@ def scale_tensor_data(tensor_data_name,scaling_method='Norm_mapping',tensor_orde
 
     #save data
     img3 = nib.Nifti1Image(normalized_DTI, img.affine)
-    nib.save(img3, os.path.splitext(filepath)[0]+'_'+scaling_method+'.nii.gz')          #Has to be changed either _CRPTuch2.nii.gz or _CRPTuch1.nii.gz or _CRPAstroem.nii.gz or _CRPNordin.nii.gz or _normalizedMapping.nii.gz _loadPreservation.nii.gz
+    nib.save(img3, nib.filename_parser.splitext_addext(filepath)[0]+'_'+scaling_method+'.nii.gz')          #Has to be changed either _CRPTuch2.nii.gz or _CRPTuch1.nii.gz or _CRPAstroem.nii.gz or _CRPNordin.nii.gz or _normalizedMapping.nii.gz _loadPreservation.nii.gz
     #nib.save(img3, tensor_data_name+'_'+scaling_method+'.nii.gz')
 
     # save for visualization with DTI TK
