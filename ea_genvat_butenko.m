@@ -142,6 +142,7 @@ else
         if ~isfile([directory, tensorName]) && isfile([ea_space, tensorName])
             % Warp tensor data only when ANTs was used for normalization
             if ismember(ea_whichnormmethod(directory), ea_getantsnormfuns)
+                fprintf('Warping tensor data into patient space...\n\n')
                 ea_ants_apply_transforms(options,...
                     [ea_space, tensorName],... % From
                     [directory, tensorName],... % To
@@ -165,6 +166,7 @@ else
 
     % Scale tensor data
     if exist('tensorDir', 'var')
+        fprintf('Scaling tensor data...\n\n')
         if isempty(getenv('SINGULARITY_NAME')) % Docker
             system(['docker run ', ...
                     '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
@@ -179,6 +181,10 @@ else
         copyfile([tensorDir, scaledTensorName], outputPath);
         settings.DTI_data_name = [outputPath,filesep,scaledTensorName];
     end
+end
+
+if ~isempty(settings.DTI_data_name)
+    fprintf('Scaled tensor data added:\n%s\n\n', settings.DTI_data_name)
 end
 
 %% Index of the tissue in the segmented MRI data
