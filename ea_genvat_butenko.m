@@ -106,11 +106,80 @@ settings.Estimate_In_Template = options.prefs.machine.vatsettings.estimateInTemp
 
 %% Set MRI path
 % Put the MRI file in stimulation folder
-%% Scaled tensor data
-settings.DTI_data_name = ''; % 'dti_tensor.nii';
 copyfile([segMaskDir, 'segmask.nii'], outputPath);
 settings.MRI_data_name = [outputPath,filesep,'segmask.nii'];
 
+%% Check tensor data
+tensorName = 'IITmean_tensor.nii.gz';
+scalingMethod = 'Norm_mapping';
+scaledTensorName = ['IITmean_tensor_',scalingMethod,'.nii.gz'];
+
+% Set to empty by default
+settings.DTI_data_name = '';
+
+if isfile([outputPath,filesep,scaledTensorName])
+    % Scaled tensor data found in stimulation folder
+    settings.DTI_data_name = [outputPath,filesep,scaledTensorName];
+
+elseif ~options.native && isfile([ea_space,filesep,scaledTensorName])
+    % MNI mode, scaled tensor data found in MNI space folder
+    copyfile([ea_space,filesep,scaledTensorName], outputPath);
+    settings.DTI_data_name = [outputPath,filesep,scaledTensorName];
+
+elseif options.native && isfile([directory,filesep,scaledTensorName])
+    % native mode, scaled tensor data found in patient folder
+    copyfile([directory,filesep,scaledTensorName], outputPath);
+    settings.DTI_data_name = [outputPath,filesep,scaledTensorName];
+
+else
+    if ~options.native
+        % MNI mode, tensor data found
+        if isfile([ea_space, tensorName])
+            tensorDir = ea_space;
+        end
+    else
+        % native mode, tensor data not found, warp template tensor data
+        if ~isfile([directory, tensorName]) && isfile([ea_space, tensorName])
+            % Warp tensor data only when ANTs was used for normalization
+            if ismember(ea_whichnormmethod(directory), ea_getantsnormfuns)
+                ea_ants_apply_transforms(options,...
+                    [ea_space, tensorName],... % From
+                    [directory, tensorName],... % To
+                    1, ... % Useinverse is 1
+                    '', ... % Reference, auto-detected
+                    '', ... % Transformation, auto-detected
+                    0, ... % NearestNeighbor interpolation
+                    3, ... % Dimension
+                    'tensor');
+            else
+                warning('off', 'backtrace');
+                warning('Warping tensor data is only supported when ANTs was used for normalization! Skipping...');
+                warning('on', 'backtrace');
+            end
+        end
+
+        if isfile([directory, tensorName]) % Scale tensor data
+            tensorDir = directory;
+        end
+    end
+
+    % Scale tensor data
+    if exist('tensorDir', 'var')
+        if isempty(getenv('SINGULARITY_NAME')) % Docker
+            system(['docker run ', ...
+                    '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+                    '--volume ', tensorDir, ':/opt/Patient ', ...
+                    '--rm ', dockerImage, ' ', ...
+                    'python3 /opt/OSS-DBS/OSS_platform/Tensor_scaling.py /opt/Patient/', tensorName, ' ', scalingMethod]);
+        else % Singularity
+            system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Tensor_scaling.py ', tensorDir, tensorName, ' ', scalingMethod]);
+        end
+
+        % Copy scaled tensor data to stimulation directory, update setting
+        copyfile([tensorDir, scaledTensorName], outputPath);
+        settings.DTI_data_name = [outputPath,filesep,scaledTensorName];
+    end
+end
 
 %% Index of the tissue in the segmented MRI data
 settings.GM_index = 1;
