@@ -35,7 +35,7 @@ for i=2:numel(inputMaps)
             outputMap.img(negativeMask) = outputMap.img(negativeMask) .* inputMaps{i}.img(negativeMask);
         case {'sum','+'}
             outputMap.img(positiveMask) = outputMap.img(positiveMask) + inputMaps{i}.img(positiveMask);
-            outputMap.img(negativeMask) = outputMap.img(negativeMask) - inputMaps{i}.img(negativeMask);
+            outputMap.img(negativeMask) = outputMap.img(negativeMask) + inputMaps{i}.img(negativeMask);
     end
 end
 
