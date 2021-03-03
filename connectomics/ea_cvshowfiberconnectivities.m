@@ -229,6 +229,7 @@ if ~options.savefibers.load
                 if options.groupmode
                     stimparams.label=['gs_',options.groupid];
                 end
+                
             end
             [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,stimparams);
             ea_stats.stimulation(thisstim).ft(side).fibercounts{la}=howmanyfibs{side}/numtotalfibs;
