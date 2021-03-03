@@ -565,6 +565,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 cbfig = figure('Visible', 'off');
                 ea_plot_colorbar(fibcmap, [], 'h', '', tick, ticklabel, axes(cbfig));
                 saveas(cbfig, [tractPath, filesep, tractName, '_colorbar.svg']);
+                close(cbfig);
                 % export_fig(cbfig, [tractPath, filesep, tractName, '_colorbar.png']);
                 fprintf('Colorbar exported as:\n%s\n\n', [tractPath, filesep, tractName, '_colorbar.svg']);
             end
