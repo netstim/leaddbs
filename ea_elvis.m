@@ -382,15 +382,17 @@ if ~strcmp(options.leadprod, 'group')
 end
 
 % Initialize Convis-Button
+if ~strcmp(options.leadprod,'group') 
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
     'TooltipString','Connectivity Visualization',...
     'ClickedCallback',{@openconnectomeviewer,resultfig,options});
-
+end
+if ~strcmp(options.leadprod,'group')
 % Initialize FS Cortex-Button
 corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
     'TooltipString','Cortical Reconstruction Visualization',...
     'ClickedCallback',{@opencortexviewer,resultfig,options});
-
+end
 % Initialize Cortical Strip-Button
 % cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),...
 %     'TooltipString','Cortical Reconstruction Visualization',...
