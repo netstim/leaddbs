@@ -467,7 +467,7 @@ def run_full_model(master_dict):
     if d["Axon_Model_Type"] == 'McIntyre2002':
         os.chdir("Axon_files/")
         with open(os.devnull, 'w') as FNULL: subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl axnode', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         from Axon_files.NEURON_direct_run import run_simulation_with_NEURON
     elif d["Axon_Model_Type"] == 'Reilly2016':
         os.chdir("Axon_files/Reilly2016/")

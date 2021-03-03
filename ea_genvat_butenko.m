@@ -28,6 +28,13 @@ else
     end
 end
 
+% docker image name
+if ispc || ismac
+    dockerImage = 'ningfei/oss-dbs';
+else % Linux
+    dockerImage = 'custom_oss-dbs';
+end
+
 % Double check if lead is supported by OSS-DBS.
 if ~ismember(options.elmodel, ea_ossdbs_elmodel)
     ea_error([options.elmodel, 'is not supported by OSS-DBS yet!'], 'Error', dbstack)
@@ -37,6 +44,13 @@ directory = [options.root, options.patientname, filesep];
 
 if ~exist([directory,'stimulations',filesep,ea_nt(options.native),S.label],'dir')
     mkdir([directory,'stimulations',filesep,ea_nt(options.native),S.label]);
+end
+
+% Set output path
+outputPath = [directory, 'stimulations', filesep, ea_nt(options.native), S.label];
+if options.native
+    MNIoutputPath = [directory, 'stimulations', filesep, ea_nt(0), S.label];
+    ea_mkdir(MNIoutputPath);
 end
 
 options = ea_assignpretra(options);
@@ -92,11 +106,86 @@ settings.Estimate_In_Template = options.prefs.machine.vatsettings.estimateInTemp
 
 %% Set MRI path
 % Put the MRI file in stimulation folder
-copyfile([segMaskDir, 'segmask.nii'], [directory,'stimulations',filesep,ea_nt(options.native),S.label]);
-settings.MRI_data_name = [directory,'stimulations',filesep,ea_nt(options.native),S.label,filesep,'segmask.nii'];
+copyfile([segMaskDir, 'segmask.nii'], outputPath);
+settings.MRI_data_name = [outputPath,filesep,'segmask.nii'];
 
-%% Scaled tensor data
-settings.DTI_data_name = ''; % 'dti_tensor.nii';
+%% Check tensor data
+tensorName = 'IITmean_tensor.nii.gz';
+scalingMethod = 'Norm_mapping';
+scaledTensorName = ['IITmean_tensor_',scalingMethod,'.nii.gz'];
+
+% Set to empty by default
+settings.DTI_data_name = '';
+
+if isfile([outputPath,filesep,scaledTensorName])
+    % Scaled tensor data found in stimulation folder
+    settings.DTI_data_name = scaledTensorName;
+
+elseif ~options.native && isfile([ea_space,filesep,scaledTensorName])
+    % MNI mode, scaled tensor data found in MNI space folder
+    copyfile([ea_space,filesep,scaledTensorName], outputPath);
+    settings.DTI_data_name = scaledTensorName;
+
+elseif options.native && isfile([directory,filesep,scaledTensorName])
+    % native mode, scaled tensor data found in patient folder
+    copyfile([directory,filesep,scaledTensorName], outputPath);
+    settings.DTI_data_name = scaledTensorName;
+
+else
+    if ~options.native
+        % MNI mode, tensor data found
+        if isfile([ea_space, tensorName])
+            tensorDir = ea_space;
+        end
+    else
+        % native mode, tensor data not found, warp template tensor data
+        if ~isfile([directory, tensorName]) && isfile([ea_space, tensorName])
+            % Warp tensor data only when ANTs was used for normalization
+            if ismember(ea_whichnormmethod(directory), ea_getantsnormfuns)
+                fprintf('Warping tensor data into patient space...\n\n')
+                ea_ants_apply_transforms(options,...
+                    [ea_space, tensorName],... % From
+                    [directory, tensorName],... % To
+                    1, ... % Useinverse is 1
+                    '', ... % Reference, auto-detected
+                    '', ... % Transformation, auto-detected
+                    0, ... % NearestNeighbor interpolation
+                    3, ... % Dimension
+                    'tensor');
+            else
+                warning('off', 'backtrace');
+                warning('Warping tensor data is only supported when ANTs was used for normalization! Skipping...');
+                warning('on', 'backtrace');
+            end
+        end
+
+        if isfile([directory, tensorName]) % Scale tensor data
+            tensorDir = directory;
+        end
+    end
+
+    % Scale tensor data
+    if exist('tensorDir', 'var')
+        fprintf('Scaling tensor data...\n\n')
+        if isempty(getenv('SINGULARITY_NAME')) % Docker
+            system(['docker run ', ...
+                    '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+                    '--volume ', tensorDir, ':/opt/Patient ', ...
+                    '--rm ', dockerImage, ' ', ...
+                    'python3 /opt/OSS-DBS/OSS_platform/Tensor_scaling.py /opt/Patient/', tensorName, ' ', scalingMethod]);
+        else % Singularity
+            system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Tensor_scaling.py ', tensorDir, tensorName, ' ', scalingMethod]);
+        end
+
+        % Copy scaled tensor data to stimulation directory, update setting
+        copyfile([tensorDir, scaledTensorName], outputPath);
+        settings.DTI_data_name = scaledTensorName;
+    end
+end
+
+if ~isempty(settings.DTI_data_name)
+    fprintf('Scaled tensor data added: %s\n\n', settings.DTI_data_name)
+end
 
 %% Index of the tissue in the segmented MRI data
 settings.GM_index = 1;
@@ -221,13 +310,6 @@ end
 % Threshold for Astrom VTA (V/mm)
 settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_ethresh;
 
-% Set output path
-outputPath = [directory, 'stimulations', filesep, ea_nt(options.native), S.label];
-if options.native
-    MNIoutputPath = [directory, 'stimulations', filesep, ea_nt(0), S.label];
-    ea_mkdir(MNIoutputPath);
-end
-
 % Axon activation setting
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcAxonActivation;
 if settings.calcAxonActivation
@@ -291,12 +373,6 @@ ea_delete([outputPath, filesep, 'skip_rh.txt']);
 ea_delete([outputPath, filesep, 'success_lh.txt']);
 ea_delete([outputPath, filesep, 'fail_lh.txt']);
 ea_delete([outputPath, filesep, 'skip_lh.txt']);
-
-if ispc || ismac
-    dockerImage = 'ningfei/oss-dbs';
-else % Linux
-    dockerImage = 'custom_oss-dbs';
-end
 
 % Iterate sides, index side: 0 - rh , 1 - lh
 runStatus = [0 0]; % Succeed or not

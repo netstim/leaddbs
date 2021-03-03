@@ -281,19 +281,13 @@ for side=options.sides
                 if ~any(isnan(usefacecolor))
                     set(0,'CurrentFigure',resultfig);
                     if ~shifthalfup
-                        %                         elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
                         elrender(pcnt)=ea_plotsphere(coords_mm{side}(cntct,:), ms/10, usefacecolor, useedgecolor);
-                        pcnt=pcnt+1;
                     else
-                        %                         elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
-                        %                             mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
-                        %                             mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
-                        %                             'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
-                        %
                         elrender(pcnt)=ea_plotsphere(mean([coords_mm{side}(cntct,:);coords_mm{side}(cntct+1,:)],1), ms/10, usefacecolor, useedgecolor);
-                        drawnow
-                        pcnt=pcnt+1;
                     end
+                    drawnow;
+                    elrender(pcnt).Tag = 'PointCloud';
+                    pcnt=pcnt+1;
                 else
 
                 end

@@ -21,7 +21,7 @@ end
 overlap = 0;
 
 % Load VTA image
-vtanii = load_untouch_nii(vta);
+vtanii = ea_load_nii(vta);
 vtanii.img = double(vtanii.img);
 
 if contains(vta, 'efield') % Input vta is efield_[right|left].nii
@@ -39,7 +39,7 @@ end
 if isnumeric(atlas)
     xyz = atlas;
 elseif isfile(atlas)
-    atlasnii = load_untouch_nii(atlas);
+    atlasnii = ea_load_nii(atlas);
     threshold = max(atlasnii.img(:)) * 0.5;
     atlasnii.img = atlasnii.img > threshold;
     [xvox, yvox, zvox] = ind2sub(size(atlasnii.img), find(atlasnii.img(:)));
