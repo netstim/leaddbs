@@ -185,17 +185,18 @@ for subj = 1:numSubUse % iterate across subjects
 
     for s=1:numseed
         for run=1:howmanyruns
-            Rw=nan(pixdim,length(sweightidx{s}));
+            Rw=nan(length(sweightidx{s}),pixdim);
             ea_dispercent(0,'Parsing connectome');
             queryfrom=1;
             while 1 % only possible via loop given matfile mapping restrictions, querying as efficiently as possible.
+                queryuntil=queryfrom;
                 for queryinterval=1:length(sweightidx{s})-queryfrom
                     if ~isequal(sweightidx{s}(queryfrom)+queryinterval,sweightidx{s}(queryfrom+queryinterval)) % check if continuous
                        break
                     end
                     queryuntil=queryfrom+queryinterval;
                 end
-                Rw(:,queryfrom:queryuntil)=db.X(1:pixdim,sweightidx{s}(queryfrom:queryuntil));
+                Rw(queryfrom:queryuntil,:)=db.X(sweightidx{s}(queryfrom:queryuntil),1:pixdim);
                 ea_dispercent(queryuntil/length(sweightidx{s}));
                 queryfrom=queryuntil+1;
                 if queryfrom>length(sweightidx{s})
@@ -206,8 +207,8 @@ for subj = 1:numSubUse % iterate across subjects
             if needdivide
                 Rw=Rw/(2^15); % convert to actual R values
             end
-            Rw=Rw.*repmat(sweightidx{s}',pixdim,1); % map weights of seed to entries
-            Rw=mean(Rw,2);
+            Rw=Rw.*repmat(sweightidx{s},1,pixdim); % map weights of seed to entries
+            Rw=mean(Rw,1);
         end
 
         mmap=dataset.vol.space;
