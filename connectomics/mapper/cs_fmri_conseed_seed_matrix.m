@@ -134,6 +134,7 @@ for s=1:size(sfile,1)
 
         sweightidx{s,lr}=find(sweights);
         sweightidxmx{s,lr}=double(sweightmx(sweightidx{s,lr},:));
+        sweightidxmx{s,lr}=sweightidxmx{s,lr}./sum(sweightidxmx{s,lr});
     end
 end
 
@@ -207,8 +208,8 @@ for subj = 1:numSubUse % iterate across subjects
             if needdivide
                 Rw=Rw/(2^15); % convert to actual R values
             end
-            Rw=Rw.*repmat(sweightidx{s},1,pixdim); % map weights of seed to entries
-            Rw=mean(Rw,1);
+            Rw=Rw.*repmat(sweightidxmx{s},1,pixdim); % map weights of seed to entries
+            Rw=sum(Rw,1); % sum is fine since sum of sweightidxmx{s} == 1
         end
 
         mmap=dataset.vol.space;
