@@ -548,9 +548,9 @@ classdef ea_sweetspot < handle
                         pobj.threshold=0;
                         obj.drawobject{group,side}{2}=ea_roi('Negative.nii',pobj);
 
-                        res.img(:)=nansum([res.img(:),negvox.img(:)],2); % keep copy for export.
+                        res.img(:)=nansum([res.img(:),-negvox.img(:)],2); % keep copy for export.
                     end
-
+                    res.img(res.img==0)=nan;
                     export{side}=res;
                 end
 
