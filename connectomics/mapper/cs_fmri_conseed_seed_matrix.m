@@ -167,7 +167,8 @@ end
 
 if ~exist('db','var')
     db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat'],'Writable',false);
-    switch class(db.X)
+    probe=db.X(1,1);
+    switch class(probe)
         case 'int16'
             needdivide=1;
         case {'single','double'}
