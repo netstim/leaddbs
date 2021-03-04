@@ -167,6 +167,14 @@ end
 
 if ~exist('db','var')
     db=matfile([dfold,'fMRI',filesep,cname,filesep,'AllX.mat'],'Writable',false);
+    switch class(db.X)
+        case 'int16'
+            needdivide=1;
+        case {'single','double'}
+            needdivide=0;
+        otherwise
+            ea_error('File format not supported');
+    end
 end
 
 disp('Iterating through subjects...');
@@ -194,8 +202,9 @@ for subj = 1:numSubUse % iterate across subjects
                 end
             end
             ea_dispercent(1,'end');
-            Rw=Rw/(2^15); % convert to actual R values
-
+            if needdivide
+                Rw=Rw/(2^15); % convert to actual R values
+            end
             Rw=Rw.*repmat(sweightidx{s}',pixdim,1); % map weights of seed to entries
             Rw=mean(Rw,2);
         end
