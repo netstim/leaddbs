@@ -116,6 +116,9 @@ setappdata(handles.stimfig,'resultfig',resultfig);
 setappdata(handles.stimfig,'options',options);
 
 stimparams=getappdata(resultfig,'stimparams'); % get info from resultfig.
+if isempty(stimparams)
+    stimparams = struct();
+end
 setappdata(handles.stimfig,'stimparams',stimparams); % store stimulation settings from resultfig to stim (this) fig for subroutines.
 
 % setup modelselect popup
@@ -127,7 +130,7 @@ if strcmp(options.leadprod, 'group')
     isdirected=0; % for now allow everything in lead group
 else
     e=load(fullfile(ea_getearoot,'templates','electrode_models',options.elspec.matfname));
-    directed_funs={'ea_genvat_horn','ea_genvat_fastfield'};
+    directed_funs={'ea_genvat_horn','ea_genvat_fastfield','ea_genvat_butenko'};
     if isfield(e.electrode,'isdirected')
         isdirected=e.electrode.isdirected;
     else
@@ -154,8 +157,24 @@ for nd=length(ndir):-1:1
         end
     end
 end
-setappdata(gcf,'genvatfunctions',genvatfunctions);
 
+% Hide OSS-DBS option in case non-dev env or elmodel not available
+if strcmp(options.leadprod, 'dbs')
+    if ~options.prefs.env.dev || ~ismember(options.elmodel,ea_ossdbs_elmodel)
+        ossdbsInd = find(contains(ndc,'OSS-DBS'));
+        genvatfunctions(ossdbsInd) = [];
+        ndc(ossdbsInd) = [];
+    end
+else % Call in lead 'group'
+    prefs = ea_prefs;
+    if ~prefs.env.dev
+        ossdbsInd = find(contains(ndc,'OSS-DBS'));
+        genvatfunctions(ossdbsInd) = [];
+        ndc(ossdbsInd) = [];
+    end
+end
+
+setappdata(gcf,'genvatfunctions',genvatfunctions);
 set(handles.modelselect,'String',ndc);
 
 % if ~isempty(stimparams) % stimfigure has been used before..
@@ -211,26 +230,54 @@ if ~strcmp(options.leadprod, 'group')
             if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
                 nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
-    %             vatfv = ea_smoothpatch(vatfv,1,35);
                 stimparams(1,1).VAT.VAT = vatfv;
+                stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
                 nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
-    %             vatfv = ea_smoothpatch(vatfv,1,35);
                 stimparams(1,2).VAT.VAT = vatfv;
+                stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
             elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2
                 nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
-    %             vatfv = ea_smoothpatch(vatfv,1,35);
                 stimparams(1,1).VAT.VAT = vatfv;
+                stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
             elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
                 nii = ea_load_nii([directory,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
-    %             vatfv = ea_smoothpatch(vatfv,1,35);
                 %For consistency, left is always on 2nd element of stimparams
                 stimparams(1,2).VAT.VAT = vatfv;
+                stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
             else
                 visualizeVAT = 0;
             end
+        end
+
+        if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat']) ...
+                && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
+            resultfig = getappdata(handles.stimfig,'resultfig');
+            PL=getappdata(resultfig,'PL');
+            for group=1:length(PL)
+                deletePL(PL(group));
+            end
+            clear PL
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
+        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'])
+            resultfig = getappdata(handles.stimfig,'resultfig');
+            PL=getappdata(resultfig,'PL');
+            for group=1:length(PL)
+                deletePL(PL(group));
+            end
+            clear PL
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
+            resultfig = getappdata(handles.stimfig,'resultfig');
+            PL=getappdata(resultfig,'PL');
+            for group=1:length(PL)
+                deletePL(PL(group));
+            end
+            clear PL
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
         end
 
         if visualizeVAT
@@ -957,48 +1004,50 @@ function modelselect_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns modelselect contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from modelselect
 
+% Set model
+S = getappdata(handles.stimfig,'S');
+models = get(handles.modelselect,'String');
+S.model = models{get(handles.modelselect,'Value')};
+setappdata(handles.stimfig,'S',S);
+
+% Handle special case for call from LeadGroup
 groupmode=getappdata(handles.stimfig,'groupmode');
 if groupmode
-
     choice = questdlg('Changing VAT model will delete stimulation parameters of all patients! Continue?', ...
         'Warning', ...
         'Yes, sure','No','No');
 
+    gSv=getappdata(handles.stimfig,'gSv');
+
     switch choice
         case 'No'
-            gSv=getappdata(handles.stimfig,'gSv');
-            ochoice=ismember(get(hObject,'String'),gSv.vatmodel);
-            setappdata(hObject,'Value',ochoice);
+            % Keep current model
+            currentModelInd = find(ismember(get(hObject,'String'),gSv.vatmodel),1);
+            set(hObject,'Value',currentModelInd);
             return
         case 'Yes, sure'
             setappdata(handles.stimfig,'gS',[]);
 
-            nms=get(hObject,'String');
-            nms=nms{get(hObject,'Value')};
-            gSv.vatmodel=nms;
-
+            % Set new model
+            models = get(hObject,'String');
+            gSv.vatmodel = models{get(hObject,'Value')};
             setappdata(handles.stimfig,'gSv',gSv);
+
+            % Clear stimulation parameters
+            setappdata(handles.stimfig,'S',[]);
     end
 end
 
-options=getappdata(handles.stimfig,'options');
-S=getappdata(handles.stimfig,'S');
-models=get(handles.modelselect,'String');
-model=models{get(handles.modelselect,'Value')};
-S.model=model;
+% Refresh GUI
+options = getappdata(handles.stimfig,'options');
+ea_refreshguisp(handles,options);
 
-ea_savestimulation(S,options);
-setappdata(handles.stimfig,'S',S);
-ea_refreshguisp(handles,options);
-S=getappdata(handles.stimfig,'S');
-for a=1:4
-    S.active=repmat(a,1,2);
-    S=ea_redistribute_voltage(S,'k1');
-    S=ea_redistribute_voltage(S,'k9');
+% Save stimulation parameters
+if ~groupmode
+    S = getappdata(handles.stimfig,'S');
+    ea_savestimulation(S,options);
 end
-S.active=[1,1];
-setappdata(handles.stimfig,'S',S);
-ea_refreshguisp(handles,options);
+
 
 % --- Executes during object creation, after setting all properties.
 function modelselect_CreateFcn(hObject, eventdata, handles)
@@ -1044,8 +1093,11 @@ end
 
 ea_savestimulation(S,options);
 setappdata(handles.stimfig,'S',S);
-if isfield(elstruct,'group')
-    gcnt=ones(length(elstruct(1).groups),1);
+
+if isfield(elstruct,'group') % group analysis, more than one electrode set
+    % this should not happen, in this case the stim button is
+    % hidden.
+    keyboard
 end
 
 % assign correct .m-file to function.
@@ -1054,25 +1106,34 @@ ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
 stimname=S.label;
 
 for el=1:length(elstruct)
-    for iside=1:length(options.sides)%length(elstruct.coords_mm)
-        side=options.sides(iside);
+    % Load stim coordinates
+    if options.native % Reload native space coordinates
+        coords = ea_load_reconstruction(options);
+    else
+        coords = elstruct(el).coords_mm;
+    end
 
-        if isfield(elstruct,'group') % group analysis, more than one electrode set
-            % this should not happen, in this case the stim button is
-            % hidden.
-            keyboard
-        else % single patient
-            if options.native % Reload native space coordinates
-                coords = ea_load_reconstruction(options);
-            else
-                coords = elstruct(el).coords_mm;
-            end
-            [stimparams(1,side).VAT(el).VAT,volume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,options.prefs.machine.vatsettings.horn_ethresh,handles.stimfig);
-            stimparams(1,side).volume=volume;
+    if strcmp(S.model, 'OSS-DBS (Butenko 2020)') % For OSS-DBS, side iteration is within the genvat function
+        if options.prefs.machine.vatsettings.butenko_calcAxonActivation
+            feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
+            ea_busyaction('off',handles.stimfig,'stim');
+            return;
+        else
+            [~, stimparams] = feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
+            flix=1;
+        end
+    else
+        stimparams = struct();
+        for iside=1:length(options.sides)
+            side=options.sides(iside);
+            [vatfv, vatvolume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,handles.stimfig);
+            stimparams(1,side).VAT(el).VAT = vatfv;
+            stimparams(1,side).volume = vatvolume;
             flix=1;
         end
     end
 end
+
 options.native=options.orignative;
 PL=getappdata(resultfig,'PL');
 for group=1:length(PL)
@@ -1100,6 +1161,7 @@ for group=flix
     end
 end
 setappdata(resultfig,'PL',PL);
+
 ea_busyaction('off',handles.stimfig,'stim');
 
 
@@ -1159,6 +1221,9 @@ else
         end
         if isfield(PL(p),'ht')
             delete(PL(p).ht);
+        end
+        if isfield(PL(p),'fiberActivation')
+            cellfun(@delete, PL(p).fiberActivation);
         end
     end
 end
@@ -1696,6 +1761,12 @@ sel=sel{get(handles.stimlabel,'Value')};
 if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
     switch sel(5:end)
         case 'New stimulation'
+            resultfig = getappdata(handles.stimfig,'resultfig');
+            PL=getappdata(resultfig,'PL');
+            for group=1:length(PL)
+                deletePL(PL(group));
+            end
+            clear PL
             ea_savestimulation(S,options);
             S=[]; % this will create the prompt to generate a new S.
             options.gen_newstim=1;
@@ -1732,6 +1803,12 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             if strcmp(answ,'No')
                 set(handles.stimlabel,'Value',1);
             else % truly delete Stimulation parameters
+                resultfig = getappdata(handles.stimfig,'resultfig');
+                PL=getappdata(resultfig,'PL');
+                for group=1:length(PL)
+                    deletePL(PL(group));
+                end
+                clear PL
                 ea_delete([directory,'stimulations',filesep,ea_nt(0),S.label]);
                 ea_delete([directory,'stimulations',filesep,ea_nt(1),S.label]);
                 S=[]; % this will create the prompt to generate a new S.
@@ -1762,47 +1839,83 @@ else
     % available the vat_xxx.nii is loaded and visualized
 
     visualizeVAT = 1;
+    stimparams = struct();
     if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
         load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
-        vatgradtemp(1) = vatgrad;
+        if exist('vatgrad','var')
+            vatgradtemp(1) = vatgrad;
+        end
         load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
         stimparams(1,2).VAT.VAT = vatfv;
         stimparams(1,2).volume = vatvolume;
-        vatgradtemp(2) = vatgrad;
-        vatgrad = vatgradtemp;
+        if exist('vatgrad','var')
+            vatgradtemp(2) = vatgrad;
+            vatgrad = vatgradtemp;
+        end
     elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
         load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
     elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
         load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
-        stimparams(1,1).VAT.VAT = vatfv;
-        stimparams(1,1).volume = vatvolume;
+        stimparams(1,2).VAT.VAT = vatfv;
+        stimparams(1,2).volume = vatvolume;
     else
         if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
             nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
-%             vatfv = ea_smoothpatch(vatfv,1,35);
             stimparams(1,1).VAT.VAT = vatfv;
+            stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
             nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
-%             vatfv = ea_smoothpatch(vatfv,1,35);
             stimparams(1,2).VAT.VAT = vatfv;
+            stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
         elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2
             nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
-%             vatfv = ea_smoothpatch(vatfv,1,35);
             stimparams(1,1).VAT.VAT = vatfv;
+            stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
         elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
             nii = ea_load_nii([directory,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
-%             vatfv = ea_smoothpatch(vatfv,1,35);
-            stimparams(1,1).VAT.VAT = vatfv;
+            stimparams(1,2).VAT.VAT = vatfv;
+            stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
         else
             visualizeVAT = 0;
         end
+    end
+
+    visualizeFiberActivation = 1;
+    if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat']) ...
+            && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
+        resultfig = getappdata(handles.stimfig,'resultfig');
+        PL=getappdata(resultfig,'PL');
+        for group=1:length(PL)
+            deletePL(PL(group));
+        end
+        clear PL
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
+    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'])
+        resultfig = getappdata(handles.stimfig,'resultfig');
+        PL=getappdata(resultfig,'PL');
+        for group=1:length(PL)
+            deletePL(PL(group));
+        end
+        clear PL
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
+        resultfig = getappdata(handles.stimfig,'resultfig');
+        PL=getappdata(resultfig,'PL');
+        for group=1:length(PL)
+            deletePL(PL(group));
+        end
+        clear PL
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
+    else
+        visualizeFiberActivation = 0;
     end
 
     if visualizeVAT
@@ -1820,8 +1933,14 @@ else
         setappdata(resultfig,'curS',S(1))
         options.writeoutstats = 1;
         ea_calc_vatstats(resultfig,options);
-    else
-        disp('VAT, cannot be visualized please recalculate')
+    end
+
+    if ~visualizeVAT && ~visualizeFiberActivation
+        fprintf('\n');
+        warning('off', 'backtrace');
+        warning('Nothing to be visualized, please rerun stimulation!!');
+        warning('on', 'backtrace');
+        fprintf('\n');
     end
 end
 
@@ -1864,6 +1983,12 @@ if groupmode
         if length(actpt)>1 % more than one entry selected
             actpt=1;
         end
+
+        % Ensure active patient is non empty
+        % This can happen if you delete a patient, then add a new one, without clicking on the patient window
+        if isempty(actpt)
+            actpt=1;
+        end
         setappdata(handles.stimfig,'actpt',actpt);
         % set grouploaded true is being done below.
     end
@@ -1895,6 +2020,7 @@ if groupmode
         end
         setappdata(handles.stimfig,'gSv',gSv);
     end
+
     % load gS - updated with each refresh:
     gS=getappdata(handles.stimfig,'gS');
     if isempty(grouploaded)
@@ -1911,12 +2037,12 @@ if groupmode
             % if gS is defined but group has just now been loaded
             try
                 if ~isempty(gS(actpt).Rs1) % current patient is defined -> set S to gS of this patient.
-                    S=gS(actpt);
+                    S = gS(actpt);
                 end
             end
         end
-        % now tell everyone that the figure has been opened for a while
-        % already:
+
+        % now tell everyone that the figure has been opened for a while already:
         setappdata(handles.stimfig,'grouploaded',1);
     end
 end
@@ -1925,10 +2051,12 @@ stimlabel=getappdata(handles.stimfig,'stimlabel');
 
 if isempty(S)
     S=ea_initializeS(stimlabel,options,handles);
+    try S.model=gSv.vatmodel; end
     setappdata(handles.stimfig,'stimlabel',S.label);
 else
     if isempty(S.Rs1)
         S=ea_initializeS(stimlabel,options,handles);
+        try S.model=gSv.vatmodel; end
         setappdata(handles.stimfig,'stimlabel',S.label);
     end
 end
@@ -1959,8 +2087,7 @@ if nargin==3
                     S.(['Rs',num2str(Ractive)]).case.pol=2;
                     S=ea_redistribute_voltage(S,varargin{3});
                     for k=0:7
-
-                        if  S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+                        if S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
                             S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
                             S=ea_redistribute_voltage(S,['k',num2str(k)]);
                         end
@@ -1974,7 +2101,7 @@ if nargin==3
                     S.(['Ls',num2str(Lactive)]).case.pol=2;
                     S=ea_redistribute_voltage(S,varargin{3});
                     for k=8:15
-                        if  S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
+                        if S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol==2
                             S.([sidec,'s',num2str(S.active(side))]).(['k',num2str(k)]).pol=0;
                             S=ea_redistribute_voltage(S,['k',num2str(k)]);
                         end
@@ -1993,7 +2120,6 @@ if nargin==3
                     S.([sidec,'s',num2str(S.active(side))]).case.pol=0;
                     S=ea_redistribute_voltage(S,[sidec,'case']);
                 end
-
         end
     else
         S=ea_redistribute_voltage(S,varargin{3});
@@ -2008,7 +2134,6 @@ for source=1:4
 
     set(eval(['handles.Rs',num2str(source),'am']),'String',num2str(S.amplitude{1}(source)));
     set(eval(['handles.Rs',num2str(source),'va']),'Value',eval(['S.Rs',num2str(source),'.va']));
-
 
     %if eval(['S.Rs',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
@@ -2030,7 +2155,6 @@ for source=1:4
         eval(['S.Rs',num2str(source),'.case.perc=100;']);
     end
     %end
-
 end
 
 for source=1:4
@@ -2039,7 +2163,7 @@ for source=1:4
     set(eval(['handles.Ls',num2str(source),'am']),'String',num2str(S.amplitude{2}(source)));
     set(eval(['handles.Ls',num2str(source),'va']),'Value',eval(['S.Ls',num2str(source),'.va']));
 
-    %   if eval(['S.Ls',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
+    % if eval(['S.Ls',num2str(source),'.amp']) % check if a valid +/- combination is active, if not set defaults.
     anycontactpositive=0; anycontactnegative=0;
     for k=8:15
         if eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol==1'])
@@ -2057,7 +2181,7 @@ for source=1:4
         eval(['S.Ls',num2str(source),'.case.pol=2;']);
         eval(['S.Ls',num2str(source),'.case.perc=100;']);
     end
-    %   end
+    % end
 end
 
 %% model to handles: all GUI elements.
@@ -2191,6 +2315,73 @@ end
 %    ea_error('VTA modeling for directed leads is not yet supported.');
 %end
 
+if get(handles.(['Rs',num2str(Ractive),'va']),'Value')==1 % Volt
+    ea_show_percent(handles,options,1,'off'); % right hemisphere
+else % Ampere
+    ea_show_percent(handles,options,1,'on'); % right hemisphere
+end
+if get(handles.(['Ls',num2str(Ractive),'va']),'Value')==1 % Volt
+    ea_show_percent(handles,options,2,'off'); % left hemisphere
+else % Ampere
+    ea_show_percent(handles,options,2,'on'); % left hemisphere
+end
+
+%% enable/disable panel based on sides that are present
+is_side_present=arrayfun(@(xside) ~ea_arenopoints4side(elstruct(actpt).trajectory, xside), [1,2]);%First element is R, second is L
+if is_side_present(1)>0%check if R side is present
+    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'on')
+    %fix color (ensure they are reloaded correctly)
+    try
+        handles.Rs1am.BackgroundColor=[1 1 1];%force redraw color
+        handles.Rs1am.BackgroundColor=[0.953 0.871 0.733];%orange
+        handles.Rs2am.BackgroundColor=[1 1 1];%force redraw color
+        handles.Rs2am.BackgroundColor=[0.729 0.831 0.957];%blue
+        handles.Rs3am.BackgroundColor=[1 1 1];%force redraw color
+        handles.Rs3am.BackgroundColor=[0.925 0.839 0.839];%red
+        handles.Rs4am.BackgroundColor=[1 1 1];%force redraw color
+        handles.Rs4am.BackgroundColor=[0.757 0.867 0.776];%green
+    catch
+        %for older versions of matlab (remove if dropping support of older Matlabs)
+        set(findall(handles.Rs1am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
+        set(findall(handles.Rs1am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.953 0.871 0.733]);%orange
+        set(findall(handles.Rs2am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
+        set(findall(handles.Rs2am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.729 0.831 0.957]);%blue
+        set(findall(handles.Rs3am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
+        set(findall(handles.Rs3am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.925 0.839 0.839]);%red
+        set(findall(handles.Rs4am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
+        set(findall(handles.Rs4am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.757 0.867 0.776]);%green
+    end
+else
+    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'off')
+end
+if is_side_present(2)>0%check if L side is present
+    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'on')
+
+    %fix color (ensure they are reloaded correctly)
+    try
+        handles.Ls1am.BackgroundColor=[1 1 1];%force redraw color
+        handles.Ls1am.BackgroundColor=[0.953 0.871 0.733];%orange
+        handles.Ls2am.BackgroundColor=[1 1 1];%force redraw color
+        handles.Ls2am.BackgroundColor=[0.729 0.831 0.957];%blue
+        handles.Ls3am.BackgroundColor=[1 1 1];%force redraw color
+        handles.Ls3am.BackgroundColor=[0.925 0.839 0.839];%red
+        handles.Ls4am.BackgroundColor=[1 1 1];%force redraw color
+        handles.Ls4am.BackgroundColor=[0.757 0.867 0.776];%green
+    catch
+        %for older versions of matlab (remove if dropping support of older Matlabs)
+        set(findall(handles.Ls1am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
+        set(findall(handles.Ls1am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.953 0.871 0.733]);%orange
+        set(findall(handles.Ls2am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
+        set(findall(handles.Ls2am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.729 0.831 0.957]);%blue
+        set(findall(handles.Ls3am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
+        set(findall(handles.Ls3am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.925 0.839 0.839]);%red
+        set(findall(handles.Ls4am, '-property', 'BackgroundColor'), 'BackgroundColor', [1 1 1]);%force redraw color
+        set(findall(handles.Ls4am, '-property', 'BackgroundColor'), 'BackgroundColor', [0.757 0.867 0.776]);%green
+    end
+else
+    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
+end
+
 switch model
     case 'SimBio/FieldTrip (see Horn 2017)'
         ea_hide_impedance(handles);
@@ -2220,41 +2411,23 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
-      case 'Fastfield (Baniasadi 2020)'
+    case 'Fastfield (Baniasadi 2020)'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
         S.monopolarmodel=0;
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
+    case 'OSS-DBS (Butenko 2020)'
+        ea_hide_impedance(handles);
+        set(handles.estimateInTemplate,'Visible','on');
+        S.monopolarmodel=0;
+        ea_enable_vas(handles,options);
+        set(handles.betawarning,'visible','on');
+        set(handles.settings,'visible','on');
+
 end
 S.model=model;
-
-
-if get(handles.(['Rs',num2str(Ractive),'va']),'Value')==1 % Volt
-    ea_show_percent(handles,options,1,'off'); % right hemisphere
-else % Ampere
-    ea_show_percent(handles,options,1,'on'); % right hemisphere
-end
-if get(handles.(['Ls',num2str(Ractive),'va']),'Value')==1 % Volt
-    ea_show_percent(handles,options,2,'off'); % left hemisphere
-else % Ampere
-    ea_show_percent(handles,options,2,'on'); % left hemisphere
-end
-
-% enable/disable panel based on sides that are present
-is_side_present=arrayfun(@(xside) ~ea_arenopoints4side(elstruct(actpt).trajectory, xside), [1,2]);%First element is R, second is L
-if is_side_present(1)>0%check if R side is present
-    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'on')
-else
-    set(findall(handles.uipanel2, '-property', 'enable'), 'enable', 'off')
-end
-if is_side_present(2)>0%check if L side is present
-    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'on')
-else
-    set(findall(handles.uipanel3, '-property', 'enable'), 'enable', 'off')
-end
-
 
 ea_savestimulation(S,options);
 setappdata(handles.stimfig,'S',S);
@@ -2906,6 +3079,11 @@ actpt=getappdata(handles.stimfig,'actpt');
 elstruct=getappdata(handles.stimfig,'elstruct');
 options=getappdata(handles.stimfig,'options');
 
+%ensure active patient is non empty
+if isempty(actpt)
+    actpt=1;
+end
+
 if isempty(gS)
     clear gS
 end
@@ -2927,7 +3105,7 @@ else
 end
 try
     setappdata(handles.stimfig,'S',gS(setto));
-catch
+catch % S for this next pt not defined yet.
     setappdata(handles.stimfig,'S',[]);
 end
 setappdata(handles.stimfig,'actpt',setto);
@@ -2946,6 +3124,12 @@ gS=getappdata(handles.stimfig,'gS');
 actpt=getappdata(handles.stimfig,'actpt');
 elstruct=getappdata(handles.stimfig,'elstruct');
 options=getappdata(handles.stimfig,'options');
+
+%ensure active patient is non empty
+if isempty(actpt)
+    actpt=1;
+end
+
 if isempty(gS)
     clear gS
 end
@@ -3271,8 +3455,9 @@ switch model
         ea_vatsettings_dembek;
     case 'Fastfield (Baniasadi 2020)'
         ea_vatsettings_fastfield;
+    case 'OSS-DBS (Butenko 2020)'
+        ea_vatsettings_butenko;
 end
-% ea_vatsettings_horn;
 
 
 % --- Executes on button press in estimateInTemplate.

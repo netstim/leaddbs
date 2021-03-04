@@ -1,6 +1,10 @@
 function ea_refresh_lg(handles)
 
 ea_busyaction('on',handles.leadfigure,'group');
+
+options.prefs=ea_prefs;
+options.earoot=ea_getearoot;
+
 % get model data
 disp('Getting model data...');
 M=getappdata(handles.leadfigure,'M');
@@ -49,41 +53,44 @@ M.ui.groupdir = get(handles.groupdir_choosebox,'String');
 
 disp('Refreshing selections on VI / FC Lists...');
 
-
-
-try set(handles.labelpopup,'Value',M.ui.labelpopup); end
-
-disp('Adding graph metrics to connectome popup...');
-% add graph metrics to connectome graph-metrics popup:
-thisparc=get(handles.labelpopup,'String');
-
-if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'))
-    useparc=length(get(handles.labelpopup,'String'));
+parcellations = get(handles.labelpopup,'String');
+if ~isfield(M.ui,'labelpopup')
+    M.ui.labelpopup = parcellations{get(handles.labelpopup,'Value')};
 else
-    useparc=get(handles.labelpopup,'Value');
+    if isnumeric(M.ui.labelpopup)
+        if M.ui.labelpopup>0 && M.ui.labelpopup<=length(parcellations)
+            set(handles.labelpopup,'Value',M.ui.labelpopup);
+        else % Set to default parcellation in case index out of range
+            defaultParc = options.prefs.lg.defaultParcellation;
+            set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
+        end
+    else
+        parcInd = find(ismember(parcellations, M.ui.labelpopup), 1);
+        if ~isempty(parcInd)
+            set(handles.labelpopup,'Value',parcInd);
+        else
+            defaultParc = options.prefs.lg.defaultParcellation;
+            set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
+        end
+    end
 end
 
-thisparc=thisparc{useparc};
-
-% modalities for VAT metrics:
+thisparc = parcellations{get(handles.labelpopup,'Value')};
 
 % dMRI:
-cnt=1;
-options.prefs=ea_prefs('');
-options.earoot=ea_getearoot;
-try
-    directory=[M.patient.list{1},filesep];
-    [modlist, type] = ea_genmodlist(directory,thisparc,options);
-    modlist = modlist(type==1); % Only keep dMRI connectome
-    modlist(strncmp(modlist, 'Patient''s fMRI', length('Patient''s fMRI'))) = [];
-    if ~ismember('Patient''s fiber tracts' ,modlist)
-        modlist{end+1}='Patient''s fiber tracts';
-    end
-    modlist{end+1}='Do not calculate connectivity stats';
-    set(handles.fiberspopup,'String',modlist);
-    if get(handles.fiberspopup,'Value') > length(modlist)
-        set(handles.fiberspopup,'Value',1);
-    end
+if ~isempty(M.patient.list)
+    patientDirectory = [M.patient.list{1},filesep];
+else
+    patientDirectory = [];
+end
+modlist = ea_genmodlist(patientDirectory,thisparc,options,'dmri');
+if ~ismember('Patient''s fiber tracts' ,modlist)
+    modlist{end+1}='Patient''s fiber tracts';
+end
+modlist{end+1}='Do not calculate connectivity stats';
+set(handles.fiberspopup,'String',modlist);
+if get(handles.fiberspopup,'Value') > length(modlist)
+    set(handles.fiberspopup,'Value',1);
 end
 
 % update UI
@@ -132,27 +139,42 @@ try set(handles.highlightactivecontcheck,'Value',M.ui.hlactivecontcheck); end
 try set(handles.showisovolumecheck,'Value',M.ui.showisovolumecheck); end
 try set(handles.statvatcheck,'Value',M.ui.statvat); end
 
-% update selectboxes:
-try set(handles.atlassetpopup,'Value',M.ui.atlassetpopup); end
-
+% update atlas selectboxes
+atlasset = get(handles.atlassetpopup,'String');
 if ~isfield(M.ui,'atlassetpopup')
-    M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
-end
-
-if M.ui.atlassetpopup>length(get(handles.atlassetpopup,'String'))
-    M.ui.atlassetpopup=length(get(handles.atlassetpopup,'String'));
-    set(handles.atlassetpopup,'Value',length(get(handles.atlassetpopup,'String')));
-end
-
-fiberspopup = get(handles.fiberspopup,'String');
-if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
-    if M.ui.fiberspopup > length(fiberspopup)
-        try set(handles.fiberspopup,'Value',length(fiberspopup)); end
-    else
-        try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
+    M.ui.atlassetpopup = atlasset{get(handles.atlassetpopup,'Value')};
+else
+    if isnumeric(M.ui.atlassetpopup) % Compatible with old lead group file
+        if M.ui.atlassetpopup>0 && M.ui.atlassetpopup<=length(atlasset)
+            set(handles.atlassetpopup,'Value',M.ui.atlassetpopup);
+        else % Set to default atlas in case index out of range
+            defaultAtlas = options.prefs.machine.defaultatlas;
+            set(handles.atlassetpopup,'Value',find(ismember(atlasset, defaultAtlas)));
+        end
+    else % New lead group file in which atlassetpopup is the name of the atlas
+        atlasInd = find(ismember(atlasset, M.ui.atlassetpopup), 1);
+        if ~isempty(atlasInd)
+            set(handles.atlassetpopup,'Value',atlasInd);
+        else
+            defaultAtlas = options.prefs.machine.defaultatlas;
+            set(handles.atlassetpopup,'Value',find(ismember(atlasset, defaultAtlas)));
+        end
     end
-    try
-    M.ui.connectomename = fiberspopup{M.ui.fiberspopup};
+end
+
+connectomes = get(handles.fiberspopup,'String');
+defaultConnectomeIdx = length(connectomes);
+if ~(ischar(connectomes) && strcmp(connectomes, 'Fibers'))
+    if ~isfield(M.ui, 'connectomename')
+        set(handles.fiberspopup,'Value',defaultConnectomeIdx);
+        M.ui.connectomename = connectomes{defaultConnectomeIdx};
+    else
+        connectomeIdx = find(ismember(connectomes, M.ui.connectomename),1);
+        if ~isempty(connectomeIdx)
+            set(handles.fiberspopup,'Value',connectomeIdx);
+        else
+            set(handles.fiberspopup,'Value',defaultConnectomeIdx);
+        end
     end
 end
 
@@ -198,10 +220,14 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             options.sides=1:2;
             options.native=0;
             try
-                [options.root,options.patientname]=fileparts(M.patient.list{pt});
-                if ~isempty(options.root)
-                    options.root=[options.root,filesep];
+                if M.ui.detached
+                    options.patientname = M.patient.list{pt};
+                    options.root = M.ui.groupdir;
+                else
+                    [options.root, options.patientname] = fileparts(M.patient.list{pt});
+                    options.root = [options.root, filesep];
                 end
+
                 options = ea_resolve_elspec(options);
                 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
                     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
@@ -255,7 +281,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 end
             end
         end
-        
+
         %uniform the data (by checking the missing sides and filling them)
         num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
         for pt=1:length(M.patient.list)
@@ -267,12 +293,14 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
             for check_side=1:num_sides %options.sides
                 if ea_arenopoints4side(M.elstruct(pt).coords_mm, check_side)
                     %force to have empty values if side is not present
-                    M.elstruct(pt).coords_mm{check_side}={};
-                    if ~isnan(M.elstruct(pt).coords_acpc)
-                        M.elstruct(pt).coords_acpc{check_side}={};
+                    M.elstruct(pt).coords_mm{check_side}=[];
+                    if isfield(M.elstruct(pt),'coords_acpc') && iscell(M.elstruct(pt).coords_acpc)
+                        if ea_arenopoints4side(M.elstruct(pt).coords_acpc, check_side)
+                            M.elstruct(pt).coords_acpc{check_side}=[];
+                        end
                     end
-                    M.elstruct(pt).trajectory{check_side}={};
-                
+                    M.elstruct(pt).trajectory{check_side}=[];
+
                     %this will create the missing structure
                     M.elstruct(pt).markers(check_side).head=[];
                     M.elstruct(pt).markers(check_side).tail=[];

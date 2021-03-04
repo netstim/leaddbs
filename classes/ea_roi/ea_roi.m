@@ -25,6 +25,7 @@ classdef ea_roi < handle
         controlH % handle to color / threshold control figure
         plotFigureH % handle of figure on which to plot
         patchH % handle of patch
+        colormap % for nonbinary ROI
         toggleH % toggle handle
         htH % handle for toggle toolbar
         Tag % tag of ROI can be used in multi-roi scenes
@@ -71,8 +72,10 @@ classdef ea_roi < handle
                 try
                     obj.name=pobj.name;
                 catch
-                    [~,obj.name]=fileparts(obj.niftiFilename);
+                    [~,obj.name]=ea_niifileparts(obj.niftiFilename);
                 end
+
+                obj.Tag = obj.name;
 
                 try
                     obj.plotFigureH=pobj.plotFigureH;
@@ -108,7 +111,15 @@ classdef ea_roi < handle
                 try
                     obj.binary=pobj.binary;
                 end
-                
+
+                try
+                    obj.usesolidcolor=pobj.usesolidcolor;
+                end
+
+                try
+                    obj.colormap=pobj.colormap;
+                end
+
                 try
                     obj.nii=pobj.nii;
                 catch
@@ -142,9 +153,16 @@ classdef ea_roi < handle
                         obj.threshold=obj.max-0.5*maxmindiff;
                     end
                 end
-
-                obj.smooth=options.prefs.hullsmooth;
-                obj.hullsimplify=options.prefs.hullsimplify;
+                try
+                    obj.smooth=pobj.smooth;
+                catch
+                    obj.smooth=options.prefs.hullsmooth;
+                end
+                try
+                    obj.hullsimplify=pobj.hullsimplify;
+                catch
+                    obj.hullsimplify=options.prefs.hullsimplify;
+                end
                 set(0,'CurrentFigure',obj.plotFigureH);
                 obj.patchH=patch;
 
@@ -186,7 +204,7 @@ classdef ea_roi < handle
                 @changeevent);
             addlistener(obj,'edgecolor','PostSet',...
                 @changeevent);
-            
+
             if isempty(obj.toggleH)
                 obj.toggleH=uitoggletool(obj.htH);
             end
@@ -221,7 +239,12 @@ classdef ea_roi < handle
                 obj.fv.vertices=[obj.fv.vertices;fvc.vertices];
 
                 if obj.smooth
-                    obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
+                    if ~isempty(obj.fv.vertices) && ~isempty(obj.fv.faces)
+                        
+                        obj.sfv=ea_smoothpatch(obj.fv,1,obj.smooth);
+                    else
+                        return
+                    end
                 else
                     obj.sfv=obj.fv;
                 end
@@ -238,15 +261,17 @@ classdef ea_roi < handle
                         obj.sfv=reducepatch(obj.sfv,simplify);
                     end
                 end
-                jetlist = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]); % default blue to red colormap
 
                 if obj.binary || obj.usesolidcolor
                     obj.cdat=abs(repmat(obj.color,length(obj.sfv.vertices),1) ... % C-Data for surface
                         +randn(length(obj.sfv.vertices),1)*2)';
                 else
+                    if isempty(obj.colormap) % make sure some colormap is set.
+                        obj.colormap = ea_colorgradient(length(gray), [0,0,1], [1,1,1], [1,0,0]); % default blue to red colormap
+                    end
                     obj.cdat=isocolors(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.sfv.vertices);
                     obj.cdat=round((ea_contrast(obj.cdat).*(length(gray)-1))+1);
-                    obj.cdat=jetlist(obj.cdat,:);
+                    obj.cdat=obj.colormap(obj.cdat,:);
                 end
             end
 
@@ -260,10 +285,17 @@ classdef ea_roi < handle
             if isempty(obj.edgecolor)
                 obj.edgecolor='none';
             end
-            
+
+            % Set obj Tag
+            if ~isempty(obj.Tag)
+                roiTag = obj.Tag;
+            else
+                roiTag = obj.name;
+            end
+
             set(obj.patchH,...
-                {'Faces','Vertices','FaceAlpha','EdgeColor','EdgeLighting','FaceLighting','Visible','SpecularColorReflectance','SpecularExponent','SpecularStrength','DiffuseStrength','AmbientStrength'},...
-                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'gouraud','gouraud',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength,obj.AmbientStrength});
+                {'Faces','Vertices','FaceAlpha','EdgeColor','EdgeLighting','FaceLighting','Visible','SpecularColorReflectance','SpecularExponent','SpecularStrength','DiffuseStrength','AmbientStrength','Tag'},...
+                {obj.sfv.faces,obj.sfv.vertices,obj.alpha,obj.edgecolor,'gouraud','gouraud',obj.Visible,obj.SpecularColorReflectance,obj.SpecularExponent,obj.SpecularStrength,obj.DiffuseStrength,obj.AmbientStrength,roiTag});
             if obj.binary || obj.usesolidcolor
                 set(obj.patchH,...
                     {'FaceColor'},...
@@ -276,8 +308,8 @@ classdef ea_roi < handle
 
             % add toggle button:
             set(obj.toggleH,...
-                {'Parent','CData','TooltipString','OnCallback','OffCallback','State'},...
-                {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible});
+                {'Parent','CData','TooltipString','OnCallback','OffCallback','State','Tooltip'},...
+                {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,roiTag});
         end
     end
 end

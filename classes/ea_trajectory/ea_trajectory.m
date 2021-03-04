@@ -356,7 +356,6 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             markers.y = markers.head + yunitv*(options.elspec.lead_diameter/2);
             [coords_mm,trajectory,markers]=ea_resolvecoords(markers,options);
             obj.plan2elstruct(1).coords_mm=coords_mm;
-            obj.plan2elstruct(1).coords_mm=ea_resolvecoords(markers,options);
             obj.plan2elstruct(1).trajectory=trajectory;
             obj.plan2elstruct(1).name='';
             obj.plan2elstruct(1).markers=markers;

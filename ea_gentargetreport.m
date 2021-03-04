@@ -14,17 +14,27 @@ for thr=0:1
         else
             rf(target,thr+1)=figure('color','w','Numbertitle','off','name',['Distances of electrode centers to nearest voxel in ',M.vilist{M.ui.volumeintersections(target)}]);
         end
-        distances=zeros(8,length(M.ui.listselect));
         
+        % Here we suppose electrodes of the select patients have the same
+        % number of contacts 
+        numContacts = size(M.stats(1).ea_stats.conmat{1},1);
+        distances=zeros(numContacts*2,length(M.ui.listselect));
+
         for pt=1:length(M.ui.listselect)
             try
                 distances(:,pt)=[M.stats(M.ui.listselect(pt)).ea_stats.conmat{1}(:,M.ui.volumeintersections(target));... % right side
                     M.stats(M.ui.listselect(pt)).ea_stats.conmat{2}(:,M.ui.volumeintersections(target))];
-            catch
-                ea_error('Please run DBS stats for all patients first.');
+            catch ME
+                if strcmp(ME.identifier, 'MATLAB:subsassigndimmismatch')
+                    ea_error('Number of contacts not consistent across patients!')
+                elseif strcmp(ME.identifier, 'MATLAB:nonExistentField')
+                    ea_error('Please calculate DBS stats for all patients first!');
+                else
+                    ea_error(ME.message);
+                end
             end
         end
-        
+
         if thr
             distances=distances<thresh;
         end
@@ -33,7 +43,7 @@ for thr=0:1
 
         for xx=1:size(R{target,thr+1},1)
               for yy=1:size(R{target,thr+1},2)
-                  side=ceil((xx/8)*2);
+                  side=ceil((xx/numContacts/2)*2);
                   con=xx+(1-side)*size(R{target,thr+1},1)/2;
                   cstring='FFFFFF';
                   try
@@ -44,11 +54,11 @@ for thr=0:1
                   C{xx,yy}=['<html><table border=0 width=400 bgcolor=#',cstring,'><TR><TD>',num2str(R{target,thr+1}(xx,yy)),'</TR> </table></html>'];
               end
         end
-        
+
         cnames=M.patient.list(M.ui.listselect');
         [~,cnames]=cellfun(@fileparts,cnames,'UniformOutput',0);
         rnames={'K0','K1','K2','K3','K8','K9','K10','K11'};
-        
+
         if M.ui.hlactivecontcheck
             t(target,thr+1)=uitable(rf(target,thr+1),'Data',C,'ColumnName',cnames,'RowName',rnames);
         else

@@ -3,13 +3,15 @@ function [coords_mm,trajectory,markers]=ea_runtraccore(options)
 directory = [options.root,options.patientname,filesep];
 
 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
-   [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+    options.native = 0; % Load MNI reco
+    [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 end
+
 if isempty(options.sides)
     return
 end
-% build lfile
 
+% build lfile
 fis={[ea_space,'bb.nii']};
 switch options.modality
     case 1 % MR
@@ -21,9 +23,6 @@ switch options.modality
         fis=[fis;{[directory,options.prefs.gctnii]}];
 end
 
-% if exist([directory,options.prefs.gsagnii],'file')
-%     fis=[fis;{[directory,options.prefs.gsagnii]}];
-% end
 matlabbatch{1}.spm.util.imcalc.input = fis;
 matlabbatch{1}.spm.util.imcalc.output = [directory,'lpost.nii'];
 matlabbatch{1}.spm.util.imcalc.outdir = {directory};
@@ -38,7 +37,6 @@ clear matlabbatch
 lnii=ea_load_untouch_nii([directory,'lpost.nii']);
 
 for side=options.sides
-
     %try
     % call main routine reconstructing trajectory for one side.
     [coords,trajvector{side},trajectory{side},tramat]=ea_reconstruct(options.patientname,options,side,lnii);
@@ -74,7 +72,6 @@ for side=options.sides
         if ~isempty(trajectory{side})
             trajectory{side}=ea_map_coords(trajectory{side}', [directory,'lpost.nii'])';
         end
-
     end
 end
 

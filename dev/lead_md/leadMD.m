@@ -79,7 +79,7 @@ atlases{end+1} = 'Use none';
 set(handles.atlassetpopup, 'String', atlases);
 
 set(handles.atlassetpopup, 'String', atlases);
-[~,defix]=ismember(options.prefs.atlases.default, atlases);
+[~,defix]=ismember(options.prefs.machine.defaultatlas, atlases);
 set(handles.atlassetpopup, 'Value', defix);
 
 set(handles.versiontxt, 'String', ['v', ea_getvsn('local')]);
@@ -613,8 +613,7 @@ options.colormap = [0 0 0.5625
                     0.5625 0 0];
 %%
 options.dolc = 0;
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -626,7 +625,6 @@ options.lc.func.compute_GM = 0;
 options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
@@ -754,8 +752,7 @@ options.colormap = [0 0 0
                     1 1 1];
 %%
 options.dolc = 0;
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -767,7 +764,6 @@ options.lc.func.compute_GM = 0;
 options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
@@ -896,8 +892,7 @@ options.colormap = [0 0 0.5625
                     0.5625 0 0];
 %%
 options.dolc = 0;
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -910,7 +905,6 @@ options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
 options.lc.struc.ft.method = 'ea_ft_gqi_yeh';
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
@@ -1043,8 +1037,7 @@ options.colormap = [0 0 0
                     1 1 1];
 %%
 options.dolc = 0;
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -1057,7 +1050,6 @@ options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
 options.lc.struc.ft.method = 'ea_ft_gqi_yeh';
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 
@@ -1189,8 +1181,7 @@ options.colormap = [0 0 0.5625
 %%
 options.dolc = 0;
 options.uipatdirs = [];
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -1203,7 +1194,6 @@ options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
 options.lc.struc.ft.method = 'ea_ft_gqi_yeh';
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 options.native=1;
@@ -1340,8 +1330,7 @@ options.colormap = [0 0 0.5625
 %%
 options.dolc = 0;
 options.uipatdirs = [];
-options.lc.general.parcellation = 'aal';
-options.lc.general.parcellationn = 1;
+options.lc.general.parcellation = 'Automated Anatomical Labeling 3 (Rolls 2020)';
 options.lc.graph.struc_func_sim = 0;
 options.lc.graph.nodal_efficiency = 0;
 options.lc.graph.eigenvector_centrality = 0;
@@ -1353,7 +1342,6 @@ options.lc.func.compute_GM = 0;
 options.lc.func.prefs.TR = 2;
 options.lc.struc.compute_CM = 0;
 options.lc.struc.compute_GM = 0;
-options.lc.struc.ft.methodn = 2;
 options.lc.struc.ft.do = 0;
 options.lc.struc.ft.normalize = 1;
 

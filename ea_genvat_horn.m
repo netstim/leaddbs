@@ -5,26 +5,26 @@ function varargout=ea_genvat_horn(varargin)
 useSI=1;
 vizz=0;
 if nargin==5
-    % acoords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
+    % coords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
-elseif nargin==7
-    % acoords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
+elseif nargin==6
+    % coords=varargin{1}; % Not used anymore, will reload coords using ea_load_reconstruction
     S=varargin{2};
     side=varargin{3};
     options=varargin{4};
     stimname=varargin{5};
-    thresh=varargin{6};
-    lgfigure=varargin{7};
+    lgfigure=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='SimBio/FieldTrip (see Horn 2017)';
         return
     end
 end
+
+thresh=options.prefs.machine.vatsettings.horn_ethresh; %0.2;
 
 if useSI
     thresh=thresh.*(10^3);
@@ -47,10 +47,8 @@ resultfig=getappdata(lgfigure,'resultfig');
 % Important to load in reco from a new since we need to decide whether to
 % use native or template coordinates. Even when running in template space,
 % the native coordinates are sometimes used (VTA is then calculated in native space and ported to template).
-options.loadrecoforviz=1;
 [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
 elstruct(1).coords_mm=coords_mm;
-elstruct(1).coords_mm=ea_resolvecoords(markers,options);
 elstruct(1).trajectory=trajectory;
 elstruct(1).name=options.patientname;
 elstruct(1).markers=markers;
@@ -88,11 +86,11 @@ if hmchanged
                 if ~isfield(atlases,'tissuetypes')
                     atlases.tissuetypes=ones(length(atlases.names),1);
                 end
-                for atlas=1:numel(atlases.fv)
-                    if isempty(atlases.fv{atlas}) || (atlases.tissuetypes~=1)
+                for atlas=1:numel(atlases.roi)
+                    if isempty(atlases.roi{atlas}.fv) || (atlases.tissuetypes~=1)
                         continue
                     end
-                    fv(cnt)=atlases.fv{atlas};
+                    fv(cnt)=atlases.roi{atlas}.fv;
 
                     ins=surfinterior(fv(cnt).vertices,fv(cnt).faces);
                     %tissuetype(cnt)=1;
@@ -105,6 +103,7 @@ if hmchanged
                 fv.vertices=fv.vertices(1:3,:)';
             case 'mask'
                 fv=ea_fem_getmask(options);
+                %figure, patch('faces',fv.faces,'vertices',fv.vertices)
         end
     else
         fv=[];
@@ -125,6 +124,9 @@ if hmchanged
             % can sometimes happen. We will introduce a small jitter to
             % the electrode and try again.
             Ymod=Y+(randn(4)/700); % Very small jitter on transformation which will be used on electrode. - should not exceed ~700. Use vizz below to see effects.
+            if attempt>2
+                fv=ea_fem_getmask(options,1); % try no surface smoothing for atlas fv - in rare cases this has led to conflicts for tetgen.
+            end
             if vizz
                 h=figure;
                 telfv=elfv;
@@ -4201,7 +4203,7 @@ end
 % get the optional input arguments
 output  = ea_ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombined'
 
-if ~exist(type, 'var')
+if ~exist('type', 'var')
     error('the requested sensor type "%s" is not supported', type);
 
 elseif isempty(eval(type))

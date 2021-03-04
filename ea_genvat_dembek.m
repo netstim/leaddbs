@@ -15,7 +15,6 @@ if nargin>=5
     options=varargin{4};
     stimname=varargin{5};    
 elseif nargin==1
-    
     if ischar(varargin{1}) % return name of method.
         varargout{1}='Dembek 2017';
         return

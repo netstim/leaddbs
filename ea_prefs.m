@@ -45,8 +45,8 @@ try
         uprefs = jsondecode(fread(fid,'*char')'); fclose(fid);
         umachine = load([home, '.ea_prefs.mat']);
     end
-catch
-    warning('User preferences file could not be read. Please set write permissions to Lead-DBS install directory accordingly.');
+catch ME
+    warning(ME.message);
     return
 end
 
@@ -60,8 +60,6 @@ prefs = combinestructs(dprefs, uprefs);
 if strcmp(context, 'normal')
     prefs.machine = combinestructs(dmachine.machine, umachine.machine);
 end
-
-
 
 % legacy code support for gl/l normalized file differentiation:
 prefs.prenii=prefs.gprenii;

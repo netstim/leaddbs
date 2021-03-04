@@ -68,7 +68,8 @@ n = length(X);
     [r,p] = bend_compute(X,beta);
 
 
-
+r=r';
+p=p';
  
 
 

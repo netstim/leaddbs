@@ -1,0 +1,148 @@
+/* Extracellular stimulation of FH myelinated axon model.
+Axon is in a conductive medium in which there is 
+a uniform electrical field of intensity E (volt/meter)
+parallel to the axon.
+
+This triggers a spike that starts at one end or the other of the axon
+so the spike detector must be placed near the middle of the axon.
+*/
+
+//load_file("nrngui.hoc")
+{load_file("stdgui.hoc")}
+///// parameters
+
+RHOE = 300 // extracellular resistivity in ohm cm
+
+///// anatomical and biophysical properties of the axon
+///// assuming extracellular medium is perfect conductor
+
+{load_file("axon10.hoc")} // external diameter is 10 um
+// load_file("axon5.hoc") // external diameter is 5 um
+
+v_init=-70.0
+// actual resting potential is closer to -69.77 mV
+
+///// stimulation
+
+// axon is assumed to lie along the x axis
+// with its root node (0 node of 1st node of Ranvier)
+// being at x=0
+// and the axon extending toward larger x values
+// extracellular field is parallel to axon
+// so, choosing the axon originaxon (zero node of the first node of Ranvier)
+// as the point at which local extracellular potential is 0,
+// the extracellular potential in mV
+// at any point x in a section along the axon is
+// E*distance(x)/1000
+// where E is in V/meter, and distance(x) is distance from axon origin to x in um
+// 
+// steps:
+// 0.  insert extracellular mechanism and specify its parameters
+// 1.  set up distance(x)/1000 values
+// 2.  set up stimulus waveform
+// 3.  couple stim waveform to xstim
+
+// 0.  insert extracellular mechanism and specify its parameters
+//     when using extracellular to implement extracelluar stimulation,
+//     use extracellular's xg and xc to play the role of myelin--see axon.hoc
+
+forall insert extracellular
+forsec internodes {
+  for (x,0) {
+    cm(x) = CM // since extracellular's default xc is 0; CM is defined in axon.hoc
+    for i=0,1 xg(x) = 1e-9 // "effectively a perfect insulator"
+  }
+}
+
+axonnodes=9
+objectvar wf[axonnodes*2-1] // input waveforms
+n_pulse = 1  // number of DBS pulses. default 1
+// Initialize variables
+steps_per_ms=1000
+
+// EXTRACELLULAR STIMULUS
+proc stimul() {
+
+        // Set model to default position
+        countspikes_0 = 0
+        countspikes_1 = 0
+        spikeobserved_0 = 0
+        spikeobserved_1 = 0
+        bin_old_0 = -1
+        bin_old_1 = -1
+        stoprun = 0
+        
+        
+        // Apply extracellular potential stimulus
+    	for i=0,axonnodes-2 {
+		for j=0,1 {
+			if (j==0) {
+				// Play the vector into nodes of Ranvier
+				wf[(i)*2+j].play(&node[i].e_extracellular(0.5),dt)
+				}
+			if (j==1) {
+				// Play the vector into nodes of Ranvier
+				wf[(i)*2+j].play(&internode[i].e_extracellular(0.5),dt)
+				}
+			}
+	}
+	// Play the vector into the last node of Ranvier  (100 internodal, 101 nodes, -1 due to indexing)
+	wf[axonnodes*2-2].play(&node[axonnodes-1].e_extracellular(0.5),dt)
+	
+	finitialize(v_init)
+    fcurrent()
+    //print nodeD
+}
+
+// Procedure to set up Net Connection event
+// watcher to detect if we've seen an AP
+
+// Watcher for 'start' of the axon
+objectvar pgnc_0,pgnil_0
+proc setupAPWatcher_0() {
+node[0] pgnc_0 = new NetCon(&v(.5),pgnil_0)
+pgnc_0.record("handle_0()")
+}
+
+// Watcher for 'end' of the axon
+objectvar pgnc_1,pgnil_1
+proc setupAPWatcher_1() {
+node[axonnodes-1] pgnc_1 = new NetCon(&v(.5),pgnil_1)
+pgnc_1.record("handle_1()")
+}
+setupAPWatcher_0()
+setupAPWatcher_1()
+
+
+// Handler to call when we've seen an AP
+// Just sets the global var to 1 signalling an AP
+
+// Handler for 'start' of the axon
+proc handle_0() {
+     bin_0 = int(t/tstop*n_pulse)
+     if (bin_0>bin_old_0) {
+        countspikes_0=countspikes_0+1
+        bin_old_0 = bin_0
+     }
+     if (countspikes_0==n_pulse) {
+        spikeobserved_0=1
+        stoprun=1
+    }
+}
+
+// Handler for 'end' of the axon
+proc handle_1() {
+     bin_1 = int(t/tstop*n_pulse)
+     if (bin_1>bin_old_1) {
+        countspikes_1=countspikes_1+1
+        bin_old_1 = bin_1
+     }
+     if (countspikes_1==n_pulse) {
+        spikeobserved_1=1
+        stoprun=1
+    }
+}
+
+// print stoprun
+
+

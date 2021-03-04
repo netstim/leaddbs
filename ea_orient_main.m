@@ -44,8 +44,8 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         if sum(sum(abs(ct_org.mat-ct_org.private.mat0)))<tol
             tmat_org = ct_org.mat;
         else
-            msg = sprintf(['Warning: Different sForm and qForm matrices in Nifti-object. Please select the matrix you want to use.']);
-            choice = questdlg(msg,'Warning!','sForm','qForm','sForm');
+            msg = sprintf('Different sForm and qForm matrices found in:\n%s\nPlease select the matrix you want to use.', ct_org.fname);
+            choice = questdlg(msg, 'Warning!','sForm','qForm','sForm');
             switch choice
                 case 'sForm'
                     tmat_org = ct_org.mat;

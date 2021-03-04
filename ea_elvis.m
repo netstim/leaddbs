@@ -71,6 +71,11 @@ uibjs.slide3dtog=uitoggletool(ht, 'CData', ea_get_icn('quiver'),...
 %     'OffCallback', {@ea_pan,'off'}, 'State', 'off');
 setappdata(resultfig,'uibjs',uibjs);
 
+% Initialize Sliceview-Button
+slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
+    'TooltipString','Slice Control Figure',...
+    'ClickedCallback',{@opensliceviewer,resultfig,options});
+
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract',...
     'Callback',{@ea_addobj,resultfig,'tract',options});
@@ -78,6 +83,8 @@ fh2 = uimenu(mh,'Label','Open ROI',...
     'Callback',{@ea_addobj,resultfig,'roi',options});
 fh3 = uimenu(mh,'Label','Show tracts weighted by activation map',...
     'Callback',{@ea_addobj,resultfig,'tractmap',options});
+fh3 = uimenu(mh,'Label','Show fiber activation result from OSS-DBS',...
+    'Callback',{@ea_addobj,resultfig,'fiberactivation',options});
 
 % Set some visualization parameters
 set(resultfig,'Renderer','opengl')
@@ -94,7 +101,7 @@ figtitle=get(gcf,'Name');
 set(gcf,'Name',[figtitle,'...building...']);
 axis equal
 axis fill
-
+prefs=ea_prefs;
 % colormap('gray')
 
 %% Patient specific part (skipped if no patient is selected or no reco available):
@@ -104,25 +111,21 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             multiplemode=1;
 
             % mer development
-%             if isstruct(varargin{2})
-%                 elstruct=varargin{2}.elstruct;
-%                 merstruct=varargin{2}.merstruct;
-%             else
-                elstruct=varargin{2};
-%             end
+            % if isstruct(varargin{2})
+            %     elstruct=varargin{2}.elstruct;
+            %     merstruct=varargin{2}.merstruct;
+            % else
+            elstruct=varargin{2};
+            % end
 
             if options.d3.mirrorsides
                 elstruct=ea_mirrorsides(elstruct);
                 try options.d3.isomatrix=ea_mirrorsides(options.d3.isomatrix); end
             end
-
         else
             multiplemode=0;
-            options.loadrecoforviz=1; % add flag to load scrf entry if in native mode.
             [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
-
             elstruct(1).coords_mm=coords_mm;
-            elstruct(1).coords_mm=ea_resolvecoords(markers,options);
             elstruct(1).trajectory=trajectory;
             elstruct(1).name=options.patientname;
             elstruct(1).markers=markers;
@@ -189,10 +192,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 end
             end
             if options.d3.elrendering==1 && options.d3.exportBB % export vizstruct for lateron export to JSON file / Brainbrowser.
-               % this part for brainbrowser support.
-               vizstruct=struct('faces',[],'vertices',[],'colors',[]);
+                % this part for brainbrowser support.
+                vizstruct=struct('faces',[],'vertices',[],'colors',[]);
 
-               cnt=1;
+                cnt=1;
                 for iside=1:length(options.sides)
                     side=options.sides(iside);
                     extract=1:length(el_render(side).elpatch);
@@ -220,11 +223,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
             % show microelectrode recording data
             if exist('merstruct','var')
-               try
-                   [mer(pt).render,merlabel(:,pt)]=ea_showmer(resultfig,merstruct(pt),pt,options);
-               catch
-                   ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
-               end
+                try
+                    [mer(pt).render,merlabel(:,pt)]=ea_showmer(resultfig,merstruct(pt),pt,options);
+                catch
+                    ea_error(['Couldn''''t visualize electrode from patient ',num2str(pt),'.']);
+                end
             end
         end
 
@@ -242,33 +245,64 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             for g = unique(elstructGroupID)
                 el_renderID = elrenderGroupID == g;
                 eleGroupToggle = uitoggletool(ht, 'CData', ea_get_icn('electrode_group'),...
-                        'TooltipString', ['Electrode Group ', num2str(g)],...
-                        'Tag', ['Group: ', num2str(g)],...
-                        'OnCallback', {@eleGroupVisible,el_render(el_renderID)},...
-                        'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
+                    'TooltipString', ['Electrode Group ', num2str(g)],...
+                    'Tag', ['Group: ', num2str(g)],...
+                    'OnCallback', {@eleGroupVisible,el_render(el_renderID)},...
+                    'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
             end
 
-            
+            % add sweetspot explorer button.
+            sweetspotadd = uipushtool(ht, 'CData', ea_get_icn('sweetspot_add'),...
+                'TooltipString', ['Add sweetspot analysis'],...
+                'Tag', ['Add sweetspot analysis'],...
+                'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});        
+
+            di=dir([options.root,options.patientname,filesep,'sweetspots',filesep,'*.sweetspot']);
+            for d=1:length(di)
+                uipushtool(ht, 'CData', ea_get_icn('sweetspot'),...
+                    'TooltipString', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
+                    'Tag', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
+                    'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'sweetspots',filesep,di(d).name],resultfig});
+            end
+
+
             % add discriminative fiber explorer button.
             discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber_add'),...
-                'TooltipString', ['Add discriminative fibertract'],...
-                'Tag', ['Add discriminative fibertract'],...
+                'TooltipString', ['Add Fiber Filtering analysis'],...
+                'Tag', ['Add fiber filtering analysis'],...
                 'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
-            
-            di=dir([options.root,options.patientname,filesep,'disctracts',filesep,'*.mat']);
+
+            di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
-                    'TooltipString', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
-                    'Tag', ['Explore discriminative fibertract ',ea_stripext(di(d).name)],...
-                    'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'disctracts',filesep,di(d).name],resultfig});
+                    'TooltipString', ['Explore fiber filtering analysis ',ea_stripext(di(d).name)],...
+                    'Tag', ['Explore fiber filtering analysis ',ea_stripext(di(d).name)],...
+                    'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'fiberfiltering',filesep,di(d).name],resultfig});
             end
-            
-            % Move the group toggle forward
-            tractToggleInd = 1:length(di)+1;
-            eleGroupToggleInd = length(tractToggleInd)+1:length(tractToggleInd)+numel(unique(elstructGroupID));
-            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
-            eleToggleInd = length(tractToggleInd)+length(eleGroupToggleInd)+1:find(isEleToggle,1,'last');
-            ht.Children=ht.Children([eleToggleInd, eleGroupToggleInd, tractToggleInd, find(isEleToggle,1,'last')+1:end]);   
+
+            % add networkmapping explorer button.
+            netmapadd = uipushtool(ht, 'CData', ea_get_icn('networkmapping_add'),...
+                'TooltipString', ['Add DBS Network Mapping analysis'],...
+                'Tag', ['Add DBS Network Mapping analysis'],...
+                'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
+
+            di=dir([options.root,options.patientname,filesep,'networkmapping',filesep,'*.netmap']);
+            for d=1:length(di)
+                uipushtool(ht, 'CData', ea_get_icn('networkmapping'),...
+                    'TooltipString', ['Explore DBS Network Mapping analysis ',ea_stripext(di(d).name)],...
+                    'Tag', ['Explore DBS Network Mapping analysis ',ea_stripext(di(d).name)],...
+                    'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'networkmapping',filesep,di(d).name],resultfig});
+            end
+
+
+            % Move the group toggles and app toggles forward
+            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+,', 'once')), allchild(ht));
+            eleToggleInd = find(isEleToggle);
+            isEleGroupToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+$', 'once')), allchild(ht));
+            eleGroupToggleInd = find(isEleGroupToggle);
+            otherToggleInd = (find(isEleToggle,1,'last')+1:numel(ht.Children))';
+            appToggleInd = (1:find(isEleGroupToggle,1)-1)';
+            ht.Children=ht.Children([eleToggleInd;eleGroupToggleInd;appToggleInd;otherToggleInd]);
         end
 
         try
@@ -277,35 +311,46 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 'TooltipString', 'Electrode Labels',...
                 'OnCallback', {@objvisible,ellabel},...
                 'OffCallback', {@objinvisible,ellabel}, 'State','off');
+
+            % Move eleLabel toggle to front
+            if strcmp(options.leadprod,'dbs')
+                eleToggleTagPattern = '^Patient: ';
+            elseif strcmp(options.leadprod,'group')
+                eleToggleTagPattern = '^Group: \d+';
+            end
+            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, eleToggleTagPattern, 'once')), allchild(ht));
+            eleToggleInd = find(isEleToggle);
+            otherToggleInd = (find(isEleToggle,1,'last')+1:numel(ht.Children))';
+            ht.Children=ht.Children([eleToggleInd;1;otherToggleInd]);
         end
 
         cnt=1;
         for pt=1:length(elstruct)
-                try
-                    if multiplemode
-                        caption{1}=[elstruct(pt).name,'_Left'];
-                        caption{2}=[elstruct(pt).name,'_Right'];
-                    else
-                        caption{1}='Electrode_Left';
-                        caption{2}='Electrode_Right';
-                    end
-                    %eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
-                    %eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
-                    if isfield(options,'uipatdirs')
-                        if exist([options.uipatdirs{pt} '/cortex/CortElecs.mat'],'file')
-                            vars = whos('-file',[options.uipatdirs{pt} '/cortex/CortElecs.mat']);
-                            CortElecs = load([options.uipatdirs{pt} '/cortex/CortElecs.mat']);
-                            if ismember('Left',{vars.name})
-                                hold on; plot3(CortElecs.Left(:,1),CortElecs.Left(:,2),CortElecs.Left(:,3),'.','color','r','markersize',10)
-                                ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
-                            end
-                            if ismember('Right',{vars.name})
-                                ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
-                            end
+            try
+                if multiplemode
+                    caption{1}=[elstruct(pt).name,'_Left'];
+                    caption{2}=[elstruct(pt).name,'_Right'];
+                else
+                    caption{1}='Electrode_Left';
+                    caption{2}='Electrode_Right';
+                end
+                %eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                %eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
+                if isfield(options,'uipatdirs')
+                    if exist([options.uipatdirs{pt} '/cortex/CortElecs.mat'],'file')
+                        vars = whos('-file',[options.uipatdirs{pt} '/cortex/CortElecs.mat']);
+                        CortElecs = load([options.uipatdirs{pt} '/cortex/CortElecs.mat']);
+                        if ismember('Left',{vars.name})
+                            hold on; plot3(CortElecs.Left(:,1),CortElecs.Left(:,2),CortElecs.Left(:,3),'.','color','r','markersize',10)
+                            ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
+                        end
+                        if ismember('Right',{vars.name})
+                            ctxeltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('cortical_strip'),'TooltipString',['Cortical_' caption{1}],'OnCallback',{@ctxelvisible,el_renderstrip,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
                         end
                     end
-                    cnt=cnt+2;
                 end
+                cnt=cnt+2;
+            end
         end
 
         clear cnt
@@ -329,13 +374,7 @@ else
     elstruct=struct;
 end
 
-% Initialize Sliceview-Button
-slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
-    'TooltipString','Slice Control Figure',...
-    'ClickedCallback',{@opensliceviewer,resultfig,options});
-
 % Initialize MER-Button
-
 if ~strcmp(options.leadprod, 'group')
     merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
         'TooltipString','MER Control Figure',...
@@ -343,15 +382,17 @@ if ~strcmp(options.leadprod, 'group')
 end
 
 % Initialize Convis-Button
+if ~strcmp(options.leadprod,'group') 
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
     'TooltipString','Connectivity Visualization',...
     'ClickedCallback',{@openconnectomeviewer,resultfig,options});
-
+end
+if ~strcmp(options.leadprod,'group')
 % Initialize FS Cortex-Button
 corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
     'TooltipString','Cortical Reconstruction Visualization',...
     'ClickedCallback',{@opencortexviewer,resultfig,options});
-
+end
 % Initialize Cortical Strip-Button
 % cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),...
 %     'TooltipString','Cortical Reconstruction Visualization',...
@@ -400,8 +441,8 @@ ea_show_light(resultfig,1);
 % set(lightbulb, 'Visible', 'off');
 
 lightbulbbutton=uipushtool(ht,'CData',ea_get_icn('lightbulb'),...
-     'TooltipString','Set Lighting',...
-     'ClickedCallback',{@ea_launch_setlighting,resultfig});
+    'TooltipString','Set Lighting',...
+    'ClickedCallback',{@ea_launch_setlighting,resultfig});
 % clightbulbbutton=uitoggletool(ht,'CData',ea_get_icn('clightbulb'),...
 %     'TooltipString','Ceiling Lightbulb',...
 %     'OnCallback',{@objvisible,getappdata(resultfig,'ceiling_lamp')},...
@@ -449,6 +490,15 @@ uipushtool(ht, 'CData',ea_get_icn('defaultviewsave'),...
 uipushtool(ht, 'CData',ea_get_icn('defaultviewset'),...
     'TooltipString', 'Display default view',...
     'ClickedCallback',@set_defaultview_callback);
+
+% Reorder toggles to move eleToggle to the end
+if strcmp(options.leadprod,'group')
+    isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+', 'once')), allchild(ht));
+    eleToggleInd = find(isEleToggle);
+    eleLabelToggleInd = eleToggleInd(end) + 1;
+    otherToggleInd = setdiff((1:numel(ht.Children))', [eleToggleInd;eleLabelToggleInd]);
+    ht.Children=ht.Children([eleToggleInd;eleLabelToggleInd;otherToggleInd]);
+end
 
 hold off
 
@@ -641,7 +691,7 @@ if(getappdata(gcf,'altpressed'))
         for iside=1:length(options.sides)
             side=options.sides(iside);
             try
-               set(atls(el).el_render{side}, 'Visible', onoff);
+                set(atls(el).el_render{side}, 'Visible', onoff);
             end
         end
     end
@@ -739,14 +789,14 @@ if ~isempty(mercontrolfig) && isvalid(mercontrolfig)
         ea_mercontrol_updateimplanted(handles);
 
     end
-% commnd=event.Character;
-% switch lower(commnd)
-%     case ' '
-%     case {'x','a','p','y','l','r'} % view angles.
-%     case {'0','3','4','7'}
-%     case {'c','v','b','n'}
-%     otherwise % arrow keys, plus, minus
-% end
+    % commnd=event.Character;
+    % switch lower(commnd)
+    %     case ' '
+    %     case {'x','a','p','y','l','r'} % view angles.
+    %     case {'0','3','4','7'}
+    %     case {'c','v','b','n'}
+    %     otherwise % arrow keys, plus, minus
+    % end
 end
 
 

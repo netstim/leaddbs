@@ -113,8 +113,9 @@ prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregis
 %% Subcortical refine (Post to Pre):
 prefs.scrf.tonemap='tp_'; % can set to '' if want to use non-tonemapped CTs for brainshift correction (default = 'tp_').
 
-%% Atlas-Sets:
-prefs.atlases.default='DISTAL Minimal (Ewert 2017)';
+%% Default parcellation setting for LeadConn and LeadGroup
+prefs.lc.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';
+prefs.lg.defaultParcellation='Automated Anatomical Labeling 3 (Rolls 2020)';
 
 %% volumes:
 prefs.hullmethod=2; % set 2 to use isosurface, 1 for concavehull, 0 for convexhull.
@@ -139,9 +140,18 @@ prefs.d3.fiberdiameter=0.1; % diameter of fibers ? only works in all ML versions
 prefs.d3.maxfibers=200; % set to inf to show all fibers (but this could lead to crashes).
 prefs.d3.colorjitter=0; % set to 0 to show no color jitter at all.
 prefs.d3.showdirarrows = 0;
+prefs.d3.fiber_activated_color = [1 0 0];
+prefs.d3.fiber_nonactivated_color = [1 1 1];
+prefs.d3.fiber_damaged_color = [0.5 0 0.5];
+prefs.d3.pointcloudstyle = 'plain'; % Show 'plain' or '3d' point cloud
 
 %% Video export
-prefs.video.path=[-90,10;-110,10;-180,80;-250,10;-360,10;-450,10];
+prefs.video.path=[-90,10
+                  -110,10
+                  -180,80
+                  -250,10
+                  -360,10
+                  -450,10];
 prefs.video.opts.FrameRate=24;
 prefs.video.opts.Duration=30;
 prefs.video.opts.Periodic=true;
@@ -165,7 +175,7 @@ prefs.mer.tract_info = struct(...
                 [0.5,0.5,0],...     Olive
                 [0,0.5,0],...       Green
                 [0.5,0,0.5],...     Purple
-                [0,0.5,0.5]},...    Teal; 0,0,0.5 Navy
+                [0,0.5,0.5]},...    Teal
     'position', {  [ 0,  0, 0],...
                     [ 0,  1, 0],...
                     [ 0, -1, 0],...
@@ -210,3 +220,14 @@ prefs.ixi.meanage=60; % mean age used if no patient/subject age is specified in 
 
 %% genetics
 prefs.genetics.dbdir=[ea_space,'genetics',filesep];
+
+
+%% platform specific (if changed, needs to restart Matlab)
+
+% Set to true this line if libstdc++.so.6 is needed.
+% However it is preferrable to fix it at system level (e.g. using package build-essentials).
+% Additionally, install the matlab-support package and choose to use the system libraries for gcc.
+% If set to true it will add this path: fullfile(earoot,'ext_libs\support\glnxa64') to the LD_LIBRARY_PATH;
+prefs.platform.glnxa64.load_shipped_runtime=false;  % for Linux default is NOT loaded (using system libs)
+prefs.platform.maci64.load_shipped_runtime=false;    % for macOS default is NOT loaded
+prefs.platform.win64.load_shipped_runtime=false;  % for Windows default is NOT loaded

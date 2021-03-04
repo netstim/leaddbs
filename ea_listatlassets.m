@@ -24,7 +24,7 @@ if mninative==2
         % sweep pt dir for atlases
         natlases=dir([get(handles.patdir_choosebox,'String'),filesep,'atlases',filesep]);
         natlases = {natlases(cell2mat({natlases.isdir})).name};
-        natlases = natlases(cellfun(@(x) ~strcmp(x(1),'.'), natlases)); 
+        natlases = natlases(cellfun(@(x) ~strcmp(x(1),'.'), natlases));
         natlases = cellfun(@(x) {['Local atlas: ', x]}, natlases);
     end
 end
@@ -35,7 +35,7 @@ catch
     keyboard
 end
 
-[~,defix]=ismember(options.prefs.atlases.default,[atlases,natlases]);
+[~,defix]=ismember(options.prefs.machine.defaultatlas,[atlases,natlases]);
 if defix
     set(handles.atlassetpopup,'Value',defix);
 end

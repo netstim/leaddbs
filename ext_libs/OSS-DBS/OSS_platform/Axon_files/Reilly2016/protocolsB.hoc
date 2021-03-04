@@ -1,0 +1,88 @@
+/*
+Find excitation threshold to 4 significant figures.
+
+Case B (uniform gradient field)
+Threshold in V/m
+
+Parameters
+
+waveform
+  waveform type
+    monophasic pulse
+    biphasic square wave
+  TP (ms)
+
+axon diameter D (um)
+*/
+
+TRUE = 1
+FALSE = 0
+
+// stimulus waveform
+waveform = 0
+PULSE = 1  // single pulse
+SQUARE = 2 // biphasic square wave
+SINE = 3   // sine with NC cycles
+
+TP = 0 // phase duration (ms)
+NC = 0 // number of cycles, a nonnegative integer
+
+strdef wstr
+
+func protocol() {
+  waveform = TP = NC = 0
+  if ($1==13) {
+    waveform = PULSE
+    wstr = "pls"
+    TP = 5e-3
+    NC = 1
+  }
+  if ($1==14) {
+    waveform = PULSE
+    wstr = "pls"
+    TP = 2.0
+    NC = 1
+  }
+  if ($1==16) {
+    waveform = SQUARE
+    wstr = "sqr"
+    TP = 5e-3
+    NC = 1
+  }
+  if ($1==17) {
+    waveform = SQUARE
+    wstr = "sqr"
+    TP = 2.0
+    NC = 1
+  }
+/*
+  pstr = "" // start anew
+  if (waveform>0) {
+    sprint(pstr, "%s   tp %5.3f   ", wstr, TP) // common to all
+    wstr = pstr
+    if (waveform==SINE) sprint(pstr, "%snc %7.1f \t", wstr, NC) // peculiar to sine
+    wstr = pstr
+    sprint(pstr, "%sxa,ya %5.2f,%5.2f   xc,yc %5.2f,%5.2f   thresh ", wstr, XA, YA, XC, YC) // common to all
+  }
+ print pstr, $1
+*/
+  return waveform>0
+}
+
+strdef pstr
+
+proc testprotocols() { local ii
+  for ii=0,18 {
+    pstr = "" // start anew
+    protocol(ii)
+    if (waveform>0) {
+      sprint(pstr, "%s   tp %5.3f   ", wstr, TP) // common to all
+      wstr = pstr
+      if (waveform==SINE) sprint(pstr, "%snc %7.1f \t", wstr, NC) // peculiar to sine
+      wstr = pstr
+//      sprint(pstr, "%sxa,ya %5.2f,%5.2f   xc,yc %5.2f,%5.2f   thresh ", wstr, XA, YA, XC, YC) // common to all
+    }
+    print ii, pstr
+  }
+}
+

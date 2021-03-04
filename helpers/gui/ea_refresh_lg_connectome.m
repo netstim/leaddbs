@@ -2,6 +2,9 @@ function ea_refresh_lg_connectome(handles)
 
 ea_busyaction('on',handles.leadfigure,'group');
 
+options.prefs=ea_prefs;
+options.earoot=ea_getearoot;
+
 % get analysis data
 M=getappdata(handles.leadfigure,'M');
 
@@ -37,19 +40,33 @@ if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
     set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
 end
 
-try set(handles.labelpopup,'Value',M.ui.labelpopup); end
+% Parcellation
+parcellations = get(handles.labelpopup,'String');
+if ~isfield(M.ui,'labelpopup')
+    M.ui.labelpopup = parcellations{get(handles.labelpopup,'Value')};
+else
+    if isnumeric(M.ui.labelpopup)
+        if M.ui.labelpopup>0 && M.ui.labelpopup<=length(parcellations)
+            set(handles.labelpopup,'Value',M.ui.labelpopup);
+        else % Set to default parcellation in case index out of range
+            defaultParc = options.prefs.lg.defaultParcellation;
+            set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
+        end
+    else
+        parcInd = find(ismember(parcellations, M.ui.labelpopup), 1);
+        if ~isempty(parcInd)
+            set(handles.labelpopup,'Value',parcInd);
+        else
+            defaultParc = options.prefs.lg.defaultParcellation;
+            set(handles.labelpopup,'Value',find(ismember(parcellations, defaultParc)));
+        end
+    end
+end
+
+thisparc = parcellations{get(handles.labelpopup,'Value')};
 
 disp('Adding graph metrics to connectome popup...');
 % add graph metrics to connectome graph-metrics popup:
-thisparc=get(handles.labelpopup,'String');
-
-if get(handles.labelpopup,'Value')>length(get(handles.labelpopup,'String'))
-    useparc=length(get(handles.labelpopup,'String'));
-else
-    useparc=get(handles.labelpopup,'Value');
-end
-
-thisparc=thisparc{useparc};
 try
     gms = dir([M.patient.list{1},filesep,'connectomics',filesep,thisparc,filesep,'graph',filesep,'*.nii']);
     gms = cellfun(@(x) {strrep(x, '.nii', '')}, {gms.name});
@@ -66,20 +83,19 @@ end
 %% modalities for VAT metrics:
 
 % dMRI:
-cnt=1;
-options.prefs=ea_prefs('');
-options.earoot=ea_getearoot;
-try
-    directory=[M.patient.list{1},filesep];
-    modlist=ea_genmodlist(directory,thisparc,options);
-    if ~ismember('Patient''s fiber tracts' ,modlist)
-        modlist{end+1}='Patient''s fiber tracts';
-    end
-    modlist{end+1}='Do not calculate connectivity stats';
-    set(handles.fiberspopup,'String',modlist);
-    if get(handles.fiberspopup,'Value') > length(modlist)
-        set(handles.fiberspopup,'Value',1);
-    end
+if ~isempty(M.patient.list)
+    patientDirectory = [M.patient.list{1},filesep];
+else
+    patientDirectory = [];
+end
+modlist=ea_genmodlist(patientDirectory,thisparc,options,'dmri');
+if ~ismember('Patient''s fiber tracts' ,modlist)
+    modlist{end+1}='Patient''s fiber tracts';
+end
+modlist{end+1}='Do not calculate connectivity stats';
+set(handles.fiberspopup,'String',modlist);
+if get(handles.fiberspopup,'Value') > length(modlist)
+    set(handles.fiberspopup,'Value',1);
 end
 
 % update UI
@@ -91,9 +107,20 @@ try set(handles.lc_normalization,'Value',M.ui.lc.normalization); end
 try set(handles.lc_smooth,'Value',M.ui.lc.smooth); end
 
 % update selectboxes:
-fiberspopup = get(handles.fiberspopup,'String');
-if ~(ischar(fiberspopup) && strcmp(fiberspopup, 'Fibers'))
-    try set(handles.fiberspopup,'Value',M.ui.fiberspopup); end
+connectomes = get(handles.fiberspopup,'String');
+defaultConnectomeIdx = length(connectomes);
+if ~(ischar(connectomes) && strcmp(connectomes, 'Fibers'))
+    if ~isfield(M.ui, 'connectomename')
+        set(handles.fiberspopup,'Value',defaultConnectomeIdx);
+        M.ui.connectomename = connectomes{defaultConnectomeIdx};
+    else
+        connectomeIdx = find(ismember(connectomes, M.ui.connectomename),1);
+        if ~isempty(connectomeIdx)
+            set(handles.fiberspopup,'Value',connectomeIdx);
+        else
+            set(handles.fiberspopup,'Value',defaultConnectomeIdx);
+        end
+    end
 end
 
 lc_graphmetric = get(handles.lc_graphmetric,'String');

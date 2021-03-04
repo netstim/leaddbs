@@ -65,7 +65,7 @@ guidata(hObject, handles);
 % uiwait(handles.leadfigure);
 
 options.earoot = ea_getearoot;
-options.prefs = ea_prefs('');
+options.prefs = ea_prefs;
 setappdata(handles.leadfigure,'earoot',options.earoot);
 
 % Build popup tables:
@@ -77,7 +77,7 @@ atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));
 atlases{end+1} = 'Use none';
 
 set(handles.atlassetpopup,'String', atlases);
-[~, defix]=ismember(options.prefs.atlases.default, atlases);
+[~, defix]=ismember(options.prefs.machine.defaultatlas, atlases);
 if defix
     set(handles.atlassetpopup,'Value',defix);
 end
@@ -93,6 +93,12 @@ for nd=length(ndir):-1:1
         genvatfunctions{cnt}=methodf;
         cnt=cnt+1;
     end
+end
+
+if ~options.prefs.env.dev
+    ossdbsInd = find(contains(ndc,'OSS-DBS'));
+    genvatfunctions(ossdbsInd) = [];
+    ndc(ossdbsInd) = [];
 end
 
 setappdata(handles.leadfigure,'genvatfunctions',genvatfunctions);
@@ -122,16 +128,15 @@ labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
 
 set(handles.labelpopup,'String', labeling);
 
-try
-    priorselection = find(ismember(labeling, stimparams.labelatlas)); % retrieve prior selection of fiberset.
-    if length(priorselection) == 1
-        set(handles.labelpopup,'Value',priorselection); % set to prior selection
-    else % if priorselection was a cell array with more than one entry, set to use all
-        set(handles.labelpopup,'Value',lab+1); % set to use all
-    end
-catch    % reinitialize using third entry.
-    set(handles.labelpopup,'Value',1);
-end
+% Initialize parcellation popupmenu
+defaultParc = options.prefs.lg.defaultParcellation;
+set(handles.labelpopup,'Value',find(ismember(labeling, defaultParc)));
+
+% Set connectome popup
+modlist = ea_genmodlist([],[],options,'dmri');
+modlist{end+1}='Do not calculate connectivity stats';
+set(handles.fiberspopup,'String',modlist);
+set(handles.fiberspopup,'Value',length(modlist));
 
 % set version text:
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
@@ -925,7 +930,7 @@ for pt=selection
 
     if M.ui.detached
         processlocal=1;
-        mkdir([M.ui.groupdir,options.patientname]);
+        ea_mkdir([M.ui.groupdir,options.patientname]);
         options.root=M.ui.groupdir;
         %    options.patientname='tmp';
         try
@@ -973,8 +978,6 @@ for pt=selection
     resultfig=ea_elvis(options,M.elstruct(pt));
 
     % save scene as matlab figure
-
-
     options.modality=ea_checkctmrpresent(M.patient.list{pt});
     volumespresent=1;
     if options.modality(1) % prefer MR
@@ -1006,7 +1009,6 @@ for pt=selection
             keyboard
         end
 
-
         options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
 
         options.orignative=options.native; % backup
@@ -1015,33 +1017,48 @@ for pt=selection
             warning(['You chose to process VTAs in native space but patient-data cannot be found for ',M.patient.list{pt},'. Proceeding with VTA calculation directly in template space.']);
             options.native=0;
         end
+
         setappdata(handles.leadfigure,'resultfig',resultfig);
+        setappdata(resultfig,'elstruct',M.elstruct(pt));
+        setappdata(resultfig,'elspec',options.elspec);
+
+        if options.native % Reload native space coordinates
+            coords = ea_load_reconstruction(options);
+        else
+            coords = M.elstruct(pt).coords_mm;
+        end
 
         vatCalcPassed = [0 0];
-        for side=1:2
-            setappdata(resultfig,'elstruct',M.elstruct(pt));
-            setappdata(resultfig,'elspec',options.elspec);
-
-            if options.native % Reload native space coordinates
-                coords = ea_load_reconstruction(options);
+        stimparams = struct();
+        if strcmp(M.S(pt).model, 'OSS-DBS (Butenko 2020)')
+            if options.prefs.machine.vatsettings.butenko_calcAxonActivation
+                feval(ea_genvat,M.S(pt),options);
+                fprintf('\n');
+                warning('off', 'backtrace');
+                warning('OSS-DBS axon activation mode detect, skipping calc stats for %s!\n', options.patientname);
+                warning('on', 'backtrace');
+                continue;
             else
-                coords = M.elstruct(pt).coords_mm;
+                [vatCalcPassed, stimparams] = feval(ea_genvat,M.S(pt),options);
             end
-
-            try
-                [stimparams(1,side).VAT(1).VAT,volume]=feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],options.prefs.machine.vatsettings.horn_ethresh,handles.leadfigure);
-                vatCalcPassed(side) = 1;
-            catch
-                volume=0;
-                vatCalcPassed(side) = 0;
+        else
+            for side=1:2
+                try
+                    [vtafv,vtavolume] = feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],handles.leadfigure);
+                    vatCalcPassed(side) = 1;
+                catch
+                    vtafv=[];
+                    vtavolume=0;
+                    vatCalcPassed(side) = 0;
+                end
+                stimparams(1,side).VAT(1).VAT = vtafv;
+                stimparams(1,side).volume = vtavolume;
             end
-            stimparams(1,side).volume=volume;
         end
 
         options.native=options.orignative; % restore
         setappdata(resultfig,'stimparams',stimparams(1,:));
     end
-
     % Calc VAT stats (atlas intersection and volume)
     if all(vatCalcPassed)
         ea_calc_vatstats(resultfig,options);
@@ -1088,7 +1105,9 @@ for pt=selection
         setappdata(gcf,'M',M);
 
         save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M','-v7.3');
-        try	movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']); end
+        try
+            movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']);
+        end
         %rmdir([M.ui.groupdir,'tmp'],'s');
     end
 end
@@ -1117,14 +1136,12 @@ else
     connChanged = 1;
 end
 
-M.ui.fiberspopup=get(handles.fiberspopup,'Value');
-M.ui.connectomename=get(handles.fiberspopup,'String');
-M.ui.connectomename=M.ui.connectomename{M.ui.fiberspopup};
+M.ui.connectomename = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 
 ea_refresh_lg(handles);
 
-if connChanged
+if ~isempty(M.patient.list) && connChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
     set(handles.exportstats, 'Enable', 'off');
@@ -1154,18 +1171,24 @@ function labelpopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from labelpopup
 M=getappdata(gcf,'M');
 
-if isfield(M.ui, 'labelpopup') && ...
-   eventdata.Source.Value == M.ui.labelpopup
-    labelChanged = 0;
-else
-    labelChanged = 1;
+labelChanged = 1;
+if isfield(M.ui, 'labelpopup')
+    if isnumeric(M.ui.labelpopup) % Old format, labelpopup is numeric
+        if eventdata.Source.Value == M.ui.labelpopup
+            labelChanged = 0;
+        end
+    else % New format, labelpopup is labeling parcellation name
+        if strcmp(eventdata.Source.String{eventdata.Source.Value}, M.ui.labelpopup)
+            labelChanged = 0;
+        end
+    end
 end
 
-M.ui.labelpopup=get(handles.labelpopup,'Value');
+M.ui.labelpopup = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
-if labelChanged
+if ~isempty(M.patient.list) && labelChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
     set(handles.exportstats, 'Enable', 'off');
@@ -1195,18 +1218,24 @@ function atlassetpopup_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from atlassetpopup
 M=getappdata(gcf,'M');
 
-if isfield(M.ui, 'atlassetpopup') && ...
-   eventdata.Source.Value == M.ui.atlassetpopup
-    atlasChanged = 0;
-else
-    atlasChanged = 1;
+atlasChanged = 1;
+if isfield(M.ui, 'atlassetpopup')
+    if isnumeric(M.ui.atlassetpopup) % Old format, atlassetpopup is numeric
+        if eventdata.Source.Value == M.ui.atlassetpopup
+            atlasChanged = 0;
+        end
+    else % New format, atlassetpopup is atlas name
+        if strcmp(eventdata.Source.String{eventdata.Source.Value}, M.ui.atlassetpopup)
+            atlasChanged = 0;
+        end
+    end
 end
 
-M.ui.atlassetpopup=get(handles.atlassetpopup,'Value');
+M.ui.atlassetpopup = eventdata.Source.String{eventdata.Source.Value};
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
-if atlasChanged
+if ~isempty(M.patient.list) && atlasChanged
     set(handles.calculatebutton, 'BackgroundColor', [0.1;0.8;0.1]);
     set(handles.explorestats, 'Enable', 'off');
     set(handles.exportstats, 'Enable', 'off');

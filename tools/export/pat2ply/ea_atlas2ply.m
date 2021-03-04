@@ -20,13 +20,17 @@ for atl=1:length(atlasnames)
         views=viewsets.(target).plyview;
         presets=resolveviews(views(1).structures,atlases);
     else
-        presets=atlases.presets(1).show;
+        if isfield(atlases,'presets')
+            presets=atlases.presets(1).show;
+        else
+            presets=1:length(atlases.names);
+        end
     end
     for side=1:2
         for i=1:length(presets)
-            cfv(cnt).vertices=atlases.fv{presets(i),side}.vertices;
-            cfv(cnt).faces=atlases.fv{presets(i),side}.faces;
-            cfv(cnt).facevertexcdata=repmat(atlases.colors(presets(i)),1,size(cfv(cnt).vertices,1));
+            cfv(cnt).vertices=atlases.roi{presets(i),side}.fv.vertices;
+            cfv(cnt).faces=atlases.roi{presets(i),side}.fv.faces;
+            cfv(cnt).facevertexcdata=repmat(atlases.roi{presets(i),side}.color,size(cfv(cnt).faces,1),1);
             cnt = cnt + 1;
         end
     end

@@ -138,6 +138,8 @@ WVFntSz = 9;
 BtnSz = 10;
 ChBxSz = 10;
 
+magnFactor = .1;    % standard magnification value that is used then left mouse button is clicked for the first time
+
 [Rmin Rmax] = WL2R(Win, LevV);
 
 hdl_im = axes('position',[0,0,1,1]);
@@ -196,6 +198,7 @@ set(gcf,'WindowButtonUpFcn', @mouseRelease)
 set(gcf,'ResizeFcn', @figureResized)
 set(gcf,'WindowButtonMotionFcn', @ButtonMotionCallback)
 set(gcf,'KeyPressFcn', @KeyPressCallback);
+
 
 % -=< Figure resize callback function >=-
     function figureResized(object, eventdata)
@@ -285,25 +288,24 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             f1 = get(a1,'Parent');
 
             a2 = copyobj(a1,f1, 'legacy');
-
+            % helptext is also copied, we delete it here so it is not
+            % duplicated when when magnifying
+            delete(findall(a2,'Type','text')); 
+            
             i2 = get(a2,'Children');
             try
             i2=i2(2);
             end
+
             set(f1, ...
                 'UserData',[f1,a1,a2], ...
                 'Pointer','crosshair', ...
                 'CurrentAxes',a2);
             set(a2, ...
-                'UserData',[1,0.1], ...  %magnification, frame size
+                'UserData',[1,magnFactor], ...  %magnification, frame size
                 'Color',get(a1,'Color'), ...
                 'Box','on');
             set(i2,'CData',Img(XImage,YImage,S,2));
-            xlabel(''); ylabel(''); zlabel(''); title('');
-            set(a1, ...
-                'Color',get(a1,'Color')*0.95);
-            set(f1, ...
-                'CurrentAxes',a1);
             set(f1,'WindowButtonMotionFcn', @ButtonMotionCallback)
             ButtonMotionCallback(f1);
 
@@ -382,13 +384,12 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         if ~isempty(H)
             f1 = H(1); a1 = H(2); a2 = H(3);
-            a2_param = get(a2,'UserData');
             if (strcmp(get(f1,'CurrentCharacter'),'<') | strcmp(get(f1,'CurrentCharacter'),','))
-                a2_param(2) = a2_param(2)/1.2;
+                magnFactor = magnFactor/1.2;
             elseif (strcmp(get(f1,'CurrentCharacter'),'>') | strcmp(get(f1,'CurrentCharacter'),'.'))
-                a2_param(2) = a2_param(2)*1.2;
+                magnFactor = magnFactor*1.2;
             end
-            set(a2,'UserData',a2_param);
+            set(a2,'UserData',[1, magnFactor]);
         end
 
         if (strcmp(eventdata.Key,'leftarrow') || strcmp(eventdata.Key,'downarrow'))
@@ -416,6 +417,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 MainImage=wiresIX;
             end
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
+                        
         elseif (strcmpi(eventdata.Key,'g'))
             if size(Img,4)==4 && strfind(callingfunction,'normalization') % only do if grid is available.
                 if MainImage(1)==1
@@ -701,10 +703,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
 
         try % image toolbox
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-        end;
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
+        end
         showhelptext(callingfunction);
 
         if sno > 1
@@ -725,8 +727,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         end
-
-        set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
 
@@ -754,10 +754,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         hdl_im = axes('position',[0,0,1,1]);
 
         try % image toolbox
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-        end;
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
+        end
         showhelptext(callingfunction);
 
         if sno > 1
@@ -778,7 +778,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
         end
-        set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
 
@@ -807,10 +806,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         hdl_im = axes('position',[0,0,1,1]);
 
         try % image toolbox
-            ImHndl=imshow(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
+            ImHndl=imshow(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
         catch
-            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
-        end;
+            ImHndl=imagesc(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
+        end
         showhelptext(callingfunction);
 
         if sno > 1
@@ -827,7 +826,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         end
-        set (gcf, 'ButtonDownFcn', @mouseClick);
         set(ImHndl,'ButtonDownFcn', @mouseClick);
     end
 end

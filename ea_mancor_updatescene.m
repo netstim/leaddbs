@@ -23,7 +23,6 @@ end
 set(mcfig,'color',getbgsidecol(options));
 
 patientname=getappdata(mcfig,'patientname');
-%markers=getappdata(mcfig,'markers');
 
 if nargin==4
     ea_busyaction('on',gcf,'reco');
@@ -46,6 +45,7 @@ switch space
         options.native=0;
     case 'native'
         options.native=1;
+        options.loadnativereco = 1; % Load native reco intead of scrf
 end
 
 setappdata(mcfig,'options',options);
@@ -94,18 +94,14 @@ xvec_unrot=cross(normtrajvector,[1,0,0]); % orthogonal vectors used for x-ray mo
 xvec_unrot=xvec_unrot./norm(xvec_unrot);
 yvec_unrot=cross(normtrajvector,[0,1,0]); % orthogonal vectors used for x-ray mode
 yvec_unrot=yvec_unrot./norm(yvec_unrot);
-% [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 
-%trajectory=getappdata(mcfig,'trajectory');
 options=getappdata(mcfig,'options');
 movedel=getappdata(mcfig,'movedel');
 trajectory_plot=getappdata(mcfig,'trajectory_plot');
 spacetext=getappdata(mcfig,'spacetext');
 planes=getappdata(mcfig,'planes');
-
 elplot = getappdata(mcfig,'elplot');
 mplot = getappdata(mcfig,'mplot');
-
 selectrode=getappdata(mcfig,'selectrode');
 
 if ~isempty(selectrode) && selectrode>0
@@ -219,7 +215,7 @@ if selectrode
     set(mplot(selectrode,1),'MarkerEdgeColor','y');
 end
 try
-    midpt=markers(options.elside).head;
+    midpt=double(markers(options.elside).head);
 catch
     midpt=[0 0 0];
 end
@@ -615,10 +611,6 @@ switch options.modality
             end
         end
 end
-
-
-function fn=stripext(fn)
-[~,fn]=fileparts(fn);
 
 
 function col=getbgsidecol(options)

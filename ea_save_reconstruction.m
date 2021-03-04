@@ -25,6 +25,7 @@ if options.native
         end
     end
     save([options.root,options.patientname,filesep,outfname],'reco');
+
     if isfield(options,'hybridsave')
         ea_dispt('Warping fiducials to template space');
         ea_reconstruction2mni(options);
@@ -46,7 +47,6 @@ else
     save([options.root,options.patientname,filesep,outfname],'reco');
 
     if isfield(options,'hybridsave')
-
         ea_dispt('Warping fiducials to native space');
         ea_reconstruction2native(options);
         if options.prefs.reco.saveACPC
@@ -70,7 +70,6 @@ end
 
 function [reco,corrected]=ea_checkswap_lr(reco,options)
 options.native=0; % this can only be done in MNI space.
-%[coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
 corrected=0;
 if length(reco.mni.coords_mm)==2 && ~any(cellfun(@isempty,reco.mni.coords_mm))
     if mean(reco.mni.coords_mm{1}(:,1))<mean(reco.mni.coords_mm{2}(:,1)) % RL swapped

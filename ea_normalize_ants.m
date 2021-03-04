@@ -90,10 +90,10 @@ if exist([directory,'segmentations'],'dir')
         if ~strcmp(segs(seg).name(1),'.')
             if strfind(segs(seg).name,'.nii')
                 if exist(ea_niigz([ea_space,'segmentations',filesep,segs(seg).name]),'file') % check if matching template exists
-                    disp(['Including segmentations/',segs(seg).name,' for segment based assistance (weight = 3).']);
+                    disp(['Including segmentations/',segs(seg).name,' for segment based assistance (weight = 20).']);
                     from=[{[directory,'segmentations',filesep,segs(seg).name]},from]; % append to front (since last one is convergence critical)
                     to=[{ea_niigz([ea_space,'segmentations',filesep,segs(seg).name])},to];
-                    weights=[5,weights]; % set weight to 5 - DO NOT CHANGE THIS VALUE BELOW 3. IF VALUE IS CHANGED, SEGMENTATIONS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
+                    weights=[20,weights]; % set weight to 20 - DO NOT CHANGE THIS VALUE BELOW 3. IF VALUE IS CHANGED, SEGMENTATIONS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
                 end
             end
         end

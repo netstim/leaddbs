@@ -95,11 +95,11 @@ cmd = [props.ANTS, ' --verbose 1', ...
     initreg, ...
     props.rigidstage, props.affinestage, props.synstage];
 
-if isfield('props', 'slabstage')
+if isfield(props, 'slabstage')
     cmd = [cmd, props.slabstage];
 end
 
-if isfield('props', 'synmaskstage')
+if isfield(props, 'synmaskstage')
     cmd = [cmd, props.synmaskstage];
 end
 

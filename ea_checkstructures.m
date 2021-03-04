@@ -240,29 +240,29 @@ ea_setprefs('checkreg.default',[h.Parent.Label,'@',h.Label]);
 options.atlasset=h.Parent.Label;
 load([ea_space(options,'atlases'),options.atlasset,filesep,'atlas_index.mat']);
 if strcmp(h.Label,'ALL')
-    fv=atlases.fv;
+    roi=atlases.roi;
     pixdim=atlases.pixdim;
     xyz=[];
-    for i=1:numel(fv)
+    for i=1:numel(roi)
         try % some are empty in case of midline/mixed structures
-            xyz=[xyz;fv{i}.vertices];
+            xyz=[xyz;roi{i}.fv.vertices];
         end
     end
     pixdim=pixdim{1};
 else
-    [~,six]=ismember(h.Label,ea_rmext(atlases.names));
-    fv=atlases.fv(six,:);
-    pixdim=atlases.pixdim(six,:);
-    if length(fv)>1
+    [~,idx]=ismember(h.Label,ea_rmext(atlases.names));
+    roi=atlases.roi(idx,:);
+    pixdim=atlases.pixdim(idx,:);
+    if length(roi)>1
         xyz=[];
-        for i=1:numel(fv)
+        for i=1:numel(roi)
             try % some are empty in case of midline/mixed structures
-                xyz=[xyz;fv{i}.vertices];
+                xyz=[xyz;roi{i}.fv.vertices];
             end
         end
         pixdim=mean([pixdim{1};pixdim{2}]);
     else
-        xyz=fv{1}.vertices;
+        xyz=roi{1}.fv.vertices;
         pixdim=pixdim{1};
     end
 end
@@ -279,7 +279,7 @@ mzsag=mean(xyz);
 vmzsag=abs(max(xyz)-min(xyz));
 
 setappdata(handles.checkstructures,'h',h);
-setappdata(handles.checkstructures,'fv',fv);
+setappdata(handles.checkstructures,'roi',roi);
 setappdata(handles.checkstructures,'atlases',atlases);
 setappdata(handles.checkstructures,'pixdim',pixdim);
 setappdata(handles.checkstructures,'mz',mz);
@@ -293,7 +293,7 @@ end
 
 
 function ea_updateviews(options,handles,cortrasag)
-fv=getappdata(handles.checkstructures,'fv');
+fv=getappdata(handles.checkstructures,'roi');
 atlases=getappdata(handles.checkstructures,'atlases');
 pixdim=getappdata(handles.checkstructures,'pixdim');
 mz=getappdata(handles.checkstructures,'mz');
@@ -620,7 +620,7 @@ end
 map3d=0;
 if map3d % this could be used to map in 3D instead of 2D - then could be incongruent to visualization which is in 2D
     % map points to closest point on atlas:
-    atlfv=getappdata(handles.checkstructures,'fv'); % get current atlas
+    atlfv=getappdata(handles.checkstructures,'roi'); % get current atlas
     allatlcoords=[];
     for entry=1:length(atlfv)
         try allatlcoords=[allatlcoords;atlfv{entry}.vertices]; end

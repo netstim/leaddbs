@@ -71,14 +71,18 @@ for side=options.sides
             [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig);
             if ~err
                 break
-            else
-                try                
-                    %recalculate as the tolerance/precision was not
-                    %satisfactory for this use case (will be loaded at tries==2)
+            elseif ~options.d3.mirrorsides
+                try
+                    % Recalculate as the tolerance/precision was not
+                    % satisfactory for this use case (will be loaded at tries==2)
                     if ~isfield(options,'patient_list') % single subject mode
-                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.root,options.patientname]);
+                        % Recalc then reload depending on options.native flag
+                        ea_recalc_reco([],[],[options.root,options.patientname]);
+                        [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
                     else
-                        [coords_mm,trajectory,markers]=ea_recalc_reco([],[],[options.patient_list{pt},filesep]);
+                        % Recalc then reload depending on options.native flag
+                        ea_recalc_reco([],[],[options.patient_list{pt},filesep]);
+                        [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
                     end
                     elstruct.markers=markers;
                     elstruct.coords_mm=coords_mm;
@@ -191,7 +195,7 @@ for side=options.sides
                 % Calc stick location
                 stxmarker = elstruct.markers(side).head + stretchfactor * markerposRel * unitvector;
                 arrowtip = stxmarker + 5 * (elstruct.markers(side).y - elstruct.markers(side).head);
-                elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.3 .3 .3],'tipWidth',0.2,'tipLength',0,'stemWidth',0.2);
+                elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.3 .3 .3],'tipWidth',0.2,'tipLength',0,'stemWidth',0.2,'Tag','DirectionMarker');
                 specsurf(elrender(cnt),[.3 .3 .3],1);
                 cnt = cnt+1;
             end
@@ -236,7 +240,7 @@ for side=options.sides
         for cntct=1:elspec.numel-shifthalfup
             if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})))
                 if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
-                    useedgecolor=[0.8,0.5,0.5];
+                    useedgecolor=[0.9,0.9,0.7];
                     ms=10;
                 elseif options.d3.hlactivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})) % make inactive grey and smaller contact without transparency
                     useedgecolor='none';
@@ -277,16 +281,25 @@ for side=options.sides
                 if ~any(isnan(usefacecolor))
                     set(0,'CurrentFigure',resultfig);
                     if ~shifthalfup
-                        elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
-                        pcnt=pcnt+1;
+                        if strcmpi(options.prefs.d3.pointcloudstyle, '3d')
+                            elrender(pcnt)=ea_plotsphere(coords_mm{side}(cntct,:), ms/10, usefacecolor, useedgecolor);
+                            elrender(pcnt).Tag = 'PointCloud';
+                        else
+                            elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        end
                     else
-                        elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
-                            mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
-                            mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
-                            'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
-                        drawnow
-                        pcnt=pcnt+1;
+                        if strcmpi(options.prefs.d3.pointcloudstyle, '3d')
+                            elrender(pcnt)=ea_plotsphere(mean([coords_mm{side}(cntct,:);coords_mm{side}(cntct+1,:)],1), ms/10, usefacecolor, useedgecolor);
+                            elrender(pcnt).Tag = 'PointCloud';
+                        else
+                            elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
+                                mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
+                                mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
+                                'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        end
                     end
+                    drawnow;
+                    pcnt=pcnt+1;
                 else
 
                 end
@@ -352,8 +365,12 @@ set(surfc,'AlphaDataMapping','none');
 
 set(surfc,'FaceLighting','phong');
 set(surfc,'SpecularColorReflectance',0);
-set(surfc,'SpecularExponent',10);
 set(surfc,'EdgeColor','none')
+
+set(surfc,'SpecularExponent',3) % patch property
+set(surfc,'SpecularStrength',0.21) % patch property
+set(surfc,'DiffuseStrength',0.4) % patch property
+set(surfc,'AmbientStrength',0.3) % patch property
 
 if nargin==3
     set(surfc,'FaceAlpha',aData);

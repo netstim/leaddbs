@@ -14,11 +14,8 @@ function  [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=
 
 coords_acpc=nan; % make sure the output is there.
 if isstruct(varargin{1})
-
     options=varargin{1};
-
     directory=[options.root,options.patientname,filesep];
-
 else
     directory=varargin{1};
     if ~strcmp(directory(end),filesep)
@@ -41,11 +38,12 @@ if exist('reco','var')
     end
 
     if options.native
-        if isfield(options, 'loadrecoforviz') && isfield(reco, 'scrf')
-            % if loading reco for visualization, should return scrf.
-            space_type = 'scrf';
-        else
+        if isfield(options, 'loadnativereco') && options.loadnativereco || ~isfield(reco, 'scrf')
+            % Load native reco for recalculation or manual reconstruction
             space_type = 'native';
+        else
+            % Load scrf reco by default
+            space_type = 'scrf';
         end
     else
         space_type = 'mni';

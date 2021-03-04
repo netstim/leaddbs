@@ -124,7 +124,18 @@ if exist('pperm','var') && ~isempty(pperm)
     pstr='p(perm)';
 end
 
-g.set_title([labels{1},' [R = ',sprintf('%.2f',R),'; ',pstr,' = ',sprintf('%.3f',pv),']'],'FontSize',20);
+if pv >= 0.001 % Show p = 0.XXX when p > 0.001
+    pstr = [pstr, ' = ', sprintf('%.3f',pv)];
+else
+    % pstr = [pstr, ' = ', sprintf('%.1e',pv)]; % Show p = X.Xe-X
+    signCheck=zeros(1,17);
+    for i=1:length(signCheck)
+        signCheck(i)=eval(['pv<1e-',num2str(i),';']);
+    end
+    pstr = [pstr, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
+end
+
+g.set_title([labels{1}, ' [R = ', sprintf('%.2f',R), '; ', pstr, ']'], 'FontSize', 20);
 g.set_names('x',labels{2},'y',labels{3});
 g.set_text_options('base_size',22);
 g.no_legend();

@@ -1,7 +1,7 @@
 function ea_reconstruction2acpc(options)
 
 directory=[options.root,options.patientname,filesep];
-load([directory,filesep,'ea_reconstruction.mat']);
+load([directory,filesep,'ea_reconstruction.mat'],'reco');
 
 for iside=1:length(options.sides)
     side=options.sides(iside);

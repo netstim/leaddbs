@@ -1,0 +1,65 @@
+// $Id$
+/* Computes xyz coords of nodes in a model cell 
+   whose topology & geometry are defined by pt3d data.
+   Expects sections to already exist, and that the xstim mechanism has been inserted
+ */
+
+// $o1 is the SectionList that holds all sections of interest
+
+proc grindaway() { local ii, nn, xr  localobj xx, yy, zz, length, xint, yint, zint, range
+  // xx, yy, zz, length hold the original, irregularly spaced data
+  // xint, yint, zint, range hold the interpolated data
+  // and are spaced at regular intervals
+  // i.e. at locations that correspond to segment centers
+
+  forsec $o1 {
+    // get the data for the section
+    nn = n3d()
+    xx = new Vector(nn)
+    yy = new Vector(nn)
+    zz = new Vector(nn)
+    length = new Vector(nn)
+
+    for ii = 0,nn-1 {
+      xx.x[ii] = x3d(ii)
+      yy.x[ii] = y3d(ii)
+      zz.x[ii] = z3d(ii)
+      length.x[ii] = arc3d(ii)
+    }
+
+    // to use Vector class's .interpolate() 
+    // must first scale the independent variable
+    // i.e. normalize length along centroid
+    length.div(length.x[nn-1])
+
+    // initialize the destination "independent" vector
+    range = new Vector(nseg+2)
+    range.indgen(1/nseg)
+    range.sub(1/(2*nseg))
+    range.x[0]=0
+    range.x[nseg+1]=1
+
+    // length contains the normalized distances of the pt3d points 
+    // along the centroid of the section.  These are spaced at irregular intervals.
+    // range contains the normalized distances of the nodes along the 
+    // centroid of the section.  These are spaced at regular intervals.
+    // Ready to interpolate.
+
+    xint = new Vector(nseg+2) // nseg+2 to hold coords of all nodes including those at 0 and 1
+    yint = new Vector(nseg+2)
+    zint = new Vector(nseg+2)
+    xint.interpolate(range, length, xx)
+    yint.interpolate(range, length, yy)
+    zint.interpolate(range, length, zz)
+
+    // for each internal node, assign the xyz values to x_xstim, y_xstim, z_xstim
+    // avoid writing coords of the 0 and 1 ends into internal nodes
+    for ii = 1, nseg {
+      xr = range.x[ii]
+      x_xstim(xr) = xint.x[ii]
+      y_xstim(xr) = yint.x[ii]
+      z_xstim(xr) = zint.x[ii]
+    }
+  }
+}
+

@@ -1,7 +1,13 @@
-function atlases=ea_loadatlas(atlname,resultfig,ht)
+function atlases = ea_loadatlas(atlases,resultfig,ht)
 % Load atlases and do struct2roi conversion when needed
 
-load([ea_space([],'atlases'),atlname,filesep,'atlas_index.mat'], 'atlases');
+if ischar(atlases) % Input is not atlases struct itself
+    if isfile(atlases) % Input is atlas_index.mat file path
+        load(atlases);
+    else % Input is atlas name (suppose in MNI space)
+        load([ea_space([],'atlases'),atlases,filesep,'atlas_index.mat'], 'atlases');
+    end
+end
 
 if isfield(atlases, 'roi')
     if ~exist('resultfig','var')
@@ -13,7 +19,7 @@ if isfield(atlases, 'roi')
     end
 
     for atl=1:size(atlases.roi,1)
-        for side=1:2
+        for side=1:size(atlases.roi,2)
             if ~isa(atlases.roi{atl,side},'ea_roi')
                 atlases.roi{atl,side}=ea_struct2roi(atlases.roi{atl,side},resultfig,ht);
             end

@@ -5,13 +5,12 @@ if nargin>1
     lc=varargin{2};
 else
     if isempty(varargin{1})
-        h=lead_connectome;
+        handles=lead_connectome;
     else
-        h=varargin{1};
+        handles=varargin{1};
     end
-    lc.general.parcellation=getappdata(h,'parcellation');
-    lc.general.parcellationn=1;
-    lc.general.parcellation=lc.general.parcellation{lc.general.parcellationn};
+    prefs = ea_prefs;
+    lc.general.parcellation = prefs.lc.defaultParcellation;
     lc.graph.degree_centrality=0;
     lc.graph.eigenvector_centrality=0;
     lc.graph.nodal_efficiency=0;
@@ -24,12 +23,10 @@ else
     lc.struc.compute_CM=0;
     lc.struc.compute_GM=0;
     lc.struc.ft.do=0;
-    ftmethods=getappdata(h,'ftmethods');
     if isempty(varargin{1})
         close(h)
     end
     lc.struc.ft.method='ea_ft_gqi_yeh';
-    lc.struc.ft.methodn=find(ismember(ftmethods, 'ea_ft_gqi_yeh'));
     lc.struc.ft.dsistudio.fiber_count=200000;
     lc.struc.ft.normalize=0;
 end

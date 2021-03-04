@@ -61,8 +61,8 @@ end
 % convert VTA seeds also if neither func or struc conn is chosen.
 if (~options.lcm.func.do) && (~options.lcm.struc.do)
     if strcmp(options.lcm.seeddef,'vats')
-        ea_resolvevatseeds(options,'dMRI');
-        ea_resolvevatseeds(options,'fMRI');
+        try ea_resolvevatseeds(options,'dMRI'); end
+        try ea_resolvevatseeds(options,'fMRI'); end
     end
 end
 
@@ -174,7 +174,7 @@ for suffix=dowhich
                     bbfile = [ea_space,'bb.nii'];
                 end
 
-                %if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
+                if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -192,6 +192,8 @@ for suffix=dowhich
                             nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
                             nii(cnt).img(isnan(nii(cnt).img))=0;
                             cnt=cnt+1;
+                        else
+                            error('Seed file %s doesn''t exist!', [vatdir,'vat',addstr,'_',sidec,'.nii']);
                         end
                     end
 
@@ -207,7 +209,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                %end
+                end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
                 end
@@ -230,7 +232,7 @@ for suffix=dowhich
                 else
                     nativeprefix='';
                 end
-                %if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -242,7 +244,7 @@ for suffix=dowhich
 
                         if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
                             if ~strcmp(cname,'No functional connectome found.')
-                                if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
+                                if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') && ~isfield(options.lcm,'onlygenvats') % patient specific rs-fMRI
                                     nii(cnt) = ea_warp_vat2rest(cname,vatdir,sidec,options);
                                 else
                                     nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'], [vatdir,'vat',addstr,'_',sidec,'.nii']);
@@ -265,7 +267,7 @@ for suffix=dowhich
 
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
-                %end
+                end
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end
