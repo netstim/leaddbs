@@ -417,7 +417,7 @@ switch atlases.types(atlas)
         atlnames{2}=[root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
 end
 
-options = ea_assignpretra(options,root);
+options = ea_assignpretra(options);
 
 for atl=1:length(atlnames)
     atlname=atlnames{atl};
