@@ -1,10 +1,10 @@
-function [options, presentfiles] = ea_assignpretra(options,root,allowgz)
+function [options, presentfiles] = ea_assignpretra(options,allowgz)
 
 if ~exist('allowgz','var')
     allowgz=0;
 end
 
-directory = fullfile(root, options.patientname);
+directory = fullfile(options.root, options.patientname);
 
 if allowgz
     sstr = [options.prefs.prenii_searchstring(1:end-1),'*'];
