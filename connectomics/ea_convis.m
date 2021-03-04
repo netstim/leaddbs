@@ -525,7 +525,7 @@ modlist=ea_genmodlist(directory,selectedparc,options);
 
 %% VATs:
 
-vdirs=dir([directory,filesep,'stimulations',filesep,ea_nt(options)]);
+vdirs=dir([directory,'stimulations',filesep,ea_nt(options)]);
 cnt=1;
 vdicell=cell(0); %empty cell
 for vdir=1:length(vdirs) 
