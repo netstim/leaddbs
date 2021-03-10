@@ -456,6 +456,12 @@ lightbulbbutton=uipushtool(ht,'CData',ea_get_icn('lightbulb'),...
 %     'OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},...
 %     'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
 
+if options.prefs.env.dev
+    setBackgroundButton = uipushtool(ht,'CData',ea_get_icn('BG'),...
+        'TooltipString','Set background to Black or White',...
+        'ClickedCallback',{@ea_setElvisBackground,resultfig});
+end
+
 % Initialize HD-Export button
 dumpscreenshotbutton=uipushtool(ht,'CData',ea_get_icn('dump'),...
     'TooltipString','Dump Screenshot','ClickedCallback',{@dump_screenshot,resultfig,options});
@@ -623,6 +629,33 @@ v = prefs.machine.view;
 togglestates = prefs.machine.togglestates;
 ea_defaultview_transition(v,togglestates);
 ea_defaultview(v,togglestates);
+
+
+function ea_setElvisBackground(source,eventdata,resultfig)
+bg = get(resultfig, 'Color');
+cmap = gray;
+if all(bg==[0 0 0]) % Black, default background
+    % Get volume data
+    V = getappdata(resultfig, 'V');
+    if isa(V{1}, 'nifti')
+        V = V{1}.dat; % Memory mapped nifti struct
+    else
+        V = V{1}.img; % Standard nifti struct
+    end
+
+    % Take the middle z slice
+    zslice = V(:,:,round(size(V,3)/2));
+
+    % Check if background (1st voxel) is dark or bright
+    if zslice(1,1) < mean(zslice(:))
+        % Flip black to white in colormap in case background is dark
+        cmap(1,:) = [1 1 1];
+    end
+
+    set(resultfig, 'Color', 'w', 'Colormap', cmap);
+elseif all(bg==[1 1 1]) % Already toggled to white
+    set(resultfig, 'Color', 'k', 'Colormap', cmap);
+end
 
 
 function export_video(hobj,ev,options)
