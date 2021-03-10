@@ -178,8 +178,9 @@ else
     sliceim=uint8(ea_contrast(single(sliceim),c,o)*255);
 end
 
-resdivs=1; % could increase to 2 but would render a bit slow.
-if size(sliceim,3)==1
+% Interpolate slice when it has low resolution
+if size(sliceim,3)==1 && any(size(sliceim)<1000)
+    resdivs=1; % could increase to 2 but would render a bit slow.
     sliceim=interp2(sliceim,resdivs);
 else
     resdivs=0;
