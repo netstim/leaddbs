@@ -75,7 +75,7 @@ for g=1:length(geneidx)
         'natural');
     
     nii.img(linidx)=F(XYZ);
-    
+    nii.dt=[16 0];
     nii.fname=fullfile(outputfolder,[geneidx{g},'.nii']);
     ea_write_nii(nii);
     
