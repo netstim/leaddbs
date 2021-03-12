@@ -58,6 +58,10 @@ switch options.prefs.reco.mancoruse
                 tmat_flirt = dlmread([directory 'anat_t12postop_ct_flirt1.mat']);
                 %TODO check if add + 1 is nessesary, check the inverse case
                 tmat = flirtmat2worldmatPaCER(tmat_flirt, [directory,options.prefs.prenii_unnormalized],[directory,options.prefs.rawctnii_unnormalized], false );
+                % use inv() function to return inverse when queried (for example DiODe)
+                if inverse
+                    tmat = inv(tmat);
+                end
                 %disp(['Warning: Currently, FSL coregistration is not supported. Using registered CT.'])
                 %tmat=eye(4);
                 %postopct=[directory,options.prefs.ctnii_coregistered];
