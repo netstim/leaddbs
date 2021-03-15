@@ -64,6 +64,43 @@ def run_full_model(master_dict):
     d=rearrange_Inp_dict(d)             #misc. transformation of parameters to the platform's format
     d.update(master_dict)               #modifies the user provided input dictionary (e.g. for UQ study), check run_master_study() function . Warning: this does not work update the encap. layer properties and the solver during adaptive mesh refiment, because these data are realoaded from the original dictionary
 
+
+    import os
+#    os.environ['PATIENTDIR'] = '/opt/Patient' # Use fixed mount path for docker
+
+
+    if (os.path.isfile(os.environ['PATIENTDIR']+'/Current_protocols.csv')):
+        d['Current_sets']==True
+        d["Skip_mesh_refinement"]=1
+        print("When testing different current set, adaptive refinement is unavailable, make sure the mesh is prerefined")
+        d["EQS_core"]="QS"
+        print("When testing different current set, only QS formulation is currently available")
+        cc_multicontact=True
+        d["spectrum_trunc_method"]="Octave Band Method"
+        print("When testing different current set, only Octave Band Method is currently available")
+        #IMPORTANT: If grounding should be on the electrode, disable external grounding and put here one entry to 0.0
+        d['Phi_vector']=[1.0] * len(d['Phi_vector'])          # unit vector
+        d["external_grounding"]=True
+        d["current_control"]=1
+
+        if d["Full_Field_IFFT"] == 1:
+            print("Field superposition is yet not supported for VTA from E-field/Rattay's function")
+            raise SystemExit
+
+        import math
+
+        stim_protocols = np.genfromtxt(os.environ['PATIENTDIR']+"/Current_protocols_"+str(d['Stim_side'])+".csv", dtype=float, delimiter=',', names=True)
+        Currents_to_check=[]
+        for i in range(stim_protocols.shape[0]):
+            stim_prot=list(stim_protocols[i])
+            for j in range(len(stim_prot)):
+                if math.isnan(stim_prot[j]):
+                    stim_prot[j]=None
+
+            Currents_to_check.append(stim_prot)
+    else:
+        d['Current_sets']=False
+
     #=========Check the simulation setup and state, load the corresponding data=========#
 
 
@@ -91,9 +128,8 @@ def run_full_model(master_dict):
         print("MRI data is new, the DTI data will be reprocessed")
         d["voxel_arr_DTI"]==0
 
-    import os    
-        
     #loading of meta data depending on the simulatation setup and state
+    import os
     if d["Init_neuron_model_ready"]==1:
         [ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib,n_Ranvier,ROI_radius,N_segm]=np.genfromtxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_model_misc.csv', delimiter=' ')
         param_axon=[ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib]
@@ -224,6 +260,7 @@ def run_full_model(master_dict):
         VTA_edge,VTA_full_name,VTA_resolution= create_VTA_array(d['x_seed'],d['y_seed'],d['z_seed'])
         arrays_shape = resave_as_verts(VTA_full_name)
         number_of_points=sum(arrays_shape)
+        VTA_parameters=[VTA_edge,VTA_full_name,VTA_resolution]
 
 #=============================Signal creation=================================#
     #in case there was an update of the signal
@@ -311,6 +348,64 @@ def run_full_model(master_dict):
             Xs_signal_norm_new=add_trunc_data
 
 #==========Calculate freq in parallel and rearrange field array===============#
+
+    if d['Current_sets']==True:
+
+        if d["Parallel_comp_ready"]==0:
+
+            if ["Parallel_comp_interrupted"]==1:
+                import os
+                if not (os.path.isfile('Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile('Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations
+                    print("There were no previous computations, 'Parallel_comp_interrupted' is put to 0")
+                    ["Parallel_comp_interrupted"]==0
+
+            from Parallel_unit_current_calc import calculate_in_parallel
+            '''calculate_in_parallel will save a sorted_solution array if IFFT is pointwise or will save the whole field for each frequency in Field_solutions_functions/ if full_IFFT is requested'''
+
+            if d["spectrum_trunc_method"]=='No Truncation':
+                print("----- Calculating electric field in the frequency spectrum -----")
+                calculate_in_parallel(d,FR_vector_signal,Domains,MRI_param,DTI_param,anisotrop,number_of_points,cc_multicontact)
+
+            if d["spectrum_trunc_method"]=='High Amplitude Method' or d["spectrum_trunc_method"]=='Cutoff Method' or d["spectrum_trunc_method"]=='Octave Band Method':
+                print("----- Calculating electric field in the truncated frequency spectrum -----")
+                calculate_in_parallel(d,FR_vector_signal_new,Domains,MRI_param,DTI_param,anisotrop,number_of_points,cc_multicontact)
+        else:
+            print("--- Results of calculations in the frequency spectrum were loaded\n")
+
+        if d["spectrum_trunc_method"]=='No Truncation':
+            name_sorted_solution=os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution_per_contact.csv'
+        else:
+            name_sorted_solution=os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution_per_contact_'+str(d["spectrum_trunc_method"])+'_'+str(d["trunc_param"])+'.csv'
+
+
+
+        if d["IFFT_ready"] == 0:
+            from Current_scaler import find_activation
+            #Currents_to_check=[[None,None,-0.001,None,None,None,None,None],[None,-0.001,None,None,None,0.001,None,None]]
+            #Currents_to_check=[[None,0.002,None,None,None,None,None,None],[None,-0.001,None,0.002,None,-0.001,None,None]]
+
+            if d["Full_Field_IFFT"] == 1:       # rename later
+                N_segm=arrays_shape
+            else:
+                VTA_parameters=0
+
+            it_num=0
+            for current_comb in Currents_to_check:
+                Activation=find_activation(current_comb,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,it_num,VTA_param=VTA_parameters)
+                it_num+=1
+
+
+        if d["Stim_side"]==0:
+            subprocess.call(['touch', os.environ['PATIENTDIR']+'/success_rh.txt'])
+        else:
+            subprocess.call(['touch', os.environ['PATIENTDIR']+'/success_lh.txt'])
+
+        return True
+
+
+
+
+
     if d["Parallel_comp_ready"]==0:
         if ["Parallel_comp_interrupted"]==1:
             if not (os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations
@@ -467,7 +562,7 @@ def run_full_model(master_dict):
     if d["Axon_Model_Type"] == 'McIntyre2002':
         os.chdir("Axon_files/")
         with open(os.devnull, 'w') as FNULL: subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl axnode', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         from Axon_files.NEURON_direct_run import run_simulation_with_NEURON
     elif d["Axon_Model_Type"] == 'Reilly2016':
         os.chdir("Axon_files/Reilly2016/")
