@@ -69,7 +69,7 @@ def run_full_model(master_dict):
 #    os.environ['PATIENTDIR'] = '/opt/Patient' # Use fixed mount path for docker
 
 
-    if (os.path.isfile(os.environ['PATIENTDIR']+'/Current_protocols.csv')):
+    if (os.path.isfile(os.environ['PATIENTDIR']+'/Current_protocols_'+str(d['Stim_side'])+'.csv')):
         d['Current_sets']==True
         d["Skip_mesh_refinement"]=1
         print("When testing different current set, adaptive refinement is unavailable, make sure the mesh is prerefined")
@@ -89,7 +89,7 @@ def run_full_model(master_dict):
 
         import math
 
-        stim_protocols = np.genfromtxt(os.environ['PATIENTDIR']+"/Current_protocols_"+str(d['Stim_side'])+".csv", dtype=float, delimiter=',', names=True)
+        stim_protocols = np.genfromtxt(os.environ['PATIENTDIR']+'/Current_protocols_'+str(d['Stim_side'])+'.csv', dtype=float, delimiter=',', names=True)
         Currents_to_check=[]
         for i in range(stim_protocols.shape[0]):
             stim_prot=list(stim_protocols[i])
