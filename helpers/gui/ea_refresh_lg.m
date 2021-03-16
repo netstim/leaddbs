@@ -382,7 +382,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
         end
         
         
-        % load stats for group
+        % load clinical data for group
         disp('Loading clinical data for group...');
         for pt=1:length(M.patient.list)
             
@@ -404,7 +404,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                     end
                     if exist('clindata','var') && isfield(clindata,scorename)
                     else
-                         clindata.(scorename).baseline=[];
+                        clindata.(scorename).baseline=[];
                         clindata.(scorename).postop=[];
                         clindata.(scorename).factors={};
                         clindata.(scorename).score={};
@@ -439,39 +439,61 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                     
                 end
             end
-            
-            
-            
         end
-        
-        fns=fieldnames(clindata);
-        for fn=1:length(fns)
-            scorename=fns{fn};
-            clindata.(scorename).scores=unique(clindata.(scorename).score);
-            
-            modes={'absolute','percent','cleaned'};
-            
-            % now auto-query improvements for all factors:
-            for s=1:length(clindata.(scorename).somatotopynames)
-                for f=1:length(clindata.(scorename).factornames)
-                    for mode=1:length(modes)
-                        I=ea_getimprovs_fctr_smtp(clindata.(scorename),modes{mode},1:length(M.patient.list),clindata.(scorename).factornames{f},clindata.(scorename).somatotopynames{s});
-                        Ilabel=[scorename,'_',clindata.(scorename).somatotopynames{s},'_',clindata.(scorename).factornames{f},'_',modes{mode}];
-                        
-                        [is,ix]=ismember(Ilabel,M.clinical.labels);
-                        if ~is
-                           M.clinical.labels{end+1}=Ilabel;
-                           M.clinical.vars{end+1}=I;
-                        else % update
-                           M.clinical.labels{ix}=Ilabel;
-                           M.clinical.vars{ix}=I;                            
+        if exist('clindata','var')
+            fns=fieldnames(clindata);
+            for fn=1:length(fns)
+                scorename=fns{fn};
+                clindata.(scorename).scores=unique(clindata.(scorename).score);
+                
+                modes={'absolute','percent','cleaned'};
+                
+                % now auto-query improvements for all factors:
+                for s=1:length(clindata.(scorename).somatotopynames)
+                    for f=1:length(clindata.(scorename).factornames)
+                        for mode=1:length(modes)
+                            I=ea_getimprovs_fctr_smtp(clindata.(scorename),modes{mode},1:length(M.patient.list),clindata.(scorename).factornames{f},clindata.(scorename).somatotopynames{s});
+                            Ilabel=[scorename,'_',clindata.(scorename).somatotopynames{s},'_',clindata.(scorename).factornames{f},'_',modes{mode}];
+                            
+                            [is,ix]=ismember(Ilabel,M.clinical.labels);
+                            if ~is
+                                M.clinical.labels{end+1}=Ilabel;
+                                M.clinical.vars{end+1}=I;
+                            else % update
+                                M.clinical.labels{ix}=Ilabel;
+                                M.clinical.vars{ix}=I;
+                            end
                         end
                     end
                 end
             end
-            
-            
         end
+        
+        
+        % sync stimulation parameters for group
+        disp('Syncing stimulation parameters for group...');
+        for pt=1:length(M.patient.list)
+            if exist(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'),'file')
+            ptS=load(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'));
+               
+            try % could fail if M.S(pt) is not defined.
+                if ~all([isequal(ptS.S.Rs1,M.S(pt).Rs1),...
+                        isequal(ptS.S.Rs2,M.S(pt).Rs2),...
+                        isequal(ptS.S.Rs3,M.S(pt).Rs3),...
+                        isequal(ptS.S.Rs4,M.S(pt).Rs4),...
+                        isequal(ptS.S.Ls1,M.S(pt).Ls1),...
+                        isequal(ptS.S.Ls2,M.S(pt).Ls2),...
+                        isequal(ptS.S.Ls3,M.S(pt).Ls3),...
+                        isequal(ptS.S.Ls4,M.S(pt).Ls4),...
+                        isequal(ptS.S.amplitude,M.S(pt).amplitude)])
+                    warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+                end
+            end
+            
+            end
+        end
+        
+        
         try
             setappdata(handles.leadfigure,'elstruct',elstruct);
         end
