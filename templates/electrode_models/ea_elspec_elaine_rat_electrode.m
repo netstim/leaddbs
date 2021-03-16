@@ -38,10 +38,10 @@ end
 %% Contact coordinates and other specifications
 electrode.coords_mm(1,:)=[0 0 elspec.tip_length];
 
-electrode.head_position = [0 0 elspec.tip_length]; % dummy value
-electrode.tail_position = [0 0 elspec.tip_length*4]; % dummy value
-electrode.x_position = [elspec.lead_diameter/2, 0, elspec.tip_length]; % dummy value
-electrode.y_position = [0, elspec.lead_diameter/2, elspec.tip_length]; % dummy value
+electrode.head_position = [0 0 elspec.tip_length/2]; % dummy value
+electrode.tail_position = [0 0 elspec.tip_length*6.5]; % dummy value
+electrode.x_position = [elspec.lead_diameter/2, 0, elspec.tip_length/2]; % dummy value
+electrode.y_position = [0, elspec.lead_diameter/2, elspec.tip_length/2]; % dummy value
 
 electrode.electrode_model = options.elmodel;
 electrode.isdirected = elspec.isdirected;
