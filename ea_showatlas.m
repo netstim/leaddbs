@@ -1,6 +1,6 @@
 function [atlases,colorbuttons,atlassurfs,atlaslabels] = ea_showatlas(varargin)
 % This function shows atlas data in the 3D-Scene viewer. It
-% reads in all atlases found in the eAuto_root/atlases folder, calculates a
+% reads in all atlases found in the atlases folder, calculates a
 % convex hull around the nonzero area and renders this area as 3D surfaces.
 % For a small part of contact statistics, the function uses
 % inhull.m which is covered by the BSD-license (see below).
