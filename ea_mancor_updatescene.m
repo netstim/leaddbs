@@ -373,8 +373,7 @@ mks=nan(2,3); % always assign 4 markers, no matter if only right or left electro
 try mks(1,:)=markers(options.elside).head; end
 try mks(2,:)=markers(options.elside).tail; end
 
-mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
-mks=mks(1:3,:)';
+mks = ea_mm2vox(mks, Vtra.mat);
 
 %title(['Electrode ',num2str(el-1),', transversal view.']);
 wsize=15; res=0.5;
