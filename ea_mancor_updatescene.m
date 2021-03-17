@@ -557,6 +557,7 @@ hdtrajectory(:,3)=interp1q([1:length(trajectory)]',trajectory(:,3),[1:1/resoluti
 
 
 function V=getV(mcfig,ID,options)
+directory = [options.root,options.patientname,filesep];
 if options.native
     addon='_unnormalized';
 else
@@ -574,20 +575,20 @@ switch options.modality
             switch ID
                 case 'Vcor'
                     try
-                        V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
+                        V=spm_vol([directory,options.prefs.(['cornii',addon])]);
                     catch
-                        V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
+                        V=spm_vol([directory,options.prefs.(['tranii',addon])]);
                     end
                 case 'Vtra'
-                    V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
+                    V=spm_vol([directory,options.prefs.(['tranii',addon])]);
                 case 'Vsag'
                     try
-                        V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['sagnii',addon])]);
+                        V=spm_vol([directory,options.prefs.(['sagnii',addon])]);
                     catch
                         try
-                            V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
+                            V=spm_vol([directory,options.prefs.(['cornii',addon])]);
                         catch
-                            V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
+                            V=spm_vol([directory,options.prefs.(['tranii',addon])]);
                         end
                     end
             end
@@ -607,7 +608,7 @@ switch options.modality
         else
             V=getappdata(mcfig,'VCTmni');
             if isempty(V)
-                V=spm_vol([options.root,options.patientname,filesep,options.prefs.ctnii]);
+                V=spm_vol([directory,options.prefs.ctnii]);
                 setappdata(mcfig,'VCTmni',V);
             end
         end
