@@ -5,9 +5,10 @@ function [s, info, dict] = dicm_hdr(fname, dict, iFrames)
 % 
 % The mandatory 1st input is the dicom file name. 
 % 
-% The optional 2nd input is a dicom dictionary returned by dicm_dict. It may
+% The optional 2nd input can be a dicom dictionary returned by dicm_dict. It may
 % have only part of the full dictionary, which can speed up header read
-% considerably. See rename_dicm for example.
+% considerably. See rename_dicm for example. The 2nd input can also be a char of
+% dicom tag name, or cellstr with multiple names.
 % 
 % The optional 3rd intput is useful for multi-frame dicom. When there are many
 % frames, it may be slow to read all frames in PerFrameFunctionalGroupsSequence.
@@ -105,15 +106,21 @@ function [s, info, dict] = dicm_hdr(fname, dict, iFrames)
 % 180620 philips_xml: bug fix to convert str to num for sort_frames.
 % 180712 bug fix for implict VR in search method (thx LorenaF).
 
-persistent dict_full;
+persistent dict_full nHdr;
 s = []; info = '';
 if nargin<2 || isempty(dict)
     if isempty(dict_full), dict_full = dicm_dict; end
     p.fullHdr = true;
     p.dict = dict_full; 
-else
-    p.fullHdr = false; % p updated in main func
+elseif isstruct(dict) || (exist('istable', 'file') && istable(dict))
+    p.fullHdr = false; % p updated only in main func
     p.dict = dict;
+elseif ischar(dict) || iscellstr(dict) || ...
+        (exist('strings', 'builtin') && isstring(dict)) % field names
+    p.fullHdr = false;
+    p.dict = dicm_dict('', dict);
+else
+    error('Invalid input #2: dicom dict or tag name expected');
 end
 
 if nargin==3 && isstruct(fname) % wrapper
@@ -131,7 +138,8 @@ if fSize<140 % 132 + one empty tag, ignore truncated
     info = ['Invalid file: ' fname];
     return;
 end
-b8 = fread(fid, 130000, 'uint8=>uint8')'; % enough for most dicom
+if isempty(nHdr), nHdr = 200000; end
+b8 = fread(fid, nHdr, 'uint8=>uint8')'; % enough for most dicom
 
 iTagStart = 132; % start of first tag
 isDicm = isequal(b8(129:132), 'DICM');
@@ -181,7 +189,7 @@ end
 tg = char([224 127 16 0]); % PixelData, VR can be OW/OB even if expl
 if p.be, tg = tg([2 1 4 3]); end
 found = false;
-for nb = [0 2e6 20e6 fSize] % if not enough, read more till all read
+for nb = [0 2e6 fSize] % if not enough, read more till all read
     b8 = [b8 fread(fid, nb, 'uint8=>uint8')']; %#ok
     i = strfind(char(b8), tg);
     i = i(mod(i,2)==1); % must be odd number
@@ -205,6 +213,7 @@ for nb = [0 2e6 20e6 fSize] % if not enough, read more till all read
         break;
     end
 end
+if nHdr<p.iPixelData || nHdr>p.iPixelData*2, nHdr = p.iPixelData + 10000; end
 
 s.Filename = fopen(fid);
 s.FileSize = fSize;
@@ -214,7 +223,7 @@ toSearch = nTag<2 || (nTag<30 && ~any(strcmp(p.dict.vr, 'SQ')) && p.iPixelData<1
 if toSearch % search each tag if header is short and not many tags asked
     if ~isempty(tsUID), s.TransferSyntaxUID = tsUID; end % hope it is 1st tag
     bc = char(b8(1:min(end, p.iPixelData)));
-    if ~isempty(p.dict.vendor) && any(mod(p.dict.group, 2)) % private group
+    if ~isempty(p.dict.Properties.UserData.vendor) && any(mod(p.dict.group, 2)) % private group
         tg = char([8 0 112 0]); % Manufacturer
         if p.be, tg = tg([2 1 4 3]); end
         if p.expl, tg = [tg 'LO']; end
@@ -293,14 +302,14 @@ while ~toSearch
     iPre = i; % back it up for PixelData
     [dat, name, info, i, tg] = read_item(b8, i, p);
     if ~isempty(info), break; end
-    if ~p.fullHdr && tg>p.dict.tag(end), break; end % done for partial hdr
-    if isempty(dat) || isnumeric(name), continue; end
+    if isempty(dat) || isempty(name), continue; end
     s.(name) = dat;
     if strcmp(name, 'Manufacturer')
         [p, dict] = updateVendor(p, dat);
     elseif tg>=2621697 && ~isfield(p, 'nFrames') % BitsAllocated
         p = get_nFrames(s, p, b8); % only make code here cleaner
     end
+    if ~p.fullHdr && tg>=p.dict.tag(end), break; end % done for partial hdr
 end
 
 if p.iPixelData < fSize+1
@@ -321,13 +330,14 @@ end
 
     %% nested function: update Manufacturer
     function [p, dict] = updateVendor(p, vendor)
-        if ~isempty(p.dict.vendor) && strncmpi(vendor, p.dict.vendor, 2)
+        if ~isempty(p.dict.Properties.UserData.vendor) && ...
+                strncmpi(vendor, p.dict.Properties.UserData.vendor, 2)
             dict = p.dict; % in case dicm_hdr asks 3rd output
             return;
         end
         dict_full = dicm_dict(vendor);
-        if ~p.fullHdr && isfield(p.dict, 'fields')
-            dict = dicm_dict(vendor, p.dict.fields);
+        if ~p.fullHdr && isfield(p.dict.Properties.UserData, 'fields')
+            dict = dicm_dict(vendor, p.dict.Properties.UserData.fields);
         else
             dict = dict_full;
         end
@@ -336,9 +346,10 @@ end
 end % main func
 
 %% subfunction: read dicom item. Called by dicm_hdr and read_sq
-function [dat, name, info, i, tag] = read_item(b8, i, p)
-dat = []; name = nan; info = ''; vr = 'CS'; % vr may be used if implicit
+function [dat, name, info, i, tag] = read_item(b8, i0, p)
+dat = []; name = ''; info = ''; vr = 'CS'; % vr may be used if implicit
 
+i = i0;
 group = b8(i+(0:1)); i=i+2;
 swap = p.be && ~isequal(group, [2 0]); % good news: no 0x0200 group
 group = ch2int16(group, swap);
@@ -379,7 +390,7 @@ end
 % compressed PixelData, n can be 0xffffffff
 if ~hasVR && n==4294967295, vr = 'SQ'; end % best guess
 if n+i>p.iPixelData && ~strcmp(vr, 'SQ'), i = i+n; return; end % PixelData or err
-% fprintf('(%04x %04x) %s %6.0f %s\n', group, elmnt, vr, n, name);
+% fprintf('%8i (%04x,%04x) %s %10i %s\n', i0-1, group, elmnt, vr, n, name);
 
 if strcmp(vr, 'SQ')
     nEnd = min(i+n, p.iPixelData); % n is likely 0xffff ffff
@@ -401,14 +412,15 @@ end
 %% Subfunction: decode SQ, called by read_item (recursively)
 % SQ structure:
 %  while isItem (FFFE E000, Item) % Item_1, Item_2, ... 
-%   loop tags under the Item till FFFE E00D, ItemDelimitationItem
+%   loop tags under the Item till FFFE E00D, ItemDelimitationItem, or end of Item
 %   return if FFFE E0DD SequenceDelimitationItem (not checked)
+%   both DelimitationItem seem optional (omitted if valid Item length?)
 function [rst, info, i] = read_sq(b8, i, nEnd, p, isPerFrameSQ)
 rst = []; info = ''; tag1 = []; j = 0; % j is SQ Item index
 
 while i<nEnd % loop through multi Item under the SQ
     tag = b8(i+([2 3 0 1])); i = i+4;
-    if p.be, tag = tag([2 1 3 4]); end
+    if p.be, tag = tag([2 1 4 3]); end
     tag = ch2int32(tag, 0);
     if tag ~= 4294893568, i = i+4; return; end % only do FFFE E000, Item
     n = ch2int32(b8(i+(0:3)), p.be); i = i+4; % n may be 0xffff ffff
@@ -466,7 +478,7 @@ while i<nEnd % loop through multi Item under the SQ
         [dat, name, info, i, tag] = read_item(b8, i, p);
         if tag == 4294893581, break; end % FFFE E00D ItemDelimitationItem
         if isempty(tag1), tag1 = tag; end % first detected tag for PerFrameSQ
-        if isempty(dat) || isnumeric(name), continue; end % 0-length or skipped
+        if isempty(dat) || isempty(name), continue; end % 0-length or skipped
         rst.(Item_n).(name) = dat;
     end
 end
@@ -503,7 +515,7 @@ end
 
 %% subfunction: read value, called by search method and read_item
 function [dat, info] = read_val(b, vr, swap)
-if strcmp(vr, 'DS') || strcmp(vr, 'IS')
+if any(strcmp(vr, {'DS' 'IS'}))
     dat = sscanf(char(b), '%f\\'); % like 1\2\3
 elseif ~isempty(strfind('AE AS CS DA DT LO LT PN SH ST TM UI UT', vr)) % char
     dat = deblank(char(b));
@@ -574,7 +586,7 @@ try % in case of error, we return the original csa
         vr = char(b(i+(1:2))); i=i+8; % vr(4), syngodt(4)
         n = ch2int32(b(i+(1:4)), 0); i=i+8;
         if n<1, continue; end % skip name decoding, faster
-        nam = regexp(char(b(i-84+(1:64))), '\w+', 'match', 'once');
+        ii = find(b(i-84+(1:64))==0, 1); nam = char(b(i-84+(1:ii-1)));
         isNum = isempty(strfind(chDat, vr));
         % fprintf('%s %3g %s\n', vr, n, nam);
 
@@ -690,7 +702,7 @@ for i = 1:numel(flds)
     end
     
     isCH = ~isempty(strfind(chDat, vr)); % char data
-    isDS = strcmp(vr, 'DS') || strcmp(vr, 'IS');
+    isDS = any(strcmp(vr, {'DS' 'IS'}));
     if ~isCH && ~isDS % numeric data, UN or SQ
         fmt = vr2fmt(vr);
         if isempty(fmt), continue; end % skip SQ
@@ -728,7 +740,7 @@ fullName = fopen(fid); % name with full path
 
 str = fread(fid, inf, '*char')'; % read all as char
 fclose(fid);
-str = strrep(str, char([13 10]), char(10)); % remove char(13)
+str = strrep(str, char([13 10]), char(10)); %#ok remove char(13)
 ch = regexp(str, '.*?(?=IMAGE INFORMATION DEFINITION)', 'match', 'once');
 
 V = regexpi(ch, 'image export tool\s*(V[\d\.]+)', 'tokens', 'once');
@@ -878,14 +890,16 @@ s.EchoTimes = par_val('echo_time', iVol);
 s.EchoTime = s.EchoTimes(1);
 s.FlipAngle = par_val('image_flip_angle');
 s.CardiacTriggerDelayTimes = par_val('trigger_time', iVol);
-% s.TimeOfAcquisition = par_val('dyn_scan_begin_time', 1:s.NumberOfFrames);
 
 posMid = par_attr(ch, 'Off Centre midslice'); % (ap,fh,rl) [mm]
 posMid = posMid([3 1 2]); % better precision than those in the table
 rotAngle = par_attr(ch, 'Angulation midslice'); % (ap,fh,rl) deg
-a = rotAngle([3 1 2]) /180*pi; % always this order?
-R = makehgtform('xrotate', a(1), 'yrotate', a(2), 'zrotate', a(3));
-R = R(1:3, :);
+rotAngle = rotAngle([3 1 2]);
+ca = cosd(rotAngle); sa = sind(rotAngle);
+rx = [1 0 0; 0 ca(1) -sa(1); 0 sa(1) ca(1)]; % 3D rotation
+ry = [ca(2) 0 sa(2); 0 1 0; -sa(2) 0 ca(2)];
+rz = [ca(3) -sa(3) 0; sa(3) ca(3) 0; 0 0 1];
+R = rx * ry * rz; % seems right for Philips
 
 iOri = par_val('slice orientation'); % 1/2/3 for TRA/SAG/COR
 iOri = mod(iOri+1, 3) + 1;
@@ -893,25 +907,11 @@ a = {'SAGITTAL' 'CORONAL' 'TRANSVERSAL'};
 s.SliceOrientation = a{iOri};
 if iOri == 1 
     R(:,[1 3]) = -R(:,[1 3]);
-    R = R(:, [2 3 1 4]);
+    R = R(:, [2 3 1]);
 elseif iOri == 2
     R(:,3) = -R(:,3);
-    R = R(:, [1 3 2 4]);
+    R = R(:, [1 3 2]);
 end
-
-a = par_attr(ch, 'Preparation direction', 0); % Anterior-Posterior
-if ~isempty(a)
-    a = a(regexp(a, '\<.')); % 'AP'
-    s.Stack.Item_1.MRStackPreparationDirection = a;
-    iPhase = strfind('LRAPFH', a(1));
-    iPhase = ceil(iPhase/2); % 1/2/3
-    if iPhase == (iOri==1)+1, a = 'ROW'; else, a = 'COL'; end
-    s.InPlanePhaseEncodingDirection = a;
-end
-
-s.ImageOrientationPatient = R(1:6)';
-R = R * diag([s.PixelSpacing([2 1]); s.SpacingBetweenSlices; 1]);
-R(:,4) = posMid; % 4th col is mid slice center position
 
 a = par_val('image offcentre', [1 nSL]);
 % Take axis with largest 'image offcentre' range as slice axis. This can be
@@ -921,6 +921,18 @@ if ind==iOri, ax_order = 1:3; else, ax_order = [3 1 2]; end
 s.SliceLocation = a(1, ax_order(iOri)); % center loc for 1st slice
 if sign(R(iOri,3)) ~= sign(posMid(iOri)-s.SliceLocation)
     R(:,3) = -R(:,3);
+end
+s.ImageOrientationPatient = R(1:6)';
+R = [R * diag([s.PixelSpacing([2 1]); s.SpacingBetweenSlices]) posMid];
+
+a = par_attr(ch, 'Preparation direction', 0); % Anterior-Posterior
+if ~isempty(a)
+    a = a(regexp(a, '\<.')); % 'AP'
+    s.Stack.Item_1.MRStackPreparationDirection = a;
+    iPhase = strfind('LRAPFH', a(1));
+    iPhase = ceil(iPhase/2); % 1/2/3
+    if iPhase == (iOri==1)+1, a = 'ROW'; else, a = 'COL'; end
+    s.InPlanePhaseEncodingDirection = a;
 end
 
 if par_attr(ch, 'Diffusion')>0 % DTI
@@ -935,7 +947,7 @@ R(:,4) = R * [-([s.Columns s.Rows nSL]-1)/2 1]'; % vol center to corner of 1st
 s.ImagePositionPatient = R(:,4);
 s.LastFile.ImagePositionPatient = R * [0 0 nSL-1 1]'; % last slice
 s.Manufacturer = 'Philips';
-s.Filename = fullfile(pth, [nam '.REC']); % rest for dicm_img
+s.Filename = fullfile(pth, strcat(nam, '.REC')); % rest for dicm_img
 s.PixelData.Start = 0;
 s.PixelData.Bytes = s.Rows * s.Columns * nFrame * s.BitsAllocated / 8;
 
@@ -1456,20 +1468,23 @@ if isDTI
 end
 s.TurboFactor = xml_val(ch, 'TURBO Factor');
 
-a = [xml_attr(ch1, 'Angulation RL', 1)
-     xml_attr(ch1, 'Angulation AP', 1)
-     xml_attr(ch1, 'Angulation FH', 1)] /180*pi; % deg to radians
-R = makehgtform('xrotate', a(1), 'yrotate', a(2), 'zrotate', a(3));
-R = R(1:3, :);
+rotAngle = [xml_attr(ch1, 'Angulation RL', 1) 
+            xml_attr(ch1, 'Angulation AP', 1)
+            xml_attr(ch1, 'Angulation FH', 1)];
+ca = cosd(rotAngle); sa = sind(rotAngle);
+rx = [1 0 0; 0 ca(1) -sa(1); 0 sa(1) ca(1)]; % 3D rotation
+ry = [ca(2) 0 sa(2); 0 1 0; -sa(2) 0 ca(2)];
+rz = [ca(3) -sa(3) 0; sa(3) ca(3) 0; 0 0 1];
+R = rx * ry * rz; % seems right for Philips
 
 s.SliceOrientation = upper(xml_val(ch, 'Slice Orientation', 0));
 iOri = find(strncmp({'SAG' 'COR' 'TRA'}, s.SliceOrientation, 3));
 if iOri == 1 
     R(:,[1 3]) = -R(:,[1 3]);
-    R = R(:, [2 3 1 4]);
+    R = R(:, [2 3 1]);
 elseif iOri == 2
     R(:,3) = -R(:,3);
-    R = R(:, [1 3 2 4]);
+    R = R(:, [1 3 2]);
 end
 
 s.PixelSpacing = xml_val(ch, 'Pixel Spacing')';
@@ -1483,7 +1498,7 @@ if iPhase == (iOri==1)+1, a = 'ROW'; else, a = 'COL'; end
 s.InPlanePhaseEncodingDirection = a;
 
 s.ImageOrientationPatient = R(1:6)';
-R = R * diag([s.PixelSpacing([2 1]); s.SpacingBetweenSlices; 1]);
+R = R * diag([s.PixelSpacing([2 1]); s.SpacingBetweenSlices]);
 R(:,4) = [xml_attr(ch1, 'Off Center RL', 1)
           xml_attr(ch1, 'Off Center AP', 1)
           xml_attr(ch1, 'Off Center FH', 1)]; % vol center for now  
@@ -1498,7 +1513,7 @@ R(:,4) = R * [-([s.Columns s.Rows nSL]-1)/2 1]'; % vol center to corner of 1st
 s.ImagePositionPatient = R(:,4);
 s.LastFile.ImagePositionPatient = R * [0 0 nSL-1 1]'; % last slice
 s.Manufacturer = 'Philips';
-s.Filename = fullfile(pth, [nam '.REC']); % rest for dicm_img
+s.Filename = fullfile(pth, strcat(nam, '.REC')); % rest for dicm_img
 s.PixelData.Start = 0;
 s.PixelData.Bytes = s.Rows * s.Columns * nFrame * s.BitsAllocated / 8;
 

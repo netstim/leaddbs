@@ -47,6 +47,7 @@ function varargout = nii_moco(nii, out, ref)
 % 170120 Use later ref vol: p.ref=p.ref+1
 
 toSave = nargin>1 && ~isempty(out);
+ischar = nii_tool('func_handle', 'ischar');
 if toSave && ~ischar(out)
     error('Second input must be nii file name to save data.');
 end
@@ -56,6 +57,7 @@ if ~toSave && nargout<1
     out = fullfile(pth, out);
     toSave = true;
 end
+if toSave && isempty(regexpi(out, '(.nii|.nii.gz)$')), out = [out '.nii']; end
 
 if ischar(nii), nii = nii_tool('load', nii); end % file name
 if ~isstruct(nii) || ~all(isfield(nii, {'hdr' 'img'}))
@@ -64,12 +66,13 @@ end
 
 d = nii.hdr.dim(2:7); d(d<1 | d>32768 | mod(d,1)) = 1;
 nVol = prod(d(4:end));
+if ~isfield(nii.hdr, 'file_name'), nii.hdr.file_name = ''; end
 if nVol<2, error('Not multi-volume NIfTI: %s', nii.hdr.file_name); end
 d = d(1:3);
 Rm = nii_viewer('LocalFunc', 'nii_xform_mat', nii.hdr, 1); % moving img R
 
 sz = nii.hdr.pixdim(2:4);
-if all(abs(diff(sz)/sz(1)))<0.05 && sz(1)>2 && sz(1)<4 % 6~12mm
+if all(abs(diff(sz)/sz(1))<0.05) && sz(1)>2 && sz(1)<4 % 6~12mm
     sz = 3; % iso-voxel, 2~4mm res, simple fast smooth
 else
     sz = 9 ./ sz; % 9 mm seems good
@@ -182,10 +185,9 @@ if doXform
     nii.hdr.descrip = ['nii_moco.m: orig ' nii.hdr.file_name];
     
     F.Method = 'spline'; % much slower than linear
-    F.ExtrapolationMethod = 'nearest';
-    I = ones([d 4], 'single');
-    [I(:,:,:,1), I(:,:,:,2), I(:,:,:,3)] = ndgrid(0:d(1)-1, 0:d(2)-1, 0:d(3)-1);
-    I = permute(I, [4 1 2 3]);
+    F.ExtrapolationMethod = 'none';
+    I = ones([4 d], 'single');
+    [I(1,:,:,:), I(2,:,:,:), I(3,:,:,:)] = ndgrid(0:d(1)-1, 0:d(2)-1, 0:d(3)-1);
     I = reshape(I, 4, []); % ijk in 4 by nVox for original dim
     I = Rm * I; % xyz now
 end
@@ -197,6 +199,7 @@ for i = 1:nVol
         J = p.R(:,:,i) * I; % R_rst \ (Rm * ijk)
         F.Values = nii.img(:,:,:,i);
         a = F(J(1,:), J(2,:), J(3,:));
+        a(isnan(a)) = 0; % 'none' ExtrapolationMethod gives nan
         nii.img(:,:,:,i) = reshape(a, d(1:3));
     end
     R = Rm * p.R(:,:,i); % inv(R_rst / Rref)
@@ -214,10 +217,10 @@ if isnumeric(p.ref) % need to store p.ref
     if toSave
         [pth, nam, ext] = fileparts(out);
         if strcmpi(ext, '.gz'), [~, nam, e0] = fileparts(nam); ext = [e0 ext]; end
-        p.ref = fullfile(pth, [nam '_ref' ext]);
+        p.ref = fullfile(pth, strcat(nam, '_ref', ext));
         nii_tool('save', refV, p.ref);
     else % store nii struct as ref in p: result large p
-        refV.hdr.file_name = ''; % just avoid overwrite accident
+        refV.hdr.file_name = 'moco_ref'; % just avoid overwrite accident
         p.ref = nii_tool('update', refV); % override iRef for single vol nii
     end
 end
@@ -230,7 +233,7 @@ if toSave % save corrected nii and p
     nii_tool('save', nii, out);
     [pth, nam, ext] = fileparts(out);
     if strcmpi(ext, '.gz'), [~, nam] = fileparts(nam); end
-    nam = fullfile(pth, [nam '.mat']);
+    nam = fullfile(pth, strcat(nam, '.mat'));
     save(nam, 'p'); % save a mat file with the same name as NIfTI
 end
 
@@ -240,10 +243,9 @@ if nargout>1, varargout{2} = nii_tool('update', nii); end
 %% Translation (mm) and rotation (deg) to 4x4 R. Order: ZYXT
 function R = rigid_mat(p6)
 ca = cosd(p6(4:6)); sa = sind(p6(4:6));
-rx = [1 0 0; 0 ca(1) -sa(1); 0 sa(1) ca(1)]; % 3D rotation
-ry = [ca(2) 0 sa(2); 0 1 0; -sa(2) 0 ca(2)];
-rz = [ca(3) -sa(3) 0; sa(3) ca(3) 0; 0 0 1];
-R = rx * ry * rz;
+R = [1 0 0; 0 ca(1) sa(1); 0 -sa(1) ca(1)] * ...
+    [ca(2) 0 sa(2); 0 1 0; -sa(2) 0 ca(2)] * ...
+    [ca(3) sa(3) 0; -sa(3) ca(3) 0; 0 0 1]; % 3D rotation
 R = [R p6(1:3); 0 0 0 1];
 
 %% Simple gaussian smooth for motion correction, sz in unit of voxels
@@ -265,3 +267,4 @@ F = griddedInterpolant(I, out, intp);
 out = smooth3(F(J), 'gaussian'); % sz=3
 F = griddedInterpolant(J, out, intp);
 out = F(I);
+%%

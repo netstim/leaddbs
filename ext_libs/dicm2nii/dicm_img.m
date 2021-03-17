@@ -34,6 +34,7 @@ function img = dicm_img(s, xpose)
 % 160127 support big endian files. 
 % 160521 support dicom with BitsStored~=HighBit+1 (thx RayL).
 % 171201 Bug fix for compressed dicom without offset table (thx DianaG).
+% 200911 Fix error for compressed, unsigned data (thx ZWei).
 
 persistent dict mem cleanObj;
 if isstruct(s) && ~all(isfield(s, {'Rows' 'Columns' 'PixelData'})), s = s.Filename; end
@@ -46,32 +47,9 @@ if ischar(s) % input is file name
     if isempty(s), error(err); end
 end
 
-if isfield(s, 'SamplesPerPixel'), spp = double(s.SamplesPerPixel);
-else, spp = 1;
-end
-
 if isnumeric(s.PixelData) % data already in hdr
     img = s.PixelData;
     return;
-end
-
-if isfield(s.PixelData, 'Format') % all expl dicm
-    fmt = s.PixelData.Format;
-    if isfield(s, 'BitsAllocated')
-        bpp = double(s.BitsAllocated);
-        if bpp==8 && strcmp(fmt, 'uint16'), fmt = 'uint8'; % ugly fix
-        elseif bpp==16 && strcmp(fmt, 'uint8'), fmt = 'uint16'; % by CorradoC
-        end
-    elseif regexp(fmt, 'single$'), bpp = 32;
-    elseif regexp(fmt, 'double$'), bpp = 64;
-    else, bpp = str2double(regexp(fmt, '(?<=int)\d+', 'match', 'once'));
-    end
-    if fmt(1) ~= '*', fmt = ['*' fmt]; end
-elseif isfield(s, 'BitsAllocated')
-    bpp = double(s.BitsAllocated);
-    fmt = sprintf('*uint%g', bpp);
-else
-    error('Unknown data type for %s', s.Filename);
 end
 
 if nargin<2 || isempty(xpose), xpose = true; end % same as dicomread by default
@@ -92,6 +70,29 @@ else, tsUID = '1.2.840.10008.1.2.1'; % files other than dicom
 end
 
 if any(strcmp(tsUID, {'1.2.840.10008.1.2.1' '1.2.840.10008.1.2.2' '1.2.840.10008.1.2'}))
+    if isfield(s, 'SamplesPerPixel'), spp = double(s.SamplesPerPixel);
+    else, spp = 1;
+    end
+    
+    if isfield(s.PixelData, 'Format') % all expl dicm
+        fmt = s.PixelData.Format;
+        if isfield(s, 'BitsAllocated')
+            bpp = double(s.BitsAllocated);
+            if bpp==8 && strcmp(fmt, 'uint16'), fmt = 'uint8'; % ugly fix
+            elseif bpp==16 && strcmp(fmt, 'uint8'), fmt = 'uint16'; % by CorradoC
+            end
+        elseif regexp(fmt, 'single$'), bpp = 32;
+        elseif regexp(fmt, 'double$'), bpp = 64;
+        else, bpp = str2double(regexp(fmt, '(?<=int)\d+', 'match', 'once'));
+        end
+        if fmt(1) ~= '*', fmt = ['*' fmt]; end
+    elseif isfield(s, 'BitsAllocated')
+        bpp = double(s.BitsAllocated);
+        fmt = sprintf('*uint%g', bpp);
+    else
+        error('Unknown data type for %s', s.Filename);
+    end
+    
     n = double(s.PixelData.Bytes) / (bpp/8);
     img = fread(fid, n, fmt);
     
@@ -101,7 +102,7 @@ if any(strcmp(tsUID, {'1.2.840.10008.1.2.1' '1.2.840.10008.1.2.2' '1.2.840.10008
     end
     
     dim = double([s.Columns s.Rows]);
-    nFrame = n/spp/dim(1)/dim(2);
+    nFrame = n / (spp * dim(1) * dim(2));
     if ~isfield(s, 'PlanarConfiguration') || s.PlanarConfiguration==0
         img = reshape(img, [spp dim nFrame]);
         img = permute(img, [2 3 1 4]);
@@ -110,6 +111,10 @@ if any(strcmp(tsUID, {'1.2.840.10008.1.2.1' '1.2.840.10008.1.2.2' '1.2.840.10008
     end
     if xpose, img = permute(img, [2 1 3 4]); end
     if strcmp(tsUID, '1.2.840.10008.1.2.2'), img = swapbytes(img); end % BE
+    
+    if isfield(s, 'PixelRepresentation') && s.PixelRepresentation>0
+        img = reshape(typecast(img(:), fmt(3:end)), size(img)); % signed
+    end
 else % compressed dicom: rely on imread for decompression
     b = fread(fid, inf, '*uint8'); % read all as bytes
     del = uint8([254 255 0 224]); % delimeter in LE
@@ -121,7 +126,6 @@ else % compressed dicom: rely on imread for decompression
     else % no offset table: search delimiters to estimate nFrame
         nFrame = numel(strfind(b(9:end)', del)); % may count false delimeters
     end
-    img = zeros(s.Rows, s.Columns, spp, nFrame, fmt(2:end)); % pre-allocate
     i = 8 + double(len); % 8 for leading delimeter and len, skip offset table
     j = 0; 
     while i<nEnd
@@ -141,14 +145,15 @@ else % compressed dicom: rely on imread for decompression
             mem = memmapfile(mem.Filename, 'Writable', true);
         end
         mem.Data(1:n) = b(i+(1:n)); i = i+n;
-        img(:,:,:,j) = imread(mem.Filename); % expand if more than nFrame
+        if j == 1
+            img = imread(mem.Filename); % init dim and data type
+            img(:,:,:,2:nFrame) = 0; % pre-allocate
+        else
+            img(:,:,:,j) = imread(mem.Filename); % expand if more than nFrame
+        end
     end
     if j<nFrame, img(:,:,:,j+1:end) = []; end % truncate if less than nFrame
     if ~xpose, img = permute(img, [2 1 3 4]); end
-end
-
-if isfield(s, 'PixelRepresentation') && s.PixelRepresentation>0
-    img = reshape(typecast(img(:), fmt(3:end)), size(img)); % signed
 end
 
     function cleanup(fname)
