@@ -170,7 +170,9 @@ switch options.elmodel
         end
 end
 memp_eldist=mean([emp_eldist{:}]);
-[~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
+if ~isnan(memp_eldist) % Can happen in single contact case (numel == 1)
+    [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
+end
 clear coords_temp
 
 %% plot coords
