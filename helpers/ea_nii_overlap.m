@@ -14,8 +14,8 @@ if ~exist('binary', 'var')
     binary = 1;
 end
 
-nii1 = load_untouch_nii(image1);
-nii2 = load_untouch_nii(image2);
+nii1 = ea_load_nii(image1);
+nii2 = ea_load_nii(image2);
 
 if binary
     % Binarize the image if they are not yet binaried

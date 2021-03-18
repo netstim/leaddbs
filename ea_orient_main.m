@@ -73,16 +73,9 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     tmat_reg2org=eye(4); % default.
     try
         if strcmp(options.prefs.reco.mancoruse,'postop')
-        load([folder 'ea_coregctmethod_applied.mat']);
-        switch coregct_method_applied{end}
-            case 'ea_coregctmri_fsl'
-                %             tmat_reg2org = dlmread([folder 'anat_t12postop_ct_flirt1.mat']));
-                disp(['Warning: Temporary fix to use DiODe algorithm with FLIRT. rpostop_ct is used so results may be slightly less accurate.'])
-                ct = ct_reg;
-            otherwise
-                [tmat_reg2org,ctfname] = ea_getrawct2preniimat(options,1);
-                ct=ea_load_nii(ctfname);
-        end
+            load([folder 'ea_coregctmethod_applied.mat']);
+            [tmat_reg2org,ctfname] = ea_getrawct2preniimat(options,1);
+            ct=ea_load_nii(ctfname);
         else
             ct = ct_reg;
         end

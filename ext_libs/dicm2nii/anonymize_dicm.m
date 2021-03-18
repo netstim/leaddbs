@@ -16,7 +16,7 @@ function anonymize_dicm(src, rst, subID)
 % into the source folder to indicate the correspondence between the original
 % PatientName and assigned subject IDs.
 % 
-% See also DICM_HDR, SORT_DICM, RENAME_DICM, DICM2NII
+% See also DICM_HDR, SORT_DICM, RENAME_DICM, DICM2NII, DICM_SAVE
 
 % 161226 Wrote it (xiangrui.li@gmail.com)
 % 170103 Take care of confusion of multi-subjects; safer by using dicm tag.
@@ -42,7 +42,7 @@ if nargin<1 || isempty(src)
 end
 
 if nargin<2 || isempty(rst)
-    if isdir(src), def = src; else, def = fileparts(src); end
+    if isdir(src), def = src; else, def = fileparts(src); end %#ok<*ISDIR>
     if ~isdir(src) && (exist(src, 'file') || (iscell(src) && numel(src)==1))
         [rst, pth] = uiputfile([def filesep '*.dcm'], ...
             'Input file name to save the anonymized file');
@@ -75,7 +75,7 @@ for i = 1:nFile
         nam = rst;
     else % 2nd arg is dir
         [~, nam, ext] = fileparts(s.Filename);
-        nam = fullfile(rst, [nam ext]);
+        nam = fullfile(rst, strcat(nam, ext));
     end
     
     try 
@@ -132,7 +132,7 @@ for i = 1:nFile
 end
 
 if numel(subjIDs)<2, return; end
-subjIDs = deblank(subjIDs); %#ok remove padded null
+subjIDs = deblank(subjIDs); % remove padded null
 matNam = fullfile(fileparts(nams{1}), 'subjIDs_PatientNames.mat');
 try
     save(matNam, 'subjIDs', 'PatientNames');

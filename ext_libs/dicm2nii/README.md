@@ -1,5 +1,5 @@
-
-# DICOM to NIfTI conversion, DICOM and NIfTI tools, NIfTI visualization (version 2019.08.19)
+# DICOM to NIfTI conversion, DICOM and NIfTI tools, NIfTI visualization (version 2021.03.09)
+[![View xiangruili/dicm2nii on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/42997-xiangruili-dicm2nii)
 
 # dicm2nii
 Convert DICOM into NIfTI. It can also convert PAR/XML/REC, HEAD/BRIK, MGZ and BrainVoyager files into NIfTI.
@@ -19,8 +19,11 @@ Perform slice timing correction on a NIfTI.
 # nii_xform
 Transform a NIfTI into different resolution, or into a template space.
 
-# dicm_hdr, dicm_img, dicm_dict
-Read DICOM header and image, independent of Matlab Image Processing Toolbox. 
+# dicm_hdr, dicm_img, dicm_dict, dicm_save
+Read/write DICOM header and image, independent of Matlab Image Processing Toolbox. 
 
 # rename_dicm, sort_dicm, anonymize_dicm
 DICOM tools performing the tasks as indicated by the name.
+
+# RT_moco
+Real time motion/image monitor and more for Siemens scanner.

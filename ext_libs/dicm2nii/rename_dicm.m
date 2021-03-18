@@ -1,5 +1,5 @@
 function rename_dicm(files, fmt)
-% Rename dicom files so the names are meaninful to human.
+% Rename dicom files so the names are meaningful to human.
 % 
 % RENAME_DICM(files, outputNameFormat)
 % 
@@ -26,7 +26,7 @@ function rename_dicm(files, fmt)
 % 5: run1_003_001_00001.dcm (SeriesDescription_Series_acquisition_instance). 
 %    This ensures no name conflict, and is the default.
 % 
-% Whenever there is name confict, you will see red warning and the latter
+% Whenever there is name confict, you will see red warning and the remaining
 % files won't be renamed.
 % 
 % If the first input is not provided or empty, you will be asked to pick up

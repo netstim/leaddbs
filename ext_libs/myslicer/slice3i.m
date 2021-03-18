@@ -1,6 +1,6 @@
 function h = slice3i(resultfig, vol, I2X, slicedim, sliceidx, controlhandles)
 % Display a slice from a volume in 3-D
-% h = slice3(vol, I2X, slicedim, sliceidx, handle) 
+% h = slice3(vol, I2X, slicedim, sliceidx, handle)
 %
 % Vol is either a scalar or RGB volume, e.g. N x M x K or N x M x K x 3.
 % I2X is a transformation matrix from volume coordinates to xyz 3-D world
@@ -37,14 +37,14 @@ switch slicedim
     case 3
 
         h=getappdata(resultfig,'zsliceplot');
-        
+
 end
 if ~exist('controlhandles','var')
     controlhandles='';
 end
 
 h = update_slice(vol, I2X, slicedim, sliceidx, h, controlhandles, resultfig);
-    
+
 % set up gui
 gui.handle = h;
 gui.vol = vol;
@@ -167,23 +167,30 @@ if ~isempty(sc) % add contrast from user GUI
     c=c+sc.c;
     o=o+sc.o;
 end
+
 % if ~isempty(strfind(controlhandles.templatepopup.String{controlhandles.templatepopup.Value},'BigBrain'))
 %     sliceim=ea_contrast(sliceim,c,o)*64;
 % end
-resdivs=1; % could increase to 2 but would render a bit slow.
+
 if length(size(sliceim))==2
     sliceim=ea_contrast(sliceim,c,o)*length(gray);
 else
-	sliceim=uint8(ea_contrast(single(sliceim),c,o)*255);
+    sliceim=uint8(ea_contrast(single(sliceim),c,o)*255);
 end
-if size(sliceim,3)==1
+
+% Interpolate slice when it has low resolution
+if size(sliceim,3)==1 && any(size(sliceim)<1000)
+    resdivs=1; % could increase to 2 but would render a bit slow.
     sliceim=interp2(sliceim,resdivs);
 else
-   resdivs=0;
+    resdivs=0;
 end
 
 ij2xyz(:,1:2)=ij2xyz(:,1:2)/(2^resdivs);
-try ea_update_anatomycontrol(sliceidx,slicedim,I2X,controlhandles); end
+try
+    ea_update_anatomycontrol(sliceidx,slicedim,I2X,controlhandles);
+end
+
 if isempty(handle)
 	h = image3(sliceim,ij2xyz);
 else

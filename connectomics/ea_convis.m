@@ -528,7 +528,7 @@ modlist=ea_genmodlist(directory,selectedparc,options);
 vdirs=dir([directory,'stimulations',filesep,ea_nt(options)]);
 cnt=1;
 vdicell=cell(0); %empty cell
-for vdir=1:length(vdirs) 
+for vdir=1:length(vdirs)
     if vdirs(vdir).isdir && ~strcmp(vdirs(vdir).name(1),'.')
         vdicell{cnt}=vdirs(vdir).name;
         cnt=cnt+1;
@@ -564,7 +564,7 @@ else
 
     %% check if left/right VATs are present
     stimfolder=vdicell{get(handles.vatseed,'Value')};
-    vatdir=dir([directory,filesep,'stimulations',filesep,ea_nt(options),stimfolder,filesep,'*.nii']);
+    vatdir=dir([directory,'stimulations',filesep,ea_nt(options),stimfolder,filesep,'*.nii']);
     for vt=1:length(vatdir)
         vatcell{vt}=vatdir(vt).name;
     end
