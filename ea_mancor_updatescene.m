@@ -148,32 +148,35 @@ delete(spacetext);
 captions=getappdata(mcfig,'captions');
 try delete(captions); end
 
-% Plot spacing distance info text and correct inhomogeneous spacings.
-%emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
-clear emp_eldist
-switch options.elmodel
-    case {'Boston Scientific Vercise Directed'
-          'St. Jude Directed 6172 (short)'
-          'St. Jude Directed 6173 (long)'}
-        for side=options.sides
-            coords_temp{side}(1,:) = coords_mm{side}(1,:);
-            coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
-            coords_temp{side}(3,:) = mean(coords_mm{side}(5:7,:));
-            coords_temp{side}(4,:) = coords_mm{side}(8,:);
-            A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
-            emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
-        end
-    otherwise
-        for side=options.sides
-            A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
-            emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
-        end
-end
-memp_eldist=mean([emp_eldist{:}]);
-if ~isnan(memp_eldist) % Can happen in single contact case (numel == 1)
+% Correct inhomogeneous spacings, calculate spacing for info text display.
+% Only do it when number of contacts > 1
+if options.elspec.numel > 1
+    % emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
+    clear emp_eldist
+    switch options.elmodel
+        case {'Boston Scientific Vercise Directed'
+              'St. Jude Directed 6172 (short)'
+              'St. Jude Directed 6173 (long)'}
+            for side=options.sides
+                coords_temp{side}(1,:) = coords_mm{side}(1,:);
+                coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
+                coords_temp{side}(3,:) = mean(coords_mm{side}(5:7,:));
+                coords_temp{side}(4,:) = coords_mm{side}(8,:);
+                A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
+                emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
+            end
+        otherwise
+            for side=options.sides
+                A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
+                emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
+            end
+    end
+    memp_eldist=mean([emp_eldist{:}]);
     [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
+    clear coords_temp
+else
+    memp_eldist = 0;
 end
-clear coords_temp
 
 %% plot coords
 hold on
@@ -599,10 +602,7 @@ switch options.modality
         if options.native
             V=getappdata(mcfig,'VCTnative');
             if isempty(V)
-                options=ea_assignpretra(options);
-                [mat,ctfile]=ea_getrawct2preniimat(options,0);
-                V=spm_vol(ctfile);
-                V.mat=mat*V.mat;
+                V = spm_vol([directory,options.prefs.ctnii_coregistered]);
                 setappdata(mcfig,'VCTnative',V);
             end
         else
