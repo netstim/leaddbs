@@ -362,7 +362,10 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
 
                 if ~(atlases.types(atlas)>5)
-                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
+                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),...
+                        'TooltipString',[fibTag,'_',sidestr{side}],...
+                        'ClickedCallback',{@atlasvisible,resultfig,atlascnt},...
+                        'State',visible);
                 end
 
                 % gather contact statistics
