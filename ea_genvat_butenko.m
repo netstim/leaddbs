@@ -82,9 +82,9 @@ end
 
 if ~isfile([segMaskDir, 'segmask.nii'])
     % Binarize segmentations
-    c1 = ea_load_nii([segMaskDir, 'c1', segFileSuffix]);
-    c2 = ea_load_nii([segMaskDir, 'c2', segFileSuffix]);
-    c3 = ea_load_nii([segMaskDir, 'c3', segFileSuffix]);
+    c1 = load_nii([segMaskDir, 'c1', segFileSuffix]);
+    c2 = load_nii([segMaskDir, 'c2', segFileSuffix]);
+    c3 = load_nii([segMaskDir, 'c3', segFileSuffix]);
     c1.img = c1.img>0.5;
     c2.img = c2.img>0.5;
     c3.img = c3.img>0.5;
@@ -92,10 +92,10 @@ if ~isfile([segMaskDir, 'segmask.nii'])
     % Fuse segmentations by voting in the order  CSF -> WM -> GM
     c2.img(c3.img) = 0;
     c1.img(c2.img | c3.img) = 0;
-    c1.fname = [segMaskDir, 'segmask.nii'];
-    c1.dt = [2 0];
-    c1.img = int16(c1.img) + int16(c2.img)*2 + int16(c3.img)*3;
-    ea_write_nii(c1);
+    c1.img = c1.img + c2.img*2 + c3.img*3;
+    c1.hdr.dime.datatype = 2;
+    c1.hdr.hist.descrip = 'Tissue 1 + 2 + 3';
+    save_nii(c1, [segMaskDir, 'segmask.nii']);
 end
 
 %% Set patient folder
