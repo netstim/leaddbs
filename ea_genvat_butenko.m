@@ -429,7 +429,7 @@ for side=0:1
 
             % Delete this folder in MATLAB since shutil.rmtree may raise
             % I/O error
-            %ea_delete([outputPath, filesep,'Axons_in_time']);
+            % ea_delete([outputPath, filesep,'Axons_in_time']);
 
             if isempty(getenv('SINGULARITY_NAME')) % Docker
                 system(['docker run ', ...
@@ -584,7 +584,7 @@ for side=0:1
 
     % Delete this folder in MATLAB since shutil.rmtree may raise
     % I/O error
-    ea_delete([outputPath, filesep,'Axons_in_time']);
+    % ea_delete([outputPath, filesep,'Axons_in_time']);
 end
 
 varargout{1} = runStatus;
