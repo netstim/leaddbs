@@ -36,7 +36,19 @@ dir_x300 = (dirlevel(3) - dir_ven300(3)) / vec300(3);
 dir_300 = dir_ven300 + (dir_x300 .* vec300);
 
 % bla = [dir_60'; dir_180'; dir_300']
-
+%% new stuff
+      p1 = dir_60(1:2) - dirlevel(1:2);
+      p2 = dir_180(1:2) - dirlevel(1:2);
+      [dir_angles_new(1),dir_angles_new(2)] = calculatestreaks(p1,p2,radius);
+      p1 = dir_180(1:2) - dirlevel(1:2);
+      p2 = dir_300(1:2) - dirlevel(1:2);
+      [dir_angles_new(3),dir_angles_new(4)] = calculatestreaks(p1,p2,radius);
+      p1 = dir_300(1:2) - dirlevel(1:2);
+      p2 = dir_60(1:2) - dirlevel(1:2);
+      [dir_angles_new(5),dir_angles_new(6)] = calculatestreaks(p1,p2,radius);
+      dir_angles_new = sort(dir_angles_new);
+      
+      dir_angles = dir_angles_new;
 %%
 % a=1+slope.^2;
 % b=2*(slope.*(intercpt-centery)-centerx);
@@ -74,24 +86,24 @@ dir_vec3 = dir_vec3 ./ norm(dir_vec3);
 % dir_vec3 = (dir_180 - dir_300)  / norm(dir_180 - dir_300);
 
 %% calculate the angles of the dark lines with respect to the y-axis
-dir_angles(1) = atan2(norm(cross(dir_vec1,[0 1 0])),dot(dir_vec1,[0 1 0]));
-if dir_vec1(1) < 0
-    dir_angles(1) = -dir_angles(1);
-end
-dir_angles(2) = atan2(norm(cross(dir_vec2,[0 1 0])),dot(dir_vec2,[0 1 0]));
-if dir_vec2(1) < 0
-    dir_angles(2) = -dir_angles(2);
-end
-dir_angles(3) = atan2(norm(cross(dir_vec3,[0 1 0])),dot(dir_vec3,[0 1 0]));
-if dir_vec3(1) < 0
-    dir_angles(3) = -dir_angles(3);
-end
-
-dir_angles = [dir_angles (dir_angles + pi)];
-dir_angles(find(dir_angles>2*pi)) = dir_angles(find(dir_angles>2*pi)) - (2* pi);
-dir_angles(find(dir_angles<0)) = dir_angles(find(dir_angles<0)) + (2* pi);
-dir_angles = (2 *pi) -dir_angles;
-dir_angles = sort(dir_angles);
+% dir_angles(1) = atan2(norm(cross(dir_vec1,[0 1 0])),dot(dir_vec1,[0 1 0]));
+% if dir_vec1(1) < 0
+%     dir_angles(1) = -dir_angles(1);
+% end
+% dir_angles(2) = atan2(norm(cross(dir_vec2,[0 1 0])),dot(dir_vec2,[0 1 0]));
+% if dir_vec2(1) < 0
+%     dir_angles(2) = -dir_angles(2);
+% end
+% dir_angles(3) = atan2(norm(cross(dir_vec3,[0 1 0])),dot(dir_vec3,[0 1 0]));
+% if dir_vec3(1) < 0
+%     dir_angles(3) = -dir_angles(3);
+% end
+% 
+% dir_angles = [dir_angles (dir_angles + pi)];
+% dir_angles(find(dir_angles>2*pi)) = dir_angles(find(dir_angles>2*pi)) - (2* pi);
+% dir_angles(find(dir_angles<0)) = dir_angles(find(dir_angles<0)) + (2* pi);
+% dir_angles = (2 *pi) -dir_angles;
+% dir_angles = sort(dir_angles);
 
 %% vizz
 
@@ -116,4 +128,38 @@ if vizz == 1
     ylabel('y')
     zlabel('z')
 end
+end
+
+function [ws1,ws2] = calculatestreaks(p1,p2,radius)
+      a = (p2(1) - p1(1))^2 + (p2(2) - p1(2))^2;
+      b = 2 * (p1(1) * (p2(1) - p1(1)) + p1(2) * (p2(2) - p1(2)));
+      c = p1(1) * p1(1) + p1(2) * p1(2) - radius^2;
+      lambda1 = (-b + sqrt(b*b - 4*a*c)) / (2*a);
+      lambda2 = (-b - sqrt(b*b - 4*a*c)) / (2*a);
+
+      x1 = p1(1) + lambda1 * (p2(1) - p1(1));  %intersection of dark streak with validation circle
+      y1 = p1(2) + lambda1 * (p2(2) - p1(2));
+      x2 = p1(1) + lambda2 * (p2(1) - p1(1));
+      y2 = p1(2) + lambda2 * (p2(2) - p1(2));
+
+%       ws1 = rad2deg(atan2(y1, x1));
+%       ws2 = rad2deg(atan2(y2, x2));
+%       ws1 = -90 + ws1;            % angle clockwise with respect to +y
+%       ws2 = -90 + ws2;
+%       if ws1 < 0
+%           ws1 = ws1 + 360;
+%       end
+%       if ws2 < 0 
+%           ws2 = ws2 + 360;
+%       end
+     ws1 = atan2(y1, x1);
+      ws2 = atan2(y2, x2);
+      ws1 = -(pi/2) + ws1;            % angle clockwise with respect to +y
+      ws2 = -(pi/2) + ws2;
+      if ws1 < 0
+          ws1 = ws1 + (2*pi);
+      end
+      if ws2 < 0 
+          ws2 = ws2 + (2*pi);
+      end
 end
