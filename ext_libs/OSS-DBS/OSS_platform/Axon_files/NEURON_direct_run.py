@@ -243,6 +243,7 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     neuron_global_index_array=np.zeros((N_models),int)
 
     os.chdir("Axon_files/")
+    axons_quart=[int(N_models/4.0),int(2*N_models/4.0),int(3*N_models/4.0)]
 
     # run NEURON simulation in parallel
     while Neuron_index<N_models:
@@ -274,7 +275,10 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
 
             j_proc=j_proc+1
             Neuron_index=Neuron_index+1
-
+            
+            if N_models>500 and Neuron_index in axons_quart:
+                print(int(Neuron_index*100/N_models)+1,"% of neuron models were processed")
+            
         for p in proc:
             p.start()
         for p in proc:
