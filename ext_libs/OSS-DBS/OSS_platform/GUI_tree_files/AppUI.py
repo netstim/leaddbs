@@ -137,7 +137,9 @@ class MainWindow(Functionalities):
         self.ui.checkBox_Dimensions_From_MRI.stateChanged.connect(
             lambda: self.hide_menu_item_on_checkbox_click(self.ui.checkBox_Dimensions_From_MRI,
                                                           self.ui.widget_Approximating_Dimensions_3))
-
+        self.ui.checkBox_Dimensions_From_MRI.stateChanged.connect(
+            lambda: self.ui.lineEdit_Approximating_Dimensions.setText('0'))
+        
         self.ui.checkBox_Approx_Geom_Centered_On_MRI.stateChanged.connect(
             lambda: self.hide_menu_item_on_checkbox_click(self.ui.checkBox_Approx_Geom_Centered_On_MRI,
                                                           self.ui.widget_Approx_Geometry_Center))
