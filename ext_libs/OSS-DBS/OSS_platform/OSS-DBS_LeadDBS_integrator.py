@@ -61,6 +61,8 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         'Neuron_model_array_prepared': 0,
         'stretch': 1.0,
         'number_of_processors': 0,
+        'Approximating_Dimensions': [80.0, 80.0, 80.0],
+        'Aprox_geometry_center': [0.0, 0.0, 0.0],
     }
 
     #should add for 'Name_prepared_neuron_array' (you need only the name of the file, not the whole path)
@@ -213,7 +215,8 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 
     input_dict['Implantation_coordinate_X'],input_dict['Implantation_coordinate_Y'],input_dict['Implantation_coordinate_Z'] = file['settings']['Implantation_coordinate'][:,index_side]
     input_dict['Second_coordinate_X'],input_dict['Second_coordinate_Y'],input_dict['Second_coordinate_Z'] = file['settings']['Second_coordinate'][:,index_side]
-
+    input_dict['Aprox_geometry_center']=[input_dict['Implantation_coordinate_X'],input_dict['Implantation_coordinate_Y'],input_dict['Implantation_coordinate_Z']]
+    
     el_array_length=np.sqrt((input_dict['Implantation_coordinate_X']-input_dict['Second_coordinate_X'])**2+(input_dict['Implantation_coordinate_Y']-input_dict['Second_coordinate_Y'])**2+(input_dict['Implantation_coordinate_Z']-input_dict['Second_coordinate_Z'])**2)
     stretch=el_array_length/normal_array_length
 
