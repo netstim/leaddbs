@@ -96,6 +96,7 @@ if ~isfile([segMaskDir, 'segmask.nii'])
     c1.fname = [segMaskDir, 'segmask.nii'];
     c1.dt = [2 0]; % unit8 according to spm_type
     c1.descrip = 'Tissue 1 + 2 + 3';
+    c1.pinfo(1:2) = [1,0]; % uint8 is enough for output values, no need for scaling
     ea_write_nii(c1);
 end
 
