@@ -92,9 +92,11 @@ if ~isfile([segMaskDir, 'segmask.nii'])
     % Fuse segmentations by voting in the order  CSF -> WM -> GM
     c2.img(c3.img) = 0;
     c1.img(c2.img | c3.img) = 0;
+    c1.img = c1.img + c2.img*2 + c3.img*3;
     c1.fname = [segMaskDir, 'segmask.nii'];
-    c1.dt = [2 0];
-    c1.img = int16(c1.img) + int16(c2.img)*2 + int16(c3.img)*3;
+    c1.dt = [2 0]; % unit8 according to spm_type
+    c1.descrip = 'Tissue 1 + 2 + 3';
+    c1.pinfo(1:2) = [1,0]; % uint8 is enough for output values, no need for scaling
     ea_write_nii(c1);
 end
 
@@ -429,7 +431,7 @@ for side=0:1
 
             % Delete this folder in MATLAB since shutil.rmtree may raise
             % I/O error
-            ea_delete([outputPath, filesep,'Axons_in_time']);
+            % ea_delete([outputPath, filesep,'Axons_in_time']);
 
             if isempty(getenv('SINGULARITY_NAME')) % Docker
                 system(['docker run ', ...
@@ -584,7 +586,7 @@ for side=0:1
 
     % Delete this folder in MATLAB since shutil.rmtree may raise
     % I/O error
-    ea_delete([outputPath, filesep,'Axons_in_time']);
+    % ea_delete([outputPath, filesep,'Axons_in_time']);
 end
 
 varargout{1} = runStatus;

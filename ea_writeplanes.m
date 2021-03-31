@@ -165,11 +165,13 @@ for iside=1:length(options.sides)
             end
 
             try                level=evalin('base','level_offset'); end
-
-            printstr_el_stat=['Electrode(s) k',num2str(el-1),'/',options.elspec.contactnames{el} ', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.'];
-            disp(printstr_el_stat);
-            if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
-                fprintf(fid,'%s\n',printstr_el_stat);
+            try
+                printstr_el_stat=['Electrode(s) k',num2str(el-1),'/',options.elspec.contactnames{el} ', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.'];
+                disp(printstr_el_stat);
+                
+                if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
+                    fprintf(fid,'%s\n',printstr_el_stat);
+                end
             end
             set(0,'CurrentFigure',cuts)
 
