@@ -188,7 +188,7 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
     return (Mx,My,Mz,round(min(x_arr),6),round(min(y_arr),6),round(min(z_arr),6),round(max(x_arr),6),round(max(y_arr),6),round(max(z_arr),6),voxel_size_x,voxel_size_y,voxel_size_z)
 
 
-def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor data from the grid txt file (COMSOL format)
+def map_DTI(d,DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor data from the grid txt file (COMSOL format)
 
     start_voxel=time.clock()
 
@@ -315,8 +315,32 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
 
         example_filename = os.path.join(os.environ['PATIENTDIR']+'/'+DTI_name)
         img = nib.load(example_filename)
-        img.shape
-        tissue_array = img.get_fdata()
+
+        if d["Brain_shape_name"]==0:
+            print("Extracting a subset of the tensor data for the appox. volume")
+            if DTI_data_in_m==1: 
+                res_x,rex_y,res_z=(img.header.get_zooms()[0]*1000.0,img.header.get_zooms()[1]*1000.0,img.header.get_zooms()[2]*1000.0)
+                img_start_x,img_start_y,img_start_z=(img.affine[0,3]*1000,img.affine[1,3]*1000,img.affine[2,3]*1000)
+            else:
+                res_x,res_y,res_z=(img.header.get_zooms()[0],img.header.get_zooms()[1],img.header.get_zooms()[2])
+                img_start_x,img_start_y,img_start_z=(img.affine[0,3],img.affine[1,3],img.affine[2,3])
+                        
+            start_vox_x=int((d['Implantation_coordinate_X']-img_start_x)/res_x)-int(d['Approximating_Dimensions'][0]/(2.0*res_x))
+            vox_window_x=int(d['Approximating_Dimensions'][0]/(res_x))
+
+            start_vox_y=int((d['Implantation_coordinate_Y']-img_start_y)/res_y)-int(d['Approximating_Dimensions'][1]/(2.0*res_y))
+            vox_window_y=int(d['Approximating_Dimensions'][1]/(res_y))
+
+            start_vox_z=int((d['Implantation_coordinate_Z']-img_start_z)/res_z)-int(d['Approximating_Dimensions'][2]/(2.0*res_z))
+            vox_window_z=int(d['Approximating_Dimensions'][2]/(res_z))
+            
+            tissue_array = img.dataobj[start_vox_x:start_vox_x+vox_window_x,start_vox_y:start_vox_y+vox_window_y,start_vox_z:start_vox_z+vox_window_z,...]
+                        
+            img.affine[0,3]=img_start_x+res_x*start_vox_x
+            img.affine[1,3]=img_start_y+res_y*start_vox_y
+            img.affine[2,3]=img_start_z+res_z*start_vox_z
+        else:
+            tissue_array = img.get_fdata()
 
         voxel_arr_c11=tissue_array[:,:,:,0].flatten('F')
         voxel_arr_c21=tissue_array[:,:,:,1].flatten('F')
@@ -360,21 +384,7 @@ def map_DTI(DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor dat
     np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/y_vector_DTI_Box.csv', y_vector_DTI_Box, delimiter=" ")
     np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/z_vector_DTI_Box.csv', z_vector_DTI_Box, delimiter=" ")
 
-
-    i=0
-    for z_i in z_arr:
-        for y_i in y_arr:
-            for x_i in x_arr:
-
-                Tensor_array[i,0]=round(voxel_arr_c11[i],8)
-                Tensor_array[i,1]=round(voxel_arr_c21[i],8)
-                Tensor_array[i,2]=round(voxel_arr_c31[i],8)
-                Tensor_array[i,3]=round(voxel_arr_c22[i],8)
-                Tensor_array[i,4]=round(voxel_arr_c32[i],8)
-                Tensor_array[i,5]=round(voxel_arr_c33[i],8)
-
-                i=i+1
-
+    Tensor_array[:,:]=np.vstack((voxel_arr_c11[:],voxel_arr_c21[:],voxel_arr_c31[:],voxel_arr_c22[:],voxel_arr_c32[:],voxel_arr_c33[:])).T
 
     #'''Initialyly the data should be in ascending order'''
     #'''To ensure that coordinate vectors go in ascending order'''
@@ -426,9 +436,9 @@ def obtain_DTI_class(inp_dict,MRI_param):
 
     if inp_dict["voxel_arr_DTI"]==0:       #1 if DTI data were already processed by the platform and corresp. meta data were created
         if inp_dict["DTI_data_name"][-3:]=='nii' or inp_dict["DTI_data_name"][-6:]=='nii.gz':
-            [Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z]=map_DTI(inp_dict["DTI_data_name"],inp_dict["MRI_in_m"],False)
+            [Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z]=map_DTI(inp_dict,inp_dict["DTI_data_name"],inp_dict["MRI_in_m"],False)
         else:
-            [Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z]=map_DTI(inp_dict["DTI_data_name"],inp_dict["MRI_in_m"],True)
+            [Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z]=map_DTI(inp_dict,inp_dict["DTI_data_name"],inp_dict["MRI_in_m"],True)
 
         x_start_dti=x_min_dti-MRI_param.x_min               #DTI can be shifted from the MRI origin (0,0,0) (but only to the positive direction).
         y_start_dti=y_min_dti-MRI_param.y_min
