@@ -340,7 +340,9 @@ for nativemni=nm % switch between native and mni space atlases.
                     atlassurfs{atlascnt,1}=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
                 end
 
-                fibTag = regexp(atlases.names{atlas},['[^',filesep,']+?(?=\.[^.]*$|$)'],'match','once');
+                % Use fileparts to extract the name, fiber atlas files are
+                % always named as XXX.mat
+                [~, fibTag] = fileparts(atlases.names{atlas});
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
                     ea_underscore2space(fibTag),...
                     'Tag', [fibTag,'_',sidestr{side}],...
@@ -360,7 +362,10 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
 
                 if ~(atlases.types(atlas)>5)
-                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
+                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),...
+                        'TooltipString',[fibTag,'_',sidestr{side}],...
+                        'ClickedCallback',{@atlasvisible,resultfig,atlascnt},...
+                        'State',visible);
                 end
 
                 % gather contact statistics

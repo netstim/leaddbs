@@ -39,7 +39,7 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
 
 
 
-        if np.all(DTI_data[i,j,k,0,:]==0.0):
+        if np.all(data_reshape[i,j,k,:]==0.0):
             tmp[i,j,k,:]=np.array([1.0,0.0,0.0,1.0,0.0,1.0])
         else:
             if tensor_order=="NIFTI":

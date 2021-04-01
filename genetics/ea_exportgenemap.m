@@ -1,4 +1,4 @@
-function nii=ea_exportgenemap(geneidx,smoothkernel,outputfolder,mirror,resolution,db)
+function nii=ea_exportgenemap(geneidx,smoothkernel,intensnorm,outputfolder,mirror,resolution,db)
 % Function to export nifti image for a particular gene expression from the
 % Allen institute database.
 % (c) Andreas Horn 2021
@@ -18,7 +18,10 @@ if ~exist('outputfolder','var')
     outputfolder=pwd;
 end
 if ~exist('mirror','var')
-    mirror=1;
+   mirror=1;
+end
+if ~exist('intensnorm','var')
+    intensnorm='';
 end
 if ~exist('resolution','var')
    resolution='222'; 
@@ -73,8 +76,14 @@ for g=1:length(geneidx)
     F=scatteredInterpolant(querypoints,...
         repmat(ea_nanmean((genedb(:,id{g})),2),double(logical(mirror))+1,1),...
         'natural');
-    
-    nii.img(linidx)=F(XYZ);
+    switch intensnorm
+        case ''
+            nii.img(linidx)=F(XYZ);
+        case 'k'
+            nii.img(linidx)=ea_normal(F(XYZ));
+        case 'z'
+            nii.img(linidx)=ea_nanzscore(F(XYZ));
+    end
     nii.dt=[16 0];
     nii.fname=fullfile(outputfolder,[geneidx{g},'.nii']);
     ea_write_nii(nii);

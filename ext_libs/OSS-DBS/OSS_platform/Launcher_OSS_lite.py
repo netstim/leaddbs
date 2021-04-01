@@ -113,9 +113,6 @@ def run_full_model(master_dict):
         d["CPE_activ"]=0
         print("Disabling CPE for current-controlled simulation")
 
-
-    d["Aprox_geometry_center"]=[d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z']]
-
     Phi_vector_active_non_zero=[x for x in d["Phi_vector"] if (x is not None) and (x!=0.0)]
     cc_multicontact=False
     if d["current_control"]==1 and len(Phi_vector_active_non_zero)>1:       #multicontact current-controlled case
