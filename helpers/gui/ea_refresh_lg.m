@@ -30,14 +30,7 @@ disp('Refreshing patient list...');
 set(handles.patientlist,'String',M.patient.list);
 try set(handles.patientlist,'Value',M.ui.listselect); end
 
-%disp('Refreshing clinical list...');
-% refresh clinical list
-%set(handles.clinicallist,'String',M.clinical.labels);
-%try set(handles.clinicallist,'Value',M.ui.clinicallist); end
 
-%if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
-%    set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
-%end
 
 
 disp('Creating isomatrix from regressor list...');
@@ -192,7 +185,7 @@ end
 t=datetime('now');
 t.Format='uuuMMddHHmmss';
 t=str2double(char(t));
-if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
+if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
     % patient specific part:
     if ~isempty(M.patient.list)
         disp('Loading localizations...');
@@ -392,13 +385,18 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
         
          %load clinical data for group
          
-         if isfield(M,'clinical') && ~isempty(M.clinical.vars)
-             disp("Clinical list has already been loaded, skipping loading...")
+         if isfield(M,'clinical') && ~isempty(M.clinical.vars) %TODO change this? (reflect new changes generated using app)
+             M = rmfield(M,'clinical');
+             disp("removed old clinical list, loading new one")
+         end
+         if ~isfield(M,'postopid')
+                 disp("Clinical data is not available in patient folder, please run the clinical score generator app..")
          else
              disp('Loading clinical data for group...');
-             j = 1;
-             for i=1:length(M.postopid)
-                 for pt=1:length(M.patient.list)
+             for pt=1:length(M.patient.list)
+                 j = 1;
+                 
+                 for i=1:length(M.postopid)
                      if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
                          load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
                          if strcmp(fieldnames(scores),'Motor_MDSUPDRS')
@@ -408,10 +406,8 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                          end
                          
                          postop_flag = M.postopid{i,1};
-                         
                          if isfield(scores.(motor_flag).(postop_flag),'Global')
-                             
-                             M.clinical.labels{1,j} = [postop_flag ' -Global-abs-improvements'];
+                             M.clinical.labels{1,j} = [postop_flag '-Global-abs-improvements'];
                              M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Global.abs_improvements;
                              j = j+1;
                              M.clinical.labels{1,j} = [postop_flag '-Global-perc_improvements'];
@@ -487,10 +483,11 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
                          end
                      end
                  end
+                 
              end
          end
-         set(handles.clinicallist,'String',M.clinical.labels);
-         try set(handles.clinicallist,'Value',M.ui.clinicallist); end
+         
+         
 
              
 %             if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
@@ -608,14 +605,17 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
     end
 end
 
-%refresh clinical list
+
+disp('Refreshing clinical list...');
+ %refresh clinical list
 set(handles.clinicallist,'String',M.clinical.labels);
-try set(handles.clinicallist,'Value',M.ui.clinicallist); end
+try 
+   set(handles.clinicallist,'Value',M.ui.clinicallist); 
+end
 
 if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
     set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
 end
-
 % store everything in Model
 disp('Storing everything in model...');
 if ~isempty(M.patient.list)
