@@ -385,7 +385,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
         
          %load clinical data for group
          
-         if isfield(M,'clinical') && ~isempty(M.clinical.vars) %TODO change this? (reflect new changes generated using app)
+         if isfield(M,'clinical') && ~isempty(M.clinical.vars) 
              M = rmfield(M,'clinical');
              disp("removed old clinical list, loading new one")
          end
@@ -394,101 +394,36 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
          else
              disp('Loading clinical data for group...');
              for pt=1:length(M.patient.list)
-                 j = 1;
-                 
+                 j=1;
                  for i=1:length(M.postopid)
                      if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
                          load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
                          if strcmp(fieldnames(scores),'Motor_MDSUPDRS')
-                             motor_flag = 'Motor_MDSUPDRS';
-                         else
-                             motor_flag = 'Motor_UPDRS';
+                             score_type = 'Motor_MDSUPDRS';
+                         elseif strcmp(fieldnames(scores),'Motor_UPDRS')
+                             score_type = 'Motor_UPDRS';
+                         elseif strcmp(fieldnames(scores),'BDI')
+                             score_type = 'BDI';
+                         end
+                         postop_flag = M.postopid{i,1};
+                         fields = fieldnames(scores.(score_type).(postop_flag));
+                         for k=1:length(fields)
+                            M.clinical.labels{1,j} = [postop_flag '-' fields{k,1} '-abs-improvements'];
+                            M.clinical.vars{1,j}(pt,:) = scores.(score_type).(postop_flag).(fields{k,1}).abs_improvements;
+                            j = j+1;
+                            M.clinical.labels{1,j} = [postop_flag '-' fields{k,1} '-perc-improvements'];
+                            M.clinical.vars{1,j}(pt,:) = scores.(score_type).(postop_flag).(fields{k,1}).perc_improvements;
+                            j=j+1;
+                            M.clinical.labels{1,j} = [postop_flag '-' fields{k,1} '-cleaned-improvements'];
+                            M.clinical.vars{1,j}(pt,:) = scores.(score_type).(postop_flag).(fields{k,1}).cleaned_improvements;
+                            j=j+1;
                          end
                          
-                         postop_flag = M.postopid{i,1};
-                         if isfield(scores.(motor_flag).(postop_flag),'Global')
-                             M.clinical.labels{1,j} = [postop_flag '-Global-abs-improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Global.abs_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Global-perc_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Global.perc_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Global-cleaned_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Global.cleaned_improvements;
-                             j = j+1;
-                         end
-                         if isfield(scores.(motor_flag).(postop_flag),'Bradykinesia')
-                             
-                             M.clinical.labels{1,j} = [postop_flag '-Bradykinesia-abs-improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Bradykinesia.abs_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Bradykinesia-perc_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Bradykinesia.perc_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Bradykinesia-cleaned_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Bradykinesia.cleaned_improvements;
-                             j = j+1;
-                             
-                         end
-                         if isfield(scores.(motor_flag).(postop_flag),'Rigidity')
-                             
-                             M.clinical.labels{1,j} = [postop_flag '-Rigidity-abs-improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Rigidity.abs_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Rigidity-perc_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Rigidity.perc_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Rigidity-cleaned_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Rigidity.cleaned_improvements;
-                             j = j+1;
-                             
-                         end
-                         if isfield(scores.(motor_flag).(postop_flag),'Axial')
-                             
-                             M.clinical.labels{1,j} = [postop_flag '-Axial-abs-improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Axial.abs_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Axial-perc_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Axial.perc_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Axial-cleaned_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Axial.cleaned_improvements;
-                             j = j+1;
-                             
-                         end
-                         if isfield(scores.(motor_flag).(postop_flag),'Tremor')
-                             
-                             M.clinical.labels{1,j} = [postop_flag '-Tremor-abs-improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Tremor.abs_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Tremor-perc_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Tremor.perc_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Tremor-cleaned_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Tremor.cleaned_improvements;
-                             j = j+1;
-                             
-                         end
-                         if isfield(scores.(motor_flag).(postop_flag),'Custom')
-                             M.clinical.labels{1,j} = [postop_flag '-Custom-abs-improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Custom.abs_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Custom-perc_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Custom.perc_improvements;
-                             j = j+1;
-                             M.clinical.labels{1,j} = [postop_flag '-Custom-cleaned_improvements'];
-                             M.clinical.vars{1,j}(pt,:) = scores.(motor_flag).(postop_flag).Custom.cleaned_improvements;
-                             j = j+1;
-                             
-                         end
                      end
                  end
-                 
              end
          end
-         
-         
-
+                 
              
 %             if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
 %                 ptscores=load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
