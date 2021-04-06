@@ -154,7 +154,9 @@ if options.elspec.numel > 1
     % emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
     clear emp_eldist
     switch options.elmodel
-        case {'Boston Scientific Vercise Directed'
+        case {'Medtronic B33005'
+              'Medtronic B33015'
+              'Boston Scientific Vercise Directed'
               'St. Jude Directed 6172 (short)'
               'St. Jude Directed 6173 (long)'}
             for side=options.sides
