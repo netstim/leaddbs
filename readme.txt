@@ -20,5 +20,18 @@ UPDRS23 (in two seperate lines).
 9. Click on Generate to Generate the subscores.
 10.You can also export these subscores (along with the custom subscore) in a table using the export excel button.
 11. To export these scores to your lead group folder, navigate to the lead group app and select the patient directory. The scores should auto populate.
-
+UPDRS Sub-scores:
+1. Bradykinesia
+2. Rigidity
+3. Tremor
+4. Axial
+5. Custom
+If you only have one of these subscores, it will not affect the algorithm: the outputs for the rest of the subscores will just be "NaN" values.
+BDI Sub-scores:
+1. APATHY
+2. BIS
+3. EQ
+4. BDI
+5. QUIP
+6. Custom..
 
