@@ -23,7 +23,9 @@ if redomarkers
         elstruct.markers(side).head=elstruct.coords_mm{side}(1,:);
 
         switch options.elmodel
-            case {'Boston Scientific Vercise Directed'
+            case {'Medtronic B33005'
+                  'Medtronic B33015'
+                  'Boston Scientific Vercise Directed'
                   'St. Jude Directed 6172 (short)'
                   'St. Jude Directed 6173 (long)'}
                 elstruct.markers(side).tail=elstruct.coords_mm{side}(8,:);
