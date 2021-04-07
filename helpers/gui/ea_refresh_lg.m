@@ -30,6 +30,16 @@ disp('Refreshing patient list...');
 set(handles.patientlist,'String',M.patient.list);
 try set(handles.patientlist,'Value',M.ui.listselect); end
 
+disp('Refreshing clinical list...');
+ %refresh clinical list
+set(handles.clinicallist,'String',M.clinical.labels);
+try 
+   set(handles.clinicallist,'Value',M.ui.clinicallist); 
+end
+
+if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
+    set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
+end
 
 
 
@@ -185,7 +195,7 @@ end
 t=datetime('now');
 t.Format='uuuMMddHHmmss';
 t=str2double(char(t));
-if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
+if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
     % patient specific part:
     if ~isempty(M.patient.list)
         disp('Loading localizations...');
@@ -385,10 +395,10 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
         
          %load clinical data for group
          
-         if isfield(M,'clinical') && ~isempty(M.clinical.vars) 
-             M = rmfield(M,'clinical');
-             disp("removed old clinical list, loading new one")
-         end
+         %if isfield(M,'clinical') && ~isempty(M.clinical.vars) 
+         %    M = rmfield(M,'clinical');
+         %    disp("removed old clinical list, loading new one")
+         %end
          if ~isfield(M,'postopid')
                  disp("Clinical data is not available in patient folder, please run the clinical score generator app..")
          else
