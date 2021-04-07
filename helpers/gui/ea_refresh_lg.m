@@ -394,47 +394,86 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
         
         
          %load clinical data for group
-         
-         %if isfield(M,'clinical') && ~isempty(M.clinical.vars) 
-         %    M = rmfield(M,'clinical');
-         %    disp("removed old clinical list, loading new one")
-         %end
-         if ~isfield(M,'postopid')
+             if isfield(M,'clinical')
+                flag = 0;    
+                for pt=1:length(M.patient.list)
+                    j=1;
+                    score_dir = [M.patient.list{pt},'/clinical','/clinical_scores.mat'];
+                    for i=1:length(M.postopid)
+                        if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
+                            load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
+                            if strcmp(fieldnames(scores),'Motor_MDSUPDRS')
+                                score_type = 'Motor_MDSUPDRS';
+                            elseif strcmp(fieldnames(scores),'Motor_UPDRS')
+                                score_type = 'Motor_UPDRS';
+                            elseif strcmp(fieldnames(scores),'BDI')
+                                score_type = 'BDI';
+                            end
+                            postop_flag = M.postopid{i,1};
+                            fields = fieldnames(scores.(score_type).(postop_flag));
+                            for k=1:length(fields)
+                                if M.clinical.vars{1,i}(pt,:) ~= scores.(score_type).(postop_flag).(fields{k,1}).abs_improvements
+                                    flag = 1;
+                                    scores.(score_type).(postop_flag).(fields{k,1}).abs_improvements = M.clinical.vars{1,j}(pt,:);
+                                end
+                                j = j+1;
+                                if M.clinical.vars{1,j}(pt,:) ~= scores.(score_type).(postop_flag).(fields{k,1}).perc_improvements
+                                    flag = 1;
+                                    scores.(score_type).(postop_flag).(fields{k,1}).perc_improvements = M.clinical.vars{1,j}(pt,:);
+                                end
+                                j=j+1;
+                                if  M.clinical.vars{1,j}(pt,:) ~= scores.(score_type).(postop_flag).(fields{k,1}).cleaned_improvements
+                                    flag = 1;
+                                    scores.(score_type).(postop_flag).(fields{k,1}).cleaned_improvements = M.clinical.vars{1,j}(pt,:);
+                                end
+                                j=j+1;
+                            end
+                            
+                        end
+                    end
+                    if flag > 0
+                        save(score_dir,'scores')
+                        if pt==1
+                            disp("Storing new clinical stores into patient folders")
+                        end
+                    end
+                end
+             end
+             if ~isfield(M,'postopid')
                  disp("Clinical data is not available in patient folder, please run the clinical score generator app..")
-         else
-             disp('Loading clinical data for group...');
-             for pt=1:length(M.patient.list)
-                 j=1;
-                 for i=1:length(M.postopid)
-                     if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
-                         load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
-                         if strcmp(fieldnames(scores),'Motor_MDSUPDRS')
-                             score_type = 'Motor_MDSUPDRS';
-                         elseif strcmp(fieldnames(scores),'Motor_UPDRS')
-                             score_type = 'Motor_UPDRS';
-                         elseif strcmp(fieldnames(scores),'BDI')
-                             score_type = 'BDI';
+             else
+                 disp('Loading clinical data for group...');
+                 for pt=1:length(M.patient.list)
+                     j=1;
+                     for i=1:length(M.postopid)
+                         if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
+                             load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
+                             if strcmp(fieldnames(scores),'Motor_MDSUPDRS')
+                                 score_type = 'Motor_MDSUPDRS';
+                             elseif strcmp(fieldnames(scores),'Motor_UPDRS')
+                                 score_type = 'Motor_UPDRS';
+                             elseif strcmp(fieldnames(scores),'BDI')
+                                 score_type = 'BDI';
+                             end
+                             postop_flag = M.postopid{i,1};
+                             fields = fieldnames(scores.(score_type).(postop_flag));
+                             for k=1:length(fields)
+                                 M.clinical.labels{1,j} = [postop_flag '-' fields{k,1} '-abs-improvements'];
+                                 M.clinical.vars{1,j}(pt,:) = scores.(score_type).(postop_flag).(fields{k,1}).abs_improvements;
+                                 j = j+1;
+                                 M.clinical.labels{1,j} = [postop_flag '-' fields{k,1} '-perc-improvements'];
+                                 M.clinical.vars{1,j}(pt,:) = scores.(score_type).(postop_flag).(fields{k,1}).perc_improvements;
+                                 j=j+1;
+                                 M.clinical.labels{1,j} = [postop_flag '-' fields{k,1} '-cleaned-improvements'];
+                                 M.clinical.vars{1,j}(pt,:) = scores.(score_type).(postop_flag).(fields{k,1}).cleaned_improvements;
+                                 j=j+1;
+                             end
+                             
                          end
-                         postop_flag = M.postopid{i,1};
-                         fields = fieldnames(scores.(score_type).(postop_flag));
-                         for k=1:length(fields)
-                            M.clinical.labels{1,j} = [postop_flag '-' fields{k,1} '-abs-improvements'];
-                            M.clinical.vars{1,j}(pt,:) = scores.(score_type).(postop_flag).(fields{k,1}).abs_improvements;
-                            j = j+1;
-                            M.clinical.labels{1,j} = [postop_flag '-' fields{k,1} '-perc-improvements'];
-                            M.clinical.vars{1,j}(pt,:) = scores.(score_type).(postop_flag).(fields{k,1}).perc_improvements;
-                            j=j+1;
-                            M.clinical.labels{1,j} = [postop_flag '-' fields{k,1} '-cleaned-improvements'];
-                            M.clinical.vars{1,j}(pt,:) = scores.(score_type).(postop_flag).(fields{k,1}).cleaned_improvements;
-                            j=j+1;
-                         end
-                         
                      end
                  end
-             end
-         end
-                 
-             
+            end
+            
 %             if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
 %                 ptscores=load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
 %                 if ~exist('ea_scores','var') % set up automatic assignment struct
