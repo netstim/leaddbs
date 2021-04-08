@@ -3205,11 +3205,11 @@ function Rs2am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=2;
 S.Rs2.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3221,11 +3221,11 @@ function Rs1am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=1;
 S.Rs1.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3237,11 +3237,11 @@ function Rs3am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=3;
 S.Rs3.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3253,11 +3253,11 @@ function Rs4am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=4;
 S.Rs4.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3269,11 +3269,11 @@ function Ls1am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=1;
 S.Ls1.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3285,11 +3285,11 @@ function Ls2am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=2;
 S.Ls2.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3301,11 +3301,11 @@ function Ls3am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=3;
 S.Ls3.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3317,11 +3317,11 @@ function Ls4am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=4;
 S.Ls4.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3331,10 +3331,11 @@ function Rs1am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs1am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=1;
 S.Rs1.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3344,10 +3345,11 @@ function Rs2am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs2am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=2;
 S.Rs1.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3357,10 +3359,11 @@ function Rs3am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs3am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=3;
 S.Rs3.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3370,10 +3373,11 @@ function Rs4am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs4am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=4;
 S.Rs4.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3383,10 +3387,11 @@ function Ls1am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls1am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=1;
 S.Ls1.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3396,10 +3401,11 @@ function Ls2am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls2am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=2;
 S.Ls2.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3409,10 +3415,11 @@ function Ls3am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls3am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=3;
 S.Ls3.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3422,10 +3429,11 @@ function Ls4am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls4am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=4;
 S.Ls4.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
