@@ -329,7 +329,8 @@ def compute_fields_from_unit_currents(Field_calc_param,Solver_type,Vertices,Doma
     #print(len(contacts_with_current))
 
     if VTA_IFFT==1:
-
+        print("VTA from E-field metrics is not yet supported for current superposition mode")
+        raise SystemExit
     else:
         Solutions_on_points=np.zeros((Vertices.shape[0],len(contacts_with_current)),float)
 
