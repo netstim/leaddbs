@@ -70,7 +70,7 @@ def run_full_model(master_dict):
 
 
     if (os.path.isfile(os.environ['PATIENTDIR']+'/Current_protocols_'+str(d['Stim_side'])+'.csv')):
-        d['Current_sets']==True
+        d['Current_sets']=True
         d["Skip_mesh_refinement"]=1
         print("When testing different current set, adaptive refinement is unavailable, make sure the mesh is prerefined")
         d["EQS_core"]="QS"
@@ -78,8 +78,8 @@ def run_full_model(master_dict):
         cc_multicontact=True
         d["spectrum_trunc_method"]="Octave Band Method"
         print("When testing different current set, only Octave Band Method is currently available")
-        #IMPORTANT: If grounding should be on the electrode, disable external grounding and put here one entry to 0.0
         d['Phi_vector']=[1.0] * len(d['Phi_vector'])          # unit vector
+        print("When testing different current sets, grounding is fixed to the casing (but you can imitate grounding by assigning a value of -1.0*sum(Icontacts)) to one of the contacts")
         d["external_grounding"]=True
         d["current_control"]=1
 
@@ -96,7 +96,12 @@ def run_full_model(master_dict):
             for j in range(len(stim_prot)):
                 if math.isnan(stim_prot[j]):
                     stim_prot[j]=None
-
+                elif stim_prot[j]==0.0:
+                    print('0.0 always refers to grounding in OSS-DBS. Please, type "passive" or "float" for contacts that do not deliver currents.')
+                    raise SystemExit
+            if len(d['Phi_vector']) != len(stim_prot):
+                print("Current protocols do not match the number of contacts on the electrode, exiting")
+                raise SystemExit
             Currents_to_check.append(stim_prot)
     else:
         d['Current_sets']=False
