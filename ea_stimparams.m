@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 19-Jan-2020 19:27:15
+% Last Modified by GUIDE v2.5 03-Mar-2021 16:26:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2390,6 +2390,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','off');
     case 'Maedler 2012'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2397,6 +2398,7 @@ switch model
         ea_disable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
+        set(handles.addStimSet,'visible','off');
     case 'Kuncel 2008'
         ea_hide_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2404,6 +2406,7 @@ switch model
         ea_disable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
+        set(handles.addStimSet,'visible','off');
     case 'Dembek 2017'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2411,6 +2414,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','off');
     case 'Fastfield (Baniasadi 2020)'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2418,6 +2422,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','off');
     case 'OSS-DBS (Butenko 2020)'
         ea_hide_impedance(handles);
         set(handles.estimateInTemplate,'Visible','on');
@@ -2425,6 +2430,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','on');
 
 end
 S.model=model;
@@ -3486,3 +3492,19 @@ function stimfig_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 ea_setprefs('vatsettings.estimateInTemplate',get(handles.estimateInTemplate,'Value'));
 delete(hObject);
+
+
+% --- Executes on button press in addStimSet.
+function addStimSet_Callback(hObject, eventdata, handles)
+% hObject    handle to addStimSet (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of addStimSet
+if hObject.Value
+    options = getappdata(handles.stimfig, 'options');
+    numContacts = options.elspec.numel;
+    stimLabel = getappdata(handles.stimfig, 'stimlabel');
+    stimFolder = [options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimLabel];
+    ea_addStimSet(numContacts, stimFolder);
+end
