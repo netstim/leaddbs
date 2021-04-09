@@ -391,7 +391,7 @@ function omaskbutton_Callback(hObject, eventdata, handles)
 
 [omask, path] = uigetfile({'*.nii';'*.nii.gz'},'Choose output location');
 if ischar(path)
-    setappdata(hObject,'omask',omask);
+    setappdata(hObject,'omask',fullfile(path,omask));
     set(hObject,'String',omask);
 end
 
