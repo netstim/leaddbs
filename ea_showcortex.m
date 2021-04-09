@@ -144,50 +144,45 @@ cortexH{2} = patch('vertices',cortex.Vertices_lh,'faces',cortex.Faces_lh(:,[1 3 
     'facelighting', 'gouraud', 'specularstrength', .25,'Tag',tagstr{2});
 
 % Load annotation file
-files = dir(adir); files = {files(~cellfun(@(x) isempty(regexp(x, 'annot', 'once')), {files.name})).name};
-atlas = files{~cellfun(@(x) isempty(regexp(x, ['annot_',options.prefs.d3.cortex_defaultatlas,'.mat'], 'match')), files)};
-if ~isempty(files) && ~isempty(atlas)
-    load(fullfile(adir,atlas));
+files = dir(adir);
+files = {files(~cellfun(@(x) isempty(regexp(x, 'annot', 'once')), {files.name})).name};
+if ~isempty(files)
+    atlas = files{~cellfun(@(x) isempty(regexp(x, ['annot_',options.prefs.d3.cortex_defaultatlas,'.mat'], 'match')), files)};
+    if ~isempty(atlas)
+        load(fullfile(adir,atlas));
 
-    for side = 1:2
-        % Choose gyri
-        structures{side}={};
-        struct_names=annot(side).colortable.struct_names;
-        labelidx=cell(length(structures{side}),1);
-        if ~isempty(labelidx)
-            for i=1:length(structures{side})
-                labelidx{i} =  find(~cellfun(@isempty,strfind(struct_names,structures{side}{i})));
+        for side = 1:2
+            % Choose gyri
+            structures{side}={};
+            struct_names=annot(side).colortable.struct_names;
+            labelidx=cell(length(structures{side}),1);
+            if ~isempty(labelidx)
+                for i=1:length(structures{side})
+                    labelidx{i} =  find(~cellfun(@isempty,strfind(struct_names,structures{side}{i})));
+                end
+            else
+                labelidx=mat2cell([1:size(struct_names,1)]',ones(size(struct_names)));
             end
-        else
-            labelidx=mat2cell([1:size(struct_names,1)]',ones(size(struct_names)));
-        end
-        annot(side).cdat = get(cortexH{side},'FaceVertexCData');
-        structidx = arrayfun(@(x) find(annot(side).label==annot(side).colortable.table(x,5)),[labelidx{:}],'uni',0);
-        labels = cell2mat(arrayfun(@(x) find(x==annot(side).label),annot(side).colortable.table(:,5),'uni',0));
+            annot(side).cdat = get(cortexH{side},'FaceVertexCData');
+            structidx = arrayfun(@(x) find(annot(side).label==annot(side).colortable.table(x,5)),[labelidx{:}],'uni',0);
+            labels = cell2mat(arrayfun(@(x) find(x==annot(side).label),annot(side).colortable.table(:,5),'uni',0));
 
-        for i = 1:size(annot(side).colortable.table,1)
-            colorindex = structidx{i};
-            visindex=setdiff(labels,colorindex);
-            %         invisindex=[invisindex;setdiff(labels,colorindex)];
-            annot(side).cdat(colorindex,:) = repmat(annot(side).colortable.table(i,1:3)/256,[length(colorindex),1]);
-            annot(side).adat(colorindex,:) = ones(length(colorindex),1) * alpha;
+            for i = 1:size(annot(side).colortable.table,1)
+                colorindex = structidx{i};
+                visindex=setdiff(labels,colorindex);
+                %         invisindex=[invisindex;setdiff(labels,colorindex)];
+                annot(side).cdat(colorindex,:) = repmat(annot(side).colortable.table(i,1:3)/256,[length(colorindex),1]);
+                annot(side).adat(colorindex,:) = ones(length(colorindex),1) * alpha;
+            end
+            set(cortexH{side},'FaceVertexCData',annot(side).cdat)
+            set(cortexH{side},'FaceVertexAlphaData',annot(side).adat,'FaceAlpha','interp')
         end
-        set(cortexH{side},'FaceVertexCData',annot(side).cdat)
-        set(cortexH{side},'FaceVertexAlphaData',annot(side).adat,'FaceAlpha','interp')
+        setappdata(resultfig,'cortex',cortexH);
+        setappdata(resultfig,'annot',annot);
+
+        atlas = strrep(atlas,'.mat','');
+        cswin = ea_cortexselect(cortex, annot, atlas, colorindex, struct_names, options, resultfig);
+        set(cswin, 'visible', options.d3.verbose);
+        setappdata(resultfig, 'aswin', cswin);
     end
 end
-
-setappdata(resultfig,'cortex',cortexH);
-setappdata(resultfig,'annot',annot);
-% camlight('headlight','infinite'); axis equal;
-
-% function ea_opencortcontrol(hobj, ev, cortex, resultfig, options)
-% all available atlases
-files = dir(adir); atlases = {files(~cellfun(@(x) isempty(regexp(x, 'annot', 'once')), {files.name})).name};
-atlases=strrep(atlases,'.mat','');
-% current atlas:
-atlas=strrep(atlas,'.mat','');
-cswin = ea_cortexselect(cortex, annot, atlas, colorindex, struct_names, options, resultfig);
-set(cswin, 'visible', options.d3.verbose);
-
-setappdata(resultfig, 'aswin', cswin);
