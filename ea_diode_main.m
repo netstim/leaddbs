@@ -137,7 +137,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         newmethod = 1;
         if newmethod
             % sampling from head to 10mm above it in .5mm steps
-            samplelength = 10;
+            samplelength = 20;
             samplingvector_mm = vertcat([head_mm(1):unitvector_mm(1)./2:head_mm(1)+ samplelength*unitvector_mm(1)],...
                 [head_mm(2):unitvector_mm(2)./2:head_mm(2)+ samplelength*unitvector_mm(2)],...
                 [head_mm(3):unitvector_mm(3)./2:head_mm(3)+ samplelength*unitvector_mm(3)],...
@@ -169,7 +169,9 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             end
             
             newcentervector_mm = tmat_vx2mm * newcentervector_vx;
-            
+            if numel(find(isnan(newcentervector_mm))) > 0.5 * numel(newcentervector_mm)
+                error('Something went wrong with interpolation of the Lead - maybe wrong sForm/qForm was chosen?')
+            end
             % fit linear model to the centers of mass and recalculate head
             % and unitvector
             new = [0:.5:samplelength];
@@ -244,7 +246,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             % select slice with maximum difference in fft and respecify
             % marker accordingly            
             [~,tmp_shift] = max(fftdiff);
-            tmp_shift = checkslices(tmp_shift)            
+            tmp_shift = checkslices(tmp_shift);
             marker_mm = marker_mm + (unitvector_mm * tmp_shift);
             marker_vx = tmat_vx2mm\marker_mm;
             
@@ -295,97 +297,122 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             %% Intensity at FFT peak
             % compares the intensity at the location of the FFTpeak within
             % the intensity profile
-            if intensity(peak(1)) > intensity(peak(2))
-                disp(['Intensity at FFT-Peak decides for peak 1'])
-                solution.FFTpeak = 1;
-            else
-                disp(['Intensity at FFT-Peak decides for peak 2'])
-                solution.FFTpeak = 2;
-            end
+%             if intensity(peak(1)) > intensity(peak(2))
+%                 disp(['Intensity at FFT-Peak decides for peak 1'])
+%                 solution.FFTpeak = 1;
+%             else
+%                 disp(['Intensity at FFT-Peak decides for peak 2'])
+%                 solution.FFTpeak = 2;
+%             end
             
             %% Intensity at yaw/pitch corrected expected peak
             % compares the intensity at the location of the yaw/pitch
             % corrected peak within the intensity profile
-            [~,corr_peak(1)] = min(abs(angle -marker_angles(1)));
-            [~,corr_peak(2)] = min(abs(angle -marker_angles(2)));
-            if intensity(corr_peak(1)) > intensity(corr_peak(2))
-                disp(['Intensity at corrected Peak decides for peak 1'])
-                solution.Correctedpeak = 1;
-            else
-                disp(['Intensity at corrected Peak decides for peak 2'])
-                solution.Correctedpeak = 2;
-            end
-            
+%             [~,corr_peak(1)] = min(abs(angle -marker_angles(1)));
+%             [~,corr_peak(2)] = min(abs(angle -marker_angles(2)));
+%             if intensity(corr_peak(1)) > intensity(corr_peak(2))
+%                 disp(['Intensity at corrected Peak decides for peak 1'])
+%                 solution.Correctedpeak = 1;
+%             else
+%                 disp(['Intensity at corrected Peak decides for peak 2'])
+%                 solution.Correctedpeak = 2;
+%             end
+%             
             %% Maximum intensity in range
             % compares the maximum intensity between the valleys
-            if max(intensity(valley(1):valley(2))) > max(intensity([1:valley(1),valley(2):length(intensity)]))
+%             if max(intensity(valley(1):valley(2))) > max(intensity([1:valley(1),valley(2):length(intensity)]))
+%                 if peak(1) > valley(1) && peak(1) < valley(2)
+%                     disp(['Maximum Intensity decides for peak 1'])
+%                     solution.MAXpeak = 1;
+%                 else
+%                     disp(['Maximum Intensity decides for peak 2'])
+%                     solution.MAXpeak = 2;
+%                 end
+%             else
+%                 if peak(1) > valley(1) && peak(1) < valley(2)
+%                     disp(['Maximum Intensity decides for peak 2'])
+%                     solution.MAXpeak = 2;
+%                 else
+%                     disp(['Maximum Intensity decides for peak 1'])
+%                     solution.MAXpeak = 1;
+%                 end
+%             end
+            
+            %% ASM
+            % compares the maximum intensity between the valleys in 3 radii
+            ASMradii = [3,6,9];
+            for k = 1:length(ASMradii)
+                 [~, ASMintensity(k,:),~] = ea_orient_intensityprofile(artifact_marker,center_marker,pixdim,ASMradii(k));
+            end
+            ASMintensity = mean(ASMintensity);
+            if max(ASMintensity(valley(1):valley(2))) > max(ASMintensity([1:valley(1),valley(2):length(ASMintensity)]))
                 if peak(1) > valley(1) && peak(1) < valley(2)
-                    disp(['Maximum Intensity decides for peak 1'])
-                    solution.MAXpeak = 1;
+                    disp(['ASM decides for peak 1'])
+                    solution.ASM = 1;
                 else
-                    disp(['Maximum Intensity decides for peak 2'])
-                    solution.MAXpeak = 2;
+                    disp(['ASM decides for peak 2'])
+                    solution.ASM = 2;
                 end
             else
                 if peak(1) > valley(1) && peak(1) < valley(2)
-                    disp(['Maximum Intensity decides for peak 2'])
-                    solution.MAXpeak = 2;
+                    disp(['ASM decides for peak 2'])
+                    solution.ASM = 2;
                 else
-                    disp(['Maximum Intensity decides for peak 1'])
-                    solution.MAXpeak = 1;
+                    disp(['ASM decides for peak 1'])
+                    solution.ASM = 1;
                 end
             end
             
             %% Peak Shift from FFT
             % compares the angle-shift of the max intensity peak from the
             % peak in FFT and chooses the solution with the smaller shift
-            tmp = [valley(1):valley(2)];
-            [~,intpeak(1)] = max(intensity(tmp));
-            intpeak(1) = tmp(intpeak(1));
-            tmp = [1:valley(1),valley(2):length(intensity)];
-            [~,intpeak(2)] = max(intensity(tmp));
-            intpeak(2) = tmp(intpeak(2));
-            intpeak = sort(intpeak,'ascend');
-            clear tmp
-            if max(abs(peak-intpeak)) > 90 && intpeak(1) < 90
-                intpeak(1) = intpeak(1) + 180;
-            elseif max(abs(peak-intpeak)) > 90 && intpeak(2) > 270
-                intpeak(2) = intpeak(2) - 180;
-            end
-            intpeak = sort(intpeak,'ascend');
-            if abs(peak(1) - intpeak(1)) < abs(peak(2) - intpeak(2))
-                disp(['Intensity peak shift from FFT decides for peak 1'])
-                solution.FFTshift = 1;
-            else
-                disp(['Intensity peak shift from FFT decides for peak 2'])
-                solution.FFTshift = 2;
-            end
+%             tmp = [valley(1):valley(2)];
+%             [~,intpeak(1)] = max(intensity(tmp));
+%             intpeak(1) = tmp(intpeak(1));
+%             tmp = [1:valley(1),valley(2):length(intensity)];
+%             [~,intpeak(2)] = max(intensity(tmp));
+%             intpeak(2) = tmp(intpeak(2));
+%             intpeak = sort(intpeak,'ascend');
+%             clear tmp
+%             if max(abs(peak-intpeak)) > 90 && intpeak(1) < 90
+%                 intpeak(1) = intpeak(1) + 180;
+%             elseif max(abs(peak-intpeak)) > 90 && intpeak(2) > 270
+%                 intpeak(2) = intpeak(2) - 180;
+%             end
+%             intpeak = sort(intpeak,'ascend');
+%             if abs(peak(1) - intpeak(1)) < abs(peak(2) - intpeak(2))
+%                 disp(['Intensity peak shift from FFT decides for peak 1'])
+%                 solution.FFTshift = 1;
+%             else
+%                 disp(['Intensity peak shift from FFT decides for peak 2'])
+%                 solution.FFTshift = 2;
+%             end
             
             %% Peak Shift from Corrected Peak
             % compares the angle-shift of the max intensity peak from the
             % yaw- and shift-corrected peak and chooses the solution with 
             % the smaller shift
-            tmp = [valley(1):valley(2)];
-            [~,intpeak(1)] = max(intensity(tmp));
-            intpeak(1) = tmp(intpeak(1));
-            tmp = [1:valley(1),valley(2):length(intensity)];
-            [~,intpeak(2)] = max(intensity(tmp));
-            intpeak(2) = tmp(intpeak(2));
-            intpeak = sort(intpeak,'ascend');
-            clear tmp
-            if max(abs(corr_peak-intpeak)) > 90 && intpeak(1) < 90
-                intpeak(1) = intpeak(1) + 180;
-            elseif max(abs(corr_peak-intpeak)) > 90 && intpeak(2) > 270
-                intpeak(2) = intpeak(2) - 180;
-            end
-            intpeak = sort(intpeak,'ascend');
-            if abs(corr_peak(1) - intpeak(1)) < abs(corr_peak(2) - intpeak(2))
-                disp(['Intensity peak shift from corrected peak decides for peak 1'])
-                solution.Correctedshift = 1;
-            else
-                disp(['Intensity peak shift from corrected decides for peak 2'])
-                solution.Correctedshift = 2;
-            end
+%             tmp = [valley(1):valley(2)];
+%             [~,intpeak(1)] = max(intensity(tmp));
+%             intpeak(1) = tmp(intpeak(1));
+%             tmp = [1:valley(1),valley(2):length(intensity)];
+%             [~,intpeak(2)] = max(intensity(tmp));
+%             intpeak(2) = tmp(intpeak(2));
+%             intpeak = sort(intpeak,'ascend');
+%             clear tmp
+%             if max(abs(corr_peak-intpeak)) > 90 && intpeak(1) < 90
+%                 intpeak(1) = intpeak(1) + 180;
+%             elseif max(abs(corr_peak-intpeak)) > 90 && intpeak(2) > 270
+%                 intpeak(2) = intpeak(2) - 180;
+%             end
+%             intpeak = sort(intpeak,'ascend');
+%             if abs(corr_peak(1) - intpeak(1)) < abs(corr_peak(2) - intpeak(2))
+%                 disp(['Intensity peak shift from corrected peak decides for peak 1'])
+%                 solution.Correctedshift = 1;
+%             else
+%                 disp(['Intensity peak shift from corrected decides for peak 2'])
+%                 solution.Correctedshift = 2;
+%             end
             
             %% Center of Mass method
             % this is where shit gets complicated
@@ -393,7 +420,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             % first, to orthogonal vectors, yvec which is the unitvector
             % pointing in the direction of peak(1) and x_vec, perpendicular
             % to it and unitvector are generated
-            rolltmp = ea_diode_angle2roll(deg2rad(peak(1)),yaw,pitch);
+            rolltmp = ea_diode_angle2roll(angle(peak(1)),yaw,pitch);
             [M,~,~,~] = ea_orient_rollpitchyaw(rolltmp,pitch,yaw);
             yvec_mm = M * [0;1;0];
             xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
@@ -450,7 +477,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             else
                 disp(['COGtrans decides for peak 2'])
                 solution.COGtrans = 2;
-            end            
+            end
             %% slice visualization if needed
 %             figure
 %             newmarkerslice = slice(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
@@ -465,6 +492,34 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
 %             scatter3(marker_mm(1)+COG_dir(1),marker_mm(2)+COG_dir(2),marker_mm(3)+COG_dir(3),'b')
 %             caxis([-500 3500])
 %             close            
+            %% slice perpendicular * 11
+            % 10 times a 5mm slice with .1mm resolution is sampled perpendicular to
+            % the lead from .5mm below to .5mm above the position of the
+            % marker center oriented in the direction of x-vec and y-vec
+%             extract_width = 5; % in mm
+%             samplingres = .1;
+%             count = 1;
+%             COG_mm = [];
+%             COG_dir = [];
+%             for k = -0.5:0.1:0.5
+%                 markertmp = marker_mm +  (k .* unitvector_mm);
+%                 Xslice = ([-extract_width:samplingres:extract_width] .* xvec_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + markertmp(1);
+%                 Yslice = ([-extract_width:samplingres:extract_width] .* xvec_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + markertmp(2);
+%                 Zslice = ea_diode_perpendicularplane(unitvector_mm,marker_mm,Xslice,Yslice);
+%             
+%                 myslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
+%                 COG_mm(:,count) = ea_diode_calculateCOG((myslice >= 2000),Xslice,Yslice,Zslice);
+%                 COG_dir(:,count) = (COG_mm(:,count)-markertmp(1:3))/norm((COG_mm(:,count)-markertmp(1:3)));
+%                 count = count +1;
+%             end
+%                        
+%             if sum(abs(yvec_mm-COG_dir),'all') < sum(abs(-yvec_mm-COG_dir),'all')
+%                 disp(['COGtrans11 decides for peak 1'])
+%                 solution.COGtrans11 = 1;
+%             else
+%                 disp(['COGtrans11 decides for peak 2'])
+%                 solution.COGtrans11 = 2;
+%             end       
             %% slice parralel
             % a 1.5mm slice with .1mm resolution is sampled vertically
             % through the lead and through the marker center and oriented
@@ -514,7 +569,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
             finalslice = finalslice';
             
-            if angle(peak(1)) < 90 || angle(peak(1)) > 270 
+            if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270 
                 finalslice = flipdim(finalslice,2);
             end
             %% darkstar method
@@ -616,40 +671,6 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             peakangle(side) = angle(finalpeak(side));
             roll = ea_diode_angle2roll(peakangle(side),yaw,pitch);
             
-            %% Loop over slices from -2mm to +2mm of dir_new
-%             checkslices = [-2:0.5:2]; % check neighboring slices for marker
-%             count = 1;
-%             for x = checkslices
-%                 checklocation_mm = dirlevelnew_mm + (unitvector_mm * x);
-%                 checklocation_vx = round(tmat_vx2mm\checklocation_mm);
-%                 artifact_tmp=ea_sample_slice(ct,'tra',extractradius,'vox',{checklocation_vx(1:3)'},1)';
-%                 if ct.mat(1,1) < 0
-%                     artifact_tmp = flip(artifact_tmp,1);
-%                 end
-%                 if ct.mat(2,2) < 0
-%                     artifact_tmp = flip(artifact_tmp,2);
-%                 end
-%                 center_tmp = [(size(artifact_tmp,1)+1)/2 (size(artifact_tmp,1)+1)/2];
-%                 radius = 8;
-%                 
-%                 [~, intensity_tmp,~] = ea_orient_intensityprofile(artifact_tmp,center_tmp,pixdim,radius);
-%                 %% determine angles of the 6-valley artifact ('dark star') artifact in each of the slices for +30:-30 deg
-%                 for k = 1:61
-%                     roll_shift = k-31;
-%                     rolltemp = roll + deg2rad(roll_shift);
-%                     dirnew_angles = ea_diode_darkstar(rolltemp,pitch,yaw,checklocation_mm,radius);
-%                     [sumintensitynew(count,k)] = ea_orient_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
-%                     rollangles(count,k) = rolltemp;
-%                 end
-%                 count = count +1;
-%             end
-%             
-%             [~,darkstarangle] = min(min(sumintensitynew,[],1));
-%             [~,darkstarslice] = min(min(sumintensitynew,[],2));
-%             
-%             clear intensity_tmp artifact_tmp
-            
-            %% Take anterior solution
             realsolution = solution.Anterior;
             
             dirlevelnew_mm = dirlevelnew_mm + (unitvector_mm * checkslices(darkstarslice(realsolution)));
@@ -696,11 +717,39 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
             'string','Accept','FontSize',12,'Background','w');
         
         fig(side).txt6 = uicontrol('style','text','units','pixels','Background','w',...
-            'position',[60,140,720,80],'FontSize',12,'HorizontalAlignment','left',...
-            'string',sprintf(['Anterior Solution is: ' num2str(round(solution.rolls_deg(solution.Anterior),1)) ' deg\n' ...
+            'position',[100,250,720,20],'FontSize',12,'HorizontalAlignment','left',...
+            'string',sprintf([...
             'COM-Transversal Solution is: ' num2str(round(solution.rolls_deg(solution.COGtrans),1)) ' deg\n' ...
-            'COM-Sagittal Solution is: ' num2str(round(solution.rolls_deg(solution.COGsag),1)) ' deg\n' ...            
-            'DIR-Asymmetry Solution is: ' num2str(round(solution.rolls_deg(solution.Darkstar),1)) ' deg\n' ...            
+            ]));
+        if solution.COGsag ~= solution.COGtrans
+            txtcolor = [1 .5 .25];
+        else
+            txtcolor = 'k';
+        end
+        fig(side).txt7 = uicontrol('style','text','units','pixels','Background','w',...
+            'position',[100,230,720,20],'FontSize',12,'HorizontalAlignment','left','ForegroundColor',txtcolor,...
+            'string',sprintf([...
+            'COM-Sagittal Solution is: ' num2str(round(solution.rolls_deg(solution.COGsag),1)) ' deg\n' ...     
+            ]));
+        if solution.Darkstar ~= solution.COGtrans
+            txtcolor = [1 .5 .25];
+        else
+            txtcolor = 'k';
+        end
+        fig(side).txt8 = uicontrol('style','text','units','pixels','Background','w',...
+            'position',[100,210,720,20],'FontSize',12,'HorizontalAlignment','left','ForegroundColor',txtcolor,...
+            'string',sprintf([...
+            'STARS Solution is: ' num2str(round(solution.rolls_deg(solution.Darkstar),1)) ' deg\n' ...            
+            ]));
+        if solution.ASM ~= solution.COGtrans
+            txtcolor = [1 .5 .25];
+        else
+            txtcolor = 'k';
+        end
+        fig(side).txt9 = uicontrol('style','text','units','pixels','Background','w',...
+            'position',[100,190,720,20],'FontSize',12,'HorizontalAlignment','left','ForegroundColor',txtcolor,...
+            'string',sprintf([...
+            'ASM Solution is: ' num2str(round(solution.rolls_deg(solution.ASM),1)) ' deg\n' ... 
             ]));
         
         
@@ -776,15 +825,15 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         axis equal
         axis off
         caxis([1500 3000])
-        if finalpeak(side) < 90 || finalpeak(side) > 270
-            quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, -round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
-        elseif finalpeak(side) >= 90 && finalpeak(side) <=270
-            quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, +round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
-        end
-        scatter(ax3,round(size(finalslice,2)/2),round(size(finalslice,1)/2).*1.7,[],[0 0.4470 0.7410],'filled')
-        plot([round(size(finalslice,2)/2), round(size(finalslice,2)/2)], [round(size(finalslice,2)/2)-75, round(size(finalslice,2)/2)+100],'LineStyle','--','Color',[0 0.4470 0.7410])
-        xlimit = get(ax3,'Xlim');
-        ylimit = get(ax3,'Ylim');
+%         if finalpeak(side) < 90 || finalpeak(side) > 270
+%             quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, -round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
+%         elseif finalpeak(side) >= 90 && finalpeak(side) <=270
+%             quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, +round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
+%         end
+%         scatter(ax3,round(size(finalslice,2)/2),round(size(finalslice,1)/2).*1.7,[],[0 0.4470 0.7410],'filled')
+%         plot([round(size(finalslice,2)/2), round(size(finalslice,2)/2)], [round(size(finalslice,2)/2)-75, round(size(finalslice,2)/2)+100],'LineStyle','--','Color',[0 0.4470 0.7410])
+%         xlimit = get(ax3,'Xlim');
+%         ylimit = get(ax3,'Ylim');
 %         text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
 %         text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')    
         %% graphics dir level one
@@ -874,7 +923,7 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
         tempvec = [0; 1; 0];
         temp3x3 = ea_orient_rollpitchyaw(-tempangle,0,0);
         tempvec = temp3x3 * tempvec;
-        text(tempvec(1),tempvec(2),markercenter,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+%         text(tempvec(1),tempvec(2),markercenter,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
         %         text(tempvec(1),tempvec(2),level1center,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
         %         text(tempvec(1),tempvec(2),level2center,'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
         clear tempangle
