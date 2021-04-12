@@ -334,6 +334,12 @@ def map_DTI(d,DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor d
             start_vox_z=int((d['Implantation_coordinate_Z']-img_start_z)/res_z)-int(d['Approximating_Dimensions'][2]/(2.0*res_z))
             vox_window_z=int(d['Approximating_Dimensions'][2]/(res_z))
             
+            if start_vox_x<0 or start_vox_y<0 or start_vox_z<0:
+                print('Warning, the DTI data does not cover the whole computational domain (isotropic values will be assigned)')
+                if start_vox_x<0: start_vox_x=0
+                if start_vox_y<0: start_vox_y=0
+                if start_vox_z<0: start_vox_z=0  
+                    
             tissue_array = img.dataobj[start_vox_x:start_vox_x+vox_window_x,start_vox_y:start_vox_y+vox_window_y,start_vox_z:start_vox_z+vox_window_z,...]
                         
             img.affine[0,3]=img_start_x+res_x*start_vox_x
