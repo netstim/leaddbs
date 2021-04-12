@@ -132,7 +132,11 @@ else
     for i=1:length(signCheck)
         signCheck(i)=eval(['pv<1e-',num2str(i),';']);
     end
-    pstr = [pstr, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
+    if all(signCheck)
+        pstr = [pstr, ' < 1e-16']; % Show p < 1e-17
+    else
+        pstr = [pstr, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
+    end
 end
 
 g.set_title([labels{1}, ' [R = ', sprintf('%.2f',R), '; ', pstr, ']'], 'FontSize', 20);
