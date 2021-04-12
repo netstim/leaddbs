@@ -128,7 +128,7 @@ if pv >= 0.001 % Show p = 0.XXX when p > 0.001
     pstr = [pstr, ' = ', sprintf('%.3f',pv)];
 else
     % pstr = [pstr, ' = ', sprintf('%.1e',pv)]; % Show p = X.Xe-X
-    signCheck=zeros(1,17);
+    signCheck=zeros(1,16);
     for i=1:length(signCheck)
         signCheck(i)=eval(['pv<1e-',num2str(i),';']);
     end
