@@ -312,7 +312,7 @@ classdef ea_disctract < handle
                         end
                 end
                 
-                for side=1:numel(vals)
+                for side=1:size(vals,2)
                     if ~isempty(vals{1,side})
                         switch obj.statmetric % also differentiate between methods in the prediction part.
                             case 1 % ttests
@@ -454,7 +454,7 @@ classdef ea_disctract < handle
             
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
-            if numel(vals)>1 % bihemispheric usual case
+            if size(vals,2)>1 % bihemispheric usual case
                 obj.stats.pos.shown(2)=sum(vals{1,2}>0);
                 obj.stats.neg.shown(2)=sum(vals{1,2}<0);
             end
@@ -559,14 +559,14 @@ classdef ea_disctract < handle
                 end
                 setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
                 
-                if numel(vals)>1 % standard case
+                if size(vals,2)>1 % standard case
                     cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
                     alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
                 else % potential scripting case, only one side
                     cmapind = mat2cell(cmapind, numel(vals{group,1}))';
                     alphaind = mat2cell(alphaind, numel(vals{group,1}))';
                 end
-                for side=1:numel(vals)
+                for side=1:size(vals,2)
                     if dogroups % introduce small jitter for visualization
                         fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.01);
                     end
