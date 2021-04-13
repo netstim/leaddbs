@@ -144,6 +144,7 @@ classdef ea_disctract < handle
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_peak').fibsval = fibsvalPeak;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_5peak').fibsval = fibsval5Peak;
+            obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
         end
         
@@ -335,6 +336,19 @@ classdef ea_disctract < handle
                                         Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','pearson'));
                                     case 'profile of scores: bend'
                                         Ihat(test,side) = atanh(ea_bendcorr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test))));
+                                    case 'mean of scores'
+                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'sum of scores'
+                                        Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak of scores'
+                                        Ihat(test,side) = ea_nanmax(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak 5% of scores'
+                                        ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test));
+                                        ihatvals=sort(ihatvals);
+                                        Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                end
+                            case 3 % Plain Connection
+                                switch lower(obj.basepredictionon)
                                     case 'mean of scores'
                                         Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
                                     case 'sum of scores'
