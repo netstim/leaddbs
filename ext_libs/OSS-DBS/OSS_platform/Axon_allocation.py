@@ -5,13 +5,23 @@ Created on Fri Dec 18 14:00:04 2020
 @author: konstantin
 """
 
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Oct 29 20:57:09 2020
 
+@author: konstantin
+"""
+
+# Streamlines from fibers.mat
+
+#import tables
 import numpy as np
 #import nibabel as nib
 import os
 import h5py
 import sys
 
+#from GUI_inp_dict import d
 
 
 
@@ -25,6 +35,9 @@ def fibers_to_axons(name_of_combined_file,name_of_fiber_file,projection_name,axo
     else:
         fiber_array=file[projection_name]['fibers'][:]
 
+    if fiber_array.ndim==1:
+        print(projection_name,'projection is empty, check settings for fib. diameter and axon length')
+        return 0
 
     #fiber_array has 4 rows (x,y,z,fiber_index), columns - all points
 
@@ -361,15 +374,15 @@ def fibers_to_axons(name_of_combined_file,name_of_fiber_file,projection_name,axo
     #hf.create_dataset(projection_name, data=Array_coord_platform)
     #hf.close()
 
-    #let's save it in PATIENTDIR
+
     hf = h5py.File(os.environ['PATIENTDIR']+'/'+name_of_combined_file + '.h5', 'a')
     hf.create_dataset(projection_name, data=Array_coord_platform)
     hf.close()
 
-
     from scipy.io import savemat
     mdic = {"fibers": Array_coord_colored, "ea_fibformat": "1.0"}
     savemat(name_of_directory+'/'+name_of_combined_file +'_'+projection_name+"_axons.mat", mdic)
+
 
     return int(n_Ranviers)
 
@@ -401,12 +414,12 @@ if __name__ == '__main__':
     #list_ascii = map(lambda s: s.strip(), list_ascii)
     Connectome_name=''.join(chr(i) for i in list_ascii)
 
-    if Connectome_name=='Multi-Tract: TestConn':
+    if 'Multi-Tract' in Connectome_name:
         Full_paths=[os.environ['PATIENTDIR']+'/'+Connectome_name.rsplit(' ',1)[1]+'/data'+str(index_side+1)+'.mat']
     else:
         Full_paths=[os.environ['PATIENTDIR']+'/'+Connectome_name+'/data'+str(index_side+1)+'.mat']
 
-    if Connectome_name=='Multi-Tract: TestConn':
+    if 'Multi-Tract' in Connectome_name:
         Projections=[]
         for i in range(len(file_inp['settings']['connectomeTractNames'][0])):
             ext_string=file_inp[file_inp['settings']['connectomeTractNames'][0][i]]
@@ -427,9 +440,12 @@ if __name__ == '__main__':
     # Active_contact_coordinates=[np.array([10.92957028, -12.11697637, -7.697]),np.array([-10.92957028, -12.11697637, -7.697])]   # STN for now, should be changed
 
 
+    
+
+
     #Full_paths=[os.environ['PATIENTDIR']+'/'+Path_to_files+'.mat']   # In Lead-DBS 1 is for rh, 2 for lh, that's why we add 1; data2 is for lh example, will be imported from Lead-DBS
     Name_to_save='Allocated_axons'  #should be the name of the connectome later?
-    Axon_model='McIntyre2002'       #Reilly be used instead directly
+    Axon_model='McIntyre2002'
 
     axon_length=list(file_inp['settings']['axonLength'][:][0][:])
     #axon_length=[file_inp['settings']['minFiberLength'][:][0][0]]
@@ -447,6 +463,11 @@ if __name__ == '__main__':
             b=file_inp[a_ref]
             Active_contact_coordinates.append(b[:,i])
 
+    #print(Active_contact_coordinates)
+
+
+
+
     Fiber_names=[]
 
     for fiber_file in Full_paths:       #obsolete way, we store mutiple fibers in one data.mat
@@ -459,6 +480,8 @@ if __name__ == '__main__':
     name_of_directory=fiber_file.rsplit('/',1)[0]       # they should be in the same directory
 
 
+
+
     axon_dict = {
         'Axon_Model_Type': 'No_model',
         'Neuron_model_array_prepared': 1,   # now it is known
@@ -469,13 +492,12 @@ if __name__ == '__main__':
 
     axon_dict['Axon_Model_Type']=Axon_model
     axon_dict['Name_prepared_neuron_array']=Name_to_save+'.h5'
-    axon_dict['diam_fib']=diams_fib
 
     n_Ranviers_per_projection=np.zeros(len(axon_length),int)
     for i in range(len(diams_fib)):
-        if Connectome_name=='Multi-Tract: TestConn':
+        if 'Multi-Tract' in Connectome_name:
             print(Projections[i])
-            n_Ranviers_per_projection[i]=fibers_to_axons(Name_to_save,Full_paths[0],Projections[i],Axon_model,diams_fib[i],axon_length[i],Active_contact_coordinates,True)
+            n_Ranviers_per_projection[i]=fibers_to_axons(Name_to_save,Full_paths[0],Projections[i],Axon_model,diams_fib[i],axon_length[i],Active_contact_coordinates,True)                
             print("Projection ",Projections[i]," seeded with ",n_Ranviers_per_projection[i], "nodes of Ranvier")
         else:
             n_Ranviers_per_projection[i]=fibers_to_axons(Name_to_save,Full_paths[i],Fiber_names[i],Axon_model,diams_fib[i],axon_length[i],Active_contact_coordinates,False)
@@ -489,8 +511,16 @@ if __name__ == '__main__':
     else:
         n_Ranviers_per_projection_list=list(n_Ranviers_per_projection)
 
-    axon_dict['n_Ranvier']=n_Ranviers_per_projection_list
 
+    diams_fib_true=[]
+    n_Ranviers_per_projection_true=[]
+    for i in range(len(diams_fib)):
+        if n_Ranviers_per_projection[i]!=0:
+            diams_fib_true.append(diams_fib[i])
+            n_Ranviers_per_projection_true.append(n_Ranviers_per_projection[i])
+
+    axon_dict['n_Ranvier']=n_Ranviers_per_projection_true
+    axon_dict['diam_fib']=diams_fib_true
 
     from GUI_tree_files.GUI_tree_files.default_dict import d
     d.update(axon_dict)
@@ -505,4 +535,6 @@ if __name__ == '__main__':
             else:
                 save_as_dict.write("    '{}': '{}',\n".format(key, d[key]))
         save_as_dict.write("}\n")
+
+#return True
 
