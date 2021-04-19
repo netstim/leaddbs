@@ -75,7 +75,7 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_ve
         Number_of_activated=0
         last_point=0
         for i in range(len(d["n_Ranvier"])):
-            Number_of_activated_population=run_simulation_with_NEURON(last_point,i,d["diam_fib"][i],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"][i],N_models[i],d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d['Stim_side'],scaling_index)
+            Number_of_activated_population=run_simulation_with_NEURON(last_point,i,d["diam_fib"][i],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"][i],N_models[i],d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d['Stim_side'],scaling_index,d["Name_prepared_neuron_array"])
             Number_of_activated=Number_of_activated+Number_of_activated_population
 
             os.chdir("Axon_files/")
@@ -86,30 +86,28 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_ve
         if d["Axon_Model_Type"] == 'Reilly2016':
             os.chdir("..")
     else:
+        if isinstance(d["diam_fib"],list):
+            d["diam_fib"]=d["diam_fib"][0]
+            d["n_Ranvier"]=d["n_Ranvier"][0] 
         Number_of_activated=run_simulation_with_NEURON(0,-1,d["diam_fib"],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"],N_models,d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d['Stim_side'],scaling_index)
 
     if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
         with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_connections_activation.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        if d['Show_paraview_screenshots']==1:
-            subprocess.call('xdg-open "Images/Axon_activation.png"',shell=True)
-    else:
-        subprocess.call('python Visualization_files/Paraview_csv_activation.py', shell=True)
-        #if d['Show_paraview_screenshots']==1:
-            #subprocess.call('xdg-open "Images/Activated_neurons.png"',shell=True)
+
 
     minutes=int((time.time() - start_neuron)/60)
     secnds=int(time.time() - start_neuron)-minutes*60
     print("----- NEURON calculations took ",minutes," min ",secnds," s -----\n")
 
-    #minutes=int((time.time() - start_simulation_run)/60)
-    #secnds=int(time.time() - start_simulation_run)-minutes*60
-    #total_seconds=time.time() - start_simulation_run
-    #print("---Simulation run took ",minutes," min ",secnds," s ")
+    if d['Stim_side']==0:
+        stim_folder='Results_rh/'
+    else:
+        stim_folder='Results_lh/'
 
 
     if isinstance(d["n_Ranvier"],list):
         activation_in_populations=np.zeros(len(d["n_Ranvier"]),int)
-        hf = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/Activation/Network_status_'+str(scaling_index)+'.h5', 'r')
+        hf = h5py.File(os.environ['PATIENTDIR']+'/'+stim_folder+'Network_status_'+str(scaling_index)+'.h5', 'r')
         lst=list(hf.keys())
         for i in range(len(lst)):
             Axon_status=hf.get(lst[i])
@@ -123,62 +121,10 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_ve
     else:
         activation_in_populations=Number_of_activated
 
-    # #order_of populations=[GPe-GPi,GPe-GPi,GPi-Th,GPi-Th,STN-GPe,GPe-STN,GPe-STN,STN-GPe,STN-GPi,STN-GPi,STN-MC,STN-MC,STN-MC,STN-PMC]
-    # #goal_activation=np.array([0,      0,    -1,     -1,     0,      0,     0,      0,      235,    237,    100,  100,   100,   100])
-    # goal_activation=np.array([178,109,500,500,250,250,247,249,235,237,100,100,100,100])
-
-    # total_difference=0
-
-    # for i in range(goal_activation.shape[0]):
-    #     total_difference=total_difference+abs(goal_activation[i]-activation_in_populations[i])
-    # print("\n total_difference: ",total_difference,"\n\n\n")
-
-    # goal_activation=np.array([-1,         0,    900,     -1,     -1,         -1,     0,      193,      -1,          183,    60,  60,   60,   61])
-    # #goal_activation=np.array([178,109,500,500,250,250,247,249,235,237,100,100,100,100])
-
-    # total_difference=0
-
-    # for i in range(goal_activation.shape[0]):
-    #     if goal_activation[i]!=-1 and i!=2 and i!=3:
-    #         total_difference=total_difference+abs(goal_activation[i]-activation_in_populations[i])
-    #     elif i==2:      #sum up for GPi-Th
-    #         total_difference=total_difference+abs(goal_activation[i]-activation_in_populations[i+1]-activation_in_populations[i])
-    # print("\n total_difference: ",total_difference,"\n\n\n")
-    #order_of populations=[GPe-GPi_sm,GPi-Th,GPe-STN,STN-GPe,STN-GPi,STN-MC,STN-PMC]
-    #goal_activation=np.array([66,307,-1,144,108,80,195,-1,-1,-1])
-
-#    #goal_activation=np.array([0,314,126,73,68,113,48])   #  0.2935 0.5059 0.2854 0.3140 0.3773 0.4806; k=10
-#    goal_activation=np.array([0,314,73,126,68,113,48])   #  0.2935 0.5059 0.2854 0.3140 0.3773 0.4806; k=10
-#    #goal_activation=np.array([-1,314,73,126,68,113,48])
-#    #goal_activation=np.array([109,1000,247,249,237,300,100])
-#    # GPe-GPi_sm,GPi-Th,GPe-STN,STN-GPe,STN-GPi
-#    total_difference=0
-#
-#    for i in range(goal_activation.shape[0]):
-#        if goal_activation[i]!=-1 and i!=1 and i!=2 and i!=6 and i!=7 and i!=8:
-#            total_difference=total_difference+abs(goal_activation[i]-activation_in_populations[i])
-#        elif i==1:      #sum up for GPi-Th
-#            total_difference=total_difference+abs(goal_activation[i]-activation_in_populations[i+1]-activation_in_populations[i])
-#        elif i==6:
-#            total_difference=total_difference+abs(goal_activation[i]-activation_in_populations[i+2]-activation_in_populations[i+1]-activation_in_populations[i])
-#    print("\n total_difference: ",total_difference,"\n\n\n")
-#
-#
-#    opt_data=list(S_vector)
-#    opt_data.append(total_difference)
-#    optim_data=np.vstack((opt_data)).T
-#
-#    with open('Optimization_results/optim_data_currents.csv','a') as f_handle:
-#        np.savetxt(f_handle,optim_data)
-
-#    if os.path.isdir(os.environ['PATIENTDIR']+'/Field_solutions/Activation'):     # we always re-run NEURON simulation
-#        shutil.rmtree(os.environ['PATIENTDIR']+'/Field_solutions/Activation')
-#        os.makedirs(os.environ['PATIENTDIR']+'/Field_solutions/Activation')
 
     if os.path.isdir(os.environ['PATIENTDIR']+'/Axons_in_time'):     # we always re-run NEURON simulation
         os.system('rm -fr '+os.environ['PATIENTDIR']+'/Axons_in_time')
         os.makedirs(os.environ['PATIENTDIR']+'/Axons_in_time')
-
 
 
     return activation_in_populations
@@ -209,7 +155,7 @@ def find_activation(current_comb,d,Xs_signal_norm,N_models,N_segm,FR_vector_sign
 
     minutes=int((time.time() - start_current_run)/60)
     secnds=int(time.time() - start_current_run)-minutes*60
-    print("----- Current optimization took: ",minutes," min ",secnds," s -----\n")
+    print("----- Solved for current protocol in: ",minutes," min ",secnds," s -----\n")
 
     return activation
 
