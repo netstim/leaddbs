@@ -96,7 +96,22 @@ pv=stats(3);
 F=stats(2);
 Rsquared=mdl.Rsquared.Ordinary;
 
-g.set_title([labels{1},' [R2 = ',sprintf('%.2f',Rsquared),'; F-stat = ',sprintf('%.2f',F),'; ',pstr,' = ',sprintf('%.3f',pv),']'],'FontSize',20);
+if pv >= 0.001 % Show p = 0.XXX when p >= 0.001
+    pstr = [pstr, ' = ', sprintf('%.3f',pv)];
+else
+    % pstr = [pstr, ' = ', sprintf('%.1e',pv)]; % Show p = X.Xe-X
+    signCheck=zeros(1,16);
+    for i=1:length(signCheck)
+        signCheck(i)=eval(['pv<1e-',num2str(i),';']);
+    end
+    if all(signCheck)
+        pstr = [pstr, ' < 1e-16']; % Show p < 1e-16
+    else
+        pstr = [pstr, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
+    end
+end
+
+g.set_title([labels{1},' [R2 = ',sprintf('%.2f',Rsquared),'; F-stat = ',sprintf('%.2f',F),'; ',pstr,']'],'FontSize',20);
 g.set_names('x',labels{2},'y',labels{3});
 g.set_text_options('base_size',22);
 g.no_legend();

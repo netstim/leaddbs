@@ -124,7 +124,7 @@ if exist('pperm','var') && ~isempty(pperm)
     pstr='p(perm)';
 end
 
-if pv >= 0.001 % Show p = 0.XXX when p > 0.001
+if pv >= 0.001 % Show p = 0.XXX when p >= 0.001
     pstr = [pstr, ' = ', sprintf('%.3f',pv)];
 else
     % pstr = [pstr, ' = ', sprintf('%.1e',pv)]; % Show p = X.Xe-X
@@ -133,7 +133,7 @@ else
         signCheck(i)=eval(['pv<1e-',num2str(i),';']);
     end
     if all(signCheck)
-        pstr = [pstr, ' < 1e-16']; % Show p < 1e-17
+        pstr = [pstr, ' < 1e-16']; % Show p < 1e-16
     else
         pstr = [pstr, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
     end
