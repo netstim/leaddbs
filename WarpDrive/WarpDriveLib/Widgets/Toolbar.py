@@ -196,7 +196,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("ImageNode"))
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("TemplateNode"))
     # initialize new image and init
-    imageNode = slicer.util.loadVolume(os.path.join((self.parameterNode.GetParameter("subjectPath"), 'anat_'+modality+'.nii')), properties={'show':False})
+    imageNode = slicer.util.loadVolume(os.path.join(self.parameterNode.GetParameter("subjectPath"), 'anat_'+modality+'.nii'), properties={'show':False})
     imageNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))    
     # change to t1 in case modality not present
     modality = modality if modality in ['t1','t2','pca','pd'] else 't1'
