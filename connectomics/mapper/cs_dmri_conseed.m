@@ -21,7 +21,7 @@ end
 disp(['Command: ',cmd]);
 switch cmd
     case 'seed'             
-        ea_dmri_conseed_map(dfold,cname,sfile,cmd,space,options)
+        ea_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
     case {'matrix', 'pmatrix'}
         for s=1:length(sfile)
             if strcmp(dfold, 'Patient''s fiber tracts')

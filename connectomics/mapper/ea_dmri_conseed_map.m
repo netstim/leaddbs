@@ -1,4 +1,8 @@
-function ea_dmri_conseed_map(dfold,cname,sfile,cmd,space,options)
+function ea_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
+
+if isempty(outputfolder)
+    outputfolder = ea_getoutputfolder(sfile,cname);
+end
 
 useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
 for s=1:length(sfile)
@@ -158,7 +162,6 @@ for s=1:length(sfile)
         end
 
         [~,fn]=fileparts(sfile{s});
-        outputfolder=ea_getoutputfolder(sfile(s),cname);
 
         if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')
             map.img(~(map.img==0))=ea_normal(map.img(~(map.img==0)));
