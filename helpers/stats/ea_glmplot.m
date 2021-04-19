@@ -111,7 +111,13 @@ else
     end
 end
 
-g.set_title([labels{1},' [R2 = ',sprintf('%.2f',Rsquared),'; F-stat = ',sprintf('%.2f',F),'; ',pstr,']'],'FontSize',20);
+if F >= 1000
+    Fstr = ['F-stat = ', sprintf('%.2e',F)];
+else
+    Fstr = ['F-stat = ', sprintf('%.2f',F)];
+end
+
+g.set_title([labels{1},' [R2 = ',sprintf('%.2f',Rsquared),'; ',Fstr,'; ',pstr,']'],'FontSize',20);
 g.set_names('x',labels{2},'y',labels{3});
 g.set_text_options('base_size',22);
 g.no_legend();
