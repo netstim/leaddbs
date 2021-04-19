@@ -1,4 +1,4 @@
-function ea_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
+function cs_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
 
 if isempty(outputfolder)
     outputfolder = ea_getoutputfolder(sfile,cname);
