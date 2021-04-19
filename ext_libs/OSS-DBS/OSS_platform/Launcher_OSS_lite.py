@@ -100,6 +100,8 @@ def run_full_model(master_dict):
                     elif stim_prot[j]==0.0:
                         print('0.0 always refers to grounding in OSS-DBS. Please, type "passive" or "float" for contacts that do not deliver currents.')
                         raise SystemExit
+                    else:
+                        stim_prot[j]=stim_prot[j]*0.001            # Lead-DBS stores in mA
                 if len(d['Phi_vector']) != len(stim_prot):
                     print("Current protocols do not match the number of contacts on the electrode, exiting")
                     raise SystemExit
