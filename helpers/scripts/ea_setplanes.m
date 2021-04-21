@@ -21,6 +21,12 @@ end
 % Set togglestates
 setappdata(resultfig,'togglestates',togglestates);
 
+% Update anatomy control GUI
+awin = getappdata(resultfig, 'awin');
+handle = guidata(awin);
+handle.xval.String = num2str(xx);
+handle.yval.String = num2str(yy);
+handle.zval.String = num2str(zz);
 
 % Update slices
 ea_anatomyslices(resultfig, togglestates, options, []);
