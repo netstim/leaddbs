@@ -151,11 +151,17 @@ if options.prefs.env.dev
     set(handles.mercheck,'Visible','on')
 end
 
-M=getappdata(gcf,'M');
-if isempty(M)
-    % initialize Model variable M
-    M=ea_initializeM;
+if ~isempty(varargin) && isfile(varargin{1}) % Path to group analysis file provided as input
+    load(varargin{1}, 'M');
+    set(handles.groupdir_choosebox,'String',M.root);
+else
+    M=getappdata(gcf,'M');
+    if isempty(M)
+        % initialize Model variable M
+        M=ea_initializeM;
+    end
 end
+
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
