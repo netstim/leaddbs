@@ -154,6 +154,13 @@ end
 if ~isempty(varargin) && isfile(varargin{1}) % Path to group analysis file provided as input
     load(varargin{1}, 'M');
     set(handles.groupdir_choosebox,'String',M.root);
+    set(handles.groupdir_choosebox,'TooltipString', M.root);
+    setappdata(handles.leadfigure, 'M', M);
+    try
+        setappdata(handles.leadfigure, 'S', M.S);
+        setappdata(handles.leadfigure, 'vatmodel', M.S(1).model);
+    end
+    ea_addrecentpatient(handles,{M.root},'groups','groups');
 else
     M=getappdata(gcf,'M');
     if isempty(M)
