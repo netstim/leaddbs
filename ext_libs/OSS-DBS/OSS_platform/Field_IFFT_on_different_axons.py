@@ -18,16 +18,16 @@ FREQ_vector_signal='none'
 
 def compute_Z_ifft(d,Xs_signal_normalized,t_vector,A,i_start_octv=0.0):      # get impedance in Time (only for 2-contact systems)
 
-    Impedance_fr_get=read_csv('/opt/Patient/Field_solutions/sorted_impedance.csv', delimiter=' ', header=None)
+    Impedance_fr_get=read_csv(os.environ['PATIENTDIR']+'/Field_solutions/sorted_impedance.csv', delimiter=' ', header=None)
     Impedance_fr=Impedance_fr_get.values
     Z_Tr=np.vectorize(complex)(Impedance_fr[:,0],Impedance_fr[:,1])
 
     if d["spectrum_trunc_method"]=='Octave Band Method':
 
-        FR_vec_sign_octv=np.genfromtxt('/opt/Patient/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        FR_vec_sign_octv=np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
         FR_vec_sign_octv=np.round(FR_vec_sign_octv,6)
 
-        Fr_corresp_ar = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        Fr_corresp_ar = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
         Fr_corresp_ar=np.round(Fr_corresp_ar,6)
 
         cutoff = int(np.ceil((t_vector.shape[0]+1)/2.))
@@ -57,7 +57,7 @@ def compute_Z_ifft(d,Xs_signal_normalized,t_vector,A,i_start_octv=0.0):      # g
         Z_conv=Xs_signal_normalized*Z_Tr/A       #devided by A because we need a normilized Xs_signal_normalized, not scaled with the signal ampl.
 
     if d["spectrum_trunc_method"]=='High Amplitude Method':
-        Ind_trunc1 = np.genfromtxt('/opt/Patient/Stim_Signal/Indices_high_ampl.csv', delimiter=' ')
+        Ind_trunc1 = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Indices_high_ampl.csv', delimiter=' ')
         cutoff = int(np.ceil((t_vector.shape[0]+1)/2.))
         Xs_signal_full=np.complex(1.0,0.0)*np.zeros(cutoff,float)
         Z_Tr_full=np.complex(1.0,0.0)*np.zeros(cutoff,float)
@@ -76,7 +76,7 @@ def compute_Z_ifft(d,Xs_signal_normalized,t_vector,A,i_start_octv=0.0):      # g
         Z_conv=Xs_signal_full*Z_Tr_full/A
 
     if d["spectrum_trunc_method"]=='Cutoff Method':
-        Ind_trunc1 = np.genfromtxt('/opt/Patient/Stim_Signal/Indices_cutoff.csv', delimiter=' ')
+        Ind_trunc1 = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Indices_cutoff.csv', delimiter=' ')
         cutoff = int(np.ceil((t_vector.shape[0]+1)/2.))
         Xs_signal_full=np.complex(1.0,0.0)*np.zeros(cutoff,float)
         Z_Tr_full=np.complex(1.0,0.0)*np.zeros(cutoff,float)
@@ -111,9 +111,9 @@ def compute_Z_ifft(d,Xs_signal_normalized,t_vector,A,i_start_octv=0.0):      # g
     plt.xlabel('t, sec')
     plt.ylabel('Zreal, Ohm')
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig('/opt/Patient/Images/Z_convoluted.png', format='png', dpi=1000)
-    np.savetxt('/opt/Patient/Field_solutions/Z_R_TimeDomain.csv', Signal_t_Zconv.real, delimiter=" ")
-    np.savetxt('/opt/Patient/Field_solutions/Z_Im_TimeDomain.csv', Signal_t_Zconv.imag, delimiter=" ")
+    plt.savefig(os.environ['PATIENTDIR']+'/Images/Z_convoluted.png', format='png', dpi=1000)
+    np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Z_R_TimeDomain.csv', Signal_t_Zconv.real, delimiter=" ")
+    np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Z_Im_TimeDomain.csv', Signal_t_Zconv.imag, delimiter=" ")
 
     return Signal_t_Zconv
 
@@ -124,6 +124,8 @@ def convolute_and_ifft(last_point,Ind_trunc1,trunc_method,post_truncation,i_axon
     global Xs_signal_normalized
     global t_vect
     global FREQ_vector_signal
+
+    Signal_t_conv=np.zeros((int(num_segments),t_vect.shape[0]),float)
 
     for i_point in range(int(num_segments)):
         global_i_point=int(num_segments*i_axon+i_point)
@@ -176,19 +178,20 @@ def convolute_and_ifft(last_point,Ind_trunc1,trunc_method,post_truncation,i_axon
             fv_conj = np.conjugate(Xs_conv[-2:0:-1])
 
         Y = np.concatenate((Xs_conv, fv_conj), axis=0)
-        Signal_t_conv=np.fft.ifft(Y).real
+        Signal_t_conv[i_point,:]=np.fft.ifft(Y).real
 
         if global_i_point+last_point==0:
             plt.figure(11111234)
-            plt.plot(t_vect,Signal_t_conv)
+            plt.plot(t_vect,Signal_t_conv[i_point,:])
             plt.xlim(0.000,T*5)
             plt.grid(True)
             plt.xlabel('t, sec')
             plt.ylabel('Potential, V')
             plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            plt.savefig('/opt/Patient/Images/Signal_convoluted_1st_point.png', format='png', dpi=1000)
+            plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_convoluted_1st_point.png', format='png', dpi=1000)
 
-        np.save('/opt/Patient/Points_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv.real)
+    # Number is the global point index of the last compartment on the neuron
+    np.save(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv)
 
     output.put(i_axon)
 
@@ -200,6 +203,8 @@ def convolute_and_ifft_octaves(last_point,i_axon,num_segments,N_freq,N_freq_octv
     global t_vect
     global FREQ_vector_signal
     global FR_vec_sign_octv
+
+    Signal_t_conv=np.zeros((int(num_segments),t_vect.shape[0]),float)
 
     for i_point in range(int(num_segments)):
         global_i_point=int(num_segments*i_axon+i_point)
@@ -221,8 +226,8 @@ def convolute_and_ifft_octaves(last_point,i_axon,num_segments,N_freq,N_freq_octv
                 stepper=stepper+1
         if global_i_point==0:
 
-            np.savetxt('/opt/Patient/Field_solutions/Xs_Tr_full_real.csv', Xs_Tr_full_real, delimiter=" ")
-            np.savetxt('/opt/Patient/Field_solutions/Xs_Tr_full_imag.csv', Xs_Tr_full_imag, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Xs_Tr_full_real.csv', Xs_Tr_full_real, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Xs_Tr_full_imag.csv', Xs_Tr_full_imag, delimiter=" ")
 
         Xs_Tr_full_complex=np.vectorize(complex)(Xs_Tr_full_real,Xs_Tr_full_imag)
 
@@ -235,19 +240,22 @@ def convolute_and_ifft_octaves(last_point,i_axon,num_segments,N_freq,N_freq_octv
 
         Y = np.concatenate((Xs_conv, fv_conj), axis=0)
 
-        Signal_t_conv=np.fft.ifft(Y).real
+        #Signal_t_conv=np.fft.ifft(Y).real\
+        Signal_t_conv[i_point,:]=np.fft.ifft(Y).real
 
         if global_i_point+last_point==0:
             plt.figure(11111234)
-            plt.plot(t_vect,Signal_t_conv)
+            plt.plot(t_vect,Signal_t_conv[i_point,:])
             plt.xlim(0.000,T*5)
             plt.grid(True)
             plt.xlabel('t, sec')
             plt.ylabel('Potential, V')
             plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            plt.savefig('/opt/Patient/Images/Signal_convoluted_1st_point.png', format='png', dpi=500)
+            plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_convoluted_1st_point.png', format='png', dpi=500)
 
-        np.save('/opt/Patient/Points_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv.real)
+        #np.save('Points_in_time/Signal_t_conv'+str(i_axon), Signal_t_conv)
+    # Number is the global point index of the last compartment on the neuron
+    np.save(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv)
 
     output.put(i_axon)
 
@@ -257,9 +265,9 @@ def convolute_signal_with_field_and_compute_ifft(d,XS_signal,models_in_populatio
     start_ifft=time_lib.time()
 
     if d["spectrum_trunc_method"]=='Octave Band Method':
-        Fr_corresp_arr = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-        Fr_octave_vect = np.genfromtxt('/opt/Patient/Stim_Signal/Fr_octave_vector_'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
-        FR_vec_oct = np.genfromtxt('/opt/Patient/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        Fr_corresp_arr = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        Fr_octave_vect = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Fr_octave_vector_'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
+        FR_vec_oct = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
 
         Fr_corresp_arr=np.round(Fr_corresp_arr,6)
         Fr_octave_vect=np.round(Fr_octave_vect,6)
@@ -295,10 +303,10 @@ def convolute_signal_with_field_and_compute_ifft(d,XS_signal,models_in_populatio
             hf.close()
 
         if d["spectrum_trunc_method"]=='Cutoff Method':
-            Ind_trunc = np.genfromtxt('/opt/Patient/Stim_Signal/Indices_cutoff.csv', delimiter=' ')
+            Ind_trunc = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Indices_cutoff.csv', delimiter=' ')
 
         elif d["spectrum_trunc_method"]=='High Amplitude Method':
-            Ind_trunc = np.genfromtxt('/opt/Patient/Stim_Signal/Indices_high_ampl.csv', delimiter=' ')
+            Ind_trunc = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Indices_high_ampl.csv', delimiter=' ')
         else:
             Ind_trunc=0
 

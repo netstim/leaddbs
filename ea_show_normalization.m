@@ -177,7 +177,8 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
 %       if strcmp(options.prefs.dev.profile,'se')
 %         ;
 %       else
-    catch
+    catch ME
+        warning(ME.message);
         fprintf('Skip showing normalization of %s\n', checkf);
     end
 

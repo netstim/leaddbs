@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 19-Jan-2020 19:27:15
+% Last Modified by GUIDE v2.5 03-Mar-2021 16:26:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -252,32 +252,32 @@ if ~strcmp(options.leadprod, 'group')
             end
         end
 
-        if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat']) ...
-                && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+        if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat']) ...
+                && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
-            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
-        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'])
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
+        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
-        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
+            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
         end
 
         if visualizeVAT
@@ -1222,8 +1222,8 @@ else
         if isfield(PL(p),'ht')
             delete(PL(p).ht);
         end
-        if isfield(PL(p),'axon')
-            cellfun(@delete, PL(p).axon);
+        if isfield(PL(p),'fiberActivation')
+            cellfun(@delete, PL(p).fiberActivation);
         end
     end
 end
@@ -1887,35 +1887,35 @@ else
         end
     end
 
-    visualizeAxon = 1;
-    if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat']) ...
-            && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+    visualizeFiberActivation = 1;
+    if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat']) ...
+            && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
-        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
-    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'])
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
+    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_right.mat'], resultfig);
-    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'])
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
+    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_axon_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'axonActivation_left.mat'], resultfig);
+        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
     else
-        visualizeAxon = 0;
+        visualizeFiberActivation = 0;
     end
 
     if visualizeVAT
@@ -1935,7 +1935,7 @@ else
         ea_calc_vatstats(resultfig,options);
     end
 
-    if ~visualizeVAT && ~visualizeAxon
+    if ~visualizeVAT && ~visualizeFiberActivation
         fprintf('\n');
         warning('off', 'backtrace');
         warning('Nothing to be visualized, please rerun stimulation!!');
@@ -2390,6 +2390,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','off');
     case 'Maedler 2012'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2397,6 +2398,7 @@ switch model
         ea_disable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
+        set(handles.addStimSet,'visible','off');
     case 'Kuncel 2008'
         ea_hide_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2404,6 +2406,7 @@ switch model
         ea_disable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
+        set(handles.addStimSet,'visible','off');
     case 'Dembek 2017'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2411,6 +2414,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','off');
     case 'Fastfield (Baniasadi 2020)'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2418,6 +2422,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','off');
     case 'OSS-DBS (Butenko 2020)'
         ea_hide_impedance(handles);
         set(handles.estimateInTemplate,'Visible','on');
@@ -2425,6 +2430,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','on');
 
 end
 S.model=model;
@@ -3205,11 +3211,11 @@ function Rs2am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=2;
 S.Rs2.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3221,11 +3227,11 @@ function Rs1am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=1;
 S.Rs1.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3237,11 +3243,11 @@ function Rs3am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=3;
 S.Rs3.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3253,11 +3259,11 @@ function Rs4am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=4;
 S.Rs4.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3269,11 +3275,11 @@ function Ls1am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=1;
 S.Ls1.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3285,11 +3291,11 @@ function Ls2am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=2;
 S.Ls2.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3301,11 +3307,11 @@ function Ls3am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=3;
 S.Ls3.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3317,11 +3323,11 @@ function Ls4am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=4;
 S.Ls4.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3331,10 +3337,11 @@ function Rs1am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs1am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=1;
 S.Rs1.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3344,10 +3351,11 @@ function Rs2am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs2am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=2;
 S.Rs1.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3357,10 +3365,11 @@ function Rs3am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs3am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=3;
 S.Rs3.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3370,10 +3379,11 @@ function Rs4am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs4am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=4;
 S.Rs4.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3383,10 +3393,11 @@ function Ls1am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls1am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=1;
 S.Ls1.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3396,10 +3407,11 @@ function Ls2am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls2am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=2;
 S.Ls2.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3409,10 +3421,11 @@ function Ls3am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls3am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=3;
 S.Ls3.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3422,10 +3435,11 @@ function Ls4am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls4am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=4;
 S.Ls4.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3478,3 +3492,19 @@ function stimfig_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 ea_setprefs('vatsettings.estimateInTemplate',get(handles.estimateInTemplate,'Value'));
 delete(hObject);
+
+
+% --- Executes on button press in addStimSet.
+function addStimSet_Callback(hObject, eventdata, handles)
+% hObject    handle to addStimSet (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of addStimSet
+if hObject.Value
+    options = getappdata(handles.stimfig, 'options');
+    numContacts = options.elspec.numel;
+    stimLabel = getappdata(handles.stimfig, 'stimlabel');
+    stimFolder = [options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimLabel];
+    ea_addStimSet(numContacts, stimFolder, hObject);
+end

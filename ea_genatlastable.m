@@ -308,10 +308,10 @@ if strcmp(fname(end-3:end),'.nii') % volumetric
         switch unmix
             case 'unmix_l'
                 structure.name=strrep(structure.name,'_l',''); % important to remove suffixes again for later indexing.
-                structure.Tag=strrep(structure.Tag,'_l','');
+                structure.Tag=strrep(structure.Tag,'_l','_left');
             case 'unmix_r'
                 structure.name=strrep(structure.name,'_r','');
-                structure.Tag=strrep(structure.Tag,'_r','');
+                structure.Tag=strrep(structure.Tag,'_r','_right');
         end
         delete(fullfile(pth,[f,'_r',ext]));
         delete(fullfile(pth,[f,'_l',ext]));

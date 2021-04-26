@@ -601,7 +601,7 @@ NETGEN_3D_Parameters_5 = NETGEN_1D_2D_3D_4.Parameters()
 NETGEN_3D_Parameters_5.SetMaxSize( Max_size_rest )
 NETGEN_3D_Parameters_5.SetSecondOrder( 0 )
 NETGEN_3D_Parameters_5.SetOptimize( 1 )
-NETGEN_3D_Parameters_5.SetFineness( 1 )
+NETGEN_3D_Parameters_5.SetFineness( 2 )   # for external grounding
 NETGEN_3D_Parameters_5.SetMinSize( Min_size_rest )
 NETGEN_3D_Parameters_5.SetUseSurfaceCurvature( 1 )
 NETGEN_3D_Parameters_5.SetFuseEdges( 1 )
@@ -709,7 +709,7 @@ if(Lead2nd_Enable):
 	smesh.SetName(Sub_mesh_4_2, 'Sub-mesh_4_2')
 
 #to export the mesh
-Mesh_1.ExportMED('/opt/Patient/Meshes/Mesh_unref.med')
+Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med')
 
 
 if salome.sg.hasDesktop():

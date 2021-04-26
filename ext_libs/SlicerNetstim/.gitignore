@@ -1,2 +1,8 @@
-!CMakeLists.txt
-!/**/*.png
+AlphaOmega-build/
+./**/*.pyc
+/LeadOR/.vscode/settings.json
+*.pyc
+*.cpython-36.pyc
+*.DS_Store
+/LeadOR/.DS_Store
+.vscode/*

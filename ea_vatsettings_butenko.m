@@ -22,7 +22,7 @@ function varargout = ea_vatsettings_butenko(varargin)
 
 % Edit the above text to modify the response to help ea_vatsettings_butenko
 
-% Last Modified by GUIDE v2.5 30-Dec-2020 15:00:48
+% Last Modified by GUIDE v2.5 15-Apr-2021 19:44:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,6 +65,14 @@ prefs=ea_prefs('');
 set(handles.calcAxonActivation,'Value',prefs.machine.vatsettings.butenko_calcAxonActivation);
 
 connectomes = ea_genmodlist([], [], [], 'dmri');
+
+% Check multi-tract connectome
+multiTractConnFolder = [ea_getconnectomebase, 'dMRI_MultiTract'];
+multiTractConn = unique(cellfun(@fileparts, ea_regexpdir(multiTractConnFolder,'\.mat$'), 'Uni', 0));
+multiTractConn = strrep(multiTractConn, [multiTractConnFolder,filesep], 'Multi-Tract: ')';
+
+connectomes = [connectomes, multiTractConn];
+
 if isempty(connectomes)
     fprintf('\n')
     warning('off', 'backtrace');
@@ -84,8 +92,17 @@ else
     end
 end
 
-set(handles.axonLength,'String',num2str(prefs.machine.vatsettings.butenko_axonLength));
-set(handles.fiberDiameter,'String',num2str(prefs.machine.vatsettings.butenko_fiberDiameter));
+if numel(prefs.machine.vatsettings.butenko_axonLength) == 1 % Normal connectome
+    set(handles.axonLength,'String',num2str(prefs.machine.vatsettings.butenko_axonLength));
+    set(handles.fiberDiameter,'String',num2str(prefs.machine.vatsettings.butenko_fiberDiameter));
+    handles.LenDSetting.Visible = 'off';
+else % Multi-Tract connectome case
+    set(handles.axonLength,'String','10');
+    set(handles.fiberDiameter,'String','5.7');
+    set(handles.axonLength,'Enable','off');
+    set(handles.fiberDiameter,'Enable','off');
+    handles.LenDSetting.Visible = 'on';
+end
 
 etv={'E-Field Threshold Presets:',nan
     'Approximation by D [um] and PW [us] (Proverbio & Husch 2019)',nan
@@ -155,8 +172,13 @@ if strcmp(get(handles.connectomes,'Enable'), 'on')
     connectomes = get(handles.connectomes,'String');
     vatsettings.butenko_connectome = connectomes{get(handles.connectomes,'Value')};
 end
-vatsettings.butenko_axonLength = str2double(get(handles.axonLength,'String'));
-vatsettings.butenko_fiberDiameter = str2double(get(handles.fiberDiameter,'String'));
+if ~startsWith(vatsettings.butenko_connectome, 'Multi-Tract: ') % Values from the EditField
+    vatsettings.butenko_axonLength = str2double(get(handles.axonLength,'String'));
+    vatsettings.butenko_fiberDiameter = str2double(get(handles.fiberDiameter,'String'));
+else % Multi-Tract connectome case, values from appdata
+    vatsettings.butenko_axonLength = getappdata(handles.setfig, 'axonLength');
+    vatsettings.butenko_fiberDiameter = getappdata(handles.setfig, 'fiberDiameter');
+end
 vatsettings.butenko_ethresh = str2double(get(handles.ethresh,'String'));
 vatsettings.butenko_interactive = get(handles.interactive,'Value');
 ea_setprefs('vatsettings',vatsettings);
@@ -295,7 +317,17 @@ function connectomes_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns connectomes contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from connectomes
-
+conn = hObject.String{hObject.Value};
+if ~startsWith(conn, 'Multi-Tract: ')
+    handles.axonLength.Enable = 'on';
+    handles.fiberDiameter.Enable = 'on';
+    handles.LenDSetting.Visible = 'off';
+else
+    handles.axonLength.Enable = 'off';
+    handles.fiberDiameter.Enable = 'off';
+    ea_axonact_connsetting(strrep(conn, 'Multi-Tract: ', ''), handles.setfig);
+    handles.LenDSetting.Visible = 'on';
+end
 
 % --- Executes during object creation, after setting all properties.
 function connectomes_CreateFcn(hObject, eventdata, handles)
@@ -317,3 +349,12 @@ function interactive_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of interactive
+
+
+% --- Executes on button press in LenDSetting.
+function LenDSetting_Callback(hObject, eventdata, handles)
+% hObject    handle to LenDSetting (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+conn = handles.connectomes.String{handles.connectomes.Value};
+ea_axonact_connsetting(strrep(conn, 'Multi-Tract: ', ''), handles.setfig);

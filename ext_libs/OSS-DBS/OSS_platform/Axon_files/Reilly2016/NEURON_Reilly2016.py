@@ -111,41 +111,6 @@ def connection_visualizator(Activated_models,Initial_number,population_name,iter
 
     return True
 
-def get_one_internodal(N_index,n_segments,last_point,n_Ranvier,Ampl_scale,fiberD):
-    os.chdir("..")
-    os.chdir("..")
-    nodes=[]
-    #here we need to load potential only on Ranviers and middle STIN
-    if fiberD>3.0:         #load 5th and 6th compartment (middle STINs) and take average
-        for point_inx in range(n_segments):
-            if point_inx%11==0:
-                loc_index=0
-                nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
-                nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
-            elif loc_index%6==0 and loc_index!=0:
-                nodes_point_in_time_left=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point-1)+'.npy')
-                nodes_point_in_time_right=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
-
-                #nodes_point_in_time_left=np.asarray(nodes_point_in_time_left)
-                #nodes_point_in_time_left = nodes_point_in_time_left.ravel()
-
-                #nodes_point_in_time_right=np.asarray(nodes_point_in_time_right)
-                #nodes_point_in_time_right = nodes_point_in_time_right.ravel()
-
-                nodes_point_in_time=(nodes_point_in_time_left[:]+nodes_point_in_time_right[:])/2
-
-                nodes.append((nodes_point_in_time)*(1000)*Ampl_scale)    #convert to mV
-            loc_index+=1
-    else:
-        for point_inx in range(n_segments):     #take every forth compartment (either Ranvier or middle STIN)
-            if point_inx%4==0:
-                nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
-                nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
-
-    nodes=np.asarray(nodes)
-    nodes = nodes.ravel()
-
-    return nodes
 
 def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl_scale,t_steps,n_segments,dt,tstop,n_pulse,v_init,n_Ranvier,output):
 
@@ -190,20 +155,28 @@ def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl
     #if  we have a model for Reilly
     os.chdir("..")
     os.chdir("..")
-    nodes=[]
+
     n_segments=n_Ranvier*2-1
-    for point_inx in range(n_segments):
 
-        nodes_point_in_time=np.load('/opt/Patient/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')   #get solution for each compartment in time for one neuron
-        nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
+    #nodes=[]
+#    for point_inx in range(n_segments):
+#
+#        nodes_point_in_time=np.load(os.environ['PATIENTDIR']+'/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')   #get solution for each compartment in time for one neuron
+#        nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
+#
+#    nodes=np.asarray(nodes)
+#    nodes = nodes.ravel()
+#
+#    V_art=np.zeros((n_segments,t_steps),float)
+#
+#    for i in range(n_segments):
+#        V_art[i,:]=nodes[(i*t_steps):((i*t_steps)+t_steps)]
 
-    nodes=np.asarray(nodes)
-    nodes = nodes.ravel()
-
+    #to distinguish axons in different populations, we indexed them with the global index of the last compartment
+    axon_in_time=np.load(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(n_segments-1+N_index*n_segments+last_point)+'.npy')
     V_art=np.zeros((n_segments,t_steps),float)
-
     for i in range(n_segments):
-        V_art[i,:]=nodes[(i*t_steps):((i*t_steps)+t_steps)]
+        V_art[i,:]=axon_in_time[i,:]*(1000)*Ampl_scale   #convert to mV
 
     #only if we want to save potential in time on axons
     #np.save('Field_on_axons_in_time/'+str(population_name)+'axon_'+str(N_index_glob), V_art)
@@ -254,15 +227,15 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
 
     if population_index==-1:    # only one population is simulated
         population_name=''
-        Vert_full_get=read_csv('/opt/Patient/Neuron_model_arrays/All_neuron_models.csv', delimiter=' ', header=None) # get all neuron models
+        Vert_full_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/All_neuron_models.csv', delimiter=' ', header=None) # get all neuron models
         Vert_full=Vert_full_get.values
         Vert_full=np.round(Vert_full,8)
 
-        Vert_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)    # get only physiologically correct neuron models
+        Vert_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)    # get only physiologically correct neuron models
         Vert=Vert_get.values
         Vert=np.round(Vert,8)
     else:
-        hf = h5py.File('/opt/Patient/Neuron_model_arrays/All_neuron_models_by_populations.h5', 'r')
+        hf = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/All_neuron_models_by_populations.h5', 'r')
         lst=list(hf.keys())
 
         if N_models==0:
@@ -274,7 +247,7 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
         hf.close()
         Vert_full=np.round(Vert_full,8)
 
-        hf2 = h5py.File('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'r')
+        hf2 = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'r')
         lst=list(hf2.keys())
         population_name=str(lst[population_index])+'/'
         Vert=hf2.get(lst[population_index])
@@ -297,6 +270,7 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     neuron_global_index_array=np.zeros((N_models),int)
 
     os.chdir("Axon_files/Reilly2016/")
+    axons_quart=[int(N_models/4.0),int(2*N_models/4.0),int(3*N_models/4.0)]
 
     # run NEURON simulation in parallel
     while Neuron_index<N_models:
@@ -328,7 +302,10 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
 
             j_proc=j_proc+1
             Neuron_index=Neuron_index+1
-
+            
+            if N_models>500 and Neuron_index in axons_quart:
+                print(int(Neuron_index*100/N_models)+1,"% of neuron models were processed")
+            
         for p in proc:
             p.start()
         for p in proc:
@@ -365,7 +342,7 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
 
     Axon_status=np.zeros((N_models,7),float)      #x1,y1,z1,x2,y2,z2,status. Holds info only about placed neurons. Important: coordinates are in the initial MRI space!
 
-    [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt('/opt/Patient/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
+    [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
     shift_to_MRI_space=np.array([x_min,y_min,z_min])
 
     Axon_Lead_DBS=np.zeros((Number_of_axons_initially*n_segments,5),float)
@@ -390,14 +367,14 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     mdic = {"fibers": Axon_Lead_DBS, "ea_fibformat": "1.0"}
     if population_index==-1:            # only one population is simulated
         if stim_side==0:
-            savemat("/opt/Patient/Results_rh/Axon_state.mat", mdic)
+            savemat(os.environ['PATIENTDIR']+"/Results_rh/Axon_state.mat", mdic)
         else:
-            savemat("/opt/Patient/Results_lh/Axon_state.mat", mdic)
+            savemat(os.environ['PATIENTDIR']+"/Results_lh/Axon_state.mat", mdic)
     else:
         if stim_side==0:
-            savemat("/opt/Patient/Results_rh/Axon_state_"+str(lst[population_index])+".mat", mdic)
+            savemat(os.environ['PATIENTDIR']+"/Results_rh/Axon_state_"+str(lst[population_index])+".mat", mdic)
         else:
-            savemat("/opt/Patient/Results_lh/Axon_state_"+str(lst[population_index])+".mat", mdic)
+            savemat(os.environ['PATIENTDIR']+"/Results_lh/Axon_state_"+str(lst[population_index])+".mat", mdic)
 
     loc_ind_start=0
     for i in range(N_models):
@@ -429,36 +406,36 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     if population_index==-1:
         print(np.round(Activated_models/float(Number_of_axons_initially)*100,2),"% activation (including damaged neurons)\n")
         if stim_side==0:
-            #np.savetxt('/opt/Patient/Field_solutions/Activation/Last_run.csv', List_of_activated, delimiter=" ")
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
-            np.save('/opt/Patient/Results_rh/'+stim_folder+'Connection_status',Axon_status)
-            #np.save('/opt/Patient/Results_rh/'+stim_folder+'Network_status',Vert_full_status)
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Network_status.csv', Vert_full_status, delimiter=" ")  #Ningfei prefers .csv
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
+            #np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Activation/Last_run.csv', List_of_activated, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
+            np.save(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Connection_status',Axon_status)
+            #np.save(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Network_status',Vert_full_status)
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Network_status.csv', Vert_full_status, delimiter=" ")  #Ningfei prefers .csv
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
         else:
-            #np.savetxt('/opt/Patient/Field_solutions/Activation/Last_run.csv', List_of_activated, delimiter=" ")
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
-            np.save('/opt/Patient/Results_lh/'+stim_folder+'Connection_status',Axon_status)
-            #np.save('/opt/Patient/Results_lh/'+stim_folder+'Network_status',Vert_full_status)
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Network_status.csv', Vert_full_status, delimiter=" ")  #Ningfei prefers .csv
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
+            #np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Activation/Last_run.csv', List_of_activated, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
+            np.save(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Connection_status',Axon_status)
+            #np.save(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Network_status',Vert_full_status)
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Network_status.csv', Vert_full_status, delimiter=" ")  #Ningfei prefers .csv
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
 
     else:
         print(np.round(Activated_models/float(Number_of_axons_initially)*100,2),"% activation in ",lst[population_index], "(including damaged neurons)\n")
         if stim_side==0:
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
-            np.save('/opt/Patient/Results_rh/'+stim_folder+'Connection_status_'+str(lst[population_index]),Axon_status)
-            np.savetxt('/opt/Patient/Results_rh/'+stim_folder+'Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
+            np.save(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Connection_status_'+str(lst[population_index]),Axon_status)
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
 
-            hf = h5py.File('/opt/Patient/Results_rh/'+stim_folder+'Network_status.h5', 'a')
+            hf = h5py.File(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Network_status.h5', 'a')
             hf.create_dataset(str(lst[population_index]), data=Vert_full_status)
             hf.close()
         else:
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
-            np.save('/opt/Patient/Results_lh/'+stim_folder+'Connection_status_'+str(lst[population_index]),Axon_status)
-            np.savetxt('/opt/Patient/Results_lh/'+stim_folder+'Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
+            np.save(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Connection_status_'+str(lst[population_index]),Axon_status)
+            np.savetxt(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
 
-            hf = h5py.File('/opt/Patient/Results_lh/'+stim_folder+'Network_status.h5', 'a')
+            hf = h5py.File(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Network_status.h5', 'a')
             hf.create_dataset(str(lst[population_index]), data=Vert_full_status)
             hf.close()
 

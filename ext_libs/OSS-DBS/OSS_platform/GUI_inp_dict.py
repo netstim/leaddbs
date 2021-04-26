@@ -75,7 +75,7 @@ d = {
     'K_A': 0.0,
     'beta_ground': 0.0,
     'K_A_ground': 0.0,
-
+    
     'Global_rot': 1,
     'x_seed': 10.0379,
     'y_seed': -18.2943,
@@ -100,8 +100,8 @@ d = {
     'VTA_from_divE': 0,
     'VTA_from_NEURON': 0,
     'VTA_from_E': 1,
-    'Activation_threshold_VTA': 0.1,
-
+    'Activation_threshold_VTA': 0.2,
+    
     'refinement_frequency': [0],
     'num_ref_freqs': 1,
     'rel_div_CSF': -1,

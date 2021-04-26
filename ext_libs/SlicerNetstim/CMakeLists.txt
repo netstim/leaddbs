@@ -1,16 +1,16 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.13.4)
 
-project(Netstim)
+project(SlicerNetstim)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "http://slicer.org/slicerWiki/index.php/Documentation/Nightly/Extensions/Netstim")
+set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/SlicerNetstim")
 set(EXTENSION_CATEGORY "Netstim")
-set(EXTENSION_CONTRIBUTORS "John Doe (AnyWare Corp.)")
-set(EXTENSION_DESCRIPTION "This is an example of a simple extension")
-set(EXTENSION_ICONURL "http://www.example.com/Slicer/Extensions/Netstim.png")
-set(EXTENSION_SCREENSHOTURLS "http://www.example.com/Slicer/Extensions/Netstim/Screenshots/1.png")
-set(EXTENSION_DEPENDS "NA") # Specified as a space separated string, a list or 'NA' if any
+set(EXTENSION_CONTRIBUTORS "Simon Oxenford (Charite Berlin)")
+set(EXTENSION_DESCRIPTION "Netstim modules collection")
+set(EXTENSION_ICONURL "http://www.example.com/Slicer/Extensions/SlicerNetstim.png")
+set(EXTENSION_SCREENSHOTURLS "http://www.example.com/Slicer/Extensions/SlicerNetstim/Screenshots/1.png")
+set(EXTENSION_DEPENDS "NA") # Specified as a list or "NA" if no dependencies
 
 #-----------------------------------------------------------------------------
 # Extension dependencies
@@ -19,8 +19,10 @@ include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 # Extension modules
+add_subdirectory(LeadOR)
+add_subdirectory(AlphaOmega)
+add_subdirectory(StereotacticPlan)
 add_subdirectory(ImportAtlas)
-add_subdirectory(ImportSubject)
 add_subdirectory(WarpDrive)
 ## NEXT_MODULE
 

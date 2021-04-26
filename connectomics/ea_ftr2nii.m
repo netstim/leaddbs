@@ -1,6 +1,6 @@
 function ea_ftr2nii(ftrFile, reference, outputName)
 
-if ~exist('reference','var')
+if ~exist('reference','var') || isempty(reference)
     reference = [ea_space,'t1.nii'];
 end
 refnii = ea_load_nii(reference);

@@ -58,6 +58,8 @@ for group=groups
                 sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
             case 2
                 sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
+            case 3
+                sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
         % to too many VTAs (connthreshold slider)
@@ -187,6 +189,9 @@ for group=groups
 
                     vals{group,side}(nonempty)=outvals;
                 end
+            case 3 % Plain Connection
+                vals{group,side} = sumgfibsval/length(gpatsel);
+                vals{group,side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)))=nan;
         end
 
         fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));

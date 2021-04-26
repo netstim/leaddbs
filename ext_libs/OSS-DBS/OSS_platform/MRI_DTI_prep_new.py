@@ -492,3 +492,4 @@ def obtain_DTI_class(inp_dict,MRI_param):
         pickle.dump(DTI_param, f, pickle.HIGHEST_PROTOCOL)
 
     return DTI_param
+

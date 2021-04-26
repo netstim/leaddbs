@@ -2,27 +2,32 @@ function color = ea_uisetcolor(varargin)
 % Wrapper for MATLAB built-in function 'uisetcolor'
 %
 % The original color picker uses 'jxbrowser-chromium' as backend since
-% version R2016b (9.1), which has a bug on Linux. All the MATLAB component uses
-% 'jxbrowser-chromium' (like color picker and help browser) might hang when
-% closing the window. The color picker is also slower now (on other
+% version R2016b (9.1), which has a bug on Linux. All the MATLAB component
+% uses 'jxbrowser-chromium' (like color picker and help browser) might hang
+% when closing the window. The color picker is also slower now (on other
 % platforms, too). This warpper will set the color picker to the old
 % fashion for MATLAB R2016b and later versions on Linux. It can be used
 % until MATLAB fixes the bug in future release.
 %
-% Seems fixed on R2018b (9.5). Reocurring in R2019b (9.7)...
+% Set to old version for MATLAB R2016b, R2017a, R2017b, R2018a and R2019b
 
-ver = version;
-ver = str2double(ver(1:3));
+if ismac || ispc
+    color = uisetcolor(varargin{:});
+    return;
+end
 
-if ismac || ispc || ver < 9.1 %|| ver == 9.5
+if isMatlabVer('<',[9,1]) ... % < R2016b
+        || isMatlabVer('==',[9,5]) ... % R2018b
+        || isMatlabVer('==',[9,6]) ... % R2019a
+        || isMatlabVer('>=',[9,8]) % >= R2020a
     color = uisetcolor(varargin{:});
 else
-    if ver == 9.1   % R2016b
+    if isMatlabVer('==',[9,1])	% R2016b
         currVer = getpref('Mathworks_uisetcolor', 'Version');
         setpref('Mathworks_uisetcolor', 'Version', 1);
         color = uisetcolor(varargin{:});
         setpref('Mathworks_uisetcolor', 'Version', currVer);
-    else    % Since R2017a
+    else	% R2017a, R2017b, R2018a, R2019b
         s = settings;
         oldColorPicker = 'matlab.ui.internal.dialog.ColorChooser';
         % For reference:

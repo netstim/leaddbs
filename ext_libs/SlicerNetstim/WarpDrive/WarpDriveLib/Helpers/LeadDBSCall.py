@@ -3,9 +3,9 @@ import os, sys, shutil
 import uuid
 from scipy import io
 import numpy as np
+from subprocess import call
 
 from . import WarpDriveUtil, GridNodeHelper
-import ImportSubject
 
 try:
   import h5py
@@ -95,21 +95,28 @@ def updateParameterNodeFromArgs(parameterNode):
     parameterNode.SetParameter("antsApplyTransformsPath", antsApplyTransformsPath)
     parameterNode.SetNodeReferenceID("ImageNode", None)
     parameterNode.SetNodeReferenceID("TemplateNode", None)
-    parameterNode.SetNodeReferenceID("Segmentation", None)
     return True
 
 
 def loadSubjectTransform(subjectPath, antsApplyTransformsPath):
 
   # update subject warp fields to new lead dbs specification
-  if ImportSubject.ImportSubjectLogic().ish5Transform(subjectPath):
-    ImportSubject.ImportSubjectLogic().updateTranform(subjectPath, antsApplyTransformsPath)
+  if os.path.isfile(os.path.join(subjectPath, 'glanatComposite.h5')):
+    updateTranform(subjectPath, antsApplyTransformsPath)
 
   # load glanat composite
-  glanatCompositeNode = ImportSubject.ImportSubjectLogic().importTransform(subjectPath, 'glanatComposite.nii.gz')
+  glanatCompositeNode = slicer.util.loadTransform(os.path.join(subjectPath, 'glanatComposite.nii.gz'))
   
   return glanatCompositeNode
 
+def updateTranform(directory, antsApplyTransformsPath):
+  for transform,reference in zip(['glanatComposite','glanatInverseComposite'],['glanat','anat_t1']):
+    transformFullPath = os.path.join(directory,transform + '.h5') # in case inverse doesnt exist
+    if os.path.isfile(transformFullPath):
+      command = antsApplyTransformsPath + " -r " + os.path.join(directory,reference + '.nii') + " -t " + transformFullPath + " -o [" + os.path.join(directory,transform + '.nii.gz') + ",1] -v 1"
+      commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
+      os.remove(transformFullPath)
+  return True
   
 def queryUserApproveSubject(subjectPath):
   msgBox = qt.QMessageBox()

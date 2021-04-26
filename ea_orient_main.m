@@ -8,7 +8,11 @@ if  options.modality == 1 % check for electrode type and postoperative imaging
     msg = sprintf(['Automatic rotation detection works only for postoperative CT images.']);
     choice = questdlg(msg,'No postoperative CT!','Abort','Abort');
     roll_out = [];
-elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)') || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
+elseif strcmp(options.elmodel,'Medtronic B33005') ...
+        || strcmp(options.elmodel,'Medtronic B33015') ...
+        || strcmp(options.elmodel,'Boston Scientific Vercise Directed') ...
+        || strcmp(options.elmodel,'St. Jude Directed 6172 (short)') ...
+        || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
     if ismember(options.elmodel,{'St. Jude Directed 6172 (short)','St. Jude Directed 6173 (long)'})
         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
     end
@@ -73,16 +77,9 @@ elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(op
     tmat_reg2org=eye(4); % default.
     try
         if strcmp(options.prefs.reco.mancoruse,'postop')
-        load([folder 'ea_coregctmethod_applied.mat']);
-        switch coregct_method_applied{end}
-            case 'ea_coregctmri_fsl'
-                %             tmat_reg2org = dlmread([folder 'anat_t12postop_ct_flirt1.mat']));
-                disp(['Warning: Temporary fix to use DiODe algorithm with FLIRT. rpostop_ct is used so results may be slightly less accurate.'])
-                ct = ct_reg;
-            otherwise
-                [tmat_reg2org,ctfname] = ea_getrawct2preniimat(options,1);
-                ct=ea_load_nii(ctfname);
-        end
+            load([folder 'ea_coregctmethod_applied.mat']);
+            [tmat_reg2org,ctfname] = ea_getrawct2preniimat(options,1);
+            ct=ea_load_nii(ctfname);
         else
             ct = ct_reg;
         end

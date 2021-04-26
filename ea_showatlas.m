@@ -1,6 +1,6 @@
 function [atlases,colorbuttons,atlassurfs,atlaslabels] = ea_showatlas(varargin)
 % This function shows atlas data in the 3D-Scene viewer. It
-% reads in all atlases found in the eAuto_root/atlases folder, calculates a
+% reads in all atlases found in the atlases folder, calculates a
 % convex hull around the nonzero area and renders this area as 3D surfaces.
 % For a small part of contact statistics, the function uses
 % inhull.m which is covered by the BSD-license (see below).
@@ -31,10 +31,10 @@ for nativemni=nm % switch between native and mni space atlases.
 
     switch nativemni
         case 1 % mni
-            adir=[ea_space(options,'atlases'),options.atlasset,filesep];
+            atlasFolder = ea_space(options,'atlases');
             mifix='';
         case 2 % native
-            adir=[[options.root,options.patientname,filesep],'atlases',filesep,options.atlasset,filesep];
+            atlasFolder = [options.root,options.patientname,filesep,'atlases',filesep];
             mifix='';
     end
 
@@ -42,11 +42,11 @@ for nativemni=nm % switch between native and mni space atlases.
     set(0,'CurrentFigure',resultfig)
     ht=getappdata(resultfig,'atlht');
 
-    if ~exist([adir,'atlas_index.mat'],'file')
-        atlases = ea_genatlastable([],adir,options,mifix,resultfig);
+    if ~exist([atlasFolder,options.atlasset,filesep,'atlas_index.mat'],'file')
+        atlases = ea_genatlastable([],atlasFolder,options,mifix,resultfig);
     else
-        atlases = ea_loadatlas([adir,'atlas_index.mat'],resultfig,ht);
-        atlases = ea_genatlastable(atlases,adir,options,mifix);
+        atlases = ea_loadatlas([atlasFolder,options.atlasset,filesep,'atlas_index.mat'],resultfig,ht);
+        atlases = ea_genatlastable(atlases,atlasFolder,options,mifix);
     end
     
     isdiscfibers = cellfun(@(x) ischar(x) && strcmp(x, 'discfibers'), atlases.pixdim);
@@ -158,15 +158,20 @@ for nativemni=nm % switch between native and mni space atlases.
             if isnumeric(atlases.pixdim{atlas,side})
                 % Get ROI Tag
                 if ~isempty(atlases.roi{atlas,side}.Tag)
-                    roiTag = atlases.roi{atlas,side}.Tag;
+                    % Check if roi Tag has proper sidestr
+                    if endsWith(atlases.roi{atlas,side}.Tag, ['_',sidestr{side}])
+                        roiTag = atlases.roi{atlas,side}.Tag;
+                    else
+                        roiTag = [atlases.roi{atlas,side}.Tag, '_', sidestr{side}];
+                    end
                 else
-                    roiTag = atlases.roi{atlas,side}.name;
+                    roiTag = [atlases.roi{atlas,side}.name,'_',sidestr{side}];
                 end
-                atlases.roi{atlas,side}.Tag = [roiTag,'_',sidestr{side}];
 
                 % breathe life into stored ea_roi
                 atlases.roi{atlas,side}.plotFigureH=resultfig; % attach to main viewer
                 atlases.roi{atlas,side}.htH=ht; % attach to tooltip menu
+                atlases.roi{atlas,side}.Tag=roiTag;
                 atlases.roi{atlas,side}.breathelife;
                 atlases.roi{atlas,side}.smooth=options.prefs.hullsmooth;
                 atlases.roi{atlas,side}.update_roi;
@@ -194,7 +199,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 % Set atlaslabel
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
                     ea_underscore2space(roiTag),...
-                    'Tag', [roiTag,'_',sidestr{side}],...
+                    'Tag', roiTag,...
                     'VerticalAlignment', 'Baseline',...
                     'HorizontalAlignment', 'Center',...
                     'FontWeight', 'bold',...
@@ -247,8 +252,8 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 % set Tags
                 try
-                    set(colorbuttons(atlascnt),'tag',[roiTag,'_',sidestr{side}])
-                    atlassurfs{atlascnt,1}.Tag=[roiTag,'_',sidestr{side}];
+                    set(colorbuttons(atlascnt),'Tag', roiTag)
+                    atlassurfs{atlascnt,1}.Tag = roiTag;
                 catch
                     keyboard
                 end
@@ -335,7 +340,9 @@ for nativemni=nm % switch between native and mni space atlases.
                     atlassurfs{atlascnt,1}=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
                 end
 
-                fibTag = regexp(atlases.names{atlas},['[^',filesep,']+?(?=\.[^.]*$|$)'],'match','once');
+                % Use fileparts to extract the name, fiber atlas files are
+                % always named as XXX.mat
+                [~, fibTag] = fileparts(atlases.names{atlas});
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
                     ea_underscore2space(fibTag),...
                     'Tag', [fibTag,'_',sidestr{side}],...
@@ -355,7 +362,10 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
 
                 if ~(atlases.types(atlas)>5)
-                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
+                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),...
+                        'TooltipString',[fibTag,'_',sidestr{side}],...
+                        'ClickedCallback',{@atlasvisible,resultfig,atlascnt},...
+                        'State',visible);
                 end
 
                 % gather contact statistics
@@ -560,6 +570,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 cbfig = figure('Visible', 'off');
                 ea_plot_colorbar(fibcmap, [], 'h', '', tick, ticklabel, axes(cbfig));
                 saveas(cbfig, [tractPath, filesep, tractName, '_colorbar.svg']);
+                close(cbfig);
                 % export_fig(cbfig, [tractPath, filesep, tractName, '_colorbar.png']);
                 fprintf('Colorbar exported as:\n%s\n\n', [tractPath, filesep, tractName, '_colorbar.svg']);
             end
@@ -611,7 +622,7 @@ for nativemni=nm % switch between native and mni space atlases.
 
     try
         atlases.rebuild=0; % always reset rebuild flag.
-        save([adir,options.atlasset,filesep,'atlas_index.mat'],'atlases','-v7.3');
+        ea_saveatlas(atlasFolder,options.atlasset,atlases);
     end
 
     if isfield(atlases, 'citation')

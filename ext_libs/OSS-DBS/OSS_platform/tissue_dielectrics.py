@@ -182,3 +182,4 @@ class ColeColeParams:
 
         else:
             raise NotImplementedError('Unknown tissue type ', tissue)
+

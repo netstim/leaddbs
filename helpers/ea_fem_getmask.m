@@ -1,5 +1,8 @@
-function fv=ea_fem_getmask(options)
+function fv=ea_fem_getmask(options,nosmooth)
 
+if ~exist('nosmooth','var')
+   nosmooth=0;
+end
 % load nifti
 try
     switch options.native
@@ -39,8 +42,9 @@ fvc=isocaps(X,Y,Z,permute(nii.img,[2,1,3]),max(nii.img(:))/2);
 fv.faces=[fv.faces;fvc.faces+size(fv.vertices,1)];
 fv.vertices=[fv.vertices;fvc.vertices];
 
-fv=ea_smoothpatch(fv,[],ceil(options.prefs.hullsmooth/2));
-
+if ~nosmooth
+    fv=ea_smoothpatch(fv,[],ceil(options.prefs.hullsmooth/2));
+end
 
 % figure
 % patch('vertices',fv.vertices,'faces',fv.faces,'facecolor','r');

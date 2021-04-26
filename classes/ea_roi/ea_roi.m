@@ -311,6 +311,10 @@ classdef ea_roi < handle
                 {'Parent','CData','TooltipString','OnCallback','OffCallback','State','Tooltip'},...
                 {obj.htH,ea_get_icn('atlas',obj.color),stripext(obj.niftiFilename),{@ea_roivisible,'on',obj},{@ea_roivisible,'off',obj},obj.Visible,roiTag});
         end
+
+        function delete(obj)
+            delete(obj.patchH);
+        end
     end
 end
 

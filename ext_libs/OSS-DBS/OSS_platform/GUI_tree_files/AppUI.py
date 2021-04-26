@@ -97,7 +97,6 @@ class MainWindow(Functionalities):
         self.ui.checkBox_Neuron_Model_Array_Prepared.stateChanged.connect(
             lambda: self.show_menu_item_on_checkbox_click(self.ui.checkBox_Neuron_Model_Array_Prepared,
                                                           self.ui.widget_Name_Of_External_Neuron_Array_3))
-
         # PopUps
         self.ui.checkBox_Neuron_Model_Array_Prepared.stateChanged.connect(
             lambda: self.pop_up_reverse(self.ui.checkBox_Neuron_Model_Array_Prepared, self.externalNeuronArray,
@@ -138,7 +137,9 @@ class MainWindow(Functionalities):
         self.ui.checkBox_Dimensions_From_MRI.stateChanged.connect(
             lambda: self.hide_menu_item_on_checkbox_click(self.ui.checkBox_Dimensions_From_MRI,
                                                           self.ui.widget_Approximating_Dimensions_3))
-
+        self.ui.checkBox_Dimensions_From_MRI.stateChanged.connect(
+            lambda: self.ui.lineEdit_Approximating_Dimensions.setText('0'))
+        
         self.ui.checkBox_Approx_Geom_Centered_On_MRI.stateChanged.connect(
             lambda: self.hide_menu_item_on_checkbox_click(self.ui.checkBox_Approx_Geom_Centered_On_MRI,
                                                           self.ui.widget_Approx_Geometry_Center))
@@ -214,23 +215,21 @@ class MainWindow(Functionalities):
 
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
-        #subprocess.run(['sudo', 'docker', 'run', '--name', 'OSS_docker', '--volume', '/home/butenko/oss_platform:/opt/oss_platform', '--cap-add=SYS_PTRACE', '-it', '--rm gitlab.elaine.uni-rostock.de:4567/kb589/oss_platform:platform', 'python3', 'Launcher_OSS_lite.py'])
         #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
-        OSS_DBS_path=os.getcwd()
-        os.chdir("..")
-        dir_code=os.getcwd()            #stupid but simple
-        os.chdir("OSS_platform/")
-        dir_code_OSS_platform = os.getcwd()
-        if sys.platform=='linux' or sys.platform=='Linux':
+        dir_code=os.path.dirname(os.getcwd()) # OSS-DBS folder to be mount, NOT OSS_platform folder
+        if sys.platform=='linux':
+            if os.environ.get('SINGULARITY_NAME'):
+                output = subprocess.run(['python3', 'Launcher_OSS_lite.py'])
+            else:
+                output = subprocess.run(
+                    ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
+                     '--volume', self.path_to_patient + ':/opt/Patient',
+                     '-it', '--rm', 'custom_oss-dbs', 'python3', 'Launcher_OSS_lite.py'])  #
+        elif sys.platform == 'darwin' or sys.platform=='win32':
             output = subprocess.run(
-                ['docker', 'run','--name','OSS_container', '--volume', dir_code + ':/opt/OSS-DBS',
-                 '--volume', self.path_to_patient + ':/opt/Patient', '--cap-add=SYS_PTRACE', '-it', '--rm',
-                 'custom_oss_platform', 'python3', 'Launcher_OSS_lite.py'])  #
-        elif sys.platform == 'darwin' or sys.platform=='Darwin':
-            output = subprocess.run(['open', 'script.sh', self.path_to_patient, dir_code], executable='/bin/bash')   # in this case we use a bash script that calls Applescript
-        elif sys.platform=='win32':
-            print("Should be implemented the same way as for Linux (i.e. directly calling an external terminal)")
-            raise SystemExit
+                ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
+                '--volume', self.path_to_patient + ':/opt/Patient',
+                '-it', '--rm', 'ningfei/oss-dbs', 'python3', 'Launcher_OSS_lite.py'])
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
@@ -469,10 +468,8 @@ class MainWindow(Functionalities):
                 for dict_filename in self.dict_list:
                     dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
                     with open(dict_filename, 'r') as f:
-                        num_start = f.read().find('{')
-                        f.seek(num_start + 1)
-                        content = f.read().split('}')[0]
-                        test_dict.write(content)
+                        content = f.read().split('{')[1].split('}')[0]
+                        test_dict.write(content.strip())
 
                 test_dict.write("}\n")
 
@@ -510,10 +507,8 @@ class MainWindow(Functionalities):
                     for dict_filename in self.dict_list:
                         dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
                         with open(dict_filename, 'r') as f:
-                            num_start = f.read().find('{')
-                            f.seek(num_start + 1)
-                            content = f.read().split('}')[0]
-                            save_as_dict.write(content)
+                            content = f.read().split('{')[1].split('}')[0]
+                            save_as_dict.write(content.strip())
 
                     save_as_dict.write("}\n")
 
@@ -526,10 +521,8 @@ class MainWindow(Functionalities):
                     for dict_filename in self.dict_list:
                         dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
                         with open(dict_filename, 'r') as f:
-                            num_start = f.read().find('{')
-                            f.seek(num_start + 1)
-                            content = f.read().split('}')[0]
-                            last_save.write(content)
+                            content = f.read().split('{')[1].split('}')[0]
+                            last_save.write(content.strip())
 
                     last_save.write("}\n")
 
@@ -543,7 +536,7 @@ class MainWindow(Functionalities):
         self.stretch=d['stretch']
 
         # default choice of processors
-        if sys.platform=='linux' or sys.platform=='Linux':
+        if sys.platform=='linux':
             physical_cores=os.popen("""lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l""").read()[:-1]
             d['number_of_processors']=int(int(physical_cores)*0.5)     # leave some
             print("Number of cores drawn by default: ",d['number_of_processors'])
@@ -581,6 +574,7 @@ class MainWindow(Functionalities):
             self.get_lineedit_entry(d['Approximating_Dimensions'], self.ui.lineEdit_Approximating_Dimensions)
         except:
             pass
+
         self.ui.doubleSpinBox_Implantation_Coordinate_X.setValue(d['Implantation_coordinate_X'])
         self.ui.doubleSpinBox_Implantation_Coordinate_Y.setValue(d['Implantation_coordinate_Y'])
         self.ui.doubleSpinBox_Implantation_Coordinate_Z.setValue(d['Implantation_coordinate_Z'])
@@ -692,7 +686,7 @@ class MainWindow(Functionalities):
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d = ast.literal_eval(content)
+                d = ast.literal_eval(content.strip())
                 self.set_load_state(d)
 
             self.info("Run", "{} has been loaded successfully.".format(filename))
@@ -704,7 +698,7 @@ class MainWindow(Functionalities):
             num = f.read().find('{')
             f.seek(num)
             content = f.read()
-            d = ast.literal_eval(content)
+            d = ast.literal_eval(content.strip())
             self.set_load_state(d)
         # self.set_current_file_name(filename)
 
@@ -734,7 +728,7 @@ class MainWindow(Functionalities):
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d = ast.literal_eval(content)
+                d = ast.literal_eval(content.strip())
                 self.set_load_state(d)
             # self.info("Run", "Last save state was loaded successfully")
             # self.set_current_file_name(filename)
@@ -758,8 +752,6 @@ class MainWindow(Functionalities):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    #print(sys.argv)
-    #path_to_patient_import='/home/John_Doe/'
     main_win = MainWindow(*sys.argv[1:])
     main_win.show()
     sys.exit(app.exec_())

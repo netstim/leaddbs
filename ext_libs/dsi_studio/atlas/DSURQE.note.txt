@@ -1,0 +1,37 @@
+source: http://repo.mouseimaging.ca/repo/DSURQE_40micron/notes_on_DSURQE_atlas
+Based on the following atlases:
+* Dorr et.al., 2008, High resolution three-dimensional brain atlas using an average magnetic resonance image of 40 adult C57Bl/6J mice.
+* Steadman et.al., 2014, Genetic effects on cerebellar structure across mouse models of autism using a magnetic resonance imaging atlas.
+* Ullmann et.al., 2013, A segmentation protocol and MRI atlas of the C57BL/6J mouse neocortex.
+* Richards et.al, 2011, Segmentation of the mouse hippocampal formation in magnetic resonance images.
+* Shannon Egan (2015) – added olfactory bulb segmentation based on data from the Allen Brain Institute 
+* Lily Qiu (2016) – added the medial amygdala and medial preoptic area
+
+Compared to DSURE
+=================
+* added Medial amygdala (segmentated by Lily)
+* added Medial preoptic nucleus (segmented by Lily)
+--> these labels were mapped from the Dorr_2008 average (which was used for the segmentation) onto the 
+    40 micron average. The segmentation should be cleaned up at some point
+
+(DSURE atlas notes) Compared to DSUR
+====================================
+* olfactory layers segmented by Shannon Egan have been incorporated
+* all the old hippocampus labels (including the stratum granulosum and dentate gyrus) have been updated
+* voxels in the right side of the brain labeled as left have been fixed (same for the other way around)
+* spurious labeled voxels outside of the brain have been removed
+
+(DSUR atlas notes) Compared to DSU
+==================================
+* Fixes in the hippocampus have been made from slice 200-240(ish). What still needs to be done in terms of the hippocampus are slices 199-151. This also means that there are voxels labeled:
+
+label value, name
+6          , "TODO-fix-me-old hippocampus right"
+13         , "TODO-fix-me-old stratum granulosum of hippocampus right"
+16         , "TODO-fix-me-old dentate gyrus of hippocampus right"
+63         , "TODO-fix-me-old stratum granulosum of hippocampus left"
+66         , "TODO-fix-me-old dentate gyrus of hippocampus left"
+106        , "TODO-fix-me-old hippocampus left"
+
+* Fixes were made to the boundary of the cortex (outside of the brain, and around the corpus callosum). These were roughly made in slices 199-233
+

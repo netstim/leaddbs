@@ -71,6 +71,11 @@ uibjs.slide3dtog=uitoggletool(ht, 'CData', ea_get_icn('quiver'),...
 %     'OffCallback', {@ea_pan,'off'}, 'State', 'off');
 setappdata(resultfig,'uibjs',uibjs);
 
+% Initialize Sliceview-Button
+slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
+    'TooltipString','Slice Control Figure',...
+    'ClickedCallback',{@opensliceviewer,resultfig,options});
+
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract',...
     'Callback',{@ea_addobj,resultfig,'tract',options});
@@ -78,8 +83,8 @@ fh2 = uimenu(mh,'Label','Open ROI',...
     'Callback',{@ea_addobj,resultfig,'roi',options});
 fh3 = uimenu(mh,'Label','Show tracts weighted by activation map',...
     'Callback',{@ea_addobj,resultfig,'tractmap',options});
-fh3 = uimenu(mh,'Label','Show axon activation result from OSS-DBS',...
-    'Callback',{@ea_addobj,resultfig,'axonactivation',options});
+fh3 = uimenu(mh,'Label','Show fiber activation result from OSS-DBS',...
+    'Callback',{@ea_addobj,resultfig,'fiberactivation',options});
 
 % Set some visualization parameters
 set(resultfig,'Renderer','opengl')
@@ -247,13 +252,12 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             end
 
             % add sweetspot explorer button.
-
-            di=dir([options.root,options.patientname,filesep,'sweetspots',filesep,'*.sweetspot']);
-            % add sweetspot explorer button.
             sweetspotadd = uipushtool(ht, 'CData', ea_get_icn('sweetspot_add'),...
                 'TooltipString', ['Add sweetspot analysis'],...
                 'Tag', ['Add sweetspot analysis'],...
-                'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});        di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);
+                'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});        
+
+            di=dir([options.root,options.patientname,filesep,'sweetspots',filesep,'*.sweetspot']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('sweetspot'),...
                     'TooltipString', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
@@ -291,12 +295,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             end
 
 
-            % Move the group toggle forward
-            tractToggleInd = 1:length(di)+1;
-            eleGroupToggleInd = length(tractToggleInd)+1:length(tractToggleInd)+numel(unique(elstructGroupID));
-            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: ', 'once')), allchild(ht));
-            eleToggleInd = length(tractToggleInd)+length(eleGroupToggleInd)+1:find(isEleToggle,1,'last');
-            ht.Children=ht.Children([eleToggleInd, eleGroupToggleInd, tractToggleInd, find(isEleToggle,1,'last')+1:end]);
+            % Move the group toggles and app toggles forward
+            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+,', 'once')), allchild(ht));
+            eleToggleInd = find(isEleToggle);
+            isEleGroupToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+$', 'once')), allchild(ht));
+            eleGroupToggleInd = find(isEleGroupToggle);
+            otherToggleInd = (find(isEleToggle,1,'last')+1:numel(ht.Children))';
+            appToggleInd = (1:find(isEleGroupToggle,1)-1)';
+            ht.Children=ht.Children([eleToggleInd;eleGroupToggleInd;appToggleInd;otherToggleInd]);
         end
 
         try
@@ -305,6 +311,17 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 'TooltipString', 'Electrode Labels',...
                 'OnCallback', {@objvisible,ellabel},...
                 'OffCallback', {@objinvisible,ellabel}, 'State','off');
+
+            % Move eleLabel toggle to front
+            if strcmp(options.leadprod,'dbs')
+                eleToggleTagPattern = '^Patient: ';
+            elseif strcmp(options.leadprod,'group')
+                eleToggleTagPattern = '^Group: \d+';
+            end
+            isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, eleToggleTagPattern, 'once')), allchild(ht));
+            eleToggleInd = find(isEleToggle);
+            otherToggleInd = (find(isEleToggle,1,'last')+1:numel(ht.Children))';
+            ht.Children=ht.Children([eleToggleInd;1;otherToggleInd]);
         end
 
         cnt=1;
@@ -357,13 +374,7 @@ else
     elstruct=struct;
 end
 
-% Initialize Sliceview-Button
-slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
-    'TooltipString','Slice Control Figure',...
-    'ClickedCallback',{@opensliceviewer,resultfig,options});
-
 % Initialize MER-Button
-
 if ~strcmp(options.leadprod, 'group')
     merbutton=uipushtool(ht,'CData',ea_get_icn('mer'),...
         'TooltipString','MER Control Figure',...
@@ -371,9 +382,11 @@ if ~strcmp(options.leadprod, 'group')
 end
 
 % Initialize Convis-Button
+if ~strcmp(options.leadprod,'group') 
 convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
     'TooltipString','Connectivity Visualization',...
     'ClickedCallback',{@openconnectomeviewer,resultfig,options});
+end
 
 % Initialize FS Cortex-Button
 corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
@@ -443,6 +456,12 @@ lightbulbbutton=uipushtool(ht,'CData',ea_get_icn('lightbulb'),...
 %     'OnCallback',{@objvisible,getappdata(resultfig,'right_lamp')},...
 %     'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
 
+if options.prefs.env.dev
+    setBackgroundButton = uipushtool(ht,'CData',ea_get_icn('BG'),...
+        'TooltipString','Set background to Black or White',...
+        'ClickedCallback',{@ea_setElvisBackground,resultfig});
+end
+
 % Initialize HD-Export button
 dumpscreenshotbutton=uipushtool(ht,'CData',ea_get_icn('dump'),...
     'TooltipString','Dump Screenshot','ClickedCallback',{@dump_screenshot,resultfig,options});
@@ -477,6 +496,15 @@ uipushtool(ht, 'CData',ea_get_icn('defaultviewsave'),...
 uipushtool(ht, 'CData',ea_get_icn('defaultviewset'),...
     'TooltipString', 'Display default view',...
     'ClickedCallback',@set_defaultview_callback);
+
+% Reorder toggles to move eleToggle to the end
+if strcmp(options.leadprod,'group')
+    isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+', 'once')), allchild(ht));
+    eleToggleInd = find(isEleToggle);
+    eleLabelToggleInd = eleToggleInd(end) + 1;
+    otherToggleInd = setdiff((1:numel(ht.Children))', [eleToggleInd;eleLabelToggleInd]);
+    ht.Children=ht.Children([eleToggleInd;eleLabelToggleInd;otherToggleInd]);
+end
 
 hold off
 
@@ -601,6 +629,33 @@ v = prefs.machine.view;
 togglestates = prefs.machine.togglestates;
 ea_defaultview_transition(v,togglestates);
 ea_defaultview(v,togglestates);
+
+
+function ea_setElvisBackground(source,eventdata,resultfig)
+bg = get(resultfig, 'Color');
+cmap = gray;
+if all(bg==[0 0 0]) % Black, default background
+    % Get volume data
+    V = getappdata(resultfig, 'V');
+    if isa(V{1}, 'nifti')
+        V = V{1}.dat; % Memory mapped nifti struct
+    else
+        V = V{1}.img; % Standard nifti struct
+    end
+
+    % Take the middle z slice
+    zslice = V(:,:,round(size(V,3)/2));
+
+    % Check if background (1st voxel) is dark or bright
+    if zslice(1,1) < mean(zslice(:))
+        % Flip black to white in colormap in case background is dark
+        cmap(1,:) = [1 1 1];
+    end
+
+    set(resultfig, 'Color', 'w', 'Colormap', cmap);
+elseif all(bg==[1 1 1]) % Already toggled to white
+    set(resultfig, 'Color', 'k', 'Colormap', cmap);
+end
 
 
 function export_video(hobj,ev,options)

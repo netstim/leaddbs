@@ -119,6 +119,7 @@ for side=options.sides
             electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
             electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.insulation(ins));
+
             elrender(cnt).Tag = [nameprefix, 'Insulation', num2str(cnt), '_Side', num2str(side)];
 
             if isfield(options,'sidecolor')
@@ -142,7 +143,7 @@ for side=options.sides
                         usecolor=obj.color;
                 end
             end
-            specsurf(elrender(cnt),usecolor,aData);
+            specsurf(elrender(cnt),usecolor,aData,'insulation');
             cnt=cnt+1;
         end
 
@@ -150,10 +151,12 @@ for side=options.sides
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.contacts(con));
+
+
             elrender(cnt).Tag = [nameprefix, 'Contact', num2str(con), '_Side', num2str(side)];
             eltype(cnt)=1;
             if ~isempty(options.colorMacroContacts)
-                specsurf(elrender(cnt),options.colorMacroContacts(con,:),1);
+                specsurf(elrender(cnt),options.colorMacroContacts(con,:),1,'metal');
             else
                 if contains(nameprefix, '_mirrored_')
                     % Mirror highlight contact
@@ -167,9 +170,9 @@ for side=options.sides
                 end
 
                 if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{mside})) % make active red contact without transparency
-                    specsurf(elrender(cnt),[0.8,0.2,0.2],1);
+                    specsurf(elrender(cnt),[0.8,0.2,0.2],1,'metal');
                 else
-                    specsurf(elrender(cnt),elspec.contact_color,aData);
+                    specsurf(elrender(cnt),elspec.contact_color,aData,'metal');
                 end
             end
             cnt=cnt+1;
@@ -178,7 +181,9 @@ for side=options.sides
         % arrows for directional leads
         if isfield(options.prefs.d3,'showdirarrows') && options.prefs.d3.showdirarrows
             switch options.elmodel
-                case {'Boston Scientific Vercise Directed'
+                case {'Medtronic B33005'
+                      'Medtronic B33015'
+                      'Boston Scientific Vercise Directed'
                       'St. Jude Directed 6172 (short)'
                       'St. Jude Directed 6173 (long)'}
                     % Marker position relative to head position along z axis
@@ -196,7 +201,7 @@ for side=options.sides
                 stxmarker = elstruct.markers(side).head + stretchfactor * markerposRel * unitvector;
                 arrowtip = stxmarker + 5 * (elstruct.markers(side).y - elstruct.markers(side).head);
                 elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.3 .3 .3],'tipWidth',0.2,'tipLength',0,'stemWidth',0.2,'Tag','DirectionMarker');
-                specsurf(elrender(cnt),[.3 .3 .3],1);
+                specsurf(elrender(cnt),[.3 .3 .3],1,'metal');
                 cnt = cnt+1;
             end
         end
@@ -240,7 +245,7 @@ for side=options.sides
         for cntct=1:elspec.numel-shifthalfup
             if (options.d3.showactivecontacts && ismember(cntct,find(elstruct.activecontacts{side}))) || (options.d3.showpassivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})))
                 if options.d3.hlactivecontacts && ismember(cntct,find(elstruct.activecontacts{side})) % make active red contact without transparency
-                    useedgecolor=[0.8,0.5,0.5];
+                    useedgecolor=[0.9,0.9,0.7];
                     ms=10;
                 elseif options.d3.hlactivecontacts && ~ismember(cntct,find(elstruct.activecontacts{side})) % make inactive grey and smaller contact without transparency
                     useedgecolor='none';
@@ -281,16 +286,25 @@ for side=options.sides
                 if ~any(isnan(usefacecolor))
                     set(0,'CurrentFigure',resultfig);
                     if ~shifthalfup
-                        elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
-                        pcnt=pcnt+1;
+                        if strcmpi(options.prefs.d3.pointcloudstyle, '3d')
+                            elrender(pcnt)=ea_plotsphere(coords_mm{side}(cntct,:), ms/10, usefacecolor, useedgecolor);
+                            elrender(pcnt).Tag = 'PointCloud';
+                        else
+                            elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        end
                     else
-                        elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
-                            mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
-                            mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
-                            'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
-                        drawnow
-                        pcnt=pcnt+1;
+                        if strcmpi(options.prefs.d3.pointcloudstyle, '3d')
+                            elrender(pcnt)=ea_plotsphere(mean([coords_mm{side}(cntct,:);coords_mm{side}(cntct+1,:)],1), ms/10, usefacecolor, useedgecolor);
+                            elrender(pcnt).Tag = 'PointCloud';
+                        else
+                            elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
+                                mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
+                                mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
+                                'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        end
                     end
+                    drawnow;
+                    pcnt=pcnt+1;
                 else
 
                 end
@@ -325,7 +339,7 @@ function specsurf(varargin)
 
 surfc=varargin{1};
 color=varargin{2};
-if nargin==3
+if nargin>2
     aData=varargin{3};
 end
 
@@ -355,14 +369,30 @@ end
 set(surfc,'AlphaDataMapping','none');
 
 set(surfc,'FaceLighting','phong');
-set(surfc,'SpecularColorReflectance',0);
 set(surfc,'EdgeColor','none')
 
-set(surfc,'SpecularExponent',3) % patch property
-set(surfc,'SpecularStrength',0.21) % patch property
-set(surfc,'DiffuseStrength',0.4) % patch property
-set(surfc,'AmbientStrength',0.3) % patch property
-
+if nargin>3
+    switch varargin{4} % material
+        case 'metal'
+            surfc.AmbientStrength = 0.1;
+            surfc.DiffuseStrength = 0.2;
+            surfc.SpecularStrength = 1.0;
+            surfc.SpecularExponent = 20;
+            surfc.SpecularColorReflectance = 0.1;
+        case 'insulation'
+            surfc.AmbientStrength = 0.4;
+            surfc.DiffuseStrength = 0.35;
+            surfc.SpecularStrength = 0.21;
+            surfc.SpecularExponent = 3;
+            surfc.SpecularColorReflectance = 1.0;
+    end
+else % default
+    set(surfc,'SpecularExponent',3) % patch property
+    set(surfc,'SpecularStrength',0.21) % patch property
+    set(surfc,'DiffuseStrength',0.4) % patch property
+    set(surfc,'AmbientStrength',0.3) % patch property
+    set(surfc,'SpecularColorReflectance',0);
+end
 if nargin==3
     set(surfc,'FaceAlpha',aData);
 end

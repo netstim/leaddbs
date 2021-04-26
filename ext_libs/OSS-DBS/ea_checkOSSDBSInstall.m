@@ -1,8 +1,22 @@
 function ea_checkOSSDBSInstall
 % Check if OSS-DBS dependencies have been properly configured
 
-% Check python3, h5py and PyQt5 installations
-binPath = getenv('PATH'); % Backup current PATH
+if ~isempty(getenv('SINGULARITY_NAME')) % Singularity
+    % Set pythonPath
+    pythonPath = ea_findBinPath('python3');
+    ea_setprefs('env.pythonPath', pythonPath, 'user');
+
+    % Set installed flag
+    prefs = ea_prefs;
+    vatsettings = prefs.machine.vatsettings;
+    vatsettings.oss_dbs.installed = 1;
+    ea_setprefs('vatsettings', vatsettings);
+
+    fprintf('OSS-DBS dependencies have been properly configured.\n');
+    return
+end
+
+binPath = getenv('PATH'); % Current PATH
 
 % Check docker installation
 dockerPath = ea_findBinPath('docker');
@@ -18,24 +32,25 @@ if isempty(dockerPath)
     end
 else
     if ismac || ispc % Use upstream image since there's no permission issue
-        [~, id] = system('docker images -q sfbelaine/oss_dbs:python_latest');
+        [~, id] = system('docker images -q ningfei/oss-dbs');
         if ~isempty(id)
-            fprintf('docker image found: sfbelaine/oss_dbs:python_latest\n');
-        else
-            fprintf('Pulling docker image...\n');
-            system('docker pull sfbelaine/oss_dbs:python_latest');
+            fprintf('docker image found: ningfei/oss-dbs\n');
         end
+        fprintf('\nPulling docker image...\n'); % Always pull to update local image
+        system('docker pull ningfei/oss-dbs:latest');
     else % Use local built image
-        [~, id] = system('docker images -q custom_oss_platform');
+        [~, id] = system('docker images -q custom_oss-dbs');
         if ~isempty(id)
-            fprintf('docker image found: custom_oss_platform\n');
+            fprintf('docker image found: custom_oss-dbs\n');
+            fprintf('\nRebuilding docker image...\n');
         else
-            fprintf('Building docker image...\n');
-            currentPath = pwd;
-            cd([ea_getearoot, 'ext_libs/OSS-DBS']);
-            system('docker build --build-arg OSS_UID=$(id -u) --build-arg OSS_GID=$(id -g) -t custom_oss_platform .');
-            cd(currentPath);
+            fprintf('\nBuilding docker image...\n');
         end
+        currentPath = pwd;
+        cd([ea_getearoot, 'ext_libs/OSS-DBS']);
+        system('docker pull ningfei/oss-dbs:latest'); % Pull to update base image
+        system('docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t custom_oss-dbs .');
+        cd(currentPath);
     end
 end
 
@@ -51,7 +66,14 @@ if isfield(prefs.env, 'pythonPath')
 end
 
 % Check python3
-pythonPath = ea_findBinPath('python3');
+if ispc
+    pythonBinName = 'python';
+else
+    pythonBinName = 'python3';
+end
+pythonPath = ea_findBinPath(pythonBinName);
+
+fprintf('\n');
 if isempty(pythonPath)
     ea_error('python3 not found!', 'Error', dbstack, 0);
 else
@@ -74,25 +96,25 @@ else
 end
 
 % python3 executable
-pythonBin = [pythonPath, filesep, 'python3'];
-fprintf('python3 detected: %s\n', pythonBin);
+pythonBinPath = [pythonPath, filesep, pythonBinName];
+fprintf('python3 detected: %s\n', pythonBinPath);
 
 % Check h5py
-[status, h5pyPath] = system([pythonBin, ' -c "import h5py;print(h5py.__file__)"']);
+[status, h5pyPath] = system([pythonBinPath, ' -c "import h5py;print(h5py.__file__)"']);
 if status
-    ea_error(sprintf(['h5py not found! Please run ''', ...
-             pythonPath,filesep,'pip3 install h5py',...
-             ''' in your terminal.']), 'Error', dbstack, 0);
+    ea_error(['h5py not found! Please run ''', ...
+             pythonBinPath,' -m pip install h5py',...
+             ''' in your terminal.'], 'Error', dbstack, 0);
 else
     fprintf('h5py detected: %s\n', fileparts(h5pyPath));
 end
 
 % Check PyQt5
-[status, pyqt5Path] = system([pythonBin, ' -c "import PyQt5;print(PyQt5.__file__)"']);
+[status, pyqt5Path] = system([pythonBinPath, ' -c "import PyQt5;print(PyQt5.__file__)"']);
 if status
-    ea_error(sprintf(['PyQt5 not found! Please run ''', ...
-             pythonPath,filesep,'pip3 install PyQt5',...
-             ''' in your terminal.']), 'Error', dbstack, 0);
+    ea_error(['PyQt5 not found! Please run ''', ...
+             pythonBinPath,' -m pip install PyQt5',...
+             ''' in your terminal.'], 'Error', dbstack, 0);
 else
     fprintf('PyQt5 detected: %s\n', fileparts(pyqt5Path));
 end
@@ -110,4 +132,4 @@ vatsettings = prefs.machine.vatsettings;
 vatsettings.oss_dbs.installed = 1;
 ea_setprefs('vatsettings', vatsettings);
 
-fprintf('OSS-DBS dependencies have been properly configured.\n');
+fprintf('\nOSS-DBS dependencies have been properly configured.\n');

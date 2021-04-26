@@ -70,9 +70,9 @@ else  % uigetfile, 'obj' is the type of the files to be selected
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
             [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
             addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,options)
-        case 'axonactivation'
-            [fileName,filePath]=uigetfile('*.mat','Choose axon activation to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
-            ea_axon_viz([filePath,fileName],resultfig)
+        case 'fiberactivation'
+            [fileName,filePath]=uigetfile('*.mat','Choose fiber activation to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
+            ea_fiberactivation_viz([filePath,fileName],resultfig)
     end
 end
 
@@ -168,8 +168,8 @@ if ischar(obj) % addobj
             end
 
             % Check fiber format
-            if size(fibers,2) == 5 && contains(obj,'axonActivation') % axon activation result loaded
-                ea_axon_viz(obj, resultfig);
+            if size(fibers,2) == 5 && contains(obj,'fiberActivation') % fiber activation result loaded
+                ea_fiberactivation_viz(obj, resultfig);
                 return;
             elseif size(fibers,2) == 4 % with index
                 thisset = fibers(:,1:3);

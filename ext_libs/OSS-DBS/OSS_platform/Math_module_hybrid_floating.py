@@ -9,7 +9,7 @@ Created on Sun Aug 19 13:23:54 2018
 from dolfin import *
 from pandas import read_csv
 import numpy as np
-import os.path
+import os
 import time as tm
 
 import warnings
@@ -76,7 +76,7 @@ def load_scaled_cond_tensor(xx,xy,xz,yy,yz,zz,mesh_tensor):
 
     """
 
-    hdf = HDF5File(mesh_tensor.mpi_comm(), "/opt/Patient/Results_adaptive/Mesh_to_solve.h5", "r")
+    hdf = HDF5File(mesh_tensor.mpi_comm(), os.environ['PATIENTDIR']+"/Results_adaptive/Mesh_to_solve.h5", "r")
     hdf.read(xx, "/c00")
     hdf.read(xy, "/c01")
     hdf.read(xz, "/c02")
@@ -136,7 +136,7 @@ def get_field_with_floats(external_grounding,mesh_sol,active_index,Domains,subdo
             Cond_tensor = load_scaled_cond_tensor(c00,c01,c02,c11,c12,c22,mesh_sol)
         else:
             # load the unscaled diffusion tensor (should be normalized beforehand)
-            hdf = HDF5File(mesh_sol.mpi_comm(), "/opt/Patient/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_sol.num_cells())+".h5", "r")
+            hdf = HDF5File(mesh_sol.mpi_comm(), os.environ['PATIENTDIR']+"/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_sol.num_cells())+".h5", "r")
             hdf.read(c00, "/c00")
             hdf.read(c01, "/c01")
             hdf.read(c02, "/c02")
@@ -286,12 +286,12 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
         # to get conductivity (and permittivity if EQS formulation) mapped accrodingly to the subdomains. k_val_r is just a list of conductivities (S/mm!) in a specific order to scale the cond. tensor
         from FEM_in_spectrum import get_dielectric_properties_from_subdomains
         kappa,k_val_r=get_dielectric_properties_from_subdomains(mesh_sol,subdomains,Laplace_mode,Domains.Float_contacts,conductivities,rel_permittivities,frequenc)
-        file=File('/opt/Patient/Results_adaptive/Last_subdomains_map.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_subdomains_map.pvd')
         file<<subdomains
-        file=File('/opt/Patient/Results_adaptive/Last_conductivity_map.pvd')
+        file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_conductivity_map.pvd')
         file<<kappa[0]
         if Laplace_mode == 'EQS':
-            file=File('/opt/Patient/Results_adaptive/Last_permittivity_map.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_permittivity_map.pvd')
             file<<kappa[1]
 
     if anisotropy==1:
@@ -307,7 +307,7 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
             Cond_tensor = load_scaled_cond_tensor(c00,c01,c02,c11,c12,c22,mesh_sol)
         else:
             # load the unscaled diffusion tensor (should be normalized beforehand)
-            hdf = HDF5File(mesh_sol.mpi_comm(), "/opt/Patient/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_sol.num_cells())+".h5", "r")
+            hdf = HDF5File(mesh_sol.mpi_comm(), os.environ['PATIENTDIR']+"/Results_adaptive/Tensors_to_solve_num_el_"+str(mesh_sol.num_cells())+".h5", "r")
             hdf.read(c00, "/c00")
             hdf.read(c01, "/c01")
             hdf.read(c02, "/c02")
@@ -383,7 +383,7 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
     ind_high_current=[]
 
     if calc_with_MPI==False:
-        Vertices_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+        Vertices_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
         Vertices_array=Vertices_get.values
 
         Phi_ROI=np.zeros((Vertices_array.shape[0],4),float)
@@ -396,7 +396,7 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
             Phi_ROI[inx,2]=Vertices_array[inx,2]
             Phi_ROI[inx,3]=np.sqrt(phi_r_sol(pnt)*phi_r_sol(pnt)+phi_i_sol(pnt)*phi_i_sol(pnt))
 
-        np.savetxt('/opt/Patient/Results_adaptive/Phi_'+str(frequenc)+'.csv',  Phi_ROI, delimiter=" ")      # this is amplitude, actually
+        np.savetxt(os.environ['PATIENTDIR']+'/Results_adaptive/Phi_'+str(frequenc)+'.csv',  Phi_ROI, delimiter=" ")      # this is amplitude, actually
 
     if external_grounding==True:
         Quasi_imp_real=np.zeros(len(Domains.Contacts)+1,float)       #not really, but gives an idea
@@ -435,7 +435,7 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
     if calc_with_MPI == True:
         J_Vector=Vector(MPI.comm_self,2)
         J_Vector.set_local(np.array([Quasi_imp_real_total,Quasi_imp_im_total],dtype=np.float64))
-        Hdf=HDF5File(mesh_sol.mpi_comm(), "/opt/Patient/Results_adaptive/Solution_"+str(np.round(frequenc,6))+".h5", "w")
+        Hdf=HDF5File(mesh_sol.mpi_comm(), os.environ['PATIENTDIR']+"/Results_adaptive/Solution_"+str(np.round(frequenc,6))+".h5", "w")
         Hdf.write(mesh_sol, "mesh_sol")
         Hdf.write(phi_sol, "solution_phi_full")
         Hdf.write(E_field, "solution_E_field")
@@ -451,12 +451,12 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
         E_norm=project(sqrt(inner(E_field,E_field)+inner(E_field_im,E_field_im)),V_normE,solver_type="cg", preconditioner_type="amg")
         max_E=E_norm.vector().max()
         if calc_with_MPI==False or MPI.comm_world.rank==1:
-            file=File('/opt/Patient/Results_adaptive/E_ampl_'+str(Laplace_mode)+'.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Results_adaptive/E_ampl_'+str(Laplace_mode)+'.pvd')
             file<<E_norm,mesh_sol
-            file=File('/opt/Patient/Results_adaptive/Last_Phi_r_field_'+str(Laplace_mode)+'.pvd')
+            file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_Phi_r_field_'+str(Laplace_mode)+'.pvd')
             file<<phi_r_sol,mesh_sol
             if Laplace_mode=='EQS':
-                file=File('/opt/Patient/Results_adaptive/Last_Phi_im_field_'+str(Laplace_mode)+'.pvd')
+                file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Last_Phi_im_field_'+str(Laplace_mode)+'.pvd')
                 file<<phi_i_sol,mesh_sol
 
         return (phi_r_sol,phi_i_sol,E_field,E_field_im,max_E,Quasi_imp_real_total,Quasi_imp_im_total,j_dens_real,j_dens_im)
@@ -464,7 +464,7 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
 
 def get_field_on_points(phi_r,phi_i,c_c,J_r,J_i):
 
-    Vertices_neur_get=read_csv('/opt/Patient/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
+    Vertices_neur_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
     Vertices_neur=Vertices_neur_get.values
 
     Ampl_ROI=np.zeros((Vertices_neur.shape[0],4),float)

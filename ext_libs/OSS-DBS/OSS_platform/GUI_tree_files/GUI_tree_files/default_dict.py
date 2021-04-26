@@ -31,7 +31,7 @@ d = {
     'Implantation_coordinate_Z': -8.54887,
     'Second_coordinate_X': 13.8119,
     'Second_coordinate_Y': -10.2629,
-    'Second_coordinate_Z': -3.3633699999999997,
+    'Second_coordinate_Z': -3.36337,
     'Rotation_Z': 20.875803789679328,
     'encap_thickness': 0.1,
     'encap_tissue_type': 2,

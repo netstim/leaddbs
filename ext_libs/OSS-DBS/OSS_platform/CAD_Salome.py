@@ -60,8 +60,8 @@ def build_brain_approx(d,MRI_param):
     kill_SALOME_port()
 
     print("Brain_substitute.brep was created\n")
-    with open(os.devnull, 'w') as FNULL: subprocess.call('gmsh /opt/Patient/Meshes/Mesh_brain_substitute_max_ROI.med -3 -v 0 -o /opt/Patient/Meshes/Mesh_brain_substitute_max_ROI.msh2 && mv /opt/Patient/Meshes/Mesh_brain_substitute_max_ROI.msh2 /opt/Patient/Meshes/Mesh_brain_substitute_max_ROI.msh',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-    with open(os.devnull, 'w') as FNULL: subprocess.call('dolfin-convert /opt/Patient/Meshes/Mesh_brain_substitute_max_ROI.msh /opt/Patient/Meshes/Mesh_brain_substitute_max_ROI.xml',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    with open(os.devnull, 'w') as FNULL: subprocess.call('gmsh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.med -3 -v 0 -o ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh2 && mv ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh2 ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    with open(os.devnull, 'w') as FNULL: subprocess.call('dolfin-convert ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.xml',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     return x_length,y_length,z_length
 
@@ -70,15 +70,19 @@ def build_final_geometry(d,MRI_param,Brain_shape_name,ROI_radius,cc_multicontact
     start_final_geom=time_lib.time()
 
     from Electrode_files.DBS_lead_position_V10 import create_geometry_script
-    Brain_link = '/opt/Patient/'+str(Brain_shape_name)
+    Brain_link = os.environ['PATIENTDIR']+'/'+str(Brain_shape_name)
 
     if cc_multicontact==True:           #here we will also create floating volumes for active contacts with assigned currents
         Electrode_profile=d["Electrode_type"]+'_floating_profile.py'
-        position_script_name="/opt/Patient/"+d["Electrode_type"]+"_floating_position.py"
+        position_script_name=os.environ['PATIENTDIR']+"/"+d["Electrode_type"]+"_floating_position.py"
     else:
         Electrode_profile=d["Electrode_type"]+'_profile.py'
-        position_script_name="/opt/Patient/"+d["Electrode_type"]+"_position.py"
+        position_script_name=os.environ['PATIENTDIR']+"/"+d["Electrode_type"]+"_position.py"
 
+    if ROI_radius<6.5 and d["Electrode_type"]!="SNEX100": # correction for human electrodes. Otherwise, SALOME might fail to find encap_outer
+        ROI_radius=6.5
+        
+        
     create_geometry_script(d["Phi_vector"],Brain_link,Electrode_profile,d["Implantation_coordinate_X"],d["Implantation_coordinate_Y"],d["Implantation_coordinate_Z"],d["Second_coordinate_X"],d["Second_coordinate_Y"],d["Second_coordinate_Z"],d["Rotation_Z"],0.0,0.0,0.0,0.0,0.0,0.0,d["encap_thickness"],ROI_radius,MRI_param.x_shift,MRI_param.y_shift,MRI_param.z_shift,False,False,d["stretch"])
 
     direct = os.getcwd()
@@ -89,7 +93,7 @@ def build_final_geometry(d,MRI_param,Brain_shape_name,ROI_radius,cc_multicontact
     with open(os.devnull, 'w') as FNULL: subprocess.call('salome -t python '+ position_script_name +' --ns-port-log='+direct+'/salomePort.txt', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     kill_SALOME_port()
 
-    with open(os.devnull, 'w') as FNULL: subprocess.call('gmsh /opt/Patient/Meshes/Mesh_unref.med -3 -v 0 -o /opt/Patient/Meshes/Mesh_unref.msh2 && mv /opt/Patient/Meshes/Mesh_unref.msh2 /opt/Patient/Meshes/Mesh_unref.msh',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    with open(os.devnull, 'w') as FNULL: subprocess.call('gmsh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med -3 -v 0 -o ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh2 && mv ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh2 ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     Phi_vector=[x for x in d["Phi_vector"] if x is not None] #now we don't need None values, Contacts point to the active ones
 
@@ -130,10 +134,10 @@ def build_final_geometry(d,MRI_param,Brain_shape_name,ROI_radius,cc_multicontact
     if Domains.Tis_index==-1:
         print("ROI is the whole computational domain! Employing a bigger geometrical domain is necessary")
 
-    with open('/opt/Patient/Meshes/Mesh_ind.file', "wb") as f:
+    with open(os.environ['PATIENTDIR']+'/Meshes/Mesh_ind.file', "wb") as f:
         pickle.dump(Domains, f, pickle.HIGHEST_PROTOCOL)
 
-    with open(os.devnull, 'w') as FNULL: subprocess.call('dolfin-convert /opt/Patient/Meshes/Mesh_unref.msh /opt/Patient/Meshes/Mesh_unref.xml',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    with open(os.devnull, 'w') as FNULL: subprocess.call('dolfin-convert ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.xml',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     minutes=int((time_lib.time() - start_final_geom)/60)
     secnds=int(time_lib.time() - start_final_geom)-minutes*60
