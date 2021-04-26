@@ -342,4 +342,3 @@ def get_cellmap_tensors(mesh,subdomains_assigned,Domains,MRI_param,DTI_param,def
 
     return (subdomains)          #cond, perm are cell functions and can be directly used
 #interactive()
-
