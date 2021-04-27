@@ -22,7 +22,7 @@ function varargout = ea_vatsettings_butenko(varargin)
 
 % Edit the above text to modify the response to help ea_vatsettings_butenko
 
-% Last Modified by GUIDE v2.5 15-Apr-2021 19:44:49
+% Last Modified by GUIDE v2.5 27-Apr-2021 21:44:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -144,7 +144,7 @@ set(handles.ethreshpresets,'String',etv(:,1));
 setappdata(handles.ethreshpresets,'data',etv);
 
 set(handles.ethresh,'String',num2str(prefs.machine.vatsettings.butenko_ethresh));
-
+set(handles.useTensorData,'Value',prefs.machine.vatsettings.butenko_useTensorData);
 set(handles.interactive,'Value',prefs.machine.vatsettings.butenko_interactive);
 
 
@@ -179,7 +179,9 @@ else % Multi-Tract connectome case, values from appdata
     vatsettings.butenko_axonLength = getappdata(handles.setfig, 'axonLength');
     vatsettings.butenko_fiberDiameter = getappdata(handles.setfig, 'fiberDiameter');
 end
+
 vatsettings.butenko_ethresh = str2double(get(handles.ethresh,'String'));
+vatsettings.butenko_useTensorData = get(handles.useTensorData,'Value');
 vatsettings.butenko_interactive = get(handles.interactive,'Value');
 ea_setprefs('vatsettings',vatsettings);
 
@@ -358,3 +360,12 @@ function LenDSetting_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 conn = handles.connectomes.String{handles.connectomes.Value};
 ea_axonact_connsetting(strrep(conn, 'Multi-Tract: ', ''), handles.setfig);
+
+
+% --- Executes on button press in useTensorData.
+function useTensorData_Callback(hObject, eventdata, handles)
+% hObject    handle to useTensorData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of useTensorData
