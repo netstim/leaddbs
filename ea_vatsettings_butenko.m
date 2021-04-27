@@ -325,7 +325,7 @@ if ~startsWith(conn, 'Multi-Tract: ')
 else
     handles.axonLength.Enable = 'off';
     handles.fiberDiameter.Enable = 'off';
-    ea_axonact_connsetting(strrep(conn, 'Multi-Tract: ', ''), handles.setfig);
+    % ea_axonact_connsetting(strrep(conn, 'Multi-Tract: ', ''), handles.setfig);
     handles.LenDSetting.Visible = 'on';
 end
 
