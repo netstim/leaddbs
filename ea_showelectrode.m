@@ -152,7 +152,7 @@ for side=options.sides
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.contacts(con));
 
-            
+
             elrender(cnt).Tag = [nameprefix, 'Contact', num2str(con), '_Side', num2str(side)];
             eltype(cnt)=1;
             if ~isempty(options.colorMacroContacts)
@@ -181,7 +181,9 @@ for side=options.sides
         % arrows for directional leads
         if isfield(options.prefs.d3,'showdirarrows') && options.prefs.d3.showdirarrows
             switch options.elmodel
-                case {'Boston Scientific Vercise Directed'
+                case {'Medtronic B33005'
+                      'Medtronic B33015'
+                      'Boston Scientific Vercise Directed'
                       'St. Jude Directed 6172 (short)'
                       'St. Jude Directed 6173 (long)'}
                     % Marker position relative to head position along z axis

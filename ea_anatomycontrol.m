@@ -148,6 +148,8 @@ set(hObject,'position',[0,0,pos(3),pos(4)]);
 refreshresultfig(handles)
 set(handles.acontrolfig,'Visible',options.d3.verbose); % set invisible if called from lead group
 
+setappdata(resultfig,'awin',hObject);
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_anatomycontrol_OutputFcn(hObject, eventdata, handles)

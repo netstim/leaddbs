@@ -392,11 +392,12 @@ convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
     'TooltipString','Connectivity Visualization',...
     'ClickedCallback',{@openconnectomeviewer,resultfig,options});
 end
-if ~strcmp(options.leadprod,'group')
+
 % Initialize FS Cortex-Button
 corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
     'TooltipString','Cortical Reconstruction Visualization',...
     'ClickedCallback',{@opencortexviewer,resultfig,options});
+<<<<<<< HEAD
 end
 
 % if strcmp(options.leadprod,'group')
@@ -404,6 +405,8 @@ end
 %                  'TooltipString','Add Mixed Fiber analysis',...
 %                  'ClickedCallback',{@ea_add_mixfiber,[options.root,'LEAD_groupanalysis.mat'],resultfig});
 % end
+=======
+>>>>>>> 77e47cd1ff08620afa5c93fabb85388057888600
 
 % Initialize Cortical Strip-Button
 % cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),...

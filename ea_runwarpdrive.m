@@ -50,12 +50,13 @@ else
 end
 
 % aditional modules
-d = dir(fullfile(ea_getearoot,'ext_libs','SlicerNetstim','*','CMakeLists.txt')); 
+addition_module_paths = {fullfile(ea_getearoot,'ext_libs','SlicerNetstim','ImportAtlas'),...
+                         fullfile(ea_getearoot,'ext_libs','SlicerNetstim','WarpDrive')}; 
 
 command = ['"' slicer_path '"' ...
            ' --no-splash'...
            ' --ignore-slicerrc'...
-           ' --additional-module-paths "' strjoin({d.folder},'" "') '"' ...        % SlicerNetstim modules 
+           ' --additional-module-paths "' strjoin(addition_module_paths,'" "') '"' ...        % SlicerNetstim modules 
            ' --python-code "slicer.util.selectModule(''WarpDrive'')" ' ...  % Change to WarpDrive module
            ' "' strjoin([ea_getearoot; do_pts_dirs],'" "') '"'];               % Additional args with leadroot and pts dir
        

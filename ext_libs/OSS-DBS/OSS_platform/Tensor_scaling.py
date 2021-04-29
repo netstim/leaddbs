@@ -1,8 +1,8 @@
+
 # -*- coding: utf-8 -*-
 """
 Created on Fri May 29 12:11:41 2020
-
-@author: scaling algorithms buy A.Andree, parallelization by K.Butenko
+@author: scaling algorithms by A.Andree, parallelization by K.Butenko
 """
 
 import os
@@ -62,7 +62,7 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
             #compute eigenvalues and eigenvectors
             eigVals,eigVecs = np.linalg.eig(matrix_from_array)
             if np.any(eigVals<0):
-                 print("Error, no negative eigenvalues are allowed for an SPD tensor")
+                 print("Warning, no negative eigenvalues should be present for DTI voxels by definition, taking an absolute value. But check your DTI data!")
                  #raise SystemExit
                  eigVals=abs(eigVals)
 
@@ -73,28 +73,36 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
                 k_DTI=0.844e3 #S*s/mm³ Umrechnung in (S/m)*(s/mm²) daher e3
                 d_epsilon=0.124e-3 #micrometer^2/ms extracellular diffusivity Umrechnung in mm²/s daher e-3
                 eigVals_scaled=k_DTI*(eigVals-d_epsilon)
-
-            elif scaling_method=='Nordin':
-                #CRP Nordin approach as in Nordin el al. 2019 BUT Do Not Use EigenValues that is wrong use Dxx Dyy Dzz
-                eigVals_scaled=eigVals/((data_reshape[i,j,k,0]+data_reshape[i,j,k,2]+data_reshape[i,j,k,5])/3)
+#
+#            elif scaling_method=='Nordin':
+#                #CRP Nordin approach as in Nordin el al. 2019 BUT Do Not Use EigenValues that is wrong use Dxx Dyy Dzz
+#                eigVals_scaled=eigVals/((data_reshape[i,j,k,0]+data_reshape[i,j,k,2]+data_reshape[i,j,k,5])/3)
+#                
 
             elif scaling_method=='Norm_mapping':
             ##Normalized MAPPING approach as in Güllmar et al./Schmidt el al.
                 eigVals_scaled=eigVals/(eigVals[0]*eigVals[1]*eigVals[2])**(1/3.0)
 
             if np.any(eigVals_scaled<=0): # if there are still negative eigenvalues put eigVals<=0.0000001
-                print("Error, no negative eigenvalues are allowed for an SPD tensor")
+                print("Error, no negative eigenvalues are allowed by definition!")
                 raise SystemExit
             #Using eigendecomposition of an SPD tensor (A=Q*lambda*Qtransposed)
             #A is the SPD tensor, which here is the diffusion tensor (which is scaled to become the conductivity tensor)
             #Q is an orthogonal matrix whose columns are eigenvectors of A
             #lambda is the diagonal matrix with the eigenvalues as entries
-            eigVals_matrix=np.diag(eigVals_scaled) #HAS TO BE COMMENTED FOR CRP AS IN ASTROEM!
-            tensor=eigVecs.dot(eigVals_matrix).dot(eigVecs.T) #HAS TO BE COMMENTED FOR CRP AS IN ASTROEM!
+
+            elif scaling_method=='Nordin':
+                #CRP Nordin approach as in Nordin el al. 2019
+                tensor=matrix_from_array/((data_reshape[i,j,k,0]+data_reshape[i,j,k,2]+data_reshape[i,j,k,5])/3)
+            else:
+                eigVals_matrix=np.diag(eigVals_scaled) #HAS TO BE COMMENTED FOR CRP AS IN ASTROEM!
+                tensor=eigVecs.dot(eigVals_matrix).dot(eigVecs.T) #HAS TO BE COMMENTED FOR CRP AS IN ASTROEM!
+
+
 
             eigVals_tensor,eigVecs_tensor = np.linalg.eig(tensor)
             if np.any(eigVals_tensor<=0): # if there are still negative eigenvalues put eigVals<=0.0000001
-                 print("Error, no negative eigenvalues are allowed for an SPD tensor")
+                 print("Error, no negative eigenvalues are allowed by definition!")
                  raise SystemExit
 
             # define a lower boundary for the used conductivity (mean value for all tissues in the brain):
@@ -105,7 +113,7 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
 #                Sigma_iso_lowerBoundary=0.000025
 
             #define a lower boundary for the eigenvalues:
-            if np.any(eigVals_scaled*Sigma_iso_low<Sigma_iso_lowerBoundary):
+            if np.any(eigVals_tensor*Sigma_iso_low<Sigma_iso_lowerBoundary):
 #                if np.any((eigVals*Sigma_iso_low)<Sigma_iso_lowerBoundary):
                 print("lower boundary detected at Voxel:")
                 print(i,j,k)

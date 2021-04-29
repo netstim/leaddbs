@@ -12,5 +12,3 @@ end
 
 clear regexpdir
 dirlist = regexpdir(rootdir, expstr, recursive);
-
-    

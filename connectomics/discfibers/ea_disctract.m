@@ -74,6 +74,7 @@ classdef ea_disctract < handle
         end
         
         function initialize(obj,datapath,resultfig)
+            datapath = GetFullPath(datapath);
             D = load(datapath);
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
@@ -143,6 +144,7 @@ classdef ea_disctract < handle
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_peak').fibsval = fibsvalPeak;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_5peak').fibsval = fibsval5Peak;
+            obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
         end
         
@@ -310,7 +312,7 @@ classdef ea_disctract < handle
                         end
                 end
                 
-                for side=1:numel(vals)
+                for side=1:size(vals,2)
                     if ~isempty(vals{1,side})
                         switch obj.statmetric % also differentiate between methods in the prediction part.
                             case 1 % ttests
@@ -334,6 +336,19 @@ classdef ea_disctract < handle
                                         Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','pearson'));
                                     case 'profile of scores: bend'
                                         Ihat(test,side) = atanh(ea_bendcorr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test))));
+                                    case 'mean of scores'
+                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'sum of scores'
+                                        Ihat(test,side) = ea_nansum(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak of scores'
+                                        Ihat(test,side) = ea_nanmax(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
+                                    case 'peak 5% of scores'
+                                        ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test));
+                                        ihatvals=sort(ihatvals);
+                                        Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                end
+                            case 3 % Plain Connection
+                                switch lower(obj.basepredictionon)
                                     case 'mean of scores'
                                         Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
                                     case 'sum of scores'
@@ -439,7 +454,7 @@ classdef ea_disctract < handle
             
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
-            if numel(vals)>1 % bihemispheric usual case
+            if size(vals,2)>1 % bihemispheric usual case
                 obj.stats.pos.shown(2)=sum(vals{1,2}>0);
                 obj.stats.neg.shown(2)=sum(vals{1,2}<0);
             end
@@ -466,7 +481,7 @@ classdef ea_disctract < handle
             
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Vertcat all values for colorbar construction
-                allvals = vertcat(vals{group,:});
+                allvals = full(vertcat(vals{group,:}));
                 if isempty(allvals)
                     continue;
                 end
@@ -544,14 +559,14 @@ classdef ea_disctract < handle
                 end
                 setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
                 
-                if numel(vals)>1 % standard case
+                if size(vals,2)>1 % standard case
                     cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
                     alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
                 else % potential scripting case, only one side
                     cmapind = mat2cell(cmapind, numel(vals{group,1}))';
                     alphaind = mat2cell(alphaind, numel(vals{group,1}))';
                 end
-                for side=1:numel(vals)
+                for side=1:size(vals,2)
                     if dogroups % introduce small jitter for visualization
                         fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.01);
                     end

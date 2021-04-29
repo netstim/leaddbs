@@ -1,4 +1,4 @@
-function h=ea_plothistperm(title,similarities,idlabels,ids,cols,onesided)
+function [h,p]=ea_plothistperm(title,similarities,idlabels,ids,cols,onesided)
 if ~exist('cols','var')
    cols=ones(length(ids),1);
 end

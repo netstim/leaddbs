@@ -119,69 +119,71 @@ scaledTensorName = ['IITmean_tensor_',scalingMethod,'.nii.gz'];
 % Set to empty by default
 settings.DTI_data_name = '';
 
-if isfile([outputPath,filesep,scaledTensorName])
-    % Scaled tensor data found in stimulation folder
-    settings.DTI_data_name = scaledTensorName;
+if options.prefs.machine.vatsettings.butenko_useTensorData
+    if isfile([outputPath,filesep,scaledTensorName])
+        % Scaled tensor data found in stimulation folder
+        settings.DTI_data_name = scaledTensorName;
 
-elseif ~options.native && isfile([ea_space,filesep,scaledTensorName])
-    % MNI mode, scaled tensor data found in MNI space folder
-    copyfile([ea_space,filesep,scaledTensorName], outputPath);
-    settings.DTI_data_name = scaledTensorName;
+    elseif ~options.native && isfile([ea_space,filesep,scaledTensorName])
+        % MNI mode, scaled tensor data found in MNI space folder
+        copyfile([ea_space,filesep,scaledTensorName], outputPath);
+        settings.DTI_data_name = scaledTensorName;
 
-elseif options.native && isfile([directory,filesep,scaledTensorName])
-    % native mode, scaled tensor data found in patient folder
-    copyfile([directory,filesep,scaledTensorName], outputPath);
-    settings.DTI_data_name = scaledTensorName;
+    elseif options.native && isfile([directory,filesep,scaledTensorName])
+        % native mode, scaled tensor data found in patient folder
+        copyfile([directory,filesep,scaledTensorName], outputPath);
+        settings.DTI_data_name = scaledTensorName;
 
-else
-    if ~options.native
-        % MNI mode, tensor data found
-        if isfile([ea_space, tensorName])
-            tensorDir = ea_space;
-        end
     else
-        % native mode, tensor data not found, warp template tensor data
-        if ~isfile([directory, tensorName]) && isfile([ea_space, tensorName])
-            % Warp tensor data only when ANTs was used for normalization
-            if ismember(ea_whichnormmethod(directory), ea_getantsnormfuns)
-                fprintf('Warping tensor data into patient space...\n\n')
-                ea_ants_apply_transforms(options,...
-                    [ea_space, tensorName],... % From
-                    [directory, tensorName],... % To
-                    1, ... % Useinverse is 1
-                    '', ... % Reference, auto-detected
-                    '', ... % Transformation, auto-detected
-                    0, ... % NearestNeighbor interpolation
-                    3, ... % Dimension
-                    'tensor');
-            else
-                warning('off', 'backtrace');
-                warning('Warping tensor data is only supported when ANTs was used for normalization! Skipping...');
-                warning('on', 'backtrace');
+        if ~options.native
+            % MNI mode, tensor data found
+            if isfile([ea_space, tensorName])
+                tensorDir = ea_space;
+            end
+        else
+            % native mode, tensor data not found, warp template tensor data
+            if ~isfile([directory, tensorName]) && isfile([ea_space, tensorName])
+                % Warp tensor data only when ANTs was used for normalization
+                if ismember(ea_whichnormmethod(directory), ea_getantsnormfuns)
+                    fprintf('Warping tensor data into patient space...\n\n')
+                    ea_ants_apply_transforms(options,...
+                        [ea_space, tensorName],... % From
+                        [directory, tensorName],... % To
+                        1, ... % Useinverse is 1
+                        '', ... % Reference, auto-detected
+                        '', ... % Transformation, auto-detected
+                        0, ... % NearestNeighbor interpolation
+                        3, ... % Dimension
+                        'tensor');
+                else
+                    warning('off', 'backtrace');
+                    warning('Warping tensor data is only supported when ANTs was used for normalization! Skipping...');
+                    warning('on', 'backtrace');
+                end
+            end
+
+            if isfile([directory, tensorName]) % Scale tensor data
+                tensorDir = directory;
             end
         end
 
-        if isfile([directory, tensorName]) % Scale tensor data
-            tensorDir = directory;
-        end
-    end
+        % Scale tensor data
+        if exist('tensorDir', 'var')
+            fprintf('Scaling tensor data...\n\n')
+            if isempty(getenv('SINGULARITY_NAME')) % Docker
+                system(['docker run ', ...
+                        '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+                        '--volume ', tensorDir, ':/opt/Patient ', ...
+                        '--rm ', dockerImage, ' ', ...
+                        'python3 /opt/OSS-DBS/OSS_platform/Tensor_scaling.py /opt/Patient/', tensorName, ' ', scalingMethod]);
+            else % Singularity
+                system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Tensor_scaling.py ', tensorDir, tensorName, ' ', scalingMethod]);
+            end
 
-    % Scale tensor data
-    if exist('tensorDir', 'var')
-        fprintf('Scaling tensor data...\n\n')
-        if isempty(getenv('SINGULARITY_NAME')) % Docker
-            system(['docker run ', ...
-                    '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
-                    '--volume ', tensorDir, ':/opt/Patient ', ...
-                    '--rm ', dockerImage, ' ', ...
-                    'python3 /opt/OSS-DBS/OSS_platform/Tensor_scaling.py /opt/Patient/', tensorName, ' ', scalingMethod]);
-        else % Singularity
-            system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Tensor_scaling.py ', tensorDir, tensorName, ' ', scalingMethod]);
+            % Copy scaled tensor data to stimulation directory, update setting
+            copyfile([tensorDir, scaledTensorName], outputPath);
+            settings.DTI_data_name = scaledTensorName;
         end
-
-        % Copy scaled tensor data to stimulation directory, update setting
-        copyfile([tensorDir, scaledTensorName], outputPath);
-        settings.DTI_data_name = scaledTensorName;
     end
 end
 
@@ -318,42 +320,101 @@ if settings.calcAxonActivation
     settings.connectome = options.prefs.machine.vatsettings.butenko_connectome;
     settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
-    fprintf('Loading connectome: %s ...\n', settings.connectome);
-    conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
-    if options.native
-        originalFib = conn.fibers;
-        % Convert connectome fibers from MNI space to anchor space
-        fprintf('Convert connectome into native space...\n\n');
-        fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, 't1.nii'])';
-        conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
-            [ea_space, 't1.nii'], ...
-            [directory, 'y_ea_normparams.nii'], ...
-            [directory, options.prefs.prenii_unnormalized])';
-    end
 
-    % Filter fibers based on the spherical ROI
-    fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2);
-
-    % Filter fibers based on the minimal length
-    fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength);
-
-    % Move original fiber id to the 5th column, the 4th column will be 1:N
-    fibersFound = zeros(size(fiberFiltered));
-    for i=1:length(fiberFiltered)
-        if ~isempty(fiberFiltered{i}.fibers)
-            fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
-            fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
-            fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
-            fiberFiltered{i}.fibers = fibers;
-            fibersFound(i) = 1;
+    if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
+        fprintf('Loading connectome: %s ...\n', settings.connectome);
+        conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
+        if options.native
+            originalFib = conn.fibers;
+            % Convert connectome fibers from MNI space to anchor space
+            fprintf('Convert connectome into native space...\n\n');
+            fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, 't1.nii'])';
+            conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
+                [ea_space, 't1.nii'], ...
+                [directory, 'y_ea_normparams.nii'], ...
+                [directory, options.prefs.prenii_unnormalized])';
         end
-    end
 
-    settings.connectomePath = [outputPath, filesep, settings.connectome];
-    ea_mkdir(settings.connectomePath);
-    for i=1:length(fiberFiltered)
-        buffer = fiberFiltered{i};
-        save([settings.connectomePath, filesep, 'data', num2str(i), '.mat'], '-struct', 'buffer', '-v7.3');
+        % Filter fibers based on the spherical ROI
+        fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2);
+
+        % Filter fibers based on the minimal length
+        fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength);
+
+        % Move original fiber id to the 5th column, the 4th column will be 1:N
+        fibersFound = zeros(size(fiberFiltered));
+        for i=1:length(fiberFiltered)
+            if ~isempty(fiberFiltered{i}.fibers)
+                fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
+                fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
+                fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
+                fiberFiltered{i}.fibers = fibers;
+                fibersFound(i) = 1;
+            end
+        end
+
+        settings.connectomePath = [outputPath, filesep, settings.connectome];
+        ea_mkdir(settings.connectomePath);
+        for i=1:length(fiberFiltered)
+            buffer = fiberFiltered{i};
+            save([settings.connectomePath, filesep, 'data', num2str(i), '.mat'], '-struct', 'buffer', '-v7.3');
+        end
+    else % Multi-Tract connectome
+        % Extract connectome name
+        connName = strrep(settings.connectome, 'Multi-Tract: ', '');
+
+        % Create output folder
+        settings.connectomePath = [outputPath, filesep, connName];
+        ea_mkdir(settings.connectomePath);
+
+        % Get paths of tracts
+        connFolder = [ea_getconnectomebase, 'dMRI_MultiTract', filesep, connName];
+        tracts = ea_regexpdir(connFolder, '\.mat$', 0);
+
+        settings.connectomeTractNames = cell(size(tracts));
+        data1 = struct;
+        data2 = struct;
+        fibersFound = zeros(numel(tracts),2);
+        for t=1:numel(tracts)
+            tract = tracts{t};
+            [~, tractName] = fileparts(tract);
+            settings.connectomeTractNames{t} = tractName;
+            fprintf('Loading connectome: %s, Tract: %s ...\n', connName, tractName);
+            conn = load(tract);
+            if options.native
+                originalFib = conn.fibers;
+                % Convert connectome fibers from MNI space to anchor space
+                fprintf('Convert connectome into native space...\n\n');
+                fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, 't1.nii'])';
+                conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
+                    [ea_space, 't1.nii'], ...
+                    [directory, 'y_ea_normparams.nii'], ...
+                    [directory, options.prefs.prenii_unnormalized])';
+            end
+
+            % Filter fibers based on the spherical ROI
+            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2);
+
+            % Filter fibers based on the minimal length
+            fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
+
+            % Move original fiber id to the 5th column, the 4th column will be 1:N
+            for i=1:length(fiberFiltered)
+                if ~isempty(fiberFiltered{i}.fibers)
+                    fibers = zeros(size(fiberFiltered{i}.fibers,1),5);
+                    fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
+                    fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
+                    fiberFiltered{i}.fibers = fibers;
+                    fibersFound(t,i) = 1;
+                end
+            end
+            eval(['data1.', tractName, ' = fiberFiltered{1};']);
+            eval(['data2.', tractName, ' = fiberFiltered{2};']);
+        end
+
+        % Save filtered fibers
+        save([settings.connectomePath, filesep, 'data1.mat'], '-struct', 'data1', '-v7.3');
+        save([settings.connectomePath, filesep, 'data2.mat'], '-struct', 'data2', '-v7.3');
     end
 end
 
@@ -409,7 +470,7 @@ for side=0:1
         continue;
     end
 
-    if settings.calcAxonActivation && ~fibersFound(side+1)
+    if settings.calcAxonActivation && ~any(fibersFound(:,side+1))
         warning('off', 'backtrace');
         warning('No fibers found for %s side! Skipping...\n', sideStr);
         warning('on', 'backtrace');

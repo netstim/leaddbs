@@ -7,7 +7,7 @@ function varargout=ea_resolve_elspec(varargin)
 % Andreas Horn
 
 if ~nargin
-    varargout{1}={'Medtronic 3389', 'Medtronic 3387', 'Medtronic 3391', ...
+    varargout{1}={'Medtronic 3389', 'Medtronic 3387', 'Medtronic 3391', 'Medtronic B33005', 'Medtronic B33015', ...
         'Boston Scientific Vercise', 'Boston Scientific Vercise Directed', ...
         'St. Jude ActiveTip (6146-6149)','St. Jude ActiveTip (6142-6145)', ...
         'St. Jude Directed 6172 (short)','St. Jude Directed 6173 (long)', ...
@@ -19,7 +19,7 @@ if ~nargin
         'DIXI D08-05AM', 'DIXI D08-08AM', 'DIXI D08-10AM', 'DIXI D08-12AM', 'DIXI D08-15AM', 'DIXI D08-18AM', ...
         'AdTech SD10R-SP05X Choi', 'AdTech RD10R-SP03X', 'AdTech BF08R-SP05X', 'AdTech BF08R-SP21X', 'AdTech BF08R-SP61X', ...
         'ELAINE Rat Electrode', 'NuMed Mini Lead'}';
-    varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', ...
+    varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', 'medtronic_b33005', 'medtronic_b33015', ...
         'boston_vercise', 'boston_vercise_directed', ...
         'stjude_activetip_2mm','stjude_activetip_3mm', ...
         'stjude_directed_05','stjude_directed_15', ...
@@ -106,6 +106,48 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=1;
+    case 'Medtronic B33005'
+        elspec.matfname='medtronic_b33005';
+        elspec.lead_diameter=1.3;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.3;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.3;
+        elspec.tip_color=0.7;
+        elspec.tip_length=0.9;
+        elspec.contact_spacing=0.5;
+        elspec.numel=8;
+        elspec.tipiscontact=0;
+        elspec.markerpos = 15.65;
+        elspec.markerlen = 2.3;
+        elspec.contactnames={'K0 (R)','K1A (R)','K1B (R)','K1C (R)','K2A (R)','K2B (R)','K2C (R)','K3 (R)','K0 (L)','K1A (L)','K1B (L)','K1C (L)','K2A (L)','K2B (L)','K2C (L)','K3 (L)'};
+        elspec.isdirected=1;
+        elspec.etagenames{1}={'K0 (R)','K1 (R)','K2 (R)','K3 (R)'};
+        elspec.etagenames{2}={'K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
+        elspec.etageidx={1,2:4,5:7,8};
+        elspec.forstimulation=1;
+    case 'Medtronic B33015'
+        elspec.matfname='medtronic_b33015';
+        elspec.lead_diameter=1.3;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.3;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.3;
+        elspec.tip_color=0.7;
+        elspec.tip_length=0.9;
+        elspec.contact_spacing=1.5;
+        elspec.numel=8;
+        elspec.tipiscontact=0;
+        elspec.markerpos = 18.65;
+        elspec.markerlen = 2.3;
+        elspec.contactnames={'K0 (R)','K1A (R)','K1B (R)','K1C (R)','K2A (R)','K2B (R)','K2C (R)','K3 (R)','K0 (L)','K1A (L)','K1B (L)','K1C (L)','K2A (L)','K2B (L)','K2C (L)','K3 (L)'};
+        elspec.isdirected=1;
+        elspec.etagenames{1}={'K0 (R)','K1 (R)','K2 (R)','K3 (R)'};
+        elspec.etagenames{2}={'K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
+        elspec.etageidx={1,2:4,5:7,8};
         elspec.forstimulation=1;
     case 'Boston Scientific Vercise'
         elspec.matfname='boston_vercise';
