@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 13-Nov-2020 13:22:10
+% Last Modified by GUIDE v2.5 23-Apr-2021 14:23:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -611,10 +611,12 @@ function addvarbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 M.ui.clinicallist=length(M.clinical.labels)+1;
-[numat,nuvar]=ea_get_clinical(M);
+%new_var = 1 since you are adding a new variable
+[numat,nuvar]=ea_get_clinical(M,1);
 if ~isempty(numat) % user did not press cancel
     M.clinical.vars{end+1}=numat;
     M.clinical.labels{end+1}=nuvar;
+    
 end
 set(handles.clinicallist,'Value',M.ui.clinicallist);
 % store model and refresh UI
@@ -623,7 +625,7 @@ setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
 
 
-function [mat,matname]=ea_get_clinical(M)
+function [mat,matname]=ea_get_clinical(M,new_var)
 try
     mat=M.clinical.vars{M.ui.clinicallist};
 catch % new variable
@@ -639,7 +641,9 @@ end
 if ~isempty(numat) % user did not press cancel
     mat=numat;
     matname=nuname;
+    ea_write_scores(M,mat,matname,new_var,'');
 end
+
 
 
 % --- Executes on button press in removevarbutton.
@@ -650,9 +654,10 @@ function removevarbutton_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 
 % delete data
+val_to_rm = M.clinical.labels(get(handles.clinicallist,'Value'));
+ea_write_scores(M,'','','',val_to_rm) %First do it in the patient folder because it uses M.
 M.clinical.vars(get(handles.clinicallist,'Value'))=[];
 M.clinical.labels(get(handles.clinicallist,'Value'))=[];
-
 % store model and refresh UI
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
@@ -755,9 +760,10 @@ function reviewvarbutton_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 
 % store in model as variables
-
 %M.clinical.vars{get(handles.clinicallist,'Value')}(isnan(M.clinical.vars{get(handles.clinicallist,'Value')}))=0;
-[M.clinical.vars{get(handles.clinicallist,'Value')},M.clinical.labels{get(handles.clinicallist,'Value')}]=ea_get_clinical(M);
+%new_var = 0 because you are reviewing an old variable
+[M.clinical.vars{get(handles.clinicallist,'Value')},M.clinical.labels{get(handles.clinicallist,'Value')}]=ea_get_clinical(M,0);
+
 
 
 % store model and refresh UI
@@ -1549,7 +1555,7 @@ ea_busyaction('on',gcf,'group');
 if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
-    ea_refresh_lg(handles);
+%    ea_refresh_lg(handles);
     M=getappdata(hObject,'M');
     disp('Saving data to disk...');
     try
@@ -1748,3 +1754,22 @@ if file % make sure user didnt press cancel
     ea_lg_exportstats(M, [path, file]);
     fprintf('\nDBS Stats exported to:\n%s\n\n', [path, file]);
 end
+
+
+
+
+% --- Executes on button press in clinical_score_generator.
+function clinical_score_generator_Callback(hObject, eventdata, handles)
+% hObject    handle to clinical_score_generator (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M = getappdata(gcf,'M');
+ea_score_gen('',M);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over reviewvarbutton.
+function reviewvarbutton_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to reviewvarbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
