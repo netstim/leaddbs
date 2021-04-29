@@ -250,7 +250,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'OnCallback', {@eleGroupVisible,el_render(el_renderID)},...
                     'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
             end
-
+            
+           mixfiberadd=uipushtool(ht,'CData',ea_get_icn('mixedfiber_add'),...
+                 'TooltipString','Add Mixed Fiber analysis',...
+                 'ClickedCallback',{@ea_add_mixfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
             % add sweetspot explorer button.
             sweetspotadd = uipushtool(ht, 'CData', ea_get_icn('sweetspot_add'),...
                 'TooltipString', ['Add sweetspot analysis'],...
@@ -271,6 +274,8 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 'TooltipString', ['Add Fiber Filtering analysis'],...
                 'Tag', ['Add fiber filtering analysis'],...
                 'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
+            
+           
 
             di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);
             for d=1:length(di)
@@ -393,6 +398,13 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
     'TooltipString','Cortical Reconstruction Visualization',...
     'ClickedCallback',{@opencortexviewer,resultfig,options});
 end
+
+% if strcmp(options.leadprod,'group')
+%     mixfiberadd = uipushtool(ht, 'CData', ea_get_icn('mixedfiber_add'),...
+%                  'TooltipString','Add Mixed Fiber analysis',...
+%                  'ClickedCallback',{@ea_add_mixfiber,[options.root,'LEAD_groupanalysis.mat'],resultfig});
+% end
+
 % Initialize Cortical Strip-Button
 % cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),...
 %     'TooltipString','Cortical Reconstruction Visualization',...
@@ -432,6 +444,7 @@ if isfield(options.d3,'expdf')
         return
     end
 end
+
 %% End of patient's part.
 
 % Initialize a draggable lightbulb
@@ -681,7 +694,7 @@ end
 function dump_screenshot(hobj,ev,resultfig,options)
 
 set(0,'CurrentFigure',resultfig);
-if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'dir')
+if ~exist([options.root,options.x,filesep,'export',filesep,'views'],'dir')
     mkdir([options.root,options.patientname,filesep,'export',filesep,'views']);
 end
 
