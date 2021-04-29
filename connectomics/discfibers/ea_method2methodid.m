@@ -17,4 +17,6 @@ switch obj.statmetric
             case 'Peak 5%'
                 id=[id,'_5peak'];
         end
+    case 3
+        id = 'plainconn';
 end

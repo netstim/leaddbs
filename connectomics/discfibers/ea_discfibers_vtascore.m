@@ -16,7 +16,7 @@ if ~exist('posneg', 'var')
     posneg = 'both';
 end
 
-% Predict using fiberss from only one side
+% Predict using fibers from only one side
 switch lower(side)
     case 'right'
         if isempty(fibcell{1})

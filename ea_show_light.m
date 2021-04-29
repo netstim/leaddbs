@@ -7,11 +7,12 @@ if nargin<2
 end
 
 set(0,'CurrentFigure',resultfig);
-CamLight=light('style','infinite','Color',[0.8,0.8,1]); % not modifiable, infinite light.
-camlight(CamLight,'headlight'); % move light object.
-%set(cam_lamp,'Color',[1,1,1]);
-CeilingLight=light('Position',[0 0 10],'style','local','Color',[1,0.9,0.9]); % not modifiable, infinite light.
 
+CamLight=light('style','infinite','Color',[0.8,0.8,1]); % not modifiable, infinite light.
+%set(cam_lamp,'Color',[1,1,1]);
+camlight(CamLight,'headlight'); % move light object.
+
+CeilingLight=light('Position',[0 0 10],'style','local','Color',[1,0.9,0.9]); % not modifiable, infinite light.
 %set(ceiling_lamp,'Color',[0.5,0.5,0.5]);
 
 RightLight=light('Position',[-100 0 0],'style','infinite','Color',[1,0.9,0.7]); % not modifiable, infinite light.
@@ -19,15 +20,6 @@ RightLight=light('Position',[-100 0 0],'style','infinite','Color',[1,0.9,0.7]); 
 
 LeftLight=light('Position',[100 0 0],'style','infinite','Color',[0.9,0.9,1]); % not modifiable, infinite light.
 %set(left_lamp,'Color',[0.5,0.5,0.3]);
-
-
-%AddLight=light('style','local','Color',[1,0.8,1],'Position',[0 0 1]); % not modifiable, infinite light.
-
-
-% delete(CamLight)
-% delete(CeilingLight)
-% delete(RightLight)
-% delete(LeftLight)
 
 %lightobj=light('Position',[30 30 30],'Style','local');
 %lightbulb=plot3(30, 30, 30,'o','MarkerSize',20,'MarkerFaceColor','y','MarkerEdgeColor','k');
