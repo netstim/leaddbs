@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 23-Apr-2021 14:23:19
+% Last Modified by GUIDE v2.5 30-Apr-2021 15:11:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1786,3 +1786,151 @@ function reviewvarbutton_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to reviewvarbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in AddPatients.
+function AddPatients_Callback(hObject, eventdata, handles)
+% hObject    handle to AddPatients (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% hObject    handle to addptbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
+    ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
+end
+
+M=getappdata(handles.leadfigure,'M');
+
+folders=ea_uigetdir(ea_startpath,'Select Patient folders..');
+M.patient.list=[M.patient.list;folders'];
+M.patient.group=[M.patient.group;ones(length(folders),1)];
+options=ea_setopts_local(handles);
+
+tS=ea_initializeS(['gs_',M.guid],options,handles);
+
+if isempty(M.S)
+    M=rmfield(M,'S');
+    M.S(1:length(folders))=tS;
+else
+    try
+        M.S(end+1:end+length(folders))=tS;
+    catch
+        tS.volume=[0,0];
+        tS.sources=[1:4];
+        M.S(end+1:end+length(folders))=tS;
+    end
+end
+
+setappdata(handles.leadfigure,'M',M);
+setappdata(handles.leadfigure,'S',M.S);
+ea_refresh_lg(handles);
+% save M
+M=getappdata(handles.leadfigure,'M');
+save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+
+
+% --- Executes on button press in RemovePatients.
+function RemovePatients_Callback(hObject, eventdata, handles)
+% hObject    handle to RemovePatients (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M=getappdata(handles.leadfigure,'M');
+
+deleteentry=get(handles.patientlist,'Value');
+
+M.patient.list(deleteentry)=[];
+
+M.patient.group(deleteentry)=[];
+
+try M.elstruct(deleteentry)=[]; end
+
+for cvar=1:length(M.clinical.vars)
+    try
+        M.clinical.vars{cvar}(deleteentry,:)=[];
+    end
+end
+
+if isfield(M,'S')
+    try
+    M.S(deleteentry)=[];
+    end
+    setappdata(handles.leadfigure, 'S', M.S);
+end
+
+try
+    M.stats(deleteentry)=[];
+end
+setappdata(handles.leadfigure,'M',M);
+ea_refresh_lg(handles);
+
+
+% --- Executes on button press in removept.
+function removept_Callback(hObject, eventdata, handles)
+% hObject    handle to removept (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M=getappdata(handles.leadfigure,'M');
+
+deleteentry=get(handles.patientlist,'Value');
+
+M.patient.list(deleteentry)=[];
+
+M.patient.group(deleteentry)=[];
+
+try M.elstruct(deleteentry)=[]; end
+
+for cvar=1:length(M.clinical.vars)
+    try
+        M.clinical.vars{cvar}(deleteentry,:)=[];
+    end
+end
+
+if isfield(M,'S')
+    try
+    M.S(deleteentry)=[];
+    end
+    setappdata(handles.leadfigure, 'S', M.S);
+end
+
+try
+    M.stats(deleteentry)=[];
+end
+setappdata(handles.leadfigure,'M',M);
+ea_refresh_lg(handles);
+
+% --- Executes on button press in moveptdown.
+function moveptdown_Callback(hObject, eventdata, handles)
+% hObject    handle to moveptdown (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M=getappdata(gcf,'M');
+whichmoved=get(handles.patientlist,'Value');
+
+if whichmoved(end)==length(M.patient.list) % last entry anyways
+    return
+end
+
+ix=1:length(M.patient.list);
+ix(whichmoved)=ix(whichmoved)+1;
+ix(whichmoved+1)=ix(whichmoved+1)-1;
+
+M.patient.list=M.patient.list(ix);
+M.patient.group=M.patient.group(ix);
+M.ui.listselect=whichmoved+1;
+for c=1:length(M.clinical.vars)
+    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+end
+try
+    M.S = M.S(ix);
+end
+try
+    M=rmfield(M,'elstruct');
+end
+try
+    M=rmfield(M,'stats');
+end
+setappdata(gcf,'M',M);
+
+set(handles.patientlist,'Value',whichmoved+1);
+ea_refresh_lg(handles);
