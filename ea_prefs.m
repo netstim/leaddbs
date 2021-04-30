@@ -46,6 +46,7 @@ try
         umachine = load([home, '.ea_prefs.mat']);
     end
 catch ME
+    prefs=dprefs; % it seems user-defined prefs cannot be loaded.
     warning(ME.message);
     return
 end

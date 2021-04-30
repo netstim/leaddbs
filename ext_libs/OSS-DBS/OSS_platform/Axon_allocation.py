@@ -428,9 +428,9 @@ if __name__ == '__main__':
                 list_ascii.append(ext_string[i][0])
             #list_ascii = map(lambda s: s.strip(), list_ascii)
             projection_name=''.join(chr(i) for i in list_ascii)
-            print(projection_name)
+            # print(projection_name)
             Projections.append(projection_name)
-            
+
 
     # Full_paths=[os.environ['PATIENTDIR']+'/'+name_of_the_connectome+'/data'+str(index_side+1)+'.mat',os.environ['PATIENTDIR']+'/'+name_of_the_connectome+'/data'+str(2)+'.mat']   # In Lead-DBS 1 is for rh, 2 for lh, that's why we add 1; data2 is for lh example, will be imported from Lead-DBS
     # Name_to_save='Test2'
@@ -440,7 +440,7 @@ if __name__ == '__main__':
     # Active_contact_coordinates=[np.array([10.92957028, -12.11697637, -7.697]),np.array([-10.92957028, -12.11697637, -7.697])]   # STN for now, should be changed
 
 
-    
+
 
 
     #Full_paths=[os.environ['PATIENTDIR']+'/'+Path_to_files+'.mat']   # In Lead-DBS 1 is for rh, 2 for lh, that's why we add 1; data2 is for lh example, will be imported from Lead-DBS
@@ -451,7 +451,7 @@ if __name__ == '__main__':
     #axon_length=[file_inp['settings']['minFiberLength'][:][0][0]]
     diams_fib=list(file_inp['settings']['fiberDiameter'][:][0][:])
 
-    print(axon_length,diams_fib)
+    # print(axon_length,diams_fib)
 
     Phi_vector=file_inp['settings']['Phi_vector'][:,index_side]
     Phi_vector=list(Phi_vector)
@@ -496,12 +496,12 @@ if __name__ == '__main__':
     n_Ranviers_per_projection=np.zeros(len(axon_length),int)
     for i in range(len(diams_fib)):
         if 'Multi-Tract' in Connectome_name:
-            print(Projections[i])
-            n_Ranviers_per_projection[i]=fibers_to_axons(Name_to_save,Full_paths[0],Projections[i],Axon_model,diams_fib[i],axon_length[i],Active_contact_coordinates,True)                
-            print("Projection ",Projections[i]," seeded with ",n_Ranviers_per_projection[i], "nodes of Ranvier")
+            # print(Projections[i])
+            n_Ranviers_per_projection[i]=fibers_to_axons(Name_to_save,Full_paths[0],Projections[i],Axon_model,diams_fib[i],axon_length[i],Active_contact_coordinates,True)
+            print("Projection",Projections[i],"seeded with",n_Ranviers_per_projection[i], "nodes of Ranvier\n")
         else:
             n_Ranviers_per_projection[i]=fibers_to_axons(Name_to_save,Full_paths[i],Fiber_names[i],Axon_model,diams_fib[i],axon_length[i],Active_contact_coordinates,False)
-            print("Projection ",Fiber_names[i]," seeded with ",n_Ranviers_per_projection[i], "nodes of Ranvier")
+            print("Projection",Fiber_names[i],"seeded with",n_Ranviers_per_projection[i], "nodes of Ranvier\n")
     np.savetxt(os.environ['PATIENTDIR']+'/'+Name_to_save+'_N_nodes.csv', n_Ranviers_per_projection, delimiter=" ")
 
     if len(diams_fib)==1 and not os.path.exists(os.environ['PATIENTDIR']+'/'+Name_to_save+'.h5'):            #stupid way

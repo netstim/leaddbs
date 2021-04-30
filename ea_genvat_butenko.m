@@ -482,27 +482,27 @@ for side=0:1
 
     % Calculate axon allocation when option enabled
     if settings.calcAxonActivation
-            fprintf('Calculating axon allocation for %s side stimulation...\n\n', sideStr);
+        fprintf('Calculating axon allocation for %s side stimulation...\n\n', sideStr);
 
-            % Make sure to clean up, useful in manually interruption
-            ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
-            ea_delete([outputPath, filesep,'Allocated_axons.h5']);
-            ea_delete([outputPath, filesep,'*.csv']);
-            ea_delete([outputPath, filesep,'*.py']);
+        % Make sure to clean up, useful in manually interruption
+        ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
+        ea_delete([outputPath, filesep,'Allocated_axons.h5']);
+        ea_delete([outputPath, filesep,'*.csv']);
+        ea_delete([outputPath, filesep,'*.py']);
 
-            % Delete this folder in MATLAB since shutil.rmtree may raise
-            % I/O error
-            % ea_delete([outputPath, filesep,'Axons_in_time']);
+        % Delete this folder in MATLAB since shutil.rmtree may raise
+        % I/O error
+        % ea_delete([outputPath, filesep,'Axons_in_time']);
 
-            if isempty(getenv('SINGULARITY_NAME')) % Docker
-                system(['docker run ', ...
-                        '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
-                        '--volume ', outputPath, ':/opt/Patient ', ...
-                        '--rm ', dockerImage, ' ', ...
-                        'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side)]);
-            else % Singularity
-                system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputPath, ' ', num2str(side)]);
-            end
+        if isempty(getenv('SINGULARITY_NAME')) % Docker
+            system(['docker run ', ...
+                    '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
+                    '--volume ', outputPath, ':/opt/Patient ', ...
+                    '--rm ', dockerImage, ' ', ...
+                    'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side)]);
+        else % Singularity
+            system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputPath, ' ', num2str(side)]);
+        end
     end
 
     % Call OSS-DBS GUI to start calculation
@@ -568,68 +568,85 @@ for side=0:1
             stimparams(side+1).volume = vatvolume;
         end
 
-        if isfile([outputPath, filesep, 'Results_', sideCode, filesep, 'Axon_state_data',num2str(side+1),'.mat'])
-            % Get fiber id and state from OSS-DBS result
-            ftr = load([outputPath, filesep, 'Results_', sideCode, filesep, 'Axon_state_data',num2str(side+1),'.mat']);
-            [fibId, ind] = unique(ftr.fibers(:,4));
-            fibState = ftr.fibers(ind,5);
+        axonState = ea_regexpdir([outputPath, filesep, 'Results_', sideCode], 'Axon_state.*\.mat', 0);
+        if ~isempty(axonState)
+            for f=1:length(axonState)
+                % Get fiber id and state from OSS-DBS result
+                ftr = load(axonState{f});
+                [fibId, ind] = unique(ftr.fibers(:,4));
+                fibState = ftr.fibers(ind,5);
 
-            % Restore full length fiber (as in original filtered fiber)
-            ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
-            ftr.fibers = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
-            originalFibID = ftr.fibers(:,5);
+                % Restore full length fiber (as in original filtered fiber)
+                if startsWith(settings.connectome, 'Multi-Tract: ')
+                    ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat'], settings.connectomeTractNames{f});
+                    ftr = ftr.(settings.connectomeTractNames{f});
+                else
+                    ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
+                end
+                ftr.fibers = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
+                originalFibID = ftr.fibers(:,5);
 
-            % Extract original conn fiber id and idx, needed in case
-            % calculation is done in native space
-            [connFibID, idx] = unique(ftr.fibers(:,5));
+                % Extract original conn fiber id and idx, needed in case
+                % calculation is done in native space
+                [connFibID, idx] = unique(ftr.fibers(:,5));
 
-            % Set fiber state
-            for f=1:length(fibId)
-                ftr.fibers(ftr.fibers(:,4)==fibId(f),5) = fibState(f);
-            end
-
-            % Extract state of original conn fiber, needed in case
-            % calculation is  done in native space
-            connFibState = ftr.fibers(idx, 5);
-
-            % Reset original fiber id as in the connectome
-            ftr.fibers(:,4) = originalFibID;
-
-            % Save result for visualization
-            save([outputPath, filesep, 'fiberActivation_', sideStr, '.mat'], '-struct', 'ftr');
-            fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
-
-            if options.native % Generate fiber activation file in MNI space
-                fprintf('Restore connectome in MNI space: %s ...\n\n', settings.connectome);
-                conn.fibers = originalFib;
-
-                fprintf('Convert fiber activation result into MNI space...\n\n');
-                conn.fibers = conn.fibers(ismember(conn.fibers(:,4), connFibID), :);
                 % Set fiber state
-                conn.fibers = [conn.fibers, zeros(size(conn.fibers,1),1)];
-                for f=1:length(connFibID)
-                    conn.fibers(conn.fibers(:,4)==connFibID(f),5) = connFibState(f);
+                for fib=1:length(fibId)
+                    ftr.fibers(ftr.fibers(:,4)==fibId(fib),5) = fibState(fib);
                 end
 
-                % Recreate fiber idx
-                [~, ~, idx] = unique(conn.fibers(:,4), 'stable');
-                conn.idx = accumarray(idx,1);
+                % Extract state of original conn fiber, needed in case
+                % calculation is  done in native space
+                connFibState = ftr.fibers(idx, 5);
 
                 % Reset original fiber id as in the connectome
                 ftr.fibers(:,4) = originalFibID;
 
-                % Save MNI space fiber activation result
-                save([MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'], '-struct', 'conn');
-
-                if ~options.orignative % Visualize MNI space result
-                    fiberActivation = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                % Save result for visualization
+                if startsWith(settings.connectome, 'Multi-Tract: ')
+                    fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '_', settings.connectomeTractNames{f}, '.mat'];
+                else
+                    fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
                 end
-            end
+                save(fiberActivation, '-struct', 'ftr');
 
-            % Visualize fiber activation
-            if exist('resultfig', 'var')
-                set(0, 'CurrentFigure', resultfig);
-                ea_fiberactivation_viz(fiberActivation, resultfig);
+                if options.native % Generate fiber activation file in MNI space
+                    fprintf('Restore connectome in MNI space: %s ...\n\n', settings.connectome);
+                    conn.fibers = originalFib;
+
+                    fprintf('Convert fiber activation result into MNI space...\n\n');
+                    conn.fibers = conn.fibers(ismember(conn.fibers(:,4), connFibID), :);
+                    % Set fiber state
+                    conn.fibers = [conn.fibers, zeros(size(conn.fibers,1),1)];
+                    for fib=1:length(connFibID)
+                        conn.fibers(conn.fibers(:,4)==connFibID(fib),5) = connFibState(fib);
+                    end
+
+                    % Recreate fiber idx
+                    [~, ~, idx] = unique(conn.fibers(:,4), 'stable');
+                    conn.idx = accumarray(idx,1);
+
+                    % Reset original fiber id as in the connectome
+                    ftr.fibers(:,4) = originalFibID;
+
+                    % Save MNI space fiber activation result
+                    if startsWith(settings.connectome, 'Multi-Tract: ')
+                        fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '_', settings.connectomeTractNames{f}, '.mat'];
+                    else
+                        fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                    end
+                    save(fiberActivationMNI, '-struct', 'conn');
+
+                    if ~options.orignative % Visualize MNI space result
+                        fiberActivation = fiberActivationMNI;
+                    end
+                end
+
+                % Visualize fiber activation
+                if exist('resultfig', 'var')
+                    set(0, 'CurrentFigure', resultfig);
+                    ea_fiberactivation_viz(fiberActivation, resultfig);
+                end
             end
         end
     elseif isfile([outputPath, filesep, 'fail_', sideCode, '.txt'])
