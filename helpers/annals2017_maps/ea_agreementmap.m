@@ -1,8 +1,8 @@
-function [outputMap, mask] = ea_agreementmap(inputMaps, outputFileName, writeoutMask, mode)
+function [outputMap, mask] = ea_agreementmap(inputMaps, outputFileName, writeoutMask, mode, zz)
 % Calculate agreement R-map
 
 if ~exist('mode','var')
-   mode='sum';
+   mode='mult';
 end
 
 % Load input map
@@ -41,6 +41,15 @@ end
 
 % Ensure that negatively agreeing voxels have negative values
 outputMap.img(negativeMask) = -abs(outputMap.img(negativeMask));
+
+if exist('zz','var')
+    switch zz
+        case 'z'
+            outputMap.img(~(outputMap.img==0))=ea_nanzscore(outputMap.img(~(outputMap.img==0)));
+        case 'k'
+            outputMap.img(~(outputMap.img==0))=ea_normal(outputMap.img(~(outputMap.img==0)));
+    end
+end
 
 % Optionaly save agreement map to NIfTI
 if exist('outputFileName','var')
