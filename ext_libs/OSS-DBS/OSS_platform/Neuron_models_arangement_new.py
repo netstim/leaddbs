@@ -583,6 +583,7 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
                             check3=np.logical_and(np.logical_and(check1_1,check2_1),np.logical_and(np.logical_and(check1_2,check2_2),np.logical_and(check1_3,check2_3)))
                             a=np.where((check3 == (True)))
                             if str(a)!='(array([], dtype=int64),)':
+                                points_csf=points_csf+1
                                 inx_start=int(inx/int(n_segments_fib_diam_array[i,0]))*int(n_segments_fib_diam_array[i,0])
                                 Array_coord[inx_start:inx_start+int(n_segments_fib_diam_array[i,0]),:]=-100000000.0
                                 inx=inx_start+int(n_segments_fib_diam_array[i,0])
