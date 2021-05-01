@@ -63,6 +63,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         'number_of_processors': 0,
         'Approximating_Dimensions': [80.0, 80.0, 80.0],
         'Aprox_geometry_center': [0.0, 0.0, 0.0],
+        'el_order':2,
     }
 
     #should add for 'Name_prepared_neuron_array' (you need only the name of the file, not the whole path)
@@ -94,6 +95,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     if file['settings']['current_control'][0][0]==1 or file['settings']['current_control'][0][-1]==1:
         input_dict['current_control']=1
         Phi_vector=Phi_vector*0.001     # because Lead-DBS uses mA as the input
+        input_dict['el_order']=3
 
     Phi_vector=list(Phi_vector)
     import math
