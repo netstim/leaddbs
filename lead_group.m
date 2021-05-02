@@ -1777,7 +1777,8 @@ function clinical_score_generator_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M = getappdata(gcf,'M');
-ea_score_gen('',M);
+
+ea_score_gen('',M,handles);
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
