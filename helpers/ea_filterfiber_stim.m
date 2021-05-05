@@ -1,4 +1,4 @@
-function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type, factor)
+function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type, factor, ref)
 % Filter fibers based on the active contacts and stimulation amplitudes
 
 % Load stimparameters in case needed
@@ -98,6 +98,11 @@ if isfield(ftr, 'voxmm') && strcmp(ftr.voxmm, 'vox')
     end
 end
 
+% Reference image when construct the spherical ROI, use MNI t1 by default
+if ~exist('ref','var')
+    ref = [ea_space,'t1.nii'];
+end
+
 % Check if fibers pass through the ROI
 fibConn = zeros(length(ftr.idx), length(stimAmplitudes));
 fiberFiltered = cell(size(stimAmplitudes));
@@ -106,7 +111,7 @@ for i=1:length(radius)
         disp('No stimulation found, skipping...');
     else
         fprintf('\nConstructing spherical ROI...\n');
-        sphereROI = ea_spherical_roi([],stimCoords{i}, radius{i}, 0);
+        sphereROI = ea_spherical_roi([],stimCoords{i}, radius{i}, 0, ref);
 
         % Find indices within sphere ROI region
         sphereROIInd = find(sphereROI.img(:));
