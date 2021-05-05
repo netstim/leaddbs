@@ -3,15 +3,10 @@ function ea_pathwayreport(stimFolder, sortPathway, pathwayTable)
 
 fibers = [];
 
-% Load result from left side
-if isfile([stimFolder, filesep, 'fiberActivation_left.mat'])
-    result = load([stimFolder, filesep, 'fiberActivation_left.mat'], 'fibers');
-    fibers = [fibers;result.fibers];
-end
-
-% Load result from right side
-if isfile([stimFolder, filesep, 'fiberActivation_right.mat'])
-    result = load([stimFolder, filesep, 'fiberActivation_right.mat'], 'fibers');
+% Load result
+results = ea_regexpdir(stimFolder, 'fiberActivation_.*\.mat$', 0);
+for i=1:length(results)
+    result = load(results{i}, 'fibers');
     fibers = [fibers;result.fibers];
 end
 

@@ -180,7 +180,11 @@ end
 
 % Interpolate slice when it has low resolution
 if size(sliceim,3)==1 && any(size(sliceim)<1000)
-    resdivs=1; % could increase to 2 but would render a bit slow.
+    if any(size(sliceim)<=256)
+        resdivs=2; % increase to 2 but would render a bit slow.
+    else
+        resdivs=1;
+    end
     sliceim=interp2(sliceim,resdivs);
 else
     resdivs=0;

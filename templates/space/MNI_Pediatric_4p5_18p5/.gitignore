@@ -1,0 +1,8 @@
+!ea_space_def.mat
+/.augtpm
+/.aug_tpm
+/.tpm
+*.txt
+atlases/
+backdrops/
+fliplr/
