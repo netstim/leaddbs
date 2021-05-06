@@ -238,7 +238,13 @@ end
 % Tail
 settings.Second_coordinate = nan(eleNum, 3);
 for i=1:eleNum
-    if ~isempty(coords_mm{i})
+    if options.elspec.numel == 1 % Exception for electrode with only one contact
+        if options.native
+            settings.Second_coordinate(i,:) = markersNative(i).tail;
+        else
+            settings.Second_coordinate(i,:) = markersMNI(i).tail;
+        end
+    elseif ~isempty(coords_mm{i})
         settings.Second_coordinate(i,:) = coords_mm{i}(end,:);
     end
 end
