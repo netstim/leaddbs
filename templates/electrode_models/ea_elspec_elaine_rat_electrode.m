@@ -1,13 +1,13 @@
 function electrode=ea_elspec_elaine_rat_electrode(varargin)
-% This function creates the electrode specification for a certain
-% lead. Since this code is usually only executed once (to
-% establish the model), it is not optimized in any way. You can however use
-% this code to modify the electrode model and/or duplicate the function to
-% build a different model.
+% Creates the FEM-compatible electrode model for ELAINE rat electrode.
+% It's based on the mesh generated using SketchUp and tetgen.
+% _________________________________________________________________________
+% Copyright (C) 2020 Charite University Medicine Berlin
+% Ningfei Li
 
 % Set folder
 elemodelPath = fileparts(mfilename('fullpath'));
-modelFolder = 'ELAINE_Rat_Electrode_Components';
+modelFolder = 'ELAINE_Rat_Electrode';
 
 % Get specification
 options.elmodel='ELAINE Rat Electrode';

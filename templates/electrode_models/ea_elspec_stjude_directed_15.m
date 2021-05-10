@@ -3,27 +3,30 @@ function electrode=ea_elspec_stjude_directed_15(varargin)
 % This function creates the electrode specification for the short SJM directed lead.
 % In contrast to other electrode generation functions, it is based on an
 % externally generated FEM-compatible model, stored in the
-% StJude_Directed_05_Components subfolder.
+% StJude_Directed_05 subfolder.
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-% The segmented contacts are clockwise arranged seen from the top view, the
-% same as in the models in the components folder.
-electrodeorder = [1 2 3 4 5 6 7 8 9];
+% Set folder
+elemodelPath = fileparts(mfilename('fullpath'));
+modelFolder = 'StJude_Directed_15';
+
+% Get insulation and contact numbers
+numIns = numel(ea_regexpdir([elemodelPath, filesep, modelFolder,filesep, 'Insulations'], '.*\.smesh$'));
+numCon = numel(ea_regexpdir([elemodelPath, filesep, modelFolder,filesep, 'Contacts'], '.*\.smesh$'));
 
 %% import insulations and contacts from subfolder
-for k = 1:17
-    filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'Insulations',filesep,'ins', num2str(k),'.1'];
+for k = 1:numIns
+    filename = [elemodelPath,filesep,modelFolder,filesep,'Insulations',filesep,'ins', num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
     electrode.insulation(k).vertices = node;
     electrode.insulation(k).faces = face(:,1:3);
     clear face node filename
 end
 
-for k = 1:numel(electrodeorder)
-    filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',...
-        filesep,'Contacts',filesep,'con',num2str(electrodeorder(k)),'.1'];
+for k = 1:numCon
+    filename = [elemodelPath,filesep,modelFolder,filesep,'Contacts',filesep,'con',num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
     electrode.contacts(k).vertices = node;
     electrode.contacts(k).faces = face(:,1:3);
@@ -59,12 +62,12 @@ electrode.coords_mm(8,:)=[0 0 10.75];
 electrode.isdirected = 1;
 
 %% saving electrode struct
-save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_15.mat'],'electrode');
+save([elemodelPath,filesep,'stjude_directed_15.mat'],'electrode');
 
 %% create and save _vol file
-filename = [fileparts(mfilename('fullpath')),filesep,'StJude_Directed_15_Components',filesep,'final.1'];
+filename = [elemodelPath,filesep,modelFolder,filesep,'final.1'];
 [node,~,face]=readtetgen(filename);
-save([fileparts(mfilename('fullpath')),filesep,'stjude_directed_15_vol.mat'],'face','node')
+save([elemodelPath,filesep,'stjude_directed_15_vol.mat'],'face','node')
 clear node face
 
 %% visualize
