@@ -124,13 +124,16 @@ end
 
 % Labels:
 labeling = dir([ea_space(options,'labeling'),'*.nii']);
-labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
+if ~isempty(labeling)
+    labeling = cellfun(@(x) {strrep(x, '.nii', '')}, {labeling.name});
+    set(handles.labelpopup,'String', labeling);
 
-set(handles.labelpopup,'String', labeling);
-
-% Initialize parcellation popupmenu
-defaultParc = options.prefs.lg.defaultParcellation;
-set(handles.labelpopup,'Value',find(ismember(labeling, defaultParc)));
+    % Initialize parcellation popupmenu
+    parc = find(ismember(labeling, options.prefs.lg.defaultParcellation));
+    if ~isempty(parc)
+        set(handles.labelpopup,'Value',parc);
+    end
+end
 
 % Set connectome popup
 modlist = ea_genmodlist([],[],options,'dmri');
