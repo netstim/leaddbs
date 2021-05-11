@@ -1,4 +1,4 @@
-function [M,Mz,My,Mx] = ea_orient_rollpitchyaw(roll,pitch,yaw)
+function [M,Mz,My,Mx] = ea_diode_rollpitchyaw(roll,pitch,yaw)
 %% returns a 3x3 rotation matrix for roll->pitch->yaw rotation in that order
 %% all in radians
 a = pitch; %around x axis
