@@ -1,8 +1,8 @@
-function [roll_out] = ea_diode_main(options,supervised)
+function [roll_out] = ea_diode_main(options)
 %% Determine Orientation for BSCI directed leads from postoperative CT
 % has an unsupervised and a supervised version
 folder = [options.root options.patientname filesep];
-defaultdirection = 'anterior';
+
 if  options.modality == 1 % check for electrode type and postoperative imaging
     msg = sprintf(['Automatic rotation detection works only for postoperative CT images.']);
     choice = questdlg(msg,'No postoperative CT!','Abort','Abort');
@@ -77,9 +77,9 @@ end
 
 sides = {'right','left','3','4','5','6','7','8'};
 for side = options.elside
-    disp(['Reconstructing rotation of ' sides{side} ' lead!'])    
+    disp(['Reconstructing rotation of ' sides{side} ' lead!'])
     % import lead information
-    load([folder 'ea_reconstruction.mat']); % included in for-loop to make independent ea_save_reconstruction for both sides      
+    load([folder 'ea_reconstruction.mat']); % included in for-loop to make independent ea_save_reconstruction for both sides
     
     %% transform head/tail coordinates from native to image coordinates
     head_native = [reco.native.markers(side).head 1]';
@@ -108,8 +108,7 @@ for side = options.elside
     
     %% launch DiODe for different leads
     if strcmp(options.elmodel,'Boston Scientific Vercise Directed')
-%         [roll_y,y,solution] = ea_diode_bsci(options,side,ct,head_mm,tail_mm,head_vx,tail_vx, tmat_vx2mm, unitvector_mm, supervised);
-        [roll_y,y,solution] = ea_diode_bsci(side,ct,head_mm,unitvector_mm,tmat_vx2mm,supervised);
+        [roll_y,y,~] = ea_diode_bsci(side,ct,head_mm,unitvector_mm,tmat_vx2mm);
     else  % check for electrode type and postoperative imaging
         msg = sprintf(['No Valid Directional Lead Selected!']);
         choice = questdlg(msg,'No Directional Lead!','Abort','Abort');
@@ -117,41 +116,45 @@ for side = options.elside
         return
     end
     
+    if ~isempty(y)
         %% transform y to native space and back
-    if strcmp(CTname,[filesep 'postop_ct.nii']) || strcmp(CTname,[filesep 'postop_ct_resliced.nii'])
-        % transform postop_ct_mm -> rpostop_ct_mm
-        y = tmat_reg2org \ y;
-    elseif strcmp(CTname,[filesep 'rpostop_ct.nii'])
-        y = y;
+        if strcmp(CTname,[filesep 'postop_ct.nii']) || strcmp(CTname,[filesep 'postop_ct_resliced.nii'])
+            % transform postop_ct_mm -> rpostop_ct_mm
+            y = tmat_reg2org \ y;
+        elseif strcmp(CTname,[filesep 'rpostop_ct.nii'])
+            y = y;
+        end
+        
+        head = head_native(1:3)';
+        tail = tail_native(1:3)';
+        y = y(1:3)' - head;
+        
+        %% Calculate direction of x and y markers
+        [xunitv, yunitv] = ea_calcxy(head, tail, y);
+        
+        y = head + yunitv * (options.elspec.lead_diameter / 2);
+        x = head + xunitv * (options.elspec.lead_diameter / 2);
+        
+        reco.native.markers(side).y = y;
+        reco.native.markers(side).x = x;
+        
+        %% for direct saving into manual reconstruction
+        [coords,trajectory,markers]=ea_resolvecoords(reco.native.markers,options);
+        ea_save_reconstruction(coords,trajectory,markers,options.elmodel,1,options)
+        
+        % %% for transfering to ea_manualreconstruction
+        yunitv(3) = 0;
+        roll_out = rad2deg(atan2(norm(cross([0 1 0],yunitv)),dot([0 1 0],yunitv)));
+        if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
+            roll_out = - roll_out;
+        end
+        disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' deg, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
+    else
+        roll_out = [];
     end
-    
-    head = head_native(1:3)';
-    tail = tail_native(1:3)';
-    y = y(1:3)' - head;
-    
-    %% Calculate direction of x and y markers
-    [xunitv, yunitv] = ea_calcxy(head, tail, y);
-    
-    y = head + yunitv * (options.elspec.lead_diameter / 2);
-    x = head + xunitv * (options.elspec.lead_diameter / 2);
-    
-    reco.native.markers(side).y = y;
-    reco.native.markers(side).x = x;
-    
-    %% for direct saving into manual reconstruction
-    [coords,trajectory,markers]=ea_resolvecoords(reco.native.markers,options);
-    ea_save_reconstruction(coords,trajectory,markers,options.elmodel,1,options)
-    
-    % %% for transfering to ea_manualreconstruction
-    yunitv(3) = 0;
-    roll_out = rad2deg(atan2(norm(cross([0 1 0],yunitv)),dot([0 1 0],yunitv)));
-    if markers(side).y(1) > markers(side).head(1) % negative 90 points to right, positive 90 points to left
-        roll_out = - roll_out;
-    end
-    disp(['Corrected roll angle roll = ' num2str(rad2deg(roll_y)) ' deg, has been converted to orientation angle = ' num2str(roll_out) ' for compatibility with ea_mancorupdatescene.'])
     %% methods dump:
     ea_methods(options,...
         ['Orientation of directional DBS leads was determined using the algorithm published by Dembek et al. 2019 as implemented in Lead-DBS software.'],...
         {'T.A. Dembek, M. Hoevels, A. Hellerbach, A. Horn, J.N. Petry-Schmelzer, J. Borggrefe, J. Wirths, H.S. Dafsari, M.T. Barbe, V. Visser-Vandewalle & H. Treuer (2019). Directional DBS leads show large deviations from their intended implantation orientation. Parkinsonism Relat Disord. 2019 Oct;67:117-121. doi: 10.1016/j.parkreldis.2019.08.017.'});
-
+    
 end

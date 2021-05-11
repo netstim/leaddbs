@@ -1,4 +1,4 @@
-function [roll_y,y,solution] = ea_diode_bsci(side,ct,head_mm,unitvector_mm,tmat_vx2mm)
+function [roll_y,y,solution] = ea_diode_bsci_manual(side,ct,head_mm,unitvector_mm,tmat_vx2mm)
 %% constant variables
 % colorscale for ct figures
 cscale = [-50 100];
@@ -68,7 +68,7 @@ zmdl = fitlm(new,newcentervector_mm(3,:));
 head_mm = [predict(xmdl,0),predict(ymdl,0),predict(zmdl,0),1]';
 other_mm = [predict(xmdl,10),predict(ymdl,10),predict(zmdl,10),1]';
 unitvector_mm = (other_mm - head_mm)/norm(other_mm - head_mm);
-clear tmpcent newcentervector_vx newcentervector_mm samplingvector_vx samplingvector_mm new k other_mm
+clear tmp tmpcent newcentervector_vx newcentervector_mm samplingvector_vx samplingvector_mm new k other_mm
 
 
 % calculate locations of markers and directional levels
@@ -87,6 +87,8 @@ dirlevel2_vx = tmat_vx2mm\dirlevel2_mm;
 dirlevelnew_mm = mean([dirlevel1_mm,dirlevel2_mm]')';
 dirlevelnew_vx = round(tmat_vx2mm\dirlevelnew_mm);
 
+clear dirlevel1_mm dirlevel2_mm
+
 % calculate lead yaw and pitch angles for correction at the end
 yaw = asin(unitvector_mm(1));
 pitch = asin(unitvector_mm(2)/cos(yaw));
@@ -103,41 +105,39 @@ if solution.polar1 > 40 || solution.polar2 > 40
     disp(['Warning: Polar > 40 deg - Determining orientation might be inaccurate!'])
 end
 
-%% extract axial slices at the level of marker and directional electrodes
-%% select slice for marker where peak-valley-difference in FFT-intensity profile is largest
-count = 1;
-checkslices = [-1:0.5:1]; % check neighboring slices for marker +/- 1mm in .5mm steps
-for k = checkslices
-    checklocation_mm = marker_mm + (unitvector_mm * k);
-    checklocation_vx = round(tmat_vx2mm\checklocation_mm);
-    tmp=ea_sample_slice(ct,'tra',extractradius,'vox',{checklocation_vx(1:3)' + [0 0 k]},1)';
-    if ct.mat(1,1) < 0
-        tmp = flip(tmp,1);
+%% select axial slices at the level of the marker
+h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');
+txt1 = uicontrol('style','text','units','pixels','Background','w',...
+    'position',[10,770,600,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+    'string',sprintf(['Please specify the slice with the most clearly defined artifact:']));
+
+%% Identify plane with optimal marker artifact
+nummarkerslices = [-2:1:+2];
+for k = 1:length(nummarkerslices)
+    tmp{k}=ea_sample_slice(ct,'tra',extractradius,'vox',{marker_vx(1:3)' + [0 0 nummarkerslices(k)]},1)';
+    sliceButton(k) = uicontrol('Style', 'pushbutton', 'String', ['Slice: ' num2str(nummarkerslices(k))],...
+        'Position', [375 (-20 + k*140) 150  25],'FontSize',12,...
+        'Callback', @buttonPress);
+end
+[tmp] = ea_diode_respecifyslices(tmp,ct,cscale,electrode,9);
+
+uiwait
+for k = 1:length(nummarkerslices)
+    if sliceButton(k).UserData == 1
+        answer = k;
+        sliceButton(k).UserData = 0;
     end
-    if ct.mat(2,2) < 0
-        tmp = flip(tmp,2);
-    end
-    center_tmp = [(size(tmp,1)+1)/2 (size(tmp,1)+1)/2];
-    radius = 4;
-    
-    % calculate intensityprofile and its FFT for each slice
-    [~, intensity,~] = ea_orient_intensityprofile(tmp,center_tmp,ct.voxsize,radius);
-    [peak,tmpfft] = ea_orient_intensitypeaksFFT(intensity,2);
-    valley = ea_orient_intensitypeaksFFT(-intensity,2);
-    fftdiff(count) = mean(tmpfft(peak)) - mean(tmpfft(valley));
-    count = count +1;
 end
 
-% select slice with maximum difference in fft and respecify
-% marker accordingly
-[~,tmp_shift] = max(fftdiff);
-tmp_shift = checkslices(tmp_shift);
-marker_mm = marker_mm + (unitvector_mm * tmp_shift);
+%% recalculate marker position from selected slice
+marker_vx_z = marker_vx(3) + nummarkerslices(answer);
+marker_mm_z = tmat_vx2mm * [0;0;marker_vx_z;1];
+marker_mm_z = marker_mm_z(3);
+marker_scale = (marker_mm_z-head_mm(3)) ./ unitvector_mm(3);
+marker_mm = head_mm + (unitvector_mm .* marker_scale);
 marker_vx = tmat_vx2mm\marker_mm;
 
-clear k count fftdiff valley peak radius intensity center_tmp tmp checkslices tmp_shift tmpfft checklocation_mm checklocation_vx
-
-%% extract marker artifact from slice
+%% extract respecified marker artifact from slice
 artifact_marker=ea_sample_slice(ct,'tra',extractradius,'vox',{round(marker_vx(1:3))'},1)';
 if ct.mat(1,1) < 0
     artifact_marker = flip(artifact_marker,1);
@@ -146,7 +146,116 @@ if ct.mat(2,2) < 0
     artifact_marker = flip(artifact_marker,2);
 end
 center_marker = [(size(artifact_marker,1)+1)/2 (size(artifact_marker,1)+1)/2];
+close(h)
+clear txt1 sliceButton tmp answer nummarkerslices marker_vx_z marker_mm_z marker_scale
 
+%% respecify center of the marker Artifact
+h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');
+txt1 = uicontrol('style','text','units','pixels','Background','w',...
+    'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+    'string',sprintf(['Please mark the center of the artifact by doubleclicking:']));
+imagesc(artifact_marker');
+axis equal
+axis off
+view(-180,90)
+hold on
+colormap(gray)
+caxis manual
+caxis(cscale2)
+scatter(center_marker(1),center_marker(2),'o','r');
+[a,b] = getpts;
+center_marker = [a(end) b(end)] - center_marker;
+marker_vx(1) = marker_vx(1) + center_marker(1);
+marker_vx(2) = marker_vx(2) + center_marker(2);
+marker_mm = tmat_vx2mm * marker_vx;
+marker_vx = tmat_vx2mm\marker_mm;
+
+%% extract respecified marker artifact from slice
+artifact_marker=ea_sample_slice(ct,'tra',extractradius,'vox',{round(marker_vx(1:3))'},1)';
+if ct.mat(1,1) < 0
+    artifact_marker = flip(artifact_marker,1);
+end
+if ct.mat(2,2) < 0
+    artifact_marker = flip(artifact_marker,2);
+end
+center_marker = [(size(artifact_marker,1)+1)/2 (size(artifact_marker,1)+1)/2];
+close(h)
+clear a b h txt1
+%% select axial slices at the level of the directional levels
+h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');
+txt1 = uicontrol('style','text','units','pixels','Background','w',...
+    'position',[10,770,600,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+    'string',sprintf(['Please specify the slice with the most clearly defined artifact:']));
+
+numdirslices = [-2:1:+2];
+for k = 1:length(numdirslices)
+    tmp{k}=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevelnew_vx(1:3)' + [0 0 numdirslices(k)]},1)';
+    sliceButton(k) = uicontrol('Style', 'pushbutton', 'String', ['Slice: ' num2str(numdirslices(k))],...
+        'Position', [375 (-20 + k*140) 150  25],'FontSize',12,...
+        'Callback', @buttonPress);
+end
+[tmp] = ea_diode_respecifyslices(tmp,ct,cscale,electrode,[2 3 4 5 6 7]);
+
+uiwait
+for k = 1:length(numdirslices)
+    if sliceButton(k).UserData == 1
+        answer = k;
+        sliceButton(k).UserData = 0;
+    end
+end
+
+%% recalculate dirlevelnew position from selected slice
+dirlevelnew_vx_z = dirlevelnew_vx(3) + numdirslices(answer);
+dirlevelnew_mm_z = tmat_vx2mm * [0;0;dirlevelnew_vx_z;1];
+dirlevelnew_mm_z = dirlevelnew_mm_z(3);
+dirlevelnew_scale = (dirlevelnew_mm_z-head_mm(3)) ./ unitvector_mm(3);
+dirlevelnew_mm = head_mm + (unitvector_mm .* dirlevelnew_scale);
+dirlevelnew_vx = tmat_vx2mm\dirlevelnew_mm;
+
+%% extract respecified dirlevelnew artifact from slice
+artifact_dirnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
+if ct.mat(1,1) < 0
+    artifact_dirnew = flip(artifact_dirlevelnew,1);
+end
+if ct.mat(2,2) < 0
+    artifact_dirnew = flip(artifact_dirlevelnew,2);
+end
+center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
+close(h)
+clear h txt1 sliceButton tmp answer numdirslices dirlevelnew_vx_z dirlevelnew_mm_z dirlevelnew_scale
+
+%% respecify center of the marker Artifact
+h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'Position',[100 100 600 800],'Color','w');
+txt1 = uicontrol('style','text','units','pixels','Background','w',...
+    'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
+    'string',sprintf(['Please mark the center of the artifact by doubleclicking:']));
+imagesc(artifact_dirnew');
+axis equal
+axis off
+view(-180,90)
+hold on
+colormap(gray)
+caxis manual
+caxis(cscale2)
+scatter(center_dirnew(1),center_dirnew(2),'o','r');
+[a,b] = getpts;
+center_dirnew = [a(end) b(end)] - center_dirnew;
+dirlevelnew_vx(1) = dirlevelnew_vx(1) + center_dirnew(1);
+dirlevelnew_vx(2) = dirlevelnew_vx(2) + center_dirnew(2);
+dirlevelnew_mm = tmat_vx2mm * dirlevelnew_vx;
+dirlevelnew_vx = tmat_vx2mm\dirlevelnew_mm;
+
+%% extract respecified dirlevelnew artifact from slice
+artifact_dirnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
+if ct.mat(1,1) < 0
+    artifact_dirnew = flip(artifact_dirlevelnew,1);
+end
+if ct.mat(2,2) < 0
+    artifact_dirnew = flip(artifact_dirlevelnew,2);
+end
+center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
+close(h)
+clear h a b
 %% extract intensity profile from marker artifact
 radius = 4;
 [angle, intensity,vector] = ea_orient_intensityprofile(artifact_marker,center_marker,ct.voxsize,radius);
@@ -458,7 +567,7 @@ if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
     finalslice = flipdim(finalslice,2);
 end
 %% darkstar method
-checkslices = [-2:0.5:2]; % check neighboring slices for marker
+checkslices = [0]; % check neighboring slices for marker
 
 % solution 1
 count = 1;
@@ -550,26 +659,12 @@ roll = ea_diode_angle2roll(peakangle(side),yaw,pitch);
 
 realsolution = solution.COGtrans;
 
-dirlevelnew_mm = dirlevelnew_mm + (unitvector_mm * checkslices(darkstarslice(realsolution)));
-dirlevelnew_vx = round(tmat_vx2mm\dirlevelnew_mm);
-
-artifact_dirnew = ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevelnew_vx(1:3)'},1)';
-if ct.mat(1,1) < 0
-    artifact_dirnew = flip(artifact_dirnew,1);
-end
-if ct.mat(2,2) < 0
-    artifact_dirnew = flip(artifact_dirnew,2);
-end
-center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
 [anglenew, intensitynew,vectornew] = ea_orient_intensityprofile(artifact_dirnew,center_dirnew,ct.voxsize,radius);
 
 rollnew = roll + rollangles{realsolution}(darkstarangle(realsolution));
 dirnew_angles = ea_diode_darkstar(rollnew,pitch,yaw,dirlevelnew_mm,radius);
 dirnew_valleys = round(rad2deg(dirnew_angles) +1);
 dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 360;
-
-
-
 
 %% final figure
 fig(side).figure = figure('Name',['Lead ' sides{side}],'Position',[100 100 800 800],'Color','w','Toolbar','none');
@@ -635,24 +730,27 @@ if rad2deg(abs(pitch)) > 40 || rad2deg(abs(yaw)) > 40
     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
         'string',sprintf(['WARNING: The polar angle of the lead is larger than 40 deg and results could be inaccurate.\nPlease inspect the results carefully and use manual refinement if necessary.']));
-elseif rad2deg(abs(roll)) > 60
-    fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
-        'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
-        'string',sprintf(['WARNING: The orientation of the lead is far from ' defaultdirection '.\nPlease verify whether the correct marker orientation has been chosen.']));
+% elseif rad2deg(abs(roll)) > 60
+%     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
+%         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
+%         'string',sprintf(['WARNING: The orientation of the lead is far from ' defaultdirection '.\nPlease verify whether the correct marker orientation has been chosen.']));
 else
     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','k',...
         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
         'string',sprintf(['No warnings: The polar angle and lead orientation are within normal ranges.']));
 end
 
-SaveButton = uicontrol('Style', 'pushbutton', 'String', 'Accept & Save',...
-    'Position', [150 20 150 25],'FontSize',12,...
+Solution1Button = uicontrol('Style', 'pushbutton', 'String', ['Solution1: ' num2str(round(solution.rolls_deg(1),1)) ' deg'],...
+    'Position', [75 20 150 25],'FontSize',12,...
+    'Callback', @buttonPress);
+Solution2Button = uicontrol('Style', 'pushbutton', 'String', ['Solution2: ' num2str(round(solution.rolls_deg(2),1)) ' deg'],...
+    'Position', [250 20 150 25],'FontSize',12,...
     'Callback', @buttonPress);
 ManualButton = uicontrol('Style', 'pushbutton', 'String', 'Manual Refine',...
-    'Position', [325 20 150 25],'FontSize',12,...
+    'Position', [425 20 150 25],'FontSize',12,...
     'Callback', @buttonPress);
 DiscardButton = uicontrol('Style', 'pushbutton', 'String', 'Discard',...
-    'Position', [500 20 150 25],'FontSize',12,...
+    'Position', [600 20 150 25],'FontSize',12,...
     'Callback', @buttonPress);
 %% marker
 ax1 = subplot(3,3,1);
@@ -811,8 +909,18 @@ end
 
 uiwait
 
-if SaveButton.UserData == 1
+if Solution1Button.UserData == 1
     savestate = 1;
+    finalpeak(side) = peak(1);
+    peakangle(side) = angle(finalpeak(side));
+    roll = ea_diode_angle2roll(peakangle(side),yaw,pitch);
+    rollnew = roll + rollangles{1}(darkstarangle(1));
+elseif Solution2Button.UserData == 1
+    savestate = 1;
+    finalpeak(side) = peak(2);
+    peakangle(side) = angle(finalpeak(side));
+    roll = ea_diode_angle2roll(peakangle(side),yaw,pitch);
+    rollnew = roll + rollangles{2}(darkstarangle(2));
 elseif DiscardButton.UserData == 1
     savestate = 0;
     retrystate = 0;
@@ -832,7 +940,7 @@ if savestate == 1
         disp(['Using roll angle defined by stereotactic marker: ' num2str(rad2deg(roll)) ' deg'])
     elseif checkbox1
         roll_y = rollnew;
-        disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(rollnew)) ' deg'])
+        disp(['Using corrected roll angle defined by directional level: ' num2str(rad2deg(rollnew)) ' deg'])
     end
     %% calculate y
     [M,~,~,~] = ea_orient_rollpitchyaw(roll_y,pitch,yaw);
