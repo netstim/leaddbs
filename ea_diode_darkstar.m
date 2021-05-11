@@ -6,13 +6,13 @@ dirlevel = dirlevel(1:3);
 
 ven = [0 0.65 -0.75 ]';
 dor = [0 0.65 0.75 ]';
-[M,~,~,~] = ea_orient_rollpitchyaw(roll-((2*pi)/6),pitch,yaw);
+[M,~,~,~] = ea_diode_rollpitchyaw(roll-((2*pi)/6),pitch,yaw);
 ven60 = M * ven;
 dor60 = M * dor;
-[M,~,~,~] = ea_orient_rollpitchyaw(roll-(3*(2*pi)/6),pitch,yaw);
+[M,~,~,~] = ea_diode_rollpitchyaw(roll-(3*(2*pi)/6),pitch,yaw);
 ven180 = M * ven;
 dor180 = M * dor;
-[M,~,~,~] = ea_orient_rollpitchyaw(roll-(5*(2*pi)/6),pitch,yaw);
+[M,~,~,~] = ea_diode_rollpitchyaw(roll-(5*(2*pi)/6),pitch,yaw);
 ven300 = M * ven;
 dor300 = M * dor;
 

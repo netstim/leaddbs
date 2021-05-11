@@ -101,7 +101,7 @@ end
 if rad2deg(abs(yaw)) > 40
     disp(['Warning: Yaw > 40 deg - Determining orientation might be inaccurate!'])
 end
-if solution.polar1 > 40 || solution.polar2 > 40
+if solution.polar1 > 40
     disp(['Warning: Polar > 40 deg - Determining orientation might be inaccurate!'])
 end
 

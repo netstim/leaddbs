@@ -7,10 +7,10 @@ marker = marker(1:3);
 ven = [0 0.65 -0.75 ]';
 dor = [0 0.65 0.75 ]';
 
-[M,~,~,~] = ea_orient_rollpitchyaw(roll-(pi/2),pitch,yaw);
+[M,~,~,~] = ea_diode_rollpitchyaw(roll-(pi/2),pitch,yaw);
 ven90 = M * ven;
 dor90 = M * dor;
-[M,~,~,~] = ea_orient_rollpitchyaw(roll-(3*(pi/2)),pitch,yaw);
+[M,~,~,~] = ea_diode_rollpitchyaw(roll-(3*(pi/2)),pitch,yaw);
 ven270 = M * ven;
 dor270 = M * dor;
 %% calculate intersecting points between vec60/270/300 and the z-plane through the dir-level artifact
