@@ -943,7 +943,7 @@ if savestate == 1
         disp(['Using corrected roll angle defined by directional level: ' num2str(rad2deg(rollnew)) ' deg'])
     end
     %% calculate y
-    [M,~,~,~] = ea_orient_rollpitchyaw(roll_y,pitch,yaw);
+    [M,~,~,~] = ea_diode_rollpitchyaw(roll_y,pitch,yaw);
     y = M * [0;1;0];
     head = head_mm(1:3);
     y = head + y;
