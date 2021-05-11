@@ -93,7 +93,7 @@ clear dirlevel1_mm dirlevel2_mm
 yaw = asin(unitvector_mm(1));
 pitch = asin(unitvector_mm(2)/cos(yaw));
 solution.polar1 = rad2deg(atan2(norm(cross([0;0;1],unitvector_mm(1:3))),dot([0;0;1],unitvector_mm(1:3))));
-solution.polar2 = -rad2deg(atan2(unitvector_mm(2),unitvector_mm(1))) + 90;
+% solution.polar2 = -rad2deg(atan2(unitvector_mm(2),unitvector_mm(1))) + 90;
 
 if rad2deg(abs(pitch)) > 40
     disp(['Warning: Pitch > 40 deg - Determining orientation might be inaccurate!'])
@@ -288,49 +288,6 @@ solution.rolls_streak_deg = rad2deg(marker_angles);
 % resolves the Darkstar for both solutions and then compares
 % the goodness of fit.
 
-%% Intensity at FFT peak
-% compares the intensity at the location of the FFTpeak within
-% the intensity profile
-%             if intensity(peak(1)) > intensity(peak(2))
-%                 disp(['Intensity at FFT-Peak decides for peak 1'])
-%                 solution.FFTpeak = 1;
-%             else
-%                 disp(['Intensity at FFT-Peak decides for peak 2'])
-%                 solution.FFTpeak = 2;
-%             end
-
-%% Intensity at yaw/pitch corrected expected peak
-% compares the intensity at the location of the yaw/pitch
-% corrected peak within the intensity profile
-%             [~,corr_peak(1)] = min(abs(angle -marker_angles(1)));
-%             [~,corr_peak(2)] = min(abs(angle -marker_angles(2)));
-%             if intensity(corr_peak(1)) > intensity(corr_peak(2))
-%                 disp(['Intensity at corrected Peak decides for peak 1'])
-%                 solution.Correctedpeak = 1;
-%             else
-%                 disp(['Intensity at corrected Peak decides for peak 2'])
-%                 solution.Correctedpeak = 2;
-%             end
-%
-%% Maximum intensity in range
-% compares the maximum intensity between the valleys
-%             if max(intensity(valley(1):valley(2))) > max(intensity([1:valley(1),valley(2):length(intensity)]))
-%                 if peak(1) > valley(1) && peak(1) < valley(2)
-%                     disp(['Maximum Intensity decides for peak 1'])
-%                     solution.MAXpeak = 1;
-%                 else
-%                     disp(['Maximum Intensity decides for peak 2'])
-%                     solution.MAXpeak = 2;
-%                 end
-%             else
-%                 if peak(1) > valley(1) && peak(1) < valley(2)
-%                     disp(['Maximum Intensity decides for peak 2'])
-%                     solution.MAXpeak = 2;
-%                 else
-%                     disp(['Maximum Intensity decides for peak 1'])
-%                     solution.MAXpeak = 1;
-%                 end
-%             end
 
 %% ASM
 % compares the maximum intensity between the valleys in 3 radii
@@ -356,57 +313,6 @@ else
         solution.ASM = 1;
     end
 end
-
-%% Peak Shift from FFT
-% compares the angle-shift of the max intensity peak from the
-% peak in FFT and chooses the solution with the smaller shift
-%             tmp = [valley(1):valley(2)];
-%             [~,intpeak(1)] = max(intensity(tmp));
-%             intpeak(1) = tmp(intpeak(1));
-%             tmp = [1:valley(1),valley(2):length(intensity)];
-%             [~,intpeak(2)] = max(intensity(tmp));
-%             intpeak(2) = tmp(intpeak(2));
-%             intpeak = sort(intpeak,'ascend');
-%             clear tmp
-%             if max(abs(peak-intpeak)) > 90 && intpeak(1) < 90
-%                 intpeak(1) = intpeak(1) + 180;
-%             elseif max(abs(peak-intpeak)) > 90 && intpeak(2) > 270
-%                 intpeak(2) = intpeak(2) - 180;
-%             end
-%             intpeak = sort(intpeak,'ascend');
-%             if abs(peak(1) - intpeak(1)) < abs(peak(2) - intpeak(2))
-%                 disp(['Intensity peak shift from FFT decides for peak 1'])
-%                 solution.FFTshift = 1;
-%             else
-%                 disp(['Intensity peak shift from FFT decides for peak 2'])
-%                 solution.FFTshift = 2;
-%             end
-
-%% Peak Shift from Corrected Peak
-% compares the angle-shift of the max intensity peak from the
-% yaw- and shift-corrected peak and chooses the solution with
-% the smaller shift
-%             tmp = [valley(1):valley(2)];
-%             [~,intpeak(1)] = max(intensity(tmp));
-%             intpeak(1) = tmp(intpeak(1));
-%             tmp = [1:valley(1),valley(2):length(intensity)];
-%             [~,intpeak(2)] = max(intensity(tmp));
-%             intpeak(2) = tmp(intpeak(2));
-%             intpeak = sort(intpeak,'ascend');
-%             clear tmp
-%             if max(abs(corr_peak-intpeak)) > 90 && intpeak(1) < 90
-%                 intpeak(1) = intpeak(1) + 180;
-%             elseif max(abs(corr_peak-intpeak)) > 90 && intpeak(2) > 270
-%                 intpeak(2) = intpeak(2) - 180;
-%             end
-%             intpeak = sort(intpeak,'ascend');
-%             if abs(corr_peak(1) - intpeak(1)) < abs(corr_peak(2) - intpeak(2))
-%                 disp(['Intensity peak shift from corrected peak decides for peak 1'])
-%                 solution.Correctedshift = 1;
-%             else
-%                 disp(['Intensity peak shift from corrected decides for peak 2'])
-%                 solution.Correctedshift = 2;
-%             end
 
 %% Center of Mass method
 % this is where shit gets complicated
@@ -434,22 +340,6 @@ maxcorner_mm = tmat_vx2mm * [size(ct.img)';1];
 clear mincorner_mm maxcorner_mm
 
 Vnew = permute(ct.img,[2,1,3]);
-%% slice in CT
-% meshgrid based code to export a slice from the CT in Vnew
-% not needed any more
-
-%             extract_width = 10; % in mm
-%             samplingres = .1;
-%             [Xslice,Yslice] = meshgrid(...
-%                 [marker_mm(1)-extract_width:samplingres:marker_mm(1)+extract_width],...
-%                 [marker_mm(2)-extract_width:samplingres:marker_mm(2)+extract_width]);
-%             Zslice = repmat(marker_mm(3),size(Xslice));
-%
-%             figure
-%             newmarkerslice = slice(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
-%             set(newmarkerslice, 'EdgeColor','none')
-%             axis equal
-%             close
 
 %% slice perpendicular
 % a 5mm slice with .1mm resolution is sampled perpendicular to
@@ -486,34 +376,7 @@ end
 %             scatter3(marker_mm(1)+COG_dir(1),marker_mm(2)+COG_dir(2),marker_mm(3)+COG_dir(3),'b')
 %             caxis([-500 3500])
 %             close
-%% slice perpendicular * 11
-% 10 times a 5mm slice with .1mm resolution is sampled perpendicular to
-% the lead from .5mm below to .5mm above the position of the
-% marker center oriented in the direction of x-vec and y-vec
-%             extract_width = 5; % in mm
-%             samplingres = .1;
-%             count = 1;
-%             COG_mm = [];
-%             COG_dir = [];
-%             for k = -0.5:0.1:0.5
-%                 markertmp = marker_mm +  (k .* unitvector_mm);
-%                 Xslice = ([-extract_width:samplingres:extract_width] .* xvec_mm(1)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(1))' + markertmp(1);
-%                 Yslice = ([-extract_width:samplingres:extract_width] .* xvec_mm(2)) + ([-extract_width:samplingres:extract_width] .* yvec_mm(2))' + markertmp(2);
-%                 Zslice = ea_diode_perpendicularplane(unitvector_mm,marker_mm,Xslice,Yslice);
-%
-%                 myslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
-%                 COG_mm(:,count) = ea_diode_calculateCOG((myslice >= 2000),Xslice,Yslice,Zslice);
-%                 COG_dir(:,count) = (COG_mm(:,count)-markertmp(1:3))/norm((COG_mm(:,count)-markertmp(1:3)));
-%                 count = count +1;
-%             end
-%
-%             if sum(abs(yvec_mm-COG_dir),'all') < sum(abs(-yvec_mm-COG_dir),'all')
-%                 disp(['COGtrans11 decides for peak 1'])
-%                 solution.COGtrans11 = 1;
-%             else
-%                 disp(['COGtrans11 decides for peak 2'])
-%                 solution.COGtrans11 = 2;
-%             end
+
 %% slice parralel
 % a 1.5mm slice with .1mm resolution is sampled vertically
 % through the lead and through the marker center and oriented
@@ -726,14 +589,10 @@ fig(side).txt4 = uicontrol('style','text','units','pixels','Background','w',...
     'position',[60,60,720,40],'FontSize',12,'HorizontalAlignment','left',...
     'string',sprintf(['Use the checkboxes if the algorithm accurately detected the artifacts of the directional levels and if you want to use them to correct the marker angle. Then accept, manually refine, or discard the results.']));
 
-if rad2deg(abs(pitch)) > 40 || rad2deg(abs(yaw)) > 40
+if rad2deg(abs(pitch)) > 40 || rad2deg(abs(yaw)) > 40 || abs(solution.polar1) > 40
     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
         'string',sprintf(['WARNING: The polar angle of the lead is larger than 40 deg and results could be inaccurate.\nPlease inspect the results carefully and use manual refinement if necessary.']));
-% elseif rad2deg(abs(roll)) > 60
-%     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
-%         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
-%         'string',sprintf(['WARNING: The orientation of the lead is far from ' defaultdirection '.\nPlease verify whether the correct marker orientation has been chosen.']));
 else
     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','k',...
         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
@@ -797,17 +656,7 @@ imagesc(finalslice)
 axis equal
 axis off
 caxis([1500 3000])
-%         if finalpeak(side) < 90 || finalpeak(side) > 270
-%             quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, -round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
-%         elseif finalpeak(side) >= 90 && finalpeak(side) <=270
-%             quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, +round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
-%         end
-%         scatter(ax3,round(size(finalslice,2)/2),round(size(finalslice,1)/2).*1.7,[],[0 0.4470 0.7410],'filled')
-%         plot([round(size(finalslice,2)/2), round(size(finalslice,2)/2)], [round(size(finalslice,2)/2)-75, round(size(finalslice,2)/2)+100],'LineStyle','--','Color',[0 0.4470 0.7410])
-%         xlimit = get(ax3,'Xlim');
-%         ylimit = get(ax3,'Ylim');
-%         text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-%         text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
+
 %% graphics dir level one
 ax4 = subplot(3,3,4);
 hold on
@@ -895,9 +744,7 @@ camorbit(-rad2deg(tempangle),0)
 tempvec = [0; 1; 0];
 temp3x3 = ea_orient_rollpitchyaw(-tempangle,0,0);
 tempvec = temp3x3 * tempvec;
-%         text(tempvec(1),tempvec(2),markercenter,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-%         text(tempvec(1),tempvec(2),level1center,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-%         text(tempvec(1),tempvec(2),level2center,'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
+
 clear tempangle
 
 set(ax_elec,'Position',[-0.16 0.38 0.43 0.6])
