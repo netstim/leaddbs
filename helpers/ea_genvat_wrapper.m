@@ -1,4 +1,4 @@
-function ea_genvat_warpper(patientFolder, stimLabel, side, cathode, stimAmplitude, anode, stimType, estimateInTemplate)
+function ea_genvat_wrapper(patientFolder, stimLabel, side, cathode, stimAmplitude, anode, stimType, estimateInTemplate)
 % Wrapper to create VTA without GUI.
 % Only support single source evenly splitted SimBio model for now.
 % Contacts are indexed as 0-N. Case is indexed as -1.
