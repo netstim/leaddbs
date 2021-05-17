@@ -380,8 +380,8 @@ if nargin>3
             surfc.SpecularStrength = 1.0;
             surfc.SpecularExponent = 20;
             surfc.SpecularColorReflectance = 0.1;
-            met=load([ea_getearoot,'icons',filesep,'metal.mat']);
-            ea_patchtexture(surfc,met.X);
+        %    met=load([ea_getearoot,'icons',filesep,'metal.mat']);
+        %    ea_patchtexture(surfc,met.X);
         case 'insulation'
             surfc.AmbientStrength = 0.4;
             surfc.DiffuseStrength = 0.35;
