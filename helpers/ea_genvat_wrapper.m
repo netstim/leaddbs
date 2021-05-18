@@ -76,10 +76,10 @@ S.activecontacts{sideInd}(setdiff(union(anode, cathode),-1)+1) = 1;
 % Set anode parameters
 for i=1:numel(anode)
     if anode(i) == -1
-        eval(['S.',sideChar,'s1.case.perc = 1/numel(anode);']);
+        eval(['S.',sideChar,'s1.case.perc = 1/numel(anode)*100;']);
         eval(['S.',sideChar,'s1.case.pol = 2;']);
     else
-        eval(['S.',sideChar,'s1.k',num2str(anode(i)+sideOffSet),'.perc = 1/numel(anode);']);
+        eval(['S.',sideChar,'s1.k',num2str(anode(i)+sideOffSet),'.perc = 1/numel(anode)*100;']);
         eval(['S.',sideChar,'s1.k',num2str(anode(i)+sideOffSet),'.pol = 2;']);
     end
 end
@@ -87,10 +87,10 @@ end
 % Set cathode parameters
 for i=1:numel(cathode)
     if cathode(i) == -1
-        eval(['S.',sideChar,'s1.case.perc = 1/numel(cathode);']);
+        eval(['S.',sideChar,'s1.case.perc = 1/numel(cathode)*100;']);
         eval(['S.',sideChar,'s1.case.pol = 1;']);
     else
-        eval(['S.',sideChar,'s1.k',num2str(cathode(i)+sideOffSet),'.perc = 1/numel(cathode);']);
+        eval(['S.',sideChar,'s1.k',num2str(cathode(i)+sideOffSet),'.perc = 1/numel(cathode)*100;']);
         eval(['S.',sideChar,'s1.k',num2str(cathode(i)+sideOffSet),'.pol = 1;']);
     end
 end
