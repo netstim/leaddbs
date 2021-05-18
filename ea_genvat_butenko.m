@@ -70,10 +70,10 @@ else
     if ~isfile([ea_space, 'c1mask.nii']) ...
             || ~isfile([ea_space, 'c2mask.nii']) ...
             || ~isfile([ea_space, 'c3mask.nii'])
-        ea_newseg(ea_space, 't1.nii', 0, options, 1);
-        movefile([ea_space, 'c1t1.nii'], [ea_space, 'c1mask.nii']);
-        movefile([ea_space, 'c2t1.nii'], [ea_space, 'c2mask.nii']);
-        movefile([ea_space, 'c3t1.nii'], [ea_space, 'c3mask.nii']);
+        ea_newseg(ea_space, [options.primarytemplate, '.nii'], 0, options, 1);
+        movefile([ea_space, 'c1', options.primarytemplate, 'nii'], [ea_space, 'c1mask.nii']);
+        movefile([ea_space, 'c2', options.primarytemplate, 'nii'], [ea_space, 'c2mask.nii']);
+        movefile([ea_space, 'c3', options.primarytemplate, 'nii'], [ea_space, 'c3mask.nii']);
     end
 
     segMaskDir = ea_space;
@@ -334,9 +334,9 @@ if settings.calcAxonActivation
             originalFib = conn.fibers;
             % Convert connectome fibers from MNI space to anchor space
             fprintf('Convert connectome into native space...\n\n');
-            fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, 't1.nii'])';
+            fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
             conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
-                [ea_space, 't1.nii'], ...
+                [ea_space, options.primarytemplate, '.nii'], ...
                 [directory, 'y_ea_normparams.nii'], ...
                 [directory, options.prefs.prenii_unnormalized])';
         end
@@ -345,7 +345,7 @@ if settings.calcAxonActivation
         if options.native
             fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2, [directory, options.prefs.prenii_unnormalized]);
         else
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2, [ea_space, 't1.nii']);
+            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
         end
 
         % Filter fibers based on the minimal length
@@ -395,9 +395,9 @@ if settings.calcAxonActivation
                 originalFib = conn.fibers;
                 % Convert connectome fibers from MNI space to anchor space
                 fprintf('Convert connectome into native space...\n\n');
-                fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, 't1.nii'])';
+                fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
                 conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
-                    [ea_space, 't1.nii'], ...
+                    [ea_space, options.primarytemplate, '.nii'], ...
                     [directory, 'y_ea_normparams.nii'], ...
                     [directory, options.prefs.prenii_unnormalized])';
             end
@@ -544,7 +544,7 @@ for side=0:1
                     directory,... % patient directory
                     0, ... % useinverse is 0
                     1, ... % linear interpolation
-                    [ea_space, 't1.nii']);
+                    [ea_space, options.primarytemplate, '.nii']);
                 ea_autocrop([MNIoutputPath, filesep, 'vat_efield_', sideStr, '.nii']);
             end
         end
@@ -561,7 +561,7 @@ for side=0:1
                     directory,... % patient directory
                     0, ... % useinverse is 0
                     0, ... % nn interpolation
-                    [ea_space, 't1.nii']);
+                    [ea_space, options.primarytemplate, '.nii']);
                 ea_autocrop([MNIoutputPath, filesep, 'vat_', sideStr, '.nii']);
 
                 if ~options.orignative % Visualize MNI space VTA
