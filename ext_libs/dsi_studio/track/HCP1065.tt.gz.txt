@@ -64,8 +64,8 @@ Medial_Lemniscus_L
 Medial_Lemniscus_R
 Optic_Radiation_L
 Optic_Radiation_R
-Reticulospinal_Tract_L
-Reticulospinal_Tract_R
+Reticular_Tract_L
+Reticular_Tract_R
 Anterior_Commissure
 Corpus_Callosum_Forceps_Minor
 Corpus_Callosum_Body

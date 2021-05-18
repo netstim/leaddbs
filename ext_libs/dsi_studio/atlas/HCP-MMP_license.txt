@@ -27,4 +27,4 @@ presentations if this authorship would be based solely on the use of WU-Minn HCP
 6. Failure to abide by these guidelines will result in termination of my privileges to access WU-Minn HCP data. 
 
 
-source: https://figshare.com/articles/HCP-MMP1_0_projected_on_MNI2009a_GM_volumetric_in_NIfTI_format/3501911
+https://neurovault.org/collections/1549/    MPM 1.0 asymetrical (improved reconstruction)
