@@ -51,9 +51,11 @@ switch lower(side)
     case {0, 'r', 'right'}
         sideChar = 'R';
         sideInd = 1;
+        sideOffSet = 0; % k0-k7, no index offset
     case {1, 'l', 'left'}
         sideChar = 'L';
         sideInd = 2;
+        sideOffSet = 8; % k8-k15, offset the indices from 0-7 to 8-15
 end
 
 switch lower(stimType)
@@ -77,8 +79,8 @@ for i=1:numel(anode)
         eval(['S.',sideChar,'s1.case.perc = 1/numel(anode);']);
         eval(['S.',sideChar,'s1.case.pol = 2;']);
     else
-        eval(['S.',sideChar,'s1.k',num2str(anode(i)),'.perc = 1/numel(anode);']);
-        eval(['S.',sideChar,'s1.k',num2str(anode(i)),'.pol = 2;']);
+        eval(['S.',sideChar,'s1.k',num2str(anode(i)+sideOffSet),'.perc = 1/numel(anode);']);
+        eval(['S.',sideChar,'s1.k',num2str(anode(i)+sideOffSet),'.pol = 2;']);
     end
 end
 
@@ -88,8 +90,8 @@ for i=1:numel(cathode)
         eval(['S.',sideChar,'s1.case.perc = 1/numel(cathode);']);
         eval(['S.',sideChar,'s1.case.pol = 1;']);
     else
-        eval(['S.',sideChar,'s1.k',num2str(cathode(i)),'.perc = 1/numel(cathode);']);
-        eval(['S.',sideChar,'s1.k',num2str(cathode(i)),'.pol = 1;']);
+        eval(['S.',sideChar,'s1.k',num2str(cathode(i)+sideOffSet),'.perc = 1/numel(cathode);']);
+        eval(['S.',sideChar,'s1.k',num2str(cathode(i)+sideOffSet),'.pol = 1;']);
     end
 end
 
