@@ -18,12 +18,14 @@ import nibabel as nib
 
 #This script allows to use VTA arrays of points instead of axons in OSS-DBS
 
-def create_VTA_array(Xt,Yt,Zt):    #in mm, in MRI space
+def create_VTA_array(Xt,Yt,Zt,el_model):    #in mm, in MRI space
     [__,__,__,__,__,__,__,__,__,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
 
     VTA_res=max(MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z)
     #VTA_res=0.5
     VTA_box_length=20.0       # can be adjusted
+    if el_model=='SR_rodent' or el_model=='AA_rodent_monopolar':
+        VTA_box_length=2.0
 
     x_vector=np.arange(Xt-VTA_box_length/2.0,Xt+VTA_box_length/2.0+VTA_res,VTA_res)
     y_vector=np.arange(Yt-VTA_box_length/2.0,Yt+VTA_box_length/2.0+VTA_res,VTA_res)
