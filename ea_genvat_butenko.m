@@ -112,9 +112,9 @@ copyfile([segMaskDir, 'segmask.nii'], outputPath);
 settings.MRI_data_name = [outputPath,filesep,'segmask.nii'];
 
 %% Check tensor data
-tensorName = 'IITmean_tensor.nii.gz';
+tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
 scalingMethod = 'Norm_mapping';
-scaledTensorName = ['IITmean_tensor_',scalingMethod,'.nii.gz'];
+scaledTensorName = strrep(tensorName, '.nii', ['_',scalingMethod,'.nii']);
 
 % Set to empty by default
 settings.DTI_data_name = '';

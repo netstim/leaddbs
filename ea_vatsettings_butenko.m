@@ -22,7 +22,7 @@ function varargout = ea_vatsettings_butenko(varargin)
 
 % Edit the above text to modify the response to help ea_vatsettings_butenko
 
-% Last Modified by GUIDE v2.5 27-Apr-2021 21:44:53
+% Last Modified by GUIDE v2.5 18-May-2021 10:37:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -144,7 +144,12 @@ set(handles.ethreshpresets,'String',etv(:,1));
 setappdata(handles.ethreshpresets,'data',etv);
 
 set(handles.ethresh,'String',num2str(prefs.machine.vatsettings.butenko_ethresh));
+
 set(handles.useTensorData,'Value',prefs.machine.vatsettings.butenko_useTensorData);
+if isfield(prefs.machine.vatsettings, 'butenko_tensorFileName') && ~isempty(prefs.machine.vatsettings.butenko_tensorFileName)
+    set(handles.tensorFileName,'String',prefs.machine.vatsettings.butenko_tensorFileName);
+end
+
 set(handles.interactive,'Value',prefs.machine.vatsettings.butenko_interactive);
 
 
@@ -181,7 +186,10 @@ else % Multi-Tract connectome case, values from appdata
 end
 
 vatsettings.butenko_ethresh = str2double(get(handles.ethresh,'String'));
+
 vatsettings.butenko_useTensorData = get(handles.useTensorData,'Value');
+vatsettings.butenko_tensorFileName = get(handles.tensorFileName,'String');
+
 vatsettings.butenko_interactive = get(handles.interactive,'Value');
 ea_setprefs('vatsettings',vatsettings);
 
@@ -369,3 +377,26 @@ function useTensorData_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of useTensorData
+
+
+
+function tensorFileName_Callback(hObject, eventdata, handles)
+% hObject    handle to tensorFileName (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of tensorFileName as text
+%        str2double(get(hObject,'String')) returns contents of tensorFileName as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function tensorFileName_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to tensorFileName (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
