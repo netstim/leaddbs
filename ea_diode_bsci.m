@@ -627,6 +627,7 @@ set(ax5,'Position',[0.345 0.395 0.2 0.2])
 set(ax6,'Position',[0.56 0.395 0.2 0.2])
 
 %% graphics lead
+set(0, 'CurrentFigure', fig(side).figure);
 ax_elec = axes('Position',[0 0.3 0.1 0.75]);
 axis vis3d
 hold on
