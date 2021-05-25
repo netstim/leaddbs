@@ -20,18 +20,24 @@ for side=options.sides
             vol = spm_vol([directory,options.prefs.ctnii_coregistered]);
     end
     spm_orthviews('Reset');
-    spm_orthviews('Image', vol);
+    h = spm_orthviews('Image', vol);
     colormap('gray');
     cameratoolbar('resetcamera')
     cameratoolbar('close')
     rotate3d off;
 
-    if spm_input(['Select tip and click'] , 1,'OK|Retry', [1,0], 1)
+    if spm_input('Adjust contrast', 1.5, 'y/n', [1,0],2)
+        pc = spm_input('Percentiles', 1.5, 'w', '3 97', 2, 100);
+        wn = spm_summarise(vol, 'all', @(X) spm_percentile(X, pc));
+        spm_orthviews('window', h, wn);
+    end
+
+    if spm_input('Select tip and click' , 1.5, 'OK|Retry', [1,0], 1)
         markers(side).head = spm_orthviews('Pos')';
         %spm_orthviews('Reset');
     end
 
-    if spm_input(['Select point on trajectory and click'] , 1,'OK|Retry', [1,0], 1)
+    if spm_input('Select point on trajectory and click', 1.5, 'OK|Retry', [1,0], 1)
         markers(side).tail = spm_orthviews('Pos')';
         %spm_orthviews('Reset');
     end

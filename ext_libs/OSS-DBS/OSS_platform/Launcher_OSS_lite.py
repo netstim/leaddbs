@@ -133,7 +133,7 @@ def run_full_model(master_dict):
 
     if d["voxel_arr_MRI"]==0 and d["voxel_arr_DTI"]==1:
         print("MRI data is new, the DTI data will be reprocessed")
-        d["voxel_arr_DTI"]==0
+        d["voxel_arr_DTI"]=0
 
     #loading of meta data depending on the simulatation setup and state
     import os
@@ -178,6 +178,18 @@ def run_full_model(master_dict):
         d['alpha_array_glob']=[0]
         d['beta_array_glob']=[0]
         d['gamma_array_glob']=[0]
+        if d['Electrode_type']=="AA_rodent_monopolar" or d['Electrode_type']=="SR_rodent":    #rodent VTA
+            d['Axon_Model_Type']='Reilly2016'
+            d['x_seed'],d['y_seed'],d['z_seed']=(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z'])  # it makes sense to shift it a bit from the tip
+            d['diam_fib']=5.0
+            d['n_Ranvier']=3
+            d['x_step'],d['y_step'],d['z_step']=(0.1,0.1,0.1)
+            d['x_steps'],d['y_steps'],d['z_steps']=(20.0,0.0,20.0)  #we assume that Z-axis is ventra-dorsal in the MRI
+            d['Global_rot']=1
+            d['alpha_array_glob']=[0]
+            d['beta_array_glob']=[0]
+            d['gamma_array_glob']=[0]
+
 
     if d["Init_mesh_ready"]==0:
 
@@ -264,7 +276,7 @@ def run_full_model(master_dict):
     #if IFFT_on_VTA_array == 1:
         #if we create internally
         from VTA_from_array import create_VTA_array,resave_as_verts,get_VTA
-        VTA_edge,VTA_full_name,VTA_resolution= create_VTA_array(d['x_seed'],d['y_seed'],d['z_seed'])
+        VTA_edge,VTA_full_name,VTA_resolution= create_VTA_array(d['x_seed'],d['y_seed'],d['z_seed'],d['Electrode_type'])
         arrays_shape = resave_as_verts(VTA_full_name)
         number_of_points=sum(arrays_shape)
         VTA_parameters=[VTA_edge,VTA_full_name,VTA_resolution]

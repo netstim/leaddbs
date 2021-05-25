@@ -42,7 +42,11 @@ if ~any(S.activecontacts{side}) % empty VAT, no active contacts.
 end
 
 %% get electrodes handles // initial parameters:
-resultfig=getappdata(lgfigure,'resultfig');
+if exist('lgfigure', 'var')
+    resultfig = getappdata(lgfigure,'resultfig');
+else
+    resultfig = '';
+end
 
 % Important to load in reco from a new since we need to decide whether to
 % use native or template coordinates. Even when running in template space,
@@ -53,10 +57,15 @@ elstruct(1).trajectory=trajectory;
 elstruct(1).name=options.patientname;
 elstruct(1).markers=markers;
 
-elspec=getappdata(resultfig,'elspec');
+if ~isempty(resultfig)
+    elspec = getappdata(resultfig,'elspec');
+    setappdata(resultfig,'elstruct',elstruct);
+else
+    elspec = options.elspec;
+end
+
 options.usediffusion=0; % set to 1 to incorporate diffusion signal (for now only possible using the mesoFT tracker).
 coords = coords_mm{side};
-setappdata(resultfig,'elstruct',elstruct);
 
 % Add stretchfactor to elstruct simply for purpose of checking if headmodel
 % changed. Larger stim amplitudes need larger bounding boxes so

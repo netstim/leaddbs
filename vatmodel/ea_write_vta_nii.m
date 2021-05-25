@@ -1,8 +1,10 @@
 function [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
 
-vatgrad=getappdata(resultfig,'vatgrad');
-if isempty(vatgrad)
-    clear('vatgrad');
+if ~isempty(resultfig)
+    vatgrad=getappdata(resultfig,'vatgrad');
+    if isempty(vatgrad)
+        clear('vatgrad');
+    end
 end
 
 % define midpoints of quiver field
@@ -35,7 +37,9 @@ vat.pos=midpts;
 
 %plot3(midpts(:,1),midpts(:,2),midpts(:,3),'g.');
 
-setappdata(resultfig,'vatgrad',vatgrad);
+if ~isempty(resultfig)
+    setappdata(resultfig,'vatgrad',vatgrad);
+end
 
 ngrad=sqrt(sum(gradient'.^2,1));
 vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.

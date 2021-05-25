@@ -37,7 +37,17 @@ if isnan(col)
     end
     ea_dispercent(1,'end');
 end
-fibhandle = streamtube(fibersnew,0.25);
+
+if length(fibersnew)<500
+    idx=1:length(fibersnew);
+else
+    idx=ceil(linspace(1,length(fibersnew),500));
+end
+try
+fibhandle = streamtube(fibersnew(idx),0.25);
+catch
+    keyboard
+end
 set(fibhandle(:),'CDataMapping','direct')
 
 fprintf('\n');
@@ -65,9 +75,7 @@ end
 % we could be done here - but now lets concatenate the tracts for faster
 % visualization:
 
-afv=ea_concatfv(fibhandle,0,0.5);
+afv=ea_concatfv(fibhandle,0,0.1);
 delete(fibhandle);
-
-%dafv=reducepatch(afv,0.2,'fast');
 
 fibhandle=patch('Faces',afv.faces,'Vertices',afv.vertices,'FaceVertexCData',afv.facevertexcdata,'EdgeColor','none','FaceAlpha',fiberalpha,'CDataMapping','direct','FaceColor','flat');

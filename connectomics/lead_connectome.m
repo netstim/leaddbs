@@ -62,16 +62,16 @@ set(handles.leadfigure,'name','Lead Connectome','color','w');
 
 % Add parcellations to menu:
 parcFiles = dir([ea_space([],'labeling'),'*.nii']);
-parcellations = cell(1,length(parcFiles));
-for i=1:length(parcFiles)
-    [~,n]=fileparts(parcFiles(i).name);
-    parcellations{i}=n;
-end
-set(handles.parcellation,'String',parcellations);
+if ~isempty(parcFiles)
+    parcellations = cellfun(@(x) {strrep(x, '.nii', '')}, {parcFiles.name});
+    set(handles.parcellation,'String',parcellations);
 
-options.prefs = ea_prefs;
-defaultParc = options.prefs.lc.defaultParcellation;
-set(handles.parcellation,'Value',find(ismember(parcellations,defaultParc)));
+    options.prefs = ea_prefs;
+    parc = find(ismember(parcellations,options.prefs.lc.defaultParcellation));
+    if ~isempty(parc)
+        set(handles.parcellation,'Value',parc);
+    end
+end
 
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
@@ -435,8 +435,10 @@ else
         set(handles.parcellation,'Value',parcIdx);
     else
         options.prefs = ea_prefs;
-        defaultParc = options.prefs.lc.defaultParcellation;
-        set(handles.parcellation,'Value',find(ismember(parcellations, defaultParc)));
+        parc = find(ismember(parcellations, options.prefs.lc.defaultParcellation));
+        if ~isempty(parc)
+            set(handles.parcellation,'Value',parc);
+        end
     end
 end
 

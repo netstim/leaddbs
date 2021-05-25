@@ -275,11 +275,11 @@ switch lower(commnd)
     case '.' % center selected electrode - this doesn't seem to work yet.
         selectrode=getappdata(mcfig,'selectrode');
         if selectrode
-
+            
             optoffsets=getappdata(mcfig,'optoffsets');
             [coords_mm,trajectory,markers,elmodel]=ea_load_reconstruction(options);
             movedcoords=moveonecoord(markers,selectrode,optoffsets(selectrode,:),options); % move the correct coord to the correct direction.
-
+            
             set(mplot(1,1),'XData',movedcoords(options.elside).head(1),'YData',movedcoords(options.elside).head(2),'ZData',movedcoords(options.elside).head(3))
             set(mplot(2,1),'XData',movedcoords(options.elside).tail(1),'YData',movedcoords(options.elside).tail(2),'ZData',movedcoords(options.elside).tail(3))
             %            setappdata(mcfig,'markers',markers);
@@ -304,7 +304,7 @@ switch lower(commnd)
             case {'3','7'}
                 selectrode=2;
         end
-
+        
         if numel(options.sides) == 1	% only one hemisphere
             switch options.sides
                 case 1	% right hemisphere, return if '4' or '7' is pressed
@@ -317,7 +317,7 @@ switch lower(commnd)
                     end
             end
         end
-
+        
         oselectrode=getappdata(mcfig,'selectrode');
         if selectrode==oselectrode % toggle had already been clicked -> deselect all.
             % reset all toggletools
@@ -331,10 +331,10 @@ switch lower(commnd)
             for i=1:2
                 set(eltog(i),'State','off');
             end
-
+            
             % set the correct toggletool again.
             set(eltog(selectrode),'State','on');
-
+            
             % store selected electrode in appdata.
             setappdata(mcfig,'selectrode',selectrode);
             ea_mancor_updatescene([],[],mcfig);
@@ -348,9 +348,9 @@ switch lower(commnd)
         %         increaseoffset(nan,nan,event);
         %     case 'n'
         %         decreaseoffset(nan,nan,event);
-
+        
     case {'s','d'}
-
+        
     case 'm' % manual electrodes head / tail setting
         % get screen size
         scrSize=get(0,'ScreenSize');
@@ -417,13 +417,13 @@ switch lower(commnd)
         % store the UI elements in user data property of the new figure
         userData=struct('tvRH',tvRH,'tvRT',tvRT,'tvLH',tvLH,'tvLT',tvLT,'mcfig',mcfig);
         set(f,'UserData',userData);
-
+        
         % wait for the figure closing (either by pressing the bu button, or by closing it)
         waitfor(f)
-
+        
         % update the scene
         ea_mancor_updatescene([],[],mcfig);
-
+        
         % reload the parameters
         [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
     otherwise % arrow keys, plus, minus
@@ -431,27 +431,27 @@ switch lower(commnd)
             selectrode=getappdata(mcfig,'selectrode');
             if ~selectrode % no electrode is highlighted, move electrodes alongside trajectory or increase/decrease spacing.
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
+                
                 markers=ea_correctcoords(markers,trajectory,event,options);
                 if isfield(options,'hybridsave')
                     options=rmfield(options,'hybridsave');
                 end
                 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-
+                
                 ea_mancor_updatescene([],[],mcfig);
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
-
+                
             else % electrode is highlighted. Move in xy dirs.
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
                 movedcoords=moveonecoord(markers,selectrode,event,options); % move the correct coord to the correct direction.
-
+                
                 set(mplot(1,1),'XData',movedcoords(options.elside).head(1),'YData',movedcoords(options.elside).head(2),'ZData',movedcoords(options.elside).head(3))
                 set(mplot(2,1),'XData',movedcoords(options.elside).tail(1),'YData',movedcoords(options.elside).tail(2),'ZData',movedcoords(options.elside).tail(3))
-
+                
                 ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,1,options);
-
+                
                 ea_mancor_updatescene([],[],mcfig);
-
+                
                 [coords_mm,trajectory,markers,elmodel,manually_corrected]=ea_load_reconstruction(options);
             end
         end
@@ -615,8 +615,10 @@ ea_mancor_updatescene([],[],mcfig);
 function ea_autorotate(hobj,ev,ccw,mcfig)
 options = getappdata(gcf,'options');
 rotation=getappdata(gcf,'rotation'); % rotation angle in degrees
-orientation = ea_orient_main(options,0);
-rotation{options.elside} = orientation;
+orientation = ea_diode_main(options);
+if ~isempty(orientation)
+    rotation{options.elside} = orientation;
+end
 figure(mcfig);
 setappdata(gcf,'rotation',rotation);
 ea_mancor_updatescene([],[],mcfig);

@@ -24,13 +24,13 @@ import math
 import SALOMEDS
 
 #input variables
-DX_MRI=100.0
-DY_MRI=100.0
-DZ_MRI=100.0
+DX_MRI=80.0
+DY_MRI=80.0
+DZ_MRI=80.0
 
-X_tip=11.7816
-Y_tip=-13.5587
-Z_tip=-8.5489
+X_tip=2.476187675483748
+Y_tip=-3.0393966740032874
+Z_tip=-0.8115758910846853
 
 ##################
 geompy = geomBuilder.New(theStudy)

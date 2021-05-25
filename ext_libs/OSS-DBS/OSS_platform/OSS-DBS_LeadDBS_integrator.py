@@ -66,13 +66,6 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         'el_order':2,
     }
 
-    #should add for 'Name_prepared_neuron_array' (you need only the name of the file, not the whole path)
-    #if 'Name_prepared_neuron_array'!='':
-        # 'Neuron_model_array_prepared'=1
-    #the same for the 'Brain_shape_name'
-    #also we need to choose whether the IFFT will be on neurons or VTA array (currently controlled by 'Full_Field_IFFT')
-    # and if VTA, then E-field threshold???
-
     print("\nInput from ",settings_location, "\n")
     file = h5py.File(str(settings_location), 'r')
 
@@ -209,11 +202,11 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     elif Electrode_type == 'PINS Medical L303':
         input_dict['Electrode_type']="PINS_L303"
         normal_array_length=18.0
+    elif Electrode_type == 'ELAINE Rat Electrode':
+        input_dict['Electrode_type']="AA_rodent_monopolar"
+        normal_array_length=1.0 # irrelevant for monopolar electrodes       
     else:
         print("The electrode is not yet implemented, but we will be happy to add it. Contact us via konstantin.butenko@uni-rostock.de")
-
-    #input_dict['Implantation_coordinate_X'],input_dict['Implantation_coordinate_Y'],input_dict['Implantation_coordinate_Z'] = file.root.settings.Implantation_coordinate[:,index_side]
-    #input_dict['Second_coordinate_X'],input_dict['Second_coordinate_Y'],input_dict['Second_coordinate_Z'] = file.root.settings.Second_coordinate[:,index_side]
 
     input_dict['Implantation_coordinate_X'],input_dict['Implantation_coordinate_Y'],input_dict['Implantation_coordinate_Z'] = file['settings']['Implantation_coordinate'][:,index_side]
     input_dict['Second_coordinate_X'],input_dict['Second_coordinate_Y'],input_dict['Second_coordinate_Z'] = file['settings']['Second_coordinate'][:,index_side]
@@ -222,30 +215,17 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     el_array_length=np.sqrt((input_dict['Implantation_coordinate_X']-input_dict['Second_coordinate_X'])**2+(input_dict['Implantation_coordinate_Y']-input_dict['Second_coordinate_Y'])**2+(input_dict['Implantation_coordinate_Z']-input_dict['Second_coordinate_Z'])**2)
     stretch=el_array_length/normal_array_length
 
-    if abs(stretch-1.0)<0.01:   #if 1% tolerance
+    if abs(stretch-1.0)<0.01 or Electrode_type == 'ELAINE Rat Electrode':   #1% tolerance or monopolar electrodes
         input_dict["stretch"]=1.0
     else:
         input_dict["stretch"]=stretch
 
-    #input_dict['Rotation_Z']=file.root.settings.Rotation_Z[0][0]
-    #input_dict['Activation_threshold_VTA']=file.root.settings.Activation_threshold_VTA[0][0]
-
-    #input_dict['Rotation_Z']=file['settings']['Rotation_Z'][0][0] # this is not implemented, we need to extract rotation angles from markers
     input_dict['Activation_threshold_VTA']=file['settings']['Activation_threshold_VTA'][0][0] #threshold is the same for both hemispheres
     input_dict['external_grounding']=bool(file['settings']['Case_grounding'][:,index_side][0])
     input_dict['Neuron_model_array_prepared']=int(file['settings']['calcAxonActivation'][0][0])    # external model (e.g. from fiber tractograpy)
 
     if input_dict['Neuron_model_array_prepared']!=1:
         input_dict['Full_Field_IFFT']=1 # for now we have only these two options
-
-    ##just testing
-    #input_dict['Electrode_type']="Boston_Scientific_Vercise"
-    #input_dict['Phi_vector']=[0.0,-3.0,2.0,None,0.0,-3.0,2.0,None]
-    # input_dict['current_control']=1
-    # input_dict['Phi_vector']=[None,0.0005,None,None]
-    # input_dict['external_grounding']=True
-    # input_dict['Full_Field_IFFT']=1
-    # input_dict['Activation_threshold_VTA']: 0.12
 
     from GUI_tree_files.GUI_tree_files.default_dict import d
     d.update(input_dict)

@@ -46,6 +46,8 @@ switch cmd
 end
 
 if ~exist(path,'dir')
+    warning('off', 'backtrace');
     warning('Not all atlas data is present. Please click on ''Install'' -> ''Redownload data files'' to download the required files');
+    warning('on', 'backtrace');
     %warning('This functionality seems not to be compatible with the space you are working in. Please consider using the default ICBM 2009b nonlinear asymmetric space for this procedure.');
 end
