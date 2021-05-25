@@ -11,7 +11,6 @@ function resultfig=ea_elvis(varargin)
 %
 % Andreas Horn
 
-
 % Initialize inputs
 options=varargin{1};
 
@@ -27,7 +26,6 @@ end
 if nargin==4
     fiberthresh=varargin{4};
 else
-
     fiberthresh=options.fiberthresh;
 end
 % Initialize figure
@@ -251,10 +249,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
             end
             setappdata(resultfig,'eleGroupToggle',eleGroupToggle);
+
+            % mixfiberadd=uipushtool(ht,'CData',ea_get_icn('mixedfiber_add'),...
+            %     'TooltipString','Add Mixed Fiber analysis',...
+            %     'ClickedCallback',{@ea_add_mixfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
             
-          % mixfiberadd=uipushtool(ht,'CData',ea_get_icn('mixedfiber_add'),...
-           %      'TooltipString','Add Mixed Fiber analysis',...
-           %      'ClickedCallback',{@ea_add_mixfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
             % add sweetspot explorer button.
             sweetspotadd = uipushtool(ht, 'CData', ea_get_icn('sweetspot_add'),...
                 'TooltipString', ['Add sweetspot analysis'],...
@@ -269,14 +268,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'sweetspots',filesep,di(d).name],resultfig});
             end
 
-
             % add discriminative fiber explorer button.
             discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber_add'),...
                 'TooltipString', ['Add Fiber Filtering analysis'],...
                 'Tag', ['Add fiber filtering analysis'],...
                 'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
-            
-           
 
             di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);
             for d=1:length(di)
@@ -299,7 +295,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     'Tag', ['Explore DBS Network Mapping analysis ',ea_stripext(di(d).name)],...
                     'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'networkmapping',filesep,di(d).name],resultfig});
             end
-
 
             % Move the group toggles and app toggles forward
             isEleToggle = arrayfun(@(obj) ~isempty(regexp(obj.Tag, '^Group: \d+,', 'once')), allchild(ht));
@@ -340,8 +335,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                     caption{1}='Electrode_Left';
                     caption{2}='Electrode_Right';
                 end
-                %eltog(cnt)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{1},'OnCallback',{@elvisible,el_render,pt,2,'on',options},'OffCallback',{@elvisible,el_render,pt,2,'off',options},'State','on');
-                %eltog(cnt+1)=uitoggletool(ht,'CData',ea_get_icn('electrode'),'TooltipString',caption{2},'OnCallback',{@elvisible,el_render,pt,1,'on',options},'OffCallback',{@elvisible,el_render,pt,1,'off',options},'State','on');
+
                 if isfield(options,'uipatdirs')
                     if exist([options.uipatdirs{pt} '/cortex/CortElecs.mat'],'file')
                         vars = whos('-file',[options.uipatdirs{pt} '/cortex/CortElecs.mat']);
@@ -374,7 +368,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         options.writeoutstats=0; % if no electrodes are there, stats can't be written.
         elstruct=struct;
     end
-
 else
     options.writeoutstats=0; % if no electrodes are there, stats can't be written.
     elstruct=struct;
@@ -389,9 +382,9 @@ end
 
 % Initialize Convis-Button
 if ~strcmp(options.leadprod,'group') 
-convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
-    'TooltipString','Connectivity Visualization',...
-    'ClickedCallback',{@openconnectomeviewer,resultfig,options});
+    convisbutton=uipushtool(ht,'CData',ea_get_icn('connectome'),...
+        'TooltipString','Connectivity Visualization',...
+        'ClickedCallback',{@openconnectomeviewer,resultfig,options});
 end
 
 % Initialize FS Cortex-Button
@@ -399,14 +392,11 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
     'TooltipString','Cortical Reconstruction Visualization',...
     'ClickedCallback',{@opencortexviewer,resultfig,options});
 
-
-
 % if strcmp(options.leadprod,'group')
 %     mixfiberadd = uipushtool(ht, 'CData', ea_get_icn('mixedfiber_add'),...
-%                  'TooltipString','Add Mixed Fiber analysis',...
-%                  'ClickedCallback',{@ea_add_mixfiber,[options.root,'LEAD_groupanalysis.mat'],resultfig});
+%         'TooltipString','Add Mixed Fiber analysis',...
+%         'ClickedCallback',{@ea_add_mixfiber,[options.root,'LEAD_groupanalysis.mat'],resultfig});
 % end
-
 
 % Initialize Cortical Strip-Button
 % cortelsbutton=uipushtool(ht,'CData',ea_get_icn('cortical_strip'),...
