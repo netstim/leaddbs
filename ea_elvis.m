@@ -244,20 +244,16 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             elrenderGroupID = repelem(elstructGroupID, sideNum);
             for g = unique(elstructGroupID)
                 el_renderID = elrenderGroupID == g;
-                eleGroupToggle(g) = uitoggletool(ht, 'CData', ea_get_icn('electrode_group'),...
+                eleGroupToggle = uitoggletool(ht, 'CData', ea_get_icn('electrode_group'),...
                     'TooltipString', ['Electrode Group ', num2str(g)],...
                     'Tag', ['Group: ', num2str(g)],...
                     'OnCallback', {@eleGroupVisible,el_render(el_renderID)},...
                     'OffCallback', {@eleGroupInvisible,el_render(el_renderID)}, 'State','on');
             end
-            setappdata(resultfig,'eleGroupToggle',eleGroupToggle);
-
-
             
           % mixfiberadd=uipushtool(ht,'CData',ea_get_icn('mixedfiber_add'),...
-          %       'TooltipString','Add Mixed Fiber analysis',...
-          %       'ClickedCallback',{@ea_add_mixfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
-
+           %      'TooltipString','Add Mixed Fiber analysis',...
+           %      'ClickedCallback',{@ea_add_mixfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
             % add sweetspot explorer button.
             sweetspotadd = uipushtool(ht, 'CData', ea_get_icn('sweetspot_add'),...
                 'TooltipString', ['Add sweetspot analysis'],...
@@ -403,12 +399,12 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
     'ClickedCallback',{@opencortexviewer,resultfig,options});
 
 
+
 % if strcmp(options.leadprod,'group')
 %     mixfiberadd = uipushtool(ht, 'CData', ea_get_icn('mixedfiber_add'),...
 %                  'TooltipString','Add Mixed Fiber analysis',...
 %                  'ClickedCallback',{@ea_add_mixfiber,[options.root,'LEAD_groupanalysis.mat'],resultfig});
 % end
-=======
 
 
 % Initialize Cortical Strip-Button
@@ -700,7 +696,7 @@ end
 function dump_screenshot(hobj,ev,resultfig,options)
 
 set(0,'CurrentFigure',resultfig);
-if ~exist([options.root,options.x,filesep,'export',filesep,'views'],'dir')
+if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'dir')
     mkdir([options.root,options.patientname,filesep,'export',filesep,'views']);
 end
 
