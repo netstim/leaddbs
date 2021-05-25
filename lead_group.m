@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 30-Apr-2021 15:11:37
+% Last Modified by GUIDE v2.5 25-May-2021 16:34:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -622,23 +622,39 @@ end
 
 % --- Executes on button press in addvarbutton.
 function addvarbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to addvarbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-M=getappdata(gcf,'M');
-M.ui.clinicallist=length(M.clinical.labels)+1;
-%new_var = 1 since you are adding a new variable
-[numat,nuvar]=ea_get_clinical(M,1);
-if ~isempty(numat) % user did not press cancel
-    M.clinical.vars{end+1}=numat;
-    M.clinical.labels{end+1}=nuvar;
-    
+%Temp name but actually this clears ALL scores
+answer = questdlg('This will delete all variables, are you sure you would like to continue?', ...
+	'Yes','No!');
+switch answer
+    case 'Yes'
+        M = getappdata(gcf, 'M');
+        ea_write_scores(M,'','','','all')
+        if isfield(M,'clinical')
+            M.clinical = [];
+        end
+        setappdata(gcf,'M',M);
+        ea_refresh_lg(handles);
+    case 'No!'
+        close(questdlg);
 end
-set(handles.clinicallist,'Value',M.ui.clinicallist);
-% store model and refresh UI
-setappdata(gcf,'M',M);
 
-ea_refresh_lg(handles);
+
+
+%function addvarbutton_Callback(hObject, eventdata, handles)
+    % hObject    handle to addvarbutton (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+%M=getappdata(gcf,'M');
+%M.ui.clinicallist=length(M.clinical.labels)+1;
+%[numat,nuvar]=ea_get_clinical(M,1);
+%if ~isempty(numat) % user did not press cancel
+%    M.clinical.vars{end+1}=numat;
+%    M.clinical.labels{end+1}=nuvar;   
+%end
+%set(handles.clinicallist,'Value',M.ui.clinicallist);
+% store model and refresh UI
+%setappdata(gcf,'M',M);
+%ea_refresh_lg(handles);
 
 
 function [mat,matname]=ea_get_clinical(M,new_var)
@@ -670,10 +686,12 @@ function removevarbutton_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 
 % delete data
-val_to_rm = M.clinical.labels(get(handles.clinicallist,'Value'));
-ea_write_scores(M,'','','',val_to_rm) %First do it in the patient folder because it uses M.
-M.clinical.vars(get(handles.clinicallist,'Value'))=[];
-M.clinical.labels(get(handles.clinicallist,'Value'))=[];
+if isfield(M, 'clinical')
+    val_to_rm = M.clinical.labels(get(handles.clinicallist,'Value'));
+    ea_write_scores(M,'','','',val_to_rm) %First do it in the patient folder because it uses M.
+    M.clinical.vars(get(handles.clinicallist,'Value'))=[];
+    M.clinical.labels(get(handles.clinicallist,'Value'))=[];
+end
 % store model and refresh UI
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
