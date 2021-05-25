@@ -408,7 +408,6 @@ corticalbutton=uipushtool(ht,'CData',ea_get_icn('cortex'),...
 %                  'TooltipString','Add Mixed Fiber analysis',...
 %                  'ClickedCallback',{@ea_add_mixfiber,[options.root,'LEAD_groupanalysis.mat'],resultfig});
 % end
-=======
 
 
 % Initialize Cortical Strip-Button
@@ -700,7 +699,7 @@ end
 function dump_screenshot(hobj,ev,resultfig,options)
 
 set(0,'CurrentFigure',resultfig);
-if ~exist([options.root,options.x,filesep,'export',filesep,'views'],'dir')
+if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'dir')
     mkdir([options.root,options.patientname,filesep,'export',filesep,'views']);
 end
 
