@@ -29,6 +29,18 @@ disp('Refreshing patient list...');
 % refresh patient list
 set(handles.patientlist,'String',M.patient.list);
 try set(handles.patientlist,'Value',M.ui.listselect); end
+if isfield(M,'clincial')
+    disp('Refreshing clinical list...');
+    %refresh clinical list
+    set(handles.clinicallist,'String',M.clinical.labels);
+    try
+        set(handles.clinicallist,'Value',M.ui.clinicallist);
+    end
+    
+    if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
+        set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
+    end
+end
 
 
 
@@ -184,7 +196,7 @@ end
 t=datetime('now');
 t.Format='uuuMMddHHmmss';
 t=str2double(char(t));
-if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
+if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
     % patient specific part:
     if ~isempty(M.patient.list)
         disp('Loading localizations...');
@@ -382,93 +394,144 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
         end
         
         
-        % load clinical data for group
-        disp('Loading clinical data for group...');
-        for pt=1:length(M.patient.list)
+         %load clinical data for group
+             if isfield(M,'clinical')
+                 M = rmfield(M,'clinical');
+             end
+             try
+                 disp('Loading clinical data for group...');
+                 for pt=1:length(M.patient.list)
+                     if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
+                         load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
+                         score_type = fieldnames(scores);
+                         j=1;
+                         for x=1:length(score_type)
+                             s = score_type{x};
+                             if strcmp(s,'Motor_MDSUPDRS') || strcmp(s,'Motor_UPDRS')
+                                 place_holder_score = 'Motor_Mixed';
+                             else
+                                 place_holder_score = s;
+                             end
+                             postopid = fieldnames(scores.(s));
+                             for i=1:length(postopid)
+                                 postop_flag = postopid{i,1};
+                                 fields = fieldnames(scores.(s).(postop_flag));
+                                 for k=1:length(fields)
+                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'abs_improvements')
+                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-abs_improvements'];
+                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).abs_improvements;
+                                         j = j+1;
+                                     end
+                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'perc_improvements')
+                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-perc_improvements'];
+                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).perc_improvements;
+                                         j=j+1;
+                                     end
+                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'cleaned_improvements')
+                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-cleaned_improvements'];
+                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).cleaned_improvements;
+                                         j=j+1;
+                                     end
+                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'absolute_values')
+                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-absolute_values'];
+                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).absolute_values;
+                                         j=j+1;
+                                     end
+                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'average_values')
+                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-average_values'];
+                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).average_values;
+                                         j=j+1;
+                                     end
+                                 end
+                             end
+                         end
+                     end
+                 end
+             end
+    
+           
             
-            if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
-                ptscores=load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
-                if ~exist('ea_scores','var') % set up automatic assignment struct
-                    ea_scores=load(fullfile(ea_getearoot,'clinical','ea_scores.mat'));
-                end
-                entries=fieldnames(ptscores);
-                for entry=1:length(entries) % iterate scores available in patient
-                    
-                    switch entries{entry}
-                        case {'Motor_UPDRS','Motor_MDSUPDRS'} % group these two together
-                            
-                            scorename='mUPDRS';
-                        otherwise
-                            
-                            scorename=entries{entry};
-                    end
-                    if exist('clindata','var') && isfield(clindata,scorename)
-                    else
-                        clindata.(scorename).baseline=[];
-                        clindata.(scorename).postop=[];
-                        clindata.(scorename).factors={};
-                        clindata.(scorename).score={};
-                    end
-                    
-                    [ispresent,ix]=ismember(entries{entry},fieldnames(ea_scores));
-                    if ispresent % does lead-dbs know what to do with a score named like this?
-                        if isfield(ptscores.(entries{entry}),ea_scores.(entries{entry}).default_baseline)
-                            baseline=ptscores.(entries{entry}).(ea_scores.(entries{entry}).default_baseline).score;
-                            success=1;
-                        else
-                            success=0;
-                            continue
-                        end
-                        if isfield(ptscores.(entries{entry}),M.guid)
-                            postop=ptscores.(entries{entry}).(M.guid).score;
-                            success=1;
-                        else
-                            success=0;
-                            continue
-                        end
-                        if success % both baseline and postop available
-                            clindata.(scorename).baseline(pt,:)=table2array(baseline);
-                            clindata.(scorename).postop(pt,:)=table2array(postop);
-                            clindata.(scorename).score{pt,1}=entries{entry};
-                            clindata.(scorename).factornames=ea_scores.(entries{entry}).factornames;
-                            clindata.(scorename).factors.(entries{entry})=ea_scores.(entries{entry}).factors;
-                            clindata.(scorename).somatotopies.(entries{entry})=ea_scores.(entries{entry}).somatotopies;
-                            clindata.(scorename).somatotopynames=ea_scores.(entries{entry}).somatotopynames;
-                        end
-                    end
-                    
-                end
-            end
-        end
-        if exist('clindata','var')
-            fns=fieldnames(clindata);
-            for fn=1:length(fns)
-                scorename=fns{fn};
-                clindata.(scorename).scores=unique(clindata.(scorename).score);
-                
-                modes={'absolute','percent','cleaned'};
-                
-                % now auto-query improvements for all factors:
-                for s=1:length(clindata.(scorename).somatotopynames)
-                    for f=1:length(clindata.(scorename).factornames)
-                        for mode=1:length(modes)
-                            I=ea_getimprovs_fctr_smtp(clindata.(scorename),modes{mode},1:length(M.patient.list),clindata.(scorename).factornames{f},clindata.(scorename).somatotopynames{s});
-                            Ilabel=[scorename,'_',clindata.(scorename).somatotopynames{s},'_',clindata.(scorename).factornames{f},'_',modes{mode}];
-                            
-                            [is,ix]=ismember(Ilabel,M.clinical.labels);
-                            if ~is
-                                M.clinical.labels{end+1}=Ilabel;
-                                M.clinical.vars{end+1}=I;
-                            else % update
-                                M.clinical.labels{ix}=Ilabel;
-                                M.clinical.vars{ix}=I;
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        
+%             if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
+%                 ptscores=load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
+%                 if ~exist('ea_scores','var') % set up automatic assignment struct
+%                     ea_scores=load(fullfile(ea_getearoot,'clinical','ea_scores.mat'));
+%                 end
+%                 entries=fieldnames(ptscores);
+%                 for entry=1:length(entries) % iterate scores available in patient
+                     
+%                     switch entries{entry}
+%                         case {'Motor_UPDRS','Motor_MDSUPDRS'} % group these two together                             
+%                             scorename='mUPDRS';
+%                         otherwise                             
+%                             scorename=entries{entry};
+%                     end
+%                     if exist('clindata','var') && isfield(clindata,scorename)
+%                     else
+%                         clindata.(scorename).baseline=[];
+%                         clindata.(scorename).postop=[];
+%                         clindata.(scorename).factors={};
+%                         clindata.(scorename).score={};
+%                     end
+%                     
+%                     [ispresent,ix]=ismember(entries{entry},fieldnames(ea_scores));
+%                     if ispresent % does lead-dbs know what to do with a score named like this?
+%                         if isfield(ptscores.(entries{entry}),ea_scores.(entries{entry}).default_baseline)
+%                             baseline=ptscores.(entries{entry}).(ea_scores.(entries{entry}).default_baseline).score;
+%                             success=1;
+%                         else
+%                             success=0;
+%                             continue
+%                         end
+%                         if isfield(ptscores.(entries{entry}),M.guid)
+%                             postop=ptscores.(entries{entry}).(M.guid).score;
+%                             success=1;
+%                         else
+%                             success=0;
+%                             continue
+%                         end
+%                         if success % both baseline and postop available
+%                             clindata.(scorename).baseline(pt,:)=table2array(baseline);
+%                             clindata.(scorename).postop(pt,:)=table2array(postop);
+%                             clindata.(scorename).score{pt,1}=entries{entry};
+%                             clindata.(scorename).factornames=ea_scores.(entries{entry}).factornames;
+%                             clindata.(scorename).factors.(entries{entry})=ea_scores.(entries{entry}).factors;
+%                             clindata.(scorename).somatotopies.(entries{entry})=ea_scores.(entries{entry}).somatotopies;
+%                             clindata.(scorename).somatotopynames=ea_scores.(entries{entry}).somatotopynames;
+%                         end
+%                     end
+%                     
+%                 end
+%             end
+%         end
+%         if exist('clindata','var')
+%             fns=fieldnames(clindata);
+%             for fn=1:length(fns)
+%                 scorename=fns{fn};
+%                 clindata.(scorename).scores=unique(clindata.(scorename).score);
+%                 
+%                 modes={'absolute','percent','cleaned'};
+%                 
+%                 % now auto-query improvements for all factors:
+%                 for s=1:length(clindata.(scorename).somatotopynames)
+%                     for f=1:length(clindata.(scorename).factornames)
+%                         for mode=1:length(modes)
+%                             I=ea_getimprovs_fctr_smtp(clindata.(scorename),modes{mode},1:length(M.patient.list),clindata.(scorename).factornames{f},clindata.(scorename).somatotopynames{s});
+%                             Ilabel=[scorename,'_',clindata.(scorename).somatotopynames{s},'_',clindata.(scorename).factornames{f},'_',modes{mode}];
+%                             
+%                             [is,ix]=ismember(Ilabel,M.clinical.labels);
+%                             if ~is
+%                                 M.clinical.labels{end+1}=Ilabel;
+%                                 M.clinical.vars{end+1}=I;
+%                             else % update
+%                                 M.clinical.labels{ix}=Ilabel;
+%                                 M.clinical.vars{ix}=I;
+%                             end
+%                         end
+%                     end
+%                 end
+%             end
+%         end
+%         
         
         % sync stimulation parameters for group
         disp('Syncing stimulation parameters for group...');
@@ -503,13 +566,17 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
     end
 end
 
-disp('Refreshing clinical list...');
-% refresh clinical list
-set(handles.clinicallist,'String',M.clinical.labels);
-try set(handles.clinicallist,'Value',M.ui.clinicallist); end
-
-if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
-    set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
+if isfield(M,'clinical')
+    disp('Refreshing clinical list...');
+    %refresh clinical list
+    set(handles.clinicallist,'String',M.clinical.labels);
+    try
+        set(handles.clinicallist,'Value',M.ui.clinicallist);
+    end
+    
+    if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
+        set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
+    end
 end
 
 % store everything in Model
@@ -520,7 +587,6 @@ if ~isempty(M.patient.list)
     M.ui.lastupdated=str2double(char(t));
     setappdata(handles.leadfigure,'M',M);
 end
-
 disp('Done.');
 
 ea_busyaction('off',handles.leadfigure,'group');
