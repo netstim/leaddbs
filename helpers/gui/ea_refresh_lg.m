@@ -405,45 +405,59 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                          load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
                          score_type = fieldnames(scores);
                          j=1;
-                         for x=1:length(score_type)
-                             s = score_type{x};
-                             if strcmp(s,'Motor_MDSUPDRS') || strcmp(s,'Motor_UPDRS')
-                                 place_holder_score = 'Motor_Mixed';
-                             else
-                                 place_holder_score = s;
+                         if isempty(fieldnames(scores))
+                             set(handles.clinicallist,'String',' ');
+                             if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
+                                 set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
                              end
-                             postopid = fieldnames(scores.(s));
-                             for i=1:length(postopid)
-                                 postop_flag = postopid{i,1};
-                                 fields = fieldnames(scores.(s).(postop_flag));
-                                 for k=1:length(fields)
-                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'abs_improvements')
-                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-abs_improvements'];
-                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).abs_improvements;
-                                         j = j+1;
-                                     end
-                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'perc_improvements')
-                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-perc_improvements'];
-                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).perc_improvements;
-                                         j=j+1;
-                                     end
-                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'cleaned_improvements')
-                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-cleaned_improvements'];
-                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).cleaned_improvements;
-                                         j=j+1;
-                                     end
-                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'absolute_values')
-                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-absolute_values'];
-                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).absolute_values;
-                                         j=j+1;
-                                     end
-                                     if isfield(scores.(s).(postop_flag).(fields{k,1}),'average_values')
-                                         M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-average_values'];
-                                         M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).average_values;
-                                         j=j+1;
+                         else
+                             for x=1:length(score_type)
+                                 s = score_type{x};
+                                 if strcmp(s,'Motor_MDSUPDRS') || strcmp(s,'Motor_UPDRS')
+                                     place_holder_score = 'Motor_Mixed';
+                                 else
+                                     place_holder_score = s;
+                                 end
+                                 postopid = fieldnames(scores.(s));
+                                 
+                                 for i=1:length(postopid)
+                                     postop_flag = postopid{i,1};
+                                     fields = fieldnames(scores.(s).(postop_flag));
+                                     for k=1:length(fields)
+                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'abs_improvements')
+                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-abs_improvements'];
+                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).abs_improvements;
+                                             j = j+1;
+                                         end
+                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'perc_improvements')
+                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-perc_improvements'];
+                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).perc_improvements;
+                                             j=j+1;
+                                         end
+                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'cleaned_improvements')
+                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-cleaned_improvements'];
+                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).cleaned_improvements;
+                                             j=j+1;
+                                         end
+                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'absolute_values')
+                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-absolute_values'];
+                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).absolute_values;
+                                             j=j+1;
+                                         end
+                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'average_values')
+                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-average_values'];
+                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).average_values;
+                                             j=j+1;
+                                         end
+                                         
                                      end
                                  end
                              end
+                         end
+                     else
+                         set(handles.clinicallist,'String',' ');
+                         if pt == 1
+                            disp('.mat file containing clinical scores is not present in patient directory please run clinical score generator again.');
                          end
                      end
                  end
