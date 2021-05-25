@@ -126,6 +126,9 @@ if vizz
     plot3(xx,yy,zz,'g.')
 end
 
+% Add index column
+fibers(:,4) = repelem(1:length(idx), idx)';
+
 ftr.ea_fibformat = '1.0';
 ftr.fourindex = 1;
 ftr.fibers = fibers;
