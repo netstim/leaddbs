@@ -13,10 +13,13 @@ if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % n
     ea_busyaction('off',handles.leadfigure,'group');
     return
 end
+
 M.root=get(handles.groupdir_choosebox,'String');
+
 if ~isfield(M,'guid') % only done once, legacy support.
     M.guid=datestr(datevec(now), 'yyyymmddHHMMSS' );
 end
+
 disp('Refreshing group list...');
 % refresh group list
 set(handles.grouplist,'String',M.patient.group);
@@ -36,13 +39,11 @@ if isfield(M,'clincial')
     try
         set(handles.clinicallist,'Value',M.ui.clinicallist);
     end
-    
+
     if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
         set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
     end
 end
-
-
 
 disp('Creating isomatrix from regressor list...');
 % set isomatrix from variable in clinical list
@@ -88,10 +89,12 @@ if ~isempty(M.patient.list)
 else
     patientDirectory = [];
 end
+
 modlist = ea_genmodlist(patientDirectory,thisparc,options,'dmri');
 if ~ismember('Patient''s fiber tracts' ,modlist)
     modlist{end+1}='Patient''s fiber tracts';
 end
+
 modlist{end+1}='Do not calculate connectivity stats';
 set(handles.fiberspopup,'String',modlist);
 if get(handles.fiberspopup,'Value') > length(modlist)
@@ -115,7 +118,6 @@ if ~isempty(S)
 else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
-
 
 % check if groups are okay
 if isfield(M,'groups')
@@ -193,6 +195,7 @@ try
         set(handles.detachbutton,'Visible','on');
     end
 end
+
 t=datetime('now');
 t.Format='uuuMMddHHmmss';
 t=str2double(char(t));
@@ -207,23 +210,23 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                     M.ui.labelpopup=length(get(handles.labelpopup,'String'));
                 end
             end
-            
+
             if isfield(M,'stimparams') % deprecated.
                 M=rmfield(M,'stimparams');
             end
-            
+
             % load localization
             [~, patientname] = fileparts(M.patient.list{pt});
-            
+
             M.elstruct(pt).group=M.patient.group(pt);
             if ~isfield(M,'groups')
                 M.groups.color=[0.7,0.7,0.7];
                 M.groups.group=ones(length(M.patient.list),1);
             end
-            
+
             M.elstruct(pt).groupcolors=M.groups.color;
             M.elstruct(pt).groups=M.groups.group;
-            
+
             options.sides=1:2;
             options.native=0;
             try
@@ -234,11 +237,11 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                     [options.root, options.patientname] = fileparts(M.patient.list{pt});
                     options.root = [options.root, filesep];
                 end
-                
+
                 options = ea_resolve_elspec(options);
                 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
                     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
-                    
+
                     if M.ui.elmodelselect==1 % use patient specific elmodel
                         if exist('elmodel','var')
                             M.elstruct(pt).elmodel=elmodel;
@@ -249,19 +252,19 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                         elmodels = [{'Patient specified'};ea_resolve_elspec];
                         M.elstruct(pt).elmodel = elmodels{M.ui.elmodelselect};
                     end
-                    
+
                     % make sure coords_mm is congruent to coded electrode model
                     poptions=options;
                     poptions.native=0;
                     poptions.elmodel=M.elstruct(pt).elmodel;
                     poptions=ea_resolve_elspec(poptions);
                     [coords_mm,trajectory,markers]=ea_resolvecoords(markers,poptions,0);
-                    
+
                     M.elstruct(pt).coords_mm=coords_mm;
                     M.elstruct(pt).coords_acpc=coords_acpc;
                     M.elstruct(pt).trajectory=trajectory;
                     M.elstruct(pt).name = patientname;
-                    
+
                     if ~exist('markers','var') % backward compatibility to old recon format
                         for side=1:2
                             try
@@ -288,7 +291,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                 end
             end
         end
-        
+
         %uniform the data (by checking the missing sides and filling them)
         num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
         for pt=1:length(M.patient.list)
@@ -307,7 +310,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                         end
                     end
                     M.elstruct(pt).trajectory{check_side}=[];
-                    
+
                     %this will create the missing structure
                     M.elstruct(pt).markers(check_side).head=[];
                     M.elstruct(pt).markers(check_side).tail=[];
@@ -316,7 +319,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                 end
             end
         end
-        
+
         % load stats for group
         disp('Loading stats for group...');
         for pt=1:length(M.patient.list)
@@ -329,14 +332,14 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                     M.stats(pt).ea_stats=rmfield(M.stats(pt).ea_stats,'atlases');
                     M.stats(pt).ea_stats.atlases.names=ea_stats.atlases.names;
                     M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
-                    
+
                     % also correct single subject file:
                     load([M.patient.list{pt},filesep,'ea_stats']);
                     ea_stats.atlases=M.stats(pt).ea_stats.atlases;
                     save([M.patient.list{pt},filesep,'ea_stats'],'ea_stats','-v7.3');
                 end
             end
-            
+
             if ~isfield(M,'stats')
                 % if no stats  present yet, return.
                 setappdata(handles.leadfigure,'M',M);
@@ -350,7 +353,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                 set(handles.explorestats, 'Enable', 'on');
                 set(handles.exportstats, 'Enable', 'on');
             end
-            
+
             priorvilist=M.vilist;
             try % try using stats from patient folder.
                 M.vilist=ea_stats.atlases.names;
@@ -361,8 +364,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                     M.vilist={};
                 end
             end
-            
-            %disp('Comparing stats with prior atlas intersection list...');
+
             % check and compare with prior atlas intersection list.
             if ~isempty(priorvilist) && ~isequal(priorvilist,M.vilist)
                 warning('off', 'backtrace');
@@ -370,7 +372,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                 warning('%s: inhomogeneous stats. Please re-run group analysis (Calculate Stats).', ptname);
                 warning('on', 'backtrace');
             end
-            
+
             priorfclist=M.fclist;
             try % try using stats from patient folder.
                 M.fclist=ea_stats.stimulation(1).ft(1).labels{1};
@@ -384,7 +386,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                     fcdone=0;
                 end
             end
-            
+
             % check and compare with prior fibertracking list.
             if fcdone
                 if ~isempty(priorfclist) && ~isequal(priorfclist,M.fclist)
@@ -392,185 +394,97 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                 end
             end
         end
-        
-        
-         %load clinical data for group
-             if isfield(M,'clinical')
-                 M = rmfield(M,'clinical');
-             end
-             try
-                 disp('Loading clinical data for group...');
-                 for pt=1:length(M.patient.list)
-                     if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
-                         load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
-                         score_type = fieldnames(scores);
-                         j=1;
-                         if isempty(fieldnames(scores))
-                             set(handles.clinicallist,'String',' ');
-                             if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
-                                 set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
-                             end
-                         else
-                             for x=1:length(score_type)
-                                 s = score_type{x};
-                                 if strcmp(s,'Motor_MDSUPDRS') || strcmp(s,'Motor_UPDRS')
-                                     place_holder_score = 'Motor_Mixed';
-                                 else
-                                     place_holder_score = s;
-                                 end
-                                 postopid = fieldnames(scores.(s));
-                                 
-                                 for i=1:length(postopid)
-                                     postop_flag = postopid{i,1};
-                                     fields = fieldnames(scores.(s).(postop_flag));
-                                     for k=1:length(fields)
-                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'abs_improvements')
-                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-abs_improvements'];
-                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).abs_improvements;
-                                             j = j+1;
-                                         end
-                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'perc_improvements')
-                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-perc_improvements'];
-                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).perc_improvements;
-                                             j=j+1;
-                                         end
-                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'cleaned_improvements')
-                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-cleaned_improvements'];
-                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).cleaned_improvements;
-                                             j=j+1;
-                                         end
-                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'absolute_values')
-                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-absolute_values'];
-                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).absolute_values;
-                                             j=j+1;
-                                         end
-                                         if isfield(scores.(s).(postop_flag).(fields{k,1}),'average_values')
-                                             M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-average_values'];
-                                             M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).average_values;
-                                             j=j+1;
-                                         end
-                                         
-                                     end
-                                 end
-                             end
-                         end
-                     else
-                         set(handles.clinicallist,'String',' ');
-                         if pt == 1
-                            disp('.mat file containing clinical scores is not present in patient directory please run clinical score generator again.');
-                         end
-                     end
-                 end
-             end
-    
-           
-            
-%             if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
-%                 ptscores=load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
-%                 if ~exist('ea_scores','var') % set up automatic assignment struct
-%                     ea_scores=load(fullfile(ea_getearoot,'clinical','ea_scores.mat'));
-%                 end
-%                 entries=fieldnames(ptscores);
-%                 for entry=1:length(entries) % iterate scores available in patient
-                     
-%                     switch entries{entry}
-%                         case {'Motor_UPDRS','Motor_MDSUPDRS'} % group these two together                             
-%                             scorename='mUPDRS';
-%                         otherwise                             
-%                             scorename=entries{entry};
-%                     end
-%                     if exist('clindata','var') && isfield(clindata,scorename)
-%                     else
-%                         clindata.(scorename).baseline=[];
-%                         clindata.(scorename).postop=[];
-%                         clindata.(scorename).factors={};
-%                         clindata.(scorename).score={};
-%                     end
-%                     
-%                     [ispresent,ix]=ismember(entries{entry},fieldnames(ea_scores));
-%                     if ispresent % does lead-dbs know what to do with a score named like this?
-%                         if isfield(ptscores.(entries{entry}),ea_scores.(entries{entry}).default_baseline)
-%                             baseline=ptscores.(entries{entry}).(ea_scores.(entries{entry}).default_baseline).score;
-%                             success=1;
-%                         else
-%                             success=0;
-%                             continue
-%                         end
-%                         if isfield(ptscores.(entries{entry}),M.guid)
-%                             postop=ptscores.(entries{entry}).(M.guid).score;
-%                             success=1;
-%                         else
-%                             success=0;
-%                             continue
-%                         end
-%                         if success % both baseline and postop available
-%                             clindata.(scorename).baseline(pt,:)=table2array(baseline);
-%                             clindata.(scorename).postop(pt,:)=table2array(postop);
-%                             clindata.(scorename).score{pt,1}=entries{entry};
-%                             clindata.(scorename).factornames=ea_scores.(entries{entry}).factornames;
-%                             clindata.(scorename).factors.(entries{entry})=ea_scores.(entries{entry}).factors;
-%                             clindata.(scorename).somatotopies.(entries{entry})=ea_scores.(entries{entry}).somatotopies;
-%                             clindata.(scorename).somatotopynames=ea_scores.(entries{entry}).somatotopynames;
-%                         end
-%                     end
-%                     
-%                 end
-%             end
-%         end
-%         if exist('clindata','var')
-%             fns=fieldnames(clindata);
-%             for fn=1:length(fns)
-%                 scorename=fns{fn};
-%                 clindata.(scorename).scores=unique(clindata.(scorename).score);
-%                 
-%                 modes={'absolute','percent','cleaned'};
-%                 
-%                 % now auto-query improvements for all factors:
-%                 for s=1:length(clindata.(scorename).somatotopynames)
-%                     for f=1:length(clindata.(scorename).factornames)
-%                         for mode=1:length(modes)
-%                             I=ea_getimprovs_fctr_smtp(clindata.(scorename),modes{mode},1:length(M.patient.list),clindata.(scorename).factornames{f},clindata.(scorename).somatotopynames{s});
-%                             Ilabel=[scorename,'_',clindata.(scorename).somatotopynames{s},'_',clindata.(scorename).factornames{f},'_',modes{mode}];
-%                             
-%                             [is,ix]=ismember(Ilabel,M.clinical.labels);
-%                             if ~is
-%                                 M.clinical.labels{end+1}=Ilabel;
-%                                 M.clinical.vars{end+1}=I;
-%                             else % update
-%                                 M.clinical.labels{ix}=Ilabel;
-%                                 M.clinical.vars{ix}=I;
-%                             end
-%                         end
-%                     end
-%                 end
-%             end
-%         end
-%         
-        
+
+        %load clinical data for group
+        if isfield(M,'clinical')
+            M = rmfield(M,'clinical');
+        end
+        try
+            disp('Loading clinical data for group...');
+            for pt=1:length(M.patient.list)
+                if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
+                    load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
+                    score_type = fieldnames(scores);
+                    j=1;
+                    if isempty(fieldnames(scores))
+                        set(handles.clinicallist,'String',' ');
+                        if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
+                            set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
+                        end
+                    else
+                        for x=1:length(score_type)
+                            s = score_type{x};
+                            if strcmp(s,'Motor_MDSUPDRS') || strcmp(s,'Motor_UPDRS')
+                                place_holder_score = 'Motor_Mixed';
+                            else
+                                place_holder_score = s;
+                            end
+                            postopid = fieldnames(scores.(s));
+
+                            for i=1:length(postopid)
+                                postop_flag = postopid{i,1};
+                                fields = fieldnames(scores.(s).(postop_flag));
+                                for k=1:length(fields)
+                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'abs_improvements')
+                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-abs_improvements'];
+                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).abs_improvements;
+                                        j = j+1;
+                                    end
+                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'perc_improvements')
+                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-perc_improvements'];
+                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).perc_improvements;
+                                        j=j+1;
+                                    end
+                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'cleaned_improvements')
+                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-cleaned_improvements'];
+                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).cleaned_improvements;
+                                        j=j+1;
+                                    end
+                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'absolute_values')
+                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-absolute_values'];
+                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).absolute_values;
+                                        j=j+1;
+                                    end
+                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'average_values')
+                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-average_values'];
+                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).average_values;
+                                        j=j+1;
+                                    end
+                                end
+                            end
+                        end
+                    end
+                else
+                    set(handles.clinicallist,'String',' ');
+                    if pt == 1
+                        disp('.mat file containing clinical scores is not present in patient directory please run clinical score generator again.');
+                    end
+                end
+            end
+        end
+
         % sync stimulation parameters for group
         disp('Syncing stimulation parameters for group...');
         for pt=1:length(M.patient.list)
             if exist(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'),'file')
-            ptS=load(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'));
-               
-            try % could fail if M.S(pt) is not defined.
-                if ~all([isequal(ptS.S.Rs1,M.S(pt).Rs1),...
-                        isequal(ptS.S.Rs2,M.S(pt).Rs2),...
-                        isequal(ptS.S.Rs3,M.S(pt).Rs3),...
-                        isequal(ptS.S.Rs4,M.S(pt).Rs4),...
-                        isequal(ptS.S.Ls1,M.S(pt).Ls1),...
-                        isequal(ptS.S.Ls2,M.S(pt).Ls2),...
-                        isequal(ptS.S.Ls3,M.S(pt).Ls3),...
-                        isequal(ptS.S.Ls4,M.S(pt).Ls4),...
-                        isequal(ptS.S.amplitude,M.S(pt).amplitude)])
-                    warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+                ptS=load(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'));
+
+                try % could fail if M.S(pt) is not defined.
+                    if ~all([isequal(ptS.S.Rs1,M.S(pt).Rs1),...
+                             isequal(ptS.S.Rs2,M.S(pt).Rs2),...
+                             isequal(ptS.S.Rs3,M.S(pt).Rs3),...
+                             isequal(ptS.S.Rs4,M.S(pt).Rs4),...
+                             isequal(ptS.S.Ls1,M.S(pt).Ls1),...
+                             isequal(ptS.S.Ls2,M.S(pt).Ls2),...
+                             isequal(ptS.S.Ls3,M.S(pt).Ls3),...
+                             isequal(ptS.S.Ls4,M.S(pt).Ls4),...
+                             isequal(ptS.S.amplitude,M.S(pt).amplitude)])
+                        warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+                    end
                 end
             end
-            
-            end
         end
-        
-        
+
         try
             setappdata(handles.leadfigure,'elstruct',elstruct);
         end
@@ -587,7 +501,7 @@ if isfield(M,'clinical')
     try
         set(handles.clinicallist,'Value',M.ui.clinicallist);
     end
-    
+
     if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
         set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
     end
