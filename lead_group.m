@@ -553,7 +553,6 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
         load(filename,'vizstruct')
 
     end
-
 end
 
 % amend .pt to identify which patient is selected (needed for isomatrix).
@@ -641,7 +640,6 @@ switch answer
 end
 
 
-
 %function addvarbutton_Callback(hObject, eventdata, handles)
     % hObject    handle to addvarbutton (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
@@ -690,10 +688,11 @@ M=getappdata(gcf,'M');
 % delete data
 if isfield(M, 'clinical')
     val_to_rm = M.clinical.labels(get(handles.clinicallist,'Value'));
-    ea_write_scores(M,'','','',val_to_rm) %First do it in the patient folder because it uses M.
+    ea_write_scores(M,'','','',val_to_rm) % First do it in the patient folder because it uses M.
     M.clinical.vars(get(handles.clinicallist,'Value'))=[];
     M.clinical.labels(get(handles.clinicallist,'Value'))=[];
 end
+
 % store model and refresh UI
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
