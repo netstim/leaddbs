@@ -199,7 +199,7 @@ end
 t=datetime('now');
 t.Format='uuuMMddHHmmss';
 t=str2double(char(t));
-if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
+if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>60 % 1 min refresh interval
     % patient specific part:
     if ~isempty(M.patient.list)
         disp('Loading localizations...');
@@ -395,71 +395,127 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
             end
         end
 
-        %load clinical data for group
-        if isfield(M,'clinical')
-            M = rmfield(M,'clinical');
-        end
-        try
-            disp('Loading clinical data for group...');
-            for pt=1:length(M.patient.list)
-                if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
-                    load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
-                    score_type = fieldnames(scores);
-                    j=1;
-                    if isempty(fieldnames(scores))
-                        set(handles.clinicallist,'String',' ');
-                        if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
-                            set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
-                        end
+        % Load clinical data for group
+        disp('Try to load clinical data for group...');
+        for pt=1:length(M.patient.list)
+            if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
+                load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'), 'scores');
+                scoreTypes = fieldnames(scores);
+                for t=1:length(scoreTypes)
+                    scoreType = scoreTypes{t};
+                    if strcmp(scoreType,'Motor_MDSUPDRS') || strcmp(scoreType,'Motor_UPDRS')
+                        % Use 'Motor_Mixed' var label prefix for the two types
+                        type = 'Motor_Mixed';
                     else
-                        for x=1:length(score_type)
-                            s = score_type{x};
-                            if strcmp(s,'Motor_MDSUPDRS') || strcmp(s,'Motor_UPDRS')
-                                place_holder_score = 'Motor_Mixed';
-                            else
-                                place_holder_score = s;
-                            end
-                            postopid = fieldnames(scores.(s));
+                        type = scoreType;
+                    end
 
-                            for i=1:length(postopid)
-                                postop_flag = postopid{i,1};
-                                fields = fieldnames(scores.(s).(postop_flag));
-                                for k=1:length(fields)
-                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'abs_improvements')
-                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-abs_improvements'];
-                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).abs_improvements;
-                                        j = j+1;
-                                    end
-                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'perc_improvements')
-                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-perc_improvements'];
-                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).perc_improvements;
-                                        j=j+1;
-                                    end
-                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'cleaned_improvements')
-                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-cleaned_improvements'];
-                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).cleaned_improvements;
-                                        j=j+1;
-                                    end
-                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'absolute_values')
-                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-absolute_values'];
-                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).absolute_values;
-                                        j=j+1;
-                                    end
-                                    if isfield(scores.(s).(postop_flag).(fields{k,1}),'average_values')
-                                        M.clinical.labels{1,j} = [place_holder_score '-' postop_flag '-' fields{k,1} '-average_values'];
-                                        M.clinical.vars{1,j}(pt,:) = scores.(s).(postop_flag).(fields{k,1}).average_values;
-                                        j=j+1;
-                                    end
+                    % Get postop flags, can be Postop6M for example
+                    postopFlags = fieldnames(scores.(scoreType));
+
+                    % Further check fields
+                    for p=1:length(postopFlags)
+                        postopFlag = postopFlags{p};
+                        fields = fieldnames(scores.(scoreType).(postopFlag));
+                        for f=1:length(fields)
+                            field = fields{f};
+
+                            % Absolute improvement
+                            if isfield(scores.(scoreType).(postopFlag).(field),'abs_improvements')
+                                varLabel = [type '-' postopFlag '-' field '-abs_improvements'];
+                                varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
+                                if isempty(varLabelIndex) % Variable not existing.
+                                    % Append variable label
+                                    varLabelIndex = length(M.clinical.labels) + 1;
+                                    M.clinical.labels{varLabelIndex} = varLabel;
+                                    % Append variable, initialized with nan
+                                    M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
                                 end
+
+                                % Set score to variable
+                                M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).abs_improvements;
+                            end
+
+                            % Percentage improvement
+                            if isfield(scores.(scoreType).(postopFlag).(field),'perc_improvements')
+                                varLabel = [type '-' postopFlag '-' field '-perc_improvements'];
+                                varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
+                                if isempty(varLabelIndex) % Variable not existing.
+                                    % Append variable label
+                                    varLabelIndex = length(M.clinical.labels) + 1;
+                                    M.clinical.labels{varLabelIndex} = varLabel;
+                                    % Append variable, initialized with nan
+                                    M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
+                                end
+
+                                % Set score to variable
+                                M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).perc_improvements;
+                            end
+
+                            % Cleaned improvement
+                            if isfield(scores.(scoreType).(postopFlag).(field),'cleaned_improvements')
+                                varLabel = [type '-' postopFlag '-' field '-cleaned_improvements'];
+                                varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
+                                if isempty(varLabelIndex) % Variable not existing.
+                                    % Append variable label
+                                    varLabelIndex = length(M.clinical.labels) + 1;
+                                    M.clinical.labels{varLabelIndex} = varLabel;
+                                    % Append variable, initialized with nan
+                                    M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
+                                end
+
+                                % Set score to variable
+                                M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).cleaned_improvements;
+                            end
+
+                            % Absolution values
+                            if isfield(scores.(scoreType).(postopFlag).(field),'absolute_values')
+                                varLabel = [type '-' postopFlag '-' field '-absolute_values'];
+                                varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
+                                if isempty(varLabelIndex) % Variable not existing.
+                                    % Append variable label
+                                    varLabelIndex = length(M.clinical.labels) + 1;
+                                    M.clinical.labels{varLabelIndex} = varLabel;
+                                    % Append variable, initialized with nan
+                                    M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
+                                end
+
+                                % Set score to variable
+                                M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).absolute_values;
+                            end
+
+                            % Average values
+                            if isfield(scores.(scoreType).(postopFlag).(field),'average_values')
+                                varLabel = [type '-' postopFlag '-' field '-average_values'];
+                                varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
+                                if isempty(varLabelIndex) % Variable not existing.
+                                    % Append variable label
+                                    varLabelIndex = length(M.clinical.labels) + 1;
+                                    M.clinical.labels{varLabelIndex} = varLabel;
+                                    % Append variable, initialized with nan
+                                    M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
+                                end
+
+                                % Set score to variable
+                                M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).average_values;
                             end
                         end
-                    end
-                else
-                    set(handles.clinicallist,'String',' ');
-                    if pt == 1
-                        disp('.mat file containing clinical scores is not present in patient directory please run clinical score generator again.');
                     end
                 end
+            else
+                [~, patientName]=fileparts(M.patient.list{pt});
+                disp(['clinical_scores.mat file doesn''t exist for patient ', patientName, '.']);
+            end
+        end
+
+        if ~isempty(M.clinical.labels)
+            % Refresh clinical variable list
+            disp('Refreshing clinical list...');
+            set(handles.clinicallist, 'String', M.clinical.labels);
+            if M.ui.clinicallist <= length(M.clinical.labels)
+                set(handles.clinicallist, 'Value', M.ui.clinicallist);
+            else % Reset to the 1st variable in case out of range
+                set(handles.clinicallist, 'Value', 1);
             end
         end
 
@@ -494,16 +550,14 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
     end
 end
 
-if isfield(M,'clinical')
+if ~isempty(M.clinical.labels)
+    % Refresh clinical variable list
     disp('Refreshing clinical list...');
-    %refresh clinical list
-    set(handles.clinicallist,'String',M.clinical.labels);
-    try
-        set(handles.clinicallist,'Value',M.ui.clinicallist);
-    end
-
-    if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
-        set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
+    set(handles.clinicallist, 'String', M.clinical.labels);
+    if M.ui.clinicallist <= length(M.clinical.labels)
+        set(handles.clinicallist, 'Value', M.ui.clinicallist);
+    else % Reset to the 1st variable in case out of range
+        set(handles.clinicallist, 'Value', 1);
     end
 end
 
