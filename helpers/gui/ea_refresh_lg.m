@@ -395,14 +395,17 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
         
         
          %load clinical data for group
-             if isfield(M,'clinical')
-                 M = rmfield(M,'clinical');
-             end
+             
              try
-                 disp('Loading clinical data for group...');
+                 disp('Trying to Load clinical data for group...');
                  for pt=1:length(M.patient.list)
                      if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
                          load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
+                         if pt == 1
+                             if isfield(M,'clinical')
+                                 M = rmfield(M,'clinical');
+                             end
+                         end
                          score_type = fieldnames(scores);
                          j=1;
                          if isempty(fieldnames(scores))
@@ -454,6 +457,19 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 4 mins time limit
                                  end
                              end
                          end
+                     elseif isfield(M,'clinical')
+                         if pt == 1
+                            disp('Refreshing clinical list...');
+                         end
+                         %refresh clinical list
+                         set(handles.clinicallist,'String',M.clinical.labels);
+                         try
+                             set(handles.clinicallist,'Value',M.ui.clinicallist);
+                         end
+                         
+                         if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
+                             set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
+                         end 
                      else
                          set(handles.clinicallist,'String',' ');
                          if pt == 1
