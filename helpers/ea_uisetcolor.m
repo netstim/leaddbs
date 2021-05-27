@@ -29,12 +29,12 @@ else
         setpref('Mathworks_uisetcolor', 'Version', currVer);
     else	% R2017a, R2017b, R2018a, R2019b
         s = settings;
+        newColorPicker = 'matlab.ui.internal.dialog.WebColorChooser';
         oldColorPicker = 'matlab.ui.internal.dialog.ColorChooser';
-        % For reference:
-        % newColorPicker = 'matlab.ui.internal.dialog.WebColorChooser';
-
+        s = settings;
         % 'TemporaryValue' only effective in the current MATLAB session
         s.matlab.ui.dialog.uisetcolor.ControllerName.TemporaryValue = oldColorPicker;
         color = uisetcolor(varargin{:});
+        s.matlab.ui.dialog.uisetcolor.ControllerName.TemporaryValue = newColorPicker;
     end
 end
