@@ -9,7 +9,7 @@ function color = ea_uisetcolor(varargin)
 % fashion for MATLAB R2016b and later versions on Linux. It can be used
 % until MATLAB fixes the bug in future release.
 %
-% Set to old version for MATLAB R2016b, R2017a, R2017b, R2018a and R2019b
+% Set to old version for MATLAB R2016b, R2017a, R2017b, R2018a and R2019b+
 
 if ismac || ispc
     color = uisetcolor(varargin{:});
@@ -18,8 +18,7 @@ end
 
 if isMatlabVer('<',[9,1]) ... % < R2016b
         || isMatlabVer('==',[9,5]) ... % R2018b
-        || isMatlabVer('==',[9,6]) ... % R2019a
-        || isMatlabVer('>=',[9,8]) % >= R2020a
+        || isMatlabVer('==',[9,6]) % R2019a
     color = uisetcolor(varargin{:});
 else
     if isMatlabVer('==',[9,1])	% R2016b
@@ -27,8 +26,7 @@ else
         setpref('Mathworks_uisetcolor', 'Version', 1);
         color = uisetcolor(varargin{:});
         setpref('Mathworks_uisetcolor', 'Version', currVer);
-    else	% R2017a, R2017b, R2018a, R2019b
-        s = settings;
+    else	% R2017a, R2017b, R2018a, R2019b+
         newColorPicker = 'matlab.ui.internal.dialog.WebColorChooser';
         oldColorPicker = 'matlab.ui.internal.dialog.ColorChooser';
         s = settings;
