@@ -49,10 +49,12 @@ if isnan(col)
     ea_dispercent(1,'end');
 end
 
-if length(fibersnew)<500
-    idx=1:length(fibersnew);
+% Downsample fibers. TODO: Need further validation!
+numFiberThreshold = 500;
+if length(fibersnew) < numFiberThreshold
+    idx = 1:length(fibersnew);
 else
-    idx=ceil(linspace(1,length(fibersnew),500));
+    idx = ceil(linspace(1, length(fibersnew), numFiberThreshold));
 end
 
 try
