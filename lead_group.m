@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 25-May-2021 16:34:25
+% Last Modified by GUIDE v2.5 27-May-2021 21:01:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -688,9 +688,16 @@ M=getappdata(gcf,'M');
 % delete data
 if isfield(M, 'clinical')
     val_to_rm = M.clinical.labels(get(handles.clinicallist,'Value'));
-    ea_write_scores(M,'','','',val_to_rm) % First do it in the patient folder because it uses M.
-    M.clinical.vars(get(handles.clinicallist,'Value'))=[];
-    M.clinical.labels(get(handles.clinicallist,'Value'))=[];
+    %support for creation of variables w/o using app
+    try
+        ea_write_scores(M,'','','',val_to_rm) % First do it in the patient folder because it uses M.
+        M.clinical.vars(get(handles.clinicallist,'Value'))=[];
+        M.clinical.labels(get(handles.clinicallist,'Value'))=[];
+        
+    catch
+        M.clinical.vars(get(handles.clinicallist,'Value'))=[];
+        M.clinical.labels(get(handles.clinicallist,'Value'))=[];
+    end
 end
 
 % store model and refresh UI
@@ -1957,3 +1964,78 @@ setappdata(gcf,'M',M);
 
 set(handles.patientlist,'Value',whichmoved+1);
 ea_refresh_lg(handles);
+
+
+% --- Executes on button press in syncFunction.
+function syncFunction_Callback(hObject, eventdata, handles)
+% hObject    handle to syncFunction (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M=getappdata(gcf,'M');
+if isfield(M,'clinical')
+    if ~isempty(M.clinical)
+        varIndxToRename = [];
+        disp("Syncing scores from Lead Group file to Patient Directory");
+        for pt = 1:length(M.patient.list)
+            score_file = [M.patient.list{pt},'/clinical','/clinical_scores.mat'];
+            if exist(score_file,'file')
+                load(score_file)
+            else
+                mkdir([M.patient.list{pt},'/clinical'])
+            end
+            for i=1:length(M.clinical.labels)
+                split_cell = strsplit(M.clinical.labels{i},'-');
+                str_to_cmp = split_cell{1};
+                if strcmp(str_to_cmp,'Motor_Mixed')
+                    if (~exist(score_file,'file')) || (~isfield(scores,'Motor_MDSUPDRS') && ~isfield(scores,'Motor_UPDRS'))
+                        score_type = 'NewVar';
+                        postop_flag = 'Custom';
+                        scores.(score_type).(postop_flag).(str_to_cmp).value = M.clinical.vars{1,i}(pt);
+                        varIndxToRename(end+1) = i;
+                    end
+                else
+                    if ~exist(score_file,'file') || ~isfield(scores,str_to_cmp)
+                        score_type = 'NewVar';
+                        postop_flag = 'Custom';
+                        if contains(str_to_cmp,' ')
+                            str_to_cmp = strrep(str_to_cmp);
+                        end
+                        scores.(score_type).(postop_flag).(str_to_cmp).value = M.clinical.vars{1,i}(pt);
+                        varIndxToRename(end+1) = i;
+                    end
+                end
+                  
+            end
+            save(score_file,'scores')
+        end
+        varIndxToRename = unique(varIndxToRename);
+        answer = questdlg('In order to support legacy clinical scores, we would like to save your old scores with a new label. Would you like to continue?', ...
+            'Yes','No!');
+        switch answer
+            case 'Yes'
+                for var=1:length(varIndxToRename) %delete old entry, it is now saved as a new entry in scores dir
+                    %and will be loaded in M file with the new label.
+                    M.clinical.labels{1,varIndxToRename} = [];
+                    M.clinical.vars{1,varIndxToRename} = [];
+                    %clean up so that empty cells are not displayed in lead
+                    %group GUI
+                    emptyLabel = cellfun('isempty', M.clinical.labels);
+                    emptyVars = cellfun('isempty', M.clinical.vars);
+                    M.clinical.labels(emptyLabel) = [];
+                    M.clinical.vars(emptyVars) = [];
+                    
+                end
+            case 'No!'
+                f = msgbox("Okay, a duplicate copy of your score is saved in the patient folder.");
+        end
+        
+    end
+else
+    disp("Please first generate the scores using the clinical scores generator app, or by manually editing your Lead group file.")
+end
+setappdata(gcf,'M',M);
+ea_refresh_lg(handles);
+
+
+               
+                   
