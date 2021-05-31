@@ -1971,6 +1971,7 @@ function syncFunction_Callback(hObject, eventdata, handles)
 % hObject    handle to syncFunction (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ea_busyaction('on',handles.leadfigure,'group');
 M=getappdata(gcf,'M');
 if isfield(M,'clinical')
     if ~isempty(M.clinical)
@@ -2004,38 +2005,38 @@ if isfield(M,'clinical')
                         varIndxToRename(end+1) = i;
                     end
                 end
-                  
             end
             save(score_file,'scores')
         end
-        varIndxToRename = unique(varIndxToRename);
-        answer = questdlg('In order to support legacy clinical scores, we would like to save your old scores with a new label. Would you like to continue?', ...
-            'Yes','No!');
-        switch answer
-            case 'Yes'
-                for var=1:length(varIndxToRename) %delete old entry, it is now saved as a new entry in scores dir
-                    %and will be loaded in M file with the new label.
-                    M.clinical.labels{1,varIndxToRename} = [];
-                    M.clinical.vars{1,varIndxToRename} = [];
-                    %clean up so that empty cells are not displayed in lead
-                    %group GUI
-                    emptyLabel = cellfun('isempty', M.clinical.labels);
-                    emptyVars = cellfun('isempty', M.clinical.vars);
-                    M.clinical.labels(emptyLabel) = [];
-                    M.clinical.vars(emptyVars) = [];
-                    
-                end
-            case 'No!'
-                f = msgbox("Okay, a duplicate copy of your score is saved in the patient folder.");
+        if isempty(varIndxToRename)
+            disp("There are no scores to sync!")
+            ea_busyaction('off',handles.leadfigure,'group');
+        else
+            varIndxToRename = unique(varIndxToRename);
+            answer = questdlg('In order to support legacy clinical scores, we would like to save your old scores with a new label. Would you like to continue?', ...
+                'Yes','No!');
+            switch answer
+                case 'Yes'
+                    for var=1:length(varIndxToRename) %delete old entry, it is now saved as a new entry in scores dir
+                        %and will be loaded in M file with the new label.
+                        M.clinical.labels{1,varIndxToRename} = [];
+                        M.clinical.vars{1,varIndxToRename} = [];
+                        %clean up so that empty cells are not displayed in lead
+                        %group GUI
+                        emptyLabel = cellfun('isempty', M.clinical.labels);
+                        emptyVars = cellfun('isempty', M.clinical.vars);
+                        M.clinical.labels(emptyLabel) = [];
+                        M.clinical.vars(emptyVars) = [];
+                        
+                    end
+                case 'No!'
+                    f = msgbox("Okay, a duplicate copy of your score is saved in the patient folder.");
+            end
+            setappdata(gcf,'M',M);
+            ea_refresh_lg(handles);
+            ea_busyaction('off',handles.leadfigure,'group');
         end
-        
+    else
+        disp("Please first generate the clinical scores using either the clinical score generator OR by manually editing the M file.")
     end
-else
-    disp("Please first generate the scores using the clinical scores generator app, or by manually editing your Lead group file.")
 end
-setappdata(gcf,'M',M);
-ea_refresh_lg(handles);
-
-
-               
-                   
