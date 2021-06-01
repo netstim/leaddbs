@@ -1989,15 +1989,15 @@ if isfield(M,'clinical')
                 str_to_cmp = split_cell{1};
                 if strcmp(str_to_cmp,'Motor_Mixed')
                     if (~exist(score_file,'file')) || (~isfield(scores,'Motor_MDSUPDRS') && ~isfield(scores,'Motor_UPDRS'))
-                        score_type = 'NewVar';
-                        postop_flag = 'Custom';
+                        score_type = 'Default';
+                        postop_flag = 'Postop';
                         scores.(score_type).(postop_flag).(str_to_cmp).value = M.clinical.vars{1,i}(pt);
                         varIndxToRename(end+1) = i;
                     end
                 else
                     if ~exist(score_file,'file') || ~isfield(scores,str_to_cmp)
-                        score_type = 'NewVar';
-                        postop_flag = 'Custom';
+                        score_type = 'Default';
+                        postop_flag = 'Postop';
                         if contains(str_to_cmp,' ')
                             str_to_cmp = strrep(str_to_cmp);
                         end
@@ -2027,6 +2027,7 @@ if isfield(M,'clinical')
                         emptyVars = cellfun('isempty', M.clinical.vars);
                         M.clinical.labels(emptyLabel) = [];
                         M.clinical.vars(emptyVars) = [];
+                        msgbox(["Your score will be saved as: Default-Postop-" M.clinical.labels{1,varIndxToRename}])
                         
                     end
                 case 'No!'
