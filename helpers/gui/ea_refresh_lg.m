@@ -394,160 +394,39 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 1 min refresh interval
                 end
             end
         end
-        try
-            % Load clinical data for group
-            disp('Trying to load clinical data for group...');
-            for pt=1:length(M.patient.list)
-                if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
-                    load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'), 'scores');
-                    scoreTypes = fieldnames(scores);
-                    if ~isfield(M,'clinical')
-                        varLabelIndex = 1;
+        
+        % Load clinical data for group
+        disp('Trying to load clinical data for group...');
+        for pt=1:length(M.patient.list)
+            if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
+                load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'), 'scores');
+                scoreTypes = fieldnames(scores);
+                if ~isfield(M,'clinical')
+                    varLabelIndex = 1;
+                end
+                for t=1:length(scoreTypes)
+                    scoreType = scoreTypes{t};
+                    if strcmp(scoreType,'Motor_MDSUPDRS') || strcmp(scoreType,'Motor_UPDRS')
+                        % Use 'Motor_Mixed' var label prefix for the two types
+                        type = 'Motor_Mixed';
+                    else
+                        type = scoreType;
                     end
-                    for t=1:length(scoreTypes)
-                        scoreType = scoreTypes{t};
-                        if strcmp(scoreType,'Motor_MDSUPDRS') || strcmp(scoreType,'Motor_UPDRS')
-                           % Use 'Motor_Mixed' var label prefix for the two types
-                            type = 'Motor_Mixed';
-                        else
-                            type = scoreType;
-                        end
-                        %Get postop flags, can be Postop6M for example
-                        postopFlags = fieldnames(scores.(scoreType));
-                        %Further check fields
-                        for p=1:length(postopFlags)
-                            postopFlag = postopFlags{p};
-                            fields = fieldnames(scores.(scoreType).(postopFlag));
-                            for f=1:length(fields)
-                                field = fields{f};
-                                %Absolute improvement
-                                if isfield(scores.(scoreType).(postopFlag).(field),'abs_improvements')
-                                    varLabel = [type '-' postopFlag '-' field '-abs_improvements'];
-                                    if isfield(M, 'clinical')
-                                        varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
-                                        success = 0;
-                                        if isempty(varLabelIndex) % Variable not existing.
-                                            % Append variable label
-                                            varLabelIndex = length(M.clinical.labels) + 1;
-                                            M.clinical.labels{varLabelIndex} = varLabel;
-                                           % Append variable, initialized with nan
-                                            M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
-                                        end
-                                    else %there is no field, user is running this for the first time
-                                        M.clinical.labels{varLabelIndex} = varLabel;
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).abs_improvements;
-                                        success = 1;
-                                        varLabelIndex = varLabelIndex + 1;
-                                    end
-                                    % Set score to variable
-                                    if success == 0
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).abs_improvements;
-                                    end
-                                end
-                                
-                                % Percentage improvement
-                                if isfield(scores.(scoreType).(postopFlag).(field),'perc_improvements')
-                                    varLabel = [type '-' postopFlag '-' field '-perc_improvements'];
-                                    if isfield(M, 'clinical')
-                                        varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
-                                        success = 0;
-                                        if isempty(varLabelIndex) % Variable not existing.
-                                            %Append variable label
-                                            varLabelIndex = length(M.clinical.labels) + 1;
-                                            M.clinical.labels{varLabelIndex} = varLabel;
-                                            %Append variable, initialized with nan
-                                            M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
-                                        end
-                                    else
-                                        M.clinical.labels{varLabelIndex} = varLabel;
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).perc_improvements;
-                                        success = 1;
-                                        varLabelIndex = varLabelIndex + 1;
-                                    end
-                                    if success == 0
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).perc_improvements;
-                                    end
-                                    % Set score to variable
-                                    
-                                end
-                                
-                                %Cleaned improvement
-                                if isfield(scores.(scoreType).(postopFlag).(field),'cleaned_improvements')
-                                    varLabel = [type '-' postopFlag '-' field '-cleaned_improvements'];
-                                    if isfield(M, 'clinical')
-                                        varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
-                                        success = 0;
-                                        if isempty(varLabelIndex) % Variable not existing.
-                                            %Append variable label
-                                            varLabelIndex = length(M.clinical.labels) + 1;
-                                            M.clinical.labels{varLabelIndex} = varLabel;
-                                            % Append variable, initialized with nan
-                                            M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
-                                        end
-                                    else
-                                        M.clinical.labels{varLabelIndex} = varLabel;
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).cleaned_improvements;
-                                        success = 1;
-                                        varLabelIndex = varLabelIndex + 1;
-                                        
-                                    end
-                                    if success == 0
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).cleaned_improvements;
-                                    end
-                                end
-                                
-                                % Absolute values
-                                if isfield(scores.(scoreType).(postopFlag).(field),'absolute_values')
-                                    varLabel = [type '-' postopFlag '-' field '-absolute_values'];
-                                    if isfield(M, 'clinical')
-                                        varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
-                                        success = 0;
-                                        if isempty(varLabelIndex) % Variable not existing.
-                                            %Append variable label
-                                            varLabelIndex = length(M.clinical.labels) + 1;
-                                            M.clinical.labels{varLabelIndex} = varLabel;
-                                            %Append variable, initialized with nan
-                                            M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
-                                        end
-                                    else
-                                        M.clinical.labels{varLabelIndex} = varLabel;
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).absolute_values;
-                                        success = 1;
-                                        varLabelIndex = varLabelIndex + 1;
-                                    end
-                                    % Set score to variable
-                                    if success == 0
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).absolute_values;
-                                    end
-                                end
-                                
-                                % Average values
-                                if isfield(scores.(scoreType).(postopFlag).(field),'average_values')
-                                    varLabel = [type '-' postopFlag '-' field '-average_values'];
-                                    if isfield(M,'clinical')
-                                        varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
-                                        success = 0;
-                                        if isempty(varLabelIndex) % Variable not existing.
-                                            %Append variable label
-                                            varLabelIndex = length(M.clinical.labels) + 1;
-                                            M.clinical.labels{varLabelIndex} = varLabel;
-                                            %Append variable, initialized with nan
-                                            M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
-                                        end
-                                    else
-                                        M.clinical.labels{varLabelIndex} = varLabel;
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).average_values;
-                                        success = 1;
-                                        varLabelIndex = varLabelIndex + 1;
-                                    end
-                                    % Set score to variable
-                                    if success == 0
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).average_values;
-                                    end
-                                end
-                                %specifically for other types of scores
-                                if isfield(scores.(scoreType).(postopFlag).(field),'value')
-                                    varLabel = [type '-' postopFlag '-' field '-value'];
+                    %Get postop flags, can be Postop6M for example
+                    postopFlags = fieldnames(scores.(scoreType));
+                    %define possible fields, used to check for any misc.
+                    %scores
+                    field_list = {'Baseline','Postop'};
+                    %Further check fields
+                    for p=1:length(postopFlags)
+                        postopFlag = postopFlags{p};
+                        fields = fieldnames(scores.(scoreType).(postopFlag));
+                        for f=1:length(fields)
+                            varname = fields{f};
+                            all_vars = fieldnames(scores.(scoreType).(postopFlag).(varname));
+                            for CurrVar=1:length(all_vars)
+                                if ~ismember(field_list,all_vars{CurrVar})
+                                    varLabel = [type '-' postopFlag '-' varname '-' all_vars{CurrVar}];
                                     if isfield(M,'clinical')
                                         varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
                                         success = 0;
@@ -560,13 +439,13 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 1 min refresh interval
                                         end
                                     else
                                         M.clinical.labels{varLabelIndex} = varLabel;
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).value;
+                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(varname).(all_vars{CurrVar});
                                         success = 1;
                                         varLabelIndex = varLabelIndex + 1;
                                     end
                                     %Set score to variable
                                     if success == 0
-                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(field).value;
+                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(varname).(all_vars{CurrVar});
                                     end
                                 end
                             end
@@ -575,16 +454,15 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 1 min refresh interval
                 end
             end
         end
-
-        if ~isempty(M.clinical.labels)
-            % Refresh clinical variable list
-            disp('Refreshing clinical list...');
-            set(handles.clinicallist, 'String', M.clinical.labels);
-            if M.ui.clinicallist <= length(M.clinical.labels)
-                set(handles.clinicallist, 'Value', M.ui.clinicallist);
-            else % Reset to the 1st variable in case out of range
-                set(handles.clinicallist, 'Value', 1);
-            end
+        if isfield(M,'clinical') && ~isempty(M.clinical.labels)
+                % Refresh clinical variable list
+                disp('Refreshing clinical list...');
+                set(handles.clinicallist, 'String', M.clinical.labels);
+                if M.ui.clinicallist <= length(M.clinical.labels)
+                    set(handles.clinicallist, 'Value', M.ui.clinicallist);
+                else % Reset to the 1st variable in case out of range
+                    set(handles.clinicallist, 'Value', 1);
+                end
         end
 
         % sync stimulation parameters for group
@@ -618,7 +496,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 1 min refresh interval
     end
 end
 
-if ~isempty(M.clinical.labels)
+if isfield(M,'clinical') && ~isempty(M.clinical.labels)
     % Refresh clinical variable list
     disp('Refreshing clinical list...');
     set(handles.clinicallist, 'String', M.clinical.labels);
