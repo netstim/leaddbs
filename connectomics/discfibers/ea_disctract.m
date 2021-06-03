@@ -332,10 +332,22 @@ classdef ea_disctract < handle
                                 switch lower(obj.basepredictionon)
                                     case 'profile of scores: spearman'
                                         Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','spearman'));
+                                        if any(isnan(Ihat(test,side)))
+                                            Ihat(isnan(Ihat(test,side)),side)=0;
+                                            warning('Profiles of scores could not be evaluated for some patients. Displaying these points as zero entries. Lower threshold or carefully check results.');
+                                        end
                                     case 'profile of scores: pearson'
                                         Ihat(test,side) = atanh(corr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test)),'rows','pairwise','type','pearson'));
+                                        if any(isnan(Ihat(test,side)))
+                                            Ihat(isnan(Ihat(test,side)),side)=0;
+                                            warning('Profiles of scores could not be evaluated for some patients. Displaying these points as zero entries. Lower threshold or carefully check results.');
+                                        end
                                     case 'profile of scores: bend'
                                         Ihat(test,side) = atanh(ea_bendcorr(vals{1,side},fibsval{1,side}(usedidx{1,side},patientsel(test))));
+                                        if any(isnan(Ihat(test,side)))
+                                            Ihat(isnan(Ihat(test,side)),side)=0;
+                                            warning('Profiles of scores could not be evaluated for some patients. Displaying these points as zero entries. Lower threshold or carefully check results.');
+                                        end
                                     case 'mean of scores'
                                         Ihat(test,side) = ea_nanmean(vals{1,side}.*fibsval{1,side}(usedidx{1,side},patientsel(test)),1);
                                     case 'sum of scores'
