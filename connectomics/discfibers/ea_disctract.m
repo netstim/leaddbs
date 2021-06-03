@@ -11,7 +11,7 @@ classdef ea_disctract < handle
         showposamount = [25 25] % two entries for right and left
         shownegamount = [25 25] % two entries for right and left
         connthreshold = 20
-        efieldthreshold = 2500
+        efieldthreshold = 200
         statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
@@ -136,7 +136,7 @@ classdef ea_disctract < handle
                 [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, 0); % consider all voxels > 0
             else
                 vatlist = ea_discfibers_getvats(obj);
-                [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile);
+                [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, 0);
             end
             
             obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
