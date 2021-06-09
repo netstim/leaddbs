@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 27-May-2021 21:01:11
+% Last Modified by GUIDE v2.5 09-Jun-2021 14:57:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -624,14 +624,14 @@ end
 % --- Executes on button press in addvarbutton.
 function addvarbutton_Callback(hObject, eventdata, handles)
 %Temp name but actually this clears ALL scores
-answer = questdlg('This will delete all variables, are you sure you would like to continue?', ...
+answer = questdlg('This action will delete all variables, are you sure you would like to continue?', ...
 	'Yes','No!');
 switch answer
     case 'Yes'
         M = getappdata(gcf, 'M');
         ea_write_scores(M,'','','','all')
         if isfield(M,'clinical')
-            M.clinical = [];
+           M = rmfield(M,'clinical');
         end
         setappdata(gcf,'M',M);
         ea_refresh_lg(handles);
@@ -821,72 +821,76 @@ function moveptupbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 whichmoved=get(handles.patientlist,'Value');
-
 if whichmoved(1)==1 % first entry anyways
     return
 end
-
-ix=1:length(M.patient.list);
-ix(whichmoved)=ix(whichmoved)-1;
-ix(whichmoved-1)=ix(whichmoved-1)+1;
-
-M.patient.list=M.patient.list(ix);
-M.patient.group=M.patient.group(ix);
-M.ui.listselect=whichmoved-1;
-for c=1:length(M.clinical.vars)
-    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+success = 0;
+if length(whichmoved) > 1 %for group selections
+    ix=1:length(M.patient.list);
+    for movIndx=1:length(whichmoved) - 1 %start from zero so the loop doesn't repeat twice for odd entries
+        if (whichmoved(movIndx+1) - whichmoved(movIndx)) == 1 %for continous blocks only
+            success = 1;
+        else
+            success = 0;
+        end
+    end
+    %store the variable before the group of variables: this will be
+    %overwritten in the loop
+    pt2move = M.patient.list(whichmoved(1) - 1);
+    grp2move = M.patient.group(whichmoved(1) - 1);
+    stim2move = M.S(whichmoved(1)-1);
+    indx2move = ix(whichmoved(length(whichmoved))); 
+    if success == 1
+        for pt_indx = 1:length(whichmoved)
+            M.patient.list(whichmoved(pt_indx)-1)=M.patient.list(whichmoved(pt_indx));
+            M.patient.group(whichmoved(pt_indx)-1) = M.patient.group(whichmoved(pt_indx));
+            %M.ui.listselect=whichmoved(pt_indx)-1;
+            %do not need to do this, because the M clinical vars keep
+            %getting refreshed & keeps getting re-loaded.            
+            try
+                M.S(whichmoved(pt_indx)-1) = M.S(whichmoved(pt_indx));
+            end            
+        end
+        %add the overwritten var back
+        M.patient.list(indx2move) = pt2move;
+        M.patient.group(indx2move) = grp2move;
+        M.S(indx2move) = stim2move;
+        setappdata(gcf,'M',M);
+        set(handles.patientlist,'String',M.patient.list)
+        set(handles.patientlist,'Value',whichmoved);
+        ea_refresh_lg(handles);
+    %after moving, add the stored score in later
+    else %if it is not continous, don't do anything.
+        disp(['Your patient list is not continous, so there will be no change in the order of patient! '...
+            'select a continous list of patients to proceed'])
+    end
+else
+    ix=1:length(M.patient.list);
+    ix(whichmoved)=ix(whichmoved)-1;
+    ix(whichmoved-1)=ix(whichmoved-1)+1;
+    
+    M.patient.list=M.patient.list(ix);
+    M.patient.group=M.patient.group(ix);
+    M.ui.listselect=whichmoved-1;
+    if isfield(M,'clinical') && ~isempty(M.clinical)
+        for c=1:length(M.clinical.vars)
+            M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+        end
+    end
+    try
+        M.S = M.S(ix);
+    end
+    try
+        M=rmfield(M,'elstruct');
+    end
+    try
+        M=rmfield(M,'stats');
+    end
+    setappdata(gcf,'M',M);
+    
+    set(handles.patientlist,'Value',whichmoved-1);
+    ea_refresh_lg(handles);
 end
-try
-    M.S = M.S(ix);
-end
-try
-    M=rmfield(M,'elstruct');
-end
-try
-    M=rmfield(M,'stats');
-end
-setappdata(gcf,'M',M);
-
-set(handles.patientlist,'Value',whichmoved-1);
-ea_refresh_lg(handles);
-
-
-% --- Executes on button press in moveptdownbutton.
-function moveptdownbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to moveptdownbutton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-M=getappdata(gcf,'M');
-whichmoved=get(handles.patientlist,'Value');
-
-if whichmoved(end)==length(M.patient.list) % last entry anyways
-    return
-end
-
-ix=1:length(M.patient.list);
-ix(whichmoved)=ix(whichmoved)+1;
-ix(whichmoved+1)=ix(whichmoved+1)-1;
-
-M.patient.list=M.patient.list(ix);
-M.patient.group=M.patient.group(ix);
-M.ui.listselect=whichmoved+1;
-for c=1:length(M.clinical.vars)
-    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
-end
-try
-    M.S = M.S(ix);
-end
-try
-    M=rmfield(M,'elstruct');
-end
-try
-    M=rmfield(M,'stats');
-end
-setappdata(gcf,'M',M);
-
-set(handles.patientlist,'Value',whichmoved+1);
-ea_refresh_lg(handles);
 
 
 % --- Executes on button press in calculatebutton.
@@ -1940,30 +1944,75 @@ whichmoved=get(handles.patientlist,'Value');
 if whichmoved(end)==length(M.patient.list) % last entry anyways
     return
 end
-
-ix=1:length(M.patient.list);
-ix(whichmoved)=ix(whichmoved)+1;
-ix(whichmoved+1)=ix(whichmoved+1)-1;
-
-M.patient.list=M.patient.list(ix);
-M.patient.group=M.patient.group(ix);
-M.ui.listselect=whichmoved+1;
-for c=1:length(M.clinical.vars)
-    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+success = 0;
+if length(whichmoved) > 1 %for group selections
+    ix=1:length(M.patient.list);
+    for movIndx=1:length(whichmoved) - 1 %start from zero so the loop doesn't repeat twice for odd entries
+        if (whichmoved(movIndx+1) - whichmoved(movIndx)) == 1 %for continous blocks only
+            success = 1;
+        else
+            success = 0;
+        end
+    end
+    %store the variable immediately after the group of variables: this will be
+    %overwritten in the loop
+    pt2move = M.patient.list(whichmoved(end) + 1);
+    grp2move = M.patient.group(whichmoved(end) + 1);
+    stim2move = M.S(whichmoved(end)+1);
+    indx2move = ix(whichmoved(1)); %move it to BEFORE the group of variables
+    if success == 1
+        pt_indx = length(whichmoved);
+        for ascending_indx = 1:length(whichmoved)
+            %here, pt_indx has to go down from the last. i.e., when pt_indx
+            %is one, the indx should be = length(whichmoved)
+            M.patient.list(whichmoved(pt_indx)+1)  = M.patient.list(whichmoved(pt_indx));
+            M.patient.group(whichmoved(pt_indx)+1) = M.patient.group(whichmoved(pt_indx));
+            %M.ui.listselect=whichmoved(pt_indx)-1;
+            %do not need to do this, because the M clinical vars keep
+            %getting refreshed & keeps getting re-loaded.            
+            try
+                M.S(whichmoved(pt_indx)+1) = M.S(whichmoved(pt_indx));
+            end  
+            pt_indx = pt_indx - 1;
+        end
+        %add the overwritten var back
+        M.patient.list(indx2move) = pt2move;
+        M.patient.group(indx2move) = grp2move;
+        M.S(indx2move) = stim2move;
+        setappdata(gcf,'M',M);
+        set(handles.patientlist,'String',M.patient.list);
+        set(handles.patientlist,'Value',whichmoved);
+        ea_refresh_lg(handles);
+    %after moving, add the stored score in later
+    else %if it is not continous, don't do anything.
+        disp(['Your patient list is not continous, so there will be no change in the order of patient! '...
+            'select a continous list of patients to proceed']) 
+    end
+else
+    ix=1:length(M.patient.list);
+    ix(whichmoved)=ix(whichmoved)+1;
+    ix(whichmoved+1)=ix(whichmoved+1)-1;
+    
+    M.patient.list=M.patient.list(ix);
+    M.patient.group=M.patient.group(ix);
+    M.ui.listselect=whichmoved+1;
+    for c=1:length(M.clinical.vars)
+        M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+    end
+    try
+        M.S = M.S(ix);
+    end
+    try
+        M=rmfield(M,'elstruct');
+    end
+    try
+        M=rmfield(M,'stats');
+    end
+    setappdata(gcf,'M',M);
+    
+    set(handles.patientlist,'Value',whichmoved+1);
+    ea_refresh_lg(handles);
 end
-try
-    M.S = M.S(ix);
-end
-try
-    M=rmfield(M,'elstruct');
-end
-try
-    M=rmfield(M,'stats');
-end
-setappdata(gcf,'M',M);
-
-set(handles.patientlist,'Value',whichmoved+1);
-ea_refresh_lg(handles);
 
 
 % --- Executes on button press in syncFunction.
@@ -1973,6 +2022,7 @@ function syncFunction_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'group');
 M=getappdata(gcf,'M');
+%%First we sync clinical scores
 if isfield(M,'clinical')
     if ~isempty(M.clinical)
         varIndxToRename = [];
@@ -2040,4 +2090,150 @@ if isfield(M,'clinical')
     else
         disp("Please first generate the clinical scores using either the clinical score generator OR by manually editing the M file.")
     end
+end
+%%Let's sync stimulation parameters
+disp('Loading localizations...');
+if ~isempty(M.patient.list)
+    for pt=1:length(M.patient.list)
+        % set stimparams based on values provided by user
+        for side=1:2
+            if M.ui.labelpopup>length(get(handles.labelpopup,'String'))
+                M.ui.labelpopup=length(get(handles.labelpopup,'String'));
+            end
+        end
+        
+        if isfield(M,'stimparams') % deprecated.
+            M=rmfield(M,'stimparams');
+        end
+        
+        % load localization
+        [~, patientname] = fileparts(M.patient.list{pt});
+        
+        M.elstruct(pt).group=M.patient.group(pt);
+        if ~isfield(M,'groups')
+            M.groups.color=[0.7,0.7,0.7];
+            M.groups.group=ones(length(M.patient.list),1);
+        end
+        
+        M.elstruct(pt).groupcolors=M.groups.color;
+        M.elstruct(pt).groups=M.groups.group;
+        
+        options.sides=1:2;
+        options.native=0;
+        try
+            if M.ui.detached
+                options.patientname = M.patient.list{pt};
+                options.root = M.ui.groupdir;
+            else
+                [options.root, options.patientname] = fileparts(M.patient.list{pt});
+                options.root = [options.root, filesep];
+            end
+            
+            options = ea_resolve_elspec(options);
+            if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+                [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
+                
+                if M.ui.elmodelselect==1 % use patient specific elmodel
+                    if exist('elmodel','var')
+                        M.elstruct(pt).elmodel=elmodel;
+                    else
+                        M.elstruct(pt).elmodel='Medtronic 3389'; % use default for older reconstructions that did not store elmodel.
+                    end
+                else
+                    elmodels = [{'Patient specified'};ea_resolve_elspec];
+                    M.elstruct(pt).elmodel = elmodels{M.ui.elmodelselect};
+                end
+                
+                % make sure coords_mm is congruent to coded electrode model
+                poptions=options;
+                poptions.native=0;
+                poptions.elmodel=M.elstruct(pt).elmodel;
+                poptions=ea_resolve_elspec(poptions);
+                [coords_mm,trajectory,markers]=ea_resolvecoords(markers,poptions,0);
+                
+                M.elstruct(pt).coords_mm=coords_mm;
+                M.elstruct(pt).coords_acpc=coords_acpc;
+                M.elstruct(pt).trajectory=trajectory;
+                M.elstruct(pt).name = patientname;
+                
+                if ~exist('markers','var') % backward compatibility to old recon format
+                    for side=1:2
+                        try
+                            %if side is present, process the old recon format
+                            markers(side).head=coords_mm{side}(1,:);
+                            markers(side).tail=coords_mm{side}(4,:);
+                            [xunitv, yunitv] = ea_calcxy(markers(side).head, markers(side).tail);
+                            markers(side).x = markers(side).head +  xunitv*(options.elspec.lead_diameter/2);
+                            markers(side).y = markers(side).head + yunitv*(options.elspec.lead_diameter/2);
+                        catch
+                        end
+                    end
+                end
+                M.elstruct(pt).markers=markers;
+            end
+        catch
+            if pt>1 % first patient has worked but some other patient seems not to have worked.
+                try
+                    if ~M.ui.detached
+                        M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
+                        warning(['No reconstruction present for ',patientname,'. Please check.']);
+                    end
+                end
+            end
+        end
+    end
+    
+    %uniform the data (by checking the missing sides and filling them)
+    num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
+    for pt=1:length(M.patient.list)
+        
+        if length(M.elstruct(pt).coords_mm)>num_sides
+            num_sides=M.elstruct(pt).coords_mm;
+        end
+    end
+    for pt=1:length(M.patient.list)
+        for check_side=1:num_sides %options.sides
+            if ea_arenopoints4side(M.elstruct(pt).coords_mm, check_side)
+                %force to have empty values if side is not present
+                M.elstruct(pt).coords_mm{check_side}=[];
+                if isfield(M.elstruct(pt),'coords_acpc') && iscell(M.elstruct(pt).coords_acpc)
+                    if ea_arenopoints4side(M.elstruct(pt).coords_acpc, check_side)
+                        M.elstruct(pt).coords_acpc{check_side}=[];
+                    end
+                end
+                M.elstruct(pt).trajectory{check_side}=[];
+                
+                %this will create the missing structure
+                M.elstruct(pt).markers(check_side).head=[];
+                M.elstruct(pt).markers(check_side).tail=[];
+                M.elstruct(pt).markers(check_side).x=[];
+                M.elstruct(pt).markers(check_side).y=[];
+            end
+        end
+    end
+    disp('Syncing stimulation parameters for group...');
+    for pt=1:length(M.patient.list)
+        if exist(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'),'file')
+            ptS=load(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'));
+            try % could fail if M.S(pt) is not defined.
+                if ~all([isequal(ptS.S.Rs1,M.S(pt).Rs1),...
+                        isequal(ptS.S.Rs2,M.S(pt).Rs2),...
+                        isequal(ptS.S.Rs3,M.S(pt).Rs3),...
+                        isequal(ptS.S.Rs4,M.S(pt).Rs4),...
+                        isequal(ptS.S.Ls1,M.S(pt).Ls1),...
+                        isequal(ptS.S.Ls2,M.S(pt).Ls2),...
+                        isequal(ptS.S.Ls3,M.S(pt).Ls3),...
+                        isequal(ptS.S.Ls4,M.S(pt).Ls4),...
+                        isequal(ptS.S.amplitude,M.S(pt).amplitude)])
+                    warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+                end
+            end
+        end
+    end
+    try
+        setappdata(handles.leadfigure,'elstruct',elstruct);
+    end
+else
+     M.vilist={};
+     M.fclist={};
 end
