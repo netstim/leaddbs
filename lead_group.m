@@ -1904,34 +1904,39 @@ function removept_Callback(hObject, eventdata, handles)
 % hObject    handle to removept (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-M=getappdata(handles.leadfigure,'M');
-
-deleteentry=get(handles.patientlist,'Value');
-
-M.patient.list(deleteentry)=[];
-
-M.patient.group(deleteentry)=[];
-
-try M.elstruct(deleteentry)=[]; end
-
-for cvar=1:length(M.clinical.vars)
-    try
-        M.clinical.vars{cvar}(deleteentry,:)=[];
-    end
+answer = questdlg('The selected patient & the corresponding group information will be deleted. Are you sure you want to continue?', ...
+                'Yes','No!');
+switch answer
+    case 'Yes'
+        M=getappdata(handles.leadfigure,'M');
+        
+        deleteentry=get(handles.patientlist,'Value');
+        
+        M.patient.list(deleteentry)=[];
+        
+        M.patient.group(deleteentry)=[];
+        
+        try M.elstruct(deleteentry)=[]; end
+        
+        for cvar=1:length(M.clinical.vars)
+            try
+                M.clinical.vars{cvar}(deleteentry,:)=[];
+            end
+        end
+        
+        if isfield(M,'S')
+            try
+                M.S(deleteentry)=[];
+            end
+            setappdata(handles.leadfigure, 'S', M.S);
+        end
+        
+        try
+            M.stats(deleteentry)=[];
+        end
+        setappdata(handles.leadfigure,'M',M);
+        ea_refresh_lg(handles); 
 end
-
-if isfield(M,'S')
-    try
-    M.S(deleteentry)=[];
-    end
-    setappdata(handles.leadfigure, 'S', M.S);
-end
-
-try
-    M.stats(deleteentry)=[];
-end
-setappdata(handles.leadfigure,'M',M);
-ea_refresh_lg(handles);
 
 % --- Executes on button press in moveptdown.
 function moveptdown_Callback(hObject, eventdata, handles)
@@ -2084,8 +2089,6 @@ if isfield(M,'clinical')
                     f = msgbox("Okay, a duplicate copy of your score is saved in the patient folder.");
             end
             setappdata(gcf,'M',M);
-            ea_refresh_lg(handles);
-            ea_busyaction('off',handles.leadfigure,'group');
         end
     else
         disp("Please first generate the clinical scores using either the clinical score generator OR by manually editing the M file.")
@@ -2237,3 +2240,5 @@ else
      M.vilist={};
      M.fclist={};
 end
+ea_refresh_lg(handles);
+ea_busyaction('off',handles.leadfigure,'group');
