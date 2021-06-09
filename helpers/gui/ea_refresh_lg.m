@@ -295,6 +295,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 1 min refresh interval
         %uniform the data (by checking the missing sides and filling them)
         num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
         for pt=1:length(M.patient.list)
+
             if length(M.elstruct(pt).coords_mm)>num_sides
                 num_sides=M.elstruct(pt).coords_mm;
             end
@@ -454,7 +455,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 1 min refresh interval
                 end
             end
         end
-        if isfield(M,'clinical') && ~isempty(M.clinical.labels)
+        if isfield(M,'clinical') && ~isempty(M.clinical)
                 % Refresh clinical variable list
                 disp('Refreshing clinical list...');
                 set(handles.clinicallist, 'String', M.clinical.labels);
@@ -496,7 +497,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 1 min refresh interval
     end
 end
 
-if isfield(M,'clinical') && ~isempty(M.clinical.labels)
+if isfield(M,'clinical') && ~isempty(M.clinical)
     % Refresh clinical variable list
     disp('Refreshing clinical list...');
     set(handles.clinicallist, 'String', M.clinical.labels);
