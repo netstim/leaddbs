@@ -251,9 +251,9 @@ def get_VTA(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,V
     affine_info[0,0]=VTA_res   # always isotropic voxels for VTA array
     affine_info[1,1]=VTA_res
     affine_info[2,2]=VTA_res
-    affine_info[0,3]=VTA_affected_MRI_space[0,0]-VTA_res*0.5
-    affine_info[1,3]=VTA_affected_MRI_space[0,1]-VTA_res*0.5
-    affine_info[2,3]=VTA_affected_MRI_space[0,2]-VTA_res*0.5
+    affine_info[0,3]=VTA_affected_MRI_space[0,0]
+    affine_info[1,3]=VTA_affected_MRI_space[0,1]
+    affine_info[2,3]=VTA_affected_MRI_space[0,2]
 
 
     import os
@@ -342,9 +342,9 @@ def get_VTA_scaled(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along
     affine_info[0,0]=VTA_res   # always isotropic voxels for VTA array
     affine_info[1,1]=VTA_res
     affine_info[2,2]=VTA_res
-    affine_info[0,3]=VTA_affected_MRI_space[0,0]-VTA_res*0.5
-    affine_info[1,3]=VTA_affected_MRI_space[0,1]-VTA_res*0.5
-    affine_info[2,3]=VTA_affected_MRI_space[0,2]-VTA_res*0.5
+    affine_info[0,3]=VTA_affected_MRI_space[0,0]
+    affine_info[1,3]=VTA_affected_MRI_space[0,1]
+    affine_info[2,3]=VTA_affected_MRI_space[0,2]
 
 
     import os
