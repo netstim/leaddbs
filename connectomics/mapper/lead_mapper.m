@@ -349,7 +349,7 @@ function odirbutton_Callback(hObject, eventdata, handles)
 
 seeds=getappdata(handles.seedbutton,'seeds');
 if ~isempty(seeds) % seeds defined already
-   seedbase=fileparts(seeds{1});
+    seedbase=fileparts(seeds{1});
 else
     seedbase='';
 end

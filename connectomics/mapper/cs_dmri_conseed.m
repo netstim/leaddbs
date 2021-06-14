@@ -1,55 +1,61 @@
-function cs_dmri_conseed(dfold,cname,sfile,cmd,outputfolder,space,options)
+function cs_dmri_conseed(connBaseFolder, options)
 
-sfile = ea_handleseeds(sfile);
+connName = options.lcm.struc.connectome;
+sfile = ea_handleseeds(options.lcm.seeds');
+cmd = ea_lcm_resolvecmd(options.lcm.cmd);
 
-if isfield(options,'uivatdirs') && ~isempty(options.uivatdirs)
+switch options.lcm.struc.espace
+    case 1
+        space = '222.nii';
+    case 2
+        space = '111.nii';
+    case 3
+        space = '555.nii';
+end
+
+if strcmp(cmd, 'seed') % Calculate seed connectivity, output folder will be derived automatically
 	outputfolder=[];
-end
-
-if ~exist('outputfolder','var') || isempty(outputfolder)
-    outputfolder = ea_getoutputfolder(sfile,cname);
-elseif ~strcmp(outputfolder(end),filesep)
-    outputfolder = [outputfolder,filesep];
-end
-
-if isdeployed
-    cbase=dfold;
 else
-    cbase=ea_getconnectomebase;
+    outputfolder = options.lcm.odir;
+    if isempty(outputfolder)
+        warning('off', 'backtrace');
+        warning('Custom output folder not specified! Will save result to current folder.');
+        warning('on', 'backtrace');
+        outputfolder = ea_getoutputfolder({[pwd, filesep]},connName);
+    elseif ~strcmp(outputfolder(end),filesep)
+        outputfolder = [outputfolder,filesep];
+    end
 end
 
 disp(['Command: ',cmd]);
 switch cmd
     case 'seed'             
-        cs_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
+        cs_dmri_conseed_map(connBaseFolder,connName,sfile,cmd,space,options)
     case {'matrix', 'pmatrix'}
         for s=1:length(sfile)
-            if strcmp(dfold, 'Patient''s fiber tracts')
-                if strcmp(cname, options.prefs.FTR_normalized) % patient specific fibertracts
+            if strcmp(connBaseFolder, 'Patient''s fiber tracts')
+                if strcmp(connName, options.prefs.FTR_normalized) % patient specific fibertracts
                     cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,'wFTR.mat'];
-                    [fibers,fidx,voxmm,mat]=ea_loadfibertracts(cfile);
+                    [fibers,fidx]=ea_loadfibertracts(cfile);
                     redotree=1;
-                    ctype='mat';
                 else % connectome type not supported
                     ea_error(['Connectome file (',options.prefs.FTR_normalized,') vanished or not supported!']);
                 end
             else
-                cfile=[dfold,'dMRI',filesep,cname];
+                cfile=[connBaseFolder,'dMRI',filesep,connName];
 
                 if exist([cfile,filesep,'data.mat'],'file') % regular mat file
                     if ~exist('fibers','var')
-                        [fibers,fidx,voxmm,mat]=ea_loadfibertracts([cfile,filesep,'data.mat']);
+                        [fibers,fidx]=ea_loadfibertracts([cfile,filesep,'data.mat']);
                         if ~exist('fibers','var')
                             ea_error('Structural connectome file supplied in wrong format.');
                         end
                     end
                     redotree=0;
-                    ctype='mat';
                 elseif exist([cfile,filesep,'data.fib.gz'],'file') % regular .fib.gz file
                     ftr=track_seed_gqi([cfile,filesep,'data.fib.gz'],sfile{s});
                     fibers=ftr.fibers;
                     redotree=1;
-                    ctype='fibgz';
                 else % connectome type not supported
                     ea_error('Connectome file vanished or not supported!');
                 end
@@ -80,7 +86,6 @@ switch cmd
 
             % select fibers for each ix
             ea_dispercent(0, ['Iterating voxels (', num2str(s), '/', num2str(length(sfile)), ')']);
-            ixdim=length(ixvals);
             fiberstrength{s}=zeros(size(fidx,1),1); % in this var we will store a mean value for each fiber (not fiber segment) traversing through seed
             fiberstrengthn{s}=zeros(size(fidx,1),1); % counting variable to average strengths
             for ix=find(cellfun(@length,ids))' % iterate through voxels that found something
@@ -118,63 +123,15 @@ switch cmd
         end
         mat=mat+mat'; % symmetrize matrix
         mat(logical(eye(length(sfile))))=mat(logical(eye(length(sfile))))/2;
-        [~,fn]=fileparts(sfile{1});
+        if isfield(options.lcm, 'parcSeedName') && ~isempty(options.lcm.parcSeedName)
+            fn = options.lcm.parcSeedName;
+        else
+            [~,fn]=fileparts(sfile{1});
+        end
         save(fullfile(outputfolder,[fn,'_struc_',cmd,'.mat']),'mat');
     otherwise
         warning('Structural connectivity only supported for seed / matrix / pmatrix commands.');
 end
-
-
-function C = countmember(A,B)
-% COUNTMEMBER - count members
-%
-%   C = COUNTMEMBER(A,B) counts the number of times the elements of array A are
-%   present in array B, so that C(k) equals the number of occurences of
-%   A(k) in B. A may contain non-unique elements. C will have the same size as A.
-%   A and B should be of the same type, and can be cell array of strings.
-%
-%   Examples:
-%     countmember([1 2 1 3],[1 2 2 2 2])
-%        -> 1     4     1     0
-%     countmember({'a','b','c'},{'a','x','a'})
-%        -> 2     0     0
-%
-%   See also ISMEMBER, UNIQUE, HISTC
-
-% for Matlab R13 and up
-% version 1.2 (dec 2008)
-% (c) Jos van der Geest
-% email: jos@jasen.nl
-
-% History:
-% 1.0 (2005) created
-% 1.1 (??): removed dum variable from [AU,dum,j] = unique(A(:)) to reduce
-%    overhead
-% 1.2 (dec 2008) - added comments, fixed some spelling and grammar
-%    mistakes, after being selected as Pick of the Week (dec 2008)
-
-error(nargchk(2,2,nargin)) ;
-
-if ~isequal(class(A),class(B))
-    error('Both inputs should be the same class.') ;
-end
-if isempty(B)
-    C = zeros(size(A)) ;
-    return
-elseif isempty(A)
-    C = [] ;
-    return
-end
-
-% which elements are unique in A,
-% also store the position to re-order later on
-[AU,j,j] = unique(A(:)) ;
-% assign each element in B a number corresponding to the element of A
-[L, L] = ismember(B,AU) ;
-% count these numbers
-N = histc(L(:),1:length(AU)) ;
-% re-order according to A, and reshape
-C = reshape(N(j),size(A)) ;
 
 
 function ftr=track_seed_gqi(cfile,seedfile)
@@ -186,14 +143,13 @@ else
     DSISTUDIO = [basedir, 'dsi_studio.', computer('arch')];
 end
 
-[pth,fn]=fileparts(seedfile);
+pth=fileparts(seedfile);
 
 cmd=[DSISTUDIO,' --action=trk --source=',ea_path_helper(cfile),...
     ' --method=0',...
     ' --seed=',ea_path_helper(seedfile),...
     ' --seed_count=10000',...
     ' --output=',ea_path_helper([pth,filesep,'temp.mat'])];
-
 
 err=ea_submitcmd(cmd);
 if err

@@ -6,11 +6,8 @@ if options.lcm.struc.do
     if strcmp(options.lcm.seeddef,'vats')
         originalseeds=options.lcm.seeds;
         options.lcm.seeds=ea_resolvevatseeds(options,'dMRI');
-        if isempty(options.lcm.odir)
-            options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep,options.lcm.struc.connectome,filesep];
-            if ~exist(options.lcm.odir,'dir')
-                mkdir(options.lcm.odir);
-            end
+        if ~isempty(options.lcm.odir) && ~exist(options.lcm.odir,'dir')
+            mkdir(options.lcm.odir);
         end
     elseif strcmp(options.lcm.seeddef,'parcellation')
         options=ea_resolveparcseeds(options,'dMRI');
@@ -78,7 +75,7 @@ switch modality
             gunzip(fullfile(tmp,[uuid,ext]));
             delete(fullfile(tmp,[uuid,ext]));
         end
-        [pth,fn,ext]=ea_niifileparts(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']));
+        [~,~,ext]=ea_niifileparts(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']));
         copyfile(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']),[tmp,'222',ext]);
         if strcmp(ext,'.nii.gz')
             gunzip([tmp,'222',ext]);
@@ -94,6 +91,8 @@ switch modality
         uuid=ea_generate_uuid;
 
         [pth,fn,ext]=fileparts(options.lcm.seeds{1});
+        options.lcm.parcSeedFolder = [pth, filesep];
+        options.lcm.parcSeedName = strrep(fn, ' ', '_');
         switch ext
             case {'.nii','.gz'}
                 parctxt=fullfile(pth,[ea_stripext(fn),'.txt']);
@@ -101,7 +100,6 @@ switch modality
                 options.lcm.seeds{1}=fullfile(pth,[fn,'.nii']);
                 parctxt=fullfile(pth,[fn,'.txt']);
         end
-        options.lcm.odir=[pth,filesep];
         fid=fopen(parctxt);
         A=textscan(fid,'%f %s');
         fclose(fid);

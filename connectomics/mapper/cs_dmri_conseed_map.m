@@ -1,8 +1,4 @@
-function cs_dmri_conseed_map(dfold,cname,sfile,cmd,outputfolder,space,options)
-
-if isempty(outputfolder)
-    outputfolder = ea_getoutputfolder(sfile,cname);
-end
+function cs_dmri_conseed_map(connBaseFolder,connName,sfile,cmd,space,options)
 
 useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
 for s=1:length(sfile)
@@ -21,11 +17,11 @@ for s=1:length(sfile)
         map=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,space]);
     end
 
-    if strcmp(dfold, 'Patient''s fiber tracts')
+    if strcmp(connBaseFolder, 'Patient''s fiber tracts')
         if useNativeSeed
-            cfile=[options.uivatdirs{s},filesep,cname];
+            cfile=[options.uivatdirs{s},filesep,connName];
         else
-            cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,cname];
+            cfile=[options.uivatdirs{s},filesep,'connectomes',filesep,'dMRI',filesep,connName];
         end
 
         if exist(cfile, 'file')
@@ -40,10 +36,10 @@ for s=1:length(sfile)
             redotree=1;
             ctype='mat';
         else % connectome type not supported
-            ea_error(['Connectome file (',cname,') not found!']);
+            ea_error(['Connectome file (',connName,') not found!']);
         end
     else
-        cfile=[dfold,'dMRI',filesep,cname];
+        cfile=[connBaseFolder,'dMRI',filesep,connName];
         if exist([cfile,filesep,'data.mat'],'file') % regular mat file
             if ~exist('fibers','var')
                 [fibers,fidx]=ea_loadfibertracts([cfile,filesep,'data.mat']);
@@ -162,6 +158,7 @@ for s=1:length(sfile)
         end
 
         [~,fn]=fileparts(sfile{s});
+        outputfolder=ea_getoutputfolder(sfile(s),connName);
 
         if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')
             map.img(~(map.img==0))=ea_normal(map.img(~(map.img==0)));

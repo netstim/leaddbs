@@ -14,4 +14,3 @@ if exist('cmd','var')
             base=[base,'fMRI',filesep];
     end
 end
-
