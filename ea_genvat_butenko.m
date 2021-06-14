@@ -497,7 +497,7 @@ for side=0:1
         % Make sure to clean up, useful in manually interruption
         ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
         ea_delete([outputPath, filesep,'Allocated_axons.h5']);
-        ea_delete([outputPath, filesep,'*.csv']);
+        ea_delete(ea_regexpdir(outputPath, '^(?!Current_protocols_).*\.csv$', 0));
         ea_delete([outputPath, filesep,'*.py']);
 
         % Delete this folder in MATLAB since shutil.rmtree may raise
@@ -669,7 +669,7 @@ for side=0:1
     % Clean up
     ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
     ea_delete([outputPath, filesep,'Allocated_axons.h5']);
-    ea_delete([outputPath, filesep,'*.csv']);
+    ea_delete(ea_regexpdir(outputPath, '^(?!Current_protocols_).*\.csv$', 0));
     ea_delete([outputPath, filesep,'*.py']);
 
     % Delete this folder in MATLAB since shutil.rmtree may raise
