@@ -67,6 +67,12 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     }
 
     print("\nInput from ",settings_location, "\n")
+    
+    path = os.path.normpath(settings_location)
+    path.split(os.sep)
+    print('Patient folder: ',path.split(os.sep)[-5])
+    patient_folder = path.split(os.sep)[-5]
+    
     file = h5py.File(str(settings_location), 'r')
 
     #if file.root.settings.current_control[0][0]!=file.root.settings.current_control[0][1]:
@@ -243,7 +249,7 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 
     interactive_mode = int(file['settings']['interactiveMode'][0][0])
 
-    return path_to_patient,index_side,interactive_mode
+    return path_to_patient,index_side,interactive_mode,patient_folder
 
 
 if __name__ == '__main__':
@@ -251,7 +257,7 @@ if __name__ == '__main__':
     oss_dbs_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
     os.chdir(oss_dbs_folder)
 
-    path_to_patient,side,interactive_mode=get_input_from_LeadDBS(*sys.argv[1:])
+    path_to_patient, side, interactive_mode, patient_folder = get_input_from_LeadDBS(*sys.argv[1:])
 
     if os.environ.get('SINGULARITY_NAME'):
         os.environ['PATIENTDIR'] = path_to_patient # Use real path for singularity
@@ -262,15 +268,15 @@ if __name__ == '__main__':
     if path_to_patient!=-1:
         if sys.platform == 'linux':
             if os.environ.get('SINGULARITY_NAME'):
-                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
+                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder)])
             else:
-                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
+                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder)])
         elif sys.platform == 'darwin':
             open_terminal = 'tell application "Terminal" to do script "cd \''+oss_dbs_folder+'\';'
-            open_gui = ' '.join(['python3 GUI_tree_files/AppUI.py', path_to_patient, str(side), str(interactive_mode), ';exit"'])
+            open_gui = ' '.join(['python3 GUI_tree_files/AppUI.py', path_to_patient, str(side), str(interactive_mode),str(patient_folder), ';exit"'])
             output = subprocess.run(['osascript', '-e', open_terminal+open_gui])
         elif sys.platform == 'win32':
-            output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)], shell = True)
+            output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder)], shell = True)
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
