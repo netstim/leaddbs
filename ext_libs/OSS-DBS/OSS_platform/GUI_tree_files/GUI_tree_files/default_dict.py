@@ -103,4 +103,5 @@ d = {
     'external_grounding': True,
     'Stim_side': 0,
     'stretch': 1.0,
+    'patient_folder' : 'John_Doe',   
 }
