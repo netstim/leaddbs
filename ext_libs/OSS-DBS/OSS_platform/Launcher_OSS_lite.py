@@ -374,7 +374,7 @@ def run_full_model(master_dict):
 
             if ["Parallel_comp_interrupted"]==1:
                 import os
-                if not (os.path.isfile('Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile('Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations
+                if not (os.path.isfile(os.environ['PATIENTDIR']+'Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile(os.environ['PATIENTDIR']+'Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations
                     print("There were no previous computations, 'Parallel_comp_interrupted' is put to 0")
                     ["Parallel_comp_interrupted"]==0
 
