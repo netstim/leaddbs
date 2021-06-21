@@ -269,9 +269,8 @@ def get_field_with_floats(external_grounding,mesh_sol,active_index,Domains,subdo
                 Phi_ROI[inx]=phi_r_sol(pnt)/J_real
 
             else:
-                if frequenc==130.0:
-                    print("Couldn't probe the potential at the point ",Vertices_array[inx,0],Vertices_array[inx,1],Vertices_array[inx,2])
-                    print("check the neuron array, exiting....")
+                print("Couldn't probe the potential at the point ",Vertices_array[inx,0],Vertices_array[inx,1],Vertices_array[inx,2])
+                print("check the neuron array, exiting....")
                 raise SystemExit
 
 
@@ -303,11 +302,11 @@ def compute_fields_from_unit_currents(Field_calc_param,Solver_type,Vertices,Doma
 
 
     if Field_calc_param.element_order==1:
-        if Field_calc_param.sine_freq==130.0:
+        if Field_calc_param.sine_freq==Field_calc_param.signal_freq:
             print("Selected element_order (1st) is too low for current-controlled stimulation, increasing to 2nd")
         Field_calc_param.element_order=2
 
-    if Field_calc_param.sine_freq==130.0:
+    if Field_calc_param.sine_freq==Field_calc_param.signal_freq:
         print("Computing field with superposition on mesh with ",Field_calc_param.mesh.num_cells(), " elements")
         print(len(Domains.fi)," computations are required for the iteration")
 
