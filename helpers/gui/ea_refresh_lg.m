@@ -184,7 +184,7 @@ end
 t=datetime('now');
 t.Format='uuuMMddHHmmss';
 t=str2double(char(t));
-if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
+if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
     % patient specific part:
     if ~isempty(M.patient.list)
         disp('Loading localizations...');
