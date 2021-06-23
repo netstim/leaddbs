@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 09-Jun-2021 14:57:03
+% Last Modified by GUIDE v2.5 23-Jun-2021 14:06:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -621,17 +621,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in addvarbutton.
-function addvarbutton_Callback(hObject, eventdata, handles)
+% --- Executes on button press in removeallvarbutton.
+function removeallvarbutton_Callback(hObject, eventdata, handles)
 %Temp name but actually this clears ALL scores
 answer = questdlg('This action will delete all variables, are you sure you would like to continue?', ...
 	'Yes','No!');
 switch answer
     case 'Yes'
         M = getappdata(gcf, 'M');
-        ea_write_scores(M,'','','','all')
+        %deletes scores from patient directory
+        ea_write_scores(M,'','','','all');
         if isfield(M,'clinical')
-           M = rmfield(M,'clinical');
+           M.clinical.labels = [];
+           M.clinical.vars = [];
         end
         setappdata(gcf,'M',M);
         ea_refresh_lg(handles);
@@ -641,7 +643,7 @@ end
 
 
 %function addvarbutton_Callback(hObject, eventdata, handles)
-    % hObject    handle to addvarbutton (see GCBO)
+    % hObject    handle to removeallvarbutton (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
 %M=getappdata(gcf,'M');
@@ -2242,3 +2244,13 @@ else
 end
 ea_refresh_lg(handles);
 ea_busyaction('off',handles.leadfigure,'group');
+
+
+% --- Executes on key press with focus on removeallvarbutton and none of its controls.
+function removeallvarbutton_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to removeallvarbutton (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
