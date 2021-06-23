@@ -1839,24 +1839,44 @@ end
 M=getappdata(handles.leadfigure,'M');
 
 folders=ea_uigetdir(ea_startpath,'Select Patient folders..');
-M.patient.list=[M.patient.list;folders'];
-M.patient.group=[M.patient.group;ones(length(folders),1)];
-options=ea_setopts_local(handles);
-
-tS=ea_initializeS(['gs_',M.guid],options,handles);
-
-if isempty(M.S)
-    M=rmfield(M,'S');
-    M.S(1:length(folders))=tS;
-else
+%if you want to add only one patient, e.g., 
+%this should give you the patient below which your new patient will be inserted;
+selected_pt = get(handles.patientlist,'Value');
+if length(folders) == 1  %adding only one patient, at a specific location.
+    %%save newly added entry to that position
+    M.patient.list = {M.patient.list{1:selected_pt},folders{1},M.patient.list{selected_pt+1:end}}';
+    M.patient.group = [M.patient.group(1:selected_pt);1;M.patient.group(selected_pt+1:end)];
+    options=ea_setopts_local(handles);
+    tS=ea_initializeS(['gs_',M.guid],options,handles);
     try
-        M.S(end+1:end+length(folders))=tS;
+        M.S = [M.S(1:selected_pt);tS;M.S(selected_pt+1:end)];
     catch
         tS.volume=[0,0];
         tS.sources=[1:4];
-        M.S(end+1:end+length(folders))=tS;
+        M.S = [M.S(1:selected_pt);tS;M.S(selected_pt+1:end)];
+    end   
+else
+    M.patient.list=[M.patient.list;folders'];
+    M.patient.group=[M.patient.group;ones(length(folders),1)];
+    options=ea_setopts_local(handles);
+    
+    tS=ea_initializeS(['gs_',M.guid],options,handles);
+    
+    if isempty(M.S)
+        M=rmfield(M,'S');
+        M.S(1:length(folders))=tS;
+    else
+        try
+            M.S(end+1:end+length(folders))=tS;
+        catch
+            tS.volume=[0,0];
+            tS.sources=[1:4];
+            M.S(end+1:end+length(folders))=tS;
+        end
     end
 end
+
+ 
 
 setappdata(handles.leadfigure,'M',M);
 setappdata(handles.leadfigure,'S',M.S);
