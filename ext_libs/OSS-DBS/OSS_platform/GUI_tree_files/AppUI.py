@@ -24,7 +24,7 @@ class MainWindow(Functionalities):
         self.ui.setupUi(self.main_win)
 
         self.path_to_patient=path_to_patient
-        self.patient_folder = int(patient_folder)
+        self.patient_folder = patient_folder
         self.index_side=int(index_side)
         self.interactive_mode=int(interactive_mode)
 
