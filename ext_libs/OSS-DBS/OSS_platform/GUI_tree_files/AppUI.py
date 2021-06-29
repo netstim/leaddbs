@@ -437,7 +437,7 @@ class MainWindow(Functionalities):
         # from pop_up_control.dictionaries import dict_cpe_active, dict_external_neuron_array, dict_full_field_ifft, \
         #     dict_mesh_refinement
         output_dict = Dictionary(self).output_dict()
-        output_dict['patient_folder'] = self.patient_folder
+        output_dict['patient_folder'] = str(self.patient_folder)
         output_dict['Stim_side'] = self.index_side
         output_dict['stretch'] = self.stretch
 
