@@ -581,6 +581,11 @@ for side=0:1
         axonState = ea_regexpdir([outputPath, filesep, 'Results_', sideCode], 'Axon_state.*\.mat', 0);
         if ~isempty(axonState)
             for f=1:length(axonState)
+                % Determine tract name
+                if startsWith(settings.connectome, 'Multi-Tract: ')
+                    tractName = regexp(axonState{f},'(?<=Axon_state_)(.*)(?=\.mat)', 'match', 'once');
+                end
+
                 % Get fiber id and state from OSS-DBS result
                 ftr = load(axonState{f});
                 [fibId, ind] = unique(ftr.fibers(:,4));
@@ -588,8 +593,8 @@ for side=0:1
 
                 % Restore full length fiber (as in original filtered fiber)
                 if startsWith(settings.connectome, 'Multi-Tract: ')
-                    ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat'], settings.connectomeTractNames{f});
-                    ftr = ftr.(settings.connectomeTractNames{f});
+                    ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat'], tractName);
+                    ftr = ftr.(tractName);
                 else
                     ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
                 end
@@ -614,7 +619,7 @@ for side=0:1
 
                 % Save result for visualization
                 if startsWith(settings.connectome, 'Multi-Tract: ')
-                    fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '_', settings.connectomeTractNames{f}, '.mat'];
+                    fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
                 else
                     fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
                 end
@@ -641,7 +646,7 @@ for side=0:1
 
                     % Save MNI space fiber activation result
                     if startsWith(settings.connectome, 'Multi-Tract: ')
-                        fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '_', settings.connectomeTractNames{f}, '.mat'];
+                        fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
                     else
                         fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
                     end
