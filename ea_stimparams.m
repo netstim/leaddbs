@@ -3512,6 +3512,6 @@ if hObject.Value
     options = getappdata(handles.stimfig, 'options');
     numContacts = options.elspec.numel;
     stimLabel = getappdata(handles.stimfig, 'stimlabel');
-    stimFolder = [options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimLabel];
+    stimFolder = [options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(~handles.estimateInTemplate.Value),stimLabel];
     ea_addStimSet(numContacts, stimFolder, hObject);
 end
