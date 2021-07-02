@@ -253,35 +253,11 @@ end
 settings.Rotation_Z = 0.0;
 
 %% Stimulation Information
-source = nan(eleNum,1);
-for i=1:eleNum
-    if any(S.amplitude{i})
-        source(i) = find(S.amplitude{i},1);
-    end
-end
+% Set stimSetMode flag
+settings.stimSetMode = options.stimSetMode;
 
-% 0 - Voltage Control; 1 - Current Control
+% Initialize current control flag
 settings.current_control = nan(eleNum,1);
-for i=1:eleNum
-   	switch i
-        case 1
-            sideCode = 'R';
-        case 2
-            sideCode = 'L';
-    end
-
-    if ~isnan(source(i))
-        settings.current_control(i) = uint8(S.([sideCode, 's', num2str(source(i))]).va==2);
-    end
-end
-
-% Get stimulation amplitude
-amp = nan(eleNum,1);
-for i=1:eleNum
-    if ~isnan(source(i))
-        amp(i) = S.amplitude{i}(source(i));
-    end
-end
 
 % Initalize Phi vector
 settings.Phi_vector = nan(eleNum,options.elspec.numel);
@@ -289,30 +265,63 @@ settings.Phi_vector = nan(eleNum,options.elspec.numel);
 % Initialize grounding
 settings.Case_grounding = zeros(eleNum,1);
 
-for i = 1:eleNum
-    switch i
-        case 1
-            sideCode = 'R';
-            cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
-        case 2
-            sideCode = 'L';
-            cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
+% Get the stimulation parameters from S in case stimSetMode is 0, otherwise
+% they will be loaded directly from the Current_protocols_[0|1].csv files
+if ~settings.stimSetMode
+    source = nan(eleNum,1);
+    for i=1:eleNum
+        if any(S.amplitude{i})
+            source(i) = find(S.amplitude{i},1);
+        end
     end
 
-    if ~isnan(source(i))
-        stimSource = S.([sideCode, 's', num2str(source(i))]);
-        for cnt = 1:options.elspec.numel
-            if S.activecontacts{i}(cnt)
-                switch stimSource.(cntlabel{cnt}).pol
-                    case 1 % Negative, cathode
-                        settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
-                    case 2 % Postive, anode
-                        settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+    % 0 - Voltage Control; 1 - Current Control
+    for i=1:eleNum
+        switch i
+            case 1
+                sideCode = 'R';
+            case 2
+                sideCode = 'L';
+        end
+
+        if ~isnan(source(i))
+            settings.current_control(i) = uint8(S.([sideCode, 's', num2str(source(i))]).va==2);
+        end
+    end
+
+    % Get stimulation amplitude
+    amp = nan(eleNum,1);
+    for i=1:eleNum
+        if ~isnan(source(i))
+            amp(i) = S.amplitude{i}(source(i));
+        end
+    end
+
+    for i = 1:eleNum
+        switch i
+            case 1
+                sideCode = 'R';
+                cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
+            case 2
+                sideCode = 'L';
+                cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
+        end
+
+        if ~isnan(source(i))
+            stimSource = S.([sideCode, 's', num2str(source(i))]);
+            for cnt = 1:options.elspec.numel
+                if S.activecontacts{i}(cnt)
+                    switch stimSource.(cntlabel{cnt}).pol
+                        case 1 % Negative, cathode
+                            settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                        case 2 % Postive, anode
+                            settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                    end
                 end
             end
-        end
-        if stimSource.case.perc == 100
-            settings.Case_grounding(i) = 1;
+            if stimSource.case.perc == 100
+                settings.Case_grounding(i) = 1;
+            end
         end
     end
 end
@@ -427,9 +436,6 @@ if settings.calcAxonActivation
         save([settings.connectomePath, filesep, 'data2.mat'], '-struct', 'data2', '-v7.3');
     end
 end
-
-% Set stimSetMode flag
-settings.stimSetMode = options.stimSetMode;
 
 % Interactive mode setting
 settings.interactiveMode = options.prefs.machine.vatsettings.butenko_interactive;
