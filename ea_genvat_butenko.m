@@ -329,6 +329,13 @@ end
 % Threshold for Astrom VTA (V/mm)
 settings.Activation_threshold_VTA = options.prefs.machine.vatsettings.butenko_ethresh;
 
+% Set stimulation protocol
+if settings.stimSetMode
+    stimProtocol = ea_regexpdir(outputPath, '^Current_protocols_\d\.csv$', 0);
+else
+    stimProtocol = S;
+end
+
 % Axon activation setting
 settings.calcAxonActivation = options.prefs.machine.vatsettings.butenko_calcAxonActivation;
 if settings.calcAxonActivation
@@ -352,9 +359,9 @@ if settings.calcAxonActivation
 
         % Filter fibers based on the spherical ROI
         if options.native
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2, [directory, options.prefs.prenii_unnormalized]);
+        	fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [directory, options.prefs.prenii_unnormalized]);
         else
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
+            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
         end
 
         % Filter fibers based on the minimal length
@@ -412,7 +419,7 @@ if settings.calcAxonActivation
             end
 
             % Filter fibers based on the spherical ROI
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, S, 'kuncel', 2);
+            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2);
 
             % Filter fibers based on the minimal length
             fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
