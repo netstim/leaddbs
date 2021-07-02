@@ -7,7 +7,7 @@ if nargin==2
 elseif nargin==3
     S=varargin{1};
     options=varargin{2};
-    lgfigure=varargin{3};
+    hFigure=varargin{3};
 elseif nargin==1 && ischar(varargin{1}) % return name of method.
     varargout{1} = 'OSS-DBS (Butenko 2020)';
     return
@@ -428,6 +428,9 @@ if settings.calcAxonActivation
     end
 end
 
+% Set stimSetMode flag
+settings.stimSetMode = options.stimSetMode;
+
 % Interactive mode setting
 settings.interactiveMode = options.prefs.machine.vatsettings.butenko_interactive;
 
@@ -526,8 +529,8 @@ for side=0:1
     end
 
     % Get resultfig handle
-    if exist('lgfigure', 'var')
-        resultfig = getappdata(lgfigure,'resultfig');
+    if exist('hFigure', 'var')
+        resultfig = getappdata(hFigure,'resultfig');
     end
 
     if isfile([outputPath, filesep, 'success_', sideCode, '.txt'])

@@ -1114,6 +1114,13 @@ for el=1:length(elstruct)
     end
 
     if strcmp(S.model, 'OSS-DBS (Butenko 2020)') % For OSS-DBS, side iteration is within the genvat function
+        % Set stimSetMode flag to options
+        % (avoid additional parameter or setting appdata, to make it scriptable)
+        if handles.addStimSet.Value
+            options.stimSetMode = 1;
+        else
+            options.stimSetMode = 0;
+        end
         if options.prefs.machine.vatsettings.butenko_calcAxonActivation
             feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
             ea_busyaction('off',handles.stimfig,'stim');
