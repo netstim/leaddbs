@@ -107,7 +107,7 @@ for group=groups
             I=[I;I];
         end
     end
-    
+
     for side=1:numel(gfibsval)
         % check connthreshold
         switch obj.statmetric
@@ -169,7 +169,7 @@ for group=groups
                     ea_dispercent(1,'end');
                     fprintf('\b');
                     warning('on', 'stats:classreg:regr:lmeutils:StandardLinearMixedModel:Message_PerfectFit');
-                    
+
                 else
                     % no covariates exist:
                     allvals=repmat(I(gpatsel,side)',size(gfibsval{side}(:,gpatsel),1),1); % improvement values (taken from Lead group file or specified in line 12).
@@ -182,7 +182,7 @@ for group=groups
                     if obj.showsignificantonly
                         pvals{group,side}=ps';
                     end
-                    
+
                     %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                 end
             case 2 % correlations
@@ -191,7 +191,7 @@ for group=groups
                 else
                     conventionalcorr=0;
                 end
-                
+
                 nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
                 invals=gfibsval{side}(nonempty,gpatsel)';
                 if ~isempty(invals)
@@ -204,14 +204,14 @@ for group=groups
                             end
                             usecovars=[usecovars,thiscv];
                         end
-                        if obj.showsignificantonly 
+                        if obj.showsignificantonly
                             [outvals,outps]=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
                         else % no need to calc p-val here
                             outvals=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
                         end
                     else
                         if conventionalcorr
-                            if obj.showsignificantonly 
+                            if obj.showsignificantonly
                                 [outvals,outps]=corr(invals,I(gpatsel,side),'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
                             else % no need to calc p-val here
                                 outvals=corr(invals,I(gpatsel,side),'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
@@ -222,98 +222,104 @@ for group=groups
                             end
                             switch lower(obj.corrtype)
                                 case 'bend'
-                                    if obj.showsignificantonly 
+                                    if obj.showsignificantonly
                                         [outvals,outps]=ea_bendcorr(invals,I(gpatsel,side)); % generate optimality values on all but left out patients
                                     else % no need to calc p-val here
                                         outvals=ea_bendcorr(invals,I(gpatsel,side)); % generate optimality values on all but left out patients
                                     end
                                 case 'skipped pearson'
-                                    if obj.showsignificantonly 
+                                    if obj.showsignificantonly
                                         ea_error('Significance not implemented for Skipped correlations');
                                     else
                                         outvals=ea_skipped_correlation(full(invals),I(gpatsel,side),'Pearson'); % generate optimality values on all but left out patients
                                     end
                                 case 'skipped spearman'
-                                    if obj.showsignificantonly 
+                                    if obj.showsignificantonly
                                         ea_error('Significance not implemented for Skipped correlations');
                                     else
                                         outvals=ea_skipped_correlation(full(invals),I(gpatsel,side),'Spearman'); % generate optimality values on all but left out patients
                                     end
                             end
-                            
+
                         end
                     end
-                    
+
                     vals{group,side}(nonempty)=outvals;
                     if exist('outps','var') % only calculated if testing for significance.
                         pvals{group,side}(nonempty)=outps;
                     end
                 end
+
             case 3 % OSS-DBS pathway activations & Ttests
                 keyboard
+
             case 4 % Dice Coeff / VTA for binary variables
-                
+
                 nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
                 invals=gfibsval{side}(nonempty,gpatsel)';
+                vals{group,side}=nan(size(gfibsval{side},1),1);
                 if ~isempty(invals)
-                    
-                    ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
-                    % restore nans
-                    ImpBinary(isnan(I(gpatsel,side)))=nan;
-                    
-                    
-                    DC=zeros(size(invals,2),1); % calculate dice coefficients between each fiber (conn / unconn to each VTA) and (binary) improvement vector
-                    for fib=1:size(invals,2)
-                        DC(fib) = 2*(ea_nansum(invals(:,fib).*ImpBinary))/ea_nansum(invals(:,fib) + ImpBinary);
-                    end
-                    if obj.showsignificantonly 
-                        ea_error('Calculating significance for Dice coefficients is not possible');
-                    end
-                    vals{group,side}(nonempty)=DC;
+
+                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                        % restore nans
+                        ImpBinary(isnan(I(gpatsel,side)))=nan;
+
+
+                        DC=zeros(size(invals,2),1); % calculate dice coefficients between each fiber (conn / unconn to each VTA) and (binary) improvement vector
+                        for fib=1:size(invals,2)
+                            DC(fib) = 2*(ea_nansum(invals(:,fib).*ImpBinary))/ea_nansum(invals(:,fib) + ImpBinary);
+                        end
+
+
+                        vals{group,side}(nonempty)=DC;
                 end
-                
+
             case 5 % Reverse t-tests with efields for binary variables
+
                 nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
                 invals=gfibsval{side}(nonempty,gpatsel)';
+                vals{group,side}=nan(size(gfibsval{side},1),1);
                 if ~isempty(invals)
-                    ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
-                    % restore nans
-                    ImpBinary(isnan(I(gpatsel,side)))=nan;
-                    upSet=invals(ImpBinary==1,:);
-                    downSet=invals(ImpBinary==0,:);
-                    
-                    if obj.showsignificantonly || obj.subscore.showsignificantonly
-                        [~,ps,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
-                        outvals=stats.tstat';
-                        outps=ps;
-                        %outvals=ea_corrsignan(outvals,ps,obj);
-                    else % no need to calc p-val here
-                        [~,~,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
-                        outvals=stats.tstat';
-                    end
-                    
+
+                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                        % restore nans
+                        ImpBinary(isnan(I(gpatsel,side)))=nan;
+
+
+                        upSet=invals(ImpBinary==1,:);
+                        downSet=invals(ImpBinary==0,:);
+
+                        if obj.showsignificantonly
+                            [~,ps,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
+                            outvals=stats.tstat';
+
+                            outvals=ea_corrsignan(outvals,ps,obj);
+                        else % no need to calc p-val here
+                            [~,~,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
+                            outvals=stats.tstat';
+                        end
+
                     vals{group,side}(nonempty)=outvals;
-                    pvals{group,side}(nonempty)=outps;
                 end
-                
+
             case 6 % Plain Connection
                 vals{group,side} = sumgfibsval/length(gpatsel);
                 vals{group,side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)))=nan;
-                if obj.showsignificantonly 
+                if obj.showsignificantonly
                     ea_error('Calculating significance does not make sense (plain connections mode)');
                 end
         end
     end
 end
-    
+
 % close group loop to test for significance across all tests run:
 
-if obj.showsignificantonly 
+if obj.showsignificantonly
     vals=ea_corrsignan(vals,pvals,obj);
 end
 
 % reopen group loop for thresholding etc:
-        
+
 for group=groups
     for side=1:numel(gfibsval)
         fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));
@@ -341,7 +347,7 @@ for group=groups
                 else
                     posrange = posvals(1) - posvals(end);
                     posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-                    
+
                     if posrange == 0
                         posthresh = posthresh - eps*10;
                     end
@@ -352,25 +358,25 @@ for group=groups
                 else
                     posrange = posvals(1) - posvals(end);
                     posthresh = posvals(1) - obj.subscore.showposamount(group,side)/100 * posrange;
-                    
+
                     if posrange == 0
                         posthresh = posthresh - eps*10;
                     end
                 end
             end
-        
+
         else
             if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
                 posthresh = inf;
             else
                 posrange = posvals(1) - posvals(end);
                 posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-                
+
                 if posrange == 0
                     posthresh = posthresh - eps*10;
                 end
             end
-  
+
         end
         if dosubscores || dogroups
             if obj.subscore.special_case
@@ -379,7 +385,7 @@ for group=groups
                 else
                     negrange = negvals(1) - negvals(end);
                     negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-                    
+
                     if negrange == 0
                         negthresh = negthresh + eps*10;
                     end
@@ -390,7 +396,7 @@ for group=groups
                 else
                     negrange = negvals(1) - negvals(end);
                     negthresh = negvals(1) - obj.subscore.shownegamount(group,side)/100 * negrange;
-                    
+
                     if negrange == 0
                         negthresh = negthresh + eps*10;
                     end
@@ -402,7 +408,7 @@ for group=groups
             else
                 negrange = negvals(1) - negvals(end);
                 negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-                
+
                 if negrange == 0
                     negthresh = negthresh + eps*10;
                 end
@@ -414,7 +420,7 @@ for group=groups
         vals{group,side}(remove)=[];
         fibcell{group,side}(remove)=[];
         usedidx{group,side}(remove)=[];
-        
+
     end
 end
 
