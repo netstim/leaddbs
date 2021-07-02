@@ -9,7 +9,7 @@ if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
     stimProtocol = cellfun(@(f) table2array(readtable(f,'NumHeaderLines',1)), stimProtocol, 'Uni', 0)';
     activeContacts = cell(size(stimProtocol));
     for i=1:length(activeContacts)
-        activeContacts{i} = find(~isnan(max(stimProtocol{i})));
+        activeContacts{i} = find(~isnan(max(stimProtocol{i}))); % Find contact with stimulation input
     end
 else % normal mode
     if ischar(S) && isfile(S) % stimparameters.mat provided
@@ -32,7 +32,7 @@ end
 if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
     stimAmplitudes = cell(size(stimProtocol));
     for i=1:length(stimAmplitudes)
-        stimAmplitudes{i} = max(stimProtocol{i});
+        stimAmplitudes{i} = max(abs(stimProtocol{i})); % Use maximum absolute amplitude
     end
 else % normal mode
     stimAmplitudes = cell(size(S.amplitude));
