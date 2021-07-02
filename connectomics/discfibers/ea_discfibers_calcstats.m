@@ -54,11 +54,13 @@ for group=groups
     for side=1:numel(gfibsval)
         % check connthreshold
         switch obj.statmetric
-            case 1
+            case {1,4}
                 sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
-            case 2
+            case {2,5}
                 sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
             case 3
+                keyboard % OSS-DBS not yet implemented.
+            case 6
                 sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
@@ -66,7 +68,7 @@ for group=groups
         gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),:)=0;
         % only in case of VTAs (given two-sample-t-test statistic) do we
         % need to also exclude if tract is connected to too many VTAs:
-        if obj.statmetric==1
+        if ismember(obj.statmetric,[1,4])
             gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),:)=0;
         end
 
@@ -189,7 +191,63 @@ for group=groups
 
                     vals{group,side}(nonempty)=outvals;
                 end
-            case 3 % Plain Connection
+            case 3 % OSS-DBS pathway activations & Ttests
+                keyboard
+            case 4 % Dice Coeff / VTA for binary variables
+                
+                nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
+                invals=gfibsval{side}(nonempty,gpatsel)';
+                vals{group,side}=nan(size(gfibsval{side},1),1);
+                if ~isempty(invals)
+                        
+                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                        % restore nans
+                        ImpBinary(isnan(I(gpatsel,side)))=nan;
+ 
+
+                        DC=zeros(size(invals,2),1); % calculate dice coefficients between each fiber (conn / unconn to each VTA) and (binary) improvement vector
+                        for fib=1:size(invals,2)
+                            DC(fib) = 2*(ea_nansum(invals(:,fib).*ImpBinary))/ea_nansum(invals(:,fib) + ImpBinary);
+                        end
+                        
+                        
+                        vals{group,side}(nonempty)=DC;
+                end
+                
+                
+                
+                
+            case 5 % Reverse t-tests with efields for binary variables
+
+                nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
+                invals=gfibsval{side}(nonempty,gpatsel)';
+                vals{group,side}=nan(size(gfibsval{side},1),1);
+                if ~isempty(invals)
+                        
+                        ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                        % restore nans
+                        ImpBinary(isnan(I(gpatsel,side)))=nan;
+                      
+                        
+                        upSet=invals(ImpBinary==1,:);
+                        downSet=invals(ImpBinary==0,:);
+                                    
+                        if obj.showsignificantonly
+                            [~,ps,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
+                            outvals=stats.tstat';
+                            
+                            outvals=ea_corrsignan(outvals,ps,obj);
+                        else % no need to calc p-val here
+                            [~,~,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
+                            outvals=stats.tstat';
+                        end
+                    
+                    vals{group,side}(nonempty)=outvals;
+                end
+                
+               
+                
+            case 6 % Plain Connection
                 vals{group,side} = sumgfibsval/length(gpatsel);
                 vals{group,side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)))=nan;
         end
