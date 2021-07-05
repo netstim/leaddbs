@@ -3513,5 +3513,6 @@ if hObject.Value
     numContacts = options.elspec.numel;
     stimLabel = getappdata(handles.stimfig, 'stimlabel');
     stimFolder = [options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(~handles.estimateInTemplate.Value),stimLabel];
+    ea_mkdir(stimFolder);
     ea_addStimSet(numContacts, stimFolder, hObject);
 end
