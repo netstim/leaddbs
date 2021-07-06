@@ -68,6 +68,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     self.addSeparator()
     self.hardenChangesCheckBox = qt.QCheckBox("Harden Changes")
+    self.hardenChangesCheckBox.checked = True
     self.addWidget(self.hardenChangesCheckBox)
 
     #
@@ -105,7 +106,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       folderNode = folderNodes.GetItemAsObject(i)
       if 'atlas' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(folderNode)):
         return
-    ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), 'DISTAL Minimal (Ewert 2017)'))
+    ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), 'DISTAL Minimal (Ewert 2017)', 'atlas_index.mat'))
 
 
   def initFromRaw(self):
@@ -179,7 +180,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
     # load atlas
     if atlasName is not None and os.path.isdir(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName)):
-      ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName))
+      ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName, 'atlas_index.mat'))
 
     # init output
     outputNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')

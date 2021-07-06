@@ -21,6 +21,8 @@
 #include <QListWidgetItem>
 #include <QDir>
 #include <QDirIterator>
+#include <QDateTime>
+#include <QTimer>
 
 // SlicerQt includes
 #include "qSlicerAlphaOmegaModuleWidget.h"
@@ -40,6 +42,7 @@
 
 // STD
 #include <cmath> // NAN
+#include <algorithm> // find
 
 // vtkSlicerLogic includes
 #include "vtkSlicerAlphaOmegaLogic.h"
@@ -63,6 +66,7 @@ public:
   qAlphaOmegaStatusThread* alphaOmegaStatusThread = new qAlphaOmegaStatusThread;
   vtkMRMLScriptedModuleNode* parameterNode = nullptr;
   vtkWeakPointer<vtkMRMLAlphaOmegaChannelNode> CurrentChannelNode;
+  QTimer* updateChannelsTablesTimer;
 };
 
 //-----------------------------------------------------------------------------
@@ -126,6 +130,10 @@ void qSlicerAlphaOmegaModuleWidget::setup()
   // Singleton Parameter Node
   d->parameterNode = d->logic()->getParameterNode();
 
+  // Timer
+  d->updateChannelsTablesTimer = new QTimer(this);
+  QObject::connect(d->updateChannelsTablesTimer, SIGNAL(timeout()), this, SLOT(updateChannelsTables()));
+
 }
 
 //-----------------------------------------------------------------------------
@@ -153,16 +161,17 @@ void qSlicerAlphaOmegaModuleWidget::onConnectPushButton()
     this->populateChannelNamesComboBox();
     this->setAndCreateRootSavePath();
     d->alphaOmegaStatusThread->start();
+    d->updateChannelsTablesTimer->start(100);
   }
   else
   {
     d->connectPushButton->setText("Connect");
     d->distanceToTargetLabel->setText("-");
     d->channelsNamesComboBox->clear();
+    d->updateChannelsTablesTimer->stop();
   }
 
   this->setConnectingFeedback(false);
-
 }
 
 //-----------------------------------------------------------------------------
@@ -188,7 +197,8 @@ void qSlicerAlphaOmegaModuleWidget::onTestPushButton()
   d->logic()->sayHelloWorld();
   this->setAndCreateRootSavePath();
   this->populateChannelNamesComboBox();
-  // d->alphaOmegaStatusThread->start();
+  d->alphaOmegaStatusThread->start();
+  d->updateChannelsTablesTimer->start(100);
 }
 
 //-----------------------------------------------------------------------------
@@ -201,7 +211,6 @@ void qSlicerAlphaOmegaModuleWidget::onConnectionStatusModified(bool* deviceIsCon
     d->connectPushButton->animateClick();
   }
 }
-
 
 //-----------------------------------------------------------------------------
 void qSlicerAlphaOmegaModuleWidget::onDistanceToTargetModified(float* distanceToTargetMiliM)
@@ -222,7 +231,6 @@ void qSlicerAlphaOmegaModuleWidget::onDistanceToTargetModified(float* distanceTo
 }
 
 
-
 //-----------------------------------------------------------------------------
 void qSlicerAlphaOmegaModuleWidget::onDistanceToTargetTransformAdded(vtkMRMLNode * node)
 {
@@ -239,7 +247,20 @@ void qSlicerAlphaOmegaModuleWidget::onDistanceToTargetTransformModified(vtkMRMLN
   d->parameterNode->SetNodeReferenceID("DistanceToTargetTransform", nodeID);
 }
 
-
+//-----------------------------------------------------------------------------
+void qSlicerAlphaOmegaModuleWidget::updateChannelsTables()
+{
+  Q_D(qSlicerAlphaOmegaModuleWidget);
+  for (int i=0; i<d->logic()->GetMRMLScene()->GetNumberOfNodesByClass("vtkMRMLAlphaOmegaChannelNode"); i++)
+  {
+    vtkMRMLAlphaOmegaChannelNode* alphaOmegaChannelNode =  vtkMRMLAlphaOmegaChannelNode::SafeDownCast(d->logic()->GetMRMLScene()->GetNthNodeByClass(i,"vtkMRMLAlphaOmegaChannelNode"));
+    vtkMRMLTableNode* channelTableNode = vtkMRMLTableNode::SafeDownCast(alphaOmegaChannelNode->GetChannelPreviewTableNode());
+    if (channelTableNode != nullptr && alphaOmegaChannelNode->GetGatheringData())
+    {
+      channelTableNode->Modified();
+    }
+  }
+}
 
 //-----------------------------------------------------------------------------
 void qSlicerAlphaOmegaModuleWidget::onAlphaOmegaChannelNodeChanged(vtkMRMLNode * node)
@@ -268,13 +289,11 @@ void qSlicerAlphaOmegaModuleWidget::updateGUIFromMRML()
   d->bufferSizeSpinBox->setValue(d->CurrentChannelNode->GetChannelBufferSizeMiliSeconds());
   d->previewLengthSpinBox->setValue(d->CurrentChannelNode->GetChannelPreviewLengthMiliSeconds());
   d->previewTableNodeComboBox->setCurrentNode(vtkMRMLTableNode::SafeDownCast(d->CurrentChannelNode->GetChannelPreviewTableNode()));
-  d->rootSavePathLabel->setText(QString::fromStdString(d->CurrentChannelNode->GetChannelRootSavePath()));
-  d->fullSavePathLabel->setText(QString::fromStdString(d->CurrentChannelNode->GetChannelFullSavePath()));
   d->channelActiveCheckBox->setChecked(d->CurrentChannelNode->GetGatheringData());
+  d->channelActiveCheckBox->setEnabled(strcmp(d->channelsNamesComboBox->currentText().toLocal8Bit().constData(),"") != 0);
 
   this->modifyingGUI = false;
 }
-
 
 
 //-----------------------------------------------------------------------------
@@ -286,7 +305,14 @@ void qSlicerAlphaOmegaModuleWidget::updateChannelNodeFromGUI()
   
   vtkMRMLAlphaOmegaChannelNode* alphaOmegaChannelNode =  vtkMRMLAlphaOmegaChannelNode::SafeDownCast(d->alphaOmegaChannelComboBox->currentNode());
   
-  alphaOmegaChannelNode->SetChannelNameAndID(d->channelsNamesComboBox->currentText().toLocal8Bit().constData());
+  const char* newChannelName = d->channelsNamesComboBox->currentText().toLocal8Bit().constData();
+  if (this->channelNameAlreadyInitialized(newChannelName) && strcmp(newChannelName,alphaOmegaChannelNode->GetChannelName().c_str()) != 0)
+  {
+    newChannelName = "";
+    d->channelsNamesComboBox->setCurrentText(QString::fromUtf8(newChannelName));
+  }
+
+  alphaOmegaChannelNode->SetChannelNameAndID(newChannelName);
   alphaOmegaChannelNode->SetChannelSamplingRate(d->samplingRateSpinBox->value());
   alphaOmegaChannelNode->SetChannelGain(d->gainSpinBox->value());
   alphaOmegaChannelNode->SetChannelBitResolution(d->bitResolutionSpinBox->value());
@@ -294,7 +320,31 @@ void qSlicerAlphaOmegaModuleWidget::updateChannelNodeFromGUI()
   alphaOmegaChannelNode->SetChannelPreviewLengthMiliSeconds(d->previewLengthSpinBox->value());
   alphaOmegaChannelNode->SetChannelPreviewTableNode(vtkMRMLTableNode::SafeDownCast(d->previewTableNodeComboBox->currentNode()));
 
+  this->updateGUIFromMRML();
+}
 
+//-----------------------------------------------------------------------------
+bool qSlicerAlphaOmegaModuleWidget::channelNameAlreadyInitialized(const char* channelName)
+{
+  std::vector<std::string> initializedChannelsNames = this->getInitializedChannelsNames();
+  if (std::find(initializedChannelsNames.begin(), initializedChannelsNames.end(), channelName) != initializedChannelsNames.end())
+  {
+    return true;
+  }
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+std::vector<std::string> qSlicerAlphaOmegaModuleWidget::getInitializedChannelsNames()
+{
+  Q_D(qSlicerAlphaOmegaModuleWidget);
+  std::vector<std::string> initializedChannelsNames;
+  for (int i=0; i<d->logic()->GetMRMLScene()->GetNumberOfNodesByClass("vtkMRMLAlphaOmegaChannelNode"); i++)
+  {
+    vtkMRMLAlphaOmegaChannelNode* alphaOmegaChannelNode =  vtkMRMLAlphaOmegaChannelNode::SafeDownCast(d->logic()->GetMRMLScene()->GetNthNodeByClass(i,"vtkMRMLAlphaOmegaChannelNode"));
+    initializedChannelsNames.push_back(alphaOmegaChannelNode->GetChannelName());
+  }
+  return initializedChannelsNames;
 }
 
 //-----------------------------------------------------------------------------
@@ -342,14 +392,6 @@ void qSlicerAlphaOmegaModuleWidget::populateChannelNamesComboBox()
 }
 
 //-----------------------------------------------------------------------------
-std::string getYearMonthDayString()
-{
-  auto t = std::time(nullptr);
-  std::ostringstream oss;
-  oss << std::put_time(std::localtime(&t), "%Y%m%d");
-  return oss.str();
-}
-
 int getNumberOfSubDirs(const char* path)
 {
   int numberOfSubDirs = 0;
@@ -364,7 +406,7 @@ int getNumberOfSubDirs(const char* path)
 
 void qSlicerAlphaOmegaModuleWidget::setAndCreateRootSavePath()
 {
-  QString rootSavePath = QDir::cleanPath("C:/SurgeriesData/" + QString::fromStdString(getYearMonthDayString()) + QDir::separator());
+  QString rootSavePath = QDir::cleanPath("C:/LeadORData/" + QDateTime::currentDateTime().toString("yyyyMMdd") + QDir::separator());
   QDir().mkpath(rootSavePath);
 
   int numberOfSubDirs = getNumberOfSubDirs(rootSavePath.toLocal8Bit().constData());

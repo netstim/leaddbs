@@ -4,6 +4,8 @@ set(MODULE_NAME StereotacticPlan)
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}.py
+  StereotacticPlanLib/util.py
+  StereotacticPlanLib/__init__.py
   )
 
 set(MODULE_PYTHON_RESOURCES

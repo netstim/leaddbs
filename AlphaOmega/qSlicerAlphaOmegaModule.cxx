@@ -69,7 +69,7 @@ QString qSlicerAlphaOmegaModule::acknowledgementText() const
 QStringList qSlicerAlphaOmegaModule::contributors() const
 {
   QStringList moduleContributors;
-  moduleContributors << QString("John Doe (AnyWare Corp.)");
+  moduleContributors << QString("Simon Oxenford (Netstim Berlin)");
   return moduleContributors;
 }
 
