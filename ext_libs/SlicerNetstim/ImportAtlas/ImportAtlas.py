@@ -7,13 +7,6 @@ import logging
 import sys
 import numpy as np
 
-try:
-  import h5py
-except:
-  slicer.util.pip_install('h5py')
-  import h5py
-
-
 #
 # ImportAtlas
 #
@@ -28,16 +21,12 @@ class ImportAtlas(ScriptedLoadableModule):
     self.parent.title = "ImportAtlas" # TODO make this more human readable by adding spaces
     self.parent.categories = ["Netstim"]
     self.parent.dependencies = []
-    self.parent.contributors = ["John Doe (AnyWare Corp.)"] # replace with "Firstname Lastname (Organization)"
+    self.parent.contributors = ["Simon Oxenford (Netstim Berlin)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
-This is an example of scripted loadable module bundled in an extension.
-It performs a simple thresholding on the input volume and optionally captures a screenshot.
+This module loads Lead-DBS atlases into Slicer.
 """
     self.parent.helpText += self.getDefaultModuleDocumentationLink()
-    self.parent.acknowledgementText = """
-This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
-""" # replace with organization, grant and thanks.
+    self.parent.acknowledgementText = "" # replace with organization, grant and thanks.
 
 #
 # ImportAtlasWidget
@@ -129,7 +118,12 @@ class ImportAtlasWidget(ScriptedLoadableModuleWidget):
   def onImportButton(self):
     logic = ImportAtlasLogic()
     atlasPath = os.path.join(self.atlasDirectoryButton.directory, self.atlasComboBox.currentText)
-    logic.run(atlasPath)
+    qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
+    qt.QApplication.processEvents()
+    try:
+      logic.readAtlas(os.path.join(atlasPath,'atlas_index.mat'))
+    finally:
+      qt.QApplication.restoreOverrideCursor() 
 
 #
 # ImportAtlasLogic
@@ -188,7 +182,14 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
     pd.SetPoints(points)
     pd.SetPolys(triangles)
 
-    return pd
+    # Compute surface normals for better appearance
+    normals = vtk.vtkPolyDataNormals()
+    normals.SetInputData(pd)
+    normals.ConsistencyOn()
+    normals.AutoOrientNormalsOn()
+    normals.Update()
+
+    return normals.GetOutput()
 
   def createModel(self, polydata, name, color):
     """
@@ -200,11 +201,10 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
     modelNode.GetDisplayNode().SetColor(*color)
     modelNode.GetDisplayNode().SetVisibility2D(1)
     modelNode.GetDisplayNode().SetBackfaceCulling(0)
-    modelNode.GetDisplayNode().SetOpacity(0.8)
     modelNode.GetDisplayNode().SetVisibility(0) # hide by default
     return modelNode
 
-  def createFolderDisplayNode(self, folderID, color=[0.66,0.66,0.66]):
+  def createFolderDisplayNode(self, folderID, color=[0.66,0.66,0.66], opacity=1.0):
     # from qSlicerSubjectHierarchyFolderPlugin.cxx
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
     displayNode = slicer.vtkMRMLFolderDisplayNode()
@@ -212,23 +212,32 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
     displayNode.SetHideFromEditors(0)
     displayNode.SetAttribute('SubjectHierarchy.Folder', "1")
     displayNode.SetColor(*color)
+    displayNode.SetOpacity(opacity)
     shNode.GetScene().AddNode(displayNode)
     shNode.SetItemDataNode(folderID, displayNode)
     shNode.ItemModified(folderID)
 
-  def run(self, atlasPath):
+  def readAtlas(self, atlasPath, name=None):
     """
     Run the actual algorithm
     """
-    qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
-    qt.QApplication.processEvents()
-  
+
+    try:
+      import h5py
+    except:
+      slicer.util.pip_install('h5py')
+      import h5py
+
+    if name is None:
+      folder = os.path.split(atlasPath)[0]
+      name = os.path.split(folder)[1]
+
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
-    folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), os.path.split(atlasPath)[-1])
-    self.createFolderDisplayNode(folderID)
+    folderID = shNode.CreateFolderItem(shNode.GetSceneItemID(), name)
+    self.createFolderDisplayNode(folderID, opacity=0.8)
     shNode.SetItemAttribute(folderID, 'atlas', '1')
-  
-    with h5py.File(os.path.join(atlasPath,'atlas_index.mat'),'r') as atlasFile:
+
+    with h5py.File(atlasPath,'r') as atlasFile:
       # get .mat data
       roi = atlasFile['atlases']['roi']
       colors = atlasFile['atlases']['colors'][()]   
@@ -274,10 +283,54 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
           # add as child to parent
           shNode.SetItemParent(shNode.GetItemChildWithName(shNode.GetSceneItemID(), sideName), subFolderID)
           shNode.SetItemAttribute(shNode.GetItemByDataNode(modelNode), 'atlas', '1')
-        
-    qt.QApplication.setOverrideCursor(qt.QCursor(qt.Qt.ArrowCursor))
-  
+
     return folderID
+
+class ImportAtlasFileReader:
+
+  def __init__(self, parent):
+    self.parent = parent
+
+  def description(self):
+    return 'Lead-DBS atlas'
+
+  def fileType(self):
+    return 'LeadDBSAtlas'
+
+  def extensions(self):
+    return ['Lead-DBS atlas (*.mat)']
+
+  def canLoadFile(self, filePath):
+    # filename must be atlas_index.mat
+    filename = os.path.split(filePath)[1]
+    return filename == "atlas_index.mat"
+
+  def load(self, properties):
+    try:
+
+      # Import data
+      filePath = properties['fileName']
+      logic = ImportAtlasLogic()
+      shFolderItem = logic.readAtlas(filePath)
+
+      # Create list of loaded noed IDs
+      loadedNodeIDs = []
+      shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+      childrenIdList = vtk.vtkIdList()
+      shNode.GetItemChildren(shFolderItem, childrenIdList, True)
+      for childIndex in range(childrenIdList.GetNumberOfIds()):
+        dataNode = shNode.GetItemDataNode(childrenIdList.GetId(childIndex))
+        if dataNode:
+          loadedNodeIDs.append(dataNode.GetID())
+
+    except Exception as e:
+      logging.error('Failed to load file: '+str(e))
+      import traceback
+      traceback.print_exc()
+      return False
+
+    self.parent.loadedNodes = loadedNodeIDs
+    return True
 
 
 class ImportAtlasTest(ScriptedLoadableModuleTest):

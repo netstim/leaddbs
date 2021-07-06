@@ -4,23 +4,21 @@ import re
 from datetime import datetime
 
 
-#
-# PDF Import
-#
-
-try:
-  import pdfplumber
-except:
-  slicer.util.pip_install('pdfplumber')
-  import pdfplumber
-
-
 class StereotaxyReport():
 
   def __init__(self, PDFPath):
+    self.importPDFPlumber()
     self.pdf = pdfplumber.open(PDFPath)
     self.pdfWidth = float(self.pdf.pages[0].width)
     self.pdfHeight = float(self.pdf.pages[0].height)
+
+  @classmethod
+  def importPDFPlumber():
+    try:
+      import pdfplumber
+    except:
+      slicer.util.pip_install('pdfplumber')
+      import pdfplumber
 
   def hasPatientID(self, patientID):
     return patientID == self.getPatientInformation()['Patient ID']
@@ -94,18 +92,32 @@ class StereotaxyReport():
     return xyz_flt
 
   def getDICOMInformation(self):
-    cropRegion = (self.pdfWidth/2, self.pdfHeight * 0.61 , self.pdfWidth, self.pdfHeight * 0.66)
+    hStart = self.findHeightContainingText(1, self.pdfHeight * 0.5, "DICOM Coordinates") + 15
+    hEnd = self.findHeightContainingText(1, self.pdfHeight * 0.61, "X Y Z") - 5
+    cropRegion = (self.pdfWidth/2, hStart , self.pdfWidth, hEnd)
     tableSettings = {
         "vertical_strategy": "text",
-        "horizontal_strategy": "text",
+        "horizontal_strategy": "lines",
         "min_words_vertical": 1,
         "keep_blank_chars": True,
+        "intersection_y_tolerance":15,
+        "edge_min_length":15,
+        "explicit_horizontal_lines":[hEnd],
+        "explicit_vertical_lines":[570]
         }
     outList = self.pdf.pages[1].crop(cropRegion).extract_table(tableSettings)
-    outDict = {r[0]:r[1] for r in outList}
+    outDict = {r[0]:r[1].replace('\n','') for r in outList}
     outDict['SeriesDescription'] = outDict['Image Set']
     outDict['AcquisitionDateTime'] = datetime.strptime(outDict['Scanned'], '%m/%d/%Y, %I:%M %p')
     return outDict
+
+  def findHeightContainingText(self, pageNumber, heightStart, matchText):
+    t = None
+    maxHeight = heightStart
+    while not t or t.find(matchText)==-1:
+      maxHeight = maxHeight+1
+      t = self.pdf.pages[pageNumber].crop((0, heightStart , self.pdfWidth, maxHeight)).extract_text()
+    return maxHeight
 
 
 def exctractPlanningFromPDF(PDFFilePath):

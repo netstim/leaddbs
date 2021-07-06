@@ -11,16 +11,18 @@
 #include <vtkSmartPointer.h>
 #include <vtkFloatArray.h>
 #include <vtkMRMLTableNode.h>
+#include <vtkMRMLPlotSeriesNode.h>
 #include <vtkTable.h>
 #include <vtksys/SystemTools.hxx>
 
-// AlphaOmega SDK
+// AlphaO2mega SDK
 #include "AOSystemAPI.h"
 #include "AOTypes.h"
 #include "StreamFormat.h"
 
 // STD includes
 #include <cmath> // NAN
+#include <algorithm> // replace
 
 // Windows
 #include <Windows.h>
@@ -30,6 +32,7 @@
 
 
 static const int BUFFER_HEADER_SIZE = 7;
+static const float MINIMUM_RECORDING_TIME_S = 4.0;
 
 //------------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLAlphaOmegaChannelNode);
@@ -41,6 +44,9 @@ std::string vtkMRMLAlphaOmegaChannelNode::ChannelRootSavePath = "";
 float vtkMRMLAlphaOmegaChannelNode::DriveDistanceToTarget = NAN;
 
 //----------------------------------------------------------------------------
+std::mutex vtkMRMLAlphaOmegaChannelNode::H5Busy;
+
+//----------------------------------------------------------------------------
 vtkMRMLAlphaOmegaChannelNode::vtkMRMLAlphaOmegaChannelNode()
 {
   this->SetHideFromEditors(false);
@@ -50,11 +56,13 @@ vtkMRMLAlphaOmegaChannelNode::vtkMRMLAlphaOmegaChannelNode()
   this->ChannelGain = 20;
   this->ChannelBitResolution = 38.147;
   // Preview
+  this->ChannelPreviewLengthMiliSeconds = 1000;
   this->ChannelPreviewTimeArray =  vtkFloatArray::New();
   this->ChannelPreviewTimeArray->SetName(const_cast<char *>("t"));
   this->ChannelPreviewSignalArray =  vtkFloatArray::New();
   this->ChannelPreviewSignalArray->SetName(const_cast<char *>("x"));
   this->ChannelPreviewTableNode = nullptr;
+  this->ChannelPreviewPlotSeriesNode = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -190,6 +198,8 @@ std::vector<std::string> vtkMRMLAlphaOmegaChannelNode::GetAllChannelsNames()
   SInformation *pChannelsInfo = new SInformation[uChannelsCount];
 	GetAllChannels(pChannelsInfo, uChannelsCount);
 
+  channelsNames.push_back("");
+
   // fill vector. in case of error the uChannelCount = 0 and the vector is empty
   for (int i = 0; i<uChannelsCount; i++)
   {
@@ -197,6 +207,8 @@ std::vector<std::string> vtkMRMLAlphaOmegaChannelNode::GetAllChannelsNames()
   }
 
   channelsNames.push_back("Test");
+  channelsNames.push_back("Test2");
+  channelsNames.push_back("Test3");
 
   return channelsNames;
 }
@@ -213,15 +225,29 @@ int vtkMRMLAlphaOmegaChannelNode::SetChannelNameAndID(const char* name)
 void vtkMRMLAlphaOmegaChannelNode::SetChannelPreviewTableNode(vtkMRMLTableNode* tableNode)
 {
   this->ChannelPreviewTableNode = tableNode;
-  if (this->ChannelPreviewTableNode != nullptr)
+  if (this->ChannelPreviewTableNode == nullptr)
+  {
+    return;
+  }
+  else
   {
     this->ChannelPreviewTableNode->Reset(nullptr);
     this->ChannelPreviewTableNode->GetTable()->AddColumn(this->ChannelPreviewTimeArray);
     this->ChannelPreviewTableNode->GetTable()->AddColumn(this->ChannelPreviewSignalArray);
     this->ChannelPreviewTableNode->Modified();
   }
+  if (this->ChannelPreviewPlotSeriesNode == nullptr)
+  {
+    this->ChannelPreviewPlotSeriesNode = vtkMRMLPlotSeriesNode::SafeDownCast(this->GetScene()->AddNewNodeByClass("vtkMRMLPlotSeriesNode",this->GetChannelName()));
+    this->ChannelPreviewPlotSeriesNode->SetPlotType(vtkMRMLPlotSeriesNode::PlotTypeScatter);
+    this->ChannelPreviewPlotSeriesNode->SetMarkerStyle(vtkMRMLPlotSeriesNode::MarkerStyleNone);
+    this->ChannelPreviewPlotSeriesNode->SetPlotType(vtkMRMLPlotSeriesNode::PlotTypeLine);
+  }
+  this->ChannelPreviewPlotSeriesNode->SetAndObserveTableNodeID(this->ChannelPreviewTableNode->GetID());
+  this->ChannelPreviewPlotSeriesNode->SetXColumnName(this->ChannelPreviewTableNode->GetColumnName(0));
+  this->ChannelPreviewPlotSeriesNode->SetYColumnName(this->ChannelPreviewTableNode->GetColumnName(1));
+  this->ChannelPreviewPlotSeriesNode->SetColor(0,0,0);
 }
-
 
 //----------------------------------------------------------------------------
 int vtkMRMLAlphaOmegaChannelNode::InitializeChannelBuffer()
@@ -254,41 +280,37 @@ void vtkMRMLAlphaOmegaChannelNode::InitializeChannelPreview()
 
 
 //----------------------------------------------------------------------------
-std::string getHourMinuteSecondString()
-{
-  auto t = std::time(nullptr);
-  std::ostringstream oss;
-  oss << std::put_time(std::localtime(&t), "%HH%MM%SS");
-  return oss.str();
-}
-
-//----------------------------------------------------------------------------
 void vtkMRMLAlphaOmegaChannelNode::InitializeSaveFile()
 {
-  // path
+  vtkMRMLAlphaOmegaChannelNode::H5Busy.lock();
+
+  std::string modifiedName = this->ChannelName;
+  std::replace(modifiedName.begin(), modifiedName.end(), '/', '_');
+  std::replace(modifiedName.begin(), modifiedName.end(), ' ', '_');
+
   std::vector<std::string> filesVector;
   filesVector.push_back(this->ChannelRootSavePath);
   filesVector.emplace_back("/");
-  filesVector.push_back(this->ChannelName);
+  filesVector.push_back(modifiedName);
   this->ChannelFullSavePath = vtksys::SystemTools::JoinPath(filesVector);
   vtksys::SystemTools::MakeDirectory(this->ChannelFullSavePath.c_str());
 
-  // name
   filesVector.emplace_back("/");
-  filesVector.push_back(getHourMinuteSecondString() + std::to_string(this->DriveDistanceToTarget) + ".h5");
+  filesVector.push_back(vtksys::SystemTools::GetCurrentDateTime("%H%M%S_") + std::to_string(this->DriveDistanceToTarget) + ".h5");
   this->ChannelFullSavePath = vtksys::SystemTools::JoinPath(filesVector);
-  
+
   const hsize_t ndims = 1;
 
   // create file
   hid_t plist1 = H5Pcreate(H5P_FILE_ACCESS);
   H5Pset_fclose_degree(plist1, H5F_CLOSE_STRONG);
+  H5Pset_libver_bounds(plist1, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
   this->H5File = new H5::H5File(this->ChannelFullSavePath.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plist1);
 
   // save sampling rate
   H5::DataSpace samplingRateSpace(1, &ndims);
-  H5::DataSet   samplingRateSet = this->H5File->createDataSet("sr", H5T_NATIVE_INT, samplingRateSpace);
-  samplingRateSet.write(&this->ChannelSamplingRate, H5T_NATIVE_INT);
+  H5::DataSet   samplingRateSet = this->H5File->createDataSet("sr", H5::PredType::NATIVE_INT, samplingRateSpace);
+  samplingRateSet.write(&this->ChannelSamplingRate, H5::PredType::NATIVE_INT);
   samplingRateSet.close();
 
   // create dataspace
@@ -309,22 +331,27 @@ void vtkMRMLAlphaOmegaChannelNode::InitializeSaveFile()
   dims[0] = this->DataCapture;
   this->H5MemoryDataspace = H5Screate_simple(ndims, dims, NULL);
 
+  // Single-Writer/Multiple-Reader
+  H5Fstart_swmr_write(this->H5File->getId());
+
   // close
   H5Pclose(plist1);
   H5Pclose(plist2);
   H5Sclose(file_space);
 
+  vtkMRMLAlphaOmegaChannelNode::H5Busy.unlock();
 }
 
 void vtkMRMLAlphaOmegaChannelNode::CloseSaveFile()
 {
-  if (!this->ChannelFullSavePath.empty())
-  {
-    H5Sclose(this->H5MemoryDataspace);
-    this->H5File->close();
-    this->ChannelFullSavePath = "";
-  }
+  vtkMRMLAlphaOmegaChannelNode::H5Busy.lock();
+  
+  H5Sclose(this->H5MemoryDataspace);
+  this->H5File->close();
+  
+  vtkMRMLAlphaOmegaChannelNode::H5Busy.unlock();
 }
+
 
 //----------------------------------------------------------------------------
 static void *vtkMRMLAlphaOmegaChannelNode_ThreadFunction(vtkMultiThreader::ThreadInfo *genericData )
@@ -382,14 +409,12 @@ void vtkMRMLAlphaOmegaChannelNode::ContinuousGatherData()
 
   while (active)
   {
-    this->DriveDistanceToTargetLock.lock();
     if (!isnan(this->DriveDistanceToTarget) && previousDistanceToTarget != this->DriveDistanceToTarget)
     {
       this->CloseSaveFile();
       this->InitializeSaveFile();
       previousDistanceToTarget = this->DriveDistanceToTarget;
     }
-    this->DriveDistanceToTargetLock.unlock();
 
     this->GatherData();
     float* newDataArray = this->CreateNewDataArray();
@@ -482,6 +507,8 @@ void vtkMRMLAlphaOmegaChannelNode::AppendNewDataToPreviewArray(float* newDataArr
 //----------------------------------------------------------------------------
 void vtkMRMLAlphaOmegaChannelNode::AppendNewDataToSaveFile(float* newDataArray)
 {
+  vtkMRMLAlphaOmegaChannelNode::H5Busy.lock();
+
   const hsize_t ndims = 1;
 
   // Resize momory dataspace with current ammount of new data
@@ -503,5 +530,7 @@ void vtkMRMLAlphaOmegaChannelNode::AppendNewDataToSaveFile(float* newDataArray)
   H5Dwrite(H5DataSet.getId(), H5T_NATIVE_FLOAT, this->H5MemoryDataspace, H5DataSpace.getId(), H5P_DEFAULT, newDataArray);
   H5DataSpace.close();
   H5DataSet.close();
+  this->H5File->flush(H5F_SCOPE_LOCAL);
 
+  vtkMRMLAlphaOmegaChannelNode::H5Busy.unlock();
 }

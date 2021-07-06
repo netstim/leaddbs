@@ -6,8 +6,6 @@ from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 
 import numpy as np
-import importlib
-import glob
 
 from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool
 from WarpDriveLib.Helpers import GridNodeHelper, WarpDriveUtil, LeadDBSCall
@@ -24,18 +22,15 @@ class WarpDrive(ScriptedLoadableModule):
 
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "WarpDrive"  # TODO: make this more human readable by adding spaces
-    self.parent.categories = ["Netstim"]  # TODO: set categories (folders where the module shows up in the module selector)
-    self.parent.dependencies = []  # TODO: add here list of module names that this module requires
-    self.parent.contributors = ["John Doe (AnyWare Corp.)"]  # TODO: replace with "Firstname Lastname (Organization)"
+    self.parent.title = "WarpDrive" 
+    self.parent.categories = ["Netstim"]
+    self.parent.dependencies = ["MarkupsToModel", "plastimatch_slicer_landwarp"]
+    self.parent.contributors = ["Simon Oxenford (Netstim Berlin)"]
     self.parent.helpText = """
-This is an example of scripted loadable module bundled in an extension.
-"""  # TODO: update with short description of the module
+This module provides tools to manually fix misalignments after non linear registration
+"""
     self.parent.helpText += self.getDefaultModuleDocumentationLink()  # TODO: verify that the default URL is correct or change it to the actual documentation
-    self.parent.acknowledgementText = """
-This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc., Andras Lasso, PerkLab,
-and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
-"""  # TODO: replace with organization, grant and thanks.
+    self.parent.acknowledgementText = "" 
 
 #
 # WarpDriveWidget
@@ -466,6 +461,8 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
     ScriptedLoadableModuleLogic.__init__(self)
     if slicer.util.settingsValue('Developer/DeveloperMode', False, converter=slicer.util.toBool):
       import WarpDriveLib
+      import importlib
+      import glob
       warpDrivePath = os.path.split(__file__)[0]
       G = glob.glob(os.path.join(warpDrivePath, 'WarpDriveLib','**','*.py'))
       for g in G:

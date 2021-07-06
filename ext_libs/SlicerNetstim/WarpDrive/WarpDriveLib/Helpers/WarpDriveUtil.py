@@ -3,8 +3,6 @@ import SimpleITK as sitk
 import sitkUtils
 
 import numpy as np
-from scipy import ndimage
-
 
 from . import GridNodeHelper
 
@@ -112,6 +110,7 @@ def getDistanceMap(labelMapNode):
   return outNode
 
 def getMaskVolume(referenceVolume):
+  from scipy import ndimage
   shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
   # create segmentation node
   segmentationNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")

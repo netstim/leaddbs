@@ -7,20 +7,22 @@ from subprocess import call
 
 from . import WarpDriveUtil, GridNodeHelper
 
-try:
-  import h5py
-except:
-  slicer.util.pip_install('h5py')
-  import h5py
-
-try:
-  import hdf5storage
-except:
-  slicer.util.pip_install('hdf5storage')
-  import hdf5storage
 
 
 def saveApprovedData(subjectPath):
+
+  try:
+    import h5py
+  except:
+    slicer.util.pip_install('h5py')
+    import h5py
+
+  try:
+    import hdf5storage
+  except:
+    slicer.util.pip_install('hdf5storage')
+    import hdf5storage
+
   approvedFile = os.path.join(subjectPath,'ea_coreg_approved.mat')
   matfiledata = {}
   if os.path.isfile(approvedFile):

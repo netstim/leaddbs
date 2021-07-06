@@ -2,6 +2,7 @@
 
 // STD Includes
 #include <cmath> // NAN
+// #include <stdlib.h> 
 
 // Windows
 #include <Windows.h>
@@ -74,6 +75,7 @@ void qAlphaOmegaStatusThread::run()
 
 
     distanceToTargetMiliM = this->GetDistanceToTargetMiliM();
+    // distanceToTargetMiliM = 10.0 * ((float) rand()) / (float) RAND_MAX;
     if (distanceToTargetMiliM != previousDistanceToTargetMiliM)
     {
       emit distanceToTargetModified(&distanceToTargetMiliM);

@@ -9,7 +9,7 @@ from datetime import datetime
 from DICOMLib import DICOMUtils
 import pydicom as dicom
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'StereoacticPlan', 'StereoacticPlanLib'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "StereotacticPlan"))
 from StereotacticPlanLib.util import StereotaxyReport
 
 #------------------------------------------------------------------------------------------
@@ -41,8 +41,8 @@ class LeadDBSSubject():
     glanatInverseTransformNode = slicer.util.loadTransform(os.path.join(self.path, 'glanatInverseComposite.nii.gz'))
 
     import ImportAtlas
-    atlasPath = os.path.join(self.leaddbsPath,'templates','space','MNI_ICBM_2009b_NLIN_ASYM','atlases','DISTAL Nano (Ewert 2017)')
-    ImportAtlas.ImportAtlasLogic().run(atlasPath)
+    atlasPath = os.path.join(self.leaddbsPath,'templates','space','MNI_ICBM_2009b_NLIN_ASYM','atlases','DISTAL Nano (Ewert 2017)','atlas_index.mat')
+    ImportAtlas.ImportAtlasLogic().readAtlas(atlasPath)
 
     anatVolumeNode.ApplyTransform(anatToframeTransformNode.GetTransformToParent())
     anatVolumeNode.HardenTransform()
@@ -113,6 +113,7 @@ class LeadDBSSubject():
     parameters['useRigid'] 				        = True
     parameters['costMetric'] 			        = 'MMI'
     cli = slicer.cli.run(slicer.modules.brainsfit, None, parameters, wait_for_completion=True, update_display=False)
+    slicer.util.saveNode(outTransformNode, os.path.join(self.path, rawAnatVolumeNode.GetName().split(' ')[-1] + 'ToAnat.txt'))
     return outTransformNode
 
   def getModalityFromSeriesDescription(self, seriesDescription):
@@ -129,7 +130,7 @@ class LeadDBSSubject():
       series = SlicerDICOMDatabase().geSeriestMatchingDescriptionAndDateTime(dcmInfo['SeriesDescription'], dcmInfo['AcquisitionDateTime'])
       loadedNodeIDs.extend(DICOMUtils.loadSeriesByUID([series]))
 
-    for nodeID in loadedNodeIDs:
+    for nodeID in loadedNodeIDs[::-1]:
       volumeNode = slicer.util.getNode(nodeID)
       if re.search('.*' + dcmInfo['SeriesDescription'] + '.*', volumeNode.GetName()):
         return volumeNode
@@ -148,12 +149,15 @@ class SlicerDICOMDatabase():
         for series in self.db.seriesForStudy(study):
           try:
             seriesDescription = self.getSeriesAcquisitionInformationFromTag(series, 'SeriesDescription')
-            acquisitionDate = self.getSeriesAcquisitionInformationFromTag(series, 'AcquisitionDate')
-            acquisitionTime = self.getSeriesAcquisitionInformationFromTag(series, 'AcquisitionTime')
+            acquisitionDateTime = self.getSeriesAcquisitionInformationFromTag(series, 'AcquisitionDateTime')
+            if not acquisitionDateTime:
+              acquisitionDate = self.getSeriesAcquisitionInformationFromTag(series, 'AcquisitionDate')
+              acquisitionTime = self.getSeriesAcquisitionInformationFromTag(series, 'AcquisitionTime')
+              acquisitionDateTime = acquisitionDate + acquisitionTime
+            dateTime = self.DICOMDateTimeStringToDateTime(acquisitionDateTime)
           except:
             continue
           descriptionMatch = self.seriesDescriptionMatch(seriesDescription, descriptionIn)
-          dateTime = self.DICOMDateTimeStringToDateTime(acquisitionDate + acquisitionTime)
           dateTimeMatch = self.seriesDateTimeMatch(dateTime, dateTimeIn)
           if descriptionMatch and dateTimeMatch:
             return series

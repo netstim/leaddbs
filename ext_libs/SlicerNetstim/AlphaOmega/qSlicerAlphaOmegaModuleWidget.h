@@ -53,6 +53,7 @@ public slots:
   void onAlphaOmegaChannelNodeChanged(vtkMRMLNode * node);
   void updateGUIFromMRML();
   void updateChannelNodeFromGUI();
+  void updateChannelsTables();
   void onChannelActiveStateChanged(int state);
 
 protected:
@@ -63,6 +64,8 @@ protected:
   void setAndCreateRootSavePath();
   void setConnectingFeedback(bool connecting);
   void setChannelWidgetEnabled(bool enabled);
+  bool channelNameAlreadyInitialized(const char* channelName);
+  std::vector<std::string> getInitializedChannelsNames();
 
   
 private slots:

@@ -4,6 +4,8 @@ set(MODULE_NAME LeadOR)
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}.py
+  LeadORLib/util.py
+  LeadORLib/__init__.py
   )
 
 set(MODULE_PYTHON_RESOURCES
