@@ -488,7 +488,7 @@ for side=0:1
             sideStr = 'left';
     end
 
-    if isnan(settings.current_control(side+1))
+    if ~settings.stimSetMode && isnan(settings.current_control(side+1))
         warning('off', 'backtrace');
         warning('No stimulation exists for %s side! Skipping...\n', sideStr);
         warning('on', 'backtrace');
