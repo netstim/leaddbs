@@ -942,48 +942,6 @@ for pt=selection
         options.expstatvat.pt=pt;
     end
     options.expstatvat.dir=M.ui.groupdir;
-    processlocal=0;
-
-    if M.ui.detached
-        processlocal=1;
-        ea_mkdir([M.ui.groupdir,options.patientname]);
-        options.root=M.ui.groupdir;
-        %    options.patientname='tmp';
-        try
-            ea_stats=M.stats(pt).ea_stats;
-        catch
-            ea_stats=struct;
-        end
-        reco.mni.coords_mm=M.elstruct(pt).coords_mm;
-        reco.mni.trajectory=M.elstruct(pt).trajectory;
-        reco.mni.markers=M.elstruct(pt).markers;
-        reco.props.elmodel=M.elstruct(pt).elmodel;
-        reco.props.manually_corrected=1;
-        save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
-        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'reco');
-    end
-
-    if ~exist(options.root,'file') % data is not there. Act as if detached. Process in tmp-dir.
-        processlocal=1;
-        warning('on');
-        warning('Data has been detached from group-directory. Will process locally. Please be aware that you might loose this newly-processed data once you re-attach the single-patient data to the analysis!');
-        warning('off');
-        mkdir([M.ui.groupdir,options.patientname]);
-        options.root=M.ui.groupdir;
-        % options.patientname='tmp';
-        try
-            ea_stats=M.stats(pt).ea_stats;
-        catch
-            ea_stats=struct;
-        end
-        reco.mni.coords_mm=M.elstruct(pt).coords_mm;
-        reco.mni.trajectory=M.elstruct(pt).trajectory;
-        reco.mni.markers=M.elstruct(pt).markers;
-        reco.props.elmodel=M.elstruct(pt).elmodel;
-        reco.props.manually_corrected=1;
-        save([M.ui.groupdir,options.patientname,filesep,'ea_stats'],'ea_stats');
-        save([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction'],'reco');
-    end
 
     %delete([options.root,options.patientname,filesep,'ea_stats.mat']);
 
@@ -1110,22 +1068,6 @@ for pt=selection
     end
 
     close(resultfig);
-
-    if processlocal % gather stats and recos to M
-        load([M.ui.groupdir,options.patientname,filesep,'ea_stats']);
-        load([M.ui.groupdir,options.patientname,filesep,'ea_reconstruction']);
-
-        M.stats(pt).ea_stats=ea_stats;
-        M.elstruct(pt).coords_mm=reco.mni.coords_mm;
-        M.elstruct(pt).trajectory=reco.mni.trajectory;
-        setappdata(gcf,'M',M);
-
-        save([M.ui.groupdir,'LEAD_groupanalysis.mat'],'M','-v7.3');
-        try
-            movefile([options.root,options.patientname,filesep,'LEAD_scene.fig'],[M.ui.groupdir,'LEAD_scene_',num2str(pt),'.fig']);
-        end
-        %rmdir([M.ui.groupdir,'tmp'],'s');
-    end
 end
 %% processing done here.
 ea_refresh_lg(handles);
@@ -1519,7 +1461,6 @@ switch choice
         end
         ea_dispercent(1,'end');
         M.ui.detached=1;
-
 end
 
 setappdata(gcf,'M',M);
