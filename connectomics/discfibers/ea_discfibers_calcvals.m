@@ -26,6 +26,7 @@ for side = 1:numSide
     fibsval5Peak{side} = zeros(length(idx), numPatient);
 
     disp(['Calculate for side ', num2str(side), ':']);
+    cnt=1;
     for pt = 1:numPatient
         disp(['VAT ', num2str(pt, ['%0',num2str(numel(num2str(numPatient))),'d']), '/', num2str(numPatient), '...']);
         vat = ea_load_nii(vatlist{pt,side});
@@ -67,7 +68,14 @@ for side = 1:numSide
         fibsvalMean{side}(trimmedFiberInd(connected), pt) = cellfun(@mean, vals);
         fibsvalPeak{side}(trimmedFiberInd(connected), pt) = cellfun(@max, vals);
         fibsval5Peak{side}(trimmedFiberInd(connected), pt) = cellfun(@(x) mean(maxk(x,ceil(0.05*numel(x)))), vals);
+        
+        cnt=cnt+1;
+        if cnt>500
+            cnt=1;
+           save('tempdump','fibsvalBin','fibsvalMean','fibsvalPeak','fibsval5Peak','-v7.3'); 
+        end
     end
+           save('tempdump','fibsvalBin','fibsvalMean','fibsvalPeak','fibsval5Peak','-v7.3'); 
 
     % Remove values for not connected fibers, convert to sparse matrix
     fibIsConnected = any(fibsvalBin{side}, 2);

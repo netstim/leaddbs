@@ -97,10 +97,16 @@ cmweights=weights;
 cmweights=cmweights-min(cmweights);
 cmweights=cmweights/max(cmweights);
 cmweights=(cmweights*(length(gray)-1))+1; % normalize to colormap
-cmweights=squeeze(ind2rgb(round(cmweights),jet));
+c1=uisetcolor([1,1,1],'Valley Color');
+c2=uisetcolor([1,0,0],'Peak Color');
+cg = ea_colorgradient(length(gray), c1, c2); % white to red standard
+cmweights=squeeze(ind2rgb(round(cmweights),cg));
 
 [nzX,nzY,nzZ]=ind2sub(size(nii.img),nzeros);
 nzXYZ=[nzX,nzY,nzZ]; clear nzX nzY nzZ
+
+nzXYZ=nii.mat*[nzXYZ,ones(size(nzXYZ,1),1)]';
+nzXYZ=nzXYZ(1:3,:)';
 
 disp('Selecting fibertracts...')
 [ix,d]=knnsearch(nzXYZ,fibers(:,1:3));
@@ -113,14 +119,14 @@ for ftract=1:fibno
     thisfibentries=idcnt:idcnt+idx(ftract)-1;
     idcnt=idcnt+idx(ftract);
     ftdists=d(thisfibentries);
-    [mindist,mindistix]=min(ftdists);
+    %[mindist,mindistix]=min(ftdists);
 
     smallftdists=ftdists<2;
 
     if any(smallftdists)
         minidentifier=thisfibentries(smallftdists);
-        weights=weights(ix(minidentifier));
-        [~,maxix]=max(weights);
+        thisweights=weights(ix(minidentifier));
+        [~,maxix]=max(thisweights);
         ftractcols(ftract,:)=cmweights(ix(minidentifier(maxix)),:);
     end
     ea_dispercent(ftract/fibno);
@@ -134,21 +140,25 @@ numcoloredfibs=length(coloredfibs);
 for fib=coloredfibs
     ea_dispercent(cnt/numcoloredfibs);
     thisfib=fibers(fibers(:,4)==fib,1:3);
-    thisfib=[thisfib,repmat(ftractcols(fib),size(thisfib,1),1)];
-    [~,fv(cnt)]=ea_plot_fiber(thisfib',6,0,options);
+    thisfib=[thisfib,...
+        repmat(ftractcols(fib,:),size(thisfib,1),1)]'; % assign weight to fib
+    [~,fv(cnt)]=ea_plot_fiber(thisfib,6,0,options);
     cnt=cnt+1;
 end
 ea_dispercent(1,'end');
-fv=ea_concatfv(fv);
-addobjr=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.3);
-
-% add toggle button:
-[~, tfina] = fileparts(tract);
-[~, rfina] = fileparts(weight);
-addbutn=uitoggletool(addht,'CData',ea_get_icn('fiber'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
-%storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
-drawnow
-
+if numcoloredfibs
+    fv=ea_concatfv(fv);
+    addobjr=patch(fv,'Facecolor', 'interp', 'EdgeColor', 'none','FaceAlpha',0.3);
+    
+    % add toggle button:
+    [~, tfina] = fileparts(tract);
+    [~, rfina] = fileparts(weight);
+    addbutn=uitoggletool(addht,'CData',ea_get_icn('fibers'),'TooltipString',[tfina,' weighted by ',rfina],'OnCallback',{@ea_atlasvisible,addobjr},'OffCallback',{@ea_atlasinvisible,addobjr},'State','on');
+    %storeinfigure(resultfig,addht,addbutn,addobjr,addobj,fina,'roi',XYZ,0,options); % store rendering in figure.
+    drawnow
+else
+    ea_warning('No fibers selected by ROI');
+end
 disp('Done.');
 
 
