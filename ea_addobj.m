@@ -177,6 +177,11 @@ if ischar(obj) % addobj
                 fibers = fibers';
             end
 
+            % Convert fibers to mm space when needed
+            if exist('voxmm', 'var') && strcmp(voxmm, 'vox') && exist('mat', 'var')
+                fibers(:,1:3) = ea_vox2mm(fibers(:,1:3), mat);
+            end
+
             % Check fiber format
             if size(fibers,2) == 5 && contains(obj,'fiberActivation') % fiber activation result loaded
                 ea_fiberactivation_viz(obj, resultfig);
