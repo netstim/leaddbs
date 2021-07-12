@@ -1,0 +1,34 @@
+//pref
+Ambient|float|0|0.6|1
+Diffuse|float|0|0.6|1
+Specular|float|0|0.2|1
+Shininess|float|1|60|120
+Hemispheric lighting: "Ambient" is second light source from above with reflection from below. Copyright 2015 Chris Rorden, BSD2clause.|note
+//frag
+#version 120
+varying vec3 vN, vV, vL;
+varying vec4 vP, vClr;
+uniform float Ambient = 0.5;
+uniform float Diffuse = 0.7;
+uniform float Specular = 0.2;
+uniform float Shininess = 60.0;
+uniform vec4 ClipPlane = vec4(2.0, 0.0, 0.0, 0.0);
+
+void main() {
+	if ((ClipPlane[0] < 1.5) && (dot( ClipPlane, vP) > 0.0)) discard;
+	vec3 l = normalize(vL);
+	vec3 n = normalize(vN);
+	vec3 h = normalize(l+normalize(vV));
+	vec3 a = vClr.rgb;
+	vec3 d = a;
+	vec3 up = vec3(0.0, 1.0, 0.0);
+	float ax = dot(vN, up) * 0.5 + 0.5;  //Shreiner et al. (2013) OpenGL Programming Guide, 8th Ed., p 388. ISBN-10: 0321773039
+	vec3 upClr = vec3(1.0, 1.0, 0.95);
+	vec3 downClr = vec3(0.4, 0.4, 0.6);
+	a *= mix(downClr, upClr,  ax);
+	float diff = dot(n,l);
+	float spec = pow(max(0.0,dot(n,h)), Shininess);
+	vec3 backcolor = Ambient*vec3(0.1+0.1+0.1) + d*abs(diff)*Diffuse;
+	float backface = step(0.00, n.z);
+	gl_FragColor = vec4(mix(backcolor.rgb, a*Ambient + d*diff*Diffuse + spec*Specular,  backface), 1.0);
+}

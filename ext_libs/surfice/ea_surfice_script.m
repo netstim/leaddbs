@@ -24,13 +24,14 @@ end
 
 basedir=[ea_getearoot,'ext_libs',filesep,'surfice',filesep];
 if ismac
-    surfice = [basedir,'mac',filesep, surfice_exe, '.app',filesep,'Contents',filesep,'MacOS',filesep,'surfice'];
+    surfice = [basedir, surfice_exe, '.app',filesep,'Contents',filesep,'MacOS',filesep,'surfice'];
 elseif isunix
     ea_libs_helper([basedir, 'linux']);
-    surfice = [basedir, 'linux', filesep, surfice_exe];
+    surfice = [basedir, surfice_exe];
 elseif ispc
-    surfice = ea_path_helper([basedir, 'win', filesep, surfice_exe, '.exe']);
+    surfice = ea_path_helper([basedir, surfice_exe, '.exe']);
 end
+
 cmd = [surfice, ' -S "', script,'"'];
 if ~hold
     cmd = [cmd,' &'];

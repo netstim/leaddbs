@@ -1,0 +1,11 @@
+
+Images are from the Geometry format under the Neuroimaging Informatics Technology Initiative (GIfTI) format page (https://www.nitrc.org/projects/gifti/) : caret_gifti_files.zip
+
+
+functional overlay from
+Corbetta, M., Akbudak, E., Conturo, T.E., Snyder, A.Z , 
+Ollinger, J.M.,Drury, H.A., Linenweber, M.R., Raichle, M.E.,
+Van Essen, D.C. Petersen, S.E and Shulman, G.L. (1998) 
+A common network of functional areas for attention and eye movements. 
+Neuron 21, 761-773
+http://www.neuron.org/content/article/fulltext?uid=PIIS0896627398145939
