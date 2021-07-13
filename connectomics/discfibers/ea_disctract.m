@@ -110,16 +110,12 @@ classdef ea_disctract < handle
                 obj.responsevarlabel = obj.M.clinical.labels{1};
                 obj.subscore.vars = {};
                 obj.subscore.labels = {};
-                obj.subscore.pcavars = {};
                 obj.subscore.weights = [];
-                obj.subscore.colors{1,1} = ea_color_wes('all');
-                obj.subscore.colors{1,2} = flip(ea_color_wes('all')); %TODO think about this a bit more
-                obj.subscore.showposamount = repmat([25,25],10,1); %total of 10 subscores - will delete when we know the total number of subscores
-                obj.subscore.shownegamount = repmat([25,25],10,1);
-                obj.subscore.negvisible = zeros(10,1);
-                obj.subscore.posvisible = ones(10,1);
-                obj.subscore.spitbysubscore = 0;
-                obj.subscore.special_case = 0;
+                obj.subscore.colors{1} = repmat([0.7686,0.8314,0.8784],36,1);
+                obj.subscore.colors{2} = ea_color_wes('all');
+                obj.subscore.split_by_subscore = 0;
+                obj.subscore.mixfibers = 0;
+                obj.subscore.colorchange = 0;
                 obj.covarlabels={};
             elseif  isfield(D, 'tractset')  % Saved tractset class loaded
                 props = properties(D.tractset);
@@ -274,6 +270,7 @@ classdef ea_disctract < handle
                 patientsel = obj.customselection;
             end
             
+<<<<<<< HEAD
             switch obj.multitractmode
                 case 'Split & Color By PCA'
                     if ~exist('Iperm', 'var') || isempty(Iperm)
@@ -287,10 +284,29 @@ classdef ea_disctract < handle
                     else
                         Improvement = Iperm(patientsel);
                     end
+=======
+            if ~exist('Iperm', 'var') || isempty(Iperm)
+                I = obj.responsevar(patientsel);
+            elseif obj.subscore.mixfibers
+                for i=1:length(obj.subscore.vars)
+                    I_subscore(1:length(patientsel),i) = obj.subscore.weights(i)*obj.subscore.vars{i};
+                end
+                I = nansum(I_subscore,2);
+            else
+                I = Iperm(patientsel);
+>>>>>>> performs multitract analysis
             end
             % Ihat is the estimate of improvements (not scaled to real improvements)
+<<<<<<< HEAD
             
             Ihat = nan(length(patientsel),2);
+=======
+            if obj.subscore.mixfibers
+                Ihat = obj.responsevar(patientsel);
+            else
+                Ihat = nan(length(patientsel),2);
+            end
+>>>>>>> performs multitract analysis
             
             
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
@@ -813,8 +829,20 @@ classdef ea_disctract < handle
                             end
                     end     
                 else
+<<<<<<< HEAD
                     obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
                     obj.negcolor = [0.2824,0.6157,0.9725]; % negative main color
+=======
+                    if obj.subscore.split_by_subscore && obj.subscore.colorchange
+                        ix = cellfun(@(x)isequal(x,obj.responsevarlabel),obj.M.clinical.labels);
+                        obj.poscolor = obj.subscore.colors{1,2}(ix,:);
+                        obj.negcolor = obj.subscore.colors{1,1}(ix,:);
+                    end
+                    if obj.subscore.mixfibers
+                        obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
+                        obj.negcolor = [0.2824,0.6157,0.9725]; % negative main color
+                    end
+>>>>>>> performs multitract analysis
                     
                     if obj.posvisible && obj.negvisible
                         cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);

@@ -1,12 +1,18 @@
 function [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj,patsel,Iperm)
 
-
-if ~exist('Iperm','var')
-    I=obj.responsevar;
-else % used in permutation based statistics - in this case the real improvement can be substituted with permuted variables.
-    I=Iperm;
+if obj.subscore.mixfibers
+   for i=1:length(obj.subscore.vars)
+        I_subscore(1:length(obj.subscore.vars{1,1}),i) = obj.subscore.weights(i)*obj.subscore.vars{i};
+   end
+   I = nanmean(I_subscore,2);
+else
+    if ~exist('Iperm','var')
+        I=obj.responsevar;
+    else % used in permutation based statistics - in this case the real improvement can be substituted with permuted variables.
+        I=Iperm;
+    end
 end
-% end
+
 fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
 
 % quickly recalc stats:
@@ -456,3 +462,6 @@ for cellentry=1:numel(vals)
     ps{cellentry}(:)=allps(cnt:cnt+length(vals{cellentry})-1);
     cnt=cnt+length(vals{cellentry});
 end
+
+ps(~nnanidx)=1;
+vals(ps>obj.alphalevel)=nan; % delete everything nonsignificant.
