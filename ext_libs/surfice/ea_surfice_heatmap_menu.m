@@ -18,5 +18,5 @@ if manualcontrast
     [do,threshs]=ea_sfc_setthreshs(threshs,fis);
 end
 if ~manualcontrast || strcmp(do,'proceed')
-     ea_surficeoverlay_lr(fullfi,[],sides);
+     ea_surficeoverlay(fullfi,[],sides);
 end

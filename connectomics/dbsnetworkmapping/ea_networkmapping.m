@@ -739,7 +739,7 @@ classdef ea_networkmapping < handle
                         script=[script,...
                             ' END.'];
 
-                        ea_surfice_script(script,0);
+                        ea_surfice(script,0);
                 end
 
                 % Set colorbar tick positions and labels
