@@ -52,7 +52,7 @@ for side=1:2
 
 
     fvs=ea_mapcolvert2face(fvs);
-    ea_stlwrite([ea_space,'surf_',sidest{side},'.stl'],fvs,'FACECOLOR',fvs.facevertexcdata);
+    ea_stlwrite([ea_space,'surf.',sidest{side},'h.stl'],fvs,'FACECOLOR',fvs.facevertexcdata);
 end
 ea_dispt('Cleaning up');
 

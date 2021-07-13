@@ -605,11 +605,11 @@ classdef ea_networkmapping < handle
                         % first draw correct surface
                         switch obj.model
                             case 'Smoothed'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_r_smoothed.obj']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_l_smoothed.obj']); end
+                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_smoothed.rh.obj']); end
+                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_smoothed.lh.obj']); end
                             case 'Full'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_r.obj']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end
+                                if obj.modelRH; rh=ea_readObj([ea_space,'surf.rh.obj']); end
+                                if obj.modelLH; lh=ea_readObj([ea_space,'surf.lh.obj']); end
                         end
 
                         % Check cmap
@@ -680,10 +680,10 @@ classdef ea_networkmapping < handle
                         switch obj.model
                             case 'Smoothed'
                                 if obj.modelRH && ~obj.modelLH
-                                    mesh=([ea_space,'surf_r_smoothed.obj']);
+                                    mesh=([ea_space,'surf_smoothed.rh.obj']);
                                     side=1;
                                 elseif obj.modelLH && ~obj.modelRH
-                                    mesh=([ea_space,'surf_l_smoothed.obj']);
+                                    mesh=([ea_space,'surf_smoothed.lh.obj']);
                                     side=2;
                                 elseif obj.modelRH && obj.modelLH
                                     mesh=([ea_space,'surf_smoothed.obj']);
@@ -693,10 +693,10 @@ classdef ea_networkmapping < handle
                                 end
                             case 'Full'
                                 if obj.modelRH && ~obj.modelLH
-                                    mesh=([ea_space,'surf_r.obj']);
+                                    mesh=([ea_space,'surf.rh.obj']);
                                     side=1;
                                 elseif obj.modelLH && ~obj.modelRH
-                                    mesh=([ea_space,'surf_l.obj']);
+                                    mesh=([ea_space,'surf.lh.obj']);
                                     side=2;
                                 elseif obj.modelRH && obj.modelLH
                                     mesh=([ea_space,'surf.obj']);
