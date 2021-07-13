@@ -21,7 +21,7 @@ classdef ea_disctract < handle
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
-        
+        subscore
         results
         % Subfields:
         % results.(connectomename).fibcell: cell of all fibers connected, sorted by side
@@ -103,6 +103,14 @@ classdef ea_disctract < handle
                 end
                 
                 obj.responsevarlabel = obj.M.clinical.labels{1};
+                obj.subscore.vars = {};
+                obj.subscore.labels = {};
+                obj.subscore.weights = [];
+                obj.subscore.colors{1} = repmat([0.7686,0.8314,0.8784],36,1);
+                obj.subscore.colors{2} = ea_color_wes('all');
+                obj.subscore.split_by_subscore = 0;
+                obj.subscore.mixfibers = 0;   
+                obj.subscore.colorchange = 0;
                 obj.covarlabels={};
             elseif  isfield(D, 'tractset')  % Saved tractset class loaded
                 props = properties(D.tractset);
@@ -260,12 +268,21 @@ classdef ea_disctract < handle
             
             if ~exist('Iperm', 'var') || isempty(Iperm)
                 I = obj.responsevar(patientsel);
+            elseif obj.subscore.mixfibers
+                for i=1:length(obj.subscore.vars)
+                    I_subscore(1:length(patientsel),i) = obj.subscore.weights(i)*obj.subscore.vars{i};
+                end
+                I = nansum(I_subscore,2);
             else
                 I = Iperm(patientsel);
             end
             
             % Ihat is the estimate of improvements (not scaled to real improvements)
-            Ihat = nan(length(patientsel),2);
+            if obj.subscore.mixfibers
+                Ihat = obj.responsevar(patientsel); 
+            else
+                Ihat = nan(length(patientsel),2);
+            end
             
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
             
@@ -543,6 +560,16 @@ classdef ea_disctract < handle
                         return;
                     end
                 else
+                    if obj.subscore.split_by_subscore && obj.subscore.colorchange
+                        ix = cellfun(@(x)isequal(x,obj.responsevarlabel),obj.M.clinical.labels);
+                        obj.poscolor = obj.subscore.colors{1,2}(ix,:);
+                        obj.negcolor = obj.subscore.colors{1,1}(ix,:);
+                    end
+                    if obj.subscore.mixfibers
+                        obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
+                        obj.negcolor = [0.2824,0.6157,0.9725]; % negative main color
+                    end
+                    
                     if obj.posvisible && obj.negvisible
                         cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
                         cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
