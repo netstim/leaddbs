@@ -1,4 +1,4 @@
-function ea_surficeoverlay(overlay, threshold, sideCode, showColorbar, useSmoothedMesh)
+function ea_surficeoverlay(overlay, threshold, sideCode, showColorbar, colorbarPosition, useSmoothedMesh)
 % Wrapper to export mesh+overlay image from Surf-Ice
 
 % Check overlay path
@@ -34,6 +34,11 @@ if ~exist('showColorbar','var')
     showColorbar = 0;
 end
 
+% Top colorbar by default
+if ~exist('colorbarPosition','var')
+    colorbarPosition = 3;
+end
+
 % Use normal mesh instead of smoothed mesh by default
 if ~exist('useSmoothedMesh','var')
     useSmoothedMesh = 0;
@@ -53,6 +58,7 @@ script = ['import gl;', ...
     'gl.resetdefaults();', ...
     'gl.orientcubevisible(0);', ...
     'gl.colorbarvisible(', num2str(showColorbar), ');',...
+    'gl.colorbarposition(', num2str(colorbarPosition), ')', ...
     'gl.meshload(''', mesh, ''');'];
 
 for f=1:length(overlay)
