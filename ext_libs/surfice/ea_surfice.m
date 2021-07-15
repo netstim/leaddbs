@@ -45,5 +45,16 @@ if ~hold
     end
 end
 
+% Handle library conflicts for Linux
+if isunix && ~ismac
+    libPathBackup = getenv('LD_LIBRARY_PATH');
+    setenv('LD_LIBRARY_PATH', strrep(libPathBackup, [matlabroot,'/cefclient/sys/os/glnxa64:'],''));
+end
+
 % Run Surf-Ice with script
 system(cmd);
+
+% Restore original library path
+if isunix && ~ismac
+    setenv('LD_LIBRARY_PATH', libPathBackup);
+end
