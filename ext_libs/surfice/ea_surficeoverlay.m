@@ -36,7 +36,7 @@ end
 
 % Top colorbar by default
 if ~exist('colorbarPosition','var')
-    colorbarPosition = 3;
+    colorbarPosition = 4;
 end
 
 % Use normal mesh instead of smoothed mesh by default
