@@ -1,4 +1,3 @@
-
 function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, thresh)
 % Calculate fiber connection values based on the VATs and the connectome
 
@@ -32,7 +31,7 @@ for side = 1:numSide
         vat = ea_load_nii(vatlist{pt,side});
         
         % Threshold the vat efield
-        vatInd = find(abs(vat.img(:))>thresh);
+        vatInd = find(vat.img(:)>thresh);
         
         % Trim connectome fibers
         [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
