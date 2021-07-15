@@ -36,6 +36,11 @@ end
 % Construct script call
 cmd = [surfice, ' -S "', script, '"'];
 
+% Redirect stderr to null for Unix
+if isunix
+    cmd = [cmd, ' 2> /dev/null'];
+end
+
 % when hold is false, run the command in background
 if ~hold
     if ispc
