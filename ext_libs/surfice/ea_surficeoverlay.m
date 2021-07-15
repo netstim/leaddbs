@@ -126,9 +126,6 @@ script = [script, 'quit();end.'];
 % Run scritpt using Surf-Ice
 ea_surfice(script, 1);
 
-% Wait for image writing
-pause(0.5);
-
 % Crop files
 for f=1:length(overlay)
     overlayBasePath = ea_niifileparts(overlay{f});
