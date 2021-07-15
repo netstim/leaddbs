@@ -109,8 +109,8 @@ classdef ea_disctract < handle
                 obj.subscore.colors{1} = repmat([0.7686,0.8314,0.8784],36,1);
                 obj.subscore.colors{2} = ea_color_wes('all');
                 obj.subscore.split_by_subscore = 0;
-                obj.subscore.mixfibers = 0;   
-                obj.subscore.colorchange = 0;
+                obj.subscore.mixfibers = 0;
+                obj.subscore.control_single_fiber = 0;
                 obj.covarlabels={};
             elseif  isfield(D, 'tractset')  % Saved tractset class loaded
                 props = properties(D.tractset);
@@ -279,7 +279,7 @@ classdef ea_disctract < handle
             
             % Ihat is the estimate of improvements (not scaled to real improvements)
             if obj.subscore.mixfibers
-                Ihat = obj.responsevar(patientsel); 
+                Ihat = obj.responsevar(patientsel);
             else
                 Ihat = nan(length(patientsel),2);
             end
@@ -441,7 +441,7 @@ classdef ea_disctract < handle
             % generate null distribution
             R1 = R(1);
             R0 = sort((R(2:end)),'descend');
-
+            
             Rp95 = R0(round(0.05*numPerm));
             higherR0=R0>(R1);
             pperm=sum(higherR0)/numel(higherR0);
@@ -480,7 +480,8 @@ classdef ea_disctract < handle
             end
             obj.fiberdrawn.fibcell = fibcell;
             obj.fiberdrawn.vals = vals;
-            
+            %this is a bit weird because you're only looking at the first
+            %val
             obj.stats.pos.shown(1)=sum(vals{1,1}>0);
             obj.stats.neg.shown(1)=sum(vals{1,1}<0);
             if size(vals,2)>1 % bihemispheric usual case
@@ -494,23 +495,40 @@ classdef ea_disctract < handle
                 obj.M.groups.group=1;
                 obj.M.groups.color=ea_color_wes('all');
             end
-            linecols=obj.M.groups.color;
+            if obj.splitbygroup
+                linecols=obj.M.groups.color;
+            elseif obj.subscore.split_by_subscore
+                linecols = obj.subscore.colors;
+            end
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
             end
+            
             for tract=1:numel(obj.drawobject)
                 try delete(obj.drawobject{tract}); end % try since could run into error when reopening from scratch.
             end
+            
             
             % reset colorbar
             obj.colorbar=[];
             if ~any([obj.posvisible,obj.negvisible])
                 return
             end
+            %special case, specific for...specific for??? oh man, I can't
+            %think! It's specific for when you want to control a single
+            %fiber. I think this is super useful.
+            if obj.subscore.control_single_fiber
+                indx_of_vals = cellfun(@(x)isequal(x,obj.responsevarlabel),obj.subscore.labels);
+                vals2 = {vals{indx_of_vals,1:2}};
+                fibcell2 = {fibcell{indx_of_vals,1:2}};
+            else
+                vals2 = vals;
+                fibcell2 = fibcell;
+            end
             
-            for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
+            for group=1:size(vals2,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Vertcat all values for colorbar construction
-                allvals = full(vertcat(vals{group,:}));
+                allvals = full(vertcat(vals2{group,:}));
                 if isempty(allvals)
                     continue;
                 end
@@ -542,34 +560,57 @@ classdef ea_disctract < handle
                 shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
                 
                 if dogroups
-                    if obj.posvisible && ~obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-                        fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(allvals, 'range');
-                    elseif ~obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
-                        fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(-allvals, 'range');
-                    else
-                        warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                            '\nShow both positive and negative fibers is not supported when "Color by Group Variable" is on.']));
-                        return;
+                    if obj.subscore.split_by_subscore
+                        if obj.subscore.control_single_fiber
+                            ix = indx_of_vals;
+                        else
+                            %change this to ix = 1; ix = ix+1;
+                            ix = group;
+                        end
+                        if obj.posvisible && ~obj.negvisible
+                            obj.poscolor = obj.subscore.colors{1,2}(ix,:);
+                            cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
+                            fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
+                            cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                            alphaind = ones(size(allvals));
+                            % alphaind = normalize(allvals, 'range');
+                        elseif ~obj.posvisible && obj.negvisible
+                            obj.negcolor = obj.subscore.colors{1,1}(ix,:);
+                            cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
+                            fibcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
+                            %fibcmap{group} = ea_colorgradient(gradientLevel, linecols{1,1}(group,:), cmap(shiftedCmapEnd,:));
+                            cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                            alphaind = ones(size(allvals));
+                            % alphaind = normalize(-allvals, 'range');
+                        else
+                            warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
+                                '\nShow both positive and negative fibers is not supported when "Color by Group Variable" is on.']));
+                            return;
+                        end
+                    elseif obj.splitbygroup
+                        if obj.posvisible && ~obj.negvisible
+                            cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
+                            fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
+                            cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                            alphaind = ones(size(allvals));
+                            % alphaind = normalize(allvals, 'range');
+                        elseif ~obj.posvisible && obj.negvisible
+                            cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
+                            fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
+                            cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                            alphaind = ones(size(allvals));
+                            % alphaind = normalize(-allvals, 'range');
+                        else
+                            warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
+                                '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
+                            return;
+                        end
+                    
                     end
                 else
-                    if obj.subscore.split_by_subscore && obj.subscore.colorchange
-                        ix = cellfun(@(x)isequal(x,obj.responsevarlabel),obj.M.clinical.labels);
-                        obj.poscolor = obj.subscore.colors{1,2}(ix,:);
-                        obj.negcolor = obj.subscore.colors{1,1}(ix,:);
-                    end
-                    if obj.subscore.mixfibers
-                        obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
-                        obj.negcolor = [0.2824,0.6157,0.9725]; % negative main color
-                    end
-                    
+                    obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
+                    obj.negcolor = [0.2824,0.6157,0.9725]; % negative main color
+                   
                     if obj.posvisible && obj.negvisible
                         cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
                         cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
@@ -598,28 +639,28 @@ classdef ea_disctract < handle
                 end
                 setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
                 
-                if size(vals,2)>1 % standard case
-                    cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
-                    alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
+                if size(vals2,2)>1 % standard case
+                    cmapind = mat2cell(cmapind, [numel(vals2{group,1}), numel(vals2{group,2})])';
+                    alphaind = mat2cell(alphaind, [numel(vals2{group,1}), numel(vals2{group,2})])';
                 else % potential scripting case, only one side
-                    cmapind = mat2cell(cmapind, numel(vals{group,1}))';
-                    alphaind = mat2cell(alphaind, numel(vals{group,1}))';
+                    cmapind = mat2cell(cmapind, numel(vals2{group,1}))';
+                    alphaind = mat2cell(alphaind, numel(vals2{group,1}))';
                 end
-                for side=1:size(vals,2)
+                for side=1:size(vals2,2)
                     if dogroups % introduce small jitter for visualization
-                        fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.01);
+                        fibcell2{group,side}=ea_discfibers_addjitter(fibcell2{group,side},0.01);
                     end
                     
                     % Plot fibers if any survived
-                    if ~isempty(fibcell{group,side})
-                        obj.drawobject{group,side}=streamtube(fibcell{group,side},0.2);
+                    if ~isempty(fibcell2{group,side})
+                        obj.drawobject{group,side}=streamtube(fibcell2{group,side},0.2);
                         
-                        nones=repmat({'none'},size(fibcell{group,side}));
+                        nones=repmat({'none'},size(fibcell2{group,side}));
                         [obj.drawobject{group,side}.EdgeColor]=nones{:};
                         
                         % Calulate fiber colors alpha values
-                        fibcolor = mat2cell(fibcmap{group}(cmapind{side},:), ones(size(fibcell{group,side})));
-                        fibalpha = mat2cell(alphaind{side},ones(size(fibcell{group,side})));
+                        fibcolor = mat2cell(fibcmap{group}(cmapind{side},:), ones(size(fibcell2{group,side})));
+                        fibalpha = mat2cell(alphaind{side},ones(size(fibcell2{group,side})));
                         
                         % Set fiber colors and alphas
                         [obj.drawobject{group,side}.FaceColor]=fibcolor{:};
@@ -657,7 +698,6 @@ classdef ea_disctract < handle
             end
         end
     end
-    
     methods (Static)
         function changeevent(~,event)
             update_trajectory(event.AffectedObject,event.Source.Name);
