@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec 18 14:00:04 2020
-
-@author: konstantin
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Created on Thu Oct 29 20:57:09 2020
 
 @author: konstantin
@@ -457,15 +450,33 @@ if __name__ == '__main__':
     Phi_vector=list(Phi_vector)
     Active_contact_coordinates=[]
     import math
+
+
+
+
+    StimSets = bool(file_inp['settings']['stimSetMode'][0][0])  # if StimSets are used, create a dummy Phi_vector
+
+    if StimSets == True:    # create Phi_vector from maximum values of the protocols
+        stim_protocols = np.genfromtxt(os.environ['PATIENTDIR']+'/Current_protocols_'+str(index_side)+'.csv', dtype=float, delimiter=',', names=True)
+
+        total_contacts =  len(list(stim_protocols[0]))
+        total_protocols = stim_protocols.shape[0]
+
+        protocols_array=np.zeros((total_protocols,total_contacts),float)
+        Phi_vector = np.zeros(total_contacts,float)
+        Phi_vector = list(stim_protocols[0])   # just initialize
+
+        for j in range(total_protocols):
+            protocols_array[j,:] = list(stim_protocols[j])
+            for i in range(total_contacts):
+                if not math.isnan(protocols_array[j,i]):
+                    Phi_vector[i] = 1.0     # you do not need a value, just substitute NaN
+   
     for i in range(len(Phi_vector)):
         if not(math.isnan(Phi_vector[i])):
             a_ref=file_inp['settings']['contactLocation'][index_side][0]
             b=file_inp[a_ref]
             Active_contact_coordinates.append(b[:,i])
-
-    #print(Active_contact_coordinates)
-
-
 
 
     Fiber_names=[]
