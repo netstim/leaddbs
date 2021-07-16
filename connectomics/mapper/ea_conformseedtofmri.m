@@ -13,10 +13,10 @@ if ~isstruct(seed) && isfile(seed)
     seed = ea_load_nii(seed);
 end
 
-% Use trilinear interpolation by default.
-% Set to 0 to use nearest neighbour
+% Set default interp method to trilinear
+% Can choose from trilinear, nearestneighbour, sinc or spline
 if ~exist('interp', 'var')
-    interp = 1;
+    interp = trilinear;
 end
 
 td = tempdir;
@@ -34,8 +34,8 @@ seed.dt = [16,0];
 ea_write_nii(seed);
 
 % Conform space by coregistration using SPM with trilinear interpolation
-options.coregmr.method='SPM';
-ea_coreg2images(options,tmpseed,tmpref,tmpseed,[],[],[],interp);
+% ea_conformspaceto(tmpref, tmpseed);
+ea_fsl_reslice(tmpseed, tmpref, tmpseed, interp);
 
 % Load resliced seed file and clean up
 seed=ea_load_nii(tmpseed);
