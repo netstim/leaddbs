@@ -69,7 +69,7 @@ def run_full_model(master_dict):
 #    os.environ['PATIENTDIR'] = '/opt/Patient' # Use fixed mount path for docker
 
 
-    if (os.path.isfile(os.environ['PATIENTDIR']+'/Current_protocols_'+str(d['Stim_side'])+'.csv')):
+    if d['StimSets'] == 1: 
         stim_protocols = np.genfromtxt(os.environ['PATIENTDIR']+'/Current_protocols_'+str(d['Stim_side'])+'.csv', dtype=float, delimiter=',', names=True)
         if stim_protocols.size:
             d['Current_sets']=True
