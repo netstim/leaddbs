@@ -227,7 +227,7 @@ for suffix=dowhich
                 else
                     nativeprefix='';
                 end
-                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+                if 1 % for now always recreate ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
                     cnt=1;
                     for side=1:2
                         switch side
@@ -245,6 +245,12 @@ for suffix=dowhich
                                     nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'], [vatdir,'vat',addstr,'_',sidec,'.nii']);
                                 end
                                 nii(cnt).img(isnan(nii(cnt).img))=0;
+                                nii(cnt).img(nii(cnt).img<0)=0; % safety measure: VTAs should not have negative entries
+                                
+                                if strcmp(addstr,'_efield')
+                                    nii(cnt).img(nii(cnt).img<25)=0; % remove small electric field values.
+                                end
+                                
                                 if ~any(nii(cnt).img(:))
                                     msgbox(['Created empty VTA for ',options.patientname,'(',options.uivatdirs{pt},'), ',sidec,' hemisphere.']);
                                 end
@@ -256,6 +262,9 @@ for suffix=dowhich
                     for n=2:length(nii)
                         Cnii.img=Cnii.img+nii(n).img;
                     end
+                    
+               
+                    
                     Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                     ea_write_nii(Cnii);
                     delete([vatdir,'tmp_*']);
