@@ -18,7 +18,7 @@ from threading import Thread
 
 
 class MainWindow(Functionalities):
-    def __init__(self,path_to_patient,index_side,interactive_mode,patient_folder):
+    def __init__(self,path_to_patient,index_side,interactive_mode,patient_folder,StimSets):
         self.main_win = QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.main_win)
@@ -27,6 +27,7 @@ class MainWindow(Functionalities):
         self.patient_folder = "'" + patient_folder + "'"
         self.index_side=int(index_side)
         self.interactive_mode=int(interactive_mode)
+        self.StimSets=int(StimSets)
 
         self.rel_folder = self.rel_folder()
 
@@ -440,6 +441,7 @@ class MainWindow(Functionalities):
         output_dict['patient_folder'] = self.patient_folder
         output_dict['Stim_side'] = self.index_side
         output_dict['stretch'] = self.stretch
+        output_dict['StimSets'] = self.StimSets
 
         # # concatenate various dictionaries
         # output_dict.update(dict_cpe_active.d)
