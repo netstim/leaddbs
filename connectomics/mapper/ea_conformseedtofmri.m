@@ -18,10 +18,10 @@ end
 if ~exist('interp', 'var')
     interp = 'trilinear';
 end
-
+guid=ea_generate_uuid;
 td = tempdir;
-tmpref = [td,'tmpspace.nii'];
-tmpseed = [td,'tmpseed.nii'];
+tmpref = [td,'tmpspace',guid,'.nii'];
+tmpseed = [td,'tmpseed',guid,'.nii'];
 
 % Write out ref into temp file
 dataset.vol.space.fname = tmpref;
