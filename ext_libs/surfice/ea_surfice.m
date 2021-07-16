@@ -6,21 +6,21 @@ if ~exist('hold', 'var')
 end
 
 % check OpenGL version
-openglInfo = opengl('data');
-openglVer = strrep(regexp(openglInfo.Version, '(^[\d.]+)(?=.*)', 'match', 'once'), '.', '');
-if numel(openglVer) == 2
-    openglVer = [openglVer, '0'];
-end
-openglVer = str2double(openglVer);
+% openglInfo = opengl('data');
+% openglVer = strrep(regexp(openglInfo.Version, '(^[\d.]+)(?=.*)', 'match', 'once'), '.', '');
+% if numel(openglVer) == 2
+%     openglVer = [openglVer, '0'];
+% end
+% openglVer = str2double(openglVer);
 
-if openglVer >= 330 || ismac
+% if openglVer >= 330 || ismac
     SURFICE = 'surfice';
-elseif openglVer >= 210
-    SURFICE = 'surficeOld';
-else
-    ea_error(sprintf('Surf Ice failed to load proper OpenGL!\nFound version: %s, Vendor: %s.', ...
-        openglInfo.Version, openglInfo.Vendor), 'Error', dbstack);
-end
+% elseif openglVer >= 210
+%     SURFICE = 'surficeOld';
+% else
+%     ea_error(sprintf('Surf Ice failed to load proper OpenGL!\nFound version: %s, Vendor: %s.', ...
+%         openglInfo.Version, openglInfo.Vendor), 'Error', dbstack);
+% end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
