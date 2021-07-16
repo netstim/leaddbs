@@ -16,7 +16,7 @@ end
 % Set default interp method to trilinear
 % Can choose from trilinear, nearestneighbour, sinc or spline
 if ~exist('interp', 'var')
-    interp = trilinear;
+    interp = 'trilinear';
 end
 
 td = tempdir;
