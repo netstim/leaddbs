@@ -6,15 +6,6 @@ Created on Tue Jun 23 17:28:33 2020
 @author: butenko
 """
 
-#This script reads input files from Lead-DBS and updates the default dictionary of GUI.
-
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 18 11:33:13 2020
-
-@author: konstantin
-"""
-
 #import tables
 import h5py #works better
 import numpy as np
@@ -30,6 +21,7 @@ import sys
 
 #updates default dictionary
 def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
+
     #index_side=1
     #settings_location,index_side=side_and_settings[:]
     index_side=int(index_side)
@@ -102,8 +94,9 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         if math.isnan(Phi_vector[i]):
             Phi_vector[i]=None
 
-    # print(type(Phi_vector))
-    if all(v is None for v in Phi_vector):
+    StimSets = int(file['settings']['stimSetMode'][0][0])
+    
+    if all(v is None for v in Phi_vector) and StimSets == 0:
         print("No stimulation defined for this hemisphere")
         return -1
 
@@ -249,7 +242,8 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 
     interactive_mode = int(file['settings']['interactiveMode'][0][0])
 
-    return path_to_patient,index_side,interactive_mode,patient_folder
+
+    return path_to_patient,index_side,interactive_mode,patient_folder,StimSets
 
 
 if __name__ == '__main__':
@@ -257,7 +251,7 @@ if __name__ == '__main__':
     oss_dbs_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
     os.chdir(oss_dbs_folder)
 
-    path_to_patient, side, interactive_mode, patient_folder = get_input_from_LeadDBS(*sys.argv[1:])
+    path_to_patient, side, interactive_mode, patient_folder, StimSets = get_input_from_LeadDBS(*sys.argv[1:])
 
     if os.environ.get('SINGULARITY_NAME'):
         os.environ['PATIENTDIR'] = path_to_patient # Use real path for singularity
@@ -268,15 +262,15 @@ if __name__ == '__main__':
     if path_to_patient!=-1:
         if sys.platform == 'linux':
             if os.environ.get('SINGULARITY_NAME'):
-                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder)])
+                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder),str(StimSets)])
             else:
-                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder)])
+                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder),str(StimSets)])
         elif sys.platform == 'darwin':
             open_terminal = 'tell application "Terminal" to do script "cd \''+oss_dbs_folder+'\';'
-            open_gui = ' '.join(['python3 GUI_tree_files/AppUI.py', path_to_patient, str(side), str(interactive_mode),str(patient_folder), ';exit"'])
+            open_gui = ' '.join(['python3 GUI_tree_files/AppUI.py', path_to_patient, str(side), str(interactive_mode),str(patient_folder),str(StimSets), ';exit"'])
             output = subprocess.run(['osascript', '-e', open_terminal+open_gui])
         elif sys.platform == 'win32':
-            output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder)], shell = True)
+            output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder),str(StimSets)], shell = True)
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
