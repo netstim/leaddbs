@@ -271,7 +271,6 @@ switch ea_stripext(currvol)
 end
 
 if ~exist(checkfig,'file')
-
     ea_gencheckregpair([directory,ea_stripext(currvol)],anchorpath,checkfig);
 
     if ~exist(checkfig,'file')
@@ -326,6 +325,7 @@ switch options.modality
             presentfiles=[presentfiles;['tp_',options.prefs.ctnii_coregistered]];
         end
 end
+
 if exist([directory,options.prefs.fa2anat],'file')
     presentfiles=[presentfiles;options.prefs.fa2anat];
 end

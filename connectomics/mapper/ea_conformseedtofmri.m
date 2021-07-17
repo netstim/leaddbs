@@ -20,8 +20,8 @@ if ~exist('interp', 'var')
 end
 guid=ea_generate_uuid;
 td = tempdir;
-tmpref = [td,'tmpspace',guid,'.nii'];
-tmpseed = [td,'tmpseed',guid,'.nii'];
+tmpref = [td,'tmpspace_',guid,'.nii'];
+tmpseed = [td,'tmpseed_',guid,'.nii'];
 
 % Write out ref into temp file
 dataset.vol.space.fname = tmpref;

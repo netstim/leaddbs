@@ -222,12 +222,15 @@ for suffix=dowhich
                     subset=cname(delim+1:end);
                     cname=cname(1:delim-1);
                 end
+
                 if ~strcmp(cname,'No functional connectome found.') && ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
                     nativeprefix=['_',cname(length('Patient''s fMRI - ')+1:end)];
                 else
                     nativeprefix='';
                 end
-                if 1 % for now always recreate ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+
+                % if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+                if 1 % for now always recreate
                     cnt=1;
                     for side=1:2
                         switch side
@@ -262,9 +265,7 @@ for suffix=dowhich
                     for n=2:length(nii)
                         Cnii.img=Cnii.img+nii(n).img;
                     end
-                    
-               
-                    
+
                     Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                     ea_write_nii(Cnii);
                     delete([vatdir,'tmp_*']);
@@ -272,6 +273,7 @@ for suffix=dowhich
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
                 end
+
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end

@@ -23,7 +23,8 @@ disp('Construct VAT list...')
 for sub=1:numPatient % Original VAT E-field
     vatlist{sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
         ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_',sfstring,'_efield.nii'];
-    if 1; % for now always recreate compound VTA seed // ~exist(vatlist{sub},'file') % create joint VTA
+    % if ~exist(vatlist{sub},'file') % create joint VTA
+    if 1 % for now always recreate compound VTA seed
         rungenlocalmapper(obj,sub)
     end
 end

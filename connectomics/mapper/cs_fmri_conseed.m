@@ -11,7 +11,6 @@ function cs_fmri_conseed(dfold,cname,sfile,cmd,writeoutsinglefiles,outputfolder,
 
 tic
 
-
 if ~exist('writeoutsinglefiles','var')
     writeoutsinglefiles=0;
 else
