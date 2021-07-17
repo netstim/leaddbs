@@ -5,11 +5,11 @@ if nargin < 2
     margin = 5;	% add margin to the calculated bounding box, unit in voxel
 end
 
-img = uint8(spm_read_vols(spm_vol(image)));
+img = spm_read_vols(spm_vol(image));
 
-th = ea_otsuthresh(img);
+th = multithresh(img);
 
-BW = img > max(img(:)) * th;
+BW = img > th;
 
 [i,j,k] = ind2sub(size(BW), find(BW));
 
