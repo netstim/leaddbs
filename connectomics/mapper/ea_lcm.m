@@ -251,7 +251,7 @@ for suffix=dowhich
                                 nii(cnt).img(nii(cnt).img<0)=0; % safety measure: VTAs should not have negative entries
                                 
                                 if strcmp(addstr,'_efield')
-                                    nii(cnt).img(nii(cnt).img<25)=0; % remove small electric field values.
+                                    nii(cnt).img(nii(cnt).img<multithresh(nii(cnt).img)) = 0; % remove small electric field values.
                                 end
                                 
                                 if ~any(nii(cnt).img(:))
