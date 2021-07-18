@@ -18,6 +18,7 @@ classdef ea_disctract < handle
         poscolor = [0.9176,0.2000,0.1373] % positive main color
         negcolor = [0.2824,0.6157,0.9725] % negative main color
         splitbygroup = 0
+        splitbysubscore = 0
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
@@ -107,7 +108,7 @@ classdef ea_disctract < handle
                 obj.subscore.labels = {};
                 obj.subscore.weights = [];
                 obj.subscore.colors = ea_color_wes('all');
-                obj.subscore.split_by_subscore = 0;
+                obj.subscore.spitbysubscore = 0;
                 obj.subscore.mixfibers = 0;
                 obj.subscore.control_single_fiber = 0;
                 obj.covarlabels={};
@@ -496,13 +497,17 @@ classdef ea_disctract < handle
             end
             obj.fiberdrawn.fibcell = fibcell;
             obj.fiberdrawn.vals = vals;
-            %this is a bit weird because you're only looking at the first
-            %val
-            obj.stats.pos.shown(1)=sum(vals{1,1}>0);
-            obj.stats.neg.shown(1)=sum(vals{1,1}<0);
+            allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
+            allvals{2}=[];
+            for v=1:length(vals)
+                allvals{1}=[allvals{1};vals{v,1}];
+                allvals{2}=[allvals{2};vals{v,2}];
+            end
+            obj.stats.pos.shown(1)=sum(allvals{1}>0);
+            obj.stats.neg.shown(1)=sum(allvals{1}<0);
             if size(vals,2)>1 % bihemispheric usual case
-                obj.stats.pos.shown(2)=sum(vals{1,2}>0);
-                obj.stats.neg.shown(2)=sum(vals{1,2}<0);
+                obj.stats.pos.shown(2)=sum(allvals{2}>0);
+                obj.stats.neg.shown(2)=sum(allvals{2}<0);
             end
             set(0,'CurrentFigure',obj.resultfig);
             
@@ -513,7 +518,7 @@ classdef ea_disctract < handle
             end
             if obj.splitbygroup
                 linecols=obj.M.groups.color;
-            elseif obj.subscore.split_by_subscore
+            elseif obj.splitbysubscore
                 linecols = obj.subscore.colors;
             end
             if isempty(obj.drawobject) % check if prior object has been stored
@@ -569,7 +574,7 @@ classdef ea_disctract < handle
                 shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
                 
                 if domultitract % also means subscores
-                    if obj.subscore.split_by_subscore
+                    if obj.splitbysubscore
                         cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.subscore.colors(group,:));
                     elseif obj.splitbygroup
                         cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
@@ -631,7 +636,7 @@ classdef ea_disctract < handle
                 end
                 for side=1:size(vals,2)
                     if domultitract % introduce small jitter for visualization
-                        fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.01);
+                        fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.03);
                     end
                     
                     % Plot fibers if any survived
