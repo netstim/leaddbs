@@ -499,7 +499,7 @@ classdef ea_disctract < handle
             obj.fiberdrawn.vals = vals;
             allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
             allvals{2}=[];
-            for v=1:length(vals)
+            for v=1:size(vals,1)
                 allvals{1}=[allvals{1};vals{v,1}];
                 allvals{2}=[allvals{2};vals{v,2}];
             end
