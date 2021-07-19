@@ -31,7 +31,7 @@ end
 
 % No colorbar by default
 if ~exist('showColorbar','var')
-    showColorbar = 0;
+    showColorbar = 1;
 end
 
 % Convert 1/0 to true/false for Pascal engine
