@@ -213,14 +213,14 @@ dirlevelnew_mm = head_mm + (unitvector_mm .* dirlevelnew_scale);
 dirlevelnew_vx = tmat_vx2mm\dirlevelnew_mm;
 
 %% extract respecified dirlevelnew artifact from slice
-artifact_dirnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
+artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
 if ct.mat(1,1) < 0
-    artifact_dirnew = flip(artifact_dirlevelnew,1);
+    artifact_dirlevelnew = flip(artifact_dirlevelnew,1);
 end
 if ct.mat(2,2) < 0
-    artifact_dirnew = flip(artifact_dirlevelnew,2);
+    artifact_dirlevelnew = flip(artifact_dirlevelnew,2);
 end
-center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
+center_dirnew = [(size(artifact_dirlevelnew,1)+1)/2 (size(artifact_dirlevelnew,1)+1)/2];
 close(h)
 clear h txt1 sliceButton tmp answer numdirslices dirlevelnew_vx_z dirlevelnew_mm_z dirlevelnew_scale
 
@@ -229,7 +229,7 @@ h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'Posit
 txt1 = uicontrol('style','text','units','pixels','Background','w',...
     'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
     'string',sprintf(['Please mark the center of the artifact by doubleclicking:']));
-imagesc(artifact_dirnew');
+imagesc(artifact_dirlevelnew');
 axis equal
 axis off
 view(-180,90)
@@ -246,14 +246,14 @@ dirlevelnew_mm = tmat_vx2mm * dirlevelnew_vx;
 dirlevelnew_vx = tmat_vx2mm\dirlevelnew_mm;
 
 %% extract respecified dirlevelnew artifact from slice
-artifact_dirnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
+artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
 if ct.mat(1,1) < 0
-    artifact_dirnew = flip(artifact_dirlevelnew,1);
+    artifact_dirlevelnew = flip(artifact_dirlevelnew,1);
 end
 if ct.mat(2,2) < 0
-    artifact_dirnew = flip(artifact_dirlevelnew,2);
+    artifact_dirlevelnew = flip(artifact_dirlevelnew,2);
 end
-center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
+center_dirnew = [(size(artifact_dirlevelnew,1)+1)/2 (size(artifact_dirlevelnew,1)+1)/2];
 close(h)
 clear h a b
 %% extract intensity profile from marker artifact
@@ -522,7 +522,7 @@ roll = ea_diode_angle2roll(peakangle(side),yaw,pitch);
 
 realsolution = solution.COGtrans;
 
-[anglenew, intensitynew,vectornew] = ea_diode_intensityprofile(artifact_dirnew,center_dirnew,ct.voxsize,radius);
+[anglenew, intensitynew,vectornew] = ea_diode_intensityprofile(artifact_dirlevelnew,center_dirnew,ct.voxsize,radius);
 
 rollnew = roll + rollangles{realsolution}(darkstarangle(realsolution));
 dirnew_angles = ea_diode_darkstar(rollnew,pitch,yaw,dirlevelnew_mm,radius);
@@ -661,7 +661,7 @@ caxis([1500 3000])
 ax4 = subplot(3,3,4);
 hold on
 title(ax4,'Directional Level')
-imagesc(artifact_dirnew')
+imagesc(artifact_dirlevelnew')
 view(-180,-90)
 axis equal
 axis off
