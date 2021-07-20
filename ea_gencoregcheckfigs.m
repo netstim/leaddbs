@@ -64,7 +64,7 @@ for fi=1:length(fis2anat)
     [~,fname]=fileparts(fis2anat{fi});
     [~,rfname]=fileparts(primanat);
     switch [fname,'.nii'] % cannot use options.modality here since also in CT imaging, e.g. anat_t1 or anat_pd could be used using coregmrmethod applied.
-        case options.prefs.rawctnii_unnormalized
+        case options.prefs.tp_ctnii_coregistered
             suffx=cm; % CT suffix
         otherwise
             suffx=mm; % MR suffix
