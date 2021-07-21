@@ -1,11 +1,6 @@
 function [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj,patsel,Iperm)
 
-% if obj.subscore.mixfibers
-%    for i=1:length(obj.subscore.vars)
-%         I_subscore(1:length(obj.subscore.vars{1,1}),i) = obj.subscore.weights(i)*obj.subscore.vars{i};
-%    end
-%    I = nanmean(I_subscore,2);
-% else
+
 if ~exist('Iperm','var')
     I=obj.responsevar;
 else % used in permutation based statistics - in this case the real improvement can be substituted with permuted variables.
@@ -37,26 +32,47 @@ if ~isempty(obj.covars)
     end
 end
 
-%if ~obj.splitbygroup && ~obj.split_by_subscore
-%    groups=1;
-%    dogroups = 0;
-%end
-% if ~obj.subscore.split_by_subscore
-if obj.splitbygroup && ~obj.split_by_subscore
-    groups = unique(obj.M.patient.group)';
-    dogroups = 1;
-    dosubscores = 0;
-elseif obj.splitbysubscore && ~isempty(obj.subscore.vars) && ~obj.splitbygroup
-    groups = 1:length(obj.subscore.vars);
-    dosubscores = 1;
-    dogroups = 0;
-elseif obj.splitbysubscore && obj.splitbygroup
-    ea_error('Multitract analyses with multiple tracts and subscores are not possible.');
-else
-    groups=1;
-    dogroups = 0;
-    dosubscores = 0;
+if strcmp(obj.multitractmode,'Split & Color By PCA')
+   % prep PCA:
+   subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
+   try
+   [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'algorithm','als');
+   catch % pca failed, likely not enough variables selected.
+       score=nan(length(obj.responsevar),obj.numpcs);
+   end
+       
+   obj.subscore.pcavars=cell(1);
+   for pc=1:obj.numpcs
+       obj.subscore.pcavars{pc}=score(:,pc);
+   end
+   if ~isfield(obj.subscore,'pcacolors')
+       obj.subscore.pcacolors=ea_color_wes('all'); % assign some random colors.
+   end
 end
+
+switch obj.multitractmode
+    case 'Split & Color By Group'
+        groups = unique(obj.M.patient.group)';
+        dogroups = 1;
+        dosubscores = 0;
+    case 'Split & Color By Subscore'
+        if ~isempty(obj.subscore.vars)
+            groups = 1:length(obj.subscore.vars);
+            dosubscores = 1;
+            dogroups = 0;
+        end
+    case 'Split & Color By PCA'
+        groups = 1:length(obj.subscore.pcavars);
+        dosubscores = 1;
+        dogroups = 0;
+    otherwise
+        groups=1;
+        dogroups = 0;
+        dosubscores = 0;
+end
+
+
+
 for group=groups
     gfibsval=fibsval; %refresh fibsval
     if dogroups
@@ -71,7 +87,12 @@ for group=groups
         gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
     if dosubscores
-        I = obj.subscore.vars{group};
+        switch obj.multitractmode
+            case 'Split & Color By Subscores'
+                I = obj.subscore.vars{group};
+            case 'Split & Color By PCA'
+                I = obj.subscore.pcavars{group};
+        end
         if size(I,2)==1 % 1 entry per patient, not per electrode
             I=[I,I]; % both sides the same;
         end
