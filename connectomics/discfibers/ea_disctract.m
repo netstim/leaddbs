@@ -466,7 +466,7 @@ classdef ea_disctract < handle
                     
                     % map back to PCA:
                     subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
-                    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'algorithm','als');
+                    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
                  
                     Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
                     
