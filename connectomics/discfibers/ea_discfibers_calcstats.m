@@ -36,7 +36,7 @@ if strcmp(obj.multitractmode,'Split & Color By PCA')
    % prep PCA:
    subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
    try
-   [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'algorithm','als');
+   [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
    catch % pca failed, likely not enough variables selected.
        score=nan(length(obj.responsevar),obj.numpcs);
    end
