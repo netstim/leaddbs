@@ -18,8 +18,10 @@ classdef ea_disctract < handle
         efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [0.9176,0.2000,0.1373] % positive main color
         negcolor = [0.2824,0.6157,0.9725] % negative main color
-        splitbygroup = 0
-        splitbysubscore = 0
+        multitractmode = 'Single Tract Analysis' % multi mode now coded by this value
+        numpcs = 4; % standard value of how many PCs to compute in case of PCA mode
+        doactualprediction = 0; % set up nested CVs to carry out actual predictions of response variables
+        predictionmodel = 'Linear'; % type of glm used to fit fiber values to actual scores
         showsignificantonly = 0
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
@@ -107,6 +109,7 @@ classdef ea_disctract < handle
                 obj.responsevarlabel = obj.M.clinical.labels{1};
                 obj.subscore.vars = {};
                 obj.subscore.labels = {};
+                obj.subscore.pcavars = {};
                 obj.subscore.weights = [];
                 obj.subscore.colors = ea_color_wes('all');
                 obj.subscore.spitbysubscore = 0;
@@ -247,7 +250,7 @@ classdef ea_disctract < handle
             end
         end
         
-        function [I, Ihat] = crossval(obj, cvp, Iperm)
+        function [Improvement, Ihat] = crossval(obj, cvp, Iperm)
             if isnumeric(cvp) % cvp is crossvalind
                 cvIndices = cvp;
                 cvID = unique(cvIndices);
@@ -266,12 +269,20 @@ classdef ea_disctract < handle
                 patientsel = obj.customselection;
             end
             
-            if ~exist('Iperm', 'var') || isempty(Iperm)
-                I = obj.responsevar(patientsel);
-            else
-                I = Iperm(patientsel);
+            switch obj.multitractmode
+                case 'Split & Color By PCA'
+                    if ~exist('Iperm', 'var') || isempty(Iperm)
+                        Improvement = obj.subscore.vars;
+                    else
+                        ea_error('Permutation based test not yet coded in for PCA mode.');
+                    end
+                otherwise     
+                    if ~exist('Iperm', 'var') || isempty(Iperm)
+                        Improvement = obj.responsevar(patientsel);
+                    else
+                        Improvement = Iperm(patientsel);
+                    end
             end
-            
             % Ihat is the estimate of improvements (not scaled to real improvements)
            
                 Ihat = nan(length(patientsel),2);
@@ -387,47 +398,107 @@ classdef ea_disctract < handle
                         end
                     end
                     
+                    
                     Ihat_voters=cat(3,Ihat_voters,Ihat);
                 end
             end
             
-            if size(Ihat_voters,3)>1
-                weightmatrix=zeros(size(Ihat_voters));
-                for voter=1:size(Ihat_voters,3)
-                    if ~isnan(obj.subscore.weights(voter)) % same weight for all subjects in that voter (slider was used)
-                        weightmatrix(:,:,voter)=obj.subscore.weights(voter);
-                    else % if the weight value is nan, this means we will need to derive a weight from the variable of choice
-                        weightmatrix(:,:,voter)=repmat(obj.subscore.weightvars{voter},1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter},2));
+            if obj.doactualprediction % repeat loops partly to fit to actual response variables:
+                Ihat_voters_prediction=nan(size(Ihat_voters));
+                for c=1:cvp.NumTestSets
+                    
+                    if isobject(cvp)
+                        training = cvp.training(c);
+                        test = cvp.test(c);
+                    elseif isstruct(cvp)
+                        training = cvp.training{c};
+                        test = cvp.test{c};
+                    end
+                    for voter=1:size(vals,1)
+                        switch obj.multitractmode
+                            case 'Split & Color By Subscore'
+                                useI=obj.subscore.vars{voter};
+                            case 'Split & Color By PCA'
+                                useI=obj.subscore.pcavars{voter};
+                            otherwise
+                                useI=obj.responsevar;
+                        end
+                        
+                        if size(useI,2)>1
+                            ea_error('This has not been implemented for hemiscores.');
+                        end
+                        predictor=squeeze(ea_nanmean(Ihat_voters,2));
+                        
+                        mdl=fitglm(predictor(training,voter),useI(training),lower(obj.predictionmodel));
+                        
+                        if size(useI,2)==1 % global scores
+                            Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,predictor(test,voter)),1,2); % fill both sides equally
+                        end
                     end
                 end
-                for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
-                    for yy=1:size(Ihat_voters,2)
-                    weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
-                    end
-                end
-                
-                Ihat=ea_nansum(Ihat_voters.*weightmatrix,3);
-            else % only one voter (i.e. one subscore tract)
-                Ihat=squeeze(Ihat_voters); 
+                Ihat_voters=Ihat_voters_prediction; % replace with actual response variables.
             end
             
+            
+            switch obj.multitractmode
+                case 'Split & Color By Subscore'
+                    % here we map back to the single response variable using a
+                    % weightmatrix
+                    weightmatrix=zeros(size(Ihat_voters));
+                    for voter=1:size(Ihat_voters,3)
+                        if ~isnan(obj.subscore.weights(voter)) % same weight for all subjects in that voter (slider was used)
+                            weightmatrix(:,:,voter)=obj.subscore.weights(voter);
+                        else % if the weight value is nan, this means we will need to derive a weight from the variable of choice
+                            weightmatrix(:,:,voter)=repmat(obj.subscore.weightvars{voter},1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter},2));
+                        end
+                    end
+                    for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
+                        for yy=1:size(Ihat_voters,2)
+                            weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
+                        end
+                    end
+                    
+                    Ihat=ea_nansum(Ihat_voters.*weightmatrix,3);
+                case 'Split & Color By PCA'
+                
+                    
+                    Ihat_voters=squeeze(ea_nanmean(Ihat_voters,2)); % need to assume global scores here for now.
+                    
+                    % map back to PCA:
+                    subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
+                    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'algorithm','als');
+                 
+                    Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
+                    
+                    Ihat=cell(1); % export in cell format as the Improvement itself.
+                    for subsc=1:size(Ihatout,2)
+                       Ihat{subsc}=Ihatout(:,subsc); 
+                    end
+                    
+                    
+                otherwise
+                    Ihat=squeeze(Ihat_voters);
+            end
+            if ~iscell(Ihat)
+                if cvp.NumTestSets == 1
+                    Ihat = Ihat(test,:);
+                    Improvement = Improvement(test);
+                end
+                
+                if size(obj.responsevar,2)==2 % hemiscores
+                    Ihat = Ihat(:); % compare hemiscores (electrode wise)
+                    Improvement = Improvement(:);
+                else
+                    Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
+                end
+            end
             
             % restore original view in case of live drawing
             if obj.cvlivevisualize
                 obj.draw;
             end
             
-            if cvp.NumTestSets == 1
-                Ihat = Ihat(test,:);
-                I = I(test);
-            end
-            
-            if size(obj.responsevar,2)==2 % hemiscores
-                Ihat = Ihat(:); % compare hemiscores (electrode wise)
-                I = I(:);
-            else
-                Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
-            end
+
         end
         
         function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
@@ -516,10 +587,13 @@ classdef ea_disctract < handle
                 obj.M.groups.group=1;
                 obj.M.groups.color=ea_color_wes('all');
             end
-            if obj.splitbygroup
-                linecols=obj.M.groups.color;
-            elseif obj.splitbysubscore
-                linecols = obj.subscore.colors;
+            switch obj.multitractmode
+                case 'Split & Color By Group'
+                    linecols=obj.M.groups.color;
+                case 'Split & Color By Subscore'
+                    linecols = obj.subscore.colors;
+                case 'Split & Color By PCA'
+                    linecols = obj.subscore.pcacolors;
             end
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
@@ -574,9 +648,10 @@ classdef ea_disctract < handle
                 shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
                 
                 if domultitract % also means subscores
-                    if obj.splitbysubscore
+                    switch obj.multitractmode
+                        case 'Split & Color By Subscore'
                         cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.subscore.colors(group,:));
-                    elseif obj.splitbygroup
+                        case {'Split & Color By Group','Split & Color By PCA'}
                         cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
                     end
                     if obj.posvisible && ~obj.negvisible
