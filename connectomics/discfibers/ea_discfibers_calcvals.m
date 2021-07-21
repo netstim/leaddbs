@@ -31,7 +31,7 @@ for side = 1:numSide
         vat = ea_load_nii(vatlist{pt,side});
         
         % Threshold the vat efield
-        vatInd = find(vat.img(:)>thresh);
+        vatInd = find(abs(vat.img(:))>thresh);
         
         % Trim connectome fibers
         [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);

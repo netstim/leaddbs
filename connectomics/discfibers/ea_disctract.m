@@ -6,6 +6,7 @@ classdef ea_disctract < handle
         M % content of lead group project
         resultfig % figure handle to plot results
         ID % name / ID of discriminative fibers object
+        calcthreshold % initial hard threshold to impose on (absolute) nifti files only when calculating the data
         posvisible = 1 % pos tract visible
         negvisible = 0 % neg tract visible
         showposamount = [25 25] % two entries for right and left
@@ -141,12 +142,11 @@ classdef ea_disctract < handle
             cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
             if isfield(obj.M,'pseudoM')
                 vatlist = obj.M.ROI.list;
-                [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, 0); % consider all voxels > 0
             else
                 vatlist = ea_discfibers_getvats(obj);
-                [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, 0);
             end
-            
+            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
+
             obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
