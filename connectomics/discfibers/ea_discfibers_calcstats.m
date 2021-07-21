@@ -88,7 +88,7 @@ for group=groups
     end
     if dosubscores
         switch obj.multitractmode
-            case 'Split & Color By Subscores'
+            case 'Split & Color By Subscore'
                 I = obj.subscore.vars{group};
             case 'Split & Color By PCA'
                 I = obj.subscore.pcavars{group};
