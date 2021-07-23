@@ -111,10 +111,14 @@ classdef ea_disctract < handle
                 obj.subscore.labels = {};
                 obj.subscore.pcavars = {};
                 obj.subscore.weights = [];
-                obj.subscore.colors = ea_color_wes('all');
+                obj.subscore.colors{1,1} = ea_color_wes('all');
+                obj.subscore.colors{1,2} = flip(ea_color_wes('all')); %TODO think about this a bit more
+                obj.subscore.showposamount = repmat([25,25],10,1); %total of 10 subscores - will delete when we know the total number of subscores
+                obj.subscore.shownegamount = repmat([25,25],10,1);
+                obj.subscore.negvisible = zeros(10,1);
+                obj.subscore.posvisible = ones(10,1);
                 obj.subscore.spitbysubscore = 0;
                 obj.subscore.mixfibers = 0;
-                obj.subscore.control_single_fiber = 0;
                 obj.covarlabels={};
             elseif  isfield(D, 'tractset')  % Saved tractset class loaded
                 props = properties(D.tractset);
@@ -149,7 +153,7 @@ classdef ea_disctract < handle
                 vatlist = ea_discfibers_getvats(obj);
             end
             [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
-
+            
             obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
@@ -276,7 +280,7 @@ classdef ea_disctract < handle
                     else
                         ea_error('Permutation based test not yet coded in for PCA mode.');
                     end
-                otherwise     
+                otherwise
                     if ~exist('Iperm', 'var') || isempty(Iperm)
                         Improvement = obj.responsevar(patientsel);
                     else
@@ -284,8 +288,8 @@ classdef ea_disctract < handle
                     end
             end
             % Ihat is the estimate of improvements (not scaled to real improvements)
-           
-                Ihat = nan(length(patientsel),2);
+            
+            Ihat = nan(length(patientsel),2);
             
             
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
@@ -460,21 +464,19 @@ classdef ea_disctract < handle
                     
                     Ihat=ea_nansum(Ihat_voters.*weightmatrix,3);
                 case 'Split & Color By PCA'
-                
                     
                     Ihat_voters=squeeze(ea_nanmean(Ihat_voters,2)); % need to assume global scores here for now.
                     
                     % map back to PCA:
                     subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
                     [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
-                 
+                    
                     Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
                     
                     Ihat=cell(1); % export in cell format as the Improvement itself.
                     for subsc=1:size(Ihatout,2)
-                       Ihat{subsc}=Ihatout(:,subsc); 
+                        Ihat{subsc}=Ihatout(:,subsc);
                     end
-                    
                     
                 otherwise
                     Ihat=squeeze(Ihat_voters);
@@ -498,7 +500,7 @@ classdef ea_disctract < handle
                 obj.draw;
             end
             
-
+            
         end
         
         function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
@@ -592,8 +594,10 @@ classdef ea_disctract < handle
                     linecols=obj.M.groups.color;
                 case 'Split & Color By Subscore'
                     linecols = obj.subscore.colors;
+                    
                 case 'Split & Color By PCA'
                     linecols = obj.subscore.pcacolors;
+                    
             end
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
@@ -611,8 +615,6 @@ classdef ea_disctract < handle
             end
             
             
-            
-            
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % vals will also be >1 for subscore tracts
                 % Vertcat all values for colorbar construction
@@ -620,25 +622,43 @@ classdef ea_disctract < handle
                 if isempty(allvals)
                     continue;
                 end
-                
-                if obj.posvisible && all(allvals<0)
-                    obj.posvisible = 0;
-                    fprintf('\n')
-                    warning('off', 'backtrace');
-                    warning('No positive values found, posvisible is set to 0 now!');
-                    warning('on', 'backtrace');
-                    fprintf('\n')
+                if strcmp(obj.multitractmode,'Split & Color By Subscore')
+                    if obj.subscore.posvisible(group) && all(allvals<0)
+                        obj.subscore.posvisible(group) = 0;
+                        fprintf('\n')
+                        warning('off', 'backtrace');
+                        warning('No positive values found, posvisible is set to 0 now!');
+                        warning('on', 'backtrace');
+                        fprintf('\n')
+                    end
+                    
+                    if obj.subscore.negvisible(group) && all(allvals>0)
+                        obj.subscore.negvisible(group) = 0;
+                        fprintf('\n')
+                        warning('off', 'backtrace');
+                        warning('No negative values found, negvisible is set to 0 now!');
+                        warning('on', 'backtrace');
+                        fprintf('\n')
+                    end
+                else
+                    if obj.posvisible && all(allvals<0)
+                        obj.posvisible = 0;
+                        fprintf('\n')
+                        warning('off', 'backtrace');
+                        warning('No positive values found, posvisible is set to 0 now!');
+                        warning('on', 'backtrace');
+                        fprintf('\n')
+                    end
+                    
+                    if obj.negvisible && all(allvals>0)
+                        obj.negvisible = 0;
+                        fprintf('\n')
+                        warning('off', 'backtrace');
+                        warning('No negative values found, negvisible is set to 0 now!');
+                        warning('on', 'backtrace');
+                        fprintf('\n')
+                    end
                 end
-                
-                if obj.negvisible && all(allvals>0)
-                    obj.negvisible = 0;
-                    fprintf('\n')
-                    warning('off', 'backtrace');
-                    warning('No negative values found, negvisible is set to 0 now!');
-                    warning('on', 'backtrace');
-                    fprintf('\n')
-                end
-                
                 colormap(gray);
                 gradientLevel = 1024;
                 cmapShiftRatio = 0.5;
@@ -650,25 +670,53 @@ classdef ea_disctract < handle
                 if domultitract % also means subscores
                     switch obj.multitractmode
                         case 'Split & Color By Subscore'
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.subscore.colors(group,:));
+                            obj.poscolor = obj.subscore.colors{1,2}(group,:); % positive main color
+                            obj.negcolor = obj.subscore.colors{1,1}(group,:); % negative main color
+                            if obj.subscore.posvisible(group) && obj.subscore.negvisible(group)
+                                cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
+                                cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
+                                cmap = ea_colorgradient(gradientLevel/2, [1,1,1], obj.poscolor);
+                                cmapRight = ea_colorgradient(gradientLevel/2, cmap(shiftedCmapRightStart,:), obj.poscolor);
+                                fibcmap{group} = [cmapLeft;cmapRight];
+                                cmapind = ones(size(allvals))*gradientLevel/2;
+                                cmapind(allvals<0) = round(normalize(allvals(allvals<0),'range',[1,gradientLevel/2]));
+                                cmapind(allvals>0) = round(normalize(allvals(allvals>0),'range',[gradientLevel/2+1,gradientLevel]));
+                                alphaind = ones(size(allvals));
+                                % alphaind(allvals<0) = normalize(-1./(1+exp(-allvals(allvals<0))), 'range');
+                                % alphaind(allvals>0) = normalize(1./(1+exp(-allvals(allvals>0))), 'range');
+                            elseif obj.subscore.posvisible(group)
+                                cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
+                                fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
+                                cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                alphaind = ones(size(allvals));
+                                % alphaind = normalize(1./(1+exp(-allvals)), 'range');
+                            elseif obj.subscore.negvisible(group)
+                                cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
+                                fibcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
+                                cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                alphaind = ones(size(allvals));
+                                % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
+                            end
+                            
                         case {'Split & Color By Group','Split & Color By PCA'}
-                        cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-                    end
-                    if obj.posvisible && ~obj.negvisible
-                        fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(allvals, 'range');
-                    elseif ~obj.posvisible && obj.negvisible
-                        cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
-                        fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
-                        cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                        alphaind = ones(size(allvals));
-                        % alphaind = normalize(-allvals, 'range');
-                    else
-                        warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                            '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
-                        return;
+                            cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
+                            
+                            if obj.posvisible && ~obj.negvisible
+                                fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
+                                cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                alphaind = ones(size(allvals));
+                                % alphaind = normalize(allvals, 'range');
+                            elseif ~obj.posvisible && obj.negvisible
+                                cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
+                                fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
+                                cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                alphaind = ones(size(allvals));
+                                % alphaind = normalize(-allvals, 'range');
+                            else
+                                warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
+                                    '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
+                                return;
+                            end
                     end
                 else
                     obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
@@ -732,31 +780,51 @@ classdef ea_disctract < handle
                 
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
-                    if obj.posvisible && obj.negvisible
-                        tick{group} = [1, length(fibcmap{group})];
-                        poscbvals = sort(allvals(allvals>0));
-                        negcbvals = sort(allvals(allvals<0));
-                        ticklabel{group} = [negcbvals(1), poscbvals(end)];
-                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-                    elseif obj.posvisible
-                        tick{group} = [1, length(fibcmap{group})];
-                        posvals = sort(allvals(allvals>0));
-                        ticklabel{group} = [posvals(1), posvals(end)];
-                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-                    elseif obj.negvisible
-                        tick{group} = [1, length(fibcmap{group})];
-                        negvals = sort(allvals(allvals<0));
-                        ticklabel{group} = [negvals(1), negvals(end)];
-                        ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                    if strcmp(obj.multitractmode,'Split & Color By Subscore')
+                        if obj.subscore.posvisible(group) && obj.subscore.negvisible(group)
+                            tick{group} = [1, length(fibcmap{group})];
+                            poscbvals = sort(allvals(allvals>0));
+                            negcbvals = sort(allvals(allvals<0));
+                            ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        elseif obj.subscore.posvisible(group)
+                            tick{group} = [1, length(fibcmap{group})];
+                            posvals = sort(allvals(allvals>0));
+                            ticklabel{group} = [posvals(1), posvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        elseif obj.subscore.negvisible(group)
+                            tick{group} = [1, length(fibcmap{group})];
+                            negvals = sort(allvals(allvals<0));
+                            ticklabel{group} = [negvals(1), negvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        end
+                    else
+                        if obj.posvisible && obj.negvisible
+                            tick{group} = [1, length(fibcmap{group})];
+                            poscbvals = sort(allvals(allvals>0));
+                            negcbvals = sort(allvals(allvals<0));
+                            ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        elseif obj.posvisible
+                            tick{group} = [1, length(fibcmap{group})];
+                            posvals = sort(allvals(allvals>0));
+                            ticklabel{group} = [posvals(1), posvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        elseif obj.negvisible
+                            tick{group} = [1, length(fibcmap{group})];
+                            negvals = sort(allvals(allvals<0));
+                            ticklabel{group} = [negvals(1), negvals(end)];
+                            ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                        end
                     end
                 end
-            end
-            
-            % store colorbar in object
-            if exist('fibcmap','var') % could be no fibers present at all.
-                obj.colorbar.cmap = fibcmap;
-                obj.colorbar.tick = tick;
-                obj.colorbar.ticklabel = ticklabel;
+                % store colorbar in object
+                if exist('fibcmap','var') % could be no fibers present at all.
+                    obj.colorbar.cmap = fibcmap;
+                    obj.colorbar.tick = tick;
+                    obj.colorbar.ticklabel = ticklabel;
+                end
+                
             end
         end
     end
