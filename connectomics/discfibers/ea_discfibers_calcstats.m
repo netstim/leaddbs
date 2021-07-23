@@ -197,14 +197,14 @@ for group=groups
                             end
                             usecovars=[usecovars,thiscv];
                         end
-                        if obj.showsignificantonly
+                        if obj.showsignificantonly 
                             [outvals,outps]=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
                         else % no need to calc p-val here
                             outvals=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
                         end
                     else
                         if conventionalcorr
-                            if obj.showsignificantonly
+                            if obj.showsignificantonly 
                                 [outvals,outps]=corr(invals,I(gpatsel,side),'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
                             else % no need to calc p-val here
                                 outvals=corr(invals,I(gpatsel,side),'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
@@ -215,19 +215,19 @@ for group=groups
                             end
                             switch lower(obj.corrtype)
                                 case 'bend'
-                                    if obj.showsignificantonly
+                                    if obj.showsignificantonly 
                                         [outvals,outps]=ea_bendcorr(invals,I(gpatsel,side)); % generate optimality values on all but left out patients
                                     else % no need to calc p-val here
                                         outvals=ea_bendcorr(invals,I(gpatsel,side)); % generate optimality values on all but left out patients
                                     end
                                 case 'skipped pearson'
-                                    if obj.showsignificantonly
+                                    if obj.showsignificantonly 
                                         ea_error('Significance not implemented for Skipped correlations');
                                     else
                                         outvals=ea_skipped_correlation(full(invals),I(gpatsel,side),'Pearson'); % generate optimality values on all but left out patients
                                     end
                                 case 'skipped spearman'
-                                    if obj.showsignificantonly
+                                    if obj.showsignificantonly 
                                         ea_error('Significance not implemented for Skipped correlations');
                                     else
                                         outvals=ea_skipped_correlation(full(invals),I(gpatsel,side),'Spearman'); % generate optimality values on all but left out patients
@@ -259,7 +259,7 @@ for group=groups
                     for fib=1:size(invals,2)
                         DC(fib) = 2*(ea_nansum(invals(:,fib).*ImpBinary))/ea_nansum(invals(:,fib) + ImpBinary);
                     end
-                    if obj.showsignificantonly
+                    if obj.showsignificantonly 
                         ea_error('Calculating significance for Dice coefficients is not possible');
                     end
                     vals{group,side}(nonempty)=DC;
@@ -275,7 +275,7 @@ for group=groups
                     upSet=invals(ImpBinary==1,:);
                     downSet=invals(ImpBinary==0,:);
                     
-                    if obj.showsignificantonly
+                    if obj.showsignificantonly || obj.subscore.showsignificantonly
                         [~,ps,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
                         outvals=stats.tstat';
                         outps=ps;
@@ -292,7 +292,7 @@ for group=groups
             case 6 % Plain Connection
                 vals{group,side} = sumgfibsval/length(gpatsel);
                 vals{group,side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)))=nan;
-                if obj.showsignificantonly
+                if obj.showsignificantonly 
                     ea_error('Calculating significance does not make sense (plain connections mode)');
                 end
         end
@@ -301,7 +301,7 @@ end
     
 % close group loop to test for significance across all tests run:
 
-if obj.showsignificantonly
+if obj.showsignificantonly 
     vals=ea_corrsignan(vals,pvals,obj);
 end
 
@@ -322,29 +322,53 @@ for group=groups
         allvals = vertcat(vals{group,:});
         posvals = sort(allvals(allvals>0),'descend');
         negvals = sort(allvals(allvals<0),'ascend');
+        if strcmp(obj.multitractmode,'Split & Color By Subscore')
+            if ~obj.subscore.posvisible(group) || ~obj.subscore.showposamount(group,side) || isempty(posvals)
+                posthresh = inf;
+            else
+                posrange = posvals(1) - posvals(end);
+                posthresh = posvals(1) - obj.subscore.showposamount(group,side)/100 * posrange;
+
+                if posrange == 0
+                    posthresh = posthresh - eps*10;
+                end
+            end
         
-        if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
-            posthresh = inf;
         else
-            posrange = posvals(1) - posvals(end);
-            posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-            
-            if posrange == 0
-                posthresh = posthresh - eps*10;
+            if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
+                posthresh = inf;
+            else
+                posrange = posvals(1) - posvals(end);
+                posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
+                
+                if posrange == 0
+                    posthresh = posthresh - eps*10;
+                end
             end
         end
-        
-        if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
-            negthresh = -inf;
+        if strcmp(obj.multitractmode,'Split & Color By Subscore')
+            if ~obj.subscore.negvisible(group) || ~obj.subscore.shownegamount(group,side) || isempty(negvals)
+                negthresh = -inf;
+            else
+                negrange = negvals(1) - negvals(end);
+                negthresh = negvals(1) - obj.subscore.shownegamount(group,side)/100 * negrange;
+                
+                if negrange == 0
+                    negthresh = negthresh + eps*10;
+                end
+            end
         else
-            negrange = negvals(1) - negvals(end);
-            negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-            
-            if negrange == 0
-                negthresh = negthresh + eps*10;
+            if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
+                negthresh = -inf;
+            else
+                negrange = negvals(1) - negvals(end);
+                negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
+                
+                if negrange == 0
+                    negthresh = negthresh + eps*10;
+                end
             end
         end
-        
         % Remove vals and fibers outside the thresholding range (set by
         % sliders)
         remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
