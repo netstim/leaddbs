@@ -314,6 +314,10 @@ for group=groups
         % Remove vals and fibers outside the thresholding range
         obj.stats.pos.available(side)=sum(cat(1,vals{:,1})>0); % only collected for first group (positives)
         obj.stats.neg.available(side)=sum(cat(1,vals{:,1})<0);
+        if strcmp(obj.multitractmode,'Split & Color By Subscore')
+            obj.subscore.vis.pos_available(group,side)=sum(cat(1,vals{group,1})>0); % only collected for first group (positives)
+            obj.subscore.vis.neg_available(group,side)=sum(cat(1,vals{group,1})<0);
+        end
         usedidx{group,side}=find(~isnan(vals{group,side}));
         vals{group,side}=vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
         if exist('pvals','var')

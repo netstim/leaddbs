@@ -582,6 +582,7 @@ classdef ea_disctract < handle
                 obj.stats.pos.shown(2)=sum(allvals{2}>0);
                 obj.stats.neg.shown(2)=sum(allvals{2}<0);
             end
+            
             set(0,'CurrentFigure',obj.resultfig);
             
             domultitract=size(vals,1)>1; % if color by groups is set will be positive.
@@ -618,7 +619,19 @@ classdef ea_disctract < handle
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % vals will also be >1 for subscore tracts
                 % Vertcat all values for colorbar construction
+                if ~any([obj.subscore.posvisible(group),obj.subscore.negvisible(group)])
+                    continue
+                end
+                if strcmp(obj.multitractmode,'Split & Color By Subscore')
+                    obj.subscore.vis.pos_shown(group,1)=sum(vals{group,1}>0);
+                    obj.subscore.vis.neg_shown(group,1)=sum(vals{group,1}<0);
+                    if (size(vals{group,2},1))>1 % bihemispheric usual case
+                        obj.subscore.vis.pos_shown(group,2)=sum(vals{group,2}>0);
+                        obj.subscore.vis.neg_shown(group,2)=sum(vals{group,2}<0);
+                    end
+                end
                 allvals = full(vertcat(vals{group,:}));
+                
                 if isempty(allvals)
                     continue;
                 end
