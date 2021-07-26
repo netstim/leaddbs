@@ -170,6 +170,8 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     # this script is solely for McIntyre2002 model
     '''Here we assume that all axons have the same number of nodes of Ranvier (and hence the length) and the morphology'''
 
+    N_models = int(N_models)
+    
     if stim_side==0:
         stim_folder='Results_rh/'
     else:
