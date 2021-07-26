@@ -605,11 +605,11 @@ classdef ea_networkmapping < handle
                         % first draw correct surface
                         switch obj.model
                             case 'Smoothed'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_smoothed.rh.obj']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_smoothed.lh.obj']); end
+                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_smoothed.rh.mz3']); end
+                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_smoothed.lh.mz3']); end
                             case 'Full'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf.rh.obj']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf.lh.obj']); end
+                                if obj.modelRH; rh=ea_readObj([ea_space,'surf.rh.mz3']); end
+                                if obj.modelLH; lh=ea_readObj([ea_space,'surf.lh.mz3']); end
                         end
 
                         % Check cmap
@@ -680,26 +680,26 @@ classdef ea_networkmapping < handle
                         switch obj.model
                             case 'Smoothed'
                                 if obj.modelRH && ~obj.modelLH
-                                    mesh=([ea_space,'surf_smoothed.rh.obj']);
+                                    mesh=([ea_space,'surf_smoothed.rh.mz3']);
                                     side=1;
                                 elseif obj.modelLH && ~obj.modelRH
-                                    mesh=([ea_space,'surf_smoothed.lh.obj']);
+                                    mesh=([ea_space,'surf_smoothed.lh.mz3']);
                                     side=2;
                                 elseif obj.modelRH && obj.modelLH
-                                    mesh=([ea_space,'surf_smoothed.obj']);
+                                    mesh=([ea_space,'surf_smoothed.mz3']);
                                     side=1;
                                 elseif ~obj.modelRH && ~obj.modelLH
                                     ea_error('Please switch on at least one hemisphere');
                                 end
                             case 'Full'
                                 if obj.modelRH && ~obj.modelLH
-                                    mesh=([ea_space,'surf.rh.obj']);
+                                    mesh=([ea_space,'surf.rh.mz3']);
                                     side=1;
                                 elseif obj.modelLH && ~obj.modelRH
-                                    mesh=([ea_space,'surf.lh.obj']);
+                                    mesh=([ea_space,'surf.lh.mz3']);
                                     side=2;
                                 elseif obj.modelRH && obj.modelLH
-                                    mesh=([ea_space,'surf.obj']);
+                                    mesh=([ea_space,'surf.mz3']);
                                     side=1;
                                 elseif ~obj.modelRH && ~obj.modelLH
                                     ea_error('Please switch on at least one hemisphere');
