@@ -327,14 +327,27 @@ for group=groups
         posvals = sort(allvals(allvals>0),'descend');
         negvals = sort(allvals(allvals<0),'ascend');
         if strcmp(obj.multitractmode,'Split & Color By Subscore')
-            if ~obj.subscore.posvisible(group) || ~obj.subscore.showposamount(group,side) || isempty(posvals)
-                posthresh = inf;
+            if obj.subscore.special_case
+                if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
+                    posthresh = inf;
+                else
+                    posrange = posvals(1) - posvals(end);
+                    posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
+                    
+                    if posrange == 0
+                        posthresh = posthresh - eps*10;
+                    end
+                end
             else
-                posrange = posvals(1) - posvals(end);
-                posthresh = posvals(1) - obj.subscore.showposamount(group,side)/100 * posrange;
-
-                if posrange == 0
-                    posthresh = posthresh - eps*10;
+                if ~obj.subscore.posvisible(group) || ~obj.subscore.showposamount(group,side) || isempty(posvals)
+                    posthresh = inf;
+                else
+                    posrange = posvals(1) - posvals(end);
+                    posthresh = posvals(1) - obj.subscore.showposamount(group,side)/100 * posrange;
+                    
+                    if posrange == 0
+                        posthresh = posthresh - eps*10;
+                    end
                 end
             end
         
@@ -349,16 +362,30 @@ for group=groups
                     posthresh = posthresh - eps*10;
                 end
             end
+  
         end
         if strcmp(obj.multitractmode,'Split & Color By Subscore')
-            if ~obj.subscore.negvisible(group) || ~obj.subscore.shownegamount(group,side) || isempty(negvals)
-                negthresh = -inf;
+            if obj.subscore.special_case
+                if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
+                    negthresh = -inf;
+                else
+                    negrange = negvals(1) - negvals(end);
+                    negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
+                    
+                    if negrange == 0
+                        negthresh = negthresh + eps*10;
+                    end
+                end
             else
-                negrange = negvals(1) - negvals(end);
-                negthresh = negvals(1) - obj.subscore.shownegamount(group,side)/100 * negrange;
-                
-                if negrange == 0
-                    negthresh = negthresh + eps*10;
+                if ~obj.subscore.negvisible(group) || ~obj.subscore.shownegamount(group,side) || isempty(negvals)
+                    negthresh = -inf;
+                else
+                    negrange = negvals(1) - negvals(end);
+                    negthresh = negvals(1) - obj.subscore.shownegamount(group,side)/100 * negrange;
+                    
+                    if negrange == 0
+                        negthresh = negthresh + eps*10;
+                    end
                 end
             end
         else
