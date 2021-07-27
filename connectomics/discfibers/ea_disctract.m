@@ -52,6 +52,7 @@ classdef ea_disctract < handle
         leadgroup % redundancy protocol only, path to original lead group project
         connectome % redundancy protocol only, name of underlying connectome
         colorbar % colorbar information
+        groupcolors = ea_color_wes('all');
         % stats: (how many fibers available and shown etc for GUI)
         modelNormalization='None';
         numBins=15;
@@ -703,10 +704,61 @@ classdef ea_disctract < handle
                 
                 if domultitract % also means subscores
                     switch obj.multitractmode
-                        case 'Split & Color By Subscore'
-                            obj.poscolor = obj.subscore.colors{1,2}(group,:); % positive main color
-                            obj.negcolor = obj.subscore.colors{1,1}(group,:); % negative main color
+                        %logic is different for groups (pos & neg cannot be
+                        %shown together), whereas for PCA it is not as
+                        %such. Therefore, I am splitting the cases into
+                        %two.
+                        case 'Split & Color By Group' 
+                            obj.poscolor = obj.groupcolors(group,:);
+                            obj.negcolor = [0.94,0.97,1.00];
                             if obj.subscore.special_case
+                                cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
+                                if obj.posvisible && ~obj.negvisible
+                                    fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
+                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind = normalize(allvals, 'range');
+                                elseif ~obj.posvisible && obj.negvisible
+                                    cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
+                                    fibcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
+                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind = normalize(-allvals, 'range');
+                                else
+                                    warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
+                                        '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
+                                    return;
+                                end
+                            else
+                                cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
+                                if obj.posvisible(group) && ~obj.negvisible(group)
+                                    fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
+                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind = normalize(allvals, 'range');
+                                elseif ~obj.posvisible(group) && obj.negvisible(group)
+                                    cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
+                                    fibcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
+                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind = normalize(-allvals, 'range');
+                                else
+                                    warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
+                                        '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
+                                    return;
+                                end
+                            end
+                        otherwise
+                            if  strcmp(obj.multitractmode,'Split & Color By Subscore')
+                                obj.poscolor = obj.subscore.colors{1,2}(group,:); % positive main color
+                                obj.negcolor = obj.subscore.colors{1,1}(group,:); % negative main color 
+                            elseif strcmp(obj.multitractmode,'Split & Color By PCA')
+                                obj.poscolor = obj.subscore.pcacolors(group,:);
+                                obj.negcolor = [0.94,0.97,1.00];
+                            end
+                            if obj.subscore.special_case %operating the mixed fiber tract in the multitract mode. Essentially uses the same logic as you would have used if you were not doing multitract mode, but it incorporates the multitract analysis.
+                                %for split by groups options, you cannot have pos &
+                                %neg open at the same time.
                                 if obj.posvisible && obj.negvisible
                                     cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
                                     cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
@@ -759,66 +811,7 @@ classdef ea_disctract < handle
                                     % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
                                 end
                             end
-                        case 'Split & Color By PCA'
-                            if obj.subscore.special_case
-                                cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-                                
-                                if obj.posvisible && ~obj.negvisible
-                                    fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
-                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                                    alphaind = ones(size(allvals));
-                                    % alphaind = normalize(allvals, 'range');
-                                elseif ~obj.posvisible && obj.negvisible
-                                    cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
-                                    fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
-                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                                    alphaind = ones(size(allvals));
-                                    % alphaind = normalize(-allvals, 'range');
-                                else
-                                    warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                                        '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
-                                    return;
-                                end
-                            else
-                                cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-                                
-                                if obj.posvisible(group) && ~obj.negvisible(group)
-                                    fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
-                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                                    alphaind = ones(size(allvals));
-                                    % alphaind = normalize(allvals, 'range');
-                                elseif ~obj.posvisible(group) && obj.negvisible(group)
-                                    cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
-                                    fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
-                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                                    alphaind = ones(size(allvals));
-                                    % alphaind = normalize(-allvals, 'range');
-                                else
-                                    warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                                        '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
-                                    return;
-                                end
-                            end
-                        case 'Split & Color By Group'
-                            cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
-                            
-                            if obj.posvisible && ~obj.negvisible
-                                fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
-                                cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                                alphaind = ones(size(allvals));
-                                % alphaind = normalize(allvals, 'range');
-                            elseif ~obj.posvisible && obj.negvisible
-                                cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
-                                fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
-                                cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
-                                alphaind = ones(size(allvals));
-                                % alphaind = normalize(-allvals, 'range');
-                            else
-                                warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
-                                    '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
-                                return;
-                            end
-                    end
+                    end     
                 else
                     obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
                     obj.negcolor = [0.2824,0.6157,0.9725]; % negative main color
@@ -881,7 +874,7 @@ classdef ea_disctract < handle
                 
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
-                    if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
+                    if domultitract 
                         if obj.subscore.special_case
                            if obj.posvisible && obj.negvisible
                                 tick{group} = [1, length(fibcmap{group})];
