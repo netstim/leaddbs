@@ -669,7 +669,7 @@ elseif ManualButton.UserData == 1
     savestate = 0;
     retrystate = 1;
     disp(['Retry with manual refinement!'])
-    [roll_y_retry,y_retry] = ea_diode_bsci_manual(side,ct,head_mm,unitvector_mm,tmat_vx2mm);
+    [roll_y_retry,y_retry] = ea_diode_manual(side,ct,head_mm,unitvector_mm,tmat_vx2mm);
 end
 
 %% saving results
