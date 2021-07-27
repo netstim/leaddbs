@@ -56,7 +56,8 @@ switch obj.multitractmode
         dogroups = 1;
         dosubscores = 0;
     case 'Split & Color By Subscore'
-        if ~isempty(obj.subscore.vars)
+        if ~isempty(obj.subscore.vars) %this will be empty when user
+            %initializes the split by subscore button
             groups = 1:length(obj.subscore.vars);
             dosubscores = 1;
             dogroups = 0;
@@ -309,14 +310,15 @@ end
         
 for group=groups
     for side=1:numel(gfibsval)
-        
         fibcell{group,side}=obj.results.(ea_conn2connid(obj.connectome)).fibcell{side}(~isnan(vals{group,side}));
         % Remove vals and fibers outside the thresholding range
-        obj.stats.pos.available(side)=sum(cat(1,vals{:,1})>0); % only collected for first group (positives)
-        obj.stats.neg.available(side)=sum(cat(1,vals{:,1})<0);
-        if strcmp(obj.multitractmode,'Split & Color By Subscore')
-            obj.subscore.vis.pos_available(group,side)=sum(cat(1,vals{group,side})>0); % collected for every group
-            obj.subscore.vis.neg_available(group,side)=sum(cat(1,vals{group,side})<0);
+        obj.stats.pos.available(side)=sum(cat(1,vals{:,side})>0); % only collected for first group (positives)
+        obj.stats.neg.available(side)=sum(cat(1,vals{:,side})<0);
+        if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
+            if ~obj.subscore.special_case
+                obj.subscore.vis.pos_available(group,side)=sum(cat(1,vals{group,side})>0); % collected for every group
+                obj.subscore.vis.neg_available(group,side)=sum(cat(1,vals{group,side})<0);
+            end
         end
         usedidx{group,side}=find(~isnan(vals{group,side}));
         vals{group,side}=vals{group,side}(usedidx{group,side}); % final weights for surviving fibers
@@ -326,7 +328,7 @@ for group=groups
         allvals = vertcat(vals{group,:});
         posvals = sort(allvals(allvals>0),'descend');
         negvals = sort(allvals(allvals<0),'ascend');
-        if strcmp(obj.multitractmode,'Split & Color By Subscore')
+        if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
             if obj.subscore.special_case
                 if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
                     posthresh = inf;
@@ -364,7 +366,7 @@ for group=groups
             end
   
         end
-        if strcmp(obj.multitractmode,'Split & Color By Subscore')
+        if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
             if obj.subscore.special_case
                 if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
                     negthresh = -inf;
