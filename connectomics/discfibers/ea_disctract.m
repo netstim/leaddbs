@@ -595,7 +595,6 @@ classdef ea_disctract < handle
                     linecols=obj.M.groups.color;
                 case 'Split & Color By Subscore'
                     linecols = obj.subscore.colors;
-                    
                 case 'Split & Color By PCA'
                     linecols = obj.subscore.pcacolors;
                     
@@ -607,14 +606,13 @@ classdef ea_disctract < handle
             for tract=1:numel(obj.drawobject)
                 try delete(obj.drawobject{tract}); end % try since could run into error when reopening from scratch.
             end
-            
-            
-            % reset colorbar
-            obj.colorbar=[];
-            if ~any([obj.posvisible,obj.negvisible])
-                return
+           if strcmp(obj.multitractmode,'Single Tract Analysis') || ~obj.subscore.special_case
+                % reset colorbar
+                obj.colorbar=[];
+                if ~any([obj.posvisible,obj.negvisible])
+                    return
+                end
             end
-            
             
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % vals will also be >1 for subscore tracts
@@ -624,7 +622,7 @@ classdef ea_disctract < handle
                         continue
                     end
                 end
-                if strcmp(obj.multitractmode,'Split & Color By Subscore')
+                if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
                     obj.subscore.vis.pos_shown(group,1)=sum(vals{group,1}>0);
                     obj.subscore.vis.neg_shown(group,1)=sum(vals{group,1}<0);
                     if (size(vals{group,2},1))>1 % bihemispheric usual case
@@ -637,7 +635,7 @@ classdef ea_disctract < handle
                 if isempty(allvals)
                     continue;
                 end
-                if strcmp(obj.multitractmode,'Split & Color By Subscore')
+                if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
                     if obj.subscore.special_case
                         if obj.posvisible && all(allvals<0)
                             obj.posvisible = 0;
@@ -675,7 +673,7 @@ classdef ea_disctract < handle
                             fprintf('\n')
                         end
                     end
-                    
+                   
                 else
                     if obj.posvisible && all(allvals<0)
                         obj.posvisible = 0;
@@ -706,7 +704,6 @@ classdef ea_disctract < handle
                 if domultitract % also means subscores
                     switch obj.multitractmode
                         case 'Split & Color By Subscore'
-                            
                             obj.poscolor = obj.subscore.colors{1,2}(group,:); % positive main color
                             obj.negcolor = obj.subscore.colors{1,1}(group,:); % negative main color
                             if obj.subscore.special_case
@@ -762,8 +759,47 @@ classdef ea_disctract < handle
                                     % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
                                 end
                             end
-                            
-                        case {'Split & Color By Group','Split & Color By PCA'}
+                        case 'Split & Color By PCA'
+                            if obj.subscore.special_case
+                                cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
+                                
+                                if obj.posvisible && ~obj.negvisible
+                                    fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
+                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind = normalize(allvals, 'range');
+                                elseif ~obj.posvisible && obj.negvisible
+                                    cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
+                                    fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
+                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind = normalize(-allvals, 'range');
+                                else
+                                    warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
+                                        '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
+                                    return;
+                                end
+                            else
+                                cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
+                                
+                                if obj.posvisible(group) && ~obj.negvisible(group)
+                                    fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), linecols(group,:));
+                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind = normalize(allvals, 'range');
+                                elseif ~obj.posvisible(group) && obj.negvisible(group)
+                                    cmap = ea_colorgradient(gradientLevel, linecols(group,:), [1,1,1]);
+                                    fibcmap{group} = ea_colorgradient(gradientLevel, linecols(group,:), cmap(shiftedCmapEnd,:));
+                                    cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
+                                    alphaind = ones(size(allvals));
+                                    % alphaind = normalize(-allvals, 'range');
+                                else
+                                    warndlg(sprintf(['Please choose either "Show Positive Fibers" or "Show Negative Fibers".',...
+                                        '\nShow both positive and negative fibers is not supported when "Color by Subscore Variable" is on.']));
+                                    return;
+                                end
+                            end
+                        case 'Split & Color By Group'
                             cmap = ea_colorgradient(gradientLevel, [1,1,1], linecols(group,:));
                             
                             if obj.posvisible && ~obj.negvisible
@@ -845,7 +881,7 @@ classdef ea_disctract < handle
                 
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
-                    if strcmp(obj.multitractmode,'Split & Color By Subscore')
+                    if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
                         if obj.subscore.special_case
                            if obj.posvisible && obj.negvisible
                                 tick{group} = [1, length(fibcmap{group})];
