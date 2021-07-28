@@ -439,7 +439,7 @@ dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 36
 
 
 %% final figure
-fig(side).figure = figure('Name',['Lead ' sides{side}],'Position',[100 100 800 800],'Color','w','Toolbar','none');
+fig(side).figure = figure('Name',['Lead ' sides{side}],'NumberTitle','off','Position',[100 100 800 800],'Color','w','Toolbar','none');
 
 if peakangle(side) > pi
     tempangle = peakangle(side) - 2 * pi;
