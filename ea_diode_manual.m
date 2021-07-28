@@ -130,12 +130,13 @@ for k = 1:length(nummarkerslices)
 end
 
 %% recalculate marker position from selected slice
-marker_vx_z = marker_vx(3) + nummarkerslices(answer);
-marker_mm_z = tmat_vx2mm * [0;0;marker_vx_z;1];
-marker_mm_z = marker_mm_z(3);
-marker_scale = (marker_mm_z-head_mm(3)) ./ unitvector_mm(3);
-marker_mm = head_mm + (unitvector_mm .* marker_scale);
-marker_vx = tmat_vx2mm\marker_mm;
+% marker_vx_z = marker_vx(3) + nummarkerslices(answer);
+% marker_mm_z = tmat_vx2mm * [0;0;marker_vx_z;1];
+% marker_mm_z = marker_mm_z(3);
+% marker_scale = (marker_mm_z-head_mm(3)) ./ unitvector_mm(3);
+% marker_mm = head_mm + (unitvector_mm .* marker_scale);
+% marker_vx = tmat_vx2mm\marker_mm;
+marker_vx(3) = marker_vx(3) + nummarkerslices(answer);
 
 %% extract respecified marker artifact from slice
 artifact_marker=ea_sample_slice(ct,'tra',extractradius,'vox',{round(marker_vx(1:3))'},1)';
@@ -205,12 +206,13 @@ for k = 1:length(numdirslices)
 end
 
 %% recalculate dirlevelnew position from selected slice
-dirlevelnew_vx_z = dirlevelnew_vx(3) + numdirslices(answer);
-dirlevelnew_mm_z = tmat_vx2mm * [0;0;dirlevelnew_vx_z;1];
-dirlevelnew_mm_z = dirlevelnew_mm_z(3);
-dirlevelnew_scale = (dirlevelnew_mm_z-head_mm(3)) ./ unitvector_mm(3);
-dirlevelnew_mm = head_mm + (unitvector_mm .* dirlevelnew_scale);
-dirlevelnew_vx = tmat_vx2mm\dirlevelnew_mm;
+% dirlevelnew_vx_z = dirlevelnew_vx(3) + numdirslices(answer);
+% dirlevelnew_mm_z = tmat_vx2mm * [0;0;dirlevelnew_vx_z;1];
+% dirlevelnew_mm_z = dirlevelnew_mm_z(3);
+% dirlevelnew_scale = (dirlevelnew_mm_z-head_mm(3)) ./ unitvector_mm(3);
+% dirlevelnew_mm = head_mm + (unitvector_mm .* dirlevelnew_scale);
+% dirlevelnew_vx = tmat_vx2mm\dirlevelnew_mm;
+dirlevelnew_vx(3) = dirlevelnew_vx(3) + numdirslices(answer);
 
 %% extract respecified dirlevelnew artifact from slice
 artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
