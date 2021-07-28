@@ -58,9 +58,14 @@ switch obj.multitractmode
     case 'Split & Color By Subscore'
         if ~isempty(obj.subscore.vars) %this will be empty when user
             %initializes the split by subscore button
-            groups = 1:length(obj.subscore.vars);
-            dosubscores = 1;
+           groups = 1:length(obj.subscore.vars);
+           dosubscores = 1;
+           dogroups = 0;
+        else
+            obj.multitractmode = 'Single Tract Analysis';
+            groups = 1;
             dogroups = 0;
+            dosubscores = 0;
         end
     case 'Split & Color By PCA'
         groups = 1:length(obj.subscore.pcavars);
