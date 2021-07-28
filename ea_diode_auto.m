@@ -1,4 +1,10 @@
-function [roll_y,y,solution] = ea_diode_bsci(side,ct,head_mm,unitvector_mm,tmat_vx2mm)
+function [roll_y,y,solution] = ea_diode_auto(side,ct,head_mm,unitvector_mm,tmat_vx2mm,elspec)
+if ~strcmp(elspec.matfname, 'boston_vercise_directed')
+    msg = sprintf(['Warning: DiODe has only been phantom-validated for Boston Scientific direcional lead!']);
+    choice = questdlg(msg,'Warning!','Continue','Continue');
+    clear msg choice
+end
+
 %% constant variables
 % colorscale for ct figures
 cscale = [-50 100];
@@ -9,12 +15,12 @@ extractradius = 30;
 sides = {'right','left','3','4','5','6','7','8'};
 
 %% define electrode properties
-% z position of the centers of directional levels 1 and 2 and themarker relative to
+% z position of the centers of directional levels 1 and 2 and the marker relative to
 % head position
-level1centerRelative = 2;
-level2centerRelative = 4;
-markercenterRelative = 10.25;
-load('boston_vercise_directed');
+level1centerRelative = elspec.contact_length + elspec.contact_spacing;
+level2centerRelative = (elspec.contact_length + elspec.contact_spacing) * 2;
+markercenterRelative = elspec.markerpos - elspec.tip_length*~elspec.tipiscontact - elspec.contact_length/2;
+load(elspec.matfname);
 
 %% load CTs
 %% Recalculate trajvector to optimize position at center of artifacts
@@ -669,7 +675,7 @@ elseif ManualButton.UserData == 1
     savestate = 0;
     retrystate = 1;
     disp(['Retry with manual refinement!'])
-    [roll_y_retry,y_retry] = ea_diode_manual(side,ct,head_mm,unitvector_mm,tmat_vx2mm);
+    [roll_y_retry,y_retry] = ea_diode_manual(side,ct,head_mm,unitvector_mm,tmat_vx2mm,elspec);
 end
 
 %% saving results

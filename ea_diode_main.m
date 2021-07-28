@@ -107,12 +107,10 @@ for side = options.elside
     unitvector_mm = (tail_mm - head_mm)/norm(tail_mm - head_mm); % vector along the lead axis with 1mm length
     
     %% launch DiODe for different leads
-    if strcmp(options.elmodel,'Boston Scientific Vercise Directed')
-        [roll_y,y,~] = ea_diode_bsci(side,ct,head_mm,unitvector_mm,tmat_vx2mm);
-    elseif strcmp(options.elmodel,'St. Jude Directed 6172 (short)')
-        [roll_y,y,~] = ea_diode_abbottshort(side,ct,head_mm,unitvector_mm,tmat_vx2mm);
-    elseif strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
-        [roll_y,y,~] = ea_diode_abbottlong(side,ct,head_mm,unitvector_mm,tmat_vx2mm);
+    if ismember(options.elmodel, {'Boston Scientific Vercise Directed', ...
+            'St. Jude Directed 6172 (short)', ...
+            'St. Jude Directed 6172 (long)'})
+        [roll_y,y,~] = ea_diode_auto(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
     else  % check for electrode type and postoperative imaging
         msg = sprintf(['No Valid Directional Lead Selected!']);
         choice = questdlg(msg,'No Directional Lead!','Abort','Abort');
