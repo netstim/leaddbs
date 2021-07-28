@@ -34,16 +34,17 @@ end
 
 if strcmp(obj.multitractmode,'Split & Color By PCA')
    % prep PCA:
-   subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
+   subvars=ea_nanzscore(cell2mat(obj.subscore.vars')); %standardize subscore stage
    try
-   [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
+   [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
    catch % pca failed, likely not enough variables selected.
        score=nan(length(obj.responsevar),obj.numpcs);
    end
-       
-   obj.subscore.pcavars=cell(1);
+   if ~isfield(obj.subscore,'pcavars')
+      obj.subscore.pcavars=cell(1);
+   end
    for pc=1:obj.numpcs
-       obj.subscore.pcavars{pc}=score(:,pc);
+      obj.subscore.pcavars{pc}=score(:,pc); %pca variables -> pca components, location of first subscore is replaced by first pc
    end
    if ~isfield(obj.subscore,'pcacolors')
        obj.subscore.pcacolors=ea_color_wes('all'); % assign some random colors.
