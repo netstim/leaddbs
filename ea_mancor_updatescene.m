@@ -497,7 +497,7 @@ if isempty(legplot)
     set(elax,'XLimMode','manual'),set(elax,'YLimMode','manual'),set(elax,'ZLimMode','manual')
     axis manual
     axis equal
-    view(0,0);
+    view(180,0);
 
     %light('Position',[0 -5 10]);
     text(0,0,14,options.elmodel,'color','w');
