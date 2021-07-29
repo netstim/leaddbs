@@ -1,5 +1,5 @@
 function electrode = ea_elspec_pmt_2102_16_093(vizz)
-% Creates the FEM-compatible electrode model for PMT 2102-16-092.
+% Creates the FEM-compatible electrode model for PMT 2102-16-093.
 % It's based on the mesh generated using SketchUp and tetgen.
 % _________________________________________________________________________
 % Copyright (C) 2020 Charite University Medicine Berlin
