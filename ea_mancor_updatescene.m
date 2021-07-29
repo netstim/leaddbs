@@ -502,7 +502,7 @@ if isempty(legplot)
     view(180,0);
 
     %light('Position',[0 -5 10]);
-    text(0,0,14,options.elmodel,'color','w');
+    text(0,2,14,options.elmodel,'color','w');
     setappdata(mcfig,'legplot',1);
 end
 
