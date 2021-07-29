@@ -1,4 +1,4 @@
-function ea_genvol_adtech_bf(meshel,elspec,rescaleratio,vizz)
+function ea_genvol_adtech(meshel,elspec,rescaleratio,vizz)
 
 electrodetrisize=0.1;  % the maximum triangle size of the electrode mesh
 

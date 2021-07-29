@@ -373,7 +373,7 @@ if vizz
 end
 
 %% build volumetric addition to it:
-ea_genvol_adtech_bf(meshel,elspec,rescaleratio,vizz);
+ea_genvol_adtech(meshel,elspec,rescaleratio,vizz);
 
 %% Revert to real dimension
 electrode.head_position = electrode.head_position/rescaleratio;
