@@ -38,7 +38,7 @@ end
 view (90,0)
 ylim([-1 1])
 xlim([-1 1])
-zlim([0 15])
+zlim([0 max(electrode.insulation(end-1).vertices(:,3))])
 axis equal
 axis off
 end

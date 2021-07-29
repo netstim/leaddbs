@@ -740,7 +740,7 @@ end
 view(180,0)
 ylim([-1 1])
 xlim([-1 1])
-zlim([0 15])
+zlim([0 max(electrode.insulation(end-1).vertices(:,3))])
 axis off
 axis equal
 
@@ -751,7 +751,7 @@ tempvec = temp3x3 * tempvec;
 
 clear tempangle
 
-set(ax_elec,'Position',[-0.16 0.38 0.43 0.6])
+set(ax_elec,'Position',[-0.16 0.38 0.43 0.45])
 
 %% get results
 if round(sumintensitynew{[1 2] == realsolution}(darkstarangle([1 2] == realsolution))) <= -200
