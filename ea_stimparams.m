@@ -2459,7 +2459,13 @@ switch side
         ptval=3;
 end
 
-sel=sel(1:options.elspec.numel);
+% Only support up to 8 contacts for now
+if options.elspec.numel<=8
+    sel=sel(1:options.elspec.numel);
+else
+    sel=sel(1:8);
+end
+
 for k=sel
     set(handles.(['k',num2str(k),'u']),'visible',onoff);
 end
