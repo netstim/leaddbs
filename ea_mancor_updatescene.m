@@ -494,7 +494,9 @@ if isempty(legplot)
     plot3(electrode.head_position(1),electrode.head_position(2),electrode.head_position(3),'*r','MarkerSize',15)
     plot3(electrode.tail_position(1),electrode.tail_position(2),electrode.tail_position(3),'*g','MarkerSize',15)
     axis([-2,2,-2,2,0,16])
-    set(elax,'XLimMode','manual'),set(elax,'YLimMode','manual'),set(elax,'ZLimMode','manual')
+    set(elax,'XLimMode','manual');
+    set(elax,'YLimMode','manual');
+    set(elax,'ZLimMode','manual');
     axis manual
     axis equal
     view(180,0);

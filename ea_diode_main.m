@@ -113,6 +113,8 @@ for side = options.elside
             'Medtronic B33005', ...
             'Medtronic B33015'})
         [roll_y,y,~] = ea_diode_auto(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
+    elseif ismember(options.elmodel, {'Medtronic B33005', 'Medtronic B33015'})
+        [roll_y,y,~] = ea_diode_medtronic(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec,1);
     else  % check for electrode type and postoperative imaging
         msg = sprintf(['No Valid Directional Lead Selected!']);
         choice = questdlg(msg,'No Directional Lead!','Abort','Abort');

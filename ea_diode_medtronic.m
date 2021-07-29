@@ -1,4 +1,4 @@
-function [roll_y,y,solution] = ea_diode_mdt(side,ct,head_mm,unitvector_mm,tmat_vx2mm,supervised)
+function [roll_y,y,solution] = ea_diode_mdt(side,ct,head_mm,unitvector_mm,tmat_vx2mm,elspec,supervised)
 %% constant variables
 % colorscale for ct figures
 cscale = [-50 100];
@@ -9,12 +9,12 @@ extractradius = 30;
 sides = {'right','left','3','4','5','6','7','8'};
 
 %% define electrode properties
-% z position of the centers of directional levels 1 and 2 and themarker relative to
+% z position of the centers of directional levels 1 and 2 and the marker relative to
 % head position
-level1centerRelative = 2;
-level2centerRelative = 4;
-markercenterRelative = 12.75;
-load('boston_vercise_directed');
+level1centerRelative = elspec.contact_length + elspec.contact_spacing;
+level2centerRelative = (elspec.contact_length + elspec.contact_spacing) * 2;
+markercenterRelative = elspec.markerpos - elspec.tip_length*~elspec.tipiscontact - elspec.contact_length/2;
+load(elspec.matfname);
 
 %% load CTs
 %% Recalculate trajvector to optimize position at center of artifacts
@@ -122,9 +122,9 @@ if ~supervised
     %         radius = 4;
     %
     %         % calculate intensityprofile and its FFT for each slice
-    %         [~, intensity,~] = ea_orient_intensityprofile(tmp,center_tmp,ct.voxsize,radius);
-    %         [peak,tmpfft] = ea_orient_intensitypeaksFFT(intensity,2);
-    %         valley = ea_orient_intensitypeaksFFT(-intensity,2);
+    %         [~, intensity,~] = ea_diode_intensityprofile(tmp,center_tmp,ct.voxsize,radius);
+    %         [peak,tmpfft] = ea_diode_intensitypeaksFFT(intensity,2);
+    %         valley = ea_diode_intensitypeaksFFT(-intensity,2);
     %         fftdiff(count) = mean(tmpfft(peak)) - mean(tmpfft(valley));
     %         count = count +1;
     %     end
@@ -150,11 +150,11 @@ if ~supervised
     %
     %     %% extract intensity profile from marker artifact
     %     radius = 4;
-    %     [angle, intensity,vector] = ea_orient_intensityprofile(artifact_marker,center_marker,ct.voxsize,radius);
+    %     [angle, intensity,vector] = ea_diode_intensityprofile(artifact_marker,center_marker,ct.voxsize,radius);
     %
     %     %% detect peaks and valleys for marker artifact
-    %     [peak,markerfft] = ea_orient_intensitypeaksFFT(intensity,2);
-    %     valley = ea_orient_intensitypeaksFFT(-intensity,2);
+    %     [peak,markerfft] = ea_diode_intensitypeaksFFT(intensity,2);
+    %     valley = ea_diode_intensitypeaksFFT(-intensity,2);
     %
     %     %% Detect angles of the white streak of the marker (only for intensityprofile-based ambiguity features)
     %     valley_roll = ea_diode_angle2roll(angle(valley(1)),yaw,pitch);
@@ -228,7 +228,7 @@ if ~supervised
     %     % compares the maximum intensity between the valleys in 3 radii
     %     ASMradii = [3,6,9];
     %     for k = 1:length(ASMradii)
-    %         [~, ASMintensity(k,:),~] = ea_orient_intensityprofile(artifact_marker,center_marker,ct.voxsize,ASMradii(k));
+    %         [~, ASMintensity(k,:),~] = ea_diode_intensityprofile(artifact_marker,center_marker,ct.voxsize,ASMradii(k));
     %     end
     %     ASMintensity = mean(ASMintensity);
     %     if max(ASMintensity(valley(1):valley(2))) > max(ASMintensity([1:valley(1),valley(2):length(ASMintensity)]))
@@ -309,7 +309,7 @@ if ~supervised
 %     rolltmp = ea_diode_angle2roll(0,yaw,pitch);
     
     rolltmp = 0;
-    [M,~,~,~] = ea_orient_rollpitchyaw(rolltmp,pitch,yaw);
+    [M,~,~,~] = ea_diode_rollpitchyaw(rolltmp,pitch,yaw);
     yvec_mm = M * [0;1;0];
     xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
     clear M
@@ -526,7 +526,7 @@ if ~supervised
     % through the lead and through the marker center and oriented
     % in the direction of y-vec and unitvector for later
     % visualization    
-    [M,~,~,~] = ea_orient_rollpitchyaw(roll,pitch,yaw);
+    [M,~,~,~] = ea_diode_rollpitchyaw(roll,pitch,yaw);
     yvec_mm = M * [0;1;0];
     xvec_mm = cross(unitvector_mm(1:3), yvec_mm);
     clear M
@@ -560,13 +560,13 @@ if ~supervised
         center_tmp = [(size(artifact_tmp,1)+1)/2 (size(artifact_tmp,1)+1)/2];
         radius = 8;
         
-        [~, intensity_tmp,~] = ea_orient_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
+        [~, intensity_tmp,~] = ea_diode_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
         %% determine angles of the 6-valley artifact ('dark star') artifact in each of the slices for +30:-30 deg
         for k = 1:61
             roll_shift = k-31;
             rolltemp = myroll + deg2rad(roll_shift);
             dirnew_angles = ea_diode_darkstar(rolltemp,pitch,yaw,checklocation_mm,radius);
-            [sumintensitynew{1}(count,k)] = ea_orient_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
+            [sumintensitynew{1}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
             %                     rollangles{1}(count,k) = rolltemp;
             rollangles{1}(count,k) = deg2rad(roll_shift);
         end
@@ -593,13 +593,13 @@ if ~supervised
         center_tmp = [(size(artifact_tmp,1)+1)/2 (size(artifact_tmp,1)+1)/2];
         radius = 8;
         
-        [~, intensity_tmp,~] = ea_orient_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
+        [~, intensity_tmp,~] = ea_diode_intensityprofile(artifact_tmp,center_tmp,ct.voxsize,radius);
         %% determine angles of the 6-valley artifact ('dark star') artifact in each of the slices for +30:-30 deg
         for k = 1:61
             roll_shift = k-31;
             rolltemp = myroll + pi + deg2rad(roll_shift);
             dirnew_angles = ea_diode_darkstar(rolltemp,pitch,yaw,checklocation_mm,radius);
-            [sumintensitynew{2}(count,k)] = ea_orient_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
+            [sumintensitynew{2}(count,k)] = ea_diode_intensitypeaksdirmarker(intensity_tmp,dirnew_angles);
             %                     rollangles{2}(count,k) = rolltemp;
             rollangles{2}(count,k) = deg2rad(roll_shift);
         end
@@ -655,7 +655,7 @@ if ~supervised
         artifact_dirnew = flip(artifact_dirnew,2);
     end
     center_dirnew = [(size(artifact_dirnew,1)+1)/2 (size(artifact_dirnew,1)+1)/2];
-    [anglenew, intensitynew,vectornew] = ea_orient_intensityprofile(artifact_dirnew,center_dirnew,ct.voxsize,radius);
+    [anglenew, intensitynew,vectornew] = ea_diode_intensityprofile(artifact_dirnew,center_dirnew,ct.voxsize,radius);
     
     rollnew = roll + rollangles{realsolution}(darkstarangle(realsolution));
     dirnew_angles = ea_diode_darkstar(rollnew,pitch,yaw,dirlevelnew_mm,radius);
@@ -886,13 +886,13 @@ end
 view(180,0)
 ylim([-1 1])
 xlim([-1 1])
-zlim([0 15])
+zlim([0 max(electrode.insulation(end-1).vertices(:,3))])
 axis off
 axis equal
 
 camorbit(-rad2deg(tempangle),0)
 tempvec = [0; 1; 0];
-temp3x3 = ea_orient_rollpitchyaw(-tempangle,0,0);
+temp3x3 = ea_diode_rollpitchyaw(-tempangle,0,0);
 tempvec = temp3x3 * tempvec;
 %         text(tempvec(1),tempvec(2),markercenter,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
 %         text(tempvec(1),tempvec(2),level1center,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
@@ -917,7 +917,7 @@ elseif ManualButton.UserData == 1
     savestate = 0;
     retrystate = 1;
     disp(['Retry with manual refinement!'])
-    [roll_y_retry,y_retry] = ea_diode_bsci(side,ct,head_mm,unitvector_mm,tmat_vx2mm,1);
+    [roll_y_retry,y_retry] = ea_diode_manual(side,ct,head_mm,unitvector_mm,tmat_vx2mm,elspec);
 end
 
 %% saving results
@@ -932,7 +932,7 @@ if savestate == 1
         disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(rollnew)) ' deg'])
     end
     %% calculate y
-    [M,~,~,~] = ea_orient_rollpitchyaw(roll_y,pitch,yaw);
+    [M,~,~,~] = ea_diode_rollpitchyaw(roll_y,pitch,yaw);
     y = M * [0;1;0];
     head = head_mm(1:3);
     y = head + y;
