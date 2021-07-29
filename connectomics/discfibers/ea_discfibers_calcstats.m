@@ -40,9 +40,9 @@ if strcmp(obj.multitractmode,'Split & Color By PCA')
    catch % pca failed, likely not enough variables selected.
        score=nan(length(obj.responsevar),obj.numpcs);
    end
-   if ~isfield(obj.subscore,'pcavars')
-      obj.subscore.pcavars=cell(1);
-   end
+   %if ~isfield(obj.subscore,'pcavars')
+   obj.subscore.pcavars=cell(1);
+   %end
    for pc=1:obj.numpcs
       obj.subscore.pcavars{pc}=score(:,pc); %pca variables -> pca components, location of first subscore is replaced by first pc
    end
@@ -180,7 +180,7 @@ for group=groups
                     [~,ps,~,stats]=ttest2(fibsimpval',nfibsimpval'); % Run two-sample t-test across connected / unconnected values
                     vals{group,side}=stats.tstat';
                     if obj.showsignificantonly
-                        pvals{group,side}=ps;
+                        pvals{group,side}=ps';
                     end
                     
                     %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
