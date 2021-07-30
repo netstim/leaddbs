@@ -26,7 +26,7 @@ for side=options.sides
     cameratoolbar('close')
     rotate3d off;
 
-    if spm_input('Adjust contrast', 1.5, 'y/n', [1,0],2)
+    if side==1 && spm_input('Adjust contrast', 1.5, 'y/n', [1,0],2)
         pc = spm_input('Percentiles', 1.5, 'w', '3 97', 2, 100);
         wn = spm_summarise(vol, 'all', @(X) spm_percentile(X, pc));
         spm_orthviews('window', h, wn);
