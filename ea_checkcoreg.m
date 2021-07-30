@@ -75,6 +75,14 @@ if exist([directory,options.prefs.gprenii],'file') && ~ea_coreglocked(options,op
     presentfiles=[presentfiles;{[directory,options.prefs.gprenii]}];
 end
 
+% if exist([directory,options.prefs.gtranii],'file') && ~ea_coreglocked(options,options.prefs.gtranii)
+%     presentfiles=[presentfiles;{[directory,options.prefs.gtranii]}];
+% end
+%
+% if exist([directory,options.prefs.tp_gctnii],'file') && ~ea_coreglocked(options,options.prefs.tp_gctnii)
+%     presentfiles=[presentfiles;{[directory,options.prefs.tp_gctnii]}];
+% end
+
 % add coregchecks for b0 and rest:
 % get files with rs-fMRI data
 restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_searchstring]);
@@ -163,6 +171,7 @@ if strcmp(currvol,'brainshift')
 end
 switch ea_stripext(currvol)
     case ea_stripext(options.prefs.gprenii)
+    % case ea_stripext({options.prefs.gprenii, options.prefs.gtranii, options.prefs.tp_gctnii})
         handles.checkatl.Visible='on';
         [options] = ea_assignpretra(options);
         anchor=[ea_space,options.primarytemplate,'.nii'];
@@ -260,6 +269,7 @@ set(handles.imgfn,'String',checkfig);
 set(handles.imgfn,'TooltipString',checkfig);
 switch ea_stripext(currvol)
     case ea_stripext(options.prefs.gprenii)
+    % case ea_stripext({options.prefs.gprenii, options.prefs.gtranii, options.prefs.tp_gctnii})
         options=ea_assignpretra(options);
         anchorpath=[ea_space,options.primarytemplate];
     otherwise
