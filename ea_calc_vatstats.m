@@ -207,24 +207,35 @@ for iside=1:length(options.sides)
                             else % Skip fiber atlas
                                 ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
                                 ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
+                                ea_stats.stimulation(thisstim).vat(side,vat).nWithinAtlasIntersection(atlas)=0;
+                                ea_stats.stimulation(thisstim).vat(side,vat).AtlasVolume(atlas)=nan;%if nothing is computed, the atlas volume is not estimated
                                 continue;
                             end
 
                             vatfile = ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_',sidec]);
-                            voxsize = prod(ea_detvoxsize(vatfile));
+                            [vox_overlap, mm_overlap, vox_vta, mm_vta, vox_atlas, mm_atlas]  = ea_vta_overlap(vatfile,atlasfile,sidec);
 
-                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vatfile,atlasfile,sidec).*voxsize;
-                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)/stimparams(1,side).volume(vat);
-
+                            %overriding the volume of the vat with the one
+                            %computed from the nifti image, for consistency
+                            %with the atlas/overlap volume estimation
+                            stimparams(1,side).volume(vat)=mm_vta;
+                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasVolume(atlas)=mm_atlas;
+                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=mm_overlap;%ea_vta_overlap(vatfile,atlasfile,sidec).*voxsize;
+                            ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=mm_overlap./mm_vta;%overlap in respect of VAT (ratio [0-1]);
+                            ea_stats.stimulation(thisstim).vat(side,vat).nWithinAtlasIntersection(atlas)=mm_overlap./mm_atlas;%overlap in respect of atlas (ratio [0-1])
+                            
                             % now also add efield overlap:
                             if exist('vefieldfile','var')
-                                ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=ea_vta_overlap(vefieldfile,atlasfile,sidec);
+                                [vox_overlap_efield]  = ea_vta_overlap(vefieldfile,atlasfile,sidec);
+                                ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)=vox_overlap_efield;
                                 ea_stats.stimulation(thisstim).efield(side,vat).nAtlasIntersection(atlas)=...
                                     ea_stats.stimulation(thisstim).efield(side,vat).AtlasIntersection(atlas)./sum(Vefield.img(:));
                             end
                         else % no stimulation, simply set vi to zero.
                             ea_stats.stimulation(thisstim).vat(side,vat).AtlasIntersection(atlas)=0;
                             ea_stats.stimulation(thisstim).vat(side,vat).nAtlasIntersection(atlas)=0;
+                            ea_stats.stimulation(thisstim).vat(side,vat).nWithinAtlasIntersection(atlas)=0;
+                            ea_stats.stimulation(thisstim).vat(side,vat).AtlasVolume(atlas)=nan;%if nothing is computed, the atlas volume is not estimated
                         end
                     end
                 end

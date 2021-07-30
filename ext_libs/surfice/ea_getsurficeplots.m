@@ -8,7 +8,7 @@ if ~exist(fullfile(pth,[fn,'_l_lat.png']),'file') || ~exist(fullfile(pth,[fn,'_l
     copyfile(niftiname,tniftiname);
 
     [tpth,tfn,ext]=fileparts(tniftiname);
-    ea_surficeoverlay_lr((tniftiname),threshs,2);
+    ea_surficeoverlay(tniftiname,threshs,2);
     pause(0.5);
     delete(tniftiname);
     movefile(fullfile(tpth,[tfn,'_l_lat.png']),fullfile(pth,[fn,'_l_lat.png']));

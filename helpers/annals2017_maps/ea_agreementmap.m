@@ -1,5 +1,9 @@
-function [outputMap, mask] = ea_agreementmap(inputMaps, outputFileName, writeoutMask)
+function [outputMap, mask] = ea_agreementmap(inputMaps, outputFileName, writeoutMask, mode, zz)
 % Calculate agreement R-map
+
+if ~exist('mode','var')
+   mode='mult';
+end
 
 % Load input map
 for i=1:numel(inputMaps)
@@ -25,12 +29,27 @@ outputMap.img = nan(size(outputMap.img));
 outputMap.img(positiveMask) = inputMaps{1}.img(positiveMask);
 outputMap.img(negativeMask) = inputMaps{1}.img(negativeMask);
 for i=2:numel(inputMaps)
-    outputMap.img(positiveMask) = outputMap.img(positiveMask) .* inputMaps{i}.img(positiveMask);
-    outputMap.img(negativeMask) = outputMap.img(negativeMask) .* inputMaps{i}.img(negativeMask);
+    switch mode
+        case {'mult','multiplication','multiply','*'}
+            outputMap.img(positiveMask) = outputMap.img(positiveMask) .* inputMaps{i}.img(positiveMask);
+            outputMap.img(negativeMask) = outputMap.img(negativeMask) .* inputMaps{i}.img(negativeMask);
+        case {'sum','+'}
+            outputMap.img(positiveMask) = outputMap.img(positiveMask) + inputMaps{i}.img(positiveMask);
+            outputMap.img(negativeMask) = outputMap.img(negativeMask) + inputMaps{i}.img(negativeMask);
+    end
 end
 
 % Ensure that negatively agreeing voxels have negative values
 outputMap.img(negativeMask) = -abs(outputMap.img(negativeMask));
+
+if exist('zz','var')
+    switch zz
+        case 'z'
+            outputMap.img(~(outputMap.img==0))=ea_nanzscore(outputMap.img(~(outputMap.img==0)));
+        case 'k'
+            outputMap.img(~(outputMap.img==0))=ea_normal(outputMap.img(~(outputMap.img==0)));
+    end
+end
 
 % Optionaly save agreement map to NIfTI
 if exist('outputFileName','var')

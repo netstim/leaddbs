@@ -18,14 +18,16 @@ from threading import Thread
 
 
 class MainWindow(Functionalities):
-    def __init__(self,path_to_patient,index_side,interactive_mode):
+    def __init__(self,path_to_patient,index_side,interactive_mode,patient_folder,StimSets):
         self.main_win = QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.main_win)
 
         self.path_to_patient=path_to_patient
+        self.patient_folder = "'" + patient_folder + "'"
         self.index_side=int(index_side)
         self.interactive_mode=int(interactive_mode)
+        self.StimSets=int(StimSets)
 
         self.rel_folder = self.rel_folder()
 
@@ -137,7 +139,9 @@ class MainWindow(Functionalities):
         self.ui.checkBox_Dimensions_From_MRI.stateChanged.connect(
             lambda: self.hide_menu_item_on_checkbox_click(self.ui.checkBox_Dimensions_From_MRI,
                                                           self.ui.widget_Approximating_Dimensions_3))
-
+        self.ui.checkBox_Dimensions_From_MRI.stateChanged.connect(
+            lambda: self.ui.lineEdit_Approximating_Dimensions.setText('0'))
+        
         self.ui.checkBox_Approx_Geom_Centered_On_MRI.stateChanged.connect(
             lambda: self.hide_menu_item_on_checkbox_click(self.ui.checkBox_Approx_Geom_Centered_On_MRI,
                                                           self.ui.widget_Approx_Geometry_Center))
@@ -434,8 +438,10 @@ class MainWindow(Functionalities):
         # from pop_up_control.dictionaries import dict_cpe_active, dict_external_neuron_array, dict_full_field_ifft, \
         #     dict_mesh_refinement
         output_dict = Dictionary(self).output_dict()
+        output_dict['patient_folder'] = self.patient_folder
         output_dict['Stim_side'] = self.index_side
         output_dict['stretch'] = self.stretch
+        output_dict['StimSets'] = self.StimSets
 
         # # concatenate various dictionaries
         # output_dict.update(dict_cpe_active.d)

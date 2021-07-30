@@ -3,10 +3,10 @@ from qt import QToolBar
 import os
 import itertools
 from slicer.util import VTKObservationMixin
+import glob
 
 import WarpDrive
 import ImportAtlas
-import ImportSubject
 from ..Helpers import LeadDBSCall, WarpDriveUtil
 from ..Widgets import ToolWidget
 
@@ -47,23 +47,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     templateSlider.connect('valueChanged(int)', lambda value: slicer.util.setSliceViewerLayers(foregroundOpacity = value / 100.0))
     self.addWidget(templateSlider)
 
-    #
-    # Segments Opacity
-    #
-    self.addSeparator()
-    self.addWidget(qt.QLabel('Segments:'))
-    self.segmentOpacitySlider = qt.QSlider(1)
-    self.segmentOpacitySlider.singleStep = 10
-    self.segmentOpacitySlider.minimum = 0
-    self.segmentOpacitySlider.maximum = 100
-    self.segmentOpacitySlider.value = 50
-    self.segmentOpacitySlider.setFixedWidth(120)
-    self.segmentOpacitySlider.connect('valueChanged(int)', self.onSegmentOpacitySlider)
-    self.addWidget(self.segmentOpacitySlider)
-    segmentMode = qt.QPushButton('Fill/Outline')
-    segmentMode.connect('clicked(bool)', self.onSegmentMode)
-    self.segmentModeIterator = itertools.cycle([[1,1],[1,0],[0,1]])
-    self.addWidget(segmentMode)
 
     #
     # Space Separator
@@ -85,6 +68,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     self.addSeparator()
     self.hardenChangesCheckBox = qt.QCheckBox("Harden Changes")
+    self.hardenChangesCheckBox.checked = True
     self.addWidget(self.hardenChangesCheckBox)
 
     #
@@ -105,17 +89,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.updateToolbarFromParameterNode()
 
 
-  def onSegmentMode(self, b):
-    segmentationNode = self.parameterNode.GetNodeReference("Segmentation")
-    if segmentationNode:
-      fill,outline = next(self.segmentModeIterator)
-      segmentationNode.GetDisplayNode().SetAllSegmentsVisibility2DFill(fill)
-      segmentationNode.GetDisplayNode().SetAllSegmentsVisibility2DOutline(outline)
-
-  def onSegmentOpacitySlider(self, value):
-    segmentationNode = self.parameterNode.GetNodeReference("Segmentation")
-    if segmentationNode:
-      segmentationNode.GetDisplayNode().SetOpacity(value/100)
 
   def initSubject(self):
     if os.path.isfile(os.path.join(self.parameterNode.GetParameter("subjectPath"),'WarpDrive','WarpDriveScene.mrml')):
@@ -133,7 +106,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       folderNode = folderNodes.GetItemAsObject(i)
       if 'atlas' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(folderNode)):
         return
-    ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), 'DISTAL Minimal (Ewert 2017)'))
+    ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), 'DISTAL Minimal (Ewert 2017)', 'atlas_index.mat'))
 
 
   def initFromRaw(self):
@@ -141,15 +114,9 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     inputNode = LeadDBSCall.loadSubjectTransform(self.parameterNode.GetParameter("subjectPath"), self.parameterNode.GetParameter("antsApplyTransformsPath"))
     outputNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
     inputNode.SetAndObserveTransformNodeID(outputNode.GetID())
-    # set up segmentation
-    segmentationNode = ImportSubject.ImportSubjectLogic().importSegmentations(self.parameterNode.GetParameter("subjectPath"))
-    if segmentationNode:
-      segmentationNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))    
-      segmentationNode.GetDisplayNode().SetOpacity(self.segmentOpacitySlider.value/100)
     # parameter node
     self.parameterNode.SetNodeReferenceID("InputNode", inputNode.GetID())
     self.parameterNode.SetNodeReferenceID("OutputGridTransform", outputNode.GetID())
-    self.parameterNode.SetNodeReferenceID("Segmentation", segmentationNode.GetID() if segmentationNode else None)
 
   def initFromScene(self):
     shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
@@ -213,7 +180,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
     # load atlas
     if atlasName is not None and os.path.isdir(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName)):
-      ImportAtlas.ImportAtlasLogic().run(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName))
+      ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(self.parameterNode.GetParameter("MNIAtlasPath"), atlasName, 'atlas_index.mat'))
 
     # init output
     outputNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
@@ -230,7 +197,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("ImageNode"))
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("TemplateNode"))
     # initialize new image and init
-    imageNode = ImportSubject.ImportSubjectLogic().importImage(self.parameterNode.GetParameter("subjectPath"), modality)
+    imageNode = slicer.util.loadVolume(os.path.join(self.parameterNode.GetParameter("subjectPath"), 'anat_'+modality+'.nii'), properties={'show':False})
     imageNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))    
     # change to t1 in case modality not present
     modality = modality if modality in ['t1','t2','pca','pd'] else 't1'
@@ -277,7 +244,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("InputNode"))
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("ImageNode"))
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("OutputGridTransform"))
-    slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("Segmentation"))
     
     LeadDBSCall.DeleteCorrections()
 
@@ -301,9 +267,18 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
   def updateModalities(self, subjectPath):
     currentModality = self.modalityComboBox.currentText
-    subjectModalities = ImportSubject.ImportSubjectLogic().getAvailableModalities(subjectPath)
+    subjectModalities = self.getAvailableModalities(subjectPath)
     if currentModality not in subjectModalities:
       self.parameterNode.SetParameter("modality", subjectModalities[0])
     self.modalityComboBox.clear()
     self.modalityComboBox.addItems(subjectModalities)
 
+  def getAvailableModalities(self, directory):
+    modalities = []
+    listing = glob.glob(os.path.join(directory,'anat_*.nii'))
+    for fileName in listing:
+      fileName = os.path.split(fileName)[-1] # remove directory
+      fileName = os.path.splitext(fileName)[0] # remove extension
+      modality = fileName[5:] # remove 'anat_'
+      modalities.append(modality)
+    return modalities

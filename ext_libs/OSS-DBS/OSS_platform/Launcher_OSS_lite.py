@@ -64,6 +64,53 @@ def run_full_model(master_dict):
     d=rearrange_Inp_dict(d)             #misc. transformation of parameters to the platform's format
     d.update(master_dict)               #modifies the user provided input dictionary (e.g. for UQ study), check run_master_study() function . Warning: this does not work update the encap. layer properties and the solver during adaptive mesh refiment, because these data are realoaded from the original dictionary
 
+
+    import os
+#    os.environ['PATIENTDIR'] = '/opt/Patient' # Use fixed mount path for docker
+
+
+    if d['StimSets'] == 1 and os.path.isfile(os.environ['PATIENTDIR']+'/Current_protocols_'+str(d['Stim_side'])+'.csv'):
+        stim_protocols = np.genfromtxt(os.environ['PATIENTDIR']+'/Current_protocols_'+str(d['Stim_side'])+'.csv', dtype=float, delimiter=',', names=True)
+        if stim_protocols.size:
+            d['Current_sets']=True
+            d["Skip_mesh_refinement"]=1
+            print("When testing different current set, adaptive refinement is unavailable, make sure the mesh is prerefined")
+            d["EQS_core"]="QS"
+            print("When testing different current set, only QS formulation is currently available")
+            cc_multicontact=True
+            d["spectrum_trunc_method"]="Octave Band Method"
+            print("When testing different current set, only Octave Band Method is currently available")
+            d['Phi_vector']=[1.0] * len(d['Phi_vector'])          # unit vector
+            print("When testing different current sets, grounding is fixed to the casing (but you can imitate grounding by assigning a value of -1.0*sum(Icontacts)) to one of the contacts")
+            d["external_grounding"]=True
+            d["current_control"]=1
+
+            if d["Full_Field_IFFT"] == 1:
+                print("Field superposition is yet not supported for VTA from E-field/Rattay's function")
+                raise SystemExit
+
+            import math
+
+            Currents_to_check=[]
+            for i in range(stim_protocols.shape[0]):
+                stim_prot=list(stim_protocols[i])
+                for j in range(len(stim_prot)):
+                    if math.isnan(stim_prot[j]):
+                        stim_prot[j]=None
+                    elif stim_prot[j]==0.0:
+                        print('0.0 always refers to grounding in OSS-DBS. Please, type "passive" or "float" for contacts that do not deliver currents.')
+                        raise SystemExit
+                    else:
+                        stim_prot[j]=stim_prot[j]*0.001            # Lead-DBS stores in mA
+                if len(d['Phi_vector']) != len(stim_prot):
+                    print("Current protocols do not match the number of contacts on the electrode, exiting")
+                    raise SystemExit
+                Currents_to_check.append(stim_prot)
+        else:
+            d['Current_sets']=False
+    else:
+        d['Current_sets']=False
+
     #=========Check the simulation setup and state, load the corresponding data=========#
 
 
@@ -76,9 +123,6 @@ def run_full_model(master_dict):
         d["CPE_activ"]=0
         print("Disabling CPE for current-controlled simulation")
 
-
-    d["Aprox_geometry_center"]=[d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z']]
-
     Phi_vector_active_non_zero=[x for x in d["Phi_vector"] if (x is not None) and (x!=0.0)]
     cc_multicontact=False
     if d["current_control"]==1 and len(Phi_vector_active_non_zero)>1:       #multicontact current-controlled case
@@ -89,9 +133,10 @@ def run_full_model(master_dict):
 
     if d["voxel_arr_MRI"]==0 and d["voxel_arr_DTI"]==1:
         print("MRI data is new, the DTI data will be reprocessed")
-        d["voxel_arr_DTI"]==0
+        d["voxel_arr_DTI"]=0
 
     #loading of meta data depending on the simulatation setup and state
+    import os
     if d["Init_neuron_model_ready"]==1:
         [ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib,n_Ranvier,ROI_radius,N_segm]=np.genfromtxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_model_misc.csv', delimiter=' ')
         param_axon=[ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib]
@@ -109,7 +154,6 @@ def run_full_model(master_dict):
         with open(os.environ['PATIENTDIR']+'/Meshes/Mesh_ind.file', "rb") as f:
             Domains = pickle.load(f)
 
-    import os
     #========================Formating MRI and DTI data=======================#
     from MRI_DTI_prep_new import obtain_MRI_class
     MRI_param=obtain_MRI_class(d)       #also creates 'MRI_DTI_derived_data/Tissue_array_MRI.csv' and meta data
@@ -134,6 +178,18 @@ def run_full_model(master_dict):
         d['alpha_array_glob']=[0]
         d['beta_array_glob']=[0]
         d['gamma_array_glob']=[0]
+        if d['Electrode_type']=="AA_rodent_monopolar" or d['Electrode_type']=="SR_rodent":    #rodent VTA
+            d['Axon_Model_Type']='Reilly2016'
+            d['x_seed'],d['y_seed'],d['z_seed']=(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z'])  # it makes sense to shift it a bit from the tip
+            d['diam_fib']=5.0
+            d['n_Ranvier']=3
+            d['x_step'],d['y_step'],d['z_step']=(0.1,0.1,0.1)
+            d['x_steps'],d['y_steps'],d['z_steps']=(20.0,0.0,20.0)  #we assume that Z-axis is ventra-dorsal in the MRI
+            d['Global_rot']=1
+            d['alpha_array_glob']=[0]
+            d['beta_array_glob']=[0]
+            d['gamma_array_glob']=[0]
+
 
     if d["Init_mesh_ready"]==0:
 
@@ -220,9 +276,10 @@ def run_full_model(master_dict):
     #if IFFT_on_VTA_array == 1:
         #if we create internally
         from VTA_from_array import create_VTA_array,resave_as_verts,get_VTA
-        VTA_edge,VTA_full_name,VTA_resolution= create_VTA_array(d['x_seed'],d['y_seed'],d['z_seed'])
+        VTA_edge,VTA_full_name,VTA_resolution= create_VTA_array(d['x_seed'],d['y_seed'],d['z_seed'],d['Electrode_type'])
         arrays_shape = resave_as_verts(VTA_full_name)
         number_of_points=sum(arrays_shape)
+        VTA_parameters=[VTA_edge,VTA_full_name,VTA_resolution]
 
 #=============================Signal creation=================================#
     #in case there was an update of the signal
@@ -310,6 +367,64 @@ def run_full_model(master_dict):
             Xs_signal_norm_new=add_trunc_data
 
 #==========Calculate freq in parallel and rearrange field array===============#
+
+    if d['Current_sets']==True:
+
+        if d["Parallel_comp_ready"]==0:
+
+            if ["Parallel_comp_interrupted"]==1:
+                import os
+                if not (os.path.isfile(os.environ['PATIENTDIR']+'Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile(os.environ['PATIENTDIR']+'Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations
+                    print("There were no previous computations, 'Parallel_comp_interrupted' is put to 0")
+                    ["Parallel_comp_interrupted"]==0
+
+            from Parallel_unit_current_calc import calculate_in_parallel
+            '''calculate_in_parallel will save a sorted_solution array if IFFT is pointwise or will save the whole field for each frequency in Field_solutions_functions/ if full_IFFT is requested'''
+
+            if d["spectrum_trunc_method"]=='No Truncation':
+                print("----- Calculating electric field in the frequency spectrum -----")
+                calculate_in_parallel(d,FR_vector_signal,Domains,MRI_param,DTI_param,anisotrop,number_of_points,cc_multicontact)
+
+            if d["spectrum_trunc_method"]=='High Amplitude Method' or d["spectrum_trunc_method"]=='Cutoff Method' or d["spectrum_trunc_method"]=='Octave Band Method':
+                print("----- Calculating electric field in the truncated frequency spectrum -----")
+                calculate_in_parallel(d,FR_vector_signal_new,Domains,MRI_param,DTI_param,anisotrop,number_of_points,cc_multicontact)
+        else:
+            print("--- Results of calculations in the frequency spectrum were loaded\n")
+
+        if d["spectrum_trunc_method"]=='No Truncation':
+            name_sorted_solution=os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution_per_contact.csv'
+        else:
+            name_sorted_solution=os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution_per_contact_'+str(d["spectrum_trunc_method"])+'_'+str(d["trunc_param"])+'.csv'
+
+
+
+        if d["IFFT_ready"] == 0:
+            from Current_scaler import find_activation
+            #Currents_to_check=[[None,None,-0.001,None,None,None,None,None],[None,-0.001,None,None,None,0.001,None,None]]
+            #Currents_to_check=[[None,0.002,None,None,None,None,None,None],[None,-0.001,None,0.002,None,-0.001,None,None]]
+
+            if d["Full_Field_IFFT"] == 1:       # rename later
+                N_segm=arrays_shape
+            else:
+                VTA_parameters=0
+
+            it_num=0
+            for current_comb in Currents_to_check:
+                Activation=find_activation(current_comb,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,it_num,VTA_param=VTA_parameters)
+                it_num+=1
+
+
+        if d["Stim_side"]==0:
+            subprocess.call(['touch', os.environ['PATIENTDIR']+'/success_rh.txt'])
+        else:
+            subprocess.call(['touch', os.environ['PATIENTDIR']+'/success_lh.txt'])
+
+        return True
+
+
+
+
+
     if d["Parallel_comp_ready"]==0:
         if ["Parallel_comp_interrupted"]==1:
             if not (os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations

@@ -38,7 +38,7 @@ if ~exist('outputName', 'var') || isempty(outputName)
     outputName = regexprep(discfiber, '\.mat$', '.nii');
 end
 
-if ~exist('reference', 'var')
+if ~exist('reference', 'var') || isempty(reference)
     reference = [ea_space, 't1.nii'];
 end
 

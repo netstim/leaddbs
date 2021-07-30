@@ -403,27 +403,50 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
             x_neuron_min,y_neuron_min,z_neuron_min=(min(min_values[:,0]),min(min_values[:,0]),min(min_values[:,0]))
 
         space_from_neurons=1.0          #here we do not need to check further away
-        for z_coord in z_vect:
-            for y_coord in y_vect:
-                for x_coord in x_vect:
+        
+        
+        affine=np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/affine_MRI.npy')
+        
+        if affine[0,1]!=0.0 or affine[0,2]!=0.0 or affine[1,2]!=0.0:
+            glob_index=0
+            for z_i in range(MRI_param.M_z):
+                for y_i in range(MRI_param.M_y):
+                    for x_i in range(MRI_param.M_x):
+                        
+                        coords_reals=np.dot(affine,np.array([x_i,y_i,z_i,1.0]))
+                        
+                        x_pos=coords_reals[0]+MRI_param.x_shift+voxel_size_x/2.0
+                        y_pos=coords_reals[1]+MRI_param.y_shift+voxel_size_y/2.0
+                        z_pos=coords_reals[2]+MRI_param.z_shift+voxel_size_z/2.0
 
-                    x_pos=x_coord-voxel_size_x/2.0
-                    y_pos=y_coord-voxel_size_y/2.0
-                    z_pos=z_coord-voxel_size_z/2.0
-
-                    if (x_pos<=x_neuron_max+space_from_neurons and x_pos>=x_neuron_min-space_from_neurons and y_pos<=y_neuron_max+space_from_neurons and y_pos>=y_neuron_min-space_from_neurons and z_pos<=z_neuron_max+space_from_neurons and z_pos>=z_neuron_min-space_from_neurons):
-
-                        xv_mri=int((x_coord)/voxel_size_x-0.000000001)                                  #defines number of steps to get to the voxels containing x[0] coordinate
-                        yv_mri=(int((y_coord)/voxel_size_y-0.000000001))*Mx_mri                  #defines number of steps to get to the voxels containing x[0] and x[1] coordinates
-                        zv_mri=(int((z_coord)/voxel_size_z-0.000000001))*Mx_mri*My_mri           #defines number of steps to get to the voxels containing x[0], x[1] and x[2] coordinates
-
-                        glob_index=xv_mri+yv_mri+zv_mri
-                        glob_index=int(glob_index)
-
-                        if Tissue_array[glob_index]==1:
-                            voxel_array_CSF[glob_index,0]=x_pos
-                            voxel_array_CSF[glob_index,1]=y_pos
-                            voxel_array_CSF[glob_index,2]=z_pos
+                        if (x_pos<=x_neuron_max+space_from_neurons and x_pos>=x_neuron_min-space_from_neurons and y_pos<=y_neuron_max+space_from_neurons and y_pos>=y_neuron_min-space_from_neurons and z_pos<=z_neuron_max+space_from_neurons and z_pos>=z_neuron_min-space_from_neurons):                        
+                            if Tissue_array[glob_index]==1:
+                                voxel_array_CSF[glob_index,0]=x_pos
+                                voxel_array_CSF[glob_index,1]=y_pos
+                                voxel_array_CSF[glob_index,2]=z_pos                        
+                        glob_index+=1
+        else:
+            for z_coord in z_vect:
+                for y_coord in y_vect:
+                    for x_coord in x_vect:
+    
+                        x_pos=x_coord-voxel_size_x/2.0
+                        y_pos=y_coord-voxel_size_y/2.0
+                        z_pos=z_coord-voxel_size_z/2.0
+    
+                        if (x_pos<=x_neuron_max+space_from_neurons and x_pos>=x_neuron_min-space_from_neurons and y_pos<=y_neuron_max+space_from_neurons and y_pos>=y_neuron_min-space_from_neurons and z_pos<=z_neuron_max+space_from_neurons and z_pos>=z_neuron_min-space_from_neurons):
+    
+                            xv_mri=int((x_coord)/voxel_size_x-0.000000001)                                  #defines number of steps to get to the voxels containing x[0] coordinate
+                            yv_mri=(int((y_coord)/voxel_size_y-0.000000001))*Mx_mri                  #defines number of steps to get to the voxels containing x[0] and x[1] coordinates
+                            zv_mri=(int((z_coord)/voxel_size_z-0.000000001))*Mx_mri*My_mri           #defines number of steps to get to the voxels containing x[0], x[1] and x[2] coordinates
+    
+                            glob_index=xv_mri+yv_mri+zv_mri
+                            glob_index=int(glob_index)
+    
+                            if Tissue_array[glob_index]==1:
+                                voxel_array_CSF[glob_index,0]=x_pos
+                                voxel_array_CSF[glob_index,1]=y_pos
+                                voxel_array_CSF[glob_index,2]=z_pos
 
         voxel_array_CSF=voxel_array_CSF[~np.all(voxel_array_CSF==0.0,axis=1)]  #deletes all zero enteries
 
@@ -465,6 +488,7 @@ def generate_neuron_models(N_Ranv,Full_model_ready,Domains,MRI_param,Neuron_para
             if (submesh_encup.bounding_box_tree().compute_first_entity_collision(pnt)<submesh_encup.num_cells()):        #this is a condition to check whether the point is inside encap. layer or floating conductor
                 points_encap=points_encap+1
                 inx_start=int(inx/n_segments)*n_segments
+                #print(Array_coord[inx,0],Array_coord[inx,1],Array_coord[inx,2])
                 Array_coord[inx_start:inx_start+n_segments,:]=-100000000.0
                 inx=inx_start+n_segments
             else:

@@ -349,7 +349,7 @@ function odirbutton_Callback(hObject, eventdata, handles)
 
 seeds=getappdata(handles.seedbutton,'seeds');
 if ~isempty(seeds) % seeds defined already
-   seedbase=fileparts(seeds{1});
+    seedbase=fileparts(seeds{1});
 else
     seedbase='';
 end
@@ -391,7 +391,7 @@ function omaskbutton_Callback(hObject, eventdata, handles)
 
 [omask, path] = uigetfile({'*.nii';'*.nii.gz'},'Choose output location');
 if ischar(path)
-    setappdata(hObject,'omask',omask);
+    setappdata(hObject,'omask',fullfile(path,omask));
     set(hObject,'String',omask);
 end
 

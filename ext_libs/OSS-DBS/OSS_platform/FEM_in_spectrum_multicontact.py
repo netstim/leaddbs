@@ -205,7 +205,7 @@ def get_field_with_floats(Sim_setup,active_index,Domains,Solver_type):
 
     # assess the floating potential by integrating over the contact's surface
     for fl_in in range(active_floats):
-        Float_surface_size=assemble(1.0*dsS_int(2))
+        Float_surface_size=assemble(1.0*dsS_int(float_surface))
         Float_potentials_real[float_surface-2]=assemble(phi_r*dsS_int(float_surface))/Float_surface_size
         if Sim_setup.Laplace_eq=='EQS':
             Float_potentials_imag[float_surface-2]=assemble(phi_i*dsS_int(float_surface))/Float_surface_size

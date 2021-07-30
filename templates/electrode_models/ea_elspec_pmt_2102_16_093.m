@@ -1,5 +1,5 @@
 function electrode = ea_elspec_pmt_2102_16_093(vizz)
-% Creates the FEM-compatible electrode model for PMT 2102-16-092.
+% Creates the FEM-compatible electrode model for PMT 2102-16-093.
 % It's based on the mesh generated using SketchUp and tetgen.
 % _________________________________________________________________________
 % Copyright (C) 2020 Charite University Medicine Berlin
@@ -38,9 +38,9 @@ end
 %% Contact coordinates and other specifications
 electrode.coords_mm = zeros(numCon,3);
 for i=1:numCon
-    electrode.coords_mm(i,3) = elspec.tip_length*elspec.tipiscontact + ...
+    electrode.coords_mm(i,3) = elspec.tip_length*~elspec.tipiscontact + ...
                      elspec.contact_length/2 + ...
-                     (numCon-1)*(elspec.contact_spacing+elspec.contact_length);
+                     (i-1)*(elspec.contact_spacing+elspec.contact_length);
 end
 
 electrode.head_position = electrode.coords_mm(1,:);

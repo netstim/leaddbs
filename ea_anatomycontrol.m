@@ -77,10 +77,10 @@ ht=getappdata(handles.acontrolfig,'toolbar');
 if isempty(ht)
     ht=uitoolbar(handles.acontrolfig);
     c_step=2;
-    minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus'),'TooltipString','Decrease Contrast','ClickedCallback',{@setslidecontrast,'c',-0.1,resultfig,handles});
-    pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus'),'TooltipString','Increase Contrast','ClickedCallback',{@setslidecontrast,'c',0.1,resultfig,handles});
-    minusbrightness=uipushtool(ht,'CData',ea_get_icn('brightnessminus'),'TooltipString','Decrease Brightness','ClickedCallback',{@setslidecontrast,'o',-0.1,resultfig,handles});
-    plusbrightnesst=uipushtool(ht,'CData',ea_get_icn('brightnessplus'),'TooltipString','Increase Brightness','ClickedCallback',{@setslidecontrast,'o',0.1,resultfig,handles});
+    minuscontrast=uipushtool(ht,'CData',ea_get_icn('contrastminus'),'TooltipString','Decrease Contrast','ClickedCallback',{@ea_setslidecontrast,'c',-0.1,resultfig,handles});
+    pluscontrast=uipushtool(ht,'CData',ea_get_icn('contrastplus'),'TooltipString','Increase Contrast','ClickedCallback',{@ea_setslidecontrast,'c',0.1,resultfig,handles});
+    minusbrightness=uipushtool(ht,'CData',ea_get_icn('brightnessminus'),'TooltipString','Decrease Brightness','ClickedCallback',{@ea_setslidecontrast,'o',-0.1,resultfig,handles});
+    plusbrightnesst=uipushtool(ht,'CData',ea_get_icn('brightnessplus'),'TooltipString','Increase Brightness','ClickedCallback',{@ea_setslidecontrast,'o',0.1,resultfig,handles});
     setappdata(handles.acontrolfig,'toolbar',ht);
 end
 
@@ -145,8 +145,10 @@ end
 
 pos=get(hObject,'position');
 set(hObject,'position',[0,0,pos(3),pos(4)]);
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 set(handles.acontrolfig,'Visible',options.d3.verbose); % set invisible if called from lead group
+
+setappdata(resultfig,'awin',hObject);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -185,7 +187,7 @@ if strcmp(popvals{get(hObject,'Value')},'Choose...')
         set(hObject,'Value',1);
     end
 end
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 % --- Executes during object creation, after setting all properties.
 function templatepopup_CreateFcn(hObject, eventdata, handles)
@@ -205,14 +207,14 @@ function xtoggle_Callback(hObject, eventdata, handles)
 % hObject    handle to xtoggle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 % --- Executes on button press in ytoggle.
 function ytoggle_Callback(hObject, eventdata, handles)
 % hObject    handle to ytoggle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 
 % --- Executes on button press in ztoggle.
@@ -220,7 +222,7 @@ function ztoggle_Callback(hObject, eventdata, handles)
 % hObject    handle to ztoggle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 
 function xval_Callback(hObject, eventdata, handles)
@@ -231,7 +233,7 @@ function xval_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of xval as text
 %        str2double(get(hObject,'String')) returns contents of xval as a double
 
-refreshresultfig(handles,1)
+ea_refreshresultfig(handles,1)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -255,7 +257,7 @@ function yval_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of yval as text
 %        str2double(get(hObject,'String')) returns contents of yval as a double
-refreshresultfig(handles,1)
+ea_refreshresultfig(handles,1)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -280,7 +282,7 @@ function zval_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of zval as text
 %        str2double(get(hObject,'String')) returns contents of zval as a double
 
-refreshresultfig(handles,1)
+ea_refreshresultfig(handles,1)
 
 % --- Executes during object creation, after setting all properties.
 function zval_CreateFcn(hObject, eventdata, handles)
@@ -303,7 +305,7 @@ function xtrans_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of xtrans as text
 %        str2double(get(hObject,'String')) returns contents of xtrans as a double
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -327,7 +329,7 @@ function ytrans_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ytrans as text
 %        str2double(get(hObject,'String')) returns contents of ytrans as a double
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -351,7 +353,7 @@ function ztrans_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of ztrans as text
 %        str2double(get(hObject,'String')) returns contents of ztrans as a double
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -374,79 +376,9 @@ function invertcheck_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of invertcheck
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 
-function refreshresultfig(handles,refresh)
-% this part makes changes of the figure active:
-
-resultfig=getappdata(handles.acontrolfig,'resultfig');
-try
-    togglestates=getappdata(resultfig,'togglestates');
-catch
-    resultfig=gcf;
-    togglestates=getappdata(handles.acontrolfig,'togglestates');
-end
-if ~isfield(togglestates,'refreshcuts')
-    togglestates.refreshcuts=0;
-end
-
-if exist('refresh','var')
-    togglestates.refreshview=refresh;
-elseif isfield(togglestates,'refreshview')
-else
-    togglestates.refreshview=0;
-end
-
-% reset states based on gui:
-togglestates.xyzmm=[str2double(get(handles.xval,'String')),str2double(get(handles.yval,'String')),str2double(get(handles.zval,'String'))];
-togglestates.xyztoggles=[get(handles.xtoggle,'Value'),get(handles.ytoggle,'Value'),get(handles.ztoggle,'Value')];
-togglestates.xyztransparencies=[str2double(get(handles.xtrans,'String')),str2double(get(handles.ytrans,'String')),str2double(get(handles.ztrans,'String'))];
-togglestates.template=get(handles.templatepopup,'String');
-togglestates.template=togglestates.template{get(handles.templatepopup,'Value')};
-togglestates.tinvert=0;
-togglestates.customfile=getappdata(gcf,'customfile');
-setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestates); % also store toggle data in resultfig.
-
-ea_anatomyslices(getappdata(handles.acontrolfig,'resultfig'),...
-    togglestates,...
-    getappdata(handles.acontrolfig,'options'),handles);
-
-nativemni = ea_getnativemni;
-if togglestates.refreshcuts && nativemni==1
-    axis([-100 100 -130 100 -70 100]);
-elseif togglestates.refreshcuts && nativemni==2
-    axis([-200 200 -50 250 -100 150]);
-end
-
-togglestates.refreshcuts=0;
-togglestates.refreshview=0;
-setappdata(resultfig,'togglestates',togglestates);
-% fprintf('Figure updated\n')
-
-
-
-
-function setslidecontrast(~,~,contrastoffset,posneg,resultfig,handles)
-sc=getappdata(resultfig,'slidecontrast');
-if isempty(sc)
-    sc.c=0;
-    sc.o=0;
-end
-switch contrastoffset
-    case 'c' % contrast
-        sc.c=sc.c+posneg;
-    case 'o' % offset
-        sc.o=sc.o+posneg*0.2;
-end
-setappdata(resultfig,'slidecontrast',sc);
-
-
-togglestates = getappdata(resultfig,'togglestates');
-togglestates.refreshview = 1;
-setappdata(resultfig,'togglestates',togglestates);
-
-refreshresultfig(handles,1);
 
 
 % --------------------------------------------------------------------
@@ -514,7 +446,7 @@ switch eventdata.NewValue
 end
 setappdata(getappdata(gcf,'resultfig'),'togglestates',togglestates);
 
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 
 % --- Executes on button press in specify2dwrite.
@@ -551,7 +483,7 @@ end
 setappdata(getappdata(gcf,'resultfig'),'showcortex',showcortex);
 % ea_busyaction('del',gcf,'anatomy')
 
-refreshresultfig(handles)
+ea_refreshresultfig(handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -593,7 +525,7 @@ elseif get(handles.slicepopup,'Value')==2 && strcmp(eventdata.EventName,'Action'
     set(handles.zval,'String',num2str(xyzmm(3)))
 
 end
-refreshresultfig(handles,1)
+ea_refreshresultfig(handles,1)
 
 
 % --- Executes during object creation, after setting all properties.

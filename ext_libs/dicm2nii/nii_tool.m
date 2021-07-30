@@ -14,7 +14,7 @@ function varargout = nii_tool(cmd, varargin)
 % 
 % nii_tool('default', 'version', 1, 'rgb_dim', 1);
 % nii = nii_tool('init', img);
-% nii = nii_tool('update', nii);
+% nii = nii_tool('update', nii, mat);
 % nii_tool('save', nii, filename, force_3D);
 % hdr = nii_tool('hdr', filename);
 % img = nii_tool('img', filename_or_hdr);
@@ -39,7 +39,7 @@ function varargout = nii_tool(cmd, varargin)
 % 
 %  oldVal = nii_tool('default', 'version', 2); % set version 2 as default
 %  % 'init' and 'save' NIfTI using above version
-%  nii_tool('default', oldVal); % restore default setting
+%  nii_tool('default', 'version', oldVal); % restore default setting
 % 
 % The default version setting affects 'init' command only. If you 'load' a NIfTI
 % file, modify it, and then 'save' it, the version will be the same as the
@@ -72,13 +72,16 @@ function varargout = nii_tool(cmd, varargin)
 % RGB in 8th dim.
 % 
 % 
-% nii = nii_tool('update', nii);
+% nii = nii_tool('update', nii, mat);
 % 
 % - Update nii.hdr according to nii.img. This is useful if one changes nii.img
 % type or dimension. The 'save' command calls this internally, so it is not
 % necessary to call this before 'save'. A useful case to call 'update' is that
 % one likes to use nii struct without saving it to a file, and 'update' will
 % make nii.hdr.dim and others correct.
+% 
+% If the 3rd input, new transformation matrix is provided, it will be set as the
+% sform transformation matrix.
 % 
 % 
 % hdr = nii_tool('hdr', filename);
@@ -261,6 +264,7 @@ function varargout = nii_tool(cmd, varargin)
 % 180104 check_gzip: add /usr/local/bin to PATH for unix if needed.
 % 180119 use jsystem for better speed.
 % 180710 bug fix for cal_max/cal_min in 'update'.
+% 210302 take care of unicode char in hdr (Thx Yong).
 
 persistent C para; % C columns: name, length, format, value, offset
 if isempty(C)
@@ -288,6 +292,8 @@ if strcmpi(cmd, 'init')
         if i<0 || i>8 || mod(i,1)>0, error('Invalid RGB_dim number'); end
         nii.img = permute(nii.img, [1:i-1 i+1:8 i]); % RGB to dim8
     end
+    nii.hdr.file_name = inputname(2);
+    if isempty(nii.hdr.file_name), nii.hdr.file_name = 'tmpNII'; end
     varargout{1} = nii_tool('update', nii); % set datatype etc
     
 elseif strcmpi(cmd, 'save')
@@ -323,7 +329,7 @@ elseif strcmpi(cmd, 'save')
     % Deal with NIfTI version and sizeof_hdr
     niiVer = para.version;
     if isfield(nii.hdr, 'version'), niiVer = nii.hdr.version; end
-    if niiVer==1 && any(nii.hdr.dim(2:end) > 32767), niiVer = 2; end
+    if niiVer<2 && any(nii.hdr.dim(2:end) > 32767), niiVer = 2; end
 
     if niiVer == 1
         nii.hdr.sizeof_hdr = 348; % in case it was loaded from other version
@@ -401,11 +407,11 @@ elseif strcmpi(cmd, 'save')
         % version 1 will take only the first 4
         nii.hdr.magic = sprintf('n+%g%s', niiVer, char([0 13 10 26 10]));
         nii.hdr.vox_offset = nii.hdr.sizeof_hdr + 4 + esize;
-        fid = fopen([fname fext], 'W');
+        fid = fopen(strcat(fname, fext), 'W');
     else
         nii.hdr.magic = sprintf('ni%g%s', niiVer, char([0 13 10 26 10]));
         nii.hdr.vox_offset = 0;
-        fid = fopen([fname '.hdr'], 'W');
+        fid = fopen(strcat(fname, '.hdr'), 'W');
     end
     
     % Write nii hdr
@@ -415,6 +421,12 @@ elseif strcmpi(cmd, 'save')
         else % niiVer=2 omit some fields, also take care of other cases
             val = C0{i,4};
         end
+        fmt0 = C0{i,3};
+        if strcmp(C0{i,3}, 'char')
+            if ~ischar(val), val = char(val); end % avoid val=[] error etc
+            val = unicode2native(val); % may have more bytes than numel(val)
+            fmt0 = 'uint8';
+        end
         n = numel(val);
         len = C0{i,2};
         if n>len
@@ -422,7 +434,7 @@ elseif strcmpi(cmd, 'save')
         elseif n<len
             val(n+1:len) = 0; % pad 0, normally for char
         end
-        fwrite(fid, val, C0{i,3});
+        fwrite(fid, val, fmt0);
     end
     
     % Write nii ext: extension is in hdr
@@ -434,7 +446,7 @@ elseif strcmpi(cmd, 'save')
     
     if ~isNii
         fclose(fid); % done with .hdr
-        fid = fopen([fname '.img'], 'W');
+        fid = fopen(strcat(fname, '.img'), 'W');
     end
 
     % Write nii image
@@ -444,10 +456,10 @@ elseif strcmpi(cmd, 'save')
     % gzip if asked
     if do_gzip
         if isNii
-            gzipOS([fname '.nii']);
+            gzipOS(strcat(fname, '.nii'));
         else
-            gzipOS([fname '.hdr']); % better not to compress .hdr
-            gzipOS([fname '.img']);
+            gzipOS(strcat(fname, '.hdr')); % better not to compress .hdr
+            gzipOS(strcat(fname, '.img'));
         end
     end
     
@@ -542,7 +554,7 @@ elseif strcmpi(cmd, 'cat3D')
     end
     
     n = numel(fnames);
-    if n<2 || ~iscellstr(fnames)
+    if n<2 || (~iscellstr(fnames) && (exist('strings', 'builtin') && ~isstring(fnames)))
         error('Invalid input for nii_tool(''cat3D''): %s', varargin{1});
     end
 
@@ -573,13 +585,21 @@ elseif strcmpi(cmd, 'update') % old img2datatype subfunction
     if nargin<2, error('nii_tool(''%s'') needs second input', cmd); end
     nii = varargin{1};
     if ~isstruct(nii) || ~isfield(nii, 'hdr') || ~isfield(nii, 'img') 
-        error(['nii_tool(''save'') needs a struct from nii_tool(''init'')' ...
+        error(['nii_tool(''update'') needs a struct from nii_tool(''init'')' ...
             ' or nii_tool(''load'') as the second input']);
     end
     
     dim = size(nii.img);
     ndim = numel(dim);
     dim(ndim+1:7) = 1;
+    
+    if nargin>2 % set new sform mat
+        R = varargin{2};
+        if size(R,2)~=4, error('Invalid matrix dimension.'); end
+        nii.hdr.srow_x = R(1,:);
+        nii.hdr.srow_y = R(2,:);
+        nii.hdr.srow_z = R(3,:);
+    end
     
     if ndim == 8 % RGB/RGBA data. Change img type to uint8/single if needed
         valpix = dim(8);
@@ -592,7 +612,7 @@ elseif strcmpi(cmd, 'update') % old img2datatype subfunction
             else, nii.img = single(nii.img);
             end
         else
-            error('Color dimension must have length of 3 for RGB and 4 for RGBA');
+            error('Color dimension must have length of 3 for RGB or 4 for RGBA');
         end
         
         dim(8) = []; % remove color-dim so numel(dim)=7 for nii.hdr
@@ -663,11 +683,11 @@ if niiVer == 1
     C = {
     % name              len  format     value           offset
     'sizeof_hdr'        1   'int32'     348             0
-    'data_type'         10  'char*1'    ''              4
-    'db_name'           18  'char*1'    ''              14
+    'data_type'         10  'char'      ''              4
+    'db_name'           18  'char'      ''              14
     'extents'           1   'int32'     16384           32
     'session_error'     1   'int16'     0               36
-    'regular'           1   'char*1'    'r'             38
+    'regular'           1   'char'      'r'             38
     'dim_info'          1   'uint8'     0               39
     'dim'               8   'int16'     ones(1,8)       40
     'intent_p1'         1   'single'    0               56
@@ -690,8 +710,8 @@ if niiVer == 1
     'toffset'           1   'single'    0               136
     'glmax'             1   'int32'     0               140
     'glmin'             1   'int32'     0               144
-    'descrip'           80  'char*1'    ''              148
-    'aux_file'          24  'char*1'    ''              228
+    'descrip'           80  'char'      ''              148
+    'aux_file'          24  'char'      ''              228
     'qform_code'        1   'int16'     0               252
     'sform_code'        1   'int16'     0               254
     'quatern_b'         1   'single'    0               256
@@ -703,15 +723,15 @@ if niiVer == 1
     'srow_x'            4   'single'    [1 0 0 0]       280
     'srow_y'            4   'single'    [0 1 0 0]       296
     'srow_z'            4   'single'    [0 0 1 0]       312
-    'intent_name'       16  'char*1'    ''              328
-    'magic'             4   'char*1'    ''              344
+    'intent_name'       16  'char'      ''              328
+    'magic'             4   'char'      'n+1'           344
     'extension'         4   'uint8'     [0 0 0 0]       348
     };
 
 elseif niiVer == 2
     C = {
     'sizeof_hdr'        1   'int32'     540             0
-    'magic'             8   'char*1'    ''              4
+    'magic'             8   'char'      'n+2'           4
     'datatype'          1   'int16'     0               12
     'bitpix'            1   'int16'     0               14
     'dim'               8   'int64'     ones(1,8)       16
@@ -728,8 +748,8 @@ elseif niiVer == 2
     'toffset'           1   'double'    0               216
     'slice_start'       1   'int64'     0               224
     'slice_end'         1   'int64'     0               232
-    'descrip'           80  'char*1'    ''              240
-    'aux_file'          24  'char*1'    ''              320
+    'descrip'           80  'char'      ''              240
+    'aux_file'          24  'char'      ''              320
     'qform_code'        1   'int32'     0               344
     'sform_code'        1   'int32'     0               348
     'quatern_b'         1   'double'    0               352
@@ -744,9 +764,9 @@ elseif niiVer == 2
     'slice_code'        1   'int32'     0               496
     'xyzt_units'        1   'int32'     0               500
     'intent_code'       1   'int32'     0               504
-    'intent_name'       16  'char*1'    ''              508
+    'intent_name'       16  'char'      ''              508
     'dim_info'          1   'uint8'     0               524
-    'unused_str'        15  'char*1'    ''              525
+    'unused_str'        15  'char'      ''              525
     'extension'         4   'uint8'     [0 0 0 0]       540
     };
 else
@@ -770,9 +790,9 @@ D = {
     'uint32'    768     32      1
     'int64'     1024    64      1
     'uint64'    1280    64      1
-%     'float128'  1536    128     1 % long double, for 22nd century?
+%   'float128'  1536    128     1 % long double, for 22nd century?
     'double'    1792    128     2 % complex
-%     'float128'  2048    256     2 % long double complex
+%   'float128'  2048    256     2 % long double complex
     'uint8'     2304    32      4 % RGBA
     };
 
@@ -802,7 +822,7 @@ if islogical(cmd)
 end
 
 [err, str] = jsystem(cmd(fname));
-if err && ~exist([fname '.gz'], 'file')
+if err && ~exist(strcat(fname, '.gz'), 'file')
     try
         gzip(fname); deleteFile(fname);
     catch
@@ -890,6 +910,7 @@ if isempty(cmd)
     uid = @()sprintf('_%s_%03x', datestr(now, 'yymmddHHMMSSfff'), randi(999));
 end
 
+fname = char(fname);
 if islogical(cmd)
     outName = gunzip(fname, pth);
     outName = outName{1};
@@ -948,8 +969,8 @@ for i = 1:size(C,1)
         else, a = b(C{i,5} + (1:C{i,2})); % last item extension is in bytes
         end
     end
-    if strcmp(C{i,3}, 'char*1')
-        a = deblank(char(a));
+    if strcmp(C{i,3}, 'char')
+        a = deblank(native2unicode(a));
     else
         a = cast_swap(a, C{i,3}, swap);
         a = double(a);
@@ -993,7 +1014,7 @@ for i = 1:numel(ext)
         fclose(fid1);
         deleteMat = onCleanup(@() deleteFile(tmp)); % delete temp file after done
         ext(i).edata_decoded = load(tmp); % load into struct
-    elseif any(ext(i).ecode == [4 6 32]) % 4 AFNI, 6 plain text, 32 CIfTI
+    elseif any(ext(i).ecode == [4 6 32 44]) % 4 AFNI, 6 plain text, 32 CIfTI, 44 MRS (json)
         str = char(ext(i).edata(:)');
         if isempty(strfind(str, 'dicm2nii.m'))
             ext(i).edata_decoded = deblank(str);
@@ -1205,6 +1226,7 @@ end
 %% faster than system: based on https://github.com/avivrosenberg/matlab-jsystem
 function [err, out] = jsystem(cmd)
 % cmd is cell str, no quotation marks needed for file names with space.
+cmd = cellstr(cmd);
 try
     pb = java.lang.ProcessBuilder(cmd);
     pb.redirectErrorStream(true); % ErrorStream to InputStream
@@ -1215,6 +1237,12 @@ try
     if err, error('java.lang.ProcessBuilder error'); end
 catch % fallback to system() if java fails like for Octave
     cmd = regexprep(cmd, '.+? .+', '"$0"'); % double quotes if with middle space
-    [err, out] = system(sprintf('%s ', cmd{:}));
+    [err, out] = system(sprintf('%s ', cmd{:}, '2>&1'));
 end
+
+%% Return true if input is char or single string (R2016b+)
+function tf = ischar(A)
+tf = builtin('ischar', A);
+if tf, return; end
+if exist('strings', 'builtin'), tf = isstring(A) && numel(A)==1; end
 %%

@@ -1,6 +1,6 @@
 function ea_crop_nii_bb(varargin)
 % This function crops nifti to a bounding-box.
-% usage: ea_crop_nii_bb(filename, [prefix (default: overwrite, boundbox), interp]).
+% usage: ea_crop_nii_bb(filename, [prefix (default: overwrite), boundbox, interp]).
 % Note that outputs will not contain nan values anymore.
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit

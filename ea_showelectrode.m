@@ -119,6 +119,7 @@ for side=options.sides
             electrode.insulation(ins).vertices=X*[electrode.insulation(ins).vertices,ones(size(electrode.insulation(ins).vertices,1),1)]';
             electrode.insulation(ins).vertices=electrode.insulation(ins).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.insulation(ins));
+
             elrender(cnt).Tag = [nameprefix, 'Insulation', num2str(cnt), '_Side', num2str(side)];
 
             if isfield(options,'sidecolor')
@@ -142,7 +143,7 @@ for side=options.sides
                         usecolor=obj.color;
                 end
             end
-            specsurf(elrender(cnt),usecolor,aData);
+            ea_specsurf(elrender(cnt),usecolor,aData,'insulation');
             cnt=cnt+1;
         end
 
@@ -150,10 +151,13 @@ for side=options.sides
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.contacts(con));
+
+
+
             elrender(cnt).Tag = [nameprefix, 'Contact', num2str(con), '_Side', num2str(side)];
             eltype(cnt)=1;
             if ~isempty(options.colorMacroContacts)
-                specsurf(elrender(cnt),options.colorMacroContacts(con,:),1);
+                ea_specsurf(elrender(cnt),options.colorMacroContacts(con,:),1,'metal');
             else
                 if contains(nameprefix, '_mirrored_')
                     % Mirror highlight contact
@@ -167,9 +171,9 @@ for side=options.sides
                 end
 
                 if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{mside})) % make active red contact without transparency
-                    specsurf(elrender(cnt),[0.8,0.2,0.2],1);
+                    ea_specsurf(elrender(cnt),[0.8,0.2,0.2],1,'metal');
                 else
-                    specsurf(elrender(cnt),elspec.contact_color,aData);
+                    ea_specsurf(elrender(cnt),elspec.contact_color,aData,'metal');
                 end
             end
             cnt=cnt+1;
@@ -178,7 +182,9 @@ for side=options.sides
         % arrows for directional leads
         if isfield(options.prefs.d3,'showdirarrows') && options.prefs.d3.showdirarrows
             switch options.elmodel
-                case {'Boston Scientific Vercise Directed'
+                case {'Medtronic B33005'
+                      'Medtronic B33015'
+                      'Boston Scientific Vercise Directed'
                       'St. Jude Directed 6172 (short)'
                       'St. Jude Directed 6173 (long)'}
                     % Marker position relative to head position along z axis
@@ -196,7 +202,7 @@ for side=options.sides
                 stxmarker = elstruct.markers(side).head + stretchfactor * markerposRel * unitvector;
                 arrowtip = stxmarker + 5 * (elstruct.markers(side).y - elstruct.markers(side).head);
                 elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.3 .3 .3],'tipWidth',0.2,'tipLength',0,'stemWidth',0.2,'Tag','DirectionMarker');
-                specsurf(elrender(cnt),[.3 .3 .3],1);
+                ea_specsurf(elrender(cnt),[.3 .3 .3],1,'metal');
                 cnt = cnt+1;
             end
         end
@@ -281,19 +287,25 @@ for side=options.sides
                 if ~any(isnan(usefacecolor))
                     set(0,'CurrentFigure',resultfig);
                     if ~shifthalfup
-                        %                         elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
-                        elrender(pcnt)=ea_plotsphere(coords_mm{side}(cntct,:), ms/10, usefacecolor, useedgecolor);
-                        pcnt=pcnt+1;
+                        if strcmpi(options.prefs.d3.pointcloudstyle, '3d')
+                            elrender(pcnt)=ea_plotsphere(coords_mm{side}(cntct,:), ms/10, usefacecolor, useedgecolor);
+                            elrender(pcnt).Tag = 'PointCloud';
+                        else
+                            elrender(pcnt)=plot3(coords_mm{side}(cntct,1),coords_mm{side}(cntct,2),coords_mm{side}(cntct,3),'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        end
                     else
-                        %                         elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
-                        %                             mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
-                        %                             mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
-                        %                             'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
-                        %
-                        elrender(pcnt)=ea_plotsphere(mean([coords_mm{side}(cntct,:);coords_mm{side}(cntct+1,:)],1), ms/10, usefacecolor, useedgecolor);
-                        drawnow
-                        pcnt=pcnt+1;
+                        if strcmpi(options.prefs.d3.pointcloudstyle, '3d')
+                            elrender(pcnt)=ea_plotsphere(mean([coords_mm{side}(cntct,:);coords_mm{side}(cntct+1,:)],1), ms/10, usefacecolor, useedgecolor);
+                            elrender(pcnt).Tag = 'PointCloud';
+                        else
+                            elrender(pcnt)=plot3(mean([coords_mm{side}(cntct,1),coords_mm{side}(cntct+1,1)]),...
+                                mean([coords_mm{side}(cntct,2),coords_mm{side}(cntct+1,2)]),...
+                                mean([coords_mm{side}(cntct,3),coords_mm{side}(cntct+1,3)]),...
+                                'o','MarkerFaceColor',usefacecolor,'MarkerEdgeColor',useedgecolor,'MarkerSize',ms);
+                        end
                     end
+                    drawnow;
+                    pcnt=pcnt+1;
                 else
 
                 end
@@ -306,71 +318,3 @@ end
 if ~exist('elrender','var')
     elrender=nan;
 end
-
-
-function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.
-m=0;
-for c=1:length(cellinp)
-    nm=max(cellinp{c}(:));
-    if nm>m; m=nm; end
-end
-
-
-function m=miniso(cellinp)
-m=inf;
-for c=1:length(cellinp)
-    nm=min(cellinp{c}(:));
-    if nm<m; m=nm; end
-end
-
-
-function specsurf(varargin)
-
-surfc=varargin{1};
-color=varargin{2};
-if nargin==3
-    aData=varargin{3};
-end
-
-len=get(surfc,'ZData');
-
-cd=zeros([size(len),3]);
-cd(:,:,1)=color(1);
-try % works if color is denoted as 1x3 array
-    cd(:,:,2)=color(2);cd(:,:,3)=color(3);
-catch % if color is denoted as gray value (1x1) only
-    cd(:,:,2)=color(1);cd(:,:,3)=color(1);
-end
-
-
-cd=cd+0.01*randn(size(cd));
-
-set(surfc,'FaceColor','interp');
-set(surfc,'CData',cd);
-
-try % for patches
-    vertices=get(surfc,'Vertices');
-    cd=zeros(size(vertices));
-    cd(:)=color(1);
-    cd=repmat(color,size(cd,1),size(cd,2)/size(color,2));
-    set(surfc,'FaceVertexCData',cd);
-end
-set(surfc,'AlphaDataMapping','none');
-
-set(surfc,'FaceLighting','phong');
-set(surfc,'SpecularColorReflectance',0);
-set(surfc,'EdgeColor','none')
-
-set(surfc,'SpecularExponent',3) % patch property
-set(surfc,'SpecularStrength',0.21) % patch property
-set(surfc,'DiffuseStrength',0.4) % patch property
-set(surfc,'AmbientStrength',0.3) % patch property
-
-if nargin==3
-    set(surfc,'FaceAlpha',aData);
-end
-
-
-function C=rgb(C) % returns rgb values for the colors.
-
-C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);

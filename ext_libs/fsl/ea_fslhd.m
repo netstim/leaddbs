@@ -8,6 +8,10 @@ elseif strcmp(xmlarg, 'x')
     xmlarg = '-x';
 end
 
+if ~isfile(input)
+    error('%s not found!', input);
+end
+
 input = ea_path_helper(input);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];

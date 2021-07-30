@@ -30,14 +30,7 @@ disp('Refreshing patient list...');
 set(handles.patientlist,'String',M.patient.list);
 try set(handles.patientlist,'Value',M.ui.listselect); end
 
-disp('Refreshing clinical list...');
-% refresh clinical list
-set(handles.clinicallist,'String',M.clinical.labels);
-try set(handles.clinicallist,'Value',M.ui.clinicallist); end
 
-if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
-    set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
-end
 
 disp('Creating isomatrix from regressor list...');
 % set isomatrix from variable in clinical list
@@ -103,7 +96,7 @@ if ~isempty(S)
     set(handles.setstimparamsbutton,'BackgroundColor',[0.1;0.8;0.1]);
     M.S=S;
     for sp=1:length(M.S) % make sure stimlabel is gs_guid.
-       M.S(sp).label=['gs_',M.guid];
+        M.S(sp).label=['gs_',M.guid];
     end
     % M.S=ea_activecontacts(M.S);
     M.vatmodel=getappdata(handles.leadfigure,'vatmodel');
@@ -188,8 +181,10 @@ try
         set(handles.detachbutton,'Visible','on');
     end
 end
-
-if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time limit
+t=datetime('now');
+t.Format='uuuMMddHHmmss';
+t=str2double(char(t));
+if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
     % patient specific part:
     if ~isempty(M.patient.list)
         disp('Loading localizations...');
@@ -200,34 +195,38 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                     M.ui.labelpopup=length(get(handles.labelpopup,'String'));
                 end
             end
-
+            
             if isfield(M,'stimparams') % deprecated.
                 M=rmfield(M,'stimparams');
             end
-
+            
             % load localization
             [~, patientname] = fileparts(M.patient.list{pt});
-
+            
             M.elstruct(pt).group=M.patient.group(pt);
             if ~isfield(M,'groups')
                 M.groups.color=[0.7,0.7,0.7];
                 M.groups.group=ones(length(M.patient.list),1);
             end
-
+            
             M.elstruct(pt).groupcolors=M.groups.color;
             M.elstruct(pt).groups=M.groups.group;
-
+            
             options.sides=1:2;
             options.native=0;
             try
-                [options.root,options.patientname]=fileparts(M.patient.list{pt});
-                if ~isempty(options.root)
-                    options.root=[options.root,filesep];
+                if M.ui.detached
+                    options.patientname = M.patient.list{pt};
+                    options.root = M.ui.groupdir;
+                else
+                    [options.root, options.patientname] = fileparts(M.patient.list{pt});
+                    options.root = [options.root, filesep];
                 end
+                
                 options = ea_resolve_elspec(options);
                 if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
                     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
-
+                    
                     if M.ui.elmodelselect==1 % use patient specific elmodel
                         if exist('elmodel','var')
                             M.elstruct(pt).elmodel=elmodel;
@@ -238,19 +237,19 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                         elmodels = [{'Patient specified'};ea_resolve_elspec];
                         M.elstruct(pt).elmodel = elmodels{M.ui.elmodelselect};
                     end
-
+                    
                     % make sure coords_mm is congruent to coded electrode model
                     poptions=options;
                     poptions.native=0;
                     poptions.elmodel=M.elstruct(pt).elmodel;
                     poptions=ea_resolve_elspec(poptions);
                     [coords_mm,trajectory,markers]=ea_resolvecoords(markers,poptions,0);
-
+                    
                     M.elstruct(pt).coords_mm=coords_mm;
                     M.elstruct(pt).coords_acpc=coords_acpc;
                     M.elstruct(pt).trajectory=trajectory;
                     M.elstruct(pt).name = patientname;
-
+                    
                     if ~exist('markers','var') % backward compatibility to old recon format
                         for side=1:2
                             try
@@ -270,14 +269,14 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 if pt>1 % first patient has worked but some other patient seems not to have worked.
                     try
                         if ~M.ui.detached
-                        M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
-                        warning(['No reconstruction present for ',patientname,'. Please check.']);
+                            M.elstruct(1).coords_mm; % probe if error happens in pt. 1 ? if not show warning
+                            warning(['No reconstruction present for ',patientname,'. Please check.']);
                         end
                     end
                 end
             end
         end
-
+        
         %uniform the data (by checking the missing sides and filling them)
         num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
         for pt=1:length(M.patient.list)
@@ -296,7 +295,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                         end
                     end
                     M.elstruct(pt).trajectory{check_side}=[];
-
+                    
                     %this will create the missing structure
                     M.elstruct(pt).markers(check_side).head=[];
                     M.elstruct(pt).markers(check_side).tail=[];
@@ -305,7 +304,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 end
             end
         end
-
+        
         % load stats for group
         disp('Loading stats for group...');
         for pt=1:length(M.patient.list)
@@ -315,17 +314,17 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 ea_stats=ea_rmssstimulations(ea_stats,M); % only preserve stimulations with label 'gs_groupid'.
                 M.stats(pt).ea_stats=ea_stats;
                 if isfield(M.stats(pt).ea_stats.atlases,'rebuild') % old stats format with complete atlas table - delete, will lead to large M file
-                   M.stats(pt).ea_stats=rmfield(M.stats(pt).ea_stats,'atlases');
-                   M.stats(pt).ea_stats.atlases.names=ea_stats.atlases.names;
-                   M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
-
-                   % also correct single subject file:
-                   load([M.patient.list{pt},filesep,'ea_stats']);
-                   ea_stats.atlases=M.stats(pt).ea_stats.atlases;
-                   save([M.patient.list{pt},filesep,'ea_stats'],'ea_stats','-v7.3');
+                    M.stats(pt).ea_stats=rmfield(M.stats(pt).ea_stats,'atlases');
+                    M.stats(pt).ea_stats.atlases.names=ea_stats.atlases.names;
+                    M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
+                    
+                    % also correct single subject file:
+                    load([M.patient.list{pt},filesep,'ea_stats']);
+                    ea_stats.atlases=M.stats(pt).ea_stats.atlases;
+                    save([M.patient.list{pt},filesep,'ea_stats'],'ea_stats','-v7.3');
                 end
             end
-
+            
             if ~isfield(M,'stats')
                 % if no stats  present yet, return.
                 setappdata(handles.leadfigure,'M',M);
@@ -339,7 +338,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 set(handles.explorestats, 'Enable', 'on');
                 set(handles.exportstats, 'Enable', 'on');
             end
-
+            
             priorvilist=M.vilist;
             try % try using stats from patient folder.
                 M.vilist=ea_stats.atlases.names;
@@ -350,7 +349,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                     M.vilist={};
                 end
             end
-
+            
             %disp('Comparing stats with prior atlas intersection list...');
             % check and compare with prior atlas intersection list.
             if ~isempty(priorvilist) && ~isequal(priorvilist,M.vilist)
@@ -359,7 +358,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 warning('%s: inhomogeneous stats. Please re-run group analysis (Calculate Stats).', ptname);
                 warning('on', 'backtrace');
             end
-
+            
             priorfclist=M.fclist;
             try % try using stats from patient folder.
                 M.fclist=ea_stats.stimulation(1).ft(1).labels{1};
@@ -373,7 +372,7 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                     fcdone=0;
                 end
             end
-
+            
             % check and compare with prior fibertracking list.
             if fcdone
                 if ~isempty(priorfclist) && ~isequal(priorfclist,M.fclist)
@@ -381,7 +380,120 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
                 end
             end
         end
-
+        
+        
+        % load clinical data for group
+        disp('Loading clinical data for group...');
+        for pt=1:length(M.patient.list)
+            
+            if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
+                ptscores=load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
+                if ~exist('ea_scores','var') % set up automatic assignment struct
+                    ea_scores=load(fullfile(ea_getearoot,'clinical','ea_scores.mat'));
+                end
+                entries=fieldnames(ptscores);
+                for entry=1:length(entries) % iterate scores available in patient
+                    
+                    switch entries{entry}
+                        case {'Motor_UPDRS','Motor_MDSUPDRS'} % group these two together
+                            
+                            scorename='mUPDRS';
+                        otherwise
+                            
+                            scorename=entries{entry};
+                    end
+                    if exist('clindata','var') && isfield(clindata,scorename)
+                    else
+                        clindata.(scorename).baseline=[];
+                        clindata.(scorename).postop=[];
+                        clindata.(scorename).factors={};
+                        clindata.(scorename).score={};
+                    end
+                    
+                    [ispresent,ix]=ismember(entries{entry},fieldnames(ea_scores));
+                    if ispresent % does lead-dbs know what to do with a score named like this?
+                        if isfield(ptscores.(entries{entry}),ea_scores.(entries{entry}).default_baseline)
+                            baseline=ptscores.(entries{entry}).(ea_scores.(entries{entry}).default_baseline).score;
+                            success=1;
+                        else
+                            success=0;
+                            continue
+                        end
+                        if isfield(ptscores.(entries{entry}),M.guid)
+                            postop=ptscores.(entries{entry}).(M.guid).score;
+                            success=1;
+                        else
+                            success=0;
+                            continue
+                        end
+                        if success % both baseline and postop available
+                            clindata.(scorename).baseline(pt,:)=table2array(baseline);
+                            clindata.(scorename).postop(pt,:)=table2array(postop);
+                            clindata.(scorename).score{pt,1}=entries{entry};
+                            clindata.(scorename).factornames=ea_scores.(entries{entry}).factornames;
+                            clindata.(scorename).factors.(entries{entry})=ea_scores.(entries{entry}).factors;
+                            clindata.(scorename).somatotopies.(entries{entry})=ea_scores.(entries{entry}).somatotopies;
+                            clindata.(scorename).somatotopynames=ea_scores.(entries{entry}).somatotopynames;
+                        end
+                    end
+                    
+                end
+            end
+        end
+        if exist('clindata','var')
+            fns=fieldnames(clindata);
+            for fn=1:length(fns)
+                scorename=fns{fn};
+                clindata.(scorename).scores=unique(clindata.(scorename).score);
+                
+                modes={'absolute','percent','cleaned'};
+                
+                % now auto-query improvements for all factors:
+                for s=1:length(clindata.(scorename).somatotopynames)
+                    for f=1:length(clindata.(scorename).factornames)
+                        for mode=1:length(modes)
+                            I=ea_getimprovs_fctr_smtp(clindata.(scorename),modes{mode},1:length(M.patient.list),clindata.(scorename).factornames{f},clindata.(scorename).somatotopynames{s});
+                            Ilabel=[scorename,'_',clindata.(scorename).somatotopynames{s},'_',clindata.(scorename).factornames{f},'_',modes{mode}];
+                            
+                            [is,ix]=ismember(Ilabel,M.clinical.labels);
+                            if ~is
+                                M.clinical.labels{end+1}=Ilabel;
+                                M.clinical.vars{end+1}=I;
+                            else % update
+                                M.clinical.labels{ix}=Ilabel;
+                                M.clinical.vars{ix}=I;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        
+        % sync stimulation parameters for group
+        disp('Syncing stimulation parameters for group...');
+        for pt=1:length(M.patient.list)
+            if exist(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'),'file')
+            ptS=load(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'));
+               
+            try % could fail if M.S(pt) is not defined.
+                if ~all([isequal(ptS.S.Rs1,M.S(pt).Rs1),...
+                        isequal(ptS.S.Rs2,M.S(pt).Rs2),...
+                        isequal(ptS.S.Rs3,M.S(pt).Rs3),...
+                        isequal(ptS.S.Rs4,M.S(pt).Rs4),...
+                        isequal(ptS.S.Ls1,M.S(pt).Ls1),...
+                        isequal(ptS.S.Ls2,M.S(pt).Ls2),...
+                        isequal(ptS.S.Ls3,M.S(pt).Ls3),...
+                        isequal(ptS.S.Ls4,M.S(pt).Ls4),...
+                        isequal(ptS.S.amplitude,M.S(pt).amplitude)])
+                    warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+                end
+            end
+            
+            end
+        end
+        
+        
         try
             setappdata(handles.leadfigure,'elstruct',elstruct);
         end
@@ -389,6 +501,15 @@ if 1    % ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>240 % 4 mins time l
         M.vilist={};
         M.fclist={};
     end
+end
+
+disp('Refreshing clinical list...');
+% refresh clinical list
+set(handles.clinicallist,'String',M.clinical.labels);
+try set(handles.clinicallist,'Value',M.ui.clinicallist); end
+
+if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
+    set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
 end
 
 % store everything in Model

@@ -29,7 +29,7 @@ for pt=[0,allpts] % iterate through patients, leaving out one each time. In firs
     ea_Rmap(patConnectivityFiles(otherpts),Regressor(otherpts),['Rmaps',filesep,'R_',sprintf('%02.0f',pt),'.nii'],ea_getmask(usemask),'',corrtype);
     
     if pt==0 % visualize main R-map (across all patients) in surfice
-        ea_surfice(['Rmaps',filesep,'R_',sprintf('%02.0f',pt),'.nii']);
+        ea_surficeoverlay(['Rmaps',filesep,'R_',sprintf('%02.0f',pt),'.nii']);
     end
     
     

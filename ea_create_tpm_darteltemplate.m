@@ -129,7 +129,7 @@ end
 
 % make sure TPM sums to 1 everywhere
 nii=ea_load_untouch_nii([ea_space,'TPM.nii']);
-nii.img=nii.img./repmat(sum(nii.img,4),1,1,1,6);
+nii.img=nii.img./repmat(sum(nii.img,4),1,1,1,tpmnum);
 ea_save_untouch_nii(nii,[ea_space,'TPM.nii']);
 
 wd=ea_space([],'dartel');
@@ -256,7 +256,7 @@ ea_addshoot;
 % % make sure TPM sums to 1 everywhere
 %
 % nii=ea_load_untouch_nii([ea_space,'TPM.nii']);
-% nii.img=nii.img./repmat(sum(nii.img,4),1,1,1,6);
+% nii.img=nii.img./repmat(sum(nii.img,4),1,1,1,tpmnum);
 % ea_save_untouch_nii(nii,[ea_space,'TPM.nii']);
 %
 % ea_delete([ea_space,'*PM_0*.nii']);

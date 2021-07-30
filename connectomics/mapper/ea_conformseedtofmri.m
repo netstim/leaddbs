@@ -13,15 +13,15 @@ if ~isstruct(seed) && isfile(seed)
     seed = ea_load_nii(seed);
 end
 
-% Use trilinear interpolation by default.
-% Set to 0 to use nearest neighbour
+% Set default interp method to trilinear
+% Can choose from trilinear, nearestneighbour, sinc or spline
 if ~exist('interp', 'var')
-    interp = 1;
+    interp = 'trilinear';
 end
-
+guid=ea_generate_uuid;
 td = tempdir;
-tmpref = [td,'tmpspace.nii'];
-tmpseed = [td,'tmpseed.nii'];
+tmpref = [td,'tmpspace_',guid,'.nii'];
+tmpseed = [td,'tmpseed_',guid,'.nii'];
 
 % Write out ref into temp file
 dataset.vol.space.fname = tmpref;
@@ -34,8 +34,13 @@ seed.dt = [16,0];
 ea_write_nii(seed);
 
 % Conform space by coregistration using SPM with trilinear interpolation
-options.coregmr.method='SPM';
-ea_coreg2images(options,tmpseed,tmpref,tmpseed,[],[],[],interp);
+prefs=ea_prefs;
+switch prefs.lcm.vat2fmrimethod
+    case 'fsl' % default since v.2.5.3
+        ea_fsl_reslice(tmpseed, tmpref, tmpseed, interp);
+    case 'spm' % older method - can lead to issues with very small vtas.
+        ea_conformspaceto(tmpref, tmpseed, 1); % use interp = 1 for trilinear.
+end
 
 % Load resliced seed file and clean up
 seed=ea_load_nii(tmpseed);

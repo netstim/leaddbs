@@ -109,7 +109,7 @@ for iside=1:length(options.sides)
 
     aData=1;
 
-    specsurf(elrender{side}(1),usecolor,aData);
+    ea_specsurf(elrender{side}(1),usecolor,aData);
 
     % draw contacts
     for cntct=1:elspec.numel
@@ -272,7 +272,7 @@ for iside=1:length(options.sides)
     if any(axis_rot) || angle_X1X2
         %       rotate(elrender{side}(cnt),axis_rot,angle_X1X2,X1)
     end
-    specsurf(elrender{side}(cnt),usecolor,aData);
+    ea_specsurf(elrender{side}(cnt),usecolor,aData);
 end
 
 if ~exist('elrender','var')
@@ -336,7 +336,7 @@ if vizz
         else
             usecolor=elspec.lead_color;
         end
-        specsurf(elrender{side}(cnt),usecolor,aData);
+        ea_specsurf(elrender{side}(cnt),usecolor,aData);
         cnt=cnt+1;
     end
     for con=1:length(electrode.contacts)
@@ -345,7 +345,7 @@ if vizz
         electrode.contacts(con).vertices=vs(1:3,:)';
         elrender{side}(cnt)=patch('Faces',electrode.contacts(con).faces,'Vertices',electrode.contacts(con).vertices);
 
-        specsurf(elrender{side}(cnt),elspec.contact_color,aData);
+        ea_specsurf(elrender{side}(cnt),elspec.contact_color,aData);
 
         cnt=cnt+1;
     end
@@ -355,7 +355,7 @@ if vizz
 end
 
 %% build volumetric addition to it:
-ea_genvol_adtech_sd(meshel,elspec,rescaleratio,vizz);
+ea_genvol_adtech(meshel,elspec,rescaleratio,vizz);
 
 %% Revert to real dimension
 electrode.head_position = electrode.head_position/rescaleratio;
@@ -381,65 +381,3 @@ for i=1:length(meshel.con)
 end
 
 save([ea_getearoot,'templates',filesep,'electrode_models',filesep,elspec.matfname],'electrode');
-
-
-function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.
-m=0;
-for c=1:length(cellinp)
-    nm=max(cellinp{c}(:));
-    if nm>m; m=nm; end
-end
-
-function m=miniso(cellinp)
-m=inf;
-for c=1:length(cellinp)
-    nm=min(cellinp{c}(:));
-    if nm<m; m=nm; end
-end
-
-
-function specsurf(varargin)
-
-surfc=varargin{1};
-color=varargin{2};
-if nargin==3
-    aData=varargin{3};
-end
-
-len=get(surfc,'ZData');
-
-cd=zeros([size(len),3]);
-cd(:,:,1)=color(1);
-try % works if color is denoted as 1x3 array
-    cd(:,:,2)=color(2);cd(:,:,3)=color(3);
-catch % if color is denoted as gray value (1x1) only
-    cd(:,:,2)=color(1);cd(:,:,3)=color(1);
-end
-
-
-cd=cd+0.01*randn(size(cd));
-
-set(surfc,'FaceColor','interp');
-set(surfc,'CData',cd);
-
-try % for patches
-    Vertices=get(surfc,'Vertices');
-    cd=zeros(size(Vertices));
-    cd(:)=color(1);
-    set(surfc,'FaceVertexCData',cd);
-end
-set(surfc,'AlphaDataMapping','none');
-
-set(surfc,'FaceLighting','phong');
-set(surfc,'SpecularColorReflectance',0);
-set(surfc,'SpecularExponent',10);
-set(surfc,'EdgeColor','none')
-
-if nargin==3
-    set(surfc,'FaceAlpha',aData);
-end
-%set(surfc,'FaceAlpha',0.3);
-
-function C=rgb(C) % returns rgb values for the colors.
-
-C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);

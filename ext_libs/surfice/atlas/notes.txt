@@ -1,0 +1,18 @@
+AAL (Automated Anatomical Labeling)
+ http://www.gin.cnrs.fr/en/tools/aal-aal2/
+ https://www.ncbi.nlm.nih.gov/pubmed/11771995
+ Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, Mazoyer B, Joliot M. (2002) Automated Anatomical Labeling of Activations in SPM Using a Macroscopic Anatomical Parcellation of the MNI MRI Single-Subject Brain. NeuroImage. 15:273-289.
+
+AICHA (Atlas of Intrinsic Connectivity of Homotopic Areas)
+ http://www.gin.cnrs.fr/en/tools/aicha/
+ https://www.ncbi.nlm.nih.gov/pubmed/26213217
+ Joliot M, Jobard G, Naveau M, Delcroix N, Petit L, Zago L, Crivello F, Mellet E, Mazoyer B, Tzourio-Mazoyer N (2015). AICHA: An atlas of intrinsic connectivity of homotopic areas. Journal of Neuroscience Methods, 254:46–59.
+
+JHU
+ https://www.ncbi.nlm.nih.gov/pubmed/22498656
+ Faria AV, Joel SE, Zhang Y, Oishi K, van Zjil PC, Miller MI, Pekar JJ, Mori S (2012) Atlas-based analysis of resting-state functional connectivity: evaluation for reproducibility and multi-modal anatomy-function correlation studies. Neuroimage 61:613– 621.
+
+CIT168 Reinforcement Learning Atlas
+ https://osf.io/jkzwp/
+ https://www.biorxiv.org/content/early/2017/10/30/211201
+ Pauli WM, Nili AN, Tyszka JM (2017). A High-Resolution Probabilistic In Vivo Atlas of Human Subcortical Brain Nuclei. bioRxiv, 211201.

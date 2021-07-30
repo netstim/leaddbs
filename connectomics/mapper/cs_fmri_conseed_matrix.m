@@ -24,7 +24,6 @@ else
 end
 
 disp(['Connectome dataset: ',cname,'.']);
-ocname=cname;
 if ismember('>',cname)
     delim=strfind(cname,'>');
     subset=cname(delim+1:end);
@@ -38,15 +37,13 @@ d=load([dfold,'fMRI',filesep,cname,filesep,'dataset_info.mat']);
 dataset=d.dataset;
 clear d;
 
-if ~exist('outputfolder','var')
-    outputfolder=ea_getoutputfolder(sfile,ocname);
-else
-    if isempty(outputfolder) % from shell wrapper.
-        outputfolder=ea_getoutputfolder(sfile,ocname);
-    end
-    if ~strcmp(outputfolder(end),filesep)
-        outputfolder=[outputfolder,filesep];
-    end
+if isempty(outputfolder)
+    warning('off', 'backtrace');
+    warning('Custom output folder not specified! Will save result to current folder.');
+    warning('on', 'backtrace');
+    outputfolder = ea_getoutputfolder({[pwd, filesep]},cname);
+elseif ~strcmp(outputfolder(end),filesep)
+    outputfolder = [outputfolder,filesep];
 end
 
 for s=1:size(sfile,1)
@@ -213,13 +210,19 @@ switch dataset.type
     case 'fMRI_matrix'
         ea_error(['Command ',cmd,' in combination with an fMRI-matrix not (yet) supported.']);
     case 'fMRI_timecourses'
+        if isfield(options.lcm, 'parcSeedName') && ~isempty(options.lcm.parcSeedName)
+            corrMxName = options.lcm.parcSeedName;
+        else
+            corrMxName = 'matrix';
+        end
+
         % export mean
         M=nanmean(fX');
         X=zeros(numseed);
         X(logical(triu(ones(numseed),1)))=M;
         X=X+X';
         X(logical(eye(length(X))))=1;
-        save([outputfolder,cmd,'_corrMx_AvgR.mat'],'X','-v7.3');
+        save([outputfolder,corrMxName,'_corrMx_AvgR.mat'],'X','-v7.3');
 
         % export variance
         M=nanvar(fX');
@@ -227,7 +230,7 @@ switch dataset.type
         X(logical(triu(ones(numseed),1)))=M;
         X=X+X';
         X(logical(eye(length(X))))=1;
-        save([outputfolder,cmd,'_corrMx_VarR.mat'],'X','-v7.3');
+        save([outputfolder,corrMxName,'_corrMx_VarR.mat'],'X','-v7.3');
 
         % fisher-transform:
         fX=atanh(fX);
@@ -236,7 +239,7 @@ switch dataset.type
         X(logical(triu(ones(numseed),1)))=M;
         X=X+X';
         X(logical(eye(length(X))))=1;
-        save([outputfolder,cmd,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
+        save([outputfolder,corrMxName,'_corrMx_AvgR_Fz.mat'],'X','-v7.3');
 
         % export T
         [~,~,~,tstat]=ttest(fX');

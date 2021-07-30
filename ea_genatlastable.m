@@ -106,7 +106,8 @@ if checkrebuild(atlases,options,root,mifix)
     end
     nm=nm(logical(nmind)); % select which shall be performed.
     if ~isfield(atlases,'colormap')
-        atlases.colormap=ea_color_wes('all',length(atlases.names));
+        %atlases.colormap=ea_colorlover(12);
+        atlases.colormap=othercolor('BuOrR_14',length(atlases.names));
     end
     maxcolor = size(atlases.colormap,1);
 

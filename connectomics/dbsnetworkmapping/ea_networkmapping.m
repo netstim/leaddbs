@@ -32,6 +32,7 @@ classdef ea_networkmapping < handle
         basepredictionon = 'Spatial Correlations (Spearman)';
         surfdrawn % struct contains data that is actually drawn.
         drawobject % handle to surface drawn on figure
+        exportmodelsAsNifti=0 % export models during cross-validation into the lg directory
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
         setlabels={};
         setselections={};
@@ -288,6 +289,57 @@ classdef ea_networkmapping < handle
                     else
                         [vals] = ea_networkmapping_calcstats(obj, patientsel(training), Iperm);
                     end
+                end
+                
+                if obj.exportmodelsAsNifti 
+                   
+                    % determine how to call selected patients
+                    
+                    for set=1:length(obj.setlabels)
+                        if isequal(obj.patientselection,find(obj.setselections{set}))
+                            setname=ea_space2sub(obj.setlabels{set});
+                        end
+                    end
+                    if isequal(obj.patientselection,1:length(obj.M.patient.list))
+                        setname='All_Patients';
+                    end
+                    if ~exist('setname','var') % custom selection
+                       setname=['N=',num2str(length(obj.patientselection))]; 
+                    end
+                    
+                    % determine which cv is running
+                   st = dbstack;
+                   callingfunction = st(2).name;
+                   callingfunction = strrep(callingfunction,'ea_networkmapping.','');
+                   
+                   
+                   
+                   
+                   res=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+                   res.dt=[16,1];
+                   res.img(:)=vals{1};
+                   
+                   ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction));
+                   res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction,[ea_space2sub(obj.statmetric),'_',num2str(c),'.nii']);
+                   ea_write_nii(res);
+                   
+                   
+                   % also check if fingerprints have already been exported
+                   if c==1
+                       odir=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints');
+                       if exist(odir,'dir')
+                          ea_warning(['An analysis with the same name (',setname,') already exists under ',odir,'. Dumping novel NIfTI files in there - but better reexport and clean up before.']); 
+                       end
+                       ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints'));
+                       for pt=obj.patientselection
+                           
+                           res.img(:)=obj.results.(ea_conn2connid(obj.connectome)).connval(pt,:);
+                           res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints',['Fingerprint_',num2str(pt),'.nii']);
+                           ea_write_nii(res);
+                       end                       
+                   end
+
+                   
                 end
 
                 switch lower(obj.basepredictionon)
@@ -553,11 +605,11 @@ classdef ea_networkmapping < handle
                         % first draw correct surface
                         switch obj.model
                             case 'Smoothed'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_r_smoothed.obj']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_l_smoothed.obj']); end
+                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_smoothed.rh.mz3']); end
+                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_smoothed.lh.mz3']); end
                             case 'Full'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_r.obj']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_l.obj']); end
+                                if obj.modelRH; rh=ea_readObj([ea_space,'surf.rh.mz3']); end
+                                if obj.modelLH; lh=ea_readObj([ea_space,'surf.lh.mz3']); end
                         end
 
                         % Check cmap
@@ -628,26 +680,26 @@ classdef ea_networkmapping < handle
                         switch obj.model
                             case 'Smoothed'
                                 if obj.modelRH && ~obj.modelLH
-                                    mesh=([ea_space,'surf_r_smoothed.obj']);
+                                    mesh=([ea_space,'surf_smoothed.rh.mz3']);
                                     side=1;
                                 elseif obj.modelLH && ~obj.modelRH
-                                    mesh=([ea_space,'surf_l_smoothed.obj']);
+                                    mesh=([ea_space,'surf_smoothed.lh.mz3']);
                                     side=2;
                                 elseif obj.modelRH && obj.modelLH
-                                    mesh=([ea_space,'surf_smoothed.obj']);
+                                    mesh=([ea_space,'surf_smoothed.mz3']);
                                     side=1;
                                 elseif ~obj.modelRH && ~obj.modelLH
                                     ea_error('Please switch on at least one hemisphere');
                                 end
                             case 'Full'
                                 if obj.modelRH && ~obj.modelLH
-                                    mesh=([ea_space,'surf_r.obj']);
+                                    mesh=([ea_space,'surf.rh.mz3']);
                                     side=1;
                                 elseif obj.modelLH && ~obj.modelRH
-                                    mesh=([ea_space,'surf_l.obj']);
+                                    mesh=([ea_space,'surf.lh.mz3']);
                                     side=2;
                                 elseif obj.modelRH && obj.modelLH
-                                    mesh=([ea_space,'surf.obj']);
+                                    mesh=([ea_space,'surf.mz3']);
                                     side=1;
                                 elseif ~obj.modelRH && ~obj.modelLH
                                     ea_error('Please switch on at least one hemisphere');
@@ -687,7 +739,7 @@ classdef ea_networkmapping < handle
                         script=[script,...
                             ' END.'];
 
-                        ea_surfice_script(script,0);
+                        ea_surfice(script,0);
                 end
 
                 % Set colorbar tick positions and labels

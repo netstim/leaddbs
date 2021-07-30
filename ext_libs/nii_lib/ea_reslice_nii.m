@@ -12,7 +12,7 @@
 %  "Transform of this NIFTI data is not supported by the program".
 %
 %  Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], ...
-%			[method], [img_idx], [preferredForm]);
+%			[interp], [img_idx], [preferredForm]);
 %
 %  old_fn  -	filename for original NIfTI file
 %
@@ -33,11 +33,11 @@
 %			will be the average of two corner voxel intensities
 %			in original image volume, if it is default or empty.
 %
-%  method (optional)  -	1, 2, or 3
+%  interp (optional)  -	1, 2, or 3
 %			1:  for Trilinear interpolation
 %			2:  for Nearest Neighbor interpolation
 %			3:  for Fischer's Bresenham interpolation
-%			'method' is 1 if it is default or empty.
+%			'interp' is 1 if it is default or empty.
 %
 %  img_idx (optional)  -  a numerical array of image volume indices. Only
 %		the specified volumes will be loaded. All available image
@@ -60,14 +60,14 @@
 function ea_reslice_nii(old_fn, new_fn, voxel_size, verbose, bg, interp, img_idx, preferredForm, tool)
 
 if ~exist('old_fn','var') || ~exist('new_fn','var')
-    error('Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], [method], [img_idx])');
+    error('Usage: reslice_nii(old_fn, new_fn, [voxel_size], [verbose], [bg], [interp], [img_idx])');
 end
 
 if ~exist('verbose','var') || isempty(verbose)
     verbose = 1;
 end
 
-if ~exist('method','var') || isempty(interp)
+if ~exist('interp','var') || isempty(interp)
     interp = 1;
 end
 

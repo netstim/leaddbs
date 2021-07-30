@@ -22,7 +22,7 @@ function varargout = ea_roicontrol(varargin)
 
 % Edit the above text to modify the response to help ea_roicontrol
 
-% Last Modified by GUIDE v2.5 28-Oct-2020 13:19:26
+% Last Modified by GUIDE v2.5 25-Jun-2021 13:53:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -82,7 +82,7 @@ if ~obj.binary
     set(handles.roicontrol,'Name',obj.niftiFilename);
     handles.histax.XAxis.Limits=[min(nzeros),max(nzeros)];
 else
-    set(handles.threshtxt,'Visible','off');
+    set(handles.threshLabel,'Visible','off');
 end
 % button
 if ischar(obj.color) % none
@@ -118,12 +118,14 @@ if ~obj.binary
 else
     obj.threshold=obj.max/2;
 end
+set(handles.threshtxt, 'String', num2str(obj.threshold));
 
 % alpha
 set(0,'CurrentFigure',handles.roicontrol);
 jSlider{2} = javax.swing.JSlider(0,100);
 ea_javacomponent(jSlider{2},[0,65,handles.roicontrol.Position(3)-1,45]);
 set(jSlider{2}, 'Value', obj.alpha*100, 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+set(handles.alphatxt, 'String', num2str(obj.alpha));
 hjSlider{2} = handle(jSlider{2}, 'CallbackProperties');
 hjSlider{2}.Background=javax.swing.plaf.ColorUIResource(1,1,1);
 set(hjSlider{2}, 'StateChangedCallback', {@slideralphachange,obj,handles});  %alternative
@@ -133,6 +135,7 @@ set(0,'CurrentFigure',handles.roicontrol);
 jSlider{3} = javax.swing.JSlider(0,100);
 ea_javacomponent(jSlider{3},[0,0,handles.roicontrol.Position(3)-1,45]);
 set(jSlider{3}, 'Value', round(obj.smooth*2), 'MajorTickSpacing',0.1, 'PaintLabels',true);  % with labels, no ticks
+set(handles.smoothtxt, 'String', [num2str(obj.smooth),' Its.']);
 hjSlider{3} = handle(jSlider{3}, 'CallbackProperties');
 hjSlider{3}.Background=javax.swing.plaf.ColorUIResource(1,1,1);
 set(hjSlider{3}, 'StateChangedCallback', {@slidersmoothchangetxt,obj,handles});  %alternative
@@ -169,7 +172,7 @@ tval=slide.Value;
 tval=tval/100;
 tval=tval*obj.max;
 tval=tval+obj.min;
-set(handles.theshtxt,'String',sprintf('%0.2f',tval));
+set(handles.threshtxt,'String',num2str(tval));
 
 function slidersmoothchange(varargin)
 slide=varargin{1};

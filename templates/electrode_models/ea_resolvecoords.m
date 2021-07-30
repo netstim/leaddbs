@@ -23,7 +23,9 @@ for side=1:length(markers) %valid for unilateral support
         %emp_dist=ea_pdist([markers(side).head;markers(side).tail]);
         %A=squareform(pdist(electrode.coords_mm));
         switch options.elmodel
-            case {'Boston Scientific Vercise Directed'
+            case {'Medtronic B33005'
+                  'Medtronic B33015'
+                  'Boston Scientific Vercise Directed'
                   'St. Jude Directed 6172 (short)'
                   'St. Jude Directed 6173 (long)'}
                 coords_temp(1,:) = electrode.coords_mm(1,:);

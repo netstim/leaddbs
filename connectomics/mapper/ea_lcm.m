@@ -6,11 +6,8 @@ if options.lcm.struc.do
     if strcmp(options.lcm.seeddef,'vats')
         originalseeds=options.lcm.seeds;
         options.lcm.seeds=ea_resolvevatseeds(options,'dMRI');
-        if isempty(options.lcm.odir)
-            options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep,options.lcm.struc.connectome,filesep];
-            if ~exist(options.lcm.odir,'dir')
-                mkdir(options.lcm.odir);
-            end
+        if ~isempty(options.lcm.odir) && ~exist(options.lcm.odir,'dir')
+            mkdir(options.lcm.odir);
         end
     elseif strcmp(options.lcm.seeddef,'parcellation')
         options=ea_resolveparcseeds(options,'dMRI');
@@ -25,11 +22,8 @@ if options.lcm.func.do
             options.lcm.seeds=originalseeds;
         end
         options.lcm.seeds=ea_resolvevatseeds(options,'fMRI');
-        if isempty(options.lcm.odir) && ~strcmp(options.lcm.seeddef,'vats')
-            options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep,options.lcm.func.connectome,filesep];
-            if ~exist(options.lcm.odir,'dir')
-                mkdir(options.lcm.odir);
-            end
+        if ~isempty(options.lcm.odir) && ~exist(options.lcm.odir,'dir')
+        	mkdir(options.lcm.odir);
         end
     elseif strcmp(options.lcm.seeddef,'parcellation')
         options=ea_resolveparcseeds(options,'fMRI');
@@ -72,13 +66,15 @@ switch modality
     case 'fMRI'
         tmp=ea_getleadtempdir;
         uuid=ea_generate_uuid;
-        [~,~,ext]=ea_niifileparts(options.lcm.seeds{1});
+        [pth,fn,ext]=ea_niifileparts(options.lcm.seeds{1});
+        options.lcm.parcSeedFolder = [pth, filesep];
+        options.lcm.parcSeedName = strrep(fn, ' ', '_');
         copyfile(options.lcm.seeds{1},fullfile(tmp,[uuid,ext]));
         if strcmp(ext,'.nii.gz')
             gunzip(fullfile(tmp,[uuid,ext]));
             delete(fullfile(tmp,[uuid,ext]));
         end
-        [pth,fn,ext]=ea_niifileparts(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']));
+        [~,~,ext]=ea_niifileparts(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']));
         copyfile(ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222']),[tmp,'222',ext]);
         if strcmp(ext,'.nii.gz')
             gunzip([tmp,'222',ext]);
@@ -87,13 +83,13 @@ switch modality
         ea_conformspaceto([tmp,'222','.nii'],ea_niigz(fullfile(tmp,uuid)),...
             0,[],fullfile(tmp,[uuid,'.nii']),0);
         options.lcm.seeds={fullfile(tmp,[uuid,'.nii'])};
-        options.lcm.odir=ea_getoutputfolder(options.lcm.seeds,options.lcm.func.connectome);
-
     case 'dMRI'
         tmp=ea_getleadtempdir;
         uuid=ea_generate_uuid;
 
         [pth,fn,ext]=fileparts(options.lcm.seeds{1});
+        options.lcm.parcSeedFolder = [pth, filesep];
+        options.lcm.parcSeedName = strrep(fn, ' ', '_');
         switch ext
             case {'.nii','.gz'}
                 parctxt=fullfile(pth,[ea_stripext(fn),'.txt']);
@@ -101,7 +97,6 @@ switch modality
                 options.lcm.seeds{1}=fullfile(pth,[fn,'.nii']);
                 parctxt=fullfile(pth,[fn,'.txt']);
         end
-        options.lcm.odir=[pth,filesep];
         fid=fopen(parctxt);
         A=textscan(fid,'%f %s');
         fclose(fid);
@@ -227,12 +222,15 @@ for suffix=dowhich
                     subset=cname(delim+1:end);
                     cname=cname(1:delim-1);
                 end
+
                 if ~strcmp(cname,'No functional connectome found.') && ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
                     nativeprefix=['_',cname(length('Patient''s fMRI - ')+1:end)];
                 else
                     nativeprefix='';
                 end
-                if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+
+                % if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
+                if 1 % for now always recreate
                     cnt=1;
                     for side=1:2
                         switch side
@@ -250,6 +248,12 @@ for suffix=dowhich
                                     nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'], [vatdir,'vat',addstr,'_',sidec,'.nii']);
                                 end
                                 nii(cnt).img(isnan(nii(cnt).img))=0;
+                                nii(cnt).img(nii(cnt).img<0)=0; % safety measure: VTAs should not have negative entries
+                                
+                                if strcmp(addstr,'_efield')
+                                    nii(cnt).img(nii(cnt).img<multithresh(nii(cnt).img)) = 0; % remove small electric field values.
+                                end
+                                
                                 if ~any(nii(cnt).img(:))
                                     msgbox(['Created empty VTA for ',options.patientname,'(',options.uivatdirs{pt},'), ',sidec,' hemisphere.']);
                                 end
@@ -261,6 +265,7 @@ for suffix=dowhich
                     for n=2:length(nii)
                         Cnii.img=Cnii.img+nii(n).img;
                     end
+
                     Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                     ea_write_nii(Cnii);
                     delete([vatdir,'tmp_*']);
@@ -268,6 +273,7 @@ for suffix=dowhich
                     ea_split_nii_lr(Cnii.fname);
                     disp('Done.');
                 end
+
                 if keepthisone
                     seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
                 end

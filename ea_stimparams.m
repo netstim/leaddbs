@@ -22,7 +22,7 @@ function varargout = ea_stimparams(varargin)
 
 % Edit the above text to modify the response to help ea_stimparams
 
-% Last Modified by GUIDE v2.5 19-Jan-2020 19:27:15
+% Last Modified by GUIDE v2.5 03-Mar-2021 16:26:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -242,7 +242,7 @@ if ~strcmp(options.leadprod, 'group')
                 stimparams(1,1).VAT.VAT = vatfv;
                 stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
             elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-                nii = ea_load_nii([directory,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
+                nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),filesep,label,filesep,'vat_left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 %For consistency, left is always on 2nd element of stimparams
                 stimparams(1,2).VAT.VAT = vatfv;
@@ -1114,6 +1114,13 @@ for el=1:length(elstruct)
     end
 
     if strcmp(S.model, 'OSS-DBS (Butenko 2020)') % For OSS-DBS, side iteration is within the genvat function
+        % Set stimSetMode flag to options
+        % (avoid additional parameter or setting appdata, to make it scriptable)
+        if handles.addStimSet.Value
+            options.stimSetMode = 1;
+        else
+            options.stimSetMode = 0;
+        end
         if options.prefs.machine.vatsettings.butenko_calcAxonActivation
             feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
             ea_busyaction('off',handles.stimfig,'stim');
@@ -1878,7 +1885,7 @@ else
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
         elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-            nii = ea_load_nii([directory,'stimulations',ea_nt(options),filesep,label,filesep,'vat_left.nii']);
+            nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),filesep,label,filesep,'vat_left.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
@@ -2390,6 +2397,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','off');
     case 'Maedler 2012'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2397,6 +2405,7 @@ switch model
         ea_disable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
+        set(handles.addStimSet,'visible','off');
     case 'Kuncel 2008'
         ea_hide_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2404,6 +2413,7 @@ switch model
         ea_disable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','off');
+        set(handles.addStimSet,'visible','off');
     case 'Dembek 2017'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2411,6 +2421,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','off');
     case 'Fastfield (Baniasadi 2020)'
         ea_show_impedance(handles);
         set(handles.estimateInTemplate,'Visible','off');
@@ -2418,6 +2429,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','off');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','off');
     case 'OSS-DBS (Butenko 2020)'
         ea_hide_impedance(handles);
         set(handles.estimateInTemplate,'Visible','on');
@@ -2425,6 +2437,7 @@ switch model
         ea_enable_vas(handles,options);
         set(handles.betawarning,'visible','on');
         set(handles.settings,'visible','on');
+        set(handles.addStimSet,'visible','on');
 
 end
 S.model=model;
@@ -2446,7 +2459,13 @@ switch side
         ptval=3;
 end
 
-sel=sel(1:options.elspec.numel);
+% Only support up to 8 contacts for now
+if options.elspec.numel<=8
+    sel=sel(1:options.elspec.numel);
+else
+    sel=sel(1:8);
+end
+
 for k=sel
     set(handles.(['k',num2str(k),'u']),'visible',onoff);
 end
@@ -3205,11 +3224,11 @@ function Rs2am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=2;
 S.Rs2.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3221,11 +3240,11 @@ function Rs1am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=1;
 S.Rs1.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3237,11 +3256,11 @@ function Rs3am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=3;
 S.Rs3.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3253,11 +3272,11 @@ function Rs4am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=4;
 S.Rs4.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3269,11 +3288,11 @@ function Ls1am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=1;
 S.Ls1.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3285,11 +3304,11 @@ function Ls2am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=2;
 S.Ls2.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3301,11 +3320,11 @@ function Ls3am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=3;
 S.Ls3.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3317,11 +3336,11 @@ function Ls4am_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=4;
 S.Ls4.amp=str2double(get(hObject,'String'));
-
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3331,10 +3350,11 @@ function Rs1am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs1am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=1;
 S.Rs1.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3344,10 +3364,11 @@ function Rs2am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs2am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=2;
 S.Rs1.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3357,10 +3378,11 @@ function Rs3am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs3am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=3;
 S.Rs3.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3370,10 +3392,11 @@ function Rs4am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Rs4am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(1)=4;
 S.Rs4.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3383,10 +3406,11 @@ function Ls1am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls1am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=1;
 S.Ls1.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3396,10 +3420,11 @@ function Ls2am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls2am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=2;
 S.Ls2.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3409,10 +3434,11 @@ function Ls3am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls3am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=3;
 S.Ls3.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3422,10 +3448,11 @@ function Ls4am_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Ls4am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
 S.active(2)=4;
 S.Ls4.amp=str2double(get(hObject,'String'));
 setappdata(handles.stimfig,'S',S);
+options=getappdata(handles.stimfig,'options');
 ea_refreshguisp(handles,options);
 
 
@@ -3478,3 +3505,20 @@ function stimfig_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 ea_setprefs('vatsettings.estimateInTemplate',get(handles.estimateInTemplate,'Value'));
 delete(hObject);
+
+
+% --- Executes on button press in addStimSet.
+function addStimSet_Callback(hObject, eventdata, handles)
+% hObject    handle to addStimSet (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of addStimSet
+if hObject.Value
+    options = getappdata(handles.stimfig, 'options');
+    numContacts = options.elspec.numel;
+    stimLabel = getappdata(handles.stimfig, 'stimlabel');
+    stimFolder = [options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(~handles.estimateInTemplate.Value),stimLabel];
+    ea_mkdir(stimFolder);
+    ea_addStimSet(numContacts, stimFolder, hObject);
+end

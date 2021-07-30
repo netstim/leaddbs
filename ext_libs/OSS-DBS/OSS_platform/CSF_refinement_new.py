@@ -247,27 +247,54 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         z_neuron_min=min(Vertices_neur[:,2])
 
         #go over all voxels and check whether it contains CSF and intersect with the mesh
-        for x_coord in x_vect:
-            for y_coord in y_vect:
-                for z_coord in z_vect:
+        
+        
+        affine=np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/affine_MRI.npy')
+        
+        if affine[0,1]!=0.0 or affine[0,2]!=0.0 or affine[1,2]!=0.0:
+            glob_index=0
+            
+            for z_i in range(int(MRI_param.M_z)):
+                for y_i in range(int(MRI_param.M_y)):
+                    for x_i in range(int(MRI_param.M_x)):
+                        
+                        coords_reals=np.dot(affine,np.array([x_i,y_i,z_i,1.0]))
+                        
+                        x_pos=coords_reals[0]+MRI_param.x_shift+MRI_param.x_vox_size/2.0
+                        y_pos=coords_reals[1]+MRI_param.y_shift+MRI_param.y_vox_size/2.0
+                        z_pos=coords_reals[2]+MRI_param.z_shift+MRI_param.z_vox_size/2.0
 
-                    x_pos=x_coord-MRI_param.x_vox_size/2.0
-                    y_pos=y_coord-MRI_param.y_vox_size/2.0
-                    z_pos=z_coord-MRI_param.z_vox_size/2.0
+                        if (x_pos<=x_neuron_max+CSF_ref_add and x_pos>=x_neuron_min-CSF_ref_add and y_pos<=y_neuron_max+CSF_ref_add and y_pos>=y_neuron_min-CSF_ref_add and z_pos<=z_neuron_max+CSF_ref_add and z_pos>=z_neuron_min-CSF_ref_add):                        
+                            pnt=Point(x_pos,y_pos,z_pos)
+                            
+                            if Tissue_array[glob_index]==1 and bb.compute_first_entity_collision(pnt)<mesh.num_cells()*100:
+                                voxel_array_CSF[glob_index,0]=x_pos
+                                voxel_array_CSF[glob_index,1]=y_pos
+                                voxel_array_CSF[glob_index,2]=z_pos                      
 
-                    if (x_pos<=x_neuron_max+CSF_ref_add and x_pos>=x_neuron_min-CSF_ref_add and y_pos<=y_neuron_max+CSF_ref_add and y_pos>=y_neuron_min-CSF_ref_add and z_pos<=z_neuron_max+CSF_ref_add and z_pos>=z_neuron_min-CSF_ref_add):
-
-                        xv_mri=int((x_coord)/MRI_param.x_vox_size-0.000000001)                                  #defines number of steps to get to the voxels containing x[0] coordinate
-                        yv_mri=(int((y_coord)/MRI_param.y_vox_size-0.000000001))*MRI_param.M_x                  #defines number of steps to get to the voxels containing x[0] and x[1] coordinates
-                        zv_mri=(int((z_coord)/MRI_param.z_vox_size-0.000000001))*MRI_param.M_x*MRI_param.M_y          #defines number of steps to get to the voxels containing x[0], x[1] and x[2] coordinates
-                        glob_index=int(xv_mri+yv_mri+zv_mri)
-
-                        pnt=Point(x_pos,y_pos,z_pos)
-
-                        if Tissue_array[glob_index]==1 and bb.compute_first_entity_collision(pnt)<mesh.num_cells()*100:
-                            voxel_array_CSF[glob_index,0]=x_pos
-                            voxel_array_CSF[glob_index,1]=y_pos
-                            voxel_array_CSF[glob_index,2]=z_pos
+                        glob_index+=1
+        else:                        
+            for x_coord in x_vect:
+                for y_coord in y_vect:
+                    for z_coord in z_vect:
+    
+                        x_pos=x_coord-MRI_param.x_vox_size/2.0
+                        y_pos=y_coord-MRI_param.y_vox_size/2.0
+                        z_pos=z_coord-MRI_param.z_vox_size/2.0
+    
+                        if (x_pos<=x_neuron_max+CSF_ref_add and x_pos>=x_neuron_min-CSF_ref_add and y_pos<=y_neuron_max+CSF_ref_add and y_pos>=y_neuron_min-CSF_ref_add and z_pos<=z_neuron_max+CSF_ref_add and z_pos>=z_neuron_min-CSF_ref_add):
+    
+                            xv_mri=int((x_coord)/MRI_param.x_vox_size-0.000000001)                                  #defines number of steps to get to the voxels containing x[0] coordinate
+                            yv_mri=(int((y_coord)/MRI_param.y_vox_size-0.000000001))*MRI_param.M_x                  #defines number of steps to get to the voxels containing x[0] and x[1] coordinates
+                            zv_mri=(int((z_coord)/MRI_param.z_vox_size-0.000000001))*MRI_param.M_x*MRI_param.M_y          #defines number of steps to get to the voxels containing x[0], x[1] and x[2] coordinates
+                            glob_index=int(xv_mri+yv_mri+zv_mri)
+    
+                            pnt=Point(x_pos,y_pos,z_pos)
+    
+                            if Tissue_array[glob_index]==1 and bb.compute_first_entity_collision(pnt)<mesh.num_cells()*100:
+                                voxel_array_CSF[glob_index,0]=x_pos
+                                voxel_array_CSF[glob_index,1]=y_pos
+                                voxel_array_CSF[glob_index,2]=z_pos
 
         voxel_array_CSF=voxel_array_CSF[~np.all(voxel_array_CSF==0.0,axis=1)]  #deletes all zero enteries
 

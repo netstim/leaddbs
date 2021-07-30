@@ -148,30 +148,37 @@ delete(spacetext);
 captions=getappdata(mcfig,'captions');
 try delete(captions); end
 
-% Plot spacing distance info text and correct inhomogeneous spacings.
-%emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
-clear emp_eldist
-switch options.elmodel
-    case {'Boston Scientific Vercise Directed'
-          'St. Jude Directed 6172 (short)'
-          'St. Jude Directed 6173 (long)'}
-        for side=options.sides
-            coords_temp{side}(1,:) = coords_mm{side}(1,:);
-            coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
-            coords_temp{side}(3,:) = mean(coords_mm{side}(5:7,:));
-            coords_temp{side}(4,:) = coords_mm{side}(8,:);
-            A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
-            emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
-        end
-    otherwise
-        for side=options.sides
-            A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
-            emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
-        end
+% Correct inhomogeneous spacings, calculate spacing for info text display.
+% Only do it when number of contacts > 1
+if options.elspec.numel > 1
+    % emp_eldist(1)=mean([ea_pdist([markers(1).head;markers(1).tail]),ea_pdist([markers(2).head;markers(2).tail])])/3;
+    clear emp_eldist
+    switch options.elmodel
+        case {'Medtronic B33005'
+              'Medtronic B33015'
+              'Boston Scientific Vercise Directed'
+              'St. Jude Directed 6172 (short)'
+              'St. Jude Directed 6173 (long)'}
+            for side=options.sides
+                coords_temp{side}(1,:) = coords_mm{side}(1,:);
+                coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));
+                coords_temp{side}(3,:) = mean(coords_mm{side}(5:7,:));
+                coords_temp{side}(4,:) = coords_mm{side}(8,:);
+                A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
+                emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
+            end
+        otherwise
+            for side=options.sides
+                A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));
+                emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(options.elspec.numel-1);
+            end
+    end
+    memp_eldist=mean([emp_eldist{:}]);
+    [~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
+    clear coords_temp
+else
+    memp_eldist = 0;
 end
-memp_eldist=mean([emp_eldist{:}]);
-[~,trajectory,markers]=ea_resolvecoords(markers,options,1,memp_eldist);
-clear coords_temp
 
 %% plot coords
 hold on
@@ -215,7 +222,7 @@ if selectrode
     set(mplot(selectrode,1),'MarkerEdgeColor','y');
 end
 try
-    midpt=markers(options.elside).head;
+    midpt=double(markers(options.elside).head);
 catch
     midpt=[0 0 0];
 end
@@ -371,8 +378,7 @@ mks=nan(2,3); % always assign 4 markers, no matter if only right or left electro
 try mks(1,:)=markers(options.elside).head; end
 try mks(2,:)=markers(options.elside).tail; end
 
-mks=Vtra.mat\[mks,ones(size(mks,1),1)]';
-mks=mks(1:3,:)';
+mks = ea_mm2vox(mks, Vtra.mat);
 
 %title(['Electrode ',num2str(el-1),', transversal view.']);
 wsize=15; res=0.5;
@@ -488,13 +494,15 @@ if isempty(legplot)
     plot3(electrode.head_position(1),electrode.head_position(2),electrode.head_position(3),'*r','MarkerSize',15)
     plot3(electrode.tail_position(1),electrode.tail_position(2),electrode.tail_position(3),'*g','MarkerSize',15)
     axis([-2,2,-2,2,0,16])
-    set(elax,'XLimMode','manual'),set(elax,'YLimMode','manual'),set(elax,'ZLimMode','manual')
+    set(elax,'XLimMode','manual');
+    set(elax,'YLimMode','manual');
+    set(elax,'ZLimMode','manual');
     axis manual
     axis equal
-    view(0,0);
+    view(180,0);
 
     %light('Position',[0 -5 10]);
-    text(0,0,14,options.elmodel,'color','w');
+    text(0,2,14,options.elmodel,'color','w');
     setappdata(mcfig,'legplot',1);
 end
 
@@ -556,6 +564,7 @@ hdtrajectory(:,3)=interp1q([1:length(trajectory)]',trajectory(:,3),[1:1/resoluti
 
 
 function V=getV(mcfig,ID,options)
+directory = [options.root,options.patientname,filesep];
 if options.native
     addon='_unnormalized';
 else
@@ -573,20 +582,20 @@ switch options.modality
             switch ID
                 case 'Vcor'
                     try
-                        V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
+                        V=spm_vol([directory,options.prefs.(['cornii',addon])]);
                     catch
-                        V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
+                        V=spm_vol([directory,options.prefs.(['tranii',addon])]);
                     end
                 case 'Vtra'
-                    V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
+                    V=spm_vol([directory,options.prefs.(['tranii',addon])]);
                 case 'Vsag'
                     try
-                        V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['sagnii',addon])]);
+                        V=spm_vol([directory,options.prefs.(['sagnii',addon])]);
                     catch
                         try
-                            V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['cornii',addon])]);
+                            V=spm_vol([directory,options.prefs.(['cornii',addon])]);
                         catch
-                            V=spm_vol([options.root,options.patientname,filesep,options.prefs.(['tranii',addon])]);
+                            V=spm_vol([directory,options.prefs.(['tranii',addon])]);
                         end
                     end
             end
@@ -606,7 +615,7 @@ switch options.modality
         else
             V=getappdata(mcfig,'VCTmni');
             if isempty(V)
-                V=spm_vol([options.root,options.patientname,filesep,options.prefs.ctnii]);
+                V=spm_vol([directory,options.prefs.ctnii]);
                 setappdata(mcfig,'VCTmni',V);
             end
         end

@@ -95,7 +95,7 @@ for iside=1:length(options.sides)
             else
                 usecolor=elspec.lead_color;
             end
-            specsurf(elrender{side}(cnt),usecolor,aData);
+            ea_specsurf(elrender{side}(cnt),usecolor,aData);
             cnt=cnt+1;
         end
 
@@ -105,9 +105,9 @@ for iside=1:length(options.sides)
             elrender{side}(cnt)=patch(electrode.contacts(con));
 
             if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{side})) % make active red contact without transparency
-                specsurf(elrender{side}(cnt),[0.8,0.2,0.2],1);
+                ea_specsurf(elrender{side}(cnt),[0.8,0.2,0.2],1);
             else
-                specsurf(elrender{side}(cnt),elspec.contact_color,aData);
+                ea_specsurf(elrender{side}(cnt),elspec.contact_color,aData);
             end
             cnt=cnt+1;
         end
@@ -198,46 +198,4 @@ end
 
 if ~exist('elrender','var')
     elrender=nan;
-end
-
-
-function specsurf(varargin)
-
-surfc=varargin{1};
-color=varargin{2};
-if nargin==3
-    aData=varargin{3};
-end
-
-len=get(surfc,'ZData');
-
-cd=zeros([size(len),3]);
-cd(:,:,1)=color(1);
-try % works if color is denoted as 1x3 array
-    cd(:,:,2)=color(2);cd(:,:,3)=color(3);
-catch % if color is denoted as gray value (1x1) only
-    cd(:,:,2)=color(1);cd(:,:,3)=color(1);
-end
-
-cd=cd+0.01*randn(size(cd));
-
-set(surfc,'FaceColor','interp');
-set(surfc,'CData',cd);
-
-try % for patches
-    vertices=get(surfc,'Vertices');
-    cd=zeros(size(vertices));
-    cd(:)=color(1);
-    cd=repmat(color,size(cd,1),size(cd,2)/size(color,2));
-    set(surfc,'FaceVertexCData',cd);
-end
-
-set(surfc,'AlphaDataMapping','none');
-set(surfc,'FaceLighting','phong');
-set(surfc,'SpecularColorReflectance',0);
-set(surfc,'SpecularExponent',10);
-set(surfc,'EdgeColor','none')
-
-if nargin==3
-    set(surfc,'FaceAlpha',aData);
 end

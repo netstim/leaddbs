@@ -1,0 +1,10 @@
+boggle.annot is based on the DKTatlas http://www.mindboggle.info/data.html converted to FreeSurfer's annot format.
+
+lh.curv, lh.inflated and lh.pial are from the FreeSurfer distribution (http://freesurfer.net)
+
+The file fhlin_toolbox.w is based on stc-format files available from http://maki.bme.ntu.edu.tw/?page_id=1378
+
+For details on warping analyses from SPM to FreeSurfer images see
+  https://surfer.nmr.mgh.harvard.edu/fswiki/SPM
+For details on warping FSL analyses to FreeSurfer images see
+  https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/FslFeatFreeSurfer

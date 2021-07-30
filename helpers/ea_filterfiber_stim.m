@@ -1,17 +1,25 @@
-function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type, factor)
+function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type, factor, ref)
 % Filter fibers based on the active contacts and stimulation amplitudes
-
-% Load stimparameters in case needed
-if ischar(S) && isfile(S)
-    load(S, 'S');
-end
 
 fprintf('\nCollecting stimulation parameters...\n')
 
 % Active contacts indices
-activeContacts = cell(size(S.activecontacts));
-for i=1:length(activeContacts)
-    activeContacts{i} = find(S.activecontacts{i});
+if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
+    stimProtocol = S;
+    stimProtocol = cellfun(@(f) table2array(readtable(f,'NumHeaderLines',1)), stimProtocol, 'Uni', 0)';
+    activeContacts = cell(size(stimProtocol));
+    for i=1:length(activeContacts)
+        activeContacts{i} = find(~isnan(max(stimProtocol{i}))); % Find contact with stimulation input
+    end
+else % normal mode
+    if ischar(S) && isfile(S) % stimparameters.mat provided
+        load(S, 'S');
+    end
+
+    activeContacts = cell(size(S.activecontacts));
+    for i=1:length(activeContacts)
+        activeContacts{i} = find(S.activecontacts{i});
+    end
 end
 
 % Active contacts coordinates
@@ -21,31 +29,38 @@ for i=1:length(stimCoords)
 end
 
 % Stimulation amplitude, V or mA.
-stimAmplitudes = cell(size(S.amplitude));
-for i=1:length(stimAmplitudes)
-    stimAmplitudes{i} = zeros(1, size(coords{1},1));
-end
-
-for side = 1:length(S.amplitude)
-    % Set stimulation source label and contacts labels
-    switch side
-        case 1
-            sideCode = 'R';
-            cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
-        case 2
-            sideCode = 'L';
-            cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
+if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
+    stimAmplitudes = cell(size(stimProtocol));
+    for i=1:length(stimAmplitudes)
+        stimAmplitudes{i} = max(abs(stimProtocol{i})); % Use maximum absolute amplitude
+    end
+else % normal mode
+    stimAmplitudes = cell(size(S.amplitude));
+    for i=1:length(stimAmplitudes)
+        stimAmplitudes{i} = zeros(1, size(coords{1},1));
     end
 
-    % Index of stimulation source, only support 1 input source for now
-    sourceIndex = find(S.amplitude{side},1);
-    if ~isempty(sourceIndex)
-        stimSource = S.([sideCode, 's', num2str(sourceIndex)]);
+    for side = 1:length(S.amplitude)
+        % Set stimulation source label and contacts labels
+        switch side
+            case 1
+                sideCode = 'R';
+                cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
+            case 2
+                sideCode = 'L';
+                cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
+        end
 
-        % Collect stimulation amplitudes
-        for cnt = 1:length(stimAmplitudes{side})
-            if S.activecontacts{side}(cnt)
-                stimAmplitudes{side}(cnt) = S.amplitude{side}(sourceIndex)*stimSource.(cntlabel{cnt}).perc/100;
+        % Index of stimulation source, only support 1 input source for now
+        sourceIndex = find(S.amplitude{side},1);
+        if ~isempty(sourceIndex)
+            stimSource = S.([sideCode, 's', num2str(sourceIndex)]);
+
+            % Collect stimulation amplitudes
+            for cnt = 1:length(stimAmplitudes{side})
+                if S.activecontacts{side}(cnt)
+                    stimAmplitudes{side}(cnt) = S.amplitude{side}(sourceIndex)*stimSource.(cntlabel{cnt}).perc/100;
+                end
             end
         end
     end
@@ -98,6 +113,14 @@ if isfield(ftr, 'voxmm') && strcmp(ftr.voxmm, 'vox')
     end
 end
 
+load([ea_space, 'ea_space_def.mat'], 'spacedef');
+primarytemplate = spacedef.templates{1};
+
+% Reference image when construct the spherical ROI, use MNI t1 by default
+if ~exist('ref','var')
+    ref = [ea_space, primarytemplate, '.nii'];
+end
+
 % Check if fibers pass through the ROI
 fibConn = zeros(length(ftr.idx), length(stimAmplitudes));
 fiberFiltered = cell(size(stimAmplitudes));
@@ -106,7 +129,7 @@ for i=1:length(radius)
         disp('No stimulation found, skipping...');
     else
         fprintf('\nConstructing spherical ROI...\n');
-        sphereROI = ea_spherical_roi([],stimCoords{i}, radius{i}, 0);
+        sphereROI = ea_spherical_roi([],stimCoords{i}, radius{i}, 0, ref);
 
         % Find indices within sphere ROI region
         sphereROIInd = find(sphereROI.img(:));

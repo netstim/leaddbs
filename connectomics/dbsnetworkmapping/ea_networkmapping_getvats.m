@@ -23,7 +23,8 @@ disp('Construct VAT list...')
 for sub=1:numPatient % Original VAT E-field
     vatlist{sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
         ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_',sfstring,'_efield.nii'];
-    if ~exist(vatlist{sub},'file') % create joint VTA
+    % if ~exist(vatlist{sub},'file') % create joint VTA
+    if 1 % for now always recreate compound VTA seed
         rungenlocalmapper(obj,sub)
     end
 end
@@ -240,7 +241,6 @@ options.prefs.lc.func.regress_global = 1;
 options.prefs.lc.func.regress_wmcsf = 1;
 options.prefs.lc.func.bphighcutoff = 0.08;
 options.prefs.lc.func.bplowcutoff = 0.009;
-options.prefs.lc.datadir = '/Volumes/Impact/connectomes/';
 options.prefs.lcm.vatseed = 'efield';
 options.prefs.lcm.chunk = 10;
 options.prefs.lcm.includesurf = 0;
@@ -337,9 +337,7 @@ options.prefs.env.campus = 'generic';
 options.prefs.ixi.meanage = 60;
 options.prefs.ixi.dir = '';
 options.prefs.ltx.pdfconverter = '';
-options.prefs.genetics.dbdir = '/Users/andreashorn/PA/Neuro/_projects/lead/lead_dbs/templates/space/MNI_ICBM_2009b_NLIN_ASYM/genetics/';
 options.prefs.firstrun = 'off';
-options.prefs.slicer.dir = '/Applications/Slicer.app';
 options.prefs.machine.defaultatlas = 'DISTAL Minimal (Ewert 2017)';
 options.prefs.machine.atlaspresets = struct([]);
 options.prefs.machine.checkreg.default = 'DISTAL Minimal (Ewert 2017)@STN';

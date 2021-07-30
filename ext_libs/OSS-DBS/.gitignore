@@ -1,6 +1,8 @@
 access-token.txt
 local-build.sh
+OSS_platform/Axon_files/axnode.c
 OSS_platform/test.out
 OSS_platform/salomePort.txt
 *.sif
-
+!*.png
+OSS_platform/Axon_files/x86_64

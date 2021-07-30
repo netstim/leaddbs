@@ -6,15 +6,6 @@ Created on Tue Jun 23 17:28:33 2020
 @author: butenko
 """
 
-#This script reads input files from Lead-DBS and updates the default dictionary of GUI.
-
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 18 11:33:13 2020
-
-@author: konstantin
-"""
-
 #import tables
 import h5py #works better
 import numpy as np
@@ -30,6 +21,7 @@ import sys
 
 #updates default dictionary
 def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
+
     #index_side=1
     #settings_location,index_side=side_and_settings[:]
     index_side=int(index_side)
@@ -61,21 +53,23 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         'Neuron_model_array_prepared': 0,
         'stretch': 1.0,
         'number_of_processors': 0,
+        'Approximating_Dimensions': [80.0, 80.0, 80.0],
+        'Aprox_geometry_center': [0.0, 0.0, 0.0],
+        'el_order':2,
     }
 
-    #should add for 'Name_prepared_neuron_array' (you need only the name of the file, not the whole path)
-    #if 'Name_prepared_neuron_array'!='':
-        # 'Neuron_model_array_prepared'=1
-    #the same for the 'Brain_shape_name'
-    #also we need to choose whether the IFFT will be on neurons or VTA array (currently controlled by 'Full_Field_IFFT')
-    # and if VTA, then E-field threshold???
-
     print("\nInput from ",settings_location, "\n")
+    
+    path = os.path.normpath(settings_location)
+    path.split(os.sep)
+    print('Patient folder: ',path.split(os.sep)[-5])
+    patient_folder = path.split(os.sep)[-5]
+    
     file = h5py.File(str(settings_location), 'r')
 
     #if file.root.settings.current_control[0][0]!=file.root.settings.current_control[0][1]:
     if all(~np.isnan(file['settings']['current_control'][0])):
-        if file['settings']['current_control'][0][0] != file['settings']['current_control'][0][1]:
+        if file['settings']['current_control'][0][0] != file['settings']['current_control'][0][-1]:
             print("Simultaneous use of VC and CC is not allowed for safety reasons!")
             raise SystemExit
 
@@ -89,9 +83,10 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     input_dict['Stim_side']=index_side
     #Phi_vector=file.root.settings.Phi_vector[:,index_side]
     Phi_vector=file['settings']['Phi_vector'][:,index_side]
-    if file['settings']['current_control'][0][0]==1:
+    if file['settings']['current_control'][0][0]==1 or file['settings']['current_control'][0][-1]==1:
         input_dict['current_control']=1
         Phi_vector=Phi_vector*0.001     # because Lead-DBS uses mA as the input
+        input_dict['el_order']=3
 
     Phi_vector=list(Phi_vector)
     import math
@@ -99,8 +94,9 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
         if math.isnan(Phi_vector[i]):
             Phi_vector[i]=None
 
-    # print(type(Phi_vector))
-    if all(v is None for v in Phi_vector):
+    StimSets = int(file['settings']['stimSetMode'][0][0])
+    
+    if all(v is None for v in Phi_vector) and StimSets == 0:
         print("No stimulation defined for this hemisphere")
         return -1
 
@@ -205,42 +201,30 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
     elif Electrode_type == 'PINS Medical L303':
         input_dict['Electrode_type']="PINS_L303"
         normal_array_length=18.0
+    elif Electrode_type == 'ELAINE Rat Electrode':
+        input_dict['Electrode_type']="AA_rodent_monopolar"
+        normal_array_length=1.0 # irrelevant for monopolar electrodes       
     else:
         print("The electrode is not yet implemented, but we will be happy to add it. Contact us via konstantin.butenko@uni-rostock.de")
 
-    #input_dict['Implantation_coordinate_X'],input_dict['Implantation_coordinate_Y'],input_dict['Implantation_coordinate_Z'] = file.root.settings.Implantation_coordinate[:,index_side]
-    #input_dict['Second_coordinate_X'],input_dict['Second_coordinate_Y'],input_dict['Second_coordinate_Z'] = file.root.settings.Second_coordinate[:,index_side]
-
     input_dict['Implantation_coordinate_X'],input_dict['Implantation_coordinate_Y'],input_dict['Implantation_coordinate_Z'] = file['settings']['Implantation_coordinate'][:,index_side]
     input_dict['Second_coordinate_X'],input_dict['Second_coordinate_Y'],input_dict['Second_coordinate_Z'] = file['settings']['Second_coordinate'][:,index_side]
-
+    input_dict['Aprox_geometry_center']=[input_dict['Implantation_coordinate_X'],input_dict['Implantation_coordinate_Y'],input_dict['Implantation_coordinate_Z']]
+    
     el_array_length=np.sqrt((input_dict['Implantation_coordinate_X']-input_dict['Second_coordinate_X'])**2+(input_dict['Implantation_coordinate_Y']-input_dict['Second_coordinate_Y'])**2+(input_dict['Implantation_coordinate_Z']-input_dict['Second_coordinate_Z'])**2)
     stretch=el_array_length/normal_array_length
 
-    if abs(stretch-1.0)<0.01:   #if 1% tolerance
+    if abs(stretch-1.0)<0.01 or Electrode_type == 'ELAINE Rat Electrode':   #1% tolerance or monopolar electrodes
         input_dict["stretch"]=1.0
     else:
         input_dict["stretch"]=stretch
 
-    #input_dict['Rotation_Z']=file.root.settings.Rotation_Z[0][0]
-    #input_dict['Activation_threshold_VTA']=file.root.settings.Activation_threshold_VTA[0][0]
-
-    #input_dict['Rotation_Z']=file['settings']['Rotation_Z'][0][0] # this is not implemented, we need to extract rotation angles from markers
     input_dict['Activation_threshold_VTA']=file['settings']['Activation_threshold_VTA'][0][0] #threshold is the same for both hemispheres
     input_dict['external_grounding']=bool(file['settings']['Case_grounding'][:,index_side][0])
     input_dict['Neuron_model_array_prepared']=int(file['settings']['calcAxonActivation'][0][0])    # external model (e.g. from fiber tractograpy)
 
     if input_dict['Neuron_model_array_prepared']!=1:
         input_dict['Full_Field_IFFT']=1 # for now we have only these two options
-
-    ##just testing
-    #input_dict['Electrode_type']="Boston_Scientific_Vercise"
-    #input_dict['Phi_vector']=[0.0,-3.0,2.0,None,0.0,-3.0,2.0,None]
-    # input_dict['current_control']=1
-    # input_dict['Phi_vector']=[None,0.0005,None,None]
-    # input_dict['external_grounding']=True
-    # input_dict['Full_Field_IFFT']=1
-    # input_dict['Activation_threshold_VTA']: 0.12
 
     from GUI_tree_files.GUI_tree_files.default_dict import d
     d.update(input_dict)
@@ -258,7 +242,8 @@ def get_input_from_LeadDBS(settings_location,index_side):     # 0 - rhs, 1 - lhs
 
     interactive_mode = int(file['settings']['interactiveMode'][0][0])
 
-    return path_to_patient,index_side,interactive_mode
+
+    return path_to_patient,index_side,interactive_mode,patient_folder,StimSets
 
 
 if __name__ == '__main__':
@@ -266,7 +251,7 @@ if __name__ == '__main__':
     oss_dbs_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
     os.chdir(oss_dbs_folder)
 
-    path_to_patient,side,interactive_mode=get_input_from_LeadDBS(*sys.argv[1:])
+    path_to_patient, side, interactive_mode, patient_folder, StimSets = get_input_from_LeadDBS(*sys.argv[1:])
 
     if os.environ.get('SINGULARITY_NAME'):
         os.environ['PATIENTDIR'] = path_to_patient # Use real path for singularity
@@ -277,15 +262,15 @@ if __name__ == '__main__':
     if path_to_patient!=-1:
         if sys.platform == 'linux':
             if os.environ.get('SINGULARITY_NAME'):
-                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
+                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder),str(StimSets)])
             else:
-                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)])
+                output = subprocess.run(['xterm','-e','python3','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder),str(StimSets)])
         elif sys.platform == 'darwin':
             open_terminal = 'tell application "Terminal" to do script "cd \''+oss_dbs_folder+'\';'
-            open_gui = ' '.join(['python3 GUI_tree_files/AppUI.py', path_to_patient, str(side), str(interactive_mode), ';exit"'])
+            open_gui = ' '.join(['python3 GUI_tree_files/AppUI.py', path_to_patient, str(side), str(interactive_mode),str(patient_folder),str(StimSets), ';exit"'])
             output = subprocess.run(['osascript', '-e', open_terminal+open_gui])
         elif sys.platform == 'win32':
-            output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode)], shell = True)
+            output = subprocess.run(['start','cmd','/c','python','GUI_tree_files/AppUI.py',path_to_patient,str(side),str(interactive_mode),str(patient_folder),str(StimSets)], shell = True)
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit

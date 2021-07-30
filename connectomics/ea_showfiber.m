@@ -8,13 +8,24 @@ if ~exist('fiberalpha','var')
     fiberalpha=0.2;
 end
 
+% Adapt tube width and fv reduce factor for rat (and other) space[s]
+if ismember(ea_getspace, {'Waxholm_Space_Atlas_SD_Rat_Brain'})
+    sampleFactor = 1; % Do not reduce the points along the fiber
+    tubeWidth = 0.02; % Smaller tube width
+    reduceFactor = 0; % No patch reduce
+else
+    sampleFactor = 5; % Reduce the points along the fiber by a factor of 5
+    tubeWidth = 0.25; % Larger tube width
+    reduceFactor = 0.1; % Set patch reduce factor
+end
+
 if ~(size(fibers,1)==4)
     fibers=fibers';
 end
+
 fibersnew=mat2cell(fibers(1:3,:)',fibidx);
 
-fibersnew = cellfun(@(f,len) f(round(linspace(1,len,round(len/5))),:), fibersnew, num2cell(cellfun(@(p) size(p,1), fibersnew)), 'UniformOutput', 0);
-%fibersnew=cellfun(@downsample,fibersnew,repmat({5},length(fibersnew),1),'UniformOutput',0);
+fibersnew = cellfun(@(f,len) f(round(linspace(1,len,round(len/sampleFactor))),:), fibersnew, num2cell(cellfun(@(p) size(p,1), fibersnew)), 'UniformOutput', 0);
 
 k = 1;
 while k <= length(fibersnew)
@@ -37,7 +48,20 @@ if isnan(col)
     end
     ea_dispercent(1,'end');
 end
-fibhandle = streamtube(fibersnew,0.25);
+
+% Downsample fibers. TODO: Need further validation!
+numFiberThreshold = 500;
+if length(fibersnew) < numFiberThreshold
+    idx = 1:length(fibersnew);
+else
+    idx = ceil(linspace(1, length(fibersnew), numFiberThreshold));
+end
+
+try
+    fibhandle = streamtube(fibersnew(idx), tubeWidth);
+catch
+    keyboard
+end
 set(fibhandle(:),'CDataMapping','direct')
 
 fprintf('\n');
@@ -62,12 +86,10 @@ else
     end
     ea_dispercent(1,'end');
 end
+
 % we could be done here - but now lets concatenate the tracts for faster
-% visualization:
-
-afv=ea_concatfv(fibhandle,0,0.5);
+% visualization
+afv = ea_concatfv(fibhandle, 0, reduceFactor);
 delete(fibhandle);
-
-%dafv=reducepatch(afv,0.2,'fast');
 
 fibhandle=patch('Faces',afv.faces,'Vertices',afv.vertices,'FaceVertexCData',afv.facevertexcdata,'EdgeColor','none','FaceAlpha',fiberalpha,'CDataMapping','direct','FaceColor','flat');

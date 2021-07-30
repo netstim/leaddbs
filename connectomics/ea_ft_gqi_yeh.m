@@ -74,7 +74,6 @@ trkcmd=[DSISTUDIO,' --action=trk',...
     ' --seed_plan=0',...
     ' --smoothing=0.2',...
     ' --step_size=0.5',...
-    ' --tip_iteration=0',...
     ' --turning_angle=75'];
 
 err=ea_submitcmd(trkcmd);
@@ -126,6 +125,9 @@ if vizz
     [xx,yy,zz]=ind2sub(size(b0.img),find(b0.img(:)>thresh));
     plot3(xx,yy,zz,'g.')
 end
+
+% Add index column
+fibers(:,4) = repelem(1:length(idx), idx)';
 
 ftr.ea_fibformat = '1.0';
 ftr.fourindex = 1;

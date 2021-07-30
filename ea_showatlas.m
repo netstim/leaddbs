@@ -1,6 +1,6 @@
 function [atlases,colorbuttons,atlassurfs,atlaslabels] = ea_showatlas(varargin)
 % This function shows atlas data in the 3D-Scene viewer. It
-% reads in all atlases found in the eAuto_root/atlases folder, calculates a
+% reads in all atlases found in the atlases folder, calculates a
 % convex hull around the nonzero area and renders this area as 3D surfaces.
 % For a small part of contact statistics, the function uses
 % inhull.m which is covered by the BSD-license (see below).
@@ -340,7 +340,10 @@ for nativemni=nm % switch between native and mni space atlases.
                     atlassurfs{atlascnt,1}=patch(fv,'FaceVertexCData',cdat,'FaceColor','interp','facealpha',0.7,'EdgeColor','none','facelighting','phong','visible',visible);
                 end
 
-                fibTag = regexp(atlases.names{atlas},['[^',filesep,']+?(?=\.[^.]*$|$)'],'match','once');
+                % Use fileparts to extract the name, fiber atlas files are
+                % always named as XXX.mat
+                [~, fibTag] = fileparts(atlases.names{atlas});
+                fibTag=ea_stripext(fibTag);
                 atlaslabels(atlascnt)=text(double(centroid(1)),double(centroid(2)),double(centroid(3)),...
                     ea_underscore2space(fibTag),...
                     'Tag', [fibTag,'_',sidestr{side}],...
@@ -360,7 +363,10 @@ for nativemni=nm % switch between native and mni space atlases.
                 end
 
                 if ~(atlases.types(atlas)>5)
-                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),'TooltipString',atlases.names{atlas},'ClickedCallback',{@atlasvisible,resultfig,atlascnt},'State',visible);
+                    colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlasc),...
+                        'TooltipString',[fibTag,'_',sidestr{side}],...
+                        'ClickedCallback',{@atlasvisible,resultfig,atlascnt},...
+                        'State',visible);
                 end
 
                 % gather contact statistics
@@ -565,6 +571,7 @@ for nativemni=nm % switch between native and mni space atlases.
                 cbfig = figure('Visible', 'off');
                 ea_plot_colorbar(fibcmap, [], 'h', '', tick, ticklabel, axes(cbfig));
                 saveas(cbfig, [tractPath, filesep, tractName, '_colorbar.svg']);
+                close(cbfig);
                 % export_fig(cbfig, [tractPath, filesep, tractName, '_colorbar.png']);
                 fprintf('Colorbar exported as:\n%s\n\n', [tractPath, filesep, tractName, '_colorbar.svg']);
             end

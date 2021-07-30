@@ -32,7 +32,11 @@ if ~isempty(switchto) && ~(length(switchto)==2) && ~strcmp(handles.prod, 'anatom
                 set(handles.reconmethod,'String',{'TRAC/CORE (Horn 2015)','Manual', 'Slicer (Manual)'});
                 % default TRAC/CORE:
                 set(handles.reconmethod,'enable','on');
-                set(handles.reconmethod,'Value',1); % set to TRAC/CORE algorithm.
+                if ismember(ea_getspace,{'Waxholm_Space_Atlas_SD_Rat_Brain','MNI_Macaque'})
+                    set(handles.reconmethod,'Value',2);
+                else
+                    set(handles.reconmethod,'Value',1); % set to TRAC/CORE algorithm.
+                end
                 set(handles.targetpopup,'enable','on');
                 set(handles.maskwindow_txt,'enable','on');
 
@@ -41,7 +45,11 @@ if ~isempty(switchto) && ~(length(switchto)==2) && ~strcmp(handles.prod, 'anatom
                 set(handles.reconmethod,'String',{'Refined TRAC/CORE','TRAC/CORE (Horn 2015)','PaCER (Husch 2017)','Manual', 'Slicer (Manual)'});
                 % default PaCER:
                 set(handles.reconmethod,'enable','on');
-                set(handles.reconmethod,'Value',3); % set to PaCER algorithm.
+                if ismember(ea_getspace,{'Waxholm_Space_Atlas_SD_Rat_Brain','MNI_Macaque'})
+                    set(handles.reconmethod,'Value',4);
+                else
+                    set(handles.reconmethod,'Value',3); % set to PaCER algorithm.
+                end
                 set(handles.targetpopup,'enable','off');
                 set(handles.maskwindow_txt,'enable','off');
     end

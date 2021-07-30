@@ -172,7 +172,7 @@ class treeViewAtlasFilter(treeViewFilter):
     result = BoolResult()
     atlasName = qt.QInputDialog.getItem(qt.QWidget(),'Select Atlas','',items,0,0,result)
     if result:
-      ImportAtlas.ImportAtlasLogic().run(os.path.join(directory, atlasName))    
+      ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(directory, atlasName, 'atlas_index.mat'))    
 
 
 class WarpDriveTreeView(qt.QWidget):
