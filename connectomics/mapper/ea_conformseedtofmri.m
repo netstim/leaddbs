@@ -33,10 +33,10 @@ seed.fname = tmpseed;
 seed.dt = [16,0];
 ea_write_nii(seed);
 
-% Conform space by coregistration using SPM with trilinear interpolation
+% Conform space using FSL or SPM reslicing with trilinear interpolation
 prefs=ea_prefs;
 switch prefs.lcm.vat2fmrimethod
-    case 'fsl' % default since v.2.5.3
+    case 'fsl' % default since v2.5.3
         ea_fsl_reslice(tmpseed, tmpref, tmpseed, interp);
     case 'spm' % older method - can lead to issues with very small vtas.
         ea_conformspaceto(tmpref, tmpseed, 1); % use interp = 1 for trilinear.
