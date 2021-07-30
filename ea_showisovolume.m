@@ -157,11 +157,3 @@ set(atls, 'Visible', 'on');
 function isoinvisible(hobj,ev,atls)
 set(atls, 'Visible', 'off');
 %disp([atls,'invisible clicked']);
-
-
-function m = maxiso(isomatrix) % Returns the max value of matrices in a cell.
-m = max(cellfun(@(x) max(x(:)), isomatrix));
-
-
-function m = miniso(isomatrix) % Returns the min value of matrices in a cell.
-m = min(cellfun(@(x) min(x(:)), isomatrix));

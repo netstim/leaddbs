@@ -143,7 +143,7 @@ for side=options.sides
                         usecolor=obj.color;
                 end
             end
-            specsurf(elrender(cnt),usecolor,aData,'insulation');
+            ea_specsurf(elrender(cnt),usecolor,aData,'insulation');
             cnt=cnt+1;
         end
 
@@ -157,7 +157,7 @@ for side=options.sides
             elrender(cnt).Tag = [nameprefix, 'Contact', num2str(con), '_Side', num2str(side)];
             eltype(cnt)=1;
             if ~isempty(options.colorMacroContacts)
-                specsurf(elrender(cnt),options.colorMacroContacts(con,:),1,'metal');
+                ea_specsurf(elrender(cnt),options.colorMacroContacts(con,:),1,'metal');
             else
                 if contains(nameprefix, '_mirrored_')
                     % Mirror highlight contact
@@ -171,9 +171,9 @@ for side=options.sides
                 end
 
                 if options.d3.hlactivecontacts && ismember(con,find(elstruct.activecontacts{mside})) % make active red contact without transparency
-                    specsurf(elrender(cnt),[0.8,0.2,0.2],1,'metal');
+                    ea_specsurf(elrender(cnt),[0.8,0.2,0.2],1,'metal');
                 else
-                    specsurf(elrender(cnt),elspec.contact_color,aData,'metal');
+                    ea_specsurf(elrender(cnt),elspec.contact_color,aData,'metal');
                 end
             end
             cnt=cnt+1;
@@ -202,7 +202,7 @@ for side=options.sides
                 stxmarker = elstruct.markers(side).head + stretchfactor * markerposRel * unitvector;
                 arrowtip = stxmarker + 5 * (elstruct.markers(side).y - elstruct.markers(side).head);
                 elrender(cnt) = mArrow3(stxmarker,arrowtip,'color',[.3 .3 .3],'tipWidth',0.2,'tipLength',0,'stemWidth',0.2,'Tag','DirectionMarker');
-                specsurf(elrender(cnt),[.3 .3 .3],1,'metal');
+                ea_specsurf(elrender(cnt),[.3 .3 .3],1,'metal');
                 cnt = cnt+1;
             end
         end
@@ -318,89 +318,3 @@ end
 if ~exist('elrender','var')
     elrender=nan;
 end
-
-
-function m=maxiso(cellinp) % simply returns the highest entry of matrices in a cell.
-m=0;
-for c=1:length(cellinp)
-    nm=max(cellinp{c}(:));
-    if nm>m; m=nm; end
-end
-
-
-function m=miniso(cellinp)
-m=inf;
-for c=1:length(cellinp)
-    nm=min(cellinp{c}(:));
-    if nm<m; m=nm; end
-end
-
-
-function specsurf(varargin)
-
-surfc=varargin{1};
-color=varargin{2};
-if nargin>2
-    aData=varargin{3};
-end
-
-len=get(surfc,'ZData');
-
-cd=zeros([size(len),3]);
-cd(:,:,1)=color(1);
-try % works if color is denoted as 1x3 array
-    cd(:,:,2)=color(2);cd(:,:,3)=color(3);
-catch % if color is denoted as gray value (1x1) only
-    cd(:,:,2)=color(1);cd(:,:,3)=color(1);
-end
-
-
-cd=cd+0.01*randn(size(cd));
-
-set(surfc,'FaceColor','interp');
-set(surfc,'CData',cd);
-
-try % for patches
-    vertices=get(surfc,'Vertices');
-    cd=zeros(size(vertices));
-    cd(:)=color(1);
-    cd=repmat(color,size(cd,1),size(cd,2)/size(color,2));
-    set(surfc,'FaceVertexCData',cd);
-end
-set(surfc,'AlphaDataMapping','none');
-
-set(surfc,'FaceLighting','phong');
-set(surfc,'EdgeColor','none')
-
-if nargin>3
-    switch varargin{4} % material
-        case 'metal'
-            surfc.AmbientStrength = 0.2; %0.1;
-            surfc.DiffuseStrength = 0.3; %0.2;
-            surfc.SpecularStrength = 1.0;
-            surfc.SpecularExponent = 20;
-            surfc.SpecularColorReflectance = 0.1;
-        %    met=load([ea_getearoot,'icons',filesep,'metal.mat']);
-        %    ea_patchtexture(surfc,met.X);
-        case 'insulation'
-            surfc.AmbientStrength = 0.4;
-            surfc.DiffuseStrength = 0.35;
-            surfc.SpecularStrength = 0.21;
-            surfc.SpecularExponent = 3;
-            surfc.SpecularColorReflectance = 1.0;
-    end
-else % default
-    set(surfc,'SpecularExponent',3) % patch property
-    set(surfc,'SpecularStrength',0.21) % patch property
-    set(surfc,'DiffuseStrength',0.4) % patch property
-    set(surfc,'AmbientStrength',0.3) % patch property
-    set(surfc,'SpecularColorReflectance',0);
-end
-if nargin==3
-    set(surfc,'FaceAlpha',aData);
-end
-
-
-function C=rgb(C) % returns rgb values for the colors.
-
-C = rem(floor((strfind('kbgcrmyw', C) - 1) * [0.25 0.5 1]), 2);
