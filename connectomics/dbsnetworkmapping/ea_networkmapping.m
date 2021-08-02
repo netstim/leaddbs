@@ -681,26 +681,32 @@ classdef ea_networkmapping < handle
                             case 'Smoothed'
                                 if obj.modelRH && ~obj.modelLH
                                     mesh=([ea_space,'surf_smoothed.rh.mz3']);
-                                    side=1;
+                                    azimuth = '90'; % Right lateral side
+                                    hemiCode = '1'; % Show right hemishpere of the bilateral mesh
                                 elseif obj.modelLH && ~obj.modelRH
                                     mesh=([ea_space,'surf_smoothed.lh.mz3']);
-                                    side=2;
+                                    azimuth = '-90'; % Left lateral side
+                                    hemiCode = '-1'; % Show left hemishpere of the bilateral mesh
                                 elseif obj.modelRH && obj.modelLH
                                     mesh=([ea_space,'surf_smoothed.mz3']);
-                                    side=1;
+                                    azimuth = '90'; % Right lateral side
+                                    hemiCode = '0'; % Show both hemishperes
                                 elseif ~obj.modelRH && ~obj.modelLH
                                     ea_error('Please switch on at least one hemisphere');
                                 end
                             case 'Full'
                                 if obj.modelRH && ~obj.modelLH
                                     mesh=([ea_space,'surf.rh.mz3']);
-                                    side=1;
+                                    azimuth = '90'; % Right lateral side
+                                    hemiCode = '1'; % Show right hemishpere of the bilateral mesh
                                 elseif obj.modelLH && ~obj.modelRH
                                     mesh=([ea_space,'surf.lh.mz3']);
-                                    side=2;
+                                    azimuth = '-90'; % Left lateral side
+                                    hemiCode = '-1'; % Show left hemishpere of the bilateral mesh
                                 elseif obj.modelRH && obj.modelLH
                                     mesh=([ea_space,'surf.mz3']);
-                                    side=1;
+                                    azimuth = '90'; % Right lateral side
+                                    hemiCode = '0'; % Show both hemishperes
                                 elseif ~obj.modelRH && ~obj.modelLH
                                     ea_error('Please switch on at least one hemisphere');
                                 end
@@ -717,6 +723,7 @@ classdef ea_networkmapping < handle
                             ' MESHCOLOR(255,255,255);'];
 
                         cnt=1;
+
                         if ~any(isnan(threshs(1,1:2)))
                             script=[script,...
                             ' OVERLAYLOAD(''',ea_path_helper(res.fname),''');',...
@@ -734,7 +741,8 @@ classdef ea_networkmapping < handle
 
                         script=[script,...
                             ' COLORBARVISIBLE(','false',');',...
-                            ' AZIMUTHELEVATION(',num2str(90+(180*side)),', 0);'];
+                            ' AZIMUTHELEVATION(',azimuth,', 0);',...
+                            ' MESHHEMISPHERE(',hemiCode,');'];
 
                         script=[script,...
                             ' END.'];
