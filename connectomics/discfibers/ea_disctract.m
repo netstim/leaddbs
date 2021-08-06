@@ -638,22 +638,32 @@ classdef ea_disctract < handle
                 end
                 if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
                     if obj.subscore.special_case
-                        if obj.posvisible && all(allvals<0)
-                            obj.posvisible = 0;
-                            fprintf('\n')
-                            warning('off', 'backtrace');
-                            warning('No positive values found, posvisible is set to 0 now!');
-                            warning('on', 'backtrace');
-                            fprintf('\n')
-                        end
-                        
-                        if obj.negvisible && all(allvals>0)
-                            obj.negvisible = 0;
-                            fprintf('\n')
-                            warning('off', 'backtrace');
-                            warning('No negative values found, negvisible is set to 0 now!');
-                            warning('on', 'backtrace');
-                            fprintf('\n')
+                        %basicaly in the mixed fiber case, since the tabs
+                        %are communicating with each other, don't set
+                        %posfibers & negfibers to be zero unless the vals
+                        %across all subscores are pos and neg.
+                        %you would also only need to do this once. i.e.,
+                        %for group == 1, even if new vals are calculated it
+                        %will be taken in account here.
+                        if group == 1
+                            vals_across_subscores = full(vertcat(vals{1:size(vals,1),:}));
+                            if obj.posvisible && all(vals_across_subscores<0)
+                                obj.posvisible = 0;
+                                fprintf('\n')
+                                warning('off', 'backtrace');
+                                warning('No positive values found, posvisible is set to 0 now!');
+                                warning('on', 'backtrace');
+                                fprintf('\n')
+                            end
+                            
+                            if obj.negvisible && all(vals_across_subscores>0)
+                                obj.negvisible = 0;
+                                fprintf('\n')
+                                warning('off', 'backtrace');
+                                warning('No negative values found, negvisible is set to 0 now!');
+                                warning('on', 'backtrace');
+                                fprintf('\n')
+                            end
                         end
                     else
                         if obj.subscore.posvisible(group) && all(allvals<0)
@@ -674,7 +684,7 @@ classdef ea_disctract < handle
                             fprintf('\n')
                         end
                     end
-                   
+                    
                 else
                     if obj.posvisible && all(allvals<0)
                         obj.posvisible = 0;
@@ -731,12 +741,12 @@ classdef ea_disctract < handle
                                 end
                             else
                                 cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
-                                if obj.posvisible(group) && ~obj.negvisible(group)
+                                if obj.subscore.posvisible(group) && ~obj.subscore.negvisible(group)
                                     fibcmap{group} = ea_colorgradient(gradientLevel, cmap(shiftedCmapStart,:), obj.poscolor);
                                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
                                     alphaind = ones(size(allvals));
                                     % alphaind = normalize(allvals, 'range');
-                                elseif ~obj.posvisible(group) && obj.negvisible(group)
+                                elseif ~obj.subscore.posvisible(group) && obj.subscore.negvisible(group)
                                     cmap = ea_colorgradient(gradientLevel, obj.negcolor, [1,1,1]);
                                     fibcmap{group} = ea_colorgradient(gradientLevel, obj.negcolor, cmap(shiftedCmapEnd,:));
                                     cmapind = round(normalize(allvals,'range',[1,gradientLevel]));
