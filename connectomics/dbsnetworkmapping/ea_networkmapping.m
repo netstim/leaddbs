@@ -605,11 +605,11 @@ classdef ea_networkmapping < handle
                         % first draw correct surface
                         switch obj.model
                             case 'Smoothed'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_smoothed.rh.mz3']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_smoothed.lh.mz3']); end
+                                if obj.modelRH; [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf_smoothed.rh.mz3']); end
+                                if obj.modelLH; [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf_smoothed.lh.mz3']); end
                             case 'Full'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf.rh.mz3']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf.lh.mz3']); end
+                                if obj.modelRH; [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf.rh.mz3']); end
+                                if obj.modelLH; [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf.lh.mz3']); end
                         end
 
                         % Check cmap
