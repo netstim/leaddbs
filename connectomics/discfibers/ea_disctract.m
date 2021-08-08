@@ -607,7 +607,7 @@ classdef ea_disctract < handle
             for tract=1:numel(obj.drawobject)
                 delete(obj.drawobject{tract});
             end
-           if strcmp(obj.multitractmode,'Single Tract Analysis') || ~obj.subscore.special_case
+           if strcmp(obj.multitractmode,'Single Tract Analysis') || obj.subscore.special_case
                 % reset colorbar
                 obj.colorbar=[];
                 if ~any([obj.posvisible,obj.negvisible])
@@ -618,12 +618,12 @@ classdef ea_disctract < handle
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % vals will also be >1 for subscore tracts
                 % Vertcat all values for colorbar construction
-                if ~obj.subscore.special_case
+                if domultitract && ~obj.subscore.special_case
                     if ~any([obj.subscore.posvisible(group),obj.subscore.negvisible(group)])
                         continue
                     end
                 end
-                if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
+                if domultitract
                     obj.subscore.vis.pos_shown(group,1)=sum(vals{group,1}>0);
                     obj.subscore.vis.neg_shown(group,1)=sum(vals{group,1}<0);
                     if (size(vals{group,2},1))>1 % bihemispheric usual case
@@ -890,8 +890,12 @@ classdef ea_disctract < handle
                                 tick{group} = [1, length(fibcmap{group})];
                                 poscbvals = sort(allvals(allvals>0));
                                 negcbvals = sort(allvals(allvals<0));
-                                ticklabel{group} = [negcbvals(1), poscbvals(end)];
-                                ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                                if ~isempty(negcbvals) && ~isempty(poscbvals)
+                                    ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                                    ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
+                                else
+                                    continue
+                                end
                             elseif obj.posvisible
                                 tick{group} = [1, length(fibcmap{group})];
                                 posvals = sort(allvals(allvals>0));
