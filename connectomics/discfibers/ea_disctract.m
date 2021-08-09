@@ -482,7 +482,7 @@ classdef ea_disctract < handle
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
             end
             for tract=1:numel(obj.drawobject)
-                delete(obj.drawobject{tract});
+                try delete(obj.drawobject{tract}); end % try since could run into error when reopening from scratch.
             end
             
             % reset colorbar
