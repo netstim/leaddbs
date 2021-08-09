@@ -1,5 +1,13 @@
 function [h,pv,Rsquared,F,mdl,bb,dev,allstats]=ea_glmplot(X,y,labels,distribution,group1,group2,colors,markers,switchxy)
 
+
+if iscell(y) % model provided
+    priormodel=y{1};
+    y=y{2};
+end
+
+
+
 if ~(size(y,2)==1)
     ea_warning('Assuming X and y were switched. Switching variables.');
     Xn=y;
@@ -15,8 +23,18 @@ if ~(length(labels)==3) % assume only title provided
     labels{2}='X'; labels{3}='Y';
 end
 
-if ~exist('corrtype','var')
+if ~exist('distribution','var')
     distribution='normal';
+else
+    if iscell(distribution)
+       A=distribution{1};
+       B=distribution{2};
+       distribution=A;
+       modeltype=B;
+    end
+end
+if ~exist('modeltype','var')
+   modeltype='linear'; 
 end
 
 if ~exist('group1','var')
@@ -68,9 +86,15 @@ else
     colorOptions = {'map', map, 'n_color', size(map,1), 'n_lightness', 1};
 end
 
-mdl=fitglm(X,y,'distribution',distribution);
-[bb,dev,allstats]=glmfit(X,y,distribution);
-yhat=predict(mdl,X);
+if exist('priormodel','var') % prediction mode
+    yhat=predict(priormodel,X);
+    mdl=fitglm(yhat,y,'linear','distribution',distribution); % always use linear - interactions or quadratic would not make sense here.
+    [bb,dev,allstats]=glmfit(yhat,y,distribution);
+else
+    mdl=fitglm(X,y,modeltype,'distribution',distribution);
+    [bb,dev,allstats]=glmfit(X,y,distribution);
+    yhat=predict(mdl,X);
+end
 
 if exist('switchxy','var') && switchxy
     g=gramm('x',y,'y',yhat); % data needs to be put in "reversed" for gramm.
