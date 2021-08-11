@@ -1,4 +1,4 @@
-function [fibers, idx] = ea_ftr_aggregate(ftrFiles, outputFile, sel, type, filtermask)
+function [fibers, idx, partition] = ea_ftr_aggregate(ftrFiles, outputFile, sel, type, filtermask)
 % Aggregate fibers in the input FTR files
 % 
 % Arguments:
@@ -19,6 +19,7 @@ end
 
 fibers = [];
 idx = [];
+partition = []; % Store Num fibers of each FTR file
 
 for i=1:length(ftrFiles)
     fprintf('Aggregating fibers from %d/%d FTR files...\n', i, length(ftrFiles));
@@ -38,6 +39,7 @@ for i=1:length(ftrFiles)
 
     fibers = [fibers;ftr.fibers];
     idx = [idx;ftr.idx]; 
+    partition = [partition; length(ftr.idx)];
 end
 
 % Reset fibers(:, 4)
