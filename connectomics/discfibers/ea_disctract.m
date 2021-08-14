@@ -219,6 +219,7 @@ classdef ea_disctract < handle
             end
             D = load(obj.leadgroup);
             obj.M = D.M;
+            obj.allpatients=obj.M.patient.list;
         end
         
         function coh = getcohortregressor(obj)
