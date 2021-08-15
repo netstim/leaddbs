@@ -23,31 +23,31 @@ perc=perc/100;
 
 % calculate the efield for this configuration
 %eeg = zeros(100,100,100);
-eeg = zeros(size(standard_efield{1}));
+Efield = zeros(size(standard_efield{1}));
 
 for len = 1:length(standard_efield)
-    eeg = eeg + (perc(len)*standard_efield{len,1});
+    Efield = Efield + (perc(len)*standard_efield{len,1});
 end
 
 % scale the conductivity by 0.14 because the standard efield is generated
 % with conductivity of 0.1
 if strcmp(amp_mode,'mA')
     scale_con= 0.1 / conductivity;
-    eeg = eeg*scale_con;
+    Efield = Efield*scale_con;
 end
 
 % scale the electric field by amplitude, the standard efield is genereated
 % for amplitude of 1mA
-eeg = eeg*amp;
+Efield = Efield*amp;
 
-eeg(isnan(eeg))=0;
-eeg(eeg>10000) = 10000;
+Efield(isnan(Efield))=0;
+Efield(Efield>10000) = 10000;
 
 % Smooth data
 %Efield = smooth3(eeg,'box',9);
 %Efield = eeg;
 %Efield = smooth3(eeg,'gaussian', 9,3);
-Efield = smooth3(eeg,'box', 9);
+Efield = smooth3(Efield,'box', 9);
 %Efield = smooth3(Efield,'gaussian', 9,3);
 
 end
