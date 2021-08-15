@@ -5,7 +5,7 @@ if nargin>1
     handles=varargin{3};
 end
 
-if nargin
+if nargin>1
     if isempty(varargin{1})
         [labels, preexist] = ea_detstimname(options);
         set(handles.stimlabel, 'String', labels);
@@ -19,6 +19,7 @@ if nargin
         preexist = 0;
     end
 else
+    options=varargin{1};
     [labels, preexist] = ea_detstimname(options);
 end
 

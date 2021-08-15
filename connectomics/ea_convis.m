@@ -150,7 +150,7 @@ if apply % update elvis
     if get(handles.vizvat,'Value') % show voxel-level results
         ea_cvshowvatresults(resultfig,pX,directory,filesare,handles,pV,selectedparc,options);
     else
-        ea_deletePL(resultfig,'PL','vat');
+        ea_deletePL_conn(resultfig,'PL','vat');
     end
 
     if get(handles.vizgraph,'Value') % show voxel-level results
@@ -160,7 +160,7 @@ if apply % update elvis
     if get(handles.vizmat,'Value') % show seed-based-connectivity results
         ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handles,options);
     else
-        ea_deletePL(resultfig,'PL','mat');
+        ea_deletePL_conn(resultfig,'PL','mat');
     end
 
 
@@ -251,7 +251,7 @@ function ea_cvshowseedbasedresults(resultfig,directory,pV,pX,selectedparc,handle
 matmodality=get(handles.matmodality,'String');
 matmodality=matmodality{get(handles.matmodality,'Value')};
 if regexp(matmodality, '^Patient''s fMRI - ')
-    ea_deletePL(resultfig,'PL','mat');
+    ea_deletePL_conn(resultfig,'PL','mat');
     ea_cvshowmatresultsCMTC(resultfig,directory,pV,pX,handles,options);
 else % use fiberset
 
@@ -280,7 +280,7 @@ else % use fiberset
     [changedstates,ret]=ea_checkfschanges(resultfig,fibersfile,seed,targetsfile,thresh,'mat');
 
     if ~ret % something has changed since last time.
-        ea_deletePL(resultfig,'PL','mat');
+        ea_deletePL_conn(resultfig,'PL','mat');
 
         [~,thresh]=ea_cvshowfiberconnectivities(resultfig,fibersfile,seed,targetsfile,thresh,1,options,'',changedstates,'mat',get(handles.vizmat_regs,'Value'),get(handles.vizmat_labs,'Value'));
         set(handles.matthreshis,'String',num2str(thresh));

@@ -34,8 +34,11 @@ classdef ea_disctract < handle
         % results.(connectomename).spearman_mean.fibsval % connection weights for each fiber to each VTA
         % results.(connectomename).spearman_peak.fibsval % connection weights for each fiber to each VTA
         % results.(connectomename).spearman_5peak.fibsval % connection weights for each fiber to each VTA
+        cleartuneresults % copy of results for auto tuning functions
+        cleartuneefields % efields used to calc results
+        activateby={}; % entry to use to show fiber activations
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
-        basepredictionon = 'mean of scores';
+        basepredictionon = 'Mean of Scores';
         fiberdrawn % struct contains fibercell and vals drawn in the resultfig
         drawobject % actual streamtube handle
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
@@ -134,7 +137,12 @@ classdef ea_disctract < handle
                 ea_error('You have opened a file of unknown type.')
                 return
             end
+            
+             addlistener(obj,'activateby','PostSet',...
+                @activatebychange);
+            
         end
+        
         
         function calculate(obj)
             % check that this has not been calculated before:
@@ -162,6 +170,26 @@ classdef ea_disctract < handle
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_5peak').fibsval = fibsval5Peak;
             obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
+        end
+        
+        
+        function calculate_cleartune(obj,Efields)
+            if isequal(obj.cleartuneefields,Efields) % cleartuneresults already calculated with exact same input.
+                return
+            else
+                obj.cleartuneefields=Efields;
+                
+                fibcell=obj.results.(ea_conn2connid(obj.connectome)).fibcell;
+                [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals_cleartune(Efields, fibcell, obj.calcthreshold);
+                
+                obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
+                obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
+                obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
+                obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('spearman_peak').fibsval = fibsvalPeak;
+                obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('spearman_5peak').fibsval = fibsval5Peak;
+                obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = fibsvalBin;
+                obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
+            end
         end
         
         function Amps = getstimamp(obj)
@@ -284,7 +312,7 @@ classdef ea_disctract < handle
                     end
                 otherwise
                     if ~exist('Iperm', 'var') || isempty(Iperm)
-                        Improvement = obj.responsevar(patientsel);
+                        Improvement = obj.responsevar(patientsel,:);
                     else
                         Improvement = Iperm(patientsel);
                     end
@@ -568,10 +596,11 @@ classdef ea_disctract < handle
         
         function draw(obj,vals,fibcell)
             if ~exist('vals','var')
-                [vals,fibcell]=ea_discfibers_calcstats(obj);
+                [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
             end
             obj.fiberdrawn.fibcell = fibcell;
             obj.fiberdrawn.vals = vals;
+            obj.fiberdrawn.usedidx = usedidx;
             allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
             allvals{2}=[];
             for v=1:size(vals,1)
@@ -955,7 +984,46 @@ classdef ea_disctract < handle
                 end
                 
             end
+            obj.activate_tractset; % function to highlight tracts activated by a ROI / VTA.
         end
+        
+        function activate_tractset(obj)
+            
+            weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
+                ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
+            for entry=1:length(obj.activateby)
+                thisentry=obj.activateby{entry};
+                if strfind(thisentry,'cleartune')
+                    thisentry=strrep(thisentry,'cleartune','');
+                    k=strfind(thisentry,'_');
+                    ctentry=str2double(thisentry(1:k-1));
+                    ctside=str2double(thisentry(k+1:end));
+                    weights{ctside}=weights{ctside}+...
+                        full(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
+                elseif strfind(thisentry,'results')
+                    thisentry=strrep(thisentry,'results','');
+                    k=strfind(thisentry,'_');
+                    ctentry=str2double(thisentry(1:k-1));
+                    ctside=str2double(thisentry(k+1:end));
+                    weights{ctside}=weights{ctside}+...
+                        full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
+                else % manual entry - this could be used to weight a tractset based on a (set of) nifti files.
+                    % ignore for now
+                end
+            end
+            
+            for side=1:size(obj.drawobject,2)
+                if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
+                    weights{side}=ea_minmax(ea_contrast(weights{side},10)); % enhance constrast a bit
+                end
+                for entry=1:size(obj.drawobject,1)
+                    dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
+                    dweights=mat2cell(dweights,1,ones(1,length(dweights)));
+                    [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                end
+            end
+        end
+        
     end
     methods (Static)
         function changeevent(~,event)
@@ -963,3 +1031,11 @@ classdef ea_disctract < handle
         end
     end
 end
+    
+    
+function activatebychange(~,event)
+activate_tractset();
+end
+
+
+
