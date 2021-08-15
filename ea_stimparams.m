@@ -257,7 +257,7 @@ if ~strcmp(options.leadprod, 'group')
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
@@ -266,7 +266,7 @@ if ~strcmp(options.leadprod, 'group')
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
@@ -274,7 +274,7 @@ if ~strcmp(options.leadprod, 'group')
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
@@ -285,7 +285,7 @@ if ~strcmp(options.leadprod, 'group')
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             if exist('vatgrad')
@@ -1144,7 +1144,7 @@ end
 options.native=options.orignative;
 PL=getappdata(resultfig,'PL');
 for group=1:length(PL)
-    deletePL(PL(group));
+    ea_deletePL(PL(group));
 end
 clear PL
 
@@ -1172,68 +1172,7 @@ setappdata(resultfig,'PL',PL);
 ea_busyaction('off',handles.stimfig,'stim');
 
 
-function deletePL(PL)
-if verLessThan('matlab','8.5') % ML <2014a support
-    for p=1:length(PL)
-        if isfield(PL(p),'vatsurfs')
-            delete(PL(p).vatsurfs(logical(PL(p).vatsurfs)));
-        end
-        if isfield(PL(p),'quiv')
-            delete(PL(p).quiv(logical(PL(p).quiv)));
-        end
-        if isfield(PL(p),'fib_plots')
-            if isfield(PL(p).fib_plots,'fibs')
-                delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
-            end
 
-            if isfield(PL(p).fib_plots,'dcfibs')
-                todelete=PL(p).fib_plots.dcfibs((PL(p).fib_plots.dcfibs(:)>0));
-                delete(todelete(:));
-            end
-        end
-        if isfield(PL(p),'regionsurfs')
-            todelete=PL(p).regionsurfs(logical(PL(p).regionsurfs));
-            delete(todelete(:));
-        end
-        if isfield(PL(p),'conlabels')
-            todelete=PL(p).conlabels(logical(PL(p).conlabels));
-            delete(todelete(:));
-        end
-        if isfield(PL(p),'ht')
-            delete(PL(p).ht);
-        end
-    end
-else
-    for p=1:length(PL)
-        if isfield(PL(p),'vatsurfs')
-            delete(PL(p).vatsurfs);
-        end
-        if isfield(PL(p),'quiv')
-            delete(PL(p).quiv);
-        end
-        if isfield(PL(p),'fib_plots')
-            if isfield(PL(p).fib_plots,'fibs')
-                delete(PL(p).fib_plots.fibs);
-            end
-
-            if isfield(PL(p).fib_plots,'dcfibs')
-                delete(PL(p).fib_plots.dcfibs);
-            end
-        end
-        if isfield(PL(p),'regionsurfs')
-            delete(PL(p).regionsurfs);
-        end
-        if isfield(PL(p),'conlabels')
-            delete(PL(p).conlabels);
-        end
-        if isfield(PL(p),'ht')
-            delete(PL(p).ht);
-        end
-        if isfield(PL(p),'fiberActivation')
-            cellfun(@delete, PL(p).fiberActivation);
-        end
-    end
-end
 
 
 function k12u_Callback(hObject, eventdata, handles)
@@ -1771,7 +1710,7 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             ea_savestimulation(S,options);
@@ -1813,7 +1752,7 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
                 resultfig = getappdata(handles.stimfig,'resultfig');
                 PL=getappdata(resultfig,'PL');
                 for group=1:length(PL)
-                    deletePL(PL(group));
+                    ea_deletePL(PL(group));
                 end
                 clear PL
                 ea_delete([directory,'stimulations',filesep,ea_nt(0),S.label]);
@@ -1900,7 +1839,7 @@ else
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
-            deletePL(PL(group));
+            ea_deletePL(PL(group));
         end
         clear PL
         ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
@@ -1909,7 +1848,7 @@ else
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
-            deletePL(PL(group));
+            ea_deletePL(PL(group));
         end
         clear PL
         ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
@@ -1917,7 +1856,7 @@ else
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
-            deletePL(PL(group));
+            ea_deletePL(PL(group));
         end
         clear PL
         ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
@@ -1930,7 +1869,7 @@ else
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
-            deletePL(PL(group));
+            ea_deletePL(PL(group));
         end
         clear PL
         if exist('vatgrad')
