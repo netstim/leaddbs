@@ -85,16 +85,13 @@ for pt=1:length(patselect)
 
     %% Iterate through all stimulations
     for run = runs
-        try % Generate M struct according to monopolar settings
             stimtmp = zeros(1,9);
             stimtmp(1,1) = allstims{1,2}(run);
             stimtmp(1,allstims{1,1}(run)+2) = -100;
-            S(run) = ea_initializeS(options);
+            S(run) = ea_initializeS_cleartune(options);
             S(run) = ea_cleartune_generateMfile(stimtmp,stimtmp,S(run),va);
             S(run).label = ['c',num2str(allstims{1}(run),'%02d'),'_a',num2str(allstims{2}(run)*10,'%02d')];
-        catch
-            ea_error(['Stimulation parameters for ',M.patient.list{pt},' are missing.']);
-        end
+  
         
         ea_genvat = eval('@ea_genvat_cleartune_fastfield');
         
