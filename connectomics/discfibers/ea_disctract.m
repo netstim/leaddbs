@@ -1019,7 +1019,9 @@ classdef ea_disctract < handle
                 for entry=1:size(obj.drawobject,1)
                     dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
                     dweights=mat2cell(dweights,1,ones(1,length(dweights)));
-                    [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                    if ~isempty(dweights)
+                        [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                    end
                 end
             end
         end
