@@ -36,6 +36,7 @@ classdef ea_disctract < handle
         % results.(connectomename).spearman_5peak.fibsval % connection weights for each fiber to each VTA
         cleartuneresults % copy of results for auto tuning functions
         cleartuneefields % efields used to calc results
+        cleartuneinjected % status to report file has injected values
         activateby={}; % entry to use to show fiber activations
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
         basepredictionon = 'Mean of Scores';
@@ -1057,9 +1058,7 @@ classdef ea_disctract < handle
         end
         
         function activate_tractset(obj)
-            
-            weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
-                ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
+            if ~isempty(obj.activateby)
             for entry=1:length(obj.activateby)
                 thisentry=obj.activateby{entry};
                 if strfind(thisentry,'cleartune')
@@ -1070,6 +1069,8 @@ classdef ea_disctract < handle
                     weights{ctside}=weights{ctside}+...
                         full(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
                 elseif strfind(thisentry,'results')
+                    weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
+                        ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
                     thisentry=strrep(thisentry,'results','');
                     k=strfind(thisentry,'_');
                     ctentry=str2double(thisentry(1:k-1));
@@ -1083,13 +1084,24 @@ classdef ea_disctract < handle
             
             for side=1:size(obj.drawobject,2)
                 if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
-                    weights{side}=ea_minmax(ea_contrast(weights{side},5)); % enhance constrast a bit
+                    weights{side}=ea_minmax(ea_contrast(weights{side},5))*0.5; % enhance constrast a bit
                 end
                 for entry=1:size(obj.drawobject,1)
                     dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
                     dweights=mat2cell(dweights,1,ones(1,length(dweights)));
                     if ~isempty(dweights)
                         [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                    end
+                end
+            end
+            else
+                for side=1:size(obj.drawobject,2)
+                    for entry=1:size(obj.drawobject,1)
+                        dweights=ones(1,length(obj.drawobject{entry,side}));
+                        dweights=mat2cell(dweights,1,ones(1,length(dweights)));
+                        try
+                        [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                        end
                     end
                 end
             end
