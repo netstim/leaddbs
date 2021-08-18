@@ -47,6 +47,10 @@ M.ui.groupdir = get(handles.groupdir_choosebox,'String');
 disp('Refreshing selections on VI / FC Lists...');
 
 parcellations = get(handles.labelpopup,'String');
+if ischar(parcellations)
+    parcellations = {parcellations};
+end
+
 if ~isfield(M.ui,'labelpopup')
     M.ui.labelpopup = parcellations{get(handles.labelpopup,'Value')};
 else
