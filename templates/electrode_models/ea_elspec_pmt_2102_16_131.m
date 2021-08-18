@@ -15,12 +15,14 @@ options = ea_resolve_elspec(options);
 elspec = options.elspec;
 
 % Get insulation and contact numbers
-numIns = numel(ea_regexpdir([elemodelPath, filesep, modelFolder,filesep, 'Insulations'], '.*\.smesh$'));
-numCon = numel(ea_regexpdir([elemodelPath, filesep, modelFolder,filesep, 'Contacts'], '.*\.smesh$'));
+ins = ea_regexpdir([elemodelPath, filesep, modelFolder,filesep, 'Insulations'], '.*\.ele$');
+numIns = numel(ins);
+con = ea_regexpdir([elemodelPath, filesep, modelFolder,filesep, 'Contacts'], '.*\.ele$');
+numCon = numel(con);
 
 %% Import insulations and contacts meshes
 for k = 1:numIns
-    filename = [elemodelPath, filesep, modelFolder, filesep, 'Insulations', filesep, 'ins', num2str(k), '.1'];
+    filename = ins{k}(1:end-4);
     [node,~,face] = readtetgen(filename);
     electrode.insulation(k).vertices = node;
     electrode.insulation(k).faces = face(:,1:3);
@@ -28,7 +30,7 @@ for k = 1:numIns
 end
 
 for k = 1:numCon
-    filename = [elemodelPath, filesep, modelFolder, filesep, 'Contacts', filesep, 'con', num2str(k), '.1'];
+    filename = con{k}(1:end-4);
     [node,~,face] = readtetgen(filename);
     electrode.contacts(k).vertices = node;
     electrode.contacts(k).faces = face(:,1:3);
