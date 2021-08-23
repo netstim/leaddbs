@@ -79,13 +79,12 @@ end
 
 if isstruct(elstruct)
     for side=1:length(ave_coords_mm)
-        coords{side}=Vtra.mat\[ave_coords_mm{side},ones(size(ave_coords_mm{side},1),1)]';
-        coords{side}=coords{side}(1:3,:)';
+        coords{side}=ea_mm2vox(ave_coords_mm{side}, Vtra.mat);
     end
 else
-    elstruct=[elstruct,1]';
-    coordsmm=elstruct;
-    elstruct=manualV.mat\elstruct;
+    coordsmm = elstruct;
+    elstruct = ea_mm2vox(elstruct,manualV.mat);
+    coords = elstruct;
     planedim=ea_getdims(manualtracor,1);
 end
 
@@ -95,9 +94,6 @@ for iside=1:length(options.sides)
     % write out axial/coronal/sagittal images
     for tracor=find(tracorpresent)'
         for elcnt=1:(options.elspec.numel-options.shifthalfup)
-            if ~isstruct(elstruct)
-                coords={elstruct(1:3)'};
-            end
             el=elcnt+options.elspec.numel*(side-1);
 
             % Show MR-volume
@@ -218,8 +214,7 @@ for iside=1:length(options.sides)
 
                 if isstruct(elstruct)
                     for siso=1:length(ave_coords_mm)
-                        coordsi{siso}=Viso.mat\[ave_coords_mm{siso},ones(size(ave_coords_mm{siso},1),1)]';
-                        coordsi{siso}=coordsi{siso}(1:3,:)';
+                        coordsi{siso}=ea_mm2vox(ave_coords_mm{siso}, Viso.mat);
                     end
 
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
@@ -227,8 +222,7 @@ for iside=1:length(options.sides)
                         [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el);
                     end
                 else
-                    coordsi{side}=Viso.mat\[coordsmm(1);coordsmm(1);coordsmm(1);1];
-                    coordsi{side}=coordsi{side}(1:3,:)';
+                    coordsi{side}=ea_mm2vox([coordsmm(1),coordsmm(1),coordsmm(1)], Viso.mat);
                     [slice,~,boundboxmm]=ea_sample_slice(Viso,dstring,options.d2.bbsize,'mm',coordsi,el);
                     try
                         [slicestat]=ea_sample_slice(Visostat,dstring,options.d2.bbsize,'mm',coordsi,el);
