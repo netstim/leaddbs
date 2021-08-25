@@ -1,5 +1,5 @@
 function ea_genflipspace
-if ~exist([ea_space,'fliplr',filesep,'glanatComposite.h5'],'file');
+if isempty(ea_regexpdir([ea_space,'fliplr'],'glanatComposite\.(h5|nii\.gz)',0))
     
     answ=questdlg('The transform to map from left to right hemisphere in 2009b NLIN ASYM space needs to be installed or built. For reproducable results please install the transform',...
     'Install Flip Transform','Install','Build','Cancel','Install');
