@@ -111,11 +111,25 @@ for iside=1:length(options.sides)
                     else
                         V=Vtra;
                     end
+                    if isstruct(elstruct) && length(options.sides)==2
+                        showBothSide = 1;
+                        el = [el, elcnt+options.elspec.numel];
+                        if side==2
+                            continue;
+                        end
+                    end
                 case 2 % coronal images
                     if manualtracor
                         V=manualV;
                     else
                         V=Vcor;
+                    end
+                    if isstruct(elstruct) && length(options.sides)==2
+                        showBothSide = 1;
+                        el = [el, elcnt+options.elspec.numel];
+                        if side==2
+                            continue;
+                        end
                     end
                 case 3 % sagittal images
                     if manualtracor
@@ -123,6 +137,7 @@ for iside=1:length(options.sides)
                     else
                         V=Vsag;
                     end
+                    showBothSide = 0;
             end
 
             [planedim,onedim, secdim , dstring, lstring, Ltxt, Rtxt,plusminusc,plusminusr,plusminusl]=ea_getdims(tracor,side);
@@ -164,7 +179,7 @@ for iside=1:length(options.sides)
             end
 
             try
-                printstr_el_stat=['Electrode(s) k',num2str(el-1),'/',options.elspec.contactnames{el} ', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.'];
+                printstr_el_stat=['Electrode(s) ', strjoin(options.elspec.contactnames(el)) ', ',dstring,' view: ',lstring,'',num2str(sampleheight),' mm.'];
                 disp(printstr_el_stat);
                 
                 if fid>0 % only if file exists (does sometimes not exist if called from lead anatomy or the slice-cuts feature of elvis)
@@ -306,22 +321,44 @@ for iside=1:length(options.sides)
 
                 elstruct=testifactivecontacts(elstruct,elspec,c); % small function that tests if active contacts are assigned and if not assigns them all as passive.
 
-                if isstruct(elstruct) && ((elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts) || (~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts))
-                    wstr=[1,1,1];
-                    if isfield(elstruct,'group')
-                        wstr=elstruct(c).groupcolors(elstruct(c).group,:);
-                    end
+                if isstruct(elstruct)
+                    if elstruct(c).activecontacts{side}(elcnt) && options.d3.showactivecontacts ...
+                            || ~elstruct(c).activecontacts{side}(elcnt) && options.d3.showpassivecontacts
+                        faceColor=[1,1,1];
+                        if isfield(elstruct,'group')
+                            faceColor=elstruct(c).groupcolors(elstruct(c).group,:);
+                        end
 
-                    estr=wstr./2;
-                    if options.d3.hlactivecontacts
-                        if elstruct(c).activecontacts{side}(elcnt)
-                            %wstr='r';
-                            estr='r';
+                        edgeColor=faceColor./2;
+                        if options.d3.hlactivecontacts
+                            if elstruct(c).activecontacts{side}(elcnt)
+                                edgeColor='r';
+                            end
+                        end
+
+                        if options.d2.fid_overlay
+                            elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'o','MarkerSize',10,'MarkerEdgeColor',edgeColor,'MarkerFaceColor',faceColor,'LineWidth',2);
                         end
                     end
 
-                    if options.d2.fid_overlay
-                        elplt(c)=plot(elstruct(c).coords_mm{side}(elcnt,onedim),elstruct(c).coords_mm{side}(elcnt,secdim),'o','MarkerSize',10,'MarkerEdgeColor',estr,'MarkerFaceColor',wstr,'LineWidth',2);
+                    if showBothSide ...
+                            && (elstruct(c).activecontacts{side+1}(elcnt) && options.d3.showactivecontacts ...
+                            || ~elstruct(c).activecontacts{side+1}(elcnt) && options.d3.showpassivecontacts)
+                        faceColor=[1,1,1];
+                        if isfield(elstruct,'group')
+                            faceColor=elstruct(c).groupcolors(elstruct(c).group,:);
+                        end
+
+                        edgeColor=faceColor./2;
+                        if options.d3.hlactivecontacts
+                            if elstruct(c).activecontacts{side+1}(elcnt)
+                                edgeColor='r';
+                            end
+                        end
+
+                        if options.d2.fid_overlay
+                            elplt(c)=plot(elstruct(c).coords_mm{side+1}(elcnt,onedim),elstruct(c).coords_mm{side+1}(elcnt,secdim),'o','MarkerSize',10,'MarkerEdgeColor',edgeColor,'MarkerFaceColor',faceColor,'LineWidth',2);
+                        end
                     end
                 end
             end
@@ -386,11 +423,11 @@ for iside=1:length(options.sides)
                 end
                 switch tracor
                     case 1
-                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_axial',isofnadd,'.png'],'myaa');
+                        ea_screenshot([options.root,options.patientname,filesep,'axial_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
                     case 2
-                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_coronal',isofnadd,'.png'],'myaa');
+                        ea_screenshot([options.root,options.patientname,filesep,'coronal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
                     case 3
-                        ea_screenshot([options.root,options.patientname,filesep,options.elspec.contactnames{el},'_sagittal',isofnadd,'.png'],'myaa');
+                        ea_screenshot([options.root,options.patientname,filesep,'sagittal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
                 end
             end
             axis xy

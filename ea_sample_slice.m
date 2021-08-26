@@ -22,11 +22,7 @@ if strcmp(voxmm,'mm')
 end
 
 if iscell(coords)
-    allc=[];
-    for side=1:length(coords)
-        allc=[allc;coords{side}];
-    end
-    coords=allc;
+    coords = vertcat(coords{:});
 end
 
 if length(coords)==1 % scalar input, only a height is defined. convert to mm space.
@@ -49,9 +45,9 @@ switch tracor
             boundbox{2}=linspace(2,vol.dim(2),500);
             boundbox{3}=linspace(coords,coords,500);
         else
-            boundbox{1}=coords(el,1)-wsize:1/interpfactor:coords(el,1)+wsize;
-            boundbox{2}=coords(el,2)-wsize:1/interpfactor:coords(el,2)+wsize;
-            boundbox{3}=repmat(coords(el,3),1,length(boundbox{1}));
+            boundbox{1}=mean(coords(el,1))-wsize:1/interpfactor:mean(coords(el,1))+wsize;
+            boundbox{2}=mean(coords(el,2))-wsize:1/interpfactor:mean(coords(el,2))+wsize;
+            boundbox{3}=repmat(mean(coords(el,3)),1,length(boundbox{1}));
         end
         [cmesh.X,cmesh.Y]=meshgrid(boundbox{1},boundbox{2});
         cmesh.Z=repmat(boundbox{3}(1),numel(cmesh.X),1);
@@ -68,9 +64,9 @@ switch tracor
             boundbox{2}=linspace(coords,coords,500);
             boundbox{3}=linspace(1,vol.dim(3),500);
         else
-            boundbox{1}=coords(el,1)-wsize:1/interpfactor:coords(el,1)+wsize;
-            boundbox{2}=repmat(coords(el,2),1,length(boundbox{1}));
-            boundbox{3}=coords(el,3)-wsize:1/interpfactor:coords(el,3)+wsize;
+            boundbox{1}=mean(coords(el,1))-wsize:1/interpfactor:mean(coords(el,1))+wsize;
+            boundbox{2}=repmat(mean(coords(el,2)),1,length(boundbox{1}));
+            boundbox{3}=mean(coords(el,3))-wsize:1/interpfactor:mean(coords(el,3))+wsize;
         end
         [cmesh.X,cmesh.Z]=meshgrid(boundbox{1},boundbox{3});
         cmesh.Y=repmat(boundbox{2}(1),numel(cmesh.X),1);
@@ -78,7 +74,7 @@ switch tracor
         sampleheight=vol.mat*sampleheight;
         sampleheight=sampleheight(2);
 
-            ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
+        ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
         %slice=fliplr(slice);
     case 'sag'
@@ -98,7 +94,7 @@ switch tracor
         sampleheight=vol.mat*sampleheight;
         sampleheight=sampleheight(1);
 
-            ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
+        ima=spm_sample_vol(vol,cmesh.X(:),cmesh.Y(:),cmesh.Z(:),3);
         slice=reshape(ima,length(boundbox{1}),length(boundbox{1}));
         %slice=fliplr(slice);
 end
