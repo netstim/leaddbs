@@ -88,7 +88,7 @@ else
     planedim=ea_getdims(manualtracor,1);
 end
 
-fid=fopen([options.root,options.patientname,filesep,'cuts_export_coordinates.txt'],'w');
+fid=fopen([options.root,options.patientname,filesep,'2D_cuts_export_coordinates.txt'],'w');
 for iside=1:length(options.sides)
     side=options.sides(iside);
     % write out axial/coronal/sagittal images
