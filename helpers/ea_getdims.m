@@ -9,7 +9,7 @@ switch tracor
         dstring='tra';
         lstring='z = ';
         Ltxt='M';
-        Rtxt='L';
+        Rtxt='R';
         plusminusc='plus';
         switch side
             case 1
@@ -26,7 +26,7 @@ switch tracor
         dstring='cor';
         lstring='y = ';
         Ltxt='M';
-        Rtxt='L';
+        Rtxt='R';
         plusminusc='minus';
         
         switch side
@@ -54,5 +54,4 @@ switch tracor
                 plusminusr='plus';
                 plusminusl='minus';
         end
-        
 end
