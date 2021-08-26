@@ -422,11 +422,11 @@ for iside=1:length(options.sides)
                 end
                 switch tracor
                     case 1
-                        ea_screenshot([options.root,options.patientname,filesep,'axial_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot([options.root,options.patientname,filesep,'2D_axial_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
                     case 2
-                        ea_screenshot([options.root,options.patientname,filesep,'coronal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot([options.root,options.patientname,filesep,'2D_coronal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
                     case 3
-                        ea_screenshot([options.root,options.patientname,filesep,'sagittal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot([options.root,options.patientname,filesep,'2D_sagittal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
                 end
             end
             axis xy
