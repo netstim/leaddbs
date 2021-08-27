@@ -1,4 +1,4 @@
-function ea_fsl_reslice(input, reference, output, interp)
+function ea_fsl_reslice(input, reference, output, interp, verbose)
 % Reslice images which are in the same space but with different resolutions
 % using flirt.
 
@@ -11,6 +11,11 @@ end
 % Can choose from trilinear, nearestneighbour, sinc or spline
 if ~exist('interp', 'var')
     interp = 'trilinear';
+end
+
+% Verbose by default
+if ~exist('verbose', 'var')
+    verbose = 1;
 end
 
 input = ea_path_helper(input);
@@ -29,8 +34,11 @@ cmd = [FLIRT, ...
     ' -applyxfm -usesqform -interp ', interp, ...
     ' -out ', output];
 
+if verbose
+    fprintf('Reslicing %s to match %s ...\n', input, reference);
+end
+
 setenv('FSLOUTPUTTYPE','NIFTI');
-fprintf('Reslicing %s to %s ...\n', input, reference);
 if ~ispc
     system(['bash -c "', cmd, '"']);
 else
