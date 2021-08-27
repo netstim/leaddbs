@@ -31,6 +31,9 @@ end
 % Calculate overlap using image1 as reference
 overlap1 = sum(nii1.img(:).*nii2.img(:));
 normOverlap1 = overlap1/sum(nii1.img(:));
+if isnan(normOverlap1)
+    normOverlap1 = 0;
+end
 
 % Reslice image1 using image2 as reference
 reslicedImage1 = strrep(image1, '.nii', '_resliced.nii');
@@ -47,6 +50,9 @@ end
 % Calculate overlap using image2 as reference
 overlap2 = sum(nii1.img(:).*nii2.img(:));
 normOverlap2 = overlap2/sum(nii2.img(:));
+if isnan(normOverlap2)
+    normOverlap2 = 0;
+end
 
 % Cleanup
 ea_delete({reslicedImage1, reslicedImage2});
