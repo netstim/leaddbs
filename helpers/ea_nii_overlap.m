@@ -29,7 +29,7 @@ if binary
 end
 
 % Calculate overlap using image1 as reference
-overlap1 = sum(nii1.img(:).*nii2.img(:));
+overlap1 = sum(nii1.img(:) .* nii2.img(:));
 normOverlap1 = overlap1/sum(nii1.img(:));
 if isnan(normOverlap1)
     normOverlap1 = 0;
@@ -48,7 +48,7 @@ if binary
 end
 
 % Calculate overlap using image2 as reference
-overlap2 = sum(nii1.img(:).*nii2.img(:));
+overlap2 = sum(nii1.img(:) .* nii2.img(:));
 normOverlap2 = overlap2/sum(nii2.img(:));
 if isnan(normOverlap2)
     normOverlap2 = 0;
@@ -67,11 +67,11 @@ if (numel(unique(img1(:)))~=2 || numel(unique(img2(:)))~=2) ...
         error('The images are not all binarized but threshold parameter is not supplied!');
     else
         if numel(threshold) == 1
-            img1 = img1>=threshold;
-            img2 = img2>=threshold;
+            img1 = img1>threshold;
+            img2 = img2>threshold;
         elseif numel(threshold) == 2
-            img1 = img1>=threshold(1);
-            img2 = img2>=threshold(2);
+            img1 = img1>threshold(1);
+            img2 = img2>threshold(2);
         end
     end
 end
