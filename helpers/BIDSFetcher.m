@@ -37,7 +37,7 @@ classdef BIDSFetcher
         function subjFolderNames = readSubjects(obj)
             % Find subject folders: sub-*
             subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'rawdata'], 'sub-.*', 0);
-            subjFolderNames = regexp(subjDirs, ['sub-.*(?=', filesep, '$)'], 'match', 'once');
+            subjFolderNames = regexp(subjDirs, ['sub-.*(?=\', filesep, '$)'], 'match', 'once');
         end
 
         function LeadDBSDirs = getLeadDBSDirs(obj, subjId)
