@@ -19,8 +19,10 @@ prefs.pp.csize=4; % specify how many clusters to recruit.
 prefs.pp.profile='local'; % specify parallel processing profile.
 
 %% general file handling:
+prefs.niiFileExt = '.nii';
+
 prefs.prenii_searchstring='anat_*.nii';
-prefs.prenii_order={'t1','t2','pd'}; % assign order of anatomical images used (nonspecified images matching the searchstring will be added afterwards).
+prefs.prenii_order={'T1w','T2w','PDw','T2starw'}; % assign order of anatomical images used (nonspecified images matching the searchstring will be added afterwards).
 prefs.prenii_unnormalized='anat_t2.nii'; % default (still used for DICOM import)
 prefs.prenii_unnormalized_t1='anat_t1.nii'; % default (still used for DICOM import)
 prefs.prenii_unnormalized_pd='anat_pd.nii'; % default (still used for DICOM import)
@@ -32,7 +34,7 @@ prefs.rawctnii_unnormalized='postop_ct.nii';
 prefs.ctnii_coregistered='rpostop_ct.nii';
 prefs.tp_ctnii_coregistered=['tp_',prefs.ctnii_coregistered];
 
-prefs.preferMRCT = 1; % preference of MR or CT modality for post-op image: 1 for MR, 2 for CT.
+prefs.preferMRCT = 2; % preference of MR or CT modality for post-op image: 1 for MR, 2 for CT.
 
 prefs.patientdir=patientname;
 
