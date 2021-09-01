@@ -260,7 +260,7 @@ classdef BIDSFetcher
             baseDir = fullfile(LeadDBSDirs.preprocDir, 'anat');
 
             % Get preprocessed pre-op anat images
-            baseName = ['sub-', subjId, '_desc-preproc_acq-preop_'];
+            baseName = ['sub-', subjId, '_desc-preproc_ses-preop_'];
             fields = fieldnames(preopAnat);
             for i=1:length(fields)
                 modality = fields{i};
@@ -269,7 +269,7 @@ classdef BIDSFetcher
             end
 
             % Get preprocessed post-op anat images
-            baseName = ['sub-', subjId, '_desc-preproc_acq-postop_'];
+            baseName = ['sub-', subjId, '_desc-preproc_ses-postop_'];
             if isfield(postopAnat, 'CT')
                 parsed = obj.parseFilePath(postopAnat.CT);
                 preprocAnat.postop.CT = fullfile(baseDir, [baseName, 'CT', parsed.ext]);
@@ -278,7 +278,7 @@ classdef BIDSFetcher
                 for i=1:length(fields)
                     modality = fields{i};
                     parsed = obj.parseFilePath(postopAnat.(modality));
-                    preprocAnat.postop.(modality) = fullfile(baseDir, [baseName, 'ori-', parsed.ori, '_', parsed.suffix, parsed.ext]);
+                    preprocAnat.postop.(modality) = fullfile(baseDir, [baseName, 'acq-', parsed.acq, '_', parsed.suffix, parsed.ext]);
                 end
             end
         end
@@ -386,9 +386,10 @@ classdef BIDSFetcher
             modality = fieldnames(coregAnat.postop);
             brainshiftAnat.moving = coregAnat.postop.(modality{1});
             brainshiftAnat.moving = strrep(brainshiftAnat.moving, LeadDBSDirs.coregDir, LeadDBSDirs.brainshiftDir);
-            if ~strcmp(modality{1}, 'CT')
+            if ~strcmp(modality{1}, 'CT') % Post-op MRI detected
                 parsed = obj.parseFilePath(brainshiftAnat.moving);
-                brainshiftAnat.moving = strrep(brainshiftAnat.moving, ['_ori-', parsed.ori], '');
+                brainshiftAnat.moving = strrep(brainshiftAnat.moving, ['_acq-', parsed.acq], '');
+                brainshiftAnat.moving = strrep(brainshiftAnat.moving, parsed.suffix, 'MRI');
             end
 
             % Set masks used for brain shift correction
