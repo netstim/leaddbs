@@ -20,7 +20,7 @@ classdef BIDSFetcher
             obj.settings = obj.leadPrefs('m');
             obj.spacedef = ea_getspacedef;
             obj.datasetDir = GetFullPath(datasetDir);
-            obj.subjFolderNames = readSubjects(obj);
+            obj.subjFolderNames = obj.readSubjects;
             obj.subjId = strrep(obj.subjFolderNames, 'sub-', '');
 
             % TODO: BIDS validation
@@ -70,20 +70,24 @@ classdef BIDSFetcher
                 format = ['.', format];
             end
 
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             prefs = [LeadDBSDirs.prefsDir, filesep, 'sub-', subjId, '_desc-', label, format];
         end
 
-        function subj = getSubj(obj, subjId)
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+        function subj = getSubj(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set misc fields
             subj.subjDir = LeadDBSDirs.subjDir;
-            subj.uiprefs = getPrefs(obj, subjId, 'uiprefs', 'mat');
-            subj.methodLog = getLog(obj, subjId, 'methods');
+            subj.uiprefs = obj.getPrefs(subjId, 'uiprefs', 'mat');
+            subj.methodLog = obj.getLog(subjId, 'methods');
 
             % Set pre-op anat field
-            preopAnat = getPreopAnat(obj, subjId);
+            preopAnat = obj.getPreopAnat(subjId);
             preopFields = fieldnames(preopAnat);
             for i=1:length(preopFields)
                 subj.preopAnat.(preopFields{i}).raw = preopAnat.(preopFields{i});
@@ -93,7 +97,7 @@ classdef BIDSFetcher
             subj.AnchorModality = preopFields{1};
 
             % Set post-op anat field
-            postopAnat = getPostopAnat(obj, subjId);
+            [postopAnat, bothMRCTPresent] = obj.getPostopAnat(subjId, preferMRCT);
             postopFields = fieldnames(postopAnat);
             for i=1:length(postopFields)
                 subj.postopAnat.(postopFields{i}).raw = postopAnat.(postopFields{i});
@@ -106,20 +110,23 @@ classdef BIDSFetcher
                 subj.postopModality = 'MRI';
             end
 
+            % Set bothMRCTPresent flag
+            subj.bothMRCTPresent = bothMRCTPresent;
+
             % Set pipeline fields
-            subj.preproc.anat = getPreprocAnat(obj, subjId);
-            subj.coreg.anat = getCoregAnat(obj, subjId);
-            subj.coreg.transform = getCoregTransform(obj, subjId);
-            subj.coreg.log = getCoregLog(obj, subjId);
-            subj.coreg.checkreg = getCoregCheckreg(obj, subjId);
-            subj.brainshift.anat = getBrainshiftAnat(obj, subjId);
-            subj.brainshift.transform = getBrainshiftTransform(obj, subjId);
-            subj.brainshift.log = getBrainshiftLog(obj, subjId);
-            subj.brainshift.checkreg = getBrainshiftCheckreg(obj, subjId);
-            subj.norm.anat = getNormAnat(obj, subjId);
-            subj.norm.transform = getNormTransform(obj, subjId);
-            subj.norm.log = getNormLog(obj, subjId);
-            subj.norm.checkreg = getNormCheckreg(obj, subjId);
+            subj.preproc.anat = obj.getPreprocAnat(subjId, preferMRCT);
+            subj.coreg.anat = obj.getCoregAnat(subjId, preferMRCT);
+            subj.coreg.transform = obj.getCoregTransform(subjId, preferMRCT);
+            subj.coreg.log = obj.getCoregLog(subjId);
+            subj.coreg.checkreg = obj.getCoregCheckreg(subjId, preferMRCT);
+            subj.brainshift.anat = obj.getBrainshiftAnat(subjId, preferMRCT);
+            subj.brainshift.transform = obj.getBrainshiftTransform(subjId);
+            subj.brainshift.log = obj.getBrainshiftLog(subjId);
+            subj.brainshift.checkreg = obj.getBrainshiftCheckreg(subjId, preferMRCT);
+            subj.norm.anat = obj.getNormAnat(subjId, preferMRCT);
+            subj.norm.transform = obj.getNormTransform(subjId);
+            subj.norm.log = obj.getNormLog(subjId);
+            subj.norm.checkreg = obj.getNormCheckreg(subjId, preferMRCT);
 
             % Set pre-op preprocessed images
             for i=1:length(preopFields)
@@ -158,6 +165,9 @@ classdef BIDSFetcher
             if ismember('CT', postopFields)
                 subj.postopAnat.CT.normTonemap = subj.norm.anat.postop.tonemapCT;
             end
+
+            % Set reconstruction
+            subj.recon = obj.getRecon(subjId);
         end
 
         function preopAnat = getPreopAnat(obj, subjId)
@@ -165,7 +175,7 @@ classdef BIDSFetcher
             rawDataDir = fullfile(obj.datasetDir, 'rawdata', ['sub-', subjId]);
 
             % Get raw images struct
-            rawImages = loadjson(getPrefs(obj, subjId, 'rawimages'));
+            rawImages = loadjson(obj.getPrefs(subjId, 'rawimages'));
 
             % Get images and modalities
             images = fullfile(rawDataDir, 'ses-preop', 'anat', struct2cell(rawImages.preop.anat));
@@ -197,7 +207,20 @@ classdef BIDSFetcher
             end
         end
 
-        function postopAnat = getPostopAnat(obj, subjId)
+        function [postopAnat, bothMRCTPresent] = getPostopAnat(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            else
+                if ischar(preferMRCT)
+                    switch upper(preferMRCT)
+                        case 'MR'
+                            preferMRCT = 1;
+                        case 'CT'
+                            preferMRCT = 2;
+                    end
+                end
+            end
+
             % Set dirs
             rawDataDir = fullfile(obj.datasetDir, 'rawdata', ['sub-', subjId]);
             subjDir = fullfile(obj.datasetDir, 'derivatives', 'leaddbs', ['sub-', subjId]);
@@ -209,13 +232,22 @@ classdef BIDSFetcher
             images = fullfile(rawDataDir, 'ses-postop', 'anat', struct2cell(rawImages.postop.anat));
             modality = fieldnames(rawImages.postop.anat);
 
-            if obj.settings.preferMRCT == 2
+            % Check presence of CT and MR
+            CTPresent = ismember('CT', modality);
+            MRPresent = any(contains(modality, 'ax_'));
+            if CTPresent && MRPresent
+                bothMRCTPresent = 1;
+            else
+                bothMRCTPresent = 0;
+            end
+
+            if CTPresent && (preferMRCT == 2  || preferMRCT == 1 && ~MRPresent)
                 % Check post-op CT
                 idx = find(ismember(modality, 'CT'), 1);
                 if ~isempty(idx)
                     postopAnat.CT = images{idx};
                 end
-            elseif obj.settings.preferMRCT == 1
+            elseif MRPresent && (preferMRCT == 1  || preferMRCT == 2 && ~CTPresent)
                 % Check post-op axial MRI
                 idx = find(contains(modality, 'ax'), 1);
                 if ~isempty(idx)
@@ -233,20 +265,26 @@ classdef BIDSFetcher
                 if ~isempty(idx)
                     postopAnat.(modality{idx}) = images{idx};
                 end
+            else
+                error('Post-op images not properly defined!')
             end
         end
 
-        function preprocAnat = getPreprocAnat(obj, subjId)
+        function preprocAnat = getPreprocAnat(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
             % Get pre-op and post-op anat images
-            preopAnat = getPreopAnat(obj, subjId);
-            postopAnat = getPostopAnat(obj, subjId);
+            preopAnat = obj.getPreopAnat(subjId);
+            postopAnat = obj.getPostopAnat(subjId, preferMRCT);
 
             % Get preprocessing directory
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             baseDir = fullfile(LeadDBSDirs.preprocDir, 'anat');
 
             % Get preprocessed pre-op anat images
-            baseName = ['sub-', subjId, '_desc-preproc_acq-preop_'];
+            baseName = ['sub-', subjId, '_desc-preproc_ses-preop_'];
             fields = fieldnames(preopAnat);
             for i=1:length(fields)
                 modality = fields{i};
@@ -255,7 +293,7 @@ classdef BIDSFetcher
             end
 
             % Get preprocessed post-op anat images
-            baseName = ['sub-', subjId, '_desc-preproc_acq-postop_'];
+            baseName = ['sub-', subjId, '_desc-preproc_ses-postop_'];
             if isfield(postopAnat, 'CT')
                 parsed = obj.parseFilePath(postopAnat.CT);
                 preprocAnat.postop.CT = fullfile(baseDir, [baseName, 'CT', parsed.ext]);
@@ -264,17 +302,21 @@ classdef BIDSFetcher
                 for i=1:length(fields)
                     modality = fields{i};
                     parsed = obj.parseFilePath(postopAnat.(modality));
-                    preprocAnat.postop.(modality) = fullfile(baseDir, [baseName, 'ori-', parsed.ori, '_', parsed.suffix, parsed.ext]);
+                    preprocAnat.postop.(modality) = fullfile(baseDir, [baseName, 'acq-', parsed.acq, '_', parsed.suffix, parsed.ext]);
                 end
             end
         end
 
-        function coregAnat = getCoregAnat(obj, subjId)
+        function coregAnat = getCoregAnat(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
             % Get preprocessed anat images
-            preprocAnat = getPreprocAnat(obj, subjId);
+            preprocAnat = obj.getPreprocAnat(subjId, preferMRCT);
 
             % Get LeadDBS dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set coregistered anat images
             anchorSpace = 'anchorNative';
@@ -293,13 +335,17 @@ classdef BIDSFetcher
             end
         end
 
-        function coregTransform = getCoregTransform(obj, subjId)
+        function coregTransform = getCoregTransform(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
             % Get LeadDBS dirs and base name
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             baseName = fullfile(LeadDBSDirs.coregDir, 'transformations', ['sub-', subjId, '_']);
 
             % Get coregistered images
-            coregAnat = getCoregAnat(obj, subjId);
+            coregAnat = obj.getCoregAnat(subjId, preferMRCT);
 
             % Set pre-coregistration transformation
             fields = fieldnames(coregAnat.preop);
@@ -315,7 +361,7 @@ classdef BIDSFetcher
 
         function coregLog = getCoregLog(obj, subjId)
             % Get LeadDBS dirs and base name
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             baseName = fullfile(LeadDBSDirs.coregDir, 'log', ['sub-', subjId, '_desc-']);
 
             % Set coregistion log
@@ -325,9 +371,13 @@ classdef BIDSFetcher
             coregLog.log = [baseName, 'coreglog'];
         end
 
-        function coregCheckreg = getCoregCheckreg(obj, subjId)
+        function coregCheckreg = getCoregCheckreg(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
             % Get coregistered anat images
-            coregAnat = getCoregAnat(obj, subjId);
+            coregAnat = obj.getCoregAnat(subjId, preferMRCT);
 
             % Remove pre-op anchor anat image
             fields = fieldnames(coregAnat.preop);
@@ -339,7 +389,7 @@ classdef BIDSFetcher
             end
 
             % Get dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             anatDir = fullfile(LeadDBSDirs.coregDir, 'anat');
             checkregDir = fullfile(LeadDBSDirs.coregDir, 'checkreg');
 
@@ -355,12 +405,16 @@ classdef BIDSFetcher
             end
         end
 
-        function brainshiftAnat = getBrainshiftAnat(obj, subjId)
+        function brainshiftAnat = getBrainshiftAnat(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
             % Get coregistered anat images
-            coregAnat = getCoregAnat(obj, subjId);
+            coregAnat = obj.getCoregAnat(subjId, preferMRCT);
 
             % Get LeadDBS dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set anchor anat image used for brain shift correction
             anchorSpace = 'anchorNative';
@@ -372,9 +426,10 @@ classdef BIDSFetcher
             modality = fieldnames(coregAnat.postop);
             brainshiftAnat.moving = coregAnat.postop.(modality{1});
             brainshiftAnat.moving = strrep(brainshiftAnat.moving, LeadDBSDirs.coregDir, LeadDBSDirs.brainshiftDir);
-            if ~strcmp(modality{1}, 'CT')
+            if ~strcmp(modality{1}, 'CT') % Post-op MRI detected
                 parsed = obj.parseFilePath(brainshiftAnat.moving);
-                brainshiftAnat.moving = strrep(brainshiftAnat.moving, ['_ori-', parsed.ori], '');
+                brainshiftAnat.moving = strrep(brainshiftAnat.moving, ['_acq-', parsed.acq], '');
+                brainshiftAnat.moving = strrep(brainshiftAnat.moving, parsed.suffix, 'MRI');
             end
 
             % Set masks used for brain shift correction
@@ -388,7 +443,7 @@ classdef BIDSFetcher
 
         function brainshiftTransform = getBrainshiftTransform(obj, subjId)
             % Get LeadDBS dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set base dir and base name
             anchorSpace = 'anchorNative';
@@ -403,7 +458,7 @@ classdef BIDSFetcher
 
         function brainshiftLog = getBrainshiftLog(obj, subjId)
             % Get LeadDBS dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set base dir
             baseDir = fullfile(LeadDBSDirs.brainshiftDir, 'log');
@@ -412,12 +467,16 @@ classdef BIDSFetcher
             brainshiftLog = [baseDir, filesep, 'sub-', subjId, '_desc-methods.txt'];
         end
 
-        function brainshiftCheckreg = getBrainshiftCheckreg(obj, subjId)
+        function brainshiftCheckreg = getBrainshiftCheckreg(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
             % Get brain shift anat images
-            brainshiftAnat = getBrainshiftAnat(obj, subjId);
+            brainshiftAnat = obj.getBrainshiftAnat(subjId, preferMRCT);
 
             % Set dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             anatDir = fullfile(LeadDBSDirs.brainshiftDir, 'anat');
             checkregDir = fullfile(LeadDBSDirs.brainshiftDir, 'checkreg');
 
@@ -432,16 +491,20 @@ classdef BIDSFetcher
             brainshiftCheckreg.scrf = strrep(brainshiftCheckreg.scrf, parsed.ext, '.png');
         end
 
-        function normAnat = getNormAnat(obj, subjId)
+        function normAnat = getNormAnat(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
             % Get coregistered anat images
-            coregAnat = getCoregAnat(obj, subjId);
+            coregAnat = obj.getCoregAnat(subjId, preferMRCT);
 
             % Remove pre-op anat images except for anchor image
             fields = fieldnames(coregAnat.preop);
             coregAnat.preop = rmfield(coregAnat.preop, fields(2:end));
 
             % Get LeadDBS dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set normalized anat images
             anchorSpace = 'anchorNative';
@@ -458,7 +521,7 @@ classdef BIDSFetcher
 
         function normTransform = getNormTransform(obj, subjId)
             % Get LeadDBS dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set base dir and base name
             anchorSpace = 'anchorNative';
@@ -472,7 +535,7 @@ classdef BIDSFetcher
 
         function normLog = getNormLog(obj, subjId)
             % Get LeadDBS dirs and base name
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             baseName = fullfile(LeadDBSDirs.normDir, 'log', ['sub-', subjId, '_desc-']);
 
             % Set coregistion log
@@ -480,9 +543,13 @@ classdef BIDSFetcher
             normLog.log = [baseName, 'normlog'];
         end
 
-        function normCheckreg = getNormCheckreg(obj, subjId)
+        function normCheckreg = getNormCheckreg(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
             % Get normalized anat images
-            normAnat = getNormAnat(obj, subjId);
+            normAnat = obj.getNormAnat(subjId, preferMRCT);
 
             % Remove postop CT image, will use tone-mapped CT
             if isfield(normAnat.postop, 'CT')
@@ -490,7 +557,7 @@ classdef BIDSFetcher
             end
 
             % Get dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             anatDir = fullfile(LeadDBSDirs.normDir, 'anat');
             checkregDir = fullfile(LeadDBSDirs.normDir, 'checkreg');
 
@@ -506,19 +573,23 @@ classdef BIDSFetcher
             end
         end
 
-        function recon = getRecon(obj, subjId)
+        function recon = getRecon(obj, subjId, preferMRCT)
+            if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+                preferMRCT = obj.settings.preferMRCT;
+            end
+
             % Get dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             baseName = fullfile(LeadDBSDirs.reconDir, ['sub-', subjId, '_']);
 
             % Get reconstruction
             recon.recon = [baseName, 'desc-reconstruction.mat'];
 
             % Mask for CT-based reconstruction
-            postopAnat = obj.getPostopAnat(subjId);
-            rawCTSpace = 'rawCT';
-            anchorSpace = 'anchorNative';
+            postopAnat = obj.getPostopAnat(subjId, preferMRCT);
             if isfield(postopAnat, 'CT')
+                rawCTSpace = 'rawCT';
+                anchorSpace = 'anchorNative';
                 recon.rawCTMask = [baseName, 'space-', rawCTSpace, '_desc-brainmask', obj.settings.niiFileExt];
                 recon.anchorNativeMask = [baseName, 'space-', anchorSpace, '_desc-brainmask', obj.settings.niiFileExt];
             end
@@ -526,7 +597,7 @@ classdef BIDSFetcher
 
         function log = getLog(obj, subjId, label)
             % Get dirs
-            LeadDBSDirs = getLeadDBSDirs(obj, subjId);
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             baseName = fullfile(LeadDBSDirs.logDir, ['sub-', subjId, '_desc-']);
 
             % Get log
