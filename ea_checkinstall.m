@@ -13,6 +13,9 @@ end
 python_envs = dir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments', '*.yml'));
 python_envs = cellfun(@(x) x(1:end-4), {python_envs.name}', 'UniformOutput', false);
 
+python_envs = dir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments', '*.yml'));
+python_envs = cellfun(@(x) x(1:end-4), {python_envs.name}', 'UniformOutput', false);
+
 switch cmd
     case 'list' % simply return list of installable datasets
         success={'Redownload data files'
