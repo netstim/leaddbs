@@ -165,6 +165,9 @@ classdef BIDSFetcher
             if ismember('CT', postopFields)
                 subj.postopAnat.CT.normTonemap = subj.norm.anat.postop.tonemapCT;
             end
+
+            % Set reconstruction
+            subj.recon = obj.getRecon(subjId);
         end
 
         function preopAnat = getPreopAnat(obj, subjId)
