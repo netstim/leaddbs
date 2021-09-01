@@ -27,7 +27,6 @@ end
 
 [fullrpts]=unique(fullrpts,'stable');
 if length(fullrpts)>10
-
    fullrpts=fullrpts(1:10);
 end
 [~,nuchosenix]=ismember(chosenix,fullrpts);
