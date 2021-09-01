@@ -93,7 +93,7 @@ classdef BIDSFetcher
             subj.AnchorModality = preopFields{1};
 
             % Set post-op anat field
-            postopAnat = getPostopAnat(obj, subjId);
+            [postopAnat, bothMRCTPresent] = getPostopAnat(obj, subjId);
             postopFields = fieldnames(postopAnat);
             for i=1:length(postopFields)
                 subj.postopAnat.(postopFields{i}).raw = postopAnat.(postopFields{i});
@@ -105,6 +105,9 @@ classdef BIDSFetcher
             else
                 subj.postopModality = 'MRI';
             end
+
+            % Set bothMRCTPresent flag
+            subj.bothMRCTPresent = bothMRCTPresent;
 
             % Set pipeline fields
             subj.preproc.anat = getPreprocAnat(obj, subjId);
@@ -197,7 +200,7 @@ classdef BIDSFetcher
             end
         end
 
-        function postopAnat = getPostopAnat(obj, subjId)
+        function [postopAnat, bothMRCTPresent] = getPostopAnat(obj, subjId)
             % Set dirs
             rawDataDir = fullfile(obj.datasetDir, 'rawdata', ['sub-', subjId]);
             subjDir = fullfile(obj.datasetDir, 'derivatives', 'leaddbs', ['sub-', subjId]);
@@ -209,13 +212,22 @@ classdef BIDSFetcher
             images = fullfile(rawDataDir, 'ses-postop', 'anat', struct2cell(rawImages.postop.anat));
             modality = fieldnames(rawImages.postop.anat);
 
-            if obj.settings.preferMRCT == 2
+            % Check presence of CT and MR
+            CTPresent = ismember('CT', modality);
+            MRPresent = any(contains(modality, 'ax_'));
+            if CTPresent && MRPresent
+                bothMRCTPresent = 1;
+            else
+                bothMRCTPresent = 0;
+            end
+
+            if CTPresent && (obj.settings.preferMRCT == 2  || obj.settings.preferMRCT == 1 && ~MRPresent)
                 % Check post-op CT
                 idx = find(ismember(modality, 'CT'), 1);
                 if ~isempty(idx)
                     postopAnat.CT = images{idx};
                 end
-            elseif obj.settings.preferMRCT == 1
+            elseif MRPresent && (obj.settings.preferMRCT == 1  || obj.settings.preferMRCT == 2 && ~CTPresent)
                 % Check post-op axial MRI
                 idx = find(contains(modality, 'ax'), 1);
                 if ~isempty(idx)
@@ -233,6 +245,8 @@ classdef BIDSFetcher
                 if ~isempty(idx)
                     postopAnat.(modality{idx}) = images{idx};
                 end
+            else
+                error('Post-op images not properly defined!')
             end
         end
 
