@@ -1,115 +1,155 @@
 function ea_dicom_import(options)
-% This function converts DICOM files in your in directory and outputs them
-% to the out directory as specified by lead. This function is pretty much
-% specialized to the DICOM format as used @ Charite University Medicine and
-% might not work as expected in your clinical setting. You can
-% alternatively import DICOM files using software like SPM or DCM2NII.
+% This function converts DICOM files from the sourcedata folder of your dataset into
+% a BIDS-conform rawdata folder and specified which files are to be used by lead-dbs
 % __________________________________________________________________________________
-% Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
-% Andreas Horn
+% Copyright (C) 20121 Charite University Medicine Berlin, Movement Disorders Unit
+% Johannes Achtzehn & Andreas Horn
 
+preop_modalities = {'T1w', 'T2w', 'PDw', 'FGATIR'};           % TODO: get this from prefs
+postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};                             % TODO: get this from prefs
+
+% TODO: 1. GUI to select which files, 2. first get how many sessions, then iterate over those (currently only pre- and postop)
+% TODO: 3. handle no files gracefully
+
+%% import directly from BIDS
 if isfield(options.dicomimp,'method') && options.dicomimp.method == 4
-    disp('Importing BIDS folder...')
-    bids_subject_folder = [options.root,options.patientname];
-    ea_read_bids(options,bids_subject_folder);
-    ea_delete(fullfile(bids_subject_folder,'ea_ui.mat'));
-    
-    if options.pat==length(options.uipatdirs) % last patient, finish up
-        
-        for pt=1:length(options.uipatdirs)
-            
-            [pth,fn]=fileparts(options.uipatdirs{pt});
-            options.uipatdirs{pt}=fullfile(pth,'derivatives','leaddbs',fn);
-            assignin('caller','options',options);
-            
+
+    rawdata_dir = fullfile(options.root, options.patientname, 'rawdata');   % TODO: dataset fetcher
+    lead_derivatives_dir = fullfile(options.root, options.patientname, 'derivatives', 'leaddbs');
+
+    all_files = dir(fullfile(rawdata_dir, 'sub-*'));    % get subjects in dataset root TODO: dataset fetcher
+    dirFlags = [all_files.isdir];                       % get a logical vector that tells which is a directory
+    subj_folders = all_files(dirFlags);                 % extract only those that are directories (fail-safe)
+
+    fprintf('Found %s subjects and importing directly from BIDS rawdata folder...\n', num2str(numel(subj_folders)))
+    for subj_idx = 1:numel(subj_folders)
+
+        fprintf('Importing BIDS data from subject %s...\n', subj_folders(subj_idx).name);
+
+        % preop
+        fprintf('\nSearching files for preoperative session...\n');
+        anat_files.('preop') = find_anat_files_bids(fullfile(rawdata_dir, subj_folders(subj_idx).name, 'ses-preop', 'anat'), preop_modalities);
+
+        % postop
+        fprintf('\nSearching files for postoperative session...\n');
+        anat_files.('postop') = find_anat_files_bids(fullfile(rawdata_dir, subj_folders(subj_idx).name, 'ses-postop', 'anat'), postop_modalities);
+
+        % check if multiple  or no files were found
+        % preop
+        for mod_idx = 1:length(fieldnames(anat_files.preop))
+
+            if numel(anat_files.preop.(preop_modalities{mod_idx})) > 1         % if more than one is found
+                fprintf('\nMultiple files for modality %s found, please specify which one you want to use:\n', preop_modalities{mod_idx})
+                file_list = anat_files.preop.(preop_modalities{mod_idx});
+
+                % prompt the user to select a preop image, here we only allow one selection
+                [index, tf] = listdlg('PromptString', {sprintf('Multiple preop files for modality %s found',preop_modalities{mod_idx}), ...
+                'Please select on file from the list'}, 'Name', 'Select preop images', 'SelectionMode', 'single', 'ListSize', [300, 500], 'ListString', file_list);
+                anat_files.preop.(preop_modalities{mod_idx}) = file_list{index, 1};
+
+            elseif numel(anat_files.preop.(preop_modalities{mod_idx})) == 0   % if none is found
+                anat_files.preop = rmfield(anat_files.preop, preop_modalities{mod_idx});
+
+            else    % if only one convert (for better json readability)
+                anat_files.preop.(preop_modalities{mod_idx}) = cell2mat(anat_files.preop.(preop_modalities{mod_idx}));
+            end
         end
-        handles=getappdata(options.leadfigure,'handles');
-        
-        
-        ea_load_pts(handles,options.uipatdirs,'patients')
-        
-        options.root=[fullfile(options.root,'derivatives','leaddbs'),filesep];
-        assignin('caller','options',options);
+
+        % postop
+        for mod_idx = 1:length(fieldnames(anat_files.postop))
+
+            if numel(anat_files.postop.(postop_modalities{mod_idx})) > 1   % if more than one is found
+                file_list = anat_files.postop.(postop_modalities{mod_idx});
+
+                % prompt the user to select postop images, for everything other than CT, allow multiple selections (MRI)
+                [index, tf] = listdlg('PromptString', {sprintf('Multiple postop files for modality %s found',postop_modalities{mod_idx}), ...
+                'Please select on file from the list'}, 'Name', 'Select postop images', 'SelectionMode', 'single', ...
+                'ListSize', [300, 500], 'ListString', file_list);
+
+                anat_files.postop.(postop_modalities{mod_idx}) = file_list{index, 1};
+
+            elseif numel(anat_files.postop.(postop_modalities{mod_idx})) == 0   % if none is found
+                anat_files.postop = rmfield(anat_files.postop, postop_modalities{mod_idx});
+
+            else     % if only one convert (for better json readability)
+                anat_files.postop.(postop_modalities{mod_idx}) = cell2mat(anat_files.postop.(postop_modalities{mod_idx}));
+            end
+        end
+
+        % write into json file
+        if ~exist(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'), 'dir')
+            mkdir(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'));
+        end
+        savejson('', anat_files, fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs', [subj_folders(subj_idx).name, '_desc-rawimages.json']));
     end
 
+%% import from DICOM
 else
-    disp('Importing DICOM files...');
+    sourcedata_dir = fullfile(options.root, options.patientname, 'sourcedata');     % TODO: dataset fetcher
 
-    outdir = [options.root, options.patientname, filesep];
+    % read in naming convention
+    f = fileread(fullfile(ea_getearoot(), 'ext_libs', 'dcm2nii', 'dicom_bids_heuristics.json'));
+    bids_naming_heuristics = jsondecode(f);
 
-    % check DICOM folder/zipfile under subject folder, can be named as:
-    % 'DICOM', 'DICOMDAT', 'DICOM.zip' or 'DICOMDAT.zip' (case insensitive).
-    dcmnames = ea_regexpdir(outdir, '^dicom(DAT)?(/|\\|\.zip)$', 0);
+    all_files = dir(fullfile(sourcedata_dir, 'sub-*'));  % get subjects in dataset root TODO: dataset fetcher
+    dirFlags = [all_files.isdir];                        % get a logical vector that tells which is a directory
+    subj_folders = all_files(dirFlags);                  % extract only those that are directories (fail-safe)
 
-    if isempty(dcmnames)
-        % not found, suppose the subject folder is actually DICOM folder
-        movefile([outdir, '*'],[outdir, 'DICOM'])
-        try
-            % this isn't created when selecting multiple folders.
-            movefile([outdir, 'DICOM', filesep, 'ea_ui.mat'], outdir);
-        end
-        dcmname = [outdir, 'DICOM', filesep];
-    else % found DICOM folder/zipfile
-        dcmname = dcmnames{1}; % only choose the first found one
+    for subj_idx = 1:numel(subj_folders)
+
+        fprintf('Importing DICOM data from subject %s...\n', subj_folders(subj_idx).name);
+
+        dicom_dir = fullfile(options.root, options.patientname, 'sourcedata', subj_folders(subj_idx).name);
+        tmp_dir = fullfile(options.root, options.patientname, 'sourcedata', subj_folders(subj_idx).name, 'tmp'); % tmp dir for temporary storage of niftis
+
+        %ea_dcm2niix(dicom_dir, tmp_dir);    % convert DICOMS to .nii in a temporary folder
+
+        % preop
+        anat_files.preop = find_anat_files_dicom(tmp_dir, bids_naming_heuristics.preop);
+
     end
 
-    if strcmp(dcmname(end-3:end), '.zip') % zip file under subject folder
-        unzip(dcmname, [outdir, 'DICOM']);
-        delete(dcmname);
-        indir = [outdir, 'DICOM', filesep];
-    else % DICOM folder under subject folder
-        zips = ea_regexpdir(dcmname, '.+\.zip$', 0); % check if DICOM folder contains zip files
-        for i=1:numel(zips)
-            unzip(zips{i}, dcmname);
-            delete(zips{i});
-        end
-        indir = dcmname;
-    end
+    ea_methods(options, ['DICOM images were converted to the '...
+    'NIfTI file format using dcm2niix v1.20210317 (see https://github.com/rordenlab/dcm2niix).']);
 
-    if isfield(options.dicomimp,'method')
-        switch options.dicomimp.method
-            case 1 % dcm2niix
-                ea_dcm2niix(indir, outdir);
-                ea_methods(options, ['DICOM images were converted to the '...
-                    'NIfTI file format using dcm2niix (see https://github.com/rordenlab/dcm2niix).']);
-            case 2 % dicm2nii
-                ea_dicm2nii(indir, outdir);
-                ea_delete([outdir, 'dcmHeaders.mat']);
-                ea_methods(options, ['DICOM images were converted to the '...
-                    'NIfTI file format using dicm2nii (see https://github.com/xiangruili/dicm2nii).']);
-            case 3 % SPM
-                ea_spm_dicom_import(indir, outdir);
-                ea_methods(options, ['DICOM images were converted to the '...
-                    'NIfTI file format using SPM.']);
-        end
-    else % use default set in prefs
-        switch lower(options.prefs.dicom.tool)
-            case 'dcm2niix'
-                ea_dcm2niix(indir, outdir);
-                ea_methods(options, ['DICOM images were converted to the '...
-                    'NIfTI file format using dcm2niix (see https://github.com/rordenlab/dcm2niix).']);
-            case 'dicm2nii'
-                ea_dicm2nii(indir, outdir);
-                ea_delete([outdir, 'dcmHeaders.mat']);
-                ea_methods(options, ['DICOM images were converted to the '...
-                    'NIfTI file format using dicm2nii (see https://github.com/xiangruili/dicm2nii).']);
-            case 'spm' % SPM
-                ea_spm_dicom_import(indir, outdir);
-                ea_methods(options, ['DICOM images were converted to the '...
-                    'NIfTI file format using SPM.']);
+end
+
+    function found_files = find_anat_files_bids(folder, modalities)
+
+        found_files = struct();              % store found files in a struct
+        for mod_idx = 1:numel(modalities)       % go through the different preop-image types according to prefs and see if we can find some files
+
+            if any(strcmp(modalities{mod_idx}, {'ax_MR', 'cor_MR', 'sag_MR'}))
+                % find out which one was found
+                mri_dirs = {'ax', 'cor', 'sag'};
+                dir_idx = strcmp(modalities{mod_idx}, {'ax_MR', 'cor_MR', 'sag_MR'});
+                all_files = dir(fullfile(folder, ['*_acq-', mri_dirs{dir_idx}, '_*', '.nii.gz']));
+            else
+                all_files = dir(fullfile(folder, ['*_', modalities{mod_idx}, '.nii.gz']));
+            end
+
+            switch numel(all_files)
+                case 0
+                    found_files.(modalities{mod_idx}) = {};
+                otherwise
+                    found_files_list = {};
+                    for name_idx = 1:length(all_files)
+                        fprintf('Found file %s for modality %s\n', all_files(name_idx).name, modalities{mod_idx});
+                        found_files_list{name_idx, 1} = all_files(name_idx).name;
+                    end
+                    found_files.(modalities{mod_idx}) = found_files_list;
+            end
         end
     end
 
-    % delete DICOM folder
-    if options.prefs.dicom.dicomfiles
-        rmdir(indir,'s');
+    function found_files = find_anat_files_dicom(folder, patterns)
+        found_files = struct();
+
+        for mod_idx = 1:numel(fields(patterns))
+            patterns_mod = patterns.(patterns)
+
+        end
+
     end
 
-    % remove uncropped and untilted versions
-    fclean = ea_regexpdir(outdir, '(_Crop_1|_Tilt_1|_Tilt)\.nii$', 0);
-    fclean = unique(regexprep(fclean, '(_Crop_1|_Tilt_1)', ''));
-
-    for f=1:length(fclean)
-        ea_delete(fclean{f});
-    end
 end
