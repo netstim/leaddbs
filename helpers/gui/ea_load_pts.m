@@ -65,28 +65,21 @@ end
 % add VATs to seeds for connectome mapper or predict case
 if isfield(handles,'seeddefpopup')
     for pt=1:length(uipatdir)
-    direc=[uipatdir{pt},filesep];
-    stims=ea_dir2cell(dir([direc,'stimulations',filesep,ea_getspace]));
-    if ~exist('remstims','var')
-        remstims=stims;
-    else
-        todel=[];
-        for d=1:length(remstims)
-            if ~ismember(remstims{d},stims)
-               todel(end+1)=d;
-            end
+        stims = ea_dir2cell(dir([uipatdir{pt},filesep,'stimulations',filesep,ea_getspace]));
+        if ~exist('remstims', 'var')
+            commonStims = stims;
+        else
+            commonStims = intersect(commonStims, stims);
         end
-        remstims(todel)=[];
-    end
     end
 
     % for now only check first subject for pt. specific fibers..
     % find out whether mapper or predict were calling
     if strncmp(handles.leadfigure.Name, 'Lead Connectome Mapper', 22)
-        remstims = ea_prependvat(remstims);
-        set(handles.seeddefpopup, 'String', [{'Manually choose seeds','Manually choose parcellation'},remstims]);
+        commonStims = ea_prependvat(commonStims);
+        set(handles.seeddefpopup, 'String', [{'Manually choose seeds','Manually choose parcellation'}, commonStims]);
     else
-        set(handles.seeddefpopup, 'String', remstims);
+        set(handles.seeddefpopup, 'String', commonStims);
     end
     ea_resetpopup(handles.seeddefpopup);
 
