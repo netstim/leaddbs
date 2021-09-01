@@ -54,3 +54,4 @@ Thumbs.db
 /slicer.py
 
 /ext_libs/SlicerCustom*
+/ext_libs/miniconda
