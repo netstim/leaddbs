@@ -832,16 +832,6 @@ ea_storeui(handles);
 ea_deselectall_dicom(handles);
 
 
-% --- Executes on button press in genptatlascheck.
-function genptatlascheck_Callback(hObject, eventdata, handles)
-% hObject    handle to genptatlascheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of genptatlascheck
-ea_storeui(handles);
-
-
 % --- Executes on button press in updatebutn.
 function updatebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to updatebutn (see GCBO)

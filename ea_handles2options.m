@@ -10,8 +10,6 @@ options.tra_stdfactor=0.9; % Default: 0.9 - the lower this factor, the lower the
 options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower the threshold (more included pixels in cor process).
 
 %% set options
-%uipatdir=get(handles.patdir_choosebox,'String');
-
 options.earoot = ea_getearoot;
 try % not working when calling from lead_anatomy
     options.dicomimp.do=get(handles.dicomcheck,'Value');
@@ -99,10 +97,6 @@ end
 
 options.verbose=3; % 4: Show figures but close them 3: Show all but close all figs except resultfig 2: Show all and leave figs open, 1: Show displays only, 0: Show no feedback.
 
-%sidelog=[get(handles.right_checkbox,'Value') == get(handles.right_checkbox,'Max'),get(handles.left_checkbox,'Value') == get(handles.left_checkbox,'Max')];
-%sidepos=[1,2];
-
-%options.sides=sidepos(logical(sidelog)); %side=1 -> left electrode, side=2 -> right electrode. both: [1:2]
 try
     options.sides=ea_assignsides(handles);
 catch
@@ -208,14 +202,18 @@ try
 catch
     options.d3.autoserver=0;
 end
+
 options.d3.expdf=0;
 options.numcontacts=4;
+
 try
     options.entrypoint=get(handles.targetpopup,'String');
     options.entrypoint=options.entrypoint{get(handles.targetpopup,'Value')};
     options.entrypointn=get(handles.targetpopup,'Value');
 end
+
 options.writeoutpm=1;
+
 try
     options.elmodeln = get(handles.electrode_model_popup,'Value');
     string_list = get(handles.electrode_model_popup,'String');
@@ -224,11 +222,13 @@ catch
     elms=ea_resolve_elspec;
     options.elmodel=elms{1};
 end
+
 try
     options.atlasset=get(handles.atlassetpopup,'String'); %{get(handles.atlassetpopup,'Value')}
     options.atlasset=options.atlasset{get(handles.atlassetpopup,'Value')};
     options.atlassetn=get(handles.atlassetpopup,'Value');
 end
+
 try
     if strcmp(options.atlasset,'Use none');
         options.d3.writeatlases=0;
@@ -262,6 +262,7 @@ try
     if iscell(sdp)
         sdp=sdp{get(handles.seeddefpopup,'Value')};
     end
+
     switch sdp
         case 'Manually choose seeds'
             options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
@@ -274,20 +275,23 @@ try
             options.lcm.seeds=stimname;
             options.lcm.seeddef='vats';
     end
+
     try
         options.lcm.odir=getappdata(handles.odirbutton,'odir');
     catch % called from predict module.
         options=rmfield(options,'lcm');
     end
-%     if isempty(options.lcm.odir)
-%         if ~strcmp(options.lcm.seeddef,'vats')
-%             try
-%             options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
-%             end
-%         else
-%             options.lcm.odir='';
-%         end
-%     end
+
+    % if isempty(options.lcm.odir)
+    %     if ~strcmp(options.lcm.seeddef,'vats')
+    %         try
+    %         options.lcm.odir=[fileparts(options.lcm.seeds{1}),filesep];
+    %         end
+    %     else
+    %         options.lcm.odir='';
+    %     end
+    % end
+
     options.lcm.omask=getappdata(handles.omaskbutton,'omask');
     options.lcm.struc.do=get(handles.dostructural,'Value');
     options.lcm.func.do=get(handles.dofunctional,'Value');
@@ -323,6 +327,7 @@ try
     end
     includes(todel)=[];
     options.predict.includes=includes;
+
     % dMRI connectome
     if ~iscell(handles.fiberspopup.String)
         options.predict.dMRIcon{1}=handles.fiberspopup.String;
@@ -331,7 +336,7 @@ try
     end
     options.predict.dMRIcon=options.predict.dMRIcon{handles.fiberspopup.Value};
 
-    %fMRI connectome
+    % fMRI connectome
     if ~iscell(handles.fmripopup.String)
         options.predict.fMRIcon{1}=handles.fmripopup.String;
     else
@@ -349,7 +354,7 @@ try
     options.predict.model=options.predict.model{handles.predictionmodel.Value};
     options.predict.model_mfile=mfiles{handles.predictionmodel.Value};
 
-    % chosen stimulation name
+    % Chosen stimulation name
     if ~iscell(handles.seeddefpopup.String)
     	options.predict.stimulation{1}=handles.seeddefpopup.String;
     else
@@ -357,6 +362,7 @@ try
     end
     options.predict.stimulation=options.predict.stimulation{handles.seeddefpopup.Value};
 end
+
 try
     options.ecog.extractsurface.do=get(handles.extractsurface,'Value');
     options.ecog.extractsurface.method=get(handles.surfacemethod,'Value');
@@ -364,6 +370,7 @@ try
 catch
     options.ecog.extractsurface.do=0;
 end
+
 
 function sides=ea_assignsides(handles)
 cnt=1;
