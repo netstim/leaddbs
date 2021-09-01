@@ -10,10 +10,15 @@ if ~exist('prefs','var')
     prefs = [];
 end
 
+python_envs = dir(fullfile(ea_getearoot, 'classes', 'conda_utils', 'environments', '*.yml'));
+python_envs = cellfun(@(x) x(1:end-4), {python_envs.name}', 'UniformOutput', false);
+
 switch cmd
     case 'list' % simply return list of installable datasets
         success={'Redownload data files'
                  'Install development version of Lead'
+                 'Python Environment (beta)'
+                 python_envs
                  '2009b Nonlinear Flip Transform'
                  '7T Cardiac Gated FLASH MRI (Backdrop visualization)'
                  '7T Ex Vivo 100um Brain Atlas (Backdrop visualization)'
@@ -26,6 +31,8 @@ switch cmd
 
         commands={'leaddata'
                   'hotfix'
+                  'pyenv'
+                  python_envs
                   'nlinflip'
                   '7tcgflash'
                   '7tev100um'
@@ -35,6 +42,7 @@ switch cmd
                   'groupconnectome2017'
                   'groupconnectome_ppmi2017'
                   'fgroupconnectome_ppmi2017'};
+              
     case 'leaddata'
         checkf=[ea_space,'bb.nii'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
@@ -279,6 +287,17 @@ switch cmd
         end
     otherwise
         success=0;
+        
+        if any(strcmp(cmd,python_envs))
+            py_env = ea_conda_env(cmd);
+            if ~checkonly
+                if ~ea_conda.is_installed
+                    ea_conda.install;
+                end
+                py_env.force_create;
+            end
+            success = py_env.is_created;
+        end
 end
 
 
