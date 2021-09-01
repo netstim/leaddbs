@@ -1,0 +1,7 @@
+name: lead
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - conda-forge::heudiconv
+  - conda-forge::dcm2niix
