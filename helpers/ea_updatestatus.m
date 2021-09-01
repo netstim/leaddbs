@@ -1,33 +1,41 @@
-function ea_updatestatus(handles)
+function ea_updatestatus(handles, subj)
+% subj is the struct returned by BIDSFetcher.getSubj(subjId)
 
-uipatdir=getappdata(handles.leadfigure,'uipatdir');
+if strcmp(subj.postopModality, 'CT')
+    if isfile(subj.postopAnat.CT.raw)
+        statusone = 'Raw post-op CT found. Please coregister to pre-op MRI first.';
+    end
 
-statusone = 'One or more MR-/CT-volumes missing.';
-set(handles.statusone,'String',statusone);
-set(handles.statusone,'TooltipString',statusone);
+    if isfile(subj.postopAnat.CT.coreg)
+        statusone = 'Coregistered post-op CT found. Please run normalization.';
+    end
+elseif strcmp(subj.postopModality, 'MRI')
+    fields = fieldnames(subj.postopAnat);
 
-modality=ea_checkctmrpresent(handles);
+    if isfile(subj.postopAnat.(fields{1}).raw)
+        statusone = 'Raw post-op MRI found. Please coregister to pre-op MRI first.';
+    end
 
-% check if MRCT popup is set correctly
-if any(modality)
-   if ~modality(get(handles.MRCT,'Value'))
-       set(handles.MRCT,'ForegroundColor',[0.8,0.5,0.5]);
-   else
-       set(handles.MRCT,'ForegroundColor',[0.5,0.8,0.5]);
-   end
-
+    if isfile(subj.postopAnat.(fields{1}).coreg)
+        statusone = 'Coregistered post-op MRI found. Please run normalization.';
+    end
 end
 
-% check for reconstructions
-if exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    statustwo = 'Fiducials and Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.';
-elseif exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    statustwo = 'Fiducials information present in folder. Will be overwritten if "Reconstruct" is set.';
-elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    statustwo = 'Trajectory information present in folder. Will be overwritten if "Reconstruct" is set.';
-elseif ~exist([uipatdir{1},filesep,'ea_coords.fcsv'],'file') && ~exist([uipatdir{1},filesep,'ea_reconstruction.mat'],'file')
-    statustwo = 'No reconstruction available in folder. Set "Reconstruct" to start.';
+fields = fieldnames(subj.preopAnat);
+if isfile(subj.preopAnat.(fields{1}).norm) ...
+        && ~isempty(dir([subj.norm.transform.forwardBaseName, '*'])) ...
+        && ~isempty(dir([subj.norm.transform.inverseBaseName, '*']))
+    statusone = 'Normalization has been done.';
 end
 
-set(handles.statustwo,'String',statustwo);
-set(handles.statustwo,'TooltipString',statustwo);
+set(handles.statusone, 'String', statusone);
+set(handles.statusone, 'TooltipString', statusone);
+
+if isfile(subj.recon.recon)
+    statustwo = 'Reconstruction found.';
+else
+    statustwo = 'Reconstruction not found. Please run reconstruction.';
+end
+
+set(handles.statustwo, 'String', statustwo);
+set(handles.statustwo, 'TooltipString', statustwo);
