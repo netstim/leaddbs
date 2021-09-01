@@ -613,9 +613,8 @@ if get(hObject,'Value')==1
 else
     set(handles.reconmethod,'enable','on');
     set(handles.reconmethod,'Value',2); % set to PaCER algorithm.
-    prefs=ea_prefs;
-        set(handles.targetpopup,'enable','off');
-        set(handles.maskwindow_txt,'enable','off');
+    set(handles.targetpopup,'enable','off');
+    set(handles.maskwindow_txt,'enable','off');
 end
 ea_storeui(handles);
 
@@ -850,16 +849,6 @@ if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.dicomchec
     ea_load_pts(handles,getappdata(handles.leadfigure,'uipatdir'));
     ea_busyaction('off', handles.leadfigure, 'dbs');
 end
-
-
-% --- Executes on button press in genptatlascheck.
-function genptatlascheck_Callback(hObject, eventdata, handles)
-% hObject    handle to genptatlascheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of genptatlascheck
-ea_storeui(handles);
 
 
 % --- Executes on button press in updatebutn.
