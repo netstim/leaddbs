@@ -183,7 +183,7 @@ classdef BIDSFetcher
 
             % Set pre-defined orders
             preniiOrder = obj.settings.prenii_order;
-            templateOrder = obj.spacedef.norm_mapping(:,1)';
+            templateOrder = fieldnames(obj.spacedef.norm_mapping)';
             preopImageOrder = [preniiOrder, setdiff(templateOrder, preniiOrder, 'stable')];
 
             % Set pre-op anat images according to pre-defined orders
