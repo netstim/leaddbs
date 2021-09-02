@@ -9,4 +9,5 @@ function ea_dicm2nii(indir,outdir)
 %    indir:     DICOM folder
 %    outdir:    output folder for NIfTI files
 
-dicm2nii(indir, outdir, 0)
+setpref('dicm2nii_gui_para', 'save_json', true);
+dicm2nii(indir, outdir, 1)
