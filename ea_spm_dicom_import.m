@@ -35,7 +35,7 @@ if strcmp(mode, 'all')
     matlabbatch{1}.spm.util.import.dicom.outdir = {tempFolder};
     matlabbatch{1}.spm.util.import.dicom.protfilter = '.*';
     matlabbatch{1}.spm.util.import.dicom.convopts.format = 'nii';
-    matlabbatch{1}.spm.util.import.dicom.convopts.meta = 0;
+    matlabbatch{1}.spm.util.import.dicom.convopts.meta = true;
     matlabbatch{1}.spm.util.import.dicom.convopts.icedims = 0;
 
     spm_jobman('run',{matlabbatch});
@@ -64,12 +64,17 @@ niiSubFolders = ea_regexpdir(tempFolder, ['\', filesep, '$'], 1);
 % Iterate through procotol folder, move NIfTI files to outdir
 for i=1:numel(niiSubFolders)
     niiFiles = ea_regexpdir(niiSubFolders{i}, '\.nii$', 0);
+    jsonFiles =  ea_regexpdir(niiSubFolders{i}, '\.json$', 0);
     [~, protocol] = fileparts(fileparts(niiSubFolders{i}));
     if numel(niiFiles) == 1
         movefile(niiFiles{1}, fullfile(outdir, [protocol, '.nii']));
+        gzip(fullfile(outdir, [protocol, '.nii']));
+        movefile(jsonFiles{1}, fullfile(outdir, [protocol, '.json']));
     elseif numel(niiFiles) > 1
         for f=1:numel(niiFiles)
             movefile(niiFiles{f}, fullfile(outdir, [protocol, '_', num2str(f, '%02d'), '.nii']));
+            gzip(fullfile(outdir, [protocol, '_', num2str(f, '%02d'), '.nii']));
+            movefile(jsonFiles{f}, fullfile(outdir, [protocol, '_', num2str(f, '%02d'), '.json']));
         end
     end
 end
