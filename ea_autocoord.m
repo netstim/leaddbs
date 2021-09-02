@@ -74,46 +74,53 @@ end
 
 % only 3D-rendering viewer can be opened if no patient is selected.
 if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patientname)
-    % move files for compatibility
-    try ea_compat_patfolder(options); end
-
-    % assign/order anatomical images
-    [options,presentfiles]=ea_assignpretra(options);
-
-    % generate grid file
-    if ~exist(ea_niigz([directory,'grid.nii']),'file')
-        try
-            ea_gengrid(options);
+    % Copy post-op images to preprocessing folder, no preproc is done for now
+    fields = fieldnames(options.subj.postopAnat);
+    for i=1:length(fields)
+        if ~isfile(options.subj.postopAnat.(fields{i}).preproc)
+            ea_mkdir(fileparts(options.subj.postopAnat.(fields{i}).preproc));
+            copyfile(options.subj.postopAnat.(fields{i}).raw, options.subj.postopAnat.(fields{i}).preproc);
         end
     end
 
-    % anat preprocess, only do once.
-    % a small hidden file '.pp' inside patient folder will show this has been done before.
-    if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.mat'],'file')
-        % create untouched copy
-        if ~isempty(presentfiles) && ~exist([directory,'raw_',presentfiles{1}],'file')
-            copyfile([directory,presentfiles{1}],[directory,'raw_',presentfiles{1}]);
-        end
+    % Preprocessing pre-op images
+    preprocessing = 0;
+    fields = fieldnames(options.subj.preopAnat);
+    for i=1:length(fields)
+        if ~isfile(options.subj.preopAnat.(fields{i}).preproc)
+            % Copy files
+            ea_mkdir(fileparts(options.subj.preopAnat.(fields{i}).preproc));
+            copyfile(options.subj.preopAnat.(fields{i}).raw, options.subj.preopAnat.(fields{i}).preproc);
 
-        % apply reorientation/cropping and biasfieldcorrection
-        for fi=1:length(presentfiles)
-            ea_anatpreprocess([directory,presentfiles{fi}]);
-        end
+            % Run reorientation, cropping and bias field correction
+            ea_anatpreprocess(options.subj.preopAnat.(fields{i}).preproc);
 
-        % Reslice(interpolate) preoperative anatomical image if needed
-        try ea_resliceanat(options); end
+            % Preprocessing only for pre-op anchor image
+            if i==1
+                ea_resliceanat(options.subj.preopAnat.(fields{i}).preproc);
+                % ea_acpcdetect(options.subj.preopAnat.(fields{i}).preproc);
+            end
 
-        % acpcdetect
-        % try ea_acpcdetect([directory,presentfiles{1}]); end
-
-        try ea_precoreg([directory,presentfiles{1}],options.primarytemplate,options); end
-
-        try
-            fs = fopen([directory,'.pp'],'w');
-            fprintf(fs,'%s','anat preprocess done');
-            fclose(fs);
+            preprocessing = 1;
         end
     end
+
+    if preprocessing
+        fprintf('\nPreprocessing finished.\n\n');
+    end
+
+    % Set primary template
+    if ismember(options.subj.AnchorModality, fieldnames(bids.spacedef.norm_mapping))
+        options.primarytemplate = bids.spacedef.norm_mapping.(options.subj.AnchorModality);
+    else
+        options.primarytemplate = bids.spacedef.misfit_template;
+    end
+
+    % Pre-coregister pre-op anchor image
+    ea_precoreg(options.subj.preopAnat.(fields{1}).preproc, ... % Input anchor image
+        options.primarytemplate, ... % Template to use
+        options.subj.preopAnat.(fields{1}).coreg, ... % Output pre-coregistered image
+        options.subj.coreg.transform.(fields{1})); % % Pre-coregistration transform
 
     % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
     try
