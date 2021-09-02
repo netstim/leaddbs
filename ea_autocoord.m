@@ -117,10 +117,12 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     % Pre-coregister pre-op anchor image
-    ea_precoreg(options.subj.preopAnat.(fields{1}).preproc, ... % Input anchor image
-        options.primarytemplate, ... % Template to use
-        options.subj.preopAnat.(fields{1}).coreg, ... % Output pre-coregistered image
-        options.subj.coreg.transform.(fields{1})); % % Pre-coregistration transform
+    if ~isfile(options.subj.preopAnat.(fields{1}).coreg)
+        ea_precoreg(options.subj.preopAnat.(fields{1}).preproc, ... % Input anchor image
+            options.primarytemplate, ... % Template to use
+            options.subj.preopAnat.(fields{1}).coreg, ... % Output pre-coregistered image
+            options.subj.coreg.transform.(fields{1})); % % Pre-coregistration transform
+    end
 
     % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
     try
