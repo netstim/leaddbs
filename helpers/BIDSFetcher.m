@@ -167,7 +167,7 @@ classdef BIDSFetcher
             end
 
             % Set reconstruction
-            subj.recon = obj.getRecon(subjId);
+            subj.recon = obj.getRecon(subjId, preferMRCT);
         end
 
         function preopAnat = getPreopAnat(obj, subjId)
