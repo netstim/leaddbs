@@ -73,7 +73,7 @@ else
 %                 ea_methods(options, ['DICOM images were converted to the '...
 %                     'NIfTI file format using SPM.']);
 %         end
-        
+%         
         % first option: rename files with the help of a GUI
         [~, niiFiles] = fileparts(ea_regexpdir(tmp_dir, '\.nii.gz$', 0));
         ea_select_nii_import(niiFiles, tmp_dir, dicom_dir);
