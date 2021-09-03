@@ -20,6 +20,24 @@ import itertools
 
 import sys
 
+eps = 1e-12
+def theta_star(w12, w13):
+   """
+   Nonlinear analytic expression to approximate the mapping of eigenvalues
+   based on Howell_McIntyre_2016 for load preservation method.
+   """
+   v1 = 2.15
+   u1 = 1.21
+   m = 8e-1
+   v2 = 1.85
+   u2 = 1.12
+   n = 8e-1
+   
+   theta = (v1/(np.power(u1/(w12+eps),m)+1))*\
+           (v2/(np.power(u2/(w13+eps),n)+1))
+   
+   return np.round(theta, -int(np.log10(eps))) # to supress round-off
+   
 def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
     i,j=args
     tmp = np.ctypeslib.as_array(shared_array)
@@ -82,6 +100,14 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
             elif scaling_method=='Norm_mapping':
             ##Normalized MAPPING approach as in Güllmar et al./Schmidt el al.
                 eigVals_scaled=eigVals/(eigVals[0]*eigVals[1]*eigVals[2])**(1/3.0)
+
+            ##Load preservation method as in Howell, B., McIntyre, C.C., 2016.
+            elif scaling_method=='Load_preservation':
+                eigVals_scaled=eigVals/(*eigVals[1]*eigVals[2])**(1/3.0)
+                w12 = eigVals[0]/(eigVals[1]+eps)
+                w13 = eigVals[0]/(eigVals[1]+eps)
+                theta = theta_star(w12, w13)
+                eigVals_scaled= np.array([1., 1./(w12+eps), 1./(w13+eps)]*theta
 
             if np.any(eigVals_scaled<=0): # if there are still negative eigenvalues put eigVals<=0.0000001
                 print("Error, no negative eigenvalues are allowed by definition!")
