@@ -66,8 +66,8 @@ try
 end
 
 try
-    options.coregmr.method=get(handles.coregmrpopup,'String');
-    options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+    options.coregmr.method=get(handles.coregmrmethod,'String');
+    options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
     options.coregmr.do=get(handles.coreg_checkbox,'Value');
 catch
     options.coregmr.do=0;
@@ -80,10 +80,8 @@ end
 
 try % not working when calling from lead_connectome
     % coreg CT
-    options.coregct.do=(get(handles.coreg_checkbox,'Value') == get(handles.coreg_checkbox,'Max'));
-    options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
-    options.coregct.method=options.coregct.method{get(handles.coregctmethod,'Value')};
-    options.coregct.methodn=get(handles.coregctmethod,'Value');
+    options.coregct.do = get(handles.coreg_checkbox,'Value') == get(handles.coreg_checkbox,'Max');
+    options.coregct.method = handles.coregctmethod.String{handles.coregctmethod.Value};
 catch
     options.coregct.do=0;
 end
