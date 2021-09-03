@@ -23,14 +23,16 @@ for nd=length(ndir):-1:1
         keyboard
     end
 end
+
 try
-        setappdata(handles.leadfigure,'coregctmethod',coregctmethod);
-        set(handles.(handlestring),'String',cdc);
+    setappdata(handles.leadfigure,'coregctmethod',coregctmethod);
+    set(handles.(handlestring),'String',cdc);
 catch
     if isempty(which('spm'))
         ea_error('Please install SPM12 for Lead-DBS to work properly.');
     end
 end
+
 try % set selection of ctcoregmethod to default entry (specified in ea_prefs).
     if defentry<=length(get(handles.(handlestring),'String'))
         set(handles.(handlestring),'Value',defentry);
