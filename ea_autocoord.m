@@ -130,7 +130,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
 
         if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered])
-            diary([directory, 'coregCT_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+            diary([options.subj.coreg.log.log, '_coregCT_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
             eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
             ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
             ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
