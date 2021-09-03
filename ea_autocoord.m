@@ -126,14 +126,11 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.modality == 2 % CT support
-        options.prefs.tranii=options.prefs.ctnii;
-        options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
-
         if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered])
             ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
             diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
             eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
-            ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
+            ea_dumpmethod(options, 'coreg');
             ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
             ea_gencoregcheckfigs(options); % generate checkreg figures
             diary off
@@ -163,7 +160,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             if doit || strcmp(options.normalize.method,'ea_normalize_apply_normalization')
                 clear doit
                 % 3. finally perform normalization based on dominant or all preop MRIs
-                ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
+                ea_dumpmethod(options, 'norm'); % has to come first due to applynormalization.
 
                 % cleanup already normalized versions:
                 ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
