@@ -19,11 +19,11 @@ end
 disp('Loading images...');
 
 % MR
-ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'hd_',options.prefs.prenii_unnormalized],[0.5 0.5 0.5],0);
+ea_reslice_nii([options.subj.preopAnat.(options.subj.AnchorModality).coreg],[options.root,options.patientname,filesep,'hd_',options.prefs.prenii_unnormalized],[0.5 0.5 0.5],0);
 MR=ea_load_nii([options.root,options.patientname,filesep,'hd_',options.prefs.prenii_unnormalized]);
 
 % CT
-ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'hd_',options.prefs.rawctnii_unnormalized],[0.5 0.5 0.5],0);
+ea_reslice_nii([options.subj.postopAnat.(options.subj.postopModality).preproc],[options.root,options.patientname,filesep,'hd_',options.prefs.rawctnii_unnormalized],[0.5 0.5 0.5],0);
 CT=ea_load_nii([options.root,options.patientname,filesep,'hd_',options.prefs.rawctnii_unnormalized]);
 
 disp('Done. Smoothing...');
@@ -55,7 +55,7 @@ M = imregtform(sCT,RCT, sMR,RMR, 'affine', optimizer, metric,'PyramidLevels',3,'
 
 disp('Done. Writing out rCT image...');
 rCT=MR;
-rCT.fname=[options.root,options.patientname,filesep,options.prefs.ctnii_coregistered];
+rCT.fname=[options.subj.postopAnat.(options.subj.postopModality).coreg];
 rCT.img = imwarp(CT.img,RCT,M,'bicubic','OutputView',RMR);
 
 
