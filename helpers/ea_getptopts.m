@@ -5,6 +5,8 @@ if isempty(directory)
     directory = pwd;
 end
 
+directory = regexp(directory, ['.*derivatives\' filesep 'leaddbs\' filesep 'sub-[^' filesep ']*'], 'match', 'once'); % remove after subid if present
+
 options.earoot = ea_getearoot;
 options.native = 0;
 
