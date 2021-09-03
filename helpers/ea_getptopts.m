@@ -5,8 +5,6 @@ if isempty(directory)
     directory = pwd;
 end
 
-directory = regexp(directory, ['.*derivatives\' filesep 'leaddbs\' filesep 'sub-[^' filesep ']*'], 'match', 'once'); % remove after subid if present
-
 options.earoot = ea_getearoot;
 options.native = 0;
 
@@ -14,7 +12,7 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
     % Construct BIDS class, get subjId
     BIDSRoot = regexp(directory, ['^.*(?=\', filesep, 'derivatives)'], 'match', 'once');
     bids = BIDSFetcher(BIDSRoot);
-    subjId = regexp(directory, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
+    subjId = regexp(directory, ['(?<=leaddbs\', filesep, 'sub-)[^\', filesep, ']+'], 'match', 'once');
 
     % Set prefs (not really needed, leave it for now)
     options.prefs = ea_prefs(['sub-', subjId]);
