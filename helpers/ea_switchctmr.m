@@ -4,10 +4,6 @@ function ea_switchctmr(handles, preferMRCT)
 bids = getappdata(handles.leadfigure,'bids');
 subjId = getappdata(handles.leadfigure,'subjId');
 
-if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-	preferMRCT = bids.settings.preferMRCT;
-end
-
 if length(subjId) > 1 % Mutiple patient mode
     % Disable MR/CT popupmenu
     set(handles.MRCT,'Enable', 'off');
@@ -23,6 +19,17 @@ if length(subjId) > 1 % Mutiple patient mode
 else % Only one patient loaded
     % Make sure MR/CT popupmenu is set correctly
     set(handles.MRCT, 'TooltipString', '<html>Post-operative image modality (MR/CT) will be automatically detected.<br>In case both MR and CT images are present, CT will be chosen by default.<br>You can change this in your preference file by setting ''prefs.preferMRCT'' (1 for MR and 2 for CT).');
+
+    % Check MR/CT preference: first check uiprefs, then LeadDBS settings
+    if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
+        uiprefsFile = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
+        if isfile(uiprefsFile)
+            uiprefs = load(uiprefsFile);
+            preferMRCT = uiprefs.modality;
+        else
+            preferMRCT = bids.settings.preferMRCT;
+        end
+    end
 
     % Get subj BIDS struct
     subj = bids.getSubj(subjId{1}, preferMRCT);
