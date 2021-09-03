@@ -125,11 +125,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             options.subj.coreg.transform.(fields{1})); % % Pre-coregistration transform
     end
 
-    % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
-    try
-        options.modality = ea_getmodality(directory);
-    end
-
     if options.modality == 2 % CT support
         options.prefs.tranii=options.prefs.ctnii;
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
