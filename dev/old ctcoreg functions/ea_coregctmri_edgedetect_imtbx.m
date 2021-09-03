@@ -20,7 +20,7 @@ maxiter=200;
 
     disp('Loading images...');
 
-%ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[0.5 0.5 0.5]);
+%ea_reslice_nii([options.subj.preopAnat.(options.subj.AnchorModality).coreg],[options.subj.preopAnat.(options.subj.AnchorModality).coreg],[0.5 0.5 0.5]);
 % MR
 if isfield(options,'usediffmr_coregct')
     ea_reslice_nii([options.root,options.patientname,filesep,options.usediffmr_coregct],[options.root,options.patientname,filesep,'small_',options.usediffmr_coregct],[2 2 2],0);
@@ -28,7 +28,7 @@ if isfield(options,'usediffmr_coregct')
     delete([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
 
 else
-    ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
+    ea_reslice_nii([options.subj.preopAnat.(options.subj.AnchorModality).coreg],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
     MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
     delete([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
 
@@ -41,7 +41,7 @@ if isfield(options,'usediffmr_coregct')
     delete([options.root,options.patientname,filesep,'small_',options.usediffmr_coregct]);
 
 else
-    ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
+    ea_reslice_nii([options.subj.preopAnat.(options.subj.AnchorModality).coreg],[options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized],[2 2 2],0);
     MR=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
     delete([options.root,options.patientname,filesep,'small_',options.prefs.prenii_unnormalized]);
 
@@ -49,7 +49,7 @@ end
 
 % CT
 
-ea_reslice_nii([options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],[2 2 2],0);
+ea_reslice_nii([options.subj.postopAnat.(options.subj.postopModality).preproc],[options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],[2 2 2],0);
 CT=ea_load_nii([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized],'simple');
 
 delete([options.root,options.patientname,filesep,'small_',options.prefs.rawctnii_unnormalized]);
@@ -182,7 +182,7 @@ end
 % M has been estimated and maps from voxels in CT to voxels in MR.
 %% export coregistered CT.
 
-matlabbatch{1}.spm.util.reorient.srcfiles = {[options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized,',1']};
+matlabbatch{1}.spm.util.reorient.srcfiles = {[options.subj.postopAnat.(options.subj.postopModality).preproc,',1']};
 matlabbatch{1}.spm.util.reorient.transform.transM = M;
 matlabbatch{1}.spm.util.reorient.prefix = 'r';
 jobs{1}=matlabbatch;
@@ -203,7 +203,7 @@ clear jobs matlabbatch
 
 costfuns={'nmi','mi','ecc'};
 for costfun=1:3
-    matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized]};
+    matlabbatch{1}.spm.spatial.coreg.estimate.ref = {[options.subj.preopAnat.(options.subj.AnchorModality).coreg]};
     matlabbatch{1}.spm.spatial.coreg.estimate.source = {[options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
     matlabbatch{1}.spm.spatial.coreg.estimate.other = {''};
     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.cost_fun = costfuns{costfun};
@@ -218,9 +218,9 @@ end
 
 % keep users naming scheme:
 try
-movefile([options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized],[options.root,options.patientname,filesep,options.prefs.ctnii_coregistered]);
+movefile([options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized],[options.subj.postopAnat.(options.subj.postopModality).coreg]);
 end
-% matlabbatch{1}.spm.util.checkreg.data = {[options.root,options.patientname,filesep,options.prefs.prenii_unnormalized];
+% matlabbatch{1}.spm.util.checkreg.data = {[options.subj.preopAnat.(options.subj.AnchorModality).coreg];
 %     [options.root,options.patientname,filesep,'r',options.prefs.rawctnii_unnormalized,',1']};
 % jobs{1}=matlabbatch;
 % spm_jobman('run',jobs);
