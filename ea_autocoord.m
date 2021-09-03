@@ -130,6 +130,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
 
         if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered])
+            ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
             diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
             eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
             ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
@@ -150,7 +151,8 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.do
-        diary([directory, 'normalize_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+        ea_mkdir(fileparts(options.subj.norm.log.logBaseName));
+        diary([options.subj.norm.log.logBaseName, datestr(now, 'yyyymmddTHHMMss'), '.log']);
         if ~(ea_coreglocked(options,'glanat')==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
             if ea_coreglocked(options,'glanat')==1 && ~strcmp(options.normalize.method,'ea_normalize_apply_normalization') % in this case, only perform normalization if using a multispectral approach now.
                 [~,~,~,doit]=eval([options.normalize.method,'(''prompt'')']);
