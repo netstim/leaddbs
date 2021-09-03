@@ -130,7 +130,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
 
         if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered])
-            diary([options.subj.coreg.log.log, '_coregCT_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+            diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
             eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
             ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
             ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
@@ -140,7 +140,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.coregmr.do
-        diary([directory, 'coregMR_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+        diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
         % 1. coreg all available preop MRI
         ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
 
