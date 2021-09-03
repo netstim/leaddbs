@@ -12,7 +12,7 @@ set(handles.normcheck,'Value',options.normalize.check);
 
 % CT coregistration
 set(handles.coreg_checkbox,'Value',options.coregct.do);
-index = find(ismember(handles.coregctmethod.String, options.coregct.method), 1)
+index = find(ismember(handles.coregctmethod.String, options.coregct.method), 1);
 if ~isempty(index)
     set(handles.coregctmethod, 'Value', index);
 else
