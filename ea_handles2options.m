@@ -82,6 +82,8 @@ try % not working when calling from lead_connectome
     % coreg CT
     options.coregct.do = get(handles.coreg_checkbox,'Value') == get(handles.coreg_checkbox,'Max');
     options.coregct.method = handles.coregctmethod.String{handles.coregctmethod.Value};
+    coregctmrfunc = getappdata(handles.leadfigure, 'coregctmrfunc');
+    options.coregct.func = coregctmrfunc{handles.coregctmethod.Value};
 catch
     options.coregct.do=0;
 end
