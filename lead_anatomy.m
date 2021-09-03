@@ -22,7 +22,7 @@ function varargout = lead_anatomy(varargin)
 
 % Edit the above text to modify the response to help lead_anatomy
 
-% Last Modified by GUIDE v2.5 18-May-2017 13:06:57
+% Last Modified by GUIDE v2.5 03-Sep-2021 19:51:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -550,19 +550,20 @@ function normsettings_Callback(hObject, eventdata, handles)
 currentNormMethod=getappdata(handles.normsettings,'currentNormMethod');
 ea_shownormsettings(currentNormMethod,handles)
 
-% --- Executes on selection change in coregmrpopup.
-function coregmrpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+
+% --- Executes on selection change in coregmrmethod.
+function coregmrmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns coregmrpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from coregmrpopup
+% Hints: contents = cellstr(get(hObject,'String')) returns coregmrmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from coregmrmethod
 
 
 % --- Executes during object creation, after setting all properties.
-function coregmrpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+function coregmrmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -571,6 +572,15 @@ function coregmrpopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregmrmethod.
+function coregmrmethod_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
 % --- Executes on button press in tdfidcheck.
