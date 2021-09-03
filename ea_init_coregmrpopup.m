@@ -21,5 +21,5 @@ cmethods={'SPM',...
     'Hybrid SPM & FSL',...
     'Hybrid SPM & BRAINSFIT'};
 
-set(handles.coregmrmethod, 'String', cmethods)
+set(handles.coregmrmethod, 'String', cmethods);
 set(handles.coregmrmethod, 'Value', 1); % default SPM
