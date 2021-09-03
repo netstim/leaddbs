@@ -6,16 +6,14 @@ function varargout=ea_coregctmri_brainsfit(options)
 
 if ischar(options) % return name of method.
     varargout{1}='BRAINSFit';
-    varargout{2}={'SPM8','SPM12'};
-    varargout{3}=['nan']; % suggestion for alpha-parameter.
     return
 end
 
-disp('Coregistering postop CT to preop MRI...');
+disp('Coregistering post-op CT to pre-op MRI...');
 
 ea_brainsfit([options.subj.preopAnat.(options.subj.AnchorModality).coreg],...
-          [options.subj.postopAnat.(options.subj.postopModality).preproc],...
-          [options.subj.postopAnat.(options.subj.postopModality).coreg]);
+    [options.subj.postopAnat.(options.subj.postopModality).preproc],...
+    [options.subj.postopAnat.(options.subj.postopModality).coreg]);
 
 disp('Coregistration done.');
 
