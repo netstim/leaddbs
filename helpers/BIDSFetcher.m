@@ -364,10 +364,8 @@ classdef BIDSFetcher
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             baseName = fullfile(LeadDBSDirs.coregDir, 'log', ['sub-', subjId, '_desc-']);
 
-            % Set coregistion log
-            coregLog.approved = [baseName, 'coregApproved.mat'];
-            coregLog.coregCTMethod = [baseName, 'coregCTMethod.mat'];
-            coregLog.coregMRMethod = [baseName, 'coregMRMethod.mat'];
+            % Set coregistration log
+            coregLog.method = [baseName, 'coregmethod.json'];
             coregLog.log = [baseName, 'coreglog'];
         end
 
@@ -538,8 +536,8 @@ classdef BIDSFetcher
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
             baseName = fullfile(LeadDBSDirs.normDir, 'log', ['sub-', subjId, '_desc-']);
 
-            % Set coregistion log
-            normLog.normMethod = [baseName, 'normMethod.mat'];
+            % Set normalization method and log
+            normLog.method = [baseName, 'normmethod.json'];
             normLog.log = [baseName, 'normlog'];
         end
 
