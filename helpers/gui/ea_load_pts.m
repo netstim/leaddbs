@@ -82,7 +82,7 @@ setappdata(handles.leadfigure, 'subjId', subjId);
 setappdata(handles.leadfigure, 'isDICOMConverted', isDICOMConverted);
 
 % Set up MR/CT popupmenu and status text
-ea_switchctmr(handles);
+ea_switchctmr(handles, handles.MRCT.Value);
 
 ea_getui(handles); % update ui from patient
 ea_storeui(handles); % save in pt folder
