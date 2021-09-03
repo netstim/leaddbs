@@ -366,7 +366,7 @@ classdef BIDSFetcher
 
             % Set coregistration log
             coregLog.method = [baseName, 'coregmethod.json'];
-            coregLog.log = [baseName, 'coreglog'];
+            coregLog.logBaseName = [baseName, 'coreg'];
         end
 
         function coregCheckreg = getCoregCheckreg(obj, subjId, preferMRCT)
@@ -538,7 +538,7 @@ classdef BIDSFetcher
 
             % Set normalization method and log
             normLog.method = [baseName, 'normmethod.json'];
-            normLog.log = [baseName, 'normlog'];
+            normLog.logBaseName = [baseName, 'norm'];
         end
 
         function normCheckreg = getNormCheckreg(obj, subjId, preferMRCT)
