@@ -22,7 +22,7 @@ function varargout = ea_checkcoreg(varargin)
 
 % Edit the above text to modify the response to help ea_checkcoreg
 
-% Last Modified by GUIDE v2.5 17-Oct-2018 15:54:22
+% Last Modified by GUIDE v2.5 03-Sep-2021 19:47:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -177,7 +177,7 @@ switch ea_stripext(currvol)
         anchor=[ea_space,options.primarytemplate,'.nii'];
         set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
 
-        ea_addnormmethods(handles,options,'coregmrpopup');
+        ea_addnormmethods(handles,options,'coregmrmethod');
 
         if ~exist([directory,'ea_normmethod_applied.mat'],'file')
             method='';
@@ -190,7 +190,7 @@ switch ea_stripext(currvol)
         set(handles.coregresultstxt,'String','Normalization results');
         set(handles.normsettings,'Visible','on');
         set(handles.recomputebutn,'String','(Re-) compute normalization using...');
-        set(handles.coregmrpopup,'TooltipString','Choose a normalization method');
+        set(handles.coregmrmethod,'TooltipString','Choose a normalization method');
         set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
         set(gcf,'Name',[options.patientname, ': Check Normalization']);
     otherwise
@@ -202,7 +202,7 @@ switch ea_stripext(currvol)
 
             switch currvol
                 case ['tp_',options.prefs.ctnii_coregistered] % CT
-                    ea_init_coregctpopup(handles,options,'coregmrpopup');
+                    ea_init_coregctpopup(handles, options, 'coregmrmethod');
                     if ~exist([directory,'ea_coregctmethod_applied.mat'],'file')
                         method='';
                     else
@@ -237,7 +237,7 @@ switch ea_stripext(currvol)
 
         set(handles.normsettings,'Visible','off');
         set(handles.recomputebutn,'String','(Re-) compute coregistration using...');
-        set(handles.coregmrpopup,'TooltipString','Choose a coregistration method');
+        set(handles.coregmrmethod,'TooltipString','Choose a coregistration method');
 end
 
 if ~exist([directory,'ea_coreg_approved.mat'],'file') % init
@@ -410,8 +410,8 @@ switch ea_stripext(currvol)
         end
 
         options.normalize.method=getappdata(handles.leadfigure,'normmethod');
-        options.normalize.method=options.normalize.method{get(handles.coregmrpopup,'Value')};
-        options.normalize.methodn=get(handles.coregmrpopup,'Value');
+        options.normalize.method=options.normalize.method{get(handles.coregmrmethod,'Value')};
+        options.normalize.methodn=get(handles.coregmrmethod,'Value');
         ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
         eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
 
@@ -420,25 +420,29 @@ switch ea_stripext(currvol)
         end
 
     case ea_stripext(['tp_',options.prefs.ctnii_coregistered]) % CT
-        options.coregct.method=getappdata(handles.leadfigure,'coregctmethod');
-        options.coregct.method=options.coregct.method{get(handles.coregmrpopup,'Value')};
-        options.coregct.methodn=get(handles.coregmrpopup,'Value');
+        % Get CT coregistration method
+        options.coregct.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
 
-        eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
-        ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
+        % Run CT coregistration
+        coregctmrfunc = getappdata(handles.leadfigure, 'coregctmrfunc');
+        eval([coregctmrfunc{handles.coregmrmethod.Value}, '(options)']);
+
+        % Dump method
+        ea_dumpmethod(options, 'coreg');
+
         ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
         ea_gencoregcheckfigs(options); % generate checkreg figures
 
     case ea_stripext(options.prefs.fa2anat) % FA
-        options.coregmr.method=get(handles.coregmrpopup,'String');
-        options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+        options.coregmr.method=get(handles.coregmrmethod,'String');
+        options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
         ea_backuprestore([directory,options.prefs.fa]);
         ea_coreg2images(options,[directory,options.prefs.fa],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         ea_dumpspecificmethod(handles,options.coregmr.method)
 
     otherwise % MR
-        options.coregmr.method=get(handles.coregmrpopup,'String');
-        options.coregmr.method=options.coregmr.method{get(handles.coregmrpopup,'Value')};
+        options.coregmr.method=get(handles.coregmrmethod,'String');
+        options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
         if ~isempty(b0restanchor{activevolume})  % b0 or rest files
 
             thisrest=strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
@@ -657,14 +661,14 @@ ea_busyaction('off',handles.leadfigure,'coreg');
 set(handles.leadfigure, 'Name', title);
 
 
-% --- Executes on selection change in coregmrpopup.
-function coregmrpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+% --- Executes on selection change in coregmrmethod.
+function coregmrmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns coregmrpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from coregmrpopup
+% Hints: contents = cellstr(get(hObject,'String')) returns coregmrmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from coregmrmethod
 
 options=getappdata(handles.leadfigure,'options');
 
@@ -673,13 +677,13 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 currvol=presentfiles{activevolume};
 % init retry popup:
 if strcmp(currvol,'glanat.nii')
-    ea_switchnormmethod(handles,'coregmrpopup');
+    ea_switchnormmethod(handles,'coregmrmethod');
 end
 
 
 % --- Executes during object creation, after setting all properties.
-function coregmrpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+function coregmrmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

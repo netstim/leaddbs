@@ -21,7 +21,7 @@ switch seltype
                 
             case 'coregctmethod'
             case 'coregctcheck'
-            case 'coregmrpopup'
+            case 'coregmrmethod'
                hhg=ea_web('https://leaddbs.gitbooks.io/leaddbs-manual/content/Normalization%20of%20Images.html');
 
             case 'normmethod'
