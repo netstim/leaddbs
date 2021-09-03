@@ -10,15 +10,16 @@ valueset = {'skip','skip', 'skip';
     'anat','postop', 'sag_MR';
     'anat','postop', 'cor_MR'};
 
-verLessThanOctave = false;
-
-disp('Loading .nii images for display, this may take a second...');
+verLessThanOctave = false; % debug
 
 imgs = cell(length(fnames),1);
+h_wait = waitbar(0, 'Please wait while Niftii images are being loaded ');
 for image_idx = 1:length(fnames)
     imgs{image_idx} = struct();
     [imgs{image_idx}.p, imgs{image_idx}.frm, imgs{image_idx}.rg, imgs{image_idx}.dim] = read_nii(fullfile(nii_folder, [fnames{image_idx}, '.gz']));
+    waitbar(image_idx / length(fnames));
 end
+close(h_wait);
 
 % debug
 Subject = {'01'};
@@ -97,25 +98,26 @@ else
 end
 
 % preview panel
-axesArgs_axi = {hf,'Position',[hf.Position(3)-120 70 100 hf.Position(4)- 90],...
+axesArgs_axi = {hf,'Position',[hf.Position(3)-120 150 100 hf.Position(4)-90],...
     'Colormap',gray(64)};
 ax_axi = preview_nii([],imgs{1, 1}, axesArgs_axi, 'axi');
 ax_axi.YTickLabel = [];
 ax_axi.XTickLabel = [];
 
-axesArgs_cor = {hf,'Position',[hf.Position(3)-120 100 100 hf.Position(4)-90],...
-    'Colormap',gray(64)};
-ax_cor = preview_nii([],imgs{1, 1}, axesArgs_cor, 'cor');
-ax_cor.YTickLabel = [];
-ax_cor.XTickLabel = [];
+%axesArgs_cor = {hf,'Position',[hf.Position(3) 100 100 hf.Position(4)-90],...
+%    'Colormap',gray(64)};
+%ax_cor = preview_nii([],imgs{1, 1}, axesArgs_cor, 'cor');
+%ax_cor.YTickLabel = [];
+%ax_cor.XTickLabel = [];
 
-axesArgs_sag = {hf,'Position',[hf.Position(3)-120 120 100 hf.Position(4)-90],...
-    'Colormap',gray(64)};
-ax_sag = preview_nii([],imgs{1, 1}, axesArgs_sag, 'sag');
-ax_sag.YTickLabel = [];
-ax_sag.XTickLabel = [];
+%axesArgs_sag = {hf,'Position',[hf.Position(3)-120 120 100 hf.Position(4)-90],...
+%    'Colormap',gray(64)};
+%ax_sag = preview_nii([],imgs{1, 1}, axesArgs_sag, 'sag');
+%ax_sag.YTickLabel = [];
+%ax_sag.XTickLabel = [];
 
 TT.CellSelectionCallback = @(src,event) preview_nii(ax_axi,imgs{event.Indices(1), 1}, axesArgs_axi, 'axi');
+%set(hf, 'windowscrollWheelFcn', 'disp(rand(10))');
 
 waitfor(hf);
 if getappdata(0,'Canceldicm2nii')
@@ -151,21 +153,21 @@ function ax = preview_nii(ax, img, axesArgs, cut_direction)
 if isempty(ax)
     ax=uiaxes(axesArgs{:});
 end
-disp('View nii was called!')
+
 axis(ax,'off');
 set(ax,'BackgroundColor',[0 0 0])
 
 if strcmp('axi', cut_direction)
     cut_slice = round(img.dim(3)/2);
-    imagesc(ax, img.p.nii.img(:, :, 10));
-elseif strcmp('cor', cut_direction)
+    imagesc(ax, img.p.nii.img(:, :, cut_slice));
+elseif strcmp('sag', cut_direction)
     cut_slice = round(img.dim(1)/2);
-    imagesc(ax, permute(img.p.nii.img(10, :, :), [2 3 1]));
+    imagesc(ax, permute(img.p.nii.img(cut_slice, :, :), [2 3 1]));
 else
     cut_slice = round(img.dim(2)/2);
-    imagesc(ax, permute(img.p.nii.img(:, 10, :), [1 3 2]));
+    imagesc(ax, permute(img.p.nii.img(:, cut_slice, :), [1 3 2]));
 end
-ax.DataAspectRatio = [1 1 1];
+ax.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
 end
 
 function [p, frm, rg, dim] = read_nii(fname, ask_code, reOri)
