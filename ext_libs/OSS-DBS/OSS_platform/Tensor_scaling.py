@@ -103,7 +103,6 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
 
             ##Load preservation method as in Howell, B., McIntyre, C.C., 2016.
             elif scaling_method=='Load_preservation':
-                eigVals_scaled=eigVals/(*eigVals[1]*eigVals[2])**(1/3.0)
                 w12 = eigVals[0]/(eigVals[1]+eps)
                 w13 = eigVals[0]/(eigVals[1]+eps)
                 theta = theta_star(w12, w13)
