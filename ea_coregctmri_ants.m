@@ -6,14 +6,11 @@ function varargout=ea_coregctmri_ants(options)
 
 if ischar(options) % return name of method.
     varargout{1}='Advanced Normalization Tools (ANTs)';
-    varargout{2}={'SPM8','SPM12'};
-    varargout{3}=['nan']; % suggestion for alpha-parameter.
     return
 end
 
 disp('Coregistering postop CT to preop MRI...');
 ea_ants(options.subj.preopAnat.(options.subj.AnchorModality).coreg,...
-          options.subj.postopAnat.(options.subj.postopModality).preproc,...
-          options.subj.postopAnat.(options.subj.postopModality).coreg);
+    options.subj.postopAnat.(options.subj.postopModality).preproc,...
+    options.subj.postopAnat.(options.subj.postopModality).coreg);
 disp('Coregistration done.');
-

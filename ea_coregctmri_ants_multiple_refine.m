@@ -6,12 +6,10 @@ function varargout=ea_coregctmri_ants_multiple_refine(options)
 
 if ischar(options) % return name of method.
     varargout{1}='Advanced Normalization Tools (ANTs), multiple runs + Subcortical Refine';
-    varargout{2}={'SPM8','SPM12'};
-    varargout{3}=['nan']; % suggestion for alpha-parameter.
     return
 end
 
-disp('Coregistering postop CT to preop MRI...');
+disp('Coregistering post-op CT to pre-op MRI...');
 ea_ants([options.subj.preopAnat.(options.subj.AnchorModality).coreg],...
     [options.subj.postopAnat.(options.subj.postopModality).preproc],...
     [options.subj.postopAnat.(options.subj.postopModality).coreg]);
