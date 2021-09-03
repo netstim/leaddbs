@@ -12,10 +12,11 @@ set(handles.normcheck,'Value',options.normalize.check);
 
 % CT coregistration
 set(handles.coreg_checkbox,'Value',options.coregct.do);
-if options.coregct.methodn>length(handles.coregctmethod.String)
-    set(handles.coregctmethod,'Value',1);
+index = find(ismember(handles.coregctmethod.String, options.coregct.method), 1)
+if ~isempty(index)
+    set(handles.coregctmethod, 'Value', index);
 else
-    set(handles.coregctmethod,'Value',options.coregct.methodn);
+    set(handles.coregctmethod, 'Value', 1);
 end
 
 if isfield(options, 'normcheck')
