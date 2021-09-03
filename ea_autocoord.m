@@ -132,8 +132,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
 
             % Run CT coregistration function
-            coregctmrfunc = getappdata(handles.leadfigure, 'coregctmrfunc');
-            eval([coregctmrfunc{handles.coregctmethod.Value}, '(options)']);
+            eval([options.coregct.func, '(options);']);
 
             % Dump method
             ea_dumpmethod(options, 'coreg');
