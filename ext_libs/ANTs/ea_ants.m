@@ -117,7 +117,6 @@ if runs==0 % MI affine + rigid
     ' --shrink-factors ', affineshrinkfactors ...
     ' --smoothing-sigmas ', affinesoomthingssigmas];
 
-
 elseif runs==1
     rigidstage = [' --transform Rigid[0.1]' ...
         ' --convergence ', rigidconvergence, ...
@@ -162,9 +161,6 @@ elseif runs>=3 % go directly to affine stage, try GC again
         ' --shrink-factors ', affineshrinkfactors ...
         ' --smoothing-sigmas ', affinesoomthingssigmas];
 end
-
-
-
 
 if usemasks % additional affine step based on mask is probably too much.
     rigidstage=[rigidstage, ... % add nonexisting mask for this stage
@@ -254,4 +250,3 @@ cits={
 
 ea_methods(volumedir,[mov,' was co-registered to ',fix,' using a two-stage linear registration (rigid followed by affine) as implemented in Advanced Normlization Tools (Avants 2008; http://stnava.github.io/ANTs/)'],...
     cits);
-
