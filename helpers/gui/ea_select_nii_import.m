@@ -97,9 +97,6 @@ else
     B.ButtonPushedFcn = BCB;
 end
 
-% img info panel
-setappdata(hf, 'info_text', '');
-
 % preview panel
 axesArgs_axi = {hf,'Position',[hf.Position(3)-120 150 100 hf.Position(4)-90],...
     'Colormap',gray(64)};
@@ -121,7 +118,7 @@ ax_axi.XTickLabel = [];
 %ax_sag.YTickLabel = [];
 %ax_sag.XTickLabel = [];
 
-TT.CellSelectionCallback = @(src,event) preview_nii(hf, ax_axi,imgs{event.Indices(1), 1}, axesArgs_axi, 'axi');
+TT.CellSelectionCallback = @(src,event) preview_nii(ax_axi,imgs{event.Indices(1), 1}, axesArgs_axi, 'axi');
 hf.WindowScrollWheelFcn = @(src, event) scroll_nii(ax_axi, event);  % this callback enables scrolling
 
 waitfor(hf);
@@ -169,13 +166,14 @@ function scroll_nii(ax, event)
 end
 
 
-function ax = preview_nii(fig, ax, img, axesArgs, cut_direction)
+function ax = preview_nii(ax, img, axesArgs, cut_direction)
 
 if isempty(ax)
     ax=uiaxes(axesArgs{:});
 end
 
-%info_text = getappdata(fig, 'info_text');
+% create info panel
+%infoBox = annotation('textbox', [.2 .5 .3 .3], 'String', '1');
 
 setappdata(ax, 'img', img);     % save .nii image in current appdata ax for scrolling
 
