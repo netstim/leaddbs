@@ -23,7 +23,7 @@ else
     otherfiles = {};
 end
 
-volumedir = [fileparts(ea_niifileparts(movingVolume)), filesep];
+volumedir = [fileparts(ea_niifileparts(outputVolume)), filesep];
 
 fixedVolume = ea_niigz(fixedVolume);
 movingVolume = ea_niigz(movingVolume);
