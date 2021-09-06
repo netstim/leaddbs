@@ -1,5 +1,8 @@
 function ea_select_nii_import(fnames, nii_folder, rawdata_folder)
 
+    
+%% options
+
 valueset = {'skip','skip', 'skip';
     'anat','preop', 'T1w';
     'anat','preop', 'T2w';
@@ -9,6 +12,13 @@ valueset = {'skip','skip', 'skip';
     'anat','postop', 'ax_MR';
     'anat','postop', 'sag_MR';
     'anat','postop', 'cor_MR'};
+
+fig_size_norm = [0.8, 0.6];     % widht and height relative to screen size
+fig_pos_norm = [0.2 0.2];       % lower and bottom of fig pos relative to screen size
+
+table_size_norm = [0.5, 0.5];   % size of table relative to fig size
+table_offset_abs = [20 20];     % offset from border in absolute values (pixels)
+preview_size_norm = 0.3;        % preview window size relative to fig width (will only take one value as it is supposed to be square)
 
 verLessThanOctave = false; % debug
 
@@ -36,14 +46,14 @@ T = table(fnames, Session, Type, Modality);
 ModalityTablePref = getpref('dicm2nii_gui_para', 'ModalityTable', T);
 
 % GUI
-figsize = [0.8, 0.6];
-
 setappdata(0,'Canceldicm2nii',false)
 scrSz = get(0, 'ScreenSize');
-mpos = get(0, 'MonitorPositions');
+
+fig_size_abs = [round(scrSz(3) * fig_size_norm(1)), round(scrSz(4) * fig_size_norm(2))];
+fig_pos_abs = [round(scrSz(3) * fig_pos_norm(1)), round(scrSz(4) * fig_pos_norm(2))];
+
 clr = [1 1 1]*206/256;
-figargs = {'Units', 'normalized', ...
-    'Position',[0.1 0.2 figsize(1) figsize(2)],...
+figargs = {'bids' * 256.^(0:3)','Position',[fig_pos_abs(1), fig_pos_abs(2), fig_size_abs(1), fig_size_abs(2)],...
     'Color', clr,...
     'CloseRequestFcn',@my_closereq};
 if verLessThanOctave
@@ -65,34 +75,40 @@ if verLessThanOctave
     TCN = T.Properties.VariableNames;
     T   = cellfun(@char,table2cell(T),'uni',0);
 end
-TS = uitable(hf,'Data',S);
-set(TS, 'Units', 'normalized');
 TT = uitable(hf,'Data',T);
-set(TT, 'Units', 'normalized');
 
-TSpos = [0 0.8 0.6 0.2];
-TTpos = [0 0.1 0.6 0.6];
-
-TS.Position = TSpos;
-TT.Position = TTpos;
-
-TS.ColumnEditable = [true true true true];
-
+TTpos = [20, 20, table_size_norm(1) * fig_size_abs(1), table_size_norm(2) * fig_size_abs(2)];
+if verLessThanOctave
+    setpixelposition(TS,TSpos);
+    set(TS,'Units','Normalized')
+    setpixelposition(TT,TTpos);
+    set(TT,'Units','Normalized')
+else
+    TT.Position = TTpos;
+end
+if verLessThanOctave
+    TT.ColumnName = TCN;
+end
 TT.ColumnEditable = [false true true, true];
 setappdata(0,'ModalityTable',TT.Data)
-setappdata(0,'SubjectTable',TS.Data)
 
 % button
 Bpos = [hf.Position(3)-120 20 100 30];
-BCB  = @(btn,event) BtnModalityTable(hf,TT, TS);
-
-B = uibutton(hf,'Position',Bpos);
-B.Text = 'OK';
-B.ButtonPushedFcn = BCB;
-
+BCB  = @(btn,event) BtnModalityTable(hf,TT);
+if verLessThanOctave
+    B = uicontrol(hf,'Style','pushbutton','String','OK');
+    set(B,'Callback',BCB);
+    setpixelposition(B,Bpos)
+    set(B,'Units','Normalized')
+else
+    B = uibutton(hf,'Position',Bpos);
+    B.Text = 'OK';
+    B.ButtonPushedFcn = BCB;
+end
 
 % preview panel
-axesArgs_axi = {hf,'Units', 'normalized', 'Position',[0.55 0.5 0.4 0.4],...
+preview_pos = [round(table_offset_abs(1) + 10 + table_size_norm(1) * fig_size_abs(1)), 150, round(preview_size_norm * fig_size_abs(1)), round(preview_size_norm * fig_size_abs(1))];
+axesArgs_axi = {hf,'Position', preview_pos, ...
     'Colormap',gray(64)};
 ax_axi = preview_nii([],imgs{1, 1}, axesArgs_axi, 'axi', hf);
 ax_axi.YTickLabel = [];
@@ -147,12 +163,18 @@ end
 function scroll_nii(ax, event)
     
     img = getappdata(ax, 'img');
+    dim = img.dim;
     sliceNr = getappdata(ax, 'cut_slice');
     
    if event.VerticalScrollCount == -1 % up scroll
-       sliceNr = sliceNr + 1;
+       if ~(sliceNr >= img.dim(3))
+        sliceNr = sliceNr + 1;
+       end
    else
-       sliceNr = sliceNr - 1;
+       if ~(sliceNr <= 1)
+        sliceNr = sliceNr - 1;
+       end
+
    end
     imagesc(ax, img.p.nii.img(:, :, sliceNr));
     setappdata(ax, 'cut_slice', sliceNr);
@@ -166,7 +188,7 @@ if isempty(ax)
 end
 
 if isempty(getappdata(dicom_fig, 'infoBox'))
-    infoBox = annotation(dicom_fig, 'textbox', [0.55 0.2 0.4 0.4], 'String', ' ');
+    infoBox = annotation(dicom_fig, 'textbox', [.8 .1 .3 .2], 'String', ' ');
     setappdata(dicom_fig, 'infoBox', infoBox);
 else
     infoBox = getappdata(dicom_fig, 'infoBox');
@@ -203,7 +225,8 @@ else
     cut_slice = round(img.dim(2)/2);
     imagesc(ax, permute(img.p.nii.img(:, cut_slice, :), [1 3 2]));
 end
-ax.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+%ax.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+ax.DataAspectRatio = [1, 1, 1];
 
 setappdata(ax, 'cut_slice', cut_slice); % save current cut slice for scrolling
 
@@ -422,7 +445,7 @@ if abs(rg(2))>10, rg(2) = ceil(rg(2)/2)*2; end % even number
 end
 
 %%
-function BtnModalityTable(h,TT,TS)
+function BtnModalityTable(h,TT)
 dat = cellfun(@char,table2cell(TT.Data),'uni',0);
 
 if all(any(ismember(dat(:,2:3),'skip'),2))
@@ -430,7 +453,6 @@ if all(any(ismember(dat(:,2:3),'skip'),2))
     return;
 end
 setappdata(0,'ModalityTable',TT.Data)
-setappdata(0,'SubjectTable',TS.Data)
 delete(h)
 end
 
