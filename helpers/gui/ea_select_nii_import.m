@@ -97,6 +97,9 @@ else
     B.ButtonPushedFcn = BCB;
 end
 
+% img info panel
+setappdata(hf, 'info_text', '');
+
 % preview panel
 axesArgs_axi = {hf,'Position',[hf.Position(3)-120 150 100 hf.Position(4)-90],...
     'Colormap',gray(64)};
@@ -104,20 +107,22 @@ ax_axi = preview_nii([],imgs{1, 1}, axesArgs_axi, 'axi');
 ax_axi.YTickLabel = [];
 ax_axi.XTickLabel = [];
 
+% coronal slice
 %axesArgs_cor = {hf,'Position',[hf.Position(3) 100 100 hf.Position(4)-90],...
 %    'Colormap',gray(64)};
 %ax_cor = preview_nii([],imgs{1, 1}, axesArgs_cor, 'cor');
 %ax_cor.YTickLabel = [];
 %ax_cor.XTickLabel = [];
 
+% sagittal slice
 %axesArgs_sag = {hf,'Position',[hf.Position(3)-120 120 100 hf.Position(4)-90],...
 %    'Colormap',gray(64)};
 %ax_sag = preview_nii([],imgs{1, 1}, axesArgs_sag, 'sag');
 %ax_sag.YTickLabel = [];
 %ax_sag.XTickLabel = [];
 
-TT.CellSelectionCallback = @(src,event) preview_nii(ax_axi,imgs{event.Indices(1), 1}, axesArgs_axi, 'axi');
-%set(hf, 'windowscrollWheelFcn', 'disp(rand(10))');
+TT.CellSelectionCallback = @(src,event) preview_nii(hf, ax_axi,imgs{event.Indices(1), 1}, axesArgs_axi, 'axi');
+hf.WindowScrollWheelFcn = @(src, event) scroll_nii(ax_axi, event);  % this callback enables scrolling
 
 waitfor(hf);
 if getappdata(0,'Canceldicm2nii')
@@ -148,11 +153,31 @@ for imod = 1:size(ModalityTableSavePref,1)
 end
 end
 
-function ax = preview_nii(ax, img, axesArgs, cut_direction)
+function scroll_nii(ax, event)
+    
+    img = getappdata(ax, 'img');
+    sliceNr = getappdata(ax, 'cut_slice');
+    
+   if event.VerticalScrollCount == -1 % up scroll
+       sliceNr = sliceNr + 1;
+   else
+       sliceNr = sliceNr - 1;
+   end
+    imagesc(ax, img.p.nii.img(:, :, sliceNr));
+    setappdata(ax, 'cut_slice', sliceNr);
+    
+end
+
+
+function ax = preview_nii(fig, ax, img, axesArgs, cut_direction)
 
 if isempty(ax)
     ax=uiaxes(axesArgs{:});
 end
+
+%info_text = getappdata(fig, 'info_text');
+
+setappdata(ax, 'img', img);     % save .nii image in current appdata ax for scrolling
 
 axis(ax,'off');
 set(ax,'BackgroundColor',[0 0 0])
@@ -168,6 +193,9 @@ else
     imagesc(ax, permute(img.p.nii.img(:, cut_slice, :), [1 3 2]));
 end
 ax.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+
+setappdata(ax, 'cut_slice', cut_slice); % save current cut slice for scrolling
+
 end
 
 function [p, frm, rg, dim] = read_nii(fname, ask_code, reOri)
