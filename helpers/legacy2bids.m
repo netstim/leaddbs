@@ -1,17 +1,20 @@
 function results = legacy2bids(source,dest,isdicom,dicom_source)
 %SANTIY: first check the existence of your source and dest directory. If it is not there,
 %create a new directory.
-if ~exist(source,'dir')
-    warndlg("The source directory you have specified does not exist")
-else
-    addpath(source)
+for j=1:length(source)
+    if ~exist(source{j},'dir')
+        warndlg("The source directory you have specified does not exist")
+    else
+        addpath(source{j})
+    end
+    if ~exist(dest{j}, 'dir')
+        addpath(dest{j})
+        mkdir(dest{j})
+    else
+        addpath(dest{j})
+    end
 end
-if ~exist(dest, 'dir')
-    addpath(dest)
-    mkdir(dest)
-else
-    addpath(dest)
-end
+
 %if you have dicom files and have not provided a dicom source directory
 %(this can also just be source directory,so refactor this) then throw
 %an error
@@ -23,60 +26,48 @@ end
 modes = {'anat','func'};
 sessions = {'ses-preop','ses-postop'};
 dicom_sessions = {'preop_mri','postop_ct'};
-subfolder_cell = {'sourcedata','derivatives','rawdata'};
+subfolder_cell = {'sourcedata','rawdata','derivatives'};
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export'};
 %not sure how to handle log and export yet
-
-
-%[[[currently creating a script that will take an entire source directory
-%such as: dataset/{sub_01,sub_02,sub_03,..}
-%get all subject names. This part of the code will be restructured when
-%we get the dataset fetcher.]]]
-
+%mapping will allow quick reference of the files to move
+[brainshift_corr,coreg,normalization,preproc,recon,prefs] = create_bids_mapping();
 %dir without dots is a modified dir command that with return the
 %directory contents without the dots. those evaluate to folders and
 %cause issues.
 %by default, use the sub- prefix. If the patient already has a sub-, this
-%flag is set to zero. 
-flag = 1;
-files = dir_without_dots(source);
-sub_names = {files.name};
+%flag is set to zero.
+
 %get all patient names, again this will be changed based on the dataset
 %fetcher command
-for subs = 1:length(sub_names)
-    patient_indx = 1;
-    if isfolder(fullfile(source,sub_names{subs}))
-        
-        patient_names{patient_indx} = sub_names{subs};
-        if startsWith(patient_names{patient_indx},'sub-')
-            flag = 0;
-        end
-        patient_indx = patient_indx+1;
-    end
-end
-%mapping will allow quick reference of the files to move
-[brainshift_corr,coreg,normalization,preproc,recon,prefs] = create_bids_mapping();
 %perform moving for each pat
-for patients = 1:length(patient_names)
+for patients = 1:length(source)
+    source_patient = source{patients};
+    dest_patient = dest{patients};
+    flag = 1;
+    if startsWith(source_patient,'sub-')
+        flag = 0;
+        
+    end
+    [filepath,patient_name,ext] = fileparts(source_patient);
     
-    patient = patient_names{patients};
-    files_in_pat_folder = dir_without_dots(fullfile(source,patient));
+    
+    files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
     file_index = 1;
-    for i=1:length(file_names)
+    for j=1:length(file_names)
         %if they are already files, then add their full path to the
         %filelist to be moved
-        if endsWith(file_names{i},'.nii') || endsWith(file_names{i},'.mat') || endsWith(file_names{i},'.h5') || endsWith(file_names{i},'.txt') || endsWith(file_names{i},'.log') || endsWith(file_names{i},'.gz') 
-            files_to_move{file_index} = file_names{i};
+        if endsWith(file_names{j},'.nii') || endsWith(file_names{j},'.mat') || endsWith(file_names{j},'.h5') || endsWith(file_names{j},'.txt') || endsWith(file_names{j},'.log') || endsWith(file_names{j},'.gz')
+            files_to_move{file_index} = file_names{j};
             file_index = file_index + 1;
         end
         %now let's deal with subfolders
     end
     dir_names = {files_in_pat_folder([files_in_pat_folder.isdir]).name};
-    for i=1:length(dir_names)
+    for j=1:length(dir_names)
         %%%leave atlases as it is, it will be moved directly
-        if ~(strcmp(dir_names{i},'atlases') || strcmp(dir_names{i},'stimulations'))
-            this_folder = dir_without_dots(fullfile(source,patient,dir_names{i}));
+        if ~(strcmp(dir_names{j},'atlases') || strcmp(dir_names{j},'stimulations'))
+            this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
             file_in_this_folder= {this_folder.name};
             file_inside_dir_indx = 1;
             for k=1:length(file_in_this_folder)
@@ -85,13 +76,13 @@ for patients = 1:length(patient_names)
                         files_to_move{end+1} = file_in_this_folder{k};
                     else
                         files_to_move{file_inside_dir_indx} = file_in_this_folder{k};
-                        file_inside_dir_indx = file_inside_dir_indx + 1; 
+                        file_inside_dir_indx = file_inside_dir_indx + 1;
                     end
                 end
             end
-       
+            
         else
-            movefile(fullfile(source,patient,dir_names{i}),fullfile(dest,'derivatives','leaddbs',patient,dir_names{i}))
+            movefile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}))
         end
     end
     %so we have created a list of the files to move, now we can create
@@ -100,212 +91,345 @@ for patients = 1:length(patient_names)
     for subfolders = 1:length(subfolder_cell)
         switch subfolder_cell{subfolders}
             case 'rawdata'
-                for i=1:length(sessions)
-                    new_path = fullfile(dest,subfolder_cell{subfolders},patient,sessions{i});
-                    mkdir(new_path)
-                    if strcmp(modes{i},'anat') && strcmp(sessions{i},'ses-preop')
-                        %files to be moved into pre-op:raw_anat_*.nii
-                        for files=1:length(files_to_move)
-                            if regexp(files_to_move{files},'raw_anat_.*.nii')
-                                movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,modes{folders}))
-                            end
+                for i=1:length(modes)
+                    for j=1:length(sessions)
+                        new_path = fullfile(dest_patient,subfolder_cell{subfolders},patient_name,sessions{j});
+                        if ~exist(new_path,'dir')
+                            mkdir(new_path)
                         end
-                    elseif strcmp(modes{i},'anat') && strcmp(sessions{i},'ses-postop')
                         for files=1:length(files_to_move)
-                            if ~isempty(regexp(files_to_move{files},'raw.*postop.*.nii','once')) || ~strcmp(files_to_move{files},'postop_ct.nii')
-                                movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,modes{folders}))
+                            if strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-preop')
+                                %files to be moved into pre-op:raw_anat_*.nii
+                                if regexp(files_to_move{files},'raw_anat_.*.nii')
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        str_var = strsplit(files_to_move{files},'_');
+                                        modality_str = strsplit(str_var{end},'.');
+                                        if strcmp(modality_str{1},'t1')
+                                            modality = 'T1w';
+                                        elseif strcmp(modality_str{1},'t2')
+                                            modality = 'T2w';
+                                        else
+                                            modality = upper(modality_str{1});
+                                        end
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,files_to_move{files}),fullfile(new_path,['sub-',patient_name,'_',sessions{j},'_',modality,'.nii']));
+                                        else
+                                            movefile(fullfile(new_path,files_to_move{files}),fullfile(new_path,[patient_name,'_',modality,'.nii']));
+                                        end
+                                    end
+                                end
+                            elseif strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-postop')
+                                if ~isempty(regexp(files_to_move{files},'raw_postop_.*.nii')) || strcmp(files_to_move{files},'postop_ct.nii')
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        modality_str = strsplit(files_to_move{files},'_');
+                                        if strcmp(modality_str{end},'t1')
+                                            modality = 'T1w';
+                                        elseif strcmp(modality_str{end},'t2')
+                                            modality = 'T2w';
+                                        elseif strcmp(modality_str{end},'CT')
+                                            modality = 'CT';
+                                        else
+                                            str_var = strsplit(modality_str{end},'.');
+                                            modality = upper(str_var{1});
+                                        end
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,files_to_move{files}),fullfile(new_path,['sub-',patient_name,'_',sessions{j},'_',modality,'.nii']));
+                                        else
+                                            movefile(fullfile(new_path,files_to_move{files}),fullfile(new_path,[patient_name,'_',modality,'.nii']));
+                                        end
+                                    end
+                                end
                             end
+                            
                         end
-                      
                     end
                 end
             case 'derivatives'
-                new_path = fullfile(dest,subfolder_cell{subfolders},'leaddbs',patient);
+                new_path = fullfile(dest_patient,subfolder_cell{subfolders},'leaddbs',patient_name);
                 for folders=1:length(pipelines)
-                    mkdir(fullfile(new_path,pipelines{folders}))
+                    if ~exist(fullfile(new_path,pipelines{folders}),'dir')
+                        mkdir(fullfile(new_path,pipelines{folders}))
+                    end
                     for files=1:length(files_to_move)
                         if strcmp(pipelines{folders},'coregistration')
-                            mkdir(fullfile(new_path,pipelines{folders},'anat'));
-                            mkdir(fullfile(new_path,pipelines{folders},'log'));
-                            mkdir(fullfile(new_path,pipelines{folders},'checkreg'));
-                            mkdir(fullfile(new_path,pipelines{folders},'transformations'))
+                            anat_dir = fullfile(new_path,pipelines{folders},'anat');
+                            log_dir = fullfile(new_path,pipelines{folders},'log');
+                            checkreg_dir = fullfile(new_path,pipelines{folders},'checkreg');
+                            transformations_dir = fullfile(new_path,pipelines{folders},'transformations');
+                            if ~exist(anat_dir,'dir')
+                                mkdir(anat_dir)
+                            end
+                            if ~exist(log_dir,'dir')
+                                mkdir(log_dir)
+                            end
+                            if ~exist(checkreg_dir,'dir')
+                                mkdir(checkreg_dir)
+                            end
+                            if ~exist(transformations_dir,'dir')
+                                mkdir(transformations_dir)
+                            end
                             if ismember(files_to_move{files},coreg{:,1})
                                 %if ~isempty(regexp(files_to_move{files},'^anat_t[1,2].nii||^postop_.*nii||.*rpostop.*||.*coreg.*') == 1)
                                 %corresponding index of the new pat
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),coreg{:,1});
                                 if endsWith(files_to_move{files},'.nii')
                                     %first move%
-                                    movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',files_to_move{files}));
-                                    %then rename%
-                                    if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',['sub-','_',patient,coreg{1,2}{indx}]));
-                                    else
-                                         movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',[patient,'_',coreg{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(anat_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,['sub-','_',patient_name,coreg{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,[patient_name,'_',coreg{1,2}{indx}]));
+                                        end
+                                    elseif exist(fullfile(source_patient,'scrf',files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,'scrf',files_to_move{files}),fullfile(anat_dir,files_to_move{files}));
+                                        %then rename%
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,['sub-','_',patient_name,coreg{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,[patient_name,'_',coreg{1,2}{indx}]));
+                                        end
                                     end
                                 elseif endsWith(files_to_move{files},'.png')
-                                    movefile(fullfile(source,patient,'checkreg',files_to_move{files}),fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}));
-                                    if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(new_path,pipelines{folders},'checkreg',['sub-','_',patient,coreg{1,2}{indx}]));
-                                    else
-                                         movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(new_path,pipelines{folders},'checkreg',[patient,'_',coreg{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,'checkreg',files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,'checkreg',files_to_move{files}),fullfile(checkreg_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(checkreg_dir,['sub-','_',patient_name,coreg{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(checkreg_dir,[patient_name,'_',coreg{1,2}{indx}]));
+                                        end
                                     end
-                                elseif endsWith('.log') || ~isempty(regexp(files_to_move{files},'.*_approved||.*_applied.mat'))
-                                    movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
-                                    if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(new_path,pipelines{folders},'log',['sub-','_',patient,coreg{1,2}{indx}]));
-                                    else
-                                         movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(new_path,pipelines{folders},'log',[patient,'_',coreg{1,2}{indx}]));
+                                elseif endsWith(files_to_move{files},'.log') || ~isempty(regexp(files_to_move{files},'.*_approved||.*_applied.mat'))
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(log_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(log_dir,['sub-','_',patient_name,coreg{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(log_dir,[patient_name,'_',coreg{1,2}{indx}]));
+                                        end
                                     end
                                 elseif endsWith(files_to_move{files},'.mat')
-                                   movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}));
-                                   if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(new_path,pipelines{folders},'transformations',['sub-','_',patient,coreg{1,2}{indx}]));
-                                    else
-                                         movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(new_path,pipelines{folders},'transformations',[patient,'_',coreg{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(transformations_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(transformations_dir,['sub-','_',patient_name,coreg{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(transformations_dir,[patient_name,'_',coreg{1,2}{indx}]));
+                                        end
                                     end
                                 end
-                            elseif ~isempty(regexp(files_to_move{files},'^coreg.*.log')) 
-                                    movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
-                                    
+                            elseif ~isempty(regexp(files_to_move{files},'^coreg.*.log'))
+                                if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                    movefile(fullfile(source_patient,files_to_move{files}),fullfile(log_dir,files_to_move{files}));
+                                end
                             end
-         
+                            
                         elseif strcmp(pipelines{folders},'brainshift')
-                            mkdir(fullfile(new_path,pipelines{folders},'anat'));
-                            mkdir(fullfile(new_path,pipelines{folders},'log'));
-                            mkdir(fullfile(new_path,pipelines{folders},'checkreg'));
-                            mkdir(fullfile(new_path,pipelines{folders},'transformations'))
+                            anat_dir = fullfile(new_path,pipelines{folders},'anat');
+                            log_dir = fullfile(new_path,pipelines{folders},'log');
+                            checkreg_dir = fullfile(new_path,pipelines{folders},'checkreg');
+                            transformations_dir = fullfile(new_path,pipelines{folders},'transformations');
+                            if ~exist(anat_dir,'dir')
+                                mkdir(anat_dir)
+                            end
+                            if ~exist(log_dir,'dir')
+                                mkdir(log_dir)
+                            end
+                            if ~exist(checkreg_dir,'dir')
+                                mkdir(checkreg_dir)
+                            end
+                            if ~exist(transformations_dir,'dir')
+                                mkdir(transformations_dir)
+                            end
                             if ismember(files_to_move{files},brainshift_corr{:,1})
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),brainshift_corr{:,1});
                                 if endsWith(files_to_move{files},'.nii')
                                     %first move%
-                                    movefile(fullfile(source,patient,'scrf',files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',files_to_move{files}));
-                                    %then rename%
-                                    if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',['sub-','_',patient,brainshift_corr{1,2}{indx}]));
-                                    else
-                                        movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',[patient,'_',brainshift_corr{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,'scrf',files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,'scrf',files_to_move{files}),fullfile(anat_dir,files_to_move{files}));
+                                        %then rename%
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,['sub-',patient_name,'_',brainshift_corr{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,[patient_name,'_',brainshift_corr{1,2}{indx}]));
+                                        end
                                     end
                                 elseif endsWith(files_to_move{files},'.png')
-                                    movefile(fullfile(source,patient,'scrf',files_to_move{files}),fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}));
-                                    if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(new_path,pipelines{folders},'checkreg',['sub-','_',patient,brainshift_corr{1,2}{indx}]));
-                                    else
-                                         movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(new_path,pipelines{folders},'checkreg',[patient,'_',brainshift_corr{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,'scrf',files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,'scrf',files_to_move{files}),fullfile(checkreg_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(checkreg_dir,['sub-',patient_name,'_',brainshift_corr{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(checkreg_dir,[patient_name,'_',brainshift_corr{1,2}{indx}]));
+                                        end
                                     end
                                 elseif endsWith(files_to_move{files},'.txt') || ~isempty(regexp(files_to_move{files},'.*_approved||.*_applied.mat'))
-                                    movefile(fullfile(source,patient,'scrf',files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
-                                   if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(new_path,pipelines{folders},'log',['sub-','_',patient,brainshift_corr{1,2}{indx}]));
-                                    else
-                                         movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(new_path,pipelines{folders},'log',[patient,'_',brainshift_corr{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,'scrf',files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,'scrf',files_to_move{files}),fullfile(log_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(log_dir,['sub-',patient_name,'_',brainshift_corr{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(log_dir,[patient_name,'_',brainshift_corr{1,2}{indx}]));
+                                        end
                                     end
                                 elseif endsWith(files_to_move{files},'.mat')
-                                   movefile(fullfile(source,patient,'scrf',files_to_move{files}),fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}));
-                                   if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(new_path,pipelines{folders},'transformations',['sub-','_',patient,brainshift_corr{1,2}{indx}]));
-                                    else
-                                         movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(new_path,pipelines{folders},'transformations',[patient,'_',brainshift_corr{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,'scrf',files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,'scrf',files_to_move{files}),fullfile(transformations_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(transformations_dir,['sub-',patient_name,'_',brainshift_corr{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(transformations_dir,[patient_name,'_',brainshift_corr{1,2}{indx}]));
+                                        end
                                     end
                                 end
                             end
                         elseif strcmp(pipelines{folders},'normalization')
-                            mkdir(fullfile(new_path,pipelines{folders},'anat'));
-                            mkdir(fullfile(new_path,pipelines{folders},'log'));
-                            mkdir(fullfile(new_path,pipelines{folders},'checkreg'));
-                            mkdir(fullfile(new_path,pipelines{folders},'transformations'))
+                            anat_dir = fullfile(new_path,pipelines{folders},'anat');
+                            log_dir = fullfile(new_path,pipelines{folders},'log');
+                            checkreg_dir = fullfile(new_path,pipelines{folders},'checkreg');
+                            transformations_dir = fullfile(new_path,pipelines{folders},'transformations');
+                            if ~exist(anat_dir,'dir')
+                                mkdir(anat_dir)
+                            end
+                            if ~exist(log_dir,'dir')
+                                mkdir(log_dir)
+                            end
+                            if ~exist(checkreg_dir,'dir')
+                                mkdir(checkreg_dir)
+                            end
+                            if ~exist(transformations_dir,'dir')
+                                mkdir(transformations_dir)
+                            end
                             if ismember(files_to_move{files},normalization{:,1})
                                 %corresponding index of the new pat
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),normalization{:,1});
                                 if endsWith(files_to_move{files},'.nii')
-                                    %first move%
-                                    movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',files_to_move{files}));
-                                    %then rename%
-                                    if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',['sub-','_',patient,normalization{1,2}{indx}]));
-                                    else
-                                        movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',[patient,'_',normalization{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        %first move%
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(anat_dir,files_to_move{files}));
+                                        %then rename%
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,['sub-',patient_name,'_',normalization{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,[patient_name,'_',normalization{1,2}{indx}]));
+                                        end
                                     end
                                 elseif endsWith(files_to_move{files},'.png')
-                                    movefile(fullfile(source,patient,'checkreg',files_to_move{files}),fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}));
-                                    if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(new_path,pipelines{folders},'checkreg',['sub-','_',patient,normalization{1,2}{indx}]));
-                                    else
-                                        movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(new_path,pipelines{folders},'checkreg',[patient,'_',normalization{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,'checkreg',files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,'checkreg',files_to_move{files}),fullfile(checkreg_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(checkreg_dir,['sub-',patient_name,'_',normalization{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'checkreg',files_to_move{files}),fullfile(checkreg_dir,[patient_name,'_',normalization{1,2}{indx}]));
+                                        end
                                     end
                                 elseif endsWith(files_to_move{files},'.log') || ~isempty(regexp(files_to_move{files},'.*_approved||.*_applied.mat'))
-                                   movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
-                                   if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(new_path,pipelines{folders},'log',['sub-','_',patient,normalization{1,2}{indx}]));
-                                    else
-                                         movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(new_path,pipelines{folders},'log',[patient,'_',normalization{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(log_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(log_dir,['sub-',patient_name,'_',normalization{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(log_dir,[patient_name,'_',normalization{1,2}{indx}]));
+                                        end
                                     end
                                 elseif endsWith(files_to_move{files},'.mat') || endsWith(files_to_move{files},'.gz')
-                                   movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}));
-                                   if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(new_path,pipelines{folders},'transformations',['sub-','_',patient,normalization{1,2}{indx}]));
-                                    else
-                                        movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(new_path,pipelines{folders},'transformations',[patient,'_',normalization{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(transformations_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(transformations_dir,['sub-',patient_name,'_',normalization{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'transformations',files_to_move{files}),fullfile(transformations_dir,[patient_name,'_',normalization{1,2}{indx}]));
+                                        end
+                                    end
+                                elseif ~isempty(regexp(files_to_move{files},'^normalize_.*.log')) || strcmp(files_to_move{files},'ea_ants_command.txt')
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(log_dir,files_to_move{files}));
                                     end
                                 end
-                            elseif ~isempty(regexp(files_to_move{files},'^normalize_.*.log'))
-                                movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
-                                
                             end
                         elseif strcmp(pipelines{folders},'reconstruction')
-                            mkdir(fullfile(new_path,pipelines{folders}));
+                            recon_dir = fullfile(new_path,pipelines{folders});
+                            if ~exist(recon_dir,'dir')
+                                mkdir(recon_dir)
+                            end
                             if ismember(files_to_move{files},recon{:,1})
                                 %corresponding index of the new pat
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),recon{:,1});
-                                movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},files_to_move{files}));
+                                movefile(fullfile(source_patient,files_to_move{files}),fullfile(recon_dir,files_to_move{files}));
                                 if flag
-                                    movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(new_path,pipelines{folders},['sub-','_',patient,recon{1,2}{indx}]));
+                                    movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(recon_dir,['sub-',patient_name,'_',recon{1,2}{indx}]));
                                 else
-                                    movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(new_path,pipelines{folders},[patient,'_',recon{1,2}{indx}]));
+                                    movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(recon_dir,[patient_name,'_',recon{1,2}{indx}]));
                                 end
                                 
                             end
                         elseif strcmp(pipelines{folders},'preprocessing')
-                            mkdir(fullfile(new_path,pipelines{folders},'anat'));
-                            mkdir(fullfile(new_path,pipelines{folders},'log'));
+                            anat_dir = fullfile(new_path,pipelines{folders},'anat');
+                            log_dir = fullfile(new_path,pipelines{folders},'log');
+                            if ~exist(anat_dir,'dir')
+                                mkdir(anat_dir)
+                                
+                            end
+                            if ~exist(log_dir,'dir')
+                                mkdir(log_dir)
+                            end
+                            
                             if ismember(files_to_move{files},preproc{:,1})
                                 %corresponding index of the new pat
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),preproc{:,1});
                                 if endsWith(files_to_move{files},'.nii')
                                     %first move%
-                                    movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',files_to_move{files}));
-                                    %then rename%
-                                    if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',['sub-','_',patient,preproc{1,2}{indx}]));
-                                    else
-                                        movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(new_path,pipelines{folders},'anat',[patient,'_',preproc{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(anat_dir,files_to_move{files}));
+                                        %then rename%
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,['sub-',patient_name,'_',preproc{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'anat',files_to_move{files}),fullfile(anat_dir,[patient_name,'_',preproc{1,2}{indx}]));
+                                        end
                                     end
                                 elseif endsWith(files_to_move{files},'.log')
-                                    movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
-                                    if flag
-                                        movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(new_path,pipelines{folders},'log',['sub-','_',patient,preproc{1,2}{indx}]));
-                                    else
-                                         movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(new_path,pipelines{folders},'log',[patient,'_',preproc{1,2}{indx}]));
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(log_dir,files_to_move{files}));
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(log_dir,['sub-',patient_name,'_',preproc{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},'log',files_to_move{files}),fullfile(log_dir,[patient_name,'_',preproc{1,2}{indx}]));
+                                        end
                                     end
                                 end
                             end
                         elseif strcmp(pipelines{folders},'prefs')
                             if ismember(files_to_move{files},prefs{:,1})
-                                disp(files_to_move{files})
+                          
                                 %corresponding index of the new pat
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),prefs{:,1});
-                                movefile(fullfile(source,patient,files_to_move{files}),fullfile(new_path,pipelines{folders},files_to_move{files}));
-                                if flag
-                                    movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(new_path,pipelines{folders},['sub-','_',patient,prefs{1,2}{indx}]));
-                                else
-                                    movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(new_path,pipelines{folders},[patient,'_',prefs{1,2}{indx}]));
+                                if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                    movefile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{folders},files_to_move{files}));
+                                    if flag
+                                        movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(new_path,pipelines{folders},['sub-',patient_name,'_',prefs{1,2}{indx}]));
+                                    else
+                                        movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(new_path,pipelines{folders},[patient_name,'_',prefs{1,2}{indx}]));
+                                    end
                                 end
                             end
-                         end
-                     end
-                 end
+                        elseif strcmp(pipelines{folders},'log')
+                            if exist(fullfile(source_patient,'ea_methods.txt'),'file')
+                                movefile(fullfile(source_patient,'ea_methods.txt'),fullfile(new_path,pipelines{folders},'ea_methods.txt'));
+                                if flag
+                                    movefile(fullfile(new_path,pipelines{folders},'ea_methods.txt'),fullfile(new_path,pipelines{folders},['sub-',patient_name,'_',files_to_move{files}]));
+                                else
+                                    movefile(fullfile(new_path,pipelines{folders},'ea_methods.txt'),fullfile(new_path,pipelines{folders},[patient_name,'_',files_to_move{files}]));
+                                end
+                            end
+                        end
+                    end
+                end
             otherwise
-                for i=1:length(dicom_sessions)
-                    new_path = fullfile(dest,subfolder_cell{subfolders},patient,'DICOM',dicom_sessions{i});
+                for j=1:length(dicom_sessions)
+                    new_path = fullfile(dest_patient,subfolder_cell{subfolders},patient_name,'DICOM',dicom_sessions{j});
                     if ~exist(new_path,'dir')
                         mkdir(new_path)
                     end
@@ -315,9 +439,9 @@ for patients = 1:length(patient_names)
                         movefile(dicom_source,new_path)
                     end
                 end
-         end
-     end
- end
+        end
+    end
+end
 %     %writing another script which will return the mapping between the
 %     %legacy files and the new files.
 %    % [old_files,new_files] = create_bids_mapping;
