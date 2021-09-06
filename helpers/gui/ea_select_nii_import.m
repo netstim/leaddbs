@@ -36,14 +36,14 @@ T = table(fnames, Session, Type, Modality);
 ModalityTablePref = getpref('dicm2nii_gui_para', 'ModalityTable', T);
 
 % GUI
-figsize = [1, 0.6];
+figsize = [0.8, 0.6];
 
 setappdata(0,'Canceldicm2nii',false)
 scrSz = get(0, 'ScreenSize');
 mpos = get(0, 'MonitorPositions');
 clr = [1 1 1]*206/256;
 figargs = {'Units', 'normalized', ...
-    'Position',[1.2 0 figsize(1) figsize(2)],...
+    'Position',[0.1 0.2 figsize(1) figsize(2)],...
     'Color', clr,...
     'CloseRequestFcn',@my_closereq};
 if verLessThanOctave
@@ -66,23 +66,18 @@ if verLessThanOctave
     T   = cellfun(@char,table2cell(T),'uni',0);
 end
 TS = uitable(hf,'Data',S);
+set(TS, 'Units', 'normalized');
 TT = uitable(hf,'Data',T);
-TSpos = [20 hf.Position(4)-110 hf.Position(3)-160 90];
-TTpos = [20 20 hf.Position(3)-160 hf.Position(4)-120];
-if verLessThanOctave
-    setpixelposition(TS,TSpos);
-    set(TS,'Units','Normalized')
-    setpixelposition(TT,TTpos);
-    set(TT,'Units','Normalized')
-else
-    TS.Position = TSpos;
-    TT.Position = TTpos;
-end
+set(TT, 'Units', 'normalized');
+
+TSpos = [0 0.8 0.6 0.2];
+TTpos = [0 0.1 0.6 0.6];
+
+TS.Position = TSpos;
+TT.Position = TTpos;
+
 TS.ColumnEditable = [true true true true];
-if verLessThanOctave
-    TS.ColumnName = SCN;
-    TT.ColumnName = TCN;
-end
+
 TT.ColumnEditable = [false true true, true];
 setappdata(0,'ModalityTable',TT.Data)
 setappdata(0,'SubjectTable',TS.Data)
@@ -90,19 +85,14 @@ setappdata(0,'SubjectTable',TS.Data)
 % button
 Bpos = [hf.Position(3)-120 20 100 30];
 BCB  = @(btn,event) BtnModalityTable(hf,TT, TS);
-if verLessThanOctave
-    B = uicontrol(hf,'Style','pushbutton','String','OK');
-    set(B,'Callback',BCB);
-    setpixelposition(B,Bpos)
-    set(B,'Units','Normalized')
-else
-    B = uibutton(hf,'Position',Bpos);
-    B.Text = 'OK';
-    B.ButtonPushedFcn = BCB;
-end
+
+B = uibutton(hf,'Position',Bpos);
+B.Text = 'OK';
+B.ButtonPushedFcn = BCB;
+
 
 % preview panel
-axesArgs_axi = {hf,'Position',[hf.Position(3)-120 150 100 hf.Position(4)-90],...
+axesArgs_axi = {hf,'Units', 'normalized', 'Position',[0.55 0.5 0.4 0.4],...
     'Colormap',gray(64)};
 ax_axi = preview_nii([],imgs{1, 1}, axesArgs_axi, 'axi', hf);
 ax_axi.YTickLabel = [];
@@ -176,7 +166,7 @@ if isempty(ax)
 end
 
 if isempty(getappdata(dicom_fig, 'infoBox'))
-    infoBox = annotation(dicom_fig, 'textbox', [.8 .1 .3 .2], 'String', ' ');
+    infoBox = annotation(dicom_fig, 'textbox', [0.55 0.2 0.4 0.4], 'String', ' ');
     setappdata(dicom_fig, 'infoBox', infoBox);
 else
     infoBox = getappdata(dicom_fig, 'infoBox');
