@@ -72,8 +72,8 @@ end
 
 options.prefs=ea_prefs('');
 
-ea_init_coregmrpopup(handles,1);
-ea_init_coregctpopup(handles,options);
+ea_init_coregmrpopup(handles, 1);
+ea_init_coregctpopup(handles, options.prefs.ctcoreg.default);
 
 % load atlassets
 ea_listatlassets(options,handles,1);
@@ -613,9 +613,8 @@ if get(hObject,'Value')==1
 else
     set(handles.reconmethod,'enable','on');
     set(handles.reconmethod,'Value',2); % set to PaCER algorithm.
-    prefs=ea_prefs;
-        set(handles.targetpopup,'enable','off');
-        set(handles.maskwindow_txt,'enable','off');
+    set(handles.targetpopup,'enable','off');
+    set(handles.maskwindow_txt,'enable','off');
 end
 ea_storeui(handles);
 
@@ -852,16 +851,6 @@ if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.dicomchec
 end
 
 
-% --- Executes on button press in genptatlascheck.
-function genptatlascheck_Callback(hObject, eventdata, handles)
-% hObject    handle to genptatlascheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of genptatlascheck
-ea_storeui(handles);
-
-
 % --- Executes on button press in updatebutn.
 function updatebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to updatebutn (see GCBO)
@@ -1072,19 +1061,19 @@ ea_openpatdir(handles);
 
 
 
-% --- Executes on selection change in coregmrpopup.
-function coregmrpopup_Callback(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+% --- Executes on selection change in coregmrmethod.
+function coregmrmethod_Callback(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns coregmrpopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from coregmrpopup
+% Hints: contents = cellstr(get(hObject,'String')) returns coregmrmethod contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from coregmrmethod
 
 
 % --- Executes during object creation, after setting all properties.
-function coregmrpopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+function coregmrmethod_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1379,9 +1368,9 @@ ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over coregmrpopup.
-function coregmrpopup_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to coregmrpopup (see GCBO)
+% --- Otherwise, executes on mouse press in 5 pixel border or over coregmrmethod.
+function coregmrmethod_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to coregmrmethod (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);

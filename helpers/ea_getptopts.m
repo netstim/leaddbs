@@ -1,38 +1,47 @@
-function options=ea_getptopts(directory,options)
-% function to generate minimal options struct from a patient directory.
-% prior options struct can (optionally) be fed in and only patient specific
-% entries will be replaced.
+function options = ea_getptopts(directory,options)
+% Generate minimal options struct from a patient directory.
+
 if isempty(directory)
-    directory=pwd;
+    directory = pwd;
 end
 
-if strcmp(directory(end),filesep) % strip trailing filesep
-    directory=directory(1:end-1);
-end
-options.modality=ea_getmodality(directory);
-[options.root,options.patientname]=fileparts(directory);
-if isempty(options.root)
-    options.root=[pwd,filesep];
-else
-    options.root=[options.root,filesep];
-end
+options.earoot = ea_getearoot;
+options.native = 0;
 
-options.prefs=ea_prefs(options.patientname);
-options=ea_assignpretra(options);
-options.earoot=ea_getearoot;
-try
-    options=ea_detsides(options);
-catch
-    options.sides=1:2;
-end
-if exist([directory,filesep,'ea_reconstruction.mat'],'file')
-    load([directory,filesep,'ea_reconstruction.mat']);
-    try
-        options.elmodel=ea_get_first_notempty_elmodel(reco.props);
-    catch
-        options.elmodel='Medtronic 3389';
+if contains(directory, ['derivatives', filesep, 'leaddbs'])
+    % Construct BIDS class, get subjId
+    BIDSRoot = regexp(directory, ['^.*(?=\', filesep, 'derivatives)'], 'match', 'once');
+    bids = BIDSFetcher(BIDSRoot);
+    subjId = regexp(directory, ['(?<=leaddbs\', filesep, 'sub-)[^\', filesep, ']+'], 'match', 'once');
+
+    % Set prefs (not really needed, leave it for now)
+    options.prefs = ea_prefs(['sub-', subjId]);
+
+    % Set modality field
+    uiPrefsFile = bids.getPrefs(subjId, 'uiprefs', 'mat');
+    if isfile(uiPrefsFile)
+        uiprefs = load(uiPrefsFile);
+        options.modality = uiprefs.modality;
+        options.sides = uiprefs.sides;
+    else
+        options.modality = bids.settings.preferMRCT;
+        options.sides = [1,2];
     end
-    options=ea_resolve_elspec(options);
-end
-options.native=0;
 
+    % Set subj BIDS struct
+    options.subj = bids.getSubj(subjId, options.modality);
+
+    % Set elmodel and elspec
+    recon = bids.getRecon(subjId);
+    if isfile(recon.recon)
+        load(recon.recon);
+        try
+            options.elmodel = ea_get_first_notempty_elmodel(reco.props);
+        catch
+            options.elmodel = 'Medtronic 3389';
+        end
+        options = ea_resolve_elspec(options);
+    end
+else
+    error('Not a BIDS dataset!')
+end

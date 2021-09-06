@@ -6,14 +6,11 @@ function varargout=ea_coregctmri_fsl(options)
 
 if ischar(options) % return name of method.
     varargout{1}='FSL FLIRT';
-    varargout{2}={'SPM8','SPM12'};
-    varargout{3}=['nan']; % suggestion for alpha-parameter.
     return
 end
 
-disp('Coregistering postop CT to preop MRI...');
-ea_flirt([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
-          [options.root,options.patientname,filesep,options.prefs.rawctnii_unnormalized],...
-          [options.root,options.patientname,filesep,options.prefs.ctnii_coregistered],1);
+disp('Coregistering post-op CT to pre-op MRI...');
+ea_flirt([options.subj.preopAnat.(options.subj.AnchorModality).coreg],...
+    [options.subj.postopAnat.(options.subj.postopModality).preproc],...
+    [options.subj.postopAnat.(options.subj.postopModality).coreg],1);
 disp('Coregistration done.');
-

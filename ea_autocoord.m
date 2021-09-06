@@ -14,6 +14,12 @@ options.tic=tic;
 % set patientdir
 options.prefs.patientdir = options.patientname;
 
+% Get BIDS fetcher and subj struct
+bids = getappdata(options.leadfigure, 'bids');
+subjId = getappdata(options.leadfigure, 'subjId');
+options.bids = bids;
+options.subj = bids.getSubj(subjId{1}, options.modality);
+
 % get accurate electrode specifications and save it in options.
 options = ea_resolve_elspec(options);
 directory = [options.root,options.patientname,filesep];
@@ -69,60 +75,68 @@ end
 
 % only 3D-rendering viewer can be opened if no patient is selected.
 if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patientname)
-    % move files for compatibility
-    try ea_compat_patfolder(options); end
-
-    % assign/order anatomical images
-    [options,presentfiles]=ea_assignpretra(options);
-
-    % generate grid file
-    if ~exist(ea_niigz([directory,'grid.nii']),'file')
-        try
-            ea_gengrid(options);
+    % Copy post-op images to preprocessing folder, no preproc is done for now
+    fields = fieldnames(options.subj.postopAnat);
+    for i=1:length(fields)
+        if ~isfile(options.subj.postopAnat.(fields{i}).preproc)
+            ea_mkdir(fileparts(options.subj.postopAnat.(fields{i}).preproc));
+            copyfile(options.subj.postopAnat.(fields{i}).raw, options.subj.postopAnat.(fields{i}).preproc);
         end
     end
 
-    % anat preprocess, only do once.
-    % a small hidden file '.pp' inside patient folder will show this has been done before.
-    if ~exist([directory,'.pp'],'file') && ~exist([directory,'ea_normmethod_applied.mat'],'file')
-        % create untouched copy
-        if ~isempty(presentfiles) && ~exist([directory,'raw_',presentfiles{1}],'file')
-            copyfile([directory,presentfiles{1}],[directory,'raw_',presentfiles{1}]);
-        end
+    % Preprocessing pre-op images
+    preprocessing = 0;
+    fields = fieldnames(options.subj.preopAnat);
+    for i=1:length(fields)
+        if ~isfile(options.subj.preopAnat.(fields{i}).preproc)
+            % Copy files
+            ea_mkdir(fileparts(options.subj.preopAnat.(fields{i}).preproc));
+            copyfile(options.subj.preopAnat.(fields{i}).raw, options.subj.preopAnat.(fields{i}).preproc);
 
-        % apply reorientation/cropping and biasfieldcorrection
-        for fi=1:length(presentfiles)
-            ea_anatpreprocess([directory,presentfiles{fi}]);
-        end
+            % Run reorientation, cropping and bias field correction
+            ea_anatpreprocess(options.subj.preopAnat.(fields{i}).preproc);
 
-        % Reslice(interpolate) preoperative anatomical image if needed
-        try ea_resliceanat(options); end
+            % Preprocessing only for pre-op anchor image
+            if i==1
+                ea_resliceanat(options.subj.preopAnat.(fields{i}).preproc);
+                % ea_acpcdetect(options.subj.preopAnat.(fields{i}).preproc);
+            end
 
-        % acpcdetect
-        % try ea_acpcdetect([directory,presentfiles{1}]); end
-
-        try ea_precoreg([directory,presentfiles{1}],options.primarytemplate,options); end
-
-        try
-            fs = fopen([directory,'.pp'],'w');
-            fprintf(fs,'%s','anat preprocess done');
-            fclose(fs);
+            preprocessing = 1;
         end
     end
 
-    % NEED FURTHER TUNE: auto detection of MRCT modality for the patient
-    try
-        options.modality = ea_getmodality(directory);
+    if preprocessing
+        fprintf('\nPreprocessing finished.\n\n');
+    end
+
+    % Set primary template
+    if ismember(options.subj.AnchorModality, fieldnames(bids.spacedef.norm_mapping))
+        options.primarytemplate = bids.spacedef.norm_mapping.(options.subj.AnchorModality);
+    else
+        options.primarytemplate = bids.spacedef.misfit_template;
+    end
+
+    % Pre-coregister pre-op anchor image
+    if ~isfile(options.subj.preopAnat.(fields{1}).coreg)
+        ea_precoreg(options.subj.preopAnat.(fields{1}).preproc, ... % Input anchor image
+            options.primarytemplate, ... % Template to use
+            options.subj.preopAnat.(fields{1}).coreg, ... % Output pre-coregistered image
+            options.subj.coreg.transform.(fields{1})); % % Pre-coregistration transform
     end
 
     if options.modality == 2 % CT support
-        options.prefs.tranii=options.prefs.ctnii;
-        options.prefs.tranii_unnormalized=options.prefs.rawctnii_unnormalized;
-
         if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered])
-            diary([directory, 'coregCT_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
-            eval([options.coregct.method,'(options)']); % triggers the coregct function and passes the options struct to it.
-            ea_dumpnormmethod(options,options.coregct.method,'coregctmethod');
+            % Setup log
+            ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
+            diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+
+            % Run CT coregistration function
+            eval([options.coregct.func, '(options);']);
+
+            % Dump method
+            ea_dumpmethod(options, 'coreg');
+
             ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
             ea_gencoregcheckfigs(options); % generate checkreg figures
             diary off
@@ -130,7 +144,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.coregmr.do
-        diary([directory, 'coregMR_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+        diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
         % 1. coreg all available preop MRI
         ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
 
@@ -140,7 +154,8 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.do
-        diary([directory, 'normalize_', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+        ea_mkdir(fileparts(options.subj.norm.log.logBaseName));
+        diary([options.subj.norm.log.logBaseName, datestr(now, 'yyyymmddTHHMMss'), '.log']);
         if ~(ea_coreglocked(options,'glanat')==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
             if ea_coreglocked(options,'glanat')==1 && ~strcmp(options.normalize.method,'ea_normalize_apply_normalization') % in this case, only perform normalization if using a multispectral approach now.
                 [~,~,~,doit]=eval([options.normalize.method,'(''prompt'')']);
@@ -151,7 +166,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             if doit || strcmp(options.normalize.method,'ea_normalize_apply_normalization')
                 clear doit
                 % 3. finally perform normalization based on dominant or all preop MRIs
-                ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
+                ea_dumpmethod(options, 'norm'); % has to come first due to applynormalization.
 
                 % cleanup already normalized versions:
                 ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
