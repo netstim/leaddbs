@@ -1,4 +1,4 @@
 function ea_mkdir(pth)
-if ~isfolder(pth, 'dir')
+if ~isfolder(pth)
     mkdir(pth);
 end
