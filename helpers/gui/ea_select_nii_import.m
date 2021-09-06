@@ -100,7 +100,7 @@ end
 % preview panel
 axesArgs_axi = {hf,'Position',[hf.Position(3)-120 150 100 hf.Position(4)-90],...
     'Colormap',gray(64)};
-ax_axi = preview_nii([],imgs{1, 1}, axesArgs_axi, 'axi');
+ax_axi = preview_nii([],imgs{1, 1}, axesArgs_axi, 'axi', hf);
 ax_axi.YTickLabel = [];
 ax_axi.XTickLabel = [];
 
@@ -118,7 +118,7 @@ ax_axi.XTickLabel = [];
 %ax_sag.YTickLabel = [];
 %ax_sag.XTickLabel = [];
 
-TT.CellSelectionCallback = @(src,event) preview_nii(ax_axi,imgs{event.Indices(1), 1}, axesArgs_axi, 'axi');
+TT.CellSelectionCallback = @(src,event) preview_nii(ax_axi,imgs{event.Indices(1), 1}, axesArgs_axi, 'axi', hf);
 hf.WindowScrollWheelFcn = @(src, event) scroll_nii(ax_axi, event);  % this callback enables scrolling
 
 waitfor(hf);
@@ -165,15 +165,34 @@ function scroll_nii(ax, event)
     
 end
 
-
-function ax = preview_nii(ax, img, axesArgs, cut_direction)
+function ax = preview_nii(ax, img, axesArgs, cut_direction, dicom_fig)
 
 if isempty(ax)
     ax=uiaxes(axesArgs{:});
 end
 
+if isempty(getappdata(dicom_fig, 'infoBox'))
+    infoBox = annotation(dicom_fig, 'textbox', [.8 .1 .3 .2], 'String', ' ');
+    setappdata(dicom_fig, 'infoBox', infoBox);
+else
+    infoBox = getappdata(dicom_fig, 'infoBox');
+end
+
 % create info panel
-%infoBox = annotation('textbox', [.2 .5 .3 .3], 'String', '1');
+try
+time_and_date_ugly = img.p.nii.ext.edata_decoded.AcquisitionDateTime;
+time_and_date_pretty = sprintf('%s.%s.%s %s:%s', num2str(time_and_date_ugly(7:8)), ...
+    num2str(time_and_date_ugly(5:6)), num2str(time_and_date_ugly(1:4)), ...
+    num2str(time_and_date_ugly(9:10)), num2str(time_and_date_ugly(11:12)));
+catch
+    time_and_date_pretty = 'N/A';
+end
+info_str = sprintf('Size: [%s x %s %s]\nPixel dimensions: [%.2f x %.2f x %.2f]\nAcquistion Date: %s\n', ... 
+    num2str(img.dim(1)), num2str(img.dim(2)), num2str(img.dim(3)), ...
+    img.p.pixdim(1), img.p.pixdim(2), img.p.pixdim(3), ...
+    time_and_date_pretty);
+
+infoBox.String = info_str;
 
 setappdata(ax, 'img', img);     % save .nii image in current appdata ax for scrolling
 
