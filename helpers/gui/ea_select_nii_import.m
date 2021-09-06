@@ -36,10 +36,14 @@ T = table(fnames, Session, Type, Modality);
 ModalityTablePref = getpref('dicm2nii_gui_para', 'ModalityTable', T);
 
 % GUI
+figsize = [1, 0.6];
+
 setappdata(0,'Canceldicm2nii',false)
 scrSz = get(0, 'ScreenSize');
+mpos = get(0, 'MonitorPositions');
 clr = [1 1 1]*206/256;
-figargs = {'bids' * 256.^(0:3)','Position',[min(scrSz(4)+420,620) scrSz(4)-600 600 500],...
+figargs = {'Units', 'normalized', ...
+    'Position',[1.2 0 figsize(1) figsize(2)],...
     'Color', clr,...
     'CloseRequestFcn',@my_closereq};
 if verLessThanOctave
