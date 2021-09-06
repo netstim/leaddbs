@@ -10,7 +10,11 @@ if ischar(options) % return name of method.
 end
 
 disp('Coregistering post-op CT to pre-op MRI...');
-ea_flirt([options.subj.preopAnat.(options.subj.AnchorModality).coreg],...
+transform = ea_flirt([options.subj.preopAnat.(options.subj.AnchorModality).coreg],...
     [options.subj.postopAnat.(options.subj.postopModality).preproc],...
     [options.subj.postopAnat.(options.subj.postopModality).coreg],1);
+
+movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'flirt.mat']);
+movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'flirt.mat']);
+
 disp('Coregistration done.');
