@@ -511,7 +511,7 @@ classdef BIDSFetcher
             baseDir = fullfile(LeadDBSDirs.brainshiftDir, 'log');
 
             % Set brain shift log
-            brainshiftLog = [baseDir, filesep, 'sub-', subjId, '_desc-methods.txt'];
+            brainshiftLog.method = [baseDir, filesep, 'sub-', subjId, '_desc-brainshiftmethod.json'];
         end
 
         function brainshiftCheckreg = getBrainshiftCheckreg(obj, subjId, preferMRCT)
