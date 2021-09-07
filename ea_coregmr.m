@@ -1,32 +1,36 @@
 function ea_coregmr(options)
-% wrapper for coreg routines
+% Wrapper for coregister post-op MRI
 
-% in CT imaging, coregistration is done elsewhere.
-% also ignore when there is no tra/cor/sag existing (normal conn study)
-if options.modality == 2 || ~isfield(options.prefs,'tranii_unnormalized')
-    return
-end
-
+% Set fixed anchor image
 fixed = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 
 if ~isfile(fixed)
     warning('No preoperative acquisition found. Coregistration not possible.');
     return
 end
-    
-moving = cellfun(@(x) options.subj.postopAnat.(x).preproc, fieldnames(options.subj.postopAnat), 'UniformOutput', false);
-out = cellfun(@(x) options.subj.postopAnat.(x).coreg, fieldnames(options.subj.postopAnat), 'UniformOutput', false);
 
+% Set moving and output image
+moving = cellfun(@(x) options.subj.postopAnat.(x).preproc, fieldnames(options.subj.postopAnat), 'Uni', 0);
+out = cellfun(@(x) options.subj.postopAnat.(x).coreg, fieldnames(options.subj.postopAnat), 'Uni', 0);
+
+% Check moving image existence
 moving_exists = cellfun(@(x) isfile(x), moving);
-out_approved = cellfun(@(x) logical(ea_coreglocked(options, x)), out);
 
+% Check registration lock/approval status
+out_approved = cellfun(@(x) logical(ea_reglocked(options, x)), out);
+
+% Remove non-existing moving image and approved output image
 moving(~moving_exists | out_approved) = [];
 out(~moving_exists | out_approved) = [];
 
-if isempty(moving); return; end
+% Return if no image remains
+if isempty(moving)
+    return;
+end
 
 doreslice=1;
 
+% Do coregistration
 for i = 1:length(moving)
     disp('Coregistering postop MR cor to preop MRI...');
     switch options.coregmr.method
