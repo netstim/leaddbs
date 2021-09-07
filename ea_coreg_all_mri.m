@@ -10,7 +10,6 @@ presentfiles = cellfun(@(modality) options.subj.preopAnat.(modality).preproc, mo
 for coregfi=2:length(presentfiles)
     if ~ea_coreglocked(options,presentfiles{coregfi}) % file has already been locked and approved by used
         out_file = options.subj.coreg.anat.preop.(modalities{coregfi});
-        ea_backuprestore(out_file);
         ea_coreg2images(options, presentfiles{coregfi}, presentfiles{1}, out_file);
 
         % reslice images if needed
