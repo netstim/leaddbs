@@ -15,7 +15,7 @@ transform = ea_brainsfit([options.subj.preopAnat.(options.subj.AnchorModality).c
     [options.subj.postopAnat.(options.subj.postopModality).preproc],...
     [options.subj.postopAnat.(options.subj.postopModality).coreg]);
 
-movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'brainsfit.h5']);
-movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'brainsfit.h5']);
+movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'brainsfit.mat']);
+movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'brainsfit.mat']);
 
 disp('Coregistration done.');
