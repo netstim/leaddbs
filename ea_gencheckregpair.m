@@ -1,5 +1,5 @@
 function ea_gencheckregpair(moving,fixed,outfn)
-% function that uses FSLs SLICER tool to create a checkreg figure.
+% function that uses FSL SLICER tool to create a checkreg figure.
 
 basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
 if ispc
@@ -10,7 +10,7 @@ end
 
 uuid=ea_generate_uuid;
 
-mov=ea_load_untouch_nii([moving,'.nii']);
+mov=ea_load_untouch_nii(moving);
 mov.img=double(mov.img);
 mov.img(isnan(mov.img))=0;
 SIX=sort(mov.img(mov.img(:)~=0),'descend');
