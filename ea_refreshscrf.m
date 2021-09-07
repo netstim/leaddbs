@@ -52,7 +52,7 @@ end
 
 ea_createbbfiles(directory); % needs to unfortunately be done each time since coregistration may have changed.
 ea_createmovim(directory,options);
-ea_gencoregcheckfigs_scrf(directory,scrf,options);
+ea_gencheckregfigs(options, 'brainshift');
 
 
 function ea_createbbfiles(directory)

@@ -431,7 +431,7 @@ switch ea_stripext(currvol)
         ea_dumpmethod(options, 'coreg');
 
         ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
-        ea_gencoregcheckfigs(options); % generate checkreg figures
+        ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
 
     case ea_stripext(options.prefs.fa2anat) % FA
         options.coregmr.method=get(handles.coregmrmethod,'String');

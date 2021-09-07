@@ -138,7 +138,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             ea_dumpmethod(options, 'coreg');
 
             ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
-            ea_gencoregcheckfigs(options); % generate checkreg figures
+            ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
             diary off
         end
     end
@@ -180,7 +180,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                     ea_tonemapct_file(options,'mni');
                 end
                 % 4. generate coreg-check figs (all to all).
-                ea_gencoregcheckfigs(options); % generate checkreg figures
+                ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
             end
         end
         diary off
@@ -188,7 +188,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if isfield(options,'gencheckreg') % this case is an exception when calling from the Tools menu.
         if options.gencheckreg
-            ea_gencoregcheckfigs(options); % generate checkreg figures
+            ea_gencheckregfigs(options); % generate checkreg figures
         end
     end
 
@@ -215,7 +215,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     if options.normalize.check %check box "Check Results" in "Volume Registrations" panel
         % export "control" niftis with wireframe of normal anatomy..
         if ~exist([directory,'checkreg'],'file')
-            ea_gencoregcheckfigs(options); % generate checkreg figures if they not yet exist
+            ea_gencheckregfigs(options); % generate checkreg figures if they not yet exist
         end
         options.normcoreg='normalize';
         ea_checkcoreg(options);
