@@ -7,47 +7,47 @@ if options.modality == 2 || ~isfield(options.prefs,'tranii_unnormalized')
     return
 end
 
-directory=[options.root,options.patientname,filesep];
+fixed = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+
+if ~isfile(fixed)
+    warning('No preoperative acquisition found. Coregistration not possible.');
+    return
+end
+    
+moving = cellfun(@(x) options.subj.postopAnat.(x).preproc, fieldnames(options.subj.postopAnat), 'UniformOutput', false);
+out = cellfun(@(x) options.subj.postopAnat.(x).coreg, fieldnames(options.subj.postopAnat), 'UniformOutput', false);
+
+moving_exists = cellfun(@(x) isfile(x), moving);
+out_approved = cellfun(@(x) logical(ea_coreglocked(options, x)), out);
+
+moving(~moving_exists | out_approved) = [];
+out(~moving_exists | out_approved) = [];
+
+if isempty(moving); return; end
 
 doreslice=1;
 
-% restore raw files -> postop files from prior attempts. & make backups
-% from original files in any case.
-try
-    if  ~ea_coreglocked(options,[directory,options.prefs.tranii_unnormalized]) % file has already been locked and approved by used
-        ea_backuprestore([directory,options.prefs.tranii_unnormalized]);
+for i = 1:length(moving)
+    disp('Coregistering postop MR cor to preop MRI...');
+    switch options.coregmr.method
+        case 'SPM' % SPM
+            ea_coregmr_spm(options, fixed, moving{i}, out{i}, doreslice);
+        case 'FSL FLIRT' % FSL FLIRT
+            ea_coregmr_flirt(options, fixed, moving{i}, out{i});
+        case 'FSL BBR' % FSL FLIRT
+            ea_coregmr_flirt_bbr(options, fixed, moving{i}, out{i});
+        case 'ANTs' % ANTs
+            ea_coregmr_ants(options, fixed, moving{i}, out{i}, 0);
+        case 'BRAINSFIT' % BRAINSFit
+            ea_coregmr_brainsfit(options, fixed, moving{i}, out{i});
+        case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
+            ea_coregmr_spm(options, fixed, moving{i}, out{i}, 0); % dont use doreslice here to refrain for doing two interpolations.
+            ea_coregmr_ants(options, fixed, moving{i}, out{i});
+        case 'Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
+            ea_coregmr_spm(options, fixed, moving{i}, out{i}, 0); % dont use doreslice here to refrain for doing two interpolations.
+            ea_coregmr_brainsfit(options, fixed, moving{i}, out{i});
     end
+    disp('Coregistration done.');
 end
 
-try
-    if  ~ea_coreglocked(options,[directory,options.prefs.cornii_unnormalized]) % file has already been locked and approved by used
-        ea_backuprestore([directory,options.prefs.cornii_unnormalized]);
-    end
-end
-
-try
-    if  ~ea_coreglocked(options,[directory,options.prefs.sagnii_unnormalized]) % file has already been locked and approved by used
-        ea_backuprestore([directory,options.prefs.sagnii_unnormalized]);
-    end
-end
-
-switch options.coregmr.method
-    case 'SPM' % SPM
-        ea_coregmr_spm(options,doreslice);
-    case 'FSL FLIRT' % FSL FLIRT
-        ea_coregmr_flirt(options);
-    case 'FSL BBR' % FSL FLIRT
-        ea_coregmr_flirt_bbr(options);
-    case 'ANTs' % ANTs
-        ea_coregmr_ants(options,0);
-    case 'BRAINSFIT' % BRAINSFit
-        ea_coregmr_brainsfit(options);
-    case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
-        ea_coregmr_spm(options,0); % dont use doreslice here to refrain for doing two interpolations.
-        ea_coregmr_ants(options);
-    case 'Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
-        ea_coregmr_spm(options,0); % dont use doreslice here to refrain for doing two interpolations.
-        ea_coregmr_brainsfit(options);
-end
-
-ea_dumpnormmethod(options,options.coregmr.method,'coregmrmethod');
+ea_dumpmethod(options, 'coreg');
