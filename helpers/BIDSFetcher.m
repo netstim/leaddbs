@@ -76,7 +76,14 @@ classdef BIDSFetcher
 
         function subj = getSubj(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
@@ -209,7 +216,14 @@ classdef BIDSFetcher
 
         function [postopAnat, bothMRCTPresent] = getPostopAnat(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             else
                 if ischar(preferMRCT)
                     switch upper(preferMRCT)
@@ -272,7 +286,14 @@ classdef BIDSFetcher
 
         function preprocAnat = getPreprocAnat(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             % Get pre-op and post-op anat images
@@ -309,7 +330,14 @@ classdef BIDSFetcher
 
         function coregAnat = getCoregAnat(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             % Get preprocessed anat images
@@ -337,7 +365,14 @@ classdef BIDSFetcher
 
         function coregTransform = getCoregTransform(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             % Get LeadDBS dirs and base name
@@ -371,7 +406,14 @@ classdef BIDSFetcher
 
         function coregCheckreg = getCoregCheckreg(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             % Get coregistered anat images
@@ -381,7 +423,7 @@ classdef BIDSFetcher
             fields = fieldnames(coregAnat.preop);
             coregAnat.preop = rmfield(coregAnat.preop, fields(1));
 
-            % Remove postop CT image, will use tone-mapped CT
+            % Remove post-op CT image, will use tone-mapped CT
             if isfield(coregAnat.postop, 'CT')
                 coregAnat.postop = rmfield(coregAnat.postop, 'CT');
             end
@@ -405,7 +447,14 @@ classdef BIDSFetcher
 
         function brainshiftAnat = getBrainshiftAnat(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             % Get coregistered anat images
@@ -467,7 +516,14 @@ classdef BIDSFetcher
 
         function brainshiftCheckreg = getBrainshiftCheckreg(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             % Get brain shift anat images
@@ -491,7 +547,14 @@ classdef BIDSFetcher
 
         function normAnat = getNormAnat(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             % Get coregistered anat images
@@ -543,13 +606,20 @@ classdef BIDSFetcher
 
         function normCheckreg = getNormCheckreg(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             % Get normalized anat images
             normAnat = obj.getNormAnat(subjId, preferMRCT);
 
-            % Remove postop CT image, will use tone-mapped CT
+            % Remove post-op CT image, will use tone-mapped CT
             if isfield(normAnat.postop, 'CT')
                 normAnat.postop = rmfield(normAnat.postop, 'CT');
             end
@@ -573,7 +643,14 @@ classdef BIDSFetcher
 
         function recon = getRecon(obj, subjId, preferMRCT)
             if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
-                preferMRCT = obj.settings.preferMRCT;
+                uiprefsFile = getPrefs(obj, subjId, 'uiprefs', 'mat');
+                % Check if uiprefs exists
+                if isfile(uiprefsFile) % Set from uiprefs if it exists
+                    uiprefs = load(uiprefsFile);
+                    preferMRCT = uiprefs.modality;
+                else % Set from LeadDBS prefs
+                    preferMRCT = obj.settings.preferMRCT;
+                end
             end
 
             % Get dirs
