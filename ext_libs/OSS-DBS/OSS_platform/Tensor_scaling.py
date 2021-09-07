@@ -106,7 +106,7 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
                 w12 = eigVals[0]/(eigVals[1]+eps)
                 w13 = eigVals[0]/(eigVals[1]+eps)
                 theta = theta_star(w12, w13)
-                eigVals_scaled= np.array([1., 1./(w12+eps), 1./(w13+eps)]*theta
+                eigVals_scaled= np.array([1., 1./(w12+eps), 1./(w13+eps)])*theta
 
             if np.any(eigVals_scaled<=0): # if there are still negative eigenvalues put eigVals<=0.0000001
                 print("Error, no negative eigenvalues are allowed by definition!")
