@@ -137,14 +137,17 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             % Dump method
             ea_dumpmethod(options, 'coreg');
 
-            ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
+            ea_tonemapct_file(options, 'native'); % Compute tonemapped (native space) CT
             ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
             diary off
         end
     end
 
     if options.coregmr.do
+        % Setup log
+        ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
         diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+
         % Coregister post-op MRI to pre-op MRI
         ea_coregmr(options);
 
