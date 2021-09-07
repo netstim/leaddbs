@@ -126,7 +126,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.modality == 2 % CT support
-        if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered])
+        if options.coregct.do && ~ea_reglocked(options, options.subj.coreg.anat.postop.CT)
             % Setup log
             ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
             diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
