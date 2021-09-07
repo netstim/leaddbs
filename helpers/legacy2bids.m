@@ -1,4 +1,4 @@
-function results = legacy2bids(source,dest,isdicom,dicom_source,move)
+function results = legacy2bids(source,dest,isdicom,dicom_source,move,doDcmConv)
 %SANTIY: first check the existence of your source and dest directory. If it is not there,
 %create a new directory.
 for j=1:length(source)
@@ -14,6 +14,7 @@ for j=1:length(source)
         addpath(dest{j});
         mkdir(dest{j});
     end
+    
 end
 
 %if you have dicom files and have not provided a dicom source directory
@@ -27,7 +28,11 @@ end
 modes = {'anat','func'};
 sessions = {'ses-preop','ses-postop'};
 dicom_sessions = {'preop_mri','postop_ct'};
-subfolder_cell = {'sourcedata','rawdata','derivatives'};
+if exist('doDcmConv','var') && doDcmConv 
+    subfolder_cell = {'sourcedata','legacy_rawdata','derivatives'};
+else 
+    subfolder_cell = {'sourcedata','rawdata','derivatives'};
+end
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export'};
 %not sure how to handle log and export yet
 %mapping will allow quick reference of the files to move
@@ -50,8 +55,6 @@ for patients = 1:length(source)
         
     end
     [filepath,patient_name,ext] = fileparts(source_patient);
-    
-    
     files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
     file_index = 1;
