@@ -145,11 +145,12 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if options.coregmr.do
         diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
-        % 1. coreg all available preop MRI
-        ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
-
-        % 2. then coreg postop MRI to preop MRI
+        % Coregister post-op MRI to pre-op MRI
         ea_coregmr(options);
+
+        % Coregister all available pre-op MRI
+        ea_checkcoregallmri(options,0,1);
+
         diary off
     end
 
