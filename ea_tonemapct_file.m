@@ -7,27 +7,26 @@ else
             nativemni='native';
     end
 end
+
 switch nativemni
     case 'native'
-        directory=[options.root,options.patientname,filesep];
-        if exist([directory,options.prefs.ctnii_coregistered],'file')
-            ct=ea_load_nii([directory,options.prefs.ctnii_coregistered]);
-            ct.fname=[directory,'tp_',options.prefs.ctnii_coregistered];
-            ct.img=ea_tonemap_ct(ct.img);
-            ct.dt=[16,0];
+        if isfile(options.subj.postopAnat.CT.coreg)
+            ct = ea_load_nii(options.subj.postopAnat.CT.coreg);
+            ct.fname = options.subj.postopAnat.CT.coregTonemap;
+            ct.img = ea_tonemap_ct(ct.img);
+            ct.dt = [16,0];
             ea_write_nii(ct);
         else
-            fprintf('%s not present. Skipping tonemapping.\n', options.prefs.ctnii_coregistered);
+            fprintf('Coregistered CT image not present. Skipping tonemapping.\n');
         end
     case 'mni'
-        directory=[options.root,options.patientname,filesep];
-        if exist([directory,options.prefs.gctnii],'file')
-            ct=ea_load_nii([directory,options.prefs.gctnii]);
-            ct.fname=[directory,'tp_',options.prefs.gctnii];
-            ct.img=ea_tonemap_ct(ct.img);
+        if isfile(options.subj.postopAnat.CT.norm)
+            ct = ea_load_nii(options.subj.postopAnat.CT.norm);
+            ct.fname = options.subj.postopAnat.CT.normTonemap;
+            ct.img = ea_tonemap_ct(ct.img);
             ea_write_nii(ct);
         else
-            fprintf('%s not present. Skipping tonemapping.\n', options.prefs.gctnii);
+            fprintf('Normalized CT image not present. Skipping tonemapping.\n');
         end
 end
 
