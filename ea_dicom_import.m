@@ -76,7 +76,8 @@ else
 %         
         % first option: rename files with the help of a GUI
         [~, niiFiles] = fileparts(ea_regexpdir(tmp_dir, '\.nii.gz$', 0));
-        ea_select_nii_import(niiFiles, tmp_dir, dicom_dir);
+        ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, fullfile(options.root, options.patientname), tmp_dir, dicom_dir)
+        %ea_select_nii_import(niiFiles, tmp_dir, dicom_dir);
         disp('done');
         % second option: use lookup table to find files and convert them to BIDS
         % read in lookup table
