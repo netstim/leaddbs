@@ -94,7 +94,7 @@ if numel(transform) == 0
         ea_delete([directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
     else
         ea_backuprestore(refb0);
-        ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
+        ea_coregimages(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
         ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
     end
 end

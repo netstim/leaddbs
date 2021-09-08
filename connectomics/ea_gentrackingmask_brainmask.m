@@ -84,7 +84,7 @@ if docoreg
             [directory,ea_stripext(options.prefs.b0), '2', ea_stripext(options.prefs.prenii_unnormalized), 'InverseComposite.nii.gz'], 'Linear');
     else
         copyfile([directory,'brainmask.nii'],[directory,'cbrainmask.nii']);
-        affinefile = ea_coreg2images(options, ...
+        affinefile = ea_coregimages(options, ...
             [directory,options.prefs.prenii_unnormalized], ... % moving
             [directory,options.prefs.b0], ... % fix
             [directory,'c',options.prefs.prenii_unnormalized], ... % out
