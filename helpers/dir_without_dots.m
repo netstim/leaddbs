@@ -14,8 +14,8 @@ inds = [];
 n    = 0;
 k    = 1;
 
-while n < 2 && k <= length(listing)
-    if any(strcmp(listing(k).name, {'.', '..'}))
+while n < 3 && k <= length(listing)
+    if any(strcmp(listing(k).name, {'.', '..','.DS_Store'}))
         inds(end + 1) = k;
         n = n + 1;
     end
