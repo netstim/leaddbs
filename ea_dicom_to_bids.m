@@ -77,10 +77,10 @@ for sesIdx = 1:length(sessions)
             fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
             
             if strcmp(ses, 'preop')
-                uitreenode(ui.previewtree_preop_anat, 'Text', fname); 
+                uitreenode(ui.previewtree_preop_anat, 'Text', fname);
             else
-                uitreenode(ui.previewtree_postop_anat, 'Text', fname); 
-            end  
+                uitreenode(ui.previewtree_postop_anat, 'Text', fname);
+            end
         end
         
     end
@@ -91,18 +91,25 @@ end
 function ok_button_function(uiapp, TT, lookup_table, dataset_folder, nii_folder, subjID)
 
 dat = cellfun(@char,table2cell(TT.Data),'uni',0);
+sessions = unique(lookup_table(:,2));
+sessions(ismember(sessions,'skip')) = [];   % remove skip
+
+% preallocate anat_files
+anat_files = struct();
+for sesIdx = 1:length(sessions)
+    ses = sessions{sesIdx};
+    anat_files.(ses) = [];
+end
+
 
 % if all(any(ismember(dat(:,2:4),'skip'),2))
 %     warndlg('All images are skipped... Please select the type and modality for all scans','No scan selected');
 %     return;
 % end
 
-anat_files = struct();
+sanity_check_passed = true;
 
-% populate anat_files
-sessions = unique(lookup_table(:,2));
-sessions(ismember(sessions,'skip')) = [];   % remove skip
-
+% before we do anything, first a sanity check if user has selected only one file per modality
 for sesIdx = 1:length(sessions)
     
     ses = sessions{sesIdx};
@@ -110,24 +117,52 @@ for sesIdx = 1:length(sessions)
     for fileIdx = 1:length(dat)
         if strcmp(dat{fileIdx, 2}, ses) && ~strcmp(dat{fileIdx, 4}, 'skip') && ~strcmp(dat{fileIdx, 3}, 'skip')
             
-            fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
+            fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});      % generate BIDS filename
             
-            % move files
-            if ~exist(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'), 'dir')
-                mkdir(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'));
+            if ~isfield(anat_files.(ses), dat{fileIdx, 4})
+                anat_files.(ses).(dat{fileIdx, 4}) = fname;                         % set output struct
+            else
+                sanity_check_passed = false;
+                break
             end
-            copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.nii.gz']));
-            copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.json']));
-
-            anat_files.(ses).(dat{fileIdx, 4}) = fname; % set output struct
+            
         end
+    end
+    
+end
+
+if sanity_check_passed == true
+    for sesIdx = 1:length(sessions)
         
+        ses = sessions{sesIdx};
+        
+        for fileIdx = 1:length(dat)
+            if strcmp(dat{fileIdx, 2}, ses) && ~strcmp(dat{fileIdx, 4}, 'skip') && ~strcmp(dat{fileIdx, 3}, 'skip')
+                
+                fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
+                
+                % move files
+                if ~exist(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'), 'dir')
+                    mkdir(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'));
+                end
+                copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.nii.gz']));
+                copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.json']));
+                
+                anat_files.(ses).(dat{fileIdx, 4}) = fname; % set output struct
+            end
+            
+        end
     end
 end
 
-setappdata(groot, 'anat_files', anat_files);
-
-delete(uiapp);      % close window
+if sanity_check_passed == true
+    setappdata(groot, 'anat_files', anat_files);
+    delete(uiapp);      % close window
+else
+    s = uiconfirm(uiapp.UIFigure, 'Multiple files have been detected for one or more modalities. Please select only one file per modality and session', ...
+        'Too many files detected', 'Options', {'OK'}, ...
+    'Icon', 'warning');
+end
 
 end
 
