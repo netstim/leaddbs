@@ -37,9 +37,14 @@ ui.niiFileTable.ColumnEditable = [false true true, true];
 ui.SubjectIDLabel.Text = subjID;
 ui.FilepathLabel.Text = dataset_folder;
 
+% update preview tree and expand it
+ui.previewtree_subj.Text = subjID;
+expand(ui.Tree, 'all');
 preview_nii(ui, imgs{1,1}); % set initial image to the first one
 
 ui.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(ui,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
+ui.niiFileTable.CellEditCallback = @(src,event) update_preview_tree(ui, lookup_table, subjID); % callback for cell change -> update ui tree on the right
+
 ui.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(ui, event);     % callback for scrolling images
 
 % OK button behaviour
@@ -51,6 +56,38 @@ anat_files = getappdata(groot, 'anat_files');
 
 end
 
+function update_preview_tree(ui, lookup_table, subjID)
+
+% update tree view as well
+dat = cellfun(@char,table2cell(ui.niiFileTable.Data),'uni',0);  % get data
+ui.previewtree_preop_anat.Children.delete;      % delete children
+ui.previewtree_postop_anat.Children.delete;    % delete children
+
+% populate tree
+sessions = unique(lookup_table(:,2));
+sessions(ismember(sessions,'skip')) = [];   % remove skip
+
+for sesIdx = 1:length(sessions)
+    
+    ses = sessions{sesIdx};
+    
+    for fileIdx = 1:length(dat)
+        if strcmp(dat{fileIdx, 2}, ses) && ~strcmp(dat{fileIdx, 4}, 'skip') && ~strcmp(dat{fileIdx, 3}, 'skip')
+            
+            fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
+            
+            if strcmp(ses, 'preop')
+                uitreenode(ui.previewtree_preop_anat, 'Text', fname); 
+            else
+                uitreenode(ui.previewtree_postop_anat, 'Text', fname); 
+            end  
+        end
+        
+    end
+end
+
+
+end
 function ok_button_function(uiapp, TT, lookup_table, dataset_folder, nii_folder, subjID)
 
 dat = cellfun(@char,table2cell(TT.Data),'uni',0);
@@ -143,7 +180,6 @@ setappdata(ui.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice fo
 ui.axes_sag.DataAspectRatioMode = 'manual';
 ui.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
 set(ui.axes_sag, 'view', [90, -90]);
-
 
 end
 
