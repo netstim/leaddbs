@@ -17,8 +17,8 @@ if ismember('coreg', type)
     % Remove anchor image from subj.coreg.anat.preop struct
     preop = rmfield(options.subj.coreg.anat.preop, options.subj.AnchorModality);
 
-    % Remove CT from subj.coreg.anat.postop struct
-    if options.modality
+    % Remove CT from subj.coreg.anat.postop struct, will use tone-mapped image
+    if options.modality == 2
         postop = rmfield(options.subj.coreg.anat.postop, 'CT');
     end
 
@@ -61,8 +61,8 @@ if ismember('norm', type)
     % Get template Image path
     templateImage = [ea_space, options.primarytemplate, '.nii'];
 
-    % Remove CT from subj.norm.anat.postop struct
-    if options.modality
+    % Remove CT from subj.norm.anat.postop struct, will use tone-mapped image
+    if options.modality == 2
         postop = rmfield(options.subj.norm.anat.postop, 'CT');
     end
 
