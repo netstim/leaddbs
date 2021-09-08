@@ -1,5 +1,5 @@
-function ea_coregmr(options)
-% Wrapper for coregister post-op MRI
+function ea_coregpostopmr(options)
+% Entry function to coregister post-op MRI to pre-op MRI
 
 % Set fixed anchor image
 fixed = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
@@ -38,27 +38,27 @@ for i = 1:length(moving)
             % Copy moving image to out image first, since SPM will change
             % the header of the moving image.
             copyfile(moving{i}, out{i});
-            ea_coregmr_spm(options, fixed, out{i}, out{i}, doreslice);
+            ea_coregpostopmr_spm(options, fixed, out{i}, out{i}, doreslice);
         case 'FSL FLIRT' % FSL FLIRT
-            ea_coregmr_flirt(options, fixed, moving{i}, out{i});
+            ea_coregpostopmr_flirt(options, fixed, moving{i}, out{i});
         case 'FSL BBR' % FSL FLIRT
-            ea_coregmr_flirt_bbr(options, fixed, moving{i}, out{i});
+            ea_coregpostopmr_flirtbbr(options, fixed, moving{i}, out{i});
         case 'ANTs' % ANTs
-            ea_coregmr_ants(options, fixed, moving{i}, out{i}, 0);
+            ea_coregpostopmr_ants(options, fixed, moving{i}, out{i}, 0);
         case 'BRAINSFIT' % BRAINSFit
-            ea_coregmr_brainsfit(options, fixed, moving{i}, out{i});
+            ea_coregpostopmr_brainsfit(options, fixed, moving{i}, out{i});
         case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
             % Copy moving image to out image first, since SPM will change
             % the header of the moving image.
             copyfile(moving{i}, out{i});
-            ea_coregmr_spm(options, fixed, out{i}, out{i}, 0);
-            ea_coregmr_ants(options, fixed, out{i}, out{i});
+            ea_coregpostopmr_spm(options, fixed, out{i}, out{i}, 0);
+            ea_coregpostopmr_ants(options, fixed, out{i}, out{i});
         case 'Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
             % Copy moving image to out image first, since SPM will change
             % the header of the moving image.
             copyfile(moving{i}, out{i});
-            ea_coregmr_spm(options, fixed, out{i}, out{i}, 0);
-            ea_coregmr_brainsfit(options, fixed, out{i}, out{i});
+            ea_coregpostopmr_spm(options, fixed, out{i}, out{i}, 0);
+            ea_coregpostopmr_brainsfit(options, fixed, out{i}, out{i});
     end
     disp('Coregistration done.');
 end
