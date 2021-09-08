@@ -1,4 +1,4 @@
-function ea_coregmr_ants(options,fixed, moving, out, refine)
+function ea_coregpostopmr_ants(options,fixed, moving, out, refine)
 % Wrapper for ANTs registration of post-op MRI
 
 if ~exist('refine','var')
