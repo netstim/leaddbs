@@ -1,4 +1,4 @@
 function ea_coregmr_flirt(options, fixed, moving, out)
-% uses FLIRT instead of SPM to coregister MRIs.
+% Wrapper for FLIRT FLIRT registration
 
 ea_flirt(fixed, moving, out, options.prefs.mrcoreg.writeoutcoreg);
