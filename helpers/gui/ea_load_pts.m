@@ -10,7 +10,6 @@ end
 
 isSubjFolder = 0;
 isBIDSRoot = 0;
-isDICOMConverted = 1;
 
 if length(uipatdir) == 1 % Dragged single folder
     if contains(uipatdir{1}, ['derivatives', filesep, 'leaddbs']) % Is patient folder under derivatives
@@ -36,11 +35,10 @@ if length(uipatdir) == 1 % Dragged single folder
 
         if ~isempty(rawData) % rawdata folder already exists
             uipatdir = strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs']);
-            subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match');
+            subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match', 'once');
         elseif ~isempty(sourceData) % sourcedata folder exists
-            isDICOMConverted = 0;
             uipatdir = strrep(rawData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
-            subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match');
+            subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match', 'once');
         else
             error('Both sourcedata and rawdata folders are empty!');
         end
@@ -79,7 +77,6 @@ bids = BIDSFetcher(BIDSRoot);
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
 setappdata(handles.leadfigure, 'bids', bids);
 setappdata(handles.leadfigure, 'subjId', subjId);
-setappdata(handles.leadfigure, 'isDICOMConverted', isDICOMConverted);
 
 % Set up MR/CT popupmenu and status text
 ea_switchctmr(handles);
@@ -87,6 +84,11 @@ ea_switchctmr(handles);
 ea_getui(handles); % update ui from patient
 ea_storeui(handles); % save in pt folder
 ea_addrecentpatient(handles, uipatdir, patsub, patsub);
+
+% Return when BIDS dataset is not yet ready
+if ~getappdata(handles.leadfigure, 'rawImageJSONExist')
+    return;
+end
 
 % check if reconstruction is present and assign side-toggles accordingly:
 if length(subjId) == 1 && isfield(handles, 'side1')

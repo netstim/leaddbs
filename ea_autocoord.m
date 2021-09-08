@@ -126,7 +126,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.modality == 2 % CT support
-        if options.coregct.do && ~ea_coreglocked(options,['tp_',options.prefs.ctnii_coregistered])
+        if options.coregct.do && ~ea_reglocked(options, options.subj.coreg.anat.postop.CT)
             % Setup log
             ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
             diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
@@ -137,19 +137,23 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             % Dump method
             ea_dumpmethod(options, 'coreg');
 
-            ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
-            ea_gencoregcheckfigs(options); % generate checkreg figures
+            ea_tonemapct_file(options, 'native'); % Compute tonemapped (native space) CT
+            ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
             diary off
         end
     end
 
     if options.coregmr.do
+        % Setup log
+        ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
         diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
-        % 1. coreg all available preop MRI
-        ea_checkcoregallmri(options,0,1); % check and coregister all preoperative MRIs here.
 
-        % 2. then coreg postop MRI to preop MRI
+        % Coregister post-op MRI to pre-op MRI
         ea_coregmr(options);
+
+        % Coregister all available pre-op MRI
+        ea_checkcoregallmri(options,0,1);
+
         diary off
     end
 
@@ -180,7 +184,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                     ea_tonemapct_file(options,'mni');
                 end
                 % 4. generate coreg-check figs (all to all).
-                ea_gencoregcheckfigs(options); % generate checkreg figures
+                ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
             end
         end
         diary off
@@ -188,7 +192,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if isfield(options,'gencheckreg') % this case is an exception when calling from the Tools menu.
         if options.gencheckreg
-            ea_gencoregcheckfigs(options); % generate checkreg figures
+            ea_gencheckregfigs(options); % generate checkreg figures
         end
     end
 
@@ -215,7 +219,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     if options.normalize.check %check box "Check Results" in "Volume Registrations" panel
         % export "control" niftis with wireframe of normal anatomy..
         if ~exist([directory,'checkreg'],'file')
-            ea_gencoregcheckfigs(options); % generate checkreg figures if they not yet exist
+            ea_gencheckregfigs(options); % generate checkreg figures if they not yet exist
         end
         options.normcoreg='normalize';
         ea_checkcoreg(options);

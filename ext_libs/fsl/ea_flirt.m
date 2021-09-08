@@ -28,17 +28,18 @@ fprintf('\n\nRunning FSL FLIRT: %s\n\n', movingimage);
 umachine = load([ea_gethome, '.ea_prefs.mat']);
 normsettings = umachine.machine.normsettings;
 if normsettings.fsl_skullstrip % skullstripping is on
-    fprintf('\nStart skullstripping...\n\n');
     % Prepare bet image for flirt, generate the brain masks '*_bet_mask.nii'
     [movpath, movname] = ea_niifileparts(movingimage);
     [fixpath, fixname] = ea_niifileparts(fixedimage);
-    inimage = [fileparts(movpath), filesep, 'bet_', movname];
-    refimage = [fileparts(fixpath), filesep, 'bet_', fixname];
+    inimage = [fileparts(movpath), filesep, movname, '_brain'];
+    refimage = [fileparts(fixpath), filesep, fixname, '_brain'];
     if isempty(dir([inimage,'.nii*']))
-        ea_bet(movingimage, 1, inimage);
+        fprintf('\nSkullstripping moving image...\n\n');
+        ea_bet(movingimage, 0, inimage);
     end
     if isempty(dir([refimage,'.nii*']))
-        ea_bet(fixedimage, 1, refimage);
+        fprintf('\nSkullstripping reference image...\n\n');
+        ea_bet(fixedimage, 0, refimage);
     end
 else % skullstripping is off
     fprintf('\nSkip skullstripping...\n\n');
@@ -46,7 +47,7 @@ else % skullstripping is off
     refimage = ea_niifileparts(fixedimage);
 end
 
-volumedir = [fileparts(ea_niifileparts(movingimage)), filesep];
+volumedir = [fileparts(ea_niifileparts(outputimage)), filesep];
 
 % name of the output transformation
 [~, mov] = ea_niifileparts(movingimage);
@@ -104,6 +105,11 @@ if ~ispc
 else
     system(flirtcmd);
     system(convertxfmcmd);
+end
+
+if runs>0
+    ea_delete([volumedir, invxfm, num2str(runs), '.mat']);
+    ea_delete([volumedir, invxfm, num2str(runs), '.mat']);
 end
 
 if ~isempty(otherfiles)

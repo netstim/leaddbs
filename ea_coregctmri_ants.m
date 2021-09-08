@@ -10,7 +10,11 @@ if ischar(options) % return name of method.
 end
 
 disp('Coregistering postop CT to preop MRI...');
-ea_ants(options.subj.preopAnat.(options.subj.AnchorModality).coreg,...
+transform = ea_ants(options.subj.preopAnat.(options.subj.AnchorModality).coreg,...
     options.subj.postopAnat.(options.subj.postopModality).preproc,...
     options.subj.postopAnat.(options.subj.postopModality).coreg);
+
+movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'ants.mat']);
+movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'ants.mat']);
+
 disp('Coregistration done.');

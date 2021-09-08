@@ -11,9 +11,11 @@ end
 
 disp('Coregistering post-op CT to pre-op MRI...');
 
-ea_brainsfit([options.subj.preopAnat.(options.subj.AnchorModality).coreg],...
+transform = ea_brainsfit([options.subj.preopAnat.(options.subj.AnchorModality).coreg],...
     [options.subj.postopAnat.(options.subj.postopModality).preproc],...
     [options.subj.postopAnat.(options.subj.postopModality).coreg]);
 
-disp('Coregistration done.');
+movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'brainsfit.mat']);
+movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'brainsfit.mat']);
 
+disp('Coregistration done.');
