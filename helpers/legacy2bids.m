@@ -7,7 +7,7 @@ for j=1:length(source)
     else
         addpath(source{j})
     end
-    if ~exist(dest, 'var')
+    if ~exist(dest{j}, 'var')
         dest{j} = source{j};
         addpath(dest{j});
     elseif exist(dest{j},'var') && ~exist(dest{j},'dir')
@@ -33,10 +33,10 @@ if exist('doDcmConv','var') && doDcmConv
 else 
     subfolder_cell = {'sourcedata','rawdata','derivatives'};
 end
-pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export'};
+pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','current_headmodel','headmodel'};
 %not sure how to handle log and export yet
 %mapping will allow quick reference of the files to move
-[brainshift_corr,coreg,normalization,preproc,recon,prefs] = create_bids_mapping();
+[brainshift_corr,coreg,normalization,preproc,recon,prefs,stimulations,headmodel] = create_bids_mapping();
 %dir without dots is a modified dir command that with return the
 %directory contents without the dots. those evaluate to folders and
 %cause issues.
@@ -52,9 +52,8 @@ for patients = 1:length(source)
     flag = 1;
     if startsWith(source_patient,'sub-')
         flag = 0;
-        
     end
-    [filepath,patient_name,ext] = fileparts(source_patient);
+    [~,patient_name,~] = fileparts(source_patient);
     files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
     file_index = 1;
@@ -67,10 +66,26 @@ for patients = 1:length(source)
         end
         %now let's deal with subfolders
     end
+    if ~exist(fullfile(dicom_source,'dicom'),'dir') && any(regexp(file_names,'.*.dcm'))
+        %there is no real dicom directory but there is are dicom files in the source directory
+        dicom_source = source_patient;
+    end
+        
+        
+    end
     dir_names = {files_in_pat_folder([files_in_pat_folder.isdir]).name};
     for j=1:length(dir_names)
-        %%%leave atlases as it is, it will be moved directly
-        if ~(strcmp(dir_names{j},'atlases') || strcmp(dir_names{j},'stimulations'))
+        %%%for now, copy atlases, stimulations, headmodel and current
+        %%%headmodel to their respective directories. Then you can crawl
+        %%%through and rename. 
+        if strcmp(dir_names{j},'atlases') || strcmp(dir_names{j},'stimulations') || strcmp(dir_names{j},'headmodel') || strcmp(dir_names{j},'current_headmodel')
+            if move
+                movefile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
+            else
+                copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
+            end
+            
+        else
             this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
             file_in_this_folder= {this_folder.name};
             file_inside_dir_indx = 1;
@@ -83,13 +98,6 @@ for patients = 1:length(source)
                         file_inside_dir_indx = file_inside_dir_indx + 1;
                     end
                 end
-            end
-            
-        else
-            if move
-                movefile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
-            else
-                copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name));
             end
         end
     end
@@ -523,6 +531,83 @@ for patients = 1:length(source)
                                     movefile(fullfile(new_path,pipelines{folders},'ea_methods.txt'),fullfile(new_path,pipelines{folders},[patient_name,'_',files_to_move{files}]));
                                 end
                             end
+                        elseif strcmp(pipelines{folders},'stimulations')
+                            %the stimulations folder should already be
+                            %there in the dest directory.
+                            
+                            if exist(fullfile(new_path,pipelines{folders}),'dir')
+                                pipeline = pipelines{folders};
+                                [mni_files,native_files] = vta_walkpath(new_path,pipeline);
+                                for mni_file = 1:length(mni_files)
+                                    for mni_subfile = 1:length(mni_files{1,mni_file})
+                                        [filepath,mni_filename,ext] = fileparts(mni_files{1,mni_file}{1,mni_subfile});
+                                        if ismember([mni_filename,ext],stimulations{:,1})
+                                            indx = cellfun(@(x)strcmp(x,[mni_filename,ext]),stimulations{:,1});
+                                            if flag
+                                                movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,['sub-',patient_name,'_',stimulations{1,2}{indx}]));
+                                            else
+                                                movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,[patient_name,'_',stimulations{1,2}{indx}]));
+                                            end
+                                        end
+                                    end
+                                end
+                                for native_file = 1:length(native_files)
+                                    for native_subfile = 1:length(native_files{1,native_file})
+                                        [filepath,native_filename,ext] = fileparts(native_files{1,native_file}{1,native_subfile});
+                                        if ismember([native_filename,ext],stimulations{:,1})
+                                            indx = cellfun(@(x)strcmp(x,[native_filename,ext]),stimulations{:,1});
+                                            if flag
+                                                movefile(native_files{1,native_file}{1,native_subfile},fullfile(filepath,['sub-',patient_name,'_',stimulations{1,2}{indx}]));
+                                            else
+                                                movefile(native_files{1,native_file}{1,native_subfile},fullfile(filepath,[patient_name,'_',stimulations{1,2}{indx}]));
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        elseif strcmp(pipelines{folders},'current_headmodel')
+                            if exist(fullfile(new_path,pipelines{folders}),'dir')
+                                pipeline = pipelines{folders};
+                                [mni_files,native_files] = vta_walkpath(new_path,pipeline);
+                                for mni_file = 1:length(mni_files)
+                                    [filepath,mni_filename,ext] = fileparts(mni_files{mni_file});
+                                    if ismember([mni_filename,ext],headmodel{:,1})
+                                        indx = cellfun(@(x)strcmp(x,[mni_filename,ext]),headmodel{:,1});
+                                        if flag
+                                            movefile(mni_files{mni_file},fullfile(filepath,['sub-',patient_name,'_',headmodel{1,2}{indx}]));
+                                        else
+                                            movefile(mni_files{mni_file},fullfile(filepath,[patient_name,'_',headmodel{1,2}{indx}]));
+                                        end
+                                    end
+                                end
+                                for native_file = 1:length(native_files)
+                                    [filepath,native_filename,ext] = fileparts(native_files{native_file});
+                                    if ismember([native_filename,ext],headmodel{:,1})
+                                        indx = cellfun(@(x)strcmp(x,[native_filename,ext]),headmodel{:,1});
+                                        if flag
+                                            movefile(native_files{native_file},fullfile(filepath,['sub-',patient_name,'_',headmodel{1,2}{indx}]));
+                                        else
+                                            movefile(native_files{native_file},fullfile(filepath,[patient_name,'_',headmodel{1,2}{indx}]));
+                                        end
+                                    end
+                                end
+                            end
+                        elseif strcmp(pipelines{folders},'headmodel')
+                            if exist(fullfile(new_path,pipelines{folders}),'dir')
+                                headmodel_contents = dir_without_dots(fullfile(new_path,pipelines{folders}));
+                                headmodel_files = {headmodel_contents.name};
+                                for headmodel_file = 1:length(headmodel_files)
+                                    if ismember(headmodel_files{headmodel_file},headmodel{:,1})
+                                        indx = cellfun(@(x)strcmp(x,headmodel_files{headmodel_file}),headmodel{:,1});
+                                        if flag
+                                            movefile(fullfile(new_path,pipelines{folders},headmodel_files{headmodel_file}),fullfile(new_path,pipelines{folders},['sub-',patient_name,'_',headmodel{1,2}{indx}]));
+                                        else
+                                            movefile(fullfile(new_path,pipelines{folders},headmodel_files{headmodel_file}),fullfile(new_path,pipelines{folders},[patient_name,'_',headmodel{1,2}{indx}]));
+                                        end
+                                    end
+                                end
+                            end
+                            
                         end
                     end
                 end
