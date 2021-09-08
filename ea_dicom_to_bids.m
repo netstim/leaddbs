@@ -76,6 +76,7 @@ ui.axes_axi.Colormap = gray(128);
 setappdata(ui.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
 ui.axes_axi.DataAspectRatioMode = 'manual';
 ui.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+set(ui.axes_axi, 'view', [90, -90]);
 
 % coronal
 cut_slice = round(img.dim(2)/2);
@@ -84,6 +85,7 @@ ui.axes_cor.Colormap = gray(128);
 setappdata(ui.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
 ui.axes_cor.DataAspectRatioMode = 'manual';
 ui.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+set(ui.axes_cor, 'view', [90, -90]);
 
 % sagittal
 cut_slice = round(img.dim(1)/2);
@@ -92,27 +94,8 @@ ui.axes_sag.Colormap = gray(128);
 setappdata(ui.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
 ui.axes_sag.DataAspectRatioMode = 'manual';
 ui.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+set(ui.axes_sag, 'view', [90, -90]);
 
-%
-%setappdata(ax, 'img', img);     % save .nii image in current appdata ax for scrolling
-%
-%axis(ax,'off');
-%set(ax,'BackgroundColor',[0 0 0])
-%
-%if strcmp('axi', cut_direction)
-%    cut_slice = round(img.dim(3)/2);
-%    imagesc(ax, img.p.nii.img(:, :, cut_slice));
-%elseif strcmp('sag', cut_direction)
-%    cut_slice = round(img.dim(1)/2);
-%    imagesc(ax, permute(img.p.nii.img(cut_slice, :, :), [2 3 1]));
-%else
-%    cut_slice = round(img.dim(2)/2);
-%    imagesc(ax, permute(img.p.nii.img(:, cut_slice, :), [1 3 2]));
-%end
-%%ax.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
-%ax.DataAspectRatio = [1, 1, 1];
-%
-%setappdata(ax, 'cut_slice', cut_slice); % save current cut slice for scrolling
 
 end
 
@@ -201,7 +184,7 @@ for h = c'
     
     % If descendant contains the mouse pointer position, exit
     
-    if (p(1) > x_lower) && (p(2) < x_upper) && (p(2) > y_lower) && (p(2) < y_upper)
+    if (p(1) > x_lower) && (p(1) < x_upper) && (p(2) > y_lower) && (p(2) < y_upper)
         return
     end
 end
