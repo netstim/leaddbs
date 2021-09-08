@@ -59,26 +59,13 @@ else
         dicom_dir = fullfile(options.root, options.patientname, 'sourcedata', subj_folders(subj_idx).name);
         tmp_dir = fullfile(options.root, options.patientname, 'sourcedata', subj_folders(subj_idx).name, 'tmp'); % tmp dir for temporary storage of niftis
         
-                switch options.dicomimp.method
-                    case 1 % dcm2niix
-                        ea_dcm2niix(dicom_dir, tmp_dir);
-                        ea_methods(options, ['DICOM images were converted to the '...
-                            'NIfTI file format using dcm2niix (see https://github.com/rordenlab/dcm2niix).']);
-                    case 2 % dicm2nii
-                        ea_dicm2nii(dicom_dir, tmp_dir);
-                        ea_methods(options, ['DICOM images were converted to the '...
-                            'NIfTI file format using dicm2nii (see https://github.com/xiangruili/dicm2nii).']);
-                    case 3 % SPM
-                        ea_spm_dicom_import(dicom_dir, tmp_dir);
-                        ea_methods(options, ['DICOM images were converted to the '...
-                            'NIfTI file format using SPM.']);
-                end
-        
+        % convert DICOMS to .nii files
+        ea_dcm_to_nii(options.dicomimp.method, dicom_dir, tmp_dir);
+
         % first option: rename files with the help of a GUI
         [~, niiFiles] = fileparts(ea_regexpdir(tmp_dir, '\.nii.gz$', 0));
         anat_files_selected = ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, fullfile(options.root, options.patientname), tmp_dir, dicom_dir);
         
-        %ea_select_nii_import(niiFiles, tmp_dir, dicom_dir);
         % write into json file
         if ~exist(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'), 'dir')
             mkdir(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'));
