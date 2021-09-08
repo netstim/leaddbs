@@ -125,17 +125,17 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             options.subj.coreg.transform.(fields{1})); % % Pre-coregistration transform
     end
 
-    if options.modality == 2 % CT support
-        if options.coregct.do
-            % Coregister post-op CT to pre-op MRI
-            ea_coregpostopct(options);
-        end
+    if options.modality == 2 && options.coregct.do
+        % Coregister post-op CT to pre-op MRI
+        ea_coregpostopct(options);
+    end
+
+    if options.modality == 1 && options.coregmr.do
+        % Coregister post-op MRI to pre-op MRI
+        ea_coregpostopmr(options);
     end
 
     if options.coregmr.do
-        % Coregister post-op MRI to pre-op MRI
-        ea_coregpostopmr(options);
-
         % Coregister pre-op MRIs to pre-op anchor image
         % TODO: coreg_fa disabled currently
         ea_coregpreopmri(options);
