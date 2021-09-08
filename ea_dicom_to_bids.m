@@ -74,8 +74,12 @@ for sesIdx = 1:length(sessions)
             fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
             
             % move files
+            if ~exist(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'), 'dir')
+                mkdir(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'));
+            end
             copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.nii.gz']));
             copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.json']));
+
             anat_files.(ses).(dat{fileIdx, 4}) = fname; % set output struct
         end
         
