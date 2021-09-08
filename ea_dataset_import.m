@@ -64,11 +64,13 @@ else
         % call GUI to select which files should be loaded
         anat_files_selected = ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, dataset_dir);
         
-        % write into json file
-        if ~exist(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'), 'dir')
-            mkdir(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'));
+        if ~isempty(anat_files_selected)
+            % write into json file
+            if ~exist(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'), 'dir')
+                mkdir(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'));
+            end
+            savejson('', anat_files_selected, fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs', [subj_folders(subj_idx).name, '_desc-rawimages.json']));
         end
-        savejson('', anat_files_selected, fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs', [subj_folders(subj_idx).name, '_desc-rawimages.json']));
         
         % second option: use lookup table to find files and convert them to BIDS
         % read in lookup table
