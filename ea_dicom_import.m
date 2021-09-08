@@ -60,11 +60,16 @@ else
         tmp_dir = fullfile(options.root, options.patientname, 'sourcedata', subj_folders(subj_idx).name, 'tmp'); % tmp dir for temporary storage of niftis
         
         % convert DICOMS to .nii files
-        ea_dcm_to_nii(options.dicomimp.method, dicom_dir, tmp_dir);
+        %ea_dcm_to_nii(options.dicomimp.method, dicom_dir, tmp_dir);
 
         % first option: rename files with the help of a GUI
         [~, niiFiles] = fileparts(ea_regexpdir(tmp_dir, '\.nii.gz$', 0));
-        anat_files_selected = ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, fullfile(options.root, options.patientname), tmp_dir, dicom_dir);
+        
+        % clumsily remove .nii from filename
+        for idx = 1:length(niiFiles)
+            niiFiles{idx, 1} = niiFiles{idx, 1}(1:end-4);
+        end
+        anat_files_selected = ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, fullfile(options.root, options.patientname), tmp_dir);
         
         % write into json file
         if ~exist(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'), 'dir')
