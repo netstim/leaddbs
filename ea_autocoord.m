@@ -126,35 +126,24 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.modality == 2 % CT support
-        if options.coregct.do && ~ea_reglocked(options, options.subj.coreg.anat.postop.CT)
-            % Setup log
-            ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
-            diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
-
+        if options.coregct.do
             % Coregister post-op CT to pre-op MRI
             ea_coregpostopct(options);
-
-            % Dump method
-            ea_dumpmethod(options, 'coreg');
-
-            ea_tonemapct_file(options, 'native'); % Compute tonemapped (native space) CT
-            ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
-            diary off
         end
     end
 
     if options.coregmr.do
-        % Setup log
-        ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
-        diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
-
         % Coregister post-op MRI to pre-op MRI
         ea_coregpostopmr(options);
 
-        % Coregister all available pre-op MRI
-        ea_checkcoregallmri(options,0,1);
+        % Coregister pre-op MRIs to pre-op anchor image
+        % TODO: coreg_fa disabled currently
+        ea_coregpreopmri(options);
+    end
 
-        diary off
+    if options.coregct.do || options.coregmr.do
+        % Generate checkreg figures for coregistration
+        ea_gencheckregfigs(options, 'coreg');
     end
 
     if options.normalize.do
