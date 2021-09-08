@@ -1,6 +1,5 @@
 function ea_coregmr_spm(options, fixed, moving, out, doreslice)
-% this function coregisters postoperative images to preoperative images
-% using SPM.
+% Wrapper for SPM registration of post-op MRI
 
 costfuns={'nmi','mi','ecc','ncc'};
 cfundo=[2,1];
