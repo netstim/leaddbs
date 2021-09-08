@@ -1,4 +1,4 @@
-function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder, nii_folder, rawdata_folder)
+function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder, nii_folder)
 
 lookup_table = {'skip','skip', 'skip';
     'anat','preop', 'T1w';
@@ -14,7 +14,7 @@ imgs = cell(length(fnames),1);
 h_wait = waitbar(0, 'Please wait while Niftii images are being loaded ');
 for image_idx = 1:length(fnames)
     imgs{image_idx} = struct();
-    [imgs{image_idx}.p, imgs{image_idx}.frm, imgs{image_idx}.rg, imgs{image_idx}.dim] = read_nii(fullfile(nii_folder, [fnames{image_idx}, '.gz']), [], 0);
+    [imgs{image_idx}.p, imgs{image_idx}.frm, imgs{image_idx}.rg, imgs{image_idx}.dim] = read_nii(fullfile(nii_folder, [fnames{image_idx}, '.nii.gz']), [], 0);
     waitbar(image_idx / length(fnames));
 end
 close(h_wait);
@@ -41,7 +41,7 @@ ui.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(ui,imgs{event.I
 ui.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(ui, event);     % callback for scrolling images
 
 % OK button behaviour
-ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui.niiFileTable, lookup_table);
+ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui.niiFileTable, lookup_table, dataset_folder, nii_folder, subjID);
 
 waitfor(ui.UIFigure);
 
@@ -49,7 +49,7 @@ anat_files = getappdata(groot, 'anat_files');
 
 end
 
-function ok_button_function(TT, lookup_table)
+function ok_button_function(TT, lookup_table, dataset_folder, nii_folder, subjID)
 
 dat = cellfun(@char,table2cell(TT.Data),'uni',0);
 
@@ -70,7 +70,13 @@ for sesIdx = 1:length(sessions)
     
     for fileIdx = 1:length(dat)
         if strcmp(dat{fileIdx, 2}, ses) && ~strcmp(dat{fileIdx, 4}, 'skip') && ~strcmp(dat{fileIdx, 3}, 'skip')
-            anat_files.(ses).(dat{fileIdx, 4}) = dat{fileIdx, 1};
+            
+            fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
+            
+            % move files
+            copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.nii.gz']));
+            copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.json']));
+            anat_files.(ses).(dat{fileIdx, 4}) = fname; % set output struct
         end
         
     end
