@@ -424,8 +424,7 @@ switch ea_stripext(currvol)
         options.coregct.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
 
         % Run CT coregistration
-        coregctmrfunc = getappdata(handles.leadfigure, 'coregctmrfunc');
-        eval([coregctmrfunc{handles.coregmrmethod.Value}, '(options)']);
+        ea_coregpostopct(options);
 
         % Dump method
         ea_dumpmethod(options, 'coreg');
