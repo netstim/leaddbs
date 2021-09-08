@@ -1,5 +1,5 @@
-function affinefile = ea_flirt_bbr(varargin)
-% Wrapper for FSL BBR linear registration
+function affinefile = ea_flirtbbr(varargin)
+% Wrapper for FSL FLIRT BBR registration
 
 fixedimage = varargin{1};
 movingimage = varargin{2};
