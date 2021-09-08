@@ -35,7 +35,10 @@ for i = 1:length(moving)
     disp('Coregistering postop MR cor to preop MRI...');
     switch options.coregmr.method
         case 'SPM' % SPM
-            ea_coregmr_spm(options, fixed, moving{i}, out{i}, doreslice);
+            % Copy moving image to out image first, since SPM will change
+            % the header of the moving image.
+            copyfile(moving{i}, out{i});
+            ea_coregmr_spm(options, fixed, out{i}, out{i}, doreslice);
         case 'FSL FLIRT' % FSL FLIRT
             ea_coregmr_flirt(options, fixed, moving{i}, out{i});
         case 'FSL BBR' % FSL FLIRT
@@ -45,11 +48,17 @@ for i = 1:length(moving)
         case 'BRAINSFIT' % BRAINSFit
             ea_coregmr_brainsfit(options, fixed, moving{i}, out{i});
         case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
-            ea_coregmr_spm(options, fixed, moving{i}, out{i}, 0); % dont use doreslice here to refrain for doing two interpolations.
-            ea_coregmr_ants(options, fixed, moving{i}, out{i});
+            % Copy moving image to out image first, since SPM will change
+            % the header of the moving image.
+            copyfile(moving{i}, out{i});
+            ea_coregmr_spm(options, fixed, out{i}, out{i}, 0);
+            ea_coregmr_ants(options, fixed, out{i}, out{i});
         case 'Hybrid SPM & BRAINSFIT' % Hybrid SPM -> Brainsfit
-            ea_coregmr_spm(options, fixed, moving{i}, out{i}, 0); % dont use doreslice here to refrain for doing two interpolations.
-            ea_coregmr_brainsfit(options, fixed, moving{i}, out{i});
+            % Copy moving image to out image first, since SPM will change
+            % the header of the moving image.
+            copyfile(moving{i}, out{i});
+            ea_coregmr_spm(options, fixed, out{i}, out{i}, 0);
+            ea_coregmr_brainsfit(options, fixed, out{i}, out{i});
     end
     disp('Coregistration done.');
 end
