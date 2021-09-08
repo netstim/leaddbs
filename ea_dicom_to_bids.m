@@ -1,4 +1,4 @@
-function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder, nii_folder)
+function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
 
 lookup_table = {'skip','skip', 'skip';
     'anat','preop', 'T1w';
@@ -9,6 +9,8 @@ lookup_table = {'skip','skip', 'skip';
     'anat','postop', 'ax_MR';
     'anat','postop', 'sag_MR';
     'anat','postop', 'cor_MR'};
+
+nii_folder = fullfile(dataset_folder, 'sourcedata', subjID, 'tmp');    % where are the nifti files located?
 
 imgs = cell(length(fnames),1);
 h_wait = waitbar(0, 'Please wait while Niftii images are being loaded');
