@@ -1,5 +1,5 @@
-function varargout=ea_coregctmri_brainsfit(options)
-% This function uses the BRAINSfit to register postop-CT to preop-MR.
+function varargout=ea_coregpostopct_brainsfit(options)
+% Wrapper function for BRAINSFit registration of post-op CT
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
