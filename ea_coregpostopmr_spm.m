@@ -1,4 +1,4 @@
-function ea_coregmr_spm(options, fixed, moving, out, doreslice)
+function ea_coregpostopmr_spm(options, fixed, moving, out, doreslice)
 % Wrapper for SPM registration of post-op MRI
 
 % Available cost functions

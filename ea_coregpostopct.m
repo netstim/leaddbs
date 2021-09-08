@@ -1,17 +1,17 @@
 function ea_coregpostopct(options)
-% Entry function to coregister post-op CT
+% Entry function to coregister post-op CT to pre-op MRI
 
 switch options.coregct.method
     case 'Advanced Normalization Tools (ANTs)'
-        ea_coregctmri_ants(options);
+        ea_coregpostopct_ants(options);
     case 'Advanced Normalization Tools (ANTs), multiple runs'
-        ea_coregctmri_ants_multiple(options);
+        ea_coregpostopct_ants_multiple(options);
     case 'Advanced Normalization Tools (ANTs), multiple runs + Subcortical Refine'
-        ea_coregctmri_ants_multiple_refine(options);
+        ea_coregpostopct_ants_multiple_refine(options);
     case 'Advanced Normalization Tools (ANTs) + Subcortical Refine'
-        ea_coregctmri_ants_refine(options);
+        ea_coregpostopct_ants_refine(options);
     case 'BRAINSFit'
-        ea_coregctmri_brainsfit(options);
+        ea_coregpostopct_brainsfit(options);
     case 'FSL FLIRT'
-        ea_coregctmri_fsl(options);
+        ea_coregpostopct_fsl(options);
 end
