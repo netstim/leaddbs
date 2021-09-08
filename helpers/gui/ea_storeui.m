@@ -16,4 +16,5 @@ end
 
 options = ea_handles2options(handles);
 
+ea_mkdir(fileparts(prefsPath));
 save(prefsPath, '-struct', 'options');
