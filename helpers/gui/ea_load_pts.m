@@ -10,7 +10,6 @@ end
 
 isSubjFolder = 0;
 isBIDSRoot = 0;
-isDICOMConverted = 1;
 
 if length(uipatdir) == 1 % Dragged single folder
     if contains(uipatdir{1}, ['derivatives', filesep, 'leaddbs']) % Is patient folder under derivatives
@@ -38,7 +37,6 @@ if length(uipatdir) == 1 % Dragged single folder
             uipatdir = strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs']);
             subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match');
         elseif ~isempty(sourceData) % sourcedata folder exists
-            isDICOMConverted = 0;
             uipatdir = strrep(rawData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
             subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match');
         else
@@ -79,7 +77,6 @@ bids = BIDSFetcher(BIDSRoot);
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
 setappdata(handles.leadfigure, 'bids', bids);
 setappdata(handles.leadfigure, 'subjId', subjId);
-setappdata(handles.leadfigure, 'isDICOMConverted', isDICOMConverted);
 
 % Set up MR/CT popupmenu and status text
 ea_switchctmr(handles);
