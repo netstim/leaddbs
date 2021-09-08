@@ -70,19 +70,28 @@ switch lower(options.coregmr.method)
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'hybrid spm & ants' % Hybrid SPM -> ANTs
-        ea_spm_coreg(options,moving,fixed,'nmi',0,otherfiles,writeoutmat)
+        % Copy moving image to out image first, since SPM will change
+        % the header of the moving image.
+        copyfile(moving, ofile);
+        ea_spm_coreg(options,ofile,fixed,'nmi',0,otherfiles,writeoutmat)
         affinefile = ea_ants(fixed,...
-            moving,...
+            ofile,...
             ofile,writeoutmat,otherfiles);
     case 'hybrid spm & fsl' % Hybrid SPM -> FSL
-        ea_spm_coreg(options,moving,fixed,'nmi',0,otherfiles,writeoutmat)
+        % Copy moving image to out image first, since SPM will change
+        % the header of the moving image.
+        copyfile(moving, ofile);
+        ea_spm_coreg(options,ofile,fixed,'nmi',0,otherfiles,writeoutmat)
         affinefile = ea_flirt(fixed,...
-            moving,...
+            ofile,...
             ofile,writeoutmat,otherfiles);
     case 'hybrid spm & brainsfit' % Hybrid SPM -> Brainsfit
-        ea_spm_coreg(options,moving,fixed,'nmi',0,otherfiles,writeoutmat)
+        % Copy moving image to out image first, since SPM will change
+        % the header of the moving image.
+        copyfile(moving, ofile);
+        ea_spm_coreg(options,ofile,fixed,'nmi',0,otherfiles,writeoutmat)
         affinefile = ea_brainsfit(fixed,...
-            moving,...
+            ofile,...
             ofile,writeoutmat,otherfiles);
 end
 
