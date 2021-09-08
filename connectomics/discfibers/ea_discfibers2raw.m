@@ -47,7 +47,7 @@ save(outputMAT, 'fibcell', 'opts', 'vals');
 % Register anchor to raw anchor
 options = ea_getptopts(patientdir);
 options.coregmr.method = 'SPM'; % 'SPM', 'ANTs', 'FSL FLIRT'
-affinefile = ea_coreg2images(options, refAnchor, refRawAnchor, [patientdir,'tmp.nii'],{},1);
+affinefile = ea_coregimages(options, refAnchor, refRawAnchor, [patientdir,'tmp.nii'],{},1);
 ea_delete([patientdir,'tmp.nii']);
 
 % Convert discfibers from achor space to raw anchor space
