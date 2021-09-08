@@ -1,5 +1,5 @@
-function varargout=ea_coregctmri_ants_refine(options)
-% This function uses ANTs to register postop-CT to preop-MR.
+function varargout=ea_coregpostopct_ants_refine(options)
+% Wrapper function for ANTs + Subcortical Refine registration of post-op CT
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
