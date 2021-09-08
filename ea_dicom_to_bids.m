@@ -1,6 +1,6 @@
-function ea_dicom_to_bids(subjID, fnames, dataset_folder, nii_folder, rawdata_folder)
+function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder, nii_folder, rawdata_folder)
 
-valueset = {'skip','skip', 'skip';
+lookup_table = {'skip','skip', 'skip';
     'anat','preop', 'T1w';
     'anat','preop', 'T2w';
     'anat','preop', 'FGATIR';
@@ -19,12 +19,10 @@ for image_idx = 1:length(fnames)
 end
 close(h_wait);
 
-Session = categorical(repmat({'skip'},[length(fnames),1]),unique(valueset(:,2)));
-Modality = categorical(repmat({'skip'},[length(fnames),1]), unique(valueset(:,3)));
-Type = categorical(repmat({'skip'},[length(fnames),1]),unique(valueset(:,1)));
+Session = categorical(repmat({'skip'},[length(fnames),1]),unique(lookup_table(:,2)));
+Modality = categorical(repmat({'skip'},[length(fnames),1]), unique(lookup_table(:,3)));
+Type = categorical(repmat({'skip'},[length(fnames),1]),unique(lookup_table(:,1)));
 T = table(fnames, Session, Type, Modality);
-
-ModalityTablePref = getpref('dicm2nii_gui_para', 'ModalityTable', T);
 
 % create GUI
 ui = dicom_to_bids;
@@ -37,15 +35,51 @@ ui.niiFileTable.ColumnEditable = [false true true, true];
 ui.SubjectIDLabel.Text = subjID;
 ui.FilepathLabel.Text = dataset_folder;
 
-% set initial images
-preview_nii(ui, imgs{1,1});
+preview_nii(ui, imgs{1,1}); % set initial image to the first one
 
-% add callback to table to display current image
-ui.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(ui,imgs{event.Indices(1), 1});
+ui.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(ui,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
+ui.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(ui, event);     % callback for scrolling images
 
-ui.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(ui, event);
+% OK button behaviour
+ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui.niiFileTable, lookup_table);
+
+waitfor(ui.UIFigure);
+
+anat_files = getappdata(groot, 'anat_files');
 
 end
+
+function ok_button_function(TT, lookup_table)
+
+dat = cellfun(@char,table2cell(TT.Data),'uni',0);
+
+% if all(any(ismember(dat(:,2:4),'skip'),2))
+%     warndlg('All images are skipped... Please select the type and modality for all scans','No scan selected');
+%     return;
+% end
+
+anat_files = struct();
+
+% populate anat_files
+sessions = unique(lookup_table(:,2));
+sessions(ismember(sessions,'skip')) = [];   % remove skip
+
+for sesIdx = 1:length(sessions)
+    
+    ses = sessions{sesIdx};
+    
+    for fileIdx = 1:length(dat)
+        if strcmp(dat{fileIdx, 2}, ses) && ~strcmp(dat{fileIdx, 4}, 'skip') && ~strcmp(dat{fileIdx, 3}, 'skip')
+            anat_files.(ses).(dat{fileIdx, 4}) = dat{fileIdx, 1};
+        end
+        
+    end
+end
+
+setappdata(groot, 'anat_files', anat_files);
+
+end
+
 
 function preview_nii(ui, img)
 
@@ -106,52 +140,52 @@ img = getappdata(ui.UIFigure, 'img');
 dim = img.dim;
 
 if ~isempty(hAxes)
-switch hAxes.Tag
-    case 'axi'
-        sliceNr = getappdata(ui.UIFigure, 'cut_slice_axi');
-    if event.VerticalScrollCount == -1 % up scroll
-        if ~(sliceNr >= img.dim(3) - 2)
-            sliceNr = sliceNr + 2;
-        end
-    else
-        if ~(sliceNr <= 2)
-            sliceNr = sliceNr - 2;
-        end
-        
+    switch hAxes.Tag
+        case 'axi'
+            sliceNr = getappdata(ui.UIFigure, 'cut_slice_axi');
+            if event.VerticalScrollCount == -1 % up scroll
+                if ~(sliceNr >= img.dim(3) - 2)
+                    sliceNr = sliceNr + 2;
+                end
+            else
+                if ~(sliceNr <= 2)
+                    sliceNr = sliceNr - 2;
+                end
+                
+            end
+            imagesc(ui.axes_axi, img.p.nii.img(:, :, sliceNr));
+            setappdata(ui.UIFigure, 'cut_slice_axi', sliceNr);
+        case 'cor'
+            sliceNr = getappdata(ui.UIFigure, 'cut_slice_cor');
+            if event.VerticalScrollCount == -1 % up scroll
+                if ~(sliceNr >= img.dim(2) - 2)
+                    sliceNr = sliceNr + 2;
+                end
+            else
+                if ~(sliceNr <= 2)
+                    sliceNr = sliceNr - 2;
+                end
+                
+            end
+            imagesc(ui.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :)));
+            setappdata(ui.UIFigure, 'cut_slice_cor', sliceNr);
+        case 'sag'
+            sliceNr = getappdata(ui.UIFigure, 'cut_slice_sag');
+            if event.VerticalScrollCount == -1 % up scroll
+                if ~(sliceNr >= img.dim(1) - 2)
+                    sliceNr = sliceNr + 2;
+                end
+            else
+                if ~(sliceNr <= 2)
+                    sliceNr = sliceNr - 2;
+                end
+                
+            end
+            imagesc(ui.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :)));
+            setappdata(ui.UIFigure, 'cut_slice_sag', sliceNr);
+        otherwise
+            
     end
-    imagesc(ui.axes_axi, img.p.nii.img(:, :, sliceNr));
-    setappdata(ui.UIFigure, 'cut_slice_axi', sliceNr);
-    case 'cor'
-         sliceNr = getappdata(ui.UIFigure, 'cut_slice_cor');
-        if event.VerticalScrollCount == -1 % up scroll
-        if ~(sliceNr >= img.dim(2) - 2)
-            sliceNr = sliceNr + 2;
-        end
-    else
-        if ~(sliceNr <= 2)
-            sliceNr = sliceNr - 2;
-        end
-        
-    end
-    imagesc(ui.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :)));
-    setappdata(ui.UIFigure, 'cut_slice_cor', sliceNr);
-    case 'sag'
-         sliceNr = getappdata(ui.UIFigure, 'cut_slice_sag');
-        if event.VerticalScrollCount == -1 % up scroll
-        if ~(sliceNr >= img.dim(1) - 2)
-            sliceNr = sliceNr + 2;
-        end
-    else
-        if ~(sliceNr <= 2)
-            sliceNr = sliceNr - 2;
-        end
-        
-    end
-    imagesc(ui.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :)));
-    setappdata(ui.UIFigure, 'cut_slice_sag', sliceNr);
-    otherwise
-        
-end
 end
 
 end
@@ -261,7 +295,7 @@ rg = get_range(p.nii, isfield(p, 'labels'));
 try, p.map = p.nii.NamedMap{1}.map; end
 end
 
-%% reorient nii to diagnal major
+%% helper functions for nii reading
 function [nii, perm, flp] = nii_reorient(nii, leftHand, ask_code)
 if nargin<3, ask_code = []; end
 [R, frm] = nii_xform_mat(nii.hdr, ask_code);
@@ -362,7 +396,7 @@ rotM(1:3, 4) = (dim(perm)-1) .* flp; % 0 or dim-1
 R = R / rotM; % xform matrix after flip
 end
 
-%% Estimate lower and upper bound of img display
+%  Estimate lower and upper bound of img display
 function rg = get_range(nii, isLabel)
 if size(nii.img, 8)>2 || any(nii.hdr.datatype == [128 511 2304]) % RGB / RGBA
     if max(nii.img(:))>2, rg = [0 255]; else, rg = [0 1]; end
@@ -404,16 +438,6 @@ if abs(rg(2))>10, rg(2) = ceil(rg(2)/2)*2; end % even number
 end
 
 %%
-function BtnModalityTable(h,TT)
-dat = cellfun(@char,table2cell(TT.Data),'uni',0);
-
-if all(any(ismember(dat(:,2:3),'skip'),2))
-    warndlg('All images are skipped... Please select the type and modality for all scans','No scan selected');
-    return;
-end
-setappdata(0,'ModalityTable',TT.Data)
-delete(h)
-end
 
 function my_closereq(src,~)
 % Close request function
