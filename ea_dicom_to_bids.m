@@ -52,7 +52,12 @@ ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui, ui.niiFileTabl
 
 waitfor(ui.UIFigure);
 
-anat_files = getappdata(groot, 'anat_files');
+try
+    anat_files = getappdata(groot, 'anat_files');
+catch
+    anat_files = [];
+    
+end
 
 end
 
