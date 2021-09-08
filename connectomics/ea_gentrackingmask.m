@@ -75,7 +75,7 @@ if docoreg
     ea_conformspaceto([directory,'c',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],1,[],[],0);
     ea_backuprestore([directory,'c',options.prefs.prenii_unnormalized]);
 
-    affinefile = ea_coreg2images(options, ...
+    affinefile = ea_coregimages(options, ...
         [directory,'c',options.prefs.prenii_unnormalized], ... % moving
         [directory,options.prefs.b0], ... % fix
         [directory,'c',options.prefs.prenii_unnormalized], ... % out
