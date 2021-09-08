@@ -1,11 +1,11 @@
-function varargout=ea_coregctmri_ants_multiple(options)
-% This function uses ANTs to register postop-CT to preop-MR.
+function varargout=ea_coregpostopct_ants_multiple_refine(options)
+% Wrapper function for ANTs multiple run + Subcortical Refine registration of post-op CT
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs), multiple runs';
+    varargout{1}='Advanced Normalization Tools (ANTs), multiple runs + Subcortical Refine';
     return
 end
 
@@ -21,7 +21,7 @@ transform3 = ea_ants([options.subj.preopAnat.(options.subj.AnchorModality).coreg
     [options.subj.postopAnat.(options.subj.postopModality).coreg]);
 transformFinal = ea_ants([options.subj.preopAnat.(options.subj.AnchorModality).coreg],...
     [options.subj.postopAnat.(options.subj.postopModality).preproc],...
-    [options.subj.postopAnat.(options.subj.postopModality).coreg]);
+    [options.subj.postopAnat.(options.subj.postopModality).coreg],1,{},1,options);
 
 ea_delete([transform1; transform2; transform3]);
 
