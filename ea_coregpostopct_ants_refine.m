@@ -11,8 +11,8 @@ end
 
 disp('Coregistering post-op CT to pre-op MRI...');
 transform = ea_ants([options.subj.preopAnat.(options.subj.AnchorModality).coreg],...
-    [options.subj.postopAnat.(options.subj.postopModality).preproc],...
-    [options.subj.postopAnat.(options.subj.postopModality).coreg],1,{},1,options);
+    [options.subj.postopAnat.CT.preproc],...
+    [options.subj.postopAnat.CT.coreg],1,{},1,options);
 
 movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'ants.mat']);
 movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'ants.mat']);
