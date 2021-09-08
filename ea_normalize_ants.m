@@ -59,7 +59,7 @@ if usefa && spacedef.hasfa % first put in FA since least important (if both an F
         cnt=cnt+1;
     elseif exist([directory,options.prefs.fa],'file') % recheck if now is present.
             disp('Including FA information for white-matter normalization (weight = 0.5).');
-            ea_coreg2images(options,[directory,bprfx,options.prefs.fa],[directory,anatpresent{1}],[directory,bprfx,options.prefs.fa2anat],{},0,[],1);
+            ea_coregimages(options,[directory,bprfx,options.prefs.fa],[directory,anatpresent{1}],[directory,bprfx,options.prefs.fa2anat],{},0,[],1);
             to{cnt}=[ea_space(options),'fa.nii'];
             from{cnt}=[directory,bprfx,options.prefs.fa2anat];
             weights(cnt)=0.5;
