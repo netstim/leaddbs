@@ -436,7 +436,7 @@ switch ea_stripext(currvol)
         options.coregmr.method=get(handles.coregmrmethod,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
         ea_backuprestore([directory,options.prefs.fa]);
-        ea_coreg2images(options,[directory,options.prefs.fa],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
+        ea_coregimages(options,[directory,options.prefs.fa],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         ea_dumpspecificmethod(handles,options.coregmr.method)
 
     otherwise % MR
@@ -455,7 +455,7 @@ switch ea_stripext(currvol)
 
             % in following line correct that useasanchor is the *moving*
             % image (since we're going from anchor to rest/b0.
-            ea_coreg2images(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
+            ea_coregimages(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
             if ~isequal([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
                     [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)])
                 movefile([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
@@ -469,7 +469,7 @@ switch ea_stripext(currvol)
             ea_cleandownstream(directory,thisrest);
         else  % other images
             ea_backuprestore([directory,presentfiles{activevolume}]);
-            ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
+            ea_coregimages(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
         end
         ea_dumpspecificmethod(handles,options.coregmr.method)
 end
