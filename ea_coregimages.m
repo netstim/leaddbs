@@ -1,4 +1,4 @@
-function affinefile = ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat,msks,interp)
+function affinefile = ea_coregimages(options,moving,fixed,ofile,otherfiles,writeoutmat,msks,interp)
 % Generic function for image coregistration
 %
 % 1. Moving image will keep untouched unless the output points to the same
@@ -58,7 +58,7 @@ switch lower(options.coregmr.method)
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'fsl bbr' % FSL BBR
-        affinefile = ea_flirt_bbr(fixed,...
+        affinefile = ea_flirtbbr(fixed,...
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'ants' % ANTs
@@ -70,19 +70,28 @@ switch lower(options.coregmr.method)
             moving,...
             ofile,writeoutmat,otherfiles);
     case 'hybrid spm & ants' % Hybrid SPM -> ANTs
-        ea_spm_coreg(options,moving,fixed,'nmi',0,otherfiles,writeoutmat)
+        % Copy moving image to out image first, since SPM will change
+        % the header of the moving image.
+        copyfile(moving, ofile);
+        ea_spm_coreg(options,ofile,fixed,'nmi',0,otherfiles,writeoutmat)
         affinefile = ea_ants(fixed,...
-            moving,...
+            ofile,...
             ofile,writeoutmat,otherfiles);
     case 'hybrid spm & fsl' % Hybrid SPM -> FSL
-        ea_spm_coreg(options,moving,fixed,'nmi',0,otherfiles,writeoutmat)
+        % Copy moving image to out image first, since SPM will change
+        % the header of the moving image.
+        copyfile(moving, ofile);
+        ea_spm_coreg(options,ofile,fixed,'nmi',0,otherfiles,writeoutmat)
         affinefile = ea_flirt(fixed,...
-            moving,...
+            ofile,...
             ofile,writeoutmat,otherfiles);
     case 'hybrid spm & brainsfit' % Hybrid SPM -> Brainsfit
-        ea_spm_coreg(options,moving,fixed,'nmi',0,otherfiles,writeoutmat)
+        % Copy moving image to out image first, since SPM will change
+        % the header of the moving image.
+        copyfile(moving, ofile);
+        ea_spm_coreg(options,ofile,fixed,'nmi',0,otherfiles,writeoutmat)
         affinefile = ea_brainsfit(fixed,...
-            moving,...
+            ofile,...
             ofile,writeoutmat,otherfiles);
 end
 
