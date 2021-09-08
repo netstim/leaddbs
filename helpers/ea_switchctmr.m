@@ -33,6 +33,12 @@ else % Only one patient loaded
 
     % Get subj BIDS struct
     subj = bids.getSubj(subjId{1}, preferMRCT);
+    if ~subj.rawImageJSONExist
+        setappdata(handles.leadfigure, 'rawImageJSONExist', 0);
+        return;
+    else
+        setappdata(handles.leadfigure, 'rawImageJSONExist', 1);
+    end
 
     % Enable MR/CT popupmenu in case both present
     if subj.bothMRCTPresent
