@@ -1,5 +1,6 @@
 function ea_coregmr_ants(options,fixed, moving, out, refine)
-% uses ANTs to coregister MRIs.
+% Wrapper for ANTs registration of post-op MRI
+
 if ~exist('refine','var')
     refine=0;
 end
