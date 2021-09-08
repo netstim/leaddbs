@@ -25,12 +25,12 @@ end
 
 % Prepare bet image for flirt bbr
 [fixpath, fixname] = ea_niifileparts(fixedimage);
-fixedimage_bet = [fileparts(fixpath), filesep, 'bet_', fixname];
+fixedimage_bet = [fileparts(fixpath), filesep, fixname, '_brain'];
 if isempty(dir([fixedimage_bet,'.nii*']))
     ea_bet(fixedimage, 0, fixedimage_bet, 0.5);
 end
 
-volumedir = [fileparts(ea_niifileparts(movingimage)), filesep];
+volumedir = [fileparts(ea_niifileparts(outputimage)), filesep];
 
 % name of the output transformation
 [~, movname] = ea_niifileparts(movingimage);
@@ -49,7 +49,7 @@ else
     COVERT_XFM = [basedir, 'convert_xfm.', computer('arch')];
 end
 
-fixedimage_fast = [fileparts(fixpath), filesep, 'fast_', fixname];
+fixedimage_fast = [fileparts(fixpath), filesep, fixname, '_fslfast'];
 
 % Segment the reference image
 fastcmd = [FAST, ' -v ', ...
@@ -153,6 +153,12 @@ else
     affinefile = {[volumedir, xfm, '.mat']
                   [volumedir, invxfm, '.mat']};
 end
+
+% Clean up initial transform for FSL FLIRT BBR
+ea_delete([volumedir, xfm, '_init.mat']);
+
+% Clean up FSL FAST results
+ea_delete([fixedimage_fast, '*']);
 
 fprintf('\nFSL FLIRT BBR done.\n');
 
