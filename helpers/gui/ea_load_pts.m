@@ -85,6 +85,11 @@ ea_getui(handles); % update ui from patient
 ea_storeui(handles); % save in pt folder
 ea_addrecentpatient(handles, uipatdir, patsub, patsub);
 
+% Return when BIDS dataset is not yet ready
+if ~getappdata(handles.leadfigure, 'rawImageJSONExist')
+    return;
+end
+
 % check if reconstruction is present and assign side-toggles accordingly:
 if length(subjId) == 1 && isfield(handles, 'side1')
     recon = bids.getRecon(subjId{1});
