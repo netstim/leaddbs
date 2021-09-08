@@ -11,12 +11,12 @@ postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};            % TODO: get 
 % TODO: 1. GUI to select which files, 2. first get how many sessions, then iterate over those (currently only pre- and postop)
 % TODO: 3. handle no files gracefully
 
+rawdata_dir = fullfile(options.root, options.patientname, 'rawdata');   % TODO: dataset fetcher
+lead_derivatives_dir = fullfile(options.root, options.patientname, 'derivatives', 'leaddbs');
+
 %% import directly from BIDS
 if isfield(options.dicomimp,'method') && options.dicomimp.method == 4
-    
-    rawdata_dir = fullfile(options.root, options.patientname, 'rawdata');   % TODO: dataset fetcher
-    lead_derivatives_dir = fullfile(options.root, options.patientname, 'derivatives', 'leaddbs');
-    
+
     all_files = dir(fullfile(rawdata_dir, 'sub-*'));    % get subjects in dataset root TODO: dataset fetcher
     dirFlags = [all_files.isdir];                       % get a logical vector that tells which is a directory
     subj_folders = all_files(dirFlags);                 % extract only those that are directories (fail-safe)
@@ -44,7 +44,7 @@ if isfield(options.dicomimp,'method') && options.dicomimp.method == 4
         savejson('', anat_files_selected, fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs', [subj_folders(subj_idx).name, '_desc-rawimages.json']));
     end
     
-    %% import from DICOM
+%% import from DICOM
 else
     sourcedata_dir = fullfile(options.root, options.patientname, 'sourcedata');     % TODO: dataset fetcher
     
@@ -59,26 +59,32 @@ else
         dicom_dir = fullfile(options.root, options.patientname, 'sourcedata', subj_folders(subj_idx).name);
         tmp_dir = fullfile(options.root, options.patientname, 'sourcedata', subj_folders(subj_idx).name, 'tmp'); % tmp dir for temporary storage of niftis
         
-%         switch options.dicomimp.method
-%             case 1 % dcm2niix
-%                 ea_dcm2niix(dicom_dir, tmp_dir);
-%                 ea_methods(options, ['DICOM images were converted to the '...
-%                     'NIfTI file format using dcm2niix (see https://github.com/rordenlab/dcm2niix).']);
-%             case 2 % dicm2nii
-%                 ea_dicm2nii(dicom_dir, tmp_dir);
-%                 ea_methods(options, ['DICOM images were converted to the '...
-%                     'NIfTI file format using dicm2nii (see https://github.com/xiangruili/dicm2nii).']);
-%             case 3 % SPM
-%                 ea_spm_dicom_import(dicom_dir, tmp_dir);
-%                 ea_methods(options, ['DICOM images were converted to the '...
-%                     'NIfTI file format using SPM.']);
-%         end
-%         
+                switch options.dicomimp.method
+                    case 1 % dcm2niix
+                        ea_dcm2niix(dicom_dir, tmp_dir);
+                        ea_methods(options, ['DICOM images were converted to the '...
+                            'NIfTI file format using dcm2niix (see https://github.com/rordenlab/dcm2niix).']);
+                    case 2 % dicm2nii
+                        ea_dicm2nii(dicom_dir, tmp_dir);
+                        ea_methods(options, ['DICOM images were converted to the '...
+                            'NIfTI file format using dicm2nii (see https://github.com/xiangruili/dicm2nii).']);
+                    case 3 % SPM
+                        ea_spm_dicom_import(dicom_dir, tmp_dir);
+                        ea_methods(options, ['DICOM images were converted to the '...
+                            'NIfTI file format using SPM.']);
+                end
+        
         % first option: rename files with the help of a GUI
         [~, niiFiles] = fileparts(ea_regexpdir(tmp_dir, '\.nii.gz$', 0));
-        ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, fullfile(options.root, options.patientname), tmp_dir, dicom_dir)
+        anat_files_selected = ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, fullfile(options.root, options.patientname), tmp_dir, dicom_dir);
+        
         %ea_select_nii_import(niiFiles, tmp_dir, dicom_dir);
-        disp('done');
+        % write into json file
+        if ~exist(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'), 'dir')
+            mkdir(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'));
+        end
+        savejson('', anat_files_selected, fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs', [subj_folders(subj_idx).name, '_desc-rawimages.json']));
+        
         % second option: use lookup table to find files and convert them to BIDS
         % read in lookup table
         %f = fileread(fullfile(ea_getearoot(), 'ext_libs', 'dcm2nii', 'dicom_bids_heuristics.json'));
