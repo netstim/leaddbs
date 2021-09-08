@@ -1,4 +1,4 @@
-function ea_dicom_import(options)
+function ea_dicom_import(dataset_dir, method, dicomimport)
 % This function converts DICOM files from the sourcedata folder of your dataset into
 % a BIDS-conform rawdata folder and specified which files are to be used by lead-dbs
 % __________________________________________________________________________________
@@ -11,11 +11,12 @@ postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};            % TODO: get 
 % TODO: 1. GUI to select which files, 2. first get how many sessions, then iterate over those (currently only pre- and postop)
 % TODO: 3. handle no files gracefully
 
-rawdata_dir = fullfile(options.root, options.patientname, 'rawdata');   % TODO: dataset fetcher
-lead_derivatives_dir = fullfile(options.root, options.patientname, 'derivatives', 'leaddbs');
+rawdata_dir = fullfile(dataset_dir, 'rawdata');   % TODO: dataset fetcher
+sourcedata_dir = fullfile(dataset_dir, 'sourcedata');     % TODO: dataset fetcher
+lead_derivatives_dir = fullfile(dataset_dir, 'derivatives', 'leaddbs');
 
 %% import directly from BIDS
-if isfield(options.dicomimp,'method') && options.dicomimp.method == 4
+if ~dicomimport
 
     all_files = dir(fullfile(rawdata_dir, 'sub-*'));    % get subjects in dataset root TODO: dataset fetcher
     dirFlags = [all_files.isdir];                       % get a logical vector that tells which is a directory
@@ -46,7 +47,6 @@ if isfield(options.dicomimp,'method') && options.dicomimp.method == 4
     
 %% import from DICOM
 else
-    sourcedata_dir = fullfile(options.root, options.patientname, 'sourcedata');     % TODO: dataset fetcher
     
     all_files = dir(fullfile(sourcedata_dir, 'sub-*'));  % get subjects in dataset root TODO: dataset fetcher
     dirFlags = [all_files.isdir];                        % get a logical vector that tells which is a directory
@@ -56,20 +56,13 @@ else
         
         fprintf('Importing DICOM data from subject %s...\n', subj_folders(subj_idx).name);
         
-        dicom_dir = fullfile(options.root, options.patientname, 'sourcedata', subj_folders(subj_idx).name);
-        tmp_dir = fullfile(options.root, options.patientname, 'sourcedata', subj_folders(subj_idx).name, 'tmp'); % tmp dir for temporary storage of niftis
+        dicom_dir = fullfile(sourcedata_dir, subj_folders(subj_idx).name);
         
-        % convert DICOMS to .nii files
-        ea_dcm_to_nii(options.dicomimp.method, dicom_dir, tmp_dir);
+        % convert DICOMS to .nii files and get list of files
+        niiFiles = ea_dcm_to_nii(method, dicom_dir);
 
-        % first option: rename files with the help of a GUI
-        [~, niiFiles] = fileparts(ea_regexpdir(tmp_dir, '\.nii.gz$', 0));
-        
-        % clumsily remove .nii from filename
-        for idx = 1:length(niiFiles)
-            niiFiles{idx, 1} = niiFiles{idx, 1}(1:end-4);
-        end
-        anat_files_selected = ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, fullfile(options.root, options.patientname), tmp_dir);
+        % call GUI to select which files should be loaded
+        anat_files_selected = ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, dataset_dir);
         
         % write into json file
         if ~exist(fullfile(lead_derivatives_dir, subj_folders(subj_idx).name, 'prefs'), 'dir')
@@ -88,19 +81,7 @@ else
         %anat_files.preop = find_anat_files_dicom(tmp_dir, bids_naming_heuristics.preop);
         
     end
-    
-    % methods call
-    switch options.dicomimp.method
-        case 1 % dcm2niix
-            ea_methods(options, ['DICOM images were converted to the '...
-                'NIfTI file format using dcm2niix (see https://github.com/rordenlab/dcm2niix).']);
-        case 2 % dicm2nii
-            ea_methods(options, ['DICOM images were converted to the '...
-                'NIfTI file format using dicm2nii (see https://github.com/xiangruili/dicm2nii).']);
-        case 3 % SPM
-            ea_methods(options, ['DICOM images were converted to the '...
-                'NIfTI file format using SPM.']);
-    end
+
 end
 
     function found_files = find_anat_files_bids(folder, modalities)
