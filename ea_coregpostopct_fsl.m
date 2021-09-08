@@ -1,5 +1,5 @@
-function varargout=ea_coregctmri_fsl(options)
-% This function uses FSL to register postop-CT to preop-MR.
+function varargout=ea_coregpostopct_fsl(options)
+% Wrapper function for FSL FLIRT registration of post-op CT
 % __________________________________________________________________________________
 % Copyright (C) 2019 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn

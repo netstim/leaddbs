@@ -131,7 +131,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
             diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
 
-            % Run CT coregistration function
+            % Coregister post-op CT to pre-op MRI
             ea_coregpostopct(options);
 
             % Dump method
@@ -149,7 +149,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
 
         % Coregister post-op MRI to pre-op MRI
-        ea_coregmr(options);
+        ea_coregpostopmr(options);
 
         % Coregister all available pre-op MRI
         ea_checkcoregallmri(options,0,1);
