@@ -11,11 +11,11 @@ lookup_table = {'skip','skip', 'skip';
     'anat','postop', 'cor_MR'};
 
 imgs = cell(length(fnames),1);
-h_wait = waitbar(0, 'Please wait while Niftii images are being loaded ');
+h_wait = waitbar(0, 'Please wait while Niftii images are being loaded');
 for image_idx = 1:length(fnames)
     imgs{image_idx} = struct();
     [imgs{image_idx}.p, imgs{image_idx}.frm, imgs{image_idx}.rg, imgs{image_idx}.dim] = read_nii(fullfile(nii_folder, [fnames{image_idx}, '.nii.gz']), [], 0);
-    waitbar(image_idx / length(fnames));
+    waitbar(image_idx / length(fnames), h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(fnames)));
 end
 close(h_wait);
 
@@ -41,7 +41,7 @@ ui.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(ui,imgs{event.I
 ui.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(ui, event);     % callback for scrolling images
 
 % OK button behaviour
-ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui.niiFileTable, lookup_table, dataset_folder, nii_folder, subjID);
+ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui, ui.niiFileTable, lookup_table, dataset_folder, nii_folder, subjID);
 
 waitfor(ui.UIFigure);
 
@@ -49,7 +49,7 @@ anat_files = getappdata(groot, 'anat_files');
 
 end
 
-function ok_button_function(TT, lookup_table, dataset_folder, nii_folder, subjID)
+function ok_button_function(uiapp, TT, lookup_table, dataset_folder, nii_folder, subjID)
 
 dat = cellfun(@char,table2cell(TT.Data),'uni',0);
 
@@ -83,6 +83,8 @@ for sesIdx = 1:length(sessions)
 end
 
 setappdata(groot, 'anat_files', anat_files);
+
+delete(uiapp);      % close window
 
 end
 
