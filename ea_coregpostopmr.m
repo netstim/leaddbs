@@ -30,6 +30,10 @@ end
 
 doreslice=1;
 
+% Setup log
+ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
+diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+
 % Do coregistration
 for i = 1:length(moving)
     disp('Coregistering postop MR cor to preop MRI...');
@@ -64,3 +68,5 @@ for i = 1:length(moving)
 end
 
 ea_dumpmethod(options, 'coreg');
+
+diary off;
