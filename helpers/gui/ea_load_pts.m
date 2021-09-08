@@ -35,10 +35,10 @@ if length(uipatdir) == 1 % Dragged single folder
 
         if ~isempty(rawData) % rawdata folder already exists
             uipatdir = strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs']);
-            subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match');
+            subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match', 'once');
         elseif ~isempty(sourceData) % sourcedata folder exists
             uipatdir = strrep(rawData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
-            subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match');
+            subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match', 'once');
         else
             error('Both sourcedata and rawdata folders are empty!');
         end
