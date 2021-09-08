@@ -1,4 +1,4 @@
-function affinefile = ea_coreg2images(options,moving,fixed,ofile,otherfiles,writeoutmat,msks,interp)
+function affinefile = ea_coregimages(options,moving,fixed,ofile,otherfiles,writeoutmat,msks,interp)
 % Generic function for image coregistration
 %
 % 1. Moving image will keep untouched unless the output points to the same
