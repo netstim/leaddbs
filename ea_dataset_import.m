@@ -58,6 +58,7 @@ else
     % case: dataset root is selected and sourcedata is present with
     % according subject folders below it
     if exist(fullfile(source_dir{1}, 'sourcedata'), 'dir') && length(source_dir) == 1
+        root_dataset_dir = fullfile(source_dir{1});
         sourcedata_dir = fullfile(source_dir{1}, 'sourcedata');
         lead_derivatives_dir = fullfile(source_dir{1}, 'derivatives', 'leaddbs');
         all_files = dir(fullfile(sourcedata_dir, 'sub-*'));        % get subjects in dataset root
@@ -67,7 +68,7 @@ else
         % TODO: check whether there are actually .dcm files present in each
         % subject folder. If not, exclude that subject from the list
         
-        % case: it is just one patient folder and no sourcedata folder present -> create BIDS
+    % case: it is just one patient folder and no sourcedata folder present -> create BIDS
     elseif length(source_dir) == 1
         
         if isempty(dest_dir)    % if no destination dir has been passed, just set it to source dir
@@ -85,21 +86,40 @@ else
         copyfile(fullfile(dest_dir, 'DICOM'), fullfile(dest_dir, 'sourcedata', subjID));
         
         subj_ids.name =char(subjID);
+        
+        % directory definitions for conversion
+        lead_derivatives_dir = fullfile(dest_dir,'derivatives', 'leaddbs');
         sourcedata_dir = fullfile(dest_dir, 'sourcedata');
-        % case: multiple patients selected -> create BIDS
-        % dataset into the folder above the one where the patients are
+        root_dataset_dir = dest_dir;
+    % case: multiple patients selected -> create BIDS
+    % dataset into the folder above the one where the patients are
     else
         
         if isempty(dest_dir)    % if no destination dir has been passed, build one from the top level of selected participants
             pathparts = strsplit(source_dir{1}, filesep);
             parts_without_subj = pathparts(1:end - 1);
-            dest_dir = fullfile(parts_without_subj{:});
+            dest_dir = fullfile(filesep, parts_without_subj{:});
         end
         
         mkdir(fullfile(dest_dir, 'rawdata'));
         mkdir(fullfile(dest_dir, 'sourcedata'));
         
-        % now
+        % now go through all subjects and copy paste DICOM data into sourcedata and create subj_ids var
+        subj_ids = struct();
+        for subj_idx = 1:length(source_dir)
+            pathparts = strsplit(source_dir{subj_idx}, filesep);
+            subjID = char(pathparts(end));
+            
+            fprintf('Found DICOM data for subject %s, importing DICOMS and creating a BIDS dataset at %s\n', ...
+                subjID, dest_dir);
+            copyfile(fullfile(source_dir{subj_idx}, 'DICOM'), fullfile(dest_dir, 'sourcedata', subjID));
+            subj_ids(subj_idx).name = subjID;
+        end
+        
+         % directory definitions for conversion
+        lead_derivatives_dir = fullfile(dest_dir,'derivatives', 'leaddbs');
+        sourcedata_dir = fullfile(dest_dir, 'sourcedata');
+        root_dataset_dir = dest_dir;
     end
     
     % now go through all of the subjects and convert DICOMS
@@ -113,7 +133,7 @@ else
         niiFiles = ea_dcm_to_nii(method, dicom_dir);
         
         % call GUI to select which files should be loaded
-        anat_files_selected = ea_dicom_to_bids(subj_ids(subj_idx).name, niiFiles, source_dir{1});
+        anat_files_selected = ea_dicom_to_bids(subj_ids(subj_idx).name, niiFiles, root_dataset_dir);
         
         if ~isempty(anat_files_selected)
             % write into json file
