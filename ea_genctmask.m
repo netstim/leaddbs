@@ -10,12 +10,12 @@ ea_delete([directory,'brainmask.nii']);
 
 load([directory,'ea_coregctmethod_applied.mat']) % determine last used coregmethod
 switch coregct_method_applied{end}
-    case 'ea_coregctmri_brainsfit'
+    case 'ea_coregpostopct_brainsfit'
         suffix='_brainsfit.h5';
     case {'ea_coregctmri_ants', 'ea_coregctmri_ants_refine'}
         coregs=dir([directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_ants*.mat']);
         suffix=strrep(coregs(end).name,[ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized)],'');
-    case 'ea_coregctmri_fsl'
+    case 'ea_coregpostopct_fsl'
         coregs=dir([directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_flirt*.mat']);
         suffix=strrep(coregs(end).name,[ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized)],'');
 end
