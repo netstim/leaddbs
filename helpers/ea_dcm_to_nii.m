@@ -6,7 +6,22 @@ function niiFiles = ea_dcm_to_nii(method, dicom_dir)
 
 tmp_dir = fullfile(dicom_dir, 'tmp');
 
-switch method
+% catch the case where method is a string
+if ischar(method)
+    switch method
+        case 'dcm2niix'
+            method_int = 1;
+        case 'dicm2nii'
+            method_int = 2;
+        case 'SPM'
+            method_int =3;
+    end
+else
+    method_int = method;
+end
+
+
+switch method_int
     case 1 % dcm2niix
         ea_dcm2niix(dicom_dir, tmp_dir);
     case 2 % dicm2nii
