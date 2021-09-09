@@ -1,14 +1,11 @@
 function varargout=ea_normalize_maget_segment(options)
 
 if ischar(options) % return name of method.
-    switch options
-        case 'prompt'
-            varargout{1}='MAGeT Brain-like Segmentation/Normalization DISTAL atlas (Chakravarty 2013, Ewert 2016)';
-            varargout{2}=1; % is compatible
-            varargout{3}=1; % hassettings.
-            varargout{4}=1; % is multispectral
-            return
-    end
+    varargout{1}='MAGeT Brain-like Segmentation/Normalization DISTAL atlas (Chakravarty 2013, Ewert 2016)';
+    varargout{2}=1; % dummy output
+    varargout{3}=1; % hassettings.
+    varargout{4}=1; % is multispectral
+    return
 end
 
 reforce=0;
@@ -20,7 +17,6 @@ peerfolders=ea_getmagetpeers(options);
 ea_magetcheck_norm_peers(options,peerfolders)
 
 subdirec=[options.root,options.patientname,filesep];
-
 
 %% step 1, warp DISTAL back to each peer brain
 earoot=ea_getearoot;

@@ -147,8 +147,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.do
-        ea_mkdir(fileparts(options.subj.norm.log.logBaseName));
-        diary([options.subj.norm.log.logBaseName, datestr(now, 'yyyymmddTHHMMss'), '.log']);
         if ~(ea_reglocked(options,'glanat')==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
             if ea_reglocked(options,'glanat')==1 && ~strcmp(options.normalize.method,'ea_normalize_apply_normalization') % in this case, only perform normalization if using a multispectral approach now.
                 [~,~,~,doit]=eval([options.normalize.method,'(''prompt'')']);
@@ -157,29 +155,16 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             end
 
             if doit || strcmp(options.normalize.method,'ea_normalize_apply_normalization')
-                clear doit
-                % 3. finally perform normalization based on dominant or all preop MRIs
-                ea_dumpmethod(options, 'norm'); % has to come first due to applynormalization.
+                ea_dumpmethod(options, 'norm');
 
-                % cleanup already normalized versions:
-                ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
-                for fi=2:length(presentfiles)
-                    ea_delete([options.root,options.patientname,filesep,'gl',presentfiles{fi}]);
-                end
+                ea_normalize(options);
 
-                eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
-
-                if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
-                    ea_tonemapct_file(options,'mni');
-                end
-                % 4. generate coreg-check figs (all to all).
-                ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
+                ea_gencheckregfigs(options, 'norm');
             end
         end
-        diary off
     end
 
-    if isfield(options,'gencheckreg') % this case is an exception when calling from the Tools menu.
+    if isfield(options,'gencheckreg') % Exception when calling from the Tools menu.
         if options.gencheckreg
             ea_gencheckregfigs(options); % generate checkreg figures
         end

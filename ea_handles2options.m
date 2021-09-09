@@ -27,9 +27,7 @@ try
 end
 
 try
-    options.normalize.method=getappdata(handles.leadfigure,'normmethod');
-    options.normalize.method=options.normalize.method{get(handles.normmethod,'Value')};
-    options.normalize.methodn=get(handles.normmethod,'Value');
+    options.normalize.method = handles.normmethod.String{handles.normmethod.Value};
 end
 
 try % not working when calling from lead_anatomy
