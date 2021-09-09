@@ -7,26 +7,32 @@ if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
     diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
 
     % Do coregistration
-    switch options.coregct.method
-        case 'Advanced Normalization Tools (ANTs)'
+    switch lower(options.coregct.method)
+        case lower({'ANTs (Avants 2008)', 'ANTs'})
             ea_coregpostopct_ants(options);
-        case 'Advanced Normalization Tools (ANTs), multiple runs'
+        case lower({'ANTs (Avants 2008) multiple runs', 'ANTsMulti'})
             ea_coregpostopct_ants_multiple(options);
-        case 'Advanced Normalization Tools (ANTs), multiple runs + Subcortical Refine'
+        case lower({'ANTs (Avants 2008) multiple runs + subcortical refine', 'ANTsMultiScrf'})
             ea_coregpostopct_ants_multiple_refine(options);
-        case 'Advanced Normalization Tools (ANTs) + Subcortical Refine'
+        case lower({'ANTs (Avants 2008) + subcortical refine', 'ANTsScrf'})
             ea_coregpostopct_ants_refine(options);
-        case 'BRAINSFit'
+        case lower({'BRAINSFit (Johnson 2007)', 'BRAINSFit'})
             ea_coregpostopct_brainsfit(options);
-        case 'FSL FLIRT'
+        case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
             ea_coregpostopct_fsl(options);
+        otherwise
+            warning('Coregistrion method not recognized...');
+            diary off;
+            return;
     end
 
     % Dump method
     ea_dumpmethod(options, 'coreg');
 
     % Compute tone-mapped coregistered CT
-    ea_tonemapct_file(options, 'native');
+    if options.modality == 2
+        ea_tonemapct_file(options, 'native');
+    end
 
     diary off;
 end
