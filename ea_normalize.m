@@ -37,7 +37,7 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
 
     % Compute tone-mapped normalized CT
     if options.modality == 2
-        ea_tonemapct_file(options, 'mni');
+        ea_tonemapct(options, 'norm');
     end
 
     diary off;
