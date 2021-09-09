@@ -22,7 +22,7 @@ if isempty(ea_regexpdir([ea_space,'fliplr'],'glanatComposite\.(h5|nii\.gz)',0))
             options.coregmr.method='Do not coregister MRIs (already coregistered)';
             options.modality=1;
             options.overwriteapproved=1;
-            ea_dumpnormmethod(options,'ea_normalize_ants','normmethod'); % has to come first due to applynormalization.
+            ea_dumpmethod(options, 'norm');
             ea_normalize_ants(options,0);
             
             for t=1:length(spacedef.templates)
