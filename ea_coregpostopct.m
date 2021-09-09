@@ -31,7 +31,7 @@ if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
 
     % Compute tone-mapped coregistered CT
     if options.modality == 2
-        ea_tonemapct_file(options, 'native');
+        ea_tonemapct(options, 'native');
     end
 
     diary off;
