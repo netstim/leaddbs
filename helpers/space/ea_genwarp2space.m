@@ -27,7 +27,7 @@ options.patientname=fromwhich;
 options.prefs=ea_prefs('');
 options.earoot=ea_getearoot;
 options.modality=1;
-options.coregmr.method='ANTs';
+options.coregmr.method='ANTs (Avants 2008)';
 % temporarily switch back to from space to get warps
 [options,presentfiles]=ea_assignpretra(options);
 
