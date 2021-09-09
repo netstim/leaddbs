@@ -85,7 +85,7 @@ end
 % apply tonemapping if needed
 if strcmp(options.prefs.scrf.tonemap,'tp_')
     if ~exist([directory,options.prefs.scrf.tonemap,options.prefs.ctnii_coregistered],'file') && exist([directory,options.prefs.ctnii_coregistered],'file')
-        ea_tonemapct_file(options,'native');
+        ea_tonemapct(options, 'native');
     end
 end
 fis={options.prefs.tranii_unnormalized,options.prefs.cornii_unnormalized,options.prefs.sagnii_unnormalized,[options.prefs.scrf.tonemap,options.prefs.ctnii_coregistered]};
