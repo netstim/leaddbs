@@ -3,11 +3,14 @@ function ea_options2handles(options,handles)
 % set handles
 set(handles.dicomcheck,'Value',options.dicomimp.do);
 set(handles.normalize_checkbox,'Value',options.normalize.do);
-if options.normalize.methodn>length(handles.normmethod.String)
-    set(handles.normmethod,'Value',1);
+
+index = find(ismember(handles.normmethod.String, options.normalize.method), 1);
+if ~isempty(index)
+    set(handles.normmethod,'Value',index);
 else
-    set(handles.normmethod,'Value',options.normalize.methodn);
+    set(handles.normmethod,'Value',1);
 end
+
 set(handles.normcheck,'Value',options.normalize.check);
 
 % CT coregistration

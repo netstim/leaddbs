@@ -2,7 +2,7 @@ function varargout=ea_normalize_maget(options)
 
 if ischar(options) % return name of method.
     varargout{1}='MAGeT Brain-like Normalization (Chakravarty 2013)';
-    varargout{2}=1; % is compatible
+    varargout{2}=1; % dummy output
     varargout{3}=1; % hassettings.
     varargout{4}=1; % is multispectral
     return
@@ -12,13 +12,10 @@ reforce=1;
 
 peerfolders=ea_getmagetpeers(options);
 
-
 %% step 0: check if all subjects have been processed with an ANTs-based normalization function
 ea_magetcheck_norm_peers(options,peerfolders)
 
-
 subdirec=[options.root,options.patientname,filesep];
-
 
 %% step 1, setup DISTAL warps back to sub via each peer brain
 earoot=ea_getearoot;
@@ -32,9 +29,7 @@ for peer=1:length(peerfolders)
     poptions.root=[poptions.root,filesep];
     poptions=ea_assignpretra(poptions);
 
-
     %% step 1, generate warps from peers to the selected patient brain
-
 
     if ~exist([subdirec,'MAGeT',filesep,'warps',filesep,poptions.patientname,'2mni.nii'],'file') || reforce
         [~,peerpresentfiles]=ea_assignpretra(poptions);
