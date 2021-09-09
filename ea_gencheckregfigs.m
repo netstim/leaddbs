@@ -20,6 +20,8 @@ if ismember('coreg', type)
     % Remove CT from subj.coreg.anat.postop struct, will use tone-mapped image
     if options.modality == 2
         postop = rmfield(options.subj.coreg.anat.postop, 'CT');
+    else
+        postop = options.subj.coreg.anat.postop;
     end
 
     % Get paths of coregistered image
@@ -64,6 +66,8 @@ if ismember('norm', type)
     % Remove CT from subj.norm.anat.postop struct, will use tone-mapped image
     if options.modality == 2
         postop = rmfield(options.subj.norm.anat.postop, 'CT');
+    else
+        postop = options.subj.norm.anat.postop;
     end
 
     % Get paths of coregistered image
