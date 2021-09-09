@@ -5,7 +5,7 @@ function varargout=ea_coregpostopct_fsl(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='FSL FLIRT';
+    varargout{1}='FLIRT (Jenkinson 2001 & 2002)';
     return
 end
 
