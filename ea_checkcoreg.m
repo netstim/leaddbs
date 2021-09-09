@@ -71,15 +71,15 @@ anchor=presentfiles{1};
 presentfiles(1)=[];
 
 set(handles.normsettings,'Visible','off');
-if exist([directory,options.prefs.gprenii],'file') && ~ea_coreglocked(options,options.prefs.gprenii)
+if exist([directory,options.prefs.gprenii],'file') && ~ea_reglocked(options,options.prefs.gprenii)
     presentfiles=[presentfiles;{[directory,options.prefs.gprenii]}];
 end
 
-% if exist([directory,options.prefs.gtranii],'file') && ~ea_coreglocked(options,options.prefs.gtranii)
+% if exist([directory,options.prefs.gtranii],'file') && ~ea_reglocked(options,options.prefs.gtranii)
 %     presentfiles=[presentfiles;{[directory,options.prefs.gtranii]}];
 % end
 %
-% if exist([directory,options.prefs.tp_gctnii],'file') && ~ea_coreglocked(options,options.prefs.tp_gctnii)
+% if exist([directory,options.prefs.tp_gctnii],'file') && ~ea_reglocked(options,options.prefs.tp_gctnii)
 %     presentfiles=[presentfiles;{[directory,options.prefs.tp_gctnii]}];
 % end
 
@@ -94,7 +94,7 @@ b0restanchor=cell(length(presentfiles),1);
 for irest = 1:options.prefs.n_rest
     % set filenames for this iteration
     if exist([directory,'r',ea_stripext(restfiles(irest).name),'_',anchor],'file')
-        if ~ea_coreglocked(options,['r',ea_stripext(restfiles(irest).name),'_',anchor])
+        if ~ea_reglocked(options,['r',ea_stripext(restfiles(irest).name),'_',anchor])
             presentfiles=[presentfiles;{['r',ea_stripext(restfiles(irest).name),'_',anchor]}];
             b0restanchor{length(presentfiles)} = ['mean',restfiles(irest).name];
         end
@@ -103,14 +103,14 @@ end
 
 % add b0:
 if exist([directory,ea_stripext(options.prefs.b0),'_',anchor],'file')
-    if ~ea_coreglocked(options,[directory,ea_stripext(options.prefs.b0),'_',anchor])
+    if ~ea_reglocked(options,[directory,ea_stripext(options.prefs.b0),'_',anchor])
         presentfiles=[presentfiles;{[ea_stripext(options.prefs.b0),'_',anchor]}];
         b0restanchor{length(presentfiles)} = [options.prefs.b0];
     end
 end
 
 if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
-    if ~ea_coreglocked(options,'brainshift')
+    if ~ea_reglocked(options,'brainshift')
         presentfiles=[presentfiles; {'brainshift'}];
     end
 end
@@ -343,7 +343,7 @@ end
 % now check if those are already approved (then don't show again):
 todel=[];
 for pf=1:length(presentfiles)
-    if ea_coreglocked(options,presentfiles{pf})
+    if ea_reglocked(options,presentfiles{pf})
         todel=[todel,pf];
     end
 end
