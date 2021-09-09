@@ -71,7 +71,7 @@ if useinverse % from template space to [untouched] achor space
             options.coregmr.method=get(handles.coregmrmethod,'String');
             options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
         catch
-            options.coregmr.method='SPM';
+            options.coregmr.method='SPM (Friston 2007)';
         end
 
         if ischar(fis)
@@ -135,7 +135,7 @@ else % from [untouched] achor space to template space
         options.coregmr.method=get(handles.coregmrmethod,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
     catch
-        options.coregmr.method='SPM';
+        options.coregmr.method='SPM (Friston 2007)';
     end
 
     if ischar(fis)

@@ -1,8 +1,5 @@
-function ea_coregpreopmri(options)
+function ea_coregpreopmr(options)
 % Entry function to coregister pre-op MRI
-% ______________________________________________________________________________
-% Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
-% Andreas Horn
 
 % Set anchor image
 anchor = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
@@ -17,11 +14,11 @@ output = struct2cell(coregImage);
 moving_exists = cellfun(@(x) isfile(x), moving);
 
 % Check registration lock/approval status
-out_approved = cellfun(@(x) logical(ea_reglocked(options, x)), output);
+output_approved = cellfun(@(x) logical(ea_reglocked(options, x)), output);
 
 % Remove non-existing moving image and approved output image
-moving(~moving_exists | out_approved) = [];
-output(~moving_exists | out_approved) = [];
+moving(~moving_exists | output_approved) = [];
+output(~moving_exists | output_approved) = [];
 
 % Return if no image remains
 if isempty(moving)
@@ -32,20 +29,16 @@ end
 ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
 diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
 
+% Do coregistration
 for i=1:length(moving)
     ea_coregimages(options, moving{i}, anchor, output{i});
 
-    % Reslice images if needed
-    V1 = ea_open_vol(anchor);
-    V2 = ea_open_vol(output{i});
-    if ~isequal(V1.mat, V2.mat)
-        ea_conformspaceto(anchor, output{i}, 1);
-    end
-
     % Better slab support
-    nii = ea_load_nii(V2.fname);
+    nii = ea_load_nii(output{i});
     nii.img(abs(nii.img)<0.0001) = 0;
     ea_write_nii(nii);
 end
+
+ea_dumpmethod(options, 'coreg');
 
 diary off;
