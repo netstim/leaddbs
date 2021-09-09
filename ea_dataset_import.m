@@ -12,6 +12,12 @@ if ~iscell(source_dir)
     source_dir = {source_dir};
 end
 
+if ~iscell(dest_dir)
+    dest_dir = {dest_dir};
+elseif isempty(dest_dir)
+    dest_dir = source_dir;
+end
+
 %% import directly from BIDS
 if ~dicomimport
     
@@ -68,58 +74,59 @@ else
         % TODO: check whether there are actually .dcm files present in each
         % subject folder. If not, exclude that subject from the list
         
-    % case: it is just one patient folder and no sourcedata folder present -> create BIDS
-    elseif length(source_dir) == 1
-        
-        if isempty(dest_dir)    % if no destination dir has been passed, just set it to source dir
-            dest_dir = source_dir{1};
-        end
-        
-        % create folders
-        mkdir(fullfile(dest_dir, 'rawdata'));
-        mkdir(fullfile(dest_dir, 'sourcedata'));
-        
-        pathparts = strsplit(dest_dir, filesep);
-        subjID = char(pathparts(end));
-        fprintf('Found DICOM data for subject %s, importing DICOMS and creating a BIDS dataset at %s\n', ...
-            subjID, dest_dir);
-        copyfile(fullfile(dest_dir, 'DICOM'), fullfile(dest_dir, 'sourcedata', subjID));
-        
-        subj_ids.name =char(subjID);
-        
-        % directory definitions for conversion
-        lead_derivatives_dir = fullfile(dest_dir,'derivatives', 'leaddbs');
-        sourcedata_dir = fullfile(dest_dir, 'sourcedata');
-        root_dataset_dir = dest_dir;
-    % case: multiple patients selected -> create BIDS
-    % dataset into the folder above the one where the patients are
+    % case: one or more patients selected, but not in BIDS format
     else
         
-        if isempty(dest_dir)    % if no destination dir has been passed, build one from the top level of selected participants
-            pathparts = strsplit(source_dir{1}, filesep);
-            parts_without_subj = pathparts(1:end - 1);
-            dest_dir = fullfile(filesep, parts_without_subj{:});
+        if length(dest_dir) == 1
+            fprintf('Found DICOM data for %d subjects, importing DICOMS and creating a BIDS dataset at %s...\n', ...
+                length(source_dir), dest_dir{1});
+        else
+            fprintf('Found DICOM data for %d subjects, importing DICOMS and creating BIDS datasets inside their folders...\n', ...
+                length(source_dir));
         end
         
-        mkdir(fullfile(dest_dir, 'rawdata'));
-        mkdir(fullfile(dest_dir, 'sourcedata'));
-        
-        % now go through all subjects and copy paste DICOM data into sourcedata and create subj_ids var
         subj_ids = struct();
         for subj_idx = 1:length(source_dir)
+            if length(dest_dir) == 1                            % this is the case of one destination dir
+                dest_dir_subj =  dest_dir{1};
+            else
+                dest_dir_subj = dest_dir{subj_idx};     % each subj has their own destination dir
+            end
+            
             pathparts = strsplit(source_dir{subj_idx}, filesep);
             subjID = char(pathparts(end));
             
-            fprintf('Found DICOM data for subject %s, importing DICOMS and creating a BIDS dataset at %s\n', ...
-                subjID, dest_dir);
-            copyfile(fullfile(source_dir{subj_idx}, 'DICOM'), fullfile(dest_dir, 'sourcedata', subjID));
-            subj_ids(subj_idx).name = subjID;
+            % check if sub is already present
+            if ~strcmp(subjID(1:4), 'sub-')
+                subjID = ['sub-', subjID];
+            end
+
+            % create folders
+            if ~exist(fullfile(dest_dir_subj, 'rawdata', subjID), 'dir')
+                mkdir(fullfile(dest_dir_subj, 'rawdata', subjID));
+            end
+            if ~exist(fullfile(dest_dir_subj, 'sourcedata', subjID), 'dir')
+                mkdir(fullfile(dest_dir_subj, 'sourcedata', subjID));
+            end
+            
+            copyfile(fullfile(source_dir{subj_idx}, 'DICOM'), fullfile(dest_dir_subj, 'sourcedata', subjID));
+            subj_ids.name =char(subjID);
+            
         end
         
-         % directory definitions for conversion
-        lead_derivatives_dir = fullfile(dest_dir,'derivatives', 'leaddbs');
-        sourcedata_dir = fullfile(dest_dir, 'sourcedata');
-        root_dataset_dir = dest_dir;
+        % directory definitions for conversion
+        if length(dest_dir) == 1
+        lead_derivatives_dir = fullfile(dest_dir{1},'derivatives', 'leaddbs');
+        sourcedata_dir = fullfile(dest_dir{1}, 'sourcedata');
+        root_dataset_dir = dest_dir{1};
+        else
+            for subj_idx = 1:length(source_dir)
+                lead_derivatives_dir{subj_idx} = fullfile(dest_dir{subj_idx}, 'derivatives', 'leaddbs');
+                sourcedata_dir{subj_idx} = fullfile(dest_dir{subj_idx}, 'sourcedata');
+                root_dataset_dir{subj_idx} = dest_dir{subj_idx};
+            end
+        end
+
     end
     
     % now go through all of the subjects and convert DICOMS
@@ -127,20 +134,29 @@ else
         
         fprintf('Importing DICOM data from subject %s...\n', subj_ids(subj_idx).name);
         
-        dicom_dir = fullfile(sourcedata_dir, subj_ids(subj_idx).name);
+        if iscell(sourcedata_dir)
+            sourcedata_dir_subj = sourcedata_dir{subj_idx};
+            root_dataset_dir_subj = root_dataset_dir{subj_idx};
+            lead_derivatives_dir_subj = lead_derivatives_dir{subj_idx};
+        else
+            sourcedata_dir_subj = sourcedata_dir;
+            root_dataset_dir_subj = root_dataset_dir;
+            lead_derivatives_dir_subj = lead_derivatives_dir;
+        end
+        dicom_dir = fullfile(sourcedata_dir_subj, subj_ids(subj_idx).name);
         
         % convert DICOMS to .nii files and get list of files
         niiFiles = ea_dcm_to_nii(method, dicom_dir);
         
         % call GUI to select which files should be loaded
-        anat_files_selected = ea_dicom_to_bids(subj_ids(subj_idx).name, niiFiles, root_dataset_dir);
+        anat_files_selected = ea_dicom_to_bids(subj_ids(subj_idx).name, niiFiles, root_dataset_dir_subj);
         
         if ~isempty(anat_files_selected)
             % write into json file
-            if ~exist(fullfile(lead_derivatives_dir, subj_ids(subj_idx).name, 'prefs'), 'dir')
-                mkdir(fullfile(lead_derivatives_dir, subj_ids(subj_idx).name, 'prefs'));
+            if ~exist(fullfile(lead_derivatives_dir_subj, subj_ids(subj_idx).name, 'prefs'), 'dir')
+                mkdir(fullfile(lead_derivatives_dir_subj, subj_ids(subj_idx).name, 'prefs'));
             end
-            savejson('', anat_files_selected, fullfile(lead_derivatives_dir, subj_ids(subj_idx).name, 'prefs', [subj_ids(subj_idx).name, '_desc-rawimages.json']));
+            savejson('', anat_files_selected, fullfile(lead_derivatives_dir_subj, subj_ids(subj_idx).name, 'prefs', [subj_ids(subj_idx).name, '_desc-rawimages.json']));
         end
         
         % second option: use lookup table to find files and convert them to BIDS
