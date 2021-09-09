@@ -1,21 +1,17 @@
-function ea_init_coregmrpopup(handles)
-% Initializes MR coregistration methods popupmenu.
-%
-% USAGE:
-%
-%    ea_init_coregmrpopup(handles,refine)
-%
-% INPUTS:
-%    handles:       LEAD GUI handle
-%    refine:        deprecated
+function ea_init_coregmrpopup(handles, defaultmethod)
+% Initialize MR coregistration methods popupmenu.
 
-cmethods={'SPM',...
-    'FSL FLIRT',...
-    'ANTs',...
-    'BRAINSFIT',...
-    'Hybrid SPM & ANTs',...
-    'Hybrid SPM & FSL',...
-    'Hybrid SPM & BRAINSFIT'};
+% Get functions and names
+funcs = ea_regexpdir(ea_getearoot, 'ea_coregpostopmr_.*.m', 0);
+funcs = regexp(funcs, '(ea_coregpostopmr_.*)(?=\.m)', 'match', 'once');
+names = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
 
-set(handles.coregmrmethod, 'String', cmethods);
-set(handles.coregmrmethod, 'Value', 1); % default SPM
+% Set names to popupmenu
+set(handles.coregmrmethod, 'String', names);
+
+% Set default method
+if ~ismember(defaultmethod, names)
+    defaultmethod = 'SPM (Friston 2007)';
+end
+
+set(handles.coregmrmethod, 'Value', find(ismember(names, defaultmethod), 1));
