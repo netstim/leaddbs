@@ -1,5 +1,10 @@
-function ea_coregpostopmr_spm(options, fixed, moving, out, doreslice)
+function varargout = ea_coregpostopmr_spm(options, fixed, moving, out, doreslice)
 % Wrapper for SPM registration of post-op MRI
+
+if ischar(options) % return name of method.
+    varargout{1} = 'SPM (Friston 2007)';
+    return
+end
 
 % Available cost functions
 % 'mi'  - Mutual Information
