@@ -7,10 +7,11 @@ for j=1:length(source)
     else
         addpath(source{j})
     end
-    if ~exist(dest, 'var')
+    
+    if ~exist('dest', 'var')
         dest{j} = source{j};
         addpath(dest{j});
-    elseif exist(dest,'var') && ~exist(dest{j},'dir')
+    elseif exist('dest','var') && ~exist(dest{j},'dir')
         addpath(dest{j});
         mkdir(dest{j});
     end
