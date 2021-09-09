@@ -7,8 +7,8 @@ if ~exist('handlestring','var')
 end
 
 % Get functions and names
-funcs = ea_regexpdir(ea_getearoot, 'ea_coregctmri_.*.m', 0);
-funcs = regexp(funcs, '(ea_coregctmri_.*)(?=\.m)', 'match', 'once');
+funcs = ea_regexpdir(ea_getearoot, 'ea_coregpostopct_.*.m', 0);
+funcs = regexp(funcs, '(ea_coregpostopct_.*)(?=\.m)', 'match', 'once');
 names = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
 
 % Set names to popupmenu
