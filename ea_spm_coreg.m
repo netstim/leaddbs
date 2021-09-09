@@ -120,8 +120,8 @@ end
 
 %% add methods dump:
 cits={
-    'Friston, K. J., Ashburner, J. T., Kiebel, S. J., Nichols, T. E., & Penny, W. D. (2011). Statistical Parametric Mapping: The Analysis of Functional Brain Images. Academic Press.'
+    'Friston, K. J., Ashburner, J. T., Kiebel, S. J., Nichols, T. E., & Penny, W. D. (2007). Statistical Parametric Mapping: The Analysis of Functional Brain Images. Academic Press.'
 };
 
-ea_methods(options,[mov,' was linearly co-registered to ',fix,' using ',spm('ver'),' (Friston 2011; http://www.fil.ion.ucl.ac.uk/spm/software/)'],...
+ea_methods(options,[mov,' was linearly co-registered to ',fix,' using ',spm('ver'),' (Friston 2007; http://www.fil.ion.ucl.ac.uk/spm/software/)'],...
     cits);
