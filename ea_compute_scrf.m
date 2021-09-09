@@ -3,7 +3,7 @@ function ea_compute_scrf(handles)
 options=getappdata(handles.scrf,'options');
 directory=getappdata(handles.scrf,'directory');
 
-options.coregmr.method='ANTs';
+options.coregmr.method='ANTs (Avants 2008)';
 
 if ~handles.mask0.Value
     if ~exist([directory,'scrf',filesep,'bgmsk.nii'],'file')
