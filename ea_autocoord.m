@@ -149,8 +149,8 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     if options.normalize.do
         ea_mkdir(fileparts(options.subj.norm.log.logBaseName));
         diary([options.subj.norm.log.logBaseName, datestr(now, 'yyyymmddTHHMMss'), '.log']);
-        if ~(ea_coreglocked(options,'glanat')==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
-            if ea_coreglocked(options,'glanat')==1 && ~strcmp(options.normalize.method,'ea_normalize_apply_normalization') % in this case, only perform normalization if using a multispectral approach now.
+        if ~(ea_reglocked(options,'glanat')==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
+            if ea_reglocked(options,'glanat')==1 && ~strcmp(options.normalize.method,'ea_normalize_apply_normalization') % in this case, only perform normalization if using a multispectral approach now.
                 [~,~,~,doit]=eval([options.normalize.method,'(''prompt'')']);
             else
                 doit=1;
@@ -198,7 +198,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.scrf.do
-        if ~ea_coreglocked(options,'brainshift') || options.overwriteapproved
+        if ~ea_reglocked(options,'brainshift') || options.overwriteapproved
             options.autobrainshift=1;
             ea_subcorticalrefine(options);
             options=rmfield(options,'autobrainshift');
@@ -215,7 +215,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         drawnow; % this prevents the figure from changing the name with multiple subjects
         e=evalin('base', 'checkregempty');
         evalin('base',' clear checkregempty');
-        if e && ~ea_coreglocked(options,'brainshift') ...
+        if e && ~ea_reglocked(options,'brainshift') ...
              && exist([directory,'scrf',filesep,'scrf_instore.mat'], 'file')
             ea_subcorticalrefine(options);
         end
