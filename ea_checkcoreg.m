@@ -414,7 +414,7 @@ switch ea_stripext(currvol)
         ea_normalize(options);
 
         if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
-            ea_tonemapct_file(options,'mni');
+            ea_tonemapct(options, 'norm');
         end
 
     case ea_stripext(['tp_',options.prefs.ctnii_coregistered]) % CT
@@ -427,7 +427,7 @@ switch ea_stripext(currvol)
         % Dump method
         ea_dumpmethod(options, 'coreg');
 
-        ea_tonemapct_file(options,'native'); % (Re-) compute tonemapped (native space) CT
+        ea_tonemapct(options, 'native'); % (Re-) compute tonemapped (native space) CT
         ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
 
     case ea_stripext(options.prefs.fa2anat) % FA
@@ -846,7 +846,7 @@ switch ea_stripext(currvol)
         options=ea_assignpretra(options);
         anchor=[ea_space,options.primarytemplate,'.nii'];
     case ea_stripext(['tp_',options.prefs.ctnii_coregistered]) % make sure tp matches rpostop_ct.
-        ea_tonemapct_file(options,'native');
+        ea_tonemapct(options, 'native');
 end
 b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
 if ~isempty(b0restanchor{activevolume})
