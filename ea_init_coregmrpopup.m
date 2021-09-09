@@ -1,4 +1,4 @@
-function ea_init_coregmrpopup(handles,refine)
+function ea_init_coregmrpopup(handles)
 % Initializes MR coregistration methods popupmenu.
 %
 % USAGE:
@@ -8,10 +8,6 @@ function ea_init_coregmrpopup(handles,refine)
 % INPUTS:
 %    handles:       LEAD GUI handle
 %    refine:        deprecated
-
-if ~exist('refine','var')
-    refine=0;
-end
 
 cmethods={'SPM',...
     'FSL FLIRT',...
