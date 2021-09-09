@@ -25,7 +25,7 @@ switch options.prefs.reco.mancoruse
         postopct=[directory,options.prefs.rawctnii_unnormalized];
 
         switch coregct_method_applied{end}
-            case {'ea_coregctmri_ants','ea_coregctmri_ants_refine'}
+            case {'ea_coregpostopct_ants','ea_coregpostopct_ants_refine'}
                 if inverse
                     antsmts=dir([directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_ants*','.mat']);
                 else
@@ -40,7 +40,7 @@ switch options.prefs.reco.mancoruse
                 tfields = fieldnames(t);
                 % affine         % fixed
                 tmat=ea_antsmat2mat(t.(tfields{1}),t.(tfields{2}));
-            case 'ea_coregctmri_brainsfit'
+            case 'ea_coregpostopct_brainsfit'
                 if inverse
                     brainsfit_fname = [directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_brainsfit.h5'];
                 else
@@ -54,7 +54,7 @@ switch options.prefs.reco.mancoruse
                     reg2org.AffineTransform_float_3_3 = h5read(brainsfit_fname, '/TransformGroup/0/TransformParameters');
                 end
                 tmat = ea_antsmat2mat(double(reg2org.AffineTransform_float_3_3), reg2org.fixed);
-            case 'ea_coregctmri_fsl'
+            case 'ea_coregpostopct_fsl'
                 tmat_flirt = dlmread([directory 'anat_t12postop_ct_flirt1.mat']);
                 %TODO check if add + 1 is nessesary, check the inverse case
                 tmat = flirtmat2worldmatPaCER(tmat_flirt, [directory,options.prefs.prenii_unnormalized],[directory,options.prefs.rawctnii_unnormalized], false );

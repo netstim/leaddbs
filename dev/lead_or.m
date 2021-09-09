@@ -70,7 +70,7 @@ spacedef=ea_getspacedef;
 options.prefs=ea_prefs('');
 
 
-ea_init_coregmrpopup(handles, 1);
+ea_init_coregmrpopup(handles);
 ea_init_coregctpopup(handles, options.prefs.ctcoreg.default);
 
 % load atlassets
