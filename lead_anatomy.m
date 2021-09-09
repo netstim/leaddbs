@@ -86,8 +86,8 @@ set(handles.leadfigure,'name','Lead Anatomy','color','w');
 
 ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
 
-% add norm methods to menu
-ea_addnormmethods(handles,options,'normmethod');
+% Initialize norm methods popupmenu
+ea_init_normpopup(handles, options.prefs.normalize.default);
 
 ea_processguiargs(handles,varargin)
 
@@ -472,7 +472,7 @@ function normmethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from normmethod
-ea_switchnormmethod(handles);
+ea_checknormsetting(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -547,8 +547,8 @@ function normsettings_Callback(hObject, eventdata, handles)
 % hObject    handle to normsettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-currentNormMethod=getappdata(handles.normsettings,'currentNormMethod');
-ea_shownormsettings(currentNormMethod,handles)
+normsettingsfunc = getappdata(handles.normsettings,'normsettingsfunc');
+feval(normsettingsfunc, handles);
 
 
 % --- Executes on selection change in coregmrmethod.

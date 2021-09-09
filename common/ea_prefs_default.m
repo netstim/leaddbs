@@ -93,7 +93,7 @@ prefs.normmatrix='lmat.txt';
 
 %% Normalization:
 % prefs.normalize.coreg='auto'; % set to 'manual' to include manual coregistration check steps.
-prefs.normalize.default='ea_normalize_ants';
+prefs.normalize.default = 'ANTs (Avants 2008)';
 prefs.normalize.inverse.warp='inverse'; % set to 'tpm' in case you wish to create a atlas-specific tpm to warp atlases, set to 'inverse' to apply the inverse transform of your normalization.
 prefs.normalize.inverse.customtpm=0; % set to 1 if custom TPM shall be built for inverse warpings. Only applies if the above is set to 'tpm'.
 prefs.normalize.createwarpgrids=0; % set to 1 to create grid files that show deformation fields in "Show Normalization" option.
