@@ -110,7 +110,7 @@ else
             end
             
             copyfile(fullfile(source_dir{subj_idx}, 'DICOM'), fullfile(dest_dir_subj, 'sourcedata', subjID));
-            subj_ids.name =char(subjID);
+            subj_ids(subj_idx).name =char(subjID);
             
         end
         
