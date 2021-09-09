@@ -5,7 +5,7 @@ function varargout=ea_coregpostopct_ants_refine(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs) + Subcortical Refine';
+    varargout{1}='ANTs (Avants 2008) + subcortical refine';
     return
 end
 
