@@ -4,8 +4,6 @@ if ~exist('handlestring','var')
     handlestring='normmethod';
 end
 
-
-
 % add normalization methods to menu
 cnt=1;
 
@@ -26,8 +24,6 @@ for nd=length(ndir):-1:1
                 cnt=cnt+1;
         end
 end
-
-
 
 try
     setappdata(handles.leadfigure,'normmethod',normmethod);
