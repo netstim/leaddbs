@@ -1,4 +1,4 @@
-function ea_dicom_import(dataset_dir, method, dicomimport)
+function ea_dataset_import(source_dir, dest_dir, method, dicomimport)
 % This function converts DICOM files from the sourcedata folder of your dataset into
 % a BIDS-conform rawdata folder and specified which files are to be used by lead-dbs
 % __________________________________________________________________________________
@@ -11,13 +11,13 @@ postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};            % TODO: get 
 % TODO: 1. GUI to select which files, 2. first get how many sessions, then iterate over those (currently only pre- and postop)
 % TODO: 3. handle no files gracefully
 
-rawdata_dir = fullfile(dataset_dir, 'rawdata');   % TODO: dataset fetcher
-sourcedata_dir = fullfile(dataset_dir, 'sourcedata');     % TODO: dataset fetcher
-lead_derivatives_dir = fullfile(dataset_dir, 'derivatives', 'leaddbs');
-
 %% import directly from BIDS
 if ~dicomimport
+    
+    rawdata_dir = fullfile(source_dir, 'rawdata');
+    lead_derivatives_dir = fullfile(source_dir, 'derivatives', 'leaddbs');
 
+    % before running, lets
     all_files = dir(fullfile(rawdata_dir, 'sub-*'));    % get subjects in dataset root TODO: dataset fetcher
     dirFlags = [all_files.isdir];                       % get a logical vector that tells which is a directory
     subj_folders = all_files(dirFlags);                 % extract only those that are directories (fail-safe)
@@ -47,11 +47,17 @@ if ~dicomimport
     
 %% import from DICOM
 else
-    
-    all_files = dir(fullfile(sourcedata_dir, 'sub-*'));  % get subjects in dataset root TODO: dataset fetcher
-    dirFlags = [all_files.isdir];                        % get a logical vector that tells which is a directory
-    subj_folders = all_files(dirFlags);                  % extract only those that are directories (fail-safe)
-    
+      
+    % insert check to see if this is already a BIDS root folder or just a
+    % patient folder
+    if exist(fullfile(source_dir{1}, 'sourcedata'), 'dir') && length(source_dir) == 1
+        sourcedata_dir = fullfile(source_dir{1}, 'sourcedata');    
+        lead_derivatives_dir = fullfile(source_dir{1}, 'derivatives', 'leaddbs');
+        all_files = dir(fullfile(sourcedata_dir, 'sub-*'));        % get subjects in dataset root 
+        dirFlags = [all_files.isdir];                                        % get a logical vector that tells which is a directory
+        subj_folders = all_files(dirFlags);                             % extract only those that are directories (fail-safe) 
+    end
+        
     for subj_idx = 1:numel(subj_folders)
         
         fprintf('Importing DICOM data from subject %s...\n', subj_folders(subj_idx).name);
@@ -62,7 +68,7 @@ else
         niiFiles = ea_dcm_to_nii(method, dicom_dir);
 
         % call GUI to select which files should be loaded
-        anat_files_selected = ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, dataset_dir);
+        anat_files_selected = ea_dicom_to_bids(subj_folders(subj_idx).name, niiFiles, source_dir{1});
         
         if ~isempty(anat_files_selected)
             % write into json file
