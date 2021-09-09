@@ -5,7 +5,7 @@ function varargout=ea_coregpostopct_brainsfit(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='BRAINSFit';
+    varargout{1}='BRAINSFit (Johnson 2007)';
     return
 end
 

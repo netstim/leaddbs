@@ -107,10 +107,10 @@ prefs.reco.saveimg=0; % save fiducial marker visualisation as image after "Refin
 prefs.reco.exportfiducials=0; % automatically export fiducials to a comma separated value file after "Refined TRAC/CORE". Set this to 'fcsv' for simple import into Slicer, otherwise set to 'csv' or 'txt' for import into other software.
 
 %% Coregistration (CT/MR):
-prefs.ctcoreg.default = 'Advanced Normalization Tools (ANTs)';
+prefs.ctcoreg.default = 'ANTs (Avants 2008)';
 
 %% Coregistration (MR/MR):
-prefs.mrcoreg.default='spm'; % set to 'spm' or 'ants'
+prefs.mrcoreg.default = 'SPM (Friston 2007)'; % set to 'spm' or 'ants'
 prefs.mrcoreg.writeoutcoreg=0; % set default to 0 to prevent writing out coregistration transformation
 
 %% Subcortical refine (Post to Pre):
