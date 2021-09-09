@@ -500,7 +500,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                     pt=ea_load_nii([options.root,options.patientname,filesep,'tp_',options.prefs.gctnii]);
                     PostOpLoaded={'A','C','S'};
                 catch
-                    ea_tonemapct_file(options,'mni');
+                    ea_tonemapct(options, 'norm');
                     try
                         pt=ea_load_nii([options.root,options.patientname,filesep,'tp_',options.prefs.gctnii]);
                     catch
