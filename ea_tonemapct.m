@@ -1,16 +1,12 @@
 function ea_tonemapct(options, nativenorm)
-ea_dispt('Tonemapping CT...');
-if ~exist('nativenorm','var')
+if ~exist('nativenorm', 'var') || isempty(nativenorm)
     nativenorm = 'native';
-else
-    if isempty(nativenorm)
-            nativenorm = 'native';
-    end
 end
 
 switch nativenorm
     case 'native'
         if isfile(options.subj.postopAnat.CT.coreg)
+            ea_dispt('Tonemapping coregistered CT...');
             ct = ea_load_nii(options.subj.postopAnat.CT.coreg);
             ct.fname = options.subj.postopAnat.CT.coregTonemap;
             ct.img = tonemap(ct.img);
@@ -21,6 +17,7 @@ switch nativenorm
         end
     case 'norm'
         if isfile(options.subj.postopAnat.CT.norm)
+            ea_dispt('Tonemapping normalized CT...');
             ct = ea_load_nii(options.subj.postopAnat.CT.norm);
             ct.fname = options.subj.postopAnat.CT.normTonemap;
             ct.img = tonemap(ct.img);
