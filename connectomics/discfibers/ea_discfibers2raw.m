@@ -46,7 +46,7 @@ save(outputMAT, 'fibcell', 'opts', 'vals');
 
 % Register anchor to raw anchor
 options = ea_getptopts(patientdir);
-options.coregmr.method = 'SPM'; % 'SPM', 'ANTs', 'FSL FLIRT'
+options.coregmr.method = 'SPM (Friston 2007)';
 affinefile = ea_coregimages(options, refAnchor, refRawAnchor, [patientdir,'tmp.nii'],{},1);
 ea_delete([patientdir,'tmp.nii']);
 
