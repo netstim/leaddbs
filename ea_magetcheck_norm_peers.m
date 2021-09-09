@@ -9,12 +9,12 @@ for peer=1:length(peerfolders)
     poptions=ea_assignpretra(poptions);
     % make sure peer has been normalized using ANTs
     if ~ismember(ea_whichnormmethod([peerfolders{peer},filesep]),ea_getantsnormfuns)
-        ea_dumpnormmethod(poptions,'ea_normalize_ants_multimodal','normmethod');
+        ea_dumpmethod(poptions, 'normm');
         ea_normalize_ants(poptions)
     else
         % make sure peer's anatomy files have been coregistered.
         if ~ea_seemscoregistered(poptions)
-            ea_coreg_all_mri(poptions,0);
+            ea_coregpreopmr(poptions);
         end
     end
 end

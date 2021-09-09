@@ -177,7 +177,7 @@ switch ea_stripext(currvol)
         anchor=[ea_space,options.primarytemplate,'.nii'];
         set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
 
-        ea_addnormmethods(handles,options,'coregmrmethod');
+        ea_init_normpopup(handles, options.prefs.normalize.default, 'coregmrmethod');
 
         if ~exist([directory,'ea_normmethod_applied.mat'],'file')
             method='';
@@ -409,11 +409,9 @@ switch ea_stripext(currvol)
             ea_delete([options.root,options.patientname,filesep,'gl',anatspresent{fi}]);
         end
 
-        options.normalize.method=getappdata(handles.leadfigure,'normmethod');
-        options.normalize.method=options.normalize.method{get(handles.coregmrmethod,'Value')};
-        options.normalize.methodn=get(handles.coregmrmethod,'Value');
-        ea_dumpnormmethod(options,options.normalize.method,'normmethod'); % has to come first due to applynormalization.
-        eval([options.normalize.method,'(options)']); % triggers the normalization function and passes the options struct to it.
+        options.normalize.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
+        ea_dumpmethod(options, 'norm');
+        ea_normalize(options);
 
         if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
             ea_tonemapct_file(options,'mni');
@@ -676,7 +674,7 @@ activevolume=getappdata(handles.leadfigure,'activevolume');
 currvol=presentfiles{activevolume};
 % init retry popup:
 if strcmp(currvol,'glanat.nii')
-    ea_switchnormmethod(handles,'coregmrmethod');
+    ea_checknormsetting(handles, 'coregmrmethod');
 end
 
 
@@ -731,8 +729,8 @@ function normsettings_Callback(hObject, eventdata, handles)
 % hObject    handle to normsettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-currentNormMethod=getappdata(handles.normsettings,'currentNormMethod');
-ea_shownormsettings(currentNormMethod,handles)
+normsettingsfunc = getappdata(handles.normsettings,'normsettingsfunc');
+feval(normsettingsfunc, handles);
 
 
 % --- Executes on button press in disapprovebutn.
