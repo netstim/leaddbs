@@ -53,7 +53,7 @@ function ea_checkcoreg_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to ea_checkcoreg (see VARARGIN)
 
 options=varargin{1};
-%ea_init_coregmrpopup(handles,1);
+%ea_init_coregmrpopup(handles);
 set(handles.leadfigure,'Name',[options.patientname, ': Check Coregistration']);
 
 directory=[options.root,options.patientname,filesep];
@@ -214,7 +214,7 @@ switch ea_stripext(currvol)
                         end
                     end
                 otherwise % MR
-                    ea_init_coregmrpopup(handles,1);
+                    ea_init_coregmrpopup(handles);
                     if ~exist([directory,'ea_coregmrmethod_applied.mat'],'file')
                         method='';
                     else
