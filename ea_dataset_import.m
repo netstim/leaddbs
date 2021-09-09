@@ -1,5 +1,5 @@
 function ea_dataset_import(source_dir, dest_dir, method, dicomimport)
-% This function converts DICOM files from the sourcedata folder of your dataset into
+% This function converts datasets from the sourcedata folder of your dataset into
 % a BIDS-conform rawdata folder and specified which files are to be used by lead-dbs
 % __________________________________________________________________________________
 % Copyright (C) 20121 Charite University Medicine Berlin, Movement Disorders Unit
@@ -8,17 +8,16 @@ function ea_dataset_import(source_dir, dest_dir, method, dicomimport)
 preop_modalities = {'T1w', 'T2w', 'PDw', 'FGATIR'};                 % TODO: get this from prefs
 postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};            % TODO: get this from prefs
 
-% TODO: 1. GUI to select which files, 2. first get how many sessions, then iterate over those (currently only pre- and postop)
-% TODO: 3. handle no files gracefully
-
 %% import directly from BIDS
 if ~dicomimport
+
+    % TODO: also use dicom_to_bids gui?
     
     rawdata_dir = fullfile(source_dir, 'rawdata');
     lead_derivatives_dir = fullfile(source_dir, 'derivatives', 'leaddbs');
 
     % before running, lets
-    all_files = dir(fullfile(rawdata_dir, 'sub-*'));    % get subjects in dataset root TODO: dataset fetcher
+    all_files = dir(fullfile(rawdata_dir, 'sub-*'));    % get subjects in dataset root
     dirFlags = [all_files.isdir];                       % get a logical vector that tells which is a directory
     subj_folders = all_files(dirFlags);                 % extract only those that are directories (fail-safe)
     
@@ -48,8 +47,11 @@ if ~dicomimport
 %% import from DICOM
 else
       
-    % insert check to see if this is already a BIDS root folder or just a
+    % check to see if this is already a BIDS root folder or just a
     % patient folder
+    
+    % case: dataset root is selected and sourcedata is present with
+    % according subject folders below it
     if exist(fullfile(source_dir{1}, 'sourcedata'), 'dir') && length(source_dir) == 1
         sourcedata_dir = fullfile(source_dir{1}, 'sourcedata');    
         lead_derivatives_dir = fullfile(source_dir{1}, 'derivatives', 'leaddbs');
@@ -88,6 +90,7 @@ else
         % fourth option: just leave them and user has to manually rename files
         %anat_files.preop = find_anat_files_dicom(tmp_dir, bids_naming_heuristics.preop);
         
+        rmdir(fullfile(dicom_dir, 'tmp'), 's');
     end
 
 end
