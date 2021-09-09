@@ -99,9 +99,10 @@ axis equal;
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
-% add norm methods to menu
 options.earoot=ea_getearoot;
-ea_addnormmethods(handles,options);
+
+% Initialize norm methods popupmenu
+ea_init_normpopup(handles, options.prefs.normalize.default);
 
 ea_processguiargs(handles,varargin)
 
@@ -661,7 +662,7 @@ function normmethod_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from normmethod
 ea_storeui(handles);
-ea_switchnormmethod(handles);
+ea_checknormsetting(handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1405,8 +1406,8 @@ function normsettings_Callback(hObject, eventdata, handles)
 % hObject    handle to normsettings (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-currentNormMethod=getappdata(handles.normsettings,'currentNormMethod');
-ea_shownormsettings(currentNormMethod,handles)
+normsettingsfunc = getappdata(handles.normsettings,'normsettingsfunc');
+feval(normsettingsfunc, handles);
 
 
 % --- Executes on button press in checkfigures.
