@@ -19,10 +19,7 @@ function varargout=ea_normalize_spmseg_macaque(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    switch spm('ver')
-        case 'SPM12'
-            varargout{1}='SPM12 Old Segment nonlinear [MR/CT]';
-    end
+    varargout{1}='SPM12 Old Segment [MR/CT]';
     varargout{2}={'SPM12'};
     return
 end
@@ -48,7 +45,6 @@ if exist([options.root,options.prefs.patientdir,filesep,options.prefs.tranii_unn
         gunzip([options.root,options.prefs.patientdir,filesep,options.prefs.prenii_unnormalized,'.gz']);
     end
 end
-
 
 % do a linear coregistration into mni space
 if options.modality==1 %MR

@@ -19,15 +19,10 @@ function varargout=ea_normalize_spmnewseg(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='SPM12 Segment nonlinear (Ashburner 2005)';
-    switch spm('ver')
-        case 'SPM12'
-            varargout{2}=1; % compatible
-            varargout{3}=1; % hassettings.
-            varargout{4}=1; % is multispectral
-        otherwise
-            varargout{2}=0; % not compatible
-    end
+    varargout{1}='SPM12 Segment (Ashburner 2005)';
+    varargout{2}=1; % dummy output
+    varargout{3}=1; % hassettings.
+    varargout{4}=1; % is multispectral
     return
 end
 

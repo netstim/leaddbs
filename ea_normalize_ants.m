@@ -18,8 +18,8 @@ function varargout=ea_normalize_ants(options,includeatlas)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (Avants 2008)';
-    varargout{2}=1;
+    varargout{1}='ANTs (Avants 2008)';
+    varargout{2}=1; % dummy output
     varargout{3}=1; % hassettings.
     varargout{4}=1; % is multispectral
     return
@@ -43,11 +43,9 @@ if usebrainmask
 else
     bprfx='';
 end
+
 spacedef=ea_getspacedef; % get definition of current space we are working in
 [~,anatpresent]=ea_assignpretra(options);
-
-
-
 
 if usefa && spacedef.hasfa % first put in FA since least important (if both an FA template and an fa2anat file is available)
 
@@ -83,7 +81,6 @@ for anatf=1:length(anatpresent)
     cnt=cnt+1;
 end
 
-
 if exist([directory,'segmentations'],'dir')
     segs=dir([directory,'segmentations']);
     for seg=1:length(segs)
@@ -115,7 +112,6 @@ if exist([directory,'fiducials'],'dir')
         end
     end
 end
-
 
 if includeatlas % append as last to make criterion converge on this one.
     to{cnt}=ea_niigz([ea_space(options),'atlas']);
