@@ -5,7 +5,7 @@ function varargout=ea_coregpostopct_ants_multiple(options)
 % Andreas Horn
 
 if ischar(options) % return name of method.
-    varargout{1}='Advanced Normalization Tools (ANTs), multiple runs';
+    varargout{1}='ANTs (Avants 2008) multiple runs';
     return
 end
 

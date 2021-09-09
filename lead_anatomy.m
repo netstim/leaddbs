@@ -84,7 +84,7 @@ axis off;
 axis equal;
 set(handles.leadfigure,'name','Lead Anatomy','color','w');
 
-ea_init_coregmrpopup(handles);
+ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
 
 % add norm methods to menu
 ea_addnormmethods(handles,options,'normmethod');
