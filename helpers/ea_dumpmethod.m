@@ -2,6 +2,8 @@ function ea_dumpmethod(options, type)
 
 methodLogFile = options.subj.(type).log.method;
 
+ea_mkdir(fileparts(methodLogFile));
+
 % Load method log when it exists.
 if isfile(methodLogFile)
     log = loadjson(methodLogFile);
