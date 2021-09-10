@@ -9,4 +9,4 @@ end
 directory=[options.root,options.patientname,filesep];
 [options,presentfiles]=ea_assignpretra(options);
 
-ea_newseg(directory,presentfiles,dartel,options,del,force)
+ea_newseg(fullfile(directory,presentfiles),dartel,options,del,force)
