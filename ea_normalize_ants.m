@@ -163,7 +163,7 @@ for fr=1:length(from)
     switch [fn,ext]
         case options.prefs.fa2anat
             if ~exist([directory,'tc2',options.prefs.prenii_unnormalized],'file')
-            	ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+            	ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0,options);
                 % assume that tc2 doesn't exist
                 nii=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.7;
@@ -175,7 +175,7 @@ for fr=1:length(from)
 
         otherwise
             if ~exist([directory,'tc1',options.prefs.prenii_unnormalized],'file')
-                ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+                ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0,options);
                 % assume that tc1 doesn't exist
                 nii=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
                 nii.img=nii.img>0.3;
@@ -198,7 +198,7 @@ end
 
 function ea_genbrainmask(options)
 directory=[options.root,options.patientname,filesep];
-ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0,options);
 c1=ea_load_nii([directory,'c1',options.prefs.prenii_unnormalized]);
 c2=ea_load_nii([directory,'c2',options.prefs.prenii_unnormalized]);
 c3=ea_load_nii([directory,'c3',options.prefs.prenii_unnormalized]);
