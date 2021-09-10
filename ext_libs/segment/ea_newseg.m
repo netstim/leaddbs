@@ -1,4 +1,4 @@
-function ea_newseg(directory,files,dartel,options,del,force)
+function ea_newseg(files,dartel,options,del,force)
 % SPM NewSegment
 % we cannot generate the TPM from the SPM TPM anymore since
 % we use the enhanced TPM by Lorio / Draganski:
@@ -17,7 +17,9 @@ end
 
 ea_create_tpm_darteltemplate; % function will check if needs to run (again).
 
-if (~dartel && exist([directory, 'c1', files{1}], 'file') || dartel && exist([directory, 'rc1', files{1}], 'file')) && (~force)
+directory = [fileparts(files{1}), filesep];
+
+if (~dartel && isfile([directory, 'c1', files{1}]) || dartel && isfile([directory, 'rc1', files{1}])) && (~force)
     disp('Segmentation already done!');
 else
     disp('Segmentation...');
@@ -25,7 +27,7 @@ else
     load([ea_getearoot,'ext_libs',filesep,'segment',filesep,'segjob12']);
     tpminf = [ea_space,'TPM.nii'];
     for fi=1:length(files) % add channels for multispectral segmentation
-        job.channel(fi).vols = {[directory, files{fi}, ',1']};
+        job.channel(fi).vols = {[files{fi}, ',1']};
         job.channel(fi).biasreg = 0.001;
         job.channel(fi).biasfwhm = 60;
         job.channel(fi).write = [0 0];
