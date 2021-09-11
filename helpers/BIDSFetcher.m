@@ -86,10 +86,10 @@ classdef BIDSFetcher
                 end
             end
 
-            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
+            % Set subj dirs
+            subj = obj.getLeadDBSDirs(subjId);
 
             % Set misc fields
-            subj.subjDir = LeadDBSDirs.subjDir;
             subj.uiprefs = obj.getPrefs(subjId, 'uiprefs', 'mat');
             subj.methodLog = obj.getLog(subjId, 'methods');
 

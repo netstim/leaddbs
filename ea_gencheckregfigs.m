@@ -9,7 +9,7 @@ end
 
 if ismember('coreg', type)
     % Make dir
-    ea_mkdir(fullfile(options.subj.subjDir, 'coregistration', 'checkreg'));
+    ea_mkdir(fullfile(options.subj.coregDir, 'checkreg'));
 
     % Get anchor Image path
     anchorImage = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
@@ -40,7 +40,7 @@ end
 
 if ismember('brainshift', type)
     % Make dir
-    ea_mkdir(fullfile(options.subj.subjDir, 'brainshift', 'checkreg'));
+    ea_mkdir(fullfile(options.subj.brainshiftDir, 'checkreg'));
 
     % Get anchor Image path
     anchorImage = options.subj.brainshift.anat.anchor;
@@ -58,7 +58,7 @@ end
 
 if ismember('norm', type)
     % Make dir
-    ea_mkdir(fullfile(options.subj.subjDir, 'normalization', 'checkreg'));
+    ea_mkdir(fullfile(options.subj.normDir, 'checkreg'));
 
     % Get template Image path
     templateImage = [ea_space, options.primarytemplate, '.nii'];
