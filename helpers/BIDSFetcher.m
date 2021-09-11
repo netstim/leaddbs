@@ -316,20 +316,20 @@ classdef BIDSFetcher
             fields = fieldnames(preopAnat);
             for i=1:length(fields)
                 modality = fields{i};
-                parsed = obj.parseFilePath(preopAnat.(modality));
+                parsed = parseBIDSFilePath(preopAnat.(modality));
                 preprocAnat.preop.(modality) = fullfile(baseDir, [baseName, parsed.suffix, parsed.ext]);
             end
 
             % Get preprocessed post-op anat images
             baseName = ['sub-', subjId, '_desc-preproc_ses-postop_'];
             if isfield(postopAnat, 'CT')
-                parsed = obj.parseFilePath(postopAnat.CT);
+                parsed = parseBIDSFilePath(postopAnat.CT);
                 preprocAnat.postop.CT = fullfile(baseDir, [baseName, 'CT', parsed.ext]);
             else
                 fields = fieldnames(postopAnat);
                 for i=1:length(fields)
                     modality = fields{i};
-                    parsed = obj.parseFilePath(postopAnat.(modality));
+                    parsed = parseBIDSFilePath(postopAnat.(modality));
                     preprocAnat.postop.(modality) = fullfile(baseDir, [baseName, 'acq-', parsed.acq, '_', parsed.suffix, parsed.ext]);
                 end
             end
@@ -446,7 +446,7 @@ classdef BIDSFetcher
                 modality = fieldnames(coregAnat.(session{i}));
                 for j=1:length(modality)
                     anat = strrep(coregAnat.(session{i}).(modality{j}), anatDir, checkregDir);
-                    parsed = obj.parseFilePath(anat);
+                    parsed = parseBIDSFilePath(anat);
                     coregCheckreg.(session{i}).(modality{j}) = strrep(anat , parsed.ext, '.png');
                 end
             end
@@ -481,7 +481,7 @@ classdef BIDSFetcher
             brainshiftAnat.moving = coregAnat.postop.(modality{1});
             brainshiftAnat.moving = strrep(brainshiftAnat.moving, LeadDBSDirs.coregDir, LeadDBSDirs.brainshiftDir);
             if ~strcmp(modality{1}, 'CT') % Post-op MRI detected
-                parsed = obj.parseFilePath(brainshiftAnat.moving);
+                parsed = parseBIDSFilePath(brainshiftAnat.moving);
                 brainshiftAnat.moving = strrep(brainshiftAnat.moving, ['_acq-', parsed.acq], '');
                 brainshiftAnat.moving = strrep(brainshiftAnat.moving, parsed.suffix, 'MRI');
             end
@@ -543,12 +543,12 @@ classdef BIDSFetcher
 
             % Before brain shift correction
             brainshiftCheckreg.moving = strrep(brainshiftAnat.moving, anatDir, checkregDir);
-            parsed = obj.parseFilePath(brainshiftCheckreg.moving);
+            parsed = parseBIDSFilePath(brainshiftCheckreg.moving);
             brainshiftCheckreg.moving = strrep(brainshiftCheckreg.moving, parsed.ext, '.png');
 
             % After brain shift correction
             brainshiftCheckreg.scrf = strrep(brainshiftAnat.scrf, anatDir, checkregDir);
-            parsed = obj.parseFilePath(brainshiftCheckreg.scrf);
+            parsed = parseBIDSFilePath(brainshiftCheckreg.scrf);
             brainshiftCheckreg.scrf = strrep(brainshiftCheckreg.scrf, parsed.ext, '.png');
         end
 
@@ -642,7 +642,7 @@ classdef BIDSFetcher
                 modality = fieldnames(normAnat.(session{i}));
                 for j=1:length(modality)
                     anat = strrep(normAnat.(session{i}).(modality{j}), anatDir, checkregDir);
-                    parsed = obj.parseFilePath(anat);
+                    parsed = parseBIDSFilePath(anat);
                     normCheckreg.(session{i}).(modality{j}) = strrep(anat , parsed.ext, '.png');
                 end
             end
@@ -702,21 +702,6 @@ classdef BIDSFetcher
                     % Read .ea_prefs.m and .ea_prefs.mat
                     prefs = ea_prefs;
             end
-        end
-
-        function parsedStruct = parseFilePath(filePath)
-            % Split file path into stripped path, file name and extension
-            [strippedPath, fileName, ext] = ea_niifileparts(GetFullPath(filePath));
-            parsedStruct.dir = fileparts(strippedPath);
-            parsedStruct.ext = ext;
-
-            % Parse file name
-            entities = strsplit(fileName, '_');
-            for i=1:length(entities)-1
-                pair = regexp(entities{i}, '-', 'split', 'once');
-                parsedStruct.(pair{1}) = pair{2};
-            end
-            parsedStruct.suffix = entities{end}; % Last one should be modality
         end
     end
 end
