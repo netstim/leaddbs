@@ -23,10 +23,10 @@ c1.pinfo(1:2) = [1,0]; % uint8 is enough for output values, no need for scaling
 % Set output file name
 if isBIDSFileName(filePath)
     parsedStruct = parseBIDSFilePath(filePath);
-    c1.fname = setBIDSEntity(filePath, 'mod', parsedStruct.suffix, 'label', 'Brain', 'suffix', 'mask');
-    movefile([directory, filesep, 'c1', fileName, '.nii'], setBIDSEntity(filePath, 'mod', parsedStruct.suffix, 'label', 'GM', 'suffix', 'mask'));
-    movefile([directory, filesep, 'c2', fileName, '.nii'], setBIDSEntity(filePath, 'mod', parsedStruct.suffix, 'label', 'WM', 'suffix', 'mask'));
-    movefile([directory, filesep, 'c3', fileName, '.nii'], setBIDSEntity(filePath, 'mod', parsedStruct.suffix, 'label', 'CSF', 'suffix', 'mask'));
+    c1.fname = setBIDSEntity(filePath, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask');
+    movefile([directory, filesep, 'c1', fileName, '.nii'], setBIDSEntity(filePath, 'label', 'GM', 'mod', parsedStruct.suffix, 'suffix', 'mask'));
+    movefile([directory, filesep, 'c2', fileName, '.nii'], setBIDSEntity(filePath, 'label', 'WM', 'mod', parsedStruct.suffix, 'suffix', 'mask'));
+    movefile([directory, filesep, 'c3', fileName, '.nii'], setBIDSEntity(filePath,  'label', 'CSF', 'mod', parsedStruct.suffix,'suffix', 'mask'));
 else
     c1.fname = [directory, filesep, fileName, '_brainmask.nii'];
 end
