@@ -40,7 +40,7 @@ end
 
 disp('Segmenting preoperative version (Import to DARTEL-space)');
 preopImages = struct2cell(options.subj.coreg.anat.preop);
-ea_newseg(preopImages, 1, options, 1);
+ea_newseg(preopImages, 1, 1);
 disp('Segmentation of preoperative MRI done.');
 
 [directory, preopAnchorName] = fileparts(preopImages{1});
