@@ -135,7 +135,6 @@ for patients = 1:length(source)
                                 which_file = files_to_move{files};
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),coregistration{:,1});
                                 bids_name = coregistration{1,2}{indx};
-                                disp(which_file)
                                 move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,move,flag)
                             elseif ~isempty(regexp(files_to_move{files},'^coreg.*.log'))
                                 if ~exist(fullfile(new_path,pipelines{folders},'log'),'dir')
@@ -160,22 +159,22 @@ for patients = 1:length(source)
                         elseif strcmp(pipelines{folders},'normalization')
                             if ismember(files_to_move{files},normalization{:,1})
                                 %corresponding index of the new pat
+                                which_file = files_to_move{files};
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),normalization{:,1});
                                 bids_name = normalization{1,2}{indx};
+                                move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,move,flag)
+                                %only for normalization
+                            elseif ~isempty(regexp(files_to_move{files},'^normalize_.*.log')) 
                                 if ~exist(fullfile(new_path,pipelines{folders},'log'),'dir')
                                     mkdir(fullfile(new_path,pipelines{folders},'log'));
                                 end
-                                %only for normalization
-                                if ~isempty(regexp(files_to_move{files},'^normalize_.*.log')) || strcmp(files_to_move{files},'ea_ants_command.txt')
-                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
-                                        if move
-                                            movefile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
-                                        else
-                                            copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log'));
-                                        end
+                                if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                    if move
+                                        movefile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
+                                    else
+                                        copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log'));
                                     end
                                 end
-                                move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,move,flag)
                             end
                             %special case for recon
                         elseif strcmp(pipelines{folders},'reconstruction')
