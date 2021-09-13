@@ -31,8 +31,17 @@ else
     fixedimage_bet = [fixedPath, '_brain'];
 end
 
-if isempty(dir([fixedimage_bet,'.nii*']))
-    ea_bet(fixedimage, 0, fixedimage_bet, 0.5);
+fprintf('\nSkullstripping fixed image...\n');
+ea_bet(fixedimage, 1, fixedimage_bet, 0.5);
+
+% Rename mask
+mask = dir([fixedimage_bet, '_mask*']);
+ext = regexp(mask(end).name, '(?<=_mask)\.nii(\.gz)?$', 'match', 'once');
+if isBIDSFileName(fixedimage)
+    parsedStruct = parseBIDSFilePath(fixedimage);
+    movefile([fixedimage_bet, '_mask', ext], setBIDSEntity(fixedimage, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask'));
+else
+    movefile([fixedimage_bet, '_mask', ext], [fixedPath, '_brainmask', ext]);
 end
 
 volumedir = [fileparts(ea_niifileparts(outputimage)), filesep];
