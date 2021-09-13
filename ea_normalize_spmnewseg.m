@@ -31,7 +31,7 @@ fprintf('\nThis Normalization routine uses the advanced TPMs by Lorio 2016.\nSee
 % Run SPM New Segment
 disp('Segmenting preoperative version...');
 preopImages = struct2cell(options.subj.coreg.anat.preop);
-ea_newseg(preopImages, 0, options, 0, 1);
+ea_newseg(preopImages, 0, 0, 1);
 disp('Segmentation of preoperative MRI done.');
 
 [directory, preopAnchorName] = fileparts(preopImages{1});

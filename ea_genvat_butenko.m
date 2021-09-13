@@ -61,7 +61,7 @@ if options.native
     if ~isfile([directory, 'c1', options.prefs.prenii_unnormalized]) ...
             || ~isfile([directory, 'c2', options.prefs.prenii_unnormalized]) ...
             || ~isfile([directory, 'c3', options.prefs.prenii_unnormalized])
-        ea_newseg(fullfile(directory, options.prefs.prenii_unnormalized), 0, options, 1);
+        ea_newseg(fullfile(directory, options.prefs.prenii_unnormalized), 0, 1);
     end
 
     segMaskDir = directory;
@@ -70,7 +70,7 @@ else
     if ~isfile([ea_space, 'c1mask.nii']) ...
             || ~isfile([ea_space, 'c2mask.nii']) ...
             || ~isfile([ea_space, 'c3mask.nii'])
-        ea_newseg(fullfile(ea_space, [options.primarytemplate, '.nii']), 0, options, 1);
+        ea_newseg(fullfile(ea_space, [options.primarytemplate, '.nii']), 0, 1);
         movefile([ea_space, 'c1', options.primarytemplate, 'nii'], [ea_space, 'c1mask.nii']);
         movefile([ea_space, 'c2', options.primarytemplate, 'nii'], [ea_space, 'c2mask.nii']);
         movefile([ea_space, 'c3', options.primarytemplate, 'nii'], [ea_space, 'c3mask.nii']);
