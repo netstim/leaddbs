@@ -4,7 +4,7 @@ function ea_genbrainmask(filePath)
 % Segment image
 filePath = GetFullPath(filePath);
 [directory, fileName] = fileparts(filePath);
-ea_newseg(filePath, 0, 0);
+ea_newseg(filePath, 0, 1);
 
 % Load segmentations
 c1 = ea_load_nii([directory, filesep, 'c1', fileName, '.nii']);
