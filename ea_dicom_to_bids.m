@@ -1,6 +1,6 @@
 function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
 
-lookup_table = {'skip','skip', 'skip';
+table_options = {'skip','skip', 'skip';
     'anat','preop', 'T1w';
     'anat','preop', 'T2w';
     'anat','preop', 'FGATIR';
@@ -9,6 +9,8 @@ lookup_table = {'skip','skip', 'skip';
     'anat','postop', 'ax_MR';
     'anat','postop', 'sag_MR';
     'anat','postop', 'cor_MR'};
+
+
 
 nii_folder = fullfile(dataset_folder, 'sourcedata', subjID, 'tmp');    % where are the nifti files located?
 
@@ -21,9 +23,9 @@ for image_idx = 1:length(fnames)
 end
 close(h_wait);
 
-Session = categorical(repmat({'skip'},[length(fnames),1]),unique(lookup_table(:,2)));
-Modality = categorical(repmat({'skip'},[length(fnames),1]), unique(lookup_table(:,3)));
-Type = categorical(repmat({'skip'},[length(fnames),1]),unique(lookup_table(:,1)));
+Session = categorical(repmat({'skip'},[length(fnames),1]),unique(table_options(:,2)));
+Modality = categorical(repmat({'skip'},[length(fnames),1]), unique(table_options(:,3)));
+Type = categorical(repmat({'skip'},[length(fnames),1]),unique(table_options(:,1)));
 T = table(fnames, Session, Type, Modality);
 
 % create GUI
@@ -43,12 +45,15 @@ expand(ui.Tree, 'all');
 preview_nii(ui, imgs{1,1}); % set initial image to the first one
 
 ui.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(ui,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
-ui.niiFileTable.CellEditCallback = @(src,event) update_preview_tree(ui, lookup_table, subjID); % callback for cell change -> update ui tree on the right
+ui.niiFileTable.CellEditCallback = @(src,event) update_preview_tree(ui, table_options, subjID); % callback for cell change -> update ui tree on the right
 
 ui.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(ui, event);     % callback for scrolling images
 
 % OK button behaviour
-ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui, ui.niiFileTable, lookup_table, dataset_folder, nii_folder, subjID);
+ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui, ui.niiFileTable, table_options, dataset_folder, nii_folder, subjID);
+
+% cancel button behaviour
+ui.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(ui);
 
 waitfor(ui.UIFigure);
 
@@ -61,7 +66,7 @@ end
 
 end
 
-function update_preview_tree(ui, lookup_table, subjID)
+function update_preview_tree(ui, table_options, subjID)
 
 % update tree view as well
 dat = cellfun(@char,table2cell(ui.niiFileTable.Data),'uni',0);  % get data
@@ -69,7 +74,7 @@ ui.previewtree_preop_anat.Children.delete;      % delete children
 ui.previewtree_postop_anat.Children.delete;    % delete children
 
 % populate tree
-sessions = unique(lookup_table(:,2));
+sessions = unique(table_options(:,2));
 sessions(ismember(sessions,'skip')) = [];   % remove skip
 
 for sesIdx = 1:length(sessions)
@@ -93,10 +98,24 @@ end
 
 
 end
-function ok_button_function(uiapp, TT, lookup_table, dataset_folder, nii_folder, subjID)
+
+function cancel_button_function(uiapp)
+
+ s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'Confirm close', ...
+    'Icon', 'question');
+
+switch s
+    case 'OK'
+        delete(uiapp);
+end
+
+    
+end
+
+function ok_button_function(uiapp, TT, table_options, dataset_folder, nii_folder, subjID)
 
 dat = cellfun(@char,table2cell(TT.Data),'uni',0);
-sessions = unique(lookup_table(:,2));
+sessions = unique(table_options(:,2));
 sessions(ismember(sessions,'skip')) = [];   % remove skip
 
 % preallocate anat_files
@@ -525,23 +544,5 @@ rg = str2num(sprintf('%.2g ', rg)); %#ok<*ST2NM>
 if rg(1)==rg(2), rg(1) = mi; end
 if abs(rg(1))>10, rg(1) = floor(rg(1)/2)*2; end % even number
 if abs(rg(2))>10, rg(2) = ceil(rg(2)/2)*2; end % even number
-end
-
-%%
-
-function my_closereq(src,~)
-% Close request function
-% to display a question dialog box
-
-selection = uiconfirm(src,'Cancel Dicom conversion?',...
-    'Close dicm2nii');
-
-switch selection
-    case 'OK'
-        delete(src)
-        setappdata(0,'Canceldicm2nii',true)
-    case 'Cancel'
-        return
-end
 end
 
