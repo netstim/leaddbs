@@ -28,7 +28,7 @@ if ~exist([directory,options.prefs.fa2anat],'file')
     end
 end
 if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
-    if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+    if usebrainmask
         ea_maskimg(options,[directory,options.prefs.fa2anat],bprfx);
     end
 end
