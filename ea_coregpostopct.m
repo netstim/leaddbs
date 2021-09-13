@@ -3,8 +3,10 @@ function ea_coregpostopct(options)
 
 if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
     % Setup log
-    ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
-    diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+    if options.prefs.diary
+        ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
+        diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+    end
 
     % Do coregistration
     switch lower(options.coregct.method)
@@ -34,5 +36,7 @@ if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
         ea_tonemapct(options, 'native');
     end
 
-    diary off;
+    if options.prefs.diary
+        diary off;
+    end
 end
