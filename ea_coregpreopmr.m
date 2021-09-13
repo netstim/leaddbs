@@ -26,8 +26,10 @@ if isempty(moving)
 end
 
 % Setup log
-ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
-diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+if options.prefs.diary
+    ea_mkdir(fileparts(options.subj.coreg.log.logBaseName));
+    diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
+end
 
 % Do coregistration
 for i=1:length(moving)
@@ -41,4 +43,6 @@ end
 
 ea_dumpmethod(options, 'coreg');
 
-diary off;
+if options.prefs.diary
+    diary off;
+end
