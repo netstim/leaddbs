@@ -12,7 +12,7 @@ if ~iscell(source_dir)
     source_dir = {source_dir};
 end
 
-if ~iscell(dest_dir)
+if ~iscell(dest_dir) && ~isempty(dest_dir)
     dest_dir = {dest_dir};
 elseif isempty(dest_dir)
     dest_dir = source_dir;
