@@ -24,8 +24,13 @@ else
 end
 
 % Prepare bet image for flirt bbr
-[fixpath, fixname] = ea_niifileparts(fixedimage);
-fixedimage_bet = [fileparts(fixpath), filesep, fixname, '_brain'];
+fixedPath = ea_niifileparts(fixedimage);
+if isBIDSFileName(fixedimage)
+    fixedimage_bet = ea_niifileparts(setBIDSEntity(fixedimage, 'label', 'Brain'));
+else
+    fixedimage_bet = [fixedPath, '_brain'];
+end
+
 if isempty(dir([fixedimage_bet,'.nii*']))
     ea_bet(fixedimage, 0, fixedimage_bet, 0.5);
 end
@@ -49,7 +54,7 @@ else
     COVERT_XFM = [basedir, 'convert_xfm.', computer('arch')];
 end
 
-fixedimage_fast = [fileparts(fixpath), filesep, fixname, '_fslfast'];
+fixedimage_fast = [fixedPath, '_fslfast'];
 
 % Segment the reference image
 fastcmd = [FAST, ' -v ', ...
@@ -57,7 +62,7 @@ fastcmd = [FAST, ' -v ', ...
            '-A ', ea_path_helper([basedir, 'data/standard/tissuepriors/avg152T1_csf']), ' ', ...
                   ea_path_helper([basedir, 'data/standard/tissuepriors/avg152T1_gray']), ' ', ...
                   ea_path_helper([basedir, 'data/standard/tissuepriors/avg152T1_white']), ' ', ...
-           ea_path_helper(fixedimage_bet)];
+                  ea_path_helper(fixedimage_bet)];
 
 % Creat white matter mask
 wmsegcmd = [FSLMATHS, ...
@@ -160,6 +165,9 @@ ea_delete([volumedir, xfm, '_init.mat']);
 % Clean up FSL FAST results
 ea_delete([fixedimage_fast, '*']);
 
+% Clean up BET image
+ea_delete(fixedimage_bet);
+
 fprintf('\nFSL FLIRT BBR done.\n');
 
 %% add methods dump:
@@ -169,5 +177,4 @@ cits={
     'D.N. Greve and B. Fischl, Accurate and robust brain image alignment using boundary-based registration, NeuroImage, 48(1):63-72, 2009.'
 };
 
-ea_methods(volumedir,[movname,' was linearly co-registered to ',fixname,' using FLIRT BBR as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],...
-    cits);
+ea_methods(volumedir,[movname,' was linearly co-registered to ',fixname,' using FLIRT BBR as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],cits);
