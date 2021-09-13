@@ -38,7 +38,7 @@ pipelines = {'brainshift','coregistration','normalization','reconstruction','pre
 %mapping will allow quick reference of the files to move
 [brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel] = create_bids_mapping();
 legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii'};
-bids_modalities = {'T1w.nii','T2w.nii','PD.nii','CT.nii','ax.nii','cor.nii','sag.nii'};
+bids_modalities = {'T1w.nii.gz','T2w.nii.gz','PD.nii.gz','CT.nii.gz','ax.nii.gz','cor.nii.gz','sag.nii.gz'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 %dir without dots is a modified dir command that with return the
 %directory contents without the dots. those evaluate to folders and
@@ -56,11 +56,10 @@ for patients = 1:length(source)
     if isdicom
         dicom_patient = dicom_source{patients};
     end
-    flag = 1;
-    if startsWith(source_patient,'sub-')
-        flag = 0;
-    end
     [~,patient_name,~] = fileparts(source_patient);
+    if ~startsWith(patient_name,'sub-')
+       patient_name = ['sub-',patient_name];
+    end
     files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
     file_index = 1;
@@ -190,13 +189,7 @@ for patients = 1:length(source)
                                 else
                                     copyfile(fullfile(source_patient,files_to_move{files}),recon_dir)
                                 end
-                                
-                                if flag
-                                    movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(recon_dir,['sub-',patient_name,'_',reconstruction{1,2}{indx}]));
-                                else
-                                    movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(recon_dir,[patient_name,'_',reconstruction{1,2}{indx}]));
-                                end
-                                
+                                movefile(fullfile(new_path,pipelines{folders},files_to_move{files}),fullfile(recon_dir,[patient_name,'_',reconstruction{1,2}{indx}]));
                             end
                         elseif strcmp(pipelines{folders},'preprocessing')
                             if ismember(files_to_move{files},preprocessing{:,1})
@@ -220,11 +213,7 @@ for patients = 1:length(source)
                                 else
                                     copyfile(fullfile(source_patient,'ea_methods.txt'),fullfile(new_path,pipelines{folders}));
                                 end
-                                if flag
-                                    movefile(fullfile(new_path,pipelines{folders},'ea_methods.txt'),fullfile(new_path,pipelines{folders},['sub-',patient_name,'_',files_to_move{files}]));
-                                else
-                                    movefile(fullfile(new_path,pipelines{folders},'ea_methods.txt'),fullfile(new_path,pipelines{folders},[patient_name,'_',files_to_move{files}]));
-                                end
+                                movefile(fullfile(new_path,pipelines{folders},'ea_methods.txt'),fullfile(new_path,pipelines{folders},[patient_name,'_',files_to_move{files}]));
                             end
                         elseif strcmp(pipelines{folders},'stimulations')
                             %the stimulations folder should already be
@@ -248,11 +237,7 @@ for patients = 1:length(source)
                                 for headmodel_file = 1:length(headmodel_files)
                                     if ismember(headmodel_files{headmodel_file},headmodel{:,1})
                                         indx = cellfun(@(x)strcmp(x,headmodel_files{headmodel_file}),headmodel{:,1});
-                                        if flag
-                                            movefile(fullfile(new_path,pipelines{folders},headmodel_files{headmodel_file}),fullfile(new_path,pipelines{folders},['sub-',patient_name,'_',headmodel{1,2}{indx}]));
-                                        else
-                                            movefile(fullfile(new_path,pipelines{folders},headmodel_files{headmodel_file}),fullfile(new_path,pipelines{folders},[patient_name,'_',headmodel{1,2}{indx}]));
-                                        end
+                                        movefile(fullfile(new_path,pipelines{folders},headmodel_files{headmodel_file}),fullfile(new_path,pipelines{folders},[patient_name,'_',headmodel{1,2}{indx}]));
                                     end
                                 end
                             end
@@ -353,27 +338,25 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
             copyfile(old_path_scrf,new_path);
         end
     end
-        %then rename%
-    if flag
-        rename_path = fullfile(new_path,which_file);
-        movefile(rename_path,fullfile(new_path,['sub-',patient_name,'_',bids_name]));
-    else
-        rename_path = fullfile(new_path,which_file);
-        movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
-    end
+
+    %then rename%
+    rename_path = fullfile(new_path,which_file);
+    movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
     
 function move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name,move,flag)
     if exist(fullfile(source_patient_path,which_file),'file')
+       
         if move
             movefile(fullfile(source_patient_path,which_file),fullfile(new_path,which_file));
         else
             copyfile(fullfile(source_patient_path,which_file),new_path);
         end
-        if flag
-            movefile(fullfile(new_path,which_file),fullfile(new_path,['sub-',patient_name,'_',bids_name]));
-        else
-            movefile(fullfile(new_path,which_file),fullfile(new_path,[patient_name,'_',bids_name]));
+         if ~endsWith(which_file,'.gz')
+            gzip(fullfile(new_path,which_file))
+            ea_delete(fullfile(new_path,which_file))
+            which_file = [which_file,'.gz'];
         end
+        movefile(fullfile(new_path,which_file),fullfile(new_path,[patient_name,'_',bids_name]));
     end
 function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipeline,patient_name)
     if strcmp(which_pipeline,'stimulations')
@@ -382,11 +365,7 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
                 [filepath,mni_filename,ext] = fileparts(mni_files{1,mni_file}{1,mni_subfile});
                 if ismember([mni_filename,ext],stimulations{:,1})
                     indx = cellfun(@(x)strcmp(x,[mni_filename,ext]),stimulations{:,1});
-                    if flag
-                        movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,['sub-',patient_name,'_',stimulations{1,2}{indx}]));
-                    else
-                        movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,[patient_name,'_',stimulations{1,2}{indx}]));
-                    end
+                    movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,[patient_name,'_',stimulations{1,2}{indx}]));
                 end
             end
         end
@@ -395,11 +374,7 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
                 [filepath,native_filename,ext] = fileparts(native_files{1,native_file}{1,native_subfile});
                 if ismember([native_filename,ext],stimulations{:,1})
                     indx = cellfun(@(x)strcmp(x,[native_filename,ext]),stimulations{:,1});
-                    if flag
-                        movefile(native_files{1,native_file}{1,native_subfile},fullfile(filepath,['sub-',patient_name,'_',stimulations{1,2}{indx}]));
-                    else
-                        movefile(native_files{1,native_file}{1,native_subfile},fullfile(filepath,[patient_name,'_',stimulations{1,2}{indx}]));
-                    end
+                    movefile(native_files{1,native_file}{1,native_subfile},fullfile(filepath,[patient_name,'_',stimulations{1,2}{indx}]));
                 end
             end
         end
@@ -408,22 +383,14 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
             [filepath,mni_filename,ext] = fileparts(mni_files{mni_file});
             if ismember([mni_filename,ext],headmodel{:,1})
                 indx = cellfun(@(x)strcmp(x,[mni_filename,ext]),headmodel{:,1});
-                if flag
-                    movefile(mni_files{mni_file},fullfile(filepath,['sub-',patient_name,'_',headmodel{1,2}{indx}]));
-                else
-                    movefile(mni_files{mni_file},fullfile(filepath,[patient_name,'_',headmodel{1,2}{indx}]));
-                end
+                movefile(mni_files{mni_file},fullfile(filepath,[patient_name,'_',headmodel{1,2}{indx}]));
             end
         end
         for native_file = 1:length(native_files)
             [filepath,native_filename,ext] = fileparts(native_files{native_file});
             if ismember([native_filename,ext],headmodel{:,1})
                 indx = cellfun(@(x)strcmp(x,[native_filename,ext]),headmodel{:,1});
-                if flag
-                    movefile(native_files{native_file},fullfile(filepath,['sub-',patient_name,'_',headmodel{1,2}{indx}]));
-                else
-                    movefile(native_files{native_file},fullfile(filepath,[patient_name,'_',headmodel{1,2}{indx}]));
-                end
+                movefile(native_files{native_file},fullfile(filepath,[patient_name,'_',headmodel{1,2}{indx}]));
             end
         end
     end
