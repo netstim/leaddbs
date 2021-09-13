@@ -34,6 +34,8 @@ prefs.rawctnii_unnormalized='postop_ct.nii';
 prefs.ctnii_coregistered='rpostop_ct.nii';
 prefs.tp_ctnii_coregistered=['tp_',prefs.ctnii_coregistered];
 
+prefs.diary = 0; % Enable diary log for coregistration/normalization
+
 prefs.preferMRCT = 2; % preference of MR or CT modality for post-op image: 1 for MR, 2 for CT.
 
 prefs.patientdir=patientname;
