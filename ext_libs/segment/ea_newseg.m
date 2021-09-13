@@ -1,4 +1,4 @@
-function ea_newseg(files,dartel,options,del,force)
+function ea_newseg(files,dartel,del,force)
 % SPM NewSegment
 % we cannot generate the TPM from the SPM TPM anymore since
 % we use the enhanced TPM by Lorio / Draganski:
@@ -33,8 +33,9 @@ else
         job.channel(fi).biasfwhm = 60;
         job.channel(fi).write = [0 0];
     end
-    
-    job.warp.reg=job.warp.reg*options.prefs.machine.normsettings.spmnewseg_scalereg;
+
+    prefs = ea_prefs;
+    job.warp.reg=job.warp.reg*prefs.machine.normsettings.spmnewseg_scalereg;
 
     tpmHdr = ea_open_vol(tpminf);
     tpmnum = tpmHdr.volnum;
