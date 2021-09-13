@@ -1,6 +1,10 @@
 function parsedStruct = parseBIDSFilePath(filePath)
 % Parse BIDS file path into a struct
 
+if ~isBIDSFileName(filePath)
+    error('Seems not a BIDS-like file name.')
+end
+
 % Split file path into stripped path, file name and extension
 [strippedPath, fileName, ext] = ea_niifileparts(GetFullPath(filePath));
 parsedStruct.dir = fileparts(strippedPath);
