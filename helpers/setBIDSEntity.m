@@ -1,6 +1,10 @@
 function filePath = setBIDSEntity(filePath, entity, value)
 % Set BIDS entity value in file path
 
+if ~isBIDSFileName(filePath)
+    error('Seems not a BIDS-like file name.')
+end
+
 if strcmp(entity, 'suffix') % Set suffix
     filePath = regexprep(filePath, '_[a-zA-Z0-9]+(\.[a-zA-Z0-9\.]+$)', ['_', value, '$1']);
 elseif strcmp(entity, 'ext') % Set extension
