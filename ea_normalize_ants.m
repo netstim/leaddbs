@@ -1,4 +1,4 @@
-function varargout=ea_normalize_ants(options,includeatlas)
+function varargout=ea_normalize_ants(options)
 % This is a function that normalizes both a copy of transversal and coronal
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -27,14 +27,6 @@ end
 
 usefa=options.prefs.machine.normsettings.ants_usefa;
 usebrainmask=0;
-
-if ~exist('includeatlas','var')
-    includeatlas=0;
-end
-
-if ~includeatlas % second run from maget-brain segment
- %   ea_checkcoregallmri(options,usebrainmask)
-end
 
 directory=[options.root,options.patientname,filesep];
 cnt=1;
@@ -71,7 +63,7 @@ for anatf=1:length(anatpresent)
     disp(['Including ',anatpresent{anatf},' data for (grey-matter) normalization (weight = 1.25)']);
 
     to{cnt}=ea_niigz([ea_space(options),ea_det_to(anatpresent{anatf},spacedef)]);
-    if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+    if usebrainmask
         ea_maskimg(options,[directory,anatpresent{anatf}],bprfx);
     end
     from{cnt}=[directory,bprfx,anatpresent{anatf}];
@@ -111,13 +103,6 @@ if exist([directory,'fiducials'],'dir')
             end
         end
     end
-end
-
-if includeatlas % append as last to make criterion converge on this one.
-    to{cnt}=ea_niigz([ea_space(options),'atlas']);
-    from{cnt}=ea_niigz([directory,'anat_atlas']);
-    weights(cnt)=1.5;
-    cnt=cnt+1;
 end
 
 ea_ants_nonlinear(to,from,[directory,options.prefs.gprenii],weights,options);
