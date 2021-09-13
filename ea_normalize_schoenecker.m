@@ -77,6 +77,12 @@ for i=1:length(imagePresent)
 end
 
 ea_ants_schoenecker(template, moving, options.subj.norm.anat.preop.(options.subj.AnchorModality), weights, metrics);
+
+% Move transformation file
+[directory, fileName] = fileparts(options.subj.norm.anat.preop.(options.subj.AnchorModality));
+movefile([directory, filesep, fileName, '0GenericAffine.mat'], [options.subj.norm.transform.forwardBaseName, 'ants.mat']);
+movefile([directory, filesep, fileName, 'Inverse0GenericAffine.mat'], [options.subj.norm.transform.inverseBaseName, 'ants.mat']);
+
 ea_apply_normalization(options);
 
 % add methods dump:
