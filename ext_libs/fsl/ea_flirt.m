@@ -27,28 +27,48 @@ fprintf('\n\nRunning FSL FLIRT: %s\n\n', movingimage);
 
 umachine = load([ea_gethome, '.ea_prefs.mat']);
 normsettings = umachine.machine.normsettings;
+% Prepare bet image for flirt
 if normsettings.fsl_skullstrip % skullstripping is on
-    % Prepare bet image for flirt
+    % Set skullstripped file name
     if isBIDSFileName(movingimage)
         inimage = ea_niifileparts(setBIDSEntity(movingimage, 'label', 'Brain'));
     else
         inimage = [ea_niifileparts(movingimage), '_brain'];
     end
 
-    if isempty(dir([inimage,'.nii*']))
-        fprintf('\nSkullstripping moving image...\n\n');
-        ea_bet(movingimage, 0, inimage);
+    % Run BET2
+    fprintf('\nSkullstripping moving image...\n');
+    ea_bet(movingimage, 1, inimage);
+
+    % Rename mask file
+    mask = dir([inimage, '_mask*']);
+    ext = regexp(mask(end).name, '(?<=_mask)\.nii(\.gz)?$', 'match', 'once');
+    if isBIDSFileName(movingimage)
+        parsedStruct = parseBIDSFilePath(movingimage);
+        movefile([inimage, '_mask', ext], setBIDSEntity(movingimage, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask'));
+    else
+        movefile([inimage, '_mask', ext], [ea_niifileparts(movingimage), '_brainmask', ext]);
     end
 
+	% Set skullstripped file name
     if isBIDSFileName(fixedimage)
         refimage = ea_niifileparts(setBIDSEntity(fixedimage, 'label', 'Brain'));
     else
         refimage = [ea_niifileparts(fixedimage), '_brain'];
     end
 
-    if isempty(dir([refimage,'.nii*']))
-        fprintf('\nSkullstripping reference image...\n\n');
-        ea_bet(fixedimage, 0, refimage);
+    % Run BET2
+    fprintf('\nSkullstripping reference image...\n');
+    ea_bet(fixedimage, 1, refimage);
+
+    % Rename mask file
+    mask = dir([refimage, '_mask*']);
+    ext = regexp(mask(end).name, '(?<=_mask)\.nii(\.gz)?$', 'match', 'once');
+    if isBIDSFileName(fixedimage)
+        parsedStruct = parseBIDSFilePath(fixedimage);
+        movefile([refimage, '_mask', ext], setBIDSEntity(fixedimage, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask'));
+    else
+        movefile([refimage, '_mask', ext], [ea_niifileparts(fixedimage), '_brainmask', ext]);
     end
 else % skullstripping is off
     fprintf('\nSkip skullstripping...\n\n');
@@ -133,8 +153,10 @@ if ~writeoutmat
     ea_delete([volumedir, invxfm, num2str(runs+1), '.mat'])
     affinefile = {};
 else
-    affinefile = {[volumedir, xfm, num2str(runs+1), '.mat']
-                  [volumedir, invxfm, num2str(runs+1), '.mat']};
+    movefile([volumedir, xfm, num2str(runs+1), '.mat'], [volumedir, xfm, '.mat'])
+    movefile([volumedir, invxfm, num2str(runs+1), '.mat'], [volumedir, xfm, '.mat'])
+    affinefile = {[volumedir, xfm, '.mat']
+                  [volumedir, invxfm, '.mat']};
 end
 
 % Clean up BET image when skullstripping is on
