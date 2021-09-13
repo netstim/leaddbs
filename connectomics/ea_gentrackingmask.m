@@ -1,7 +1,7 @@
 function ea_gentrackingmask(options,threshold)
 directory=[options.root,options.patientname,filesep];
 
-ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0,options);
+ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0);
 
 b0_anat = [ea_stripext(options.prefs.b0),'_',ea_stripext(options.prefs.prenii_unnormalized)];
 
