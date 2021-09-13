@@ -3,8 +3,10 @@ function ea_normalize(options)
 
 if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).norm)
     % Setup log
-    ea_mkdir(fileparts(options.subj.norm.log.logBaseName));
-    diary([options.subj.norm.log.logBaseName, datestr(now, 'yyyymmddTHHMMss'), '.log']);
+    if options.prefs.diary
+        ea_mkdir(fileparts(options.subj.norm.log.logBaseName));
+        diary([options.subj.norm.log.logBaseName, datestr(now, 'yyyymmddTHHMMss'), '.log']);
+    end
     
     % Do coregistration
     switch lower(options.normalize.method)
@@ -28,7 +30,9 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
             ea_normalize_spmshoot(options);
         otherwise
             warning('Normalization method not recognized...');
-            diary off;
+            if options.prefs.diary
+                diary off;
+            end
             return;
     end
 
@@ -40,5 +44,7 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
         ea_tonemapct(options, 'norm');
     end
 
-    diary off;
+    if options.prefs.diary
+        diary off;
+    end
 end
