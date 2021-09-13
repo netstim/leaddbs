@@ -62,9 +62,8 @@ for i=1:length(imagePresent)
     % Set template image
     template{cnt} = ea_matchTemplate(imagePresent{i}, spacedef);
 
-    % Segment and mask image when needed. If `includeatlas` is set we
-    % assume that images have been coregistered and skulstripped already.
-    if usebrainmask && (~includeatlas)
+    % Segment and mask image when needed.
+    if usebrainmask
         moving{cnt} = ea_maskimg(imagePresent{i});
     else
         moving{cnt} = imagePresent{i};
