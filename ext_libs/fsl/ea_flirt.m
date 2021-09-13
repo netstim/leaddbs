@@ -28,15 +28,24 @@ fprintf('\n\nRunning FSL FLIRT: %s\n\n', movingimage);
 umachine = load([ea_gethome, '.ea_prefs.mat']);
 normsettings = umachine.machine.normsettings;
 if normsettings.fsl_skullstrip % skullstripping is on
-    % Prepare bet image for flirt, generate the brain masks '*_bet_mask.nii'
-    [movpath, movname] = ea_niifileparts(movingimage);
-    [fixpath, fixname] = ea_niifileparts(fixedimage);
-    inimage = [fileparts(movpath), filesep, movname, '_brain'];
-    refimage = [fileparts(fixpath), filesep, fixname, '_brain'];
+    % Prepare bet image for flirt
+    if isBIDSFileName(movingimage)
+        inimage = ea_niifileparts(setBIDSEntity(movingimage, 'label', 'Brain'));
+    else
+        inimage = [ea_niifileparts(movingimage), '_brain'];
+    end
+
     if isempty(dir([inimage,'.nii*']))
         fprintf('\nSkullstripping moving image...\n\n');
         ea_bet(movingimage, 0, inimage);
     end
+
+    if isBIDSFileName(fixedimage)
+        refimage = ea_niifileparts(setBIDSEntity(fixedimage, 'label', 'Brain'));
+    else
+        refimage = [ea_niifileparts(fixedimage), '_brain'];
+    end
+
     if isempty(dir([refimage,'.nii*']))
         fprintf('\nSkullstripping reference image...\n\n');
         ea_bet(fixedimage, 0, refimage);
@@ -128,6 +137,11 @@ else
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
+% Clean up BET image when skullstripping is on
+if normsettings.fsl_skullstrip
+    ea_delete({inimage, refimage});
+end
+
 fprintf('\nFSL FLIRT done.\n');
 
 %% add methods dump:
@@ -136,6 +150,5 @@ cits={
     'M. Jenkinson, P.R. Bannister, J.M. Brady, and S.M. Smith. Improved optimisation for the robust and accurate linear registration and motion correction of brain images. NeuroImage, 17(2):825-841, 2002.'
 };
 
-ea_methods(volumedir,[mov,' was linearly co-registered to ',fix,' using FLIRT as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],...
-    cits);
+ea_methods(volumedir,[mov,' was linearly co-registered to ',fix,' using FLIRT as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],cits);
 
