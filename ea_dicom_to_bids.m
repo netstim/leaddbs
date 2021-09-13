@@ -1,5 +1,6 @@
 function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
 
+% options that should appear in the table
 table_options = {'skip','skip', 'skip';
     'anat','preop', 'T1w';
     'anat','preop', 'T2w';
@@ -10,7 +11,8 @@ table_options = {'skip','skip', 'skip';
     'anat','postop', 'sag_MR';
     'anat','postop', 'cor_MR'};
 
-
+% lookup table to pre-allocate options for the table.
+lookup_table = loadjson(fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
 
 nii_folder = fullfile(dataset_folder, 'sourcedata', subjID, 'tmp');    % where are the nifti files located?
 
@@ -25,14 +27,16 @@ close(h_wait);
 
 Session = categorical(repmat({'skip'},[length(fnames),1]),unique(table_options(:,2)));
 Modality = categorical(repmat({'skip'},[length(fnames),1]), unique(table_options(:,3)));
-Type = categorical(repmat({'skip'},[length(fnames),1]),unique(table_options(:,1)));
+Type = categorical(repmat({'anat'},[length(fnames),1]),unique(table_options(:,1)));
 T = table(fnames, Session, Type, Modality);
+
+T_preallocated = preallocate_table(T, lookup_table);
 
 % create GUI
 ui = dicom_to_bids;
 
 % populate table
-ui.niiFileTable.Data = T;
+ui.niiFileTable.Data = T_preallocated;
 ui.niiFileTable.ColumnEditable = [false true true, true];
 
 % set subject ID and file path
@@ -96,6 +100,52 @@ for sesIdx = 1:length(sessions)
     end
 end
 
+
+end
+
+
+function table_preallocated = preallocate_table(table, lookup_table)
+
+table_preallocated = table;
+
+% get sessions
+image_types = fieldnames(lookup_table);
+
+% filenames
+for rowIdx = 1:height(table)
+    
+    fname = table.fnames{rowIdx};
+    
+    % image types (anat, func, ...)
+    for img_type_idx = 1:length(image_types)
+        
+        img_type = image_types{img_type_idx};
+        sessions = fieldnames(lookup_table.(img_type));
+        
+        % sessions (preop, postop, ...)
+        for session_idx = 1:length(sessions)
+            
+            session = sessions{session_idx};
+            modalities = fieldnames(lookup_table.(img_type).(session));
+            
+            % modalities (T1w, T2w, ...)
+            for modality_idx = 1:length(modalities)
+                
+                modality = modalities{modality_idx};
+                for name_idx = 1:length(lookup_table.(img_type).(session).(modality))
+                    
+                    name = char(lookup_table.(image_types{img_type_idx}).(sessions{session_idx}).(modalities{modality_idx}){name_idx});
+                    
+                    if regexp(fname, name)
+                        table_preallocated.Session(rowIdx) = session;
+                        table_preallocated.Type(rowIdx) = img_type;
+                        table_preallocated.Modality(rowIdx) = modality;
+                    end
+                end
+            end
+        end
+    end
+end
 
 end
 
