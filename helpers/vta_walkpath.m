@@ -3,6 +3,9 @@ function [mni_files,native_files] = vta_walkpath(new_path,pipeline)
 
 switch pipeline
     case 'stimulations'
+        if ~exist(fullfile(new_path,pipeline),'dir')
+           return 
+        end
         mni_dir = fullfile(new_path,pipeline,'MNI_ICBM_2009b_NLIN_ASYM');
         native_dir = fullfile(new_path,pipeline,'native');
         if exist(mni_dir,'dir')
@@ -19,7 +22,7 @@ switch pipeline
                 %all_files contains all the names
                 %of the vta files present. Now you
                 %can rename them.
-            end
+            end            
         end
         if exist(native_dir,'dir')
             this_folder = dir_without_dots(native_dir);
