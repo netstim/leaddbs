@@ -21,7 +21,7 @@ end
 %if you have dicom files and have not provided a dicom source directory
 %(this can also just be source directory,so refactor this) then throw
 %an error
-if isdicom && ~exist(dicom_source,'var')
+if isdicom && ~exist('dicom_source','var')
     warndlg("You have specified that you want dicom import, but have not specified a dicom source file. Please specific your dicom source directory!")
 end
 
@@ -53,6 +53,9 @@ tic
 for patients = 1:length(source)
     source_patient = source{patients};
     dest_patient = dest{patients};
+    if isdicom
+        dicom_patient = dicom_source{patients};
+    end
     flag = 1;
     if startsWith(source_patient,'sub-')
         flag = 0;
@@ -69,10 +72,7 @@ for patients = 1:length(source)
         
         %now let's deal with subfolders
     end
-    if ~exist(fullfile(dicom_source,'dicom'),'dir') && ~isempty(regexp(file_names,'.*.dcm'))
-        %there is no real dicom directory but there is are dicom files in the source directory
-        dicom_source = source_patient;
-    end
+    
     
     %collect directory names inside the patient folder.
     dir_names = {files_in_pat_folder([files_in_pat_folder.isdir]).name};
@@ -80,7 +80,7 @@ for patients = 1:length(source)
         %%%for now, copy atlases, stimulations, headmodel and current
         %%%headmodel to their respective directories. Then you can crawl
         %%%through and rename. Renaming is handled a bit later.
-        if strcmp(dir_names{j},'atlases') || strcmp(dir_names{j},'stimulations') || strcmp(dir_names{j},'headmodel') || strcmp(dir_names{j},'current_headmodel')
+        if strcmp(dir_names{j},'atlases') || strcmp(dir_names{j},'stimulations') || strcmp(dir_names{j},'headmodel') || strcmp(dir_names{j},'current_headmodel') || strcmp(dir_names{j},'WarpDrive')
             if move
                 movefile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
             else
@@ -105,42 +105,21 @@ for patients = 1:length(source)
     %correct "BIDS" directory
     for subfolders = 1:length(subfolder_cell)
         switch subfolder_cell{subfolders}
-            case 'rawdata'
-                for i=1:length(modes)
-                    for j=1:length(sessions)
-                        new_path = fullfile(dest_patient,subfolder_cell{subfolders},patient_name,sessions{j},modes{i});
-                        if ~exist(new_path,'dir')
-                            mkdir(new_path)
-                        end
-                        for files=1:length(files_to_move)
-                            if strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-preop')
-                                %files to be moved into pre-op:raw_anat_*.nii
-                                if regexp(files_to_move{files},'raw_anat_.*.nii')
-                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
-                                        modality_str = strsplit(files_to_move{files},'_');
-                                        modality_str = modality_str{3};
-                                        bids_name = [sessions{j},'_',rawdata_containers(modality_str)];
-                                        source_patient_path = source_patient;
-                                        which_file = files_to_move{files};
-                                        move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name,move,flag)
-                                    end
-                                end
-                            elseif strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-postop')
-                                if ~isempty(regexp(files_to_move{files},'raw_postop_.*.nii')) || strcmp(files_to_move{files},'postop_ct.nii')
-                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
-                                        modality_str = strsplit(files_to_move{files},'_');
-                                        modality_str = modality_str{3};
-                                        bids_name = [sessions{j},'_',rawdata_containers(modality_str)];
-                                        source_patient_path = source_patient;
-                                        which_file = files_to_move{files};
-                                        move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name,move,flag)
-                                    end
-                                end
-                            end
-                        end
-                        
-                    end
+            case 'sourcedata'
+                new_path = fullfile(dest_patient,subfolder_cell{subfolders},patient_name);
+                if ~exist(new_path,'dir')
+                    mkdir(new_path)
                 end
+                if ~isdicom
+                    disp("There are no dicom images, source data folder will be empty")
+                else
+                    if move
+                        movefile(dicom_patient,new_path)
+                    else
+                        copyfile(dicom_patient,new_path)
+                    end
+                    
+                end 
             case 'derivatives'
                 new_path = fullfile(dest_patient,subfolder_cell{subfolders},'leaddbs',patient_name);
                 for folders=1:length(pipelines)
@@ -156,12 +135,20 @@ for patients = 1:length(source)
                                 which_file = files_to_move{files};
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),coregistration{:,1});
                                 bids_name = coregistration{1,2}{indx};
+                                disp(which_file)
                                 move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,move,flag)
                             elseif ~isempty(regexp(files_to_move{files},'^coreg.*.log'))
+                                if ~exist(fullfile(new_path,pipelines{folders},'log'),'dir')
+                                    mkdir(fullfile(new_path,pipelines{folders},'log'));
+                                end
                                 which_file = files_to_move{files};
-                                indx = cellfun(@(x)strcmp(x,files_to_move{files}),coregistration{:,1});
-                                bids_name = coregistration{1,2}{indx};
-                                move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,move,flag)
+                                if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                   if move
+                                      movefile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
+                                   else
+                                      copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log'));
+                                   end
+                               end
                             end
                         elseif strcmp(pipelines{folders},'brainshift')
                             if ismember(files_to_move{files},brainshift{:,1})
@@ -243,20 +230,20 @@ for patients = 1:length(source)
                         elseif strcmp(pipelines{folders},'stimulations')
                             %the stimulations folder should already be
                             %there in the dest directory.
-                            if exist(fullfile(new_path,pipelines{folders}),'dir')
+                            if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                                 pipeline = pipelines{folders};
                                 [mni_files,native_files] = vta_walkpath(new_path,pipeline);
                                 move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name)
                             end
                         elseif strcmp(pipelines{folders},'current_headmodel')
-                            if exist(fullfile(new_path,pipelines{folders}),'dir')
+                            if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                                 pipeline = pipelines{folders};
                                 [mni_files,native_files] = vta_walkpath(new_path,pipeline);
                                 move_mni2bids(mni_files,native_files,'',headmodel,pipeline,patient_name)
                                 
                             end
                         elseif strcmp(pipelines{folders},'headmodel')
-                            if exist(fullfile(new_path,pipelines{folders}),'dir')
+                            if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                                 headmodel_contents = dir_without_dots(fullfile(new_path,pipelines{folders}));
                                 headmodel_files = {headmodel_contents.name};
                                 for headmodel_file = 1:length(headmodel_files)
@@ -275,22 +262,41 @@ for patients = 1:length(source)
                     end
                 end
             otherwise
-                for j=1:length(dicom_sessions)
-                    new_path = fullfile(dest_patient,subfolder_cell{subfolders},patient_name,'DICOM',dicom_sessions{j});
-                    if ~exist(new_path,'dir')
-                        mkdir(new_path)
-                    end
-                    if ~isdicom
-                        disp("There are no dicom images, source data folder will be empty")
-                    else
-                        if move
-                            movefile(dicom_source,new_path)
-                        else
-                            copyfile(dicom_source,new_path)
+                for i=1:length(modes)
+                    for j=1:length(sessions)
+                        new_path = fullfile(dest_patient,subfolder_cell{subfolders},patient_name,sessions{j},modes{i});
+                        if ~exist(new_path,'dir')
+                            mkdir(new_path)
+                        end
+                        for files=1:length(files_to_move)
+                            if strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-preop')
+                                %files to be moved into pre-op:raw_anat_*.nii
+                                if regexp(files_to_move{files},'raw_anat_.*.nii')
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        modality_str = strsplit(files_to_move{files},'_');
+                                        modality_str = modality_str{end};
+                                        bids_name = [sessions{j},'_',rawdata_containers(modality_str)];
+                                        source_patient_path = source_patient;
+                                        which_file = files_to_move{files};
+                                        move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name,move,flag)
+                                    end
+                                end
+                            elseif strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-postop')
+                                if ~isempty(regexp(files_to_move{files},'raw_postop_.*.nii')) || strcmp(files_to_move{files},'postop_ct.nii')
+                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                        modality_str = strsplit(files_to_move{files},'_');
+                                        modality_str = modality_str{end};
+                                        bids_name = [sessions{j},'_',rawdata_containers(modality_str)];
+                                        source_patient_path = source_patient;
+                                        which_file = files_to_move{files};
+                                        move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name,move,flag)
+                                    end
+                                end
+                            end
                         end
                         
                     end
-                end
+                end  
         end
     end
 end
@@ -317,6 +323,7 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
             mkdir(checkreg_dir)
         end
         old_path = fullfile(source_patient_path,which_file);
+        old_path_scrf = fullfile(source_patient_path,'checkreg',which_file);
         new_path = checkreg_dir;
     elseif endsWith(which_file,'.log') || ~isempty(regexp(which_file,'.*_approved||.*_applied.mat')) || endsWith(which_file,'.txt')
         if ~exist(log_dir,'dir')
@@ -339,6 +346,13 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
         else
             copyfile(old_path,new_path);
         end
+    elseif exist(old_path_scrf,'file')
+        if move
+            move_path = fullfile(new_path,which_file);
+            movefile(old_path_scrf,move_path);
+        else
+            copyfile(old_path_scrf,new_path);
+        end
     end
         %then rename%
     if flag
@@ -348,6 +362,7 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
         rename_path = fullfile(new_path,which_file);
         movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
     end
+    
 function move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name,move,flag)
     if exist(fullfile(source_patient_path,which_file),'file')
         if move
