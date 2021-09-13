@@ -8,7 +8,7 @@ signallength=length(V);
 %% run sequence of proxyfunctions (below):
 ea_realign_fmri(signallength,options); % realign fMRI
 
-ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0,options,1); % Segment anat
+ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0,1); % Segment anat
 
 ea_coreg_pre2fmri(options); % register pre 2 fmri (for timecourse-extraction).
 
