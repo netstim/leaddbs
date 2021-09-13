@@ -159,10 +159,10 @@ end
 function cancel_button_function(uiapp)
 
  s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'Confirm close', ...
-    'Icon', 'question');
+    'Options', {'Yes', 'No'}, 'Icon', 'question');
 
 switch s
-    case 'OK'
+    case 'Yes'
         delete(uiapp);
 end
 
@@ -182,15 +182,8 @@ for sesIdx = 1:length(sessions)
     anat_files.(ses) = [];
 end
 
-
-% if all(any(ismember(dat(:,2:4),'skip'),2))
-%     warndlg('All images are skipped... Please select the type and modality for all scans','No scan selected');
-%     return;
-% end
-
-sanity_check_passed = true;
-
 % before we do anything, first a sanity check if user has selected only one file per modality
+sanity_check_passed = true;
 for sesIdx = 1:length(sessions)
     
     ses = sessions{sesIdx};
@@ -201,15 +194,26 @@ for sesIdx = 1:length(sessions)
             fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});      % generate BIDS filename
             
             if ~isfield(anat_files.(ses), dat{fileIdx, 4})
-                anat_files.(ses).(dat{fileIdx, 4}) = fname;                         % set output struct
-            else
+                anat_files.(ses).(dat{fileIdx, 4}) = fname;                     % set output struct
+            else % more than one file has been selected
                 sanity_check_passed = false;
+                s = uiconfirm(uiapp.UIFigure, 'Multiple files have been detected for one or more modalities. Please select only one file per modality and session', ...
+                    'Too many files detected', 'Options', {'OK'}, ...
+                    'Icon', 'warning');
                 break
             end
             
         end
     end
     
+end
+
+% check if all images have been skipped
+if all(any(ismember(dat(:,2:4),'skip'),2))
+    s = uiconfirm(uiapp.UIFigure, 'All images have been skipped. Please select at least one preop and one postop image.', ...
+        'No files selected', 'Options', {'OK'}, ...
+        'Icon', 'warning');
+    sanity_check_passed = false;
 end
 
 if sanity_check_passed == true
@@ -239,10 +243,6 @@ end
 if sanity_check_passed == true
     setappdata(groot, 'anat_files', anat_files);
     delete(uiapp);      % close window
-else
-    s = uiconfirm(uiapp.UIFigure, 'Multiple files have been detected for one or more modalities. Please select only one file per modality and session', ...
-        'Too many files detected', 'Options', {'OK'}, ...
-    'Icon', 'warning');
 end
 
 end
