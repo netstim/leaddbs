@@ -8,7 +8,7 @@ filePath = GetFullPath(filePath);
 % Set brain mask and masked image path
 if isBIDSFileName(filePath)
     parsedStruct = parseBIDSFilePath(filePath);
-    brainMask = setBIDSEntity(filePath, 'mod', parsedStruct.suffix, 'label', 'Brain', 'suffix', 'mask');
+    brainMask = setBIDSEntity(filePath, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask');
     maskedImage = setBIDSEntity(filePath, 'label', 'Brain');
 else
     brainMask = [directory, filesep, fileName, '_brainmask.nii'];
