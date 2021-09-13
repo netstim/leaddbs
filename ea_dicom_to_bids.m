@@ -30,7 +30,12 @@ Modality = categorical(repmat({'skip'},[length(fnames),1]), unique(table_options
 Type = categorical(repmat({'anat'},[length(fnames),1]),unique(table_options(:,1)));
 T = table(fnames, Session, Type, Modality);
 
+try
 T_preallocated = preallocate_table(T, lookup_table);
+catch
+disp('Preallocation of table failed, defaulting to skip!');
+T_preallocated = T;
+end
 
 % create GUI
 ui = dicom_to_bids;
@@ -46,7 +51,9 @@ ui.FilepathLabel.Text = dataset_folder;
 % update preview tree and expand it
 ui.previewtree_subj.Text = subjID;
 expand(ui.Tree, 'all');
+
 preview_nii(ui, imgs{1,1}); % set initial image to the first one
+update_preview_tree(ui, table_options, subjID) % call preview tree updater to get preallocated changes
 
 ui.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(ui,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
 ui.niiFileTable.CellEditCallback = @(src,event) update_preview_tree(ui, table_options, subjID); % callback for cell change -> update ui tree on the right
