@@ -16,10 +16,6 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
             ea_normalize_apply_normalization(options);
         case lower({'FNIRT (Andersson 2010)', 'FNIRT'})
             ea_normalize_fsl(options);
-        case lower({'MAGeT Brain-like Normalization (Chakravarty 2013)', 'MAGeTNorm'})
-            ea_normalize_maget(options);
-        case lower({'MAGeT Brain-like Segmentation/Normalization DISTAL atlas (Chakravarty 2013, Ewert 2016)', 'MAGeTSeg'})
-            ea_normalize_maget_segment(options);
         case lower({'Three-step affine normalization (ANTs; Schonecker 2009)', 'Three-step', 'ThreeStep'})
             ea_normalize_schoenecker(options);
         case lower({'SPM12 DARTEL (Ashburner 2007)', 'SPMDARTEL', 'DARTEL'})
