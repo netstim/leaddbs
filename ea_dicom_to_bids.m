@@ -333,7 +333,7 @@ end
 %% scroll images
 function scroll_nii(ui, event)
 
-hAxes = checkMousePointer(ui.UIFigure, ui.CenterPanel);
+hAxes = checkMousePointer(ui.UIFigure, ui.RightPanel);
 img = getappdata(ui.UIFigure, 'img');
 dim = img.dim;
 
