@@ -1,5 +1,24 @@
 function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
 
+% Function creates a GUI in order to select which files should be used to create a BIDS compliant dataset and 
+% which files should be used by lead-dbs. After selection, a rawdata folder will be created and selected files will be
+% copy/pasted to the appropriate locations
+%
+% input
+%   subjID (string): subjID, including the 'sub' tag
+%   fnames (cell): cell of filenames to be loaded
+%   dataset_folder (string): root folder of BIDS-like dataset
+%
+% The script expects a sourcedata/subjID/ folder with DICOM files to be present under the dataset_folder path
+%
+% output
+%   anat_files (struct): struct with preop and postop session fields, inside each session field there are fields for every modality
+%                                 those fields have strings with the filenames that are selected and to be used by lead-dbs
+% __________________________________________________________________________________
+% Copyright (C) 2021 Charite University Medicine Berlin, Movement Disorders Unit
+% Johannes Achtzehn 
+% Part of this code is inspired by the dicm2nii tool of xiangrui.li@gmail.com
+
 % options that should appear in the table
 table_options = {'skip','skip', 'skip';
     'anat','preop', 'T1w';
