@@ -35,7 +35,6 @@ for i=2:length(input)
         ea_mkdir(outputDir);
 
         fprintf('\nNormalizing %s ...\n\n', inputFileName);
-
         matlabbatch{1}.spm.util.defs.comp{1}.def = {deformation};
         matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1} = tempInputFile;
         matlabbatch{1}.spm.util.defs.out{1}.push.weight = {''};
