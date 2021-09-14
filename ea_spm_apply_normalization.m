@@ -23,6 +23,7 @@ for i=2:length(input)
         % gaussdim = gaussdim*2;
 
         [~, inputFileName] = ea_niifileparts(input{i});
+
         tempInputFile = strrep(input{i}, inputFileName, ['r', inputFileName]);
         if mean(gaussdim>1)
             resize_img(input{i}, gaussdim./2, nan(2,3), 0);
@@ -32,6 +33,8 @@ for i=2:length(input)
 
         outputDir = fileparts(output{i});
         ea_mkdir(outputDir);
+
+        fprintf('\nNormalizing %s ...\n\n', inputFileName);
 
         matlabbatch{1}.spm.util.defs.comp{1}.def = {deformation};
         matlabbatch{1}.spm.util.defs.out{1}.push.fnames{1} = tempInputFile;
