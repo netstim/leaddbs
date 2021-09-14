@@ -7,12 +7,14 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
         ea_mkdir(fileparts(options.subj.norm.log.logBaseName));
         diary([options.subj.norm.log.logBaseName, datestr(now, 'yyyymmddTHHMMss'), '.log']);
     end
-    
+
+    reApply = 0;
     % Do coregistration
     switch lower(options.normalize.method)
         case lower({'ANTs (Avants 2008)', 'ANTs'})
             ea_normalize_ants(options);
-        case lower({'(Re-)apply (priorly) estimated normalization.', 'Apply', 'ReApply'})
+        case lower({'(Re-)apply (priorly) estimated normalization', 'Apply', 'ReApply'})
+            reApply = 1;
             ea_normalize_apply_normalization(options);
         case lower({'FNIRT (Andersson 2010)', 'FNIRT'})
             ea_normalize_fsl(options);
@@ -33,7 +35,9 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
     end
 
     % Dump method
-    ea_dumpmethod(options, 'norm');
+    if ~reApply
+        ea_dumpmethod(options, 'norm');
+    end
 
     % Compute tone-mapped normalized CT
     if options.modality == 2
