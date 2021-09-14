@@ -80,7 +80,6 @@ if nargin == 1
                 ofis{3} = ea_niigz([directory,'gl',options.prefs.fa2anat]);
             end
     end
-    [fis,ofis] = ea_appendgrid(options,fis,ofis,1);
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
