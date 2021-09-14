@@ -1,9 +1,5 @@
-function ea_ants_nonlinear(varargin)
+function ea_ants_nonlinear(fixedimage, movingimage, outputimage, weights, outputbase, options)
 % Wrapper for ANTs nonlinear registration
-
-fixedimage = varargin{1};
-movingimage = varargin{2};
-outputimage = varargin{3};
 
 if ischar(fixedimage)
     fixedimage = {fixedimage};
@@ -17,14 +13,17 @@ elseif ~iscell(movingimage)
     ea_error('Please supply variable fixedimage as either char or cellstring');
 end
 
-if nargin >= 4
-    weights = varargin{4};
-else
+if ~exist('weights', 'var') || isempty(weights)
     weights = ones(length(fixedimage),1);
 end
 
-if nargin >= 5
-    options = varargin{5};
+if ~exist('outputbase', 'var') || isempty(outputbase)
+    [directory, name, ~] = fileparts(outputimage);
+    outputbase = fullfile(directory, name);
+    clear directory name
+end
+
+if exist('options', 'var')
     options.prefs=ea_prefs; % refresh prefs in case called from recompute window with different settings.
 else
     umachine = load([ea_gethome, '.ea_prefs.mat'], 'machine');
@@ -49,17 +48,13 @@ end
 
 slabsupport = 1; % check for slabs in anat files and treat slabs differently (add additional SyN stage only in which slabs are being used).
 
-[outputdir, outputname, ~] = fileparts(outputimage);
-if outputdir
-    outputbase = [outputdir, filesep, outputname];
-else
-    outputbase = ['.', filesep, outputname];
-end
+is_segmentation = weights >= 3;
+is_slab = false(length(fixedimage),1);
 
 if slabsupport
     disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
     for mov = 1:length(movingimage)
-        if ~(weights(mov)>2.9) % segmentations
+        if ~is_segmentation(mov)
             mnii = ea_load_nii(movingimage{mov});
             mnii.img(abs(mnii.img)<0.0001)=nan;
             mnii.img=~isnan(mnii.img);
@@ -72,43 +67,35 @@ if slabsupport
                     ea_error(sprintf('Multispectral acquisitions are not co-registered & resliced to anchor-modality. Please run co-registration first!\n%s', movingimage{mov}));
                 end
             end
-            sums(mov) = sum(mnii.img(:));
+            sums(mov) = sum(mnii.img(:));            
         else
             sums(mov)=nan;
         end
     end
-    slabspresent = 0; % default no slabs present.
-
     if length(sums)>1 % multispectral warp
-        slabs = sums(1:end-1) < (sums(end)*0.85);
-        if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
-            slabmovingimage = ea_path_helper(movingimage(slabs)); % move slabs to new cell slabimage
-            slabfixedimage = ea_path_helper(fixedimage(slabs));
-            movingimage(slabs) = []; % remove slabs from movingimage
-            fixedimage(slabs) = []; % remove slabs from movingimage
-
-            % write out slab mask
-            slabspresent = 1;
-            mnii.dt = [4,0];
-            mnii.img = AllMX;
-
-            tmaskdir = fullfile(outputdir, 'tmp');
-            if ~exist(tmaskdir, 'dir')
-                mkdir(tmaskdir);
-            end
-
-            mnii.fname = [tmaskdir, filesep, 'slabmask.nii'];
-            ea_write_nii(mnii);
-            disp('Slabs found. Separating slabs to form an additional SyN stage.');
-        else
-            disp('No slabs found.');
-        end
+        is_slab = [sums(1:end-1) < (sums(end)*0.85) false];
     end
-else
-    slabspresent = 0;
-    impmasks = repmat({'nan'},length(movingimage),1);
 end
 
+slab_present = any(is_slab);
+
+if slab_present
+    mnii.dt = [4,0];
+    mnii.img = AllMX;
+    tmaskdir = fullfile(fileparts(movingimage{1}), 'tmp');
+    if ~exist(tmaskdir, 'dir')
+        mkdir(tmaskdir);
+    end
+    mnii.fname = fullfile(tmaskdir, 'slabmask.nii');
+    ea_write_nii(mnii);
+    disp('Slabs found. Separating slabs to form an additional SyN stage.');
+    slab_movingmask = mnii.fname;
+else
+    disp('No slabs found.');
+    slab_movingmask = '';
+end
+
+% TODO: bids refactor
 if options.prefs.machine.normsettings.ants_reinforcetargets
     if ~exist([options.root,options.patientname,filesep,'canat_combined.nii'],'file')
         ea_bet(movingimage{end},1,[options.root,options.patientname,filesep,'tmp.nii']);
@@ -140,12 +127,11 @@ ccpref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), ccns
 ccpref.metric='MeanSquares';
 ccpref.metricsuffix='';
 
-directory = fileparts(movingimage{end});
-if isempty(directory)
-    directory = ['.', filesep];
-else
-    directory = [directory, filesep];
-end
+metrics_prefix_suffix = cell(length(fixedimage),2);
+[metrics_prefix_suffix{~is_segmentation,1}] = deal(apref.metric);
+[metrics_prefix_suffix{~is_segmentation,2}] = deal(apref.metricsuffix);
+[metrics_prefix_suffix{is_segmentation,1}] = deal(ccpref.metric);
+[metrics_prefix_suffix{is_segmentation,2}] = deal(ccpref.metricsuffix);
 
 for fi = 1:length(fixedimage)
     fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
@@ -193,14 +179,11 @@ synsmoothingssigmas = apref.smoothingsigmas.syn;
 if options.prefs.machine.normsettings.ants_skullstripped
     fixedmask=ea_path_helper([ea_space,'brainmask.nii.gz']);
 else
-    if exist(ea_niigz([outputdir,filesep,'mask_template.nii']),'file')
-        fixedmask=ea_niigz([outputdir,filesep,'mask_template.nii']);
-    else
-        fixedmask='NULL';
-    end
+    fixedmask='NULL';
 end
 
-if exist(ea_niigz([outputdir,filesep,'mask_anatomy.nii']),'file')
+% TODO: bids refactor
+if false;exist(ea_niigz([outputdir,filesep,'mask_anatomy.nii']),'file')
     movingmask=ea_niigz([outputdir,filesep,'mask_anatomy.nii']);
 else
     movingmask='NULL';
@@ -213,9 +196,9 @@ rigidstage = [' --transform Rigid[0.25]' ... % bit faster gradient step (see htt
     ' --masks [',fixedmask,',',movingmask,']'];
 
 for fi = 1:length(fixedimage)
-    if ~(weights(fi)>=3) % fiducial or segmentation, do not include here
+    if ~is_segmentation(fi) && ~is_slab(fi)
         rigidstage = [rigidstage,...
-            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+            get_metric_command(fixedimage{fi}, movingimage{fi}, weights(fi), metrics_prefix_suffix(fi,:))];
     end
 end
 
@@ -226,9 +209,9 @@ affinestage = [' --transform Affine[0.15]'... % bit faster gradient step (see ht
     ' --masks [',fixedmask,',',movingmask,']'];
 
 for fi = 1:length(fixedimage)
-    if ~(weights(fi)>=3) % fiducial or segmentation, do not include here
+    if ~is_segmentation(fi) && ~is_slab(fi)
         affinestage = [affinestage,...
-            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+            get_metric_command(fixedimage{fi}, movingimage{fi}, weights(fi), metrics_prefix_suffix(fi,:))];
     end
 end
 
@@ -239,36 +222,26 @@ synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
     ' --masks [',fixedmask,',',movingmask,']'];
 
 for fi = 1:length(fixedimage)
-    if weights(fi)>=3 % fiducial or segmentation
-        if ~slabspresent % only add in fiducial / segmentation if no slabstage is added later.
-            synstage = [synstage,...
-                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
-        end
+    if is_segmentation(fi) && slab_present % slab stage with segmentation is added later
+        continue
     else
         synstage = [synstage,...
-            ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
+            get_metric_command(fixedimage{fi}, movingimage{fi}, weights(fi), metrics_prefix_suffix(fi,:))];
     end
 end
 
 % Add slab stage
-if slabspresent
+if slab_present
     slabstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
         ' --convergence ', synconvergence, ...
         ' --shrink-factors ', synshrinkfactors ...
         ' --smoothing-sigmas ', synsmoothingssigmas, ...
         ' --use-estimate-learning-rate-once ', ...
-        ' --masks [',fixedmask,',',ea_path_helper([tmaskdir,filesep,'slabmask.nii']),']'];
-    fixedimage = [fixedimage,slabfixedimage];
-    movingimage = [movingimage,slabmovingimage];
+        ' --masks [',fixedmask,',',slab_movingmask,']'];
 
     for fi = 1:length(fixedimage)
-        if weights(fi)>=3 % fiducial or segmentation
-            slabstage = [slabstage,...
-                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
-        else
-            slabstage = [slabstage,...
-                ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
-        end
+        slabstage = [slabstage,...
+            get_metric_command(fixedimage{fi}, movingimage{fi}, weights(fi), metrics_prefix_suffix(fi,:))];
     end
 else
     slabstage = '';
@@ -280,31 +253,21 @@ if  options.prefs.machine.normsettings.ants_scrf
     synmaskshrinkfactors = apref.shrinkfactors.scrf;
     synmasksmoothingssigmas = apref.smoothingsigmas.scrf;
 
-    if slabspresent
-        movingmask = ea_path_helper([tmaskdir,filesep,'slabmask.nii']);
-    else
-        movingmask = 'NULL';
-    end
-
     synmaskstage = [' --transform ',apref.antsmode,apref.antsmode_suffix, ...
         ' --convergence ', synmaskconvergence, ...
         ' --shrink-factors ', synmaskshrinkfactors,  ...
         ' --smoothing-sigmas ', synmasksmoothingssigmas, ...
         ' --use-estimate-learning-rate-once ', ...
-        ' --masks [',ea_path_helper([ea_space([],'subcortical'),'secondstepmask','.nii']),',',movingmask,']'];
+        ' --masks [',ea_path_helper([ea_space([],'subcortical'),'secondstepmask','.nii']),',',slab_movingmask,']'];
     for fi = 1:length(fixedimage)
-        if weights(fi)>=3 % fiducial or segmentation
-            synmaskstage = [synmaskstage,...
-                ' --metric ',ccpref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),ccpref.metricsuffix,']'];
-        else
-            synmaskstage = [synmaskstage,...
-                ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
-        end
+        synmaskstage = [synmaskstage,...
+            get_metric_command(fixedimage{fi}, movingimage{fi}, weights(fi), metrics_prefix_suffix(fi,:))];
     end
     
+    % TODO: bids refactor
     strucs={'atlas'}; %{'STN','GPi','GPe','RN'};
     scnt=1;
-    if options.prefs.machine.normsettings.ants_reinforcetargets
+    if false;options.prefs.machine.normsettings.ants_reinforcetargets
         for struc=1:length(strucs)
             disp(['Reinforcing ',strucs{scnt},' based on combined derived preop reconstruction']);
             synmaskstage = [synmaskstage,...
@@ -330,7 +293,6 @@ props.affinestage = affinestage;
 props.synstage = synstage;
 props.slabstage = slabstage;
 props.synmaskstage = synmaskstage;
-props.directory = directory;
 props.stagesep = options.prefs.machine.normsettings.ants_stagesep;
 
 % if exist([fileparts(movingimage{1}),filesep,'glanatComposite.h5'],'file')
@@ -345,3 +307,8 @@ ea_submit_ants_nonlinear(props);
 if exist('tmaskdir','var')
     ea_delete(tmaskdir);
 end
+
+
+function out = get_metric_command(fixed_image, moving_image, weight, metric_prefix_sufix)
+    out = [' --metric ' metric_prefix_sufix{1} '[' fixed_image ',' moving_image ',' num2str(weight) metric_prefix_sufix{2} ']'];
+ 

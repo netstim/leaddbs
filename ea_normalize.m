@@ -9,7 +9,7 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
     end
 
     reApply = 0;
-    % Do coregistration
+    % Do normalization
     switch lower(options.normalize.method)
         case lower({'ANTs (Avants 2008)', 'ANTs'})
             ea_normalize_ants(options);
