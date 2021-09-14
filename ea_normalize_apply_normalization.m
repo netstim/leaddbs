@@ -9,7 +9,7 @@ function varargout=ea_normalize_apply_normalization(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='(Re-)apply (priorly) estimated normalization.';
+    varargout{1}='(Re-)apply (priorly) estimated normalization';
     varargout{2}=1; % dummy output
     varargout{3}=0; % hassettings.
     varargout{4}=0; % dummy output
