@@ -77,6 +77,7 @@ end
 
 end
 
+%% preview tree on the right
 function update_preview_tree(ui, table_options, subjID)
 
 % update tree view as well
@@ -92,16 +93,25 @@ for sesIdx = 1:length(sessions)
     
     ses = sessions{sesIdx};
     
+    fname_list = {};
     for fileIdx = 1:length(dat)
         if strcmp(dat{fileIdx, 2}, ses) && ~strcmp(dat{fileIdx, 4}, 'skip') && ~strcmp(dat{fileIdx, 3}, 'skip')
             
             fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
             
-            if strcmp(ses, 'preop')
-                uitreenode(ui.previewtree_preop_anat, 'Text', fname);
+            if any(ismember(fname, fname_list))
+                nodetxt = ['(', fname, ')'];
             else
-                uitreenode(ui.previewtree_postop_anat, 'Text', fname);
+                nodetxt = fname;
             end
+            
+            if strcmp(ses, 'preop')
+                uitreenode(ui.previewtree_preop_anat, 'Text', nodetxt);
+            else
+                uitreenode(ui.previewtree_postop_anat, 'Text', nodetxt);
+            end
+            
+            fname_list{end+1} = fname;
         end
         
     end
@@ -110,7 +120,7 @@ end
 
 end
 
-
+%% preallocate table on the left
 function table_preallocated = preallocate_table(table, lookup_table)
 
 table_preallocated = table;
@@ -156,6 +166,7 @@ end
 
 end
 
+%% cancel button
 function cancel_button_function(uiapp)
 
  s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'Confirm close', ...
@@ -169,6 +180,7 @@ end
     
 end
 
+%% ok button
 function ok_button_function(uiapp, TT, table_options, dataset_folder, nii_folder, subjID)
 
 dat = cellfun(@char,table2cell(TT.Data),'uni',0);
@@ -247,7 +259,7 @@ end
 
 end
 
-
+%% preview images in the middle
 function preview_nii(ui, img)
 
 % update info area
@@ -299,6 +311,7 @@ set(ui.axes_sag, 'view', [90, -90]);
 
 end
 
+%% scroll images
 function scroll_nii(ui, event)
 
 hAxes = checkMousePointer(ui.UIFigure, ui.CenterPanel);
@@ -356,6 +369,7 @@ end
 
 end
 
+%% check where the mouse pointer is
 function h = checkMousePointer(fig, panel)
 
 oldUnits = get(0,'units');
