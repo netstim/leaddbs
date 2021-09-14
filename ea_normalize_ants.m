@@ -1,4 +1,4 @@
-function varargout=ea_normalize_ants(options)
+function varargout = ea_normalize_ants(options)
 % This is a function that normalizes both a copy of transversal and coronal
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -18,10 +18,10 @@ function varargout=ea_normalize_ants(options)
 
 
 if ischar(options) % return name of method.
-    varargout{1}='ANTs (Avants 2008)';
-    varargout{2}=1; % dummy output
-    varargout{3}=1; % hassettings.
-    varargout{4}=1; % is multispectral
+    varargout{1} = 'ANTs (Avants 2008)';
+    varargout{2} = 1; % dummy output
+    varargout{3} = 1; % hassettings.
+    varargout{4} = 1; % is multispectral
     return
 end
 
@@ -54,7 +54,7 @@ imagePresent = flip(struct2cell(options.subj.coreg.anat.preop)); % Flip the orde
 
 % The convergence criterion for the multivariate scenario is a slave to the
 % last metric you pass on the ANTs command line.
-for i=1:length(imagePresent)
+for i = 1:length(imagePresent)
     % Set template image
     template{cnt} = ea_matchTemplate(imagePresent{i}, spacedef);
 
@@ -85,12 +85,14 @@ if ~isempty(segmentations)
     end
 end
 
-ea_ants_nonlinear(template, moving, options.subj.norm.anat.preop.(options.subj.AnchorModality), weights, options);
+output_image = options.subj.norm.anat.preop.(options.subj.AnchorModality);
+output_transform_prefix = fullfile(fileparts(options.subj.norm.transform.forwardBaseName), 'antsout');
+
+ea_ants_nonlinear(template, moving, output_image, weights, output_transform_prefix, options);
 
 % Move transformation file
-[directory, fileName] = fileparts(options.subj.norm.anat.preop.(options.subj.AnchorModality));
-movefile([directory, filesep, fileName, 'Composite.nii.gz'], [options.subj.norm.transform.forwardBaseName, 'ants.nii.gz']);
-movefile([directory, filesep, fileName, 'InverseComposite.nii.gz'], [options.subj.norm.transform.inverseBaseName, 'ants.nii.gz']);
+movefile([output_transform_prefix 'Composite.nii.gz'], [options.subj.norm.transform.forwardBaseName, 'ants.nii.gz']);
+movefile([output_transform_prefix 'InverseComposite.nii.gz'], [options.subj.norm.transform.inverseBaseName, 'ants.nii.gz']);
 
 ea_apply_normalization(options);
 
@@ -104,7 +106,7 @@ if options.prefs.machine.normsettings.ants_scrf
         cits = [cits;{lcit}];
     end
 
-    ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
+    ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(imagePresent),') using the'...
         ' SyN registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/).',...
         ' Nonlinear deformation into template space was achieved in five stages: After two linear (rigid followed by affine) steps, ',...
         ' A nonlinear (whole brain) SyN-registration stage was followed by two nonlinear SyN-registrations that consecutively focused on the area of interest ',...
@@ -116,8 +118,9 @@ else
         cits = [cits;{lcit}];
     end
 
-    ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(anatpresent),') using the'...
+    ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',ea_cell2strlist(imagePresent),') using the'...
         ' SyN registration approach as implemented in Advanced Normalization Tools (Avants 2008; http://stnava.github.io/ANTs/).',...
         ' Nonlinear deformation into template space was achieved in three stages: After two linear (rigid followed by affine) steps, ',...
         ' a nonlinear (whole brain) SyN registration stage was added.'],cits);
 end
+
