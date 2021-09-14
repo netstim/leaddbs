@@ -1,20 +1,43 @@
 function ea_dataset_import(source_dir, dest_dir, method, dicomimport)
-% This function converts datasets from the sourcedata folder of your dataset into
-% a BIDS-conform rawdata folder and specified which files are to be used by lead-dbs
+
+% This function has two functionalities:
+%
+% (1) import an already BIDS compliant dataset (with rawdata available): 
+% screens the rawdata folder for appropriate pre- 
+% and postop files. If more than one file is found, a small window is
+% triggerd and the user has to select the file they want lead-dbs to use
+% A typical call would be ea_dataset_import(path_to_root_bids_dir, [], [], 0)
+% In this case, the function expects appropriate rawdata under path_to_roots_bids_dir 
+% No other input is necessary, as folders are defined by BIDS standards
+%
+% (2) Convert DICOM sourcedata into a BIDS compliant dataset and allow selection of files 
+% that should be used in lead-dbs. 
+% A typical call would be ea_dataset_import(path_to_input_dir, path_to_output_dir, 1, 1)
+%
+% input
+%   source_dir (mandatory, string or cell containing strings): 
+%                   (i) a string with the root folder to a BIDS dataset with sourcedata/sub-<label> folder
+%                   (ii) a cell with n strings to subject folders, each with a DICOM folder inside containing DICOM raw data
+%                        to be converted
+%   dest_dir (optional, string or cell containing strings):
+%                   (i) string to output folder that is a BIDS dataset rootfolder
+%                   (i) a cell with n strings to subject folders, must be the same dimension as source_dir in that case
+%   method (integer): DICOM -> Niftii conversion to be used (1 - dcm2niix, 2 - dicm2nii (Matlab), 3 - SPM)
+%   dicomimport (boolean integer): if dicomimport is to be triggered or not
 % __________________________________________________________________________________
-% Copyright (C) 20121 Charite University Medicine Berlin, Movement Disorders Unit
-% Johannes Achtzehn & Andreas Horn
+% Copyright (C) 2021 Charite University Medicine Berlin, Movement Disorders Unit
+% Johannes Achtzehn 
 
 preop_modalities = {'T1w', 'T2w', 'PDw', 'FGATIR'};                         % TODO: get this from prefs
 postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};               % TODO: get this from prefs
 
-if ~iscell(source_dir)
+if ~iscell(source_dir)   % if single string is passed, convert to cell
     source_dir = {source_dir};
 end
 
-if ~iscell(dest_dir) && ~isempty(dest_dir)
+if ~iscell(dest_dir) && ~isempty(dest_dir)  % if single string is passed, convert to cell
     dest_dir = {dest_dir};
-elseif isempty(dest_dir)
+elseif isempty(dest_dir)     % if dest_dir is emtpy, set it to source_dir
     dest_dir = source_dir;
 end
 
@@ -22,16 +45,14 @@ end
 if ~dicomimport
     
     % TODO: also use dicom_to_bids gui?
-    
-    % if source_dir is passed as cell, convert it
-    
+ 
     rawdata_dir = fullfile(source_dir{1}, 'rawdata');
     lead_derivatives_dir = fullfile(source_dir{1}, 'derivatives', 'leaddbs');
     
-    % before running, lets
+    % find all subjects within the BIDS dataset
     all_files = dir(fullfile(rawdata_dir, 'sub-*'));    % get subjects in dataset root
-    dirFlags = [all_files.isdir];                       % get a logical vector that tells which is a directory
-    subj_ids = all_files(dirFlags);                 % extract only those that are directories (fail-safe)
+    dirFlags = [all_files.isdir];                              % get a logical vector that tells which is a directory
+    subj_ids = all_files(dirFlags);                         % struct with subject names inside
     
     fprintf('Found %s subjects and importing directly from BIDS rawdata folder...\n', num2str(numel(subj_ids)))
     for subj_idx = 1:numel(subj_ids)
@@ -58,8 +79,8 @@ if ~dicomimport
     
     %% import from DICOM
 else
-    % check to see if this is already a BIDS root folder or just a
-    % patient folder, create subj_ids for next step
+    % 1. first check to see if this is already a BIDS root folder or just a
+    %     patient folder, create subj_ids for next step
     
     % case: dataset root is selected and sourcedata is present with
     % according subject folders below it
@@ -74,7 +95,7 @@ else
         % TODO: check whether there are actually .dcm files present in each
         % subject folder. If not, exclude that subject from the list
         
-    % case: one or more patients selected, but not in BIDS format
+    % case: one or more patients selected, but not in BIDS format (e.g. legacy dataset)
     else
         
         if length(dest_dir) == 1
@@ -93,6 +114,7 @@ else
                 dest_dir_subj = dest_dir{subj_idx};     % each subj has their own destination dir
             end
             
+            % get subjID from path
             pathparts = strsplit(source_dir{subj_idx}, filesep);
             subjID = char(pathparts(end));
             
@@ -109,6 +131,7 @@ else
                 mkdir(fullfile(dest_dir_subj, 'sourcedata', subjID));
             end
             
+            % copy DICOM data to sourcedata
             copyfile(fullfile(source_dir{subj_idx}, 'DICOM'), fullfile(dest_dir_subj, 'sourcedata', subjID));
             subj_ids(subj_idx).name =char(subjID);
             
@@ -129,16 +152,16 @@ else
 
     end
     
-    % now go through all of the subjects and convert DICOMS
+    % 2. once subj_ids is created, go through all of the subjects and convert DICOMS
     for subj_idx = 1:numel(subj_ids)
         
         fprintf('Importing DICOM data from subject %s...\n', subj_ids(subj_idx).name);
         
-        if iscell(sourcedata_dir)
+        if iscell(sourcedata_dir)   % multiple subjects
             sourcedata_dir_subj = sourcedata_dir{subj_idx};
             root_dataset_dir_subj = root_dataset_dir{subj_idx};
             lead_derivatives_dir_subj = lead_derivatives_dir{subj_idx};
-        else
+        else    % just one subject
             sourcedata_dir_subj = sourcedata_dir;
             root_dataset_dir_subj = root_dataset_dir;
             lead_derivatives_dir_subj = lead_derivatives_dir;
@@ -146,8 +169,7 @@ else
         dicom_dir = fullfile(sourcedata_dir_subj, subj_ids(subj_idx).name);
         
         h_wait = waitbar(0, 'Please wait while DICOM files are converted to niftii images...');
-        % convert DICOMS to .nii files and get list of files
-        niiFiles = ea_dcm_to_nii(method, dicom_dir);
+        niiFiles = ea_dcm_to_nii(method, dicom_dir);     % convert DICOMS to .nii files and get list of files
         close(h_wait);
        
         % call GUI to select which files should be loaded
