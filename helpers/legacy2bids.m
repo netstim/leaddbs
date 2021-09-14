@@ -8,7 +8,7 @@ for j=1:length(source)
         addpath(source{j})
     end
     if isempty(dest)
-        dest = source{j};
+        dest{j} = source{j};
         addpath(dest{j});
     end
 end
@@ -43,9 +43,9 @@ if exist('doDcmConv','var') && doDcmConv
 else
     subfolder_cell = {'sourcedata','rawdata','derivatives'};
 end
-pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','current_headmodel','headmodel'};
+pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','current_headmodel','headmodel','miscellaneous'};
 %mapping will allow quick reference of the files to move
-[brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel] = create_bids_mapping();
+[brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous] = create_bids_mapping();
 legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii'};
 bids_modalities = {'T1w.nii.gz','T2w.nii.gz','PD.nii.gz','CT.nii.gz','ax.nii.gz','cor.nii.gz','sag.nii.gz'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
@@ -61,7 +61,9 @@ rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 tic
 for patients = 1:length(source)
     source_patient = source{patients};
-    dest_patient = dest{patients};
+    if patients <= length(dest)
+        dest_patient = dest{patients};
+    end
     if isdicom
         dicom_patient = dicom_source{patients};
     end
@@ -77,7 +79,6 @@ for patients = 1:length(source)
         %and scrf). They will be handled a bit later.
         files_to_move{file_index} = file_names{j};
         file_index = file_index + 1;
-        
         %now let's deal with subfolders
     end
     
@@ -156,7 +157,6 @@ for patients = 1:length(source)
                                 if ~exist(fullfile(new_path,pipelines{folders},'log'),'dir')
                                     mkdir(fullfile(new_path,pipelines{folders},'log'));
                                 end
-                                which_file = files_to_move{files};
                                 if exist(fullfile(source_patient,files_to_move{files}),'file')
                                    if move
                                       movefile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{folders},'log',files_to_move{files}));
@@ -210,6 +210,7 @@ for patients = 1:length(source)
                             end
                         elseif strcmp(pipelines{folders},'preprocessing')
                             if ismember(files_to_move{files},preprocessing{:,1})
+                                which_file = files_to_move{files};
                                 %corresponding index of the new pat
                                 indx = cellfun(@(x)strcmp(x,files_to_move{files}),preprocessing{:,1});
                                 bids_name = preprocessing{1,2}{indx};
@@ -218,19 +219,21 @@ for patients = 1:length(source)
                         elseif strcmp(pipelines{folders},'prefs')
                             if ismember(files_to_move{files},prefs{:,1})
                                 %corresponding index of the new pat
-                                indx = cellfun(@(x)strcmp(x,files_to_move{files}),prefs{:,1});
-                                bids_name = prefs{1,2}{indx};
-                                move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,move)
+                                if strcmp(files_to_move{files},'ea_uiprefs.mat') 
+                                    copyfile(fullfile(source_patient,'ea_uiprefs.mat'),fullfile(new_path,pipelines{folders}));
+                                    movefile(fullfile(new_path,pipelines{folders},'ea_uiprefs.mat'),fullfile(new_path,pipelines{folders},[patient_name,'_','desc-','ea_uiprefs.mat']));
+                                end
                             end
                             %special case for log dir
                         elseif strcmp(pipelines{folders},'log')
-                            if exist(fullfile(source_patient,'ea_methods.txt'),'file')
-                                if move
-                                    movefile(fullfile(source_patient,'ea_methods.txt'),fullfile(new_path,pipelines{folders},'ea_methods.txt'));
-                                else
-                                    copyfile(fullfile(source_patient,'ea_methods.txt'),fullfile(new_path,pipelines{folders}));
-                                end
-                                movefile(fullfile(new_path,pipelines{folders},'ea_methods.txt'),fullfile(new_path,pipelines{folders},[patient_name,'_',files_to_move{files}]));
+                            if strcmp(files_to_move{files},'ea_methods.txt') && exist(fullfile(source_patient,'ea_methods.txt'),'file')
+                                copyfile(fullfile(source_patient,'ea_methods.txt'),fullfile(new_path,pipelines{folders}));
+                                movefile(fullfile(new_path,pipelines{folders},'ea_methods.txt'),fullfile(new_path,pipelines{folders},[patient_name,'_','desc-','ea_methods.txt']));
+                            end
+                            
+                        elseif strcmp(pipelines{folders},'miscellaneous')
+                            if ismember(files_to_move{files},miscellaneous{:,1})
+                               copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{folders}));
                             end
                         elseif strcmp(pipelines{folders},'stimulations')
                             %the stimulations folder should already be
