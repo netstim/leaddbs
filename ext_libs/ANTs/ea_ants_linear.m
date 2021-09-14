@@ -1,4 +1,4 @@
-function affinefile = ea_ants(varargin)
+function affinefile = ea_ants_linear(varargin)
 % Wrapper for ANTs linear registration
 
 fixedimage = varargin{1};
@@ -73,21 +73,21 @@ end
 imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 if any(imgsize>256)
-    rigidconvergence='[1000x500x250x100x0,1e-6,10]';
-    rigidshrinkfactors='12x8x4x2x1';
-    rigidsoomthingssigmas='4x3x2x1x1vox';
+    rigidconvergence = '[1000x500x250x100x0,1e-6,10]';
+    rigidshrinkfactors = '12x8x4x2x1';
+    rigidsoomthingssigmas = '4x3x2x1x1vox';
 
-    affineconvergence='[1000x500x250x100x0,1e-6,10]';
-    affineshrinkfactors='12x8x4x2x1';
-    affinesoomthingssigmas='4x3x2x1x1vox';
+    affineconvergence = '[1000x500x250x100x0,1e-6,10]';
+    affineshrinkfactors = '12x8x4x2x1';
+    affinesoomthingssigmas = '4x3x2x1x1vox';
 else
-    rigidconvergence='[1000x500x250x100x0,1e-6,10]';
-    rigidshrinkfactors='8x4x2x2x1';
-    rigidsoomthingssigmas='3x2x1x0x0vox';
+    rigidconvergence = '[1000x500x250x100x0,1e-6,10]';
+    rigidshrinkfactors = '8x4x2x2x1';
+    rigidsoomthingssigmas = '3x2x1x0x0vox';
 
-    affineconvergence='[1000x500x250x100x0,1e-6,10]';
-    affineshrinkfactors='8x4x2x2x1';
-    affinesoomthingssigmas='3x2x1x0x0vox';
+    affineconvergence = '[1000x500x250x100x0,1e-6,10]';
+    affineshrinkfactors = '8x4x2x2x1';
+    affinesoomthingssigmas = '3x2x1x0x0vox';
 end
 
 % name of the output transformation
@@ -101,7 +101,6 @@ if isempty(runs)
 else
     runs = str2double(runs(end).name(length(xfm)+1:end-4)); % suppose runs<10
 end
-
 
 if runs==0 % MI affine + rigid
     rigidstage = [' --transform Rigid[0.1]' ...
@@ -163,9 +162,9 @@ elseif runs>=3 % go directly to affine stage, try GC again
 end
 
 if usemasks % additional affine step based on mask is probably too much.
-    rigidstage=[rigidstage, ... % add nonexisting mask for this stage
+    rigidstage = [rigidstage, ... % add nonexisting mask for this stage
         ' --masks [nan,nan]'];
-    affinestage=[affinestage, ... % add nonexisting mask for this stage
+    affinestage = [affinestage, ... % add nonexisting mask for this stage
         ' --masks [nan,nan]'];
     mask1stage = [' --transform Affine[0.1]' ...
         ' --convergence ', rigidconvergence, ...
@@ -182,11 +181,11 @@ if usemasks % additional affine step based on mask is probably too much.
             ' --smoothing-sigmas ', affinesoomthingssigmas ...
             ' --masks [', ea_path_helper(msks{2}),',',ea_path_helper(msks{2}),']'];
     else
-        mask2stage='';
+        mask2stage = '';
     end
 else
-    mask1stage='';
-    mask2stage='';
+    mask1stage = '';
+    mask2stage = '';
 end
 
 ea_libs_helper;
@@ -220,9 +219,9 @@ end
 
 if ~isempty(otherfiles)
     for ofi=1:length(otherfiles)
-        [options.root,options.patientname]=fileparts(fileparts(otherfiles{ofi}));
-        options.root=[options.root,filesep];
-        options.prefs=ea_prefs(options.patientname);
+        [options.root,options.patientname] = fileparts(fileparts(otherfiles{ofi}));
+        options.root = [options.root,filesep];
+        options.prefs = ea_prefs(options.patientname);
 
         ea_ants_apply_transforms(options,otherfiles{ofi},otherfiles{ofi},0,fixedimage,[outputbase, '0GenericAffine.mat'],interp);
     end
