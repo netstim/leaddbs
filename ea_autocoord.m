@@ -155,8 +155,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             end
 
             if doit || strcmp(options.normalize.method,'ea_normalize_apply_normalization')
-                ea_dumpmethod(options, 'norm');
-
                 ea_normalize(options);
 
                 ea_gencheckregfigs(options, 'norm');
