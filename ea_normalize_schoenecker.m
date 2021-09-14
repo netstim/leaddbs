@@ -1,4 +1,4 @@
-function varargout=ea_normalize_schoenecker(options)
+function varargout = ea_normalize_schoenecker(options)
 % This is a function that normalizes both a copy of transversal and coronal
 % images into MNI-space. The goal was to make the procedure both robust and
 % automatic, but still, it must be said that normalization results should
@@ -25,13 +25,13 @@ if ischar(options) % return name of method.
     return
 end
 
-usefa=1;
+usefa = options.prefs.machine.normsettings.ants_usefa;
 usebrainmask=0;
 
 cnt=1;
 
 % TODO: Take care of FA
-spacedef = options.bids.spacedef; % get definition of current space we are working in
+spacedef = options.bids.spacedef;
 if usefa && spacedef.hasfa % first put in FA since least important (if both an FA template and an fa2anat file is available)
     if exist(options.prefs.fa2anat,'file') % recheck if now is present.
         disp('Including FA information for white-matter normalization.');
@@ -45,7 +45,7 @@ end
 
 if options.prefs.machine.normsettings.schoenecker_movim==1 % Based on pre-op images
     disp(['Pre-op ', strjoin(fieldnames(options.subj.coreg.anat.preop), ', '), ' images included for normalization']);
-    imagePresent = flip(struct2cell(options.subj.coreg.anat.preop));
+    imagePresent = flip(struct2cell(options.subj.coreg.anat.preop)); % Flip the order so anchor will be the last one
 elseif options.prefs.machine.normsettings.schoenecker_movim==2 % Based on post-op images
     switch options.modality
         case 1 % MRI
@@ -57,7 +57,8 @@ elseif options.prefs.machine.normsettings.schoenecker_movim==2 % Based on post-o
     end
 end
 
-% The convergence criterion for the multivariate scenario is a slave to the last metric you pass on the ANTs command line.
+% The convergence criterion for the multivariate scenario is a slave to the
+% last metric you pass on the ANTs command line.
 for i=1:length(imagePresent)
     % Set template image
     template{cnt} = ea_matchTemplate(imagePresent{i}, spacedef);
@@ -84,7 +85,7 @@ movefile([directory, filesep, fileName, 'Inverse0GenericAffine.mat'], [options.s
 
 ea_apply_normalization(options);
 
-% add methods dump:
+% Add methods dump
 [scit, lcit] = ea_getspacedefcit;
 cits={
     'Avants, B. B., Epstein, C. L., Grossman, M., & Gee, J. C. (2008). Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain. Medical Image Analysis, 12(1), 26?41. http://doi.org/10.1016/j.media.2007.06.004'
