@@ -58,24 +58,21 @@ end
 
 if slabsupport
     disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
-    
     for mov = 1:length(movingimage)
         if ~(weights(mov)>2.9) % segmentations
-
-                mnii = ea_load_nii(movingimage{mov});
-                mnii.img(abs(mnii.img)<0.0001)=nan;
-                mnii.img=~isnan(mnii.img);
-                if ~exist('AllMX','var')
-                    AllMX = mnii.img;
-                else
-                    try
-                        AllMX = AllMX.*mnii.img;
-                    catch
-                        ea_error(sprintf('Multispectral acquisitions are not co-registered & resliced to anchor-modality. Please run co-registration first!\n%s', movingimage{mov}));
-                    end
+            mnii = ea_load_nii(movingimage{mov});
+            mnii.img(abs(mnii.img)<0.0001)=nan;
+            mnii.img=~isnan(mnii.img);
+            if ~exist('AllMX','var')
+                AllMX = mnii.img;
+            else
+                try
+                    AllMX = AllMX.*mnii.img;
+                catch
+                    ea_error(sprintf('Multispectral acquisitions are not co-registered & resliced to anchor-modality. Please run co-registration first!\n%s', movingimage{mov}));
                 end
-                sums(mov) = sum(mnii.img(:));
-                
+            end
+            sums(mov) = sum(mnii.img(:));
         else
             sums(mov)=nan;
         end
@@ -83,9 +80,7 @@ if slabsupport
     slabspresent = 0; % default no slabs present.
 
     if length(sums)>1 % multispectral warp
-        
         slabs = sums(1:end-1) < (sums(end)*0.85);
-
         if any(slabs) % one image is smaller than 0.7% of last (dominant) image, a slab is prevalent.
             slabmovingimage = ea_path_helper(movingimage(slabs)); % move slabs to new cell slabimage
             slabfixedimage = ea_path_helper(fixedimage(slabs));
@@ -134,7 +129,6 @@ if options.prefs.machine.normsettings.ants_reinforcetargets
         end
     end
 end
-
 
 % Load preset parameter set
 apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), options.prefs.machine.normsettings);
@@ -212,7 +206,6 @@ else
     movingmask='NULL';
 end
 
-
 rigidstage = [' --transform Rigid[0.25]' ... % bit faster gradient step (see https://github.com/stnava/ANTs/wiki/Anatomy-of-an-antsRegistration-call)
     ' --convergence ', rigidconvergence, ...
     ' --shrink-factors ', rigidshrinkfactors, ...
@@ -245,7 +238,6 @@ synstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
     ' --smoothing-sigmas ', synsmoothingssigmas, ...
     ' --masks [',fixedmask,',',movingmask,']'];
 
-
 for fi = 1:length(fixedimage)
     if weights(fi)>=3 % fiducial or segmentation
         if ~slabspresent % only add in fiducial / segmentation if no slabstage is added later.
@@ -257,7 +249,8 @@ for fi = 1:length(fixedimage)
             ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
     end
 end
-% add slab stage
+
+% Add slab stage
 if slabspresent
     slabstage = [' --transform ',apref.antsmode,apref.antsmode_suffix...
         ' --convergence ', synconvergence, ...
@@ -292,6 +285,7 @@ if  options.prefs.machine.normsettings.ants_scrf
     else
         movingmask = 'NULL';
     end
+
     synmaskstage = [' --transform ',apref.antsmode,apref.antsmode_suffix, ...
         ' --convergence ', synmaskconvergence, ...
         ' --shrink-factors ', synmaskshrinkfactors,  ...
@@ -307,7 +301,6 @@ if  options.prefs.machine.normsettings.ants_scrf
                 ' --metric ',apref.metric,'[', fixedimage{fi}, ',', movingimage{fi}, ',',num2str(weights(fi)),apref.metricsuffix,']'];
         end
     end
-    
     
     strucs={'atlas'}; %{'STN','GPi','GPe','RN'};
     scnt=1;
@@ -339,12 +332,14 @@ props.slabstage = slabstage;
 props.synmaskstage = synmaskstage;
 props.directory = directory;
 props.stagesep = options.prefs.machine.normsettings.ants_stagesep;
+
 % if exist([fileparts(movingimage{1}),filesep,'glanatComposite.h5'],'file')
 %     % clean old deformation field. this is important for cases where ANTs
 %     % crashes and the user does not get an error back. Then, preexistant old transforms
 %     % will be considered as new ones.
 %     delete([fileparts(movingimage{1}),filesep,'glanatComposite.h5']);
 % end
+
 ea_submit_ants_nonlinear(props);
 
 if exist('tmaskdir','var')
