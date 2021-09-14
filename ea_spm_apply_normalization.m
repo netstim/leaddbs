@@ -23,6 +23,7 @@ for i=2:length(input)
         % gaussdim = gaussdim*2;
 
         [~, inputFileName] = ea_niifileparts(input{i});
+
         tempInputFile = strrep(input{i}, inputFileName, ['r', inputFileName]);
         if mean(gaussdim>1)
             resize_img(input{i}, gaussdim./2, nan(2,3), 0);

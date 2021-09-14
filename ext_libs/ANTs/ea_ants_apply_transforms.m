@@ -9,27 +9,27 @@ options = varargin{1};
 useinverse = 0;
 
 if nargin > 1 % manual application
-    fis = varargin{2};
-    ofis = varargin{3};
-    if ischar(fis)
-        fis = {fis};
+    input = varargin{2};
+    output = varargin{3};
+    if ischar(input)
+        input = {input};
     end
-    if ischar(ofis)
-        ofis = {ofis};
+    if ischar(output)
+        output = {output};
     end
     useinverse = varargin{4};
 end
 
 if nargin >= 5
-    refim = varargin{5};
+    ref = varargin{5};
 else
-    refim = ''; % use defaults
+    ref = ''; % use defaults
 end
 
 if nargin >= 6
-    transformfile = varargin{6};
+    transform = varargin{6};
 else
-    transformfile = ''; % use defaults
+    transform = ''; % use defaults
 end
 
 % Linear, NearestNeighbor, MultiLabel, Gaussian, BSpline
@@ -40,13 +40,13 @@ if nargin >= 7
     if ~ischar(interp)
         switch interp
             case 0
-                interp='NearestNeighbor';
+                interp = 'NearestNeighbor';
             case 1
-                interp='Linear';
+                interp = 'Linear';
             case -1
-                interp='GenericLabel';
+                interp = 'GenericLabel';
             otherwise
-                interp='BSpline';
+                interp = 'BSpline';
         end
     end
 else
@@ -76,50 +76,26 @@ else
     imageType = '0';
 end
 
-if ~isempty(options) && ~isempty(fieldnames(options))
-    directory = [options.root,options.patientname,filesep];
-    warpsuffix = ea_getantstransformext(directory);
-    [~,anatpresent]=ea_assignpretra(options);
-end
 if nargin == 1
-    switch options.modality
-        case 1 % MR
-            fis = {ea_niigz([directory,options.prefs.prenii_unnormalized])};
-            ofis = {ea_niigz([directory,options.prefs.gprenii])};
+    input{1} = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
+    output{1} = options.subj.norm.anat.preop.(options.subj.AnchorModality);
 
-
-            if isfield(options.prefs,'tranii_unnormalized')
-                fis = [fis,{ea_niigz([directory,options.prefs.tranii_unnormalized])}];
-                ofis = [ofis,{ea_niigz([directory,options.prefs.gtranii])}];
-            end
-
-            if isfield(options.prefs,'cornii_unnormalized')
-                fis = [fis,{ea_niigz([directory,options.prefs.cornii_unnormalized])}];
-                ofis = [ofis,{ea_niigz([directory,options.prefs.gcornii])}];
-            end
-
-            if isfield(options.prefs,'sagnii_unnormalized')
-                fis = [fis,{ea_niigz([directory,options.prefs.sagnii_unnormalized])}];
-                ofis = [ofis,{ea_niigz([directory,options.prefs.gsagnii])}];
-            end
-            if isfield(options.prefs,'fa2anat')
-                if exist([directory,options.prefs.fa2anat],'file')
-                    fis = [fis,{ea_niigz([directory,options.prefs.fa2anat])}];
-                    ofis = [ofis,{ea_niigz([directory,'gl',options.prefs.fa2anat])}];
-                end
-            end
-        case 2 % CT
-            fis{1} = ea_niigz([directory,options.prefs.prenii_unnormalized]);
-            fis{2} = ea_niigz([directory,options.prefs.ctnii_coregistered]);
-            ofis{1} = ea_niigz([directory,options.prefs.gprenii]);
-            ofis{2} = ea_niigz([directory,options.prefs.gctnii]);
-            if exist([directory,options.prefs.fa2anat],'file')
-                fis{3} = ea_niigz([directory,options.prefs.fa2anat]);
-                ofis{3} = ea_niigz([directory,'gl',options.prefs.fa2anat]);
-            end
+    json = loadjson(options.subj.norm.log.method);
+    if contains(json.method, 'affine')
+        % Three-step affine normalization (Schonecker 2009) used
+        warpSuffix = 'ants.mat';
+    else
+        warpSuffix = 'ants.nii.gz';
     end
 
-    [fis,ofis] = ea_appendgrid(options,fis,ofis,1);
+    switch options.modality
+        case 1 % MR
+            input = [input; struct2cell(options.subj.coreg.anat.postop)];
+            output = [output; struct2cell(options.subj.norm.anat.postop)];
+        case 2 % CT
+            input = [input; options.subj.coreg.anat.postop.CT];
+            output = [output; options.subj.norm.anat.postop.CT];
+    end
 end
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
@@ -129,9 +105,9 @@ else
     applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
 end
 
-for fi = 1:length(fis)
-    if ~exist(fis{fi},'file')   % skip if unnormalized file doesn't exist
-        fprintf('%s not found. Skip normalization...\n',fis{fi});
+for i = 1:length(input)
+    if ~exist(input{i},'file')   % skip if unnormalized file doesn't exist
+        fprintf('%s not found. Skip normalization...\n',input{i});
         continue
     end
 
@@ -140,45 +116,47 @@ for fi = 1:length(fis)
            ' --dimensionality ', imageDim, ...
            ' --input-image-type ', imageType, ...
            ' --float 1' ...
-           ' --input ',ea_path_helper(fis{fi}), ...
-           ' --output ',ea_path_helper(ofis{fi})];
+           ' --input ',ea_path_helper(input{i}), ...
+           ' --output ',ea_path_helper(output{i})];
 
     if useinverse
-        if isempty(refim)
-            refim = [directory,anatpresent{1}];
+        if isempty(ref)
+            ref = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
         end
 
-        if isempty(transformfile)
-            [~,glprebase] = fileparts(options.prefs.gprenii);
+        if isempty(transform)
             cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper([directory,glprebase,'InverseComposite',warpsuffix]),',0]'];
+                   ' --reference-image ',ea_path_helper(ref),...
+                   ' --transform [',ea_path_helper([options.subj.norm.transform.inverseBaseName, warpSuffix]),',0]'];
         else
             cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper(transformfile),',0]'];
+                   ' --reference-image ',ea_path_helper(ref),...
+                   ' --transform [',ea_path_helper(transform),',0]'];
         end
     else
-        if isempty(refim)
-            spacedef=ea_getspacedef;
-            refim = [ea_space,spacedef.templates{1},'.nii'];
+        if isempty(ref)
+            spacedef = ea_getspacedef;
+            ref = [ea_space, spacedef.templates{1}, '.nii'];
         end
 
-        if isempty(transformfile)
-            [~,glprebase] = fileparts(options.prefs.gprenii);
+        if isempty(transform)
             cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper([directory,glprebase,'Composite',warpsuffix]),',0]'];
+                   ' --reference-image ',ea_path_helper(ref),...
+                   ' --transform [',ea_path_helper([options.subj.norm.transform.forwardBaseName, warpSuffix]),',0]'];
         else
             cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(refim),...
-                   ' --transform [',ea_path_helper(transformfile),',0]'];
+                   ' --reference-image ',ea_path_helper(ref),...
+                   ' --transform [',ea_path_helper(transform),',0]'];
         end
     end
 
     if ~isempty(interp)
         cmd = [cmd, ' --interpolation ', interp];
     end
+
+    [~, inputFileName] = ea_niifileparts(input{i});
+    fprintf('\nNormalizing %s ...\n', inputFileName);
+
     if ~ispc
         system(['bash -c "', cmd, '"']);
     else
