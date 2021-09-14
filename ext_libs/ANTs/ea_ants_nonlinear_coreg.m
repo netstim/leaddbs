@@ -84,19 +84,19 @@ if normsettings.ants_numcores
     setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',normsettings.ants_numcores) % no num2str needed since stored as string.
 end
 
-props.ANTS = ANTS;
-props.histogrammatching = '0';
-props.winsorize = '0.005,0.995';
-props.initializationFeature = '1';  % 0 for geometric center, 1 for image intensities, 2 for origin of the image
-props.fixed = fixedimage;
-props.moving = movingimage;
-props.outputbase = outputbase;
-props.outputimage = outputimage;
-props.rigidstage = rigidstage;
-props.affinestage = affinestage;
-props.synstage = synstage;
-props.directory = directory;
-props.stagesep = 0;
-props.ants_usepreexisting = 3; % Overwrite
+cfg.ANTS = ANTS;
+cfg.histogrammatching = '0';
+cfg.winsorize = '0.005,0.995';
+cfg.initializationFeature = '1';  % 0 for geometric center, 1 for image intensities, 2 for origin of the image
+cfg.fixed = fixedimage;
+cfg.moving = movingimage;
+cfg.outputbase = outputbase;
+cfg.outputimage = outputimage;
+cfg.rigidstage = rigidstage;
+cfg.affinestage = affinestage;
+cfg.synstage = synstage;
+cfg.directory = directory;
+cfg.stagesep = 0;
+cfg.ants_usepreexisting = 3; % Overwrite
 
-ea_submit_ants_nonlinear(props);
+ea_ants_run(cfg);

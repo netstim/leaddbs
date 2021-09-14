@@ -1,17 +1,15 @@
-function ea_submit_ants_nonlinear(props)
+function ea_ants_run(cfg)
+% Proxy to run ANTs registration based on provided configurations
 
-if props.stagesep
+if cfg.stagesep
     warning('ANTs multi step is depreciated, using mono step instead');
 end
 
-ea_antsnl_monostep(props) % run all ANTs stages together
-
-function ea_antsnl_monostep(props)
-ants_transforms = dir(fullfile(fileparts(props.outputbase), '*_desc-ants.*'));
-refinewarp=0;
+ants_transforms = dir(fullfile(fileparts(cfg.outputbase), '*_desc-ants.*'));
+refinewarp = 0;
 if ~isempty(ants_transforms) % prior ANTs transform found.
-    if isfield(props, 'ants_usepreexisting')
-        ants_usepreexisting = props.ants_usepreexisting;
+    if isfield(cfg, 'ants_usepreexisting')
+        ants_usepreexisting = cfg.ants_usepreexisting;
     else
         prefs = ea_prefs;
         ants_usepreexisting = prefs.machine.normsettings.ants_usepreexisting;
@@ -26,91 +24,91 @@ if ~isempty(ants_transforms) % prior ANTs transform found.
     end
     switch lower(answ)
         case 'refine'
-            refinewarp=1;
-            props.rigidstage='';
-            props.affinestage='';
+            refinewarp = 1;
+            cfg.rigidstage = '';
+            cfg.affinestage = '';
         case 'start from scratch'
             % clean old deformation field. this is important for cases where ANTs
             % crashes and the user does not get an error back. Then, preexistant old transforms
             % will be considered as new ones.
             cellfun(@(x,y) ea_delete(fullfile(x,y)), {ants_transforms.folder}', {ants_transforms.name}')
-            refinewarp=0;
+            refinewarp = 0;
         otherwise
             return;
     end
 end
 
 % TODO: bids
-if false;exist(ea_niigz([props.directory,filesep,'mask_template.nii']),'file')
-    fixedinit=ea_niigz([props.directory,filesep,'mask_template.nii']);
+if false % exist(ea_niigz([props.directory,filesep,'mask_template.nii']),'file')
+    fixedinit = ea_niigz([cfg.directory,filesep,'mask_template.nii']);
 else
-    fixedinit=props.fixed;
+    fixedinit = cfg.fixed;
 end
 
 % TODO: bids
-if false;exist(ea_niigz([props.directory,filesep,'mask_anatomy.nii']),'file')
-    movinginit=ea_niigz([props.directory,filesep,'mask_anatomy.nii']);
+if false %exist(ea_niigz([props.directory,filesep,'mask_anatomy.nii']),'file')
+    movinginit = ea_niigz([cfg.directory,filesep,'mask_anatomy.nii']);
 else
-    movinginit=props.moving;
+    movinginit = cfg.moving;
 end
 
 if refinewarp
     writecomposite = '0';
     forward_idx = cellfun(@(x) ~isempty(regexp(x, '.*from-anchorNative.*', 'once')), {ants_transforms.name});
-    props.initial_transform = fullfile(ants_transforms(forward_idx).folder, ants_transforms(forward_idx).name);
-    props.initial_inv_transform = fullfile(ants_transforms(~forward_idx).folder, ants_transforms(~forward_idx).name);
-    initreg=[' --initial-moving-transform ', props.initial_transform];
+    cfg.initial_transform = fullfile(ants_transforms(forward_idx).folder, ants_transforms(forward_idx).name);
+    cfg.initial_inv_transform = fullfile(ants_transforms(~forward_idx).folder, ants_transforms(~forward_idx).name);
+    initreg = [' --initial-moving-transform ', cfg.initial_transform];
 else
     writecomposite = '1';
-    if isfield(props, 'initializationFeature') && ~isempty(props.initializationFeature)
-        initializationFeature = props.initializationFeature;
+    if isfield(cfg, 'initializationFeature') && ~isempty(cfg.initializationFeature)
+        initializationFeature = cfg.initializationFeature;
     else
-         % 0 for geometric center, 1 for image intensities, 2 for origin of the image
+        % 0 for geometric center, 1 for image intensities, 2 for origin of the image
         initializationFeature = '0';
     end
-    initreg=[' --initial-moving-transform [', fixedinit, ',', movinginit, ',', initializationFeature, ']'];
+    initreg = [' --initial-moving-transform [', fixedinit, ',', movinginit, ',', initializationFeature, ']'];
 end
 
-if isfield(props, 'histogrammatching') && ~isempty(props.histogrammatching)
-    histogrammatching = props.histogrammatching;
+if isfield(cfg, 'histogrammatching') && ~isempty(cfg.histogrammatching)
+    histogrammatching = cfg.histogrammatching;
 else
     histogrammatching = '0';
 end
 
-if isfield(props, 'winsorize') && ~isempty(props.winsorize)
-    winsorize = [' --winsorize-image-intensities [', props.winsorize, ']'];
+if isfield(cfg, 'winsorize') && ~isempty(cfg.winsorize)
+    winsorize = [' --winsorize-image-intensities [', cfg.winsorize, ']'];
 else
     winsorize = '';
 end
 
-cmd = [props.ANTS, ' --verbose 1', ...
+cmd = [cfg.ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
     ' --float 1',...
     ' --write-composite-transform ', writecomposite, ...
-    ' --output [',ea_path_helper(props.outputbase), ',', props.outputimage, ']', ...
+    ' --output [',ea_path_helper(cfg.outputbase), ',', cfg.outputimage, ']', ...
     ' --interpolation Linear', ...
     ' --use-histogram-matching ', histogrammatching, ...
     winsorize, ...
     initreg, ...
-    props.rigidstage, props.affinestage, props.synstage];
+    cfg.rigidstage, cfg.affinestage, cfg.synstage];
 
-if isfield(props, 'slabstage')
-    cmd = [cmd, props.slabstage];
+if isfield(cfg, 'slabstage')
+    cmd = [cmd, cfg.slabstage];
 end
 
-if isfield(props, 'synmaskstage')
-    cmd = [cmd, props.synmaskstage];
+if isfield(cfg, 'synmaskstage')
+    cmd = [cmd, cfg.synmaskstage];
 end
 
 % TODO: bidsify this name?
-fid = fopen(fullfile(fileparts(fileparts(props.outputimage)), 'log', 'ea_ants_command.txt'), 'a');
+fid = fopen(fullfile(fileparts(fileparts(cfg.outputimage)), 'log', 'ea_ants_command.txt'), 'a');
 fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
 fclose(fid);
 
 if ~ispc
-    status=system(['bash -c "', cmd, '"']);
+    status = system(['bash -c "', cmd, '"']);
 else
-    status=system(cmd);
+    status = system(cmd);
 end
 
 if status
@@ -118,10 +116,10 @@ if status
 end
 
 if refinewarp
-    ea_addrefinewarp(props);
+    ea_addrefinewarp(cfg);
 else
-    ea_conv_antswarps([props.outputbase, 'Composite.h5'], props.fixed, 'float');
-    ea_conv_antswarps([props.outputbase, 'InverseComposite.h5'], props.moving, 'float');
+    ea_conv_antswarps([cfg.outputbase, 'Composite.h5'], cfg.fixed, 'float');
+    ea_conv_antswarps([cfg.outputbase, 'InverseComposite.h5'], cfg.moving, 'float');
 end
 
 
@@ -139,9 +137,10 @@ ea_delete(props.initial_inv_transform);
 aux_warps = dir([props.outputbase '*Warp*']);
 cellfun(@(x,y) ea_delete(fullfile(x,y)), {aux_warps.folder}', {aux_warps.name}');
 
+
 function refine_with_nth_prefix(props, N)
 
-outputformat='.nii.gz';
+outputformat = '.nii.gz';
 
 applyTransforms = strrep(props.ANTS, 'antsRegistration', 'antsApplyTransforms');
 
