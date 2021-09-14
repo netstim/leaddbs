@@ -168,7 +168,7 @@ else
         end
         dicom_dir = fullfile(sourcedata_dir_subj, subj_ids(subj_idx).name);
         
-        h_wait = waitbar(0, 'Please wait while DICOM files are converted to niftii images...');
+        h_wait = waitbar(0, 'Please wait while DICOM files are converted to NIFTI images...');
         niiFiles = ea_dcm_to_nii(method, dicom_dir);     % convert DICOMS to .nii files and get list of files
         close(h_wait);
        
