@@ -52,7 +52,8 @@ is_segmentation = weights >= 3;
 is_slab = false(length(fixedimage),1);
 
 if slabsupport
-    disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
+    [~, anchorName] = ea_niifileparts(movingimage{end});
+    disp(['Checking for slabs among structural images (assuming dominant structural file ',anchorName,' is a whole-brain acquisition)...']);
     for mov = 1:length(movingimage)
         if ~is_segmentation(mov)
             mnii = ea_load_nii(movingimage{mov});
@@ -69,7 +70,7 @@ if slabsupport
             end
             sums(mov) = sum(mnii.img(:));            
         else
-            sums(mov)=nan;
+            sums(mov) = nan;
         end
     end
     if length(sums)>1 % multispectral warp
@@ -121,11 +122,11 @@ end
 apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), options.prefs.machine.normsettings);
 
 % use fixed global correlations for fiducial helpers or segmentations
-ccnsettg=options.prefs.machine.normsettings;
-ccnsettg.ants_metric='Global Correlation';
+ccnsettg = options.prefs.machine.normsettings;
+ccnsettg.ants_metric = 'Global Correlation';
 ccpref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), ccnsettg); 
-ccpref.metric='MeanSquares';
-ccpref.metricsuffix='';
+ccpref.metric = 'MeanSquares';
+ccpref.metricsuffix = '';
 
 metrics_prefix_suffix = cell(length(fixedimage),2);
 [metrics_prefix_suffix{~is_segmentation,1}] = deal(apref.metric);
@@ -149,20 +150,10 @@ outputimage = ea_path_helper(ea_niigz(outputimage));
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
-    HEADER = ea_path_helper([basedir, 'PrintHeader.exe']);
     ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
 else
-    HEADER = [basedir, 'PrintHeader.', computer('arch')];
     ANTS = [basedir, 'antsRegistration.', computer('arch')];
 end
-
-if ~ispc
-    [~, imgsize] = system(['bash -c "', HEADER, ' ',fixedimage{1}, ' 2"']);
-else
-    [~, imgsize] = system([HEADER, ' ', fixedimage{1}, ' 2']);
-end
-
-imgsize = cellfun(@(x) str2double(x),ea_strsplit(imgsize,'x'));
 
 rigidconvergence = apref.convergence.rigid;
 rigidshrinkfactors = apref.shrinkfactors.rigid;
@@ -177,16 +168,16 @@ synshrinkfactors = apref.shrinkfactors.syn;
 synsmoothingssigmas = apref.smoothingsigmas.syn;
 
 if options.prefs.machine.normsettings.ants_skullstripped
-    fixedmask=ea_path_helper([ea_space,'brainmask.nii.gz']);
+    fixedmask = ea_path_helper([ea_space,'brainmask.nii.gz']);
 else
-    fixedmask='NULL';
+    fixedmask = 'NULL';
 end
 
 % TODO: bids refactor
-if false;exist(ea_niigz([outputdir,filesep,'mask_anatomy.nii']),'file')
-    movingmask=ea_niigz([outputdir,filesep,'mask_anatomy.nii']);
+if false % exist(ea_niigz([outputdir,filesep,'mask_anatomy.nii']),'file')
+    movingmask = ea_niigz([outputdir,filesep,'mask_anatomy.nii']);
 else
-    movingmask='NULL';
+    movingmask = 'NULL';
 end
 
 rigidstage = [' --transform Rigid[0.25]' ... % bit faster gradient step (see https://github.com/stnava/ANTs/wiki/Anatomy-of-an-antsRegistration-call)
@@ -247,7 +238,7 @@ else
     slabstage = '';
 end
 
-% add subcortical refine stage:
+% Add subcortical refine stage
 if  options.prefs.machine.normsettings.ants_scrf
     synmaskconvergence = apref.convergence.scrf;
     synmaskshrinkfactors = apref.shrinkfactors.scrf;
@@ -265,8 +256,8 @@ if  options.prefs.machine.normsettings.ants_scrf
     end
     
     % TODO: bids refactor
-    strucs={'atlas'}; %{'STN','GPi','GPe','RN'};
-    scnt=1;
+    strucs = {'atlas'}; %{'STN','GPi','GPe','RN'};
+    scnt = 1;
     if false;options.prefs.machine.normsettings.ants_reinforcetargets
         for struc=1:length(strucs)
             disp(['Reinforcing ',strucs{scnt},' based on combined derived preop reconstruction']);
@@ -280,20 +271,20 @@ end
 
 ea_libs_helper
 if options.prefs.machine.normsettings.ants_numcores
-    setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',options.prefs.machine.normsettings.ants_numcores) % no num2str needed since stored as string.
+    setenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS',options.prefs.machine.normsettings.ants_numcores)
 end
 
-props.moving = movingimage{end};
-props.fixed = fixedimage{end};
-props.outputbase = outputbase;
-props.ANTS = ANTS;
-props.outputimage = outputimage;
-props.rigidstage = rigidstage;
-props.affinestage = affinestage;
-props.synstage = synstage;
-props.slabstage = slabstage;
-props.synmaskstage = synmaskstage;
-props.stagesep = options.prefs.machine.normsettings.ants_stagesep;
+cfg.moving = movingimage{end};
+cfg.fixed = fixedimage{end};
+cfg.outputbase = outputbase;
+cfg.ANTS = ANTS;
+cfg.outputimage = outputimage;
+cfg.rigidstage = rigidstage;
+cfg.affinestage = affinestage;
+cfg.synstage = synstage;
+cfg.slabstage = slabstage;
+cfg.synmaskstage = synmaskstage;
+cfg.stagesep = options.prefs.machine.normsettings.ants_stagesep;
 
 % if exist([fileparts(movingimage{1}),filesep,'glanatComposite.h5'],'file')
 %     % clean old deformation field. this is important for cases where ANTs
@@ -302,7 +293,7 @@ props.stagesep = options.prefs.machine.normsettings.ants_stagesep;
 %     delete([fileparts(movingimage{1}),filesep,'glanatComposite.h5']);
 % end
 
-ea_submit_ants_nonlinear(props);
+ea_ants_run(cfg);
 
 if exist('tmaskdir','var')
     ea_delete(tmaskdir);
