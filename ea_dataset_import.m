@@ -5,8 +5,8 @@ function ea_dataset_import(source_dir, dest_dir, method, dicomimport)
 % Copyright (C) 20121 Charite University Medicine Berlin, Movement Disorders Unit
 % Johannes Achtzehn & Andreas Horn
 
-preop_modalities = {'T1w', 'T2w', 'PDw', 'FGATIR'};                 % TODO: get this from prefs
-postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};            % TODO: get this from prefs
+preop_modalities = {'T1w', 'T2w', 'PDw', 'FGATIR'};                         % TODO: get this from prefs
+postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};               % TODO: get this from prefs
 
 if ~iscell(source_dir)
     source_dir = {source_dir};
@@ -145,9 +145,11 @@ else
         end
         dicom_dir = fullfile(sourcedata_dir_subj, subj_ids(subj_idx).name);
         
+        h_wait = waitbar(0, 'Please wait while DICOM files are converted to niftii images...');
         % convert DICOMS to .nii files and get list of files
         niiFiles = ea_dcm_to_nii(method, dicom_dir);
-        
+        close(h_wait);
+       
         % call GUI to select which files should be loaded
         anat_files_selected = ea_dicom_to_bids(subj_ids(subj_idx).name, niiFiles, root_dataset_dir_subj);
         
