@@ -52,46 +52,36 @@ function ea_subcorticalrefine_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_subcorticalrefine (see VARARGIN)
 
-options=varargin{1};
-directory=[options.root,options.patientname,filesep];
+options = varargin{1};
 
-setappdata(handles.scrf,'options',options);
-setappdata(handles.scrf,'directory',directory);
+setappdata(handles.scrf, 'options', options);
+handles.patientname.String = options.subj.subjId;
 
-[pth,patientname]=fileparts(fileparts(directory));
-handles.patientname.String=patientname;
-
-set(handles.scrf,'name',['Brainshift Correction: ',patientname]);
-options.init=1;
-ispresent=ea_refreshscrf(options,handles,directory);
+set(handles.scrf, 'name', ['Brainshift Correction: ', options.subj.subjId]);
+options.init = 1;
+ispresent = ea_refreshscrf(options,handles);
 
 switch options.scrf.mask
     case 1
-        handles.mask0.Value=1;
-        handles.mask1.Value=0;
-        handles.mask2.Value=0;
+        handles.mask0.Value = 1;
+        handles.mask1.Value = 0;
+        handles.mask2.Value = 0;
         if ~ispresent || isfield(options,'autobrainshift')
-            %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
-            %end
         end
     case 3
-        handles.mask0.Value=0;
-        handles.mask1.Value=0;
-        handles.mask2.Value=1;
+        handles.mask0.Value = 0;
+        handles.mask1.Value = 0;
+        handles.mask2.Value = 1;
         if ~ispresent || isfield(options,'autobrainshift')
-            %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
-            %end
         end
     otherwise % make default to run on mask1.
-        handles.mask0.Value=0;
-        handles.mask1.Value=1;
-        handles.mask2.Value=0;
+        handles.mask0.Value = 0;
+        handles.mask1.Value = 1;
+        handles.mask2.Value = 0;
         if ~ispresent || isfield(options,'autobrainshift')
-            %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
             ea_compute_scrf(handles)
-            %end
         end
 end
 
