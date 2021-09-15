@@ -323,7 +323,7 @@ info_str = sprintf('Size:\t\t\t[%s x %s x %s]\nPixel dimensions:\t[%.2f x %.2f x
 ui.infoArea.Value = {info_str};
 
 % update histgram
-h = histogram(ui.histogramAxes, img.img_thresholded);
+h = histogram(ui.histogramAxes, img.img_thresholded, 'EdgeAlpha', 0.1, 'FaceColor', '#2980b9');
 
 % plot images
 setappdata(ui.UIFigure, 'img', img);
