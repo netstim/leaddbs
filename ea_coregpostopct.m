@@ -14,10 +14,6 @@ if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
             ea_coregpostopct_ants(options);
         case lower({'ANTs (Avants 2008) multiple runs', 'ANTsMulti'})
             ea_coregpostopct_ants_multiple(options);
-        case lower({'ANTs (Avants 2008) multiple runs + subcortical refine', 'ANTsMultiScrf'})
-            ea_coregpostopct_ants_multiple_refine(options);
-        case lower({'ANTs (Avants 2008) + subcortical refine', 'ANTsScrf'})
-            ea_coregpostopct_ants_refine(options);
         case lower({'BRAINSFit (Johnson 2007)', 'BRAINSFit'})
             ea_coregpostopct_brainsfit(options);
         case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
