@@ -65,7 +65,7 @@ end
         end
         
         % normalize MNI brainmask to patient space
-        ea_apply_normalization_tofile(options, mask_file, mask_file_pt_space, directory, 1, 0, fullfile(directory, presentfiles{1}));
+        ea_apply_normalization_tofile(options, mask_file, mask_file_pt_space, 1, 0, fullfile(directory, presentfiles{1}));
         
         % now go through all the files and multiply them with the mask to
         % create brain extracted images
