@@ -13,7 +13,7 @@ movPath = ea_niifileparts(movingimage);
 movingimage_flirt = [movPath, '_flirt'];
 
 if isempty(dir([movingimage_flirt,'.nii*']))
-    affineInit = ea_flirt(fixedimage, movingimage, movingimage_flirt, 1);
+    affineInit = ea_flirt(fixedimage, movingimage, movingimage_flirt);
 
     % Move initial affine transformation to 'normalization/transformations'
     % folder in case BIDS dataset.
