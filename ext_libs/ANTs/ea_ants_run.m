@@ -34,17 +34,13 @@ if ~isempty(ants_transforms) % prior ANTs transform found.
     end
 end
 
-% TODO: bids
-if false % exist(ea_niigz([props.directory,filesep,'mask_template.nii']),'file')
-    fixedinit = ea_niigz([cfg.directory,filesep,'mask_template.nii']);
-else
+fixedinit = fullfile(fileparts(fileparts(fileparts(cfg.moving))), 'masks', 'mask_template.nii');
+if ~isfile(fixedinit)
     fixedinit = cfg.fixed;
 end
 
-% TODO: bids
-if false %exist(ea_niigz([props.directory,filesep,'mask_anatomy.nii']),'file')
-    movinginit = ea_niigz([cfg.directory,filesep,'mask_anatomy.nii']);
-else
+movinginit = fullfile(fileparts(fileparts(fileparts(cfg.moving))), 'masks', 'mask_anatomy.nii');
+if ~isfile(movinginit)
     movinginit = cfg.moving;
 end
 
@@ -96,7 +92,6 @@ if isfield(cfg, 'synmaskstage')
     cmd = [cmd, cfg.synmaskstage];
 end
 
-% TODO: bidsify this name?
 fid = fopen(fullfile(fileparts(fileparts(cfg.outputimage)), 'log', 'ea_ants_command.txt'), 'a');
 fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
 fclose(fid);
