@@ -64,8 +64,8 @@ ui.niiFileTable.Data = T_preallocated;
 ui.niiFileTable.ColumnEditable = [false true true, true];
 
 % set subject ID and file path
-ui.SubjectIDLabel.Text = subjID;
-ui.FilepathLabel.Text = dataset_folder;
+ui.SubjectIDLabel.Text = sprintf('Conversion for subject: %s',subjID);
+ui.FilepathLabel.Text = sprintf('BIDS root: %s',dataset_folder);
 
 % update preview tree and expand it
 ui.previewtree_subj.Text = subjID;
