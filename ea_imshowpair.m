@@ -624,7 +624,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             if ~exist(toload,'file')
                 from{1}=[directory,presentfiles{str2double(numkey)}];
                 to{1}=toload;
-                ea_apply_normalization_tofile(options,from,to,directory,0);
+                ea_apply_normalization_tofile(options,from,to,0);
             end
             pt=ea_load_nii(toload);
         else    % numkey is actually the full path of the image (used by dragndrop)
@@ -634,7 +634,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 [fpath, fname, fext] = ea_niifileparts(numkey);
                 from{1}=numkey;
                 to{1}=[fileparts(fpath), filesep, 'gl', fname, fext];
-                ea_apply_normalization_tofile(options,from,to,fileparts(fpath),0);
+                ea_apply_normalization_tofile(options,from,to,0);
                 pt=ea_load_nii(to{1});
             end
         end

@@ -23,7 +23,7 @@ if ~exist([options.root,options.patientname,filesep,'bgmsk.nii'],'file') || both
             btts='';
         end
         if exist([options.root,options.patientname,filesep,'glanat.nii'],'file') % if normalization has been done already, use inverse warp to map bgmask to anat_t1.nii
-            ea_apply_normalization_tofile(options,{[options.root,options.patientname,filesep,'bgmsk',btts,'.nii']},{[options.root,options.patientname,filesep,'bgmsk',btts,'.nii']},[options.root,options.patientname,filesep],1,0,[options.root,options.patientname,filesep,options.prefs.prenii]);
+            ea_apply_normalization_tofile(options,{[options.root,options.patientname,filesep,'bgmsk',btts,'.nii']},{[options.root,options.patientname,filesep,'bgmsk',btts,'.nii']},1,0,[options.root,options.patientname,filesep,options.prefs.prenii]);
         else % if not, use a simple linear coregistration
             ea_coregimages(options,[ea_space(options,'space'),options.primarytemplate,'.nii'],...
                 [options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],...
