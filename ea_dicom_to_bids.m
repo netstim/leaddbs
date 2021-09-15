@@ -40,6 +40,12 @@ h_wait = waitbar(0, 'Please wait while Niftii images are being loaded');
 for image_idx = 1:length(fnames)
     imgs{image_idx} = struct();
     [imgs{image_idx}.p, imgs{image_idx}.frm, imgs{image_idx}.rg, imgs{image_idx}.dim] = read_nii(fullfile(nii_folder, [fnames{image_idx}, '.nii.gz']), [], 0);
+    imgs{image_idx}.percentile = prctile(imgs{image_idx}.p.nii.img(:), 95, 'all');
+    imgs{image_idx}.img_thresholded = imgs{image_idx}.p.nii.img(:);
+    imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded > imgs{image_idx}.percentile) = nan;
+    imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded < median(imgs{image_idx}.p.nii.img(:))) = nan;
+    imgs{image_idx}.img_thresholded = imgs{image_idx}.img_thresholded(~isnan(imgs{image_idx}.img_thresholded));
+    
     waitbar(image_idx / length(fnames), h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(fnames)));
 end
 close(h_wait);
@@ -290,13 +296,17 @@ try
 catch
     time_and_date_pretty = 'N/A';
 end
-info_str = sprintf('Size: [%s x %s x %s]\nPixel dimensions: [%.2f x %.2f x %.2f]\nAcquistion date: %s\nIntensity range: [%.0f, %.0f]', ...
+info_str = sprintf('Size:\t\t\t[%s x %s x %s]\nPixel dimensions:\t[%.2f x %.2f x %.2f]\nAcquistion date:\t%s\nIntensity range:\t[%.0f, %.0f]\nHistogram range:\t[%.0f, %.0f]', ...
     num2str(img.dim(1)), num2str(img.dim(2)), num2str(img.dim(3)), ...
     img.p.pixdim(1), img.p.pixdim(2), img.p.pixdim(3), ...
     time_and_date_pretty, ...
-    min(img.p.nii.img(:)), max(img.p.nii.img(:)));
+    min(img.p.nii.img(:)), max(img.p.nii.img(:)), ...
+    min(img.img_thresholded), max(img.img_thresholded));
 
 ui.infoArea.Value = {info_str};
+
+% update histgram
+h = histogram(ui.histogramAxes, img.img_thresholded);
 
 % plot images
 setappdata(ui.UIFigure, 'img', img);
