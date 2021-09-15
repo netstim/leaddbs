@@ -10,10 +10,10 @@ handles.scrf.CurrentAxes = handles.scfax;
 imshow(refineslice);
 
 % calculate and display transform matrix:
-if exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
-    mat = ea_getscrfmat(directory);
+if isfile(options.subj.brainshift.transform.instore)
+    mat = ea_getscrfmat(options);
     handles.affmatrix.String = sprintf('% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  ',mat');
-    save([directory,'scrf',filesep,'scrf_instore_converted.mat'],'mat');
+    save(options.subj.brainshift.transform.converted, 'mat');
 end
 
 
