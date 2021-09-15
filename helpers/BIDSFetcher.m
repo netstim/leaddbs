@@ -479,9 +479,17 @@ classdef BIDSFetcher
 
             % Set moving post-op image used for brain shift correction
             modality = fieldnames(coregAnat.postop);
-            brainshiftAnat.moving = coregAnat.postop.(modality{1});
+            if contains(modality{1}, 'CT') && strcmp(obj.settings.scrf.tonemap, 'tp_')
+                % Use tone-mapped CT
+                brainshiftAnat.moving = coregAnat.postop.(modality{2});
+            else
+                % Use normal CT or MRI
+                brainshiftAnat.moving = coregAnat.postop.(modality{1});
+            end
             brainshiftAnat.moving = strrep(brainshiftAnat.moving, LeadDBSDirs.coregDir, LeadDBSDirs.brainshiftDir);
-            if ~strcmp(modality{1}, 'CT') % Post-op MRI detected
+
+            % Use MRI suffix and ignore real modality
+            if contains(modality{1}, 'MR') % Post-op MRI detected
                 parsed = parseBIDSFilePath(brainshiftAnat.moving);
                 brainshiftAnat.moving = strrep(brainshiftAnat.moving, ['_acq-', parsed.acq], '');
                 brainshiftAnat.moving = strrep(brainshiftAnat.moving, parsed.suffix, 'MRI');
