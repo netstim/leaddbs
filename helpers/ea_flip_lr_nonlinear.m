@@ -10,7 +10,7 @@ if ischar(from) % assume nifti file path
     end
     options=ea_getptopts(directory);
     ea_flip_lr(from,to);
-    ea_apply_normalization_tofile(options,{to},{to},directory,0,interp,to);
+    ea_apply_normalization_tofile(options,{to},{to},0,interp,to);
 else % assume coordinate list
     spacedef=ea_getspacedef;
     from(:,1)=-from(:,1);

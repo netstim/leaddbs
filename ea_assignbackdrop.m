@@ -215,6 +215,6 @@ else
     if ~exist([options.root,options.patientname,filesep,gfi],'file')
         to{1}=[options.root,options.patientname,filesep,gfi];
         from{1}=[options.root,options.patientname,filesep,['anat_',whichpreop,'.nii']];
-        ea_apply_normalization_tofile(options,from,to,[options.root,options.patientname,filesep],0);
+        ea_apply_normalization_tofile(options,from,to,0);
     end
 end

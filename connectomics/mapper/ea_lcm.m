@@ -162,7 +162,7 @@ for suffix=dowhich
                 if useNativeSeed
                     vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(1),options.lcm.seeds,filesep];
                     copyfile([ea_space,'bb.nii'], vatdir);
-                    ea_apply_normalization_tofile(options, {[vatdir,'bb.nii']},{[vatdir,'bb.nii']},options.uivatdirs{pt},1);
+                    ea_apply_normalization_tofile(options, {[vatdir,'bb.nii']},{[vatdir,'bb.nii']},1);
                     bbfile = [vatdir,'bb.nii'];
                 else
                     vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(0),options.lcm.seeds,filesep];
@@ -296,7 +296,7 @@ directory=[fileparts(fileparts(fileparts(fileparts(vatdir)))),filesep];
 options=ea_getptopts(directory,options);
 
 % warp VTA to native subject space (anchor modality):
-ea_apply_normalization_tofile(options,{[vatdir,'tmp_',sidec,'.nii']},{[vatdir,'tmp_',sidec,'.nii']},directory,1,1);
+ea_apply_normalization_tofile(options,{[vatdir,'tmp_',sidec,'.nii']},{[vatdir,'tmp_',sidec,'.nii']},1,1);
 
 % get peak coordinate for if empty image results when downsampling to
 % resting state file
