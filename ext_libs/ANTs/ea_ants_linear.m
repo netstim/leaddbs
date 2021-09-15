@@ -24,12 +24,12 @@ else
 end
 
 try
-    msks = varargin{6};
-    if isempty(msks)
+    masks = varargin{6};
+    if isempty(masks)
         usemasks = 0;
     else
-        if ~iscell(msks)
-            msks = {};
+        if ~iscell(masks)
+            masks = {};
             usemasks = 0;
         else
             usemasks = 1;
@@ -94,6 +94,8 @@ end
 [~, mov] = ea_niifileparts(movingimage);
 [~, fix] = ea_niifileparts(fixedimage);
 xfm = [mov, '2', fix, '_ants'];
+invxfm = [fix, '2', mov, '_ants'];
+
 % determine how many runs have been performed before
 runs = dir([volumedir, xfm, '*.mat']);
 if isempty(runs)
@@ -161,25 +163,25 @@ elseif runs>=3 % go directly to affine stage, try GC again
         ' --smoothing-sigmas ', affinesoomthingssigmas];
 end
 
-if usemasks % additional affine step based on mask is probably too much.
+if usemasks % Additional affine step based on mask is probably too much.
     rigidstage = [rigidstage, ... % add nonexisting mask for this stage
         ' --masks [nan,nan]'];
     affinestage = [affinestage, ... % add nonexisting mask for this stage
         ' --masks [nan,nan]'];
     mask1stage = [' --transform Affine[0.1]' ...
+        ' --metric MI[', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',1,32,Regular,0.25]', ...
         ' --convergence ', rigidconvergence, ...
         ' --shrink-factors ', rigidshrinkfactors, ...
         ' --smoothing-sigmas ', rigidsoomthingssigmas, ...
         ' --initial-moving-transform [', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',1]', ...
-        ' --metric MI[', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',1,32,Regular,0.25]', ...
-        ' --masks [', ea_path_helper(msks{1}),',',ea_path_helper(msks{1}),']'];
-    if length(msks)>1
+        ' --masks [', ea_path_helper(masks{1}),',',ea_path_helper(masks{1}),']'];
+    if length(masks)>1
         mask2stage = [' --transform Affine[0.1]'...
             ' --metric MI[', ea_path_helper(fixedimage), ',', ea_path_helper(movingimage), ',1,32,Regular,0.25]' ...
             ' --convergence ', affineconvergence, ...
             ' --shrink-factors ', affineshrinkfactors ...
             ' --smoothing-sigmas ', affinesoomthingssigmas ...
-            ' --masks [', ea_path_helper(msks{2}),',',ea_path_helper(msks{2}),']'];
+            ' --masks [', ea_path_helper(masks{2}),',',ea_path_helper(masks{2}),']'];
     else
         mask2stage = '';
     end
@@ -233,8 +235,6 @@ if ~writeoutmat
     affinefile = {};
 else
     movefile([outputbase, '0GenericAffine.mat'], [volumedir, xfm, num2str(runs+1), '.mat']);
-
-    invxfm = [fix, '2', mov, '_ants'];
     movefile([outputbase, 'Inverse0GenericAffine.mat'], [volumedir, invxfm, num2str(runs+1), '.mat']);
     affinefile = {[volumedir, xfm, num2str(runs+1), '.mat']
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
