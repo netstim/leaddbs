@@ -86,7 +86,7 @@ if useinverse % from template space to [untouched] achor space
             from{fi} = [path, fis{fi}];
         end
 
-        ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp);
+        ea_apply_normalization_tofile(options, from, to, useinverse, interp);
 
         if untouchedanchor % map from anchor to untouched anchor
             ea_coregimages(options,[options.root, options.patientname, filesep, presentfiles{1}],...
@@ -177,5 +177,5 @@ else % from [untouched] achor space to template space
         refim=ea_niigz([ea_space,options.primarytemplate]);
     end
 
-    ea_apply_normalization_tofile(options, from, to, [options.root, options.patientname, filesep], useinverse, interp, refim);
+    ea_apply_normalization_tofile(options, from, to, useinverse, interp, refim);
 end

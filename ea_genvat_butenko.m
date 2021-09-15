@@ -557,7 +557,6 @@ for side=0:1
                 ea_apply_normalization_tofile(options,...
                     [outputPath, filesep, 'vat_efield_', sideStr, '.nii'],... % from
                     [MNIoutputPath, filesep, 'vat_efield_', sideStr, '.nii'],... % to
-                    directory,... % patient directory
                     0, ... % useinverse is 0
                     1, ... % linear interpolation
                     [ea_space, options.primarytemplate, '.nii']);
@@ -574,7 +573,6 @@ for side=0:1
                 ea_apply_normalization_tofile(options,...
                     [outputPath, filesep, 'vat_', sideStr, '.nii'],... % from
                     [MNIoutputPath, filesep, 'vat_', sideStr, '.nii'],... % to
-                    directory,... % patient directory
                     0, ... % useinverse is 0
                     0, ... % nn interpolation
                     [ea_space, options.primarytemplate, '.nii']);
