@@ -35,7 +35,7 @@ if ~exist([directory,'mean',restfname,'_mask.nii'], 'file')
     % Warp mask from MNI space to patient T1 space
     ea_apply_normalization_tofile(ea_getptopts(directory),...
         {[directory,'temp.nii']},...
-        {[directory,'temp.nii']}, directory, 1, 0);
+        {[directory,'temp.nii']}, 1, 0);
 
     % Check coregistration method
     coregmethodsused = load([directory,'ea_coregmrmethod_applied.mat']);
@@ -335,7 +335,7 @@ for s=1:length(seedfile)
         ea_apply_normalization_tofile(options,...
             {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
             {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
-            directory,0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']));
+            0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']));
 
         nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
         nii.img(nii.img==0)=nan;

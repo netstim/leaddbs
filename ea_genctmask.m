@@ -5,7 +5,7 @@ gunzip([directory,'brainmask.nii.gz']);
 ea_delete([directory,'brainmask.nii.gz']);
 
                              % options,           from,                 to,                          directory,useinverse,interp,refim)
-ea_apply_normalization_tofile(options, {[directory,'brainmask.nii']}, {[directory,'wbrainmask.nii']}, directory, 1, 0);
+ea_apply_normalization_tofile(options, {[directory,'brainmask.nii']}, {[directory,'wbrainmask.nii']}, 1, 0);
 ea_delete([directory,'brainmask.nii']);
 
 load([directory,'ea_coregctmethod_applied.mat']) % determine last used coregmethod
