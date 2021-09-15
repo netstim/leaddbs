@@ -96,28 +96,6 @@ else
     slab_movingmask = '';
 end
 
-% TODO: bids refactor
-if options.prefs.machine.normsettings.ants_reinforcetargets
-    if ~exist([options.root,options.patientname,filesep,'canat_combined.nii'],'file')
-        ea_bet(movingimage{end},1,[options.root,options.patientname,filesep,'tmp.nii']);
-        if ~exist([options.root,options.patientname,filesep,'tmp'],'dir')
-            mkdir([options.root,options.patientname,filesep,'tmp']);
-        end
-        movefile([options.root,options.patientname,filesep,'tmp_mask.nii'],[options.root,options.patientname,filesep,'tmp',filesep,'brainmask.nii']);       
-        ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
-        if slabspresent
-            bmsk=ea_load_nii([options.root,options.patientname,filesep,'tmp',filesep,'brainmask.nii']);
-            smsk=ea_load_nii([options.root,options.patientname,filesep,'tmp',filesep,'slabmask.nii']);
-            smsk.img=smsk.img.*bmsk.img;
-            smsk.fname=[options.root,options.patientname,filesep,'tmp',filesep,'brainslabmask.nii'];
-            ea_write_nii(smsk);
-            ea_combinenii_generic(movingimage,[options.root,options.patientname,filesep,'tmp',filesep,'brainslabmask.nii'],[options.root,options.patientname,filesep,'canat_combined.nii']);
-        else
-            ea_combinenii_generic(movingimage,[options.root,options.patientname,filesep,'tmp',filesep,'brainmask.nii'],[options.root,options.patientname,filesep,'canat_combined.nii']); % should get a brainmask here somehow.
-        end
-    end
-end
-
 % Load preset parameter set
 apref = feval(eval(['@', options.prefs.machine.normsettings.ants_preset]), options.prefs.machine.normsettings);
 
@@ -254,17 +232,6 @@ if  options.prefs.machine.normsettings.ants_scrf
         synmaskstage = [synmaskstage,...
             get_metric_command(fixedimage{fi}, movingimage{fi}, weights(fi), metrics_prefix_suffix(fi,:))];
     end
-    
-    % TODO: bids refactor
-    strucs = {'atlas'}; %{'STN','GPi','GPe','RN'};
-    scnt = 1;
-    if false;options.prefs.machine.normsettings.ants_reinforcetargets
-        for struc=1:length(strucs)
-            disp(['Reinforcing ',strucs{scnt},' based on combined derived preop reconstruction']);
-            synmaskstage = [synmaskstage,...
-                ' --metric ',apref.metric,'[', ea_niigz([ea_space,strucs{struc}]), ',', ea_niigz([directory,'canat_combined']), ',',num2str(3),apref.metricsuffix,']'];
-        end
-    end
 else
     synmaskstage = '';
 end
@@ -284,14 +251,6 @@ cfg.affinestage = affinestage;
 cfg.synstage = synstage;
 cfg.slabstage = slabstage;
 cfg.synmaskstage = synmaskstage;
-cfg.stagesep = options.prefs.machine.normsettings.ants_stagesep;
-
-% if exist([fileparts(movingimage{1}),filesep,'glanatComposite.h5'],'file')
-%     % clean old deformation field. this is important for cases where ANTs
-%     % crashes and the user does not get an error back. Then, preexistant old transforms
-%     % will be considered as new ones.
-%     delete([fileparts(movingimage{1}),filesep,'glanatComposite.h5']);
-% end
 
 ea_ants_run(cfg);
 

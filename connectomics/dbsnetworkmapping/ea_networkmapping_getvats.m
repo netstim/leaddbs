@@ -391,7 +391,6 @@ options.prefs.machine.normsettings.fsl_skullstrip = 0;
 options.prefs.machine.normsettings.ants_usefa = 0;
 options.prefs.machine.normsettings.ants_skullstripped = 0;
 options.prefs.machine.normsettings.spmnewseg_scalereg = 1;
-options.prefs.machine.normsettings.ants_reinforcetargets = 0;
 options.prefs.machine.normsettings.ants_usepreexisting = 2;
 options.prefs.machine.space = 'MNI_ICBM_2009b_NLIN_ASYM';
 options.prefs.machine.togglestates.cutview = '3d';
