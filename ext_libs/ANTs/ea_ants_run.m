@@ -1,10 +1,6 @@
 function ea_ants_run(cfg)
 % Proxy to run ANTs registration based on provided configurations
 
-if cfg.stagesep
-    warning('ANTs multi step is depreciated, using mono step instead');
-end
-
 ants_transforms = dir(fullfile(fileparts(cfg.outputbase), '*_desc-ants.*'));
 refinewarp = 0;
 if ~isempty(ants_transforms) % prior ANTs transform found.
