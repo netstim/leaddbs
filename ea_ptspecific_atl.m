@@ -65,13 +65,13 @@ for atlas=1:length(atlases.names)
     end
 
     if atlases.types(atlas)==3
-        ea_apply_normalization_tofile(options,{ea_niigz([pratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
-        ea_apply_normalization_tofile(options,{ea_niigz([platlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([pratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},1,interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([platlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},1,interp);
 
         ea_crop_nii(ea_niigz([pratlf,atlases.names{atlas}]));
         ea_crop_nii(ea_niigz([platlf,atlases.names{atlas}]));
     else
-        ea_apply_normalization_tofile(options,{ea_niigz([patlf,atlases.names{atlas}])},{ea_niigz([patlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([patlf,atlases.names{atlas}])},{ea_niigz([patlf,atlases.names{atlas}])},1,interp);
         ea_crop_nii(ea_niigz([patlf,atlases.names{atlas}]));
     end
 end
