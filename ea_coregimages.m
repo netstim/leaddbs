@@ -1,4 +1,4 @@
-function affinefile = ea_coregimages(options,moving,fixed,ofile,otherfiles,writeoutmat,msks,interp)
+function affinefile = ea_coregimages(options,moving,fixed,ofile,otherfiles,writeoutmat,masks,interp)
 % Generic function for image coregistration
 %
 % 1. Moving image will keep untouched unless the output points to the same
@@ -23,8 +23,8 @@ end
 
 affinefile = {};
 
-if ~exist('msks','var') || isempty(msks)
-    msks={};
+if ~exist('masks','var') || isempty(masks)
+    masks={};
 end
 
 % Only effective for SPM, 4th degree BSpline by default.
@@ -37,7 +37,7 @@ switch lower(options.coregmr.method)
     case lower({'ANTs (Avants 2008)', 'ANTs'})
         affinefile = ea_ants_linear(fixed,...
             moving,...
-            ofile,writeoutmat,otherfiles,msks);
+            ofile,writeoutmat,otherfiles,masks);
     case lower({'BRAINSFit (Johnson 2007)', 'BRAINSFit'})
         affinefile = ea_brainsfit(fixed,...
             moving,...
