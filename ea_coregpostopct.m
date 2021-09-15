@@ -18,6 +18,8 @@ if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
             ea_coregpostopct_brainsfit(options);
         case lower({'FLIRT (Jenkinson 2001 & 2002)', 'FLIRT'})
             ea_coregpostopct_fsl(options);
+        case lower({'FLIRT (Jenkinson 2001 & 2002) multiple runs', 'FLIRTMulti'})
+            ea_coregpostopct_fsl_multiple(options);
         otherwise
             warning('Coregistrion method not recognized...');
             diary off;
