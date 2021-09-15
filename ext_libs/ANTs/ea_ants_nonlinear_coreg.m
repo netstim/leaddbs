@@ -96,7 +96,6 @@ cfg.rigidstage = rigidstage;
 cfg.affinestage = affinestage;
 cfg.synstage = synstage;
 cfg.directory = directory;
-cfg.stagesep = 0;
 cfg.ants_usepreexisting = 3; % Overwrite
 
 ea_ants_run(cfg);
