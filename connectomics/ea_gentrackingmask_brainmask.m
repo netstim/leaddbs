@@ -4,7 +4,7 @@ directory=[options.root,options.patientname,filesep];
 copyfile([ea_space,'brainmask.nii.gz'],[directory,'brainmask.nii.gz']);
 gunzip([directory,'brainmask.nii.gz']);
 ea_delete([directory,'brainmask.nii.gz']);
-ea_apply_normalization_tofile(options, {[directory,'brainmask.nii']}, {[directory,'brainmask.nii']}, directory, 1, 0);
+ea_apply_normalization_tofile(options, {[directory,'brainmask.nii']}, {[directory,'brainmask.nii']}, 1, 0);
 
 b0_anat = [ea_stripext(options.prefs.b0),'_',ea_stripext(options.prefs.prenii_unnormalized)];
 
