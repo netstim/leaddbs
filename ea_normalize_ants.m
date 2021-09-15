@@ -71,7 +71,7 @@ for i = 1:length(imagePresent)
 end
 
 % Add segmentations in case present (under coregistration/segmentations)
-segmentations = ea_regexpdir([options.subj.coregDir, filesep, 'segmentations'], '.*\.nii(\.gz)?$', 0);
+segmentations = ea_regexpdir([options.subj.subjDir, filesep, 'segmentations'], '.*\.nii(\.gz)?$', 0);
 if ~isempty(segmentations)
     for i=1:length(segmentations)
         [~, segName] = ea_niifileparts(segmentations{i});
