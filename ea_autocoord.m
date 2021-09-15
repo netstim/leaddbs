@@ -163,6 +163,14 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         end
     end
 
+    if options.scrf.do
+        if ~ea_reglocked(options, options.subj.brainshift.anat.scrf) || options.overwriteapproved
+            options.autobrainshift = 1;
+            ea_subcorticalrefine(options);
+            options = rmfield(options,'autobrainshift');
+        end
+    end
+
     if isfield(options,'gencheckreg') % Exception when calling from the Tools menu.
         if options.gencheckreg
             ea_gencheckregfigs(options); % generate checkreg figures
@@ -179,14 +187,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if options.atl.normalize % normalize patient's atlas-set.
         ea_norm_ptspecific_atl(options)
-    end
-
-    if options.scrf.do
-        if ~ea_reglocked(options,'brainshift') || options.overwriteapproved
-            options.autobrainshift=1;
-            ea_subcorticalrefine(options);
-            options=rmfield(options,'autobrainshift');
-        end
     end
 
     if options.normalize.check %check box "Check Results" in "Volume Registrations" panel

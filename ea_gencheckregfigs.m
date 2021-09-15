@@ -47,7 +47,7 @@ if ismember('brainshift', type)
 
     % Generate checkreg figure for standard image
     if isfile(options.subj.brainshift.anat.moving)
-        ea_gencheckregpair(options.subj.brainshift.anat.moving, anchorImage, options.subj.brainshift.checkreg.moving);
+        ea_gencheckregpair(options.subj.brainshift.anat.moving, anchorImage, options.subj.brainshift.checkreg.standard);
     end
 
     % Generate checkreg figure for brain shift corrected image
