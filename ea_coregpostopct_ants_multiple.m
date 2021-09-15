@@ -1,5 +1,5 @@
 function varargout=ea_coregpostopct_ants_multiple(options)
-% Wrapper function for ANTs multiple run registration of post-op CT
+% Wrapper function for ANTs (multiple-run) registration of post-op CT
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
