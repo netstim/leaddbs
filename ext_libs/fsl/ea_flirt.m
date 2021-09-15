@@ -8,7 +8,7 @@ outputimage = varargin{3};
 if nargin >= 4
     writeoutmat = varargin{4};
 else
-    writeoutmat = 0;
+    writeoutmat = 1;
 end
 
 if nargin >= 5
@@ -136,11 +136,6 @@ else
     system(convertxfmcmd);
 end
 
-if runs>0
-    ea_delete([volumedir, invxfm, num2str(runs), '.mat']);
-    ea_delete([volumedir, invxfm, num2str(runs), '.mat']);
-end
-
 if ~isempty(otherfiles)
     for fi = 1:numel(otherfiles)
         ea_fsl_apply_coregistration(fixedimage, otherfiles{fi}, otherfiles{fi}, ...
@@ -153,10 +148,8 @@ if ~writeoutmat
     ea_delete([volumedir, invxfm, num2str(runs+1), '.mat'])
     affinefile = {};
 else
-    movefile([volumedir, xfm, num2str(runs+1), '.mat'], [volumedir, xfm, '.mat'])
-    movefile([volumedir, invxfm, num2str(runs+1), '.mat'], [volumedir, xfm, '.mat'])
-    affinefile = {[volumedir, xfm, '.mat']
-                  [volumedir, invxfm, '.mat']};
+    affinefile = {[volumedir, xfm, num2str(runs+1), '.mat']
+                  [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
 % Clean up BET image when skullstripping is on
