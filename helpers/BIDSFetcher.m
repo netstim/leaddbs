@@ -90,6 +90,7 @@ classdef BIDSFetcher
             subj = obj.getLeadDBSDirs(subjId);
 
             % Set misc fields
+            subj.subjId = subjId;
             subj.uiprefs = obj.getPrefs(subjId, 'uiprefs', 'mat');
             subj.methodLog = obj.getLog(subjId, 'methods');
 
@@ -542,9 +543,9 @@ classdef BIDSFetcher
             checkregDir = fullfile(LeadDBSDirs.brainshiftDir, 'checkreg');
 
             % Before brain shift correction
-            brainshiftCheckreg.moving = strrep(brainshiftAnat.moving, anatDir, checkregDir);
-            parsed = parseBIDSFilePath(brainshiftCheckreg.moving);
-            brainshiftCheckreg.moving = strrep(brainshiftCheckreg.moving, parsed.ext, '.png');
+            brainshiftCheckreg.standard = strrep(brainshiftAnat.moving, anatDir, checkregDir);
+            parsed = parseBIDSFilePath(brainshiftCheckreg.standard);
+            brainshiftCheckreg.standard = strrep(brainshiftCheckreg.standard, parsed.ext, '.png');
 
             % After brain shift correction
             brainshiftCheckreg.scrf = strrep(brainshiftAnat.scrf, anatDir, checkregDir);
