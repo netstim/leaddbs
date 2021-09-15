@@ -23,7 +23,7 @@ if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converte
     d=load([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat']);
     reco.scrf=ea_applyscrfmat(d.mat,reco.native,options.sides);
 elseif exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file') % legacy
-    mat=ea_getscrfmat([options.root,options.patientname,filesep]);
+    mat=ea_getscrfmat(options);
     save([directory,'scrf',filesep,'scrf_converted.mat'],'mat');
     reco.scrf=ea_applyscrfmat(mat,reco.native,options.sides);
 else
