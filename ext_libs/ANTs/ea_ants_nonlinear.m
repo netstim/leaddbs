@@ -151,10 +151,8 @@ else
     fixedmask = 'NULL';
 end
 
-% TODO: bids refactor
-if false % exist(ea_niigz([outputdir,filesep,'mask_anatomy.nii']),'file')
-    movingmask = ea_niigz([outputdir,filesep,'mask_anatomy.nii']);
-else
+movingmask = fullfile(fileparts(fileparts(fileparts(movingimage{end}))), 'masks', 'mask_anatomy.nii');
+if ~isfile(movingmask)
     movingmask = 'NULL';
 end
 
