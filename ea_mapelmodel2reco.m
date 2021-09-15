@@ -54,7 +54,7 @@ if options.native && exist([options.root,options.patientname,filesep,'scrf',file
     Btest = B/mat';
     Xtest = mldivide(A,Btest);
 elseif options.native && exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf.mat'],'file') % legacy
-    mat = ea_getscrfmat([options.root,options.patientname,filesep]);
+    mat = ea_getscrfmat(options);
     save([directory,'scrf',filesep,'scrf_converted.mat'],'mat');
     Btest = B/mat';
     Xtest = mldivide(A,Btest);
