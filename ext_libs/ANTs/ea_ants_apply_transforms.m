@@ -76,17 +76,17 @@ else
     imageType = '0';
 end
 
+json = loadjson(options.subj.norm.log.method);
+if contains(json.method, 'affine')
+    % Three-step affine normalization (Schonecker 2009) used
+    warpSuffix = 'ants.mat';
+else
+    warpSuffix = 'ants.nii.gz';
+end
+
 if nargin == 1
     input{1} = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
     output{1} = options.subj.norm.anat.preop.(options.subj.AnchorModality);
-
-    json = loadjson(options.subj.norm.log.method);
-    if contains(json.method, 'affine')
-        % Three-step affine normalization (Schonecker 2009) used
-        warpSuffix = 'ants.mat';
-    else
-        warpSuffix = 'ants.nii.gz';
-    end
 
     switch options.modality
         case 1 % MR
