@@ -24,6 +24,8 @@ table_options = {'skip','skip', 'skip';
     'anat','preop', 'T1w';
     'anat','preop', 'T2w';
     'anat','preop', 'FGATIR';
+    'anat','preop', 'FLAIR';
+     'anat','preop', 'T2starw';
     'anat','preop', 'PDw';
     'anat','postop', 'CT';
     'anat','postop', 'ax_MR';
@@ -52,7 +54,7 @@ close(h_wait);
 
 Session = categorical(repmat({'skip'},[length(fnames),1]),unique(table_options(:,2)));
 Modality = categorical(repmat({'skip'},[length(fnames),1]), unique(table_options(:,3)));
-Type = categorical(repmat({'anat'},[length(fnames),1]),unique(table_options(:,1)));
+Type = categorical(repmat({'skip'},[length(fnames),1]),unique(table_options(:,1)));
 T = table(fnames, Session, Type, Modality);
 
 try
@@ -78,10 +80,10 @@ ui.previewtree_subj.Text = subjID;
 expand(ui.Tree, 'all');
 
 preview_nii(ui, imgs{1,1}); % set initial image to the first one
-update_preview_tree(ui, table_options, subjID) % call preview tree updater to get preallocated changes
+cell_change_callback(ui, table_options, subjID) % call preview tree updater to get preallocated changes
 
 ui.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(ui,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
-ui.niiFileTable.CellEditCallback = @(src,event) update_preview_tree(ui, table_options, subjID); % callback for cell change -> update ui tree on the right
+ui.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(ui, table_options, subjID); % callback for cell change -> update ui tree on the right
 
 ui.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(ui, event);     % callback for scrolling images
 
@@ -102,10 +104,10 @@ end
 
 end
 
-%% preview tree on the right
-function update_preview_tree(ui, table_options, subjID)
+%% cell change callback
+function cell_change_callback(ui, table_options, subjID)
 
-% update tree view as well
+% update tree view 
 dat = cellfun(@char,table2cell(ui.niiFileTable.Data),'uni',0);  % get data
 ui.previewtree_preop_anat.Children.delete;      % delete children
 ui.previewtree_postop_anat.Children.delete;    % delete children
@@ -125,7 +127,7 @@ for sesIdx = 1:length(sessions)
             fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
             
             if any(ismember(fname, fname_list))
-                nodetxt = ['(', fname, ')'];
+                nodetxt = ['>> ', fname, ' <<'];
             else
                 nodetxt = fname;
             end
@@ -139,9 +141,8 @@ for sesIdx = 1:length(sessions)
             fname_list{end+1} = fname;
         end
         
-    end
+    end 
 end
-
 
 end
 
@@ -234,7 +235,7 @@ for sesIdx = 1:length(sessions)
                 anat_files.(ses).(dat{fileIdx, 4}) = fname;                     % set output struct
             else % more than one file has been selected
                 sanity_check_passed = false;
-                s = uiconfirm(uiapp.UIFigure, sprintf('Multiple files have been detected for one or more modalities in session %s. Please select only one file per modality and session.', ses), ...
+                s = uiconfirm(uiapp.UIFigure, sprintf('Multiple files have been detected in session %s (look for >> filename << in preview window). Please select only one file per modality and session.', ses), ...
                     'Too many files detected', 'Options', {'OK'}, ...
                     'Icon', 'warning');
                 break
@@ -244,6 +245,22 @@ for sesIdx = 1:length(sessions)
     end
     
 end
+
+% TODO sanity check for invalid combinations of postop and preop images
+%  for fileIdx = 1:length(dat)
+%     
+%      for sesIdx = 1:length(sessions)
+%         ses = sessions{sesIdx};
+%          if strcmp(dat{fileIdx, 2}, ses)
+%              
+%              % get possible options for this session
+%              possible_options = table_options(strcmp(table_options(:,2), ses), 3);
+%              ui.niiFileTable.Modality.Data(fileIdx) = 'test'
+%          end
+%         
+%      end
+%       
+%  end
 
 % check if all images have been skipped
 if all(any(ismember(dat(:,2:4),'skip'),2))
