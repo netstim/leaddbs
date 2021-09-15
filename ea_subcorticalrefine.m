@@ -66,21 +66,21 @@ switch options.scrf.mask
         handles.mask0.Value = 1;
         handles.mask1.Value = 0;
         handles.mask2.Value = 0;
-        if ~ispresent || isfield(options,'autobrainshift')
+        if ~ispresent || isfield(options, 'autobrainshift')
             ea_compute_scrf(handles)
         end
     case 3
         handles.mask0.Value = 0;
         handles.mask1.Value = 0;
         handles.mask2.Value = 1;
-        if ~ispresent || isfield(options,'autobrainshift')
+        if ~ispresent || isfield(options, 'autobrainshift')
             ea_compute_scrf(handles)
         end
     otherwise % make default to run on mask1.
         handles.mask0.Value = 0;
         handles.mask1.Value = 1;
         handles.mask2.Value = 0;
-        if ~ispresent || isfield(options,'autobrainshift')
+        if ~ispresent || isfield(options, 'autobrainshift')
             ea_compute_scrf(handles)
         end
 end
