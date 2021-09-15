@@ -252,13 +252,6 @@ cfg.synstage = synstage;
 cfg.slabstage = slabstage;
 cfg.synmaskstage = synmaskstage;
 
-% if exist([fileparts(movingimage{1}),filesep,'glanatComposite.h5'],'file')
-%     % clean old deformation field. this is important for cases where ANTs
-%     % crashes and the user does not get an error back. Then, preexistant old transforms
-%     % will be considered as new ones.
-%     delete([fileparts(movingimage{1}),filesep,'glanatComposite.h5']);
-% end
-
 ea_ants_run(cfg);
 
 if exist('tmaskdir','var')
