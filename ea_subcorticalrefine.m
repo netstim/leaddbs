@@ -266,7 +266,6 @@ function back_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options=getappdata(handles.scrf,'options');
-options.normcoreg='coreg';
 ea_checkcoreg(options);
 closescrf(handles);
 
