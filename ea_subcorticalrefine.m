@@ -92,10 +92,10 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes ea_subcorticalrefine wait for user response (see UIRESUME)
-
 if options.d2.write || options.d3.write
     uiwait(handles.scrf);
 end
+
 if isfield(options,'autobrainshift') && options.autobrainshift
     saveandclose([], [], handles); % close figure again.
 end
@@ -149,23 +149,24 @@ function approvebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to approvebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-directory=getappdata(handles.scrf,'directory');
-if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
+
+options = getappdata(handles.scrf,'options');
+if ~isfile(options.subj.brainshift.transform.instore)
 	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
-    copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
-    if exist([directory,'ea_reconstruction.mat'],'file')
-        ea_recalc_reco([],[],directory);
+    copyfile(options.subj.brainshift.transform.converted, options.subj.brainshift.transform.scrf);
+    if isfile(options.subj.recon.recon)
+        ea_recalc_reco([],[],options.subj.subjDir);
     end
 
-    % add to protocol:
-    if exist([directory,'ea_coreg_approved.mat'],'file')
-        approved=load([directory,'ea_coreg_approved.mat']);
+    % Set approval status
+    if isfile(options.subj.brainshift.log.method)
+        json = loadjson(options.subj.brainshift.log.method);
+        json.approval = 1;
+        savejson('', json, options.subj.brainshift.log.method);
     end
-    approved.brainshift=1;
-    save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
-    ea_methods(directory,...
+    ea_methods(options,...
         ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
         'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
         ' (Horn & Kuehn 2005; SCR_002915; https://www.lead-dbs.org).'],...
@@ -179,16 +180,17 @@ function saveandclose(hObject, eventdata, handles)
 % hObject    handle to approvebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-directory=getappdata(handles.scrf,'directory');
-if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
+
+options=getappdata(handles.scrf,'options');
+if ~isfile(options.subj.brainshift.transform.instore)
 	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
-    copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
-    if exist([directory,'ea_reconstruction.mat'],'file')
-        ea_recalc_reco([],[],directory);
+    copyfile(options.subj.brainshift.transform.converted, options.subj.brainshift.transform.scrf);
+    if isfile(options.subj.recon.recon)
+        ea_recalc_reco([],[],options.subj.subjDir);
     end
 
-    ea_methods(directory,...
+    ea_methods(options,...
         ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
         'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
         ' (Horn & Kuehn 2005; SCR_002915; https://www.lead-dbs.org).'],...
@@ -202,19 +204,17 @@ function disapprovebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to disapprovebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-directory=getappdata(handles.scrf,'directory');
-if exist([directory,'scrf',filesep,'scrf.mat'],'file');
-    delete([directory,'scrf',filesep,'scrf.mat']);
-end
 
-if exist([directory,'scrf',filesep,'scrf_converted.mat'],'file');
-    delete([directory,'scrf',filesep,'scrf_converted.mat']);
-end
+options=getappdata(handles.scrf,'options');
+ea_delete(options.subj.brainshift.transform.converted);
+ea_delete(options.subj.brainshift.transform.scrf);
 
-% add to protocol:
-approved=load([directory,'ea_coreg_approved.mat']);
-approved.brainshift=0;
-save([directory,'ea_coreg_approved.mat'],'-struct','approved');
+% Set approval status
+if isfile(options.subj.brainshift.log.method)
+    json = loadjson(options.subj.brainshift.log.method);
+    json.approval = 0;
+    savejson('', json, options.subj.brainshift.log.method);
+end
 
 closescrf(handles);
 
@@ -276,4 +276,5 @@ function openpatientdir_Callback(hObject, eventdata, handles)
 % hObject    handle to openpatientdir (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_opendir(getappdata(handles.scrf,'directory'));
+options = getappdata(handles.scrf,'options');
+ea_opendir(options.subj.subjDir);
