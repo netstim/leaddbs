@@ -193,18 +193,24 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         ea_norm_ptspecific_atl(options)
     end
 
-    if options.normalize.check %check box "Check Results" in "Volume Registrations" panel
-        % export "control" niftis with wireframe of normal anatomy..
-        if ~exist([directory,'checkreg'],'file')
-            ea_gencheckregfigs(options); % generate checkreg figures if they not yet exist
+    if options.checkreg
+        % Export checkreg figures
+        if isempty(ea_regexpdir([options.subj.coregDir, filesep, 'checkreg'], '.*\.png'))
+            ea_gencheckregfigs(options, 'coreg');
         end
-        options.normcoreg='normalize';
+
+        if isempty(ea_regexpdir([options.subj.normDir, filesep, 'checkreg'], '.*\.png'))
+            ea_gencheckregfigs(options, 'norm');
+        end
+
         ea_checkcoreg(options);
-        drawnow; % this prevents the figure from changing the name with multiple subjects
+        drawnow; % Prevents the figure from changing the name with multiple subjects
+
         e=evalin('base', 'checkregempty');
         evalin('base',' clear checkregempty');
+
         if e && ~ea_reglocked(options,'brainshift') ...
-             && exist([directory,'scrf',filesep,'scrf_instore.mat'], 'file')
+             && isfile(options.subj.brainshift.transform.instore)
             ea_subcorticalrefine(options);
         end
     end
