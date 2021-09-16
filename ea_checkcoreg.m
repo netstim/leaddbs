@@ -52,70 +52,57 @@ function ea_checkcoreg_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_checkcoreg (see VARARGIN)
 
-options=varargin{1};
-%ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
-set(handles.leadfigure,'Name',[options.patientname, ': Check Coregistration']);
+options = varargin{1};
 
-directory=[options.root,options.patientname,filesep];
+handles.leadfigure.Name = [options.subj.subjId, ': Check Coregistration'];
+handles.patientname.String = options.subj.subjId;
 
-setappdata(handles.leadfigure,'options',options);
-setappdata(handles.leadfigure,'directory',directory);
+set(handles.normsettings, 'Visible', 'off');
 
-[~, patientname]=fileparts(fileparts(directory));
-handles.patientname.String=patientname;
+% Get coregistered pre-op images (except for the anchor image)
+preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
+preopCoregImages = preopCoregImages(2:end);
 
-set(handles.leadfigure,'Name',[patientname, ': MR-Coregistration']);
-
-presentfiles=ea_getall_coregcheck(options);
-anchor=presentfiles{1};
-presentfiles(1)=[];
-
-set(handles.normsettings,'Visible','off');
-if exist([directory,options.prefs.gprenii],'file') && ~ea_reglocked(options,options.prefs.gprenii)
-    presentfiles=[presentfiles;{[directory,options.prefs.gprenii]}];
+% Get coregistered post-op images
+if strcmp(options.subj.postopModality, 'CT')
+    postopCoregImages = options.subj.coreg.anat.postop.tonemapCT;
+else
+    postopCoregImages = struct2cell(options.subj.coreg.anat.postop);
 end
 
-% if exist([directory,options.prefs.gtranii],'file') && ~ea_reglocked(options,options.prefs.gtranii)
-%     presentfiles=[presentfiles;{[directory,options.prefs.gtranii]}];
-% end
-%
-% if exist([directory,options.prefs.tp_gctnii],'file') && ~ea_reglocked(options,options.prefs.tp_gctnii)
-%     presentfiles=[presentfiles;{[directory,options.prefs.tp_gctnii]}];
-% end
+% Get normalized pre-op anchor image
+preopNormImage = options.subj.norm.anat.preop.(options.subj.AnchorModality);
 
-% add coregchecks for b0 and rest:
-% get files with rs-fMRI data
+% Get brain shift corrected image
+brainshiftImage = options.subj.brainshift.anat.scrf;
+
+% List pf images for checkreg
+checkregImages = [preopCoregImages; postopCoregImages; preopNormImage; brainshiftImage];
+checkregImages = checkregImages(~cellfun(@(f) ea_reglocked(options, f), checkregImages));
+
+% fMRI
 restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_searchstring]);
-
-% get number of files with rs-fMRI data
 options.prefs.n_rest = numel(restfiles);
-
-b0restanchor=cell(length(presentfiles),1);
+b0restanchor = cell(length(checkregImages),1);
 for irest = 1:options.prefs.n_rest
-    % set filenames for this iteration
-    if exist([directory,'r',ea_stripext(restfiles(irest).name),'_',anchor],'file')
-        if ~ea_reglocked(options,['r',ea_stripext(restfiles(irest).name),'_',anchor])
-            presentfiles=[presentfiles;{['r',ea_stripext(restfiles(irest).name),'_',anchor]}];
-            b0restanchor{length(presentfiles)} = ['mean',restfiles(irest).name];
+    % Set filenames for this iteration
+    if exist(['r',ea_stripext(restfiles(irest).name),'_t1'],'file')
+        if ~ea_reglocked(options,['r',ea_stripext(restfiles(irest).name),'_t1'])
+            checkregImages = [checkregImages;{['r',ea_stripext(restfiles(irest).name),'_t1']}];
+            b0restanchor{length(checkregImages)} = ['mean',restfiles(irest).name];
         end
     end
 end
 
-% add b0:
-if exist([directory,ea_stripext(options.prefs.b0),'_',anchor],'file')
-    if ~ea_reglocked(options,[directory,ea_stripext(options.prefs.b0),'_',anchor])
-        presentfiles=[presentfiles;{[ea_stripext(options.prefs.b0),'_',anchor]}];
-        b0restanchor{length(presentfiles)} = [options.prefs.b0];
+% b0 image
+if exist([ea_stripext(options.prefs.b0),'_t1'],'file')
+    if ~ea_reglocked(options,[ea_stripext(options.prefs.b0),'_t1'])
+        checkregImages = [checkregImages;{[ea_stripext(options.prefs.b0),'_t1']}];
+        b0restanchor{length(checkregImages)} = [options.prefs.b0];
     end
 end
 
-if exist([directory,'scrf',filesep,'scrf_instore_converted.mat'],'file')
-    if ~ea_reglocked(options,'brainshift')
-        presentfiles=[presentfiles; {'brainshift'}];
-    end
-end
-
-if isempty(presentfiles)
+if isempty(checkregImages)
     evalin('base','checkregempty=1;');
     close(handles.leadfigure)
     return
@@ -124,14 +111,12 @@ else
 end
 
 %set(handles.previous,'visible','off'); set(handles.next,'visible','off');
-setappdata(handles.leadfigure,'presentfiles',presentfiles)
-setappdata(handles.leadfigure,'anchor',anchor)
-setappdata(handles.leadfigure,'b0restanchor',b0restanchor)
-setappdata(handles.leadfigure,'activevolume',1);
-setappdata(handles.leadfigure,'options',options);
+setappdata(handles.leadfigure, 'checkregImages', checkregImages)
+setappdata(handles.leadfigure, 'b0restanchor', b0restanchor)
+setappdata(handles.leadfigure, 'activevolume', 1);
+setappdata(handles.leadfigure, 'options', options);
 
-set(handles.checkatl,'Visible','off');
-
+set(handles.checkatl, 'Visible', 'off');
 
 ea_mrcview(handles);
 
@@ -142,20 +127,17 @@ if isvalid(hObject)
     % Update handles structure
     guidata(hObject, handles);
 end
-
 % UIWAIT makes ea_checkcoreg wait for user response (see UIRESUME)
 
 
 function ea_mrcview(handles)
 
-options=getappdata(handles.leadfigure,'options');
+options = getappdata(handles.leadfigure, 'options');
+checkregImages = getappdata(handles.leadfigure, 'checkregImages');
+activevolume = getappdata(handles.leadfigure, 'activevolume');
+b0restanchor = getappdata(handles.leadfigure, 'b0restanchor');
 
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
-activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=getappdata(handles.leadfigure,'directory');
-b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
-
-if activevolume==length(presentfiles)
+if activevolume==length(checkregImages)
     set(handles.disapprovebutn,'String','Disapprove & Close');
     set(handles.approvebutn,'String','Approve & Close');
 else
@@ -163,135 +145,136 @@ else
     set(handles.disapprovebutn,'String','Disapprove & Next >>');
 end
 
-currvol=presentfiles{activevolume};
-if strcmp(currvol,'brainshift')
+currvol = checkregImages{activevolume};
+
+% Brain shift corrected image
+if strcmp(currvol, options.subj.brainshift.anat.scrf)
     ea_subcorticalrefine(options);
     close(handles.leadfigure);
     return
 end
-switch ea_stripext(currvol)
-    case ea_stripext(options.prefs.gprenii)
-    % case ea_stripext({options.prefs.gprenii, options.prefs.gtranii, options.prefs.tp_gctnii})
+
+switch currvol
+    case options.subj.norm.anat.preop.(options.subj.AnchorModality)
         handles.checkatl.Visible='on';
-        [options] = ea_assignpretra(options);
-        anchor=[ea_space,options.primarytemplate,'.nii'];
-        set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
+        anchor = options.primarytemplate;
 
         ea_init_normpopup(handles, options.prefs.normalize.default, 'coregmrmethod');
 
-        if ~exist([directory,'ea_normmethod_applied.mat'],'file')
-            method='';
+        if ~isfile(options.subj.norm.log.method)
+            method = '';
         else
-            method=load([directory,'ea_normmethod_applied.mat']);
-            method=method.norm_method_applied{end};
+            json = loadjson(options.subj.norm.log.method);
+            method = json.method;
+            if ~isfield(json, 'approval') || ~isfield(json.approval, options.subj.AnchorModality)
+                json.approval.(options.subj.AnchorModality) = 0;
+                savejson('', json, options.subj.norm.log.method);
+            end
         end
 
-        set(handles.anchortxt,'String','Template (red wires):');
-        set(handles.coregresultstxt,'String','Normalization results');
-        set(handles.normsettings,'Visible','on');
-        set(handles.recomputebutn,'String','(Re-) compute normalization using...');
-        set(handles.coregmrmethod,'TooltipString','Choose a normalization method');
-        set(handles.leadfigure,'Name',[options.patientname, ': Check Normalization']);
-        set(gcf,'Name',[options.patientname, ': Check Normalization']);
-    otherwise
-        handles.checkatl.Visible='off';
-        anchor=getappdata(handles.leadfigure,'anchor');
-        set(handles.anchortxt,'String','Anchor modality (red wires):');
-        set(handles.coregresultstxt,'String','Coregistration results');
-        set(handles.leadfigure,'Name',[options.patientname, ': Check Coregistration']);
+        checkregFig = options.subj.norm.checkreg.preop.(options.subj.AnchorModality);
 
-            switch currvol
-                case ['tp_',options.prefs.ctnii_coregistered] % CT
-                    ea_init_coregctpopup(handles, options, 'coregmrmethod');
-                    if ~exist([directory,'ea_coregctmethod_applied.mat'],'file')
-                        method='';
-                    else
-                        method=load([directory,'ea_coregctmethod_applied.mat']);
-                        if iscell(method.coregct_method_applied)
-                            method=method.coregct_method_applied{end};
-                        else
-                            method=method.coregct_method_applied;
-                        end
-                    end
-                otherwise % MR
-                    ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
-                    if ~exist([directory,'ea_coregmrmethod_applied.mat'],'file')
-                        method='';
-                    else
-                        method=load([directory,'ea_coregmrmethod_applied.mat']);
-                        if isfield(method,ea_stripext(currvol)) % specific method used for this modality
-                            method=method.(ea_stripext(currvol));
-                        else
-                            if isfield(method,'coregmr_method_applied')
-                                if iscell(method.coregmr_method_applied)
-                                    method=method.coregmr_method_applied{end};
-                                else
-                                    method=method.coregmr_method_applied;
-                                end
-                            else
-                                method='';
-                            end
-                        end
-                    end
+        set(handles.anchortxt, 'String', 'Template (red wires):');
+        set(handles.coregresultstxt, 'String', 'Normalization results');
+        set(handles.normsettings, 'Visible', 'on');
+        set(handles.recomputebutn, 'String', '(Re-) compute normalization using...');
+        set(handles.coregmrmethod, 'TooltipString', 'Choose a normalization method');
+        set(handles.leadfigure, 'Name',[options.subj.subjId, ': Check Normalization']);
+    otherwise
+        handles.checkatl.Visible = 'off';
+        anchor = options.subj.AnchorModality;
+        set(handles.anchortxt, 'String', 'Anchor modality (red wires):');
+        set(handles.coregresultstxt, 'String', 'Coregistration results');
+        set(handles.leadfigure, 'Name', [options.subj.subjId, ': Check Coregistration']);
+
+        if strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
+            ea_init_coregctpopup(handles, options, 'coregmrmethod');
+
+            if ~isfile(options.subj.coreg.log.method)
+                method = '';
+            else
+                json = loadjson(options.subj.coreg.log.method);
+                method = json.method.CT;
+                if ~isfield(json, 'approval') || ~isfield(json.approval, 'CT')
+                    json.approval.CT = 0;
+                    savejson('', json, options.subj.coreg.log.method);
+                end
             end
 
-        set(handles.normsettings,'Visible','off');
-        set(handles.recomputebutn,'String','(Re-) compute coregistration using...');
-        set(handles.coregmrmethod,'TooltipString','Choose a coregistration method');
+            checkregFig = options.subj.coreg.checkreg.postop.tonemapCT;
+        else % MR
+            ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
+            if ~isfile(options.subj.coreg.log.method)
+                method = '';
+            else
+                json = loadjson(options.subj.coreg.log.method);
+                method = json.method.MRI;
+
+                % Extract image modality
+                if isempty(regexp(currvol, '_acq-(ax|cor|sag)_', 'once'))
+                    modality = regexp(currvol, '(?<=_)([a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
+                else % Keep plane label for post-op MRI
+                    modality = regexp(currvol, '(?<=_acq-)((ax|sag|cor)_[a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
+                end
+                if ~isfield(json, 'approval') || ~isfield(json.approval, modality)
+                    json.approval.(modality) = 0;
+                    savejson('', json, options.subj.coreg.log.method);
+                end
+
+                if contains(currvol, 'ses-preop')
+                    checkregFig = options.subj.coreg.checkreg.preop.(modality);
+                else
+                    checkregFig = options.subj.coreg.checkreg.postop.(modality);
+                end
+            end
+        end
+
+        set(handles.normsettings, 'Visible', 'off');
+        set(handles.recomputebutn, 'String', '(Re-) compute coregistration using...');
+        set(handles.coregmrmethod, 'TooltipString', 'Choose a coregistration method');
 end
 
-if ~exist([directory,'ea_coreg_approved.mat'],'file') % init
-    for vol=1:length(presentfiles)
-        approved.(ea_stripext(presentfiles{vol}))=0;
-    end
-    save([directory,'ea_coreg_approved.mat'],'-struct','approved');
-else
-    approved=load([directory,'ea_coreg_approved.mat']);
-end
-setappdata(handles.leadfigure,'method',method);
+setappdata(handles.leadfigure, 'method', method);
+
 
 % show result:
 if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 registration
-    set(handles.substitute,'Visible','on');
-    set(handles.substitute,'String',ea_getsubstitutes(options));
-    checkfig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(b0restanchor{activevolume}),'mean','r'),'_',method,'.png'];
+    set(handles.substitute, 'Visible', 'on');
+    set(handles.substitute, 'String', ea_getsubstitutes(options));
+    checkregFig = [directory, 'checkreg', filesep,ea_stripext(currvol),'2',strrep(ea_stripext(b0restanchor{activevolume}),'mean','r'),'_',method,'.png'];
     set(handles.anchormod,'String',ea_stripext(b0restanchor{activevolume}));
-
 else % normal anatomical 2 anatomical registration
-    set(handles.substitute,'Visible','off');
-    checkfig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',ea_stripext(anchor),'_',method,'.png'];
-    set(handles.anchormod,'String',ea_stripext(anchor));
-
+    set(handles.substitute, 'Visible', 'off');
+    set(handles.anchormod, 'String', anchor);
 end
 
-set(handles.imgfn,'Visible','on');
-set(handles.imgfn,'String',checkfig);
-set(handles.imgfn,'TooltipString',checkfig);
-switch ea_stripext(currvol)
-    case ea_stripext(options.prefs.gprenii)
-    % case ea_stripext({options.prefs.gprenii, options.prefs.gtranii, options.prefs.tp_gctnii})
-        options=ea_assignpretra(options);
-        anchorpath=[ea_space,options.primarytemplate];
+set(handles.imgfn, 'Visible', 'on');
+set(handles.imgfn, 'String', checkregFig);
+set(handles.imgfn, 'TooltipString', checkregFig);
+
+switch currvol
+    case options.subj.norm.anat.preop.(options.subj.AnchorModality)
+        anchorPath = [ea_space, options.primarytemplate];
     otherwise
         if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 registration
-            anchorpath=[directory,ea_stripext(b0restanchor{activevolume})];
+            anchorPath = ea_stripext(b0restanchor{activevolume});
         else
-            anchorpath=[directory,ea_stripext(anchor)];
+            anchorPath = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
         end
 end
 
-if ~exist(checkfig,'file')
-    ea_gencheckregpair([directory,ea_stripext(currvol)],anchorpath,checkfig);
+if ~isfile(checkregFig)
+    ea_gencheckregpair(currvol, anchorPath, checkregFig);
 
-    if ~exist(checkfig,'file')
-        checkfig=fullfile(ea_getearoot,'helpers','gui','coreg_msg.png');
-        set(handles.imgfn,'String','');
-        set(handles.imgfn,'Visible','off');
+    if ~isfile(checkregFig, 'file')
+        checkregFig = fullfile(ea_getearoot,'helpers','gui','coreg_msg.png');
+        set(handles.imgfn, 'String', '');
+        set(handles.imgfn, 'Visible', 'off');
     end
 end
 
-setappdata(handles.leadfigure,'anchorpath',anchorpath);
-im=imread(checkfig);
+setappdata(handles.leadfigure, 'anchorPath', anchorPath);
+im = imread(checkregFig);
 set(0,'CurrentFigure',handles.leadfigure);
 set(handles.leadfigure,'CurrentAxes',handles.standardax);
 
@@ -300,54 +283,19 @@ axis off
 axis equal
 
 % textfields:
-set(handles.depvolume,'String',[ea_stripext(currvol),'.nii']);
+set(handles.depvolume, 'String', [ea_stripext(currvol),'.nii']);
 
 
 function [pretras]=ea_getsubstitutes(options)
 
-[~,presentfiles]=ea_assignpretra(options);
-for fi=1:length(presentfiles)
+[~,checkregImages]=ea_assignpretra(options);
+for fi=1:length(checkregImages)
     if fi==1
-        pretras{fi}=['Use ',presentfiles{fi}, ' (default)'];
+        pretras{fi}=['Use ',checkregImages{fi}, ' (default)'];
     else
-        pretras{fi}=['Substitute moving file with ',presentfiles{fi}];
+        pretras{fi}=['Substitute moving file with ',checkregImages{fi}];
     end
 end
-
-
-function presentfiles=ea_getall_coregcheck(options)
-directory=[options.root,options.patientname,filesep];
-[options,presentfiles]=ea_assignpretra(options);
-% add postoperative volumes:
-switch options.modality
-    case 1 % MR
-        if exist([directory,options.prefs.tranii_unnormalized],'file')
-            presentfiles=[presentfiles;options.prefs.tranii_unnormalized];
-        end
-        if exist([directory,options.prefs.cornii_unnormalized],'file')
-            presentfiles=[presentfiles;options.prefs.cornii_unnormalized];
-        end
-        if exist([directory,options.prefs.sagnii_unnormalized],'file')
-            presentfiles=[presentfiles;options.prefs.sagnii_unnormalized];
-        end
-    case 2 % CT
-        if exist([directory,'tp_',options.prefs.ctnii_coregistered],'file')
-            presentfiles=[presentfiles;['tp_',options.prefs.ctnii_coregistered]];
-        end
-end
-
-if exist([directory,options.prefs.fa2anat],'file')
-    presentfiles=[presentfiles;options.prefs.fa2anat];
-end
-
-% now check if those are already approved (then don't show again):
-todel=[];
-for pf=1:length(presentfiles)
-    if ea_reglocked(options,presentfiles{pf})
-        todel=[todel,pf];
-    end
-end
-presentfiles(todel)=[];
 
 
 % --- Outputs from this function are returned to the command line.
@@ -393,13 +341,13 @@ ea_busyaction('on',handles.leadfigure,'coreg');
 
 options=getappdata(handles.leadfigure,'options');
 options.overwriteapproved=1;
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 anchor=getappdata(handles.leadfigure,'anchor');
 b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
 
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
-currvol=presentfiles{activevolume};
+currvol=checkregImages{activevolume};
 
 switch ea_stripext(currvol)
     case ea_stripext(options.prefs.gprenii)
@@ -434,7 +382,7 @@ switch ea_stripext(currvol)
         options.coregmr.method=get(handles.coregmrmethod,'String');
         options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
         ea_backuprestore([directory,options.prefs.fa]);
-        ea_coregimages(options,[directory,options.prefs.fa],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
+        ea_coregimages(options,[directory,options.prefs.fa],[directory,anchor],[directory,checkregImages{activevolume}],{},0);
         ea_dumpspecificmethod(handles,options.coregmr.method)
 
     otherwise % MR
@@ -453,7 +401,7 @@ switch ea_stripext(currvol)
 
             % in following line correct that useasanchor is the *moving*
             % image (since we're going from anchor to rest/b0.
-            ea_coregimages(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,presentfiles{activevolume}],{},1);
+            ea_coregimages(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,checkregImages{activevolume}],{},1);
             if ~isequal([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
                     [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)])
                 movefile([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
@@ -466,14 +414,14 @@ switch ea_stripext(currvol)
             end
             ea_cleandownstream(directory,thisrest);
         else  % other images
-            ea_backuprestore([directory,presentfiles{activevolume}]);
-            ea_coregimages(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
+            ea_backuprestore([directory,checkregImages{activevolume}]);
+            ea_coregimages(options,[directory,checkregImages{activevolume}],[directory,anchor],[directory,checkregImages{activevolume}],{},0);
         end
         ea_dumpspecificmethod(handles,options.coregmr.method)
 end
 
-% regenerate checkfig.
-anchorpath=getappdata(handles.leadfigure,'anchorpath');
+% regenerate checkregFig.
+anchorPath=getappdata(handles.leadfigure,'anchorPath');
 
 method=getappdata(handles.leadfigure,'method');
 
@@ -481,9 +429,9 @@ if ~isempty(b0restanchor{activevolume})
    anchor=b0restanchor{activevolume};
 end
 
-checkfig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(anchor),'mean','r'),'_',method,'.png'];
+checkregFig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(anchor),'mean','r'),'_',method,'.png'];
 
-ea_gencheckregpair([directory,ea_stripext(currvol)],anchorpath,checkfig);
+ea_gencheckregpair([directory,ea_stripext(currvol)],anchorPath,checkregFig);
 % now disapprove again since this new computation hasn't been approved yet.
 approved=load([directory,'ea_coreg_approved.mat']);
 approved.(ea_stripext(currvol))=0;
@@ -553,7 +501,7 @@ end
 function ea_dumpspecificmethod(handles,method)
 options=getappdata(handles.leadfigure,'options');
 
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
@@ -562,7 +510,7 @@ try
 catch
     m=struct;
 end
-m.(ea_stripext(presentfiles{activevolume}))=method;
+m.(ea_stripext(checkregImages{activevolume}))=method;
 save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 
 
@@ -574,10 +522,10 @@ function approvebutn_Callback(hObject, eventdata, handles)
 ea_busyaction('on',handles.leadfigure,'coreg');
 
 options=getappdata(handles.leadfigure,'options');
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
-currvol=presentfiles{activevolume};
+currvol=checkregImages{activevolume};
 
 switch ea_stripext(currvol)
     case ea_stripext(options.prefs.gprenii)
@@ -636,14 +584,14 @@ if strcmp(computer('arch'),'maci64')
     system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(currvol),'.nii'])]);
 end
 
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 
-if activevolume==length(presentfiles)
+if activevolume==length(checkregImages)
     close(handles.leadfigure); % make an exit
     return
-elseif (activevolume==length(presentfiles)-1 && strcmp(presentfiles{end},'brainshift'))
+elseif (activevolume==length(checkregImages)-1 && strcmp(checkregImages{end},'brainshift'))
     close(handles.leadfigure); % make an exit
     ea_subcorticalrefine(options);
     return
@@ -669,9 +617,9 @@ function coregmrmethod_Callback(hObject, eventdata, handles)
 
 options=getappdata(handles.leadfigure,'options');
 
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 activevolume=getappdata(handles.leadfigure,'activevolume');
-currvol=presentfiles{activevolume};
+currvol=checkregImages{activevolume};
 % init retry popup:
 if strcmp(currvol,'glanat.nii')
     ea_checknormsetting(handles, 'coregmrmethod');
@@ -697,27 +645,27 @@ function openviewer_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options=getappdata(handles.leadfigure,'options');
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
 
-currvol=presentfiles{activevolume};
+currvol=checkregImages{activevolume};
 switch ea_stripext(currvol)
     case ea_stripext(options.prefs.gprenii)
         ea_show_normalization(options);
     otherwise
-        presentfiles=getappdata(handles.leadfigure,'presentfiles');
+        checkregImages=getappdata(handles.leadfigure,'checkregImages');
         anchor=getappdata(handles.leadfigure,'anchor');
         activevolume=getappdata(handles.leadfigure,'activevolume');
         directory=getappdata(handles.leadfigure,'directory');
 
-        options.moving=[directory,presentfiles{activevolume}];
+        options.moving=[directory,checkregImages{activevolume}];
         if ~isempty(b0restanchor{activevolume})
             options.fixed=[directory,b0restanchor{activevolume}];
-            options.tag=[presentfiles{activevolume},' & ',b0restanchor{activevolume}];
+            options.tag=[checkregImages{activevolume},' & ',b0restanchor{activevolume}];
         else
             options.fixed=[directory,anchor];
-            options.tag=[presentfiles{activevolume},' & ',anchor];
+            options.tag=[checkregImages{activevolume},' & ',anchor];
         end
 
         ea_show_coregistration(options);
@@ -744,11 +692,11 @@ function disapprovebutn_Callback(hObject, eventdata, handles)
 ea_busyaction('on',handles.leadfigure,'coreg');
 
 options=getappdata(handles.leadfigure,'options');
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
 b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
-currvol=presentfiles{activevolume};
+currvol=checkregImages{activevolume};
 
 approved=load([directory,'ea_coreg_approved.mat']);
 
@@ -781,11 +729,11 @@ if ~isempty(b0restanchor{activevolume})
     ea_cleandownstream(directory,thisrest)
 end
 
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 
-if activevolume==length(presentfiles)
+if activevolume==length(checkregImages)
     close(handles.leadfigure); % make an exit
     return
 else
@@ -833,11 +781,11 @@ function refreshview_Callback(hObject, eventdata, handles)
 ea_busyaction('on',handles.leadfigure,'coreg');
 
 options=getappdata(handles.leadfigure,'options');
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 directory=getappdata(handles.leadfigure,'directory');
-currvol=presentfiles{activevolume};
-anchorpath=getappdata(handles.leadfigure,'anchorpath');
+currvol=checkregImages{activevolume};
+anchorPath=getappdata(handles.leadfigure,'anchorPath');
 method=getappdata(handles.leadfigure,'method');
 
 anchor=getappdata(handles.leadfigure,'anchor');
@@ -853,9 +801,9 @@ if ~isempty(b0restanchor{activevolume})
    anchor=b0restanchor{activevolume};
 end
 
-checkfig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(anchor),'mean','r'),'_',method,'.png'];
-ea_delete(checkfig);
-ea_gencheckregpair([directory,ea_stripext(currvol)],anchorpath,checkfig);
+checkregFig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(anchor),'mean','r'),'_',method,'.png'];
+ea_delete(checkregFig);
+ea_gencheckregpair([directory,ea_stripext(currvol)],anchorPath,checkregFig);
 ea_mrcview(handles); % refresh
 title = get(handles.leadfigure, 'Name');    % Fix title
 ea_busyaction('off',handles.leadfigure,'coreg');
@@ -868,7 +816,7 @@ function checkatl_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options=getappdata(handles.leadfigure,'options');
-presentfiles=getappdata(handles.leadfigure,'presentfiles');
+checkregImages=getappdata(handles.leadfigure,'checkregImages');
 directory=getappdata(handles.leadfigure,'directory');
 
 ea_checkstructures(options);
