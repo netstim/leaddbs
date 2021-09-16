@@ -16,6 +16,8 @@ switch type
         log.method.MRI = options.coregmr.method;
     case 'norm'
         log.method = options.normalize.method;
+    case 'brainshift'
+        log.method = options.scrf.mask;
 end
 
 % Save method log
