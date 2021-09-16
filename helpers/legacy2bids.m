@@ -24,9 +24,6 @@ if exist('dest','var')
        end
    end
 end
-
-
-
 %if you have dicom files and have not provided a dicom source directory
 %(this can also just be source directory,so refactor this) then throw
 %an error
@@ -154,7 +151,7 @@ for patients = 1:length(source)
                             mkdir(fullfile(new_path,pipelines{2},'log'));
                         end
                         if exist(fullfile(source_patient,files_to_move{files}),'file')
-                            copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{1},'log'));
+                            copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{2},'log'));
                         end
                     elseif ismember(files_to_move{files},brainshift{:,1})
                         which_file = files_to_move{files};
@@ -251,11 +248,12 @@ for patients = 1:length(source)
                                     movefile(fullfile(new_path,pipelines{folders},headmodel_files{headmodel_file}),fullfile(new_path,pipelines{folders},[patient_name,'_',headmodel{1,2}{indx}]));
                                 end
                             end
+                        
+                            curr_pipeline = 'current_headmodel';
+                            new_path = fullfile(new_path,'headmodel');
+                            [mni_files,native_files] = vta_walkpath(new_path,curr_pipeline);
+                            move_mni2bids(mni_files,native_files,'',headmodel,curr_pipeline,patient_name)
                         end
-                        curr_pipeline = 'current_headmodel';
-                        new_path = fullfile(new_path,'headmodel');
-                        [mni_files,native_files] = vta_walkpath(new_path,curr_pipeline);
-                        move_mni2bids(mni_files,native_files,'',headmodel,curr_pipeline,patient_name)
                     end
                 end
             otherwise
@@ -304,10 +302,13 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
     toconvert = {'ea_coreg_approved.mat','ea_coregmrmethod_applied.mat','ea_normmethod_applied.mat','ea_brainshiftmethod_applied.mat','ea_methods.txt'};
     if strcmp(which_pipeline,'brainshift')
         source_patient_path = fullfile(source_patient_path,'scrf');
+    elseif strcmp(which_pipeline,'coregistration')
+        brainshift_log_dir = fullfile(new_path,'brainshift','log');
     end
         
     anat_dir = fullfile(new_path,which_pipeline,'anat');
     log_dir = fullfile(new_path,which_pipeline,'log');
+    
     checkreg_dir = fullfile(new_path,which_pipeline,'checkreg');    
     transformations_dir = fullfile(new_path,which_pipeline,'transformations');
     if endsWith(which_file,'.nii')
@@ -354,6 +355,20 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
             mkdir(log_dir)
         end
         convert2json = 1;
+        if strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_methods.txt'))
+            bids_name = 'desc-brainshiftmethod.txt';
+        elseif strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_coreg_approved.mat'))
+            coreg_mat = load(fullfile(source_patient_path,'ea_coreg_approved.mat'));
+            if isfield(coreg_mat,'brainshift')
+                brainshift_method.brainshift = coreg_mat.brainshift;
+                if ~exist(brainshift_log_dir,'dir')
+                    mkdir(brainshift_log_dir)
+                end
+                save(fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.json']),'brainshift_method')
+                
+            end
+            
+        end
         old_path = fullfile(source_patient_path,which_file);
         new_path = log_dir;
         if exist(old_path,'file')
@@ -374,7 +389,7 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
             %first move%
             copyfile(old_path,new_path);
             %then rename%
-            disp(['Renaming file:' which_file 'to:' bids_name]);
+            disp(['Renaming file:' which_file ' to:' bids_name]);
             rename_path = fullfile(new_path,which_file);
             movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
         end
@@ -439,8 +454,10 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
 function file2json(fname_in,fname_out)
 %function to convert mat files and text
     if endsWith(fname_in,'.mat')
+        %special case for legacy dataset  
         input_mat = load(fname_in);
         json_fid = fopen(fname_out,'w');
+        
         encodejson = jsonencode(input_mat);
     
     elseif endsWith(fname_in,'.txt')
@@ -449,15 +466,28 @@ function file2json(fname_in,fname_out)
         text_cell = textscan(fid, '%s','Delimiter','');
         for text = 1:(length(text_cell{1,1})-1)
             if strcmp(text_cell{1,1}(text),'***')
-                temp_var = strsplit(text_cell{1,1}{text+1},':');
-                method_var = strtrim(temp_var{end});
-                S.method.(method_var) = text_cell{1,1}{text+3};
+                    temp_var = strsplit(text_cell{1,1}{text+1},':');
+                    method_var = strtrim(temp_var{end});
+                    S.method.(method_var) = text_cell{1,1}{text+3};
             end
-            %
         end
-        encodejson = jsonencode(S);
+        if ~exist('S','var')
+            try
+                %try a type of manual resolution - not sure if it belongs to the catch statement?
+                temp_var = strsplit(text_cell{1,1}{1},':');
+                method_var = strtrim(temp_var{end});
+                S.method.(method_var) = text_cell{1,1}{3};
+            catch
+                disp(['You might have to convert this file to .json manually: ' fname_in]);
+            end
+        end
+        if exist('S','var')
+            encodejson = jsonencode(S);
+        end
     end
-    fprintf(json_fid,encodejson);
+    if exist('encodejson','var') && exist('json_fid','var')
+        fprintf(json_fid,encodejson);
+    end
 
     
  
