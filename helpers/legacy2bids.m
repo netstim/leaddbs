@@ -322,7 +322,7 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
             %first move%
             copyfile(old_path,new_path);
             %then rename%
-            disp(['Renaming file:' which_file 'to:' bids_name]);
+            disp(['Renaming file:' which_file ' to:' bids_name]);
             rename_path = fullfile(new_path,which_file);
             movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
         end
@@ -339,14 +339,14 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
             %first move%
             copyfile(old_path,new_path);
             %then rename%
-            disp(['Renaming file:' which_file 'to:' bids_name]);
+            disp(['Renaming file:' which_file ' to: ' bids_name]);
             rename_path = fullfile(new_path,which_file);
             movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
         
         elseif exist(old_path_scrf,'file')
             copyfile(old_path_scrf,new_path);
             rename_path = fullfile(new_path,which_file);
-            disp(['Renaming file:' which_file 'to:' bids_name]);
+            disp(['Renaming file:' which_file ' to: ' bids_name]);
             movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
         end
         
@@ -375,7 +375,7 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
             %first move%
             copyfile(old_path,new_path);
             %then rename%
-            disp(['Renaming file:' which_file 'to:' bids_name]);
+            disp(['Renaming file:' which_file ' to: ' bids_name]);
             rename_path = fullfile(new_path,which_file);
             movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
         end
@@ -396,7 +396,6 @@ function move_derivatives2bids(source_patient_path,new_path,which_pipeline,which
     end
     if exist('convert2json','var') && convert2json
         if ismember(which_file,toconvert)
-            
             fname_in = fullfile(new_path,[patient_name,'_',bids_name]);
             [~,fname,ext] = fileparts(bids_name);
             fname_out = fullfile(new_path,[patient_name,'_',fname '.json']);
