@@ -11,7 +11,7 @@ else
     set(handles.normmethod,'Value',1);
 end
 
-set(handles.normcheck,'Value',options.normalize.check);
+set(handles.checkreg,'Value',options.checkreg);
 
 % CT coregistration
 set(handles.coreg_checkbox,'Value',options.coregct.do);
