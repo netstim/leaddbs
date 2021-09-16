@@ -31,20 +31,20 @@ try
 end
 
 try % not working when calling from lead_anatomy
-    options.normalize.check=(get(handles.normcheck,'Value') == get(handles.normcheck,'Max'));
+    options.checkreg=get(handles.checkreg,'Value');
 catch
-    options.normalize.check=0;
+    options.checkreg=0;
 end
 
 try % also open up checkreg in case of dMRI check registrations
     if get(handles.checkregdmri,'Value')
-        options.normalize.check=1;
+        options.checkreg=1;
     end
 end
 
 try % also open up checkreg in case of dMRI check registrations
     if get(handles.checkregfmri,'Value')
-        options.normalize.check=1;
+        options.checkreg=1;
     end
 end
 
