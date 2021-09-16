@@ -62,21 +62,21 @@ options.init = 1;
 ispresent = ea_refreshscrf(options,handles);
 
 switch options.scrf.mask
-    case 1
+    case 'No mask'
         handles.mask0.Value = 1;
         handles.mask1.Value = 0;
         handles.mask2.Value = 0;
         if ~ispresent || isfield(options, 'autobrainshift')
             ea_compute_scrf(handles)
         end
-    case 3
+    case 'Coarse + Fine mask (Schönecker 2008)'
         handles.mask0.Value = 0;
         handles.mask1.Value = 0;
         handles.mask2.Value = 1;
         if ~ispresent || isfield(options, 'autobrainshift')
             ea_compute_scrf(handles)
         end
-    otherwise % make default to run on mask1.
+    otherwise % 'Coarse mask (Schönecker 2008)'
         handles.mask0.Value = 0;
         handles.mask1.Value = 1;
         handles.mask2.Value = 0;
@@ -228,6 +228,18 @@ end
 delete(handles.scrf);
 
 
+% --- Executes on button press in mask0.
+function mask0_Callback(hObject, eventdata, handles)
+% hObject    handle to mask0 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of mask0
+handles.mask1.Value=0;
+handles.mask2.Value=0;
+% --- Executes on button press in mask1.
+
+
 % --- Executes on button press in mask1.
 function mask1_Callback(hObject, eventdata, handles)
 % hObject    handle to mask1 (see GCBO)
@@ -246,18 +258,6 @@ function mask2_Callback(hObject, eventdata, handles)
 handles.mask0.Value=0;
 handles.mask1.Value=0;
 % Hint: get(hObject,'Value') returns toggle state of mask2
-
-
-% --- Executes on button press in mask0.
-function mask0_Callback(hObject, eventdata, handles)
-% hObject    handle to mask0 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of mask0
-handles.mask1.Value=0;
-handles.mask2.Value=0;
-% --- Executes on button press in mask1.
 
 
 % --- Executes on button press in back.

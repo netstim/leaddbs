@@ -34,4 +34,4 @@ movefile(affineTransform{1}, options.subj.brainshift.transform.instore);
 delete(affineTransform{2});
 
 % Refresh scrf status
-ea_refreshscrf(options,handles);
+ea_refreshscrf(options, handles);
