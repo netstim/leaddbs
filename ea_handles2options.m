@@ -171,9 +171,9 @@ catch
 end
 
 try
-    options.scrf.mask=get(handles.scrfmask,'Value');
+    options.scrf.mask = handles.scrfmask.String{handles.scrfmask.Value};
 catch
-    options.scrf.mask=2;
+    options.scrf.mask = 'Coarse mask (Schönecker 2008)';
 end
 
 try
