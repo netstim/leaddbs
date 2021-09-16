@@ -13,10 +13,10 @@ end
 switch pipeline
     case 'coregistration'
         key = 'coreg';
-    case 'brainshift'
-        key = 'brainshift';
     case 'normalization'
         key = 'norm';
+    case 'brainshift'
+        key = 'brainshift';
 end
 
 % Check log file
