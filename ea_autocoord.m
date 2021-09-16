@@ -147,19 +147,22 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.do
-        anchor_normalized = options.subj.preopAnat.(options.subj.AnchorModality).norm;
-        if ~(ea_reglocked(options,anchor_normalized)==2) || strcmp(options.normalize.method,'ea_normalize_apply_normalization') % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
-            if ea_reglocked(options,anchor_normalized)==1 && ~strcmp(options.normalize.method,'ea_normalize_apply_normalization') % in this case, only perform normalization if using a multispectral approach now.
-                [~,~,~,doit]=eval([options.normalize.method,'(''prompt'')']);
-            else
-                doit=1;
-            end
-
-            if doit || strcmp(options.normalize.method,'ea_normalize_apply_normalization')
-                ea_normalize(options);
-
-                ea_gencheckregfigs(options, 'norm');
-            end
+        
+        anchor_normalized_lock = ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).norm);
+        
+        if strcmp(options.normalize.method, '(Re-)apply (priorly) estimated normalization')
+            doit = true;
+        elseif anchor_normalized_lock == 2 % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
+            doit = false;
+        elseif anchor_normalized_lock == 1 % in this case, only perform normalization if using a multispectral approach now.
+            [~, ~, ~, doit] = eval([options.normalize.method,'(''prompt'')']);
+        else
+            doit = true;
+        end
+        
+        if doit
+            ea_normalize(options);
+            ea_gencheckregfigs(options, 'norm');
         end
     end
 
