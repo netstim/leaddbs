@@ -12,7 +12,7 @@ imshow(refineslice);
 % calculate and display transform matrix:
 if isfile(options.subj.brainshift.transform.instore)
     mat = ea_getscrfmat(options);
-    handles.affmatrix.String = sprintf('% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  ',mat');
+    handles.affmatrix.String = sprintf('% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  \n% 0.2f  % 0.2f  % 0.2f  % 0.2f  ', mat');
     save(options.subj.brainshift.transform.converted, 'mat');
 end
 
