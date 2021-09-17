@@ -162,9 +162,6 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
 
     if isfile(options.subj.norm.log.method)
         json = loadjson(options.subj.norm.log.method);
-        method = json.method;
-    else
-        method = '';
     end
 
     json.approval.(options.subj.AnchorModality) = 0;
@@ -190,9 +187,6 @@ else
 
         if isfile(options.subj.coreg.log.method)
             json = loadjson(options.subj.coreg.log.method);
-            method = json.method.CT;
-        else
-            method = '';
         end
 
         json.approval.CT = 0;
@@ -201,23 +195,21 @@ else
         checkregFig = options.subj.coreg.checkreg.postop.tonemapCT;
     else % MR
         ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
-        if ~isfile(options.subj.coreg.log.method)
-            method = '';
-        else
-            % Extract image modality
-            modality = ea_getmodality(currvol);
 
+        if isfile(options.subj.coreg.log.method)
             json = loadjson(options.subj.coreg.log.method);
-            method = json.method.(modality);
+        end
+        
+        % Extract image modality
+        modality = ea_getmodality(currvol);
 
-            json.approval.(modality) = 0;
-            savejson('', json, options.subj.coreg.log.method);
+        json.approval.(modality) = 0;
+        savejson('', json, options.subj.coreg.log.method);
 
-            if contains(currvol, 'ses-preop')
-                checkregFig = options.subj.coreg.checkreg.preop.(modality);
-            else
-                checkregFig = options.subj.coreg.checkreg.postop.(modality);
-            end
+        if contains(currvol, 'ses-preop')
+            checkregFig = options.subj.coreg.checkreg.preop.(modality);
+        else
+            checkregFig = options.subj.coreg.checkreg.postop.(modality);
         end
     end
 
@@ -225,8 +217,6 @@ else
     set(handles.recomputebutn, 'String', '(Re-) compute coregistration using...');
     set(handles.coregmrmethod, 'TooltipString', 'Choose a coregistration method');
 end
-
-setappdata(handles.leadfigure, 'method', method);
 
 % show result:
 if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 registration
@@ -264,7 +254,6 @@ if ~isfile(checkregFig)
     end
 end
 
-setappdata(handles.leadfigure, 'anchorPath', anchorPath);
 im = imread(checkregFig);
 set(0,'CurrentFigure',handles.leadfigure);
 set(handles.leadfigure,'CurrentAxes',handles.standardax);
@@ -494,21 +483,10 @@ function approvebutn_Callback(hObject, eventdata, handles)
 ea_busyaction('on',handles.leadfigure,'coreg');
 
 options = getappdata(handles.leadfigure,'options');
+
 checkregImages = getappdata(handles.leadfigure,'checkregImages');
 activevolume = getappdata(handles.leadfigure,'activevolume');
 currvol = checkregImages{activevolume};
-
-switch ea_stripext(currvol)
-    case ea_stripext(options.prefs.gprenii)
-    case ea_stripext(['tp_',options.prefs.ctnii_coregistered])
-    otherwise % make sure method gets logged for specific volume.
-        method=getappdata(handles.leadfigure,'method');
-        if exist([directory,'ea_coregmrmethod_applied.mat'],'file')
-            m=load([directory,'ea_coregmrmethod_applied.mat']);
-        end
-        m.(ea_stripext(currvol))=method;
-        save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
-end
 
 approved=load([directory,'ea_coreg_approved.mat']);
 try
@@ -556,7 +534,6 @@ if strcmp(computer('arch'),'maci64')
 end
 
 checkregImages=getappdata(handles.leadfigure,'checkregImages');
-anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 
 if activevolume==length(checkregImages)
@@ -626,7 +603,6 @@ switch ea_stripext(currvol)
         ea_show_normalization(options);
     otherwise
         checkregImages=getappdata(handles.leadfigure,'checkregImages');
-        anchor=getappdata(handles.leadfigure,'anchor');
         activevolume=getappdata(handles.leadfigure,'activevolume');
         directory=getappdata(handles.leadfigure,'directory');
 
@@ -677,31 +653,12 @@ if strcmp(computer('arch'),'maci64')
     system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(currvol),'.nii'])]);
 end
 
-switch ea_stripext(currvol)
-    case ea_stripext(options.prefs.gprenii)
-
-    case ea_stripext(['tp_',options.prefs.ctnii_coregistered])
-
-    otherwise % make sure method gets unlogged for specific volume.
-        method=getappdata(handles.leadfigure,'method');
-        if exist([directory,'ea_coregmrmethod_applied.mat'],'file')
-            m=load([directory,'ea_coregmrmethod_applied.mat']);
-        else
-            m=struct;
-        end
-        if isfield(m,ea_stripext(currvol))
-            m=rmfield(m,ea_stripext(currvol));
-        end
-        save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
-end
-
 if ~isempty(b0restanchor{activevolume})
     thisrest=strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
     ea_cleandownstream(directory,thisrest)
 end
 
 checkregImages=getappdata(handles.leadfigure,'checkregImages');
-anchor=getappdata(handles.leadfigure,'anchor');
 activevolume=getappdata(handles.leadfigure,'activevolume');
 
 if activevolume==length(checkregImages)
