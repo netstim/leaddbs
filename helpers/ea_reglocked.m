@@ -28,11 +28,7 @@ else
     json = loadjson(logFile);
 
     % Extract image modality
-    if isempty(regexp(imagePath, '_acq-(ax|cor|sag)_', 'once'))
-        modality = regexp(imagePath, '(?<=_)([a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
-    else % Keep plane label for post-op MRI
-        modality = regexp(imagePath, '(?<=_acq-)((ax|sag|cor)_[a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
-    end
+    modality = ea_getmodality(imagePath);
 
     % Check approval status
     if ~isfield(json, 'approval') || ~isfield(json.approval, modality)
