@@ -35,7 +35,7 @@ else
     end
 
     % Check approval status
-    if ~isfield(json, 'approval') || ~isfield(json.approval.(modality))
+    if ~isfield(json, 'approval') || ~isfield(json.approval, modality)
         return;
     else
         locked = json.approval.(modality);

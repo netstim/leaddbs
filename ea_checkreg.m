@@ -1,26 +1,26 @@
-function varargout = ea_checkcoreg(varargin)
-% EA_CHECKCOREG MATLAB code for ea_checkcoreg.fig
-%      EA_CHECKCOREG, by itself, creates a new EA_CHECKCOREG or raises the existing
+function varargout = ea_checkreg(varargin)
+% EA_CHECKREG MATLAB code for ea_checkreg.fig
+%      EA_CHECKREG, by itself, creates a new EA_CHECKREG or raises the existing
 %      singleton*.
 %
-%      H = EA_CHECKCOREG returns the handle to a new EA_CHECKCOREG or the handle to
+%      H = EA_CHECKREG returns the handle to a new EA_CHECKREG or the handle to
 %      the existing singleton*.
 %
-%      EA_CHECKCOREG('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in EA_CHECKCOREG.M with the given input arguments.
+%      EA_CHECKREG('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in EA_CHECKREG.M with the given input arguments.
 %
-%      EA_CHECKCOREG('Property','Value',...) creates a new EA_CHECKCOREG or raises the
+%      EA_CHECKREG('Property','Value',...) creates a new EA_CHECKREG or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before ea_checkcoreg_OpeningFcn gets called.  An
+%      applied to the GUI before ea_checkreg_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to ea_checkcoreg_OpeningFcn via varargin.
+%      stop.  All inputs are passed to ea_checkreg_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help ea_checkcoreg
+% Edit the above text to modify the response to help ea_checkreg
 
 % Last Modified by GUIDE v2.5 03-Sep-2021 19:47:16
 
@@ -28,8 +28,8 @@ function varargout = ea_checkcoreg(varargin)
 gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
-    'gui_OpeningFcn', @ea_checkcoreg_OpeningFcn, ...
-    'gui_OutputFcn',  @ea_checkcoreg_OutputFcn, ...
+    'gui_OpeningFcn', @ea_checkreg_OpeningFcn, ...
+    'gui_OutputFcn',  @ea_checkreg_OutputFcn, ...
     'gui_LayoutFcn',  [] , ...
     'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,13 +44,13 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before ea_checkcoreg is made visible.
-function ea_checkcoreg_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before ea_checkreg is made visible.
+function ea_checkreg_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to ea_checkcoreg (see VARARGIN)
+% varargin   command line arguments to ea_checkreg (see VARARGIN)
 
 options = varargin{1};
 
@@ -121,13 +121,13 @@ set(handles.checkatl, 'Visible', 'off');
 ea_mrcview(handles);
 
 if isvalid(hObject)
-    % Choose default command line output for ea_checkcoreg
+    % Choose default command line output for ea_checkreg
     handles.output = hObject;
 
     % Update handles structure
     guidata(hObject, handles);
 end
-% UIWAIT makes ea_checkcoreg wait for user response (see UIRESUME)
+% UIWAIT makes ea_checkreg wait for user response (see UIRESUME)
 
 
 function ea_mrcview(handles)
@@ -138,11 +138,11 @@ activevolume = getappdata(handles.leadfigure, 'activevolume');
 b0restanchor = getappdata(handles.leadfigure, 'b0restanchor');
 
 if activevolume==length(checkregImages)
-    set(handles.disapprovebutn,'String','Disapprove & Close');
-    set(handles.approvebutn,'String','Approve & Close');
+    set(handles.disapprovebutn, 'String', 'Disapprove & Close');
+    set(handles.approvebutn, 'String', 'Approve & Close');
 else
-    set(handles.approvebutn,'String','Approve & Next >>');
-    set(handles.disapprovebutn,'String','Disapprove & Next >>');
+    set(handles.approvebutn, 'String', 'Approve & Next >>');
+    set(handles.disapprovebutn, 'String', 'Disapprove & Next >>');
 end
 
 currvol = checkregImages{activevolume};
@@ -236,7 +236,6 @@ end
 
 setappdata(handles.leadfigure, 'method', method);
 
-
 % show result:
 if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 registration
     set(handles.substitute, 'Visible', 'on');
@@ -284,6 +283,7 @@ axis equal
 
 % textfields:
 set(handles.depvolume, 'String', [ea_stripext(currvol),'.nii']);
+set(handles.depvolume, 'Tooltip', [ea_stripext(currvol),'.nii']);
 
 
 function [pretras]=ea_getsubstitutes(options)
@@ -299,7 +299,7 @@ end
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ea_checkcoreg_OutputFcn(hObject, eventdata, handles)
+function varargout = ea_checkreg_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -337,12 +337,12 @@ function recomputebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to recomputebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_busyaction('on',handles.leadfigure,'coreg');
+ea_busyaction('on', handles.leadfigure, 'coreg');
 
-options=getappdata(handles.leadfigure,'options');
+options = getappdata(handles.leadfigure,'options');
 options.overwriteapproved=1;
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-anchor=getappdata(handles.leadfigure,'anchor');
+checkregImages = getappdata(handles.leadfigure,'checkregImages');
+anchor = getappdata(handles.leadfigure,'anchor');
 b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
 
 activevolume=getappdata(handles.leadfigure,'activevolume');
