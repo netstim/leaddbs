@@ -151,9 +151,9 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         
         if strcmp(options.normalize.method, '(Re-)apply (priorly) estimated normalization')
             doit = true;
-        elseif anchor_normalized_lock == 2 % =2 means permanent lock for normalizations and only happens if all preop anatomy files were approved at time of approving normalization.
+        elseif anchor_normalized_lock == 1 % Permanent lock for normalizations and only happens if all pre-op images were approved at time of approving normalization.
             doit = false;
-        elseif anchor_normalized_lock == 1 % in this case, only perform normalization if using a multispectral approach now.
+        elseif anchor_normalized_lock == 0.5 % Perform normalization if using a multispectral approach.
             [~, ~, ~, doit] = eval([options.normalize.method,'(''prompt'')']);
         else
             doit = true;
