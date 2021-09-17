@@ -805,7 +805,8 @@ function openpatientdir_Callback(hObject, eventdata, handles)
 % hObject    handle to openpatientdir (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_opendir(getappdata(handles.leadfigure,'directory'));
+options = getappdata(handles.leadfigure, 'options');
+ea_opendir(options.subj.subjDir);
 
 
 % --- Executes on selection change in substitute.
