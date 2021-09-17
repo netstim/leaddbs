@@ -350,7 +350,7 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     ea_normalize(options);
 
     % Create checkreg fig
-    fprintf('Regenerating checkreg figure...\n\n');
+    fprintf('\nRegenerating checkreg figure...\n\n');
     ea_gencheckregfigs(options, 'norm');
 
     % Disapprove after recompute
@@ -366,7 +366,7 @@ elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj
     ea_coregpostopct(options);
 
     % Create checkreg fig
-    fprintf('Regenerating checkreg figure...\n\n');
+    fprintf('\nRegenerating checkreg figure...\n\n');
     ea_gencheckregpair(currvol, anchorImage, options.subj.coreg.checkreg.postop.tonemapCT);
 
     % Disapprove after recompute
@@ -415,7 +415,7 @@ else % MR
         ea_coregimages(options, preprocImage, anchorImage, currvol, {}, 0);
 
         % Create checkreg fig
-        fprintf('Regenerating checkreg figure...\n\n');
+        fprintf('\nRegenerating checkreg figure...\n\n');
         ea_gencheckregpair(currvol, anchorImage, options.subj.coreg.checkreg.(session).(modality));
 
         % Disapprove after recompute
@@ -751,33 +751,40 @@ function refreshview_Callback(hObject, eventdata, handles)
 
 ea_busyaction('on',handles.leadfigure,'coreg');
 
-options=getappdata(handles.leadfigure,'options');
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=getappdata(handles.leadfigure,'directory');
-currvol=checkregImages{activevolume};
-anchorPath=getappdata(handles.leadfigure,'anchorPath');
-method=getappdata(handles.leadfigure,'method');
+options = getappdata(handles.leadfigure, 'options');
 
-anchor=getappdata(handles.leadfigure,'anchor');
-switch ea_stripext(currvol)
-    case ea_stripext(options.prefs.gprenii)
-        options=ea_assignpretra(options);
-        anchor=[ea_space,options.primarytemplate,'.nii'];
-    case ea_stripext(['tp_',options.prefs.ctnii_coregistered]) % make sure tp matches rpostop_ct.
-        ea_tonemapct(options, 'native');
-end
-b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
-if ~isempty(b0restanchor{activevolume})
-   anchor=b0restanchor{activevolume};
+checkregImages = getappdata(handles.leadfigure, 'checkregImages');
+activevolume = getappdata(handles.leadfigure, 'activevolume');
+currvol = checkregImages{activevolume};
+
+anchorImage = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
+
+if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
+     % Create checkreg fig
+    fprintf('\nRegenerating checkreg figure...\n\n');
+    ea_gencheckregfigs(options, 'norm');
+
+elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
+    % Create checkreg fig
+    fprintf('\nRegenerating checkreg figure...\n\n');
+    ea_gencheckregpair(currvol, anchorImage, options.subj.coreg.checkreg.postop.tonemapCT);
+else
+    b0restanchor = getappdata(handles.leadfigure,'b0restanchor');
+    if ~isempty(b0restanchor{activevolume})
+       anchorImage = b0restanchor{activevolume};
+    end
+
+    session = regexp(currvol, '(?<=_ses-)(preop|postop)', 'match', 'once');
+    modality = ea_getmodality(currvol);
+    
+    % Create checkreg fig
+    fprintf('\nRegenerating checkreg figure...\n\n');
+    ea_gencheckregpair(currvol, anchorImage, options.subj.coreg.checkreg.(session).(modality));
 end
 
-checkregFig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(anchor),'mean','r'),'_',method,'.png'];
-ea_delete(checkregFig);
-ea_gencheckregpair([directory,ea_stripext(currvol)],anchorPath,checkregFig);
-ea_mrcview(handles); % refresh
-title = get(handles.leadfigure, 'Name');    % Fix title
-ea_busyaction('off',handles.leadfigure,'coreg');
+ea_mrcview(handles);
+title = get(handles.leadfigure, 'Name');
+ea_busyaction('off', handles.leadfigure, 'coreg');
 set(handles.leadfigure, 'Name', title);
 
 
