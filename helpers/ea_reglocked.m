@@ -29,7 +29,13 @@ if isfile(logFile)
     modality = ea_getmodality(imagePath);
 
     % Check approval status
-    if eval('isfield(json.approval, modality)', '0')
-        locked = json.approval.(modality);
+    if strcmp(key, 'coreg')
+        if eval('isfield(json.approval, modality)', '0')
+            locked = json.approval.(modality);
+        end
+    elseif ismember(key, {'norm', 'brainshift'})
+        if isfield(json, 'approval')
+            locked = json.approval;
+        end
     end
 end
