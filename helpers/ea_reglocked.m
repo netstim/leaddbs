@@ -21,9 +21,7 @@ end
 
 % Check log file
 logFile = options.subj.(key).log.method;
-if ~isfile(logFile) % log file doesn't exist
-    return;
-else
+if isfile(logFile)
     % Load method log
     json = loadjson(logFile);
 
@@ -31,9 +29,7 @@ else
     modality = ea_getmodality(imagePath);
 
     % Check approval status
-    if ~isfield(json, 'approval') || ~isfield(json.approval, modality)
-        return;
-    else
+    if eval('isfield(json.approval, modality)', '0')
         locked = json.approval.(modality);
     end
 end
