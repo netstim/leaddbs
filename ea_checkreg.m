@@ -154,81 +154,76 @@ if strcmp(currvol, options.subj.brainshift.anat.scrf)
     return
 end
 
-switch currvol
-    case options.subj.norm.anat.preop.(options.subj.AnchorModality)
-        handles.checkatl.Visible='on';
-        anchor = options.primarytemplate;
+if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
+    handles.checkatl.Visible='on';
+    anchor = options.primarytemplate;
 
-        ea_init_normpopup(handles, options.prefs.normalize.default, 'coregmrmethod');
+    ea_init_normpopup(handles, options.prefs.normalize.default, 'coregmrmethod');
 
-        if ~isfile(options.subj.norm.log.method)
+    if isfile(options.subj.norm.log.method)
+        json = loadjson(options.subj.norm.log.method);
+        method = json.method;
+    else
+        method = '';
+    end
+
+    json.approval.(options.subj.AnchorModality) = 0;
+    savejson('', json, options.subj.norm.log.method);
+
+    checkregFig = options.subj.norm.checkreg.preop.(options.subj.AnchorModality);
+
+    set(handles.anchortxt, 'String', 'Template (red wires):');
+    set(handles.coregresultstxt, 'String', 'Normalization results');
+    set(handles.normsettings, 'Visible', 'on');
+    set(handles.recomputebutn, 'String', '(Re-) compute normalization using...');
+    set(handles.coregmrmethod, 'TooltipString', 'Choose a normalization method');
+    set(handles.leadfigure, 'Name',[options.subj.subjId, ': Check Normalization']);
+else
+    handles.checkatl.Visible = 'off';
+    anchor = options.subj.AnchorModality;
+    set(handles.anchortxt, 'String', 'Anchor modality (red wires):');
+    set(handles.coregresultstxt, 'String', 'Coregistration results');
+    set(handles.leadfigure, 'Name', [options.subj.subjId, ': Check Coregistration']);
+
+    if strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
+        ea_init_coregctpopup(handles, options, 'coregmrmethod');
+
+        if isfile(options.subj.coreg.log.method)
+            json = loadjson(options.subj.coreg.log.method);
+            method = json.method.CT;
+        else
+            method = '';
+        end
+
+        json.approval.CT = 0;
+        savejson('', json, options.subj.coreg.log.method);
+
+        checkregFig = options.subj.coreg.checkreg.postop.tonemapCT;
+    else % MR
+        ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
+        if ~isfile(options.subj.coreg.log.method)
             method = '';
         else
-            json = loadjson(options.subj.norm.log.method);
-            method = json.method;
-            if ~isfield(json, 'approval') || ~isfield(json.approval, options.subj.AnchorModality)
-                json.approval.(options.subj.AnchorModality) = 0;
-                savejson('', json, options.subj.norm.log.method);
+            % Extract image modality
+            modality = ea_getmodality(currvol);
+
+            json = loadjson(options.subj.coreg.log.method);
+            method = json.method.(modality);
+
+            json.approval.(modality) = 0;
+            savejson('', json, options.subj.coreg.log.method);
+
+            if contains(currvol, 'ses-preop')
+                checkregFig = options.subj.coreg.checkreg.preop.(modality);
+            else
+                checkregFig = options.subj.coreg.checkreg.postop.(modality);
             end
         end
+    end
 
-        checkregFig = options.subj.norm.checkreg.preop.(options.subj.AnchorModality);
-
-        set(handles.anchortxt, 'String', 'Template (red wires):');
-        set(handles.coregresultstxt, 'String', 'Normalization results');
-        set(handles.normsettings, 'Visible', 'on');
-        set(handles.recomputebutn, 'String', '(Re-) compute normalization using...');
-        set(handles.coregmrmethod, 'TooltipString', 'Choose a normalization method');
-        set(handles.leadfigure, 'Name',[options.subj.subjId, ': Check Normalization']);
-    otherwise
-        handles.checkatl.Visible = 'off';
-        anchor = options.subj.AnchorModality;
-        set(handles.anchortxt, 'String', 'Anchor modality (red wires):');
-        set(handles.coregresultstxt, 'String', 'Coregistration results');
-        set(handles.leadfigure, 'Name', [options.subj.subjId, ': Check Coregistration']);
-
-        if strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
-            ea_init_coregctpopup(handles, options, 'coregmrmethod');
-
-            if ~isfile(options.subj.coreg.log.method)
-                method = '';
-            else
-                json = loadjson(options.subj.coreg.log.method);
-                method = json.method.CT;
-                if ~isfield(json, 'approval') || ~isfield(json.approval, 'CT')
-                    json.approval.CT = 0;
-                    savejson('', json, options.subj.coreg.log.method);
-                end
-            end
-
-            checkregFig = options.subj.coreg.checkreg.postop.tonemapCT;
-        else % MR
-            ea_init_coregmrpopup(handles, options.prefs.mrcoreg.default);
-            if ~isfile(options.subj.coreg.log.method)
-                method = '';
-            else
-                % Extract image modality
-                modality = ea_getmodality(currvol);
-
-                json = loadjson(options.subj.coreg.log.method);
-                method = json.method.(modality);
-
-                if ~isfield(json, 'approval') || ~isfield(json.approval, modality)
-                    json.approval.(modality) = 0;
-                    savejson('', json, options.subj.coreg.log.method);
-                end
-
-                if contains(currvol, 'ses-preop')
-                    checkregFig = options.subj.coreg.checkreg.preop.(modality);
-                else
-                    checkregFig = options.subj.coreg.checkreg.postop.(modality);
-                end
-            end
-        end
-
-        set(handles.normsettings, 'Visible', 'off');
-        set(handles.recomputebutn, 'String', '(Re-) compute coregistration using...');
-        set(handles.coregmrmethod, 'TooltipString', 'Choose a coregistration method');
+    set(handles.normsettings, 'Visible', 'off');
+    set(handles.recomputebutn, 'String', '(Re-) compute coregistration using...');
+    set(handles.coregmrmethod, 'TooltipString', 'Choose a coregistration method');
 end
 
 setappdata(handles.leadfigure, 'method', method);
@@ -336,108 +331,104 @@ function recomputebutn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on', handles.leadfigure, 'coreg');
 
-options = getappdata(handles.leadfigure,'options');
-options.overwriteapproved=1;
-checkregImages = getappdata(handles.leadfigure,'checkregImages');
-anchor = getappdata(handles.leadfigure,'anchor');
-b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
+options = getappdata(handles.leadfigure, 'options');
+options.overwriteapproved = 1;
 
-activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=getappdata(handles.leadfigure,'directory');
-currvol=checkregImages{activevolume};
+checkregImages = getappdata(handles.leadfigure, 'checkregImages');
+activevolume = getappdata(handles.leadfigure, 'activevolume');
+currvol = checkregImages{activevolume};
 
-switch ea_stripext(currvol)
-    case ea_stripext(options.prefs.gprenii)
-        ea_delete([options.root,options.patientname,filesep,options.prefs.gprenii]);
-        [options,anatspresent]=ea_assignpretra(options);
-        for fi=2:length(anatspresent)
-            ea_delete([options.root,options.patientname,filesep,'gl',anatspresent{fi}]);
+anchorImage = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
+
+if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
+    ea_delete([struct2cell(options.subj.norm.anat.preop); struct2cell(options.subj.norm.anat.postop)]);
+
+    % Get normalization method
+    options.normalize.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
+
+    % Re-run normlization
+    ea_normalize(options);
+
+    % Create checkreg fig
+    fprintf('Regenerating checkreg figure...\n\n');
+    ea_gencheckregfigs(options, 'norm');
+
+    % Disapprove after recompute
+    json = loadjson(options.subj.norm.log.method);
+    json.approval.(options.subj.AnchorModality) = 0;
+    savejson('', json, options.subj.norm.log.method);
+
+elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
+    % Get CT coregistration method
+    options.coregct.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
+
+    % Run CT coregistration
+    ea_coregpostopct(options);
+
+    % Create checkreg fig
+    fprintf('Regenerating checkreg figure...\n\n');
+    ea_gencheckregpair(currvol, anchorImage, options.subj.coreg.checkreg.postop.tonemapCT);
+
+    % Disapprove after recompute
+    json = loadjson(options.subj.coreg.log.method);
+    json.approval.CT = 0;
+    savejson('', json, options.subj.coreg.log.method);
+
+elseif strcmp(ea_stripext(options.prefs.fa2anat), 'FA') % FA
+    options.coregmr.method=get(handles.coregmrmethod,'String');
+    options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
+    ea_backuprestore([directory,options.prefs.fa]);
+    ea_coregimages(options,[directory,options.prefs.fa],[directory,anchor],[directory,checkregImages{activevolume}],{},0);
+
+else % MR
+    options.coregmr.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
+
+    b0restanchor = getappdata(handles.leadfigure, 'b0restanchor');
+    if ~isempty(b0restanchor{activevolume})  % b0 or rest files
+        thisrest=strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
+
+        ea_delete([directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)]);
+        ea_delete([directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
+
+        substitute=get(handles.substitute,'Value');
+        [~,pf]=ea_assignpretra(options);
+        useasanchor=pf{substitute};
+
+        % in following line correct that useasanchor is the *moving*
+        % image (since we're going from anchor to rest/b0.
+        ea_coregimages(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,checkregImages{activevolume}],{},1);
+        if ~isequal([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
+                [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)])
+            movefile([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
+                [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)]);
         end
-
-        options.normalize.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
-        ea_dumpmethod(options, 'norm');
-        ea_normalize(options);
-
-        if options.modality == 2 % (Re-) compute tonemapped (normalized) CT
-            ea_tonemapct(options, 'norm');
+        if ~isequal([directory,ea_stripext(useasanchor),'2',ea_stripext(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
+                [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)])
+            movefile([directory,ea_stripext(useasanchor),'2',ea_stripext(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
+                [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
         end
+        ea_cleandownstream(directory,thisrest);
+    else  % other images
+        session = regexp(currvol, '(?<=_ses-)(preop|postop)', 'match', 'once');
+        modality = ea_getmodality(currvol);
+        preprocImage = options.subj.preproc.anat.(session).(modality);
+        ea_coregimages(options, preprocImage, anchorImage, currvol, {}, 0);
 
-    case ea_stripext(['tp_',options.prefs.ctnii_coregistered]) % CT
-        % Get CT coregistration method
-        options.coregct.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
+        % Create checkreg fig
+        fprintf('Regenerating checkreg figure...\n\n');
+        ea_gencheckregpair(currvol, anchorImage, options.subj.coreg.checkreg.(session).(modality));
 
-        % Run CT coregistration
-        ea_coregpostopct(options);
-
-        % Dump method
-        ea_dumpmethod(options, 'coreg');
-
-        ea_tonemapct(options, 'native'); % (Re-) compute tonemapped (native space) CT
-        ea_gencheckregfigs(options, 'coreg'); % generate checkreg figures
-
-    case ea_stripext(options.prefs.fa2anat) % FA
-        options.coregmr.method=get(handles.coregmrmethod,'String');
-        options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
-        ea_backuprestore([directory,options.prefs.fa]);
-        ea_coregimages(options,[directory,options.prefs.fa],[directory,anchor],[directory,checkregImages{activevolume}],{},0);
-        ea_dumpspecificmethod(handles,options.coregmr.method)
-
-    otherwise % MR
-        options.coregmr.method=get(handles.coregmrmethod,'String');
-        options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
-        if ~isempty(b0restanchor{activevolume})  % b0 or rest files
-
-            thisrest=strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
-
-            ea_delete([directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)]);
-            ea_delete([directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
-
-            substitute=get(handles.substitute,'Value');
-            [~,pf]=ea_assignpretra(options);
-            useasanchor=pf{substitute};
-
-            % in following line correct that useasanchor is the *moving*
-            % image (since we're going from anchor to rest/b0.
-            ea_coregimages(options,[directory,useasanchor],[directory,b0restanchor{activevolume}],[directory,checkregImages{activevolume}],{},1);
-            if ~isequal([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
-                    [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)])
-                movefile([directory,ea_stripext(b0restanchor{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
-                    [directory,thisrest,'2',ea_stripext(anchor),'_',ea_matext(options.coregmr.method)]);
-            end
-            if ~isequal([directory,ea_stripext(useasanchor),'2',ea_stripext(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
-                    [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)])
-                movefile([directory,ea_stripext(useasanchor),'2',ea_stripext(b0restanchor{activevolume}),'_',ea_matext(options.coregmr.method)],...
-                    [directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
-            end
-            ea_cleandownstream(directory,thisrest);
-        else  % other images
-            ea_backuprestore([directory,checkregImages{activevolume}]);
-            ea_coregimages(options,[directory,checkregImages{activevolume}],[directory,anchor],[directory,checkregImages{activevolume}],{},0);
-        end
-        ea_dumpspecificmethod(handles,options.coregmr.method)
+        % Disapprove after recompute
+        json = loadjson(options.subj.coreg.log.method);
+        json.approval.(modality) = 0;
+        savejson('', json, options.subj.coreg.log.method);
+    end
 end
 
-% regenerate checkregFig.
-anchorPath=getappdata(handles.leadfigure,'anchorPath');
-
-method=getappdata(handles.leadfigure,'method');
-
-if ~isempty(b0restanchor{activevolume})
-   anchor=b0restanchor{activevolume};
-end
-
-checkregFig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',strrep(ea_stripext(anchor),'mean','r'),'_',method,'.png'];
-
-ea_gencheckregpair([directory,ea_stripext(currvol)],anchorPath,checkregFig);
-% now disapprove again since this new computation hasn't been approved yet.
-approved=load([directory,'ea_coreg_approved.mat']);
-approved.(ea_stripext(currvol))=0;
-save([directory,'ea_coreg_approved.mat'],'-struct','approved');
-
-ea_mrcview(handles)
-title = get(handles.leadfigure, 'Name');    % Fix title
+ea_mrcview(handles);
+title = get(handles.leadfigure, 'Name');
 ea_chirp(options);
-ea_busyaction('off',handles.leadfigure,'coreg');
+ea_busyaction('off', handles.leadfigure, 'coreg');
 set(handles.leadfigure, 'Name', title);
 
 
@@ -493,22 +484,6 @@ switch upper(method)
     case 'BRAINSFIT'
         ext='brainsfit.h5';
 end
-
-
-function ea_dumpspecificmethod(handles,method)
-options=getappdata(handles.leadfigure,'options');
-
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-anchor=getappdata(handles.leadfigure,'anchor');
-activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=getappdata(handles.leadfigure,'directory');
-try
-    m=load([directory,'ea_coregmrmethod_applied.mat']);
-catch
-    m=struct;
-end
-m.(ea_stripext(checkregImages{activevolume}))=method;
-save([directory,'ea_coregmrmethod_applied.mat'],'-struct','m');
 
 
 % --- Executes on button press in approvebutn.
