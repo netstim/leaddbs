@@ -480,77 +480,89 @@ function approvebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to approvebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_busyaction('on',handles.leadfigure,'coreg');
+ea_busyaction('on', handles.leadfigure, 'coreg');
 
-options = getappdata(handles.leadfigure,'options');
+options = getappdata(handles.leadfigure, 'options');
 
-checkregImages = getappdata(handles.leadfigure,'checkregImages');
-activevolume = getappdata(handles.leadfigure,'activevolume');
+checkregImages = getappdata(handles.leadfigure, 'checkregImages');
+activevolume = getappdata(handles.leadfigure, 'activevolume');
 currvol = checkregImages{activevolume};
 
-approved=load([directory,'ea_coreg_approved.mat']);
-try
-    wasapprovedalready=approved.(ea_stripext(currvol));
-catch
-    wasapprovedalready=0;
-end
-approved.(ea_stripext(currvol))=1;
-if strcmp(ea_stripext(currvol),ea_stripext(options.prefs.gprenii))
-    [options,preniis]=ea_assignpretra(options); % get all preop versions
-    allcoreg=1; % check if all preniis are already approved
-    for pn=2:length(preniis)
-        if ~approved.(ea_stripext(preniis{pn}))
-            allcoreg=0;
-        end
-    end
-    if allcoreg
-        approved.(ea_stripext(currvol))=2; % set to permanent approved =2 normalization. This will not be overriden no matter what (as long is override flag is not set).
+% Get coregistered pre-op images (except for the anchor image)
+preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
+preopCoregImages = preopCoregImages(2:end);
+
+if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
+    if all(cellfun(@(f) ea_reglocked(options, f), preopCoregImages))
+        json.approval.(options.subj.AnchorModality) = 1;
     else
         ea_warning('You approved normalization before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+        json.approval.(options.subj.AnchorModality) = 0.5;
     end
+
+    savejson('', json, options.subj.norm.log.method);
+
+elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
+    json = loadjson(options.subj.coreg.log.method);
+    json.approval.CT = 1;
+    savejson('', json, options.subj.coreg.log.method);
+
 else
-    if isfield(approved,ea_stripext(options.prefs.gprenii))
-        [~,preopfiles]=ea_assignpretra(options);
-        if ismember([ea_stripext(currvol),'.nii'],preopfiles)
-            if approved.(ea_stripext(options.prefs.gprenii))==2
-                % now in this situation we had the normalization approved before
+    json = loadjson(options.subj.coreg.log.method);
+    modality = ea_getmodality(currvol);
+        
+    if ismember(currvol, preopCoregImages)
+        if eval('isfield(json.approval, modality)', '0') && json.approval.(modality)==1
+            coregWasApproved = 1;
+        else
+            coregWasApproved = 0;
+        end
+
+        json.approval.(modality) = 1;
+        savejson('', json, options.subj.coreg.log.method);
+
+        if ~coregWasApproved
+            json = loadjson(options.subj.norm.log.method);
+            if eval('isfield(json.approval, options.subj.AnchorModality)', '0') ...
+                    && json.approval.(options.subj.AnchorModality)==1
+                % In this situation we had the normalization approved before
                 % all coregistrations were approved. This could lead to suboptimal
                 % normalizations *only* if a multispectral protocol is used. Thus
                 % we set the normalization approval rate to 1. This way, it will
                 % still be overriden in case of running a multispectral
                 % normalization.
-                if ~wasapprovedalready
-                    ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
-                    approved.stripex(options.prefs.gprenii)=1; % this will be overriden when using a multispectral normalization.
-                end
+                ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+                json.approval.(options.subj.AnchorModality) = 0.5;
+                savejson('', json, options.subj.norm.log.method);
             end
         end
+    else
+        json.approval.(modality) = 1;
+        savejson('', json, options.subj.coreg.log.method);
     end
 end
 
-save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 if strcmp(computer('arch'),'maci64')
-    system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(currvol),'.nii'])]);
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000400000000000000000000000000000000000000000000" ',currvol]);
 end
 
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-activevolume=getappdata(handles.leadfigure,'activevolume');
-
-if activevolume==length(checkregImages)
-    close(handles.leadfigure); % make an exit
+if activevolume == length(checkregImages)
+    close(handles.leadfigure);
     return
-elseif (activevolume==length(checkregImages)-1 && strcmp(checkregImages{end},'brainshift'))
-    close(handles.leadfigure); % make an exit
+elseif activevolume==length(checkregImages)-1 ...
+        && strcmp(checkregImages{end}, options.subj.brainshift.anat.scrf)
+    close(handles.leadfigure);
     ea_subcorticalrefine(options);
     return
 else
-    activevolume=activevolume+1;
+    activevolume = activevolume+1;
 end
-setappdata(handles.leadfigure,'activevolume',activevolume);
+
+setappdata(handles.leadfigure, 'activevolume', activevolume);
 
 ea_mrcview(handles);
-title = get(handles.leadfigure, 'Name');    % Fix title
-ea_busyaction('off',handles.leadfigure,'coreg');
+title = get(handles.leadfigure, 'Name');
+ea_busyaction('off', handles.leadfigure, 'coreg');
 set(handles.leadfigure, 'Name', title);
 
 
