@@ -164,7 +164,7 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
         json = loadjson(options.subj.norm.log.method);
     end
 
-    json.approval.(options.subj.AnchorModality) = 0;
+    json.approval = 0;
     savejson('', json, options.subj.norm.log.method);
 
     checkregFig = options.subj.norm.checkreg.preop.(options.subj.AnchorModality);
@@ -344,7 +344,7 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
 
     % Disapprove after recompute
     json = loadjson(options.subj.norm.log.method);
-    json.approval.(options.subj.AnchorModality) = 0;
+    json.approval = 0;
     savejson('', json, options.subj.norm.log.method);
 
 elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
@@ -495,10 +495,10 @@ preopCoregImages = preopCoregImages(2:end);
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     json = loadjson(options.subj.norm.log.method);
     if all(cellfun(@(f) ea_reglocked(options, f), preopCoregImages))
-        json.approval.(options.subj.AnchorModality) = 1;
+        json.approval = 1;
     else
         ea_warning('You approved normalization before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
-        json.approval.(options.subj.AnchorModality) = 0.5;
+        json.approval = 0.5;
     end
 
     savejson('', json, options.subj.norm.log.method);
@@ -525,7 +525,7 @@ else
         if ~coregWasApproved
             json = loadjson(options.subj.norm.log.method);
             if eval('isfield(json.approval, options.subj.AnchorModality)', '0') ...
-                    && json.approval.(options.subj.AnchorModality)==1
+                    && json.approval==1
                 % In this situation we had the normalization approved before
                 % all coregistrations were approved. This could lead to suboptimal
                 % normalizations *only* if a multispectral protocol is used. Thus
@@ -533,7 +533,7 @@ else
                 % still be overriden in case of running a multispectral
                 % normalization.
                 ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
-                json.approval.(options.subj.AnchorModality) = 0.5;
+                json.approval = 0.5;
                 savejson('', json, options.subj.norm.log.method);
             end
         end
@@ -664,9 +664,9 @@ preopCoregImages = preopCoregImages(2:end);
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     json = loadjson(options.subj.norm.log.method);
     if all(cellfun(@(f) ea_reglocked(options, f), preopCoregImages))
-        json.approval.(options.subj.AnchorModality) = 0.5;
+        json.approval = 0.5;
     else
-        json.approval.(options.subj.AnchorModality) = 0;
+        json.approval = 0;
     end
 
     savejson('', json, options.subj.norm.log.method);
@@ -693,8 +693,8 @@ else
         if coregWasApproved
             json = loadjson(options.subj.norm.log.method);
             if eval('isfield(json.approval, options.subj.AnchorModality)', '0') ...
-                    && json.approval.(options.subj.AnchorModality)==1
-                json.approval.(options.subj.AnchorModality) = 0.5;
+                    && json.approval==1
+                json.approval = 0.5;
                 savejson('', json, options.subj.norm.log.method);
             end
         end

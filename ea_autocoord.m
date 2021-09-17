@@ -208,7 +208,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         e=evalin('base', 'checkregempty');
         evalin('base',' clear checkregempty');
 
-        if e && ~ea_reglocked(options,'brainshift') ...
+        if e && ~ea_reglocked(options, options.subj.brainshift.anat.scrf) ...
              && isfile(options.subj.brainshift.transform.instore)
             ea_subcorticalrefine(options);
         end
