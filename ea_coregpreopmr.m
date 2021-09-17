@@ -33,6 +33,8 @@ end
 
 % Do coregistration
 for i=1:length(moving)
+    ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
+
     ea_coregimages(options, moving{i}, anchor, output{i});
 
     % Better slab support
@@ -40,8 +42,6 @@ for i=1:length(moving)
     nii.img(abs(nii.img)<0.0001) = 0;
     ea_write_nii(nii);
 end
-
-ea_dumpmethod(options, 'coreg');
 
 if options.prefs.diary
     diary off;
