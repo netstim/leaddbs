@@ -493,6 +493,7 @@ preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
 preopCoregImages = preopCoregImages(2:end);
 
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
+    json = loadjson(options.subj.norm.log.method);
     if all(cellfun(@(f) ea_reglocked(options, f), preopCoregImages))
         json.approval.(options.subj.AnchorModality) = 1;
     else
@@ -650,40 +651,82 @@ function disapprovebutn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'coreg');
 
-options=getappdata(handles.leadfigure,'options');
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=getappdata(handles.leadfigure,'directory');
-b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
-currvol=checkregImages{activevolume};
+options = getappdata(handles.leadfigure,'options');
 
-approved=load([directory,'ea_coreg_approved.mat']);
+checkregImages = getappdata(handles.leadfigure,'checkregImages');
+activevolume = getappdata(handles.leadfigure,'activevolume');
+currvol = checkregImages{activevolume};
 
-approved.(ea_stripext(currvol))=0;
-save([directory,'ea_coreg_approved.mat'],'-struct','approved');
+% Get coregistered pre-op images (except for the anchor image)
+preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
+preopCoregImages = preopCoregImages(2:end);
+
+if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
+    json = loadjson(options.subj.norm.log.method);
+    if all(cellfun(@(f) ea_reglocked(options, f), preopCoregImages))
+        json.approval.(options.subj.AnchorModality) = 0.5;
+    else
+        json.approval.(options.subj.AnchorModality) = 0;
+    end
+
+    savejson('', json, options.subj.norm.log.method);
+
+elseif strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
+    json = loadjson(options.subj.coreg.log.method);
+    json.approval.CT = 0;
+    savejson('', json, options.subj.coreg.log.method);
+
+else
+    json = loadjson(options.subj.coreg.log.method);
+    modality = ea_getmodality(currvol);
+
+    if ismember(currvol, preopCoregImages)
+        if eval('isfield(json.approval, modality)', '0') && json.approval.(modality)==1
+            coregWasApproved = 1;
+        else
+            coregWasApproved = 0;
+        end
+
+        json.approval.(modality) = 0;
+        savejson('', json, options.subj.coreg.log.method);
+
+        if coregWasApproved
+            json = loadjson(options.subj.norm.log.method);
+            if eval('isfield(json.approval, options.subj.AnchorModality)', '0') ...
+                    && json.approval.(options.subj.AnchorModality)==1
+                json.approval.(options.subj.AnchorModality) = 0.5;
+                savejson('', json, options.subj.norm.log.method);
+            end
+        end
+    else
+        json.approval.(modality) = 0;
+        savejson('', json, options.subj.coreg.log.method);
+    end
+end
+
 if strcmp(computer('arch'),'maci64')
-    system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ',ea_path_helper([directory,ea_stripext(currvol),'.nii'])]);
+    system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ', currvol]);
 end
 
 if ~isempty(b0restanchor{activevolume})
-    thisrest=strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
+    thisrest = strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
     ea_cleandownstream(directory,thisrest)
 end
 
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-activevolume=getappdata(handles.leadfigure,'activevolume');
+checkregImages = getappdata(handles.leadfigure,'checkregImages');
+activevolume = getappdata(handles.leadfigure,'activevolume');
 
-if activevolume==length(checkregImages)
-    close(handles.leadfigure); % make an exit
+if activevolume == length(checkregImages)
+    close(handles.leadfigure);
     return
 else
-    activevolume=activevolume+1;
+    activevolume = activevolume+1;
 end
 
-setappdata(handles.leadfigure,'activevolume',activevolume);
+setappdata(handles.leadfigure, 'activevolume', activevolume);
 ea_mrcview(handles);
 try
-    title = get(handles.leadfigure, 'Name');    % Fix title
+    title = get(handles.leadfigure, 'Name');
     ea_busyaction('off',handles.leadfigure,'coreg');
     set(handles.leadfigure, 'Name', title);
 end
@@ -694,21 +737,21 @@ function back_Callback(hObject, eventdata, handles)
 % hObject    handle to back (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_busyaction('on',handles.leadfigure,'coreg');
+ea_busyaction('on', handles.leadfigure, 'coreg');
 
-activevolume=getappdata(handles.leadfigure,'activevolume');
+activevolume = getappdata(handles.leadfigure, 'activevolume');
 
 if activevolume==1
-    ea_busyaction('off',handles.leadfigure,'coreg');
+    ea_busyaction('off',handles.leadfigure, 'coreg');
     return
 else
-    activevolume=activevolume-1;
-    setappdata(handles.leadfigure,'activevolume',activevolume);
+    activevolume = activevolume-1;
+    setappdata(handles.leadfigure, 'activevolume', activevolume);
 end
 
 ea_mrcview(handles);
-title = get(handles.leadfigure, 'Name');    % Fix title
-ea_busyaction('off',handles.leadfigure,'coreg');
+title = get(handles.leadfigure, 'Name');
+ea_busyaction('off', handles.leadfigure, 'coreg');
 set(handles.leadfigure, 'Name', title);
 
 
