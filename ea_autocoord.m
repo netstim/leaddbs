@@ -22,7 +22,6 @@ options.subj = bids.getSubj(subjId{1}, options.modality);
 
 % get accurate electrode specifications and save it in options.
 options = ea_resolve_elspec(options);
-directory = [options.root,options.patientname,filesep];
 
 if strcmp(options.leadprod, 'dbs') || strcmp(options.leadprod, 'connectome')
     if options.dicomimp.do || options.assignnii % do DICOM-Import.
