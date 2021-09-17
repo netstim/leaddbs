@@ -1,4 +1,4 @@
-function [mni_files,native_files] = vta_walkpath(new_path,pipeline)
+function [mni_files,native_files,derivatives_cell] = vta_walkpath(source_patient,new_path,pipeline,derivatives_cell)
 
 
 switch pipeline
@@ -16,7 +16,9 @@ switch pipeline
                 files_in_this_folder = dir_without_dots(fullfile(mni_dir,this_folder_names{folder_names}));
                 mni_files{file_indx} = {files_in_this_folder.name};
                 for mni_file = 1:length(mni_files{1,file_indx})
+                    derivatives_cell{end+1,1} = fullfile(source_patient,pipeline,'MNI_ICBM_2009b_NLIN_ASYM',mni_files{1,file_indx}{1,mni_file});
                     mni_files{1,file_indx}{1,mni_file} = fullfile(mni_dir,this_folder_names{folder_names},mni_files{1,file_indx}{1,mni_file});
+                    derivatives_cell{end,2} = mni_files{1,file_indx}{1,mni_file};
                 end
                 file_indx = file_indx+1;
                 %all_files contains all the names
@@ -32,7 +34,9 @@ switch pipeline
                 files_in_this_folder = dir_without_dots(fullfile(native_dir,this_folder_names{folder_names}));
                 native_files{file_indx} = {files_in_this_folder.name};
                 for native_file = 1:length(native_files{1,file_indx})
+                    derivatives_cell{end+1,1} = fullfile(source_patient,pipeline,'native',native_files{1,file_indx}{1,native_file});
                     native_files{1,file_indx}{1,native_file} = fullfile(native_dir,this_folder_names{folder_names},native_files{1,file_indx}{1,native_file});
+                    derivatives_cell{end,2} = native_files{1,file_indx}{1,native_file};
                 end
                 file_indx = file_indx+1;
                 %all_files contains all the names
@@ -48,15 +52,21 @@ switch pipeline
           this_folder = dir_without_dots(mni_dir);
           mni_files = {this_folder.name};
           for i=1:length(mni_files)
+              derivatives_cell{end+1,1} = fullfile(source_patient,pipeline,'MNI_ICBM_2009b_NLIN_ASYM',mni_files{i});
               mni_files{i} = fullfile(mni_dir,mni_files{i});
+              derivatives_cell{end,2} = mni_files{i};
           end
       end
+          
       if exist(native_dir,'dir')
           this_folder = dir_without_dots(native_dir);
           native_files = {this_folder.name};
           for i=1:length(native_files)
+              derivatives_cell{end+1,1} = fullfile(source_patient,pipeline,'native',native_files{i});
               native_files{i} = fullfile(native_dir,native_files{i});
+              derivatives_cell{end,2} = native_files{i};
           end
       end
+      
 end
 return
