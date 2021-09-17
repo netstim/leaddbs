@@ -207,11 +207,11 @@ switch currvol
             if ~isfile(options.subj.coreg.log.method)
                 method = '';
             else
-                json = loadjson(options.subj.coreg.log.method);
-                method = json.method.MRI;
-
                 % Extract image modality
                 modality = ea_getmodality(currvol);
+
+                json = loadjson(options.subj.coreg.log.method);
+                method = json.method.(modality);
 
                 if ~isfield(json, 'approval') || ~isfield(json.approval, modality)
                     json.approval.(modality) = 0;
