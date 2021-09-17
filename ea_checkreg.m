@@ -499,7 +499,9 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     if all(cellfun(@(f) ea_reglocked(options, f), preopCoregImages))
         json.approval = 1;
     else
-        ea_warning('You approved normalization before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+        warning('off', 'backtrace');
+        warning('You approved normalization before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+        warning('on', 'backtrace');
         json.approval = 0.5;
     end
 
@@ -534,7 +536,9 @@ else
                 % we set the normalization approval rate to 1. This way, it will
                 % still be overriden in case of running a multispectral
                 % normalization.
-                ea_warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+                warning('off', 'backtrace');
+                warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+                warning('on', 'backtrace');
                 json.approval = 0.5;
                 savejson('', json, options.subj.norm.log.method);
             end
@@ -710,6 +714,7 @@ if strcmp(computer('arch'),'maci64')
     system(['xattr -wx com.apple.FinderInfo "0000000000000000000C00000000000000000000000000000000000000000000" ', currvol]);
 end
 
+b0restanchor = getappdata(handles.leadfigure,'b0restanchor');
 if ~isempty(b0restanchor{activevolume})
     thisrest = strrep(ea_stripext(b0restanchor{activevolume}),'mean','r');
     ea_cleandownstream(directory,thisrest)
