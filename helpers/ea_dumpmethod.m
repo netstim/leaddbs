@@ -1,4 +1,8 @@
-function ea_dumpmethod(options, type)
+function ea_dumpmethod(options, type, modality)
+
+if strcmp(type, 'coreg') && ~exist('modality', 'var')
+    error('Missing modality when dumping coregistration method!');
+end
 
 methodLogFile = options.subj.(type).log.method;
 
@@ -12,8 +16,11 @@ end
 % Set method
 switch type
     case 'coreg'
-        log.method.CT = options.coregct.method;
-        log.method.MRI = options.coregmr.method;
+        if strcmp(modality, 'CT')
+            log.method.CT = options.coregct.method;
+        else
+            log.method.(modality) = options.coregmr.method;
+        end
     case 'norm'
         log.method = options.normalize.method;
     case 'brainshift'
