@@ -1,27 +1,9 @@
-function output=ea_getmodality(input)
-if isstruct(input) % options supplied
-    directory=[input.root,input.patientname,filesep];
-    options=input;
-else
-    directory=input;
-end
-if ~strcmp(directory(end),filesep)
-    directory=[directory,filesep];
-end
-modality = ea_checkctmrpresent(directory);
-modality = find(modality);
-if isempty(modality)    % no postop image present
-    modality = 1;    % set to MR to work it around
-elseif length(modality) == 2    % both MR and CT image present
-    prefs=ea_prefs;
-    modality = prefs.preferMRCT;  % set the modality according to 'prefs.preferMRCT'
-end
+function modality = ea_getmodality(BIDSFilePath)
+% Extract image modality from BIDS file path and keep [ax|cor|sag] label
+% for post-op MRI
 
-if exist('options','var') % originally, options were supplied
-    
-    options.modality=modality;
-    output=options;
-    
-else
-    output=modality;
+if isempty(regexp(BIDSFilePath, '_acq-(ax|cor|sag)_', 'once'))
+    modality = regexp(BIDSFilePath, '(?<=_)([a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
+else % Keep plane label for post-op MRI
+    modality = regexp(BIDSFilePath, '(?<=_acq-)((ax|sag|cor)_[a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
 end
