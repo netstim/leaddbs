@@ -31,10 +31,9 @@ end
 
 % Do coregistration
 for i=1:length(moving)
+    ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
     ea_coregimages(options, moving{i}, anchor, output{i}, [], options.prefs.mrcoreg.writeoutcoreg);
 end
-
-ea_dumpmethod(options, 'coreg');
 
 if options.prefs.diary
     diary off;
