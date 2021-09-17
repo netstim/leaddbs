@@ -110,6 +110,8 @@ else
     evalin('base','checkregempty=0;');
 end
 
+options.overwriteapproved = 0;
+
 %set(handles.previous,'visible','off'); set(handles.next,'visible','off');
 setappdata(handles.leadfigure, 'checkregImages', checkregImages)
 setappdata(handles.leadfigure, 'b0restanchor', b0restanchor)
