@@ -211,11 +211,8 @@ switch currvol
                 method = json.method.MRI;
 
                 % Extract image modality
-                if isempty(regexp(currvol, '_acq-(ax|cor|sag)_', 'once'))
-                    modality = regexp(currvol, '(?<=_)([a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
-                else % Keep plane label for post-op MRI
-                    modality = regexp(currvol, '(?<=_acq-)((ax|sag|cor)_[a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
-                end
+                modality = ea_getmodality(currvol);
+
                 if ~isfield(json, 'approval') || ~isfield(json.approval, modality)
                     json.approval.(modality) = 0;
                     savejson('', json, options.subj.coreg.log.method);
@@ -248,8 +245,8 @@ else % normal anatomical 2 anatomical registration
 end
 
 set(handles.imgfn, 'Visible', 'on');
-set(handles.imgfn, 'String', checkregFig);
-set(handles.imgfn, 'TooltipString', checkregFig);
+set(handles.imgfn, 'String', strrep(checkregFig, [fileparts(options.subj.subjDir), filesep], ''));
+set(handles.imgfn, 'TooltipString', strrep(checkregFig, [fileparts(options.subj.subjDir), filesep], ''));
 
 switch currvol
     case options.subj.norm.anat.preop.(options.subj.AnchorModality)
@@ -521,11 +518,10 @@ function approvebutn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'coreg');
 
-options=getappdata(handles.leadfigure,'options');
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-activevolume=getappdata(handles.leadfigure,'activevolume');
-directory=getappdata(handles.leadfigure,'directory');
-currvol=checkregImages{activevolume};
+options = getappdata(handles.leadfigure,'options');
+checkregImages = getappdata(handles.leadfigure,'checkregImages');
+activevolume = getappdata(handles.leadfigure,'activevolume');
+currvol = checkregImages{activevolume};
 
 switch ea_stripext(currvol)
     case ea_stripext(options.prefs.gprenii)
