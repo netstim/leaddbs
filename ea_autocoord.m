@@ -203,7 +203,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             ea_gencheckregfigs(options, 'norm');
         end
 
-        ea_checkcoreg(options);
+        ea_checkreg(options);
         drawnow; % Prevents the figure from changing the name with multiple subjects
 
         e=evalin('base', 'checkregempty');
