@@ -41,8 +41,8 @@ else
 end
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','headmodel','miscellaneous'};
 %mapping will allow quick reference of the files to move
-legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii'};
-bids_modalities = {'T1w.nii.gz','T2w.nii.gz','PD.nii.gz','CT.nii.gz','ax.nii.gz','cor.nii.gz','sag.nii.gz'};
+legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii'};
+bids_modalities = {'T1w.nii.gz','T2w.nii.gz','PDw.nii.gz','CT.nii.gz','ax.nii.gz','cor.nii.gz','sag.nii.gz','FGATIR.nii.gz'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 [brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous] = create_bids_mapping();
 %these files should be converted to .json
@@ -145,8 +145,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        %derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
-                        %derivatives_cell{end,2} = fullfile(new_path,pipelines{2},[patient_name,'_',bids_name]);
+                     
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                     elseif ~isempty(regexp(files_to_move{files},'^coreg.*.log'))
                         derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
@@ -165,8 +164,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        %derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
-                        %derivatives_cell{end,2} = fullfile(new_path,pipelines{2},[patient_name,'_',bids_name]);
+                        
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                     elseif ismember(files_to_move{files},normalization{:,1})
                         %corresponding index of the new pat
@@ -177,8 +175,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        %derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
-                        %derivatives_cell{end,2} = fullfile(new_path,pipelines{3},[patient_name,'_',bids_name]);
+                        
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                                 %only for normalization
                     elseif ~isempty(regexp(files_to_move{files},'^normalize_.*.log'))
@@ -213,8 +210,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        %derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
-                        %derivatives_cell{end,2} = fullfile(new_path,pipelines{5},[patient_name,'_',bids_name]);
+                        
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                     
                     elseif ismember(files_to_move{files},prefs{:,1})
