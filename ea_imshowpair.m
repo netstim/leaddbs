@@ -447,7 +447,6 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         if ~contains(callingfunction,'normalization') % this on
             return
         end
-        %[options] = ea_assignpretra(options);
         ea_busyaction('on',gcf,'normcheck');
         PostOpView=0;
         PostOpLoaded={''};
@@ -515,7 +514,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
         ImgO(:,:,:,1)=pt.img;
 
-        w=load([ea_space(options),'wires.mat']);
+        w=load([ea_space,'wires.mat']);
         w.wires=single(w.wires);
         w.wires=w.wires/255;
         w.wires=w.wires.*0.2;
