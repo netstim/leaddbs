@@ -167,26 +167,26 @@ if ~isempty(transform)
 
         % Need to differentiate  the transformation type
         if nargin >= 5
-            transformmethod = varargin{5};
+            normMethod = varargin{5};
         else
-            transformmethod = 'FALLBACK';
+            normMethod = 'FALLBACK';
         end
 
-        transformmethod = upper(transformmethod{end});
+        normMethod = upper(normMethod{end});
 
-        if strcmp(transformmethod, 'AFFINE') % file is  4*4 affine matrix
+        if strcmp(normMethod, 'AFFINE') % file is  4*4 affine matrix
                 transform = load(transform);
                 varname = fieldnames(transform);
                 transform = transform.(varname{1});
                 XYZ_dest_mm = transform * XYZ_src_vx;
 
-        elseif strcmp(transformmethod, 'COREG') % file is 1*N spm_coreg return value
+        elseif strcmp(normMethod, 'COREG') % file is 1*N spm_coreg return value
                 transform = load(transform);
                 varname = fieldnames(transform);
                 transform = transform.(varname{1});
                 XYZ_dest_mm = spm_matrix(transform(:)')\ea_get_affine(src)*XYZ_src_vx;
 
-        elseif contains(transformmethod, 'SPM') && ~contains(transformmethod, 'HYBRID') % Registration done by SPM (ea_spm_coreg)
+        elseif contains(normMethod, 'SPM') && ~contains(normMethod, 'HYBRID') % Registration done by SPM (ea_spm_coreg)
                 % fuzzy match, transform can be specified as *_spm.mat or simply *.mat
                 if ~isfile(transform) % *.mat not specified
                     transform = regexprep(transform, '\.mat$', '-spm.mat');
@@ -199,7 +199,7 @@ if ~isempty(transform)
                 transform = transform.spmaffine;
                 XYZ_dest_mm = transform * XYZ_src_vx;
 
-         elseif contains(transformmethod, 'ANTS') % Registration done by ANTs (ea_ants)
+         elseif contains(normMethod, 'ANTS') % Registration done by ANTs (ea_ants)
                 % fuzzy match, transform can be specified as *_ants.mat or simply *.mat
                 if isfile(transform) % *.mat present
                     useinverse = 1;
@@ -229,8 +229,8 @@ if ~isempty(transform)
                 XYZ_src_mm(2,:)=-XYZ_src_mm(2,:);
 
                 % apply transform, need transpose becuase ANTs prefer N*3 like row vector
-                directory = fileparts(fileparts(fileparts(GetFullPath(transform)))); % Subj folder (BIDS dataset)
-                XYZ_dest_mm = ea_ants_apply_transforms_to_points(directory, XYZ_src_mm(1:3,:)', useinverse, transform)';
+                subjDir = fileparts(fileparts(fileparts(GetFullPath(transform)))); % Subj folder (BIDS dataset)
+                XYZ_dest_mm = ea_ants_apply_transforms_to_points(subjDir, XYZ_src_mm(1:3,:)', useinverse, transform)';
 
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
@@ -239,7 +239,7 @@ if ~isempty(transform)
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
-        elseif contains(transformmethod, 'FLIRT') || contains(transformmethod, 'FSL') % Registration done by FSL (ea_flirt)
+        elseif contains(normMethod, 'FLIRT') || contains(normMethod, 'FSL') % Registration done by FSL (ea_flirt)
                 % fuzzy match, transform can be specified as *_flirt.mat or simply *.mat
                 if ~isfile(transform) % *.mat not specified
                     transform = regexprep(transform, '\.mat$', '-flirt.mat');
@@ -276,65 +276,69 @@ if ~isempty(transform)
     % automatically if you want to map src coords to dest coords
     % (internally, for ANTs, FSL and SPM, the inverse of the deformation
     % field is used for themapping).
-    elseif ~isempty(regexp(transform, 'y_ea_.*normparams\.nii$', 'once'))
+    elseif endsWith(transform, 'forwardTransform') || endsWith(transform, 'inverseTransform')
+        % Get normalization method
+    	subjDir = fileparts(transform);
+        options = ea_getptopts(subjDir);
+        json = loadjson(options.subj.norm.log.method);
+        normMethod = upper(json.method);
 
-        % check which normalization method has been used
-    	directory = fileparts(transform);
-        if isempty(directory)
-            directory = '.';
-        end
-        transformmethod=ea_whichnormmethod(directory);
+        if contains(normMethod, 'ANTS')
+            if endsWith(transform, 'inverseTransform')
+                useinverse = 1;
+            else
+                useinverse = 0;
+            end
 
-        switch transformmethod
+            % vox to mm, ANTs takes mm coords as input
+            XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
 
-            case ea_getantsnormfuns % ANTs (ea_ants_nolinear) used in LEAD
-                if contains(transform, 'inverseTransform')
-                    useinverse = 1;
-                else
-                    useinverse = 0;
-                end
+            % RAS to LPS, ANTs (ITK) use LPS coords
+            XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
+            XYZ_src_mm(2,:)=-XYZ_src_mm(2,:);
 
-                % vox to mm, ANTs takes mm coords as input
-                XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
+            % apply transform, need transpose becuase ANTs prefer N*3
+            % like row vector
+            XYZ_dest_mm=ea_ants_apply_transforms_to_points(subjDir,XYZ_src_mm(1:3,:)',useinverse)';
 
-                % RAS to LPS, ANTs (ITK) use LPS coords
-                XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
-                XYZ_src_mm(2,:)=-XYZ_src_mm(2,:);
+            % LPS to RAS, restore to RAS coords
+            XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
+            XYZ_dest_mm(2,:)=-XYZ_dest_mm(2,:);
 
-                % apply transform, need transpose becuase ANTs prefer N*3
-                % like row vector
-                XYZ_dest_mm=ea_ants_apply_transforms_to_points(directory,XYZ_src_mm(1:3,:)',useinverse)';
+            %  make sure coors is in 4*N size (for further transformation)
+            XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
-                % LPS to RAS, restore to RAS coords
-                XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
-                XYZ_dest_mm(2,:)=-XYZ_dest_mm(2,:);
+        elseif contains(normMethod, 'FNIRT') || contains(normMethod, 'FSL')
+            % if 'inverseTransform' is specified, it means
+            % mapping from src coords to dest coords, i.e., NOT the
+            % inverse mapping (from dest coords to src coords).
+            if endsWith(transform, 'inverseTransform')
+                inversemap = 0;
+            else
+                inversemap = 1;
+            end
 
-                %  make sure coors is in 4*N size (for further transformation)
-                XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
+            % vox to mm, img2imgcoord takes mm coords as input
+            XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
 
-            case ea_getfslnormfuns % FSL (ea_fnirt) used in lead
-                % if 'inverseTransform' is specified, it means
-                % mapping from src coords to dest coords, i.e., NOT the
-                % inverse mapping (from dest coords to src coords).
-                if contains(transform, 'inverseTransform')
-                    inversemap = 0;
-                else
-                    inversemap = 1;
-                end
+            % apply transform, need transpose because FSL prefer N*3
+            % like row vector
+            XYZ_dest_mm = ea_fsl_apply_normalization_to_points(subjDir,XYZ_src_mm(1:3,:)',inversemap)';
 
-                % vox to mm, img2imgcoord takes mm coords as input
-                XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
-
-                % apply transform, need transpose because FSL prefer N*3
-                % like row vector
-                XYZ_dest_mm = ea_fsl_apply_normalization_to_points(directory,XYZ_src_mm(1:3,:)',inversemap)';
-
-                %  make sure coors is in 4*N size (for further transformation)
-                XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
+            %  make sure coors is in 4*N size (for further transformation)
+            XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
             % Default use SPM to do the mapping
-            otherwise
-                XYZ_dest_mm = srcvx2destmm_deform(XYZ_src_vx, transform);
+        elseif contains(normMethod, 'SPM')
+            if endsWith(transform, 'inverseTransform')
+                transform = [options.subj.norm.transform.inverseBaseName, 'spm.nii'];
+            else
+                transform = [options.subj.norm.transform.forwardBaseName, 'spm.nii'];
+            end
+
+            XYZ_dest_mm = srcvx2destmm_deform(XYZ_src_vx, transform);
+        else
+            error('Normalization method not recognizable!');
         end
 
     % 'y_*.nii' or 'iy_*.nii' from SPM supplied, NOLINEAR case
@@ -348,24 +352,19 @@ if ~isempty(transform)
 
         % Need to specify the transformation type
         if nargin >= 5
-            transformmethod = varargin{5};
-            transformmethod = upper(transformmethod);
+            normMethod = varargin{5};
+            normMethod = upper(normMethod);
         else
             error('Please specify the transformation type');
         end
 
-        switch transformmethod
+        switch normMethod
 
             case {'ANTS'} % ANTs used
                 if nargin >= 6
                     useinverse = varargin{6};
                 else
                     useinverse = 0; % suppose proper deformation field specified, no need to invert
-                end
-
-                directory = fileparts(transform);
-                if isempty(directory)
-                    directory = '.';
                 end
 
                 % vox to mm, ANTs takes mm coords as input
@@ -377,7 +376,7 @@ if ~isempty(transform)
 
                 % apply transform, need transpose becuase ANTs prefer N*3
                 % like row vector
-                XYZ_dest_mm=ea_ants_apply_transforms_to_points(directory, XYZ_src_mm(1:3,:)', useinverse, transform)';
+                XYZ_dest_mm=ea_ants_apply_transforms_to_points([], XYZ_src_mm(1:3,:)', useinverse, transform)';
 
                 % LPS to RAS, restore to RAS coords
                 XYZ_dest_mm(1,:)=-XYZ_dest_mm(1,:);
@@ -398,7 +397,7 @@ if ~isempty(transform)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
             otherwise
-                error(['Unsupported transformation type: ', transformmethod])
+                error(['Unsupported transformation type: ', normMethod])
         end
 
     else
