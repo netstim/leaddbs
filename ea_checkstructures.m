@@ -724,7 +724,7 @@ if ~isempty(uuid)
 
         % now project fids back to native space and export mapping there:
         expvx=nii.mat\[expmm,ones(size(expmm,1),1)]';
-        [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
+        [~,subcvx]=ea_map_coords(expvx,[ea_space,'t1.nii'],[directory,'forwardTransform'],[directory,options.prefs.prenii_unnormalized]);
 
 
         if ~exist([directory,'fiducials',filesep,'native',filesep,uuid,'.nii'],'file')
