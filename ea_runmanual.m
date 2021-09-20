@@ -15,7 +15,7 @@ for side=options.sides
 
     switch options.modality
         case 1 % MRI
-            vol = spm_vol(options.subj.coreg.anat.postop.ax_T1w);
+            vol = spm_vol(options.subj.coreg.anat.postop.ax_MRI);
         case 2 % CT
             vol = spm_vol(options.subj.coreg.anat.postop.CT);
     end
