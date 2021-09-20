@@ -61,7 +61,7 @@ end
 
 
 tramat=eye(4);
-[~,~,dist]=ea_calc_distance(options.elspec.eldist,trajvector,tramat(1:3,1:3),[options.root,patientname,filesep,'lpost.nii']);
+[~,~,dist]=ea_calc_distance(options.elspec.eldist,trajvector,tramat(1:3,1:3),fullfile(options.subj.normDir,'tmp','lpost.nii'));
 
 % zdist is the distance between electrodes in z-direction.
 zdist=dist/norm(trajvector);
