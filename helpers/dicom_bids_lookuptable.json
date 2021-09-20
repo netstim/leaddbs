@@ -7,7 +7,7 @@
 			"PD": ["PD"]
 		},
 		"postop": {
-			"CT": ["Navigation"],
+			"CT": ["Navigation", "CT"],
 			"ax_MR": [],
 			"sag_MR": [],
 			"cor_MR":[]
