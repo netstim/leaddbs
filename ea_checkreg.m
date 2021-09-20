@@ -584,11 +584,12 @@ function coregmrmethod_Callback(hObject, eventdata, handles)
 
 options=getappdata(handles.leadfigure,'options');
 
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-activevolume=getappdata(handles.leadfigure,'activevolume');
-currvol=checkregImages{activevolume};
+checkregImages = getappdata(handles.leadfigure,'checkregImages');
+activevolume = getappdata(handles.leadfigure,'activevolume');
+currvol = checkregImages{activevolume};
+
 % init retry popup:
-if strcmp(currvol,'glanat.nii')
+if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     ea_checknormsetting(handles, 'coregmrmethod');
 end
 
