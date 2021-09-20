@@ -23,4 +23,4 @@ end
 set(handles.(handlestring), 'Value', find(ismember(names, defaultmethod), 1));
 
 % Check status of normalization setting button
-ea_checknormsetting(handles, handlestring);
+ea_normsettings(handles, handlestring);
