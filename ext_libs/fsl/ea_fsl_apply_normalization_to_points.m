@@ -33,4 +33,4 @@ else
     end
 end
 
-outcoords = ea_fsl_img2imgcoord(incoords, src, dest, transform, 'n');
+outcoords = ea_fsl_img2imgcoord(incoords, src, dest, transform, 'nonlinear');
