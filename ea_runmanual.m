@@ -15,9 +15,9 @@ for side=options.sides
 
     switch options.modality
         case 1 % MRI
-            vol = spm_vol([directory,options.prefs.tranii_unnormalized]);
+            vol = spm_vol(options.subj.coreg.anat.postop.ax_T1w);
         case 2 % CT
-            vol = spm_vol([directory,options.prefs.ctnii_coregistered]);
+            vol = spm_vol(options.subj.coreg.anat.postop.CT);
     end
     spm_orthviews('Reset');
     h = spm_orthviews('Image', vol);
