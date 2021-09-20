@@ -7,15 +7,6 @@ anchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 % Post-op MR modalities
 postopModality = fieldnames(options.subj.postopAnat);
 
-% Copy file tp preproc, take care of .nii.gz raw image
-if strcmp(options.prefs.niiFileExt, '.nii')
-    cellfun(@(x) copyfile(options.subj.postopAnat.(x).raw, [options.subj.postopAnat.(x).preproc, '.gz']), postopModality, 'Uni', 0);
-    cellfun(@(x) gunzip([options.subj.postopAnat.(x).preproc, '.gz']), postopModality, 'Uni', 0);
-    cellfun(@(x) delete([options.subj.postopAnat.(x).preproc, '.gz']), postopModality, 'Uni', 0);
-else
-    cellfun(@(x) copyfile(options.subj.postopAnat.(x).raw, options.subj.postopAnat.(x).preproc), postopModality, 'Uni', 0);
-end
-
 % Set moving and output image
 moving = cellfun(@(x) options.subj.postopAnat.(x).preproc, postopModality, 'Uni', 0);
 output = cellfun(@(x) options.subj.postopAnat.(x).coreg, postopModality, 'Uni', 0);
