@@ -1,7 +1,5 @@
 function varargout=ea_normalize_apply_normalization(options)
-% This is a function that simply applies normalization parameters (y_ea_normparams.nii) to the
-% unnormalized files and coregisters postop MRI to preop MRI if
-% MRI-modality is used.
+% Wrapper function to apply normalization to pre- an post-op images
 %
 % __________________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
