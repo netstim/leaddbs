@@ -662,7 +662,7 @@ function normmethod_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns normmethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from normmethod
 ea_storeui(handles);
-ea_checknormsetting(handles);
+ea_normsettings(handles);
 
 
 % --- Executes during object creation, after setting all properties.
