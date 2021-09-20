@@ -38,7 +38,7 @@ if genmaps
         [~,template]=ea_whichnormmethod(directory);
         V=spm_vol(template);
         pts=V.mat\pts;
-        pts=ea_map_coords(pts,template,[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
+        pts=ea_map_coords(pts,template,[directory,'forwardTransform'],[directory,options.prefs.prenii_unnormalized]);
         label=structures{s};
 
         ea_generate_probmaps(pts(1:3,:)',label,srcs,directory);

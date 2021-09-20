@@ -379,7 +379,7 @@ else % VTA calculated in native space and then transformed back to MNI
         [~,anatpresent] = ea_assignpretra(options);
         ptsvx_native = ea_mm2vox([midpts;actContact], [options.root,options.patientname,filesep,anatpresent{1}])';
         ptsmm_mni = ea_map_coords(ptsvx_native, [options.root,options.patientname,filesep,anatpresent{1}], ...
-            [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], '')';
+            [options.root,options.patientname,filesep,'inverseTransform'], '')';
         midpts_mni = ptsmm_mni(1:size(midpts,1),:);
         actContact_mni = ptsmm_mni(size(midpts,1)+1:end,:);
         options.native=0; % go back to template space for export
