@@ -75,7 +75,7 @@ for pt=1:length(uidir)
                 % warp into patient space:
 
                 %     try
-                [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
+                [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'forwardTransform'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
                 %     catch
                 %         ea_error(['Please check deformation field in ',directory,'.']);
                 %     end
@@ -187,7 +187,7 @@ for pt=1:length(uidir)
             case 'mnidirect'
                 fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';
             otherwise
-                [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'y_ea_inv_normparams.nii'], template,whichnormmethod);
+                [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'inverseTransform'], template,whichnormmethod);
                 try
                     warppts(pt,:)=warpinmni_mm';
                 catch
