@@ -1,4 +1,4 @@
-function  ea_imshowpair(Img, options, addstring, callingfunction)
+function  ea_imshowpair(Img, options, title, callingfunction)
 % this function is based on IMSHOW3DFULL by Maysam Shahedi and supports
 % truecolor images. Windowed view is adapted from MAGNIFY by Rick Hindman.
 %
@@ -20,15 +20,15 @@ end
 if nargin == 1
     figtit = '';
 elseif nargin == 2
-    figtit = options.patientname;
+    figtit = options.subj.subjId;
 elseif nargin >= 3
-    figtit = [options.patientname,', ',addstring];
+    figtit = [options.subj.subjId,', ',title];
 end
 
 isp=figure('color','k','Name',figtit,'NumberTitle','off','MenuBar','none','DockControls','off','ToolBar','none');
 
 % bind drag-drop event
-dndobj = ea_bind_dragndrop(isp, @DropFcn, @DropFcn);
+ea_bind_dragndrop(isp, @DropFcn, @DropFcn);
 
 ea_maximize(isp);
 Img=single(Img);
@@ -439,12 +439,12 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 case 'S'
                     SagittalView([]);
             end
-        end;
+        end
         ButtonMotionCallback(gcf);
     end
 
     function SwitchModality(numkey,Mod)
-        if ~strfind(callingfunction,'normalization') % this on
+        if ~contains(callingfunction,'normalization') % this on
             return
         end
         %[options] = ea_assignpretra(options);
@@ -461,7 +461,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
     end
 
     function SwitchPostop(update)
-        if ~strfind(callingfunction,'normalization') % this on
+        if ~contains(callingfunction,'normalization') % this on
             return
         end
 
