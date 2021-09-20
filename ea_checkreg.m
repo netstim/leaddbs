@@ -611,30 +611,27 @@ function openviewer_Callback(hObject, eventdata, handles)
 % hObject    handle to openviewer (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-options=getappdata(handles.leadfigure,'options');
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-activevolume=getappdata(handles.leadfigure,'activevolume');
-b0restanchor=getappdata(handles.leadfigure,'b0restanchor');
+options = getappdata(handles.leadfigure,'options');
+checkregImages = getappdata(handles.leadfigure,'checkregImages');
+activevolume = getappdata(handles.leadfigure,'activevolume');
+b0restanchor = getappdata(handles.leadfigure,'b0restanchor');
 
-currvol=checkregImages{activevolume};
-switch ea_stripext(currvol)
-    case ea_stripext(options.prefs.gprenii)
-        ea_show_normalization(options);
-    otherwise
-        checkregImages=getappdata(handles.leadfigure,'checkregImages');
-        activevolume=getappdata(handles.leadfigure,'activevolume');
-        directory=getappdata(handles.leadfigure,'directory');
+currvol = checkregImages{activevolume};
+if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
+	ea_show_normalization(options);
+else
+    directory = getappdata(handles.leadfigure,'directory');
 
-        options.moving=[directory,checkregImages{activevolume}];
-        if ~isempty(b0restanchor{activevolume})
-            options.fixed=[directory,b0restanchor{activevolume}];
-            options.tag=[checkregImages{activevolume},' & ',b0restanchor{activevolume}];
-        else
-            options.fixed=[directory,anchor];
-            options.tag=[checkregImages{activevolume},' & ',anchor];
-        end
+    options.moving = [directory,checkregImages{activevolume}];
+    if ~isempty(b0restanchor{activevolume})
+        options.fixed = [directory,b0restanchor{activevolume}];
+        options.tag = [checkregImages{activevolume},' & ',b0restanchor{activevolume}];
+    else
+        options.fixed = [directory,anchor];
+        options.tag = [checkregImages{activevolume},' & ',anchor];
+    end
 
-        ea_show_coregistration(options);
+    ea_show_coregistration(options);
 end
 
 
