@@ -173,64 +173,52 @@ if ~isempty(transform)
             transformmethod = 'FALLBACK';
         end
 
-        transformmethod = strsplit(transformmethod, ' '); % compatible with 'options.coregmr.method'
         transformmethod = upper(transformmethod{end});
 
-        switch transformmethod
-
-            case {'AFFINE'} % file is  4*4 affine matrix
+        if strcmp(transformmethod, 'AFFINE') % file is  4*4 affine matrix
                 transform = load(transform);
                 varname = fieldnames(transform);
                 transform = transform.(varname{1});
                 XYZ_dest_mm = transform * XYZ_src_vx;
 
-            case {'COREG'} % file is 1*N spm_coreg return value
+        elseif strcmp(transformmethod, 'COREG') % file is 1*N spm_coreg return value
                 transform = load(transform);
                 varname = fieldnames(transform);
                 transform = transform.(varname{1});
                 XYZ_dest_mm = spm_matrix(transform(:)')\ea_get_affine(src)*XYZ_src_vx;
 
-            case {'SPM'} % Registration done by SPM (ea_spm_coreg)
-                % fuzzy match, transform can be specified as XX2XX_spm.mat
-                % or simply XX2XX.mat
-                if ~strcmp(transform(end-7:end), '_spm.mat')
-                    transform = [transform(1:end-4), '_spm.mat'];
+        elseif contains(transformmethod, 'SPM') && ~contains(transformmethod, 'HYBRID') % Registration done by SPM (ea_spm_coreg)
+                % fuzzy match, transform can be specified as *_spm.mat or simply *.mat
+                if ~isfile(transform) % *.mat not specified
+                    transform = regexprep(transform, '\.mat$', '-spm.mat');
+                    if ~isfile(transform)
+                        error('Transformation file not detected!');
+                    end
                 end
+
                 transform = load(transform, 'spmaffine');
                 transform = transform.spmaffine;
                 XYZ_dest_mm = transform * XYZ_src_vx;
 
-            case {'ANTS'} % Registration done by ANTs (ea_ants)
-                directory = fileparts(transform);
-                if isempty(directory)
-                    directory = '.';
-                end
-
-                % fuzzy match, transform can be specified as
-                % XX2XX_antsX.mat, XX2XX_ants.mat or simply XX2XX.mat
-                if regexp(transform,'_ants\d*\.mat$', 'once')
-                    transform = transform(1:regexp(transform,'_ants\d*\.mat$', 'once')-1);
-                else
-                    transform = transform(1:end-4);
-                end
-
-                % check transformation file
-                match = dir([transform, '_ants*.mat']);
-                matchdirect=dir([transform,'.mat']);
-                if ~isempty(matchdirect) % specific ANTs transform file has been given
-                    transform=[transform,'.mat'];
-                    useinverse=1;
-                else
-                    if ~isempty(match) % src2dest.mat exists
-                        transform = [directory, filesep, match(end).name];
+         elseif contains(transformmethod, 'ANTS') % Registration done by ANTs (ea_ants)
+                % fuzzy match, transform can be specified as *_ants.mat or simply *.mat
+                if isfile(transform) % *.mat present
+                    useinverse = 1;
+                else % *.mat not present
+                    transform = regexprep(transform, '\.mat$', '-ants.mat');
+                    if isfile(transform) % *_ants.mat present
                         useinverse = 1; % Registration was done from src to dest, so we need to use inverse here
-                    else % if src2dest.mat is not found, check if dest2src.mat exists
-                        [~, transformname] = fileparts(transform);
-                        imgname = strsplit(transformname, '2');
-                        transform = [directory, filesep, imgname{2}, '2', imgname{1}];
-                        match = dir([transform, '_ants*.mat']);
-                        transform = [directory, filesep, match(end).name];
-                        useinverse = 0; % Registration was done from dest to src, no inverse needed
+                    else
+                        % Check if inverse transformation exist
+                        formSpace = regexp(transform, '(?<=_from-)[a-zA-Z]+', 'match', 'once');
+                        toSpace = regexp(transform, '(?<=_to-)[a-zA-Z]+', 'match', 'once');
+                        transform = strrep(transform, ['_from-', formSpace], ['_from-', toSpace]);
+                        transform = strrep(transform, ['_to-', toSpace], ['_to-', formSpace]);
+                        useinverse = 0;
+
+                        if ~isfile(transform) % Inverse transformation not present
+                            error('Transformation file not detected!');
+                        end
                     end
                 end
 
@@ -241,8 +229,8 @@ if ~isempty(transform)
                 XYZ_src_mm(1,:)=-XYZ_src_mm(1,:);
                 XYZ_src_mm(2,:)=-XYZ_src_mm(2,:);
 
-                % apply transform, need transpose becuase ANTs prefer N*3
-                % like row vector
+                % apply transform, need transpose becuase ANTs prefer N*3 like row vector
+                directory = fileparts(fileparts(fileparts(GetFullPath(transform)))); % Subj folder (BIDS dataset)
                 XYZ_dest_mm = ea_ants_apply_transforms_to_points(directory, XYZ_src_mm(1:3,:)', useinverse, transform)';
 
                 % LPS to RAS, restore to RAS coords
@@ -252,33 +240,25 @@ if ~isempty(transform)
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
-            case {'FSL', 'FLIRT','FSL FLIRT','FSL BBR'} % Registration done by FSL (ea_flirt)
-                directory = fileparts(transform);
-                if isempty(directory)
-                    directory = '.';
+        elseif contains(transformmethod, 'FLIRT') || contains(transformmethod, 'FSL') % Registration done by FSL (ea_flirt)
+                % fuzzy match, transform can be specified as *_flirt.mat or simply *.mat
+                if ~isfile(transform) % *.mat not specified
+                    transform = regexprep(transform, '\.mat$', '-flirt.mat');
+                    if ~isfile(transform)
+                        error('Transformation file not detected!');
+                    end
                 end
-
-                % fuzzy match, transform can be specified as
-                % XX2XX_flirtX.mat, XX2XX_flirt.mat or simply XX2XX.mat
-                if regexp(transform,'_flirt\d*\.mat$', 'once')
-                    transform = transform(1:regexp(transform,'_flirt\d*\.mat$', 'once')-1);
-                else
-                    transform = transform(1:end-4);
-                end
-                match = dir([transform, '_flirt*.mat']);
-                transform = [directory, filesep, match(end).name];
 
                 % vox to mm, img2imgcoord takes mm coords as input
                 XYZ_src_mm = ea_get_affine(src)*XYZ_src_vx;
 
-                % apply transform, need transpose because FSL prefer N*3
-                % like row vector
-                XYZ_dest_mm = ea_fsl_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'l')';
+                % apply transform, need transpose because FSL prefer N*3 like row vector
+                XYZ_dest_mm = ea_fsl_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'linear')';
 
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
 
-            otherwise % actual FALLBACK
+        else % actual FALLBACK
                 % If no transformmethod is supplied, do a just-in-time
                 % spm_coreg here as fallback, since linear transformation
                 % is not computational expensive anyway, the transformation
@@ -287,13 +267,8 @@ if ~isempty(transform)
                 x = spm_coreg(dest, src);
                 XYZ_dest_mm = spm_matrix(x(:)')\ea_get_affine(src)*XYZ_src_vx;
 
-                directory = fileparts(src);
-                if isempty(directory)
-                    directory = '.';
-                end
-                [~, mov] = ea_niifileparts(src);
-                [~, fix] = ea_niifileparts(dest);
-                save([directory, filesep, mov, '2', fix, '.mat'], 'x');
+                % directory = fileparts(GetFullPath(src));
+                % save([directory, filesep, ea_getmodality(src), '2', ea_getmodality(dest), '.mat'], 'x');
         end
 
    	% 'y_ea_normparams.nii' or 'y_ea_inv_normparams.nii' supplied, LEAD's
@@ -420,7 +395,7 @@ if ~isempty(transform)
 
                 % apply transform, need transpose because FSL prefer N*3
                 % like row vector
-                XYZ_dest_mm = ea_fsl_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'n')';
+                XYZ_dest_mm = ea_fsl_img2imgcoord(XYZ_src_mm(1:3,:)', src, dest, transform, 'nonlinear')';
 
                 %  make sure coors is in 4*N size (for further transformation)
                 XYZ_dest_mm = [XYZ_dest_mm; ones(1,size(XYZ_dest_mm, 2))];
