@@ -32,8 +32,14 @@ table_options = {'skip','skip', 'skip';
     'anat','postop', 'sag_MR';
     'anat','postop', 'cor_MR'};
 
-% lookup table to pre-allocate options for the table.
-lookup_table = loadjson(fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
+
+% lookup table to pre-allocate options for the table.% check whether pref exists, if not create it
+if ~ispref('dcm2bids', 'lookuptable')
+    lookup_table = loadjson(fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
+    addpref('dcm2bids', 'lookuptable', lookup_table)
+else
+    lookup_table = getpref('dcm2bids', 'lookuptable');
+end
 
 nii_folder = fullfile(dataset_folder, 'sourcedata', subjID, 'tmp');    % where are the nifti files located?
 
@@ -284,9 +290,18 @@ if sanity_check_passed == true
                 if ~exist(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'), 'dir')
                     mkdir(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'));
                 end
-                copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.nii.gz']));
-                copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.json']));
-                
+                if exist(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), 'file')
+                     copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.nii.gz']));
+                else
+                    warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']));
+                end
+               
+                 if exist(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), 'file')
+                      copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.json']));
+                else
+                    warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', fullfile(nii_folder, [dat{fileIdx, 1}, '.json']));
+                end
+               
                 anat_files.(ses).(dat{fileIdx, 4}) = fname; % set output struct
             end
             
