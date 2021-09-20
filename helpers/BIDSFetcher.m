@@ -8,6 +8,10 @@ classdef BIDSFetcher
         subjFolderNames
         subjId
     end
+    
+    properties (Access = private, Constant)
+        anchorSpace = 'anchorNative';
+    end
 
     methods
         %% Constructor
@@ -355,19 +359,18 @@ classdef BIDSFetcher
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set coregistered anat images
-            anchorSpace = 'anchorNative';
             session = fieldnames(preprocAnat);
             for i=1:length(session)
                 modality = fieldnames(preprocAnat.(session{i}));
                 for j=1:length(modality)
                     anat = strrep(preprocAnat.(session{i}).(modality{j}), LeadDBSDirs.preprocDir, LeadDBSDirs.coregDir);
-                    coregAnat.(session{i}).(modality{j}) = strrep(anat , [subjId, '_'], [subjId, '_space-', anchorSpace, '_']);
+                    coregAnat.(session{i}).(modality{j}) = strrep(anat , [subjId, '_'], [subjId, '_space-', obj.anchorSpace, '_']);
                 end
             end
 
             % Set tone-mapped CT
             if isfield(coregAnat.postop, 'CT')
-                coregAnat.postop.tonemapCT = strrep(coregAnat.postop.CT, anchorSpace, [anchorSpace, '_rec-tonemapped']);
+                coregAnat.postop.tonemapCT = strrep(coregAnat.postop.CT, obj.anchorSpace, [obj.anchorSpace, '_rec-tonemapped']);
             end
         end
 
@@ -396,9 +399,8 @@ classdef BIDSFetcher
 
             % Set post-op CT transformation
             if isfield(coregAnat.postop, 'CT')
-                anchorSpace = 'anchorNative';
-                coregTransform.CT.forwardBaseName = [baseName, 'from-CT_to-', anchorSpace, '_desc-'];
-                coregTransform.CT.inverseBaseName = [baseName, 'from-', anchorSpace, '_to-CT_desc-'];
+                coregTransform.CT.forwardBaseName = [baseName, 'from-CT_to-', obj.anchorSpace, '_desc-'];
+                coregTransform.CT.inverseBaseName = [baseName, 'from-', obj.anchorSpace, '_to-CT_desc-'];
             end
         end
 
@@ -472,9 +474,8 @@ classdef BIDSFetcher
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set anchor anat image used for brain shift correction
-            anchorSpace = 'anchorNative';
             modality = fieldnames(coregAnat.preop);
-            brainshiftAnat.anchor = strrep(coregAnat.preop.(modality{1}), anchorSpace, [anchorSpace, '_rec-brainshift']);
+            brainshiftAnat.anchor = strrep(coregAnat.preop.(modality{1}), obj.anchorSpace, [obj.anchorSpace, '_rec-brainshift']);
             brainshiftAnat.anchor = strrep(brainshiftAnat.anchor, LeadDBSDirs.coregDir, LeadDBSDirs.brainshiftDir);
 
             % Set moving post-op image used for brain shift correction
@@ -497,11 +498,11 @@ classdef BIDSFetcher
 
             % Set masks used for brain shift correction
             baseDir = fullfile(LeadDBSDirs.brainshiftDir, 'anat');
-            brainshiftAnat.secondstepmask = [baseDir, filesep, 'sub-', subjId, '_space-', anchorSpace, '_desc-secondstepmask', obj.settings.niiFileExt];
-            brainshiftAnat.thirdstepmask = [baseDir, filesep, 'sub-', subjId, '_space-', anchorSpace, '_desc-thirdstepmask', obj.settings.niiFileExt];
+            brainshiftAnat.secondstepmask = [baseDir, filesep, 'sub-', subjId, '_space-', obj.anchorSpace, '_desc-secondstepmask', obj.settings.niiFileExt];
+            brainshiftAnat.thirdstepmask = [baseDir, filesep, 'sub-', subjId, '_space-', obj.anchorSpace, '_desc-thirdstepmask', obj.settings.niiFileExt];
 
             % Set brain shift corrected image
-            brainshiftAnat.scrf = strrep(brainshiftAnat.moving, anchorSpace, [anchorSpace, '_rec-brainshift']);
+            brainshiftAnat.scrf = strrep(brainshiftAnat.moving, obj.anchorSpace, [obj.anchorSpace, '_rec-brainshift']);
         end
 
         function brainshiftTransform = getBrainshiftTransform(obj, subjId)
@@ -509,9 +510,8 @@ classdef BIDSFetcher
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set base dir and base name
-            anchorSpace = 'anchorNative';
             baseDir = fullfile(LeadDBSDirs.brainshiftDir, 'transformations');
-            baseName = ['sub-', subjId, '_from-', anchorSpace, '_to-', anchorSpace, 'BSC_desc-'];
+            baseName = ['sub-', subjId, '_from-', obj.anchorSpace, '_to-', obj.anchorSpace, 'BSC_desc-'];
 
             % Set brain shift transformations
             brainshiftTransform.instore = [baseDir, filesep, baseName, 'instore.mat'];
@@ -584,14 +584,13 @@ classdef BIDSFetcher
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set normalized anat images
-            anchorSpace = 'anchorNative';
             templateSpace = obj.spacedef.name;
             session = fieldnames(coregAnat);
             for i=1:length(session)
                 modality = fieldnames(coregAnat.(session{i}));
                 for j=1:length(modality)
                     anat = strrep(coregAnat.(session{i}).(modality{j}), LeadDBSDirs.coregDir, LeadDBSDirs.normDir);
-                    normAnat.(session{i}).(modality{j}) = strrep(anat, anchorSpace, templateSpace);
+                    normAnat.(session{i}).(modality{j}) = strrep(anat, obj.anchorSpace, templateSpace);
                 end
             end
         end
@@ -601,13 +600,12 @@ classdef BIDSFetcher
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
             % Set base dir and base name
-            anchorSpace = 'anchorNative';
             templateSpace = obj.spacedef.name;
             baseName = fullfile(LeadDBSDirs.normDir, 'transformations', ['sub-', subjId, '_from-']);
 
             % Set normalization transformations
-            normTransform.forwardBaseName = [baseName, anchorSpace, '_to-', templateSpace, '_desc-'];
-            normTransform.inverseBaseName = [baseName, templateSpace, '_to-', anchorSpace, '_desc-'];
+            normTransform.forwardBaseName = [baseName, obj.anchorSpace, '_to-', templateSpace, '_desc-'];
+            normTransform.inverseBaseName = [baseName, templateSpace, '_to-', obj.anchorSpace, '_desc-'];
         end
 
         function normLog = getNormLog(obj, subjId)
@@ -680,9 +678,8 @@ classdef BIDSFetcher
             postopAnat = obj.getPostopAnat(subjId, preferMRCT);
             if isfield(postopAnat, 'CT')
                 rawCTSpace = 'rawCT';
-                anchorSpace = 'anchorNative';
                 recon.rawCTMask = [baseName, 'space-', rawCTSpace, '_desc-brainmask', obj.settings.niiFileExt];
-                recon.anchorNativeMask = [baseName, 'space-', anchorSpace, '_desc-brainmask', obj.settings.niiFileExt];
+                recon.anchorNativeMask = [baseName, 'space-', obj.anchorSpace, '_desc-brainmask', obj.settings.niiFileExt];
             end
         end
 
