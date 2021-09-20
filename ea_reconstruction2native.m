@@ -85,6 +85,6 @@ c=nii(1).mat\c;
 
 [~,anats]=ea_assignpretra(options);
 src=[options.root,options.patientname,filesep,anats{1}]; % assign src image as primary anat image here.
-c=ea_map_coords(c(1:3,:), nii(1).fname, [options.root,options.patientname,filesep,'y_ea_normparams.nii'],...
+c=ea_map_coords(c(1:3,:), nii(1).fname, [options.root,options.patientname,filesep,'forwardTransform'],...
     src);
 c=c';
