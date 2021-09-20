@@ -1,8 +1,6 @@
 function ea_genctmask(options)
 
-masks_path = fullfile(options.subj.subjDir, 'masks');
-
-if ~isfolder(masks_path); mkdir(masks_path); end
+masks_path = fileparts(options.subj.recon.rawCTMask);
 
 copyfile([ea_space,'brainmask.nii.gz'], fullfile(masks_path,'brainmask.nii.gz'));
 gunzip(fullfile(masks_path,'brainmask.nii.gz'));
@@ -21,7 +19,7 @@ elseif contains(coreg_log.method.CT, 'FLIRT')
     transform_file_name = [options.subj.coreg.transform.CT.inverseBaseName 'flirt.mat'];
 end
 
-ea_apply_coregistration(options.subj.preproc.anat.postop.CT, fullfile(masks_path,'wbrainmask.nii'), fullfile(masks_path,'ct_mask.nii'), ...
+ea_apply_coregistration(options.subj.preproc.anat.postop.CT, fullfile(masks_path,'wbrainmask.nii'), options.subj.recon.rawCTMask, ...
     transform_file_name,'nn'); % nn interpolation
 
-movefile(fullfile(masks_path,'wbrainmask.nii'), fullfile(masks_path,'rct_mask.nii'));
+movefile(fullfile(masks_path,'wbrainmask.nii'), options.subj.recon.anchorNativeMask);
