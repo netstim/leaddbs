@@ -90,7 +90,15 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         if ~isfile(options.subj.preopAnat.(fields{i}).preproc)
             % Copy files
             ea_mkdir(fileparts(options.subj.preopAnat.(fields{i}).preproc));
-            copyfile(options.subj.preopAnat.(fields{i}).raw, options.subj.preopAnat.(fields{i}).preproc);
+
+            % Copy file to preproc, take care of .nii.gz raw image
+            if strcmp(options.pref.niiFileExt, '.nii')
+                copyfile(options.subj.preopAnat.(fields{i}).raw, [options.subj.preopAnat.(fields{i}).preproc, '.gz']);
+                gunzip([options.subj.preopAnat.(fields{i}).preproc, '.gz']);
+                delete([options.subj.preopAnat.(fields{i}).preproc, '.gz']);
+            else
+                copyfile(options.subj.preopAnat.(fields{i}).raw, options.subj.preopAnat.(fields{i}).preproc);
+            end
 
             % Run reorientation, cropping and bias field correction
             ea_anatpreprocess(options.subj.preopAnat.(fields{i}).preproc);
