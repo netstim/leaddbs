@@ -176,7 +176,7 @@ if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
     set(handles.normsettings, 'Visible', 'on');
     set(handles.recomputebutn, 'String', '(Re-) compute normalization using...');
     set(handles.coregmrmethod, 'TooltipString', 'Choose a normalization method');
-    set(handles.leadfigure, 'Name',[options.subj.subjId, ': Check Normalization']);
+    set(handles.leadfigure, 'Name', [options.subj.subjId, ': Check Normalization']);
 else
     handles.checkatl.Visible = 'off';
     anchor = options.subj.AnchorModality;
@@ -271,12 +271,12 @@ set(handles.depvolume, 'Tooltip', [ea_stripext(currvol),'.nii']);
 
 function [pretras]=ea_getsubstitutes(options)
 
-[~,checkregImages]=ea_assignpretra(options);
+[~, checkregImages] = ea_assignpretra(options);
 for fi=1:length(checkregImages)
     if fi==1
-        pretras{fi}=['Use ',checkregImages{fi}, ' (default)'];
+        pretras{fi} = ['Use ',checkregImages{fi}, ' (default)'];
     else
-        pretras{fi}=['Substitute moving file with ',checkregImages{fi}];
+        pretras{fi} = ['Substitute moving file with ',checkregImages{fi}];
     end
 end
 
@@ -809,8 +809,6 @@ function checkatl_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options=getappdata(handles.leadfigure,'options');
-checkregImages=getappdata(handles.leadfigure,'checkregImages');
-directory=getappdata(handles.leadfigure,'directory');
 
 ea_checkstructures(options);
 
