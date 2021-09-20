@@ -6,12 +6,11 @@ subjDir = varargin{1};
 input = varargin{2};
 useinverse = varargin{3};
 
-options = ea_getptopts(subjDir);
-
 if nargin>3 % Transformation file explicitly specified
     transform = varargin{4};
     tstring = [' --transform [', ea_path_helper(transform), ',',num2str(useinverse),']']; % [transformFileName,useInverse]
 else
+    options = ea_getptopts(subjDir);
     if useinverse
         transform = [options.subj.norm.transform.inverseBaseName, 'ants.nii.gz'];
     else
