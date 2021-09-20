@@ -58,7 +58,7 @@ else
     end
 end
 
-xfm = '(?<=_)([a-z]+)(?=\d*\.(mat|h5)$)';
+xfm = '(?<=desc-)\w+(?=\.mat)';
 transformType = upper(regexp(transform, xfm, 'match', 'once'));
 
 if ismember(transformType, {'FLIRT','FLIRTBBR'}) % Fix FSL transformation name - this will also be the extension for bbr.
