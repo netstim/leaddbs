@@ -8,15 +8,6 @@ if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
         diary([options.subj.coreg.log.logBaseName, 'CT', datestr(now, 'yyyymmddTHHMMss'), '.log']);
     end
 
-    % Copy file tp preproc, take care of .nii.gz raw image
-    if strcmp(options.prefs.niiFileExt, '.nii')
-        copyfile(options.subj.postopAnat.CT.raw, [options.subj.postopAnat.CT.preproc, '.gz']);
-        gunzip([options.subj.postopAnat.CT.preproc, '.gz']);
-        delete([options.subj.postopAnat.CT.preproc, '.gz']);
-    else
-        copyfile(options.subj.postopAnat.CT.raw, options.subj.postopAnat.CT.preproc);
-    end
-
     % Do coregistration
     switch lower(options.coregct.method)
         case lower({'ANTs (Avants 2008)', 'ANTs'})
