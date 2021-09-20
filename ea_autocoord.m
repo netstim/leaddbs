@@ -256,8 +256,8 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.doreconstruction
-        wasnative=options.native;
-        poptions=ea_checkmanapproved(options);
+        wasnative = options.native;
+        poptions = ea_checkmanapproved(options);
         if ~isempty(poptions.sides)
             switch options.reconmethod
                 case 'Refined TRAC/CORE' % refined TRAC/CORE
@@ -328,21 +328,12 @@ else
 end
 
 
-function poptions=ea_checkmanapproved(options)
-poptions=options;
-if ~options.overwriteapproved && exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') % only re-open not manually approved reconstructions.
-    load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
-    todel=[]; cnt=1;
-    for side=options.sides
-        try % index may exceed entries in legacy saves
-            if reco.props(side).manually_corrected
-                todel(cnt)=side; cnt=cnt+1;
-            end
-        end
-    end
-    [~,ix]=ismember(todel,poptions.sides);
-    poptions.sides(ix)=[]; % do not re-reconstruct the ones already approved.
-
+function options = ea_checkmanapproved(options)
+if ~options.overwriteapproved && isfile(options.subj.recon.recon) % only re-open not manually approved reconstructions.
+    load(options.subj.recon.recon, 'reco');
+    to_delete = find([reco.props.manually_corrected]);
+    [~,idx] = ismember(to_delete, options.sides);
+    options.sides(idx) = []; % do not re-reconstruct the ones already approved.
 end
 
 

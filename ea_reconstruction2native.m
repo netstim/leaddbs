@@ -1,18 +1,17 @@
 function ea_reconstruction2native(options)
 
-directory=[options.root,options.patientname,filesep];
-load([directory,filesep,'ea_reconstruction.mat'],'reco');
+load(options.subj.recon.recon, 'reco');
 
 if ~exist('reco','var') % old format
-    reco.mni.coords_mm=coords_mm;
-    reco.mni.markers=markers;
-    reco.mni.trajectory=trajectory;
-    reco.props.elmodel=elmodel;
-    reco.props.manually_corrected=manually_corrected;
+    reco.mni.coords_mm = coords_mm;
+    reco.mni.markers = markers;
+    reco.mni.trajectory = trajectory;
+    reco.props.elmodel = elmodel;
+    reco.props.manually_corrected = manually_corrected;
 end
 
-[whichnormmethod,template]=ea_whichnormmethod(directory);
-nii=ea_load_nii(template);
+[whichnormmethod,template] = ea_whichnormmethod(directory);
+nii = ea_load_nii(template);
 
 if ~ismember(whichnormmethod,ea_getantsnormfuns)
     try
