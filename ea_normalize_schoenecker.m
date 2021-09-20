@@ -50,7 +50,7 @@ elseif options.prefs.machine.normsettings.schoenecker_movim==2 % Based on post-o
     switch options.modality
         case 1 % MRI
             disp('Post-op MRI included for normalization');
-            imagePresent = options.subj.coreg.anat.postop.ax_T1w;
+            imagePresent = options.subj.coreg.anat.postop.ax_MRI;
         case 2 % CT
             disp('Post-op CT included for normalization');
             imagePresent = options.subj.coreg.anat.postop.CT;

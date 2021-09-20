@@ -13,11 +13,11 @@ end
 fis={[ea_space,'bb.nii']};
 switch options.modality
     case 1 % MR
-        if isfile(options.subj.norm.anat.postop.ax_T1w)
-            fis = [fis; {options.subj.norm.anat.postop.ax_T1w}];
+        if isfile(options.subj.norm.anat.postop.ax_MRI)
+            fis = [fis; {options.subj.norm.anat.postop.ax_MRI}];
         end
-        if isfile(options.subj.norm.anat.postop.cor_T1w)
-            fis = [fis; {options.subj.norm.anat.postop.cor_T1w}];
+        if isfile(options.subj.norm.anat.postop.cor_MRI)
+            fis = [fis; {options.subj.norm.anat.postop.cor_MRI}];
         end
     case 2 % CT
         fis = [fis; {options.subj.norm.anat.postop.CT}];
