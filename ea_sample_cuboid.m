@@ -14,13 +14,13 @@ options=varargin{2};
     
 switch options.modality
     case 1 % MR
-        if exist([options.root,options.prefs.patientdir,filesep,options.prefs.cornii],'file')
-            niifn=[options.root,options.prefs.patientdir,filesep,options.prefs.cornii];
+        if isfile(options.subj.coreg.anat.postop.cor_T1w)
+            niifn = options.subj.coreg.anat.postop.cor_T1w;
         else
-            niifn=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
+            niifn = options.subj.coreg.anat.postop.ax_T1w;
         end
     case 2 % CT
-        niifn=[options.root,options.prefs.patientdir,filesep,options.prefs.tranii];
+        niifn = options.subj.coreg.anat.postop.CT;
 end
 
 if nargin>=3 % custom sampling image specified.
