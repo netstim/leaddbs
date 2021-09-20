@@ -8,9 +8,9 @@ dest = varargin{3};
 transform = varargin{4};
 
 % Apply warp field or affine transform
-if strcmp(varargin{5}, 'l')
+if strcmp(varargin{5}, 'linear')
     type = ' -xfm';
-elseif strcmp(varargin{5}, 'n')
+elseif strcmp(varargin{5}, 'nonlinear')
     type = ' -inv -warp'; % inverse warp field supplied
 end
 
