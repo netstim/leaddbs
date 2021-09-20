@@ -588,9 +588,9 @@ checkregImages = getappdata(handles.leadfigure,'checkregImages');
 activevolume = getappdata(handles.leadfigure,'activevolume');
 currvol = checkregImages{activevolume};
 
-% init retry popup:
+% Set callback and Enable status of normalization setting button
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
-    ea_checknormsetting(handles, 'coregmrmethod');
+    ea_normsettings(handles, 'coregmrmethod');
 end
 
 
