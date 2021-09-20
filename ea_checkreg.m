@@ -620,15 +620,13 @@ currvol = checkregImages{activevolume};
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
 	ea_show_normalization(options);
 else
-    directory = getappdata(handles.leadfigure,'directory');
-
-    options.moving = [directory,checkregImages{activevolume}];
+    options.moving = checkregImages{activevolume};
     if ~isempty(b0restanchor{activevolume})
-        options.fixed = [directory,b0restanchor{activevolume}];
+        options.fixed = b0restanchor{activevolume};
         options.tag = [checkregImages{activevolume},' & ',b0restanchor{activevolume}];
     else
-        options.fixed = [directory,anchor];
-        options.tag = [checkregImages{activevolume},' & ',anchor];
+        options.fixed = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
+        options.tag = [ea_getmodality(options.moving), ' & ', ea_getmodality(options.fixed)];
     end
 
     ea_show_coregistration(options);
