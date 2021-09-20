@@ -607,7 +607,7 @@ function MRCT_Callback(hObject, eventdata, handles)
 
 ea_switchctmr(handles,get(hObject,'Value'));
 if get(hObject,'Value')==1
-    set(handles.reconmethod,'enable','off');
+    set(handles.reconmethod,'enable','on');
     set(handles.reconmethod,'Value',1); % set to TRAC/CORE algorithm.
     set(handles.targetpopup,'enable','on');
     set(handles.maskwindow_txt,'enable','on');
