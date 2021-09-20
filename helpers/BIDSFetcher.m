@@ -109,7 +109,7 @@ classdef BIDSFetcher
             preopAnat = obj.getPreopAnat(subjId);
             preopFields = fieldnames(preopAnat);
             for i=1:length(preopFields)
-                subj.preopAnat.(preopFields{i}).raw = preopAnat.(preopFields{i});
+                subj.preopAnat.(preopFields{i}).raw = [preopAnat.(preopFields{i}), '.gz'];
             end
 
             % Set pre-op anchor modality
@@ -119,7 +119,7 @@ classdef BIDSFetcher
             [postopAnat, bothMRCTPresent] = obj.getPostopAnat(subjId, preferMRCT);
             postopFields = fieldnames(postopAnat);
             for i=1:length(postopFields)
-                subj.postopAnat.(postopFields{i}).raw = postopAnat.(postopFields{i});
+                subj.postopAnat.(postopFields{i}).raw = [postopAnat.(postopFields{i}), '.gz'];
             end
 
             % Set post-op modality
@@ -197,7 +197,7 @@ classdef BIDSFetcher
             rawImages = loadjson(obj.getPrefs(subjId, 'rawimages'));
 
             % Get images and modalities
-            images = fullfile(rawDataDir, 'ses-preop', 'anat', struct2cell(rawImages.preop.anat));
+            images = fullfile(rawDataDir, 'ses-preop', 'anat', append(struct2cell(rawImages.preop.anat), obj.settings.niiFileExt));
             modality = fieldnames(rawImages.preop.anat)';
 
             % Set pre-defined orders
@@ -252,10 +252,10 @@ classdef BIDSFetcher
             subjDir = fullfile(obj.datasetDir, 'derivatives', 'leaddbs', ['sub-', subjId]);
 
             % Get raw images struct
-            rawImages = loadjson(fullfile(subjDir, 'prefs', ['sub-', subjId, '_desc-rawimages.json']));
+            rawImages = loadjson(obj.getPrefs(subjId, 'rawimages'));
 
             % Get images and modalities
-            images = fullfile(rawDataDir, 'ses-postop', 'anat', struct2cell(rawImages.postop.anat));
+            images = fullfile(rawDataDir, 'ses-postop', 'anat', append(struct2cell(rawImages.postop.anat), obj.settings.niiFileExt));
             modality = fieldnames(rawImages.postop.anat);
 
             % Check presence of CT and MR
