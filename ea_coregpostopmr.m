@@ -8,7 +8,7 @@ anchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
 postopModality = fieldnames(options.subj.postopAnat);
 
 % Copy file tp preproc, take care of .nii.gz raw image
-if strcmp(options.pref.niiFileExt, '.nii')
+if strcmp(options.prefs.niiFileExt, '.nii')
     cellfun(@(x) copyfile(options.subj.postopAnat.(x).raw, [options.subj.postopAnat.(x).preproc, '.gz']), postopModality, 'Uni', 0);
     cellfun(@(x) gunzip([options.subj.postopAnat.(x).preproc, '.gz']), postopModality, 'Uni', 0);
     cellfun(@(x) delete([options.subj.postopAnat.(x).preproc, '.gz']), postopModality, 'Uni', 0);
