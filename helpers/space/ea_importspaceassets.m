@@ -124,7 +124,7 @@ for atlasset=1:length(asc)
 
     % for .mat case
     src = fullfile(ea_space,fromspace,'anat_t1.nii');
-    invt = fullfile(ea_space,fromspace,'y_ea_inv_normparams.nii');
+    invt = fullfile(ea_space,fromspace,'inverseTransform');
     srcV = ea_open_vol(src);
 
     atlroot=[ea_space,fromspace,filesep,asc{atlasset},filesep];
