@@ -1,5 +1,5 @@
-function ea_checknormsetting(handles, handlestring)
-% Control status of normalization setting button
+function ea_normsettings(handles, handlestring)
+% Set callback and Enable status of normalization setting button
 
 % Set normmethod popupmenu by default
 % In checkreg window, we need to set coregmrmethod popupmenu
