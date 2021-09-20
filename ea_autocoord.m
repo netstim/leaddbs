@@ -76,10 +76,18 @@ end
 if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patientname)
     % Copy post-op images to preprocessing folder, no preproc is done for now
     fields = fieldnames(options.subj.postopAnat);
+
     for i=1:length(fields)
         if ~isfile(options.subj.postopAnat.(fields{i}).preproc)
             ea_mkdir(fileparts(options.subj.postopAnat.(fields{i}).preproc));
-            copyfile(options.subj.postopAnat.(fields{i}).raw, options.subj.postopAnat.(fields{i}).preproc);
+            % Copy file tp preproc, take care of .nii.gz raw image
+            if strcmp(options.prefs.niiFileExt, '.nii')
+                copyfile(options.subj.postopAnat.(fields{i}).raw, [options.subj.postopAnat.(fields{i}).preproc, '.gz']);
+                gunzip([options.subj.postopAnat.(fields{i}).preproc, '.gz']);
+                delete([options.subj.postopAnat.(fields{i}).preproc, '.gz']);
+            else
+                copyfile(options.subj.postopAnat.(fields{i}).raw, options.subj.postopAnat.(fields{i}).preproc);
+            end
         end
     end
 
