@@ -312,12 +312,12 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             return
         end
         ea_busyaction('on',gcf,'normcheck');
-        PostOpView=0;
-        PostOpLoaded={''};
+        PostOpView = 0;
+        PostOpLoaded = {''};
         if strcmp(Mod,'alt') % load templates
             SwitchTemplateMod(numkey)
         elseif isempty(Mod)
-            anchor=SwitchPatientMod(numkey);
+            anchor = SwitchPatientMod(numkey);
             SwitchTemplateMod(anchor)
         end
         ea_busyaction('off',gcf,'normcheck');
@@ -341,50 +341,52 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 try
                     switch View
                         case 'A'
-                            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gtranii]);
+                            pt=ea_load_nii(options.subj.norm.anat.postop.ax_MRI);
                             PostOpLoaded={'A'};
                         case 'C'
-                            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gcornii]);
+                            pt=ea_load_nii(options.subj.norm.anat.postop.cor_MRI);
                             PostOpLoaded={'C'};
                         case 'S'
-                            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gsagnii]);
+                            pt=ea_load_nii(options.subj.norm.anat.postop.sag_MRI);
                             PostOpLoaded={'S'};
                     end
                 catch % fallback to transversal acquisition
                     try
-                        pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gtranii]);
+                        pt=ea_load_nii(options.subj.norm.anat.postop.ax_MRI);
                         PostOpLoaded={'A','C','S'};
                     catch
-                        ea_error('No normalized postoperative acquisition seems available.');
+                        ea_error('Normalized post-op image seems not available.');
                     end
                 end
             case 2 % CT
                 try
-                    pt=ea_load_nii([options.root,options.patientname,filesep,'tp_',options.prefs.gctnii]);
+                    pt=ea_load_nii(options.subj.norm.anat.postop.tonemapCT);
                     PostOpLoaded={'A','C','S'};
                 catch
                     ea_tonemapct(options, 'norm');
                     try
-                        pt=ea_load_nii([options.root,options.patientname,filesep,'tp_',options.prefs.gctnii]);
+                        pt=ea_load_nii(options.subj.norm.anat.postop.tonemapCT);
                     catch
                         ea_error('No normalized postoperative acquisition seems available.');
                     end
                 end
         end
+
         if options.modality==2 % only do windowing for MR
             pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
             pt.img(pt.img>0.5) = 0.5;
             pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
         end
+
         ImgO(:,:,:,1)=pt.img;
 
-        w=load([ea_space,'wires.mat']);
-        w.wires=single(w.wires);
-        w.wires=w.wires/255;
-        w.wires=w.wires.*0.2;
-        w.wires=w.wires+0.8;
+        load([ea_space,'wires.mat'], 'wires');
+        wires=single(wires);
+        wires=wires/255;
+        wires=wires.*0.2;
+        wires=wires+0.8;
 
-        pt.img=pt.img.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
+        pt.img=pt.img.*wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
         ImgO(:,:,:,3)=pt.img;
 
         switch View
@@ -395,7 +397,9 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             case 'A'
                 Img = ImgO;
         end
+
         PostOpView=1;
+
         if ~MainImage==wiresIX
             set(1,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
         else
@@ -405,14 +409,14 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 keyboard
             end
         end
+
         SwitchTemplateMod('2') % set to T2 if available.
 
-        [~, fname] = ea_niifileparts(pt.fname);
         switch options.modality
             case 1
-                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Postoperative MRI (',fname,')']));
+                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', 'Postoperative MRI'));
             case 2
-                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Postoperative (tonemapped) CT (',fname,')']));
+                set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', 'Postoperative (tonemapped) CT'));
         end
 
         ea_busyaction('off',gcf,'normcheck');
@@ -420,28 +424,28 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
     function SwitchTemplateMod(numkey)
         if isempty(numkey)
-            return
+            return;
+        else
+            numkey = str2double(numkey);
         end
 
-        options.sd=load([ea_space,'ea_space_def.mat'],'spacedef');
-        if str2double(numkey)>length(options.sd.spacedef.templates)
+        spacedef = ea_getspacedef;
+        if numkey > length(spacedef.templates)
             ea_busyaction('off',gcf,'normcheck');
             return
-        end
-        if str2double(numkey)==0
-            if options.sd.spacedef.hasfa
-                whichtemplate='fa.nii';
-            else
-                ea_busyaction('off',gcf,'normcheck');
-                return
-            end
+        elseif (numkey==0 || numkey==length(spacedef.templates)) && spacedef.hasfa
+            % When "0" is pressed, choose FA as the backdrop template
+            % Also suppose that FA is the last space template
+            template = 'fa';
         else
-            whichtemplate=options.sd.spacedef.templates{str2double(numkey)};
+            template = spacedef.templates{numkey};
         end
-        tnii=ea_load_nii([ea_space,whichtemplate]);
-        tnii.img(:)=zscore(tnii.img(:));
-        tnii.img=(tnii.img-min(tnii.img(:)))/(max(tnii.img(:))-min(tnii.img(:)));
-        ImgO(:,:,:,2)=tnii.img;
+
+        tnii = ea_load_nii([ea_space, template, '.nii']);
+        tnii.img(:) = zscore(tnii.img(:));
+        tnii.img = (tnii.img-min(tnii.img(:)))/(max(tnii.img(:))-min(tnii.img(:)));
+        ImgO(:,:,:,2) = tnii.img;
+
         switch View
             case 'S'
                 Img = flip(permute(ImgO, [3 2 1 4]),1);   % Sagittal view image;
@@ -450,65 +454,69 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             case 'A'
                 Img = ImgO;
         end
-        [~, fname] = fileparts(whichtemplate);
-        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=MNI )\w+', upper(fname)));
+
+        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=MNI )\w+', upper(template)));
     end
 
-    function anchor=SwitchPatientMod(numkey)
+    function anchor = SwitchPatientMod(numkey)
         anchor = numkey; % just pass on numkey as default.
+        numkey = str2double(numkey);
 
         % load wires first
-        w=load([ea_space(options),'wires.mat']);
-        w.wires=single(w.wires);
-        w.wires=w.wires/255;
-        w.wires=w.wires.*0.2;
-        w.wires=w.wires+0.8;
+        load([ea_space,'wires.mat'], 'wires');
+        wires = single(wires);
+        wires = wires/255;
+        wires = wires.*0.2;
+        wires = wires+0.8;
 
-        [options,presentfiles] = ea_assignpretra(options);
-        if str2double(numkey)==1
-            pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gprenii]);
-            sd=load([ea_space,'ea_space_def.mat']);
-            [~,anchor]=ismember(options.primarytemplate,sd.spacedef.templates); % in this case, "1" could e.g. be the T2 as well, so pass on the T2 in this case to also load the correct template.
-            anchor=num2str(anchor);
-        elseif str2double(numkey)>length(presentfiles)
+        preopCoregImages = struct2cell(options.subj.coreg.anat.preop);
+
+        if numkey>length(preopCoregImages)
             ea_busyaction('off',gcf,'normcheck');
             anchor = [];
-            return
-        elseif str2double(numkey)==0
+            return;
+        elseif numkey==0
             if exist([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat],'file')
-                pt=ea_load_nii([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat]);
+                pt = ea_load_nii([options.root,options.patientname,filesep,'gl',options.prefs.fa2anat]);
             else
                 ea_busyaction('off',gcf,'normcheck');
                 return
             end
-        elseif ~isnan(str2double(numkey))  % numkey is the index of the image in presentfiles cell
-            directory=[options.root,options.patientname,filesep];
-            toload=[directory,'gl',presentfiles{str2double(numkey)}];
-            if ~exist(toload,'file')
-                from{1}=[directory,presentfiles{str2double(numkey)}];
-                to{1}=toload;
-                ea_apply_normalization_tofile(options,from,to,0);
+        elseif numkey==1
+            pt = ea_load_nii(options.subj.norm.anat.preop.(options.subj.AnchorModality));
+            spacedef = ea_getspacedef;
+            anchor = find(ismember(spacedef.templates, options.primarytemplate), 1);
+            anchor = num2str(anchor);
+        elseif ~isnan(numkey)  % numkey is the index of the preopCoregImages cell
+            normAnchor = options.subj.norm.anat.preop.(options.subj.AnchorModality);
+            modality = ea_getmodality(preopCoregImages{numkey});
+            normImage = strrep(normAnchor, ['ses-preop_', options.subj.AnchorModality], ['ses-preop_', modality]);
+            if ~isfile(normImage)
+                ea_apply_normalization_tofile(options, preopCoregImages{numkey}, normImage, 0);
             end
-            pt=ea_load_nii(toload);
-        else    % numkey is actually the full path of the image (used by dragndrop)
-            pt=ea_load_nii(numkey);
-            if any(pt.dim~=size(w.wires))
-                msgbox(sprintf('The file you selected seems unnormalized!\nWill try to apply the normalization now.'),'Warning','warn');
-                [fpath, fname, fext] = ea_niifileparts(numkey);
-                from{1}=numkey;
-                to{1}=[fileparts(fpath), filesep, 'gl', fname, fext];
-                ea_apply_normalization_tofile(options,from,to,0);
-                pt=ea_load_nii(to{1});
+            pt = ea_load_nii(normImage);
+        else % isnan, numkey is actually the full path of the image (used by dragndrop)
+            imagePath = anchor; % Take the original numkey (char)
+            pt = ea_load_nii(anchor);
+            if any(pt.dim~=size(wires))
+                msgbox(sprintf('The file you selected seems unnormalized!\nWill try to apply the normalization now.'), 'Warning', 'warn');
+                normAnchor = options.subj.norm.anat.preop.(options.subj.AnchorModality);
+                modality = ea_getmodality(imagePath);
+                normImage = strrep(normAnchor, ['ses-preop_', options.subj.AnchorModality], ['ses-preop_', modality]);
+                if ~isfile(normImage)
+                    ea_apply_normalization_tofile(options, imagePath, normImage, 0);
+                end
+                pt = ea_load_nii(normImage);
             end
         end
 
-        pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
+        pt.img = (pt.img-min(pt.img(:)))/(max(pt.img(:)));
         pt.img(pt.img>0.5) = 0.5;
-        pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
-        ImgO(:,:,:,1)=pt.img;
+        pt.img = (pt.img-min(pt.img(:)))/(max(pt.img(:)));
+        ImgO(:,:,:,1) = pt.img;
 
-        pt.img=pt.img.*w.wires; % shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
-        ImgO(:,:,:,3)=pt.img;
+        pt.img = pt.img .* wires; % shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
+        ImgO(:,:,:,3) = pt.img;
 
         switch View
             case 'S'
@@ -521,8 +529,8 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
 
-        [~, fname] = ea_niifileparts(pt.fname);
-        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Preoperative MRI (',fname,')']));
+        modality = ea_getmodality(pt.fname);
+        set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', ['Preoperative MRI (',modality,')']));
     end
 
     % DragnDrop callback function
