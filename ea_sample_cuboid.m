@@ -14,10 +14,10 @@ options=varargin{2};
     
 switch options.modality
     case 1 % MR
-        if isfile(options.subj.coreg.anat.postop.cor_T1w)
-            niifn = options.subj.coreg.anat.postop.cor_T1w;
+        if isfile(options.subj.coreg.anat.postop.cor_MRI)
+            niifn = options.subj.coreg.anat.postop.cor_MRI;
         else
-            niifn = options.subj.coreg.anat.postop.ax_T1w;
+            niifn = options.subj.coreg.anat.postop.ax_MRI;
         end
     case 2 % CT
         niifn = options.subj.coreg.anat.postop.CT;
