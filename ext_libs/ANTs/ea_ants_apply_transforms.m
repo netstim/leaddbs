@@ -76,12 +76,19 @@ else
     imageType = '0';
 end
 
-json = loadjson(options.subj.norm.log.method);
-if contains(json.method, 'affine')
-    % Three-step affine normalization (Schonecker 2009) used
-    warpSuffix = 'ants.mat';
-else
-    warpSuffix = 'ants.nii.gz';
+if isempty(transform)
+    json = loadjson(options.subj.norm.log.method);
+    if contains(json.method, 'affine')
+        % Three-step affine normalization (Schonecker 2009) used
+        warpSuffix = 'ants.mat';
+    else
+        warpSuffix = 'ants.nii.gz';
+    end
+    if useinverse
+        transform = [options.subj.norm.transform.inverseBaseName, warpSuffix];
+    else
+        transform = [options.subj.norm.transform.forwardBaseName, warpSuffix];
+    end
 end
 
 if nargin == 1
@@ -111,44 +118,26 @@ for i = 1:length(input)
         continue
     end
 
-	cmd = [applyTransforms, ...
-           ' --verbose 1' ...
-           ' --dimensionality ', imageDim, ...
-           ' --input-image-type ', imageType, ...
-           ' --float 1' ...
-           ' --input ',ea_path_helper(input{i}), ...
-           ' --output ',ea_path_helper(output{i})];
-
-    if useinverse
-        if isempty(ref)
+    cmd = [applyTransforms, ...
+        ' --verbose 1' ...
+        ' --dimensionality ', imageDim, ...
+        ' --input-image-type ', imageType, ...
+        ' --float 1' ...
+        ' --input ',ea_path_helper(input{i}), ...
+        ' --output ',ea_path_helper(output{i})];
+    
+    if isempty(ref)
+        if useinverse
             ref = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
-        end
-
-        if isempty(transform)
-            cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(ref),...
-                   ' --transform [',ea_path_helper([options.subj.norm.transform.inverseBaseName, warpSuffix]),',0]'];
         else
-            cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(ref),...
-                   ' --transform [',ea_path_helper(transform),',0]'];
-        end
-    else
-        if isempty(ref)
             spacedef = ea_getspacedef;
             ref = [ea_space, spacedef.templates{1}, '.nii'];
         end
-
-        if isempty(transform)
-            cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(ref),...
-                   ' --transform [',ea_path_helper([options.subj.norm.transform.forwardBaseName, warpSuffix]),',0]'];
-        else
-            cmd = [cmd, ...
-                   ' --reference-image ',ea_path_helper(ref),...
-                   ' --transform [',ea_path_helper(transform),',0]'];
-        end
     end
+    
+    cmd = [cmd, ...
+        ' --reference-image ',ea_path_helper(ref),...
+        ' --transform [',ea_path_helper(transform),',0]'];
 
     if ~isempty(interp)
         cmd = [cmd, ' --interpolation ', interp];
