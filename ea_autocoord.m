@@ -329,10 +329,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         poptions=ea_checkmanapproved(options);
         if ~isempty(poptions.sides)
             mcfig=figure('name',[options.patientname,': Electrode Reconstruction'],'numbertitle','off');
-            %warning('off');
-            try
-                ea_maximize(mcfig);
-            end
+            mcfig.WindowState = 'maximized';
             options.elside=options.sides(1);
             ea_manualreconstruction(mcfig,options.patientname,options);
         end
