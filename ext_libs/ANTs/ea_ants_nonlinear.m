@@ -52,8 +52,13 @@ is_segmentation = weights >= 3;
 is_slab = false(length(fixedimage),1);
 
 if slabsupport
-    [~, anchorName] = ea_niifileparts(movingimage{end});
-    disp(['Checking for slabs among structural images (assuming dominant structural file ',anchorName,' is a whole-brain acquisition)...']);
+    if isBIDSFileName(movingimage{end})
+        parsedStruct = parseBIDSFilePath(movingimage{end});
+        anchorName = parsedStruct.suffix;
+    else
+        [~, anchorName] = ea_niifileparts(movingimage{end});
+    end
+    disp(['Checking for slabs among structural images (assuming anchor image ',anchorName,' is a whole-brain acquisition)...']);
     for mov = 1:length(movingimage)
         if ~is_segmentation(mov)
             mnii = ea_load_nii(movingimage{mov});
@@ -259,4 +264,3 @@ end
 
 function out = get_metric_command(fixed_image, moving_image, weight, metric_prefix_sufix)
     out = [' --metric ' metric_prefix_sufix{1} '[' fixed_image ',' moving_image ',' num2str(weight) metric_prefix_sufix{2} ']'];
- 
