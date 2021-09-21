@@ -8,13 +8,16 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
         diary([options.subj.norm.log.logBaseName, datestr(now, 'yyyymmddTHHMMss'), '.log']);
     end
 
-    reApply = 0;
+    % Dump method
+    if ~ismember(lower(options.normalize.method), lower({'(Re-)apply (priorly) estimated normalization', 'Apply', 'ReApply'}))
+        ea_dumpmethod(options, 'norm');
+    end
+
     % Do normalization
     switch lower(options.normalize.method)
         case lower({'ANTs (Avants 2008)', 'ANTs'})
             ea_normalize_ants(options);
         case lower({'(Re-)apply (priorly) estimated normalization', 'Apply', 'ReApply'})
-            reApply = 1;
             ea_normalize_apply_normalization(options);
         case lower({'FNIRT (Andersson 2010)', 'FNIRT'})
             ea_normalize_fsl(options);
@@ -32,11 +35,6 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
                 diary off;
             end
             return;
-    end
-
-    % Dump method
-    if ~reApply
-        ea_dumpmethod(options, 'norm');
     end
 
     % Compute tone-mapped normalized CT
