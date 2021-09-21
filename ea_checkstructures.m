@@ -22,7 +22,7 @@ function varargout = ea_checkstructures(varargin)
 
 % Edit the above text to modify the response to help ea_checkstructures
 
-% Last Modified by GUIDE v2.5 04-Feb-2020 14:57:52
+% Last Modified by GUIDE v2.5 21-Sep-2021 10:48:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,14 +66,14 @@ options.atlasset = 'DISTAL Minimal (Ewert 2017)'; % Force atlas to Distal for ch
 setappdata(handles.checkstructures,'options',options);
 setappdata(handles.checkstructures,'hemisphere',2);
 setappdata(handles.checkstructures,'offset',[0.5,0.5,0.5]);
-[~,presentfiles]=ea_assignpretra(options);
+presentfiles = fieldnames(options.subj.preopAnat);
 
 c = uicontextmenu(handles.checkstructures);
 handles.otherstructures.UIContextMenu = c;
-atlases=dir(ea_space(options,'atlases'));
+atlases = dir(ea_space(options,'atlases'));
 atlases = {atlases(cell2mat({atlases.isdir})).name};    % only keep folders
 atlases = atlases(cellfun(@(x) ~strcmp(x(1),'.'), atlases));  % also remove '.', '..' and '.*' folders from dir results
-atlmenu=cell(length(presentfiles),length(atlases));
+atlmenu = cell(length(presentfiles),length(atlases));
 warning('off');
 set(handles.refinestatus,'String','Click on panels to add detail-corrections relative to the atlas of choice.');
 
@@ -117,26 +117,13 @@ axis equal;
 axis off;
 drawnow
 % add preop acquisitions to popup
-cellentr=cell(0);
-for p=presentfiles'
-    % cellentr{end+1}=upper(p{1}(6:end-4));
-    % TP: above line is problematic if user sets their own naming conventions
-    % in ea_prefs. At this stage, the truncation is used just to display in
-    % a drop-down list... but it gets saved to a handle and is later used
-    % to find a nii file resulting in a crash.
-    %
-    % Need to remove search string pre-fix and file extension. Below
-    % solution is still not a complete fix since I'm assuming the search
-    % string ends with *.nii
-    idx = strfind(options.prefs.prenii_searchstring, '*');
-    cellentr{end+1}=upper(p{1}(idx:end-4));
-end
-set(handles.anat_select,'String',cellentr);
-modality=get(handles.anat_select,'String');
-modality=modality{get(handles.anat_select,'Value')};
-setappdata(handles.checkstructures,'modality',modality);
-options.prefs=ea_prefs(options.patientname);
-setappdata(handles.checkstructures,'options',options);
+cellentr = presentfiles;
+set(handles.anat_select, 'String', cellentr);
+modality = get(handles.anat_select, 'String');
+modality = modality{get(handles.anat_select, 'Value')};
+setappdata(handles.checkstructures, 'modality', modality);
+options.prefs = ea_prefs(options.patientname);
+setappdata(handles.checkstructures, 'options', options);
 try
     switch(options.prefs.machine.checkreg.default)
         case 'DISTAL Minimal (Ewert 2017)@STN'
@@ -352,7 +339,7 @@ for cts=cortrasag
     him=image(img);
 
     hold on
-    set(handles.(views{cts}),'ButtonDownFcn', @(h,e) ea_getmouse(handles.(views{cts}),handles,[voxz,ea_view2coord(cts),cts],'Color',[1,1,0.6],'linewidth',2));
+%     set(handles.(views{cts}),'ButtonDownFcn', @(h,e) ea_getmouse(handles.(views{cts}),handles,[voxz,ea_view2coord(cts),cts],'Color',[1,1,0.6],'linewidth',2));
     set(handles.(views{cts}),'xtick',[],'ytick',[],'xlabel',[],'ylabel',[]);
     set(him, 'HitTest', 'off');
 end
@@ -859,8 +846,3 @@ function pushbutton6_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton6 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
-
-
-
