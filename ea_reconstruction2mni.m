@@ -1,7 +1,6 @@
 function ea_reconstruction2mni(options)
 
-directory=[options.root,options.patientname,filesep];
-load([directory,filesep,'ea_reconstruction.mat'],'reco');
+load(options.subj.recon.recon,'reco');
 
 nii = ea_load_nii(options.subj.coreg.anat.preop.(options.subj.AnchorModality));
 
@@ -67,7 +66,7 @@ for side=options.sides
     end
 end
 
-save([directory,filesep,'ea_reconstruction.mat'],'reco');
+save(options.subj.recon.recon,'reco');
 
 
 function c=ea_warpcoord(c,nii,options)
