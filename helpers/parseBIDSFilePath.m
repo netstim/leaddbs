@@ -8,10 +8,11 @@ else
 end
 
 % Split file path into stripped path, file name and extension
-strippedPath = regexp(filePath, ['.+(?=\', filesep, '[^\', filesep, ']+)'], 'match', 'once');
-fullName = strrep(filePath, [strippedPath, filesep], '');
-fileName = regexp(fullName, '[^.]+', 'match', 'once');
-fileExt = strrep(fullName, fileName, '');
+% File name has the pattern of [\w-]+
+% File extension has the pattern of (\.[^\W_]+){1,}$
+strippedPath = regexp(filePath, ['.*(?=\', filesep, '[\w-]+(\.[^\W_]+){1,}$)'], 'match', 'once');
+fileName = regexp(filePath, ['(?<=\', filesep, ')[\w-]+(?=(\.[^\W_]+){1,}$)'], 'match', 'once');
+fileExt = regexp(filePath, '(\.[^\W_]+){1,}$', 'match', 'once');
 
 parsedStruct.dir = fileparts(strippedPath);
 
