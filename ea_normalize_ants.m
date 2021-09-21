@@ -88,6 +88,9 @@ end
 output_image = options.subj.norm.anat.preop.(options.subj.AnchorModality);
 output_transform_prefix = fullfile(fileparts(options.subj.norm.transform.forwardBaseName), 'antsout');
 
+ea_mkdir(fileparts(output_image));
+ea_mkdir(fileparts(output_transform_prefix));
+
 ea_ants_nonlinear(template, moving, output_image, weights, output_transform_prefix, options);
 
 % Move transformation file
