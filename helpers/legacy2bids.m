@@ -43,7 +43,7 @@ pipelines = {'brainshift','coregistration','normalization','reconstruction','pre
 %mapping will allow quick reference of the files to move: also, certain
 %modalities have specific bids naming.
 legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
-bids_modalities = {'T1w.nii.gz','T2w.nii.gz','PDw.nii.gz','CT.nii.gz','ax.nii.gz','cor.nii.gz','sag.nii.gz','FGATIR.nii.gz','fa.nii.gz','dwi.nii.gz','dwi.bval','dwi.bvec','T2starw.nii.gz'};
+bids_modalities = {'T1w','T2w','PDw','CT','ax','cor','sag','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2starw'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 [brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking] = create_bids_mapping();
 %these files should be converted to .json
@@ -247,17 +247,15 @@ for patients = 1:length(source)
                     
                     elseif ismember(files_to_move{files},prefs{:,1})
                         %corresponding index of the new pat
-                        bids_name = [patient_name,'_','desc-','ea_uiprefs.mat'];
+                        bids_name = [patient_name,'_','desc-','uiprefs.mat'];
                         derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{6},bids_name);
                         which_pipeline = pipelines{6};
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline));
                         end
-                        if strcmp(files_to_move{files},'ea_uiprefs.mat')
-                            copyfile(fullfile(source_patient,'ea_uiprefs.mat'),fullfile(new_path,pipelines{6}));
-                            movefile(fullfile(new_path,pipelines{6},'ea_uiprefs.mat'),fullfile(new_path,pipelines{6},bids_name));
-                        end
+                        copyfile(fullfile(source_patient,'ea_ui.mat'),fullfile(new_path,pipelines{6}));
+                        movefile(fullfile(new_path,pipelines{6},'ea_ui.mat'),fullfile(new_path,pipelines{6},bids_name));
                             %special case for log dir
                     elseif strcmp(files_to_move{files},'ea_methods.txt') && exist(fullfile(source_patient,'ea_methods.txt'),'file')
                         bids_name = [patient_name,'_','desc-','ea_methods.txt'];
@@ -316,7 +314,7 @@ for patients = 1:length(source)
                     if strcmp(pipelines{folders},'stimulations')
                         %the stimulations folder should already be
                         %there in the dest directory.
-                        if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,'stimulation','dir')
+                        if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             pipeline = pipelines{folders};
                             try
                                 [mni_files,native_files,derivatives_cell] = vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
@@ -367,7 +365,7 @@ for patients = 1:length(source)
                                         modality_str = strsplit(files_to_move{files},'_');
                                         modality_str = modality_str{end};
                                         try
-                                            bids_name = [sessions{j},'_',rawdata_containers(modality_str)];
+                                            bids_name = [sessions{j},'_',rawdata_containers(modality_str),'.nii.gz'];
                                         catch
                                            modality_str = strsplit(modality_str,'.');
                                            modality_str = upper(modality_str{1});
@@ -389,7 +387,7 @@ for patients = 1:length(source)
                                         modality_str = strsplit(files_to_move{files},'_');
                                         modality_str = modality_str{end};
                                         try
-                                            bids_name = [sessions{j},'_',rawdata_containers(modality_str)];
+                                            bids_name = [sessions{j},'_',rawdata_containers(modality_str),'.nii.gz'];
                                         catch
                                            modality_str = strsplit(modality_str,'.');
                                            modality_str = upper(modality_str{1});
@@ -693,12 +691,12 @@ function generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_c
                 rawdata_fieldname = rawdata_fieldname{1};
             catch
                 modality_str = strsplit(modality_str,'.');
-                modality_str = upper(modality_str);
-                bids_name = [patient_name,'_',sessions,'_',modality_str,'.nii.gz'];
-                rawdata_fieldname = modality_str{1};
+                modality_str = upper(modality_str{1});
+                bids_name = [patient_name,'_',sessions,'_',modality_str];
+                rawdata_fieldname = modality_str;
             end
             
-            anat_files_selected.preop.(rawdata_fieldname) = bids_name;
+            anat_files_selected.preop.anat.(rawdata_fieldname) = bids_name;
         elseif ~isempty(regexp(files_to_move{i},'raw_postop_.*')) || strcmp(files_to_move{i},'postop_ct.nii')
             sessions = 'ses-postop';
             modality_str = strsplit(files_to_move{i},'_');
@@ -710,10 +708,10 @@ function generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_c
             catch
                 modality_str = strsplit(modality_str,'.');
                 modality_str = upper(modality_str);
-                bids_name = [patient_name,'_',sessions,'_',modality_str,'.nii.gz'];
+                bids_name = [patient_name,'_',sessions,'_',modality_str];
                 rawdata_fieldname = modality_str{1};
             end            
-            anat_files_selected.postop.(rawdata_fieldname) = bids_name;
+            anat_files_selected.postop.anat.(rawdata_fieldname) = bids_name;
         end
         
     end
