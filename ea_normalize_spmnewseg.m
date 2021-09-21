@@ -53,7 +53,7 @@ movefile([directory, 'iy_', preopAnchorName], [options.subj.norm.transform.inver
 % Apply estimated deformation to (coregistered) post-op images.
 ea_apply_normalization(options)
 
-modality = regexp(preopImages, '(?<=_)[a-zA-Z0-9]+(?=\.nii(\.gz)?$)', 'match', 'once');
+modality = regexp(preopImages, '(?<=_)[^\W_]+(?=\.nii(\.gz)?$)', 'match', 'once');
 
 ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space based on preoperative acquisition(s) (',strjoin(modality, ', '),') using the'...
     'Unified Segmentation Approach as implemented in SPM12 (Ashburner 2005; www.fil.ion.ucl.ac.uk/spm/software/spm12/).'], ...
