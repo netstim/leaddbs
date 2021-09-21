@@ -85,9 +85,6 @@ else
     impmasks=repmat({'nan'},length(movingimage),1);
 end
 
-directory = fileparts(movingimage{1});
-directory = [directory,filesep];
-
 for fi=1:length(fixedimage)
     fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
 end
@@ -261,7 +258,7 @@ if isBIDSFileName(outputimage)
     ea_mkdir(logDir);
     antsCMDFile = [logDir, filesep, 'sub-', parsedStruct.sub, '_desc-antscmd.txt'];
 else
-    antsCMDFile = [directory, 'ea_ants_command.txt'];
+    antsCMDFile = [outputdir, filesep, 'ea_ants_command.txt'];
 end
 
 fid = fopen(antsCMDFile, 'a');
