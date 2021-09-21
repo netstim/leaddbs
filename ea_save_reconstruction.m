@@ -1,7 +1,7 @@
 function ea_save_reconstruction(coords_mm,trajectory,markers,elmodel,manually_corrected,options,outfname)
 
 if ~exist('outfname','var')
-    outfname='ea_reconstruction.mat';
+    outfname='';
 end
 for side=options.sides
     reco.props(side).elmodel=elmodel;
@@ -24,7 +24,7 @@ if options.native
             clear x y
         end
     end
-    save([options.root,options.patientname,filesep,outfname],'reco');
+    save([options.subj.recon.recon outfname],'reco');
 
     if isfield(options,'hybridsave')
         ea_dispt('Warping fiducials to template space');
@@ -34,17 +34,17 @@ if options.native
             ea_reconstruction2acpc(options);
             ea_dispt('');
         end
-        load([options.root,options.patientname,filesep,outfname]);
+        load(options.subj.recon.recon);
         [reco,corrected]=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
 
-        save([options.root,options.patientname,filesep,outfname],'reco');
+        save([options.subj.recon.recon outfname],'reco');
         ea_dispt('');
     end
 else
     reco.mni.coords_mm=coords_mm;
     reco.mni.trajectory=trajectory;
     reco.mni.markers=markers;
-    save([options.root,options.patientname,filesep,outfname],'reco');
+    save([options.subj.recon.recon outfname],'reco');
 
     if isfield(options,'hybridsave')
         ea_dispt('Warping fiducials to native space');
@@ -54,10 +54,10 @@ else
             ea_reconstruction2acpc(options);
             ea_dispt('');
         end
-        load([options.root,options.patientname,filesep,outfname]);
+        load(options.subj.recon.recon);
         [reco,corrected]=ea_checkswap_lr(reco,options); % PaCER support, right could be left and vice versa.
 
-        save([options.root,options.patientname,filesep,outfname],'reco');
+        save([options.subj.recon.recon outfname],'reco');
         ea_dispt('');
 
         if corrected
