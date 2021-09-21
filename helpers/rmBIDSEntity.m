@@ -9,10 +9,20 @@ if ischar(entity)
     entity = {entity};
 end
 
+% Parse file path for further operation
+parsedStruct = parseBIDSFilePath(filePath);
+
 for i=1:length(entity)
     if strcmp(entity{i}, 'suffix') % Remove suffix
-        filePath = regexprep(filePath, '_[^\W_]+((\.[^\W_]+){1,})$', '$1');
+        parsedStruct.suffix = '';
     else % Remove other entities
-        filePath = regexprep(filePath, [entity{i}, '-[^\W_]+_'], '');
+        if isfield(parsedStruct, entity{i})
+            parsedStruct = rmfield(parsedStruct, entity{i});
+        else
+            error('Entity ''%s'' does not exist!', entity{i});
+        end
     end
 end
+
+% Join BIDS file path struct into file path
+filePath = joinBIDSFilePath(parsedStruct);
