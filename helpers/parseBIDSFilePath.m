@@ -19,7 +19,7 @@ parsedStruct.dir = fileparts(strippedPath);
 % Parse file name
 entities = strsplit(fileName, '_');
 if ~contains(entities{end}, '-')
-    % filePath has the following patterns:
+    % filePath has the following patterns (i.e., with suffix):
     % sub-XX_key1-value1_key2-value2_[modality].nii
     % sub-XX_key1-value1_key2-value2_[modality].nii.gz
     for i=1:length(entities)-1
@@ -28,7 +28,7 @@ if ~contains(entities{end}, '-')
     end
     parsedStruct.suffix = entities{end}; % Last one should be modality
 else
-    % filePath has the following patterns:
+    % filePath has the following patterns (i.e., without suffix):
 	% sub-XX_key1-value1_key2-value2.[ext]
     for i=1:length(entities)
         pair = regexp(entities{i}, '-', 'split', 'once');
