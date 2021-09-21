@@ -1,8 +1,9 @@
 function ea_ants_run(cfg)
 % Proxy to run ANTs registration based on provided configurations
 
-% Make sure the transformation folder exists.
+% Make sure the transformation folder and output folder exist.
 ea_mkdir(fileparts(cfg.outputbase));
+ea_mkdir(fileparts(cfg.outputimage));
 
 ants_transforms = dir(fullfile(fileparts(cfg.outputbase), '*_desc-ants.*'));
 
