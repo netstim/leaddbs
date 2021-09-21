@@ -113,7 +113,7 @@ if ~isempty(lcit)
     cits = [cits; {lcit}];
 end
 
-modality = regexp(preopImages, '(?<=_)[a-zA-Z0-9]+(?=\.nii(\.gz)?$)', 'match', 'once');
+modality = regexp(preopImages, '(?<=_)[^\W_]+(?=\.nii(\.gz)?$)', 'match', 'once');
 
 ea_methods(options,['Pre- (and post-) operative acquisitions were spatially normalized into ',ea_getspace,' space ',scit,' based on preoperative acquisition(s) (',strjoin(modality, ', '),') using a'...
     ' diffeomorphic registration algorithm using geodesic shooting and Gauss-Neuwton optimisation (SHOOT) as implemented in SPM12 (Ashburner 2011; www.fil.ion.ucl.ac.uk/spm/software/).',...
