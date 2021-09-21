@@ -1,7 +1,11 @@
 function ea_ants_run(cfg)
 % Proxy to run ANTs registration based on provided configurations
 
+% Make sure the transformation folder exists.
+ea_mkdir(fileparts(cfg.outputbase));
+
 ants_transforms = dir(fullfile(fileparts(cfg.outputbase), '*_desc-ants.*'));
+
 refinewarp = 0;
 if ~isempty(ants_transforms) % prior ANTs transform found.
     if isfield(cfg, 'ants_usepreexisting')
