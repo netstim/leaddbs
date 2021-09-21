@@ -28,7 +28,8 @@ isp=figure('color','k','Name',figtit,'NumberTitle','off','MenuBar','none','DockC
 % bind drag-drop event
 ea_bind_dragndrop(isp, @DropFcn, @DropFcn);
 
-ea_maximize(isp);
+isp.WindowState = 'maximized';
+
 Img=single(Img);
 sno = size(Img);  % image size
 sno_a = sno(3);  % number of axial slices
