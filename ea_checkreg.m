@@ -249,7 +249,7 @@ end
 if ~isfile(checkregFig)
     ea_gencheckregpair(currvol, anchorPath, checkregFig);
 
-    if ~isfile(checkregFig, 'file')
+    if ~isfile(checkregFig)
         checkregFig = fullfile(ea_getearoot,'helpers','gui','coreg_msg.png');
         set(handles.imgfn, 'String', '');
         set(handles.imgfn, 'Visible', 'off');
