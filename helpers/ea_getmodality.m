@@ -3,7 +3,7 @@ function modality = ea_getmodality(BIDSFilePath)
 % for post-op MRI
 
 if isempty(regexp(BIDSFilePath, '_acq-(ax|cor|sag)_', 'once'))
-    modality = regexp(BIDSFilePath, '(?<=_)([a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
+    modality = regexp(BIDSFilePath, '(?<=_)([^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
 else % Keep plane label for post-op MRI
-    modality = regexp(BIDSFilePath, '(?<=_acq-)((ax|sag|cor)_[a-zA-Z0-9]+)(?=\.nii(\.gz)?$)', 'match', 'once');
+    modality = regexp(BIDSFilePath, '(?<=_acq-)((ax|sag|cor)_[^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
 end

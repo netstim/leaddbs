@@ -11,8 +11,8 @@ end
 
 for i=1:length(entity)
     if strcmp(entity{i}, 'suffix') % Remove suffix
-        filePath = regexprep(filePath, '_[a-zA-Z0-9]+(\.[a-zA-Z0-9\.]+$)', '$1');
+        filePath = regexprep(filePath, '_[^\W_]+(\.[a-zA-Z0-9\.]+$)', '$1');
     else % Remove other entities
-        filePath = regexprep(filePath, [entity{i}, '-[a-zA-Z0-9]+_'], '');
+        filePath = regexprep(filePath, [entity{i}, '-[^\W_]+_'], '');
     end
 end
