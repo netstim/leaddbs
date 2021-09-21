@@ -185,7 +185,7 @@ else
     set(handles.leadfigure, 'Name', [options.subj.subjId, ': Check Coregistration']);
 
     if strcmp(options.subj.postopModality, 'CT') && strcmp(currvol, options.subj.coreg.anat.postop.tonemapCT)
-        ea_init_coregctpopup(handles, options, 'coregmrmethod');
+        ea_init_coregctpopup(handles, options.prefs.ctcoreg.default, 'coregmrmethod');
 
         if isfile(options.subj.coreg.log.method)
             json = loadjson(options.subj.coreg.log.method);
