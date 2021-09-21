@@ -40,7 +40,13 @@ else
 end
 
 if slabsupport
-    disp(['Checking for slabs among structural images (assuming dominant structural file ',movingimage{end},' is a whole-brain acquisition)...']);
+    if isBIDSFileName(movingimage{end})
+        parsedStruct = parseBIDSFilePath(movingimage{end});
+        anchorName = parsedStruct.suffix;
+    else
+        [~, anchorName] = ea_niifileparts(movingimage{end});
+    end
+    disp(['Checking for slabs among structural images (assuming anchor image ',anchorName,' is a whole-brain acquisition)...']);
 
     for mov=1:length(movingimage)
         mnii=ea_load_nii(movingimage{mov});
