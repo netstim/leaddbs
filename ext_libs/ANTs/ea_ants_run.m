@@ -92,7 +92,16 @@ if isfield(cfg, 'synmaskstage')
     cmd = [cmd, cfg.synmaskstage];
 end
 
-fid = fopen(fullfile(fileparts(fileparts(cfg.outputimage)), 'log', 'ea_ants_command.txt'), 'a');
+if isBIDSFileName(cfg.outputimage)
+    logDir = fullfile(fileparts(fileparts(cfg.outputimage)), 'log');
+    parsedStruct = parseBIDSFilePath(cfg.outputimage);
+    ea_mkdir(logDir);
+    antsCMDFile = [logDir, filesep, 'sub-', parsedStruct.sub, '_desc-antscmd.txt'];
+else
+    antsCMDFile = [directory, 'ea_ants_command.txt'];
+end
+
+fid = fopen(antsCMDFile, 'a');
 fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
 fclose(fid);
 
