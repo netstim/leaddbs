@@ -35,18 +35,10 @@ switch options.prefs.reco.mancoruse
             tmat=ea_antsmat2mat(t.(tfields{1}),t.(tfields{2}));
             
         elseif contains(coreg_log.method.CT, 'BRAINSFit')
+            % Tranformation from BRAINSFit has been converted to MAT file
             transform_file_name = [options.subj.coreg.transform.CT.([prefix 'BaseName']) 'brainsfit.mat'];
-            dataset_guess = {'/TransformGroup/0/TranformFixedParameters', '/TransformGroup/0/TranformParameters';...
-                             '/TransformGroup/0/TransformFixedParameters', '/TransformGroup/0/TransformParameters';...
-                             '/fixed', '/AffineTransform_double_3_3'};
-            for i = 1:size(dataset_guess, 1)                
-                try
-                    reg2org.fixed = h5read(transform_file_name, dataset_guess{i,1});
-                    reg2org.AffineTransform_float_3_3 = h5read(transform_file_name, dataset_guess{i,2});
-                    break
-                end
-            end
-            tmat = ea_antsmat2mat(double(reg2org.AffineTransform_float_3_3), reg2org.fixed);
+            t = load(transform_file_name);
+            tmat = ea_antsmat2mat(t.AffineTransform_double_3_3, t.fixed);
 
         elseif contains(coreg_log.method.CT, 'FLIRT')
             transform_file_name = [options.subj.coreg.transform.CT.forwardBaseName 'flirt.mat'];
