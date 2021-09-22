@@ -21,7 +21,11 @@ for i=1:length(entities)
     if strcmp(entity, 'suffix') % Set suffix
         parsedStruct.suffix = value;
     elseif strcmp(entity, 'ext') % Set extension
-        parsedStruct.ext = value;
+        if ~startsWith(value, '.') % 'ext' instead of '.ext' provided
+            parsedStruct.ext = ['.', value];
+        else
+            parsedStruct.ext = value;
+        end
     elseif isfield(parsedStruct, entity) % Entity already exist
         parsedStruct.(entity) = value;
     else % Append new entity
