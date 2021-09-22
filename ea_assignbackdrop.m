@@ -37,7 +37,7 @@ if strcmp(bdstring, 'list')
 
     % check if preop and postop images exist
     if ~nopatientmode
-        if isempty(dir([options.root,options.patientname,filesep,'anat_*.nii']))
+        if ~isfile(options.subj.coreg.anat.preop.(options.subj.AnchorModality))
             haspreop=0;
         end
         try
@@ -56,8 +56,8 @@ if strcmp(bdstring, 'list')
         varargout{1}=[ea_standardspacelist];
     else
         if haspreop
-            [~, preopfiles]=ea_assignpretra(options);
-            preop=cellfun(@(x) [subpat, ' Pre-OP (',upper(regexp(x, '(?<=anat_)(.*)(?=\.nii)', 'match', 'once')), ')'], preopfiles, 'Uniform', 0)';
+            preopfiles = fieldnames(options.subj.coreg.anat.preop);
+            preop=cellfun(@(x) [subpat, ' Pre-OP (' x ')'], preopfiles, 'Uniform', 0)';
         else
             preop={''};
         end
