@@ -70,8 +70,8 @@ function varargout =  ea_runslicer(options, task)
     switch task
         case -1 % launch slicer for lead reconstruction
             mrmltag = 'reconstruction';
-            allfiles = {options.subj.coreg.anat.postop.ax_MRI
-                options.subj.coreg.anat.postop.CT};
+            allfiles = struct2cell(options.subj.coreg.anat.postop);
+            allfiles = allfiles(~contains(allfiles, 'tonemapped'));
 
             filepaths = allfiles(isfile(allfiles));
             filenames = regexp(filepaths, ['(?<=\', filesep, ')[\w-]+(?=\.nii(\.gz)?$)'], 'match', 'once');
