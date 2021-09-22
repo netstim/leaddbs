@@ -274,6 +274,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     if options.doreconstruction
         wasnative = options.native;
         poptions = ea_checkmanapproved(options);
+        ea_mkdir(options.subj.reconDir);
         if ~isempty(poptions.sides)
             switch options.reconmethod
                 case 'Refined TRAC/CORE' % refined TRAC/CORE
