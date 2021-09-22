@@ -106,7 +106,7 @@ prefs=ea_prefs;
 
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
-    if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file') || nargin>1
+    if isfile(options.subj.recon.recon) || nargin>1
         if nargin>1
             multiplemode=1;
 
@@ -147,14 +147,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
                 popts=ea_detsides(popts);
             else
-                directory=[options.root,options.patientname,filesep];
+                directory=options.subj.reconDir;
             end
 
             elSide{pt}=popts.sides;
 
             for side=elSide{pt}
                 try
-                    pobj=ea_load_electrode(directory,side);
+                    pobj=ea_load_electrode(options.subj.recon.recon,side);
                     pobj.hasPlanning=1;
                     pobj.showPlanning=strcmp(options.leadprod,'or');
                 end
@@ -180,12 +180,12 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
                 end
             end
             if ~multiplemode
-                d=load([directory,'ea_reconstruction.mat']);
+                d=load(options.subj.recon.recon);
                 plans=d.reco.electrode(side+1:end);
                 if ~isempty(plans)
                     if isfield(plans,'plan')
                         for plan=1:length(plans)
-                            pobj=ea_load_electrode(directory,side+plan);
+                            pobj=ea_load_electrode(options.subj.recon.recon, side+plan);
                             ea_add_trajectory([],[],options,pobj,side+plan);
                         end
                     end
