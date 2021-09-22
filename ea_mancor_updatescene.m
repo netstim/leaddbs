@@ -606,7 +606,6 @@ switch options.modality
         if options.native
             V=getappdata(mcfig,'VCTnative');
             if isempty(V)
-                options=ea_assignpretra(options);
                 [mat,ctfile]=ea_getrawct2preniimat(options,0);
                 V=spm_vol(ctfile);
                 V.mat=mat*V.mat;
