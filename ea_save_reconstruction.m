@@ -44,6 +44,7 @@ else
     reco.mni.coords_mm=coords_mm;
     reco.mni.trajectory=trajectory;
     reco.mni.markers=markers;
+    ea_mkdir(options.subj.reconDir);
     save([options.subj.recon.recon outfname],'reco');
 
     if isfield(options,'hybridsave')
