@@ -58,12 +58,7 @@ else
     end
 end
 
-xfm = '(?<=desc-)\w+(?=\.mat)';
-transformType = upper(regexp(transform, xfm, 'match', 'once'));
-
-if ismember(transformType, {'FLIRT','FLIRTBBR'}) % Fix FSL transformation name - this will also be the extension for bbr.
-    transformType = 'FSL';
-end
+transformType = upper(regexp(transform, '(?<=desc-)\w+(?=\.mat)', 'match', 'once'));
 
 % nn: NearestNeighbor
 % lbl: Label (for multi-label image, ANTs uses 'GenericLabel' rather than 'NearestNeighbor')
@@ -107,7 +102,7 @@ switch transformType
             case {'spl', 'spline'}
                 interp = 'BSpline';
         end
-    case 'FSL'
+    case {'FLIRT','FLIRTBBR', 'BBR', 'FSL'}
         % trilinear, nearestneighbour, sinc, spline
         switch lower(interp)
             case {'nn', 'nearestneighbor', 'lbl', 'label'}
