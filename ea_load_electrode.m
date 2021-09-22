@@ -1,6 +1,6 @@
-function pobj=ea_load_electrode(directory,side)
+function pobj=ea_load_electrode(recon_path,side)
 
-d=load([directory,'ea_reconstruction.mat']);
+d=load(recon_path);
 
 pobj.elmodel=d.reco.electrode(side).dbs.elmodel;
 %%%
