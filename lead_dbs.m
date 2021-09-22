@@ -62,7 +62,6 @@ set(handles.vizspacepopup,'String',{[ea_underscore2space(ea_getspace), ' Space']
 
 ea_dispbn;
 
-mstr='';
 set(handles.leadfigure,'name','Welcome to LEAD-DBS');
 
 spacedef=ea_getspacedef;
@@ -1618,10 +1617,10 @@ function slicer_original_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
-options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
-options.leadprod = 'dbs';
-[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-options.root=[options.root,filesep];
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+bids = getappdata(handles.leadfigure, 'bids');
+subjId = getappdata(handles.leadfigure, 'subjId');
+options.subj = bids.getSubj(subjId{1}, options.modality);
 ea_runslicer(options, 1);
 
 
@@ -1631,10 +1630,10 @@ function slicer_coregistered_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
-options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
-options.leadprod = 'dbs';
-[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-options.root=[options.root,filesep];
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+bids = getappdata(handles.leadfigure, 'bids');
+subjId = getappdata(handles.leadfigure, 'subjId');
+options.subj = bids.getSubj(subjId{1}, options.modality);
 ea_runslicer(options, 2);
 
 
@@ -1644,10 +1643,10 @@ function slicer_normalized_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
-options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
-options.leadprod = 'dbs';
-[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-options.root=[options.root,filesep];
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+bids = getappdata(handles.leadfigure, 'bids');
+subjId = getappdata(handles.leadfigure, 'subjId');
+options.subj = bids.getSubj(subjId{1}, options.modality);
 ea_runslicer(options, 3);
 
 
@@ -1657,10 +1656,10 @@ function slicer_contact_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options = ea_handles2options(handles);
-options.uipatdirs = getappdata(handles.leadfigure,'uipatdir');
-options.leadprod = 'dbs';
-[options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
-options.root=[options.root,filesep];
+options.uipatdirs=getappdata(handles.leadfigure,'uipatdir');
+bids = getappdata(handles.leadfigure, 'bids');
+subjId = getappdata(handles.leadfigure, 'subjId');
+options.subj = bids.getSubj(subjId{1}, options.modality);
 ea_runslicer(options, 4);
 
 
