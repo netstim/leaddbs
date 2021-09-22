@@ -41,9 +41,8 @@ clear matlabbatch
 lnii = ea_load_untouch_nii(lpost_path);
 
 for side = options.sides
-
     % call main routine reconstructing trajectory for one side.
-    [coords,trajvector{side},trajectory{side},tramat] = ea_reconstruct(options.patientname,options,side,lnii);
+    [coords,trajvector{side},trajectory{side},tramat] = ea_reconstruct(options,side,lnii);
 
     % refit electrodes starting from first electrode (this is redundant at this point).
     coords_mm{side} = ea_map_coords(coords', lpost_path)';
