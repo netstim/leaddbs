@@ -167,12 +167,11 @@ if ~isempty(transform)
 
         % Need to differentiate  the transformation type
         if nargin >= 5
-            normMethod = varargin{5};
+            normMethod = upper(varargin{5});
         else
             normMethod = 'FALLBACK';
         end
 
-        normMethod = upper(normMethod{end});
 
         if strcmp(normMethod, 'AFFINE') % file is  4*4 affine matrix
                 transform = load(transform);
@@ -352,8 +351,7 @@ if ~isempty(transform)
 
         % Need to specify the transformation type
         if nargin >= 5
-            normMethod = varargin{5};
-            normMethod = upper(normMethod);
+            normMethod = upper(varargin{5});
         else
             error('Please specify the transformation type');
         end
