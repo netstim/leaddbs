@@ -1,14 +1,15 @@
 function [mni_files,native_files,derivatives_cell] = vta_walkpath(source_patient,new_path,pipeline,derivatives_cell)
 
-
+mni_files = {};
+native_files = {};
 switch pipeline
     case 'stimulations'
         if ~exist(fullfile(new_path,pipeline),'dir')
            return 
         end
-        mni_dir = fullfile(new_path,pipeline,'MNI_ICBM_2009b_NLIN_ASYM');
-        native_dir = fullfile(new_path,pipeline,'native');
-        if exist(mni_dir,'dir')
+        if exist(fullfile(new_path,pipeline,'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
+            mni_dir = fullfile(new_path,pipeline,'MNI_ICBM_2009b_NLIN_ASYM');
+            native_dir = fullfile(new_path,pipeline,'native');
             this_folder = dir_without_dots(mni_dir);
             this_folder_names = {this_folder.name};
             file_indx = 1;
@@ -25,6 +26,7 @@ switch pipeline
                 %of the vta files present. Now you
                 %can rename them.
             end            
+            
         end
         if exist(native_dir,'dir')
             this_folder = dir_without_dots(native_dir);
