@@ -328,10 +328,10 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     if options.manualheightcorrection
         poptions=ea_checkmanapproved(options);
         if ~isempty(poptions.sides)
-            mcfig=figure('name',[options.patientname,': Electrode Reconstruction'],'numbertitle','off');
+            mcfig=figure('name',[options.subj.subjId,': Electrode Reconstruction'],'numbertitle','off');
             mcfig.WindowState = 'maximized';
             options.elside=options.sides(1);
-            ea_manualreconstruction(mcfig,options.patientname,options);
+            ea_manualreconstruction(mcfig,options.subj.subjId,options);
         end
     else
         ea_write(options)
