@@ -78,7 +78,7 @@ brainshiftImage = options.subj.brainshift.anat.scrf;
 
 % List pf images for checkreg
 checkregImages = [preopCoregImages; postopCoregImages; preopNormImage; brainshiftImage];
-checkregImages = checkregImages(cellfun(@(f) ea_reglocked(options, f), checkregImages)~=1);
+checkregImages = checkregImages(cellfun(@(f) ea_reglocked(options, f)~=1 & isfile(f), checkregImages));
 
 % fMRI
 restfiles = dir([options.root,options.patientname,filesep,options.prefs.rest_searchstring]);
