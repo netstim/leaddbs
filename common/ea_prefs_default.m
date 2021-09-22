@@ -106,7 +106,7 @@ prefs.normalize.spm.resolution=1; % Defines resolution in mm when using SPM norm
 prefs.reco.mancoruse='postop'; % switch to 'rpostop' to use resliced CT.
 prefs.reco.saveACPC=0; % also save reconstructions in AC/PC space
 prefs.reco.saveimg=0; % save fiducial marker visualisation as image after "Refined TRAC/CORE"
-prefs.reco.exportfiducials=0; % automatically export fiducials to a comma separated value file after "Refined TRAC/CORE". Set this to 'fcsv' for simple import into Slicer, otherwise set to 'csv' or 'txt' for import into other software.
+prefs.reco.exportfiducials='.fcsv'; % automatically export fiducials to a comma separated value file after "Refined TRAC/CORE". Set this to '.fcsv' for simple import into Slicer, otherwise set to '.csv' or '.txt' for import into other software.
 
 %% Coregistration (CT/MR):
 prefs.ctcoreg.default = 'ANTs (Avants 2008)';
