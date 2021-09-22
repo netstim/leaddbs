@@ -370,7 +370,7 @@ for patients = 1:length(source)
                         elseif strcmp(modes{i},'dwi') && strcmp(sessions{j},'ses-preop')
                             disp("Migrating dwi data...")
                             for files = 1:length(files_to_move)
-                                if ~isempty(regexp(files_to_move{files},'^dti.*'))
+                                if ~isempty(regexp(files_to_move{files},'^dti.[bval,bvec,nii]'))
                                     if exist(fullfile(source_patient,files_to_move{files}),'file')
                                         modality_str = strsplit(files_to_move{files},'_');
                                         modality_str = modality_str{end};
