@@ -526,7 +526,7 @@ else
         json.approval.(modality) = 1;
         savejson('', json, options.subj.coreg.log.method);
 
-        if ~coregWasApproved
+        if ~coregWasApproved && isfile(options.subj.norm.log.method)
             json = loadjson(options.subj.norm.log.method);
             if eval('isfield(json.approval, options.subj.AnchorModality)', '0') ...
                     && json.approval==1
