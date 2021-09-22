@@ -1,10 +1,8 @@
 function [coords_mm,trajectory,markers]=ea_runmanual(options)
 
-directory = [options.root,options.patientname,filesep];
-load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname,'.mat']);
+load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname,'.mat'], 'electrode');
 
-normdist=pdist([electrode.head_position;electrode.tail_position]);
-
+normdist = pdist([electrode.head_position;electrode.tail_position]);
 
 for side=options.sides
     spm('defaults', 'fmri');
@@ -19,6 +17,7 @@ for side=options.sides
         case 2 % CT
             vol = spm_vol(options.subj.coreg.anat.postop.CT);
     end
+
     spm_orthviews('Reset');
     h = spm_orthviews('Image', vol);
     colormap('gray');
@@ -52,7 +51,8 @@ for side=options.sides
     markers(side).x = markers(side).head + xunitv*(options.elspec.lead_diameter/2);
     markers(side).y = markers(side).head + yunitv*(options.elspec.lead_diameter/2);
 end
-[coords_mm,trajectory,markers]=ea_resolvecoords(markers,options,0);
+
+[coords_mm,trajectory,markers] = ea_resolvecoords(markers,options,0);
 
 close(Fgraph);
 close(Finter);
