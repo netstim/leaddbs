@@ -24,7 +24,7 @@ switch options.modality
 end
 
 tmp_dir = fullfile(options.subj.normDir,'tmp');
-mkdir(tmp_dir);
+ea_mkdir(tmp_dir);
 lpost_path = fullfile(tmp_dir, 'lpost.nii');
 
 matlabbatch{1}.spm.util.imcalc.input = fis;
