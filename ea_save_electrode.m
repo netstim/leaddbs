@@ -1,7 +1,7 @@
 function ea_save_electrode(obj)
 
-if isfile(options.subj.recon.recon)
-    d = load(options.subj.recon.recon);
+if isfile(obj.options.subj.recon.recon)
+    d = load(obj.options.subj.recon.recon);
 else
     d.reco.electrode = struct;
 end
@@ -21,5 +21,5 @@ d.reco.electrode(obj.side).plan.planRelative=obj.planRelative;
 d.reco.electrode(obj.side).plan.target=obj.target;
 
 d.reco.electrode(obj.side).micro.relateMicro=obj.relateMicro;
-save(options.subj.recon.recon, '-struct', 'd');
+save(obj.options.subj.recon.recon, '-struct', 'd');
 
