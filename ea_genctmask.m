@@ -2,6 +2,8 @@ function ea_genctmask(options)
 
 masks_path = fileparts(options.subj.recon.rawCTMask);
 
+if ~isfolder(masks_path); mkdir(masks_path); end
+
 copyfile([ea_space,'brainmask.nii.gz'], fullfile(masks_path,'brainmask.nii.gz'));
 gunzip(fullfile(masks_path,'brainmask.nii.gz'));
 ea_delete(fullfile(masks_path,'brainmask.nii.gz'));
