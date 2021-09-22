@@ -4,8 +4,8 @@ function [roll_out] = ea_diode_main(options)
 folder = [options.root options.patientname filesep];
 
 if  options.modality == 1 % check for electrode type and postoperative imaging
-    msg = sprintf(['Automatic rotation detection works only for postoperative CT images.']);
-    choice = questdlg(msg,'No postoperative CT!','Abort','Abort');
+    msg = sprintf('Automatic rotation detection works only for post-op CT images.');
+    choice = questdlg(msg,'No post-op CT!','Abort','Abort');
     roll_out = [];
     return
 end
@@ -14,16 +14,17 @@ end
 %         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
 %     end
 % end
+
 %% import CTs and choose which CT to use
-if exist([folder options.prefs.ctnii_coregistered],'file') == 2
-    ct_reg = ea_load_nii([folder options.prefs.ctnii_coregistered]);
+if isfile(options.subj.coreg.anat.postop.CT)
+    ct_reg = ea_load_nii(options.subj.coreg.anat.postop.CT);
     tmat_reg = ct_reg.mat;
 else
-    error(['No coregistered CT (',options.prefs.ctnii_coregistered,') found in folder: ' folder])
+    error(['No coregistered post-op CT found in folder for patient ' options.subj.subjId])
 end
 tol=0.0001; % tolerance of (rounding) difference in qform and sform matrices.
-if exist([folder options.prefs.rawctnii_unnormalized],'file') == 2
-    ct_org = ea_load_nii([folder 'postop_ct.nii']);
+if isfile(options.subj.preproc.anat.postop.CT)
+    ct_org = ea_load_nii(options.subj.preproc.anat.postop.CT);
     if sum(sum(abs(ct_org.mat-ct_org.private.mat0)))<tol
         tmat_org = ct_org.mat;
     else
@@ -37,13 +38,12 @@ if exist([folder options.prefs.rawctnii_unnormalized],'file') == 2
         end
     end
     ct = ct_org;
-    
 else
-    msg = sprintf(['No postop_ct.nii found in folder: ' folder '\nScript will run using coregistered rpostop_ct.nii which may lead to inaccurate results.']);
+    msg = sprintf(['No post-op CT found for patient ' options.subj.subjId '\nScript will run using coregistered rpostop_ct.nii which may lead to inaccurate results.']);
     choice = questdlg(msg,'Warning!','Continue','Abort','Abort');
     switch choice
         case 'Continue'
-            disp(['Using rpostop_ct.nii as reference image.'])
+            disp('Using coregistered CT as reference image.')
             ct = ct_reg;
         case 'Abort'
             error('Aborted by user')
@@ -53,41 +53,37 @@ end
 %% import transformation matrices for CT coregistration
 tmat_reg2org=eye(4); % default.
 try
-    if strcmp(options.prefs.reco.mancoruse,'postop')
-        load([folder 'ea_coregctmethod_applied.mat']);
-        switch coregct_method_applied{end}
-            case 'ea_coregpostopct_fsl'
-                %             tmat_reg2org = dlmread([folder 'anat_t12postop_ct_flirt1.mat']));
-                disp(['Warning: Temporary fix to use DiODe algorithm with FLIRT. rpostop_ct is used so results may be slightly less accurate.'])
-                ct = ct_reg;
-            otherwise
-                [tmat_reg2org,ctfname] = ea_getrawct2preniimat(options,1);
-                ct=ea_load_nii(ctfname);
+    if strcmp(options.prefs.reco.mancoruse, 'postop')
+        json = loadjson(options.subj.coreg.log.method);
+        coregMethod = json.method.CT;
+        if contains(coregMethod, {'FLIRT','FSL'})
+            % tmat_reg2org = dlmread([folder 'anat_t12postop_ct_flirt1.mat']));
+            disp('Warning: Temporary fix to use DiODe algorithm with FLIRT. Coregistered post-op CT is used so results may be slightly less accurate.');
+            ct = ct_reg;
+        else
+            [tmat_reg2org,ctfname] = ea_getrawct2preniimat(options,1);
+            ct = ea_load_nii(ctfname);
         end
     else
         ct = ct_reg;
     end
 catch
-    reg2org = load([folder 'Postop_CT_2_T1.mat']);
+    reg2org = load(fullfile(options.subj.coregDir, 'transform', 'Postop_CT_2_T1.mat'));
     tmat_reg2org =ea_antsmat2mat(reg2org.AffineTransform_double_3_3,reg2org.fixed);
     tmat_reg2org = inv(tmat_reg2org);
 end
-
-
 
 sides = {'right','left','3','4','5','6','7','8'};
 for side = options.elside
     disp(['Reconstructing rotation of ' sides{side} ' lead!'])
     % import lead information
-    load([folder 'ea_reconstruction.mat']); % included in for-loop to make independent ea_save_reconstruction for both sides
+    load(options.subj.recon.recon, 'reco'); % included in for-loop to make independent ea_save_reconstruction for both sides
     
     %% transform head/tail coordinates from native to image coordinates
     head_native = [reco.native.markers(side).head 1]';
     tail_native = [reco.native.markers(side).tail 1]';
-    CTname = find(ct.fname==filesep);
-    CTname = ct.fname(CTname(end):end);
     
-    if strcmp(CTname,[filesep,options.prefs.rawctnii_unnormalized]) || strcmp(CTname,[filesep,'postop_ct_resliced.nii'])
+    if strcmp(ct.fname, options.subj.preproc.anat.postop.CT) || endsWith(ct.fname, 'postop_ct_resliced.nii')
         % transform rpostop_ct -> postop_ct
         head_mm = (tmat_reg2org) * head_native;
         tail_mm = (tmat_reg2org) * tail_native;
@@ -95,7 +91,7 @@ for side = options.elside
         head_vx = inv(tmat_org) * head_mm;
         tail_vx = inv(tmat_org) * tail_mm;
         tmat_vx2mm = tmat_org;
-    elseif strcmp(CTname,[filesep,options.prefs.ctnii_coregistered])
+    elseif strcmp(ct.fname, options.subj.coreg.anat.postop.CT)
         head_mm = head_native;
         tail_mm = tail_native;
         % transfrom rpostop_ct mm -> voxel
@@ -124,10 +120,10 @@ for side = options.elside
     
     if ~isempty(y)
         %% transform y to native space and back
-        if strcmp(CTname,[filesep 'postop_ct.nii']) || strcmp(CTname,[filesep 'postop_ct_resliced.nii'])
+        if strcmp(ct.fname, options.subj.preproc.anat.postop.CT) || endsWith(ct.fname, 'postop_ct_resliced.nii')
             % transform postop_ct_mm -> rpostop_ct_mm
             y = tmat_reg2org \ y;
-        elseif strcmp(CTname,[filesep 'rpostop_ct.nii'])
+        elseif strcmp(ct.fname, options.subj.coreg.anat.postop.CT)
             y = y;
         end
         
@@ -160,7 +156,7 @@ for side = options.elside
     end
     %% methods dump:
     ea_methods(options,...
-        ['Orientation of directional DBS leads was determined using the algorithm published by Dembek et al. 2019 as implemented in Lead-DBS software.'],...
+        'Orientation of directional DBS leads was determined using the algorithm published by Dembek et al. 2019 as implemented in Lead-DBS software.',...
         {'T.A. Dembek, M. Hoevels, A. Hellerbach, A. Horn, J.N. Petry-Schmelzer, J. Borggrefe, J. Wirths, H.S. Dafsari, M.T. Barbe, V. Visser-Vandewalle & H. Treuer (2019). Directional DBS leads show large deviations from their intended implantation orientation. Parkinsonism Relat Disord. 2019 Oct;67:117-121. doi: 10.1016/j.parkreldis.2019.08.017.'});
     
 end
