@@ -212,7 +212,7 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
 
     ea_save_reconstruction(coords_mm, trajectory, rmarkers, elmodel, 0, options);
     if can_export
-        ea_exportfiducials(options, setBIDSEntity(options.subj.recon.recon, 'desc', 'fiducials', 'ext', options.prefs.reco.exportfiducials));
+        ea_exportfiducials(options, setBIDSEntity(options.subj.recon.recon, 'desc', 'electrodefiducials', 'ext', options.prefs.reco.exportfiducials));
     end
 
 end
