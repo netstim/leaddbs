@@ -40,9 +40,10 @@ else
     subfolder_cell = {'sourcedata','rawdata','derivatives'};
 end
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','headmodel','miscellaneous','ftracking'};
-%mapping will allow quick reference of the files to move
-legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec'};
-bids_modalities = {'T1w.nii.gz','T2w.nii.gz','PDw.nii.gz','CT.nii.gz','ax.nii.gz','cor.nii.gz','sag.nii.gz','FGATIR.nii.gz','fa.nii.gz','dwi.nii.gz','dwi.bval','dwi.bvec'};
+%mapping will allow quick reference of the files to move: also, certain
+%modalities have specific bids naming.
+legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
+bids_modalities = {'T1w.nii.gz','T2w.nii.gz','PDw.nii.gz','CT.nii.gz','ax.nii.gz','cor.nii.gz','sag.nii.gz','FGATIR.nii.gz','fa.nii.gz','dwi.nii.gz','dwi.bval','dwi.bvec','T2starw.nii.gz'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 [brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking] = create_bids_mapping();
 %these files should be converted to .json
@@ -107,7 +108,8 @@ for patients = 1:length(source)
         %%%for now, copy atlases, stimulations, headmodel and current
         %%%headmodel to their respective directories. Then you can crawl
         %%%through and rename. Renaming is handled a bit later.
-        if strcmp(dir_names{j},'atlases') ||  strcmp(dir_names{j},'headmodel') || strcmp(dir_names{j},'warpdrive')
+        if strcmp(dir_names{j},'atlases') ||  strcmp(dir_names{j},'headmodel') || strcmp(dir_names{j},'warpdrive') || strcmp(dir_names{j},'export')
+            
             copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
         else
             this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
@@ -155,8 +157,18 @@ for patients = 1:length(source)
             case 'derivatives'
                 disp("Migrating Derivatives folder...");
                 new_path = fullfile(dest_patient,subfolder_cell{subfolders},'leaddbs',patient_name);
-                
                 for files=1:length(files_to_move)
+                    mod_split = strsplit(files_to_move{files},'_');
+                    if ismember(mod_split,'postop')
+                        session = 'ses-postop';
+                    else
+                        session = 'ses-preop';
+                    end
+                    mod_str = mod_split{end};
+                    
+                    mod_str = strsplit(mod_str,'.');
+                    mod_str = [upper(mod_str{1}),'.nii'];
+                     
                     if ismember(files_to_move{files},coregistration{:,1})
                         %corresponding index of the new pat
                         which_pipeline = pipelines{2};
@@ -231,7 +243,7 @@ for patients = 1:length(source)
                             mkdir(fullfile(new_path,which_pipeline))
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
-                    
+                        
                     
                     elseif ismember(files_to_move{files},prefs{:,1})
                         %corresponding index of the new pat
@@ -275,6 +287,29 @@ for patients = 1:length(source)
                             mkdir(fullfile(new_path,which_pipeline))
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
+                    elseif ~ismember(files_to_move{files},preprocessing{:,1}) && ~isempty(regexp(files_to_move{files},'raw_.*')) %support for other modalities in preproc
+                        %other raw files go to pre-processing folder.
+                        bids_name = [patient_name,'_','desc-preproc_',session,'_',mod_str];
+                        if ~exist(fullfile(new_path,pipelines{5},'anat'),'dir')
+                            mkdir(fullfile(new_path,pipelines{5},'anat'))
+                        end
+                        
+                        copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{5},'anat'));
+                        movefile(fullfile(new_path,pipelines{5},'anat',files_to_move{files}),fullfile(new_path,pipelines{5},'anat',bids_name));
+                    elseif ~ismember(files_to_move{files},coregistration{:,1}) && ~isempty(regexp(files_to_move{files},'^anat_.*')) %support for other modalities in coreg
+                        bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',session,'_',mod_str];
+                        if ~exist(fullfile(new_path,pipelines{2},'anat'),'dir')
+                            mkdir(fullfile(new_path,pipelines{2},'anat'))
+                        end
+                        copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{2},'anat'));
+                        movefile(fullfile(new_path,pipelines{2},'anat',files_to_move{files}),fullfile(new_path,pipelines{2},'anat',bids_name));
+                   elseif ~ismember(files_to_move{files},normalization{:,1}) && ~isempty(regexp(files_to_move{files},'^glanat_.*')) %support for other modalities in normalization                        
+                        bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',session,'_',mod_str];
+                        if ~exist(fullfile(new_path,pipelines{3},'anat'),'dir')
+                            mkdir(fullfile(new_path,pipelines{3},'anat'))
+                        end
+                        copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{3},'anat'));
+                        movefile(fullfile(new_path,pipelines{3},'anat',files_to_move{files}),fullfile(new_path,pipelines{3},'anat',bids_name));                    
                     end
                 end
                 for folders = 1:length(pipelines)
@@ -334,8 +369,9 @@ for patients = 1:length(source)
                                         try
                                             bids_name = [sessions{j},'_',rawdata_containers(modality_str)];
                                         catch
-                                           modality_str = [upper(modality_str),'.nii.gz'];
-                                           bids_name = [sessions{j},'_',modality_str];
+                                           modality_str = strsplit(modality_str,'.');
+                                           modality_str = upper(modality_str{1});
+                                           bids_name = [sessions{j},'_',modality_str,'.nii.gz'];
                                         end
                                         source_patient_path = source_patient;
                                         which_file = files_to_move{files};
@@ -355,8 +391,9 @@ for patients = 1:length(source)
                                         try
                                             bids_name = [sessions{j},'_',rawdata_containers(modality_str)];
                                         catch
-                                           modality_str = [upper(modality_str),'.nii.gz'];
-                                           bids_name = [sessions{j},'_',modality_str];
+                                           modality_str = strsplit(modality_str,'.');
+                                           modality_str = upper(modality_str{1});
+                                           bids_name = [sessions{j},'_',modality_str,'.nii.gz'];
                                         end
                                         source_patient_path = source_patient;
                                         which_file = files_to_move{files};
@@ -377,8 +414,9 @@ for patients = 1:length(source)
                                         try
                                             bids_name = [sessions{j},'_',rawdata_containers(modality_str)];
                                         catch
-                                           modality_str = [upper(modality_str),'.nii.gz'];
-                                           bids_name = [sessions{j},'_',modality_str];
+                                           modality_str = strsplit(modality_str,'.');
+                                           modality_str = upper(modality_str{1});
+                                           bids_name = [sessions{j},'_',modality_str,'.nii.gz'];
                                         end
                                         source_patient_path = source_patient;
                                         which_file = files_to_move{files};
@@ -646,20 +684,35 @@ function generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_c
     %collect all the raw files from the files to move.
     for i=1:length(files_to_move)
         if ~isempty(regexp(files_to_move{i},'raw_anat_.*.nii')) 
-            session = 'ses-preop';
+            sessions = 'ses-preop';
             modality_str = strsplit(files_to_move{i},'_');
             modality_str = modality_str{end};
-            bids_name = [patient_name,'_',session,'_',rawdata_containers(modality_str)];
-            rawdata_fieldname = strsplit(rawdata_containers(modality_str),'.');
-            rawdata_fieldname = rawdata_fieldname{1};
+            try
+                bids_name = [patient_name,'_',sessions,'_',rawdata_containers(modality_str)];
+                rawdata_fieldname = strsplit(rawdata_containers(modality_str),'.');
+                rawdata_fieldname = rawdata_fieldname{1};
+            catch
+                modality_str = strsplit(modality_str,'.');
+                modality_str = upper(modality_str);
+                bids_name = [patient_name,'_',sessions,'_',modality_str,'.nii.gz'];
+                rawdata_fieldname = modality_str{1};
+            end
+            
             anat_files_selected.preop.(rawdata_fieldname) = bids_name;
         elseif ~isempty(regexp(files_to_move{i},'raw_postop_.*')) || strcmp(files_to_move{i},'postop_ct.nii')
-            session = 'ses-postop';
+            sessions = 'ses-postop';
             modality_str = strsplit(files_to_move{i},'_');
             modality_str = modality_str{end};
-            bids_name = [patient_name,'_',session,'_',rawdata_containers(modality_str)];
-            rawdata_fieldname = strsplit(rawdata_containers(modality_str),'.');
-            rawdata_fieldname = rawdata_fieldname{1};
+            try
+                bids_name = [patient_name,'_',sessions,'_',rawdata_containers(modality_str)];
+                rawdata_fieldname = strsplit(rawdata_containers(modality_str),'.');
+                rawdata_fieldname = rawdata_fieldname{1};
+            catch
+                modality_str = strsplit(modality_str,'.');
+                modality_str = upper(modality_str);
+                bids_name = [patient_name,'_',sessions,'_',modality_str,'.nii.gz'];
+                rawdata_fieldname = modality_str{1};
+            end            
             anat_files_selected.postop.(rawdata_fieldname) = bids_name;
         end
         
