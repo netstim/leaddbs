@@ -30,13 +30,13 @@ for i=1:length(entities)
         parsedStruct.(entity) = value;
     else % Append new entity
         % Insert key-value pair before suffix
-        keys = fieldnames(parsedStruct);
-        keys = [keys(1:end-2); entity; keys(end-1:end)];
-        values = struct2cell(parsedStruct);
-        values = [values(1:end-2); value; values(end-1:end)];
+        parsedEntities = fieldnames(parsedStruct);
+        parsedEntities = [parsedEntities(1:end-2); entity; parsedEntities(end-1:end)];
+        parsedValues = struct2cell(parsedStruct);
+        parsedValues = [parsedValues(1:end-2); value; parsedValues(end-1:end)];
 
         % Construct new parsed struct
-        parsedStruct = cell2struct(values, keys, 1);
+        parsedStruct = cell2struct(parsedValues, parsedEntities, 1);
     end
 end
 
