@@ -151,7 +151,7 @@ end
 
 function ea_preset_stn(handles)
 set(handles.stn,'Value',1); set(handles.gpi,'Value',0);
-stnmods={'T2','QSM','T2STAR','FGATIR'};
+stnmods={'T2w','T2starw','FGATIR','QSM'};
 mods=get(handles.anat_select,'String');
 [is,idx]=ismember(mods,stnmods);
 if any(is) % only change modality if theres a suitable one available.
