@@ -18,13 +18,17 @@ switch type
     case 'coreg'
         if strcmp(modality, 'CT')
             log.method.CT = options.coregct.method;
+            log.approval.CT = 0;
         else
             log.method.(modality) = options.coregmr.method;
+            log.approval.(modality) = 0;
         end
     case 'norm'
         log.method = options.normalize.method;
+        log.approval = 0;
     case 'brainshift'
         log.method = options.scrf.mask;
+        log.approval = 0;
 end
 
 % Save method log
