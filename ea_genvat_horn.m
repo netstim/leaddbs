@@ -77,6 +77,12 @@ else
     elstruct.stretchfactor=0.5;
 end
 
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+ea_mkdir(stimDir);
+headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+ea_mkdir(headmodelDir);
+filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+
 hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test once.
 assignin('caller','hmchanged',hmchanged);
 if hmchanged
@@ -222,15 +228,13 @@ if hmchanged
         mesh.pnt=mesh.pnt*1000; % in meter
         mesh.unit='mm';
     end
-    if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)],'dir')
-        mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
-    end
-    save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
+
+    save(fullfile(headmodelDir, [filePrefix, 'headmodel', num2str(side),'.mat']), 'vol','mesh','centroids','wmboundary','elfv','meshregions','-v7.3');
     ea_save_hmprotocol(options,side,elstruct,1);
 else
     % simply load vol.
     ea_dispt('Loading headmodel...');
-    load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat']);
+    load(fullfile(headmodelDir, [filePrefix, 'headmodel', num2str(side),'.mat']));
     activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
 end
 
@@ -296,7 +300,7 @@ for source=S.sources
         end
 
         if isempty(ix)
-            rmdir([options.root,options.patientname,filesep,'current_headmodel'],'s'); % the least I can do at this point is to clean up the faulty headmodel.
+            rmdir(fullfile(options.subj.subjDir, 'headmodel'),'s'); % the least I can do at this point is to clean up the faulty headmodel.
             ea_error('Something went wrong. Active vertex index not found.');
         end
 
@@ -377,10 +381,9 @@ else % VTA calculated in native space and then transformed back to MNI
         end
 
         % Convert midpts and actContact from native space to MNI space
-        [~,anatpresent] = ea_assignpretra(options);
-        ptsvx_native = ea_mm2vox([midpts;actContact], [options.root,options.patientname,filesep,anatpresent{1}])';
-        ptsmm_mni = ea_map_coords(ptsvx_native, [options.root,options.patientname,filesep,anatpresent{1}], ...
-            [options.root,options.patientname,filesep,'inverseTransform'], '')';
+        ptsvx_native = ea_mm2vox([midpts;actContact], options.subj.preopAnat.(options.subj.AnchorModality).coreg)';
+        ptsmm_mni = ea_map_coords(ptsvx_native, options.subj.preopAnat.(options.subj.AnchorModality).coreg, ...
+            [options.subj.subjDir,filesep,'inverseTransform'], '')';
         midpts_mni = ptsmm_mni(1:size(midpts,1),:);
         actContact_mni = ptsmm_mni(size(midpts,1)+1:end,:);
         options.native=0; % go back to template space for export
@@ -418,14 +421,18 @@ protocol.version=1.1;
 protocol.vatsettings=options.prefs.machine.vatsettings;
 
 if sv % save protocol to disk
-    save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'hmprotocol',num2str(side),'.mat'],'protocol');
+    headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+    save(fullfile(headmodelDir, [filePrefix, 'hmprotocol',num2str(side),'.mat']), 'protocol');
 end
 
 
 function protocol=ea_load_hmprotocol(options,side)
 % function that loads protocol
 try
-    load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'hmprotocol',num2str(side),'.mat']);
+    headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+    load(fullfile(headmodelDir, [filePrefix, 'hmprotocol',num2str(side),'.mat']));
 catch
     protocol=struct; % default for errors or if not present
 end
