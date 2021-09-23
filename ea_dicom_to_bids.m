@@ -1,6 +1,6 @@
 function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
 
-% Function creates a GUI in order to select which files should be used to create a BIDS compliant dataset and 
+% Function creates a GUI in order to select which files should be used to create a BIDS compliant dataset and
 % which files should be used by lead-dbs. After selection, a rawdata folder will be created and selected files will be
 % copy/pasted to the appropriate locations
 %
@@ -16,7 +16,7 @@ function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
 %                                 those fields have strings with the filenames that are selected and to be used by lead-dbs
 % __________________________________________________________________________________
 % Copyright (C) 2021 Charite University Medicine Berlin, Movement Disorders Unit
-% Johannes Achtzehn 
+% Johannes Achtzehn
 % Part of this code is inspired by the dicm2nii tool of xiangrui.li@gmail.com
 
 % options that should appear in the table
@@ -25,7 +25,7 @@ table_options = {'skip','skip', 'skip';
     'anat','preop', 'T2w';
     'anat','preop', 'FGATIR';
     'anat','preop', 'FLAIR';
-     'anat','preop', 'T2starw';
+    'anat','preop', 'T2starw';
     'anat','preop', 'PDw';
     'anat','postop', 'CT';
     'anat','postop', 'ax_MR';
@@ -64,10 +64,10 @@ Type = categorical(repmat({'skip'},[length(fnames),1]),unique(table_options(:,1)
 T = table(fnames, Session, Type, Modality);
 
 try
-T_preallocated = preallocate_table(T, lookup_table);
+    T_preallocated = preallocate_table(T, lookup_table);
 catch
-disp('Preallocation of table failed, defaulting to skip!');
-T_preallocated = T;
+    disp('Preallocation of table failed, defaulting to skip!');
+    T_preallocated = T;
 end
 
 % create GUI
@@ -99,6 +99,8 @@ ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui, ui.niiFileTabl
 % cancel button behaviour
 ui.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(ui);
 
+% looup table behaviour
+ui.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(ui);
 waitfor(ui.UIFigure);
 
 try
@@ -110,10 +112,92 @@ end
 
 end
 
+%% lookup button function
+function lookup_button_function(ui)
+
+lookup_table_gui = ea_default_lookup;
+lookup_table = getpref('dcm2bids', 'lookuptable');
+ 
+% populate table with current preferences
+lookup_table_data = convert_lookup_struct_to_table(lookup_table);
+lookup_table_gui.UITable.Data = lookup_table_data;
+
+% load defaults button
+lookup_table_gui.LoaddefaultsButton.ButtonPushedFcn = @(btn,event) load_default_lookups(lookup_table_gui);
+
+% load .json button
+lookup_table_gui.LoadjsonButton.ButtonPushedFcn = @(btn,event) load_json_file(lookup_table_gui);
+
+% cancel button
+lookup_table_gui.CancelButton.ButtonPushedFcn = @(btn,event) cancel_lookup_function(lookup_table_gui);
+
+% save button
+lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(ui, lookup_table_gui);
+
+waitfor(lookup_table_gui.UIFigure);
+end
+
+function save_lookup_function(main_gui, lookup_table_gui)
+
+lookup_table = convert_table_to_lookup_struct(lookup_table_gui.UITable.Data);
+
+ setpref('dcm2bids', 'lookuptable', lookup_table);
+ 
+ T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table);
+ 
+ main_gui.niiFileTable.Data = T_preallocated;
+ 
+ delete(lookup_table_gui);
+ 
+end
+
+function table_struct = convert_table_to_lookup_struct(table_strings)
+
+table_struct = struct();
+
+for row_idx = 1:height(table_strings)
+        
+    keywords_string = strsplit(table_strings.Keywords(row_idx), ',');
+  
+    keywords_cell = cell(1, length(keywords_string));
+    for word = 1:length(keywords_string)
+        keywords_cell{1, word} = keywords_string(word);
+    end
+    
+    table_struct.(table_strings.Type(row_idx)).(table_strings.Session(row_idx)).(table_strings.Modality(row_idx)) = keywords_cell;
+end
+
+end
+
+function cancel_lookup_function(lookup_table_gui)
+s = uiconfirm(lookup_table_gui.UIFigure, 'Do you really want to cancel loopup modification?', 'Confirm close', ...
+    'Options', {'Yes', 'No'}, 'Icon', 'question');
+switch s
+    case 'Yes'
+        delete(lookup_table_gui);
+end
+end
+
+function load_json_file(lookup_table_gui)
+[FileName,PathName,~] = uigetfile('.json');
+fprintf('Loading lookup_table from .json file at %s\n', fullfile(PathName, FileName));
+lookup_table = loadjson(fullfile(PathName, FileName));
+lookup_table_data = convert_lookup_struct_to_table(lookup_table);
+lookup_table_gui.UITable.Data = lookup_table_data;
+end
+
+function load_default_lookups(lookup_table_gui)
+    fprintf('Loading defaults from .json file at %s\n', fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
+    lookup_table = loadjson(fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
+    setpref('dcm2bids', 'lookuptable', lookup_table)
+    lookup_table_data = convert_lookup_struct_to_table(lookup_table);
+    lookup_table_gui.UITable.Data = lookup_table_data;
+end
+
 %% cell change callback
 function cell_change_callback(ui, table_options, subjID)
 
-% update tree view 
+% update tree view
 dat = cellfun(@char,table2cell(ui.niiFileTable.Data),'uni',0);  % get data
 ui.previewtree_preop_anat.Children.delete;      % delete children
 ui.previewtree_postop_anat.Children.delete;    % delete children
@@ -147,7 +231,7 @@ for sesIdx = 1:length(sessions)
             fname_list{end+1} = fname;
         end
         
-    end 
+    end
 end
 
 end
@@ -201,7 +285,7 @@ end
 %% cancel button
 function cancel_button_function(uiapp)
 
- s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'Confirm close', ...
+s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'Confirm close', ...
     'Options', {'Yes', 'No'}, 'Icon', 'question');
 
 switch s
@@ -209,7 +293,7 @@ switch s
         delete(uiapp);
 end
 
-    
+
 end
 
 %% ok button
@@ -254,18 +338,18 @@ end
 
 % TODO sanity check for invalid combinations of postop and preop images
 %  for fileIdx = 1:length(dat)
-%     
+%
 %      for sesIdx = 1:length(sessions)
 %         ses = sessions{sesIdx};
 %          if strcmp(dat{fileIdx, 2}, ses)
-%              
+%
 %              % get possible options for this session
 %              possible_options = table_options(strcmp(table_options(:,2), ses), 3);
 %              ui.niiFileTable.Modality.Data(fileIdx) = 'test'
 %          end
-%         
+%
 %      end
-%       
+%
 %  end
 
 % check if all images have been skipped
@@ -291,17 +375,17 @@ if sanity_check_passed == true
                     mkdir(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'));
                 end
                 if exist(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), 'file')
-                     copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.nii.gz']));
+                    copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.nii.gz']));
                 else
                     warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']));
                 end
-               
-                 if exist(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), 'file')
-                      copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.json']));
+                
+                if exist(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), 'file')
+                    copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.json']));
                 else
                     warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', fullfile(nii_folder, [dat{fileIdx, 1}, '.json']));
                 end
-               
+                
                 anat_files.(ses).(dat{fileIdx, 4}) = fname; % set output struct
             end
             
@@ -534,6 +618,57 @@ if c == 1002 % Label
 end
 rg = get_range(p.nii, isfield(p, 'labels'));
 try, p.map = p.nii.NamedMap{1}.map; end
+end
+
+%% helper functions for lookup_table
+
+function lookup_table_data = convert_lookup_struct_to_table(lookup_table)
+types = fieldnames(lookup_table);
+
+lookup_table_data = table();
+
+for type_idx = 1:length(types)
+    
+    type = types{type_idx};
+    
+    sessions = fieldnames(lookup_table.(type));
+    
+    for ses_idx = 1:length(sessions)
+        
+        session = sessions{ses_idx};
+        
+        modalities = fieldnames(lookup_table.(type).(session));
+        
+        temp_table = table();
+        for mod_idx = 1:length(modalities)
+            
+            modality = modalities{mod_idx};
+            
+            keywords =  lookup_table.(type).(session).(modality);
+            keywords_table = "";
+            
+            if ~isempty(keywords)
+                
+                for keyword_idx = 1:length(keywords)
+                    if keyword_idx == 1
+                        keywords_table = string(sprintf('%s', keywords{keyword_idx}));
+                    else
+                        keywords_table = string(sprintf('%s,%s', keywords_table, keywords{keyword_idx}));
+                    end
+                end
+            end
+            
+            temp_table.Keywords = string(keywords_table);
+            temp_table.Type = string(type);
+            temp_table.Session = string(session);
+            temp_table.Modality = string(modality);
+            
+            lookup_table_data = [lookup_table_data; temp_table];
+            
+        end
+    end
+end
+
 end
 
 %% helper functions for nii reading
