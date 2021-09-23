@@ -16,7 +16,7 @@ switch options.modality
         output = [output; options.subj.norm.anat.postop.CT];
 end
 
-for i=2:length(input)
+for i=1:length(input)
     if isfile(input{i})
         header = ea_fslhd(input{i});
         gaussdim = [header.pixdim1, header.pixdim2, header.pixdim3];
