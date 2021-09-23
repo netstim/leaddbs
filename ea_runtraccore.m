@@ -16,7 +16,7 @@ switch options.modality
         if isfile(options.subj.norm.anat.postop.ax_MRI)
             fis = [fis; {options.subj.norm.anat.postop.ax_MRI}];
         end
-        if isfile(options.subj.norm.anat.postop.cor_MRI)
+        if isfield(options.subj.norm.anat.postop,'cor_MRI') && isfile(options.subj.norm.anat.postop.cor_MRI)
             fis = [fis; {options.subj.norm.anat.postop.cor_MRI}];
         end
     case 2 % CT
