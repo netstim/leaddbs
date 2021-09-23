@@ -18,6 +18,7 @@ elseif nargin==6
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}= 'Fastfield (Baniasadi 2020)';
+        varargout{2} = true; % Support directed lead
         return
     end
 end
