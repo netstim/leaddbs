@@ -117,7 +117,7 @@ function lookup_button_function(ui)
 
 lookup_table_gui = ea_default_lookup;
 lookup_table = getpref('dcm2bids', 'lookuptable');
- 
+
 % populate table with current preferences
 lookup_table_data = convert_lookup_struct_to_table(lookup_table);
 lookup_table_gui.UITable.Data = lookup_table_data;
@@ -141,14 +141,14 @@ function save_lookup_function(main_gui, lookup_table_gui)
 
 lookup_table = convert_table_to_lookup_struct(lookup_table_gui.UITable.Data);
 
- setpref('dcm2bids', 'lookuptable', lookup_table);
- 
- T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table);
- 
- main_gui.niiFileTable.Data = T_preallocated;
- 
- delete(lookup_table_gui);
- 
+setpref('dcm2bids', 'lookuptable', lookup_table);
+
+T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table);app
+
+main_gui.niiFileTable.Data = T_preallocated;
+
+delete(lookup_table_gui);
+
 end
 
 function table_struct = convert_table_to_lookup_struct(table_strings)
@@ -156,9 +156,9 @@ function table_struct = convert_table_to_lookup_struct(table_strings)
 table_struct = struct();
 
 for row_idx = 1:height(table_strings)
-        
+    
     keywords_string = strsplit(table_strings.Keywords(row_idx), ',');
-  
+    
     keywords_cell = cell(1, length(keywords_string));
     for word = 1:length(keywords_string)
         keywords_cell{1, word} = keywords_string(word);
@@ -187,11 +187,11 @@ lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 function load_default_lookups(lookup_table_gui)
-    fprintf('Loading defaults from .json file at %s\n', fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
-    lookup_table = loadjson(fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
-    setpref('dcm2bids', 'lookuptable', lookup_table)
-    lookup_table_data = convert_lookup_struct_to_table(lookup_table);
-    lookup_table_gui.UITable.Data = lookup_table_data;
+fprintf('Loading defaults from .json file at %s\n', fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
+lookup_table = loadjson(fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
+setpref('dcm2bids', 'lookuptable', lookup_table)
+lookup_table_data = convert_lookup_struct_to_table(lookup_table);
+lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 %% cell change callback
