@@ -140,36 +140,38 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             options.subj.coreg.transform.(fields{1})); % % Pre-coregistration transform
     end
 
-    if options.modality == 2 && options.coregct.do
-        % Coregister post-op CT to pre-op MRI
-        ea_coregpostopct(options);
-    end
-
-    if options.modality == 1 && options.coregmr.do
-        % Coregister post-op MRI to pre-op MRI
-        ea_coregpostopmr(options);
-    end
+    coregDone = 0;
 
     if options.coregmr.do
         % Coregister pre-op MRIs to pre-op anchor image
         % TODO: coreg_fa disabled currently
-        ea_coregpreopmr(options);
+        coregDone = ea_coregpreopmr(options);
     end
 
-    if options.coregct.do || options.coregmr.do
+    if options.modality == 1 && options.coregmr.do
+        % Coregister post-op MRI to pre-op MRI
+        coregDone = coregDone || ea_coregpostopmr(options);
+    end
+
+    if options.modality == 2 && options.coregct.do
+        % Coregister post-op CT to pre-op MRI
+        coregDone = coregDone || ea_coregpostopct(options);
+    end
+
+    if coregDone
         % Generate checkreg figures for coregistration
         ea_gencheckregfigs(options, 'coreg');
     end
 
     if options.normalize.do
         
-        anchor_normalized_lock = ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).norm);
+        normlock = ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).norm);
         
-        if strcmp(options.normalize.method, '(Re-)apply (priorly) estimated normalization')
+        if contains(options.normalize.method, 'apply')
             doit = true;
-        elseif anchor_normalized_lock == 1 % Permanent lock for normalizations and only happens if all pre-op images were approved at time of approving normalization.
+        elseif normlock == 1 % Both pre-op images coreg and norm were approved.
             doit = false;
-        elseif anchor_normalized_lock == 0.5 % Perform normalization if using a multispectral approach.
+        elseif normlock == 0.5 % Pre-op images coreg changed, rerun when using multispectral norm method.
             [~, ~, ~, doit] = eval([options.normalize.method,'(''prompt'')']);
         else
             doit = true;
