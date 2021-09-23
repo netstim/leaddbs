@@ -157,8 +157,18 @@ for patients = 1:length(source)
             case 'derivatives'
                 disp("Migrating Derivatives folder...");
                 new_path = fullfile(dest_patient,subfolder_cell{subfolders},'leaddbs',patient_name);
-                
                 for files=1:length(files_to_move)
+                    mod_split = strsplit(files_to_move{files},'_');
+                    if ismember(mod_split,'postop')
+                        session = 'ses-postop';
+                    else
+                        session = 'ses-preop';
+                    end
+                    mod_str = mod_split{end};
+                    
+                    mod_str = strsplit(mod_str,'.');
+                    mod_str = [upper(mod_str{1}),'.nii'];
+                     
                     if ismember(files_to_move{files},coregistration{:,1})
                         %corresponding index of the new pat
                         which_pipeline = pipelines{2};
@@ -277,25 +287,29 @@ for patients = 1:length(source)
                             mkdir(fullfile(new_path,which_pipeline))
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
-                    elseif ~isempty(regexp(files_to_move{files},'raw_.*'))
-                        mod_split = strsplit(files_to_move{files},'_');
-                        if ismember(mod_split,'postop')
-                            session = 'ses-postop';
-                        else
-                            session = 'ses-preop';
-                        end
-                        mod_str = mod_split{end};
-                        try
-                            mod_str = rawdata_containers(mod_str);
-                        catch
-                            mod_str = strsplit(mod_str,'.');
-                            mod_str = upper(mod_str{1});
-                        end
+                    elseif ~ismember(files_to_move{files},preprocessing{:,1}) && ~isempty(regexp(files_to_move{files},'raw_.*')) %support for other modalities in preproc
                         %other raw files go to pre-processing folder.
                         bids_name = [patient_name,'_','desc-preproc_',session,'_',mod_str];
-                        copyfile(fullfile(source_patient,files_to_move{file}),fullfile(new_path,pipelines{5}));
-                        movefile(fullfile(new_path,pipelines{5},files_to_move{file}),fullfile(new_path,pipelines{5},bids_name));
+                        if ~exist(fullfile(new_path,pipelines{5},'anat'),'dir')
+                            mkdir(fullfile(new_path,pipelines{5},'anat'))
+                        end
                         
+                        copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{5},'anat'));
+                        movefile(fullfile(new_path,pipelines{5},'anat',files_to_move{files}),fullfile(new_path,pipelines{5},'anat',bids_name));
+                    elseif ~ismember(files_to_move{files},coregistration{:,1}) && ~isempty(regexp(files_to_move{files},'^anat_.*')) %support for other modalities in coreg
+                        bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',session,'_',mod_str];
+                        if ~exist(fullfile(new_path,pipelines{2},'anat'),'dir')
+                            mkdir(fullfile(new_path,pipelines{2},'anat'))
+                        end
+                        copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{2},'anat'));
+                        movefile(fullfile(new_path,pipelines{2},'anat',files_to_move{files}),fullfile(new_path,pipelines{2},'anat',bids_name));
+                   elseif ~ismember(files_to_move{files},normalization{:,1}) && ~isempty(regexp(files_to_move{files},'^glanat_.*')) %support for other modalities in normalization                        
+                        bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',session,'_',mod_str];
+                        if ~exist(fullfile(new_path,pipelines{3},'anat'),'dir')
+                            mkdir(fullfile(new_path,pipelines{3},'anat'))
+                        end
+                        copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{3},'anat'));
+                        movefile(fullfile(new_path,pipelines{3},'anat',files_to_move{files}),fullfile(new_path,pipelines{3},'anat',bids_name));                    
                     end
                 end
                 for folders = 1:length(pipelines)
