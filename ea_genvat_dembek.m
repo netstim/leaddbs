@@ -17,6 +17,7 @@ if nargin>=5
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
         varargout{1}='Dembek 2017';
+        varargout{2} = false; % Doesn't support directed lead
         return
     end
 end
