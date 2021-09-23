@@ -172,14 +172,6 @@ for pt=1:length(uidir)
     warpcoord_vox=warpcoord_vox(1:3);
     fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
 
-    % check it inverse normparams file has correct voxel size.
-    if ~ismember(whichnormmethod,ea_getantsnormfuns)
-        Vinv=spm_vol([directory,'y_ea_inv_normparams.nii']);
-        if ~isequal(Vinv.dim,anat.dim)
-            ea_redo_inv(directory,options);
-        end
-    end
-
     % re-warp into MNI:
 
     if ~isfield(cfg,'native') || ~cfg.native % when working in native space, no need to warp acpc back to mni at all.
