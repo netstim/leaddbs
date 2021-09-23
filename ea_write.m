@@ -30,7 +30,7 @@ end
 if options.d2.write
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
-    cuts=ea_writeplanes(options);
+    ea_writeplanes(options);
 end
 
 % Render 3D Visualization
