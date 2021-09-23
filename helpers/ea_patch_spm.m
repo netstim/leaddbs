@@ -29,4 +29,4 @@ if contains(shootCfg, '^y_.*')
     fclose(fid);
 end
 
-rehash toolboxcache;
+spm_jobman('initcfg');
