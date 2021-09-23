@@ -66,7 +66,6 @@ Electrode_type = elspec.matfname;
 
 Efield_all=zeros(100,100,100);
 for source=S.sources
-
     stimsource=S.([sidec,'s',num2str(source)]);
     % constvol is 1 for constant voltage and 0 for constant current.
     amp1 = stimsource.amp;
@@ -139,50 +138,46 @@ ea_dispt('Calculating volume...');
 for t=1:3
     spacing(t) = grid_vec{t}(2)-grid_vec{t}(1);
 end
+
 vatvolume=sum(eg(:))*spacing(1)*spacing(2)*spacing(3); % returns volume of vat in mm^3
 S.volume(side)=vatvolume;
 
 ea_dispt('Writing files...');
 
-% determine stimulation name:
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname]);
-end
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+ea_mkdir(stimDir);
+filePrefix = ['sub-', options.subj.subjId, '_desc-'];
 
 switch side
     case 1
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_right.nii'];
-        Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_right.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_gauss_right.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii'];
+        Vvate=Vvat;
+        Vvatne=Vvat;
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-right.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-right.nii'];
     case 2
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_left.nii'];
-        Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_left.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_efield_gauss_left.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'];
+        Vvate = Vvat;
+        Vvatne = Vvat;
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-left.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-left.nii'];
 end
 
-% save(stimfile,'S');
 ea_savestimulation(S,options);
-% setappdata(lgfigure,'curS',S);
 
-%spm_write_vol(Vvat,flipdim(eg,3));
-
-Vvate.img=eeg; %permute(eeg,[2,1,3]);
+Vvate.img=eeg;
 Vvate.dt=[16,0];
 ea_write_nii(Vvate);
 
-Vvatne.img=neeg; %permute(neeg,[2,1,3]);
+Vvatne.img=neeg;
 ea_write_nii(Vvatne);
 
-Vvat.img=eg; %permute(eg,[1,2,3]);
+Vvat.img=eg;
 ea_write_nii(Vvat);
 
 ea_dispt('Calculating isosurface to display...');
-% vatfv=isosurface(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.75);
 vatfv=isosurface(xg,yg,zg,Vvat.img,0.75);
 
-% caps=isocaps(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.5);
 caps=isocaps(xg,yg,zg,Vvat.img,0.5);
 
 vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
@@ -206,14 +201,14 @@ end
 % visualization
 switch side
     case 1
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_right.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat'];
     case 2
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,'vat_left.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat'];
 end
 
 save(vatfvname,'vatfv','vatvolume');
 
-%% new vta.nii save, filled and eroded/dilated by 3 voxels.
+% new vta.nii save, filled and eroded/dilated by 3 voxels.
 Vvat.img=imfill(Vvat.img,'holes');
 SE = strel('sphere',3);
 Vvat.img = imerode(Vvat.img,SE);
@@ -223,5 +218,3 @@ ea_write_nii(Vvat);
 varargout{1}=vatfv;
 varargout{2}=vatvolume;
 ea_dispt('');
-
-end
