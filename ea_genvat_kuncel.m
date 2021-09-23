@@ -88,6 +88,7 @@ XYZmm=[gvmm{1}(XYZv(1,:));...
     gvmm{3}(XYZv(3,:));...
     ones(1,length(XYZv))];
 mat=mldivide(XYZv',XYZmm')';
+
 for source=S.sources
     in=ea_intriangulation(VAT{source},K{source},XYZmm(1:3,:)');
     voxspace(sub2ind(size(voxspace),XYZv(1,in),XYZv(2,in),XYZv(3,in)))=1;
@@ -100,24 +101,19 @@ Vvat.dim=size(voxspace);
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)],'file')
 
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)]);
-end
-
-mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname]);
-%S(side).volume=sum(volume);
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+ea_mkdir(stimDir);
+filePrefix = ['sub-', options.subj.subjId, '_desc-'];
 
 if side == 1
-    Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.nii'];
-    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_right.mat'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii'];
 elseif side == 2
-    Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.nii'];
-    stimfile=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters_left.mat'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'];
 end
+
 ea_savestimulation(S,options);
 spm_write_vol(Vvat,voxspace);
-
 
 varargout{1}=VAT;
 varargout{2}=volume;
