@@ -546,8 +546,6 @@ switch what
         end
 end
 
-%setappdata(mcfig,'trajectory',trajectory);
-
 
 function sp=getsuplots(sides)
 if isequal(sides,[1:2])
@@ -557,7 +555,6 @@ elseif isequal(sides,1)
 elseif isequal(sides,2)
     sp=3:4;
 end
-%setappdata(mcfig,['C',ID,addon],C);
 
 
 function markers=moveonecoord(markers,selectrode,command,options)
