@@ -180,52 +180,52 @@ set(handles.stimfig,'position',[51,51,pos(3),pos(4)]);
 ea_refreshguisp(handles,options);
 
 if ~strcmp(options.leadprod, 'group')
-    directory = [options.root,options.patientname,filesep];
+    label =handles.stimlabel.String{handles.stimlabel.Value};
+    label(strfind(label, ' ')) = '';
+    stimDir = fullfile(options.subj.stimDir, ea_nt(options), label);
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
     visualizeVAT = 1;
     if visualizeVAT
-        labels=get(handles.stimlabel,'String');
-        label=labels{get(handles.stimlabel,'Value')};
-        label(strfind(label,' '))='';
-        if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
-            load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+        if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat'])
+            load([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = vatvolume;
             if exist('vatgrad','var')
                 vatgradtemp(1) = vatgrad;
             end
-            load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+            load([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat']);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
             if exist('vatgrad','var')
                 vatgradtemp(2) = vatgrad;
                 vatgrad = vatgradtemp;
             end
-        elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
-            load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat'])
+            load([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = vatvolume;
-        elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
-            load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat'])
+            load([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat']);
             %For consistency, left is always on 2nd element of stimparams
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
         else
-            if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-                nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+            if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'])
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 stimparams(1,1).VAT.VAT = vatfv;
                 stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-                nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 stimparams(1,2).VAT.VAT = vatfv;
                 stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-            elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2
-                nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+            elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii'])
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 stimparams(1,1).VAT.VAT = vatfv;
                 stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-            elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-                nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),filesep,label,filesep,'vat_left.nii']);
+            elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'])
+                nii = ea_load_nii([stimDir,'stimulations',filesep,ea_nt(options),filesep,label,filesep,'vat_left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 %For consistency, left is always on 2nd element of stimparams
                 stimparams(1,2).VAT.VAT = vatfv;
@@ -235,32 +235,32 @@ if ~strcmp(options.leadprod, 'group')
             end
         end
 
-        if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat']) ...
-                && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
+        if isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat']) ...
+                && isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
-            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
-        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'])
+            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'], resultfig);
+            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'], resultfig);
+        elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
-        elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
+            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'], resultfig);
+        elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
+            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'], resultfig);
         end
 
         if visualizeVAT
@@ -311,7 +311,8 @@ function k0u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k0u as text
 %        str2double(get(hObject,'String')) returns contents of k0u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k0.perc=',num2str(get(hObject,'String')),';']);
 
@@ -339,7 +340,8 @@ function k1u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k1u as text
 %        str2double(get(hObject,'String')) returns contents of k1u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k1.perc=',num2str(get(hObject,'String')),';']);
 
@@ -367,7 +369,8 @@ function k2u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k2u as text
 %        str2double(get(hObject,'String')) returns contents of k2u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k2.perc=',num2str(get(hObject,'String')),';']);
 
@@ -395,7 +398,8 @@ function k3u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k3.perc=',num2str(get(hObject,'String')),';']);
 
@@ -423,7 +427,8 @@ function k4u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k4.perc=',num2str(get(hObject,'String')),';']);
 
@@ -451,7 +456,8 @@ function k5u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k5.perc=',num2str(get(hObject,'String')),';']);
 
@@ -480,7 +486,8 @@ function k6u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k6.perc=',num2str(get(hObject,'String')),';']);
 
@@ -508,7 +515,8 @@ function k7u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k7.perc=',num2str(get(hObject,'String')),';']);
 
@@ -536,7 +544,8 @@ function k4im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k4.imp=',num2str(get(hObject,'String')),';']);
 
@@ -564,7 +573,8 @@ function k5im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k5.imp=',num2str(get(hObject,'String')),';']);
 
@@ -592,7 +602,8 @@ function k6im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k6.imp=',num2str(get(hObject,'String')),';']);
 
@@ -620,7 +631,8 @@ function k7im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3u as text
 %        str2double(get(hObject,'String')) returns contents of k3u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k7.imp=',num2str(get(hObject,'String')),';']);
 
@@ -662,7 +674,8 @@ function k0im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k1im as text
 %        str2double(get(hObject,'String')) returns contents of k1im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k0.imp=',num2str(get(hObject,'String')),';']);
 
@@ -677,7 +690,8 @@ function k1im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k1im as text
 %        str2double(get(hObject,'String')) returns contents of k1im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k1.imp=',num2str(get(hObject,'String')),';']);
 
@@ -705,7 +719,8 @@ function k2im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k2im as text
 %        str2double(get(hObject,'String')) returns contents of k2im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k2.imp=',num2str(get(hObject,'String')),';']);
 
@@ -733,7 +748,8 @@ function k3im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k3im as text
 %        str2double(get(hObject,'String')) returns contents of k3im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.k3.imp=',num2str(get(hObject,'String')),';']);
 
@@ -761,7 +777,8 @@ function k8u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k8u as text
 %        str2double(get(hObject,'String')) returns contents of k8u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k8.perc=',num2str(get(hObject,'String')),';']);
 
@@ -789,7 +806,8 @@ function k9u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k9u as text
 %        str2double(get(hObject,'String')) returns contents of k9u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k9.perc=',num2str(get(hObject,'String')),';']);
 
@@ -817,7 +835,8 @@ function k10u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k10u as text
 %        str2double(get(hObject,'String')) returns contents of k10u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k10.perc=',num2str(get(hObject,'String')),';']);
 
@@ -845,7 +864,8 @@ function k11u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k11u as text
 %        str2double(get(hObject,'String')) returns contents of k11u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k11.perc=',num2str(get(hObject,'String')),';']);
 
@@ -873,7 +893,8 @@ function k8im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k8im as text
 %        str2double(get(hObject,'String')) returns contents of k8im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k8.imp=',num2str(get(hObject,'String')),';']);
 
@@ -901,7 +922,8 @@ function k9im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k9im as text
 %        str2double(get(hObject,'String')) returns contents of k9im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k9.imp=',num2str(get(hObject,'String')),';']);
 
@@ -929,7 +951,8 @@ function k10im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k10im as text
 %        str2double(get(hObject,'String')) returns contents of k10im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k10.imp=',num2str(get(hObject,'String')),';']);
 
@@ -957,7 +980,8 @@ function k11im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k11im as text
 %        str2double(get(hObject,'String')) returns contents of k11im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k11.imp=',num2str(get(hObject,'String')),';']);
 
@@ -1052,25 +1076,25 @@ function stimulate_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 ea_busyaction('on',handles.stimfig,'stim');
-elstruct=getappdata(handles.stimfig,'elstruct');
-resultfig=getappdata(handles.stimfig,'resultfig');
-options=getappdata(handles.stimfig,'options');
+elstruct = getappdata(handles.stimfig,'elstruct');
+resultfig = getappdata(handles.stimfig,'resultfig');
+options = getappdata(handles.stimfig,'options');
 % refresh prefs:
-options.prefs=ea_prefs;
+options.prefs = ea_prefs;
 setappdata(resultfig,'options',options);
 setappdata(handles.stimfig,'options',options);
-S=getappdata(handles.stimfig,'S');
-S=ea_activecontacts(S);
+S = getappdata(handles.stimfig,'S');
+S = ea_activecontacts(S);
 
-options=getappdata(resultfig,'options'); % selected atlas could have refreshed.
-options.orignative=options.native;
+options = getappdata(resultfig,'options'); % selected atlas could have refreshed.
+options.orignative = options.native;
 if strcmp('on',get(handles.estimateInTemplate,'Visible')) % only allowed for specific VTA functions
     switch get(handles.estimateInTemplate,'Value')
         case 0
-            S.template='warp';
-            options.native=1;
+            S.template = 'warp';
+            options.native = 1;
         case 1
-            S.template='direct';
+            S.template = 'direct';
     end
 end
 
@@ -1084,11 +1108,11 @@ if isfield(elstruct,'group') % group analysis, more than one electrode set
 end
 
 % assign correct .m-file to function.
-genvatfunctions=getappdata(handles.stimfig,'genvatfunctions');
-ea_genvat=eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
-stimname=S.label;
+genvatfunctions = getappdata(handles.stimfig,'genvatfunctions');
+ea_genvat = eval(['@',genvatfunctions{get(handles.modelselect,'Value')}]);
+stimname = S.label;
 
-for el=1:length(elstruct)
+for el = 1:length(elstruct)
     % Load stim coordinates
     if options.native % Reload native space coordinates
         coords = ea_load_reconstruction(options);
@@ -1110,42 +1134,42 @@ for el=1:length(elstruct)
             return;
         else
             [~, stimparams] = feval(ea_genvat,getappdata(handles.stimfig,'S'),options,handles.stimfig);
-            flix=1;
+            flix = 1;
         end
     else
         stimparams = struct();
-        for iside=1:length(options.sides)
-            side=options.sides(iside);
-            [vatfv, vatvolume]=feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,handles.stimfig);
+        for iside = 1:length(options.sides)
+            side = options.sides(iside);
+            [vatfv, vatvolume] = feval(ea_genvat,coords,getappdata(handles.stimfig,'S'),side,options,stimname,handles.stimfig);
             stimparams(1,side).VAT(el).VAT = vatfv;
             stimparams(1,side).volume = vatvolume;
-            flix=1;
+            flix = 1;
         end
     end
 end
 
-options.native=options.orignative;
-PL=getappdata(resultfig,'PL');
-for group=1:length(PL)
+options.native = options.orignative;
+PL = getappdata(resultfig,'PL');
+for group = 1:length(PL)
     deletePL(PL(group));
 end
 clear PL
 
-for group=flix
+for group = flix
     setappdata(resultfig,'stimparams',stimparams(group,:));
     setappdata(resultfig,'curS',S(group));
 
     if ~exist('hmchanged','var')
-        hmchanged=1;
+        hmchanged = 1;
     end
     ea_calc_vatstats(resultfig,options,hmchanged);
 
-    %copyfile([options.root,options.patientname,filesep,'ea_stats.mat'],[options.root,options.patientname,filesep,'ea_stats_group_',num2str(group),'.mat']);
-    try
+    try % TODO: fix dir
         copyfile([options.root,options.patientname,filesep,'ea_pm.nii'],[options.root,options.patientname,filesep,'ea_pm_group_',num2str(group),'.nii']);
     end
+
     try
-        PL(group)=getappdata(resultfig,'PL');
+        PL(group) = getappdata(resultfig,'PL');
     catch
         keyboard
     end
@@ -1226,7 +1250,8 @@ function k12u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k12u as text
 %        str2double(get(hObject,'String')) returns contents of k12u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k12.perc=',num2str(get(hObject,'String')),';']);
 
@@ -1254,7 +1279,8 @@ function k13u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k13u as text
 %        str2double(get(hObject,'String')) returns contents of k13u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k13.perc=',num2str(get(hObject,'String')),';']);
 
@@ -1282,7 +1308,8 @@ function k14u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k14u as text
 %        str2double(get(hObject,'String')) returns contents of k14u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k14.perc=',num2str(get(hObject,'String')),';']);
 
@@ -1310,7 +1337,8 @@ function k15u_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k15u as text
 %        str2double(get(hObject,'String')) returns contents of k15u as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k15.perc=',num2str(get(hObject,'String')),';']);
 
@@ -1338,7 +1366,8 @@ function k12im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k12im as text
 %        str2double(get(hObject,'String')) returns contents of k12im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k12.imp=',num2str(get(hObject,'String')),';']);
 
@@ -1366,7 +1395,8 @@ function k13im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k13im as text
 %        str2double(get(hObject,'String')) returns contents of k13im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k13.imp=',num2str(get(hObject,'String')),';']);
 
@@ -1394,7 +1424,8 @@ function k14im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k14im as text
 %        str2double(get(hObject,'String')) returns contents of k14im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k14.imp=',num2str(get(hObject,'String')),';']);
 
@@ -1422,7 +1453,8 @@ function k15im_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of k15im as text
 %        str2double(get(hObject,'String')) returns contents of k15im as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.k15.imp=',num2str(get(hObject,'String')),';']);
 
@@ -1450,7 +1482,8 @@ function RCu_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of RCu as text
 %        str2double(get(hObject,'String')) returns contents of RCu as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Rs',num2str(S.active(1)),'.case.perc=',num2str(get(hObject,'String')),';']);
 
@@ -1508,7 +1541,8 @@ function Rs1va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs1va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs1va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(1)=1;
 S.Rs1.va=get(hObject,'Value');
 
@@ -1536,7 +1570,8 @@ function Rs2am_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of Rs2am as text
 %        str2double(get(hObject,'String')) returns contents of Rs2am as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(1)=2;
 S.Rs2.amp=str2double(get(hObject,'String'));
 
@@ -1565,7 +1600,8 @@ function Rs2va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs2va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs2va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(1)=2;
 S.Rs2.va=get(hObject,'Value');
 setappdata(handles.stimfig,'S',S);
@@ -1592,7 +1628,8 @@ function LCu_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of LCu as text
 %        str2double(get(hObject,'String')) returns contents of LCu as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 
 eval(['S.Ls',num2str(S.active(2)),'.case.perc=',num2str(get(hObject,'String')),';']);
 
@@ -1620,7 +1657,8 @@ function Ls1am_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of Ls1am as text
 %        str2double(get(hObject,'String')) returns contents of Ls1am as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(2)=1;
 S.Ls1.amp=str2double(get(hObject,'String'));
 
@@ -1649,7 +1687,8 @@ function Ls1va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls1va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls1va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(2)=1;
 S.Ls1.va=get(hObject,'Value');
 
@@ -1677,7 +1716,8 @@ function Ls2am_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of Ls2am as text
 %        str2double(get(hObject,'String')) returns contents of Ls2am as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(2)=2;
 S.Ls2.amp=str2double(get(hObject,'String'));
 
@@ -1706,7 +1746,8 @@ function Ls2va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls2va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls2va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(2)=2;
 S.Ls2.va=get(hObject,'Value');
 
@@ -1743,81 +1784,79 @@ function stimlabel_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of stimlabel as text
 %        str2double(get(hObject,'String')) returns contents of stimlabel as a double
-S=getappdata(handles.stimfig,'S');
-options=getappdata(handles.stimfig,'options');
-directory = [options.root,options.patientname,filesep];
-sel=get(handles.stimlabel,'String');
-sel=sel{get(handles.stimlabel,'Value')};
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+sel = get(handles.stimlabel,'String');
+sel = sel{get(handles.stimlabel,'Value')};
 if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
     switch sel(5:end)
         case 'New stimulation'
             resultfig = getappdata(handles.stimfig,'resultfig');
-            PL=getappdata(resultfig,'PL');
-            for group=1:length(PL)
+            PL = getappdata(resultfig,'PL');
+            for group = 1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
             ea_savestimulation(S,options);
-            S=[]; % this will create the prompt to generate a new S.
-            options.gen_newstim=1;
+            S = []; % this will create the prompt to generate a new S.
+            options.gen_newstim = 1;
             setappdata(handles.stimfig,'options',options);
             setappdata(handles.stimfig,'S',S);
             ea_refreshguisp(handles,options);
-            S=getappdata(handles.stimfig,'S');
+            S = getappdata(handles.stimfig,'S');
             ea_savestimulation(S,options);
-            options.gen_newstim=0; % reset new stim flag
+            options.gen_newstim = 0; % reset new stim flag
             setappdata(handles.stimfig,'options',options);
         case 'Rename stimulation'
-            stimlabel=getappdata(handles.stimfig,'stimlabel');
+            stimlabel = getappdata(handles.stimfig,'stimlabel');
 
-            [~,ix]=ismember(stimlabel,get(handles.stimlabel,'String'));
+            [~,ix] = ismember(stimlabel,get(handles.stimlabel,'String'));
             set(handles.stimlabel,'Value',ix);
             stimc = inputdlg('Please enter a label for this stimulation','Stimulation Label',1,{stimlabel});
-            if isfolder([directory,'stimulations',filesep,ea_nt(0),stimlabel])
-                movefile([directory,'stimulations',filesep,ea_nt(0),stimlabel],[directory,'stimulations',filesep,ea_nt(0),stimc{1}]);
+            if isfolder([options.subj.stimDir,filesep,ea_nt(0),stimlabel])
+                movefile([options.subj.stimDir,filesep,ea_nt(0),stimlabel],[options.subj.stimDir,filesep,ea_nt(0),stimc{1}]);
             end
-            if isfolder([directory,'stimulations',filesep,ea_nt(1),stimlabel])
-                movefile([directory,'stimulations',filesep,ea_nt(1),stimlabel],[directory,'stimulations',filesep,ea_nt(1),stimc{1}]);
+            if isfolder([options.subj.stimDir,filesep,ea_nt(1),stimlabel])
+                movefile([options.subj.stimDir,filesep,ea_nt(1),stimlabel],[options.subj.stimDir,filesep,ea_nt(1),stimc{1}]);
             end
-            slabelc=get(handles.stimlabel,'String');
-            slabelc{ix}=stimc{1};
+            slabelc = get(handles.stimlabel,'String');
+            slabelc{ix} = stimc{1};
             set(handles.stimlabel,'String',slabelc);
-            S.label=stimc{1};
+            S.label = stimc{1};
             setappdata(handles.stimfig,'S',S);
             setappdata(handles.stimfig,'stimlabel',S.label);
             ea_refreshguisp(handles,options);
             ea_savestimulation(S,options);
         case 'Delete stimulation'
-            answ=questdlg(['Are you sure you wish to delete the stimulation parameters for ',...
+            answ = questdlg(['Are you sure you wish to delete the stimulation parameters for ',...
                 S.label,'?'],'Delete stimulation parameters','Sure','No','No');
             if strcmp(answ,'No')
                 set(handles.stimlabel,'Value',1);
             else % truly delete Stimulation parameters
-                resultfig = getappdata(handles.stimfig,'resultfig');
-                PL=getappdata(resultfig,'PL');
-                for group=1:length(PL)
+                resultfig  =  getappdata(handles.stimfig,'resultfig');
+                PL = getappdata(resultfig,'PL');
+                for group = 1:length(PL)
                     deletePL(PL(group));
                 end
                 clear PL
-                ea_delete([directory,'stimulations',filesep,ea_nt(0),S.label]);
-                ea_delete([directory,'stimulations',filesep,ea_nt(1),S.label]);
-                S=[]; % this will create the prompt to generate a new S.
+                ea_delete([options.subj.stimDir,filesep,ea_nt(0),S.label]);
+                ea_delete([options.subj.stimDir,filesep,ea_nt(1),S.label]);
+                S = []; % this will create the prompt to generate a new S.
                 setappdata(handles.stimfig,'S',S);
                 set(handles.stimlabel,'Value',1);
                 setappdata(handles.stimfig,'stimlabel','');
-                options.gen_newstim=0;
+                options.gen_newstim = 0;
                 setappdata(handles.stimfig,'S',S);
                 ea_refreshguisp(handles,options);
-                S=getappdata(handles.stimfig,'S');
+                S = getappdata(handles.stimfig,'S');
                 ea_savestimulation(S,options);
             end
     end
 else
-    labels=get(handles.stimlabel,'String');
-    label=labels{get(handles.stimlabel,'Value')};
-    label(strfind(label,' '))='';
-    S=ea_loadstimulation(label,options);
-    S.label=label;
+    label = handles.stimlabel.String{handles.stimlabel.Value};
+    label(strfind(label,' ')) = '';
+    S = ea_loadstimulation(label,options);
+    S.label = label;
     setappdata(handles.stimfig,'S',S);
     setappdata(handles.stimfig,'stimlabel',S.label);
     setappdata(handles.stimfig,'S',S);
@@ -1828,47 +1867,50 @@ else
     % and contain the VAT as well as the quiver. In case no .mat-files are
     % available the vat_xxx.nii is loaded and visualized
 
+    stimDir = fullfile(options.subj.stimDir, ea_nt(options), label);
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+
     visualizeVAT = 1;
     stimparams = struct();
-    if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
-        load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+    if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat'])
+        load([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
         if exist('vatgrad','var')
             vatgradtemp(1) = vatgrad;
         end
-        load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+        load([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat']);
         stimparams(1,2).VAT.VAT = vatfv;
         stimparams(1,2).volume = vatvolume;
         if exist('vatgrad','var')
             vatgradtemp(2) = vatgrad;
             vatgrad = vatgradtemp;
         end
-    elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat'],'file') == 2
-        load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.mat']);
+    elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat'])
+        load([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
-    elseif  exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat'],'file') == 2
-        load([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.mat']);
+    elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat'])
+        load([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat']);
         stimparams(1,2).VAT.VAT = vatfv;
         stimparams(1,2).volume = vatvolume;
     else
-        if exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2 && exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-            nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+        if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'])
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-            nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii']);
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-        elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii'],'file') == 2
-            nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_right.nii']);
+        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii'])
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-        elseif exist([directory,'stimulations',filesep,ea_nt(options),label,filesep,'vat_left.nii'],'file') == 2
-            nii = ea_load_nii([directory,'stimulations',filesep,ea_nt(options),filesep,label,filesep,'vat_left.nii']);
+        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'])
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
@@ -1878,32 +1920,32 @@ else
     end
 
     visualizeFiberActivation = 1;
-    if isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat']) ...
-            && isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
+    if isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat']) ...
+            && isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
-        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
-    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'])
+        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'], resultfig);
+        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'], resultfig);
+    elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
-    elseif isfile([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'])
+        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'], resultfig);
+    elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
+        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'], resultfig);
     else
         visualizeFiberActivation = 0;
     end
@@ -1964,7 +2006,6 @@ end
 
 if groupmode
     grouploaded=getappdata(handles.stimfig,'grouploaded');
-
     if isempty(grouploaded) % this is done only once and gets the selection info from lead_group initially (which patient shown).
         lgfig=getappdata(handles.stimfig,'resultfig');
         M=getappdata(lgfig,'M');
@@ -2743,7 +2784,6 @@ else % voltage percentage changed
         eval(['S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc=',...
             'S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc/divby;']);
     end
-
 end
 
 
@@ -2835,9 +2875,6 @@ end
 ea_refreshguisp(handles,options,ID);
 
 
-
-
-
 function Ls3am_Callback(hObject, eventdata, handles)
 % hObject    handle to Ls3am (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -2846,7 +2883,8 @@ function Ls3am_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of Ls3am as text
 %        str2double(get(hObject,'String')) returns contents of Ls3am as a double
 
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(2)=3;
 S.Ls3.amp=str2double(get(hObject,'String'));
 
@@ -2875,7 +2913,8 @@ function Ls3va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls3va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls3va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(2)=3;
 S.Ls3.va=get(hObject,'Value');
 
@@ -2903,7 +2942,8 @@ function Ls4am_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of Ls4am as text
 %        str2double(get(hObject,'String')) returns contents of Ls4am as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(2)=4;
 S.Ls4.amp=str2double(get(hObject,'String'));
 
@@ -2932,7 +2972,8 @@ function Ls4va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls4va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls4va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(2)=4;
 S.Ls4.va=get(hObject,'Value');
 
@@ -2960,7 +3001,8 @@ function Rs3am_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of Rs3am as text
 %        str2double(get(hObject,'String')) returns contents of Rs3am as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(1)=3;
 S.Rs3.amp=str2double(get(hObject,'String'));
 
@@ -2989,7 +3031,8 @@ function Rs3va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs3va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs3va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(1)=3;
 S.Rs3.va=get(hObject,'Value');
 setappdata(handles.stimfig,'S',S);
@@ -3016,7 +3059,8 @@ function Rs4am_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of Rs4am as text
 %        str2double(get(hObject,'String')) returns contents of Rs4am as a double
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(1)=4;
 S.Rs4.amp=str2double(get(hObject,'String'));
 
@@ -3045,7 +3089,8 @@ function Rs4va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs4va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs4va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S=getappdata(handles.stimfig,'S');
+options=getappdata(handles.stimfig,'options');
 S.active(1)=4;
 S.Rs4.va=get(hObject,'Value');
 
@@ -3501,7 +3546,7 @@ if hObject.Value
     options = getappdata(handles.stimfig, 'options');
     numContacts = options.elspec.numel;
     stimLabel = getappdata(handles.stimfig, 'stimlabel');
-    stimFolder = [options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(~handles.estimateInTemplate.Value),stimLabel];
-    ea_mkdir(stimFolder);
-    ea_addStimSet(numContacts, stimFolder, hObject);
+    stimDir = fullfile(options.subj.stimDir, ea_nt(~handles.estimateInTemplate.Value), stimLabel);
+    ea_mkdir(stimDir);
+    ea_addStimSet(numContacts, stimDir, hObject);
 end
