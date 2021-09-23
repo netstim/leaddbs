@@ -88,7 +88,11 @@ else
     planedim=ea_getdims(manualtracor,1);
 end
 
-fid=fopen([options.root,options.patientname,filesep,'2D_cuts_export_coordinates.txt'],'w');
+export_2D_folder = fullfile(options.subj.exportDir, '2D');
+mkdir(export_2D_folder);
+file_prefix = ['sub-' options.subj.subjId '_'];
+
+fid = fopen(fullfile(export_2D_folder,[file_prefix '2D_cuts_export_coordinates.txt']),'w');
 for iside=1:length(options.sides)
     side=options.sides(iside);
     % write out axial/coronal/sagittal images
@@ -422,11 +426,11 @@ for iside=1:length(options.sides)
                 end
                 switch tracor
                     case 1
-                        ea_screenshot([options.root,options.patientname,filesep,'2D_axial_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot(fullfile(export_2D_folder,[file_prefix '2D_axial_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png']),'myaa');
                     case 2
-                        ea_screenshot([options.root,options.patientname,filesep,'2D_coronal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot(fullfile(export_2D_folder,[file_prefix '2D_coronal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png']),'myaa');
                     case 3
-                        ea_screenshot([options.root,options.patientname,filesep,'2D_sagittal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot(fullfile(export_2D_folder,[file_prefix '2D_sagittal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png']),'myaa');
                 end
             end
             axis xy
