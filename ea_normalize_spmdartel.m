@@ -124,7 +124,7 @@ disp('*** Exported normalization parameters to y_ea_inv_normparams.nii');
 clear matlabbatch;
 
 % Delete rc* files and u_rc1* file
-ea_delete([directory, 'rc1*', preopAnchorName]);
+ea_delete([directory, 'rc*', preopAnchorName]);
 ea_delete([directory, 'u_rc1*', preopAnchorName]);
 
 % Rename Segmentations (c1, c2, c3)
@@ -135,7 +135,7 @@ movefile([directory, 'c3', preopAnchorName], setBIDSEntity(preopImages{1}, 'labe
 % Rename deformation fields
 ea_mkdir(fileparts(options.subj.norm.transform.forwardBaseName));
 movefile([directory, 'y_ea_normparams.nii'], [options.subj.norm.transform.forwardBaseName, 'spm.nii']);
-movefile([directory, 'iy_ea_inv_normparams.nii'], [options.subj.norm.transform.inverseBaseName, 'spm.nii']);
+movefile([directory, 'y_ea_inv_normparams.nii'], [options.subj.norm.transform.inverseBaseName, 'spm.nii']);
 
 % Apply estimated deformation to (coregistered) post-op images.
 ea_apply_normalization(options)
