@@ -1,5 +1,7 @@
-function ea_coregpostopct(options)
+function done = ea_coregpostopct(options)
 % Entry function to coregister post-op CT to pre-op MRI
+
+done = 0;
 
 if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
     % Setup log
@@ -37,4 +39,6 @@ if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
     if options.prefs.diary
         diary off;
     end
+
+    done = 1;
 end

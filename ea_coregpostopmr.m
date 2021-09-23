@@ -1,5 +1,7 @@
-function ea_coregpostopmr(options)
+function done = ea_coregpostopmr(options)
 % Entry function to coregister post-op MRI to pre-op MRI
+
+done = 0;
 
 % Set fixed anchor image
 anchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
@@ -41,3 +43,5 @@ end
 if options.prefs.diary
     diary off;
 end
+
+done = 1;
