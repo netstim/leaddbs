@@ -37,7 +37,6 @@ end
 %disp('*** Converting ACPC-coordinates to MNI based on normalizations in selected patients.');
 %ea_dispercent(0,'Iterating through patients');
 for pt=1:length(uidir)
-
  %   ea_dispercent(pt/length(uidir));
     if ~strcmp(uidir{pt}(end), filesep)
         directory = [uidir{pt},filesep];
@@ -72,13 +71,8 @@ for pt=1:length(uidir)
     switch automan
         case 'auto' % auto AC/PC detection
             if ~exist([directory,'ACPC_autodetect.mat'],'file')
-                % warp into patient space:
-
-                %     try
+                % warp into patient space
                 [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'forwardTransform'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
-                %     catch
-                %         ea_error(['Please check deformation field in ',directory,'.']);
-                %     end
 
                 fpinsub_mm=fpinsub_mm';
 
@@ -131,7 +125,6 @@ for pt=1:length(uidir)
             end
 
         case 'mnidirect'
-
             fid(pt).AC=[0.25,   1.298,   -5.003];
             fid(pt).PC=[-0.188, -24.756,  -2.376];
             fid(pt).MSP=[0.25,   1.298,    55];
@@ -148,15 +141,9 @@ for pt=1:length(uidir)
     yvec=yvec/norm(yvec);
     yvec=-yvec; % this vector points to anterior of the AC!! (but acpc y coordinates are given with - sign).
 
-%     switch automan
-%         case {'manual','mnidirect'}
-            zvec=cross(xvec,yvec);
-            zvec=zvec/norm(zvec);
-%         case 'auto' % the above should also work here but it's simpler with the auto coords
-%             % z-dimension (just move from ac to msag plane by z dimension):
-%             zvec=(fid(pt).MSP-fid(pt).AC);
-%             zvec=zvec/norm(zvec);
-%     end
+    zvec=cross(xvec,yvec);
+    zvec=zvec/norm(zvec);
+
     switch cfg.acmcpc
         case 1 % relative to AC:
             warpcoord_mm=fid(pt).AC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
@@ -172,8 +159,7 @@ for pt=1:length(uidir)
     warpcoord_vox=warpcoord_vox(1:3);
     fid(pt).WarpedPointNative=warpcoord_mm(1:3)';
 
-    % re-warp into MNI:
-
+    % re-warp into MNI
     if ~isfield(cfg,'native') || ~cfg.native % when working in native space, no need to warp acpc back to mni at all.
         switch automan
             case 'mnidirect'
@@ -206,9 +192,7 @@ for pt=1:length(uidir)
         clear matlabbatch
         wfis{pt}=[directory,'wACPCquerypoint.nii'];
     end
-
 end
-%ea_dispercent(1,'end');
 
 % create clear cut version:
 if cfg.mapmethod==1
@@ -241,7 +225,7 @@ elseif cfg.mapmethod==2
 end
 
 if cfg.mapmethod
-% smooth clear version:
+    % smooth clear version:
     matlabbatch{1}.spm.spatial.smooth.data = {[PathName,FileName,',1']};
     matlabbatch{1}.spm.spatial.smooth.fwhm = [1 1 1];
     matlabbatch{1}.spm.spatial.smooth.dtype = 0;
@@ -263,18 +247,3 @@ function fidpoints_vox=ea_getfidpoints(fidpoints_mm,tempfile)
 V=spm_vol(tempfile);
 fidpoints_vox=V(1).mat\[fidpoints_mm,ones(size(fidpoints_mm,1),1)]';
 fidpoints_vox=fidpoints_vox(1:3,:)';
-
-
-function o=cell2acpc(acpc)
-
-acpc=ea_strsplit(acpc{1},' ');
-if length(acpc)~=3
-    acpc=ea_strsplit(acpc{1},',');
-    if length(acpc)~=3
-        ea_error('Please enter 3 values separated by spaces or commas.');
-    end
-end
-
-for dim=1:3
-    o(dim,1)=str2double(acpc{dim});
-end
