@@ -2,6 +2,7 @@ function ea_apply_normalization_tofile(options,from,to,useinverse,interp,ref)
 % this function applies lead-dbs normalizations to nifti files.
 % currently just used to generate patient specific atlases,i.e., from MNI
 % space to native space
+
 if ~exist('interp', 'var')
     interp=4;
 end
