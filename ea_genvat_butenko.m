@@ -10,6 +10,7 @@ elseif nargin==3
     hFigure=varargin{3};
 elseif nargin==1 && ischar(varargin{1}) % return name of method.
     varargout{1} = 'OSS-DBS (Butenko 2020)';
+    varargout{2} = true; % Support directed lead
     return
 end
 
