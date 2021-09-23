@@ -69,22 +69,12 @@ end
 save(options.subj.recon.recon,'reco');
 
 
-function c=ea_warpcoord(c,nii,options)
+function c = ea_warpcoord(c,nii,options)
 c = [c,ones(size(c,1),1)]';
-% to template voxel space:
 c = nii(1).mat\c;
-try
-    whichnormmethod=ea_whichnormmethod([options.root,options.patientname,filesep]);
-    if ~ismember(whichnormmethod,ea_getantsnormfuns)
-        V=spm_vol([options.root,options.patientname,filesep,'y_ea_inv_normparams.nii']);
-        if ~isequal(V.dim,nii.dim)
-            ea_redo_inv([options.root,options.patientname,filesep],options);
-        end
-    end
-end
 
-c=ea_map_coords(c(1:3,:), ...
+c = ea_map_coords(c(1:3,:), ...
     options.subj.coreg.anat.preop.(options.subj.AnchorModality), ...
-    [options.root,options.patientname,filesep,'inverseTransform'], ...
+    [options.subj.subjDir,filesep,'inverseTransform'], ...
     '');
-c=c';
+c = c';
