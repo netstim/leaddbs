@@ -4,7 +4,9 @@
 			"T1w": ["t1", "mprage"],
 			"T2w": ["t2", "tse"],
 			"FGATIR": ["FGATIR"],
-			"PD": ["PD"]
+			"PDw": ["pd"],
+			"T2starw": ["t2star"],
+			"FLAIR": ["flair"],
 		},
 		"postop": {
 			"CT": ["Navigation", "CT"],
