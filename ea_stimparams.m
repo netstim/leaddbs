@@ -122,60 +122,43 @@ end
 setappdata(handles.stimfig,'stimparams',stimparams); % store stimulation settings from resultfig to stim (this) fig for subroutines.
 
 % setup modelselect popup
-
-cnt=1;
-
-ndir=dir([ea_getearoot,'ea_genvat_*.m']);
 if strcmp(options.leadprod, 'group')
     isdirected=0; % for now allow everything in lead group
 else
     e=load(fullfile(ea_getearoot,'templates','electrode_models',options.elspec.matfname));
-    directed_funs={'ea_genvat_horn','ea_genvat_fastfield','ea_genvat_butenko'};
     if isfield(e.electrode,'isdirected')
         isdirected=e.electrode.isdirected;
     else
         isdirected=0;
     end
 end
-for nd=length(ndir):-1:1
-    [~,methodf]=fileparts(ndir(nd).name);
-    if isdirected
-        if ismember(methodf,directed_funs)
-            try
-                [thisndc]=eval([methodf,'(','''prompt''',')']);
-                ndc{cnt}=thisndc;
-                genvatfunctions{cnt}=methodf;
-                cnt=cnt+1;
-            end
-        end
-    else
-        try
-            [thisndc]=eval([methodf,'(','''prompt''',')']);
-            ndc{cnt}=thisndc;
-            genvatfunctions{cnt}=methodf;
-            cnt=cnt+1;
-        end
-    end
+
+funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*.m', 0);
+funcs = regexp(funcs, '(ea_genvat_.*)(?=\.m)', 'match', 'once');
+[names, supportDirected] = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
+if isdirected
+    funcs = funcs(cell2mat(supportDirected));
+    names = names(cell2mat(supportDirected));
 end
 
 % Hide OSS-DBS option in case non-dev env or elmodel not available
 if strcmp(options.leadprod, 'dbs')
     if ~options.prefs.env.dev || ~ismember(options.elmodel,ea_ossdbs_elmodel)
-        ossdbsInd = find(contains(ndc,'OSS-DBS'));
-        genvatfunctions(ossdbsInd) = [];
-        ndc(ossdbsInd) = [];
+        ossdbsInd = find(contains(names,'OSS-DBS'));
+        funcs(ossdbsInd) = [];
+        names(ossdbsInd) = [];
     end
 else % Call in lead 'group'
     prefs = ea_prefs;
     if ~prefs.env.dev
-        ossdbsInd = find(contains(ndc,'OSS-DBS'));
-        genvatfunctions(ossdbsInd) = [];
-        ndc(ossdbsInd) = [];
+        ossdbsInd = find(contains(names,'OSS-DBS'));
+        funcs(ossdbsInd) = [];
+        names(ossdbsInd) = [];
     end
 end
 
-setappdata(gcf,'genvatfunctions',genvatfunctions);
-set(handles.modelselect,'String',ndc);
+setappdata(gcf, 'genvatfunctions', funcs);
+set(handles.modelselect, 'String', names);
 
 % if ~isempty(stimparams) % stimfigure has been used before..
 %     for side=1:2
