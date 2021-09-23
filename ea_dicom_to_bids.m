@@ -143,7 +143,7 @@ lookup_table = convert_table_to_lookup_struct(lookup_table_gui.UITable.Data);
 
 setpref('dcm2bids', 'lookuptable', lookup_table);
 
-T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table);app
+T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table);
 
 main_gui.niiFileTable.Data = T_preallocated;
 
