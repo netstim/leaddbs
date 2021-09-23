@@ -28,7 +28,11 @@ if ismember('coreg', type)
     coregImage = [struct2cell(preop); struct2cell(postop)];
 
     % Get paths of output figures
-    checkregFigure = [struct2cell(options.subj.coreg.checkreg.preop); struct2cell(options.subj.coreg.checkreg.postop)];
+    if isempty(struct2cell(preop)) % Only one pre-op modality available
+        checkregFigure = struct2cell(options.subj.coreg.checkreg.postop);
+    else
+        checkregFigure = [struct2cell(options.subj.coreg.checkreg.preop); struct2cell(options.subj.coreg.checkreg.postop)];
+    end
 
     % Generate checkreg figures
     for i=1:length(coregImage)
