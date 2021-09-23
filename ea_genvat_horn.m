@@ -19,7 +19,8 @@ elseif nargin==6
     lgfigure=varargin{6};
 elseif nargin==1
     if ischar(varargin{1}) % return name of method.
-        varargout{1}='SimBio/FieldTrip (see Horn 2017)';
+        varargout{1} = 'SimBio/FieldTrip (see Horn 2017)';
+        varargout{2} = true; % Support directed lead
         return
     end
 end
