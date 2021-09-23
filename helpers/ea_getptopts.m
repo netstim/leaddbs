@@ -31,6 +31,13 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
     % Set subj BIDS struct
     options.subj = bids.getSubj(subjId, options.modality);
 
+    % Set primary template
+    if ismember(options.subj.AnchorModality, fieldnames(bids.spacedef.norm_mapping))
+        options.primarytemplate = bids.spacedef.norm_mapping.(options.subj.AnchorModality);
+    else
+        options.primarytemplate = bids.spacedef.misfit_template;
+    end
+
     % Set elmodel and elspec
     recon = bids.getRecon(subjId);
     if isfile(recon.recon)
