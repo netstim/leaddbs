@@ -9,20 +9,16 @@ if ~isfield(options,'elspec')
     options = ea_resolve_elspec(options);
 end
 
-if isfile(options.subj.brainshift.transform.converted)
-    usenative='scrf';
+if isfile(options.subj.brainshift.transform.scrf)
+    usenative = 'scrf';
 else
-    usenative='native';
+    usenative = 'native';
 end
 
 % apply native to scrf matrix if available
-if isfile(options.subj.brainshift.transform.converted)
-    d = load(options.subj.brainshift.transform.converted);
+if isfile(options.subj.brainshift.transform.scrf)
+    d = load(options.subj.brainshift.transform.scrf);
     reco.scrf = ea_applyscrfmat(d.mat, reco.native, options.sides);
-elseif isfile(options.subj.brainshift.transform.scrf)
-    mat = ea_getscrfmat(options);
-    save(options.subj.brainshift.transform.converted, 'mat');
-    reco.scrf = ea_applyscrfmat(mat,reco.native,options.sides);
 else
     if isfield(reco,'scrf')
         reco = rmfield(reco,'scrf'); % delete subcortical transform if user apparently deleted the transform file.
@@ -30,28 +26,33 @@ else
 end
 
 towarp = cell(0);
-for side=options.sides
+for side = options.sides
     towarp{end+1} = reco.(usenative).coords_mm{side};
     towarp{end+1} = reco.(usenative).markers(side).head;
     towarp{end+1} = reco.(usenative).markers(side).tail;
     towarp{end+1} = reco.(usenative).trajectory{side};
 end
+
 towarp = cell2mat(towarp');
-warpedcoord = ea_warpcoord(towarp,nii,options);
+warpedcoord = ea_warpcoord(towarp, nii, options);
 
 cnt = 1;
-for side=options.sides
-    offset=size(reco.(usenative).coords_mm{side},1);
-    reco.mni.coords_mm{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
+for side = options.sides
+    offset = size(reco.(usenative).coords_mm{side},1);
+    reco.mni.coords_mm{side} = warpedcoord(cnt:cnt+offset-1,:);
+    cnt = cnt+offset;
 
-    offset=size(reco.(usenative).markers(side).head,1);
-    reco.mni.markers(side).head=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
+    offset = size(reco.(usenative).markers(side).head,1);
+    reco.mni.markers(side).head = warpedcoord(cnt:cnt+offset-1,:);
+    cnt = cnt+offset;
 
-    offset=size(reco.(usenative).markers(side).tail,1);
-    reco.mni.markers(side).tail=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
+    offset = size(reco.(usenative).markers(side).tail,1);
+    reco.mni.markers(side).tail = warpedcoord(cnt:cnt+offset-1,:);
+    cnt = cnt+offset;
 
-    offset=size(reco.(usenative).trajectory{side},1);
-    reco.mni.trajectory{side}=warpedcoord(cnt:cnt+offset-1,:); cnt=cnt+offset;
+    offset = size(reco.(usenative).trajectory{side},1);
+    reco.mni.trajectory{side} = warpedcoord(cnt:cnt+offset-1,:);
+    cnt = cnt+offset;
 
     if ~isempty(reco.mni.markers(side).head)
         % Enforce the rotation of x and y markers in MNI space. Use the
@@ -61,8 +62,8 @@ for side=options.sides
         reco.mni.markers(side).x = reco.mni.markers(side).head + xunitv*(options.elspec.lead_diameter/2);
         reco.mni.markers(side).y = reco.mni.markers(side).head + yunitv*(options.elspec.lead_diameter/2);
     else
-        reco.mni.markers(side).x=[];
-        reco.mni.markers(side).y=[];
+        reco.mni.markers(side).x = [];
+        reco.mni.markers(side).y = [];
     end
 end
 
@@ -74,7 +75,7 @@ c = [c,ones(size(c,1),1)]';
 c = nii(1).mat\c;
 
 c = ea_map_coords(c(1:3,:), ...
-    options.subj.coreg.anat.preop.(options.subj.AnchorModality), ...
+    nii(1).fname, ...
     [options.subj.subjDir,filesep,'inverseTransform'], ...
     '');
 c = c';
