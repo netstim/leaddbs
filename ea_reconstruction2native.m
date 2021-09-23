@@ -13,12 +13,6 @@ end
 [whichnormmethod,template] = ea_whichnormmethod(directory);
 nii = ea_load_nii(template);
 
-if ~ismember(whichnormmethod,ea_getantsnormfuns)
-    try
-        ea_checkforwardinv(options,'forward')
-    end
-end
-
 if exist([options.root,options.patientname,filesep,'scrf',filesep,'scrf_converted.mat'],'file')
     usenative='scrf';
 else
