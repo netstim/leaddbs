@@ -1,5 +1,5 @@
 function ea_patch_spm
-% Patch SPM def and norm cfg file to make deformation file whose name does
+% Patch SPM def, norm and shoot cfg file to make deformation file whose name does
 % not start with 'y_*' or 'iy_*' also recognizable.
 
 defCfgFile = [fileparts(which('spm')), filesep, 'config', filesep, 'spm_cfg_deformations.m'];
@@ -19,3 +19,14 @@ if contains(normCfg, 'y_.*\.nii$')
     fprintf(fid, '%s', normCfg);
     fclose(fid);
 end
+
+shootCfgFile = [fileparts(which('spm')), filesep, 'toolbox', filesep, 'Shoot', filesep, 'tbx_cfg_shoot.m'];
+shootCfg = fileread(shootCfgFile);
+if contains(shootCfg, '^y_.*')
+    shootCfg = strrep(shootCfg, '^y_.*', '.*');
+    fid = fopen(shootCfgFile, 'w');
+    fprintf(fid, '%s', shootCfg);
+    fclose(fid);
+end
+
+rehash toolboxcache;
