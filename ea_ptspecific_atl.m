@@ -260,17 +260,6 @@ else
     warpfile=[proot,'y_ea_inv_normparams.nii'];
 end
 
-
-% check if inv has correct size:
-Vinv=spm_vol(warpfile);
-Vanat=spm_vol([proot,options.prefs.prenii_unnormalized]);
-
-if ~isequal(Vinv.dim,Vanat.dim)
-    ea_redo_inv(proot,options);
-end
-
-%apply deformation fields to respective atlas.
-
 % warp atlas to patient space
 for fi=1:length(oatlasfile)
     matlabbatch{1}.spm.util.defs.comp{1}.def = {warpfile};
