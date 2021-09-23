@@ -92,7 +92,7 @@ export_2D_folder = fullfile(options.subj.exportDir, '2D');
 ea_mkdir(export_2D_folder);
 fileBaseName = fullfile(export_2D_folder, ['sub-' options.subj.subjId '_desc-']);
 
-fid = fopen([fileBaseName 'exportcoordinates.txt'],'w');
+fid = fopen([fileBaseName 'coordinates.txt'],'w');
 for iside=1:length(options.sides)
     side=options.sides(iside);
     % write out axial/coronal/sagittal images
@@ -427,11 +427,11 @@ for iside=1:length(options.sides)
                 desc = [strjoin(options.elspec.contactnames(el), '_'), isofnadd];
                 switch tracor
                     case 1
-                        ea_screenshot([fileBaseName 'ax',desc,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'ax_',desc,'.png'],'myaa');
                     case 2
-                        ea_screenshot([fileBaseName 'cor',desc,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'cor_',desc,'.png'],'myaa');
                     case 3
-                        ea_screenshot([fileBaseName 'sag',desc,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'sag_',desc,'.png'],'myaa');
                 end
             end
             axis xy

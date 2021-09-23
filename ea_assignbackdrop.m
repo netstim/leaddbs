@@ -105,11 +105,10 @@ elseif strcmp(bdstring, 'BigBrain 100 um ICBM 152 2009b Sym (Amunts 2013)')
 %     varargout{2}=varargout{1};
 %     varargout{3}=varargout{1};
 
-elseif regexp(bdstring, ['^',ea_getspace,' '])    % pattern: "MNI_ICBM_2009b_NLIN_ASYM *"
-    spacedef=ea_getspacedef;
-    template=lower(strrep(strrep(bdstring,[ea_getspace,' '],''),[' (',spacedef.citation{1},')'],''));
+elseif regexp(bdstring, ['^',ea_getspace,' '])    % pattern: "MNI152NLin2009bAsym *"
+    template=lower(regexp(bdstring, '(?<= )[^\W+]+(?= \()', 'match', 'once'));
 
-    varargout{1}=spm_vol(ea_niigz(fullfile(ea_space(options),template)));
+    varargout{1}=spm_vol(ea_niigz(fullfile(ea_space,template)));
     varargout{2}=varargout{1};
     varargout{3}=varargout{1};
 elseif strcmp(bdstring,'Choose...')
