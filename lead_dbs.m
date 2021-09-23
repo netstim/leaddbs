@@ -998,6 +998,8 @@ options.native=get(handles.vizspacepopup,'Value')==2;
 options.root=[options.root,filesep];
 options.modality=get(handles.MRCT,'Value');
 options.prefs=ea_prefs(options.patientname);
+% Get subj struct
+options.subj = BIDSFetcher(fileparts(fileparts(fileparts(options.root)))).getSubj(options.patientname(5:end));
 ea_spec2dwrite(options);
 
 
