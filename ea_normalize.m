@@ -9,6 +9,7 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
     end
 
     % Dump method
+    % Do it before runnung normalization, needed by applying norm functions
     if ~ismember(lower(options.normalize.method), lower({'(Re-)apply (priorly) estimated normalization', 'Apply', 'ReApply'}))
         ea_dumpmethod(options, 'norm');
     end
