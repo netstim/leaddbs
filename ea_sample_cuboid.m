@@ -14,7 +14,7 @@ end
     
 switch options.modality
     case 1 % MR
-        if isfile(options.subj.coreg.anat.postop.cor_MRI)
+        if isfield(options.subj.coreg.anat.postop, 'cor_MRI') && isfile(options.subj.coreg.anat.postop.cor_MRI)
             niifn = options.subj.coreg.anat.postop.cor_MRI;
         else
             niifn = options.subj.coreg.anat.postop.ax_MRI;
