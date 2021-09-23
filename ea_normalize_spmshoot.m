@@ -97,8 +97,8 @@ movefile([directory, 'c3', preopAnchorName, '.nii'], setBIDSEntity(preopImages{1
 
 % Rename deformation fields
 ea_mkdir(fileparts(options.subj.norm.transform.forwardBaseName));
-movefile([directory, 'y_ea_inv_normparams.nii'], [options.subj.norm.transform.forwardBaseName, 'spm.nii']);
-movefile([directory, 'y_ea_normparams.nii'], [options.subj.norm.transform.inverseBaseName, 'spm.nii']);
+movefile([directory, 'y_ea_normparams.nii'], [options.subj.norm.transform.forwardBaseName, 'spm.nii']);
+movefile([directory, 'y_ea_inv_normparams.nii'], [options.subj.norm.transform.inverseBaseName, 'spm.nii']);
 
 ea_apply_normalization(options)
 
