@@ -1,16 +1,13 @@
 #-----------------------------------------------------------------------------
-set(MODULE_NAME LeadOR)
+set(MODULE_NAME NetstimPreferences)
 
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}.py
-  LeadORLib/util.py
-  LeadORLib/__init__.py
   )
 
 set(MODULE_PYTHON_RESOURCES
   Resources/Icons/${MODULE_NAME}.png
-  Resources/Icons/LeadOR1.png
   Resources/UI/${MODULE_NAME}.ui
   )
 

@@ -4,58 +4,10 @@ import uuid
 from scipy import io
 import numpy as np
 from subprocess import call
+import json
+import glob
 
 from . import WarpDriveUtil, GridNodeHelper
-
-
-
-def saveApprovedData(subjectPath):
-
-  try:
-    import h5py
-  except:
-    slicer.util.pip_install('h5py')
-    import h5py
-
-  try:
-    import hdf5storage
-  except:
-    slicer.util.pip_install('hdf5storage')
-    import hdf5storage
-
-  approvedFile = os.path.join(subjectPath,'ea_coreg_approved.mat')
-  matfiledata = {}
-  if os.path.isfile(approvedFile):
-    try:
-      # read file and copy data except for glanat
-      with h5py.File(approvedFile,'r') as f:
-        for k in f.keys():
-          if k != 'glanat':
-            keyValue = f[k][()]
-            matfiledata[k] = keyValue
-      # now add approved glanat
-      matfiledata[u'glanat'] = np.array([2])
-
-    except: # use other reader for .mat file
-      f = io.loadmat(approvedFile)
-      for k in f.keys():
-        if k != 'glanat':
-          keyValue = f[k]
-          matfiledata[k] = keyValue
-      matfiledata['glanat'] = np.array([[2]],dtype='uint8')
-      io.savemat(approvedFile,matfiledata)
-      return
-
-  else:
-    matfiledata[u'glanat'] = np.array([2])
-
-  # save
-  # for some reason putting subject path into hdf5storage.write doesnt work
-  currentDir = os.getcwd()
-  os.chdir(subjectPath)
-  hdf5storage.write(matfiledata, '.', 'ea_coreg_approved.mat', matlab_compatible=True)
-  os.chdir(currentDir)
-
 
 def checkExtensionInstall(extensionName):
   em = slicer.app.extensionsManagerModel()
@@ -78,7 +30,7 @@ def updateParameterNodeFromArgs(parameterNode):
     pathsSeparator = uuid.uuid4().hex
     subjectPaths = pathsSeparator.join(sys.argv[2:])
     subjectPath = subjectPaths.split(pathsSeparator)[0]
-    MNIPath = os.path.join(sys.argv[1],'templates','space','MNI_ICBM_2009b_NLIN_ASYM')
+    MNIPath = os.path.join(sys.argv[1],'templates','space','MNI152NLin2009bAsym')
     MNIAtlasPath = os.path.join(MNIPath,'atlases')
     if sys.platform == "darwin":
       ext = "maci64"
@@ -99,25 +51,65 @@ def updateParameterNodeFromArgs(parameterNode):
     parameterNode.SetNodeReferenceID("TemplateNode", None)
     return True
 
+class LeadBIDS():
+  def __init__(self, subjectPath):
+    self.subjectPath = subjectPath
+    self.subjectID = os.path.split(self.subjectPath)[-1]
+  
+  def getNormalizationMethod(self):
+    return os.path.join(self.getNormalizationPath(), 'log', self.subjectID + '_desc-normmethod.json')
+
+  def getCoregImages(self, modality='*'):
+    return glob.glob(os.path.join(self.subjectPath, 'coregistration', 'anat', self.subjectID + '*ses-preop_' + modality + '.nii'))
+
+  def getNormalizedImages(self):
+    return glob.glob(os.path.join(self.subjectPath, 'normalization', 'anat', self.subjectID + '*ses-preop*.nii'))
+
+  def getANTSForwardWarp(self):
+    return os.path.join(self.getNormalizationPath(), 'transformations', self.subjectID + '_from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz')
+
+  def getANTSInverseWarp(self):
+    return os.path.join(self.getNormalizationPath(), 'transformations', self.subjectID + '_from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz')
+
+  def getNormalizationPath(self):
+    return os.path.join(self.subjectPath, 'normalization')
+
+  def getWarpDrivePath(self):
+    return os.path.join(self.subjectPath, 'warpdrive')
+
+def saveApprovedData(subjectPath):
+  normalizationMethodFile = LeadBIDS(subjectPath).getNormalizationMethod()
+  with open(normalizationMethodFile, 'a+') as f:
+    normalizationMethod = json.load(f)
+    normalizationMethod['approval'] = 1
+    f.seek(0)
+    json.dump(normalizationMethod, f)
+    f.truncate()
 
 def loadSubjectTransform(subjectPath, antsApplyTransformsPath):
 
+  transformPath = LeadBIDS(subjectPath).getANTSForwardWarp()
+
   # update subject warp fields to new lead dbs specification
-  if os.path.isfile(os.path.join(subjectPath, 'glanatComposite.h5')):
+  if os.path.isfile(transformPath.replace('.nii.gz','.h5')):
     updateTranform(subjectPath, antsApplyTransformsPath)
 
   # load glanat composite
-  glanatCompositeNode = slicer.util.loadTransform(os.path.join(subjectPath, 'glanatComposite.nii.gz'))
+  glanatCompositeNode = slicer.util.loadTransform(transformPath)
   
   return glanatCompositeNode
 
 def updateTranform(directory, antsApplyTransformsPath):
-  for transform,reference in zip(['glanatComposite','glanatInverseComposite'],['glanat','anat_t1']):
+  bidsSubject = LeadBIDS(directory)
+  transforms = [bidsSubject.getANTSForwardWarp(), bidsSubject.getANTSInverseWarp()]
+  references = [bidsSubject.getNormalizedImages()[0], bidsSubject.getCoregImages()[0]]
+  for transform,reference in zip(transforms,references):
     transformFullPath = os.path.join(directory,transform + '.h5') # in case inverse doesnt exist
     if os.path.isfile(transformFullPath):
-      command = antsApplyTransformsPath + " -r " + os.path.join(directory,reference + '.nii') + " -t " + transformFullPath + " -o [" + os.path.join(directory,transform + '.nii.gz') + ",1] -v 1"
+      h5transform = transform.replace('.nii.gz','.h5')
+      command = antsApplyTransformsPath + " -r " + reference + " -t " + h5transform + " -o [" + transform + ",1] -v 1"
       commandOut = call(command, env=slicer.util.startupEnvironment(), shell=True) # run antsApplyTransforms
-      os.remove(transformFullPath)
+      os.remove(h5transform)
   return True
   
 def queryUserApproveSubject(subjectPath):
@@ -154,7 +146,7 @@ def applyChanges(subjectPath, inputNode, imageNode):
   slicer.mrmlScene.RemoveNode(outNode)
   slicer.mrmlScene.RemoveNode(referenceVolume)
   # save
-  slicer.util.saveNode(inputNode, os.path.join(subjectPath,'glanatComposite.nii.gz'))
+  slicer.util.saveNode(inputNode, LeadBIDS(subjectPath).getANTSForwardWarp())
 
   # BACKWARD
 
@@ -163,7 +155,7 @@ def applyChanges(subjectPath, inputNode, imageNode):
   outNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
   slicer.modules.transforms.logic().ConvertToGridTransform(inputNode, imageNode, outNode)
   # save
-  slicer.util.saveNode(outNode, os.path.join(subjectPath,'glanatInverseComposite.nii.gz'))
+  slicer.util.saveNode(outNode, LeadBIDS(subjectPath).getANTSInverseWarp())
   # delete aux node
   slicer.mrmlScene.RemoveNode(outNode)
   
@@ -197,7 +189,7 @@ def saveCurrentScene(subjectPath):
   """
   Save corrections and fixed points is subject directory so will be loaded next time
   """
-  warpDriveSavePath = os.path.join(subjectPath,'WarpDrive')
+  warpDriveSavePath = LeadBIDS(subjectPath).getWarpDrivePath()
   # delete previous
   if os.path.isdir(warpDriveSavePath):
     shutil.rmtree(warpDriveSavePath)
