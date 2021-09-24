@@ -340,18 +340,44 @@ void vtkMRMLAlphaOmegaChannelNode::InitializeSaveFile()
   H5Sclose(file_space);
 
   vtkMRMLAlphaOmegaChannelNode::H5Busy.unlock();
+
+  this->H5FileIsClosed = false;
 }
 
 void vtkMRMLAlphaOmegaChannelNode::CloseSaveFile()
 {
+  if (this->H5FileIsClosed)
+  {
+    return;
+  }
+
   vtkMRMLAlphaOmegaChannelNode::H5Busy.lock();
-  
+
+  // Get current dimension of stored data
+  hsize_t dims[1] = {0};  
+  H5::DataSet   H5DataSet = this->H5File->openDataSet("data");
+  H5::DataSpace H5DataSpace = H5DataSet.getSpace();
+  H5DataSpace.getSimpleExtentDims(dims, nullptr);
+  H5DataSpace.close();
+  H5DataSet.close();
+
+  // Close
   H5Sclose(this->H5MemoryDataspace);
   this->H5File->close();
   
   vtkMRMLAlphaOmegaChannelNode::H5Busy.unlock();
-}
 
+  if (dims[0] < (this->ChannelSamplingRate * MINIMUM_RECORDING_TIME_S))
+  {
+    while (vtksys::SystemTools::FileExists(this->ChannelFullSavePath.c_str()))
+    {
+      vtksys::SystemTools::RemoveFile(this->ChannelFullSavePath.c_str());
+    }
+  }
+
+  this->H5FileIsClosed = true;
+
+}
 
 //----------------------------------------------------------------------------
 static void *vtkMRMLAlphaOmegaChannelNode_ThreadFunction(vtkMultiThreader::ThreadInfo *genericData )
@@ -507,6 +533,11 @@ void vtkMRMLAlphaOmegaChannelNode::AppendNewDataToPreviewArray(float* newDataArr
 //----------------------------------------------------------------------------
 void vtkMRMLAlphaOmegaChannelNode::AppendNewDataToSaveFile(float* newDataArray)
 {
+  if (this->H5FileIsClosed)
+  {
+    return;
+  }
+
   vtkMRMLAlphaOmegaChannelNode::H5Busy.lock();
 
   const hsize_t ndims = 1;
@@ -533,4 +564,10 @@ void vtkMRMLAlphaOmegaChannelNode::AppendNewDataToSaveFile(float* newDataArray)
   this->H5File->flush(H5F_SCOPE_LOCAL);
 
   vtkMRMLAlphaOmegaChannelNode::H5Busy.unlock();
+
+  if (dims[0] > (this->ChannelSamplingRate * 5.0))
+  {
+    this->CloseSaveFile();
+  }
+
 }
