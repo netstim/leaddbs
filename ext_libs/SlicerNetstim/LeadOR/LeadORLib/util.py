@@ -4,6 +4,9 @@ import numpy as np
 
 from slicer.util import VTKObservationMixin
 
+#
+# Trajectory
+#
 
 class Trajectory(VTKObservationMixin):
   
@@ -47,6 +50,12 @@ class Trajectory(VTKObservationMixin):
     self.traceFiducials.GetDisplayNode().SetVisibility(0)
     shNode.SetItemParent(shNode.GetItemByDataNode(self.traceFiducials), self.folderID)
 
+    # cluster fiducials
+    self.clusterFiducials = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    self.clusterFiducials.SetName("Cluster Fiducial - ME: " + str(N))
+    self.clusterFiducials.GetDisplayNode().SetVisibility(0)
+    shNode.SetItemParent(shNode.GetItemByDataNode(self.clusterFiducials), self.folderID)
+
     # trace model
     self.traceModel = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLModelNode')
     self.traceModel.SetName("Trace Model - ME: " + str(N))
@@ -62,25 +71,47 @@ class Trajectory(VTKObservationMixin):
     # update trace model every time the trace fiducials are modified 
     self.addObserver(self.traceFiducials, slicer.vtkMRMLMarkupsNode.PointAddedEvent,    self.updateModelFromFiducial)
     self.addObserver(self.traceFiducials, slicer.vtkMRMLMarkupsNode.PointModifiedEvent, self.updateModelFromFiducial)
-    self.addObserver(self.traceFiducials, slicer.vtkMRMLMarkupsNode.PointRemovedEvent,  self.updateModelFromFiducial)
 
 
   def setAlphaOmegaChannelNode(self, channelNode):
     self.alphaOmegaChannelNode = channelNode
-    self.cliNode = slicer.cli.run(slicer.modules.rootmeansquare, None, {'dataFileName': self.alphaOmegaChannelNode.GetChannelFullSavePath()})
-    self.cliNode.SetAutoRun(1)
-    self.addObserver(self.cliNode, slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, self.onCLIModified)
+    if hasattr(slicer.modules,'rootmeansquare'):
+      self.RMSNode = slicer.cli.run(slicer.modules.rootmeansquare, None, {'dataFileName': self.alphaOmegaChannelNode.GetChannelFullSavePath()})
+      self.addObserver(self.RMSNode, slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, self.onRMSModified)
+    if hasattr(slicer.modules,'matlabcommander'):
+      self.WCNode = slicer.cli.run(slicer.modules.matlabcommander, None, {'cmd':'addpath("C:\\repo\\SlicerNetstim\\LeadOR\\LeadORLib");addpath(genpath("C:\\Users\\simon\\Documents\\MATLAB\\wave_clus"))'}) # TODO
+      self.addObserver(self.WCNode, slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, self.onWCModified)
 
-  def onCLIModified(self, caller, event):
-    if self.cliNode.GetStatusString() == 'Completed':
-      rmsValue = self.cliNode.GetParameterAsString('rootMeanSquare')
-      fileName = os.path.basename(self.cliNode.GetParameterAsString('dataFileName'))
-      fiducialLabels = vtk.vtkStringArray()
-      self.traceFiducials.GetControlPointLabels(fiducialLabels)
-      fiducialIndex = fiducialLabels.LookupValue("D = %.3f" % float(fileName[7:-3]))
-      self.traceFiducials.SetNthControlPointDescription(fiducialIndex, rmsValue)
-      self.cliNode.SetParameterAsString('dataFileName', self.alphaOmegaChannelNode.GetChannelFullSavePath())
-      self.cliNode.InvokeEvent(slicer.vtkMRMLCommandLineModuleNode.AutoRunEvent)
+  def onRMSModified(self, caller, event):
+    rmsValue = self.RMSNode.GetParameterAsString('rootMeanSquare')
+    fullFileName = self.RMSNode.GetParameterAsString('dataFileName')
+    if self.RMSNode.GetStatusString() == 'Completed':
+      fiducialIndex = self.getFiducialIndexFromLabel("D = " + os.path.basename(fullFileName)[7:-6])
+      if fiducialIndex > -1:
+        self.traceFiducials.SetNthControlPointDescription(fiducialIndex, rmsValue)
+    if self.RMSNode.GetStatusString() in ['Completed', 'Cancelled']:
+      self.RMSNode.SetParameterAsString('dataFileName', self.alphaOmegaChannelNode.GetChannelFullSavePath())
+      slicer.cli.run(slicer.modules.rootmeansquare, self.RMSNode)
+    if (rmsValue not in ['', 'nan']) and (fullFileName != self.RMSNode.GetParameterAsString('dataFileName')):
+      self.WCNode.SetParameterAsString('cmd', 'get_is_cluster("' + fullFileName + '")')
+      slicer.cli.run(slicer.modules.matlabcommander, self.WCNode)
+
+  def onWCModified(self, caller, event):
+    if self.WCNode.GetStatusString() == 'Completed':
+      reply = self.RMSNode.GetParameterAsString('reply')
+      isCluster = reply and reply[-1] == '1'
+      if isCluster:
+        fullFileName = self.WCNode.GetParameterAsString('dataFileName')[16:-2]
+        fiducialIndex = self.getFiducialIndexFromLabel("D = " + os.path.basename(fullFileName)[7:-6])
+        if fiducialIndex > -1:
+          p = [0]*3
+          self.traceFiducials.GetNthControlPointPositionWorld(fiducialIndex, p)
+          self.clusterFiducials.AddFiducialFromArray(p)
+
+  def getFiducialIndexFromLabel(self, label):
+    fiducialLabels = vtk.vtkStringArray()
+    self.traceFiducials.GetControlPointLabels(fiducialLabels)
+    return fiducialLabels.LookupValue(label)
 
   def onTransformModified(self, caller=None, event=None):
     # get current point
@@ -180,13 +211,17 @@ class Trajectory(VTKObservationMixin):
     samplePoints = vtk.vtkPoints()
     valuesArray = []
     pos = [0.0] * 3
-    for i in range(self.traceFiducials.GetNumberOfControlPoints()):
+    i = 0
+    while i < self.traceFiducials.GetNumberOfControlPoints():
       if self.traceFiducials.GetNthControlPointDescription(i) in ['','nan']:
-        pass
+        if i < self.traceFiducials.GetNumberOfControlPoints() - 3:
+          self.traceFiducials.RemoveNthControlPoint(i)
+          continue
       else:
         self.traceFiducials.GetNthFiducialPosition(i,pos)
         samplePoints.InsertNextPoint(pos)
         valuesArray.append(float(self.traceFiducials.GetNthControlPointDescription(i)))
+      i += 1
     if not valuesArray:
       return
     # array to vtk
@@ -225,3 +260,87 @@ class Trajectory(VTKObservationMixin):
     self.traceModel.GetDisplayNode().SetScalarRange(0.0,1.0)
     self.traceModel.Modified()
     return 
+
+
+#
+# VTA
+#
+
+
+class VTASource():
+
+  def __init__(self):
+
+    self.sphereSource = self.createSphereSource()
+    self.sphereFunction = self.createSphereFunction()
+    self.ROINode = self.createROI()
+    self.VTAModel = self.createVTAModel()
+    self.markupsNode = self.createMarkups()
+    self.setFibersVisibility(True)
+
+  def SetRadius(self, r):
+    self.sphereSource.SetRadius(r)
+    self.sphereSource.Update()
+    self.sphereFunction.SetRadius(r)
+    # fiberBundleNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLFiberBundleNode')
+    # if fiberBundleNode:
+      # fiberBundleNode.InvokeCustomModifiedEvent(slicer.vtkMRMLModelNode.MeshModifiedEvent)
+
+  def SetAndObserveTransformNodeID(self, transformNodeID):
+    for node in [self.markupsNode, self.VTAModel]:
+      node.SetAndObserveTransformNodeID(transformNodeID)
+    slicer.util.getNode(transformNodeID).AddObserver(slicer.vtkMRMLTransformNode.TransformModifiedEvent, lambda c,e: self.transformModified())
+    self.transformModified()
+    
+  def transformModified(self):
+    p = [0]*3
+    self.markupsNode.GetNthControlPointPositionWorld(0,p)
+    self.sphereFunction.SetCenter(p)
+    # fiberBundleNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLFiberBundleNode')
+    # if fiberBundleNode:
+      # fiberBundleNode.InvokeCustomModifiedEvent(slicer.vtkMRMLModelNode.MeshModifiedEvent)
+
+  def createMarkups(self):
+    markupsNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    markupsNode.AddFiducialFromArray([0,0,3])
+    markupsNode.SetDisplayVisibility(0)
+    return markupsNode
+
+  def createSphereSource(self):
+    sphereSource = vtk.vtkSphereSource()
+    sphereSource.SetCenter(0,0,3)
+    sphereSource.SetPhiResolution(12)
+    sphereSource.SetThetaResolution(12)
+    return sphereSource
+
+  def createSphereFunction(self):
+    sphereFun = vtk.vtkSphere()
+    return sphereFun
+
+  def createROI(self):
+    ROINode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLAnnotationROINode')
+    ROINode.SetDisplayVisibility(0)
+    return ROINode
+
+  def createVTAModel(self):
+    stimulationVTAModel = slicer.modules.models.logic().AddModel(self.sphereSource.GetOutput())
+    stimulationVTAModel.CreateDefaultSequenceDisplayNodes()
+    stimulationVTAModel.CreateDefaultDisplayNodes()
+    stimulationVTAModel.GetDisplayNode().SetColor(0.8,0.1,0.1)
+    stimulationVTAModel.GetDisplayNode().SetOpacity(0.8)
+    stimulationVTAModel.GetDisplayNode().SetVisibility2D(1)
+    return stimulationVTAModel
+
+  def setFibersVisibility(self, state):
+    if slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLFiberBundleNode'):
+      fiberBundleNode = slicer.mrmlScene.GetFirstNodeByClass('vtkMRMLFiberBundleNode')
+      fiberBundleNode.SetAndObserveAnnotationNodeID(self.ROINode.GetID())
+      fiberBundleNode.SetSelectWithAnnotation(True)
+      fiberBundleNode.GetDisplayNode().SetVisibility(state)
+      fiberBundleNode.GetExtractFromROI().SetImplicitFunction(self.sphereFunction)
+
+  def cleanup(self):
+    self.setFibersVisibility(False)
+    slicer.mrmlScene.RemoveNode(self.ROINode)
+    slicer.mrmlScene.RemoveNode(self.VTAModel)
+    slicer.mrmlScene.RemoveNode(self.markupsNode)
