@@ -8,6 +8,8 @@ if ~iscell(uipatdir)
     uipatdir = {uipatdir};
 end
 
+uipatdir = GetFullPath(uipatdir);
+
 isSubjFolder = 0;
 isBIDSRoot = 0;
 
