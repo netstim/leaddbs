@@ -32,7 +32,7 @@ else
 end
 % Initialize figure
 
-resultfig=figure('name', [options.patientname,': Electrode-Scene'],...
+resultfig=figure('name', [options.subj.subjId,': Electrode-Scene'],...
     'color', 'k', 'numbertitle', 'off',...
     'CloseRequestFcn', @closesatellites, 'visible', options.d3.verbose,...
     'KeyPressFcn', @ea_keypress, 'KeyReleaseFcn', @ea_keyrelease);
@@ -428,7 +428,9 @@ end
 
 if isfield(options.d3,'expdf')
     if options.d3.expdf
-        fig2pdf3d(gca,[options.root,options.patientname,filesep,'Lead-DBS_Electrode_Localization'],options);
+        exportDir = [options.subj.exportDir, filesep, 'pdf'];
+        ea_mkdir(exportDir);
+        fig2pdf3d(gca,[exportDir,filesep,'Lead-DBS_Electrode_Localization'],options);
         close(resultfig);
         return
     end

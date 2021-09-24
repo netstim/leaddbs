@@ -34,7 +34,7 @@ for nativemni=nm % switch between native and mni space atlases.
             atlasFolder = ea_space(options,'atlases');
             mifix='';
         case 2 % native
-            atlasFolder = [options.root,options.patientname,filesep,'atlases',filesep];
+            atlasFolder = [options.subj.subjDir,filesep,'atlases',filesep];
             mifix='';
     end
 
@@ -57,8 +57,9 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if options.writeoutstats
+        statsFile = [options.subj.subjDir, filesep, 'sub-', options.subj.subjId, '_desc-stats.mat'];
         try
-            load([options.root,options.patientname,filesep,'ea_stats']);
+            load(statsFile);
             prioratlasnames=ea_stats.atlases.names;
         end
     end
@@ -631,19 +632,20 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if options.writeoutstats
+        statsBackupFile = [options.subj.subjDir, filesep, 'sub-', options.subj.subjId, '_desc-statsbackup.mat'];
         if exist('prioratlasnames','var')
             if ~isequal(ea_stats.atlases.names,prioratlasnames)
                 warning('off', 'backtrace');
                 warning('%s: other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.', options.patientname);
                 warning('on', 'backtrace');
-                ds=load([options.root,options.patientname,filesep,'ea_stats']);
-                save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
-                save(fullfile([options.root,options.patientname],'ea_stats_backup'),'-struct','ds','-v7.3');
+                ds=load(statsFile);
+                save(statsFile,'ea_stats','-v7.3');
+                save(statsBackupFile,'-struct','ds','-v7.3');
             else
-                save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
+                save(statsFile,'ea_stats','-v7.3');
             end
         else
-            save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
+            save(statsFile,'ea_stats','-v7.3');
         end
     end
 end
