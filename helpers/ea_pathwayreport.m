@@ -4,7 +4,7 @@ function ea_pathwayreport(stimFolder, sortPathway, pathwayTable)
 fibers = [];
 
 % Load result
-results = ea_regexpdir(stimFolder, 'fiberActivation_.*\.mat$', 0);
+results = ea_regexpdir(stimFolder, 'fiberactivation.*\.mat$', 0);
 for i=1:length(results)
     result = load(results{i}, 'fibers');
     fibers = [fibers;result.fibers];
