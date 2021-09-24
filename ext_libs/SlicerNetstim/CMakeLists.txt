@@ -24,6 +24,7 @@ add_subdirectory(LeadOR)
 add_subdirectory(StereotacticPlan)
 add_subdirectory(ImportAtlas)
 add_subdirectory(WarpDrive)
+add_subdirectory(NetstimPreferences)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
