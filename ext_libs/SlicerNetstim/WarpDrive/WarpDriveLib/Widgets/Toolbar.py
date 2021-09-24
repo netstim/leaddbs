@@ -4,6 +4,7 @@ import os
 import itertools
 from slicer.util import VTKObservationMixin
 import glob
+import re
 
 import WarpDrive
 import ImportAtlas
@@ -129,7 +130,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
     # load previous scene
     try:
-      slicer.util.loadScene(os.path.join(self.parameterNode.GetParameter("subjectPath"),'WarpDrive','WarpDriveScene.mrml'))
+      slicer.util.loadScene(os.path.join(self.parameterNode.GetParameter("subjectPath"),'warpdrive','WarpDriveScene.mrml'))
     except:
       pass
 
@@ -197,11 +198,16 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("ImageNode"))
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("TemplateNode"))
     # initialize new image and init
-    imageNode = slicer.util.loadVolume(os.path.join(self.parameterNode.GetParameter("subjectPath"), 'anat_'+modality+'.nii'), properties={'show':False})
+    imageNode = slicer.util.loadVolume(LeadDBSCall.LeadBIDS(self.parameterNode.GetParameter("subjectPath")).getCoregImages(modality)[0], properties={'show':False})
     imageNode.SetAndObserveTransformNodeID(self.parameterNode.GetNodeReferenceID("InputNode"))    
     # change to t1 in case modality not present
-    modality = modality if modality in ['t1','t2','pca','pd'] else 't1'
-    templateNode = slicer.util.loadVolume(os.path.join(self.parameterNode.GetParameter("MNIPath"), modality + ".nii"), properties={'show':False})
+    modality = re.search(r"[^w]+", modality)[0].lower()
+    templateFile = glob.glob(os.path.join(self.parameterNode.GetParameter("MNIPath"), modality+ ".nii"))
+    if templateFile:
+      templateFile = templateFile[0]
+    else:
+      templateFile = os.path.join(self.parameterNode.GetParameter("MNIPath"), "t1.nii")
+    templateNode = slicer.util.loadVolume(templateFile, properties={'show':False})
     templateNode.GetDisplayNode().AutoWindowLevelOff()
     templateNode.GetDisplayNode().SetWindow(100)
     templateNode.GetDisplayNode().SetLevel(70)
@@ -275,10 +281,10 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
   def getAvailableModalities(self, directory):
     modalities = []
-    listing = glob.glob(os.path.join(directory,'anat_*.nii'))
-    for fileName in listing:
+    fileNames = LeadDBSCall.LeadBIDS(directory).getCoregImages()
+    for fileName in fileNames:
       fileName = os.path.split(fileName)[-1] # remove directory
       fileName = os.path.splitext(fileName)[0] # remove extension
-      modality = fileName[5:] # remove 'anat_'
+      modality = re.search(r"(?<=ses-preop_)\w+", fileName)[0]
       modalities.append(modality)
     return modalities

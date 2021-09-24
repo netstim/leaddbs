@@ -5,6 +5,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 
+import LeadORLib
 
 #
 # LeadOR
@@ -25,6 +26,33 @@ class LeadOR(ScriptedLoadableModule):
 This module controls micro electrode settings for deep brain stimulation surgery
 """
     self.parent.acknowledgementText = ""
+
+
+    # Additional initialization step after application startup is complete
+    slicer.app.connect("startupCompleted()", registerSampleData)
+    slicer.app.connect("startupCompleted()", addCustomLayout)
+
+#
+# Register sample data sets in Sample Data module
+#
+
+def registerSampleData():
+  """
+  Add data sets to Sample Data module.
+  """
+
+  import SampleData
+  iconsPath = os.path.join(os.path.dirname(__file__), 'Resources/Icons')
+
+  SampleData.SampleDataLogic.registerCustomSampleDataSource(
+    category='LeadOR',
+    sampleName='STN Planning',
+    thumbnailFileName=os.path.join(iconsPath, 'LeadOR1.png'),
+    uris="https://github.com/netstim/SlicerNetstim/releases/download/SampleData/Lead-OR_STN.mrb",
+    fileNames='Lead-OR_STN.mrb',
+    loadFiles=True,
+    loadFileType='SceneFile'
+  )
 
 
 #
@@ -58,7 +86,15 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.layout.addWidget(uiWidget)
     self.ui = slicer.util.childWidgetVariables(uiWidget)
 
+    if hasattr(slicer,'vtkMRMLFiberBundleNode') and hasattr(slicer.vtkMRMLFiberBundleNode,'GetExtractFromROI'):
+      self.ui.stimulationCollapsibleButton.enabled = True
+    else:
+      self.ui.stimulationCollapsibleButton.enabled = False
+      self.ui.stimulationCollapsibleButton.collapsed = True
+      self.ui.stimulationCollapsibleButton.setToolTip('Updated SlicerDMRI Extension needed for stimulation module')
+      
     # AO Channels actions to ToolButton
+    stimulationActionGroup = qt.QActionGroup(self.layout)
     for child in self.ui.microElectrodeLayoutFrame.children():
       if isinstance(child, qt.QToolButton):
         # channel
@@ -66,7 +102,13 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         AOChannelsAction.setEnabled(False)
         AOChannelsAction.setMenu(qt.QMenu(child))
         child.addAction(AOChannelsAction)
-
+        # stim
+        stimulationAction = qt.QAction('Stim Source', self.layout)
+        stimulationAction.setCheckable(True)
+        stimulationAction.setEnabled(True)
+        stimulationAction.toggled.connect(self.updateStimulationTransform)
+        stimulationActionGroup.addAction(stimulationAction)
+        child.addAction(stimulationAction)
 
     # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
     # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
@@ -115,7 +157,11 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.MELineVisCheckBox.toggled.connect(lambda b: self.logic.setMEVisibility('trajectoryLine', b))
     self.ui.METipVisCheckBox.toggled.connect(lambda b: self.logic.setMEVisibility('tipFiducial', b))
     self.ui.METraceVisCheckBox.toggled.connect(lambda b: self.logic.setMEVisibility('traceModel', b))
+    self.ui.MEClustersCheckBox.toggled.connect(lambda b: self.logic.setMEVisibility('clusterFiducials', b))
 
+    # Stimulation
+    self.ui.stimulationActiveCheckBox.connect('toggled(bool)', self.onStimulationActivate)
+    self.ui.stimulationAmplitudeSpinBox.valueChanged.connect(self.updateStimulationRadius)
 
     # Make sure parameter node is initialized (needed for module reload)
     self.initializeParameterNode()
@@ -215,6 +261,7 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     self.ui.layoutToggleFrame.enabled            = transformsAvailable
     self.ui.microElectrodeLayoutFrame.enabled    = transformsAvailable
+    self.ui.stimulationCollapsibleButton.enabled = transformsAvailable and hasattr(slicer,'vtkMRMLFiberBundleNode') and hasattr(slicer.vtkMRMLFiberBundleNode,'GetExtractFromROI')
 
     # All the GUI updates are done
     self._updatingGUIFromParameterNode = False
@@ -298,6 +345,36 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.leftMELabel.text = 'Medial' if guessRightSide else 'Lateral'  
     self.ui.rightMELabel.text = 'Lateral' if guessRightSide else 'Medial' 
 
+  def onStimulationActivate(self, active):
+    if active: 
+      self.logic.VTASource = LeadORLib.util.VTASource()
+      self.updateStimulationRadius(self.ui.stimulationAmplitudeSpinBox.value)
+      self.updateStimulationTransform()
+    else:
+      self.logic.VTASource.cleanup()
+      self.logic.VTASource = None
+      self.ui.amplitudeRadiusLabel.setText('-')
+        
+  def updateStimulationTransform(self):
+    if not self.logic.VTASource:
+      return
+    # get current active stim
+    N = next(filter(lambda n: getattr(self.ui, 'METoolButton_'+str(n)).actions()[1].checked, range(9)), None)
+    if N is None or N not in self.logic.trajectories.keys():
+      self.ui.stimulationActiveCheckBox.checked = False
+      qt.QMessageBox().warning(qt.QWidget(),'','Set a Stimulation Source')
+      return
+    # set transform
+    self.logic.VTASource.SetAndObserveTransformNodeID(self.logic.trajectories[N].translationTransform.GetID())
+
+  def updateStimulationRadius(self, value):
+    if not self.logic.VTASource:
+      return
+    # set  radius
+    radius = self.logic.getVTARadius(value * 1e-3) * 1e3 
+    self.logic.VTASource.SetRadius(radius)
+    self.ui.amplitudeRadiusLabel.setText('%.2f' % radius)
+
 
 #
 # LeadORLogic
@@ -325,6 +402,7 @@ class LeadORLogic(ScriptedLoadableModuleLogic):
       importlib.reload(LeadORLib.util)
 
     self.trajectories = {}
+    self.VTASource = None
 
     
   def setDefaultParameters(self, parameterNode):
@@ -334,7 +412,6 @@ class LeadORLogic(ScriptedLoadableModuleLogic):
     pass
 
   def initializeNthTrajectory(self, N, distanceToTargetTransformID):
-    import LeadORLib
     self.trajectories[N] = LeadORLib.util.Trajectory(N, distanceToTargetTransformID)
   
   def removeNthTrajectory(self, N):
@@ -361,6 +438,15 @@ class LeadORLogic(ScriptedLoadableModuleLogic):
   def setMEVisibility(self, modelType, visible):
     for trajectory in self.trajectories.values():
       getattr(trajectory, modelType).GetDisplayNode().SetVisibility3D(visible)
+
+  def getVTARadius(self, I, pw=60): 
+    # I: amplitude in Ampere
+    # pw: pulse width in micro seconds
+    # returns radius in meter
+    from numpy import sqrt
+    return ((pw/90)**0.3) * sqrt(0.8*I/165) # 0.72
+
+
 
 #
 # LeadORTest
@@ -435,7 +521,7 @@ class LeadORTest(ScriptedLoadableModuleTest):
 #
 
 
-def tryToAddCustomLayout():
+def addCustomLayout():
 
   customLayout = """
   <layout type="horizontal" split="true">
@@ -516,7 +602,3 @@ def tryToAddCustomLayout():
     layoutSwitchAction = layoutSwitchActionParent.addAction("LeadOR")
     layoutSwitchAction.setData(customLayoutId)
     layoutSwitchAction.setIcon(qt.QIcon(":Icons/Go.png"))
-
-# add layout once we have a layout manager
-t = qt.QTimer()
-t.singleShot(5000, tryToAddCustomLayout)
