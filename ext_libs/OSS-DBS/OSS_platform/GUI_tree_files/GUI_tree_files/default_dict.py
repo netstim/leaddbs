@@ -13,7 +13,7 @@ d = {
     'IFFT_ready': 0,
     'MRI_data_name': 'segmask.nii',
     'MRI_in_m': 0,
-    'DTI_data_name': 'Johnson_WS_Norm_mapping.nii',
+    'DTI_data_name': 'Johnson_WS_NormMapping.nii',
     'DTI_in_m': 0,
     'CSF_index': 3.0,
     'WM_index': 2.0,

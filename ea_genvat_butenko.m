@@ -42,14 +42,15 @@ if ~ismember(options.elmodel, ea_ossdbs_elmodel)
 end
 
 % Set output path
+filePrefix = ['sub-', options.subj.subjDir, '_desc-'];
 outputDir = [options.subj.stimDir, filesep, ea_nt(options.native), S.label];
+outputBasePath = [outputDir, filesep, filePrefix];
 ea_mkdir(outputDir);
 if options.native
-    MNIoutputDir = [options.subj.stimDir, filesep, ea_nt(0), S.label];
-    ea_mkdir(MNIoutputDir);
+    templateOutputDir = [options.subj.stimDir, filesep, ea_nt(0), S.label];
+    ea_mkdir(templateOutputDir);
+    templateOutputBasePath = [templateOutputDir, filesep, filePrefix];
 end
-
-options = ea_assignpretra(options);
 
 %% Set MRI_data_name
 % Segment MRI
@@ -117,42 +118,50 @@ settings.MRI_data_name = [outputDir, filesep, 'segmask.nii'];
 
 %% Check tensor data
 tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
-scalingMethod = 'Norm_mapping';
-scaledTensorName = strrep(tensorName, '.nii', ['_',scalingMethod,'.nii']);
+scalingMethod = options.prefs.machine.vatsettings.butenko_tensorScalingMethod;
+scaledTensorName = strrep(tensorName, '.nii', ['_', scalingMethod, '.nii']);
+
+nativeTensor = [options.subj.coregDir, filesep, 'dwi', filesep, filePrefix, tensorName];
+nativeTensorScaled = [options.subj.coregDir, filesep, 'dwi', filesep, filePrefix, scaledTensorName];
+templateTensor = [ea_space, filesep, tensorName];
+templateTensorScaled = [ea_space, filesep, scaledTensorName];
+tensorData = [outputDir, filesep, scaledTensorName]; % Final tensor data input for OSS-DBS
 
 % Set to empty by default
 settings.DTI_data_name = '';
-directory = [options.root, options.patientname, filesep];
+
 if options.prefs.machine.vatsettings.butenko_useTensorData
-    if isfile([outputDir,filesep,scaledTensorName])
+    if isfile(tensorData)
         % Scaled tensor data found in stimulation folder
         settings.DTI_data_name = scaledTensorName;
 
-    elseif ~options.native && isfile([ea_space,filesep,scaledTensorName])
+    elseif ~options.native && isfile(templateTensorScaled)
         % MNI mode, scaled tensor data found in MNI space folder
-        copyfile([ea_space,filesep,scaledTensorName], outputDir);
+        copyfile(templateTensorScaled, outputDir);
         settings.DTI_data_name = scaledTensorName;
 
-    elseif options.native && isfile([directory,filesep,scaledTensorName])
+    elseif options.native && isfile(nativeTensorScaled)
         % native mode, scaled tensor data found in patient folder
-        copyfile([directory,filesep,scaledTensorName], outputDir);
+        copyfile(nativeTensorScaled, tensorData);
         settings.DTI_data_name = scaledTensorName;
 
     else
         if ~options.native
             % MNI mode, tensor data found
-            if isfile([ea_space, tensorName])
+            if isfile(templateTensor)
                 tensorDir = ea_space;
+                tensorPrefix = '';
             end
         else
             % native mode, tensor data not found, warp template tensor data
-            if ~isfile([directory, tensorName]) && isfile([ea_space, tensorName])
+            if ~isfile(nativeTensor) && isfile(templateTensor)
                 % Warp tensor data only when ANTs was used for normalization
-                if ismember(ea_whichnormmethod(directory), ea_getantsnormfuns)
+                json = loadjson(options.subj.norm.log.method);
+                if contains(json.method, 'ANTs')
                     fprintf('Warping tensor data into patient space...\n\n')
                     ea_ants_apply_transforms(options,...
                         [ea_space, tensorName],... % From
-                        [directory, tensorName],... % To
+                        nativeTensor,... % To
                         1, ... % Useinverse is 1
                         '', ... % Reference, auto-detected
                         '', ... % Transformation, auto-detected
@@ -166,8 +175,9 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
                 end
             end
 
-            if isfile([directory, tensorName]) % Scale tensor data
-                tensorDir = directory;
+            if isfile(nativeTensor) % Scale tensor data
+                tensorDir = fileparts(nativeTensor);
+                tensorPrefix = filePrefix;
             end
         end
 
@@ -179,13 +189,13 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
                         '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
                         '--volume ', tensorDir, ':/opt/Patient ', ...
                         '--rm ', dockerImage, ' ', ...
-                        'python3 /opt/OSS-DBS/OSS_platform/Tensor_scaling.py /opt/Patient/', tensorName, ' ', scalingMethod]);
+                        'python3 /opt/OSS-DBS/OSS_platform/Tensor_scaling.py /opt/Patient/', tensorPrefix, tensorName, ' ', scalingMethod]);
             else % Singularity
-                system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Tensor_scaling.py ', tensorDir, tensorName, ' ', scalingMethod]);
+                system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Tensor_scaling.py ', tensorDir, tensorPrefix, tensorName, ' ', scalingMethod]);
             end
 
             % Copy scaled tensor data to stimulation directory, update setting
-            copyfile([tensorDir, scaledTensorName], outputDir);
+            copyfile([tensorDir, tensorPrefix, scaledTensorName], tensorData);
             settings.DTI_data_name = scaledTensorName;
         end
     end
@@ -347,6 +357,7 @@ if settings.calcAxonActivation
     settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
 
+    preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
     if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
         fprintf('Loading connectome: %s ...\n', settings.connectome);
         conn = load([ea_getconnectomebase, 'dMRI', filesep, settings.connectome, filesep, 'data.mat']);
@@ -357,13 +368,13 @@ if settings.calcAxonActivation
             fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
             conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
                 [ea_space, options.primarytemplate, '.nii'], ...
-                [directory, 'forwardTransform'], ...
-                [directory, options.prefs.prenii_unnormalized])';
+                [options.subj.subjDir, 'forwardTransform'], ...
+                preopAnchor)';
         end
 
         % Filter fibers based on the spherical ROI
         if options.native
-        	fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [directory, options.prefs.prenii_unnormalized]);
+        	fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
         else
             fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
         end
@@ -418,8 +429,8 @@ if settings.calcAxonActivation
                 fibersMNIVox = ea_mm2vox(conn.fibers(:,1:3), [ea_space, options.primarytemplate, '.nii'])';
                 conn.fibers(:,1:3)  = ea_map_coords(fibersMNIVox, ...
                     [ea_space, options.primarytemplate, '.nii'], ...
-                    [directory, 'forwardTransform'], ...
-                    [directory, options.prefs.prenii_unnormalized])';
+                    [options.subj.subjDir, 'forwardTransform'], ...
+                    preopAnchor)';
             end
 
             % Filter fibers based on the spherical ROI
@@ -556,34 +567,34 @@ for side=0:1
         % Copy VAT files
         if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
             copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'], ...
-                     [outputDir, filesep, 'vat_efield_', sideStr, '.nii'])
+                     [outputBasePath, 'efield_hemi-', sideStr, '.nii'])
             if options.native % Transform to MNI space
                 ea_apply_normalization_tofile(options,...
-                    [outputDir, filesep, 'vat_efield_', sideStr, '.nii'],... % from
-                    [MNIoutputDir, filesep, 'vat_efield_', sideStr, '.nii'],... % to
+                    [outputBasePath, 'efield_hemi-', sideStr, '.nii'],... % from
+                    [templateOutputBasePath, 'efield_hemi-', sideStr, '.nii'],... % to
                     0, ... % useinverse is 0
                     1, ... % linear interpolation
                     [ea_space, options.primarytemplate, '.nii']);
-                ea_autocrop([MNIoutputDir, filesep, 'vat_efield_', sideStr, '.nii']);
+                ea_autocrop([templateOutputBasePath, 'efield_hemi-', sideStr, '.nii']);
             end
         end
 
         if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'])
             copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
-                     [outputDir, filesep, 'vat_', sideStr, '.nii'])
+                     [outputBasePath, 'stimvol_hemi-', sideStr, '.nii'])
 
-            vatToViz = [outputDir, filesep, 'vat_', sideStr, '.nii'];
+            vatToViz = [outputBasePath, 'stimvol_hemi-', sideStr, '.nii'];
             if options.native % Transform to MNI space
                 ea_apply_normalization_tofile(options,...
-                    [outputDir, filesep, 'vat_', sideStr, '.nii'],... % from
-                    [MNIoutputDir, filesep, 'vat_', sideStr, '.nii'],... % to
+                    [outputBasePath, 'stimvol_hemi-', sideStr, '.nii'],... % from
+                    [templateOutputBasePath, 'stimvol_hemi-', sideStr, '.nii'],... % to
                     0, ... % useinverse is 0
                     0, ... % nn interpolation
                     [ea_space, options.primarytemplate, '.nii']);
-                ea_autocrop([MNIoutputDir, filesep, 'vat_', sideStr, '.nii']);
+                ea_autocrop([templateOutputBasePath, 'stimvol_hemi-', sideStr, '.nii']);
 
                 if ~options.orignative % Visualize MNI space VTA
-                    vatToViz = [MNIoutputDir, filesep, 'vat_', sideStr, '.nii'];
+                    vatToViz = [templateOutputBasePath, 'stimvol_hemi-', sideStr, '.nii'];
                 end
             end
 
@@ -637,9 +648,9 @@ for side=0:1
 
                 % Save result for visualization
                 if startsWith(settings.connectome, 'Multi-Tract: ')
-                    fiberActivation = [outputDir, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                    fiberActivation = [outputBasePath, 'fiberactivation_hemi-', sideStr, '_', tractName, '.mat'];
                 else
-                    fiberActivation = [outputDir, filesep, 'fiberActivation_', sideStr, '.mat'];
+                    fiberActivation = [outputBasePath, 'fiberactivation_hemi-', sideStr, '.nii'];
                 end
                 save(fiberActivation, '-struct', 'ftr');
 
@@ -664,9 +675,9 @@ for side=0:1
 
                     % Save MNI space fiber activation result
                     if startsWith(settings.connectome, 'Multi-Tract: ')
-                        fiberActivationMNI = [MNIoutputDir, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                        fiberActivationMNI = [templateOutputBasePath, 'fiberactivation_hemi-', sideStr, '_', tractName, '.mat'];
                     else
-                        fiberActivationMNI = [MNIoutputDir, filesep, 'fiberActivation_', sideStr, '.mat'];
+                        fiberActivationMNI = [templateOutputBasePath, 'fiberactivation_hemi-', sideStr, '.mat'];
                     end
                     save(fiberActivationMNI, '-struct', 'conn');
 
