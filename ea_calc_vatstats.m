@@ -23,30 +23,27 @@ if ~exist('hmchanged','var')
     hmchanged=1;
 end
 
+stimDir = [options.subj.stimDir, filesep, ea_nt(options), S.label];
+fileBasePath = [stimDir, filesep, 'sub-', options.subj.subjId, '_desc-'];
+
 % clean downstreamfiles if necessary
 if hmchanged
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_right.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_right.nii'));
+    ea_delete([fileBasePath, 'stimvol_hemi-leftflipped.nii']);
+    ea_delete([fileBasePath, 'stimvol_hemi-rightflipped.nii']);
 
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_efield_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_efield_right.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_efield_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_efield_right.nii'));
+    ea_delete([fileBasePath, 'efield_hemi-leftflipped.nii']);
+    ea_delete([fileBasePath, 'efield_hemi-rightflipped.nii']);
 
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_efield_gauss_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'bihem_vat_efield_gauss_right.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_efield_gauss_left.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'fl_vat_efield_gauss_right.nii'));
+    ea_delete([fileBasePath, 'efieldgauss_hemi-leftflipped.nii']);
+    ea_delete([fileBasePath, 'efieldgauss_hemi-rightflipped.nii']);
 
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_dMRI.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_dMRI_l.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_dMRI_r.nii'));
+    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_dMRI.nii'));
+    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_dMRI_l.nii'));
+    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_dMRI_r.nii'));
 
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_fMRI.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_fMRI_l.nii'));
-    ea_delete(fullfile(options.root,options.patientname,'stimulations',ea_nt(options),S.label,'vat_seed_compound_fMRI_r.nii'));
+    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_fMRI.nii'));
+    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_fMRI_l.nii'));
+    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_fMRI_r.nii'));
 end
 
 %prepare statvat exports once if needed.
@@ -79,7 +76,8 @@ for but=1:length(togglenames)
 end
 clear expand
 
-load([options.root,options.patientname,filesep,'ea_stats']);
+statsFile = [options.subj.subjDir, filesep, 'sub-', options.subj.subjId, '_desc-stats.mat'];
+load(statsFile);
 
 % assign the place where to write stim stats into struct
 
@@ -161,7 +159,7 @@ for iside=1:length(options.sides)
 
             if options.writeoutstats
                 ea_dispt('Writing out stats...');
-                load([options.root,options.patientname,filesep,'ea_stats']);
+                load(statsFile);
                 ea_stats.stimulation(thisstim).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
                 ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
@@ -170,9 +168,8 @@ for iside=1:length(options.sides)
 
                 % VTA volume and efield volume
                 ea_stats.stimulation(thisstim).vat(side,vat).volume=stimparams(1,side).volume(vat);
-                if exist(ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_efield_',sidec]),'file')
-                    vefieldfile=ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_efield_',sidec]);
-                    Vefield=load_untouch_nii(vefieldfile);
+                if isfile([fileBasePath, 'efield_hemi-', sidec, '.nii'])
+                    vefieldfile = [fileBasePath, 'efield_hemi-', sidec, '.nii'];
                 end
 
                 atlasName = options.atlasset;
@@ -209,7 +206,7 @@ for iside=1:length(options.sides)
                                 continue;
                             end
 
-                            vatfile = ea_niigz([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'vat_',sidec]);
+                            vatfile = [fileBasePath, 'stimvol_hemi-', sidec, '.nii'];
                             [~, mm_overlap, normVTAOverlap, normAtlasOverlap, mm_vta, mm_atlas]  = ea_vta_overlap(vatfile, atlasfile, sidec);
 
                             % Overriding the volume of the vat with the one
@@ -237,7 +234,7 @@ for iside=1:length(options.sides)
                     end
                 end
 
-                save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats','-v7.3');
+                save(statsFile,'ea_stats','-v7.3');
             end
         end
     end
