@@ -11,7 +11,11 @@ else
     set(handles.normmethod,'Value',1);
 end
 
-set(handles.checkreg,'Value',options.checkreg);
+if isfield(options, 'checkreg')
+    set(handles.checkreg, 'Value', options.checkreg);
+else
+    set(handles.checkreg, 'Value', 0);
+end
 
 % CT coregistration
 set(handles.coreg_checkbox,'Value',options.coregct.do);
