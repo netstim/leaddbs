@@ -223,7 +223,8 @@ if ~options.savefibers.load
 
         % Write out connectivity stats
         if options.writeoutstats
-            load([options.root,options.patientname,filesep,'ea_stats']);
+            statsFile = [options.subj.subjDir, filesep, 'sub-', options.subj.subjId, '_desc-stats.mat'];
+            load(statsFile);
             % assign the place where to write stim stats into struct
             if isfield(options,'groupmode')
                 if options.groupmode
@@ -236,7 +237,7 @@ if ~options.savefibers.load
 
             ea_stats.stimulation(thisstim).ft(side).nfibercounts{la}=ea_stats.stimulation(thisstim).ft(side).fibercounts{la}/volume{side};
             ea_stats.stimulation(thisstim).ft(side).labels{la}=atlas_lgnd{2};
-            save([options.root,options.patientname,filesep,'ea_stats'],'ea_stats');
+            save(statsFile,'ea_stats');
         end
 
         contargets{side}=round(targets.img);
