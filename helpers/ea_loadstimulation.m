@@ -1,3 +1,6 @@
 function S=ea_loadstimulation(stimname,options)
 
-load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'stimparameters.mat']);
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+
+load([stimDir, filesep, filePrefix, 'stimparameters.mat']);

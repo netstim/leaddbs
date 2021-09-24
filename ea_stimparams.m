@@ -225,7 +225,7 @@ if ~strcmp(options.leadprod, 'group')
                 stimparams(1,1).VAT.VAT = vatfv;
                 stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
             elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'])
-                nii = ea_load_nii([stimDir,'stimulations',filesep,ea_nt(options),filesep,label,filesep,'vat_left.nii']);
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 %For consistency, left is always on 2nd element of stimparams
                 stimparams(1,2).VAT.VAT = vatfv;
