@@ -121,7 +121,7 @@ end
 % add VATs to seeds for connectome mapper or predict case
 if isfield(handles,'seeddefpopup')
     for pt=1:length(uipatdir)
-        stims = ea_dir2cell(dir([uipatdir{pt},filesep,'stimulations',filesep,ea_getspace]));
+        stims = ea_dir2cell(dir([uipatdir{pt},filesep,'stimulation',filesep,ea_getspace]));
         if ~exist('remstims', 'var')
             commonStims = stims;
         else
