@@ -650,7 +650,7 @@ for side=0:1
                 if startsWith(settings.connectome, 'Multi-Tract: ')
                     fiberActivation = [outputBasePath, 'fiberactivation_hemi-', sideStr, '_', tractName, '.mat'];
                 else
-                    fiberActivation = [outputBasePath, 'fiberactivation_hemi-', sideStr, '.nii'];
+                    fiberActivation = [outputBasePath, 'fiberactivation_hemi-', sideStr, '.mat'];
                 end
                 save(fiberActivation, '-struct', 'ftr');
 
