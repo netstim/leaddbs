@@ -54,6 +54,7 @@ end
 
 %% Set MRI_data_name
 % Segment MRI
+segmaskName = 'segmask.nii';
 if options.native
     anchorImage = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
     [anchorImageDir, anchorImageName] = fileparts(anchorImage);
@@ -82,7 +83,7 @@ else
         movefile([ea_space, 'c3', options.primarytemplate, 'nii'], c3File);
     end
 
-    segMaskPath = [ea_space, 'segmask.nii'];
+    segMaskPath = [ea_space, segmaskName];
 end
 
 if ~isfile(segMaskPath)
@@ -113,8 +114,8 @@ settings.Estimate_In_Template = options.prefs.machine.vatsettings.estimateInTemp
 
 %% Set MRI path
 % Put the MRI file in stimulation folder
-copyfile(segMaskPath, [outputDir, filesep, 'segmask.nii']);
-settings.MRI_data_name = [outputDir, filesep, 'segmask.nii'];
+copyfile(segMaskPath, [outputDir, filesep, segmaskName]);
+settings.MRI_data_name = segmaskName;
 
 %% Check tensor data
 tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
