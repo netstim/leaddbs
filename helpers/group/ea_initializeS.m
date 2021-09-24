@@ -33,7 +33,7 @@ catch
 end
 
 if preexist
-    load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'stimparameters.mat']);
+    load([options.subj.stimDir,filesep,ea_nt(options),S.label,filesep,'sub-', options.subj.subjId, '_desc-stimparameters.mat']);
     return
 end
 
