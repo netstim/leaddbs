@@ -52,6 +52,7 @@ function lead_mapper_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_mapper (see VARARGIN)
 
+handles.prod = 'mapper';
 
 earoot=ea_getearoot;
 im=imread([earoot,'icons',filesep,'logo_lead_connectome_mapper.png']);
