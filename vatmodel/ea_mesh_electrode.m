@@ -435,11 +435,9 @@ end
 if stlexport
     ea_dispt('Exporting STL files');
     tissuelabels={'grey','white','contacts','insulation'};
-    if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep],'file')
-        mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep]);
-    end
+    ea_mkdir([options.subj.subjDir,filesep,'headmodel']);
     for tt=1:length(tissuelabels)
-        savestl(nmesh,emesh(emesh(:,5)==tt,1:4),[options.root,options.patientname,filesep,'current_headmodel',filesep,tissuelabels{tt},num2str(side),'.stl'],tissuelabels{tt});
+        savestl(nmesh,emesh(emesh(:,5)==tt,1:4),[options.subj.subjDir,filesep,'headmodel',filesep,tissuelabels{tt},num2str(side),'.stl'],tissuelabels{tt});
     end
 end
 
