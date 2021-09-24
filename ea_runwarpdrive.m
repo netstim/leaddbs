@@ -9,12 +9,11 @@ do_pts = true(length(options.uipatdirs),1);
 if ~ (isfield(options, 'overwriteapproved') && options.overwriteapproved)
     
     for i = 1:length(options.uipatdirs)
-        approved_file = fullfile(options.uipatdirs{i},'ea_coreg_approved.mat');
-        if isfile(approved_file)
-            approved_load = load(approved_file);
-            if isfield(approved_load,'glanat') && approved_load.glanat
-                do_pts(i) = false;
-            end
+        approved_file = dir(fullfile(options.uipatdirs{i},'normalization','log','*desc-normmethod.json'));
+        if ~isempty(approved_file)
+            approved_file = fullfile(approved_file(1).folder, approved_file(1).name);
+            approved_load = loadjson(approved_file);
+            do_pts = ~isfield(approved_load,'approval') | (approved_load.approval == 0);
         end
     end
     
