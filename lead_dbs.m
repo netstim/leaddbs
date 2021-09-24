@@ -106,7 +106,7 @@ ea_addnormmethods(handles,options);
 ea_processguiargs(handles,varargin)
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'});
+ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
 
 handles.prod='dbs';
 ea_firstrun(handles,options);
