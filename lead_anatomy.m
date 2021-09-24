@@ -52,6 +52,8 @@ function lead_anatomy_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_anatomy (see VARARGIN)
 
+handles.prod = 'anatomy';
+
 % add recent patients...
 ea_initrecentpatients(handles, 'patients');
 earoot=ea_getearoot;
@@ -94,7 +96,6 @@ ea_processguiargs(handles,varargin)
 % add tools menu
 ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'});
 
-handles.prod='anatomy';
 ea_firstrun(handles,options);
 
 ea_bind_dragndrop(handles.leadfigure, ...
