@@ -164,7 +164,8 @@ private:
 
   H5::H5File* H5File;
   hid_t H5MemoryDataspace;
-
+  bool H5FileIsClosed;
+  
   static std::mutex H5Busy;
 
 };

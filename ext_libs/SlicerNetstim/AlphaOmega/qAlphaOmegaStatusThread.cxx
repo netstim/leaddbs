@@ -66,12 +66,12 @@ void qAlphaOmegaStatusThread::run()
 
     this->Mutex.lock();
 
-    deviceIsConnected = (isConnected() == eAO_CONNECTED);
-    if (deviceIsConnected != deviceWasConnected)
-    {
-      emit connectionStatusModified(&deviceIsConnected);
-      deviceWasConnected = deviceIsConnected;
-    }
+    // deviceIsConnected = (isConnected() == eAO_CONNECTED);
+    // if (deviceIsConnected != deviceWasConnected)
+    // {
+    //   emit connectionStatusModified(&deviceIsConnected);
+    //   deviceWasConnected = deviceIsConnected;
+    // }
 
 
     distanceToTargetMiliM = this->GetDistanceToTargetMiliM();
