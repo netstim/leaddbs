@@ -178,7 +178,7 @@ ea_refresh_lg(handles);
 handles.prod='group';
 ea_firstrun(handles,options);
 
-ea_menu_initmenu(handles,{'prefs','transfer','group'});
+ea_menu_initmenu(handles,{'prefs','transfer','group'},options.prefs);
 
 ea_processguiargs(handles,varargin)
 

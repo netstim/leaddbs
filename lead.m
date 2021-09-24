@@ -58,8 +58,8 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-% set lead path
-if ~isdeployed
+% set lead path first time. to overwrite path run: lead path
+if ~isdeployed && ~contains(path, fullfile(fileparts(mfilename),'helpers'))
     ea_setpath;
     if nargin>3
         switch varargin{1}
@@ -68,8 +68,6 @@ if ~isdeployed
                 return
         end
     end
-else
-    %fprintf(1, '%s\n', ctfroot);
 end
 
 ea_compat_data;
@@ -133,6 +131,10 @@ if nargin == 4
             return
         case 'dir'
             cd(ea_getearoot);
+            delete(handles.leadfigure)
+            return
+        case 'path'
+            ea_setpath;
             delete(handles.leadfigure)
             return
         case 'speak'

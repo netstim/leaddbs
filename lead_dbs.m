@@ -98,7 +98,7 @@ axis equal;
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
-options.earoot=ea_getearoot;
+options.earoot=earoot;
 
 % Initialize norm methods popupmenu
 ea_init_normpopup(handles, options.prefs.normalize.default);
@@ -106,7 +106,7 @@ ea_init_normpopup(handles, options.prefs.normalize.default);
 ea_processguiargs(handles,varargin)
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'});
+ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
 
 handles.prod='dbs';
 ea_firstrun(handles,options);

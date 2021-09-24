@@ -1,6 +1,9 @@
-function base=ea_getconnectomebase(cmd)
+function base=ea_getconnectomebase(cmd,prefs)
 
-prefs=ea_prefs('');
+if ~exist('prefs','var') || isempty(prefs)
+    prefs=ea_prefs('');
+end
+
 if isfield(prefs.lc,'datadir')
     base=prefs.lc.datadir;
 else

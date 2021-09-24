@@ -1,64 +1,36 @@
 function ea_menu_addspace(handles)
 
-g = uimenu('Label','Space');
-s = uimenu(g,'Label','Change current space to');
-spaces=dir([ea_getearoot,'templates',filesep,'space',filesep]);
-for space=1:length(spaces)
-    if ~strcmp(spaces(space).name(1),'.')
-        spacename=spaces(space).name;
-        sspacename=ea_underscore2space(spacename);
-        c=uimenu(s,'Label',sspacename,'Callback',{@ea_switchspace,spacename});
-        if strcmp(spacename,ea_getspace)
-            c.Checked='on';
-        end
-    end
-end
-j = uimenu(g,'Label','(Re-)generate aux files for current space, using selected atlas','Callback',{@ea_genauxspace,handles});
+space_menu = uimenu('Label','Space');
+change_space_menu = uimenu(space_menu,'Label','Change current space to');
 
-k1 = uimenu(g,'Label','Import atlases from...');
-for space=1:length(spaces)
-    if ~strcmp(spaces(space).name(1),'.')
-        spacename=spaces(space).name;
-        if strcmp(spacename,ea_getspace)
-            continue
-        end
-        sspacename=ea_underscore2space(spacename);
-        c=uimenu(k1,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'atlases'});
+spaces = dir(fullfile(ea_getearoot,'templates','space','*','ea_space_def.mat'));
+[~,spaces] = cellfun(@(x) fileparts(strrep(x,'_',' ')), {spaces.folder}', 'uni', false);
+sspaces = cellfun(@(x) ea_underscore2space(x), spaces, 'uni', false);
+
+current_space = ea_getspace;
+current_space_index = find(cellfun(@(x) strcmp(x, current_space), spaces));
+
+for i = 1:length(spaces)
+    c = uimenu(change_space_menu,'Label',sspaces{i},'Callback',{@ea_switchspace,spaces{i}});
+    if i == current_space_index
+        c.Checked = 'on';
     end
 end
 
-k2 = uimenu(g,'Label','Import whole-brain parcellations from...');
-for space=1:length(spaces)
-    if ~strcmp(spaces(space).name(1),'.')
-        spacename=spaces(space).name;
-        if strcmp(spacename,ea_getspace)
-            continue
-        end
-        sspacename=ea_underscore2space(spacename);
-        c=uimenu(k2,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'labeling'});
+uimenu(space_menu,'Label','(Re-)generate aux files for current space, using selected atlas','Callback',{@ea_genauxspace,handles});
+
+import_atlas_menu = uimenu(space_menu,'Label','Import atlases from...');
+import_parcellation_menu = uimenu(space_menu,'Label','Import whole-brain parcellations from...');
+import_both_menu = uimenu(space_menu,'Label','Import atlases and whole-brain-parcellations from...');
+import_custom_menu = uimenu(space_menu,'Label','Import custom .nii file from...');
+
+for i = 1:length(spaces)
+    if i == current_space_index
+        continue
     end
+    uimenu(import_atlas_menu,'Label',sspaces{i},'Callback',{@ea_importspaceassets,spaces{i},'atlases'});
+    uimenu(import_parcellation_menu,'Label',sspaces{i},'Callback',{@ea_importspaceassets,spaces{i},'labeling'});
+    uimenu(import_both_menu,'Label',sspaces{i},'Callback',{@ea_importspaceassets,spaces{i},'both'});
+    uimenu(import_custom_menu,'Label',sspaces{i},'Callback',{@ea_importspaceassets,spaces{i},'custom'});
 end
 
-k3 = uimenu(g,'Label','Import atlases and whole-brain-parcellations from...');
-for space=1:length(spaces)
-    if ~strcmp(spaces(space).name(1),'.')
-        spacename=spaces(space).name;
-        if strcmp(spacename,ea_getspace)
-            continue
-        end
-        sspacename=ea_underscore2space(spacename);
-        c=uimenu(k3,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'both'});
-    end
-end
-
-k3 = uimenu(g,'Label','Import custom .nii file from...');
-for space=1:length(spaces)
-    if ~strcmp(spaces(space).name(1),'.')
-        spacename=spaces(space).name;
-        if strcmp(spacename,ea_getspace)
-            continue
-        end
-        sspacename=ea_underscore2space(spacename);
-        c=uimenu(k3,'Label',sspacename,'Callback',{@ea_importspaceassets,spacename,'custom'});
-    end
-end
