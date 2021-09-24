@@ -52,6 +52,7 @@ function lead_predict_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   predictmetric line arguments to lead_predict (see VARARGIN)
 
+handles.prod = 'predict';
 
 earoot=ea_getearoot;
 im=imread([earoot,'icons',filesep,'logo_lead_predict.png']);
@@ -70,11 +71,8 @@ ea_processguiargs(handles,varargin)
 
 ea_menu_initmenu(handles,{'cluster','prefs','transfer','vats'},ea_prefs);
 
-
 [mdl,sf]=ea_genmodlist;
 ea_updatemodpopups(mdl,sf,handles)
-
-
 
 pmodels=dir([ea_getearoot,'predict',filesep,'ea_predict_*.m']);
 for pmod=1:length(pmodels)
