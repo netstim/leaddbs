@@ -93,10 +93,10 @@ for patients = 1:length(source)
             if any(ismember(dir_names,'stimulations'))
                 %if mni dir exists
                 if ~exist(fullfile(source_patient,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),'dir') || ~exist(fullfile(source_patient,'stimulations','native'),'dir')
-                    mkdir(fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'));
-                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'));
+                    mkdir(fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulation','MNI152NLin2009bAsym'));
+                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulation','MNI152NLin2009bAsym'));
                 else
-                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations'));
+                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulation'));
                 end
             end
             if strcmp(dir_names{j},'current_headmodel')
@@ -316,7 +316,7 @@ for patients = 1:length(source)
                     if strcmp(pipelines{folders},'stimulations')
                         %the stimulations folder should already be
                         %there in the dest directory.
-                        if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
+                        if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,'stimulation','dir')
                             pipeline = pipelines{folders};
                             try
                                 [mni_files,native_files,derivatives_cell] = vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
