@@ -98,7 +98,7 @@ axis equal;
 % get electrode model specs and place in popup
 set(handles.electrode_model_popup,'String',ea_resolve_elspec);
 
-options.earoot=ea_getearoot;
+options.earoot=earoot;
 
 % Initialize norm methods popupmenu
 ea_init_normpopup(handles, options.prefs.normalize.default);
