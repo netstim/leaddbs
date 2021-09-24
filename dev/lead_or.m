@@ -55,6 +55,8 @@ function lead_or_OpeningFcn(hObject, eventdata, handles, varargin)
 
 earoot=ea_getearoot;
 
+handles.prod = 'or';
+
 % add recent patients...
 ea_initrecentpatients(handles, 'patients');
 
@@ -104,7 +106,6 @@ ea_processguiargs(handles,varargin)
 %% add tools menu
 ea_menu_initmenu(handles,{'acpc','export','applynorm','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
 
-handles.prod='or';
 ea_firstrun(handles,options);
 ea_getui(handles);
 
