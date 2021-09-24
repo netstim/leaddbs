@@ -55,6 +55,8 @@ function lead_dbs_OpeningFcn(hObject, eventdata, handles, varargin)
 
 earoot=ea_getearoot;
 
+handles.prod = 'dbs';
+
 % add recent patients...
 ea_initrecentpatients(handles, 'patients');
 
@@ -82,12 +84,6 @@ set(handles.normalize_checkbox,'Value',0);
 set(hObject,'Color',[1 1 1]);
 set(handles.versiontxt,'String',['v',ea_getvsn('local')]);
 
-%im = imread('bg_gui.png');
-%image(im);
-%axis off;
-%axis fill
-
-%set(0,'gca',handles.logoaxes);
 set(0,'CurrentFigure',handles.leadfigure);
 im=imread([earoot,'icons',filesep,'logo_lead_dbs.png']);
 
@@ -108,7 +104,6 @@ ea_processguiargs(handles,varargin)
 %% add tools menu
 ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
 
-handles.prod='dbs';
 ea_firstrun(handles,options);
 ea_getui(handles);
 
@@ -124,10 +119,7 @@ guidata(hObject, handles);
 
 % Disable buttons for standalone app
 if isdeployed
-    %set(handles.exportcode,'Enable','off');
     set(handles.updatebutn,'Enable','off');
-    %h = findall(hObject, 'Type', 'uimenu');
-    %set(findobj(h,'Label','Submit'),'Enable','off');
 end
 
 % UIWAIT makes lead_dbs wait for user response (see UIRESUME)
