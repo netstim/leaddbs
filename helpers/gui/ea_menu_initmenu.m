@@ -1,4 +1,4 @@
-function ea_menu_initmenu(handles,cmd)
+function ea_menu_initmenu(handles,cmd,prefs)
 
 callingfunction=dbstack;
 callingfunction=callingfunction(4).name;
@@ -11,7 +11,6 @@ if isempty(menuprobe)
     uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
 
     p_c=uimenu(pp,'Label','Play sound on completed tasks.','Callback',{@ea_toggle_chirp});
-    prefs=ea_prefs;
     if prefs.machine.chirp
         p_c.Checked='on';
     else
@@ -19,7 +18,6 @@ if isempty(menuprobe)
     end
 
     m_c=uimenu(pp,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
-    prefs=ea_prefs;
     if prefs.machine.methods_show
         m_c.Checked='on';
     else
@@ -129,7 +127,7 @@ if isempty(menuprobe)
 
 
     if ismember('transfer',cmd)
-       ea_menu_addtransfer(handles,callingfunction);
+       ea_menu_addtransfer(handles,callingfunction,prefs);
     end
 
     if ismember('vats',cmd)
@@ -142,7 +140,7 @@ if isempty(menuprobe)
     for l=1:length(list)
         if isa([list{l}], 'char')
             insit(l) = uimenu(g,'Label',[list{l}],'Callback',{@ea_menuinstall,commands{l}});
-            insit(l).Checked = ea_checkinstall(commands{l},1);
+            insit(l).Checked = ea_checkinstall(commands{l},1,0,prefs);
         else % cell. create menu in above item
             insit(l-1).Callback = [];
             for j = 1:length(list{l})
