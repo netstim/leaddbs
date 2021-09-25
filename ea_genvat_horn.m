@@ -51,11 +51,16 @@ end
 % Important to load in reco from a new since we need to decide whether to
 % use native or template coordinates. Even when running in template space,
 % the native coordinates are sometimes used (VTA is then calculated in native space and ported to template).
-[coords_mm,trajectory,markers]=ea_load_reconstruction(options);
-elstruct(1).coords_mm=coords_mm;
-elstruct(1).trajectory=trajectory;
-elstruct(1).name=options.patientname;
-elstruct(1).markers=markers;
+try
+    [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+    elstruct(1).coords_mm=coords_mm;
+    elstruct(1).trajectory=trajectory;
+    elstruct(1).name=options.patientname;
+    elstruct(1).markers=markers; 
+catch % e.g. can happen in lead group detached mode (then always use MNI).
+    elstruct(1)=varargin{1};
+    coords_mm=elstruct(1).coords_mm;
+end
 
 if ~isempty(resultfig)
     elspec = getappdata(resultfig,'elspec');
@@ -358,7 +363,7 @@ indices(indices==0)=[];
 indices(indices>length(midpts))=[];
 
 if ~options.native % VTA calculated in MNI space directly
-    [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options);
+    [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,actContact,voltix,constvol,thresh,mesh,gradient,side,resultfig,options,elstruct);
     varargout{1}=vatfv;
     varargout{2}=vatvolume;
     varargout{3}=radius;

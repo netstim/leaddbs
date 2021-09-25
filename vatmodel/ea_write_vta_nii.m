@@ -1,4 +1,4 @@
-function [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options)
+function [vatfv,vatvolume,radius]=ea_write_vta_nii(S,stimname,midpts,indices,elspec,dpvx,voltix,constvol,thresh,mesh,gradient,side,resultfig,options,elstruct)
 
 if ~isempty(resultfig)
     vatgrad=getappdata(resultfig,'vatgrad');
@@ -45,11 +45,14 @@ ngrad=sqrt(sum(gradient'.^2,1));
 vat.ET=ngrad; % vol.cond(vol.tissue).*ngrad; would be stromstaerke.
 
 % reload elstruct to make sure to take correct one (native vs. template)
-[coords_mm,trajectory,markers]=ea_load_reconstruction(options);
-elstruct(1).coords_mm=coords_mm;
-elstruct(1).trajectory=trajectory;
-elstruct(1).name=options.patientname;
-elstruct(1).markers=markers;
+try
+    [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+    
+    elstruct(1).coords_mm=coords_mm;
+    elstruct(1).trajectory=trajectory;
+    elstruct(1).name=options.patientname;
+    elstruct(1).markers=markers;
+end
 if options.prefs.machine.vatsettings.horn_removeElectrode
     vat = jr_remove_electrode(vat,elstruct,mesh,side,elspec);
 end

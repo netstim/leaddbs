@@ -643,7 +643,10 @@ for nativemni=nm % switch between native and mni space atlases.
                 save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
             end
         else
-            save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3');
+            if ~exist(fullfile([options.root,options.patientname]),'dir')
+                ea_mkdir(fullfile([options.root,options.patientname]));
+            end
+            save(fullfile([options.root,options.patientname],'ea_stats'),'ea_stats','-v7.3'); 
         end
     end
 end

@@ -1018,7 +1018,7 @@ for pt=selection
         else
             for side=1:2
                 try
-                    [vtafv,vtavolume] = feval(ea_genvat,coords,M.S(pt),side,options,['gs_',M.guid],handles.leadfigure);
+                   [vtafv,vtavolume] = feval(ea_genvat,M.elstruct(pt),M.S(pt),side,options,['gs_',M.guid],handles.leadfigure);
                     vatCalcPassed(side) = 1;
                 catch
                     vtafv=[];
