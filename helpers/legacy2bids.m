@@ -69,7 +69,7 @@ for patients = 1:length(source)
     end
     [~,patient_name,~] = fileparts(source_patient);
     if ~startsWith(patient_name,'sub-')
-       patient_name = ['sub-',patient_name];
+       patient_name = ['sub-',erase(patient_name,'_')];
     end
     files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
