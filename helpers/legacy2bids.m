@@ -59,6 +59,10 @@ derivatives_cell = {};
 %fetcher command
 %perform moving for each pat
 tic
+log_path = fullfile(dest{1},'derivatives','leaddbs','logs');
+if ~exist(log_path,'dir')
+    mkdir(log_path)
+end
 for patients = 1:length(source)
     source_patient = source{patients};
     if patients <= length(dest)
@@ -109,18 +113,17 @@ for patients = 1:length(source)
         %%%headmodel to their respective directories. Then you can crawl
         %%%through and rename. Renaming is handled a bit later.
         if strcmp(dir_names{j},'atlases') ||  strcmp(dir_names{j},'headmodel') || strcmp(dir_names{j},'warpdrive') || strcmp(dir_names{j},'export') || strcmp(dir_names{j},'fiberfiltering') 
-            
             copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
-        else
+        elseif strcmp(dir_names{j},'scrf') 
             this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
             files_in_folder = {this_folder.name};
-            file_in_folder_indx = 1;
             for file_in_folder=1:length(files_in_folder)
                 if exist('files_to_move','var')
-                    files_to_move{end+1} = files_in_folder{file_in_folder};
-                else
-                    files_to_move{file_in_folder_indx} = files_in_folder{file_in_folder};
-                    file_in_folder_indx = file_in_folder_indx + 1;
+                    if strcmp(files_in_folder{file_in_folder},'anat_t1.nii')
+                        files_to_move{end+1} = ['scrf_' files_in_folder{file_in_folder}];
+                    else
+                       files_to_move{end+1} = files_in_folder{file_in_folder}; 
+                    end
                 end
             end
         end
@@ -129,7 +132,7 @@ for patients = 1:length(source)
     %the new dirrectory structure and move the correct files into the
     %correct "BIDS" directory
     
-    ea_generate_datasetDescription(dest_filepath)
+    ea_generate_datasetDescription(dest_patient)
     if ~isdicom
         generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_containers);
     end
@@ -188,6 +191,7 @@ for patients = 1:length(source)
                         if exist(fullfile(source_patient,files_to_move{files}),'file')
                             copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{2},'log'));
                         end
+                        
                     elseif ismember(files_to_move{files},brainshift{:,1})
                         which_file = files_to_move{files};
                         which_pipeline = pipelines{1};
@@ -196,7 +200,6 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                     elseif ismember(files_to_move{files},normalization{:,1})
                         %corresponding index of the new pat
@@ -430,8 +433,7 @@ for patients = 1:length(source)
                     end
                 end
         end
-    end
-    
+    end        
     disp(['Process finished for Patient:' patient_name]);
     disp("Generating excel sheet for the conversion...");
     writecell(derivatives_cell,fullfile(dest_patient,'derivatives','leaddbs',patient_name,'legacy2bids_naming.xlsx'))
@@ -456,6 +458,9 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
     if endsWith(which_file,'.nii')
         if ~exist(anat_dir,'dir')
             mkdir(anat_dir)
+        end
+        if strcmp(which_file,'scrf_anat_t1.nii')
+            which_file = erase(which_file,'scrf_');
         end
         old_path = fullfile(source_patient_path,which_file);
         new_path = anat_dir;
