@@ -18,7 +18,13 @@ parsedStruct = parseBIDSFilePath(filePath);
 for i=1:length(entities)
     entity = entities{i};
     value = values{i};
-    if strcmp(entity, 'suffix') % Set suffix
+    if isempty(value) % Delete entity
+        if ismember(entity, {'dir', 'suffix'})
+            parsedStruct.(entity) = '';
+        else
+            parsedStruct = rmfield(parsedStruct, entity);
+        end
+    elseif strcmp(entity, 'suffix') % Set suffix
         parsedStruct.suffix = value;
     elseif strcmp(entity, 'ext') % Set extension
         if ~startsWith(value, '.') % 'ext' instead of '.ext' provided
