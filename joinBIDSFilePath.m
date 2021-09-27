@@ -24,4 +24,4 @@ end
 ext = parsedStruct.ext;
 
 % Contruct file path
-filePath = [dir, filesep, fileName, suffix, ext];
+filePath = fullfile(dir, [fileName, suffix, ext]);
