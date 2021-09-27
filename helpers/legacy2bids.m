@@ -108,7 +108,7 @@ for patients = 1:length(source)
         %%%for now, copy atlases, stimulations, headmodel and current
         %%%headmodel to their respective directories. Then you can crawl
         %%%through and rename. Renaming is handled a bit later.
-        if strcmp(dir_names{j},'atlases') ||  strcmp(dir_names{j},'headmodel') || strcmp(dir_names{j},'warpdrive') || strcmp(dir_names{j},'export')
+        if strcmp(dir_names{j},'atlases') ||  strcmp(dir_names{j},'headmodel') || strcmp(dir_names{j},'warpdrive') || strcmp(dir_names{j},'export') || strcmp(dir_names{j},'fiberfiltering') 
             
             copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
         else
@@ -129,7 +129,7 @@ for patients = 1:length(source)
     %the new dirrectory structure and move the correct files into the
     %correct "BIDS" directory
     
-    generate_datasetDescrption(dest_patient);
+    ea_generate_datasetDescription(dest_filepath)
     if ~isdicom
         generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_containers);
     end
@@ -652,21 +652,7 @@ function file2json(fname_in,fname_out)
     if exist('encodejson','var') && exist('json_fid','var')
         fprintf(json_fid,encodejson);
     end
-function generate_datasetDescrption(dest_filepath)
-    [parent_dir,parent_file,ext] = fileparts(dest_filepath);
-    dataset_description.Name = parent_file;
-    dataset_description.BIDSVersion = '1.6.0';
-    dataset_description.DatasetType = 'raw'; %for backwards compatibility, as suggested by BIDS
-    output_file = fullfile(parent_dir,parent_file,'dataset_description.json');
-    json_fid = fopen(output_file,'w');
-    encodejson = jsonencode(dataset_description);
-    fprintf(json_fid,encodejson);
-    output_file_ignore = fullfile(parent_dir,parent_file,'.bidsignore');
-    opfile_ignore_fid = fopen(output_file_ignore,'w');
-  
-    fprintf(opfile_ignore_fid,'/derivatives\n');
-    fprintf(opfile_ignore_fid,'/rawdata/**/**/**/*_CT.nii.gz');
-    fprintf(opfile_ignore_fid,'*.xslx');
+
     
 function generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_containers)
     output_dir = fullfile(dest_patient,'derivatives','leaddbs',patient_name,'prefs');
