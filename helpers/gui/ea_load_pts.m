@@ -24,6 +24,10 @@ if length(uipatdir) == 1 % Dragged single folder
         if ismember('sourcedata', folders) || ismember('rawdata', folders)
             isBIDSRoot = 1;
             BIDSRoot = uipatdir{1};
+            if ~ismember(folders,'dataset_description.json')
+                disp("could not find dataset description file, generating one now...");
+               ea_generate_datasetDescription(uipatdir{1});
+            end
         end
     end
 
