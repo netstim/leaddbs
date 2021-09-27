@@ -463,11 +463,6 @@ classdef BIDSFetcher
             % Get LeadDBS dirs
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
 
-            % Set anchor anat image used for brain shift correction
-            modality = fieldnames(coregAnat.preop);
-            brainshiftAnat.anchor = strrep(coregAnat.preop.(modality{1}), obj.anchorSpace, [obj.anchorSpace, '_rec-brainshift']);
-            brainshiftAnat.anchor = strrep(brainshiftAnat.anchor, LeadDBSDirs.coregDir, LeadDBSDirs.brainshiftDir);
-
             % Set moving post-op image used for brain shift correction
             modality = fieldnames(coregAnat.postop);
             if preferMRCT == 2 && strcmp(obj.settings.scrf.tonemap, 'tp_')
@@ -486,13 +481,18 @@ classdef BIDSFetcher
                 brainshiftAnat.moving = strrep(brainshiftAnat.moving, parsed.suffix, 'MRI');
             end
 
+            % Set anchor anat image used for brain shift correction
+            modality = fieldnames(coregAnat.preop);
+            brainshiftAnat.anchor = strrep(coregAnat.preop.(modality{1}), obj.anchorSpace, [obj.anchorSpace, '_rec-brainshift']);
+            brainshiftAnat.anchor = strrep(brainshiftAnat.anchor, LeadDBSDirs.coregDir, LeadDBSDirs.brainshiftDir);
+
+            % Set brain shift corrected image
+            brainshiftAnat.scrf = setBIDSEntity(brainshiftAnat.moving, 'rec', 'tonemappedbrainshift');
+
             % Set masks used for brain shift correction
             baseDir = fullfile(LeadDBSDirs.brainshiftDir, 'anat');
             brainshiftAnat.secondstepmask = [baseDir, filesep, 'sub-', subjId, '_space-', obj.anchorSpace, '_desc-secondstepmask', obj.settings.niiFileExt];
             brainshiftAnat.thirdstepmask = [baseDir, filesep, 'sub-', subjId, '_space-', obj.anchorSpace, '_desc-thirdstepmask', obj.settings.niiFileExt];
-
-            % Set brain shift corrected image
-            brainshiftAnat.scrf = strrep(brainshiftAnat.moving, obj.anchorSpace, [obj.anchorSpace, '_rec-brainshift']);
         end
 
         function brainshiftTransform = getBrainshiftTransform(obj, subjId)
