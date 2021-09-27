@@ -6,9 +6,9 @@ if ~isBIDSFileName(filePath)
 end
 
 entities = varargin(1:2:end-1);
-values = varargin(2:2:end);
+labels = varargin(2:2:end);
 
-if length(entities) ~= length(values)
+if length(entities) ~= length(labels)
     error('Length of entities doesn''t match length of values!')
 end
 
@@ -16,28 +16,28 @@ end
 parsedStruct = parseBIDSFilePath(filePath);
 
 for i=1:length(entities)
-    entity = entities{i};
-    value = values{i};
+    key = entities{i};
+    value = labels{i};
     if isempty(value) % Delete entity
-        if ismember(entity, {'dir', 'suffix'})
-            parsedStruct.(entity) = '';
+        if ismember(key, {'dir', 'suffix'})
+            parsedStruct.(key) = '';
         else
-            parsedStruct = rmfield(parsedStruct, entity);
+            parsedStruct = rmfield(parsedStruct, key);
         end
-    elseif strcmp(entity, 'suffix') % Set suffix
+    elseif strcmp(key, 'suffix') % Set suffix
         parsedStruct.suffix = value;
-    elseif strcmp(entity, 'ext') % Set extension
+    elseif strcmp(key, 'ext') % Set extension
         if ~startsWith(value, '.') % 'ext' instead of '.ext' provided
             parsedStruct.ext = ['.', value];
         else
             parsedStruct.ext = value;
         end
-    elseif isfield(parsedStruct, entity) % Entity already exist
-        parsedStruct.(entity) = value;
+    elseif isfield(parsedStruct, key) % Entity already exist
+        parsedStruct.(key) = value;
     else % Append new entity
         % Insert key-value pair before suffix
         parsedEntities = fieldnames(parsedStruct);
-        parsedEntities = [parsedEntities(1:end-2); entity; parsedEntities(end-1:end)];
+        parsedEntities = [parsedEntities(1:end-2); key; parsedEntities(end-1:end)];
         parsedValues = struct2cell(parsedStruct);
         parsedValues = [parsedValues(1:end-2); value; parsedValues(end-1:end)];
 
