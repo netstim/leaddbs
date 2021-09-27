@@ -1,4 +1,4 @@
-function uipatdir=ea_getpatients(options,handles)
+function uipatdir=ea_getpatients(options,handles,uipatdir)
 
 p='/'; % default use root
 try
@@ -9,18 +9,21 @@ try % finally use last patient parent dir if set.
     p=fileparts(fullrpts{1});
 end
 
-uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');
+if ~exist('uipatdir','var')
+    uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');
+end
 if isempty(uipatdir)
     return
 end
 
+
 if exist('handles','var')
     ea_load_pts(handles,uipatdir,'patients');
-
+    
     if isfield(handles,'atlassetpopup') % not present in connectome mapper
         atlasset=get(handles.atlassetpopup,'String');
         atlasset=atlasset{get(handles.atlassetpopup,'Value')};
-
+        
         ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
     end
 end
