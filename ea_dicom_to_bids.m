@@ -19,20 +19,6 @@ function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
 % Johannes Achtzehn
 % Part of this code is inspired by the dicm2nii tool of xiangrui.li@gmail.com
 
-% options that should appear in the table
-table_options = {'skip','skip', 'skip';
-    'anat','preop', 'T1w';
-    'anat','preop', 'T2w';
-    'anat','preop', 'FGATIR';
-    'anat','preop', 'FLAIR';
-    'anat','preop', 'T2starw';
-    'anat','preop', 'PDw';
-    'anat','postop', 'CT';
-    'anat','postop', 'ax_MR';
-    'anat','postop', 'sag_MR';
-    'anat','postop', 'cor_MR'};
-
-
 % lookup table to pre-allocate options for the table.% check whether pref exists, if not create it
 if ~ispref('dcm2bids', 'lookuptable')
     lookup_table = loadjson(fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
@@ -42,10 +28,11 @@ else
 end
 
 nii_folder = fullfile(dataset_folder, 'sourcedata', subjID, 'tmp');    % where are the nifti files located?
+N_fnames = length(fnames);
 
-imgs = cell(length(fnames),1);
+imgs = cell(N_fnames,1);
 h_wait = waitbar(0, 'Please wait while Niftii images are being loaded');
-for image_idx = 1:length(fnames)
+for image_idx = 1:N_fnames
     imgs{image_idx} = struct();
     [imgs{image_idx}.p, imgs{image_idx}.frm, imgs{image_idx}.rg, imgs{image_idx}.dim] = read_nii(fullfile(nii_folder, [fnames{image_idx}, '.nii.gz']), [], 0);
     imgs{image_idx}.percentile = prctile(imgs{image_idx}.p.nii.img(:), 95, 'all');
@@ -54,54 +41,62 @@ for image_idx = 1:length(fnames)
     imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded < median(imgs{image_idx}.p.nii.img(:))) = nan;
     imgs{image_idx}.img_thresholded = imgs{image_idx}.img_thresholded(~isnan(imgs{image_idx}.img_thresholded));
     
-    waitbar(image_idx / length(fnames), h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(fnames)));
+    waitbar(image_idx / N_fnames, h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(fnames)));
 end
 close(h_wait);
 
-Session = categorical(repmat({'skip'},[length(fnames),1]),unique(table_options(:,2)));
-Modality = categorical(repmat({'skip'},[length(fnames),1]), unique(table_options(:,3)));
-Type = categorical(repmat({'skip'},[length(fnames),1]),unique(table_options(:,1)));
-T = table(fnames, Session, Type, Modality);
+% options that should appear in the table
+table_options = struct;
+table_options.Session = {'preop', 'postop'};
+table_options.Type = {'anat'};
+table_options.Modality = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw', 'CT', 'ax_MR', 'sag_MR', 'cor_MR'};
+
+nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
+nifti_table.Include = false(N_fnames,1);
+nifti_table.Filename = fnames;
+
+nifti_table = orderfields(nifti_table, [4 5 1 2 3]);
+nifti_table = struct2table(nifti_table);
 
 try
-    T_preallocated = preallocate_table(T, lookup_table);
+    nifti_table_preallocated = preallocate_table(nifti_table, lookup_table);
 catch
     disp('Preallocation of table failed, defaulting to skip!');
-    T_preallocated = T;
+    nifti_table_preallocated = nifti_table;
 end
 
 % create GUI
-ui = dicom_to_bids;
+uiapp = dicom_to_bids;
 
 % populate table
-ui.niiFileTable.Data = T_preallocated;
-ui.niiFileTable.ColumnEditable = [false true true, true];
+uiapp.niiFileTable.Data = nifti_table_preallocated;
+uiapp.niiFileTable.ColumnEditable = [true false true true true];
 
 % set subject ID and file path
-ui.SubjectIDLabel.Text = sprintf('Conversion for subject: %s',subjID);
-ui.FilepathLabel.Text = sprintf('BIDS root: %s',dataset_folder);
+uiapp.SubjectIDLabel.Text = sprintf('Conversion for subject: %s',subjID);
+uiapp.FilepathLabel.Text = sprintf('BIDS root: %s',dataset_folder);
 
 % update preview tree and expand it
-ui.previewtree_subj.Text = subjID;
-expand(ui.Tree, 'all');
+uiapp.previewtree_subj.Text = subjID;
+expand(uiapp.Tree, 'all');
 
-preview_nii(ui, imgs{1,1}); % set initial image to the first one
-cell_change_callback(ui, table_options, subjID) % call preview tree updater to get preallocated changes
+preview_nii(uiapp, imgs{1,1}); % set initial image to the first one
+cell_change_callback(uiapp, table_options, subjID) % call preview tree updater to get preallocated changes
 
-ui.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(ui,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
-ui.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(ui, table_options, subjID); % callback for cell change -> update ui tree on the right
+uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
+uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, table_options, subjID); % callback for cell change -> update uiapp tree on the right
 
-ui.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(ui, event);     % callback for scrolling images
+uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
 % OK button behaviour
-ui.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(ui, ui.niiFileTable, table_options, dataset_folder, nii_folder, subjID);
+uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID);
 
 % cancel button behaviour
-ui.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(ui);
+uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
 
 % looup table behaviour
-ui.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(ui);
-waitfor(ui.UIFigure);
+uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp);
+waitfor(uiapp.UIFigure);
 
 try
     anat_files = getappdata(groot, 'anat_files');
@@ -113,7 +108,7 @@ end
 end
 
 %% lookup button function
-function lookup_button_function(ui)
+function lookup_button_function(uiapp)
 
 lookup_table_gui = ea_default_lookup;
 lookup_table = getpref('dcm2bids', 'lookuptable');
@@ -132,7 +127,7 @@ lookup_table_gui.LoadjsonButton.ButtonPushedFcn = @(btn,event) load_json_file(lo
 lookup_table_gui.CancelButton.ButtonPushedFcn = @(btn,event) cancel_lookup_function(lookup_table_gui);
 
 % save button
-lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(ui, lookup_table_gui);
+lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(uiapp, lookup_table_gui);
 
 waitfor(lookup_table_gui.UIFigure);
 end
@@ -195,43 +190,34 @@ lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 %% cell change callback
-function cell_change_callback(ui, table_options, subjID)
+function cell_change_callback(uiapp, table_options, subjID)
 
-% update tree view
-dat = cellfun(@char,table2cell(ui.niiFileTable.Data),'uni',0);  % get data
-ui.previewtree_preop_anat.Children.delete;      % delete children
-ui.previewtree_postop_anat.Children.delete;    % delete children
+uiapp.previewtree_preop_anat.Children.delete;      % delete children
+uiapp.previewtree_postop_anat.Children.delete;    % delete children
 
-% populate tree
-sessions = unique(table_options(:,2));
-sessions(ismember(sessions,'skip')) = [];   % remove skip
-
-for sesIdx = 1:length(sessions)
+for i = find(uiapp.niiFileTable.Data.Include)'
     
-    ses = sessions{sesIdx};
-    
-    fname_list = {};
-    for fileIdx = 1:length(dat)
-        if strcmp(dat{fileIdx, 2}, ses) && ~strcmp(dat{fileIdx, 4}, 'skip') && ~strcmp(dat{fileIdx, 3}, 'skip')
-            
-            fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
-            
-            if any(ismember(fname, fname_list))
-                nodetxt = ['>> ', fname, ' <<'];
-            else
-                nodetxt = fname;
-            end
-            
-            if strcmp(ses, 'preop')
-                uitreenode(ui.previewtree_preop_anat, 'Text', nodetxt);
-            else
-                uitreenode(ui.previewtree_postop_anat, 'Text', nodetxt);
-            end
-            
-            fname_list{end+1} = fname;
-        end
+    session = char(uiapp.niiFileTable.Data.Session(i));
+    type = char(uiapp.niiFileTable.Data.Type(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
         
+    if any(strcmp('-', {session, type, modality}))
+        uialert(uiapp.UIFigure, 'Specify Session, Type and Modality in order to Include image.', 'Warning', 'Icon','warning');
+        uiapp.niiFileTable.Data.Include(i) = false;
+        
+    elseif ~any(strcmp(session, table_options.Session))
+        uialert(uiapp.UIFigure, ['Invalid session: ' session], 'Warning', 'Icon','warning');
+        uiapp.niiFileTable.Data.Include(i) = false;
+    
+    else
+        fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
+        ui_field = ['previewtree_' session '_anat'];
+        if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
+            fname = ['>> ', fname, ' <<'];
+        end
+        uitreenode(uiapp.(ui_field), 'Text', fname);
     end
+    
 end
 
 end
@@ -247,7 +233,7 @@ image_types = fieldnames(lookup_table);
 % filenames
 for rowIdx = 1:height(table)
     
-    fname = table.fnames{rowIdx};
+    fname = table.Filename{rowIdx};
     
     % image types (anat, func, ...)
     for img_type_idx = 1:length(image_types)
@@ -273,6 +259,7 @@ for rowIdx = 1:height(table)
                         table_preallocated.Session(rowIdx) = session;
                         table_preallocated.Type(rowIdx) = img_type;
                         table_preallocated.Modality(rowIdx) = modality;
+                        table_preallocated.Include(rowIdx) = true;
                     end
                 end
             end
@@ -297,111 +284,58 @@ end
 end
 
 %% ok button
-function ok_button_function(uiapp, TT, table_options, dataset_folder, nii_folder, subjID)
+function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID)
 
-dat = cellfun(@char,table2cell(TT.Data),'uni',0);
-sessions = unique(table_options(:,2));
-sessions(ismember(sessions,'skip')) = [];   % remove skip
-
-% preallocate anat_files
-anat_files = struct();
-for sesIdx = 1:length(sessions)
-    ses = sessions{sesIdx};
-    anat_files.(ses) = [];
+% sanity check
+if isempty(uiapp.previewtree_preop_anat.Children)
+    uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Warning', 'Icon','warning');
+    return
+elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
+        (~isempty(uiapp.previewtree_postop_anat.Children) && contains([uiapp.previewtree_postop_anat.Children.Text], '>>'))
+    uialert(uiapp.UIFigure, 'Multiple files with same modality inluded (look for >> filename << in preview window). Please select only one file per modality and session.', 'Warning', 'Icon','warning');
+    return
 end
 
-% before we do anything, first a sanity check if user has selected only one file per modality
-sanity_check_passed = true;
-for sesIdx = 1:length(sessions)
+N_sessions = length(table_options.Session);
+anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
+
+extensions = {'.nii.gz', '.json'};
+
+for i = find(uiapp.niiFileTable.Data.Include)'
     
-    ses = sessions{sesIdx};
+    session = char(uiapp.niiFileTable.Data.Session(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
     
-    for fileIdx = 1:length(dat)
-        if strcmp(dat{fileIdx, 2}, ses) && ~strcmp(dat{fileIdx, 4}, 'skip') && ~strcmp(dat{fileIdx, 3}, 'skip')
-            
-            fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});      % generate BIDS filename
-            
-            if ~isfield(anat_files.(ses), dat{fileIdx, 4})
-                anat_files.(ses).(dat{fileIdx, 4}) = fname;                     % set output struct
-            else % more than one file has been selected
-                sanity_check_passed = false;
-                s = uiconfirm(uiapp.UIFigure, sprintf('Multiple files have been detected in session %s (look for >> filename << in preview window). Please select only one file per modality and session.', ses), ...
-                    'Too many files detected', 'Options', {'OK'}, ...
-                    'Icon', 'warning');
-                break
-            end
-            
+    fname = sprintf('%s_ses-%s_%s', subjID, session, modality);
+    
+    export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], 'anat');
+    if ~isfolder(export_folder)
+        mkdir(export_folder);
+    end
+    
+    destin_no_ext = fullfile(export_folder, fname);
+    source_no_ext = fullfile(nii_folder, uiapp.niiFileTable.Data.Filename{i});
+    
+    for j = 1:length(extensions)
+        source = [source_no_ext extensions{j}];
+        if isfile(source)
+            copyfile(source, [destin_no_ext extensions{j}])
+        else
+            warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', source);
         end
     end
     
+    anat_files.(session).(modality) = fname; % set output struct
+    
 end
 
-% TODO sanity check for invalid combinations of postop and preop images
-%  for fileIdx = 1:length(dat)
-%
-%      for sesIdx = 1:length(sessions)
-%         ses = sessions{sesIdx};
-%          if strcmp(dat{fileIdx, 2}, ses)
-%
-%              % get possible options for this session
-%              possible_options = table_options(strcmp(table_options(:,2), ses), 3);
-%              ui.niiFileTable.Modality.Data(fileIdx) = 'test'
-%          end
-%
-%      end
-%
-%  end
-
-% check if all images have been skipped
-if all(any(ismember(dat(:,2:4),'skip'),2))
-    s = uiconfirm(uiapp.UIFigure, 'All images have been skipped. Please select at least one preop and one postop image.', ...
-        'No files selected', 'Options', {'OK'}, ...
-        'Icon', 'warning');
-    sanity_check_passed = false;
-end
-
-if sanity_check_passed == true
-    for sesIdx = 1:length(sessions)
-        
-        ses = sessions{sesIdx};
-        
-        for fileIdx = 1:length(dat)
-            if strcmp(dat{fileIdx, 2}, ses) && ~strcmp(dat{fileIdx, 4}, 'skip') && ~strcmp(dat{fileIdx, 3}, 'skip')
-                
-                fname = sprintf('%s_ses-%s_%s', subjID, ses, dat{fileIdx, 4});   % generate BIDS filename
-                
-                % move files
-                if ~exist(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'), 'dir')
-                    mkdir(fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat'));
-                end
-                if exist(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), 'file')
-                    copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.nii.gz']));
-                else
-                    warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', fullfile(nii_folder, [dat{fileIdx, 1}, '.nii.gz']));
-                end
-                
-                if exist(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), 'file')
-                    copyfile(fullfile(nii_folder, [dat{fileIdx, 1}, '.json']), fullfile(dataset_folder, 'rawdata', subjID, ['ses-', ses], 'anat', [fname, '.json']));
-                else
-                    warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', fullfile(nii_folder, [dat{fileIdx, 1}, '.json']));
-                end
-                
-                anat_files.(ses).(dat{fileIdx, 4}) = fname; % set output struct
-            end
-            
-        end
-    end
-end
-
-if sanity_check_passed == true
-    setappdata(groot, 'anat_files', anat_files);
-    delete(uiapp);      % close window
-end
+setappdata(groot, 'anat_files', anat_files);
+delete(uiapp);      % close window
 
 end
 
 %% preview images in the middle
-function preview_nii(ui, img)
+function preview_nii(uiapp, img)
 
 % update info area
 try
@@ -419,54 +353,55 @@ info_str = sprintf('Size:\t\t\t[%s x %s x %s]\nPixel dimensions:\t[%.2f x %.2f x
     min(img.p.nii.img(:)), max(img.p.nii.img(:)), ...
     min(img.img_thresholded), max(img.img_thresholded));
 
-ui.infoArea.Value = {info_str};
+uiapp.infoArea.Value = {info_str};
 
 % update histgram
-h = histogram(ui.histogramAxes, img.img_thresholded, 'EdgeAlpha', 0.1, 'FaceColor', '#2980b9');
+h = histogram(uiapp.histogramAxes, img.img_thresholded, 'EdgeAlpha', 0.1, 'FaceColor', [1 1 1], 'EdgeColor', [1 1 1]);
+uiapp.histogramAxes.Color = [0,0,0];
 
 % plot images
-setappdata(ui.UIFigure, 'img', img);
+setappdata(uiapp.UIFigure, 'img', img);
 
 % axial
 cut_slice = round(img.dim(3)/2);
-imagesc(ui.axes_axi, img.p.nii.img(:, :, cut_slice));
-ui.axes_axi.Colormap = gray(128);
-setappdata(ui.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
-ui.axes_axi.DataAspectRatioMode = 'manual';
-ui.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
-set(ui.axes_axi, 'view', [90, -90]);
+imagesc(uiapp.axes_axi, img.p.nii.img(:, :, cut_slice));
+uiapp.axes_axi.Colormap = gray(128);
+setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
+uiapp.axes_axi.DataAspectRatioMode = 'manual';
+uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+set(uiapp.axes_axi, 'view', [90, -90]);
 
 % coronal
 cut_slice = round(img.dim(2)/2);
-imagesc(ui.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :)));
-ui.axes_cor.Colormap = gray(128);
-setappdata(ui.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
-ui.axes_cor.DataAspectRatioMode = 'manual';
-ui.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-set(ui.axes_cor, 'view', [90, -90]);
+imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :)));
+uiapp.axes_cor.Colormap = gray(128);
+setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
+uiapp.axes_cor.DataAspectRatioMode = 'manual';
+uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+set(uiapp.axes_cor, 'view', [90, -90]);
 
 % sagittal
 cut_slice = round(img.dim(1)/2);
-imagesc(ui.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :)));
-ui.axes_sag.Colormap = gray(128);
-setappdata(ui.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
-ui.axes_sag.DataAspectRatioMode = 'manual';
-ui.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-set(ui.axes_sag, 'view', [90, -90]);
+imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :)));
+uiapp.axes_sag.Colormap = gray(128);
+setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
+uiapp.axes_sag.DataAspectRatioMode = 'manual';
+uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+set(uiapp.axes_sag, 'view', [90, -90]);
 
 end
 
 %% scroll images
-function scroll_nii(ui, event)
+function scroll_nii(uiapp, event)
 
-hAxes = checkMousePointer(ui.UIFigure, ui.RightPanel);
-img = getappdata(ui.UIFigure, 'img');
+hAxes = checkMousePointer(uiapp.UIFigure, uiapp.RightPanel);
+img = getappdata(uiapp.UIFigure, 'img');
 dim = img.dim;
 
 if ~isempty(hAxes)
     switch hAxes.Tag
         case 'axi'
-            sliceNr = getappdata(ui.UIFigure, 'cut_slice_axi');
+            sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_axi');
             if event.VerticalScrollCount == -1 % up scroll
                 if ~(sliceNr >= img.dim(3) - 2)
                     sliceNr = sliceNr + 2;
@@ -477,10 +412,10 @@ if ~isempty(hAxes)
                 end
                 
             end
-            imagesc(ui.axes_axi, img.p.nii.img(:, :, sliceNr));
-            setappdata(ui.UIFigure, 'cut_slice_axi', sliceNr);
+            imagesc(uiapp.axes_axi, img.p.nii.img(:, :, sliceNr));
+            setappdata(uiapp.UIFigure, 'cut_slice_axi', sliceNr);
         case 'cor'
-            sliceNr = getappdata(ui.UIFigure, 'cut_slice_cor');
+            sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_cor');
             if event.VerticalScrollCount == -1 % up scroll
                 if ~(sliceNr >= img.dim(2) - 2)
                     sliceNr = sliceNr + 2;
@@ -491,10 +426,10 @@ if ~isempty(hAxes)
                 end
                 
             end
-            imagesc(ui.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :)));
-            setappdata(ui.UIFigure, 'cut_slice_cor', sliceNr);
+            imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :)));
+            setappdata(uiapp.UIFigure, 'cut_slice_cor', sliceNr);
         case 'sag'
-            sliceNr = getappdata(ui.UIFigure, 'cut_slice_sag');
+            sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_sag');
             if event.VerticalScrollCount == -1 % up scroll
                 if ~(sliceNr >= img.dim(1) - 2)
                     sliceNr = sliceNr + 2;
@@ -505,8 +440,8 @@ if ~isempty(hAxes)
                 end
                 
             end
-            imagesc(ui.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :)));
-            setappdata(ui.UIFigure, 'cut_slice_sag', sliceNr);
+            imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :)));
+            setappdata(uiapp.UIFigure, 'cut_slice_sag', sliceNr);
         otherwise
             
     end
