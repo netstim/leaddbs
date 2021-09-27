@@ -487,7 +487,11 @@ classdef BIDSFetcher
             brainshiftAnat.anchor = strrep(brainshiftAnat.anchor, LeadDBSDirs.coregDir, LeadDBSDirs.brainshiftDir);
 
             % Set brain shift corrected image
-            brainshiftAnat.scrf = setBIDSEntity(brainshiftAnat.moving, 'rec', 'tonemappedbrainshift');
+            if preferMRCT == 1 % Post-op MRI detected
+                brainshiftAnat.scrf = strrep(brainshiftAnat.moving, obj.anchorSpace, [obj.anchorSpace, '_rec-brainshift']);
+            else
+                brainshiftAnat.scrf = setBIDSEntity(brainshiftAnat.moving, 'rec', 'tonemappedbrainshift');
+            end
 
             % Set masks used for brain shift correction
             baseDir = fullfile(LeadDBSDirs.brainshiftDir, 'anat');
