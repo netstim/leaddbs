@@ -477,8 +477,12 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'dbs');
 options.prefs=ea_prefs('');
-ea_getpatients(options,handles);
-ea_busyaction('off',handles.leadfigure,'dbs');
+[isBIDSRoot,uipatdir] = ea_checkbids(options,handles);
+%the dataset is bids compliant
+if isBIDSRoot
+    ea_getpatients(options,handles,uipatdir);
+    ea_busyaction('off',handles.leadfigure,'dbs');
+end
 
 
 % --- Executes on button press in left_checkbox.

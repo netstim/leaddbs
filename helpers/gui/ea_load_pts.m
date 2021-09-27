@@ -28,7 +28,7 @@ if length(uipatdir) == 1 % Dragged single folder
     end
 
     if ~isSubjFolder && ~isBIDSRoot
-        error('Neither BIDS dataset nor patient folder found!');
+        error('Neither BIDS dataset nor patient folder found, please manually use lead migrate!');
     elseif isBIDSRoot % Is BIDS root folder
         rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0);
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
