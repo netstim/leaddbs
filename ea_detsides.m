@@ -1,7 +1,7 @@
 function options=ea_detsides(options)
 
-if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
-    load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
+if exist(options.subj.recon.recon,'file')
+    load(options.subj.recon.recon);
     sides=[];
     if isfield(reco,'native')
         for el=1:length(reco.native.markers)
