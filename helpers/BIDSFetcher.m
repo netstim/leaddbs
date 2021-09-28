@@ -436,7 +436,6 @@ classdef BIDSFetcher
 
             % Get dirs
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
-            anatDir = fullfile(LeadDBSDirs.coregDir, 'anat');
             checkregDir = fullfile(LeadDBSDirs.coregDir, 'checkreg');
 
             % Set coregistered anat images
@@ -444,9 +443,7 @@ classdef BIDSFetcher
             for i=1:length(session)
                 modality = fieldnames(coregAnat.(session{i}));
                 for j=1:length(modality)
-                    anat = strrep(coregAnat.(session{i}).(modality{j}), anatDir, checkregDir);
-                    parsed = parseBIDSFilePath(anat);
-                    coregCheckreg.(session{i}).(modality{j}) = strrep(anat , parsed.ext, '.png');
+                    coregCheckreg.(session{i}).(modality{j}) = setBIDSEntity(coregAnat.(session{i}).(modality{j}), 'dir', checkregDir, 'ext', '.png');
                 end
             end
         end
@@ -476,9 +473,7 @@ classdef BIDSFetcher
 
             % Use MRI suffix and ignore real modality
             if preferMRCT == 1 % Post-op MRI detected
-                parsed = parseBIDSFilePath(brainshiftAnat.moving);
-                brainshiftAnat.moving = strrep(brainshiftAnat.moving, ['_acq-', parsed.acq], '');
-                brainshiftAnat.moving = strrep(brainshiftAnat.moving, parsed.suffix, 'MRI');
+                brainshiftAnat.moving = setBIDSEntity(brainshiftAnat.moving, 'acq', '', 'suffix', 'MRI');
             end
 
             % Set anchor anat image used for brain shift correction
@@ -540,13 +535,11 @@ classdef BIDSFetcher
 
             % Before brain shift correction
             brainshiftCheckreg.standard = strrep(brainshiftAnat.moving, anatDir, checkregDir);
-            parsed = parseBIDSFilePath(brainshiftCheckreg.standard);
-            brainshiftCheckreg.standard = strrep(brainshiftCheckreg.standard, parsed.ext, '.png');
+            brainshiftCheckreg.standard = setBIDSEntity(brainshiftCheckreg.standard, 'ext', '.png');
 
             % After brain shift correction
             brainshiftCheckreg.scrf = strrep(brainshiftAnat.scrf, anatDir, checkregDir);
-            parsed = parseBIDSFilePath(brainshiftCheckreg.scrf);
-            brainshiftCheckreg.scrf = strrep(brainshiftCheckreg.scrf, parsed.ext, '.png');
+            brainshiftCheckreg.scrf = setBIDSEntity(brainshiftCheckreg.scrf,'ext', '.png');
         end
 
         function normAnat = getNormAnat(obj, subjId, preferMRCT)
@@ -616,7 +609,6 @@ classdef BIDSFetcher
 
             % Get dirs
             LeadDBSDirs = obj.getLeadDBSDirs(subjId);
-            anatDir = fullfile(LeadDBSDirs.normDir, 'anat');
             checkregDir = fullfile(LeadDBSDirs.normDir, 'checkreg');
 
             % Set coregistered anat images
@@ -624,9 +616,7 @@ classdef BIDSFetcher
             for i=1:length(session)
                 modality = fieldnames(normAnat.(session{i}));
                 for j=1:length(modality)
-                    anat = strrep(normAnat.(session{i}).(modality{j}), anatDir, checkregDir);
-                    parsed = parseBIDSFilePath(anat);
-                    normCheckreg.(session{i}).(modality{j}) = strrep(anat , parsed.ext, '.png');
+                    normCheckreg.(session{i}).(modality{j}) = setBIDSEntity(normAnat.(session{i}).(modality{j}), 'dir', checkregDir, 'ext', '.png');
                 end
             end
         end
