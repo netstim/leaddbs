@@ -826,23 +826,6 @@ function normptatlascheck_Callback(hObject, eventdata, handles)
 ea_storeui(handles);
 
 
-% --- Executes on button press in dicomcheck.
-function dicomcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to dicomcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of dicomcheck
-ea_storeui(handles);
-ea_deselectall_dicom(handles);
-
-if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.dicomcheck,'Value')
-    ea_busyaction('on', handles.leadfigure, 'dbs');
-    ea_load_pts(handles,getappdata(handles.leadfigure,'uipatdir'));
-    ea_busyaction('off', handles.leadfigure, 'dbs');
-end
-
-
 % --- Executes on button press in updatebutn.
 function updatebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to updatebutn (see GCBO)
@@ -1174,15 +1157,6 @@ ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over dicomcheck.
-function dicomcheck_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to dicomcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
-
-
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
 % --- Otherwise, executes on mouse press in 5 pixel border or over coregct_checkbox.
 function coregct_checkbox_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to coregct_checkbox (see GCBO)
@@ -1449,22 +1423,6 @@ function reconmethod_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in assignnii.
-function assignnii_Callback(hObject, eventdata, handles)
-% hObject    handle to assignnii (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of assignnii
-ea_deselectall_dicom(handles);
-
-if ~isempty(getappdata(handles.leadfigure,'uipatdir')) && ~get(handles.assignnii,'Value')
-    ea_busyaction('on', handles.leadfigure, 'dbs');
-    ea_load_pts(handles,getappdata(handles.leadfigure,'uipatdir'));
-    ea_busyaction('off', handles.leadfigure, 'dbs');
 end
 
 
