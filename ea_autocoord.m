@@ -23,46 +23,6 @@ options.subj = bids.getSubj(subjId{1}, options.modality);
 % get accurate electrode specifications and save it in options.
 options = ea_resolve_elspec(options);
 
-if strcmp(options.leadprod, 'dbs') || strcmp(options.leadprod, 'connectome')
-    if options.dicomimp.do || options.assignnii % do DICOM-Import.
-        if options.dicomimp.do
-            if strcmp(options.patientname, 'No Patient Selected')
-                msgbox('Please choose patient directory first!','Error','error');
-            else
-                ea_dicom_import(options);
-            end
-        end
-
-        if options.assignnii
-            if strcmp(options.patientname, 'No Patient Selected')
-                msgbox('Please choose patient directory first!','Error','error');
-            else
-                outdir = [options.root, options.patientname, filesep];
-                % assign image type here
-                di = dir([outdir,'*.nii']);
-                di = ea_sortbytes(di);
-                for d=1:length(di)
-                    dcfilename=[outdir,di(d).name];
-                    ea_imageclassifier({dcfilename});
-                end
-                figs=allchild(0);
-                ids={figs.Tag};
-                [~,imclassfids]=ismember(ids,'imclassf');
-                if ~any(imclassfids)
-                    msgbox('All NIfTI files have been assigned already.');
-                else
-                    set(figs(logical(imclassfids)),'Visible','on');
-                end
-                if isempty(di)
-                    msgbox('Could not find any NIfTI files to rename/assign.');
-                end
-            end
-        end
-
-        return % For now we recommend to do import & processing in separate run calls.
-    end
-end
-
 % check connectome-mapper tags
 if isfield(options,'lcm')
     ea_lcm(options);
