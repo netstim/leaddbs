@@ -623,17 +623,6 @@ function normcheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of normcheck
 
 
-% --- Executes on button press in dicomcheck.
-function dicomcheck_Callback(hObject, eventdata, handles)
-% hObject    handle to dicomcheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of dicomcheck
-ea_storeui(handles);
-ea_deselectall_dicom(handles);
-
-
 % --- Executes on button press in exportcode.
 function exportcode_Callback(hObject, eventdata, handles)
 % hObject    handle to exportcode (see GCBO)
@@ -772,16 +761,6 @@ function openpatientdir_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_openpatdir(handles);
-
-
-% --- Executes on button press in assignnii.
-function assignnii_Callback(hObject, eventdata, handles)
-% hObject    handle to assignnii (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of assignnii
-ea_deselectall_dicom(handles);
 
 
 % --- Executes on button press in coregmrcheck.
