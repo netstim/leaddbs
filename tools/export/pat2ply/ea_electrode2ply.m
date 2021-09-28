@@ -14,7 +14,7 @@ options.leadprod='dbs';
 options.sidecolor=1;
 options.prefs=ea_prefs;
 
-[coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+[coords_mm,trajectory,markers]=ea_load_reconstruction(directory);
 elstruct(1).coords_mm=coords_mm;
 elstruct(1).trajectory=trajectory;
 elstruct(1).name=options.patientname;
