@@ -1,7 +1,6 @@
 function ea_options2handles(options,handles)
 
 % set handles
-set(handles.dicomcheck,'Value',options.dicomimp.do);
 set(handles.normalize_checkbox,'Value',options.normalize.do);
 
 index = find(ismember(handles.normmethod.String, options.normalize.method), 1);

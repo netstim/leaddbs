@@ -12,18 +12,10 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 %% set options
 options.earoot = ea_getearoot;
 try % not working when calling from lead_anatomy
-    options.dicomimp.do=get(handles.dicomcheck,'Value');
-    options.assignnii=get(handles.assignnii,'Value');
     options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
     options.normalize.settings=getappdata(handles.normsettings,'settings');
 catch
-    options.dicomimp.do=0;
-    options.assignnii=0;
     options.normalize.do=0;
-end
-
-try
-    options.dicomimp.method=get(handles.dcm2niiselect,'Value');
 end
 
 try
