@@ -517,9 +517,9 @@ else
     modality = ea_getmodality(currvol);
         
     if ismember(currvol, preopCoregImages)
-        if eval('isfield(json.approval, modality)', '0') && json.approval.(modality)==1
-            coregWasApproved = 1;
-        else
+        try % Field might not exist.
+            coregWasApproved = json.approval.(modality);
+        catch
             coregWasApproved = 0;
         end
 
@@ -528,16 +528,15 @@ else
 
         if ~coregWasApproved && isfile(options.subj.norm.log.method)
             json = loadjson(options.subj.norm.log.method);
-            if eval('isfield(json.approval, options.subj.AnchorModality)', '0') ...
-                    && json.approval==1
+            if isfield(json, 'approval') && json.approval==1
                 % In this situation we had the normalization approved before
                 % all coregistrations were approved. This could lead to suboptimal
-                % normalizations *only* if a multispectral protocol is used. Thus
-                % we set the normalization approval rate to 1. This way, it will
-                % still be overriden in case of running a multispectral
-                % normalization.
+                % normalization when a multispectral normalization method is used.
+                % Thus we set the normalization approval flag to 0.5. This way,
+                % LeadDBS will redo the normalization when using a multispectral
+                % method.
                 warning('off', 'backtrace');
-                warning('Normalization had been approved before all preoperative co-registrations were approved. Lead-DBS will still override / redo normalization if applying a multispectral method.');
+                warning('Normalization had been approved before all pre-op coregistrations were approved. Lead-DBS will redo normalization when using a multispectral method.');
                 warning('on', 'backtrace');
                 json.approval = 0.5;
                 savejson('', json, options.subj.norm.log.method);
@@ -683,19 +682,27 @@ else
     modality = ea_getmodality(currvol);
 
     if ismember(currvol, preopCoregImages)
-        if eval('isfield(json.approval, modality)', '0') && json.approval.(modality)==1
-            coregWasApproved = 1;
-        else
+        try % Field might not exist.
+            coregWasApproved = json.approval.(modality);
+        catch
             coregWasApproved = 0;
         end
 
         json.approval.(modality) = 0;
         savejson('', json, options.subj.coreg.log.method);
 
-        if coregWasApproved
+        if coregWasApproved && isfile(options.subj.norm.log.method)
             json = loadjson(options.subj.norm.log.method);
-            if eval('isfield(json.approval, options.subj.AnchorModality)', '0') ...
-                    && json.approval==1
+            if isfield(json, 'approval') && json.approval==1
+                % In this situation we had the normalization approved but the
+                % coregistration is disapproved. This could lead to suboptimal
+                % normalization when a multispectral normalization method is
+                % used. Thus we set the normalization approval flag to 0.5.
+                % This way, LeadDBS will redo the normalization when using
+                % a multispectral method.
+                warning('off', 'backtrace');
+                warning('Normalization had been approved but pre-op coregistration is disapproved now. Lead-DBS will redo normalization when using a multispectral method.');
+                warning('on', 'backtrace');
                 json.approval = 0.5;
                 savejson('', json, options.subj.norm.log.method);
             end
