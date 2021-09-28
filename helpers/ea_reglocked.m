@@ -2,9 +2,8 @@ function locked = ea_reglocked(options, imagePath)
 % Check if registration is locked (has been approved).
 % Return 1 if so, otherwise return 0.
 
-locked = 0;
-
 if isfield(options, 'overwriteapproved') && options.overwriteapproved
+    locked = 0;
     return
 end
 
@@ -29,13 +28,22 @@ if isfile(logFile)
     modality = ea_getmodality(imagePath);
 
     % Check approval status
-    if strcmp(key, 'coreg')
-        if eval('isfield(json.approval, modality)', '0')
-            locked = json.approval.(modality);
-        end
-    elseif ismember(key, {'norm', 'brainshift'})
-        if isfield(json, 'approval')
-            locked = json.approval;
-        end
+    switch key
+        case 'coreg'
+            try % Field might not exist.
+                locked = json.approval.(modality);
+            catch
+                locked = 0;
+            end
+        case {'norm', 'brainshift'}
+            try % Field might not exist.
+                locked = json.approval;
+            catch
+                locked = 0;
+            end
+        otherwise
+            locked = 0;
     end
+else
+    locked = 0;
 end
