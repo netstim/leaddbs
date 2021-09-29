@@ -81,7 +81,7 @@ for patients = 1:length(source)
     for j=1:length(file_names)
         %add filenames. However, some files are inside folder (checkrreg
         %and scrf). They will be handled a bit later.
-        files_to_move{file_index} = file_names{j};
+        files_to_move{file_index,1} = file_names{j};
         file_index = file_index + 1;
         %now let's deal with subfolders
     end
@@ -98,14 +98,16 @@ for patients = 1:length(source)
                 %if mni dir exists
                 if ~exist(fullfile(source_patient,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),'dir') || ~exist(fullfile(source_patient,'stimulations','native'),'dir')
                     mkdir(fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulation','MNI152NLin2009bAsym'));
-                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulation','MNI152NLin2009bAsym'));
+                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'));
                 else
-                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulation'));
+                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations'));
                 end
             end
-            if strcmp(dir_names{j},'current_headmodel')
+            if any(ismember(dir_names,'current_headmodel'))
                 if exist(fullfile(source_patient,'headmodel'),'dir')
                     movefile(fullfile(source_patient,'current_headmodel'),fullfile(source_patient,'headmodel'));
+                else %there is only a current headmodel but no headmodel
+                    copyfile(fullfile(source_patient,'current_headmodel'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'headmodel'))
                 end
             end
         end
@@ -120,9 +122,9 @@ for patients = 1:length(source)
             for file_in_folder=1:length(files_in_folder)
                 if exist('files_to_move','var')
                     if strcmp(files_in_folder{file_in_folder},'anat_t1.nii')
-                        files_to_move{end+1} = ['scrf_' files_in_folder{file_in_folder}];
+                        files_to_move{end+1,1} = ['scrf_' files_in_folder{file_in_folder}];
                     else
-                       files_to_move{end+1} = files_in_folder{file_in_folder}; 
+                       files_to_move{end+1,1} = files_in_folder{file_in_folder}; 
                     end
                 end
             end
@@ -132,7 +134,7 @@ for patients = 1:length(source)
     %the new dirrectory structure and move the correct files into the
     %correct "BIDS" directory
     
-    ea_generate_datasetDescription(dest_patient)
+    ea_generate_datasetDescription(dest_patient,'root_folder')
     if ~isdicom
         generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_containers);
     end
@@ -181,6 +183,8 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
+                        coreg_path = fullfile(new_path,'coregistration');
+                        ea_generate_datasetDescription(coreg_path,'derivatives')
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                     elseif ~isempty(regexp(files_to_move{files},'^coreg.*.log'))
                         derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
@@ -200,6 +204,8 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
+                        brainshift_path = fullfile(new_path,'brainshift');
+                        ea_generate_datasetDescription(brainshift_path,'derivatives')
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                     elseif ismember(files_to_move{files},normalization{:,1})
                         %corresponding index of the new pat
@@ -210,7 +216,8 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        
+                        normalization_path = fullfile(new_path,'normalization');
+                        ea_generate_datasetDescription(normalization_path,'derivatives');
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                                 %only for normalization
                     elseif ~isempty(regexp(files_to_move{files},'^normalize_.*.log'))
@@ -228,6 +235,7 @@ for patients = 1:length(source)
                         if ~exist(recon_dir,'dir')
                             mkdir(recon_dir)
                         end
+                        ea_generate_datasetDescription(recon_dir,'derivatives')
                         %corresponding index of the new pat
                         indx = cellfun(@(x)strcmp(x,files_to_move{files}),reconstruction{:,1});
                         bids_name = reconstruction{1,2}{indx};
@@ -245,6 +253,8 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
+                        preproc_path = fullfile(new_path,'preprocessing');
+                        ea_generate_datasetDescription(preproc_path,'derivatives')
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         
                     
@@ -257,9 +267,12 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline));
                         end
+                        prefs_path = fullfile(new_path,'prefs');
+                        ea_generate_datasetDescription(prefs_path,'derivatives')
                         copyfile(fullfile(source_patient,'ea_ui.mat'),fullfile(new_path,pipelines{6}));
                         movefile(fullfile(new_path,pipelines{6},'ea_ui.mat'),fullfile(new_path,pipelines{6},bids_name));
                             %special case for log dir
+                   
                     elseif strcmp(files_to_move{files},'ea_methods.txt') && exist(fullfile(source_patient,'ea_methods.txt'),'file')
                         bids_name = [patient_name,'_','desc-','ea_methods.txt'];
                         derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
@@ -268,9 +281,12 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline));
                         end
+                        log_path = fullfile(new_path,'log');
+                        ea_generate_datasetDescription(log_path,'derivatives');
                         copyfile(fullfile(source_patient,'ea_methods.txt'),fullfile(new_path,pipelines{7}));
                         movefile(fullfile(new_path,pipelines{7},'ea_methods.txt'),fullfile(new_path,pipelines{7},bids_name));
                     %pipelines 8 -> 10 are in the next loop..
+                    
                     elseif ismember(files_to_move{files},miscellaneous{:,1})
                         derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{11},files_to_move{files});
@@ -278,6 +294,8 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline));
                         end
+                        misc_path = fullfile(new_path,'miscellaneous');
+                        ea_generate_datasetDescription(misc_path,'derivatives')
                         copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{11}));
                     elseif ismember(files_to_move{files},ftracking{:,1})
                         which_file = files_to_move{files};
@@ -287,7 +305,10 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
+                        ftracking_path = fullfile(new_path,'ftracking');
+                        ea_generate_datasetDescription(ftracking_path,'derivatives')
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
+                    
                     elseif ~ismember(files_to_move{files},preprocessing{:,1}) && ~isempty(regexp(files_to_move{files},'raw_.*')) %support for other modalities in preproc
                         %other raw files go to pre-processing folder.
                         bids_name = [patient_name,'_','desc-preproc_',session,'_',mod_str];
@@ -297,6 +318,8 @@ for patients = 1:length(source)
                         
                         copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{5},'anat'));
                         movefile(fullfile(new_path,pipelines{5},'anat',files_to_move{files}),fullfile(new_path,pipelines{5},'anat',bids_name));
+                    
+                    
                     elseif ~ismember(files_to_move{files},coregistration{:,1}) && ~isempty(regexp(files_to_move{files},'^anat_.*')) %support for other modalities in coreg
                         bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',session,'_',mod_str];
                         if ~exist(fullfile(new_path,pipelines{2},'anat'),'dir')
@@ -304,7 +327,8 @@ for patients = 1:length(source)
                         end
                         copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{2},'anat'));
                         movefile(fullfile(new_path,pipelines{2},'anat',files_to_move{files}),fullfile(new_path,pipelines{2},'anat',bids_name));
-                   elseif ~ismember(files_to_move{files},normalization{:,1}) && ~isempty(regexp(files_to_move{files},'^glanat_.*')) %support for other modalities in normalization                        
+                   
+                    elseif ~ismember(files_to_move{files},normalization{:,1}) && ~isempty(regexp(files_to_move{files},'^glanat_.*')) %support for other modalities in normalization                        
                         bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',session,'_',mod_str];
                         if ~exist(fullfile(new_path,pipelines{3},'anat'),'dir')
                             mkdir(fullfile(new_path,pipelines{3},'anat'))
@@ -315,6 +339,8 @@ for patients = 1:length(source)
                 end
                 for folders = 1:length(pipelines)
                     if strcmp(pipelines{folders},'stimulations')
+                        stim_path = fullfile(new_path,'stimulations');
+                         ea_generate_datasetDescription(stim_path,'derivatives');
                         %the stimulations folder should already be
                         %there in the dest directory.
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
@@ -328,6 +354,8 @@ for patients = 1:length(source)
                         end
                         
                     elseif strcmp(pipelines{folders},'headmodel')
+                        headmodel_path = fullfile(new_path,'headmodel');
+                        ea_generate_datasetDescription(headmodel_path,'derivatives');
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             headmodel_contents = dir_without_dots(fullfile(new_path,pipelines{folders}));
                             headmodel_files = {headmodel_contents.name};
@@ -347,6 +375,17 @@ for patients = 1:length(source)
                                 move_mni2bids(mni_files,native_files,'',headmodel,curr_pipeline,patient_name);
                             catch
                                 disp("Could not detect headmodel files...");
+                            end
+                        elseif exist(fullfile(source_patient,'current_headmodel'),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
+                            headmodel_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'MNI_ICBM_2009b_NLIN_ASYM'));
+                            headmodel_files = {headmodel_contents.name};
+                            for headmodel_file = 1:length(headmodel_files)
+                                if ismember(headmodel_files{headmodel_file},headmodel{:,1})
+                                    indx = cellfun(@(x)strcmp(x,headmodel_files{headmodel_file}),headmodel{:,1});
+                                    derivatives_cell{end+1,1} = fullfile(source_patient,pipelines{folders},headmodel_files{headmodel_file});
+                                    derivatives_cell{end,2} = fullfile(new_path,pipelines{folders},[patient_name,'_',headmodel{1,2}{indx}]);
+                                    movefile(fullfile(new_path,pipelines{folders},'MNI_ICBM_2009b_NLIN_ASYM',headmodel_files{headmodel_file}),fullfile(new_path,pipelines{folders},'MNI_ICBM_2009b_NLIN_ASYM',[patient_name,'_',headmodel{1,2}{indx}]));
+                                end
                             end
                             
                         end
@@ -443,7 +482,6 @@ toc;
 
 function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell)
     
-    toconvert = {'ea_coreg_approved.mat','ea_coregmrmethod_applied.mat','ea_normmethod_applied.mat','ea_brainshiftmethod_applied.mat','ea_methods.txt'};
     if strcmp(which_pipeline,'brainshift')
         source_patient_path = fullfile(source_patient_path,'scrf');
     elseif strcmp(which_pipeline,'coregistration')
@@ -509,7 +547,6 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
         if ~exist(log_dir,'dir')
             mkdir(log_dir)
         end
-        convert2json = 1;
         if strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_methods.txt'))
             bids_name = 'desc-brainshiftmethod.txt';
         elseif strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_coreg_approved.mat'))
@@ -521,20 +558,12 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                 end
                 save(fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.json']),'brainshift_method')
             end
-        end
-        old_path = fullfile(source_patient_path,which_file);
-        new_path = log_dir;
-        if exist(old_path,'file')
-            %first move%
-            copyfile(old_path,new_path);
-            %then rename%
-            disp(['Renaming file:' which_file ' to: ' bids_name]);
-            rename_path = fullfile(new_path,which_file);
-            derivatives_cell{end+1,1} = fullfile(old_path);
-            derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-            movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
-            
-        end
+        end        
+        fname_in = fullfile(source_patient_path,which_file);
+        [~,fname,ext] = fileparts(bids_name);
+        fname_out = fullfile(log_dir,[patient_name,'_',fname '.json']);
+        file2json(fname_in,fname_out); %under leaddbs/helpers/file2json
+        
     elseif endsWith(which_file,'.mat') || endsWith(which_file,'.gz') || endsWith(which_file,'.h5')
         if ~exist(transformations_dir,'dir')
             mkdir(transformations_dir)
@@ -553,14 +582,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             
         end
     end
-    if exist('convert2json','var') && convert2json
-        if ismember(which_file,toconvert)
-            fname_in = fullfile(new_path,[patient_name,'_',bids_name]);
-            [~,fname,ext] = fileparts(bids_name);
-            fname_out = fullfile(new_path,[patient_name,'_',fname '.json']);
-            file2json(fname_in,fname_out)
-        end
-    end
+    
     return 
     
 function move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name)
@@ -620,43 +642,7 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
         end
     end
 
-function file2json(fname_in,fname_out)
-%function to convert mat files and text
-    if endsWith(fname_in,'.mat')
-        %special case for legacy dataset  
-        input_mat = load(fname_in);
-        json_fid = fopen(fname_out,'w');
-        
-        encodejson = jsonencode(input_mat);
-    
-    elseif endsWith(fname_in,'.txt')
-        fid = fopen(fname_in,'rt');
-        json_fid = fopen(fname_out,'w');
-        text_cell = textscan(fid, '%s','Delimiter','');
-        for text = 1:(length(text_cell{1,1})-1)
-            if strcmp(text_cell{1,1}(text),'***')
-                    temp_var = strsplit(text_cell{1,1}{text+1},':');
-                    method_var = strtrim(temp_var{end});
-                    S.method.(method_var) = text_cell{1,1}{text+3};
-            end
-        end
-        if ~exist('S','var')
-            try
-                %try a type of manual resolution - not sure if it belongs to the catch statement?
-                temp_var = strsplit(text_cell{1,1}{1},':');
-                method_var = strtrim(temp_var{end});
-                S.method.(method_var) = text_cell{1,1}{3};
-            catch
-                disp(['You might have to convert this file to .json manually: ' fname_in]);
-            end
-        end
-        if exist('S','var')
-            encodejson = jsonencode(S);
-        end
-    end
-    if exist('encodejson','var') && exist('json_fid','var')
-        fprintf(json_fid,encodejson);
-    end
+
 
     
 function generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_containers)
