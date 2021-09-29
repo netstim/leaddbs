@@ -72,8 +72,7 @@ else % Dragged multiple patient folders
        end
        patIndx = patIndx+1;
     end
-    warndlg('Neither BIDS dataset nor patient folder found for one or more patients. Opening the patients not in BIDS format inside lead migrate!');
-    lead_migrate(uipatdir,options,handles)
+    choosedialog(uipatdir,options,handles);
     
 end
 
