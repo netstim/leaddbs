@@ -60,43 +60,33 @@ else
     fis=[fis,ext];
 end
 
+if ischar(fis)
+    fis = {fis};
+end
+
 if useinverse % from template space to [untouched] achor space
     for pt=1:length(uipatdir)
-        [options.root, options.patientname] = fileparts(uipatdir{pt});
-        options.root = [options.root, filesep];
-        options.earoot = ea_getearoot;
-        options.prefs = ea_prefs(options.patientname);
-        [options,presentfiles] = ea_assignpretra(options);
-        try
-            options.coregmr.method=get(handles.coregmrmethod,'String');
-            options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
-        catch
-            options.coregmr.method='SPM (Friston 2007)';
-        end
+        
+        options = ea_getptopts(uipatdir{pt});
+        presentfiles = fieldnames(options.subj.preopAnat);
+        options.coregmr.method = get_coregmr_method;
 
-        if ischar(fis)
-            fis = {fis};
-        end
-
-        to = cell(1, length(fis));
-        from = cell(1, length(fis));
-
-        for fi=1:length(fis)
-            to{fi} = [uipatdir{pt}, filesep, 'w', fis{fi}];
-            from{fi} = [path, fis{fi}];
-        end
+        from = cellfun(@(x) fullfile(path,x), fis, 'uni', 0);
+        to = cellfun(@(x) fullfile(uipatdir{pt},['from' ea_getspace],x), fis, 'uni', 0);
+        
+        mkdir(fileparts(to{1}));
 
         ea_apply_normalization_tofile(options, from, to, useinverse, interp);
 
         if untouchedanchor % map from anchor to untouched anchor
-            ea_coregimages(options,[options.root, options.patientname, filesep, presentfiles{1}],...
-                [options.root, options.patientname, filesep, 'raw_', presentfiles{1}],...
-                [options.root, options.patientname, filesep, 'rraw_', presentfiles{1}],...
-                to,[],[],interp);
-            ea_delete([options.root, options.patientname, filesep, 'rraw_', presentfiles{1}]);
+            tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'preproc','tmp');
+            ea_coregimages(options,options.subj.coreg.anat.preop.(presentfiles{1}),...
+                options.subj.preproc.anat.preop.(presentfiles{1}),...
+                tmp_file, to,[],[],interp);
+            ea_delete(tmp_file);
 
             if asoverlay
-                untouchedanchorImage=ea_load_nii([options.root, options.patientname, filesep, 'raw_', presentfiles{1}]);
+                untouchedanchorImage=ea_load_nii(options.subj.preproc.anat.preop.(presentfiles{1}));
                 overlay=ea_load_nii(to{1});
                 fused=untouchedanchorImage;
                 fused.img(:)=zscore(fused.img(:));
@@ -125,37 +115,22 @@ if useinverse % from template space to [untouched] achor space
             end
         end
     end
+    
 else % from [untouched] achor space to template space
-    [options.root, options.patientname] = fileparts(fileparts(path));
-    options.root = [options.root, filesep];
-    options.earoot = ea_getearoot;
-    options.prefs = ea_prefs(options.patientname);
-    [options,presentfiles] = ea_assignpretra(options);
-    try
-        options.coregmr.method=get(handles.coregmrmethod,'String');
-        options.coregmr.method=options.coregmr.method{get(handles.coregmrmethod,'Value')};
-    catch
-        options.coregmr.method='SPM (Friston 2007)';
-    end
+    
+    options = ea_getptopts(path);
+    presentfiles = fieldnames(options.subj.preopAnat);
+    options.coregmr.method = get_coregmr_method;
 
-    if ischar(fis)
-        fis = {fis};
-    end
-
-    to = cell(1, length(fis));
-    from = cell(1, length(fis));
-
-    for fi=1:length(fis)
-        to{fi} = [path, 'gl', fis{fi}];
-        from{fi} = [path, fis{fi}];
-    end
+    to = cellfun(@(x) setBIDSEntity(fullfile(path,x),'space',ea_getspace), fis, 'uni', 0);
+    from = cellfun(@(x) fullfile(path,x), fis, 'uni', 0);
 
     if untouchedanchor % map from untouched anchor to anchor first
-        ea_coregimages(options,[options.root, options.patientname, filesep, 'raw_', presentfiles{1}],...
-            [options.root, options.patientname, filesep, presentfiles{1}],...
-            [options.root, options.patientname, filesep, 'uraw_', presentfiles{1}],...
-            from);
-        ea_delete([options.root, options.patientname, filesep, 'uraw_', presentfiles{1}]);
+        tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'preproc','tmp');
+        ea_coregimages(options, options.subj.preproc.anat.preop.(presentfiles{1}),...
+            options.subj.coreg.anat.preop.(presentfiles{1}),...
+            tmp_file, from);
+        ea_delete(tmp_file);
     end
 
     if templateresolution
@@ -178,4 +153,14 @@ else % from [untouched] achor space to template space
     end
 
     ea_apply_normalization_tofile(options, from, to, useinverse, interp, refim);
+end
+
+end
+
+function coregmr_method = get_coregmr_method(handles)
+try
+    coregmr_method = handles.coregctmethod.String{handles.coregmrmethod.Value};
+catch
+    coregmr_method = 'SPM (Friston 2007)';
+end
 end
