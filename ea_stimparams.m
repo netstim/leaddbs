@@ -133,28 +133,23 @@ else
     end
 end
 
-funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*.m', 0);
-funcs = regexp(funcs, '(ea_genvat_.*)(?=\.m)', 'match', 'once');
-[names, supportDirected] = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
-if isdirected
-    funcs = funcs(cell2mat(supportDirected));
-    names = names(cell2mat(supportDirected));
-end
-
 % Hide OSS-DBS option in case non-dev env or elmodel not available
 if strcmp(options.leadprod, 'dbs')
+    funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*.m', 0);
+    funcs = regexp(funcs, '(ea_genvat_.*)(?=\.m)', 'match', 'once');
+    [names, supportDirected] = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
+    if isdirected
+        funcs = funcs(cell2mat(supportDirected));
+        names = names(cell2mat(supportDirected));
+    end
     if ~options.prefs.env.dev || ~ismember(options.elmodel,ea_ossdbs_elmodel)
         ossdbsInd = find(contains(names,'OSS-DBS'));
         funcs(ossdbsInd) = [];
         names(ossdbsInd) = [];
     end
 else % Call in lead 'group'
-    prefs = ea_prefs;
-    if ~prefs.env.dev
-        ossdbsInd = find(contains(names,'OSS-DBS'));
-        funcs(ossdbsInd) = [];
-        names(ossdbsInd) = [];
-    end
+    funcs = getappdata(handles.leadfigure,'genvatfunctions');
+    names = getappdata(handles.leadfigure,'vatfunctionnames');
 end
 
 setappdata(gcf, 'genvatfunctions', funcs);
