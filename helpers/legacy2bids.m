@@ -114,9 +114,8 @@ for patients = 1:length(source)
         %%%for now, copy atlases, stimulations, headmodel and current
         %%%headmodel to their respective directories. Then you can crawl
         %%%through and rename. Renaming is handled a bit later.
-        if strcmp(dir_names{j},'atlases') ||  strcmp(dir_names{j},'headmodel') || strcmp(dir_names{j},'warpdrive') || strcmp(dir_names{j},'export') || strcmp(dir_names{j},'fiberfiltering') 
-            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
-        elseif strcmp(dir_names{j},'scrf') 
+        
+        if strcmp(dir_names{j},'scrf') 
             this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
             files_in_folder = {this_folder.name};
             for file_in_folder=1:length(files_in_folder)
@@ -128,6 +127,8 @@ for patients = 1:length(source)
                     end
                 end
             end
+        elseif ~strcmp(dir_names{j},'current_headmodel') %already handled
+            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
         end
     end
     %so we have created a list of the files to move, now we can create
