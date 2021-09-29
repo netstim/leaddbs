@@ -1,4 +1,6 @@
 function legacy2bids(source,dest,isdicom,dicom_source,doDcmConv)
+
+
 %SANTIY: first check the existence of your source and dest directory. If it is not there,
 %create a new directory.
 for j=1:length(source)
@@ -12,6 +14,8 @@ for j=1:length(source)
         addpath(dest{j});
     end
 end
+
+
 %when the app is used to run this script, there is an isempty check in the
 %app also. This conflicts with whether it is empty in this script (i.e., if
 %the user uses the app and doesn't input an output dir, then the output dir
@@ -24,6 +28,8 @@ if exist('dest','var')
        end
    end
 end
+
+
 %if you have dicom files and have not provided a dicom source directory
 %(this can also just be source directory,so refactor this) then throw
 %an error
@@ -40,23 +46,25 @@ else
     subfolder_cell = {'sourcedata','rawdata','derivatives'};
 end
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','headmodel','miscellaneous','ftracking'};
+
+
 %mapping will allow quick reference of the files to move: also, certain
 %modalities have specific bids naming.
 legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
 bids_modalities = {'T1w','T2w','PDw','CT','ax','cor','sag','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2starw'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 [brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking] = create_bids_mapping();
-%these files should be converted to .json
+
 %data structure for excel sheet later on
 derivatives_cell = {};
+
 %dir without dots is a modified dir command that with return the
 %directory contents without the dots. those evaluate to folders and
 %cause issues.
 %by default, use the sub- prefix. If the patient already has a sub-, this
 %flag is set to zero.
 
-%get all patient names, again this will be changed based on the dataset
-%fetcher command
+
 %perform moving for each pat
 tic
 log_path = fullfile(dest{1},'derivatives','leaddbs','logs');
@@ -64,28 +72,42 @@ if ~exist(log_path,'dir')
     mkdir(log_path)
 end
 for patients = 1:length(source)
+    %source patient filepath
     source_patient = source{patients};
-    if patients <= length(dest)
-        dest_patient = dest{patients};
-    end
+    %always specify a output directory
+    dest_patient = dest{patients};
+    
     if isdicom
         dicom_patient = dicom_source{patients};
     end
+    
+    %get and refactor patient names. specially, don't allow
+    %'_' or '-'
     [~,patient_name,~] = fileparts(source_patient);
     if ~startsWith(patient_name,'sub-')
-       patient_name = ['sub-',erase(patient_name,'_')];
+       if contains(patient_name,'_')
+           patient_name = ['sub-',erase(patient_name,'_')];
+       elseif contains(patient_name,'-')
+           patient_name = ['sub-',erase(patient_name,'-')];
+       end
     end
+    
+    %handle the files in the patient folder (directories are handled later)
+    %creates a cell of the files to move, later, we can create
+    %the new dirrectory structure and move the files into the
+    %correct "BIDS" directory
+    
     files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
     file_index = 1;
     for j=1:length(file_names)
-        %add filenames. However, some files are inside folder (checkrreg
-        %and scrf). They will be handled a bit later.
-        files_to_move{file_index,1} = file_names{j};
-        file_index = file_index + 1;
-        %now let's deal with subfolders
+        if ~isdir(file_names{j})
+            files_to_move{file_index,1} = file_names{j};
+            file_index = file_index + 1;
+        end
     end
-    %collect directory names inside the patient folder.
+    
+    %collect directories inside the patient folder.
     dir_names = {files_in_pat_folder([files_in_pat_folder.isdir]).name};
     for j=1:length(dir_names)
         if j==1
@@ -111,7 +133,7 @@ for patients = 1:length(source)
                 end
             end
         end
-       
+        %handle brainshift copy and rename
         if strcmp(dir_names{j},'scrf') 
             new_path = fullfile(dest_patient,'derivatives','leaddbs',patient_name);
             scrf_patient = fullfile(source_patient,'scrf');
@@ -124,7 +146,6 @@ for patients = 1:length(source)
             files_in_folder = {this_folder.name};
             for file_in_folder=1:length(files_in_folder)
                which_file = files_in_folder{file_in_folder};
-               disp(files_in_folder{file_in_folder});
                if ismember(files_in_folder{file_in_folder},brainshift{:,1})
                     indx = cellfun(@(x)strcmp(x,files_in_folder{file_in_folder}),brainshift{:,1});
                     bids_name = brainshift{1,2}{indx};
@@ -132,29 +153,21 @@ for patients = 1:length(source)
                     derivatives_cell = move_derivatives2bids(scrf_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell); 
                end
             end
-                
+        %other directories the user may have    
         elseif ~strcmp(dir_names{j},'current_headmodel') %already handled
             if ~exist(fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}),'dir')
                 copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
             end
         end
     end
-    %so we have created a list of the files to move, now we can create
-    %the new dirrectory structure and move the correct files into the
-    %correct "BIDS" directory
     
+    %generate the dataset description in the root_folder
     ea_generate_datasetDescription(dest_patient,'root_folder')
     if ~isdicom
+        %generate raw image json in the raw data folder
         generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_containers);
     end
-    %check for files without a DICOM folder: if there are anat_t1.nii
-    %derivatives in the coreg folder, but no raw_anat_t1.nii - then there
-    %is no way that there can a raw data dataset formed. We will
-    %incorporate a simple check to ensure that in this case, the .json file
-    %inside the raw data folder points to the coreg folder and not the
-    %raw_anat_t1.nii.gz
-   
-    
+ 
     for subfolders = 1:length(subfolder_cell)
         switch subfolder_cell{subfolders}
             case 'sourcedata'
@@ -179,12 +192,12 @@ for patients = 1:length(source)
                         session = 'ses-preop';
                     end
                     mod_str = mod_split{end};
-                    
                     mod_str = strsplit(mod_str,'.');
                     mod_str = [upper(mod_str{1}),'.nii'];
-                     
+                    
+                    %coregistration
                     if ismember(files_to_move{files},coregistration{:,1})
-                        %corresponding index of the new pat
+                        
                         which_pipeline = pipelines{2};
                         which_file = files_to_move{files};
                         indx = cellfun(@(x)strcmp(x,files_to_move{files}),coregistration{:,1});
@@ -195,7 +208,8 @@ for patients = 1:length(source)
                         coreg_path = fullfile(new_path,'coregistration');
                         ea_generate_datasetDescription(coreg_path,'derivatives')
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
-                    
+                    %coregistration: log, no fixed naming pattern and hence
+                    %in an elseif command
                     elseif ~isempty(regexp(files_to_move{files},'^coreg.*.log'))
                         derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{2},'log',files_to_move{files});
