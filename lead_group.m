@@ -55,7 +55,7 @@ function lead_group_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.prod='group';
 
 % add recent groups...
-ea_initrecentpatients(handles, 'groups');
+ea_initrecent(handles, 'groups');
 
 % Choose default command line output for lead_group
 handles.output = hObject;
@@ -157,7 +157,7 @@ if ~isempty(varargin) && isfile(varargin{1}) % Path to group analysis file provi
         setappdata(handles.leadfigure, 'S', M.S);
         setappdata(handles.leadfigure, 'vatmodel', M.S(1).model);
     end
-    ea_addrecentpatient(handles,{M.root},'groups','groups');
+    ea_addrecent(handles,{M.root},'groups','groups');
 else
     M=getappdata(gcf,'M');
     if isempty(M)
@@ -1679,21 +1679,21 @@ options.native=0;
 ea_spec2dwrite(options);
 
 
-% --- Executes on selection change in recentpts.
-function recentpts_Callback(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Executes on selection change in recent.
+function recent_Callback(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recentpts
+% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recent
 ea_busyaction('on',handles.leadfigure,'group');
-ea_rcpatientscallback(handles, 'groups');
+ea_recentcallback(handles, 'groups');
 ea_busyaction('off',handles.leadfigure,'group');
 
 
 % --- Executes during object creation, after setting all properties.
-function recentpts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+function recent_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
