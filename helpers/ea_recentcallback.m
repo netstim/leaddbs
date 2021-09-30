@@ -1,20 +1,21 @@
-function ea_recentcallback(handles, patsub)
+function ea_recentcallback(handles, type)
+% Callback for recent patients/group analyses popupmenu
 
-if get(handles.recent,'Value')==1
+if get(handles.recent, 'Value') == 1
     return
 end
 
-load([ea_getearoot,'common',filesep,'ea_recent',patsub,'.mat']);
-if iscell(fullrpts)
-    fullrpts=fullrpts(get(handles.recent,'Value')-1);
+load([ea_getearoot, 'common', filesep, 'ea_recent', type, '.mat'],  'recentfolders');
+if iscell(recentfolders)
+    recentfolders = recentfolders(handles.recent.Value-1);
 end
 
-if strcmp(['No recent ' patsub ' found'],fullrpts)
+if strcmp(['No recent ' type ' found'], recentfolders)
    return
 end
 
-if strcmp(patsub,'patients')
-    ea_load_pts(handles,fullrpts);
-elseif strcmp(patsub,'groups')
-    ea_load_group(handles,fullrpts{1,1});
+if strcmp(type, 'patients')
+    ea_load_pts(handles, recentfolders);
+elseif strcmp(type, 'groups')
+    ea_load_group(handles, recentfolders{1});
 end
