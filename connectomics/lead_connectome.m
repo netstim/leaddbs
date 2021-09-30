@@ -818,15 +818,15 @@ if length(uipatdir)>1
    %ea_error('Selecting the previous patient in folder only works if a single patient was selected.');
 elseif isempty(uipatdir)
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
-    if iscell(fullrpts)
-        fullrpts=fullrpts(1);
+    if iscell(recentfolders)
+        recentfolders=recentfolders(1);
     end
 
-    if strcmp('No recent patients found',fullrpts)
+    if strcmp('No recent patients found',recentfolders)
         return
     end
 
-    ea_load_pts(handles,fullrpts);
+    ea_load_pts(handles,recentfolders);
     return
 end
 
@@ -872,15 +872,15 @@ elseif isempty(uipatdir)
     % load recent patient then.
 
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
-    if iscell(fullrpts)
-        fullrpts=fullrpts(1);
+    if iscell(recentfolders)
+        recentfolders=recentfolders(1);
     end
 
-    if strcmp('No recent patients found',fullrpts)
+    if strcmp('No recent patients found',recentfolders)
         return
     end
 
-    ea_load_pts(handles,fullrpts);
+    ea_load_pts(handles,recentfolders);
     return
     %   ea_error('Selecting the next patient in folder only works if a patient was selected before.');
 end
