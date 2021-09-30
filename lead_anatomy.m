@@ -55,7 +55,7 @@ function lead_anatomy_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.prod = 'anatomy';
 
 % add recent patients...
-ea_initrecentpatients(handles, 'patients');
+ea_initrecent(handles, 'patients');
 earoot=ea_getearoot;
 if ~isdeployed
     addpath(genpath(earoot));
@@ -247,15 +247,15 @@ list=ea_assignbackdrop('list',options,'Patient');
 set(handles.tdbackdrop,'String',list);
 
 
-% --- Executes on selection change in recentpts.
-function recentpts_Callback(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Executes on selection change in recent.
+function recent_Callback(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recentpts
-ea_rcpatientscallback(handles, 'patients');
+% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recent
+ea_recentcallback(handles, 'patients');
 options.prefs=ea_prefs('');
 [options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
 options.root=[options.root,filesep];
@@ -264,8 +264,8 @@ set(handles.tdbackdrop,'String',list);
 
 
 % --- Executes during object creation, after setting all properties.
-function recentpts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+function recent_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
