@@ -22,7 +22,7 @@ function varargout = lead_or(varargin)
 
 % Edit the above text to modify the response to help lead_or
 
-% Last Modified by GUIDE v2.5 03-Sep-2021 19:58:38
+% Last Modified by GUIDE v2.5 30-Sep-2021 14:53:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,7 +58,7 @@ earoot=ea_getearoot;
 handles.prod = 'or';
 
 % add recent patients...
-ea_initrecentpatients(handles, 'patients');
+ea_initrecent(handles, 'patients');
 
 set(handles.vizspacepopup,'String',{[ea_underscore2space(ea_getspace), ' Space'];'Native Patient Space'});
 
@@ -1091,22 +1091,22 @@ position=[63,542,160,16];
 ea_hyperlink_label(label, url, position);
 
 
-% --- Executes on selection change in recentpts.
-function recentpts_Callback(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Executes on selection change in recent.
+function recent_Callback(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recentpts
+% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recent
 ea_busyaction('on',handles.leadfigure,'or');
-ea_rcpatientscallback(handles, 'patients');
+ea_recentcallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'or');
 
 
 % --- Executes during object creation, after setting all properties.
-function recentpts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+function recent_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1248,9 +1248,9 @@ ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over recentpts.
-function recentpts_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Otherwise, executes on mouse press in 5 pixel border or over recent.
+function recent_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
