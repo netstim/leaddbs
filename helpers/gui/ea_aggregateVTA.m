@@ -27,7 +27,7 @@ tf=fopen([fname,'export.txt'],'w');
 options.native=0;
 for pt=1:length(uipatdir)
     [pth,ptname]=fileparts(uipatdir{pt});
-    copyfile([uipatdir{pt},filesep,'stimulation',filesep,ea_nt(options),stimname,filesep,exportwhat,suffx,'.nii'],[fname,ptname,'.nii']);
+    copyfile([uipatdir{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,exportwhat,suffx,'.nii'],[fname,ptname,'.nii']);
     fprintf(tf,'%s\n',[fname,ptname,'.nii']);
 end
 fclose(tf);

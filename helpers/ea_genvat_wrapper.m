@@ -10,13 +10,13 @@ end
 [~, patientName] = fileparts(patientFolder);
 
 % Create native space output folder
-nativeStimFolder = fullfile(patientFolder, 'stimulation', ea_nt(1), stimLabel);
+nativeStimFolder = fullfile(patientFolder, 'stimulations', ea_nt(1), stimLabel);
 if ~isfolder(nativeStimFolder)
     mkdir(nativeStimFolder);
 end
 
 % Create template space output folder
-templateStimFolder = fullfile(patientFolder, 'stimulation', ea_nt(0), stimLabel);
+templateStimFolder = fullfile(patientFolder, 'stimulations', ea_nt(0), stimLabel);
 if ~isfolder(templateStimFolder)
     mkdir(templateStimFolder);
 end
