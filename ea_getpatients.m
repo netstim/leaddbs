@@ -6,7 +6,7 @@ try
 end
 try % finally use last patient parent dir if set.
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
-    p=fileparts(fullrpts{1});
+    p=fileparts(recentfolders{1});
 end
 
 if ~exist('uipatdir','var')
@@ -18,7 +18,7 @@ end
 
 
 if exist('handles','var')
-    ea_load_pts(handles,uipatdir,'patients');
+    ea_load_pts(handles,uipatdir);
     
     if isfield(handles,'atlassetpopup') % not present in connectome mapper
         atlasset=get(handles.atlassetpopup,'String');

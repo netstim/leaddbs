@@ -5,8 +5,8 @@ ea_busyaction('on', handles.leadfigure, 'group');
 set(handles.groupdir_choosebox, 'String', groupdir);
 set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
-analysisFile = ea_getGroupAnalysisFile(folder, groupdir);
-load(analysisFile, 'M')
+analysisFile = ea_getGroupAnalysisFile(groupdir);
+load(analysisFile, 'M');
 if ~isfield(M.ui, 'mirrorsides')
     % Fix missing 'mirrorsides' field for old analysis
     try
@@ -25,6 +25,6 @@ end
 
 ea_refresh_lg(handles);
 
-ea_addrecent(handles, {groupdir}, 'groups', 'groups')
+ea_addrecent(handles, {groupdir}, 'groups')
 
 ea_busyaction('off', handles.leadfigure, 'group');
