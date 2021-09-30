@@ -1,4 +1,4 @@
-function ea_updaterecentpatients(handles,patsub,nuchosenix)
+function ea_updaterecent(handles,patsub,nuchosenix)
 
 earoot=ea_getearoot;
 load([earoot,'common',filesep,'ea_recent',patsub,'.mat'],'fullrpts');
@@ -15,7 +15,7 @@ catch
     fullrpts=[{['Recent ',patsub,':']};fullrpts'];
 end
 
-set(handles.recentpts,'String',fullrpts);
+set(handles.recent,'String',fullrpts);
 if exist('nuchosenix','var')
-   set(handles.recentpts,'Value',nuchosenix+1);
+   set(handles.recent,'Value',nuchosenix+1);
 end

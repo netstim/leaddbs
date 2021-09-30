@@ -10,7 +10,7 @@ switch seltype
                 hhg=ea_web('https://leaddbs.gitbooks.io/leaddbs-manual/content/Normalization%20of%20Images.html');
             case 'patdir_choosebox'
                 hhg=ea_web('https://leaddbs.gitbooks.io/leaddbs-manual/content/Lead-DBS%20Main%20Window%20and%20Loading%20Images.html');
-            case 'recentpts'
+            case 'recent'
                 hhg=ea_web('https://leaddbs.gitbooks.io/leaddbs-manual/content/Lead-DBS%20Main%20Window%20and%20Loading%20Images.html');
             case 'electrode_model_popup'
                 

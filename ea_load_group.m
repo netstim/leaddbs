@@ -25,6 +25,6 @@ end
 
 ea_refresh_lg(handles);
 
-ea_addrecentpatient(handles, {groupdir}, 'groups', 'groups')
+ea_addrecent(handles, {groupdir}, 'groups', 'groups')
 
 ea_busyaction('off', handles.leadfigure, 'group');
