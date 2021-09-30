@@ -1,12 +1,12 @@
-function ea_rcpatientscallback(handles, patsub)
+function ea_recentcallback(handles, patsub)
 
-if get(handles.recentpts,'Value')==1              
+if get(handles.recent,'Value')==1
     return
 end
 
 load([ea_getearoot,'common',filesep,'ea_recent',patsub,'.mat']);
 if iscell(fullrpts)
-    fullrpts=fullrpts(get(handles.recentpts,'Value')-1);
+    fullrpts=fullrpts(get(handles.recent,'Value')-1);
 end
 
 if strcmp(['No recent ' patsub ' found'],fullrpts)
