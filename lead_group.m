@@ -157,7 +157,7 @@ if ~isempty(varargin) && isfile(varargin{1}) % Path to group analysis file provi
         setappdata(handles.leadfigure, 'S', M.S);
         setappdata(handles.leadfigure, 'vatmodel', M.S(1).model);
     end
-    ea_addrecent(handles,{M.root},'groups','groups');
+    ea_addrecent(handles,{M.root},'groups');
 else
     M=getappdata(gcf,'M');
     if isempty(M)
