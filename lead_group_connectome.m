@@ -171,7 +171,7 @@ if strcmp(target, 'groupDir')
 
     ea_refresh_lg_connectome(handles);
 else
-    if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
+    if strcmp(handles.groupdir_choosebox.String, 'Choose Group Directory')
         ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
     end
 
@@ -193,7 +193,7 @@ else
         ea_refresh_lg_connectome(handles);
         % save M
         M=getappdata(handles.leadfigure, 'M');
-        save([get(handles.groupdir_choosebox,'String'), 'GroupConnectomeAnalysis.mat'], 'M', '-v7.3');
+        save([handles.groupdir_choosebox.String, 'GroupConnectomeAnalysis.mat'], 'M', '-v7.3');
     end
 end
 
@@ -244,7 +244,7 @@ function addptbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to addptbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
+if strcmp(handles.groupdir_choosebox.String, 'Choose Group Directory')
     ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
 end
 
@@ -258,7 +258,7 @@ setappdata(handles.leadfigure,'M',M);
 ea_refresh_lg_connectome(handles);
 % save M
 M=getappdata(handles.leadfigure,'M');
-save([get(handles.groupdir_choosebox,'String'),'GroupConnectomeAnalysis.mat'],'M','-v7.3');
+save([handles.groupdir_choosebox.String,'GroupConnectomeAnalysis.mat'],'M','-v7.3');
 
 
 % --- Executes on button press in removeptbutton.
@@ -655,13 +655,13 @@ function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 ea_busyaction('on',gcf,'group');
-if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+if ~strcmp(handles.groupdir_choosebox.String,'Choose Group Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
     ea_refresh_lg_connectome(handles);
     M=getappdata(hObject,'M');
     try
-        save([get(handles.groupdir_choosebox,'String'),'GroupConnectomeAnalysis.mat'],'M','-v7.3');
+        save([handles.groupdir_choosebox.String,'GroupConnectomeAnalysis.mat'],'M','-v7.3');
     catch
         warning('Data could not be saved.');
         keyboard
@@ -1047,7 +1047,7 @@ UI.test.ui=UI.test.ui{get(handles.lc_stattest,'Value')};
 UI.thresh.ui = get(handles.lc_threshold,'String');
 UI.contrast.ui = get(handles.lc_contrast,'String');
 ea_preparenbs(handles)
-root=get(handles.groupdir_choosebox,'String');
+root=handles.groupdir_choosebox.String;
 UI.design.ui = [root,'NBSdesignMatrix.mat'];
 UI.matrices.ui = [root,'NBSdataMatrix.mat'];
 UI.node_coor.ui = '';
@@ -1155,7 +1155,7 @@ mX=zeros(length(gv),max(gv));
 for g=1:max(gv)
     mX(:,g)=gv==g;
 end
-save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
+save([handles.groupdir_choosebox.String,'NBSdesignMatrix'],'mX');
 
 % prepare data matrix:
 
@@ -1184,7 +1184,7 @@ if ismember('&',thismetr)
     end
 
     mX=repmat(eye(2),length(mX),1);
-    save([get(handles.groupdir_choosebox,'String'),'NBSdesignMatrix'],'mX');
+    save([handles.groupdir_choosebox.String,'NBSdesignMatrix'],'mX');
 else
  metrix{1}=thismetr;
 end
@@ -1210,7 +1210,7 @@ for pt=1:length(M.patient.list)
         Xcnt=Xcnt+1;
     end
 end
-save([get(handles.groupdir_choosebox,'String'),'NBSdataMatrix'],'allX','-v7.3');
+save([handles.groupdir_choosebox.String,'NBSdataMatrix'],'allX','-v7.3');
 
 
 % --- Executes on button press in lc_nbsadvanced.

@@ -1103,6 +1103,7 @@ ea_busyaction('on',handles.leadfigure,'or');
 ea_rcpatientscallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'or');
 
+
 % --- Executes during object creation, after setting all properties.
 function recentpts_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to recentpts (see GCBO)
