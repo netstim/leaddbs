@@ -1,4 +1,4 @@
-function ea_addrecentpatient(handles,uipatdir,patsub,chosenix)
+function ea_addrecent(handles,uipatdir,patsub,chosenix)
 
 earoot=ea_getearoot;          
 
@@ -9,7 +9,7 @@ end
 
 if ~exist('chosenix','var')
     try
-        chosenix=fullrpts{get(handles.recentpts,'Value')};
+        chosenix=fullrpts{get(handles.recent,'Value')};
     catch
         chosenix=['Recent ',patsub,':'];
     end
@@ -32,4 +32,4 @@ end
 [~,nuchosenix]=ismember(chosenix,fullrpts);
 save([earoot,'common',filesep,'ea_recent',patsub,'.mat'],'fullrpts');
 
-ea_updaterecentpatients(handles,patsub,nuchosenix);
+ea_updaterecent(handles,patsub,nuchosenix);

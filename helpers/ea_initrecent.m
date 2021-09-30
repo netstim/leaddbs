@@ -1,4 +1,4 @@
-function ea_initrecentpatients(handles,patsub)
+function ea_initrecent(handles,patsub)
 if ~exist('patsub','var')
     patsub='patients';
 end
@@ -9,4 +9,4 @@ catch
     fullrpts={['No recent ',patsub,' found']};
 end
 save([earoot,'common',filesep,'ea_recent',patsub,'.mat'],'fullrpts');
-ea_updaterecentpatients(handles,patsub);
+ea_updaterecent(handles,patsub);
