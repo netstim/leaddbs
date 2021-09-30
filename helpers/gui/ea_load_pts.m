@@ -1,8 +1,4 @@
-function ea_load_pts(handles,uipatdir,patsub)
-
-if ~exist('patsub','var')
-    patsub = 'patients';
-end
+function ea_load_pts(handles,uipatdir)
 
 if ~iscell(uipatdir)
     uipatdir = {uipatdir};
@@ -89,7 +85,7 @@ ea_switchctmr(handles);
 
 ea_getui(handles); % update ui from patient
 ea_storeui(handles); % save in pt folder
-ea_addrecent(handles, uipatdir, patsub, patsub);
+ea_addrecent(handles, uipatdir, 'patients');
 
 % Return when BIDS dataset is not yet ready
 if ~getappdata(handles.leadfigure, 'rawImageJSONExist')

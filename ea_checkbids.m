@@ -6,7 +6,7 @@ try
 end
 try % finally use last patient parent dir if set.
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
-    p=fileparts(fullrpts{1});
+    p=fileparts(recentfolders{1});
 end
 
 uipatdir=ea_uigetdir(p,'Please choose patient folder(s)...');
