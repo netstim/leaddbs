@@ -61,7 +61,7 @@ classdef BIDSFetcher
             LeadDBSDirs.prefsDir = fullfile(subjDir, 'prefs');
             LeadDBSDirs.preprocDir = fullfile(subjDir, 'preprocessing');
             LeadDBSDirs.reconDir = fullfile(subjDir, 'reconstruction');
-            LeadDBSDirs.stimDir = fullfile(subjDir, 'stimulation');
+            LeadDBSDirs.stimDir = fullfile(subjDir, 'stimulations');
         end
 
         function prefs = getPrefs(obj, subjId, label, format)
