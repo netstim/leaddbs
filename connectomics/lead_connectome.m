@@ -99,7 +99,7 @@ set(handles.ftmethod,'String',ftMethods);
 ea_init_normpopup(handles, options.prefs.normalize.default);
 
 % add recent patients...
-ea_initrecentpatients(handles, 'patients');
+ea_initrecent(handles, 'patients');
 
 % update UI:
 try
@@ -654,22 +654,22 @@ options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
 ea_busyaction('off',handles.leadfigure,'connectome');
 
-% --- Executes on selection change in recentpts.
-function recentpts_Callback(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+% --- Executes on selection change in recent.
+function recent_Callback(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recentpts contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recentpts
+% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recent
 ea_busyaction('on',handles.leadfigure,'connectome');
-ea_rcpatientscallback(handles, 'patients');
+ea_recentcallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'connectome');
 
 
 % --- Executes during object creation, after setting all properties.
-function recentpts_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recentpts (see GCBO)
+function recent_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
