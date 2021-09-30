@@ -119,7 +119,7 @@ for patients = 1:length(source)
             if any(ismember(dir_names,'stimulations'))
                 %if mni dir exists
                 if ~exist(fullfile(source_patient,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),'dir') || ~exist(fullfile(source_patient,'stimulations','native'),'dir')
-                    mkdir(fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulation','MNI152NLin2009bAsym'));
+                    mkdir(fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'));
                     copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'));
                 else
                     copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations'));
