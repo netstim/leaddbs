@@ -4,7 +4,7 @@ ea_busyaction('on',handles.leadfigure,'group');
 
 % check if Lead group is empty at present:
 projectexists=0;
-if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory')
+if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory')
     answ=questdlg('A current project is already loaded in Lead-Group. Continuing will ADD the new patients to the current project. Please select Cancel to abort.','Add patients','Continue','Cancel','Cancel');
     switch lower(answ)
         case 'cancel'
@@ -65,8 +65,6 @@ ea_refresh_lg(handles);
 
 % save M
 M=getappdata(handles.leadfigure,'M');
-save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
 
 ea_busyaction('off',handles.leadfigure,'group');
-
-    
