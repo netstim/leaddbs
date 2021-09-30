@@ -240,7 +240,7 @@ end
 try % finally use last patient parent dir if set.
     earoot=ea_getearoot;
     load([earoot,'ea_recentpatients.mat']);
-    p=fileparts(fullrpts{1});
+    p=fileparts(recentfolders{1});
 end
 
 [seeds,path]=uigetfile({'*.nii','NIfTI';'*.txt','Text';'*.nii.gz','NIfTI'},'Please choose seed definition(s)...','MultiSelect','on');
