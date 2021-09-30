@@ -89,7 +89,7 @@ ea_switchctmr(handles);
 
 ea_getui(handles); % update ui from patient
 ea_storeui(handles); % save in pt folder
-ea_addrecentpatient(handles, uipatdir, patsub, patsub);
+ea_addrecent(handles, uipatdir, patsub, patsub);
 
 % Return when BIDS dataset is not yet ready
 if ~getappdata(handles.leadfigure, 'rawImageJSONExist')
