@@ -2,7 +2,7 @@ function ea_rebasegrouppts(~,~,handles)
 
 newtarget=uigetdir('','Please select new base folder...');
 
-Mfilebase=get(handles.groupdir_choosebox,'String');
+Mfilebase=handles.groupdir_choosebox.String;
 close(handles.leadfigure);
 
 load([Mfilebase,'LEAD_groupanalysis.mat']);
