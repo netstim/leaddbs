@@ -52,6 +52,8 @@ function lead_group_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to lead_group (see VARARGIN)
 
+handles.prod='group';
+
 % add recent groups...
 ea_initrecentpatients(handles, 'groups');
 
@@ -168,9 +170,10 @@ else
 end
 
 setappdata(gcf,'M',M);
+setappdata(handles.leadfigure, 'options', options);
+
 ea_refresh_lg(handles);
 
-handles.prod='group';
 ea_firstrun(handles,options);
 
 ea_menu_initmenu(handles,{'prefs','transfer','group'},options.prefs);
@@ -202,15 +205,15 @@ end
 
 if strcmp(target, 'groupDir')
     % Save data for previous selected group folder
-    if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+    if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group dir still not chosen
         ea_busyaction('on',handles.leadfigure,'group');
         disp('Saving data...');
         % save M
         ea_refresh_lg(handles);
-        M=getappdata(handles.leadfigure,'M');
+        M = getappdata(handles.leadfigure,'M');
         disp('Saving data to disk...');
         try
-            save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+            save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
         catch
             warning('Data could not be saved.');
             keyboard
@@ -219,36 +222,35 @@ if strcmp(target, 'groupDir')
         ea_busyaction('off',handles.leadfigure,'group');
     end
 
-    if length(folders) > 1
-        ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
+    % Multiple folder dragged or not a proper BIDS folder
+    if length(folders) > 1 || ...
+            ~contains(folders{1}, ['derivatives', filesep, 'leadgroup', filesep]) && ~isfolder(fullfile(folders{1}, 'derivatives'))
+        ea_error('Please drag either a dataset root folder or a group analysis folder into Lead Group!', 'Error', dbstack);
     end
-    if ~exist(folders{1}, 'dir')
-        [pth,fn,ext]=fileparts(folders{1});
 
-        if strcmp(fn,'LEAD_groupanalysis') && strcmp(ext,'.mat') && exist(pth, 'dir')
-            folders{1}=pth;
+    if isfile(folders{1}) % Group analysis mat file dragged
+        if ~isempty(regexp(folders{1}, ['\', filesep, 'dataset-.+_analysis-.+\.mat$'], 'match', 'once'))
+            groupdir = [fileparts(folders{1}), filesep];
+            load(folders{1}, 'M');
         else
-            ea_error('To choose the group analysis directory, please drag a single folder into Lead Group!', 'Error', dbstack);
-
+            ea_error('Not a Lead Group Analysis file!', 'Error', dbstack);
         end
+    else % Dataset root folder or group analysis folder dragged
+        analysisFile = ea_getGroupAnalysisFile(folders{1});
+        if isempty(analysisFile) % Create new analysis file in case not found
+            analysisFile = ea_genGroupAnalysisFile(folders{1});
+        end
+        groupdir = [fileparts(analysisFile), filesep];
+        load(analysisFile, 'M');
     end
 
-    groupdir = [folders{1}, filesep];
     set(handles.groupdir_choosebox, 'String', groupdir);
     set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
     ea_busyaction('on',handles.leadfigure,'group');
 
-    M=ea_initializeM;
-    M.ui.groupdir = groupdir;
-
-    try % if file already exists, load it (and overwrite M).
-        load([groupdir, 'LEAD_groupanalysis.mat']);
-    catch % if not, store it saving M.
-        save([groupdir, 'LEAD_groupanalysis.mat'],'M','-v7.3');
-    end
-
     setappdata(handles.leadfigure,'M',M);
+
     try
         setappdata(handles.leadfigure,'S',M.S);
         setappdata(handles.leadfigure,'vatmodel',M.S(1).model);
@@ -257,7 +259,7 @@ if strcmp(target, 'groupDir')
     ea_busyaction('off',handles.leadfigure,'group');
     ea_refresh_lg(handles);
 else
-    if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
+    if strcmp(handles.groupdir_choosebox.String, 'Choose Dataset Directory')
         ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
     end
 
@@ -287,7 +289,7 @@ else
         ea_refresh_lg(handles);
         % save M
         M=getappdata(handles.leadfigure,'M');
-        save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+        save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
     end
 end
 
@@ -301,6 +303,46 @@ function varargout = lead_group_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+
+
+% --- Executes on button press in groupdir_choosebox.
+function groupdir_choosebox_Callback(hObject, eventdata, handles)
+% hObject    handle to groupdir_choosebox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Save data for previous selected group folder
+if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group dir still not chosen
+    ea_busyaction('on',handles.leadfigure,'group');
+    disp('Saving data...');
+    % save M
+    ea_refresh_lg(handles);
+    M=getappdata(handles.leadfigure,'M');
+    disp('Saving data to disk...');
+    try
+        save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
+    catch
+        warning('Data could not be saved.');
+        % keyboard
+    end
+    disp('Done.');
+    ea_busyaction('off',handles.leadfigure,'group');
+end
+
+% groupdir=ea_uigetdir(ea_startpath,'Choose Dataset Directory');
+groupdir = uigetdir;
+
+if ~groupdir % user pressed cancel
+    return
+else
+    analysisFile = ea_getGroupAnalysisFile(folder);
+    if isempty(analysisFile) % Create new analysis file in case not found
+        analysisFile = ea_genGroupAnalysisFile(folder);
+    end
+    groupdir = fileparts(analysisFile);
+end
+
+ea_load_group(handles,groupdir);
 
 
 % --- Executes on selection change in patientlist.
@@ -318,7 +360,6 @@ set(handles.grouplist,'Value',M.ui.listselect);
 
 setappdata(gcf,'M',M);
 ea_refresh_lg(handles);
-
 
 
 % --- Executes during object creation, after setting all properties.
@@ -339,7 +380,7 @@ function addptbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to addptbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if strcmp(get(handles.groupdir_choosebox,'String'), 'Choose Group Directory')
+if strcmp(handles.groupdir_choosebox.String, 'Choose Dataset Directory')
     ea_error('Please choose a group directory first to store the group analysis!', 'Error', dbstack)
 end
 
@@ -370,7 +411,7 @@ setappdata(handles.leadfigure,'S',M.S);
 ea_refresh_lg(handles);
 % save M
 M=getappdata(handles.leadfigure,'M');
-save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
 
 
 % --- Executes on button press in removeptbutton.
@@ -421,8 +462,8 @@ options=ea_setopts_local(handles);
 options.leadprod = 'group';
 options.groupdir = M.ui.groupdir;
 % set pt specific options
-options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),filesep];
-[~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
+options.root=[fileparts(fileparts(handles.groupdir_choosebox.String)),filesep];
+[~,options.patientname]=fileparts(fileparts(handles.groupdir_choosebox.String));
 
 options.expstatvat.do=M.ui.statvat;
 options.native=0;
@@ -468,10 +509,10 @@ for reg=1:length(options.d3.isomatrix)
     end
 end
 
-if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
-    save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+    save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
     disp('Done.');
 end
 
@@ -1245,41 +1286,6 @@ options.d3.writeatlases=1;
 options.macaquemodus=0;
 
 
-% --- Executes on button press in groupdir_choosebox.
-function groupdir_choosebox_Callback(hObject, eventdata, handles)
-% hObject    handle to groupdir_choosebox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Save data for previous selected group folder
-if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
-    ea_busyaction('on',handles.leadfigure,'group');
-    disp('Saving data...');
-    % save M
-    ea_refresh_lg(handles);
-    M=getappdata(handles.leadfigure,'M');
-    disp('Saving data to disk...');
-    try
-        save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
-    catch
-        warning('Data could not be saved.');
-        % keyboard
-    end
-    disp('Done.');
-    ea_busyaction('off',handles.leadfigure,'group');
-end
-
-% groupdir=ea_uigetdir(ea_startpath,'Choose Group Directory');
-groupdir = uigetdir;
-
-if ~groupdir % user pressed cancel
-    return
-end
-groupdir = [groupdir, filesep];
-
-ea_load_group(handles,groupdir);
-
-
 % --- Executes on button press in opensubgui.
 function opensubgui_Callback(hObject, eventdata, handles)
 % hObject    handle to opensubgui (see GCBO)
@@ -1523,14 +1529,14 @@ function leadfigure_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 ea_busyaction('on',gcf,'group');
-if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
     ea_refresh_lg(handles);
     M=getappdata(hObject,'M');
     disp('Saving data to disk...');
     try
-        save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+        save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
     catch
         warning('Data could not be saved.');
         keyboard
@@ -1563,8 +1569,8 @@ ea_busyaction('on',gcf,'group');
 % set options
 options=ea_setopts_local(handles);
 % set pt specific options
-options.root=[fileparts(fileparts(get(handles.groupdir_choosebox,'String'))),filesep];
-[~,options.patientname]=fileparts(fileparts(get(handles.groupdir_choosebox,'String')));
+options.root=[fileparts(fileparts(handles.groupdir_choosebox.String)),filesep];
+[~,options.patientname]=fileparts(fileparts(handles.groupdir_choosebox.String));
 
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 options.elmodel=M.elstruct(1).elmodel;
@@ -1632,11 +1638,11 @@ if options.d3.showisovolume || options.expstatvat.do % regressors be used - iter
             end
         end
 
-        if ~strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % group dir still not chosen
+        if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group dir still not chosen
             ea_refresh_lg(handles);
             disp('Saving data...');
             % save M
-            save([get(handles.groupdir_choosebox,'String'),'LEAD_groupanalysis.mat'],'M','-v7.3');
+            save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
             disp('Done.');
         end
 

@@ -8,7 +8,7 @@ options.earoot=ea_getearoot;
 % get analysis data
 M=getappdata(handles.leadfigure,'M');
 
-if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % not set yet.
+if strcmp(handles.groupdir_choosebox.String,'Choose Group Directory') % not set yet.
     ea_busyaction('off',handles.leadfigure,'group');
     return
 end

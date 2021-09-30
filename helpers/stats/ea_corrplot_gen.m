@@ -93,7 +93,7 @@ for area=1:length(R_upd)
     % ylim([nanmin(X(:,area+1))-spacing,nanmax(X(:,area+1))+spacing]);
     if nargin>3
         if ~isempty(varargin{4})
-            odir=get(handles.groupdir_choosebox,'String');
+            odir=handles.groupdir_choosebox.String;
             ofname=[odir,description,'_',fn,'_',labels{1},'.png'];
             ea_screenshot(ofname);
         end

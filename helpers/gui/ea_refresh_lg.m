@@ -2,18 +2,17 @@ function ea_refresh_lg(handles)
 
 ea_busyaction('on',handles.leadfigure,'group');
 
-options.prefs=ea_prefs;
-options.earoot=ea_getearoot;
+options = getappdata(handles.leadfigure, 'options');
 
 % get model data
 disp('Getting model data...');
 M=getappdata(handles.leadfigure,'M');
 
-if strcmp(get(handles.groupdir_choosebox,'String'),'Choose Group Directory') % not set yet.
+if strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % not set yet.
     ea_busyaction('off',handles.leadfigure,'group');
     return
 end
-M.root=get(handles.groupdir_choosebox,'String');
+M.root=handles.groupdir_choosebox.String;
 if ~isfield(M,'guid') % only done once, legacy support.
     M.guid=datestr(datevec(now), 'yyyymmddHHMMSS' );
 end
@@ -30,8 +29,6 @@ disp('Refreshing patient list...');
 set(handles.patientlist,'String',M.patient.list);
 try set(handles.patientlist,'Value',M.ui.listselect); end
 
-
-
 disp('Creating isomatrix from regressor list...');
 % set isomatrix from variable in clinical list
 try
@@ -42,7 +39,7 @@ catch
     M.isomatrix_name={};
 end
 
-M.ui.groupdir = get(handles.groupdir_choosebox,'String');
+M.ui.groupdir = handles.groupdir_choosebox.String;
 
 disp('Refreshing selections on VI / FC Lists...');
 
