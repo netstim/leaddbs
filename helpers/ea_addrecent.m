@@ -1,35 +1,24 @@
-function ea_addrecent(handles,uipatdir,patsub,chosenix)
+function ea_addrecent(handles, uidir, type)
+% Add new item to recent patients/group analyses
 
-earoot=ea_getearoot;          
+earoot = ea_getearoot;
 
-load([earoot,'common',filesep,'ea_recent',patsub,'.mat']);
-if strcmp(fullrpts,['No recent ',patsub,' found'])
-    fullrpts={};
+load([earoot,'common',filesep,'ea_recent',type,'.mat'], 'recentfolders');
+if strcmp(recentfolders, [ 'No recent ', type, ' found'])
+    recentfolders = {};
 end
 
-if ~exist('chosenix','var')
-    try
-        chosenix=fullrpts{get(handles.recent,'Value')};
-    catch
-        chosenix=['Recent ',patsub,':'];
-    end
+recentfolders = unique([uidir'; recentfolders], 'stable');
+if length(recentfolders) > 10
+   recentfolders = recentfolders(1:10);
 end
+
+save([earoot, 'common', filesep, 'ea_recent', type, '.mat'], 'recentfolders');
 
 try
-    fullrpts=[uipatdir';fullrpts];
-catch % calls from lead_group could end up transposed
-    try
-        fullrpts=[uipatdir;fullrpts];
-    catch
-        fullrpts=[uipatdir;fullrpts'];
-    end
+    currentItem = recentfolders{handles.recent.Value};
+catch
+    currentItem = ['Recent ', type, ':'];
 end
-
-[fullrpts]=unique(fullrpts,'stable');
-if length(fullrpts)>10
-   fullrpts=fullrpts(1:10);
-end
-[~,nuchosenix]=ismember(chosenix,fullrpts);
-save([earoot,'common',filesep,'ea_recent',patsub,'.mat'],'fullrpts');
-
-ea_updaterecent(handles,patsub,nuchosenix);
+[~, idx] = ismember(currentItem, recentfolders);
+ea_refreshrecent(handles, type, idx);
