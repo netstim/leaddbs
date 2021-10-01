@@ -149,7 +149,6 @@ for patients = 1:length(source)
                if ismember(files_in_folder{file_in_folder},brainshift{:,1})
                     indx = cellfun(@(x)strcmp(x,files_in_folder{file_in_folder}),brainshift{:,1});
                     bids_name = brainshift{1,2}{indx};
-                    ea_generate_datasetDescription(brainshift_path,'derivatives')
                     derivatives_cell = move_derivatives2bids(scrf_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell); 
                end
             end
@@ -205,8 +204,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        coreg_path = fullfile(new_path,'coregistration');
-                        ea_generate_datasetDescription(coreg_path,'derivatives')
+                        
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                     %coregistration: log, no fixed naming pattern and hence
                     %in an elseif command
@@ -230,8 +228,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        normalization_path = fullfile(new_path,'normalization');
-                        ea_generate_datasetDescription(normalization_path,'derivatives');
+                        
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                                 %only for normalization
                     elseif ~isempty(regexp(files_to_move{files},'^normalize_.*.log'))
@@ -249,7 +246,7 @@ for patients = 1:length(source)
                         if ~exist(recon_dir,'dir')
                             mkdir(recon_dir)
                         end
-                        ea_generate_datasetDescription(recon_dir,'derivatives')
+                       
                         %corresponding index of the new pat
                         indx = cellfun(@(x)strcmp(x,files_to_move{files}),reconstruction{:,1});
                         bids_name = reconstruction{1,2}{indx};
@@ -267,8 +264,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        preproc_path = fullfile(new_path,'preprocessing');
-                        ea_generate_datasetDescription(preproc_path,'derivatives')
+                        
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         
                     
@@ -281,8 +277,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline));
                         end
-                        prefs_path = fullfile(new_path,'prefs');
-                        ea_generate_datasetDescription(prefs_path,'derivatives')
+                        
                         copyfile(fullfile(source_patient,'ea_ui.mat'),fullfile(new_path,pipelines{6}));
                         movefile(fullfile(new_path,pipelines{6},'ea_ui.mat'),fullfile(new_path,pipelines{6},bids_name));
                             
@@ -295,8 +290,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline));
                         end
-                        log_path = fullfile(new_path,'log');
-                        ea_generate_datasetDescription(log_path,'derivatives');
+                        
                         copyfile(fullfile(source_patient,'ea_methods.txt'),fullfile(new_path,pipelines{7}));
                         movefile(fullfile(new_path,pipelines{7},'ea_methods.txt'),fullfile(new_path,pipelines{7},bids_name));
 
@@ -308,8 +302,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline));
                         end
-                        misc_path = fullfile(new_path,'miscellaneous');
-                        ea_generate_datasetDescription(misc_path,'derivatives')
+                        
                         copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{11}));
                     
                     elseif ismember(files_to_move{files},ftracking{:,1})
@@ -320,8 +313,7 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        ftracking_path = fullfile(new_path,'ftracking');
-                        ea_generate_datasetDescription(ftracking_path,'derivatives')
+                        
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                     
                     elseif ~ismember(files_to_move{files},preprocessing{:,1}) && ~isempty(regexp(files_to_move{files},'raw_.*')) %support for other modalities in preproc
@@ -354,8 +346,7 @@ for patients = 1:length(source)
                 end
                 for folders = 1:length(pipelines)
                     if strcmp(pipelines{folders},'stimulations')
-                        stim_path = fullfile(new_path,'stimulations');
-                         ea_generate_datasetDescription(stim_path,'derivatives');
+                       
                         %the stimulations folder should already be
                         %there in the dest directory.
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
@@ -369,8 +360,7 @@ for patients = 1:length(source)
                         end
                         
                     elseif strcmp(pipelines{folders},'headmodel')
-                        headmodel_path = fullfile(new_path,'headmodel');
-                        ea_generate_datasetDescription(headmodel_path,'derivatives');
+                        
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             headmodel_contents = dir_without_dots(fullfile(new_path,pipelines{folders}));
                             headmodel_files = {headmodel_contents.name};
@@ -440,6 +430,12 @@ for patients = 1:length(source)
                             disp("Migrating post operative session data...")
                             for files=1:length(files_to_move)
                                 if ~isempty(regexp(files_to_move{files},'raw_postop_.*.nii')) || strcmp(files_to_move{files},'postop_ct.nii')
+                                    if strcmp(files_to_move{files},'postop_ct.nii')
+                                        postop_modality = 'CT';
+                                    else
+                                        postop_modality = 'MRI';
+                                        
+                                    end
                                     if exist(fullfile(source_patient,files_to_move{files}),'file')
                                         modality_str = strsplit(files_to_move{files},'_');
                                         modality_str = modality_str{end};
@@ -486,6 +482,8 @@ for patients = 1:length(source)
                         
                     end
                 end
+                raw_path = fullfile(dest_patient,'rawdata');
+                ea_generate_datasetDescription(raw_path,'root_folder',postop_modality);
         end
     end        
     disp(['Process finished for Patient:' patient_name]);
