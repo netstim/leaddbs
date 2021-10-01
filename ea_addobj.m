@@ -1,4 +1,4 @@
-function ea_addobj(src, evt, resultfig, obj, options)
+function ea_addobj(resultfig, obj, options)
 
 addht = getappdata(resultfig,'addht');
 if isempty(addht)
