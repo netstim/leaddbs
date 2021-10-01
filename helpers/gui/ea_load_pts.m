@@ -9,7 +9,7 @@ uipatdir = GetFullPath(uipatdir);
 isSubjFolder = 0;
 isBIDSRoot = 0;
 
-if length(uipatdir) == 1 % Dragged single folder
+if length(uipatdir) == 1 % Single folder
     if contains(uipatdir{1}, ['derivatives', filesep, 'leaddbs']) % Is patient folder under derivatives
         isSubjFolder = 1;
         BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives)'], 'match', 'once');
@@ -22,13 +22,42 @@ if length(uipatdir) == 1 % Dragged single folder
             BIDSRoot = uipatdir{1};
             if ~ismember(folders,'dataset_description.json')
                 disp("could not find dataset description file, generating one now...");
-               ea_generate_datasetDescription(uipatdir{1},'raw');
+                ea_generate_datasetDescription(uipatdir{1}, 'raw');
             end
         end
     end
 
     if ~isSubjFolder && ~isBIDSRoot
-        error('Neither BIDS dataset nor patient folder found, please manually use lead migrate!');
+        if isfile(fullfile(uipatdir{1}, 'ea_ui.mat')) % Old dataset detected
+            msg = {'{\bfOld dataset detected, would you like to migrate it to BIDS?}';
+                   ['Thank you for your interest in Lead-DBS! Since version 2.6, we have re-organized the way Lead-DBS acesses and stores data.' ,...
+                   'This implies changes to the organization of your input and output data. The main objective to set standards for data organization was to promote' ,...
+                   'data sharing and open science initiatives. For more information and details on specific changes, please refer to our manual [insert url]. ' ,...
+                   'lead-import is a tool developed to automatically assist you in moving your dataset from the classic lead-dbs to the bidsified version. ',...
+                   '{\bfIf you wish to run BIDS import tool, please click on ''Yes''. Otherwise, you will not be able to use Lead-DBS.}']};
+            opts.Default = 'Cancel';
+            opts.Interpreter = 'tex';
+            choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
+            if strcmp(choice, 'yes')
+                options.prefs = ea_prefs;
+                [BIDSRoot, subjId] = lead_migrate(uipatdir{1}, options, handles);
+                uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId])};
+            else
+                return;
+            end
+        elseif isfolder(fullfile(uipatdir{1}, 'dicom')) ... % DICOM folder detected
+                || isfolder(fullfile(uipatdir{1}, 'DICOM')) ...
+                || endsWith(uipatdir{1}, 'dicom', 'IgnoreCase',true)
+            msg = {'{\bfDICOM folder found, will run DICOM to NIfTI conversion!}'};
+            opts.Interpreter = 'tex';
+            opts.WindowStyle = 'modal';
+            waitfor(msgbox(msg, '', 'help', opts));
+            options.prefs = ea_prefs;
+            [BIDSRoot, subjId] = lead_migrate(uipatdir{1}, options, handles);
+            uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId])};
+        else
+            error('Neither BIDS dataset nor patient folder found!');
+        end
     elseif isBIDSRoot % Is BIDS root folder
         rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0);
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
@@ -42,10 +71,10 @@ if length(uipatdir) == 1 % Dragged single folder
             uipatdir = strrep(rawData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
             subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match', 'once');
         else
-            error('Both sourcedata and rawdata folders are empty!');
+            error('BIDS dataset detected but both sourcedata and rawdata folders are empty!');
         end
     end
-else % Dragged multiple patient folders
+else % Multiple patient folders, suppose dataset has already been migrated to BIDS
     BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives\', filesep, 'leaddbs)'], 'match', 'once');
     if isempty(BIDSRoot)
         error('Please select patient folders under DATASET/derivatives/leaddbs!');
