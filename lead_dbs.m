@@ -102,7 +102,7 @@ ea_init_normpopup(handles, options.prefs.normalize.default);
 ea_processguiargs(handles,varargin)
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
+ea_menu_initmenu(handles,{'import','acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
 
 ea_firstrun(handles,options);
 ea_getui(handles);
