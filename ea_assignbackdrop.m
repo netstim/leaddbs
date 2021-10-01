@@ -29,7 +29,7 @@ if strcmp(bdstring, 'list')
     % check patient mode
     if isfield(options,'groupmode')
         nopatientmode = options.groupmode;
-    elseif isempty(options.subj.subjId)
+    elseif ~isfield(options, 'subj')
         nopatientmode=1;
     end
 
