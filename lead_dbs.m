@@ -476,13 +476,9 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'dbs');
-options.prefs=ea_prefs('');
-[isBIDSRoot,uipatdir] = ea_checkbids(options,handles);
-%the dataset is bids compliant
-if isBIDSRoot
-    ea_getpatients(options,handles,uipatdir);
-    ea_busyaction('off',handles.leadfigure,'dbs');
-end
+options.prefs = ea_prefs;
+ea_getpatients(options,handles);
+ea_busyaction('off',handles.leadfigure,'dbs');
 
 
 % --- Executes on button press in left_checkbox.
