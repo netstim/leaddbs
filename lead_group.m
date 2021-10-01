@@ -286,7 +286,7 @@ else
         ea_refresh_lg(handles);
         % save M
         M=getappdata(handles.leadfigure,'M');
-        save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
+        save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
     end
 end
 
@@ -408,7 +408,7 @@ setappdata(handles.leadfigure,'S',M.S);
 ea_refresh_lg(handles);
 % save M
 M=getappdata(handles.leadfigure,'M');
-save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
+save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
 
 
 % --- Executes on button press in removeptbutton.
@@ -508,7 +508,7 @@ end
 if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group dir still not chosen
     disp('Saving data...');
     % save M
-    save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
+    save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
     disp('Done.');
 end
 
@@ -548,7 +548,6 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
 
     % Get vizstruct
     if ~exist('choice','var') || strcmpi(choice,'No')
-
         for pt=1:length(M.elstruct)
             options.uipatdirs{1}=uipatdirs{pt};
             M.merstruct(pt)=ea_getmerstruct(options);
@@ -578,13 +577,9 @@ if options.prefs.env.dev && get(handles.mercheck,'Value')
 
         save(fullfile(options.root,options.patientname,'ea_groupelvisdata.mat'),...
             'options','vizstruct');
-
     elseif strcmpi(choice,'Yes')
-
         load(filename,'vizstruct')
-
     end
-
 end
 
 % amend .pt to identify which patient is selected (needed for isomatrix).
@@ -975,8 +970,6 @@ for pt=selection
         options.expstatvat.pt=pt;
     end
     options.expstatvat.dir=M.ui.groupdir;
-
-    %delete([options.root,options.patientname,filesep,'ea_stats.mat']);
 
     % Step 1: Re-calculate closeness to subcortical atlases.
     options.leadprod = 'group';
@@ -1529,7 +1522,7 @@ if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % group
     M=getappdata(hObject,'M');
     disp('Saving data to disk...');
     try
-        save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
+        save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
     catch
         warning('Data could not be saved.');
         keyboard
@@ -1635,7 +1628,7 @@ if options.d3.showisovolume || options.expstatvat.do % regressors be used - iter
             ea_refresh_lg(handles);
             disp('Saving data...');
             % save M
-            save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
+            save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
             disp('Done.');
         end
 
