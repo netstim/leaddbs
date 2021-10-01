@@ -21,7 +21,7 @@ handles = guihandles(h);
 % reset all checkboxes to 0
 handles_names = fieldnames(handles);
 for i = 1:length(handles_names)
-    if isprop(handles.(handles_names{i}), 'Style') & strcmp(handles.(handles_names{i}).Style,'checkbox')
+    if isprop(handles.(handles_names{i}), 'Style') && strcmp(handles.(handles_names{i}).Style,'checkbox')
         handles.(handles_names{i}).Value = 0;
     end
 end
