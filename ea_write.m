@@ -4,8 +4,10 @@ try
     ea_updatemodel(options);
 end
 
-% check if sides is specified correctly for visualization:
-options=ea_detsides(options);
+% check if sides is specified correctly for visualization
+if isfield(options, 'subj')
+    options=ea_detsides(options);
+end
 
 if options.d2.write || options.d3.write
    if strcmp(options.atlasset,'Segment patient anatomy')
