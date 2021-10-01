@@ -8,7 +8,7 @@ if strcmp(recentfolders, [ 'No recent ', type, ' found'])
     recentfolders = {};
 end
 
-recentfolders = unique([uidir'; recentfolders], 'stable');
+recentfolders = unique([uidir; recentfolders], 'stable');
 if length(recentfolders) > 10
    recentfolders = recentfolders(1:10);
 end
