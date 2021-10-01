@@ -24,15 +24,23 @@ if nargin>2
 else
     stimparams=nan;
 end
+
 if nargin==4
     fiberthresh=varargin{4};
 else
 
     fiberthresh=options.fiberthresh;
 end
+
 % Initialize figure
 
-resultfig=figure('name', [options.subj.subjId,': Electrode-Scene'],...
+if isfield(options, 'subj')
+    titlePrefix = options.subj.subjId;
+else
+    titlePrefix = 'No Patient Selected';
+end
+
+resultfig=figure('name', [titlePrefix,': Electrode-Scene'],...
     'color', 'k', 'numbertitle', 'off',...
     'CloseRequestFcn', @closesatellites, 'visible', options.d3.verbose,...
     'KeyPressFcn', @ea_keypress, 'KeyReleaseFcn', @ea_keyrelease);
