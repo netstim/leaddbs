@@ -125,6 +125,10 @@ if nargin == 4
             lead_predict;
             delete(handles.leadfigure)
             return
+        case {'import', '-i', 'i'}
+            lead_import;
+            delete(handles.leadfigure)
+            return
         case {'version', '-v', 'v'}
             disp(ea_getvsn('local'));
             delete(handles.leadfigure)
