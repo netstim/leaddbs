@@ -78,13 +78,13 @@ slicebutton=uipushtool(ht,'CData',ea_get_icn('slices'),...
 
 mh = uimenu(resultfig,'Label','Add Objects');
 fh1 = uimenu(mh,'Label','Open Tract',...
-    'Callback',{@ea_addobj,resultfig,'tract',options});
+    'Callback',{@(src, evt) ea_addobj(resultfig,'tract',options)});
 fh2 = uimenu(mh,'Label','Open ROI',...
-    'Callback',{@ea_addobj,resultfig,'roi',options});
+    'Callback',{@(src, evt) ea_addobj(resultfig,'roi',options)});
 fh3 = uimenu(mh,'Label','Show tracts weighted by ROI',...
-    'Callback',{@ea_addobj,resultfig,'tractmap',options});
+    'Callback',{@(src, evt) ea_addobj(resultfig,'tractmap',options)});
 fh3 = uimenu(mh,'Label','Show fiber activation result from OSS-DBS',...
-    'Callback',{@ea_addobj,resultfig,'fiberactivation',options});
+    'Callback',{@(src, evt) ea_addobj(resultfig,'fiberactivation',options)});
 
 % Set some visualization parameters
 set(resultfig,'Renderer','opengl')
@@ -582,7 +582,7 @@ end
 options = getappdata(resultfig,'options');
 
 if ~isempty(objects)
-    ea_addobj([], [], resultfig, objects, options);
+    ea_addobj(resultfig, objects, options);
 end
 
 
