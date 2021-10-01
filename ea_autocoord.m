@@ -17,8 +17,11 @@ options.prefs.patientdir = options.patientname;
 % Get BIDS fetcher and subj struct
 bids = getappdata(options.leadfigure, 'bids');
 subjId = getappdata(options.leadfigure, 'subjId');
-options.bids = bids;
-options.subj = bids.getSubj(subjId{1}, options.modality);
+
+if ~isempty(bids)
+    options.bids = bids;
+    options.subj = bids.getSubj(subjId{1}, options.modality);
+end
 
 % get accurate electrode specifications and save it in options.
 options = ea_resolve_elspec(options);
