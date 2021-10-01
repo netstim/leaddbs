@@ -24,6 +24,9 @@ if isempty(menuprobe)
         m_c.Checked='off';
     end
 
+    if ismember('import',cmd)
+        uimenu(f,'Label','Import DICOM or Migrate Dataset to BIDS','Callback',{@(src, evt) lead_migrate});
+    end
 
     if ismember('checkregfigs',cmd)
         cr=uimenu(f,'Label','Checkreg');
@@ -32,6 +35,7 @@ if isempty(menuprobe)
         uimenu(cr,'Label','Aggregate all checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'allcheckreg'});
         uimenu(cr,'Label','Aggregate most recent normalization checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'normcheckreg'});
     end
+
     if ismember('group',cmd)
        cr=uimenu(f,'Label','Group Tools');
        uimenu(cr,'Label','Check for outliers in localizations','Callback',{@ea_checkoutliers,handles});
