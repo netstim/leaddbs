@@ -22,8 +22,10 @@ if length(uipatdir) == 1 % Single folder
             BIDSRoot = uipatdir{1};
             if ~ismember(folders,'dataset_description.json')
                 disp("could not find dataset description file, generating one now...");
-                ea_generate_datasetDescription(uipatdir{1}, 'raw');
+                ea_generate_datasetDescription(uipatdir{1}, 'root_folder');
+
             end
+            
         end
     end
 
@@ -38,9 +40,12 @@ if length(uipatdir) == 1 % Single folder
             opts.Default = 'Cancel';
             opts.Interpreter = 'tex';
             choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
-            if strcmp(choice, 'yes')
+            if strcmp(choice, 'Yes')
                 options.prefs = ea_prefs;
-                [BIDSRoot, subjId] = lead_migrate(uipatdir{1}, options, handles);
+                imp = lead_import(uipatdir, options, handles);
+                waitfor(imp);
+                BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
+                subjId = getappdata(handles.leadfigure,'subjID');
                 uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId])};
             else
                 return;
@@ -53,11 +58,15 @@ if length(uipatdir) == 1 % Single folder
             opts.WindowStyle = 'modal';
             waitfor(msgbox(msg, '', 'help', opts));
             options.prefs = ea_prefs;
-            [BIDSRoot, subjId] = lead_migrate(uipatdir{1}, options, handles);
+            imp = lead_import(uipatdir, options, handles);
+            waitfor(imp);
+            BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
+            subjId = getappdata(handles.leadfigure,'subjID');
             uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId])};
         else
             error('Neither BIDS dataset nor patient folder found!');
         end
+
     elseif isBIDSRoot % Is BIDS root folder
         rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0);
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
@@ -83,7 +92,7 @@ else % Multiple patient folders, suppose dataset has already been migrated to BI
     end
 end
 
-if isBIDSRoot && length(subjId) > 1 % Multiple patients found
+if isBIDSRoot && length(uipatdir) > 1 % Multiple patients found
     index = listdlg('PromptString','Select Patient', 'ListString', subjId);
     if isempty(index)
         return;
@@ -93,7 +102,7 @@ if isBIDSRoot && length(subjId) > 1 % Multiple patients found
     end
 end
 
-if length(subjId) == 1 % Only one patient selected
+if length(uipatdir) == 1 % Only one patient selected
     set(handles.patdir_choosebox,'String',uipatdir{1});
     set(handles.patdir_choosebox,'TooltipString',uipatdir{1});
 else % Multiple patients mode
