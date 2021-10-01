@@ -1,8 +1,8 @@
-function options=ea_detsides(options)
+function options = ea_detsides(options)
 
 if exist(options.subj.recon.recon,'file')
     load(options.subj.recon.recon);
-    sides=[];
+    sides = [];
     if isfield(reco,'native')
         for el=1:length(reco.native.markers)
             if ~isempty(reco.native.markers(el).head)
@@ -16,5 +16,5 @@ if exist(options.subj.recon.recon,'file')
             end
         end
     end
-    options.sides=sides;
+    options.sides = sides;
 end
