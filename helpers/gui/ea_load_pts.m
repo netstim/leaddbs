@@ -23,9 +23,7 @@ if length(uipatdir) == 1 % Single folder
             if ~ismember(folders,'dataset_description.json')
                 disp("could not find dataset description file, generating one now...");
                 ea_generate_datasetDescription(uipatdir{1}, 'root_folder');
-
             end
-            
         end
     end
 
@@ -42,8 +40,7 @@ if length(uipatdir) == 1 % Single folder
             choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
             if strcmp(choice, 'Yes')
                 options.prefs = ea_prefs;
-                imp = lead_import(uipatdir, options, handles);
-                waitfor(imp);
+                waitfor(lead_import(uipatdir, options, handles));
                 BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                 subjId = getappdata(handles.leadfigure,'subjID');
                 uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId])};
@@ -58,15 +55,13 @@ if length(uipatdir) == 1 % Single folder
             opts.WindowStyle = 'modal';
             waitfor(msgbox(msg, '', 'help', opts));
             options.prefs = ea_prefs;
-            imp = lead_import(uipatdir, options, handles);
-            waitfor(imp);
+            waitfor(lead_import(uipatdir, options, handles));
             BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
             subjId = getappdata(handles.leadfigure,'subjID');
             uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId])};
         else
             error('Neither BIDS dataset nor patient folder found!');
         end
-
     elseif isBIDSRoot % Is BIDS root folder
         rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0);
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
@@ -131,7 +126,7 @@ if ~getappdata(handles.leadfigure, 'rawImageJSONExist')
 end
 
 % check if reconstruction is present and assign side-toggles accordingly:
-if length(subjId) == 1 && isfield(handles, 'side1')
+if length(uipatdir) == 1 && isfield(handles, 'side1')
     recon = bids.getRecon(subjId{1});
     if isfile(recon.recon)
         load(recon.recon);
