@@ -126,7 +126,7 @@ if nargin == 4
             delete(handles.leadfigure)
             return
         case {'import', '-i', 'i'}
-            lead_import;
+            ea_lead_import;
             delete(handles.leadfigure)
             return
         case {'version', '-v', 'v'}
