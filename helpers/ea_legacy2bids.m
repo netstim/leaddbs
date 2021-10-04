@@ -1,4 +1,4 @@
-function legacy2bids(source,dest,isdicom,dicom_source,doDcmConv)
+function ea_legacy2bids(source,dest,isdicom,dicom_source,doDcmConv)
 
 
 %SANTIY: first check the existence of your source and dest directory. If it is not there,
@@ -53,7 +53,7 @@ pipelines = {'brainshift','coregistration','normalization','reconstruction','pre
 legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
 bids_modalities = {'T1w','T2w','PDw','CT','ax','cor','sag','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2starw'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
-[brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking] = create_bids_mapping();
+[brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking] = ea_create_bids_mapping();
 
 %data structure for excel sheet later on
 derivatives_cell = {};
@@ -352,7 +352,7 @@ for patients = 1:length(source)
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             pipeline = pipelines{folders};
                             try
-                                [mni_files,native_files,derivatives_cell] = vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
+                                [mni_files,native_files,derivatives_cell] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
                                 move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name);
                             catch
                                 disp("Your stimulation folder might be empty..."); 
@@ -376,7 +376,7 @@ for patients = 1:length(source)
                             curr_pipeline = 'current_headmodel';
                             new_path = fullfile(new_path,'headmodel');
                             try
-                                [mni_files,native_files,derivatives_cell] = vta_walkpath(source_patient,new_path,curr_pipeline,derivatives_cell);
+                                [mni_files,native_files,derivatives_cell] = ea_vta_walkpath(source_patient,new_path,curr_pipeline,derivatives_cell);
                                 move_mni2bids(mni_files,native_files,'',headmodel,curr_pipeline,patient_name);
                             catch
                                 disp("Could not detect headmodel files...");
@@ -571,7 +571,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
         fname_in = fullfile(source_patient_path,which_file);
         [~,fname,ext] = fileparts(bids_name);
         fname_out = fullfile(log_dir,[patient_name,'_',fname '.json']);
-        file2json(fname_in,fname_out); %under leaddbs/helpers/file2json
+        ea_file2json(fname_in,fname_out); %under leaddbs/helpers/file2json
         
     elseif endsWith(which_file,'.mat') || endsWith(which_file,'.gz') || endsWith(which_file,'.h5')
         if ~exist(transformations_dir,'dir')
