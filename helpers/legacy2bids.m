@@ -482,8 +482,8 @@ for patients = 1:length(source)
                         
                     end
                 end
-                raw_path = fullfile(dest_patient,'rawdata');
-                ea_generate_datasetDescription(raw_path,'root_folder',postop_modality);
+                raw_path = fullfile(dest_patient,subfolder_cell{subfolders});
+                ea_generate_datasetDescription(raw_path,'raw',postop_modality);
         end
     end        
     disp(['Process finished for Patient:' patient_name]);
