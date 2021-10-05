@@ -9,23 +9,20 @@ for j=1:length(source)
     else
         addpath(source{j})
     end
-    if isempty(dest)
-        dest{j} = source{j};
-        addpath(dest{j});
-    end
 end
 
 
-%when the app is used to run this script, there is an isempty check in the
-%app also. This conflicts with whether it is empty in this script (i.e., if
-%the user uses the app and doesn't input an output dir, then the output dir
-%is automatically changed to the input dir. So this code will run. 
-if exist('dest','var') 
-   for dest_dir = 1:length(dest)
-       if ~exist(dest{dest_dir},'dir')
-            addpath(dest{dest_dir});
-            mkdir(dest{dest_dir});
-       end
+%SANITY for dest directories
+if ~exist('dest','var')
+    disp("Please select output directory")
+    return
+else
+   if iscell(dest)
+       dest = dest{1};
+   end
+   if ~isfolder(dest)
+       addpath(dest);
+       mkdir(dest);
    end
 end
 
@@ -67,16 +64,15 @@ derivatives_cell = {};
 
 %perform moving for each pat
 tic
-log_path = fullfile(dest{1},'derivatives','leaddbs','logs');
+log_path = fullfile(dest,'derivatives','leaddbs','logs');
 if ~exist(log_path,'dir')
     mkdir(log_path)
 end
 for patients = 1:length(source)
     %source patient filepath
     source_patient = source{patients};
-    %always specify a output directory
-    dest_patient = dest{patients};
     
+    %dest directory is already specified
     if isdicom
         dicom_patient = dicom_source{patients};
     end
@@ -91,7 +87,7 @@ for patients = 1:length(source)
            patient_name = ['sub-',erase(patient_name,'-')];
        end
     end
-    
+    disp(['Processing patient: ' patient_name]);
     %handle the files in the patient folder (directories are handled later)
     %creates a cell of the files to move, later, we can create
     %the new dirrectory structure and move the files into the
@@ -119,23 +115,23 @@ for patients = 1:length(source)
             if any(ismember(dir_names,'stimulations'))
                 %if mni dir exists
                 if ~exist(fullfile(source_patient,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),'dir') || ~exist(fullfile(source_patient,'stimulations','native'),'dir')
-                    mkdir(fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'));
-                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'));
+                    mkdir(fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'));
+                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'));
                 else
-                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'stimulations'));
+                    copyfile(fullfile(source_patient,'stimulations'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations'));
                 end
             end
             if any(ismember(dir_names,'current_headmodel'))
                 if exist(fullfile(source_patient,'headmodel'),'dir')
                     movefile(fullfile(source_patient,'current_headmodel'),fullfile(source_patient,'headmodel'));
                 else %there is only a current headmodel but no headmodel
-                    copyfile(fullfile(source_patient,'current_headmodel'),fullfile(dest_patient,'derivatives','leaddbs',patient_name,'headmodel'))
+                    copyfile(fullfile(source_patient,'current_headmodel'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'))
                 end
             end
         end
         %handle brainshift copy and rename
         if strcmp(dir_names{j},'scrf') 
-            new_path = fullfile(dest_patient,'derivatives','leaddbs',patient_name);
+            new_path = fullfile(dest,'derivatives','leaddbs',patient_name);
             scrf_patient = fullfile(source_patient,'scrf');
             which_pipeline = pipelines{1};
             if ~exist(fullfile(new_path,which_pipeline),'dir')
@@ -154,23 +150,23 @@ for patients = 1:length(source)
             end
         %other directories the user may have    
         elseif ~strcmp(dir_names{j},'current_headmodel') %already handled
-            if ~exist(fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}),'dir')
-                copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest_patient,'derivatives','leaddbs',patient_name,dir_names{j}));
+            if ~exist(fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}),'dir')
+                copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
             end
         end
     end
     
     %generate the dataset description in the root_folder
-    ea_generate_datasetDescription(dest_patient,'root_folder')
+    ea_generate_datasetDescription(dest,'root_folder')
     if ~isdicom
         %generate raw image json in the raw data folder
-        generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_containers);
+        generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers);
     end
  
     for subfolders = 1:length(subfolder_cell)
         switch subfolder_cell{subfolders}
             case 'sourcedata'
-                new_path = fullfile(dest_patient,subfolder_cell{subfolders},patient_name);
+                new_path = fullfile(dest,subfolder_cell{subfolders},patient_name);
                 if ~exist(new_path,'dir')
                     mkdir(new_path)
                 end
@@ -182,7 +178,7 @@ for patients = 1:length(source)
                 end 
             case 'derivatives'
                 disp("Migrating Derivatives folder...");
-                new_path = fullfile(dest_patient,subfolder_cell{subfolders},'leaddbs',patient_name);
+                new_path = fullfile(dest,subfolder_cell{subfolders},'leaddbs',patient_name);
                 for files=1:length(files_to_move)
                     mod_split = strsplit(files_to_move{files},'_');
                     if ismember(mod_split,'postop')
@@ -399,7 +395,7 @@ for patients = 1:length(source)
             otherwise
                 for i= 1:length(modes)
                     for j=1:length(sessions)
-                        new_path = fullfile(dest_patient,subfolder_cell{subfolders},patient_name,sessions{j},modes{i});
+                        new_path = fullfile(dest,subfolder_cell{subfolders},patient_name,sessions{j},modes{i});
                         if ~exist(new_path,'dir')
                             mkdir(new_path)
                         end
@@ -482,14 +478,14 @@ for patients = 1:length(source)
                         
                     end
                 end
-                raw_path = fullfile(dest_patient,subfolder_cell{subfolders});
+                raw_path = fullfile(dest,subfolder_cell{subfolders});
                 ea_generate_datasetDescription(raw_path,'raw',postop_modality);
         end
     end        
     disp(['Process finished for Patient:' patient_name]);
     disp("Generating excel sheet for the conversion...");
-    writecell(derivatives_cell,fullfile(dest_patient,'derivatives','leaddbs',patient_name,'legacy2bids_naming.xlsx'))
-    disp(['Report saved at:' fullfile(dest_patient,'derivatives','leaddbs',patient_name,'legacy2bids_naming.xlsx')]);
+    writecell(derivatives_cell,fullfile(dest,'derivatives','leaddbs',patient_name,'legacy2bids_naming.xlsx'))
+    disp(['Report saved at:' fullfile(dest,'derivatives','leaddbs',patient_name,'legacy2bids_naming.xlsx')]);
 end
 toc;
 
@@ -654,12 +650,12 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
 
 
     
-function generate_rawImagejson(files_to_move,patient_name,dest_patient,rawdata_containers)
-    output_dir = fullfile(dest_patient,'derivatives','leaddbs',patient_name,'prefs');
+function generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers)
+    output_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs');
     if ~exist(output_dir,'dir')
         mkdir(output_dir)
     end
-    filename_out = fullfile(dest_patient,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
+    filename_out = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
     fout_fid = fopen(filename_out,'w');
     %special_case
     if ~isempty(regexp(files_to_move,'anat_t1.nii')) && all(cellfun('isempty',regexp(files_to_move,'raw_anat_t1.nii')))
