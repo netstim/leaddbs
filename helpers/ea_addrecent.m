@@ -4,7 +4,7 @@ function ea_addrecent(handles, uidir, type)
 earoot = ea_getearoot;
 
 load([earoot,'common',filesep,'ea_recent',type,'.mat'], 'recentfolders');
-if strcmp(recentfolders, [ 'No recent ', type, ' found'])
+if ismember(['No recent ', type, ' found'], recentfolders)
     recentfolders = {};
 end
 
@@ -15,10 +15,4 @@ end
 
 save([earoot, 'common', filesep, 'ea_recent', type, '.mat'], 'recentfolders');
 
-try
-    currentItem = recentfolders{handles.recent.Value};
-catch
-    currentItem = ['Recent ', type, ':'];
-end
-[~, idx] = ismember(currentItem, recentfolders);
-ea_refreshrecent(handles, type, idx);
+ea_refreshrecent(handles, type);
