@@ -332,9 +332,9 @@ groupdir = uigetdir;
 if ~groupdir % user pressed cancel
     return
 else
-    analysisFile = ea_getGroupAnalysisFile(folder);
+    analysisFile = ea_getGroupAnalysisFile(groupdir);
     if isempty(analysisFile) % Create new analysis file in case not found
-        analysisFile = ea_genGroupAnalysisFile(folder);
+        analysisFile = ea_genGroupAnalysisFile(groupdir);
     end
     groupdir = fileparts(analysisFile);
 end
@@ -454,9 +454,11 @@ function vizbutton_Callback(hObject, eventdata, handles)
 clc;
 M=getappdata(gcf,'M');
 ea_busyaction('on',handles.leadfigure,'group');
+
 % set options
 options=ea_setopts_local(handles);
 options.leadprod = 'group';
+
 % set pt specific options
 options.root=[fileparts(fileparts(handles.groupdir_choosebox.String)),filesep];
 [~,options.patientname]=fileparts(fileparts(handles.groupdir_choosebox.String));
