@@ -119,7 +119,11 @@ else
             subjID = char(pathparts(end));
             
             % check if sub is already present
-            if ~strcmp(subjID(1:4), 'sub-')
+            if length(subjID)>3
+                if ~strcmp(subjID(1:4), 'sub-')
+                    subjID = ['sub-', subjID];
+                end
+            else
                 subjID = ['sub-', subjID];
             end
 
