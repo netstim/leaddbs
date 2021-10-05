@@ -81,7 +81,7 @@ for patients = 1:length(source)
     %'_' or '-'
     [~,patient_name,~] = fileparts(source_patient);
     if ~startsWith(patient_name,'sub-')
-        patient_name = ['sub-', regexprep(patient_name, '[\s-_]', '')];
+        patient_name = ['sub-', regexprep(patient_name, '[\W_]', '')];
     end
     disp(['Processing patient: ' patient_name]);
     %handle the files in the patient folder (directories are handled later)
