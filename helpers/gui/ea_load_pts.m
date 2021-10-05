@@ -40,10 +40,10 @@ if length(uipatdir) == 1 % Single folder
             choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
             if strcmp(choice, 'Yes')
                 options.prefs = ea_prefs;
-                waitfor(ea_lead_import(uipatdir, options, handles));
+                waitfor(lead_import(uipatdir, options, handles));
                 BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                 subjId = getappdata(handles.leadfigure,'subjID');
-                uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId])};
+                uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
             else
                 return;
             end
@@ -55,10 +55,10 @@ if length(uipatdir) == 1 % Single folder
             opts.WindowStyle = 'modal';
             waitfor(msgbox(msg, '', 'help', opts));
             options.prefs = ea_prefs;
-            waitfor(ea_lead_import(uipatdir, options, handles));
+            waitfor(lead_import(uipatdir, options, handles));
             BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
             subjId = getappdata(handles.leadfigure,'subjID');
-            uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId])};
+            uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
         else
             error('Neither BIDS dataset nor patient folder found!');
         end
@@ -79,6 +79,7 @@ if length(uipatdir) == 1 % Single folder
         end
     end
 else % Multiple patient folders, suppose dataset has already been migrated to BIDS
+    warndlg('Multiple patient folders detected. If it is not migrated to BIDS format, please do so manually');
     BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives\', filesep, 'leaddbs)'], 'match', 'once');
     if isempty(BIDSRoot)
         error('Please select patient folders under DATASET/derivatives/leaddbs!');
@@ -127,6 +128,7 @@ end
 
 % check if reconstruction is present and assign side-toggles accordingly:
 if length(uipatdir) == 1 && isfield(handles, 'side1')
+    
     recon = bids.getRecon(subjId{1});
     if isfile(recon.recon)
         load(recon.recon);
