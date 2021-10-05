@@ -85,6 +85,8 @@ for patients = 1:length(source)
            patient_name = ['sub-',erase(patient_name,'_')];
        elseif contains(patient_name,'-')
            patient_name = ['sub-',erase(patient_name,'-')];
+       else
+           patient_name = ['sub-' patient_name];
        end
     end
     disp(['Processing patient: ' patient_name]);
