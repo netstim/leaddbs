@@ -40,7 +40,6 @@ if length(uipatdir) == 1 % Single folder
             choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
             if strcmp(choice, 'Yes')
                 options.prefs = ea_prefs;
-                ea_lead_import(uipatdir, options, handles);
                 waitfor(ea_lead_import(uipatdir, options, handles));
                 BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                 subjId = getappdata(handles.leadfigure,'subjID');
@@ -56,7 +55,6 @@ if length(uipatdir) == 1 % Single folder
             opts.WindowStyle = 'modal';
             waitfor(msgbox(msg, '', 'help', opts));
             options.prefs = ea_prefs;
-            ea_lead_import(uipatdir, options, handles);
             waitfor(ea_lead_import(uipatdir, options, handles));
             BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
             subjId = getappdata(handles.leadfigure,'subjID');
