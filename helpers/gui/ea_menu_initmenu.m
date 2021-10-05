@@ -25,7 +25,7 @@ if isempty(menuprobe)
     end
 
     if ismember('import',cmd)
-        uimenu(f,'Label','Import DICOM or Migrate Dataset to BIDS','Callback',{@(src, evt) ea_lead_import});
+        uimenu(f,'Label','Import DICOM or Migrate Dataset to BIDS','Callback',{@(src, evt) lead_import});
     end
 
     if ismember('checkregfigs',cmd)
