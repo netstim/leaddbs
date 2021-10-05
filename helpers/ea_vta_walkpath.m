@@ -1,4 +1,4 @@
-function [mni_files,native_files,derivatives_cell] = vta_walkpath(source_patient,new_path,pipeline,derivatives_cell)
+function [mni_files,native_files,derivatives_cell] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell)
 
 mni_files = {};
 native_files = {};

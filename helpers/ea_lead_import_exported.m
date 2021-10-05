@@ -1,4 +1,4 @@
-classdef lead_import_exported < matlab.apps.AppBase
+classdef ea_lead_import_exported < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
@@ -126,7 +126,10 @@ classdef lead_import_exported < matlab.apps.AppBase
             app.MigratelegacyLeadDBSdatasettoBIDSdatasetCheckBox.Enable = 'on';
             app.MigratelegacyLeadDBSdatasettoBIDSdatasetCheckBox.Value = 0;
         end
-        
+        function [bidsroot,subjID] = generateopparams(app,dest)
+            bidsroot = dest;
+            subjID = app.subjID;
+        end
         
     end
     
@@ -194,8 +197,9 @@ classdef lead_import_exported < matlab.apps.AppBase
         end
 
         % Button pushed function: RunButton
-        function [dest,subjID] = RunButtonPushed(app, event)
-            subjID = app.subjID;
+        function RunButtonPushed(app, event)
+            
+            
             app.BusyLamp.Color = 'red';
             source = app.source_files;
             if isempty(app.output_files)
@@ -238,13 +242,11 @@ classdef lead_import_exported < matlab.apps.AppBase
                 % if running automatically, close as soon as the migration
                 % is over.
                 if app.close_flag
-                   % app.handles.patdir_choosebox.String = dest;
-                   % ea_getpatients(app.options,app.handles,dest);
-                   % ea_busyaction('off',app.handles.leadfigure,'dbs');
-                    close(app.LeadMigrateUIFigure);
+                   setappdata(app.handles.leadfigure, 'BIDSRoot', dest{1});
+                   setappdata(app.handles.leadfigure, 'subjID', app.subjID);
+                   close(app.LeadMigrateUIFigure);
                 end
             end
-            
         end
 
         % Callback function
@@ -369,7 +371,7 @@ classdef lead_import_exported < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = lead_import_exported(varargin)
+        function app = ea_lead_import_exported(varargin)
 
             % Create UIFigure and components
             createComponents(app)
