@@ -33,12 +33,6 @@ if ~exist([options.root,options.patientname,filesep,'statvat_results',filesep,'s
 end
 
 
-
-
-
-
-
-
 function ea_exportstatvatfiles(M,options,handles)
 
 disp('Need to export VTAs in proper format, this may take a while');
@@ -51,7 +45,6 @@ nii.img(:)=nan;
 ea_write_nii(nii);
 allV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'bb_nan.nii'];
 
-
 cnt=2;
 for pt=1:length(M.patient.list)
     %process left and right separately, check if file exists
@@ -60,13 +53,15 @@ for pt=1:length(M.patient.list)
     is_right_present=false;
 
     if M.ui.detached % process locally in lead group directory
-        fname_r=[options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_right.nii'];
-        fname_l=[options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_left.nii'];
+        patStimDir = [options.root,options.patientname,filesep,M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid];
     else
-        fname_r=[M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_right.nii'];
-        fname_l=[M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid,filesep,'vat_left.nii'];
+        patStimDir = [M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid];
     end
-    
+
+    vatFiles = ea_regexpdir(patStimDir, '_desc-stimvol_hemi-(right|left)\.nii$');
+    fname_l = vatFiles{1};
+    fname_r = vatFiles{2};
+
     if exist(fname_l,'file')>0
         %if file exist, process the right side
         is_left_present=true;
@@ -95,7 +90,7 @@ for pt=1:length(M.patient.list)
         fns_isprocessed(1)=true;
     end
 
-    %process right side
+    % process right side
     if is_right_present
         Vvatr=ea_load_nii(fname_r);
         Vvatr.img(Vvatr.img==0)=nan;
@@ -117,9 +112,7 @@ for pt=1:length(M.patient.list)
         fns_isprocessed(2)=true;% rh
         fns_isprocessed(3)=true;% rh_flipped
     end
-    
 end
-
 
 % export mean to get bounding box
 matlabbatch{1}.spm.util.imcalc.input = allV';
@@ -145,7 +138,7 @@ for pt=1:length(M.patient.list)
     fns={[options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_lh.nii'],...
         [options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh.nii'],...
         [options.root,options.patientname,filesep,'statvat_results',filesep,'s',num2str(pt),'_rh_flipped.nii']};
-    
+
     %prune based on which side was actually processed
     fns=fns(fns_isprocessed);
     
