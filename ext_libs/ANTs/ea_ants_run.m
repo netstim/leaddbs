@@ -103,7 +103,7 @@ if isBIDSFileName(cfg.outputimage)
     ea_mkdir(logDir);
     antsCMDFile = [logDir, filesep, 'sub-', parsedStruct.sub, '_desc-antscmd.txt'];
 else
-    antsCMDFile = [directory, 'ea_ants_command.txt'];
+    antsCMDFile = [fileparts(cfg.outputimage), filesep, 'ea_ants_command.txt'];
 end
 
 fid = fopen(antsCMDFile, 'a');
