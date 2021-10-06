@@ -109,7 +109,6 @@ else
     set(handles.setstimparamsbutton,'BackgroundColor',[0.93,0.93,0.93]);
 end
 
-
 % check if groups are okay
 if isfield(M,'groups')
     if ~isequal((unique(M.patient.group)),M.groups.group)
