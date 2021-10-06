@@ -37,7 +37,7 @@ function ea_exportstatvatfiles(M,options,handles)
 
 disp('Need to export VTAs in proper format, this may take a while');
 
-mkdir([options.root,options.patientname,filesep,'statvat_results']);
+ea_mkdir([options.root,options.patientname,filesep,'statvat_results']);
 copyfile([ea_space(options),'bb.nii'],[options.root,options.patientname,filesep,'statvat_results',filesep,'bb_nan.nii']);
 nii=ea_load_nii([options.root,options.patientname,filesep,'statvat_results',filesep,'bb_nan.nii']);
 nii.dt=[16,1];
