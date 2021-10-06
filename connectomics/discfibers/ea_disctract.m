@@ -94,7 +94,7 @@ classdef ea_disctract < handle
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
                     obj.M = ea_map_pseudoM(obj.M);
-                    obj.M.root = fileparts(datapath);
+                    obj.M.root = [fileparts(datapath),filesep];
                     obj.M.patient.list=obj.M.ROI.list; % copies
                     obj.M.patient.group=obj.M.ROI.group; % copies
                 else
