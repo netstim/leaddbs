@@ -148,8 +148,8 @@ if strcmp(options.leadprod, 'dbs')
         names(ossdbsInd) = [];
     end
 else % Call in lead 'group'
-    funcs = getappdata(handles.leadfigure,'genvatfunctions');
-    names = getappdata(handles.leadfigure,'vatfunctionnames');
+    funcs = getappdata(resultfig, 'genvatfunctions');
+    names = getappdata(resultfig, 'vatfunctionnames');
 end
 
 setappdata(gcf, 'genvatfunctions', funcs);
