@@ -9,7 +9,7 @@ if ischar(M)
 end
 
 if ~exist('output', 'var')
-    output = [M.root, 'ea_stats_export.mat'];
+    output = fullfile(M.root, 'ea_stats_export.mat');
 end
 
 % Suppose homogeneous setting for all the patients
