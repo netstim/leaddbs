@@ -933,20 +933,18 @@ for pt=selection
         options.root = [options.root, filesep];
     end
 
+    options = ea_getptopts(fullfile(options.root, options.patientname), options);
+
     fprintf('\nProcessing %s...\n\n', options.patientname);
     try
         options.numcontacts=size(M.elstruct(pt).coords_mm{1},1);
     catch % no localization present or in wrong format.
         ea_error(['Please localize ',options.patientname,' first.']);
     end
-    options.elmodel=M.elstruct(pt).elmodel;
-    options=ea_resolve_elspec(options);
-    options.prefs=ea_prefs(options.patientname);
     options.d3.verbose='off';
     options.d3.elrendering=1;	% hard code to viz electrodes in this setting.
     options.d3.exportBB=0;	% don't export brainbrowser struct by default
     options.d3.colorpointcloud=0;
-    options.native=0;
 
     options.d3.hlactivecontacts=get(handles.highlightactivecontcheck,'Value');
     options.d3.showactivecontacts=get(handles.showactivecontcheck,'Value');
@@ -983,21 +981,14 @@ for pt=selection
     options.leadprod = 'group';
     options.patient_list=M.patient.list;
     options.d3.mirrorsides=0;
+
     resultfig=ea_elvis(options,M.elstruct(pt));
 
-    % save scene as matlab figure
-    options.modality=ea_checkctmrpresent(M.patient.list{pt});
-    volumespresent=1;
-    if options.modality(1) % prefer MR
-        options.modality=1;
+    if isempty(dir([options.subj.norm.transform.inverseBaseName,'*']))
+        warning(['Tranformation not found for ', options.subj.subjId, '!']);
+        volumespresent=0;
     else
-        if options.modality(2)
-            options.modality=2;
-        else
-            options.modality=1;
-            warning(['No MR or CT volumes found in ',M.patient.list{pt},'.']);
-            volumespresent=0;
-        end
+        volumespresent=1;
     end
 
     % Step 2: Re-calculate VAT
