@@ -64,7 +64,9 @@ end
 
 scrsz = get(0,'ScreenSize');
 
-cuts=figure('name',[options.subj.subjId,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible,'MenuBar', 'none', 'ToolBar', 'none');
+titilePrefix = erase(options.patientname, 'sub-');
+
+cuts=figure('name',[titilePrefix,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible,'MenuBar', 'none', 'ToolBar', 'none');
 axis off
 set(cuts,'position',[100, 100, 800 ,800]);
 set(cuts,'color','w');
@@ -88,9 +90,9 @@ else
     planedim=ea_getdims(manualtracor,1);
 end
 
-export_2D_folder = fullfile(options.subj.exportDir, '2D');
+export_2D_folder = fullfile(options.root, options.patientname, 'export', '2D');
 ea_mkdir(export_2D_folder);
-fileBaseName = fullfile(export_2D_folder, ['sub-' options.subj.subjId '_desc-']);
+fileBaseName = fullfile(export_2D_folder, [options.patientname, '_desc-']);
 
 fid = fopen([fileBaseName 'coordinates.txt'],'w');
 for iside=1:length(options.sides)
@@ -424,7 +426,9 @@ for iside=1:length(options.sides)
                 else
                     isofnadd='';
                 end
-                desc = [strjoin(options.elspec.contactnames(el), '_'), isofnadd];
+                contactTag = strjoin(options.elspec.contactnames(el), '_');
+                contactTag = erase(contactTag, {' ', '(', ')'});
+                desc = [contactTag, isofnadd];
                 switch tracor
                     case 1
                         ea_screenshot([fileBaseName 'ax_',desc,'.png'],'myaa');
