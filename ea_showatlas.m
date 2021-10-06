@@ -34,7 +34,7 @@ for nativemni=nm % switch between native and mni space atlases.
             atlasFolder = ea_space(options,'atlases');
             mifix='';
         case 2 % native
-            atlasFolder = [options.subj.subjDir,filesep,'atlases',filesep];
+            atlasFolder = [options.root,options.patientname, filesep, 'atlases', filesep];
             mifix='';
     end
 
