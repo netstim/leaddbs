@@ -1,5 +1,9 @@
 function ea_reconstruction2native(options)
 
+if ~isfield(options.subj, 'norm')
+    options = ea_getptopts(fileparts(fileparts(options.subj.recon.recon)));
+end
+
 load(options.subj.recon.recon, 'reco');
 
 if ~exist('reco','var') % old format
