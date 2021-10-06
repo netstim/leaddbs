@@ -57,7 +57,7 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if options.writeoutstats
-        statsFile = [options.subj.subjDir, filesep, 'sub-', options.subj.subjId, '_desc-stats.mat'];
+        statsFile = [options.root, options.patientname, filesep, options.patientname, '_desc-stats.mat'];
         try
             load(statsFile);
             prioratlasnames=ea_stats.atlases.names;
@@ -632,7 +632,7 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if options.writeoutstats
-        statsBackupFile = [options.subj.subjDir, filesep, 'sub-', options.subj.subjId, '_desc-statsbackup.mat'];
+        statsBackupFile = [options.root, options.patientname, filesep, options.patientname, '_desc-statsbackup.mat'];
         if exist('prioratlasnames','var')
             if ~isequal(ea_stats.atlases.names,prioratlasnames)
                 warning('off', 'backtrace');
