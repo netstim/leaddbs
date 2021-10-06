@@ -90,7 +90,11 @@ else
     planedim=ea_getdims(manualtracor,1);
 end
 
-export_2D_folder = fullfile(options.root, options.patientname, 'export', '2D');
+if startsWith(options.patientname, 'gs_')
+    export_2D_folder = fullfile(options.root, options.patientname, '2D');
+else
+    export_2D_folder = fullfile(options.root, options.patientname, 'export', '2D');
+end
 ea_mkdir(export_2D_folder);
 fileBaseName = fullfile(export_2D_folder, [options.patientname, '_desc-']);
 
