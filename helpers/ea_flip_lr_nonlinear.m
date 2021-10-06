@@ -10,8 +10,8 @@ if ischar(from) % assume nifti file path
     end
     ea_flip_lr(from,to);
     options.subj.norm.log.method = fullfile(ea_space, 'fliplr', 'normmethod.json');
-    options.subj.norm.transform.inverseBaseName = fullfile(ea_space, 'fliplr', 'InverseComposite.h5');
-    options.subj.norm.transform.forwardBaseName = fullfile(ea_space, 'fliplr', 'Composite.h5');
+    options.subj.norm.transform.inverseBaseName = fullfile(ea_space, 'fliplr', 'InverseComposite.nii.gz');
+    options.subj.norm.transform.forwardBaseName = fullfile(ea_space, 'fliplr', 'Composite.nii.gz');
     ea_apply_normalization_tofile(options,{to},{to},0,interp,to);
 else % assume coordinate list
     spacedef = ea_getspacedef;
