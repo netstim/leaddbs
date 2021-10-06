@@ -1545,11 +1545,13 @@ clc;
 M=getappdata(gcf,'M');
 
 ea_busyaction('on',gcf,'group');
+
 % set options
 options=ea_setopts_local(handles);
+
 % set pt specific options
-options.root=[fileparts(fileparts(handles.groupdir_choosebox.String)),filesep];
-[~,options.patientname]=fileparts(fileparts(handles.groupdir_choosebox.String));
+[options.root, options.patientname] = fileparts(handles.groupdir_choosebox.String);
+options.root = [options.root, filesep];
 
 options.numcontacts=size(M.elstruct(1).coords_mm{1},1);
 options.elmodel=M.elstruct(1).elmodel;
