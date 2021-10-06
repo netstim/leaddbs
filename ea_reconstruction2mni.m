@@ -1,5 +1,9 @@
 function ea_reconstruction2mni(options)
 
+if ~isfield(options.subj, 'coreg')
+    options = ea_getptopts(fileparts(fileparts(options.subj.recon.recon)));
+end
+
 load(options.subj.recon.recon,'reco');
 
 nii = ea_load_nii(options.subj.coreg.anat.preop.(options.subj.AnchorModality));
