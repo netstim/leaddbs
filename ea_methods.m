@@ -33,7 +33,7 @@ else
     fprintf(expstr);
 end
 
-if ~isempty(options) && isfield(options, 'subj')
+if ~isempty(options) && isfield(options, 'subj') && isfield(options.subj, 'methodLog')
     if ischar(options)
         options = ea_getptopts(options);
     end
