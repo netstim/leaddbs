@@ -460,8 +460,8 @@ options=ea_setopts_local(handles);
 options.leadprod = 'group';
 
 % set pt specific options
-options.root=[fileparts(fileparts(handles.groupdir_choosebox.String)),filesep];
-[~,options.patientname]=fileparts(fileparts(handles.groupdir_choosebox.String));
+[options.root, options.patientname] = fileparts(handles.groupdir_choosebox.String);
+options.root = [options.root, filesep];
 
 options.expstatvat.do=M.ui.statvat;
 options.native=0;
