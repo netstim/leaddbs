@@ -34,11 +34,7 @@ end
 
 % Initialize figure
 
-if isfield(options, 'subj')
-    titlePrefix = options.subj.subjId;
-else
-    titlePrefix = 'No Patient Selected';
-end
+titlePrefix = erase(options.patientname, 'sub-');
 
 resultfig=figure('name', [titlePrefix,': Electrode-Scene'],...
     'color', 'k', 'numbertitle', 'off',...
@@ -114,7 +110,7 @@ prefs=ea_prefs;
 
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
-    if isfile(options.subj.recon.recon) || nargin>1
+    if nargin>1 || isfile(options.subj.recon.recon)
         if nargin>1
             multiplemode=1;
 
@@ -142,7 +138,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         elSide = cell(1, length(elstruct));
         for pt=1:length(elstruct)
- 
+
             if exist('el_render','var')
                 [el_render,el_label]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
             else
@@ -151,9 +147,9 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
             if strcmp(options.leadprod,'group')
                 try
-                    directory=[options.patient_list{elstruct(pt).pt},filesep];
+                    directory = [options.patient_list{elstruct(pt).pt},filesep];
                 catch
-                    directory=[options.root,options.patientname,filesep];
+                    directory = [options.root,options.patientname,filesep];
                 end
             else
                 directory=options.subj.reconDir;
