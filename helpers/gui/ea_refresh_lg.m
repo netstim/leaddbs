@@ -12,11 +12,15 @@ if strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % not se
     ea_busyaction('off',handles.leadfigure,'group');
     return
 end
+
 M.root=handles.groupdir_choosebox.String;
+
 if ~isfield(M,'guid') % only done once, legacy support.
     M.guid=datestr(datevec(now), 'yyyymmddHHMMSS' );
 end
+
 disp('Refreshing group list...');
+
 % refresh group list
 set(handles.grouplist,'String',M.patient.group);
 if max(M.ui.listselect) > length(M.patient.group)
@@ -224,8 +228,10 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
                     options.root = [options.root, filesep];
                 end
                 
+                options.subj.recon.recon = fullfile(options.root, options.patientname, 'reconstruction', [options.patientname, '_desc-reconstruction.mat']);
                 options = ea_resolve_elspec(options);
-                if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+
+                if isfile(options.subj.recon.recon)
                     [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
                     
                     if M.ui.elmodelselect==1 % use patient specific elmodel
@@ -235,7 +241,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
                             M.elstruct(pt).elmodel='Medtronic 3389'; % use default for older reconstructions that did not store elmodel.
                         end
                     else
-                        elmodels = [{'Patient specified'};ea_resolve_elspec];
+                        elmodels = [{'Patient specified'}; ea_resolve_elspec];
                         M.elstruct(pt).elmodel = elmodels{M.ui.elmodelselect};
                     end
                     
@@ -311,7 +317,8 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
         for pt=1:length(M.patient.list)
             % (re-)load stats
             try
-                load([M.patient.list{pt},filesep,'ea_stats']);
+                statsFile = [M.patient.list{pt}, filesep, options.patientname, '_desc-stats.mat'];
+                load(statsFile, 'ea_stats');
                 ea_stats=ea_rmssstimulations(ea_stats,M); % only preserve stimulations with label 'gs_groupid'.
                 M.stats(pt).ea_stats=ea_stats;
                 if isfield(M.stats(pt).ea_stats.atlases,'rebuild') % old stats format with complete atlas table - delete, will lead to large M file
@@ -320,9 +327,9 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
                     M.stats(pt).ea_stats.atlases.types=ea_stats.atlases.types;
                     
                     % also correct single subject file:
-                    load([M.patient.list{pt},filesep,'ea_stats']);
+                    load(statsFile, 'ea_stats');
                     ea_stats.atlases=M.stats(pt).ea_stats.atlases;
-                    save([M.patient.list{pt},filesep,'ea_stats'],'ea_stats','-v7.3');
+                    save(statsFile,'ea_stats','-v7.3');
                 end
             end
             
@@ -474,23 +481,23 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
         % sync stimulation parameters for group
         disp('Syncing stimulation parameters for group...');
         for pt=1:length(M.patient.list)
-            if exist(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'),'file')
-            ptS=load(fullfile(M.patient.list{pt},'stimulations',ea_getspace,['gs_',M.guid],'stimparameters.mat'));
-               
-            try % could fail if M.S(pt) is not defined.
-                if ~all([isequal(ptS.S.Rs1,M.S(pt).Rs1),...
-                        isequal(ptS.S.Rs2,M.S(pt).Rs2),...
-                        isequal(ptS.S.Rs3,M.S(pt).Rs3),...
-                        isequal(ptS.S.Rs4,M.S(pt).Rs4),...
-                        isequal(ptS.S.Ls1,M.S(pt).Ls1),...
-                        isequal(ptS.S.Ls2,M.S(pt).Ls2),...
-                        isequal(ptS.S.Ls3,M.S(pt).Ls3),...
-                        isequal(ptS.S.Ls4,M.S(pt).Ls4),...
-                        isequal(ptS.S.amplitude,M.S(pt).amplitude)])
-                    warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+            stimParamFile = fullfile(M.patient.list{pt}, 'stimulations', ea_nt(0), ['gs_', M.guid], [options.patientname, '_desc-stimparameters.mat']);
+            if isfile(stimParamFile)
+                ptS=load(stimParamFile);
+
+                try % could fail if M.S(pt) is not defined.
+                    if ~all([isequal(ptS.S.Rs1,M.S(pt).Rs1),...
+                            isequal(ptS.S.Rs2,M.S(pt).Rs2),...
+                            isequal(ptS.S.Rs3,M.S(pt).Rs3),...
+                            isequal(ptS.S.Rs4,M.S(pt).Rs4),...
+                            isequal(ptS.S.Ls1,M.S(pt).Ls1),...
+                            isequal(ptS.S.Ls2,M.S(pt).Ls2),...
+                            isequal(ptS.S.Ls3,M.S(pt).Ls3),...
+                            isequal(ptS.S.Ls4,M.S(pt).Ls4),...
+                            isequal(ptS.S.amplitude,M.S(pt).amplitude)])
+                        warning(['Local stimulation parameters for ',M.patient.list{pt},' are different to the ones stored in this Lead group analysis with the same name. Please check.']);
+                    end
                 end
-            end
-            
             end
         end
         
