@@ -1,10 +1,10 @@
 function ea_lg_exportstats(M, output)
 
 if ischar(M)
-    if exist(M,'dir') == 7 % M is the group folder
-        load(fullfile(M, 'LEAD_groupanalysis.mat'));
-    elseif exist(M,'file') == 2 % M is the path of the lead group file
-        load(M);
+    if isfolder(M) % M is the group folder
+        load(ea_getGroupAnalysisFile(M), 'M');
+    elseif isfile(M) % M is the path of the lead group file
+        load(M, 'M');
     end
 end
 
