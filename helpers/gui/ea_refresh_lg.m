@@ -13,7 +13,7 @@ if strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory') % not se
     return
 end
 
-M.root=handles.groupdir_choosebox.String;
+M.root=[handles.groupdir_choosebox.String, filesep];
 
 if ~isfield(M,'guid') % only done once, legacy support.
     M.guid=datestr(datevec(now), 'yyyymmddHHMMSS' );
@@ -43,7 +43,7 @@ catch
     M.isomatrix_name={};
 end
 
-M.ui.groupdir = handles.groupdir_choosebox.String;
+M.ui.groupdir = [handles.groupdir_choosebox.String,filesep];
 
 disp('Refreshing selections on VI / FC Lists...');
 
