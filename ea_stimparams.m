@@ -135,7 +135,7 @@ end
 
 % Hide OSS-DBS option in case non-dev env or elmodel not available
 if strcmp(options.leadprod, 'dbs')
-    funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*.m', 0);
+    funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*\.m$', 0);
     funcs = regexp(funcs, '(ea_genvat_.*)(?=\.m)', 'match', 'once');
     [names, supportDirected] = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
     if isdirected
