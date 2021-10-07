@@ -202,21 +202,12 @@ function seedbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-p='/'; % default use root
-try
-    p=pwd; % if possible use pwd instead (could not work if deployed)
-end
-try % finally use last patient parent dir if set.
-    earoot=ea_getearoot;
-    load([earoot,'ea_recentpatients.mat']);
-    p=fileparts(recentfolders{1});
-end
-seeddef=get(handles.seeddefpopup,'String');
+seeddef = get(handles.seeddefpopup,'String');
 switch seeddef{get(handles.seeddefpopup,'Value')}
     case 'Manually choose seeds'
-        [seeds,path]=uigetfile({'*'},'Please choose seed definition(s)...','MultiSelect','on');
+        [seeds,path] = uigetfile(ea_startpath, {'*'},'Please choose seed definition(s)...','MultiSelect','on');
     case 'Manually choose parcellation'
-        [seeds,path]=uigetfile({'*'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
+        [seeds,path] = uigetfile(ea_startpath, {'*'},'Please choose parcellation...',ea_space([],'labeling'),'MultiSelect','off');
 end
 
 if ischar(path) % path is 0 if the user clicks Cancel or close the window
@@ -224,11 +215,11 @@ if ischar(path) % path is 0 if the user clicks Cancel or close the window
         set(hObject,'String',['Multiple (',num2str(length(seeds)),')']);
     elseif ischar(seeds)
         set(hObject,'String',seeds);
-        seeds={seeds};
+        seeds = {seeds};
     end
 
-    for s=1:length(seeds)
-        seeds{s}=fullfile(path,seeds{s});
+    for s = 1:length(seeds)
+        seeds{s} = fullfile(path,seeds{s});
     end
 
     setappdata(hObject,'seeds',seeds);
@@ -241,12 +232,12 @@ function run_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-leadfigure=handles.leadfigure;
+leadfigure = handles.leadfigure;
 ea_busyaction('on',leadfigure,'mapper');
 
-options=ea_handles2options(handles);
-options.uivatdirs=getappdata(handles.leadfigure,'uipatdir');
-options.uipatdirs={''};
+options = ea_handles2options(handles);
+options.uivatdirs = getappdata(handles.leadfigure,'uipatdir');
+options.uipatdirs = {''};
 
 options.leadprod = 'mapper';
 
@@ -261,16 +252,16 @@ function exportcode_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-leadfigure=handles.leadfigure;
+leadfigure = handles.leadfigure;
 ea_busyaction('on',leadfigure,'mapper');
 
-options=ea_handles2options(handles);
-options.uivatdirs=getappdata(handles.leadfigure,'uipatdir');
-options.uipatdirs={''};
+options = ea_handles2options(handles);
+options.uivatdirs = getappdata(handles.leadfigure,'uipatdir');
+options.uipatdirs = {''};
 
 options.leadprod = 'mapper';
 
-ea_run('export',options);
+ea_run('export', options);
 
 ea_busyaction('off',leadfigure,'mapper');
 
@@ -403,7 +394,7 @@ function patdir_choosebox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_busyaction('on',handles.leadfigure,'mapper');
-options.prefs=ea_prefs('');
+options.prefs = ea_prefs;
 ea_getpatients(options,handles);
 ea_busyaction('off',handles.leadfigure,'mapper');
 
