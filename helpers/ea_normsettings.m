@@ -8,7 +8,7 @@ if ~exist('handlestring','var')
 end
 
 % Get functions and names
-funcs = ea_regexpdir(ea_getearoot, 'ea_normalize_.*.m', 0);
+funcs = ea_regexpdir(ea_getearoot, 'ea_normalize_.*\.m$', 0);
 funcs = regexp(funcs, '(ea_normalize_.*)(?=\.m)', 'match', 'once');
 names = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
 
