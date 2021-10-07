@@ -115,10 +115,14 @@ setappdata(handles.leadfigure, 'bids', bids);
 setappdata(handles.leadfigure, 'subjId', subjId);
 
 % Set up MR/CT popupmenu and status text
-ea_switchctmr(handles);
+if isfield(handles, 'MRCT')
+    ea_switchctmr(handles);
+end
 
-ea_getui(handles); % update ui from patient
-ea_storeui(handles); % save in pt folder
+if ~ismember(handles.prod, {'mapper'})
+    ea_getui(handles); % update ui from patient
+    ea_storeui(handles); % save in pt folder
+end
 ea_addrecent(handles, uipatdir, 'patients');
 
 % Return when BIDS dataset is not yet ready
