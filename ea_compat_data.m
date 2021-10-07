@@ -45,15 +45,15 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
     end
 
     % remove square bracket from folder name
-    folders = ea_regexpdir([space, 'atlases'], '\[.*\]/$', 0);
+    folders = ea_regexpdir([space, 'atlases'], '.*', 0, 'dir');
     for i=1:length(folders)
-        oldfolder = folders{i}(1:end-1);
-        newfolder = regexprep(oldfolder,'(.*) \[(.*)\]', '$1 - $2');
+        oldfolder = folders{i};
+        newfolder = regexprep(oldfolder, '(.*) \[(.*)\]', '$1 - $2');
         movefile(oldfolder, newfolder)
     end
 
     % remove square bracket from file name
-    files = ea_regexpdir([space, 'labeling'], '\[.*\]', 0);
+    files = ea_regexpdir([space, 'labeling'], '.*', 0, 'file');
     for i=1:length(files)
         oldfile = files{i};
         newfile = regexprep(oldfile,'\[(.*)\]', '- $1');

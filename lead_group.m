@@ -85,7 +85,7 @@ if defix
 end
 
 % setup vat functions
-funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*.m', 0);
+funcs = ea_regexpdir(ea_getearoot, 'ea_genvat_.*\.m$', 0);
 funcs = regexp(funcs, '(ea_genvat_.*)(?=\.m)', 'match', 'once');
 names = cellfun(@(x) eval([x, '(''prompt'');']), funcs, 'Uni', 0);
 
