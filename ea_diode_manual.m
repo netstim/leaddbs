@@ -160,6 +160,13 @@ caxis(cscale2)
 scatter(center_marker(1),center_marker(2),'o','r');
 [a,b] = getpts;
 center_marker = [a(end) b(end)] - center_marker;
+center_marker = center_marker ./ ((size(artifact_marker,1)-1) ./ (2*extractradius)); %correction for ea_sample_slice interpolation factor
+if ct.mat(1,1) < 0
+    center_marker(1) = -center_marker(1);
+end
+if ct.mat(2,2) < 0
+    center_marker(2) = -center_marker(2);
+end
 marker_vx(1) = marker_vx(1) + center_marker(1);
 marker_vx(2) = marker_vx(2) + center_marker(2);
 marker_mm = tmat_vx2mm * marker_vx;
@@ -209,7 +216,7 @@ end
 dirlevelnew_vx(3) = dirlevelnew_vx(3) + numdirslices(answer);
 
 %% extract respecified dirlevelnew artifact from slice
-artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
+artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevelnew_vx(1:3)'},1)';
 if ct.mat(1,1) < 0
     artifact_dirlevelnew = flip(artifact_dirlevelnew,1);
 end
@@ -236,13 +243,20 @@ caxis(cscale2)
 scatter(center_dirnew(1),center_dirnew(2),'o','r');
 [a,b] = getpts;
 center_dirnew = [a(end) b(end)] - center_dirnew;
+center_dirnew = center_dirnew ./ ((size(artifact_marker,1)-1) ./ (2*extractradius)); %correction for ea_sample_slice interpolation factor
+if ct.mat(1,1) < 0
+    center_dirnew(1) = -center_dirnew(1);
+end
+if ct.mat(2,2) < 0
+    center_dirnew(2) = -center_dirnew(2);
+end
 dirlevelnew_vx(1) = dirlevelnew_vx(1) + center_dirnew(1);
 dirlevelnew_vx(2) = dirlevelnew_vx(2) + center_dirnew(2);
 dirlevelnew_mm = tmat_vx2mm * dirlevelnew_vx;
 dirlevelnew_vx = tmat_vx2mm\dirlevelnew_mm;
 
 %% extract respecified dirlevelnew artifact from slice
-artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
+artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevelnew_vx(1:3)'},1)';
 if ct.mat(1,1) < 0
     artifact_dirlevelnew = flip(artifact_dirlevelnew,1);
 end
