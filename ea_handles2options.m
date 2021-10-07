@@ -246,22 +246,22 @@ end
 
 % lead connectome mapper options:
 try
-    sdp=get(handles.seeddefpopup,'String');
-    if iscell(sdp)
-        sdp=sdp{get(handles.seeddefpopup,'Value')};
+    seed = handles.seeddefpopup.String;
+    if iscell(seed)
+        seed = seed{handles.seeddefpopup.Value};
     end
 
-    switch sdp
+    switch seed
         case 'Manually choose seeds'
-            options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
-            options.lcm.seeddef='manual';
+            options.lcm.seeds = getappdata(handles.seedbutton,'seeds');
+            options.lcm.seeddef = 'manual';
         case 'Manually choose parcellation'
-            options.lcm.seeds=getappdata(handles.seedbutton,'seeds');
-            options.lcm.seeddef='parcellation';
+            options.lcm.seeds = getappdata(handles.seedbutton,'seeds');
+            options.lcm.seeddef = 'parcellation';
         otherwise
-            stimname=sdp(11:end);
-            options.lcm.seeds=stimname;
-            options.lcm.seeddef='vats';
+            stimname = erase(seed, 'Use VAT: ');
+            options.lcm.seeds = stimname;
+            options.lcm.seeddef = 'vats';
     end
 
     try
