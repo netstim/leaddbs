@@ -31,7 +31,7 @@ switch method_int
 end
 
 % first option: rename files with the help of a GUI
-[~, niiFiles] = fileparts(ea_regexpdir(tmp_dir, '\.nii.gz$', 0));
+[~, niiFiles] = fileparts(ea_regexpdir(tmp_dir, '\.nii\.gz$', 0));
 
 % clumsily remove .nii from filename
 for idx = 1:length(niiFiles)
