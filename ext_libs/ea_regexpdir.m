@@ -1,8 +1,13 @@
-function dirlist = ea_regexpdir(rootdir, expstr, recursive)
-% wrapper for regexpdir (need to clear the persistent variable)
+function list = ea_regexpdir(rootdir, expstr, recursive, type)
+% Wrapper for regexpdir (need to clear the persistent variable)
 
 if ~exist('recursive','var')
     recursive = true;
+end
+
+% Search file or folder
+if ~exist('type','var')
+    type = 'file';
 end
 
 % Fix to use '^STR' pattern recursively
@@ -11,4 +16,11 @@ if recursive && strcmp(expstr(1),'^')
 end
 
 clear regexpdir
-dirlist = regexpdir(rootdir, expstr, recursive);
+list = regexpdir(rootdir, expstr, recursive);
+
+switch type
+    case {'f', 'file'}
+        list = list(isfile(list));
+    case {'d', 'dir', 'fodler'}
+        list = fileparts(list(isfolder(list)));
+end
