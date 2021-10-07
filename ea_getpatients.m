@@ -1,17 +1,6 @@
 function uipatdir = ea_getpatients(options,handles)
 
-startFolder = ea_gethome; % default home folder
-
-try
-    startFolder = pwd; % if possible use pwd instead (could not work if deployed)
-end
-
-try % finally use last patient parent dir if set.
-    load([ea_getearoot,'common', filesep, 'ea_recentpatients.mat'], 'recentfolders');
-    startFolder = fileparts(recentfolders{1});
-end
-
-uipatdir = ea_uigetdir(startFolder, 'Please choose patient folder(s)...');
+uipatdir = ea_uigetdir(ea_startpath, 'Please choose patient folder(s)...');
 
 if isempty(uipatdir)
     return
