@@ -8,6 +8,10 @@ if ismember(['No recent ', type, ' found'], recentfolders)
     recentfolders = {};
 end
 
+if isrow(uidir)
+    uidir = uidir';
+end
+
 recentfolders = unique([uidir; recentfolders], 'stable');
 if length(recentfolders) > 10
    recentfolders = recentfolders(1:10);
