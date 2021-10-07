@@ -79,10 +79,9 @@ if length(uipatdir) == 1 % Single folder
         end
     end
 else % Multiple patient folders, suppose dataset has already been migrated to BIDS
-    warndlg('Multiple patient folders detected. If it is not migrated to BIDS format, please do so manually');
     BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives\', filesep, 'leaddbs)'], 'match', 'once');
     if isempty(BIDSRoot)
-        error('Please select patient folders under DATASET/derivatives/leaddbs!');
+        error('Please select patient folders under DATASET/derivatives/leaddbs or migrate the dataset to BIDS format first!');
     else
         subjId = regexp(uipatdir, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
     end
@@ -121,8 +120,10 @@ end
 
 if ~ismember(handles.prod, {'mapper'})
     ea_getui(handles); % update ui from patient
-    ea_storeui(handles); % save in pt folder
 end
+
+ea_storeui(handles); % save in pt folder
+
 ea_addrecent(handles, uipatdir, 'patients');
 
 % Return when BIDS dataset is not yet ready
@@ -162,8 +163,12 @@ end
 % add VATs to seeds for connectome mapper or predict case
 if isfield(handles,'seeddefpopup')
     for pt=1:length(uipatdir)
-        stims = ea_dir2cell(dir([uipatdir{pt},filesep,'stimulations',filesep,ea_getspace]));
-        if ~exist('remstims', 'var')
+        [~, stims] = fileparts(ea_regexpdir(fullfile(uipatdir{pt}, 'stimulations', ea_getspace), '.*', 0, 'dir'));
+        if ischar(stims)
+            stims = {stims};
+        end
+
+        if ~exist('commonStims', 'var')
             commonStims = stims;
         else
             commonStims = intersect(commonStims, stims);
@@ -172,8 +177,8 @@ if isfield(handles,'seeddefpopup')
 
     % for now only check first subject for pt. specific fibers..
     % find out whether mapper or predict were calling
-    if strncmp(handles.leadfigure.Name, 'Lead Connectome Mapper', 22)
-        commonStims = ea_prependvat(commonStims);
+    if strcmp(handles.prod, 'mapper')
+        commonStims =strcat('Use VAT:', {' '}, commonStims);
         set(handles.seeddefpopup, 'String', [{'Manually choose seeds','Manually choose parcellation'}, commonStims]);
     else
         set(handles.seeddefpopup, 'String', commonStims);
@@ -185,14 +190,8 @@ if isfield(handles,'seeddefpopup')
         directory = [uipatdir{1}, filesep];
         selectedparc = 'nan';
         options = ea_handles2options(handles);
-        options.prefs = ea_prefs;
+        options.prefs = bids.settings;
         [mdl,sf] = ea_genmodlist(directory, selectedparc, options);
         ea_updatemodpopups(mdl, sf, handles);
     end
-end
-
-
-function remstims=ea_prependvat(remstims)
-for rs=1:length(remstims)
-    remstims{rs}=['Use VATs: ',remstims{rs}];
 end
