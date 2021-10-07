@@ -160,9 +160,10 @@ for suffix=dowhich
             useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
             for pt=1:length(options.uivatdirs)
                 if useNativeSeed
-                    vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(1),options.lcm.seeds,filesep];
+                    vatdir = [options.uivatdirs{pt}, filesep, 'stimulations', filesep, ea_nt(1), options.lcm.seeds, filesep];
                     copyfile([ea_space,'bb.nii'], vatdir);
-                    ea_apply_normalization_tofile(options, {[vatdir,'bb.nii']},{[vatdir,'bb.nii']},1);
+                    options = ea_getptopts(options.uivatdirs{pt});
+                    ea_apply_normalization_tofile(options, {[vatdir,'bb.nii']}, {[vatdir,'bb.nii']}, 1);
                     bbfile = [vatdir,'bb.nii'];
                 else
                     vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(0),options.lcm.seeds,filesep];
