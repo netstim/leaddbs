@@ -43,10 +43,10 @@ for reg=1:size(centroids,1)
                 
                 for source=1:4
                     if S.([sidec,'s',num2str(source)]).amp % then this active contact could be from this source since source is active
-                        if S.([sidec,'s',num2str(source)]).(['k',num2str(con+8*(side-1)-1)]).perc % current captured contact is from this source
+                        if S.([sidec,'s',num2str(source)]).(['k',num2str(con+electrode.numel*(side-1)-1)]).perc % current captured contact is from this source
                             activeidx(source).con(con).ix=[activeidx(source).con(con).ix;unique(thiscompsnodes(:))];
-                            activeidx(source).con(con).pol=S.([sidec,'s',num2str(source)]).(['k',num2str(con+8*(side-1)-1)]).pol;
-                            activeidx(source).con(con).perc=S.([sidec,'s',num2str(source)]).(['k',num2str(con+8*(side-1)-1)]).perc;
+                            activeidx(source).con(con).pol=S.([sidec,'s',num2str(source)]).(['k',num2str(con+electrode.numel*(side-1)-1)]).pol;
+                            activeidx(source).con(con).perc=S.([sidec,'s',num2str(source)]).(['k',num2str(con+electrode.numel*(side-1)-1)]).perc;
                         end
                     end
                 end

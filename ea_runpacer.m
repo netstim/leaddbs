@@ -55,6 +55,7 @@ switch model
         % pass through (same nomenclature)
     case 'Boston Scientific Vercise Directed'
         model='Boston Vercise Directional';
+    case 'Aleva Neurotherapeutics directSTIM Directed'
     otherwise
         model=''; % 'Unkown Electrode Type'
 end

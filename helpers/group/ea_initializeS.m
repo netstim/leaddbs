@@ -44,6 +44,14 @@ for source=1:4
         eval(['S.Rs',num2str(source),'.k',num2str(k),'.pol=0;']);
         eval(['S.Rs',num2str(source),'.k',num2str(k),'.imp=1;']);
     end
+    
+    if contains(options.elmodel, 'Aleva')
+        for k=8:11
+            eval(['S.Rs',num2str(source),'.k',num2str(k),'.perc=0;']);
+            eval(['S.Rs',num2str(source),'.k',num2str(k),'.pol=0;']);
+            eval(['S.Rs',num2str(source),'.k',num2str(k),'.imp=1;']);
+        end
+    end
     eval(['S.Rs',num2str(source),'.amp=0;']);
     eval(['S.Rs',num2str(source),'.va=1;']);
     eval(['S.Rs',num2str(source),'.case.perc=100;']);
@@ -52,10 +60,18 @@ end
 
 % left sources
 for source=1:4
-    for k=8:15
-        eval(['S.Ls',num2str(source),'.k',num2str(k),'.perc=0;']);
-        eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol=0;']);
-        eval(['S.Ls',num2str(source),'.k',num2str(k),'.imp=1;']);
+    if contains(options.elmodel, 'Aleva')
+        for k=12:23
+            eval(['S.Ls',num2str(source),'.k',num2str(k),'.perc=0;']);
+            eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol=0;']);
+            eval(['S.Ls',num2str(source),'.k',num2str(k),'.imp=1;']);
+        end
+    else
+        for k=8:15
+            eval(['S.Ls',num2str(source),'.k',num2str(k),'.perc=0;']);
+            eval(['S.Ls',num2str(source),'.k',num2str(k),'.pol=0;']);
+            eval(['S.Ls',num2str(source),'.k',num2str(k),'.imp=1;']);
+        end
     end
     eval(['S.Ls',num2str(source),'.amp=0;']);
     eval(['S.Ls',num2str(source),'.va=1;']);

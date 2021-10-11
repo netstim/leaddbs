@@ -19,7 +19,8 @@ if ~nargin
         'DIXI D08-05AM', 'DIXI D08-08AM', 'DIXI D08-10AM', 'DIXI D08-12AM', 'DIXI D08-15AM', 'DIXI D08-18AM', ...
         'AdTech SD10R-SP05X Choi', 'AdTech RD10R-SP03X', 'AdTech BF08R-SP05X', 'AdTech BF08R-SP21X', 'AdTech BF08R-SP61X', ...
         'AdTech SD08R-SP05X', 'AdTech SD10R-SP05X', ...
-        'ELAINE Rat Electrode', 'FHC WU Rat Electrode', 'NuMed Mini Lead'}';
+        'ELAINE Rat Electrode', 'FHC WU Rat Electrode', 'NuMed Mini Lead', ...
+        'Aleva Neurotherapeutics directSTIM Directed'}';
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', 'medtronic_b33005', 'medtronic_b33015', ...
         'boston_vercise', 'boston_vercise_directed', ...
         'stjude_activetip_2mm','stjude_activetip_3mm', ...
@@ -32,7 +33,8 @@ if ~nargin
         'dixi_d08_05am', 'dixi_d08_08am', 'dixi_d08_10am', 'dixi_d08_12am', 'dixi_d08_15am', 'dixi_d08_18am', ...
         'adtech_sd10r_sp05x_choi', 'adtech_rd10r_sp03x', 'adtech_bf08r_sp05x', 'adtech_bf08r_sp21x', 'adtech_bf08r_sp61x', ...
         'adtech_sd08r_sp05x',  'adtech_sd14r_sp05x', ...
-        'elaine_rat_electrode', 'fhc_wu_rat_electrode', 'numed_minilead'}';
+        'elaine_rat_electrode', 'fhc_wu_rat_electrode', 'numed_minilead', ...
+        'aleva_directSTIM_directed'}';
     return
 else
     options=varargin{1};
@@ -982,6 +984,26 @@ switch elmodel
         elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=1;
+    case 'Aleva Neurotherapeutics directSTIM Directed'
+        elspec.matfname='aleva_directSTIM_directed';
+        elspec.lead_diameter=1.35;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.35;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.5;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1.1;
+        elspec.contact_spacing=0.5;
+        elspec.numel=12;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K1 (R)','K2 (R)','K3 (R)','K4 (R)','K5 (R)','K6 (R)','K7 (R)','K8 (R)','K9 (R)','K10 (R)','K11 (R)','K12 (R)',...
+            'K13 (L)','K14 (L)','K15 (L)','K16 (L)','K17 (L)','K18 (L)','K19 (L)','K20 (L)','K21 (L)','K22 (L)','K23 (L)','K24 (L)'};        
+        elspec.isdirected=1;
+        elspec.etagenames{1}={'K1-3 (R)','K4-6 (R)','K7-9 (R)','K10-12 (R)'};
+        elspec.etagenames{2}={'K13-15 (L)','K16-18 (L)','K19-21 (L)','K22-24 (L)'};
+        elspec.etageidx={1:3,4:6,7:9,10:12};
         elspec.forstimulation=1;
 end
 

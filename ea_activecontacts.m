@@ -5,14 +5,29 @@ for pt=1:length(S)
         switch side
             case 1
                 sidec='R';
-                ks=0:7;
+                % Aleva
+                if length(fieldnames(S.Rs1))==15
+                    ks=0:11;
+                else
+                    ks=0:7;
+                end
             case 2
                 sidec='L';
-                ks=8:15;
+                % Aleva
+                if length(fieldnames(S.Ls1))==15
+                    ks=12:23;
+                else
+                    ks=8:15;
+                end
         end
-        cs(ks+1)=1:8;
-
-        S(pt).activecontacts{side}=zeros(1,8);
+        % Aleva
+        if length(fieldnames(S.Rs1))==15
+           cs(ks+1)=1:12;
+           S(pt).activecontacts{side}=zeros(1,12);
+        else
+           cs(ks+1)=1:8;
+           S(pt).activecontacts{side}=zeros(1,8);
+        end
 
         for source=1:4
             for cnt=ks

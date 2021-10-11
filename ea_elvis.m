@@ -597,7 +597,11 @@ setappdata(resultfig,'conwin',conwin);
 
 
 function openstimviewer(hobj,ev,elstruct,resultfig,options)
-stimwin=ea_stimparams(elstruct,gcf,options);
+if contains(options.elmodel, 'Aleva')
+    stimwin=ea_stimparams_aleva(elstruct,gcf,options);
+else
+    stimwin=ea_stimparams(elstruct,gcf,options);
+end
 setappdata(resultfig,'stimwin',stimwin);
 %try WinOnTop(stimwin,true); end
 

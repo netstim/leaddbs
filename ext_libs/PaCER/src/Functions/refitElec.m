@@ -35,7 +35,7 @@ argParser.addParameter('contactDetectionMethod', 'peak', @(x)(ismember(x, {'peak
 argParser.addParameter('displayProfiles', false); % optional plot of intensity profiles
 argParser.addParameter('displayMPR', false); % optional MPR plot of orthogonal oblique resampling along the trajceotry
 
-argParser.addParameter('electrodeType', '', @(x)(ismember(x, {'', 'Medtronic 3387', 'Medtronic 3389', 'Boston Vercise Directional'}))); 
+argParser.addParameter('electrodeType', '', @(x)(ismember(x, {'', 'Medtronic 3387', 'Medtronic 3389', 'Boston Vercise Directional', 'Aleva Neurotherapeutics directSTIM Directed'}))); 
 
 argParser.parse(varargin{:});
 args = argParser.Results;
