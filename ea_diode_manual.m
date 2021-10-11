@@ -95,14 +95,8 @@ pitch = asin(unitvector_mm(2)/cos(yaw));
 solution.polar1 = rad2deg(atan2(norm(cross([0;0;1],unitvector_mm(1:3))),dot([0;0;1],unitvector_mm(1:3))));
 % solution.polar2 = -rad2deg(atan2(unitvector_mm(2),unitvector_mm(1))) + 90;
 
-if rad2deg(abs(pitch)) > 40
-    disp(['Warning: Pitch > 40 deg - Determining orientation might be inaccurate!'])
-end
-if rad2deg(abs(yaw)) > 40
-    disp(['Warning: Yaw > 40 deg - Determining orientation might be inaccurate!'])
-end
 if solution.polar1 > 40
-    disp(['Warning: Polar > 40 deg - Determining orientation might be inaccurate!'])
+    disp(['Warning: Polar Angle> 40 deg - Determining orientation might be inaccurate!'])
 end
 
 %% select axial slices at the level of the marker
@@ -166,6 +160,13 @@ caxis(cscale2)
 scatter(center_marker(1),center_marker(2),'o','r');
 [a,b] = getpts;
 center_marker = [a(end) b(end)] - center_marker;
+center_marker = center_marker ./ ((size(artifact_marker,1)-1) ./ (2*extractradius)); %correction for ea_sample_slice interpolation factor
+if ct.mat(1,1) < 0
+    center_marker(1) = -center_marker(1);
+end
+if ct.mat(2,2) < 0
+    center_marker(2) = -center_marker(2);
+end
 marker_vx(1) = marker_vx(1) + center_marker(1);
 marker_vx(2) = marker_vx(2) + center_marker(2);
 marker_mm = tmat_vx2mm * marker_vx;
@@ -215,7 +216,7 @@ end
 dirlevelnew_vx(3) = dirlevelnew_vx(3) + numdirslices(answer);
 
 %% extract respecified dirlevelnew artifact from slice
-artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
+artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevelnew_vx(1:3)'},1)';
 if ct.mat(1,1) < 0
     artifact_dirlevelnew = flip(artifact_dirlevelnew,1);
 end
@@ -242,13 +243,20 @@ caxis(cscale2)
 scatter(center_dirnew(1),center_dirnew(2),'o','r');
 [a,b] = getpts;
 center_dirnew = [a(end) b(end)] - center_dirnew;
+center_dirnew = center_dirnew ./ ((size(artifact_marker,1)-1) ./ (2*extractradius)); %correction for ea_sample_slice interpolation factor
+if ct.mat(1,1) < 0
+    center_dirnew(1) = -center_dirnew(1);
+end
+if ct.mat(2,2) < 0
+    center_dirnew(2) = -center_dirnew(2);
+end
 dirlevelnew_vx(1) = dirlevelnew_vx(1) + center_dirnew(1);
 dirlevelnew_vx(2) = dirlevelnew_vx(2) + center_dirnew(2);
 dirlevelnew_mm = tmat_vx2mm * dirlevelnew_vx;
 dirlevelnew_vx = tmat_vx2mm\dirlevelnew_mm;
 
 %% extract respecified dirlevelnew artifact from slice
-artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{round(dirlevelnew_vx(1:3))'},1)';
+artifact_dirlevelnew=ea_sample_slice(ct,'tra',extractradius,'vox',{dirlevelnew_vx(1:3)'},1)';
 if ct.mat(1,1) < 0
     artifact_dirlevelnew = flip(artifact_dirlevelnew,1);
 end
@@ -586,12 +594,35 @@ fig(side).txt9 = uicontrol('style','text','units','pixels','Background','w',...
     'ASM Solution is: ' num2str(round(solution.rolls_deg(solution.ASM),1)) ' deg\n' ...
     ]));
 
+if abs(solution.polar1) <= 40
+    txtcolor = [34 177 75]./255;
+elseif abs(solution.polar1) > 40 && abs(solution.polar1) <= 55
+    txtcolor = [255 128 0]./255;
+elseif abs(solution.polar1) > 55
+    txtcolor = 'r';
+end
+fig(side).txt10 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',txtcolor,...
+    'position',[100,170,720,20],'FontSize',12,'HorizontalAlignment','left',...
+    'string',sprintf([...
+    'Polar Angle is: ' num2str(round(abs(solution.polar1))) ' deg\n' ...
+    ]));
+
+if max(ct.voxsize) < 1
+    txtcolor = [34 177 75]./255;
+else
+    txtcolor = 'r';
+end
+fig(side).txt11 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor',txtcolor,...
+    'position',[100,150,720,20],'FontSize',12,'HorizontalAlignment','left',...
+    'string',sprintf([...
+    'CT Resolution is: ' num2str(round(ct.voxsize(1),2)) ' mm; ' num2str(round(ct.voxsize(2),2)) ' mm; ' num2str(round(ct.voxsize(3),2)) ' mm; '  '\n' ...
+    ]));
 
 fig(side).txt4 = uicontrol('style','text','units','pixels','Background','w',...
     'position',[60,60,720,40],'FontSize',12,'HorizontalAlignment','left',...
     'string',sprintf(['Use the checkboxes if the algorithm accurately detected the artifacts of the directional levels and if you want to use them to correct the marker angle. Then accept, manually refine, or discard the results.']));
 
-if rad2deg(abs(pitch)) > 40 || rad2deg(abs(yaw)) > 40 || abs(solution.polar1) > 40
+if abs(solution.polar1) > 40
     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
         'string',sprintf(['WARNING: The polar angle of the lead is larger than 40 deg and results could be inaccurate.\nPlease inspect the results carefully and use manual refinement if necessary.']));

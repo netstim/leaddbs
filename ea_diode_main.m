@@ -9,11 +9,6 @@ if  options.modality == 1 % check for electrode type and postoperative imaging
     roll_out = [];
     return
 end
-% elseif strcmp(options.elmodel,'Boston Scientific Vercise Directed') || strcmp(options.elmodel,'St. Jude Directed 6172 (short)') || strcmp(options.elmodel,'St. Jude Directed 6173 (long)')
-%     if ismember(options.elmodel,{'St. Jude Directed 6172 (short)','St. Jude Directed 6173 (long)'})
-%         disp(['Warning: DiODe algorithm not validated for ' options.elmodel '.'])
-%     end
-% end
 %% import CTs and choose which CT to use
 if exist([folder options.prefs.ctnii_coregistered],'file') == 2
     ct_reg = ea_load_nii([folder options.prefs.ctnii_coregistered]);
@@ -109,12 +104,10 @@ for side = options.elside
     %% launch DiODe for different leads
     if ismember(options.elmodel, {'Boston Scientific Vercise Directed', ...
             'St. Jude Directed 6172 (short)', ...
-            'St. Jude Directed 6173 (long)', ...
-            'Medtronic B33005', ...
-            'Medtronic B33015'})
+            'St. Jude Directed 6173 (long)'})
         [roll_y,y,~] = ea_diode_auto(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
     elseif ismember(options.elmodel, {'Medtronic B33005', 'Medtronic B33015'})
-        [roll_y,y,~] = ea_diode_medtronic(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec,1);
+        [roll_y,y,~] = ea_diode_medtronic(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
     else  % check for electrode type and postoperative imaging
         msg = sprintf(['No Valid Directional Lead Selected!']);
         choice = questdlg(msg,'No Directional Lead!','Abort','Abort');
