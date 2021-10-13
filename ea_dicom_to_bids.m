@@ -201,20 +201,9 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    include = uiapp.niiFileTable.Data.Include(i);
-    
-    % check whether there is one that has not been defined properly
-    if any(strcmp('-', {session, type, modality}))
-        uialert(uiapp.UIFigure, 'Specify Session, Type and Modality in order to Include image.', 'Warning', 'Icon','warning');
-        uiapp.niiFileTable.Data.Include(i) = false;
-    
-     % check if session is correct
-    elseif ~any(strcmp(session, table_options.Session))
-        uialert(uiapp.UIFigure, ['Invalid session: ' session], 'Warning', 'Icon','warning');
-        uiapp.niiFileTable.Data.Include(i) = false;
-    
-     % insert into previewtree
-    else
+ 
+    % check whether everything has been properly defined befor updating uitree
+    if ~any(strcmp('-', {session, type, modality}))
         fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
         ui_field = ['previewtree_' session '_anat'];
         if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
@@ -318,6 +307,20 @@ elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
         (~isempty(uiapp.previewtree_postop_anat.Children) && contains([uiapp.previewtree_postop_anat.Children.Text], '>>'))
     uialert(uiapp.UIFigure, 'Multiple files with same modality inluded (look for >> filename << in preview window). Please select only one file per modality and session.', 'Warning', 'Icon','warning');
     return
+else
+    for i = find(uiapp.niiFileTable.Data.Include)'
+        session = char(uiapp.niiFileTable.Data.Session(i));
+    type = char(uiapp.niiFileTable.Data.Type(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
+    include = uiapp.niiFileTable.Data.Include(i);
+    
+    % check whether there is one that has not been defined properly
+    if any(strcmp('-', {session, type, modality}))
+        uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Warning', 'Icon','warning');
+       return
+    end
+    end
+    
 end
 
 N_sessions = length(table_options.Session);
