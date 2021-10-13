@@ -81,10 +81,10 @@ uiapp.previewtree_subj.Text = subjID;
 expand(uiapp.Tree, 'all');
 
 preview_nii(uiapp, imgs{1,1}); % set initial image to the first one
-cell_change_callback(uiapp, table_options, subjID) % call preview tree updater to get preallocated changes
+cell_change_callback(uiapp, table_options, subjID, []) % call preview tree updater to get preallocated changes
 
 uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
-uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, table_options, subjID); % callback for cell change -> update uiapp tree on the right
+uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, table_options, subjID, event); % callback for cell change -> update uiapp tree on the right
 
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
@@ -190,25 +190,30 @@ lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 %% cell change callback
-function cell_change_callback(uiapp, table_options, subjID)
+function cell_change_callback(uiapp, table_options, subjID, event)
 
 uiapp.previewtree_preop_anat.Children.delete;      % delete children
 uiapp.previewtree_postop_anat.Children.delete;    % delete children
 
+% go through all the files that have been selected to include
 for i = find(uiapp.niiFileTable.Data.Include)'
     
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-        
+    include = uiapp.niiFileTable.Data.Include(i);
+    
+    % check whether there is one that has not been defined properly
     if any(strcmp('-', {session, type, modality}))
         uialert(uiapp.UIFigure, 'Specify Session, Type and Modality in order to Include image.', 'Warning', 'Icon','warning');
         uiapp.niiFileTable.Data.Include(i) = false;
-        
+    
+     % check if session is correct
     elseif ~any(strcmp(session, table_options.Session))
         uialert(uiapp.UIFigure, ['Invalid session: ' session], 'Warning', 'Icon','warning');
         uiapp.niiFileTable.Data.Include(i) = false;
     
+     % insert into previewtree
     else
         fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
         ui_field = ['previewtree_' session '_anat'];
@@ -220,6 +225,25 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     
 end
 
+for i = find(~uiapp.niiFileTable.Data.Include)'
+     session = char(uiapp.niiFileTable.Data.Session(i));
+    type = char(uiapp.niiFileTable.Data.Type(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
+    
+    if ~isempty(event)
+    if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2
+        uiapp.niiFileTable.Data.Include(i) = true;
+        fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
+        ui_field = ['previewtree_' session '_anat'];
+        if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
+            fname = ['>> ', fname, ' <<'];
+        end
+        uitreenode(uiapp.(ui_field), 'Text', fname);
+    end
+    end
+    
+end
+    
 end
 
 %% preallocate table on the left
