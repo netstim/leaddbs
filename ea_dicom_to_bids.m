@@ -223,7 +223,7 @@ for i = find(~uiapp.niiFileTable.Data.Include)'
     modality = char(uiapp.niiFileTable.Data.Modality(i));
     
     if ~isempty(event)
-    if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2
+    if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
         uiapp.niiFileTable.Data.Include(i) = true;
         fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
         ui_field = ['previewtree_' session '_anat'];
