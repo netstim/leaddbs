@@ -45,11 +45,14 @@ for image_idx = 1:N_fnames
 end
 close(h_wait);
 
+preop_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};
+postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};
+
 % options that should appear in the table
 table_options = struct;
 table_options.Session = {'preop', 'postop'};
 table_options.Type = {'anat'};
-table_options.Modality = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw', 'CT', 'ax_MR', 'sag_MR', 'cor_MR'};
+table_options.Modality = [preop_modalities, postop_modalities];
 
 nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
 nifti_table.Include = false(N_fnames,1);
@@ -89,7 +92,7 @@ uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, t
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
 % OK button behaviour
-uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID);
+uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities);
 
 % cancel button behaviour
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
@@ -297,19 +300,22 @@ end
 end
 
 %% ok button
-function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID)
+function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities)
 
 % sanity check
+% if everything is empty
 if isempty(uiapp.previewtree_preop_anat.Children)
     uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Warning', 'Icon','warning');
     return
+% if multiple files for same session/modality/type are detected
 elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
         (~isempty(uiapp.previewtree_postop_anat.Children) && contains([uiapp.previewtree_postop_anat.Children.Text], '>>'))
     uialert(uiapp.UIFigure, 'Multiple files with same modality inluded (look for >> filename << in preview window). Please select only one file per modality and session.', 'Warning', 'Icon','warning');
     return
+
 else
     for i = find(uiapp.niiFileTable.Data.Include)'
-        session = char(uiapp.niiFileTable.Data.Session(i));
+    session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
     include = uiapp.niiFileTable.Data.Include(i);
@@ -318,6 +324,12 @@ else
     if any(strcmp('-', {session, type, modality}))
         uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Warning', 'Icon','warning');
        return
+    end
+    
+    if strcmp(session, 'postop') && ~any(strcmp(modality, postop_modalities))
+        warning_str = ['You have selected an invalid modality for the postop session, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
+        uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
+        return
     end
     end
     
