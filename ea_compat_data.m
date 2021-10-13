@@ -49,7 +49,9 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
     for i=1:length(folders)
         oldfolder = folders{i};
         newfolder = regexprep(oldfolder, '(.*) \[(.*)\]', '$1 - $2');
+        if ~strcmp(oldfolder, newfolder)
         movefile(oldfolder, newfolder)
+        end
     end
 
     % remove square bracket from file name
@@ -57,7 +59,9 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
     for i=1:length(files)
         oldfile = files{i};
         newfile = regexprep(oldfile,'\[(.*)\]', '- $1');
+         if ~strcmp(oldfolder, newfolder)
         movefile(oldfile, newfile)
+         end
     end
 end
 
