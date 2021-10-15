@@ -474,7 +474,8 @@ def obtain_DTI_class(inp_dict,MRI_param):
         y_start_dti=y_min_dti-MRI_param.y_min
         z_start_dti=z_min_dti-MRI_param.z_min
 
-        if  x_start_dti<0 or y_start_dti<0 or z_start_dti<0:
+        eps = 0.1 * min(DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z)  
+        if  x_start_dti < -1*eps or y_start_dti < -1*eps or z_start_dti < -1*eps:
             print("DTI data is not in positive octant, exiting.")
             raise Exception('exit')
 
