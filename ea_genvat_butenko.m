@@ -605,7 +605,7 @@ for side=0:1
             vat = ea_load_nii(vatToViz);
             vatfv = ea_niiVAT2fvVAT(vat);
             vatvolume = sum(vat.img(:))*vat.voxsize(1)*vat.voxsize(2)*vat.voxsize(3);
-            save([outputDir, filesep, 'vat_', sideStr, '.mat'], 'vatfv', 'vatvolume');
+            save(strrep(vatToViz, '.nii', '.mat'), 'vatfv', 'vatvolume');
             stimparams(side+1).VAT.VAT = vatfv;
             stimparams(side+1).volume = vatvolume;
         end
