@@ -108,9 +108,9 @@ ea_mkdir(stimDir);
 filePrefix = ['sub-', options.subj.subjId, '_desc-'];
 
 if side == 1
-    Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii'];
 elseif side == 2
-    Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'];
 end
 
 ea_savestimulation(S,options);
