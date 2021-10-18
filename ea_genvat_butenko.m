@@ -42,14 +42,14 @@ if ~ismember(options.elmodel, ea_ossdbs_elmodel)
 end
 
 % Set output path
-filePrefix = ['sub-', options.subj.subjDir, '_desc-'];
+subPrefix = ['sub-', options.subj.subjDir, '_desc-'];
 outputDir = [options.subj.stimDir, filesep, ea_nt(options.native), S.label];
-outputBasePath = [outputDir, filesep, filePrefix];
+outputBasePath = [outputDir, filesep, 'sub-', options.subj.subjDir, '_sim-'];
 ea_mkdir(outputDir);
 if options.native
     templateOutputDir = [options.subj.stimDir, filesep, ea_nt(0), S.label];
     ea_mkdir(templateOutputDir);
-    templateOutputBasePath = [templateOutputDir, filesep, filePrefix];
+    templateOutputBasePath = [templateOutputDir, filesep, 'sub-', options.subj.subjDir, '_sim-'];
 end
 
 %% Set MRI_data_name
@@ -122,8 +122,8 @@ tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
 scalingMethod = options.prefs.machine.vatsettings.butenko_tensorScalingMethod;
 scaledTensorName = strrep(tensorName, '.nii', ['_', scalingMethod, '.nii']);
 
-nativeTensor = [options.subj.coregDir, filesep, 'dwi', filesep, filePrefix, tensorName];
-nativeTensorScaled = [options.subj.coregDir, filesep, 'dwi', filesep, filePrefix, scaledTensorName];
+nativeTensor = [options.subj.coregDir, filesep, 'dwi', filesep, subPrefix, tensorName];
+nativeTensorScaled = [options.subj.coregDir, filesep, 'dwi', filesep, subPrefix, scaledTensorName];
 templateTensor = [ea_space, filesep, tensorName];
 templateTensorScaled = [ea_space, filesep, scaledTensorName];
 tensorData = [outputDir, filesep, scaledTensorName]; % Final tensor data input for OSS-DBS
@@ -178,7 +178,7 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
 
             if isfile(nativeTensor) % Scale tensor data
                 tensorDir = fileparts(nativeTensor);
-                tensorPrefix = filePrefix;
+                tensorPrefix = subPrefix;
             end
         end
 
@@ -584,20 +584,20 @@ for side=0:1
 
         if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'])
             copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
-                     [outputBasePath, 'stimvol_hemi-', sideLabel, '.nii'])
+                     [outputBasePath, 'binary_hemi-', sideLabel, '.nii'])
 
-            vatToViz = [outputBasePath, 'stimvol_hemi-', sideLabel, '.nii'];
+            vatToViz = [outputBasePath, 'binary_hemi-', sideLabel, '.nii'];
             if options.native % Transform to MNI space
                 ea_apply_normalization_tofile(options,...
-                    [outputBasePath, 'stimvol_hemi-', sideLabel, '.nii'],... % from
-                    [templateOutputBasePath, 'stimvol_hemi-', sideLabel, '.nii'],... % to
+                    [outputBasePath, 'binary_hemi-', sideLabel, '.nii'],... % from
+                    [templateOutputBasePath, 'binary_hemi-', sideLabel, '.nii'],... % to
                     0, ... % useinverse is 0
                     0, ... % nn interpolation
                     [ea_space, options.primarytemplate, '.nii']);
-                ea_autocrop([templateOutputBasePath, 'stimvol_hemi-', sideLabel, '.nii']);
+                ea_autocrop([templateOutputBasePath, 'binary_hemi-', sideLabel, '.nii']);
 
                 if ~options.orignative % Visualize MNI space VTA
-                    vatToViz = [templateOutputBasePath, 'stimvol_hemi-', sideLabel, '.nii'];
+                    vatToViz = [templateOutputBasePath, 'binary_hemi-', sideLabel, '.nii'];
                 end
             end
 
