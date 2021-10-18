@@ -108,9 +108,9 @@ for iside=1:length(options.sides)
     side=options.sides(iside);
     switch side
         case 1
-            sidec='right';
+            sidec='R';
         case 2
-            sidec='left';
+            sidec='L';
     end
     for vat=1:length(VAT{side}.VAT)
         if ~exist('K','var') % e.g. maedler model used
@@ -185,9 +185,9 @@ for iside=1:length(options.sides)
                                     atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
                                 case 3 % both-sides atlas composed of 2 files.
                                     switch sidec
-                                        case 'right'
+                                        case {'right', 'R'}
                                             atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
-                                        case 'left'
+                                        case {'left', 'L'}
                                             atlasfile = [ea_space([],'atlases'),options.atlasset,filesep,'lh',filesep,atlases.names{atlas}];
                                     end
                                 case 4 % mixed atlas (one file with both sides information).

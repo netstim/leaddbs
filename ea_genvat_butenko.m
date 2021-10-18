@@ -502,9 +502,11 @@ for side=0:1
 
     switch side
         case 0
+            sideLabel = 'R';
             sideCode = 'rh';
             sideStr = 'right';
         case 1
+            sideLabel = 'L';
             sideCode = 'lh';
             sideStr = 'left';
     end
@@ -576,34 +578,34 @@ for side=0:1
         % Copy VAT files
         if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
             copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'], ...
-                     [outputBasePath, 'efield_hemi-', sideStr, '.nii'])
+                     [outputBasePath, 'efield_hemi-', sideLabel, '.nii'])
             if options.native % Transform to MNI space
                 ea_apply_normalization_tofile(options,...
-                    [outputBasePath, 'efield_hemi-', sideStr, '.nii'],... % from
-                    [templateOutputBasePath, 'efield_hemi-', sideStr, '.nii'],... % to
+                    [outputBasePath, 'efield_hemi-', sideLabel, '.nii'],... % from
+                    [templateOutputBasePath, 'efield_hemi-', sideLabel, '.nii'],... % to
                     0, ... % useinverse is 0
                     1, ... % linear interpolation
                     [ea_space, options.primarytemplate, '.nii']);
-                ea_autocrop([templateOutputBasePath, 'efield_hemi-', sideStr, '.nii']);
+                ea_autocrop([templateOutputBasePath, 'efield_hemi-', sideLabel, '.nii']);
             end
         end
 
         if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'])
             copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
-                     [outputBasePath, 'stimvol_hemi-', sideStr, '.nii'])
+                     [outputBasePath, 'stimvol_hemi-', sideLabel, '.nii'])
 
-            vatToViz = [outputBasePath, 'stimvol_hemi-', sideStr, '.nii'];
+            vatToViz = [outputBasePath, 'stimvol_hemi-', sideLabel, '.nii'];
             if options.native % Transform to MNI space
                 ea_apply_normalization_tofile(options,...
-                    [outputBasePath, 'stimvol_hemi-', sideStr, '.nii'],... % from
-                    [templateOutputBasePath, 'stimvol_hemi-', sideStr, '.nii'],... % to
+                    [outputBasePath, 'stimvol_hemi-', sideLabel, '.nii'],... % from
+                    [templateOutputBasePath, 'stimvol_hemi-', sideLabel, '.nii'],... % to
                     0, ... % useinverse is 0
                     0, ... % nn interpolation
                     [ea_space, options.primarytemplate, '.nii']);
-                ea_autocrop([templateOutputBasePath, 'stimvol_hemi-', sideStr, '.nii']);
+                ea_autocrop([templateOutputBasePath, 'stimvol_hemi-', sideLabel, '.nii']);
 
                 if ~options.orignative % Visualize MNI space VTA
-                    vatToViz = [templateOutputBasePath, 'stimvol_hemi-', sideStr, '.nii'];
+                    vatToViz = [templateOutputBasePath, 'stimvol_hemi-', sideLabel, '.nii'];
                 end
             end
 
@@ -673,15 +675,15 @@ for side=0:1
                     resultProtocol = [outputDir, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
                     ea_mkdir(resultProtocol);
                     if startsWith(settings.connectome, 'Multi-Tract: ')
-                        fiberActivation = [resultProtocol, filesep, filePrefix, 'fiberActivation_hemi-', sideStr, '_tract-', tractName,'_prot-', stimProt_index, '.mat'];
+                        fiberActivation = [resultProtocol, filesep, filePrefix, 'fiberActivation_hemi-', sideLabel, '_tract-', tractName,'_prot-', stimProt_index, '.mat'];
                     else
-                        fiberActivation = [resultProtocol, filesep, filePrefix, 'fiberActivation_hemi-', sideStr,'_prot-', stimProt_index, '.mat'];
+                        fiberActivation = [resultProtocol, filesep, filePrefix, 'fiberActivation_hemi-', sideLabel,'_prot-', stimProt_index, '.mat'];
                     end
                 else
                     if startsWith(settings.connectome, 'Multi-Tract: ')
-                        fiberActivation = [outputBasePath, 'fiberActivation_hemi-', sideStr, '_tract-', tractName, '.mat'];
+                        fiberActivation = [outputBasePath, 'fiberActivation_hemi-', sideLabel, '_tract-', tractName, '.mat'];
                     else
-                        fiberActivation = [outputBasePath, 'fiberActivation_hemi-', sideStr, '.mat'];
+                        fiberActivation = [outputBasePath, 'fiberActivation_hemi-', sideLabel, '.mat'];
                     end
                 end
 
@@ -713,15 +715,15 @@ for side=0:1
                         resultProtocol = [templateOutputDir, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
                         ea_mkdir(resultProtocol);
                         if startsWith(settings.connectome, 'Multi-Tract: ')
-                            fiberActivationMNI = [resultProtocol, filesep, filePrefix, 'fiberActivation_hemi-', sideStr, '_tract-', tractName,'_prot-',stimProt_index, '.mat'];
+                            fiberActivationMNI = [resultProtocol, filesep, filePrefix, 'fiberActivation_hemi-', sideLabel, '_tract-', tractName,'_prot-', stimProt_index, '.mat'];
                         else
-                            fiberActivationMNI = [resultProtocol, filesep, filePrefix, 'fiberActivation_hemi-', sideStr,'_prot-',stimProt_index, '.mat'];
+                            fiberActivationMNI = [resultProtocol, filesep, filePrefix, 'fiberActivation_hemi-', sideLabel, '_prot-', stimProt_index, '.mat'];
                         end
                     else
                         if startsWith(settings.connectome, 'Multi-Tract: ')
-                            fiberActivationMNI = [templateOutputBasePath, filesep, 'fiberActivation_hemi-', sideStr, '_tract-', tractName, '.mat'];
+                            fiberActivationMNI = [templateOutputBasePath, filesep, 'fiberActivation_hemi-', sideLabel, '_tract-', tractName, '.mat'];
                         else
-                            fiberActivationMNI = [templateOutputBasePath, filesep, 'fiberActivation_hemi-', sideStr, '.mat'];
+                            fiberActivationMNI = [templateOutputBasePath, filesep, 'fiberActivation_hemi-', sideLabel, '.mat'];
                         end
                     end
                     save(fiberActivationMNI, '-struct', 'conn');
