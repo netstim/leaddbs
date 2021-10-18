@@ -24,7 +24,7 @@ if ~exist('hmchanged','var')
 end
 
 stimDir = [options.subj.stimDir, filesep, ea_nt(options), S.label];
-fileBasePath = [stimDir, filesep, 'sub-', options.subj.subjId, '_desc-'];
+fileBasePath = [stimDir, filesep, 'sub-', options.subj.subjId, '_sim-'];
 
 % clean downstreamfiles if necessary
 if hmchanged
@@ -206,7 +206,7 @@ for iside=1:length(options.sides)
                                 continue;
                             end
 
-                            vatfile = [fileBasePath, 'stimvol_hemi-', sidec, '.nii'];
+                            vatfile = [fileBasePath, 'binary_hemi-', sidec, '.nii'];
                             [~, mm_overlap, normVTAOverlap, normAtlasOverlap, mm_vta, mm_atlas]  = ea_vta_overlap(vatfile, atlasfile, sidec);
 
                             % Overriding the volume of the vat with the one

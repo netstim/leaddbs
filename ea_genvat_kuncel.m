@@ -104,12 +104,12 @@ Vvat.descrip='lead dbs - vat';
 
 stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
 ea_mkdir(stimDir);
-filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+filePrefix = ['sub-', options.subj.subjId, '_sim-'];
 
 if side == 1
-    Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_hemi-R.nii'];
 elseif side == 2
-    Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_hemi-L.nii'];
 end
 
 ea_savestimulation(S,options);
