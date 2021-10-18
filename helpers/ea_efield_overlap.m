@@ -41,9 +41,9 @@ if ~strcmp(side, 'both')
     [xvox, yvox, zvox] = ind2sub(size(atlasnii.img), nonzeroInd);
     xyz = ea_vox2mm([xvox, yvox, zvox], atlas);
     switch side
-        case 'right'
+        case {'right', 'r'}
             atlasnii.img(nonzeroInd(xyz(:,1)<0))=0; % Set left side to 0
-        case 'left'
+        case {'left', 'l'}
             atlasnii.img(nonzeroInd(xyz(:,1)>0))=0; % Set right side to 0
     end
 end
