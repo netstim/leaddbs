@@ -194,6 +194,7 @@ classdef ea_networkmapping < handle
             end
             D = load(obj.leadgroup);
             obj.M = D.M;
+            obj.allpatients = D.M.patient.list;
         end
 
         function coh = getcohortregressor(obj)
