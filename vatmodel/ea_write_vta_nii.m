@@ -142,17 +142,17 @@ ea_dispt('Writing files...');
 % determine stimulation name
 stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
 ea_mkdir(stimDir);
-filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+filePrefix = ['sub-', options.subj.subjId, '_sim-'];
 
 switch side
     case 1
-        Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_hemi-R.nii'];
         Vvate=Vvat;
         Vvatne=Vvat;
         Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-R.nii'];
         Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-R.nii'];
     case 2
-        Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_hemi-L.nii'];
         Vvate = Vvat;
         Vvatne = Vvat;
         Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-L.nii'];
@@ -196,9 +196,9 @@ end
 % visualization
 switch side
     case 1
-        vatfvname = [stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_hemi-R.mat'];
     case 2
-        vatfvname = [stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_hemi-R.mat'];
 end
 
 vatgrad = vatgrad(side);
