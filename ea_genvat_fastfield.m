@@ -147,17 +147,17 @@ filePrefix = ['sub-', options.subj.subjId, '_desc-'];
 
 switch side
     case 1
-        Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii'];
         Vvate=Vvat;
         Vvatne=Vvat;
-        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-right.nii'];
-        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-right.nii'];
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-R.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-R.nii'];
     case 2
-        Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'];
         Vvate = Vvat;
         Vvatne = Vvat;
-        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-left.nii'];
-        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-left.nii'];
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-L.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-L.nii'];
 end
 
 ea_savestimulation(S,options);
@@ -198,9 +198,9 @@ end
 % visualization
 switch side
     case 1
-        vatfvname = [stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat'];
     case 2
-        vatfvname = [stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat'];
 end
 
 save(vatfvname,'vatfv','vatvolume');
