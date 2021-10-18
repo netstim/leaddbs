@@ -58,7 +58,7 @@ for pt=1:length(M.patient.list)
         patStimDir = [M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid];
     end
 
-    vatFiles = ea_regexpdir(patStimDir, '_desc-stimvol_hemi-(right|left)\.nii$');
+    vatFiles = ea_regexpdir(patStimDir, '_sim-binary_hemi-(R|L)\.nii$');
     fname_l = vatFiles{1};
     fname_r = vatFiles{2};
 
