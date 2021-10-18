@@ -181,46 +181,46 @@ if ~strcmp(options.leadprod, 'group')
     filePrefix = ['sub-', options.subj.subjId, '_desc-'];
     visualizeVAT = 1;
     if visualizeVAT
-        if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat'])
-            load([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']);
+        if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat'])
+            load([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = vatvolume;
             if exist('vatgrad','var')
                 vatgradtemp(1) = vatgrad;
             end
-            load([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat']);
+            load([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat']);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
             if exist('vatgrad','var')
                 vatgradtemp(2) = vatgrad;
                 vatgrad = vatgradtemp;
             end
-        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat'])
-            load([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']);
+        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat'])
+            load([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = vatvolume;
-        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat'])
-            load([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat']);
+        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat'])
+            load([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat']);
             %For consistency, left is always on 2nd element of stimparams
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
         else
-            if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'])
-                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']);
+            if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'])
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 stimparams(1,1).VAT.VAT = vatfv;
                 stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii']);
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 stimparams(1,2).VAT.VAT = vatfv;
                 stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-            elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii'])
-                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']);
+            elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii'])
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 stimparams(1,1).VAT.VAT = vatfv;
                 stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-            elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'])
-                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii']);
+            elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'])
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 %For consistency, left is always on 2nd element of stimparams
                 stimparams(1,2).VAT.VAT = vatfv;
@@ -230,32 +230,32 @@ if ~strcmp(options.leadprod, 'group')
             end
         end
 
-        if isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat']) ...
-                && isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'])
+        if isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-R.mat']) ...
+                && isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-L.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'], resultfig);
-            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'], resultfig);
-        elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'])
+            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-R.mat'], resultfig);
+            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-L.mat'], resultfig);
+        elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-R.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'], resultfig);
-        elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'])
+            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-R.mat'], resultfig);
+        elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-L.mat'])
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
                 deletePL(PL(group));
             end
             clear PL
-            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'], resultfig);
+            ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-L.mat'], resultfig);
         end
 
         if visualizeVAT
@@ -1867,45 +1867,45 @@ else
 
     visualizeVAT = 1;
     stimparams = struct();
-    if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat'])
-        load([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']);
+    if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat'])
+        load([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
         if exist('vatgrad','var')
             vatgradtemp(1) = vatgrad;
         end
-        load([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat']);
+        load([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat']);
         stimparams(1,2).VAT.VAT = vatfv;
         stimparams(1,2).volume = vatvolume;
         if exist('vatgrad','var')
             vatgradtemp(2) = vatgrad;
             vatgrad = vatgradtemp;
         end
-    elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat'])
-        load([stimDir, filesep, filePrefix, 'stimvol_hemi-right.mat']);
+    elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat'])
+        load([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
-    elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat'])
-        load([stimDir, filesep, filePrefix, 'stimvol_hemi-left.mat']);
+    elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat'])
+        load([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat']);
         stimparams(1,2).VAT.VAT = vatfv;
         stimparams(1,2).volume = vatvolume;
     else
-        if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'])
-            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']);
+        if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'])
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii']);
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii'])
-            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-right.nii']);
+        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii'])
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii'])
-            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-left.nii']);
+        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'])
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
@@ -1915,32 +1915,32 @@ else
     end
 
     visualizeFiberActivation = 1;
-    if isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat']) ...
-            && isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'])
+    if isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-R.mat']) ...
+            && isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-L.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'], resultfig);
-        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'], resultfig);
-    elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'])
+        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-R.mat'], resultfig);
+        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-L.mat'], resultfig);
+    elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-R.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-right.mat'], resultfig);
-    elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'])
+        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-R.mat'], resultfig);
+    elseif isfile([stimDir, filesep, filePrefix, 'fiberactivation_hemi-L.mat'])
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
             deletePL(PL(group));
         end
         clear PL
-        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-left.mat'], resultfig);
+        ea_fiberactivation_viz([stimDir, filesep, filePrefix, 'fiberactivation_hemi-L.mat'], resultfig);
     else
         visualizeFiberActivation = 0;
     end
