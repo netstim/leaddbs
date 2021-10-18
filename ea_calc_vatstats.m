@@ -28,14 +28,14 @@ fileBasePath = [stimDir, filesep, 'sub-', options.subj.subjId, '_sim-'];
 
 % clean downstreamfiles if necessary
 if hmchanged
-    ea_delete([fileBasePath, 'stimvol_hemi-leftflipped.nii']);
-    ea_delete([fileBasePath, 'stimvol_hemi-rightflipped.nii']);
+    ea_delete([fileBasePath, 'binary_hemi-R_desc-FlippedFromLeft.nii']);
+    ea_delete([fileBasePath, 'binary_hemi-L_desc-FlippedFromRight.nii']);
 
-    ea_delete([fileBasePath, 'efield_hemi-leftflipped.nii']);
-    ea_delete([fileBasePath, 'efield_hemi-rightflipped.nii']);
+    ea_delete([fileBasePath, 'efield_hemi-R_desc-FlippedFromLeft.nii']);
+    ea_delete([fileBasePath, 'efield_hemi-L_desc-FlippedFromRight.nii']);
 
-    ea_delete([fileBasePath, 'efieldgauss_hemi-leftflipped.nii']);
-    ea_delete([fileBasePath, 'efieldgauss_hemi-rightflipped.nii']);
+    ea_delete([fileBasePath, 'efieldgauss_hemi-R_desc-FlippedFromLeft.nii']);
+    ea_delete([fileBasePath, 'efieldgauss_hemi-L_desc-FlippedFromRight.nii']);
 
     ea_delete(fullfile(fileBasePath, 'vat_seed_compound_dMRI.nii'));
     ea_delete(fullfile(fileBasePath, 'vat_seed_compound_dMRI_l.nii'));
