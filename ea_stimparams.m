@@ -178,49 +178,49 @@ if ~strcmp(options.leadprod, 'group')
     label =handles.stimlabel.String{handles.stimlabel.Value};
     label(strfind(label, ' ')) = '';
     stimDir = fullfile(options.subj.stimDir, ea_nt(options), label);
-    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+    filePrefix = ['sub-', options.subj.subjId, '_sim-'];
     visualizeVAT = 1;
     if visualizeVAT
-        if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat'])
-            load([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']);
+        if isfile([stimDir, filesep, filePrefix, 'binary_hemi-R.mat']) && isfile([stimDir, filesep, filePrefix, 'binary_hemi-L.mat'])
+            load([stimDir, filesep, filePrefix, 'binary_hemi-R.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = vatvolume;
             if exist('vatgrad','var')
                 vatgradtemp(1) = vatgrad;
             end
-            load([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat']);
+            load([stimDir, filesep, filePrefix, 'binary_hemi-L.mat']);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
             if exist('vatgrad','var')
                 vatgradtemp(2) = vatgrad;
                 vatgrad = vatgradtemp;
             end
-        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat'])
-            load([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']);
+        elseif isfile([stimDir, filesep, filePrefix, 'binary_hemi-R.mat'])
+            load([stimDir, filesep, filePrefix, 'binary_hemi-R.mat']);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = vatvolume;
-        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat'])
-            load([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat']);
+        elseif isfile([stimDir, filesep, filePrefix, 'binary_hemi-L.mat'])
+            load([stimDir, filesep, filePrefix, 'binary_hemi-L.mat']);
             %For consistency, left is always on 2nd element of stimparams
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = vatvolume;
         else
-            if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'])
-                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']);
+            if isfile([stimDir, filesep, filePrefix, 'binary_hemi-R.nii']) && isfile([stimDir, filesep, filePrefix, 'binary_hemi-L.nii'])
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'binary_hemi-R.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 stimparams(1,1).VAT.VAT = vatfv;
                 stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii']);
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'binary_hemi-L.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 stimparams(1,2).VAT.VAT = vatfv;
                 stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-            elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii'])
-                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']);
+            elseif isfile([stimDir, filesep, filePrefix, 'binary_hemi-R.nii'])
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'binary_hemi-R.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 stimparams(1,1).VAT.VAT = vatfv;
                 stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-            elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'])
-                nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii']);
+            elseif isfile([stimDir, filesep, filePrefix, 'binary_hemi-L.nii'])
+                nii = ea_load_nii([stimDir, filesep, filePrefix, 'binary_hemi-L.nii']);
                 vatfv = ea_niiVAT2fvVAT(nii);
                 %For consistency, left is always on 2nd element of stimparams
                 stimparams(1,2).VAT.VAT = vatfv;
@@ -1863,49 +1863,49 @@ else
     % available the vat_xxx.nii is loaded and visualized
 
     stimDir = fullfile(options.subj.stimDir, ea_nt(options), label);
-    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+    filePrefix = ['sub-', options.subj.subjId, '_sim-'];
 
     visualizeVAT = 1;
     stimparams = struct();
-    if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat'])
-        load([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']);
+    if isfile([stimDir, filesep, filePrefix, 'binary_hemi-R.mat']) && isfile([stimDir, filesep, filePrefix, 'binary_hemi-L.mat'])
+        load([stimDir, filesep, filePrefix, 'binary_hemi-R.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
         if exist('vatgrad','var')
             vatgradtemp(1) = vatgrad;
         end
-        load([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat']);
+        load([stimDir, filesep, filePrefix, 'binary_hemi-L.mat']);
         stimparams(1,2).VAT.VAT = vatfv;
         stimparams(1,2).volume = vatvolume;
         if exist('vatgrad','var')
             vatgradtemp(2) = vatgrad;
             vatgrad = vatgradtemp;
         end
-    elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat'])
-        load([stimDir, filesep, filePrefix, 'stimvol_hemi-R.mat']);
+    elseif isfile([stimDir, filesep, filePrefix, 'binary_hemi-R.mat'])
+        load([stimDir, filesep, filePrefix, 'binary_hemi-R.mat']);
         stimparams(1,1).VAT.VAT = vatfv;
         stimparams(1,1).volume = vatvolume;
-    elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat'])
-        load([stimDir, filesep, filePrefix, 'stimvol_hemi-L.mat']);
+    elseif isfile([stimDir, filesep, filePrefix, 'binary_hemi-L.mat'])
+        load([stimDir, filesep, filePrefix, 'binary_hemi-L.mat']);
         stimparams(1,2).VAT.VAT = vatfv;
         stimparams(1,2).volume = vatvolume;
     else
-        if isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']) && isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'])
-            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']);
+        if isfile([stimDir, filesep, filePrefix, 'binary_hemi-R.nii']) && isfile([stimDir, filesep, filePrefix, 'binary_hemi-L.nii'])
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'binary_hemi-R.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii']);
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'binary_hemi-L.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii'])
-            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-R.nii']);
+        elseif isfile([stimDir, filesep, filePrefix, 'binary_hemi-R.nii'])
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'binary_hemi-R.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,1).VAT.VAT = vatfv;
             stimparams(1,1).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
-        elseif isfile([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii'])
-            nii = ea_load_nii([stimDir, filesep, filePrefix, 'stimvol_hemi-L.nii']);
+        elseif isfile([stimDir, filesep, filePrefix, 'binary_hemi-L.nii'])
+            nii = ea_load_nii([stimDir, filesep, filePrefix, 'binary_hemi-L.nii']);
             vatfv = ea_niiVAT2fvVAT(nii);
             stimparams(1,2).VAT.VAT = vatfv;
             stimparams(1,2).volume = sum(nii.img(:))*nii.voxsize(1)*nii.voxsize(2)*nii.voxsize(3);
