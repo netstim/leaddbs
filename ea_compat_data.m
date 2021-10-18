@@ -50,7 +50,7 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
         oldfolder = folders{i};
         newfolder = regexprep(oldfolder, '(.*) \[(.*)\]', '$1 - $2');
         if ~strcmp(oldfolder, newfolder)
-        movefile(oldfolder, newfolder)
+            movefile(oldfolder, newfolder)
         end
     end
 
@@ -60,7 +60,7 @@ if strcmp(ea_getspace,'MNI_ICBM_2009b_NLIN_ASYM')
         oldfile = files{i};
         newfile = regexprep(oldfile,'\[(.*)\]', '- $1');
          if ~strcmp(oldfolder, newfolder)
-        movefile(oldfile, newfile)
+            movefile(oldfile, newfile)
          end
     end
 end
