@@ -10,33 +10,29 @@ end
 numPatient = length(obj.allpatients);
 vatlist = cell(numPatient*2,1);
 
-[modlist,sf]=ea_genmodlist;
-[~,ix]=ismember(obj.connectome,modlist);
+[modlist,modType] = ea_genmodlist;
+[~,ix] = ismember(obj.connectome,modlist);
 if ~ix
     ea_error('Something went wrong, connectome disappeared?');
 end
-sf=sf(ix);
-sfstrings={'dMRI','fMRI'};
-sfstring=sfstrings{sf};
+modType = modType(ix);
+modStr = {'dMRI', 'fMRI'};
+modStr = modStr{modType};
 
 disp('Construct VAT list...')
-for sub=1:numPatient % Original VAT E-field
-    vatlist{sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_',sfstring,'_efield.nii'];
-    % if ~exist(vatlist{sub},'file') % create joint VTA
+for sub=1:numPatient
+    % Original VAT E-field
+    stimFolder = [pthprefix, obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
+    vatlist(sub,1) = ea_regexpdir(stimFolder, ['sim-efield_seed-', modStr, '\.nii$'], 0);
+
     if 1 % for now always recreate compound VTA seed
         rungenlocalmapper(obj,sub)
     end
-end
 
-for sub=1:numPatient % Mirrored VAT E-field
-    vatlist{numPatient+sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), ['gs_',obj.M.guid],filesep, 'fl_vat_seed_compound_',sfstring,'_efield.nii'];
-    if ~exist(vatlist{numPatient+sub,1},'file')
-        ea_flip_lr_nonlinear([pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-            ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_',sfstring,'_efield.nii'],...
-            [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-            ea_nt(0), ['gs_',obj.M.guid],filesep, 'fl_vat_seed_compound_',sfstring,'_efield.nii'],0);
+    % Mirrored VAT E-field
+    vatlist(numPatient+sub,1) = ea_regexpdir(stimFolder, ['sim-efield_seed-', modStr, '_desc-flipped\.nii$'], 0);
+    if ~isfile(vatlist{numPatient+sub,1})
+        ea_flip_lr_nonlinear(vatlist{sub,1}, vatlist{numPatient+sub,1}, 0);
     end
 end
 
