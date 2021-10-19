@@ -37,13 +37,13 @@ if hmchanged
     ea_delete([fileBasePath, 'efieldgauss_hemi-R_desc-FlippedFromLeft.nii']);
     ea_delete([fileBasePath, 'efieldgauss_hemi-L_desc-FlippedFromRight.nii']);
 
-    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_dMRI.nii'));
-    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_dMRI_l.nii'));
-    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_dMRI_r.nii'));
+    ea_delete(fullfile(fileBasePath, 'binary_seed-dMRI.nii'));
+    ea_delete(fullfile(fileBasePath, 'binary_seed-dMRI_hemi-L.nii'));
+    ea_delete(fullfile(fileBasePath, 'binary_seed-dMRI_hemi-R.nii'));
 
-    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_fMRI.nii'));
-    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_fMRI_l.nii'));
-    ea_delete(fullfile(fileBasePath, 'vat_seed_compound_fMRI_r.nii'));
+    ea_delete(fullfile(fileBasePath, 'binary_seed-fMRI.nii'));
+    ea_delete(fullfile(fileBasePath, 'binary_seed-fMRI_hemi-L.nii'));
+    ea_delete(fullfile(fileBasePath, 'binary_seed-fMRI_hemi-R.nii'));
 end
 
 %prepare statvat exports once if needed.

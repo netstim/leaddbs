@@ -13,7 +13,7 @@ vatlist = cell(numPatient*2,2);
 disp('Construct VAT list...')
 for sub=1:numPatient
     % Original VAT E-field
-    stimFolder = [pthprefix, obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_',obj.M.guid];
+    stimFolder = [pthprefix, obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
     vatlist(sub,1) = ea_regexpdir(stimFolder, 'sim-efield_hemi-R\.nii$', 0);
     vatlist(sub,2) = ea_regexpdir(stimFolder, 'sim-efield_hemi-L\.nii$', 0);
 

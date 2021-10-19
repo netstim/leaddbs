@@ -131,165 +131,147 @@ end
 function seeds=ea_resolvevatseeds(options,modality)
 disp('Preparing VATs as seedfiles...');
 
-suffices={'binary','efield','efield_gauss'};
+vtaType = options.prefs.lcm.vatseed;
 
-[~,dowhich]=ismember(options.prefs.lcm.vatseed,suffices);
-for suffix=dowhich
+if strcmp(vtaType, 'binary')
+    dinterp=0;
+else
+    dinterp=1;
+end
 
-    switch suffices{suffix}
-        case 'binary'
-            addstr='';
-            dinterp=0;
-        case 'efield_gauss'
-            addstr='_efield_gauss';
-            dinterp=1;
-        case 'efield'
-            addstr='_efield';
-            dinterp=1;
-    end
-    if strcmp(options.prefs.lcm.vatseed,suffices{suffix})
-        keepthisone=1;
-    else
-        keepthisone=0;
-    end
-
-    % prepare for dMRI
-    switch modality
-        case 'dMRI'
-            seeds=cell(0);
-            useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
-            for pt=1:length(options.uivatdirs)
-                if useNativeSeed
-                    vatdir = [options.uivatdirs{pt}, filesep, 'stimulations', filesep, ea_nt(1), options.lcm.seeds, filesep];
-                    copyfile([ea_space,'bb.nii'], vatdir);
-                    options = ea_getptopts(options.uivatdirs{pt});
-                    ea_apply_normalization_tofile(options, {[vatdir,'bb.nii']}, {[vatdir,'bb.nii']}, 1);
-                    bbfile = [vatdir,'bb.nii'];
-                else
-                    vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(0),options.lcm.seeds,filesep];
-                    bbfile = [ea_space,'bb.nii'];
-                end
-
-                if ~exist([vatdir,'vat_seed_compound_dMRI',addstr,'.nii'],'file')
-                    cnt=1;
-                    for side=1:2
-                        switch side
-                            case 1
-                                sidec='right';
-                            case 2
-                                sidec='left';
-                        end
-
-                        if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
-                            copyfile([vatdir,'vat',addstr,'_',sidec,'.nii'],[vatdir,'tmp_',sidec,'.nii']);
-                            warning('off');
-                            ea_conformspaceto(bbfile,[vatdir,'tmp_',sidec,'.nii'],dinterp);
-                            warning('on');
-                            nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
-                            nii(cnt).img(isnan(nii(cnt).img))=0;
-                            cnt=cnt+1;
-                        else
-                            error('Seed file %s doesn''t exist!', [vatdir,'vat',addstr,'_',sidec,'.nii']);
-                        end
-                    end
-
-                    Cnii=nii(1);
-
-                    for n=2:length(nii)
-                        Cnii.img=Cnii.img+nii(n).img;
-                    end
-                    Cnii.fname=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
-                    ea_write_nii(Cnii);
-                    ea_crop_nii(Cnii.fname);
-                    delete([vatdir,'tmp_*']);
-
-                    ea_split_nii_lr(Cnii.fname);
-                    disp('Done.');
-                end
-                if keepthisone
-                    seeds{end+1}=[vatdir,'vat_seed_compound_dMRI',addstr,'.nii'];
-                end
+% prepare for dMRI
+switch modality
+    case 'dMRI'
+        seeds=cell(0);
+        useNativeSeed = options.prefs.lcm.struc.patienttracts.nativeseed;
+        for pt=1:length(options.uivatdirs)
+            [~, subPrefix] = fileparts(options.uivatdirs{pt});
+            if useNativeSeed
+                vatdir = [options.uivatdirs{pt}, filesep, 'stimulations', filesep, ea_nt(1), options.lcm.seeds, filesep];
+                copyfile([ea_space,'bb.nii'], vatdir);
+                options = ea_getptopts(options.uivatdirs{pt});
+                ea_apply_normalization_tofile(options, {[vatdir,'bb.nii']}, {[vatdir,'bb.nii']}, 1);
+                bbfile = [vatdir,'bb.nii'];
+            else
+                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(0),options.lcm.seeds,filesep];
+                bbfile = [ea_space,'bb.nii'];
             end
-        case 'fMRI'
-            % prepare for fMRI
-            seeds=cell(0);
-            nativeprefix='';
-            for pt=1:length(options.uivatdirs)
-                vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
-                cname=options.lcm.func.connectome;
 
-                if ismember('>',cname)
-                    delim=strfind(cname,'>');
-                    subset=cname(delim+1:end);
-                    cname=cname(1:delim-1);
+            seedFile = [vatdir, subPrefix, '_sim-', vtaType, '_seed-dMRI.nii'];
+            if ~isfile(seedFile)
+                cnt=1;
+                for side=1:2
+                    switch side
+                        case 1
+                            sidec='R';
+                        case 2
+                            sidec='L';
+                    end
+
+                    vtaFile = ea_regexpdir(vatdir, [subPrefix, '_sim-', vtaType, '_hemi-', sidec, '\.nii$'], 0);
+                    if ~isempty(vtaFile)
+                        copyfile(vtaFile{1},[vatdir,'tmp_',sidec,'.nii']);
+                        warning('off');
+                        ea_conformspaceto(bbfile,[vatdir,'tmp_',sidec,'.nii'],dinterp);
+                        warning('on');
+                        nii(cnt)=ea_load_nii([vatdir,'tmp_',sidec,'.nii']);
+                        nii(cnt).img(isnan(nii(cnt).img))=0;
+                        cnt=cnt+1;
+                    else
+                        error('Seed file %s doesn''t exist!', vtaFile{1});
+                    end
                 end
 
-                if ~strcmp(cname,'No functional connectome found.') && ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') % patient specific rs-fMRI
-                    nativeprefix=['_',cname(length('Patient''s fMRI - ')+1:end)];
-                else
-                    nativeprefix='';
+                Cnii=nii(1);
+
+                for n=2:length(nii)
+                    Cnii.img=Cnii.img+nii(n).img;
                 end
+                Cnii.fname = seedFile;
+                ea_write_nii(Cnii);
+                ea_crop_nii(Cnii.fname);
+                delete([vatdir,'tmp_*']);
 
-                % if ~exist([vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'],'file')
-                if 1 % for now always recreate
-                    cnt=1;
-                    for side=1:2
-                        switch side
-                            case 1
-                                sidec='right';
-                            case 2
-                                sidec='left';
-                        end
+                ea_split_nii_lr(Cnii.fname);
+                disp('Done.');
+            end
+            seeds{end+1} = seedFile;
+        end
+    case 'fMRI'
+        % prepare for fMRI
+        seeds=cell(0);
+        for pt=1:length(options.uivatdirs)
+            [~, subPrefix] = fileparts(options.uivatdirs{pt});
+            vatdir=[options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),options.lcm.seeds,filesep];
+            cname=options.lcm.func.connectome;
 
-                        if exist([vatdir,'vat',addstr,'_',sidec,'.nii'],'file')
-                            if ~strcmp(cname,'No functional connectome found.')
-                                if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') && ~isfield(options.lcm,'onlygenvats') % patient specific rs-fMRI
-                                    nii(cnt) = ea_warp_vat2rest(cname,vatdir,sidec,options);
-                                else
-                                    nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'], [vatdir,'vat',addstr,'_',sidec,'.nii']);
-                                end
-                                nii(cnt).img(isnan(nii(cnt).img))=0;
-                                nii(cnt).img(nii(cnt).img<0)=0; % safety measure: VTAs should not have negative entries
-                                
-                                if strcmp(addstr,'_efield')
-                                    nii(cnt).img(nii(cnt).img<multithresh(nii(cnt).img)) = 0; % remove small electric field values.
-                                end
-                                
-                                if ~any(nii(cnt).img(:))
-                                    msgbox(['Created empty VTA for ',options.patientname,'(',options.uivatdirs{pt},'), ',sidec,' hemisphere.']);
-                                end
+            if ismember('>',cname)
+                delim=strfind(cname,'>');
+                subset=cname(delim+1:end);
+                cname=cname(1:delim-1);
+            end
+
+            if ~strcmp(cname,'No functional connectome found.') && ~isfile([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']) % patient specific rs-fMRI
+                seedLabel = erase(cname, 'Patient''s fMRI - ');
+            else
+                seedLabel = 'fMRI';
+            end
+
+            seedFile = [vatdir, subPrefix, '_sim-', vtaType, '_seed-', seedLabel, '.nii'];
+            % if ~isfile(seedFile)
+            if 1 % for now always recreate
+                cnt=1;
+                for side=1:2
+                    switch side
+                        case 1
+                            sidec='R';
+                        case 2
+                            sidec='L';
+                    end
+
+                    vtaFile = ea_regexpdir(vatdir, [subPrefix, '_sim-', vtaType, '_hemi-', sidec, '\.nii$'], 0);
+                    if isfile(vtaFile)
+                        if ~strcmp(cname,'No functional connectome found.')
+                            if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') && ~isfield(options.lcm,'onlygenvats') % patient specific rs-fMRI
+                                nii(cnt) = ea_warp_vat2rest(cname,vatdir,sidec,options);
+                            else
+                                nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'], vtaFile);
                             end
-                            cnt=cnt+1;
+
+                            nii(cnt).img(isnan(nii(cnt).img))=0;
+                            nii(cnt).img(nii(cnt).img<0)=0; % safety measure: VTAs should not have negative entries
+
+                            if strcmp(vtaType,'_efield')
+                                nii(cnt).img(nii(cnt).img<multithresh(nii(cnt).img)) = 0; % remove small electric field values.
+                            end
+
+                            if ~any(nii(cnt).img(:))
+                                msgbox(['Created empty VTA for ',subPrefix,' (',options.lcm.seeds,', ',sidec,' hemisphere).']);
+                            end
                         end
+                        cnt=cnt+1;
                     end
-                    Cnii=nii(1);
-                    for n=2:length(nii)
-                        Cnii.img=Cnii.img+nii(n).img;
-                    end
-
-                    Cnii.fname=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
-                    ea_write_nii(Cnii);
-                    delete([vatdir,'tmp_*']);
-
-                    ea_split_nii_lr(Cnii.fname);
-                    disp('Done.');
+                end
+                Cnii=nii(1);
+                for n=2:length(nii)
+                    Cnii.img=Cnii.img+nii(n).img;
                 end
 
-                if keepthisone
-                    seeds{end+1}=[vatdir,'vat_seed_compound_fMRI',addstr,nativeprefix,'.nii'];
-                end
+                Cnii.fname = seedFile;
+                ea_write_nii(Cnii);
+                delete([vatdir,'tmp_*']);
+
+                ea_split_nii_lr(Cnii.fname);
+                disp('Done.');
             end
-    end
+            seeds{end+1} = seedFile;
+        end
 end
 
 
 function vatseed = ea_warp_vat2rest(cname,vatdir,sidec,options)
 
-if strncmp(cname, 'Patient''s fMRI - ', length('Patient''s fMRI - '))
-    restfname = cname(length('Patient''s fMRI - ')+1:end);
-else
-    restfname = cname;
-end
+restfname = erase(cname, 'Patient''s fMRI - ');
 
 options.prefs.rest=[restfname,'.nii']; % make sure the proper rest_* is used
 
