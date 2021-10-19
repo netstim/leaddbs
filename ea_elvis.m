@@ -410,7 +410,7 @@ ea_view(v);
 
 % Show atlas data
 if options.d3.writeatlases && ~strcmp(options.atlasset, 'Use none')
-    atlases = ea_showatlas(resultfig,elstruct,popts);
+    atlases = ea_showatlas(resultfig,elstruct,options);
 
     if ~strcmp(options.d3.verbose,'off') && ~atlases.discfibersonly
         ea_openatlascontrol([],[],atlases,resultfig,options);
