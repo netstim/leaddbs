@@ -92,7 +92,7 @@ ea_addnormmethods(handles,options,'normmethod');
 ea_processguiargs(handles,varargin)
 
 % add tools menu
-ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'});
+ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'},options.prefs);
 
 handles.prod='anatomy';
 ea_firstrun(handles,options);
