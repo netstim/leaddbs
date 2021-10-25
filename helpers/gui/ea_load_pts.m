@@ -63,9 +63,9 @@ if length(uipatdir) == 1 % Single folder
             error('Neither BIDS dataset nor patient folder found!');
         end
     elseif isBIDSRoot % Is BIDS root folder
-        rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0);
+        rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0, 'dir');
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
-        sourceData = ea_regexpdir([uipatdir{1}, filesep, 'sourcedata'], 'sub-', 0);
+        sourceData = ea_regexpdir([uipatdir{1}, filesep, 'sourcedata'], 'sub-', 0, 'dir');
         sourceData = regexprep(sourceData, ['\', filesep, '$'], '');
 
         if ~isempty(rawData) % rawdata folder already exists
