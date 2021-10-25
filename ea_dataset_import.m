@@ -132,7 +132,9 @@ else
             end
             
             % copy DICOM data to sourcedata
+            if ~exist(fullfile(dest_dir_subj, 'sourcedata', subjID), 'dir')
             copyfile(fullfile(source_dir{subj_idx}, 'DICOM'), fullfile(dest_dir_subj, 'sourcedata', subjID));
+            end
             subj_ids(subj_idx).name =char(subjID);
             
         end
