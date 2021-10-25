@@ -70,8 +70,8 @@ if length(uipatdir) == 1 % Single folder
         sourceData = regexprep(sourceData, ['\', filesep, '$'], '');
 
         if ~isempty(rawData) % rawdata folder already exists
-            uipatdir = {strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs'])};
-            subjId = {regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match', 'once')};
+            uipatdir = strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs']);
+            subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match', 'once');
         elseif ~isempty(sourceData) % sourcedata folder exists
             % in the case of a BIDS dataset root folder as input and sourcedata available for one or more patients
             % trigger DICOM->nii conversion          
@@ -83,8 +83,8 @@ if length(uipatdir) == 1 % Single folder
             % BIDSRoot is the selected folder
             BIDSRoot = uipatdir{1};
             setappdata(handles.leadfigure, 'BIDSRoot', BIDSRoot);
+                   
             subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match', 'once');
-            
             % call lead_migrate
             msg = {'{\bfBIDS dataset with sourcedata found, will run DICOM to NIfTI conversion!}'};
             opts.Interpreter = 'tex';
@@ -93,7 +93,7 @@ if length(uipatdir) == 1 % Single folder
             options.prefs = ea_prefs;
 
             waitfor(lead_import(sourceData, options, handles));
-            uipatdir = {fullfile(BIDSRoot, 'rawdata', 'derivatives', 'leaddbs', sprintf('sub-%s', subjId{1}))};
+            uipatdir = strrep(sourceData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
             
         else
             error('BIDS dataset detected but both sourcedata and rawdata folders are empty!');
