@@ -344,6 +344,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     
     session = char(uiapp.niiFileTable.Data.Session(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
+    type = char(uiapp.niiFileTable.Data.Type(i));
     
     fname = sprintf('%s_ses-%s_%s', subjID, session, modality);
     
@@ -364,7 +365,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         end
     end
     
-    anat_files.(session).(modality) = fname; % set output struct
+    anat_files.(session).(type).(modality) = fname; % set output struct
     
 end
 
