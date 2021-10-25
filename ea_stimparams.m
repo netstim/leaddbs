@@ -3516,9 +3516,22 @@ function addStimSet_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of addStimSet
 if hObject.Value
     options = getappdata(handles.stimfig, 'options');
-    numContacts = options.elspec.numel;
     stimLabel = getappdata(handles.stimfig, 'stimlabel');
-    stimFolder = [options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(~handles.estimateInTemplate.Value),stimLabel];
+    if strcmp(options.leadprod, 'dbs')
+        patdir = [options.root, options.patientname];
+        numContacts = options.elspec.numel;
+    else % Special case when call from Lead Group
+        actpt = getappdata(handles.stimfig, 'actpt');
+        resultfig = getappdata(handles.stimfig, 'resultfig');
+        M = getappdata(resultfig, 'M');
+        if M.ui.detached
+            patdir = fullfile(M.root, M.patient.list{actpt});
+        else
+            patdir = M.patient.list{actpt};
+        end
+        numContacts = size(M.elstruct(actpt).coords_mm{1}, 1);
+    end
+    stimFolder = fullfile(patdir ,'stimulations', ea_nt(~handles.estimateInTemplate.Value), stimLabel);
     ea_mkdir(stimFolder);
     ea_addStimSet(numContacts, stimFolder, hObject);
 end
