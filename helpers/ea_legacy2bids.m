@@ -169,8 +169,10 @@ for patients = 1:length(source)
                 if ~isdicom
                     disp("There are no dicom images, source data folder will be empty")
                 else
-                    disp("Copying DICOM folder...");
-                    copyfile(dicom_patient,new_path)                    
+                    if ~exist(dicom_patient, 'dir')
+                        disp("Copying DICOM folder...");
+                        copyfile(dicom_patient,new_path)
+                    end
                 end 
             case 'derivatives'
                 disp("Migrating Derivatives folder...");
