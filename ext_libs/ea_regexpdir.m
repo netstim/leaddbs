@@ -21,6 +21,6 @@ list = regexpdir(rootdir, expstr, recursive);
 switch type
     case {'f', 'file'}
         list = list(isfile(list));
-    case {'d', 'dir', 'fodler'}
+    case {'d', 'dir', 'folder'}
         list = fileparts(list(isfolder(list)));
 end
