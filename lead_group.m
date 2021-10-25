@@ -874,6 +874,12 @@ options=ea_setopts_local(handles);
 options.groupmode = 1;
 options.groupid = M.guid;
 
+if isfield(M.ui, 'stimSetMode') && M.ui.stimSetMode
+    options.stimSetMode = 1;
+else
+    options.stimSetMode = 0;
+end
+
 % determine if fMRI or dMRI
 mods=get(handles.fiberspopup,'String');
 mod=mods{get(handles.fiberspopup,'Value')};

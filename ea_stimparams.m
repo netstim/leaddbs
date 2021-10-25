@@ -3534,4 +3534,10 @@ if hObject.Value
     stimFolder = fullfile(patdir ,'stimulations', ea_nt(~handles.estimateInTemplate.Value), stimLabel);
     ea_mkdir(stimFolder);
     ea_addStimSet(numContacts, stimFolder, hObject);
+
+    % Set stimSetMode flag for Lead Group
+    if hObject.Value && strcmp(options.leadprod, 'group')
+        M.ui.stimSetMode = 1;
+        setappdata(resultfig, 'M');
+    end
 end
