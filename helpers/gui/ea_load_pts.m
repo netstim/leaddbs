@@ -63,17 +63,34 @@ if length(uipatdir) == 1 % Single folder
             error('Neither BIDS dataset nor patient folder found!');
         end
     elseif isBIDSRoot % Is BIDS root folder
+        BIDSRoot = uipatdir{1};
         rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0, 'dir');
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
         sourceData = ea_regexpdir([uipatdir{1}, filesep, 'sourcedata'], 'sub-', 0, 'dir');
         sourceData = regexprep(sourceData, ['\', filesep, '$'], '');
 
         if ~isempty(rawData) % rawdata folder already exists
-            uipatdir = strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs']);
-            subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match', 'once');
+            uipatdir = {strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs'])};
+            subjId = {regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match', 'once')};
         elseif ~isempty(sourceData) % sourcedata folder exists
-            uipatdir = strrep(rawData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
-            subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match', 'once');
+            % in the case of a BIDS dataset root folder as input and sourcedata available for one or more patients
+            % trigger DICOM->nii conversion          
+            
+            % BIDSRoot is the selected folder
+            BIDSRoot = uipatdir{1};
+            setappdata(handles.leadfigure, 'BIDSRoot', BIDSRoot);
+            subjId = {regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match', 'once')};
+            
+            % call lead_migrate
+            msg = {'{\bfBIDS dataset with sourcedata found, will run DICOM to NIfTI conversion!}'};
+            opts.Interpreter = 'tex';
+            opts.WindowStyle = 'modal';
+            waitfor(msgbox(msg, '', 'help', opts));
+            options.prefs = ea_prefs;
+
+            waitfor(lead_import({fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{1}])}, options, handles));
+            uipatdir = {fullfile(BIDSRoot, 'rawdata', 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+            
         else
             error('BIDS dataset detected but both sourcedata and rawdata folders are empty!');
         end
