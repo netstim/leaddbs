@@ -8,8 +8,11 @@ if ~exist('fdmri','var')
 end
 
 for pat=1:length(uipatdirs)
-    fis.fmri{pat}=[uipatdirs{pat},filesep,'stimulations',filesep,stimname,filesep,fdmri.fmriconnectome,filesep,'vat_seed_compound_fMRI_func_seed_AvgR_Fz.nii'];
-    fis.dmri{pat}=[uipatdirs{pat},filesep,'stimulations',filesep,stimname,filesep,fdmri.dmriconnectome,filesep,'vat_seed_compound_dMRI_struc_seed.nii'];
+    [~, subPrefix] = fileparts([uipatdir{pt}, '_']);
+    fConnName = regexprep(fdmri.fmriconnectome, '\s|_|-|>|\([^()]+\))', '');
+    dConnName = regexprep(fdmri.dmriconnectome, '\s|_|-|>|\([^()]+\))', '');
+    fis.fmri{pat}=fullfile(uipatdirs{pat},'stimulations',ea_nt(0),stimname,fdmri.fmriconnectome,[subPrefix, 'sim-binary_conn-', fConnName, '_map-fMRI_desc-AvgRFz.nii']);
+    fis.dmri{pat}=fullfile(uipatdirs{pat},'stimulations',ea_nt(0),stimname,fdmri.dmriconnectome,[subPrefix, 'sim-binary_conn-', dConnName, '_map-dMRI.nii']);
 end
 if ~exist('dowhat','var')
     dowhat='both';
