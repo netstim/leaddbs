@@ -37,8 +37,13 @@ for pt=1:length(uipatdirs)
     for side=1:2
         acnt{side}=mean(coords_mm{side}(logical(S.activecontacts{side}),:),1);
     end
-    strucnii=ea_load_nii([thispt,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_seed_compound_dMRI_',efsx,'struc_seed.nii']);
-    funcnii=ea_load_nii([thispt,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_seed_compound_fMRI_',efsx,'func_seed_AvgR.nii']);
+
+    [~, subPrefix] = fileparts([thispt, '_']);
+    fConnName = regexprep(options.lcm.func.connectome, '\s|_|-|>|\([^()]+\))', '');
+    dConnName = regexprep(options.lcm.struc.connectome, '\s|_|-|>|\([^()]+\))', '');
+    funcnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,options.lcm.func.connectome,[subPrefix, 'sim-', options.prefs.lcm.vatseed, '_conn-', fConnName, '_map-fMRI_desc-AvgR.nii']));
+    strucnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,options.lcm.struc.connectome,[subPrefix, 'sim-', options.prefs.lcm.vatseed, '_conn-', dConnName, '_map-dMRI.nii']));
+
     % assign feature vector X:
     if iscell(allfeatsix)
        for c=1:length(allfeatsix)
