@@ -19,7 +19,9 @@ for i=1:length(entity)
         if isfield(parsedStruct, entity{i})
             parsedStruct = rmfield(parsedStruct, entity{i});
         else
-            error('Entity ''%s'' does not exist!', entity{i});
+            warning('off', 'backtrace');
+            warning('Entity ''%s'' does not exist!', entity{i});
+            warning('on', 'backtrace');
         end
     end
 end
