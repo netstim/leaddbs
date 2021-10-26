@@ -105,8 +105,8 @@ for patients = 1:length(source)
         if j==1
             disp("Migrating Atlas folder...");
             if any(ismember(dir_names,'WarpDrive'))
-                movefile(fullfile(source_patient,'WarpDrive'),fullfile(source_patient,'warpdrive'));
                 disp("Migrating warpdrive folder...");
+                movefile(fullfile(source_patient,'WarpDrive'),fullfile(dest,'derivatives','leaddbs',patient_name,'warpdrive'))
             end
             if any(ismember(dir_names,'stimulations'))
                 %if mni dir exists
@@ -169,9 +169,12 @@ for patients = 1:length(source)
                 if ~isdicom
                     disp("There are no dicom images, source data folder will be empty")
                 else
-                    if ~exist(dicom_patient, 'dir')
+                    if exist(dicom_patient, 'dir')
                         disp("Copying DICOM folder...");
                         copyfile(dicom_patient,new_path)
+                    elseif exist(fullfile(source_patient,'dicom'),'dir')
+                        disp("Copying dicom folder...");
+                        copyfile(fullfile(source_patient,'dicom'),new_path)
                     end
                 end 
             case 'derivatives'
