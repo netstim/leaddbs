@@ -48,7 +48,7 @@ pipelines = {'brainshift','coregistration','normalization','reconstruction','pre
 %mapping will allow quick reference of the files to move: also, certain
 %modalities have specific bids naming.
 legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
-bids_modalities = {'T1w','T2w','PDw','CT','ax','cor','sag','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2starw'};
+bids_modalities = {'T1w','T2w','PDw','CT','acq-ax_MRI','acq-cor_MRI','acq-sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2starw'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
 [brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking] = ea_create_bids_mapping();
 
@@ -482,8 +482,8 @@ for patients = 1:length(source)
     end        
     disp(['Process finished for Patient:' patient_name]);
     disp("Generating excel sheet for the conversion...");
-    writecell(derivatives_cell,fullfile(dest,'derivatives','leaddbs',patient_name,'legacy2bids_naming.xlsx'))
-    disp(['Report saved at:' fullfile(dest,'derivatives','leaddbs',patient_name,'legacy2bids_naming.xlsx')]);
+    writecell(derivatives_cell,fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx'))
+    disp(['Report saved at:' fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx')]);
 end
 toc;
 
@@ -685,11 +685,23 @@ function generate_rawImagejson(files_to_move,patient_name,dest,rawdata_container
                 bids_name = [patient_name,'_',sessions,'_',rawdata_containers(modality_str)];
                 rawdata_fieldname = strsplit(rawdata_containers(modality_str),'.');
                 rawdata_fieldname = rawdata_fieldname{1};
+                if strcmp(rawdata_fieldname,'acq-ax_MRI') || strcmp(rawdata_fieldname,'acq-cor_MRI') || strcmp(rawdata_fieldname,'acq-sag_MRI')
+                    rawdata_fieldname = strsplit(rawdata_fieldname,'-');
+                    rawdata_fieldname = rawdata_fieldname{end};
+                    %matching_fieldname = regexp(rawdata_fieldname,'\w*ax|cor|sag\w*','match');
+                    %rawdata_fieldname = matching_fieldname{1};
+                end
             catch
                 modality_str = strsplit(modality_str,'.');
                 modality_str = upper(modality_str);
                 bids_name = [patient_name,'_',sessions,'_',modality_str];
                 rawdata_fieldname = modality_str{1};
+                if strcmp(rawdata_fieldname,'acq-ax_MRI') || strcmp(rawdata_fieldname,'acq-cor_MRI') || strcmp(rawdata_fieldname,'acq-sag_MRI')
+                    rawdata_fieldname = strsplit(rawdata_fieldname,'-');
+                    rawdata_fieldname = rawdata_fieldname{end};
+                    %matching_fieldname = regexp(rawdata_fieldname,'\w*ax|cor|sag\w*','match');
+                    %rawdata_fieldname = matching_fieldname{1};
+                end
             end            
             anat_files_selected.postop.anat.(rawdata_fieldname) = bids_name;
         end
