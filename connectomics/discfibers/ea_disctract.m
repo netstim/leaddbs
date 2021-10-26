@@ -118,8 +118,8 @@ classdef ea_disctract < handle
                 obj.subscore.weights = [];
                 obj.subscore.colors{1,1} = ea_color_wes('all');
                 obj.subscore.colors{1,2} = flip(ea_color_wes('all')); %TODO think about this a bit more
-                obj.subscore.showposamount = repmat([25,25],10,1); %total of 10 subscores - will delete when we know the total number of subscores
-                obj.subscore.shownegamount = repmat([25,25],10,1);
+                %obj.subscore.showposamount = repmat([25,25],10,1); %total of 10 subscores - will delete when we know the total number of subscores
+                %obj.subscore.shownegamount = repmat([25,25],10,1);
                 obj.subscore.negvisible = zeros(10,1);
                 obj.subscore.posvisible = ones(10,1);
                 obj.subscore.spitbysubscore = 0;
@@ -430,22 +430,30 @@ classdef ea_disctract < handle
                                                 Ihattrain(training,side) = atanh(ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training))));
                                             end
                                         case 'mean of scores'
-                                            Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                            if ~isempty(vals{voter,side})
+                                                Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);  
+                                            end
                                             if nargout>2
                                                 Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                             end
                                         case 'sum of scores'
-                                            Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                            if ~isempty(vals{voter,side})
+                                                Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                            end
                                             if nargout>2
                                                 Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                             end
                                         case 'peak of scores'
-                                            Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                            if ~isempty(vals{voter,side})
+                                                Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                            end
                                             if nargout>2
                                                 Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                             end
                                         case 'peak 5% of scores'
-                                            ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
+                                            if ~isempty(vals{voter,side})
+                                                ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
+                                            end
                                             ihatvals=sort(ihatvals);
                                             Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                             if nargout>2
@@ -548,12 +556,17 @@ classdef ea_disctract < handle
                 case 'Split & Color By Subscore'
                     % here we map back to the single response variable using a
                     % weightmatrix
+                    if isempty(obj.customselection)
+                        selected_pts = obj.patientselection;
+                    else
+                        selected_pts = obj.customselection;
+                    end
                     weightmatrix=zeros(size(Ihat_voters));
                     for voter=1:size(Ihat_voters,3)
                         if ~isnan(obj.subscore.weights(voter)) % same weight for all subjects in that voter (slider was used)
                             weightmatrix(:,:,voter)=obj.subscore.weights(voter);
                         else % if the weight value is nan, this means we will need to derive a weight from the variable of choice
-                            weightmatrix(:,:,voter)=repmat(obj.subscore.weightvars{voter},1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter},2));
+                            weightmatrix(:,:,voter)=repmat(obj.subscore.weightvars{voter}(selected_pts),1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter}(selected_pts),2));
                         end
                     end
                     for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
@@ -729,6 +742,9 @@ classdef ea_disctract < handle
                     if (size(vals{group,2},1))>1 % bihemispheric usual case
                         obj.subscore.vis.pos_shown(group,2)=sum(vals{group,2}>0);
                         obj.subscore.vis.neg_shown(group,2)=sum(vals{group,2}<0);
+                    elseif length(vals(group,:)) == 2 %in the case that it still exist
+                        obj.subscore.vis.pos_shown(group,2) = 0;
+                        obj.subscore.vis.neg_shown(group,2) = 0;
                     end
                 end
                 allvals = full(vertcat(vals{group,:}));

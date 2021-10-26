@@ -91,7 +91,7 @@ for group=groups
         gpatsel=patsel;
     end
     if obj.mirrorsides
-        gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
+        gpatsel=[gpatsel,gpatsel+length(obj.patientselection)];
     end
     if dosubscores
         switch obj.multitractmode
@@ -197,6 +197,7 @@ for group=groups
                 if ~isempty(invals)
                     if exist('covars', 'var') && conventionalcorr % partial corrs only implemented for Pearson & Spearman
                         usecovars=[];
+                        
                         for cv=1:length(covars)
                             thiscv=covars{cv}(gpatsel,:);
                             if (size(thiscv,2)==2)
@@ -204,6 +205,16 @@ for group=groups
                             end
                             usecovars=[usecovars,thiscv];
                         end
+%                         for cv = 1:size(covars_tr,1)
+%                              covars_tr = covars{1}';
+%                              usecovars=[];
+%                             thiscovar = covars_tr(cv,:);
+%                             thiscv = thiscovar.*gpatsel;
+%                             if (size(thiscv,2)==2)
+%                                 thiscv=thiscv(:,side);
+%                             end
+%                             usecovars=[usecovars,thiscv'];
+%                         end
                         if obj.showsignificantonly 
                             [outvals,outps]=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
                         else % no need to calc p-val here
@@ -347,11 +358,11 @@ for group=groups
                     end
                 end
             else
-                if ~obj.subscore.posvisible(group) || ~obj.subscore.showposamount(group,side) || isempty(posvals)
+                if ~obj.subscore.posvisible(group) || ~obj.subscore.vis.showposamount(group,side) || isempty(posvals)
                     posthresh = inf;
                 else
                     posrange = posvals(1) - posvals(end);
-                    posthresh = posvals(1) - obj.subscore.showposamount(group,side)/100 * posrange;
+                    posthresh = posvals(1) - obj.subscore.vis.showposamount(group,side)/100 * posrange;
                     
                     if posrange == 0
                         posthresh = posthresh - eps*10;
@@ -385,11 +396,11 @@ for group=groups
                     end
                 end
             else
-                if ~obj.subscore.negvisible(group) || ~obj.subscore.shownegamount(group,side) || isempty(negvals)
+                if ~obj.subscore.negvisible(group) || ~obj.subscore.vis.shownegamount(group,side) || isempty(negvals)
                     negthresh = -inf;
                 else
                     negrange = negvals(1) - negvals(end);
-                    negthresh = negvals(1) - obj.subscore.shownegamount(group,side)/100 * negrange;
+                    negthresh = negvals(1) - obj.subscore.vis.shownegamount(group,side)/100 * negrange;
                     
                     if negrange == 0
                         negthresh = negthresh + eps*10;
