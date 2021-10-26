@@ -21,8 +21,12 @@ for i=1:length(entities)
     if isempty(value) % Delete entity
         if ismember(key, {'dir', 'suffix'})
             parsedStruct.(key) = '';
-        else
+        elseif isfield(parsedStruct, key)
             parsedStruct = rmfield(parsedStruct, key);
+        else
+            warning('off', 'backtrace');
+            warning('Entity ''%s'' does not exist!', key);
+            warning('on', 'backtrace');
         end
     elseif strcmp(key, 'suffix') % Set suffix
         parsedStruct.suffix = value;
