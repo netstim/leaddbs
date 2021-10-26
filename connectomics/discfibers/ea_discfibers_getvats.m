@@ -19,6 +19,6 @@ for sub=1:numPatient
 
     % Mirrored VAT E-field
     ea_genflippedjointnii(vatlist{sub,1}, vatlist{sub,2});
-    vatlist(numPatient+sub, 1) = ea_regexpdir(stimFolder, 'sim-efield_hemi-R_desc-FlippedFromLeft\.nii$', 0);
-    vatlist(numPatient+sub, 2) = ea_regexpdir(stimFolder, 'sim-efield_hemi-L_desc-FlippedFromRight\.nii$', 0);
+    vatlist(numPatient+sub, 1) = ea_regexpdir(stimFolder, 'sim-efield_hemi-R_hemidesc-FlippedFromLeft\.nii$', 0);
+    vatlist(numPatient+sub, 2) = ea_regexpdir(stimFolder, 'sim-efield_hemi-L_hemidesc-FlippedFromRight\.nii$', 0);
 end
