@@ -28,14 +28,14 @@ fileBasePath = [stimDir, filesep, 'sub-', options.subj.subjId, '_sim-'];
 
 % clean downstreamfiles if necessary
 if hmchanged
-    ea_delete([fileBasePath, 'binary_hemi-R_desc-FlippedFromLeft.nii']);
-    ea_delete([fileBasePath, 'binary_hemi-L_desc-FlippedFromRight.nii']);
+    ea_delete([fileBasePath, 'binary_hemi-R_hemidesc-FlippedFromLeft.nii']);
+    ea_delete([fileBasePath, 'binary_hemi-L_hemidesc-FlippedFromRight.nii']);
 
-    ea_delete([fileBasePath, 'efield_hemi-R_desc-FlippedFromLeft.nii']);
-    ea_delete([fileBasePath, 'efield_hemi-L_desc-FlippedFromRight.nii']);
+    ea_delete([fileBasePath, 'efield_hemi-R_hemidesc-FlippedFromLeft.nii']);
+    ea_delete([fileBasePath, 'efield_hemi-L_hemidesc-FlippedFromRight.nii']);
 
-    ea_delete([fileBasePath, 'efieldgauss_hemi-R_desc-FlippedFromLeft.nii']);
-    ea_delete([fileBasePath, 'efieldgauss_hemi-L_desc-FlippedFromRight.nii']);
+    ea_delete([fileBasePath, 'efieldgauss_hemi-R_hemidesc-FlippedFromLeft.nii']);
+    ea_delete([fileBasePath, 'efieldgauss_hemi-L_hemidesc-FlippedFromRight.nii']);
 
     ea_delete(fullfile(fileBasePath, 'binary_seed-dMRI.nii'));
     ea_delete(fullfile(fileBasePath, 'binary_seed-dMRI_hemi-L.nii'));

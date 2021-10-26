@@ -10,9 +10,9 @@ for f=1:2
     else
         switch f
             case 1
-                flippedFile = setBIDSEntity(files{f}, 'desc', 'FlippedFromRight');
+                flippedFile = setBIDSEntity(files{f}, 'hemidesc', 'FlippedFromRight');
             case 2
-                flippedFile = setBIDSEntity(files{f}, 'desc', 'FlippedFromLeft');
+                flippedFile = setBIDSEntity(files{f}, 'hemidesc', 'FlippedFromLeft');
         end
     end
 
