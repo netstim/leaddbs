@@ -37,7 +37,7 @@ end
 %define names of the new directorey structure
 modes = {'anat','func','dwi'};
 sessions = {'ses-preop','ses-postop'};
-if exist('doDcmConv','var') && doDcmConv
+if exist('doDcmConv','var') && doDcmConv == 1
     subfolder_cell = {'sourcedata','legacy_rawdata','derivatives'};
 else
     subfolder_cell = {'sourcedata','rawdata','derivatives'};
@@ -68,6 +68,8 @@ log_path = fullfile(dest,'derivatives','leaddbs','logs');
 if ~exist(log_path,'dir')
     mkdir(log_path)
 end
+
+
 for patients = 1:length(source)
     %source patient filepath
     source_patient = source{patients};
@@ -80,7 +82,7 @@ for patients = 1:length(source)
     %get and refactor patient names. specially, don't allow
     %'_' or '-'
     [~,patient_name,~] = fileparts(source_patient);
-    if ~startsWith(patient_name,'sub-')
+    if ~startsWith(patient_name,'sub')
         patient_name = ['sub-', regexprep(patient_name, '[\W_]', '')];
     end
     disp(['Processing patient: ' patient_name]);
@@ -88,7 +90,19 @@ for patients = 1:length(source)
     %creates a cell of the files to move, later, we can create
     %the new dirrectory structure and move the files into the
     %correct "BIDS" directory
-    
+
+    new_path = fullfile(dest,'sourcedata',patient_name);
+    if ~exist(new_path,'dir')
+        mkdir(new_path)
+    end
+    if exist(dicom_patient, 'dir')
+        disp("Copying DICOM folder...");
+        copyfile(dicom_patient,new_path)
+    elseif exist(fullfile(source_patient,'dicom'),'dir')
+        disp("Copying dicom folder...");
+        copyfile(fullfile(source_patient,'dicom'),new_path)
+    end
+
     files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
     file_index = 1;
