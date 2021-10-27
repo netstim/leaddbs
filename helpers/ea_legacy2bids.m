@@ -82,8 +82,9 @@ for patients = 1:length(source)
     %get and refactor patient names. specially, don't allow
     %'_' or '-'
     [~,patient_name,~] = fileparts(source_patient);
-    if ~startsWith(patient_name,'sub')
+    if ~startsWith(patient_name,'sub-')
         patient_name = ['sub-', regexprep(patient_name, '[\W_]', '')];
+    
     end
     disp(['Processing patient: ' patient_name]);
     %handle the files in the patient folder (directories are handled later)
@@ -102,7 +103,7 @@ for patients = 1:length(source)
         disp("Copying dicom folder...");
         copyfile(fullfile(source_patient,'dicom'),new_path)
     end
-
+    files_to_move = {};
     files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
     file_index = 1;
