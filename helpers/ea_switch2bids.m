@@ -5,16 +5,25 @@ LeadRoot = ea_getearoot;
 if ~isfolder(fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym'))
     disp('Copy "MNI_ICBM_2009b_NLIN_ASYM" to "MNI152NLin2009bAsym" ...');
     copyfile(fullfile(LeadRoot, 'templates', 'space', 'MNI_ICBM_2009b_NLIN_ASYM'), fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym'));
-end
 
-if isfile([ea_space, 'IITmean_tensor.nii.gz'])
-    disp('Rename IIT Mean Tensor ...');
-    movefile([ea_space, 'IITmean_tensor.nii.gz'], [ea_space, 'IITmeanTensor.nii.gz'])
-end
+    if isfile([ea_space, 'IITmean_tensor.nii.gz'])
+        disp('Rename IIT Mean Tensor ...');
+        movefile([ea_space, 'IITmean_tensor.nii.gz'], [ea_space, 'IITmeanTensor.nii.gz'])
+    end
 
-if isfile([ea_space, 'IITmean_tensor_Norm_mapping.nii.gz'])
-    disp('Rename scaled IIT Mean Tensor ...');
-    movefile([ea_space, 'IITmean_tensor_Norm_mapping.nii.gz'], [ea_space, 'IITmeanTensorNormMapping.nii.gz'])
+    if isfile([ea_space, 'IITmean_tensor_Norm_mapping.nii.gz'])
+        disp('Rename scaled IIT Mean Tensor ...');
+        movefile([ea_space, 'IITmean_tensor_Norm_mapping.nii.gz'], [ea_space, 'IITmeanTensorNormMapping.nii.gz'])
+    end
+
+    try
+        disp('Discard local changes in LeadDBS repository ...')
+        system(['git -C ', LeadRoot, ' checkout .']);
+    catch
+        warning('off', 'backtrace');
+        warning('Failed to discard local changes! Please run "git checkout ." in LeadDBS folder in your Terminal.');
+        warning('on', 'backtrace');
+    end
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'])
