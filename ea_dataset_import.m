@@ -131,8 +131,9 @@ else
                 mkdir(fullfile(dest_dir_subj, 'sourcedata', subjID));
             end
             
-            % copy DICOM data to sourcedata
-            if ~exist(fullfile(dest_dir_subj, 'sourcedata', subjID), 'dir')
+            % copy DICOM data to sourcedata: 
+            %without DICOM, error when subject only has DICOMS inside
+            if ~exist(fullfile(dest_dir_subj, 'sourcedata', subjID,'DICOM'), 'dir')
             copyfile(fullfile(source_dir{subj_idx}, 'DICOM'), fullfile(dest_dir_subj, 'sourcedata', subjID));
             end
             subj_ids(subj_idx).name =char(subjID);
