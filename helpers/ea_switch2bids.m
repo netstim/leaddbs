@@ -27,61 +27,61 @@ if ~isfolder(fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym'))
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'])
-    disp('Backup recent groups ...');
+    disp('Backup recent groups from develop branch ...');
     movefile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'], [LeadRoot, 'common', filesep, 'ea_recentgroups.mat.dev'])
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.bids'])
-    disp('Restore recent groups ...');
+    disp('Restore recent groups from bids branch  ...');
     movefile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.bids'], [LeadRoot, 'common', filesep, 'ea_recentgroups.mat'])
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'])
-    disp('Backup recent patients ...');
+    disp('Backup recent patients from develop branch  ...');
     movefile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'], [LeadRoot, 'common', filesep, 'ea_recentpatients.mat.dev'])
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.bids'])
-    disp('Restore recent patients ...');
+    disp('Restore recent patients from bids branch  ...');
     movefile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.bids'], [LeadRoot, 'common', filesep, 'ea_recentpatients.mat'])
 end
 
 if isfile([LeadRoot, 'ea_ui.mat'])
-    disp('Backup ea_ui.mat ...');
+    disp('Backup ea_ui.mat from develop branch  ...');
     movefile([LeadRoot, 'ea_ui.mat'], [LeadRoot, 'ea_ui.mat.dev'])
 end
 
 if isfile([LeadRoot, 'ea_ui.mat.bids'])
-    disp('Restore ea_ui.mat ...');
+    disp('Restore ea_ui.mat from bids branch  ...');
     movefile([LeadRoot, 'ea_ui.mat.bids'], [LeadRoot, 'ea_ui.mat'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.m'])
-    disp('Backup .ea_prefs.m ...');
+    disp('Backup .ea_prefs.m from develop branch  ...');
     movefile([ea_gethome, '.ea_prefs.m'], [ea_gethome, '.ea_prefs.m.dev'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.m.bids'])
-    disp('Restore .ea_prefs.m ...');
+    disp('Restore .ea_prefs.m from bids branch  ...');
     movefile([ea_gethome, '.ea_prefs.m.bids'], [ea_gethome, '.ea_prefs.m'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.mat'])
-    disp('Backup .ea_prefs.mat ...');
+    disp('Backup .ea_prefs.mat from develop branch ...');
     movefile([ea_gethome, '.ea_prefs.mat'], [ea_gethome, '.ea_prefs.mat.dev'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.mat.bids'])
-    disp('Restore .ea_prefs.mat ...');
+    disp('Restore .ea_prefs.mat from bids branch  ...');
     movefile([ea_gethome, '.ea_prefs.mat.bids'], [ea_gethome, '.ea_prefs.mat'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.json'])
-    disp('Backup .ea_prefs.json ...');
+    disp('Backup .ea_prefs.json from develop branch  ...');
     movefile([ea_gethome, '.ea_prefs.json'], [ea_gethome, '.ea_prefs.json.dev'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.json.bids'])
-    disp('Restore .ea_prefs.json ...');
+    disp('Restore .ea_prefs.json from bids branch  ...');
     movefile([ea_gethome, '.ea_prefs.json.bids'], [ea_gethome, '.ea_prefs.json'])
 end
