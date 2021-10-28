@@ -114,12 +114,12 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if options.modality == 1 && options.coregmr.do
         % Coregister post-op MRI to pre-op MRI
-        coregDone = coregDone || ea_coregpostopmr(options);
+        coregDone = ea_coregpostopmr(options) || coregDone;
     end
 
     if options.modality == 2 && options.coregct.do
         % Coregister post-op CT to pre-op MRI
-        coregDone = coregDone || ea_coregpostopct(options);
+        coregDone = ea_coregpostopct(options) || coregDone;
     end
 
     if coregDone
