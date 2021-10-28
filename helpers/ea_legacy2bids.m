@@ -95,7 +95,7 @@ for patients = 1:length(source)
     if ~exist(new_path,'dir')
         mkdir(new_path)
     end
-    if exist(dicom_patient, 'dir')
+    if isdicom && exist(dicom_patient, 'dir')
         disp("Copying DICOM folder...");
         copyfile(dicom_patient,new_path)
     elseif exist(fullfile(source_patient,'dicom'),'dir')
