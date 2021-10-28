@@ -39,8 +39,10 @@ modes = {'anat','func','dwi'};
 sessions = {'ses-preop','ses-postop'};
 if exist('doDcmConv','var') && doDcmConv == 1 && ~exist('doOnlyRaw','var')
     subfolder_cell = {'sourcedata','legacy_rawdata','derivatives'};
-elseif exist('doOnlyRaw','var') && doOnlyRaw
+elseif exist('doOnlyRaw','var') && doOnlyRaw && ~exist('doDcmConv','var')
     subfolder_cell = {'rawdata'};
+elseif exist('doOnlyRaw','var') && doOnlyRaw && exist('doDcmConv','var')
+    subfolder_cell = {'legacy_rawdata'};
 else
     subfolder_cell = {'sourcedata','rawdata','derivatives'};
 end
