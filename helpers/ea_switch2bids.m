@@ -2,9 +2,9 @@ function ea_switch2bids
 
 LeadRoot = ea_getearoot;
 
-if ~isfolder(fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym'))
+if ~isfolder(fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym', 'atlases'))
     disp('Copy "MNI_ICBM_2009b_NLIN_ASYM" to "MNI152NLin2009bAsym" ...');
-    copyfile(fullfile(LeadRoot, 'templates', 'space', 'MNI_ICBM_2009b_NLIN_ASYM'), fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym'));
+    copyfile(fullfile(LeadRoot, 'templates', 'space', 'MNI_ICBM_2009b_NLIN_ASYM', '*'), fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym'));
 
     if isfile([ea_space, 'IITmean_tensor.nii.gz'])
         disp('Rename IIT Mean Tensor ...');
@@ -19,6 +19,9 @@ if ~isfolder(fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym'))
     try
         disp('Discard local changes in LeadDBS repository ...')
         system(['git -C ', LeadRoot, ' checkout .']);
+        [~, cmdout] = system(['git -C ', LeadRoot, ' clean -fn']);
+        files = regexp(cmdout, '(?<=Would remove )(templates/space/MNI152NLin2009bAsym/[\w/.]+)', 'match')';
+        ea_delete(strcat(LeadRoot, files));
     catch
         warning('off', 'backtrace');
         warning('Failed to discard local changes! Please run "git checkout ." in LeadDBS folder in your Terminal.');
