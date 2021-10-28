@@ -61,3 +61,7 @@ if isfile([ea_gethome, '.ea_prefs.json.dev'])
     disp('Restore .ea_prefs.json from develop branch  ...');
     movefile([ea_gethome, '.ea_prefs.json.dev'], [ea_gethome, '.ea_prefs.json'])
 end
+
+disp('Update LeadDBS search path ...');
+lead path;
+rehash toolboxcache;
