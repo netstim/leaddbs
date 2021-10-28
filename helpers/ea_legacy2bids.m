@@ -1,4 +1,4 @@
-function ea_legacy2bids(source,dest,isdicom,dicom_source,doDcmConv)
+function ea_legacy2bids(source,dest,isdicom,dicom_source,doDcmConv,doOnlyRaw)
 
 
 %SANTIY: first check the existence of your source and dest directory. If it is not there,
@@ -37,8 +37,10 @@ end
 %define names of the new directorey structure
 modes = {'anat','func','dwi'};
 sessions = {'ses-preop','ses-postop'};
-if exist('doDcmConv','var') && doDcmConv == 1
+if exist('doDcmConv','var') && doDcmConv == 1 && ~exist('doOnlyRaw','var')
     subfolder_cell = {'sourcedata','legacy_rawdata','derivatives'};
+elseif exist('doOnlyRaw','var') && doOnlyRaw
+    subfolder_cell = {'rawdata'};
 else
     subfolder_cell = {'sourcedata','rawdata','derivatives'};
 end
@@ -82,8 +84,9 @@ for patients = 1:length(source)
     %get and refactor patient names. specially, don't allow
     %'_' or '-'
     [~,patient_name,~] = fileparts(source_patient);
-    if ~startsWith(patient_name,'sub')
+    if ~startsWith(patient_name,'sub-')
         patient_name = ['sub-', regexprep(patient_name, '[\W_]', '')];
+    
     end
     disp(['Processing patient: ' patient_name]);
     %handle the files in the patient folder (directories are handled later)
@@ -91,18 +94,7 @@ for patients = 1:length(source)
     %the new dirrectory structure and move the files into the
     %correct "BIDS" directory
 
-    new_path = fullfile(dest,'sourcedata',patient_name);
-    if ~exist(new_path,'dir')
-        mkdir(new_path)
-    end
-    if isdicom && exist(dicom_patient, 'dir')
-        disp("Copying DICOM folder...");
-        copyfile(dicom_patient,new_path)
-    elseif exist(fullfile(source_patient,'dicom'),'dir')
-        disp("Copying dicom folder...");
-        copyfile(fullfile(source_patient,'dicom'),new_path)
-    end
-
+    files_to_move = {};
     files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
     file_index = 1;
@@ -117,7 +109,7 @@ for patients = 1:length(source)
     dir_names = {files_in_pat_folder([files_in_pat_folder.isdir]).name};
     for j=1:length(dir_names)
         if j==1
-            disp("Migrating Atlas folder...");
+            
             if any(ismember(dir_names,'WarpDrive'))
                 disp("Migrating warpdrive folder...");
                 movefile(fullfile(source_patient,'WarpDrive'),fullfile(dest,'derivatives','leaddbs',patient_name,'warpdrive'))
@@ -137,6 +129,12 @@ for patients = 1:length(source)
                 else %there is only a current headmodel but no headmodel
                     copyfile(fullfile(source_patient,'current_headmodel'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'))
                 end
+            end
+            if any(ismember(dir_names,'DICOM'))
+              if ~exist(fullfile(dest,'sourcedata',patient_name,'DICOM'),'dir')
+                  mkdir(fullfile(dest,'sourcedata',patient_name,'DICOM'))
+              end
+              copyfile(fullfile(source_patient,'DICOM'),fullfile(dest,'sourcedata',patient_name,'DICOM'))
             end
         end
         %handle brainshift copy and rename
@@ -159,18 +157,22 @@ for patients = 1:length(source)
                end
             end
         %other directories the user may have    
-        elseif ~strcmp(dir_names{j},'current_headmodel') %already handled
-            if ~exist(fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}),'dir')
-                copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
+        else
+            if ~strcmp(dir_names{j},'current_headmodel') && ~strcmp(dir_names{j},'DICOM') && ~strcmp(dir_names{j},'checkreg')%already handled
+                if ~exist(fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}),'dir')
+                    copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
+                end
             end
         end
     end
     
     %generate the dataset description in the root_folder
     ea_generate_datasetDescription(dest,'root_folder')
-    if ~isdicom
+    if ~isdicom && ~exist('doOnlyRaw','var')
         %generate raw image json in the raw data folder
-        generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers);
+        generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers,0);
+    elseif ~isdicom && exist('doOnlyRaw','var')
+        generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers,doOnlyRaw); 
     end
  
     for subfolders = 1:length(subfolder_cell)
@@ -183,7 +185,7 @@ for patients = 1:length(source)
                 if ~isdicom
                     disp("There are no dicom images, source data folder will be empty")
                 else
-                    if exist(dicom_patient, 'dir')
+                    if exist(dicom_patient, 'dir') 
                         disp("Copying DICOM folder...");
                         copyfile(dicom_patient,new_path)
                     elseif exist(fullfile(source_patient,'dicom'),'dir')
@@ -418,7 +420,13 @@ for patients = 1:length(source)
                             disp("Migrating pre operative session data...")
                             for files=1:length(files_to_move)
                                 %files to be moved into pre-op:raw_anat_*.nii
-                                if regexp(files_to_move{files},'raw_anat_.*.nii')
+                                if exist('doOnlyRaw','var')
+                                    preop_raw_str = 'anat_.*.nii';
+                                else
+                                    preop_raw_str = 'raw_anat_.*.nii';
+                                end
+                                
+                                if regexp(files_to_move{files},preop_raw_str)
                                     if exist(fullfile(source_patient,files_to_move{files}),'file')
                                         modality_str = strsplit(files_to_move{files},'_');
                                         modality_str = modality_str{end};
@@ -665,7 +673,7 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
 
 
     
-function generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers)
+function generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers,doOnlyRaw)
     output_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs');
     if ~exist(output_dir,'dir')
         mkdir(output_dir)
@@ -673,12 +681,18 @@ function generate_rawImagejson(files_to_move,patient_name,dest,rawdata_container
     filename_out = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
     fout_fid = fopen(filename_out,'w');
     %special_case
-    if ~isempty(regexp(files_to_move,'anat_t1.nii')) && all(cellfun('isempty',regexp(files_to_move,'raw_anat_t1.nii')))
+    if ~isempty(regexp(files_to_move,'anat_t1.nii')) && all(cellfun('isempty',regexp(files_to_move,'raw_anat_t1.nii'))) && ~doOnlyRaw
         anat_files_selected.preop.T1w = [patient_name,'_','space-anchorNative_desc-preproc_ses-preop_T1w.nii'];
     end
+    if doOnlyRaw
+        preop_raw_str = 'anat_.*.nii';
+    else
+        preop_raw_str = 'raw_anat_.*.nii';
+    end
+                                
     %collect all the raw files from the files to move.
     for i=1:length(files_to_move)
-        if ~isempty(regexp(files_to_move{i},'raw_anat_.*.nii')) 
+        if ~isempty(regexp(files_to_move{i},preop_raw_str)) 
             sessions = 'ses-preop';
             modality_str = strsplit(files_to_move{i},'_');
             modality_str = modality_str{end};
