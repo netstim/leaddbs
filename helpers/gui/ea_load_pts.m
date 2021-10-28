@@ -108,6 +108,15 @@ else % Multiple patient folders, suppose dataset has already been migrated to BI
     end
 end
 
+
+if ~iscell(uipatdir)
+    uipatdir = {uipatdir};
+end
+
+if ~iscell(subjId)
+    subjId = {subjId};
+end
+
 if isBIDSRoot && length(uipatdir) > 1 % Multiple patients found
     index = listdlg('PromptString','Select Patient', 'ListString', subjId);
     if isempty(index)
