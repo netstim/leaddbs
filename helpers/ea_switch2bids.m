@@ -88,3 +88,7 @@ if isfile([ea_gethome, '.ea_prefs.json.bids'])
     disp('Restore .ea_prefs.json from bids branch  ...');
     movefile([ea_gethome, '.ea_prefs.json.bids'], [ea_gethome, '.ea_prefs.json'])
 end
+
+disp('Update LeadDBS search path ...');
+lead path;
+rehash toolboxcache;
