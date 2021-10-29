@@ -37,14 +37,14 @@ end
 %define names of the new directorey structure
 modes = {'anat','func','dwi'};
 sessions = {'ses-preop','ses-postop'};
-if exist('doDcmConv','var') && doDcmConv == 1 && ~exist('doOnlyRaw','var')
+if  doDcmConv && ~doOnlyRaw
     subfolder_cell = {'sourcedata','legacy_rawdata','derivatives'};
-elseif exist('doOnlyRaw','var') && doOnlyRaw && ~exist('doDcmConv','var')
+elseif doOnlyRaw && ~doDcmConv
     subfolder_cell = {'rawdata'};
-elseif exist('doOnlyRaw','var') && doOnlyRaw && exist('doDcmConv','var')
+elseif  doOnlyRaw && doDcmConv
     subfolder_cell = {'legacy_rawdata'};
-else
-    subfolder_cell = {'sourcedata','rawdata','derivatives'};
+elseif ~doOnlyRaw && ~doDcmConv
+    subfolder_cell = {'rawdata','derivatives'};
 end
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','headmodel','miscellaneous','ftracking'};
 
@@ -88,8 +88,9 @@ for patients = 1:length(source)
     [~,patient_name,~] = fileparts(source_patient);
     if ~startsWith(patient_name,'sub-')
         patient_name = ['sub-', regexprep(patient_name, '[\W_]', '')];
-    
     end
+    spaces_in_pat_name = isspace(patient_name);
+    patient_name = patient_name(~spaces_in_pat_name);
     disp(['Processing patient: ' patient_name]);
     %handle the files in the patient folder (directories are handled later)
     %creates a cell of the files to move, later, we can create
@@ -101,7 +102,7 @@ for patients = 1:length(source)
     file_names = {files_in_pat_folder.name};
     file_index = 1;
     for j=1:length(file_names)
-        if ~isdir(file_names{j})
+        if ~isdir(fullfile(source_patient,file_names{j}))
             files_to_move{file_index,1} = file_names{j};
             file_index = file_index + 1;
         end
@@ -170,11 +171,11 @@ for patients = 1:length(source)
     
     %generate the dataset description in the root_folder
     ea_generate_datasetDescription(dest,'root_folder')
-    if ~isdicom && ~exist('doOnlyRaw','var')
+    if ~isdicom && ~doOnlyRaw
         %generate raw image json in the raw data folder
-        generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers,0);
-    elseif ~isdicom && exist('doOnlyRaw','var')
-        generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers,doOnlyRaw); 
+        generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers,doOnlyRaw);
+    elseif ~isdicom && doOnlyRaw
+        generate_rawImagejson(files_to_move,patient_name,dest,rawdata_containers,doOnlyRaw);
     end
  
     for subfolders = 1:length(subfolder_cell)
@@ -412,6 +413,19 @@ for patients = 1:length(source)
                     end
                 end
             otherwise
+                if doOnlyRaw
+                    preop_raw_str = '(postop||tra||sag||cor||ct)';
+                    tmp_preop = cellfun('isempty', regexpi(files_to_move, preop_raw_str));
+                    postop_raw_str = '(postop||tra||sag||cor||ct)';
+                    tmp_postop = ~cellfun('isempty', regexpi(files_to_move, postop_raw_str));
+                else
+                    preop_raw_str = 'raw_anat_.*.nii';
+                    tmp_preop = ~cellfun('isempty', regexpi(files_to_move, preop_raw_str));
+                    postop_raw_str = '^(raw_postop|postop_).*.nii';
+                    tmp_postop = ~cellfun('isempty', regexpi(files_to_move, postop_raw_str));
+                end
+                matching_files_preop = files_to_move(tmp_preop); %remove postop files and get only preop
+                matching_files_postop = files_to_move(tmp_postop);
                 for i= 1:length(modes)
                     for j=1:length(sessions)
                         new_path = fullfile(dest,subfolder_cell{subfolders},patient_name,sessions{j},modes{i});
@@ -420,59 +434,48 @@ for patients = 1:length(source)
                         end
                         if strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-preop')
                             disp("Migrating pre operative session data...")
-                            for files=1:length(files_to_move)
-                                %files to be moved into pre-op:raw_anat_*.nii
-                                if exist('doOnlyRaw','var')
-                                    preop_raw_str = 'anat_.*.nii';
-                                else
-                                    preop_raw_str = 'raw_anat_.*.nii';
-                                end
-                                
-                                if regexp(files_to_move{files},preop_raw_str)
-                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
-                                        modality_str = strsplit(files_to_move{files},'_');
-                                        modality_str = modality_str{end};
-                                        try
-                                            bids_name = [sessions{j},'_',rawdata_containers(modality_str),'.nii.gz'];
-                                        catch
-                                           modality_str = strsplit(modality_str,'.');
-                                           modality_str = upper(modality_str{1});
-                                           bids_name = [sessions{j},'_',modality_str,'.nii.gz'];
-                                        end
-                                        source_patient_path = source_patient;
-                                        which_file = files_to_move{files};
-                                        derivatives_cell{end+1,1} = fullfile(source_patient_path,which_file);
-                                        derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-                                        move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name)
+                            %files to be moved into pre-op:raw_anat_*.nii
+                            for matching_files = 1:length(matching_files_preop)
+                                if exist(fullfile(source_patient,matching_files_preop{matching_files}),'file')
+                                    modality_str = strsplit(matching_files_preop{matching_files},'_');
+                                    modality_str = modality_str{end};
+                                    try
+                                        bids_name = [sessions{j},'_',rawdata_containers(modality_str),'.nii.gz'];
+                                    catch
+                                        modality_str = strsplit(modality_str,'.');
+                                        modality_str = upper(modality_str{1});
+                                        bids_name = [sessions{j},'_',modality_str,'.nii.gz'];
                                     end
+                                    source_patient_path = source_patient;
+                                    which_file = matching_files_preop{matching_files};
+                                    derivatives_cell{end+1,1} = fullfile(source_patient_path,which_file);
+                                    derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
+                                    move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name)
                                 end
                             end
                         elseif strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-postop')
                             disp("Migrating post operative session data...")
-                            for files=1:length(files_to_move)
-                                if ~isempty(regexp(files_to_move{files},'raw_postop_.*.nii')) || strcmp(files_to_move{files},'postop_ct.nii')
-                                    if strcmp(files_to_move{files},'postop_ct.nii')
-                                        postop_modality = 'CT';
-                                    else
-                                        postop_modality = 'MRI';
-                                        
+                            for matching_files = 1:length(matching_files_postop)
+                                if strcmp(matching_files_postop{matching_files},'postop_ct.nii')
+                                    postop_modality = 'CT';
+                                else
+                                    postop_modality = 'MRI';
+                                end
+                                if exist(fullfile(source_patient,matching_files_postop{matching_files}),'file')
+                                    modality_str = strsplit(matching_files_postop{matching_files},'_');
+                                    modality_str = modality_str{end};
+                                    try
+                                        bids_name = [sessions{j},'_',rawdata_containers(modality_str),'.nii.gz'];
+                                    catch
+                                        modality_str = strsplit(modality_str,'.');
+                                        modality_str = upper(modality_str{1});
+                                        bids_name = [sessions{j},'_',modality_str,'.nii.gz'];
                                     end
-                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
-                                        modality_str = strsplit(files_to_move{files},'_');
-                                        modality_str = modality_str{end};
-                                        try
-                                            bids_name = [sessions{j},'_',rawdata_containers(modality_str),'.nii.gz'];
-                                        catch
-                                           modality_str = strsplit(modality_str,'.');
-                                           modality_str = upper(modality_str{1});
-                                           bids_name = [sessions{j},'_',modality_str,'.nii.gz'];
-                                        end
-                                        source_patient_path = source_patient;
-                                        which_file = files_to_move{files};
-                                        derivatives_cell{end+1,1} = fullfile(source_patient_path,which_file);
-                                        derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-                                        move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name)
-                                    end
+                                    source_patient_path = source_patient;
+                                    which_file = matching_files_postop{matching_files};
+                                    derivatives_cell{end+1,1} = fullfile(source_patient_path,which_file);
+                                    derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
+                                    move_raw2bids(source_patient_path,new_path,which_file,patient_name,bids_name)
                                 end
                             end
                         
@@ -687,59 +690,66 @@ function generate_rawImagejson(files_to_move,patient_name,dest,rawdata_container
         anat_files_selected.preop.T1w = [patient_name,'_','space-anchorNative_desc-preproc_ses-preop_T1w.nii'];
     end
     if doOnlyRaw
-        preop_raw_str = 'anat_.*.nii';
+        preop_raw_str = '(postop||tra||sag||cor||ct)';
+        tmp_preop = cellfun('isempty', regexpi(files_to_move, preop_raw_str));
+        postop_raw_str = '(postop||tra||sag||cor||ct)';
+        tmp_postop = ~cellfun('isempty', regexpi(files_to_move, postop_raw_str));
     else
         preop_raw_str = 'raw_anat_.*.nii';
+        tmp_preop = ~cellfun('isempty', regexpi(files_to_move, preop_raw_str));
+        postop_raw_str = '^(raw_postop|postop_).*.nii';
+        tmp_postop = ~cellfun('isempty', regexpi(files_to_move, postop_raw_str));
     end
-                                
+    matching_files_preop = files_to_move(tmp_preop); %remove postop files and get only preop
+    matching_files_postop = files_to_move(tmp_postop);
     %collect all the raw files from the files to move.
-    for i=1:length(files_to_move)
-        if ~isempty(regexp(files_to_move{i},preop_raw_str)) 
-            sessions = 'ses-preop';
-            modality_str = strsplit(files_to_move{i},'_');
-            modality_str = modality_str{end};
-            try
-                bids_name = [patient_name,'_',sessions,'_',rawdata_containers(modality_str)];
-                rawdata_fieldname = strsplit(rawdata_containers(modality_str),'.');
-                rawdata_fieldname = rawdata_fieldname{1};
-            catch
-                modality_str = strsplit(modality_str,'.');
-                modality_str = upper(modality_str{1});
-                bids_name = [patient_name,'_',sessions,'_',modality_str];
-                rawdata_fieldname = modality_str;
-            end
-            
-            anat_files_selected.preop.anat.(rawdata_fieldname) = bids_name;
-        elseif ~isempty(regexp(files_to_move{i},'raw_postop_.*')) || strcmp(files_to_move{i},'postop_ct.nii')
-            sessions = 'ses-postop';
-            modality_str = strsplit(files_to_move{i},'_');
-            modality_str = modality_str{end};
-            try
-                bids_name = [patient_name,'_',sessions,'_',rawdata_containers(modality_str)];
-                rawdata_fieldname = strsplit(rawdata_containers(modality_str),'.');
-                rawdata_fieldname = rawdata_fieldname{1};
-                if strcmp(rawdata_fieldname,'acq-ax_MRI') || strcmp(rawdata_fieldname,'acq-cor_MRI') || strcmp(rawdata_fieldname,'acq-sag_MRI')
-                    rawdata_fieldname = strsplit(rawdata_fieldname,'-');
-                    rawdata_fieldname = rawdata_fieldname{end};
-                    %matching_fieldname = regexp(rawdata_fieldname,'\w*ax|cor|sag\w*','match');
-                    %rawdata_fieldname = matching_fieldname{1};
-                end
-            catch
-                modality_str = strsplit(modality_str,'.');
-                modality_str = upper(modality_str);
-                bids_name = [patient_name,'_',sessions,'_',modality_str];
-                rawdata_fieldname = modality_str{1};
-                if strcmp(rawdata_fieldname,'acq-ax_MRI') || strcmp(rawdata_fieldname,'acq-cor_MRI') || strcmp(rawdata_fieldname,'acq-sag_MRI')
-                    rawdata_fieldname = strsplit(rawdata_fieldname,'-');
-                    rawdata_fieldname = rawdata_fieldname{end};
-                    %matching_fieldname = regexp(rawdata_fieldname,'\w*ax|cor|sag\w*','match');
-                    %rawdata_fieldname = matching_fieldname{1};
-                end
-            end            
-            anat_files_selected.postop.anat.(rawdata_fieldname) = bids_name;
+    for matching_files=1:length(matching_files_preop)
+        
+        sessions = 'ses-preop';
+        modality_str = strsplit(matching_files_preop{matching_files},'_');
+        modality_str = modality_str{end};
+        try
+            bids_name = [patient_name,'_',sessions,'_',rawdata_containers(modality_str)];
+            rawdata_fieldname = strsplit(rawdata_containers(modality_str),'.');
+            rawdata_fieldname = rawdata_fieldname{1};
+        catch
+            modality_str = strsplit(modality_str,'.');
+            modality_str = upper(modality_str{1});
+            bids_name = [patient_name,'_',sessions,'_',modality_str];
+            rawdata_fieldname = modality_str;
         end
         
+        anat_files_selected.preop.anat.(rawdata_fieldname) = bids_name;
     end
+    for matching_files = 1:length(matching_files_postop)
+        sessions = 'ses-postop';
+        modality_str = strsplit(matching_files_postop{matching_files},'_');
+        modality_str = modality_str{end};
+        try
+            bids_name = [patient_name,'_',sessions,'_',rawdata_containers(modality_str)];
+            rawdata_fieldname = strsplit(rawdata_containers(modality_str),'.');
+            rawdata_fieldname = rawdata_fieldname{1};
+            if strcmp(rawdata_fieldname,'acq-ax_MRI') || strcmp(rawdata_fieldname,'acq-cor_MRI') || strcmp(rawdata_fieldname,'acq-sag_MRI')
+                rawdata_fieldname = strsplit(rawdata_fieldname,'-');
+                rawdata_fieldname = rawdata_fieldname{end};
+                %matching_fieldname = regexp(rawdata_fieldname,'\w*ax|cor|sag\w*','match');
+                %rawdata_fieldname = matching_fieldname{1};
+            end
+        catch
+            modality_str = strsplit(modality_str,'.');
+            modality_str = upper(modality_str);
+            bids_name = [patient_name,'_',sessions,'_',modality_str];
+            rawdata_fieldname = modality_str{1};
+            if strcmp(rawdata_fieldname,'acq-ax_MRI') || strcmp(rawdata_fieldname,'acq-cor_MRI') || strcmp(rawdata_fieldname,'acq-sag_MRI')
+                rawdata_fieldname = strsplit(rawdata_fieldname,'-');
+                rawdata_fieldname = rawdata_fieldname{end};
+                %matching_fieldname = regexp(rawdata_fieldname,'\w*ax|cor|sag\w*','match');
+                %rawdata_fieldname = matching_fieldname{1};
+            end
+        end
+        anat_files_selected.postop.anat.(rawdata_fieldname) = bids_name;
+    end
+    
     encodejson = jsonencode(anat_files_selected);
     fprintf(fout_fid,encodejson);
         
