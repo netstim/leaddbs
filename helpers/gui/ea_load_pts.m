@@ -26,41 +26,92 @@ if length(uipatdir) == 1 % Single folder
             end
         end
     end
-
+    
     if ~isSubjFolder && ~isBIDSRoot
-        if isfile(fullfile(uipatdir{1}, 'ea_ui.mat')) % Old dataset detected
-            msg = {'{\bfOld dataset detected, would you like to migrate it to BIDS?}';
-                   ['Thank you for your interest in Lead-DBS! Since version 2.6, we have re-organized the way Lead-DBS acesses and stores data.' ,...
-                   'This implies changes to the organization of your input and output data. The main objective to set standards for data organization was to promote' ,...
-                   'data sharing and open science initiatives. For more information and details on specific changes, please refer to our manual [insert url]. ' ,...
-                   'lead-import is a tool developed to automatically assist you in moving your dataset from the classic lead-dbs to the bidsified version. ',...
-                   '{\bfIf you wish to run BIDS import tool, please click on ''Yes''. Otherwise, you will not be able to use Lead-DBS.}']};
-            opts.Default = 'Cancel';
-            opts.Interpreter = 'tex';
-            choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
-            if strcmp(choice, 'Yes')
+        
+        % try to find out what kind of folder structure was passed
+        
+        folder_list = dir(uipatdir{1});         % do a listing of the immediate directory first
+        dcm_in_subfolder_list = dir(fullfile(uipatdir{1}, '**/*.dcm'));     % find out any .dcm files in any subdir
+        
+        % Old dataset detected
+        if isfile(fullfile(uipatdir{1}, 'ea_ui.mat'))
+            folder_type = 'legacy_patient_folder';
+            
+            % DICOM folder detected
+        elseif isfolder(fullfile(uipatdir{1}, 'dicom')) ...
+                || isfolder(fullfile(uipatdir{1}, 'DICOM')) ...
+                || endsWith(uipatdir{1}, 'dicom', 'IgnoreCase',true)
+            folder_type = 'patient_folder_dicom_folder';
+            
+            % if DICOMDIR file inside, assume dicoms are present in one of the folders on this level
+        elseif any(strcmp('DICOMDIR', {folder_list.name}))
+            mkdir(fullfile(uipatdir{1}, 'DICOM'));
+            
+            for f = 1:length(folder_list)
+                % if .dcm file is inside subfolder, just move the folder
+                if folder_list(f).isdir && ~(any(strcmp(folder_list(f).name, {'.', '..'})))
+                    movefile(fullfile(uipatdir{1}, folder_list(f).name), fullfile(uipatdir{1}, 'DICOM'));
+                    
+                end
+            end
+            folder_type = 'patient_folder_dicom_folder';
+            
+            % .dcm files are found inside one of the subfolders
+        elseif ~isempty(dcm_in_subfolder_list)  %
+            mkdir(fullfile(uipatdir{1}, 'DICOM'));
+            
+            folders_with_dicoms = unique({dcm_in_subfolder_list.folder});
+            
+            for f = 1:length(folders_with_dicoms)
+                % .dcm files are directly in uipatdir without subfolders
+                if strcmp(folders_with_dicoms{f}, uipatdir{1})
+                    for i = 1:length(dcm_in_subfolder_list)
+                        movefile(fullfile(dcm_in_subfolder_list(i).folder, dcm_in_subfolder_list(i).name), fullfile(uipatdir{1}, 'DICOM'));
+                    end
+                    % .dcm files are in subfolders, move the whole folder
+                else
+                    movefile(folders_with_dicoms{f}, fullfile(uipatdir{1}, 'DICOM'));
+                end
+            end
+            folder_type = 'patient_folder_dicom_folder';
+            
+        else
+            folder_type = '';
+        end
+        
+        switch folder_type
+            case 'legacy_patient_folder'
+                msg = {'{\bfOld dataset detected, would you like to migrate it to BIDS?}';
+                    ['Thank you for your interest in Lead-DBS! Since version 2.6, we have re-organized the way Lead-DBS acesses and stores data.' ,...
+                    'This implies changes to the organization of your input and output data. The main objective to set standards for data organization was to promote' ,...
+                    'data sharing and open science initiatives. For more information and details on specific changes, please refer to our manual [insert url]. ' ,...
+                    'lead-import is a tool developed to automatically assist you in moving your dataset from the classic lead-dbs to the bidsified version. ',...
+                    '{\bfIf you wish to run BIDS import tool, please click on ''Yes''. Otherwise, you will not be able to use Lead-DBS.}']};
+                opts.Default = 'Cancel';
+                opts.Interpreter = 'tex';
+                choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
+                if strcmp(choice, 'Yes')
+                    options.prefs = ea_prefs;
+                    waitfor(lead_import(uipatdir, options, handles));
+                    BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
+                    subjId = getappdata(handles.leadfigure,'subjID');
+                    uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+                else
+                    return;
+                end
+            case  'patient_folder_dicom_folder'
+                msg = {'{\bfDICOM folder found, will run DICOM to NIfTI conversion!}'};
+                opts.Interpreter = 'tex';
+                opts.WindowStyle = 'modal';
+                waitfor(msgbox(msg, '', 'help', opts));
                 options.prefs = ea_prefs;
                 waitfor(lead_import(uipatdir, options, handles));
                 BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                 subjId = getappdata(handles.leadfigure,'subjID');
                 uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-            else
-                return;
-            end
-        elseif isfolder(fullfile(uipatdir{1}, 'dicom')) ... % DICOM folder detected
-                || isfolder(fullfile(uipatdir{1}, 'DICOM')) ...
-                || endsWith(uipatdir{1}, 'dicom', 'IgnoreCase',true)
-            msg = {'{\bfDICOM folder found, will run DICOM to NIfTI conversion!}'};
-            opts.Interpreter = 'tex';
-            opts.WindowStyle = 'modal';
-            waitfor(msgbox(msg, '', 'help', opts));
-            options.prefs = ea_prefs;
-            waitfor(lead_import(uipatdir, options, handles));
-            BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
-            subjId = getappdata(handles.leadfigure,'subjID');
-            uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-        else
-            error('Neither BIDS dataset nor patient folder found!');
+            otherwise
+                error('Neither BIDS dataset nor patient folder found!');
         end
     elseif isBIDSRoot % Is BIDS root folder
         BIDSRoot = uipatdir{1};
@@ -68,22 +119,22 @@ if length(uipatdir) == 1 % Single folder
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
         sourceData = ea_regexpdir([uipatdir{1}, filesep, 'sourcedata'], 'sub-', 0, 'dir');
         sourceData = regexprep(sourceData, ['\', filesep, '$'], '');
-
+        
         if ~isempty(rawData) % rawdata folder already exists
             uipatdir = strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs']);
             subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match', 'once');
         elseif ~isempty(sourceData) % sourcedata folder exists
             % in the case of a BIDS dataset root folder as input and sourcedata available for one or more patients
-            % trigger DICOM->nii conversion          
+            % trigger DICOM->nii conversion
             
             if ~iscell(sourceData)
                 sourceData = {sourceData};
             end
-
+            
             % BIDSRoot is the selected folder
             BIDSRoot = uipatdir{1};
             setappdata(handles.leadfigure, 'BIDSRoot', BIDSRoot);
-                   
+            
             subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match', 'once');
             % call lead_migrate
             msg = {'{\bfBIDS dataset with sourcedata found, will run DICOM to NIfTI conversion!}'};
@@ -91,7 +142,7 @@ if length(uipatdir) == 1 % Single folder
             opts.WindowStyle = 'modal';
             waitfor(msgbox(msg, '', 'help', opts));
             options.prefs = ea_prefs;
-
+            
             waitfor(lead_import(sourceData, options, handles));
             uipatdir = strrep(sourceData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
             
@@ -168,19 +219,19 @@ if length(uipatdir) == 1 && isfield(handles, 'side1')
     if isfile(recon.recon)
         load(recon.recon);
         elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
-
+        
         % Reset electrode button status
         for el=1:elnum
             set(handles.(['side',num2str(el)]), 'Value', 0);
         end
-
+        
         % Set electrode button status
         for el=1:length(reco.native.coords_mm)
             if ~isempty(reco.native.markers(el).head)
                 set(handles.(['side',num2str(el)]), 'Value', 1);
             end
         end
-
+        
         try
             elmodel=ea_get_first_notempty_elmodel(reco.props);
             [~,locb] = ismember({elmodel},handles.electrode_model_popup.String);
@@ -197,14 +248,14 @@ if isfield(handles,'seeddefpopup')
         if ischar(stims)
             stims = {stims};
         end
-
+        
         if ~exist('commonStims', 'var')
             commonStims = stims;
         else
             commonStims = intersect(commonStims, stims);
         end
     end
-
+    
     % for now only check first subject for pt. specific fibers..
     % find out whether mapper or predict were calling
     if strcmp(handles.prod, 'mapper')
@@ -214,7 +265,7 @@ if isfield(handles,'seeddefpopup')
         set(handles.seeddefpopup, 'String', commonStims);
     end
     ea_resetpopup(handles.seeddefpopup);
-
+    
     % update cons
     if ~strcmp(get(handles.patdir_choosebox,'String'), 'Choose Patient Directory')
         directory = [uipatdir{1}, filesep];
