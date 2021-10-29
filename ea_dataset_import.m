@@ -116,13 +116,13 @@ else
             
             % get subjID from path
             pathparts = strsplit(source_dir{subj_idx}, filesep);
-            subjID = char(pathparts(end));
+            subjID = pathparts{end};
             
             % check if sub is already present
             if ~startsWith(subjID, 'sub-')
-                subjID = ['sub-', subjID];
+                subjID = ['sub-', regexprep(subjID, '[\W_]', '')];
             end
-
+             
             % create folders
             if ~exist(fullfile(dest_dir_subj, 'rawdata', subjID), 'dir')
                 mkdir(fullfile(dest_dir_subj, 'rawdata', subjID));
