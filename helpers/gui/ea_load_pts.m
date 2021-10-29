@@ -31,9 +31,10 @@ if length(uipatdir) == 1 % Single folder
         
         % try to find out what kind of folder structure was passed
         
-        folder_list = dir(uipatdir{1});         % do a listing of the immediate directory first
+        folder_list = dir_without_dots(uipatdir{1});         % do a listing of the immediate directory first
         dcm_in_subfolder_list = dir(fullfile(uipatdir{1}, '**/*.dcm'));     % find out any .dcm files in any subdir
-        
+        raw_nifti_in_subfolder_list = {folder_list.name};
+        raw_nifti_regex_str = '.nii';
         % Old dataset detected
         if isfile(fullfile(uipatdir{1}, 'ea_ui.mat'))
             folder_type = 'legacy_patient_folder';
@@ -76,6 +77,8 @@ if length(uipatdir) == 1 % Single folder
             end
             folder_type = 'patient_folder_dicom_folder';
             
+        elseif all(~cellfun('isempty',regexpi(raw_nifti_in_subfolder_list,raw_nifti_regex_str))) %does not have ea_ui.mat, only has niftis
+            folder_type = 'patient_folder_raw_nifti';
         else
             folder_type = '';
         end
@@ -110,6 +113,25 @@ if length(uipatdir) == 1 % Single folder
                 BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                 subjId = getappdata(handles.leadfigure,'subjID');
                 uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+            case 'patient_folder_raw_nifti'
+                msg = {'{\bfRaw dataset with Nifti files [only] detected, would you like to migrate it to BIDS?}';
+                    ['Thank you for your interest in Lead-DBS! Since version 2.6, we have re-organized the way Lead-DBS acesses and stores data.' ,...
+                    'This implies changes to the organization of your input and output data. The main objective to set standards for data organization was to promote' ,...
+                    'data sharing and open science initiatives. For more information and details on specific changes, please refer to our manual [insert url]. ' ,...
+                    'lead-import is a tool developed to automatically assist you in moving your dataset from the classic lead-dbs to the bidsified version. ',...
+                    '{\bfIf you wish to run BIDS import tool, please click on ''Yes''. Otherwise, you will not be able to use Lead-DBS.}']};
+                opts.Default = 'Cancel';
+                opts.Interpreter = 'tex';
+                choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
+                if strcmp(choice, 'Yes')
+                    options.prefs = ea_prefs;
+                    waitfor(lead_import(uipatdir, options, handles));
+                    BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
+                    subjId = getappdata(handles.leadfigure,'subjID');
+                    uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+                else
+                    return;
+                end
             otherwise
                 error('Neither BIDS dataset nor patient folder found!');
         end
