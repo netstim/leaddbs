@@ -282,7 +282,14 @@ switch dataset.type
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
 
-            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
+            strippedConnName = regexprep(ocname, '\s|_|-|>|\([^()]+\))', '');
+
+            if ~isBIDSFileName([outputfolder, seedfn{s}, '.nii'])
+                mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
+            else
+                mmap.fname = setBIDSEntity([outputfolder, seedfn{s}, '.nii'], 'seed', '', 'conn', strippedConnName, 'map', ['func',cmd], 'desc', 'AvgR');
+            end
+
             ea_write_nii(mmap);
             if usegzip
                 gzip(mmap.fname);
@@ -297,7 +304,12 @@ switch dataset.type
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
 
-            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
+            if ~isBIDSFileName([outputfolder, seedfn{s}, '.nii'])
+                mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_VarR.nii'];
+            else
+                mmap.fname = setBIDSEntity([outputfolder, seedfn{s}, '.nii'], 'seed', '', 'conn', strippedConnName, 'map', ['func',cmd], 'desc', 'VarR');
+            end
+
             ea_write_nii(mmap);
             if usegzip
                 gzip(mmap.fname);
@@ -348,7 +360,13 @@ switch dataset.type
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
-            mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
+
+            if ~isBIDSFileName([outputfolder, seedfn{s}, '.nii'])
+                mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
+            else
+                mmap.fname = setBIDSEntity([outputfolder, seedfn{s}, '.nii'], 'seed', '', 'conn', strippedConnName, 'map', ['func',cmd], 'desc', 'AvgRFz');
+            end
+
             spm_write_vol(mmap,mmap.img);
             if usegzip
                 gzip(mmap.fname);
@@ -394,7 +412,12 @@ switch dataset.type
 
             tmap.img(omaskidx)=tstat.tstat;
 
-            tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
+            if ~isBIDSFileName([outputfolder, seedfn{s}, '.nii'])
+                tmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_T.nii'];
+            else
+                tmap.fname = setBIDSEntity([outputfolder, seedfn{s}, '.nii'], 'seed', '', 'conn', strippedConnName, 'map', ['func',cmd], 'desc', 'T');
+            end
+
             spm_write_vol(tmap,tmap.img);
             if usegzip
                 gzip(tmap.fname);
