@@ -41,8 +41,8 @@ for pt=1:length(uipatdirs)
     [~, subPrefix] = fileparts([thispt, '_']);
     fConnName = regexprep(options.lcm.func.connectome, '\s|_|-|>|\([^()]+\))', '');
     dConnName = regexprep(options.lcm.struc.connectome, '\s|_|-|>|\([^()]+\))', '');
-    funcnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,options.lcm.func.connectome,[subPrefix, 'sim-', options.prefs.lcm.vatseed, '_conn-', fConnName, '_map-fMRI_desc-AvgR.nii']));
-    strucnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,options.lcm.struc.connectome,[subPrefix, 'sim-', options.prefs.lcm.vatseed, '_conn-', dConnName, '_map-dMRI.nii']));
+    funcnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,options.lcm.func.connectome,[subPrefix, 'sim-', options.prefs.lcm.vatseed, '_conn-', fConnName, '_map-funcseed_desc-AvgR.nii']));
+    strucnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,options.lcm.struc.connectome,[subPrefix, 'sim-', options.prefs.lcm.vatseed, '_conn-', dConnName, '_map-struc.nii']));
 
     % assign feature vector X:
     if iscell(allfeatsix)
