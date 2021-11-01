@@ -15,6 +15,9 @@ switch coregct_method_applied{end}
     case 'ea_coregctmri_ants'
         coregs=dir([directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_ants*.mat']);
         suffix=strrep(coregs(end).name,[ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized)],'');
+        case 'ea_coregctmri_ants_refine'
+        coregs=dir([directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_ants*.mat']);
+        suffix=strrep(coregs(end).name,[ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized)],'');
     case 'ea_coregctmri_fsl'
         coregs=dir([directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_flirt*.mat']);
         suffix=strrep(coregs(end).name,[ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized)],'');
