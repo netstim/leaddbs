@@ -34,7 +34,7 @@ if length(uipatdir) == 1 % Single folder
         folder_list = dir_without_dots(uipatdir{1});         % do a listing of the immediate directory first
         dcm_in_subfolder_list = dir(fullfile(uipatdir{1}, '**/*.dcm'));     % find out any .dcm files in any subdir
         raw_nifti_in_subfolder_list = {folder_list.name};
-        raw_nifti_regex_str = '.nii||.nii.gz';
+        raw_nifti_filter = {'.nii', '.nii.gz'};
         % Old dataset detected
         if isfile(fullfile(uipatdir{1}, 'ea_ui.mat'))
             folder_type = 'legacy_patient_folder';
@@ -77,7 +77,7 @@ if length(uipatdir) == 1 % Single folder
             end
             folder_type = 'patient_folder_dicom_folder';
             
-        elseif all(~cellfun('isempty',regexpi(raw_nifti_in_subfolder_list,raw_nifti_regex_str))) %does not have ea_ui.mat, only has niftis
+        elseif all(endsWith(raw_nifti_in_subfolder_list, raw_nifti_filter)) % does not have ea_ui.mat, only has niftis
             folder_type = 'patient_folder_raw_nifti';
         else
             folder_type = '';
