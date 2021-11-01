@@ -57,7 +57,7 @@ table_options.Modality = [preop_modalities, postop_modalities];
 nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
 nifti_table.Include = false(N_fnames,1);
 nifti_table.Filename = fnames;
-nifti_table.Description = repmat({'-'}, [N_fnames,1]);
+nifti_table.Acquisition = repmat({'-'}, [N_fnames,1]);
 
 nifti_table = orderfields(nifti_table, [4 5 1 2 3 6]);
 nifti_table = struct2table(nifti_table);
@@ -74,7 +74,7 @@ uiapp = dicom_to_bids;
 
 % populate table
 uiapp.niiFileTable.Data = nifti_table_preallocated;
-uiapp.niiFileTable.ColumnEditable = [true false true true true, true];
+uiapp.niiFileTable.ColumnEditable = [true false true true true true];
 
 % set subject ID and file path
 uiapp.SubjectIDLabel.Text = sprintf('Conversion for subject: %s',subjID);
@@ -205,15 +205,15 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Description(i));
+    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
     % check whether everything has been properly defined befor updating uitree
     if ~any(strcmp('-', {session, type, modality}))
         
-        if strcmp('-', desc) || strcmp('', desc)
+        if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
             fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
         else
-            fname = sprintf('%s_ses-%s_desc-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
+            fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
         end
         ui_field = ['previewtree_' session '_anat'];
         if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
@@ -229,15 +229,15 @@ for i = find(~uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Description(i));
+    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
     if ~isempty(event)
         if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Include(i) = true;
-            if strcmp('-', desc) || strcmp('', desc)
+            if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
                 fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
             else
-                fname = sprintf('%s_ses-%s_desc-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
+                fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
             end
             ui_field = ['previewtree_' session '_anat'];
             if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
@@ -316,36 +316,54 @@ end
 function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities)
 
 % sanity check
-% if everything is empty
+
+% if preop is empty
 if isempty(uiapp.previewtree_preop_anat.Children)
     uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Warning', 'Icon','warning');
+    return
+    
+    % if postop is empty
+elseif isempty(uiapp.previewtree_postop_anat.Children)
+    uialert(uiapp.UIFigure, 'No postop files included. Please select at least one postop image.', 'Warning', 'Icon','warning');
     return
     % if multiple files for same session/modality/type are detected
 elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
         (~isempty(uiapp.previewtree_postop_anat.Children) && contains([uiapp.previewtree_postop_anat.Children.Text], '>>'))
-    uialert(uiapp.UIFigure, 'Multiple files with same modality inluded (look for >> filename << in preview window). Please select only one file per modality and session.', 'Warning', 'Icon','warning');
+    uialert(uiapp.UIFigure, 'Multiple files with same modality inluded (look for >> filename << in preview window). Please select only one file per modality and session or seperate them by specifying a description.', 'Warning', 'Icon','warning');
     return
+end
+
+% go through all the files, check if session, type and modality have been set correctly
+files_without_descr = struct();
+for i = find(uiapp.niiFileTable.Data.Include)'
+    session = char(uiapp.niiFileTable.Data.Session(i));
+    type = char(uiapp.niiFileTable.Data.Type(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
+    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
-else
-    for i = find(uiapp.niiFileTable.Data.Include)'
-        session = char(uiapp.niiFileTable.Data.Session(i));
-        type = char(uiapp.niiFileTable.Data.Type(i));
-        modality = char(uiapp.niiFileTable.Data.Modality(i));
-        include = uiapp.niiFileTable.Data.Include(i);
-        
-        % check whether there is one that has not been defined properly
-        if any(strcmp('-', {session, type, modality}))
-            uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Warning', 'Icon','warning');
-            return
-        end
-        
-        if strcmp(session, 'postop') && ~any(strcmp(modality, postop_modalities))
-            warning_str = ['You have selected an invalid modality for the postop session, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
-            uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
-            return
-        end
+    % check whether there is one that has not been defined properly
+    if any(strcmp('-', {session, type, modality}))
+        uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Warning', 'Icon','warning');
+        return
     end
     
+    % check if postop images have the correct modality
+    if strcmp(session, 'postop') && ~any(strcmp(modality, postop_modalities))
+        warning_str = ['You have selected an invalid modality for the postop session, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
+        uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
+        return
+    end
+    
+    % add description
+    if strcmp('', desc) || strcmp('-', desc) || isempty(desc)
+        files_without_descr.(session) = 1;
+    end
+end
+
+% check if we have at least one file per session (pre- and postop) that have no description
+if ~(isfield(files_without_descr, 'preop') && isfield(files_without_descr, 'postop'))
+     uialert(uiapp.UIFigure, 'Please specify at least one image without an acquistion for pre- and postop sessions.', 'Warning', 'Icon','warning');
+        return
 end
 
 N_sessions = length(table_options.Session);
@@ -358,8 +376,13 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
+    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
-    fname = sprintf('%s_ses-%s_%s', subjID, session, modality);
+    if strcmp('-', desc) || strcmp('', desc)
+        fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
+    else
+        fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
+    end
     
     export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], 'anat');
     if ~isfolder(export_folder)
@@ -378,7 +401,10 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         end
     end
     
+    % only set anat_files for files without a description to be used by lead-dbs
+    if strcmp('', desc) || strcmp('-', desc) || isempty(desc)
     anat_files.(session).(type).(modality) = fname; % set output struct
+    end
     
 end
 
