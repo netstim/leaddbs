@@ -12,7 +12,7 @@ load([directory,'ea_coregctmethod_applied.mat']) % determine last used coregmeth
 switch coregct_method_applied{end}
     case 'ea_coregctmri_brainsfit'
         suffix='_brainsfit.h5';
-    case 'ea_coregctmri_ants'
+    case {'ea_coregctmri_ants', 'ea_coregctmri_ants_refine'}
         coregs=dir([directory,ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized),'_ants*.mat']);
         suffix=strrep(coregs(end).name,[ea_stripext(options.prefs.prenii_unnormalized),'2',ea_stripext(options.prefs.rawctnii_unnormalized)],'');
     case 'ea_coregctmri_fsl'
