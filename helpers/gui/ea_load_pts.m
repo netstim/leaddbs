@@ -34,7 +34,7 @@ if length(uipatdir) == 1 % Single folder
         folder_list = dir_without_dots(uipatdir{1});         % do a listing of the immediate directory first
         dcm_in_subfolder_list = dir(fullfile(uipatdir{1}, '**/*.dcm'));     % find out any .dcm files in any subdir
         raw_nifti_in_subfolder_list = {folder_list.name};
-        raw_nifti_regex_str = '.nii';
+        raw_nifti_regex_str = '.nii||.nii.gz';
         % Old dataset detected
         if isfile(fullfile(uipatdir{1}, 'ea_ui.mat'))
             folder_type = 'legacy_patient_folder';
@@ -164,7 +164,6 @@ if length(uipatdir) == 1 % Single folder
             opts.WindowStyle = 'modal';
             waitfor(msgbox(msg, '', 'help', opts));
             options.prefs = ea_prefs;
-            
             waitfor(lead_import(sourceData, options, handles));
             uipatdir = strrep(sourceData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
             
