@@ -157,27 +157,26 @@ for s=1:length(sfile)
             map.img(utopaint)=c;
         end
 
-        if ~isBIDSFileName
-            [~, fn] = fileparts(sfile{s});
-            mapFileName = [fn,'_struc_',cmd,'.nii'];
-        else
-            strippedConnName = regexprep(connName, '\s|_|-|>|\([^()]+\))', '');
-            mapFileName = setBIDSEntity(sfile{s}, 'seed', '', 'conn', strippedConnName, 'map', 'dMRI');
-        end
-
         outputfolder=ea_getoutputfolder(sfile(s),connName);
+        [~, fname] = fileparts(sfile{s});
+
+        strippedConnName = regexprep(connName, '\s|_|-|>|\([^()]+\))', '');
+        if ~isBIDSFileName
+            mapFile = fullfile(outputfolder, [fname,'_struc_',cmd,'_',strippedConnName,'.nii']);
+        else
+            mapFile = setBIDSEntity([outputfolder, fname, '.nii'], 'seed', '', 'conn', strippedConnName, 'map', 'struc');
+        end
 
         if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')
             map.img(~(map.img==0))=ea_normal(map.img(~(map.img==0)));
         end
 
-        map.fname=fullfile(outputfolder,mapFileName);
+        map.fname = mapFile;
         map.dt=[16,0];
         spm_write_vol(map,map.img);
         if useNativeSeed
-            mniOutputFolder = strrep(outputfolder, ea_nt(1), ea_nt(0));
-            mniMap = fullfile(mniOutputFolder,mapFileName);
-            ea_mkdir(mniOutputFolder);
+            mniMap = strrep(mapFile, [filesep,ea_nt(1)], [filesep,ea_nt(0)]);
+            ea_mkdir(fileparts(mniMap));
             % Warp map from patient T1 space to MNI space
             ea_apply_normalization_tofile(ea_getptopts(options.uivatdirs{s}),...
                 {map.fname},...
