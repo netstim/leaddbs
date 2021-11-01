@@ -57,8 +57,9 @@ table_options.Modality = [preop_modalities, postop_modalities];
 nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
 nifti_table.Include = false(N_fnames,1);
 nifti_table.Filename = fnames;
+nifti_table.Description = repmat({'-'}, [N_fnames,1]);
 
-nifti_table = orderfields(nifti_table, [4 5 1 2 3]);
+nifti_table = orderfields(nifti_table, [4 5 1 2 3 6]);
 nifti_table = struct2table(nifti_table);
 
 try
@@ -73,7 +74,7 @@ uiapp = dicom_to_bids;
 
 % populate table
 uiapp.niiFileTable.Data = nifti_table_preallocated;
-uiapp.niiFileTable.ColumnEditable = [true false true true true];
+uiapp.niiFileTable.ColumnEditable = [true false true true true, true];
 
 % set subject ID and file path
 uiapp.SubjectIDLabel.Text = sprintf('Conversion for subject: %s',subjID);
@@ -204,10 +205,16 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
- 
+    desc = char(uiapp.niiFileTable.Data.Description(i));
+    
     % check whether everything has been properly defined befor updating uitree
     if ~any(strcmp('-', {session, type, modality}))
-        fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
+        
+        if strcmp('-', desc) || strcmp('', desc)
+            fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
+        else
+            fname = sprintf('%s_ses-%s_desc-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
+        end
         ui_field = ['previewtree_' session '_anat'];
         if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
             fname = ['>> ', fname, ' <<'];
@@ -217,25 +224,31 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     
 end
 
+% go through all the ones that are not included but have ession, modality and type set and enable them
 for i = find(~uiapp.niiFileTable.Data.Include)'
-     session = char(uiapp.niiFileTable.Data.Session(i));
+    session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
+    desc = char(uiapp.niiFileTable.Data.Description(i));
     
     if ~isempty(event)
-    if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
-        uiapp.niiFileTable.Data.Include(i) = true;
-        fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
-        ui_field = ['previewtree_' session '_anat'];
-        if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
-            fname = ['>> ', fname, ' <<'];
+        if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Include(i) = true;
+            if strcmp('-', desc) || strcmp('', desc)
+                fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
+            else
+                fname = sprintf('%s_ses-%s_desc-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
+            end
+            ui_field = ['previewtree_' session '_anat'];
+            if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
+                fname = ['>> ', fname, ' <<'];
+            end
+            uitreenode(uiapp.(ui_field), 'Text', fname);
         end
-        uitreenode(uiapp.(ui_field), 'Text', fname);
-    end
     end
     
 end
-    
+
 end
 
 %% preallocate table on the left
@@ -307,30 +320,30 @@ function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, su
 if isempty(uiapp.previewtree_preop_anat.Children)
     uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Warning', 'Icon','warning');
     return
-% if multiple files for same session/modality/type are detected
+    % if multiple files for same session/modality/type are detected
 elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
         (~isempty(uiapp.previewtree_postop_anat.Children) && contains([uiapp.previewtree_postop_anat.Children.Text], '>>'))
     uialert(uiapp.UIFigure, 'Multiple files with same modality inluded (look for >> filename << in preview window). Please select only one file per modality and session.', 'Warning', 'Icon','warning');
     return
-
+    
 else
     for i = find(uiapp.niiFileTable.Data.Include)'
-    session = char(uiapp.niiFileTable.Data.Session(i));
-    type = char(uiapp.niiFileTable.Data.Type(i));
-    modality = char(uiapp.niiFileTable.Data.Modality(i));
-    include = uiapp.niiFileTable.Data.Include(i);
-    
-    % check whether there is one that has not been defined properly
-    if any(strcmp('-', {session, type, modality}))
-        uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Warning', 'Icon','warning');
-       return
-    end
-    
-    if strcmp(session, 'postop') && ~any(strcmp(modality, postop_modalities))
-        warning_str = ['You have selected an invalid modality for the postop session, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
-        uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
-        return
-    end
+        session = char(uiapp.niiFileTable.Data.Session(i));
+        type = char(uiapp.niiFileTable.Data.Type(i));
+        modality = char(uiapp.niiFileTable.Data.Modality(i));
+        include = uiapp.niiFileTable.Data.Include(i);
+        
+        % check whether there is one that has not been defined properly
+        if any(strcmp('-', {session, type, modality}))
+            uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Warning', 'Icon','warning');
+            return
+        end
+        
+        if strcmp(session, 'postop') && ~any(strcmp(modality, postop_modalities))
+            warning_str = ['You have selected an invalid modality for the postop session, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
+            uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
+            return
+        end
     end
     
 end
