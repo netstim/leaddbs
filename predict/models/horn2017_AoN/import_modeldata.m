@@ -22,9 +22,9 @@ for c=1:length(connectomes)
         connName = regexprep(connectome, '\s|_|-|>|\([^()]+\))', '');
         switch type
             case 'dMRI'
-                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_conn-', connName, '_map-dMRI.nii']);
+                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_conn-', connName, '_map-struc.nii']);
             case 'fMRI'
-                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_conn-', connName, '_map-fMRI_desc-AvgRFz.nii']);
+                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_conn-', connName, '_map-funcseed_desc-AvgRFz.nii']);
         end
     end
     mkdir([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'combined_maps',filesep,type,filesep,connectome]);
