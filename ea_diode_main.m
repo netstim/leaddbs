@@ -53,7 +53,7 @@ try
         json = loadjson(options.subj.coreg.log.method);
         coregMethod = json.method.CT;
         if contains(coregMethod, {'FLIRT','FSL'})
-            % tmat_reg2org = dlmread([folder 'anat_t12postop_ct_flirt1.mat']));
+            % tmat_reg2org = readmatrix([folder 'anat_t12postop_ct_flirt1.mat'], 'FileType', 'text');
             disp('Warning: Temporary fix to use DiODe algorithm with FLIRT. Coregistered post-op CT is used so results may be slightly less accurate.');
             ct = ct_reg;
         else
