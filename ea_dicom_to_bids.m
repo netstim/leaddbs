@@ -31,6 +31,7 @@ nii_folder = fullfile(dataset_folder, 'sourcedata', subjID, 'tmp');    % where a
 N_fnames = length(fnames);
 
 imgs = cell(N_fnames,1);
+imgs_resolution = cell(N_fnames,1);
 h_wait = waitbar(0, 'Please wait while Niftii images are being loaded');
 for image_idx = 1:N_fnames
     imgs{image_idx} = struct();
@@ -40,7 +41,7 @@ for image_idx = 1:N_fnames
     imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded > imgs{image_idx}.percentile) = nan;
     imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded < median(imgs{image_idx}.p.nii.img(:))) = nan;
     imgs{image_idx}.img_thresholded = imgs{image_idx}.img_thresholded(~isnan(imgs{image_idx}.img_thresholded));
-    
+    imgs_resolution{image_idx} = [imgs{image_idx}.p.pixdim(1), imgs{image_idx}.p.pixdim(2), imgs{image_idx}.p.pixdim(3)];
     waitbar(image_idx / N_fnames, h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(fnames)));
 end
 close(h_wait);
@@ -57,13 +58,13 @@ table_options.Modality = [preop_modalities, postop_modalities];
 nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
 nifti_table.Include = false(N_fnames,1);
 nifti_table.Filename = fnames;
-nifti_table.Acquisition = repmat({'-'}, [N_fnames,1]);
+nifti_table.Acquisition = repmat("-", [N_fnames,1]);
 
 nifti_table = orderfields(nifti_table, [4 5 1 2 3 6]);
 nifti_table = struct2table(nifti_table);
 
 try
-    nifti_table_preallocated = preallocate_table(nifti_table, lookup_table);
+    nifti_table_preallocated = preallocate_table(nifti_table, lookup_table, imgs_resolution);
 catch
     disp('Preallocation of table failed, defaulting to skip!');
     nifti_table_preallocated = nifti_table;
@@ -99,7 +100,7 @@ uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_op
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
 
 % looup table behaviour
-uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp);
+uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs_resolution, table_options, subjID);
 waitfor(uiapp.UIFigure);
 
 try
@@ -112,7 +113,7 @@ end
 end
 
 %% lookup button function
-function lookup_button_function(uiapp)
+function lookup_button_function(uiapp,imgs_resolution, table_options, subjID)
 
 lookup_table_gui = ea_default_lookup;
 lookup_table = getpref('dcm2bids', 'lookuptable');
@@ -131,21 +132,23 @@ lookup_table_gui.LoadjsonButton.ButtonPushedFcn = @(btn,event) load_json_file(lo
 lookup_table_gui.CancelButton.ButtonPushedFcn = @(btn,event) cancel_lookup_function(lookup_table_gui);
 
 % save button
-lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(uiapp, lookup_table_gui);
+lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(uiapp, lookup_table_gui, imgs_resolution,  table_options, subjID);
 
 waitfor(lookup_table_gui.UIFigure);
 end
 
-function save_lookup_function(main_gui, lookup_table_gui)
+function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution,  table_options, subjID)
 
 lookup_table = convert_table_to_lookup_struct(lookup_table_gui.UITable.Data);
 
 setpref('dcm2bids', 'lookuptable', lookup_table);
 
-T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table);
+T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table, imgs_resolution);
 
 main_gui.niiFileTable.Data = T_preallocated;
 
+cell_change_callback(main_gui, table_options, subjID, [])
+ 
 delete(lookup_table_gui);
 
 end
@@ -252,7 +255,7 @@ end
 end
 
 %% preallocate table on the left
-function table_preallocated = preallocate_table(table, lookup_table)
+function table_preallocated = preallocate_table(table, lookup_table, imgs_resolution)
 
 table_preallocated = table;
 
@@ -263,7 +266,7 @@ image_types = fieldnames(lookup_table);
 for rowIdx = 1:height(table)
     
     fname = table.Filename{rowIdx};
-    
+
     % image types (anat, func, ...)
     for img_type_idx = 1:length(image_types)
         
@@ -294,6 +297,23 @@ for rowIdx = 1:height(table)
             end
         end
     end
+    
+    % prepopulate acq tag by resolution for preop
+    if  ~strcmp(string(table_preallocated.Session(rowIdx)), 'postop')
+        
+        resolution = imgs_resolution{rowIdx};
+        
+        % is isometric resolution
+        acq_tags = {'sag', 'cor', 'tra'};
+        if range(resolution) < 0.05
+            table_preallocated.Acquisition(rowIdx) = "iso";
+            % is not isometric resolution
+        else
+            [~, idx] = max(resolution);
+            table_preallocated.Acquisition(rowIdx) = string(acq_tags{idx});
+        end
+    end
+    
 end
 
 end
@@ -334,7 +354,7 @@ elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
 end
 
 % go through all the files, check if session, type and modality have been set correctly
-files_without_descr = struct();
+
 for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
@@ -354,17 +374,8 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         return
     end
     
-    % add description
-    if strcmp('', desc) || strcmp('-', desc) || isempty(desc)
-        files_without_descr.(session) = 1;
-    end
 end
 
-% check if we have at least one file per session (pre- and postop) that have no description
-if ~(isfield(files_without_descr, 'preop') && isfield(files_without_descr, 'postop'))
-     uialert(uiapp.UIFigure, 'Please specify at least one image without an acquistion for pre- and postop sessions.', 'Warning', 'Icon','warning');
-        return
-end
 
 N_sessions = length(table_options.Session);
 anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
@@ -400,11 +411,16 @@ for i = find(uiapp.niiFileTable.Data.Include)'
             warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', source);
         end
     end
-    
-    % only set anat_files for files without a description to be used by lead-dbs
-    if strcmp('', desc) || strcmp('-', desc) || isempty(desc)
-    anat_files.(session).(type).(modality) = fname; % set output struct
-    end
+   
+    % generate key for .json file
+     if strcmp('-', desc) || strcmp('', desc)
+         acq_mod = modality;
+     else
+        acq_mod = [desc, '_', modality];
+     end
+     
+    % add file to anat_files
+    anat_files.(session).(type).(acq_mod) = fname; % set output struct
     
 end
 
