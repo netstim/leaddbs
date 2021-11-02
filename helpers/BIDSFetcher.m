@@ -336,7 +336,7 @@ classdef BIDSFetcher
             for i=1:length(fields)
                 modality = fields{i};
                 parsed = parseBIDSFilePath(preopAnat.(modality));
-                preprocAnat.preop.(modality) = fullfile(baseDir, [baseName, parsed.suffix, parsed.ext]);
+                preprocAnat.preop.(modality) = strrep(preopAnat.(modality), [parsed.dir, filesep, 'sub-', subjId, '_ses-preop_'], [baseDir, filesep, baseName]);
             end
 
             % Get preprocessed post-op anat images
