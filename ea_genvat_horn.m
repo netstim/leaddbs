@@ -230,7 +230,15 @@ else
     % simply load vol.
     ea_dispt('Loading headmodel...');
     load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat']);
+    
+    % Adaptation of ea_getactiveidx for directSTIM, because the concave
+    % shape of the contacts lead to centroids outside the contacts
+    if contains(options.elmodel, 'Aleva')
+        activeidx=ea_getactiveidx_aleva(S,side,centroids,mesh,elfv,elspec,meshregions);
+    else
     activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
+    end
+
 end
 
 switch side
@@ -265,8 +273,8 @@ for source=S.sources
         if stimsource.(cnts{cnt}).pol==1
             U(cnt)=U(cnt)*-1;
         end
-    end
-
+    end    
+    
     actInd=find(U); % active contact indices
     if ~isempty(actInd)
         actContact=coords(actInd,:);
