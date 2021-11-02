@@ -55,7 +55,7 @@ else
     ret = system(cmd);
 end
 assert(ret == 0); 
-points = dlmread(tempFileOut, ',', 1, 0);
+points = readmatrix(tempFileOut);
 delete(tempFileOut);
 delete(tempFile);
 
