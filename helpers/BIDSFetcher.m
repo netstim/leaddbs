@@ -249,9 +249,15 @@ classdef BIDSFetcher
             % Set pre-op anat images according to pre-defined orders
             for i=1:length(preopImageOrder)
                 % Find the index in the present images
-                idx = find(ismember(modality, preopImageOrder{i}), 1);
+                idx = find(ismember(regexp(modality, '(?<=[^\W_]+_)[^\W_]+', 'match', 'once'), preopImageOrder{i}));
                 if ~isempty(idx)
-                    preopAnat.(preopImageOrder{i}) = images{idx};
+                    [~, ind] = ea_sortalike(lower(regexp(modality(idx), '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
+                    idx = idx(ind);
+
+                    for j=1:length(idx)
+                        preopAnat.(modality{idx(j)}) = images{idx(j)};
+                    end
+
                     images(idx) = [];
                     modality(idx) = [];
                 end
