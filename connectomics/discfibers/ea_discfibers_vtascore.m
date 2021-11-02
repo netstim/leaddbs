@@ -85,6 +85,13 @@ for pt = 1:numVAT
         vatInd = find(vat.img(:));
     end
 
+    if isempty(vatInd)
+        warning('off', 'backtrace');
+        warning('Skip empty VTA %s ...', vat.fname);
+        warning('on', 'backtrace');
+        continue;
+    end
+
     % Trim connectome fibers
     [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
     vatmm = ea_vox2mm([xvox, yvox, zvox], vat.mat);
@@ -92,6 +99,9 @@ for pt = 1:numVAT
 
     % Skip further calculation in case VAT is totally not connected
     if ~any(filter)
+        warning('off', 'backtrace');
+        warning('Skip unconnected VTA %s ...', vat.fname);
+        warning('on', 'backtrace');
         continue;
     end
 
