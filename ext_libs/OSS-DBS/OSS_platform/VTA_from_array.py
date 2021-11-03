@@ -9,6 +9,10 @@ Created on Thu Jun 11 14:09:42 2020
 import h5py
 import os
 import numpy as np
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
+
 from dolfin import *
 import matplotlib.pyplot as plt
 from pandas import read_csv
@@ -186,7 +190,7 @@ def ifft_on_VTA_array(name_sol,d,FREQ_vector_signal,Xs_signal_normalized,t_vect,
 
     minutes=int((time_lib.time() - start_IFFT)/60)
     secnds=int(time_lib.time() - start_IFFT)-minutes*60
-    print("----- IFFT took ",minutes," min ",secnds," s -----")
+    logging.critical("----- IFFT took {} min {} sec -----\n".format(minutes, secnds))
 
     return(Max_signal_for_point)
 
@@ -208,7 +212,7 @@ def get_VTA(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,V
             VTA_affected[i,3]=1.0
             VTA_size+=VTA_res**3
 
-    print("VTA_size: ",VTA_size)
+    logging.critical("VTA_size: {}".format(VTA_size))
 
     [__,__,__,x_min,y_min,z_min,__,__,__,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
     shift_to_MRI_space=np.array([x_min,y_min,z_min])
@@ -225,7 +229,7 @@ def get_VTA(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,V
     # will throw an error, because we need to have the same number of points (no extractions)
     counter_truncated=0
 
-    print("vox_along_axis :",vox_along_axis)
+    logging.critical("vox_along_axis : {}".format(vox_along_axis))
 
     for i in range(vox_along_axis):  #go over all voxels
         for j in range(vox_along_axis):  #go over all voxels
@@ -242,7 +246,7 @@ def get_VTA(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along_axis,V
                     E_field_nifti[i,j,k]=0.0
 
     if counter_truncated!=VTA_affected_MRI_space.shape[0]:
-        print("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
+        logging.critical("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
         raise SystemExit
 
 
@@ -299,7 +303,7 @@ def get_VTA_scaled(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along
             VTA_affected[i,3]=1.0
             VTA_size+=VTA_res**3
 
-    print("VTA_size: ",VTA_size)
+    logging.critical("VTA_size: {}".format(VTA_size))
 
     [__,__,__,x_min,y_min,z_min,__,__,__,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
     shift_to_MRI_space=np.array([x_min,y_min,z_min])
@@ -316,7 +320,7 @@ def get_VTA_scaled(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along
     # will throw an error, because we need to have the same number of points (no extractions)
     counter_truncated=0
 
-    print("vox_along_axis :",vox_along_axis)
+    logging.critical("vox_along_axis : {}".format(vox_along_axis))
 
     for i in range(vox_along_axis):  #go over all voxels
         for j in range(vox_along_axis):  #go over all voxels
@@ -333,10 +337,8 @@ def get_VTA_scaled(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along
                     E_field_nifti[i,j,k]=0.0
 
     if counter_truncated!=VTA_affected_MRI_space.shape[0]:
-        print("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
+        logging.critical("Hasn't iterated over whole VTA_affected_MRI_space, check the algorithm")
         raise SystemExit
-
-
 
     affine_info=np.eye(4)
     affine_info[0,0]=VTA_res   # always isotropic voxels for VTA array
@@ -352,9 +354,6 @@ def get_VTA_scaled(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along
     img = nib.load(example_filename)
 
 
-
-
-
     img3 = nib.Nifti1Image(VTA_nifti, affine_info,img.header)
     if d['Stim_side']==0:
         nib.save(img3, os.environ['PATIENTDIR']+'/Results_rh/VTA_solution_'+str(scaling_index)+'.nii')
@@ -368,6 +367,3 @@ def get_VTA_scaled(d,array_full_name,Max_signal_for_point,arrays_shape,vox_along
         nib.save(img4, os.environ['PATIENTDIR']+'/Results_lh/E_field_solution_'+str(scaling_index)+'.nii')
 
     return True
-
-
-#def VTA_from_

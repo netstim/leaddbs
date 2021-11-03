@@ -11,6 +11,7 @@ import subprocess
 import pickle
 import numpy as np
 import time as time_lib
+import logging
 
 class Mesh_ind:
     def __init__(self,Tis_indx,ROI_indx,Contact_indx,Rest_indx,Flt_cnt_indx,Encup_indx,Contacts_indx,fi_vector,Active_contacts_on_lead=-1,Float_contacts_on_lead=-1):
@@ -28,7 +29,7 @@ class Mesh_ind:
 def kill_SALOME_port():         #to ensure that Salome processes were terminated
     import os
     import subprocess
-    direct = os.getcwd()
+    direct = os.environ['PATIENTDIR']
     port_file = open(direct+'/salomePort.txt','r')
     killPort = int(port_file.readline())
     port_file.close()
@@ -52,14 +53,19 @@ def build_brain_approx(d,MRI_param):
     else:   #centering on the given coordinates
         Geom_center_x,Geom_center_y,Geom_center_z=(d["Aprox_geometry_center"][0],d["Aprox_geometry_center"][1],d["Aprox_geometry_center"][2])          #this will shift only the approximating geometry, not the MRI data set!
 
+    from shutil import copy2
+    oss_dbs_folder = os.getcwd()
+    copy2(oss_dbs_folder +'/Brain_substitute.py', os.environ['PATIENTDIR'])
+    brain_substitute_path = os.environ['PATIENTDIR'] + "/Brain_substitute.py"
+
     from Parameter_insertion import paste_geom_dim
     paste_geom_dim(x_length,y_length,z_length,Geom_center_x,Geom_center_y,Geom_center_z)        #directly inserts parameters to Brain_substitute.py
-    direct = os.getcwd()
-    print("----- Creating brain approximation in SALOME -----")
-    with open(os.devnull, 'w') as FNULL: subprocess.call('salome -t python '+ 'Brain_substitute.py' +' --ns-port-log='+direct+'/salomePort.txt', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    direct = os.environ['PATIENTDIR']
+    logging.critical("----- Creating brain approximation in SALOME -----")
+    with open(os.devnull, 'w') as FNULL: subprocess.call('salome -t python '+ brain_substitute_path +' --ns-port-log='+direct+'/salomePort.txt', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     kill_SALOME_port()
 
-    print("Brain_substitute.brep was created\n")
+    logging.critical("Brain_substitute.brep was created\n")
     with open(os.devnull, 'w') as FNULL: subprocess.call('gmsh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.med -3 -v 0 -o ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh2 && mv ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh2 ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     with open(os.devnull, 'w') as FNULL: subprocess.call('dolfin-convert ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.xml',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -85,10 +91,10 @@ def build_final_geometry(d,MRI_param,Brain_shape_name,ROI_radius,cc_multicontact
         
     create_geometry_script(d["Phi_vector"],Brain_link,Electrode_profile,d["Implantation_coordinate_X"],d["Implantation_coordinate_Y"],d["Implantation_coordinate_Z"],d["Second_coordinate_X"],d["Second_coordinate_Y"],d["Second_coordinate_Z"],d["Rotation_Z"],0.0,0.0,0.0,0.0,0.0,0.0,d["encap_thickness"],ROI_radius,MRI_param.x_shift,MRI_param.y_shift,MRI_param.z_shift,False,False,d["stretch"])
 
-    direct = os.getcwd()
+    direct = os.environ['PATIENTDIR']
     # Make a subprocess call to the salome executable and store the used port in a text file:
 
-    print("----- Creating final geometry in SALOME -----")
+    logging.critical("----- Creating final geometry in SALOME -----")
 
     with open(os.devnull, 'w') as FNULL: subprocess.call('salome -t python '+ position_script_name +' --ns-port-log='+direct+'/salomePort.txt', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     kill_SALOME_port()
@@ -132,25 +138,24 @@ def build_final_geometry(d,MRI_param,Brain_shape_name,ROI_radius,cc_multicontact
         Domains=Mesh_ind(Tis_ind,ROI_ind,Contact_ind,Rest_ind,Flt_cnt,Encup_ind,Contacts,Phi_vector)
 
     if Domains.Tis_index==-1:
-        print("ROI is the whole computational domain! Employing a bigger geometrical domain is necessary")
+        logging.critical("ROI is the whole computational domain! Employing a bigger geometrical domain is necessary")
 
     with open(os.environ['PATIENTDIR']+'/Meshes/Mesh_ind.file', "wb") as f:
         pickle.dump(Domains, f, pickle.HIGHEST_PROTOCOL)
 
     with open(os.devnull, 'w') as FNULL: subprocess.call('dolfin-convert ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.xml',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
-    minutes=int((time_lib.time() - start_final_geom)/60)
-    secnds=int(time_lib.time() - start_final_geom)-minutes*60
-
-    print("----- Final geometry was created and meshed in ",minutes," min ",secnds," s , the files are stored in Meshes/ -----")
-
     x_imp=MRI_param.x_shift+d["Implantation_coordinate_X"]
     y_imp=MRI_param.y_shift+d["Implantation_coordinate_Y"]
     z_imp=MRI_param.z_shift+d["Implantation_coordinate_Z"]
     #print("Loading clipping")
-    from Parameter_insertion import paste_paraview_clipping
-    paste_paraview_clipping(x_imp,y_imp,z_imp)      #clipping on this point in x-direction
-    print("Coordinates of the electrode tip in the positive octant coordinates: ",x_imp,y_imp,z_imp,"\n")
+    #from Parameter_insertion import paste_paraview_clipping
+    #paste_paraview_clipping(x_imp,y_imp,z_imp)      #clipping on this point in x-direction
+    logging.critical("Coordinates of the electrode tip in the positive octant coordinates: {} {} {}".format(x_imp,y_imp,z_imp))
+
+    minutes=int((time_lib.time() - start_final_geom)/60)
+    secnds=int(time_lib.time() - start_final_geom)-minutes*60
+    logging.critical("----- Final geometry was created and meshed in {} min {} sec, the files are stored in Meshes/ -----\n".format(minutes, secnds))
 
     return Domains
 

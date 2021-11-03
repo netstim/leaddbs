@@ -57,9 +57,8 @@ d = {
     'CPE_activ': 0,
     'Full_Field_IFFT': 0,
     'spectrum_trunc_method': 'Octave Band Method',
-    'trunc_param': 1000.0,
+    'trunc_param': 130.0,
     'Truncate_the_obtained_full_solution': 0,
     'external_grounding': 1,
     'Stim_side': 0,
-    'stretch': 1.0,
     }

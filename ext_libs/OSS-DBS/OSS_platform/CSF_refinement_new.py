@@ -2,7 +2,12 @@
 '''The script refines provided mesh in the regions of specified material (CSF)'''
 
 
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
+
 from dolfin import *
+
 from pandas import read_csv
 from tissue_dielectrics import DielectricProperties
 import numpy as np
@@ -120,8 +125,8 @@ def mesh_refiner(mesh_old,boundaries,subdomains_assigned,cell_markers,Domains,cc
 
     # if the mesh refinement failed, it will be detected here
     if (An_surface_size_new-An_surface_size_old)/An_surface_size_new>0.01:
-        print((An_surface_size_new-An_surface_size_old)/An_surface_size_new)
-        print("Refinement broke the imposed B.C.!")
+        #(An_surface_size_new-An_surface_size_old)/An_surface_size_new
+        logging.critical("Refinement broke the imposed B.C.!")
         exit()
 
     return (mesh_new,boundaries_new,subdomains_assigned_new)
@@ -146,6 +151,94 @@ def index_cell_marker(mesh, index_array ,MRI_param, Scaler):
             c00[cell]=0.0
 
     return cell_ref
+
+
+def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
+    if Array_Type == 'Imported':
+        List_of_placed = Array_coord
+
+    # first, the neuron compartments should not pass through CSF, maybe put it as a separate function, maybe even in CSF_refinement
+    # import os
+    if os.path.isfile(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/' + MRI_param.name[:-4] + '_voxel_array_CSF.npy') or os.path.isfile(
+            os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/' + MRI_param.name[:-7] + '_voxel_array_CSF.npy'):  # if array was already prepared
+        if MRI_param.name[-2:] == 'gz':
+            voxel_array_CSF = np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/' + MRI_param.name[:-7] + '_voxel_array_CSF.npy')
+        else:
+            voxel_array_CSF = np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/' + MRI_param.name[:-4] + '_voxel_array_CSF.npy')
+        logging.critical("voxel_array_CSF is loaded")
+    else:  # otherwise prepare an array that stores coordinated of all voxels with CSF in the vicinity of the neurons
+        Tissue_array = np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Tissue_array_MRI.npy')
+
+        x_vect = np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
+        y_vect = np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
+        z_vect = np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
+
+        voxel_array_CSF = np.zeros((Tissue_array.shape[0], 3),
+                                   float)  # array to store all CSF voxels in the specified ROI
+
+        if Array_Type != 'Imported':
+            x_neuron_max, y_neuron_max, z_neuron_max = (
+            max(Array_coord[:, 0]), max(Array_coord[:, 1]), max(Array_coord[:, 2]))
+            x_neuron_min, y_neuron_min, z_neuron_min = (
+            min(Array_coord[:, 0]), min(Array_coord[:, 1]), min(Array_coord[:, 2]))
+        else:
+            max_values = np.zeros((len(List_of_placed), 3), float)
+            min_values = np.zeros((len(List_of_placed), 3), float)
+            for i in range(len(List_of_placed)):
+                max_values[i, :] = (
+                max(List_of_placed[i][:, 0]), max(List_of_placed[i][:, 1]), max(List_of_placed[i][:, 2]))
+                min_values[i, :] = (
+                min(List_of_placed[i][:, 0]), min(List_of_placed[i][:, 1]), min(List_of_placed[i][:, 2]))
+
+            x_neuron_max, y_neuron_max, z_neuron_max = (
+            max(max_values[:, 0]), max(max_values[:, 1]), max(max_values[:, 2]))
+            x_neuron_min, y_neuron_min, z_neuron_min = (
+            min(min_values[:, 0]), min(min_values[:, 0]), min(min_values[:, 0]))
+
+        space_from_neurons = 1.0  # here we do not need to check further away
+        for z_coord in z_vect:
+            for y_coord in y_vect:
+                for x_coord in x_vect:
+
+                    x_pos = x_coord - MRI_param.x_vox_size / 2.0
+                    y_pos = y_coord - MRI_param.y_vox_size / 2.0
+                    z_pos = z_coord - MRI_param.x_vox_size / 2.0
+
+                    if (
+                            x_pos <= x_neuron_max + space_from_neurons and x_pos >= x_neuron_min - space_from_neurons and y_pos <= y_neuron_max + space_from_neurons and y_pos >= y_neuron_min - space_from_neurons and z_pos <= z_neuron_max + space_from_neurons and z_pos >= z_neuron_min - space_from_neurons):
+
+                        xv_mri = int((
+                                         x_coord) / MRI_param.x_vox_size - 0.000000001)  # defines number of steps to get to the voxels containing x[0] coordinate
+                        yv_mri = (int((
+                                          y_coord) / MRI_param.y_vox_size - 0.000000001)) * MRI_param.M_x  # defines number of steps to get to the voxels containing x[0] and x[1] coordinates
+                        zv_mri = (int((
+                                          z_coord) / MRI_param.z_vox_size - 0.000000001)) * MRI_param.M_x * MRI_param.M_y  # defines number of steps to get to the voxels containing x[0], x[1] and x[2] coordinates
+
+                        glob_index = xv_mri + yv_mri + zv_mri
+                        glob_index = int(glob_index)
+
+                        if Tissue_array[glob_index] == 1:
+                            voxel_array_CSF[glob_index, 0] = x_pos
+                            voxel_array_CSF[glob_index, 1] = y_pos
+                            voxel_array_CSF[glob_index, 2] = z_pos
+
+        voxel_array_CSF = voxel_array_CSF[~np.all(voxel_array_CSF == 0.0, axis=1)]  # deletes all zero enteries
+
+        if MRI_param.name[-2:] == 'gz':
+            np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/' + MRI_param.name[:-7] + '_voxel_array_CSF', voxel_array_CSF)
+        else:
+            np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/' + MRI_param.name[:-4] + '_voxel_array_CSF', voxel_array_CSF)
+
+        del Tissue_array, x_vect, y_vect, z_vect
+        logging.critical("voxel_array_CSF (contains CSF voxels close to the neuron array) is prepared")
+
+    voxel_array_CSF_shifted = np.zeros((voxel_array_CSF.shape[0], 3), float)
+    voxel_array_CSF_shifted[:, 0] = voxel_array_CSF[:, 0] + MRI_param.x_vox_size / 2
+    voxel_array_CSF_shifted[:, 1] = voxel_array_CSF[:, 1] + MRI_param.y_vox_size / 2
+    voxel_array_CSF_shifted[:, 2] = voxel_array_CSF[:, 2] + MRI_param.z_vox_size / 2
+    del voxel_array_CSF
+
+    return voxel_array_CSF_shifted
 
 
 def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_frac_div,CSF_ref_add,EQS_mode,cc_multicontact,ref_freq,Best_scaling=0,scaling_old=0):
@@ -196,7 +289,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         boundaries_file<<boundaries
         subdomains_assigned_file<<subdomains_assigned
 
-        print("Field calculation on the initial mesh")
+        logging.critical("Field calculation on the initial mesh")
         if Field_calc_param.anisotropy==1:
             subdomains=get_cellmap_tensors(mesh,subdomains_assigned,Domains,MRI_param,DTI_param,Field_calc_param.default_material)
         else:
@@ -204,7 +297,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
 
         save_mesh_and_subdomains_to_h5(mesh,subdomains,subdomains_assigned,boundaries,Best_scaling)
 
-        print("CSF_Subdomains_unref file was created")
+        logging.critical("CSF_Subdomains_unref file was created")
         file=File(os.environ['PATIENTDIR']+'/CSF_ref/CSF_Subdomains_unref.pvd')
         file<<subdomains,mesh
 
@@ -226,7 +319,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         else:
             voxel_array_CSF=np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add)+'.npy')
 
-        print("voxel_array_CSF in ",str(CSF_ref_add)," mm vicinity is loaded")
+        logging.critical("voxel_array_CSF in {} mm vicinity is loaded".format(str(CSF_ref_add)))
     else:
         start_voxel_array_CSF=tim.clock()
 
@@ -304,24 +397,24 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
             np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add), voxel_array_CSF)
 
         del Tissue_array
-        print("----- voxel_array_CSF for ",str(CSF_ref_add)," mm vicinity was prepared in %s seconds -----" % (tim.clock() - start_voxel_array_CSF))
+        logging.critical("----- voxel_array_CSF for {} mm vicinity was prepared in {} seconds -----".format(str(CSF_ref_add),tim.clock() - start_voxel_array_CSF))
 
 
     '''Here we pre-refine mesh on elements with CSF voxels'''
     csf_ref=0
     loaded_from_h5=0
-    print("refining CSF voxels with scaling ", int(Scaling))
+    logging.critical("refining CSF voxels with scaling: {}".format(int(Scaling)))
     num_cell_old=mesh.num_cells()
 
     if os.path.isfile(os.environ['PATIENTDIR']+'/CSF_ref/Mesh_to_solve_scaling_'+str(Scaling)+'.h5'):
-        print("Mesh and tissue mapping was loaded from the refinement at the previous frequency")
+        logging.critical("Mesh and tissue mapping was loaded from the refinement at the previous frequency")
         mesh,subdomains,subdomains_assigned,boundaries=load_mesh_and_subdomains_from_h5(Scaling)
         loaded_from_h5=1
     elif os.path.isfile(os.environ['PATIENTDIR']+'/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz'):   #this and not the case above could be only triggered if no computations took place at this scalling at the last frequency (because of the same mesh size)
         if Best_scaling==0:
-            print("No elements were refined during the full CSF refinement, skipping to adaptive mesh refinement (consider decreasing Minimum Element to Voxel Ratio)")
+            logging.critical("No elements were refined during the full CSF refinement, skipping to adaptive mesh refinement (consider decreasing Minimum Element to Voxel Ratio)")
             return 1
-        print("skipping scaling ",Scaling)
+        logging.critical("skipping scaling {}".format(Scaling))
         mesh_file=File(os.environ['PATIENTDIR']+'/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
         mesh_file<<mesh
         boundaries_file = File(os.environ['PATIENTDIR']+'/CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
@@ -352,13 +445,13 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
                 boundaries_file<<boundaries
                 subdomains_assigned_file<<subdomains_assigned
 
-                print("Number of cells after CSF refinement iteration: ",mesh.num_cells())
+                logging.critical("Number of cells after CSF refinement iteration: {}".format(mesh.num_cells()))
 
                 if num_cell_old==mesh.num_cells():
                     if Best_scaling==0:
-                        print("No elements were refined during the full CSF refinement, skipping to adaptive mesh refinement (consider decreasing Minimum Element to Voxel Ratio)")
+                        logging.critical("No elements were refined during the full CSF refinement, skipping to adaptive mesh refinement (consider decreasing Minimum Element to Voxel Ratio)")
                         return 1
-                    print("skipping scaling ",Scaling)
+                    logging.critical("skipping scaling ".format(Scaling))
                     return 0
             else:
 
@@ -372,19 +465,19 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
                 mesh,boundaries,subdomains_assigned=mesh_refiner(mesh,boundaries,subdomains_assigned,cell_ref,Domains,cc_multicontact)
 
                 if mesh.num_cells()>10000000:       #users can adjust for their hardware
-                    print("Mesh is too large, will have to check with bigger scaling")
+                    logging.critical("Mesh is too large, will have to check with bigger scaling")
                     csf_refined=-1
                     return csf_refined
 
     if loaded_from_h5==1:
-        print("CSF_Subdomains_refinement file with scaling ",int(Scaling)," was loaded")
+        logging.critical("CSF_Subdomains_refinement file with scaling was loaded".format(int(Scaling)))
     else:
         if Field_calc_param.anisotropy==1:
             subdomains=get_cellmap_tensors(mesh,subdomains_assigned,Domains,MRI_param,DTI_param,Field_calc_param.default_material)
         else:
             subdomains=get_cellmap(mesh,subdomains_assigned,Domains,MRI_param,Field_calc_param.default_material)
 
-        print("CSF_Subdomains_refinement file with scaling ",int(Scaling)," was created")
+        logging.critical("CSF_Subdomains_refinement file with scaling was created".format(int(Scaling)))
         file=File(os.environ['PATIENTDIR']+'/CSF_ref/CSF_Subdomains_refinement_'+str(int(Scaling))+'.pvd')
         file<<subdomains,mesh
 
@@ -398,7 +491,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
     if Scaling==1:
         file=File(os.environ['PATIENTDIR']+'/CSF_ref/Field_r_'+str(Scaling)+'.pvd')
         file<<Field_r
-        print("CSF_Subdomains full refinement was created")
+        logging.critical("CSF_Subdomains full refinement was created")
         file=File(os.environ['PATIENTDIR']+'/CSF_ref/CSF_Subdomains_full_ref.pvd')
         file<<subdomains,mesh
 
@@ -441,10 +534,10 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
             max_div=abs(Phi_amp_on_neuron_old[inx,3]-Phi_amp_on_neuron[inx,3])
 
         if max_div> phi_error:
-            print("Deviation threshold: ",phi_error,"V")
-            print("Deviation at least: ", max_div, "V")
-            print("At point: ", Phi_amp_on_neuron_old[inx,0],Phi_amp_on_neuron_old[inx,1],Phi_amp_on_neuron_old[inx,2])
-            print("Need further refinement of CSF")
+            logging.critical("Deviation threshold: V".format(phi_error))
+            logging.critical("Deviation at least: V".format(max_div))
+            logging.critical("At point: {} {} {}".format(Phi_amp_on_neuron_old[inx,0],Phi_amp_on_neuron_old[inx,1],Phi_amp_on_neuron_old[inx,2]))
+            logging.critical("Need further refinement of CSF")
             csf_refined=0
             break
 
@@ -456,15 +549,15 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         boundaries_file<<boundaries
         subdomains_assigned_file<<subdomains_assigned
 
-        print("Max. deviation: ", max_div, "V")
-        print("Deviation threshold: ",phi_error,"V")
-        print("CSF is refined enough")
+        logging.critical("Deviation at least: V".format(max_div))
+        logging.critical("Deviation threshold: V".format(phi_error))
+        logging.critical("CSF is refined enough")
 
     del voxel_array_CSF
 
     minutes=int((tim.clock() - start_CSF_refinement)/60)
     secnds=int(tim.clock() - start_CSF_refinement)-minutes*60
-    print("----- CSF refinement iteration took ",minutes," min ",secnds," s -----\n")
+    logging.critical("----- CSF refinement iteration took {} min {} sec -----\n".format(minutes, secnds))
 
     return csf_refined
 
@@ -482,13 +575,13 @@ def launch_CSF_refinement(d,MRI_param,DTI_param,Domains,anisotrop,cc_multicontac
         el_order_for_CSF=2
         "element_order is 1, increasing to 2 for multicontact current-controlled stimulation"
 
-    print("----- Conducting evaluation of CSF refinement -----")
+    logging.critical("----- Conducting evaluation of CSF refinement -----")
 
     Min_Scaling=d["Min_Scaling"]    # the maxixum CSF element ref. criterion (element edge size/voxel site). 1 by default.
     Scaling_results=[]
 
     for freq in ref_freqs:          # conduct refinement at different frequencies
-        print("At frequency: ",freq)
+        logging.critical("At frequency: {}".format(freq))
         Field_calc_param=Field_calc_parameters(d["default_material"],el_order_for_CSF,anisotrop,d["current_control"],d["CPE_activ"],freq,d["EQS_core"],d["external_grounding"],d["Solver_Type"])
 
         csf_ref=-1
@@ -507,7 +600,7 @@ def launch_CSF_refinement(d,MRI_param,DTI_param,Domains,anisotrop,cc_multicontac
             scaling_factors=[32*Min_Scaling,16*Min_Scaling,8*Min_Scaling,4*Min_Scaling,2*Min_Scaling,1*Min_Scaling]
             scaling_old=0
             while csf_ref==0:       #subsequently refine to smaller edge sizes until the solution is below the deviation threshold
-                print('scaling factor is ',scaling_factors[iteration_csf])
+                logging.critical('scaling factor: {}'.format(scaling_factors[iteration_csf]))
                 Scaling=float(scaling_factors[iteration_csf])
                 csf_ref=Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,d["rel_div_CSF"],d["CSF_frac_div"],d["CSF_ref_reg"],d["EQS_core"],cc_multicontact,ref_freqs,Min_Scaling,scaling_old)
                 iteration_csf=iteration_csf+1

@@ -11,6 +11,8 @@ import numpy as np
 from pandas import read_csv
 import matplotlib.pyplot as plt
 
+import logging
+
 import time as tm
 import multiprocessing as mp
 
@@ -23,165 +25,21 @@ from Axon_files.Reilly2016.Parameter_insertion_python3 import paste_to_hoc_pytho
 #This function only saves the dictionary of the activation rate, the visualizator is called externally outside of docker container!
 #IMPORTANT: if same connections of different branches will be united (otherwise, the circuit image is unreadable).
 #In this case, the activation rate will be assessed as
-def connection_visualizator(Activated_models,Initial_number,population_name,iteration):
-
-    import pickle
-
-    if iteration == 0:
-        #create and save a dictionary
-        dict_connect = {   #connection might be formed from different branches. Therefore, we weight the activation with number of the branches (second entry)
-        'HDP_MC_STN'                    :  [0.0,0] ,
-        'HDP_STN_GPi'                    :  [0.0,0] ,
-        'HDP_STN_SN'                    :  [0.0,0] ,
-
-        'Direct_MC_Str'                    :  [0.0,0] ,
-        'Direct_Str_GPi'                    :  [0.0,0] ,
-        'Direct_Str_SN'                    :  [0.0,0] ,
-
-        'Indirect_MC_Str'                    :  [0.0,0] ,
-        'Indirect_Str_GPe'                    :  [0.0,0] ,
-        'Indirect_GPe_GPi'                    :  [0.0,0] ,
-        'Indirect_GPe_STN'                    :  [0.0,0] ,
-        'Indirect_GPe_SN'                    :  [0.0,0] ,
-        'Indirect_STN_GPi'                    :  [0.0,0] ,
-        'Indirect_STN_SN'                    :  [0.0,0] ,
-
-        'Excitatory_STN_GPe'                  :  [0.0,0] ,
-        'Inhibitory_GPi_Th'                  :  [0.0,0] ,
-        'Inhibitory_SN_Th'                  :  [0.0,0] ,
-        }
-        #for each of these I need an if statement
-    else:
-        #reload it and update according to the name of the connection
-        with open('connections_status.pkl', "rb") as f:
-            dict_connect = pickle.load(f)
-
-    mask_designator='_mask'   #required to distinguish structures for a specific connection in case all masks of the pathway are used for naming
-
-    if "Indirect" in population_name:
-        if "STN"+mask_designator in population_name and "GPe"+mask_designator in population_name:
-            dict_connect['Indirect_GPe_STN'][0]=float(Activated_models)/Initial_number+dict_connect['Indirect_GPe_STN'][0]
-            dict_connect['Indirect_GPe_STN'][1]+=1
-        if "STN"+mask_designator in population_name and "GPi"+mask_designator in population_name:
-            dict_connect['Indirect_STN_GPi'][0]=float(Activated_models)/Initial_number+dict_connect['Indirect_STN_GPi'][0]
-            dict_connect['Indirect_STN_GPi'][1]+=1
-        if "STN"+mask_designator in population_name and "SN"+mask_designator in population_name:
-            dict_connect['Indirect_STN_SN'][0]=float(Activated_models)/Initial_number+dict_connect['Indirect_STN_SN'][0]
-            dict_connect['Indirect_STN_SN'][1]+=1
-        if "GPi"+mask_designator in population_name and "GPe"+mask_designator in population_name:
-            dict_connect['Indirect_GPe_GPi'][0]=float(Activated_models)/Initial_number+dict_connect['Indirect_GPe_GPi'][0]
-            dict_connect['Indirect_GPe_GPi'][1]+=1
-        if "SN"+mask_designator in population_name and "GPe"+mask_designator in population_name:
-            dict_connect['Indirect_GPe_SN'][0]=float(Activated_models)/Initial_number+dict_connect['Indirect_GPe_SN'][0]
-            dict_connect['Indirect_GPe_SN'][1]+=1
-        if "MC"+mask_designator in population_name and "Str"+mask_designator in population_name:
-            dict_connect['Indirect_MC_Str'][0]=float(Activated_models)/Initial_number+dict_connect['Indirect_MC_Str'][0]
-            dict_connect['Indirect_MC_Str'][1]+=1
-        if "Str"+mask_designator in population_name and "GPe"+mask_designator in population_name:
-            dict_connect['Indirect_Str_GPe'][0]=float(Activated_models)/Initial_number+dict_connect['Indirect_Str_GPe'][0]
-            dict_connect['Indirect_Str_GPe'][1]+=1
-    elif "Direct" in population_name:
-        if "MC"+mask_designator in population_name and "Str"+mask_designator in population_name:
-            dict_connect['Direct_MC_Str'][0]=float(Activated_models)/Initial_number+dict_connect['Direct_MC_Str'][0]
-            dict_connect['Direct_MC_Str'][1]+=1
-        if "Str"+mask_designator in population_name and "GPi"+mask_designator in population_name:
-            dict_connect['Direct_Str_GPi'][0]=float(Activated_models)/Initial_number+dict_connect['Direct_Str_GPi'][0]
-            dict_connect['Direct_Str_GPi'][1]+=1
-        if "Str"+mask_designator in population_name and "SN"+mask_designator in population_name:
-            dict_connect['Direct_Str_SN'][0]=float(Activated_models)/Initial_number+dict_connect['Direct_Str_SN'][0]
-            dict_connect['Direct_Str_SN'][1]+=1
-    elif "HDP" in population_name:
-        if "MC"+mask_designator in population_name and "STN"+mask_designator in population_name:
-            dict_connect['HDP_MC_STN'][0]=float(Activated_models)/Initial_number+dict_connect['HDP_MC_STN'][0]
-            dict_connect['HDP_MC_STN'][1]+=1
-    else:
-        if "STN"+mask_designator in population_name and "GPe"+mask_designator in population_name:
-            dict_connect['Excitatory_STN_GPe'][0]=float(Activated_models)/Initial_number+dict_connect['Excitatory_STN_GPe'][0]
-            dict_connect['Excitatory_STN_GPe'][1]+=1
-        if "GPi"+mask_designator in population_name and "Th"+mask_designator in population_name:
-            dict_connect['Inhibitory_GPi_Th'][0]=float(Activated_models)/Initial_number+dict_connect['Inhibitory_GPi_Th'][0]
-            dict_connect['Inhibitory_GPi_Th'][1]+=1
-        if "SN"+mask_designator in population_name and "Th"+mask_designator in population_name:
-            dict_connect['Inhibitory_SN_Th'][0]=float(Activated_models)/Initial_number+dict_connect['Inhibitory_SN_Th'][0]
-            dict_connect['Inhibitory_SN_Th'][1]+=1
-
-    f = open("connections_status.pkl","wb")
-    pickle.dump(dict_connect,f)
-    f.close()
-
-    return True
 
 
 def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl_scale,t_steps,n_segments,dt,tstop,n_pulse,v_init,n_Ranvier,output):
 
-    # #This is the old method when I did not have a specific array for Reilly
-    #os.chdir("..")
-    # os.chdir("..")
-    # nodes=[]
-    # #here we need to load the potential only on Ranviers and middle STIN
-    # if fiberD>3.0:         #load 5th and 6th compartment (middle STINs) and take average
-    #     for point_inx in range(n_segments):
-    #         if point_inx%11==0:
-    #             loc_index=0
-    #             nodes_point_in_time=np.load('Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
-    #             nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
-    #         elif loc_index%6==0 and loc_index!=0:
-    #             nodes_point_in_time_left=np.load('Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point-1)+'.npy')
-    #             nodes_point_in_time_right=np.load('Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
-
-    #             #nodes_point_in_time_left=np.asarray(nodes_point_in_time_left)
-    #             #nodes_point_in_time_left = nodes_point_in_time_left.ravel()
-
-    #             #nodes_point_in_time_right=np.asarray(nodes_point_in_time_right)
-    #             #nodes_point_in_time_right = nodes_point_in_time_right.ravel()
-
-    #             nodes_point_in_time=(nodes_point_in_time_left[:]+nodes_point_in_time_right[:])/2
-
-    #             nodes.append((nodes_point_in_time)*(1000)*Ampl_scale)    #convert to mV
-    #         loc_index+=1
-    # else:
-    #     for point_inx in range(n_segments):     #take every forth compartment (either Ranvier or middle STIN)
-    #         if point_inx%4==0:
-    #             nodes_point_in_time=np.load('Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')
-    #             nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
-
-    # nodes=np.asarray(nodes)
-    # nodes = nodes.ravel()
-
-    # V_art=np.zeros((n_Ranvier*2-1,t_steps),float)
-    # for i in range(n_Ranvier*2-1):
-    #     V_art[i,:]=nodes[(i*t_steps):((i*t_steps)+t_steps)]
-
-    #if  we have a model for Reilly
-    os.chdir("..")
-    os.chdir("..")
-
     n_segments=n_Ranvier*2-1
-
-    #nodes=[]
-#    for point_inx in range(n_segments):
-#
-#        nodes_point_in_time=np.load(os.environ['PATIENTDIR']+'/Points_in_time/Signal_t_conv'+str(point_inx+N_index*n_segments+last_point)+'.npy')   #get solution for each compartment in time for one neuron
-#        nodes.append(nodes_point_in_time*(1000)*Ampl_scale)    #convert to mV
-#
-#    nodes=np.asarray(nodes)
-#    nodes = nodes.ravel()
-#
-#    V_art=np.zeros((n_segments,t_steps),float)
-#
-#    for i in range(n_segments):
-#        V_art[i,:]=nodes[(i*t_steps):((i*t_steps)+t_steps)]
 
     #to distinguish axons in different populations, we indexed them with the global index of the last compartment
     axon_in_time=np.load(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(n_segments-1+N_index*n_segments+last_point)+'.npy')
     V_art=np.zeros((n_segments,t_steps),float)
     for i in range(n_segments):
-        V_art[i,:]=axon_in_time[i,:]*(1000)*Ampl_scale   #convert to mV
+        V_art[i,:]=axon_in_time[i,:t_steps]*(1000)*Ampl_scale   #convert to mV
 
     #only if we want to save potential in time on axons
     #np.save('Field_on_axons_in_time/'+str(population_name)+'axon_'+str(N_index_glob), V_art)
 
-    os.chdir("Axon_files/Reilly2016/")
 
     n.h('{load_file("init_B5_extracellular.hoc")}')
 
@@ -205,11 +63,17 @@ def conduct_parallel_NEURON(population_name,last_point,N_index_glob,N_index,Ampl
         return output.put([N_index_glob,-1])
 
 
-def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_Ranvier,N_models,v_init,t_steps,Ampl_scale,n_processors,stim_side,neuron_array_name=None):
+def run_simulation_with_NEURON(d,last_point,population_index,fib_diam,n_Ranvier,N_models,Ampl_scale,n_processors,neuron_array_name=None):
     # this script is solely for Reilly2016 model
     '''Here we assume that all axons have the same number of nodes of Ranvier (and hence the length) and the morphology'''
 
-    if stim_side==0:
+    # phi and t_step in s here
+    t_steps_trunc = int(d['phi']/d['t_step']) + int(d['T']/d['t_step'])*17  # empirically defined number (i.e., we need 16*T after pulse period)
+    tstop = (d['t_step']*1000.0)*t_steps_trunc  # convert to ms
+
+    dt = d['t_step']*1000.0
+
+    if d['Stim_side']==0:
         stim_folder='Results_rh/'
     else:
         stim_folder='Results_lh/'
@@ -220,10 +84,9 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     n_segments=int((n_Ranvier-1)*2)+1       # lumped internodal segment
 
     #passing through n.h. does not work sometimes, so we do insert the parameters straight to the file
-    paste_to_hoc_python3(n_Ranvier,axoninter,n_segments,v_init,int(1.0/dt))
+    paste_to_hoc_python3(n_Ranvier,axoninter,n_segments,d['v_init'],int(1.0/dt))
 
-    os.chdir("..")
-    os.chdir("..")
+
 
     if population_index==-1:    # only one population is simulated
         population_name=''
@@ -239,7 +102,7 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
         lst=list(hf.keys())
 
         if N_models==0:
-            print(str(lst[population_index])+" population was not placed")
+            logging.critical("{} population was not placed".format(str(lst[population_index])))
             return 0
 
         Vert_full=hf.get(lst[population_index])
@@ -269,7 +132,6 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     Neuron_index=0
     neuron_global_index_array=np.zeros((N_models),int)
 
-    os.chdir("Axon_files/Reilly2016/")
     axons_quart=[int(N_models/4.0),int(2*N_models/4.0),int(3*N_models/4.0)]
 
     # run NEURON simulation in parallel
@@ -297,14 +159,14 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
 
             neuron_global_index_array[Neuron_index]=int(inx_first_true/n_segments) #index in Prepared_models_full
 
-            processes=mp.Process(target=conduct_parallel_NEURON,args=(population_name,last_point,neuron_global_index_array[Neuron_index],Neuron_index,Ampl_scale,t_steps,n_segments,dt,tstop,n_pulse,v_init,n_Ranvier,output))
+            processes=mp.Process(target=conduct_parallel_NEURON,args=(population_name,last_point,neuron_global_index_array[Neuron_index],Neuron_index,Ampl_scale,t_steps_trunc,n_segments,dt,tstop,n_pulse,d['v_init'],n_Ranvier,output))
             proc.append(processes)
 
             j_proc=j_proc+1
             Neuron_index=Neuron_index+1
             
             if N_models>500 and Neuron_index in axons_quart:
-                print(int(Neuron_index*100/N_models)+1,"% of neuron models were processed")
+                logging.critical("{}% of neuron models were processed".format(int(Neuron_index*100/N_models)+1))
             
         for p in proc:
             p.start()
@@ -324,8 +186,6 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
 
             int_counter=int_counter+1
 
-    os.chdir("..")
-    os.chdir("..")
 
     Number_of_axons_initially=int(Vert_full.shape[0]/n_segments)
     Vert_full_status=np.zeros(Number_of_axons_initially,int)            # has status of all neurons (-1 - was not placed, 0 - was not activated, 1 - was activated)
@@ -366,12 +226,12 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     from scipy.io import savemat
     mdic = {"fibers": Axon_Lead_DBS, "ea_fibformat": "1.0"}
     if population_index==-1:            # only one population is simulated
-        if stim_side==0:
+        if d['Stim_side']==0:
             savemat(os.environ['PATIENTDIR']+"/Results_rh/Axon_state.mat", mdic)
         else:
             savemat(os.environ['PATIENTDIR']+"/Results_lh/Axon_state.mat", mdic)
     else:
-        if stim_side==0:
+        if d['Stim_side']==0:
             savemat(os.environ['PATIENTDIR']+"/Results_rh/Axon_state_"+str(lst[population_index])+".mat", mdic)
         else:
             savemat(os.environ['PATIENTDIR']+"/Results_lh/Axon_state_"+str(lst[population_index])+".mat", mdic)
@@ -388,7 +248,7 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
     Nodes_status_MRI_space[:,:3]=Nodes_status[:,:3]+shift_to_MRI_space
     Nodes_status_MRI_space[:,3]=Nodes_status[:,3]
 
-    print(Activated_models, " models were activated")
+    logging.critical("{} models were activated".format(Activated_models))
 
     List_of_activated=np.asarray(List_of_activated)
 
@@ -404,8 +264,8 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
 #        hf.close()
 
     if population_index==-1:
-        print(np.round(Activated_models/float(Number_of_axons_initially)*100,2),"% activation (including damaged neurons)\n")
-        if stim_side==0:
+        logging.critical("{}% activation (including damaged neurons)\n".format(np.round(Activated_models/float(Number_of_axons_initially)*100,2)))
+        if d['Stim_side']==0:
             #np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/Activation/Last_run.csv', List_of_activated, delimiter=" ")
             np.savetxt(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Last_run.csv', List_of_activated, delimiter=" ")
             np.save(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Connection_status',Axon_status)
@@ -421,8 +281,9 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
             np.savetxt(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Activation_VAT_Neuron_Array_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
 
     else:
-        print(np.round(Activated_models/float(Number_of_axons_initially)*100,2),"% activation in ",lst[population_index], "(including damaged neurons)\n")
-        if stim_side==0:
+        logging.critical("{}% activation in {} (including damaged neurons)\n".format(
+            np.round(Activated_models / float(Number_of_axons_initially) * 100, 2), lst[population_index]))
+        if d['Stim_side']==0:
             np.savetxt(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Last_run_in_'+str(lst[population_index])+'.csv', List_of_activated, delimiter=" ")
             np.save(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Connection_status_'+str(lst[population_index]),Axon_status)
             np.savetxt(os.environ['PATIENTDIR']+'/Results_rh/'+stim_folder+'Activation_'+neuron_array_name[:-3]+'___'+str(lst[population_index])+'_'+str(Activated_models)+'.csv', Nodes_status_MRI_space_only_activated, delimiter=" ")
@@ -438,11 +299,6 @@ def run_simulation_with_NEURON(last_point,population_index,fib_diam,dt,tstop,n_R
             hf = h5py.File(os.environ['PATIENTDIR']+'/Results_lh/'+stim_folder+'Network_status.h5', 'a')
             hf.create_dataset(str(lst[population_index]), data=Vert_full_status)
             hf.close()
-
-    #this function will prepare data for connection states due to DBS
-    if population_index!=-1:
-        connection_visualizator(Activated_models,Number_of_axons_initially,lst[population_index],last_point)
-
 
 
     return Activated_models

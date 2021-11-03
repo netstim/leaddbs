@@ -21,83 +21,116 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
     import h5py
 
+import logging
+
 import time
 
 import shutil
 
+def copytree(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
+
+
+def conduct_unit_IFFT(d, Xs_signal_norm, N_models, N_segm, FR_vector_signal, t_vector, name_sorted_solution,
+                      inx_start_octv):
+    # stores sunit solution (el. potential on axons in space and time) over contacts
+
+    from IFFT_contact_ground import convolute_signal_with_field_and_compute_ifft
+    if d["spectrum_trunc_method"] == 'Octave Band Method':
+        if isinstance(d["n_Ranvier"], list):  # if different populations
+            last_point = 0
+            hf = h5py.File(os.environ['PATIENTDIR'] + '/' + d["Name_prepared_neuron_array"], 'r')
+            lst_population_names = list(hf.keys())
+            hf.close()
+            for i in range(len(d["n_Ranvier"])):
+                # print("in ",lst_population_names[i]," population")
+                last_point = convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm, N_models[i], N_segm[i],
+                                                                          FR_vector_signal, t_vector,
+                                                                          name_sorted_solution,
+                                                                          inx_st_oct = inx_start_octv, dif_axons=True,
+                                                                          last_point = last_point)
+        else:
+            convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm, N_models, N_segm, FR_vector_signal,
+                                                         t_vector, name_sorted_solution, inx_st_oct=inx_start_octv,
+                                                         dif_axons=False, last_point=0)
+    else:
+        logging.scale("Spectrum truncation with Octave Band Method has to be enabled")
+        raise SystemExit
+
+    return True
+
+
 def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,VTA_IFFT,scaling_index,VTA_parameters):
 
-    #d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv=args
+    if VTA_IFFT == 1:
 
-    if VTA_IFFT==1:
-
-        VTA_edge,VTA_full_name,VTA_resolution=VTA_parameters
+        VTA_edge,VTA_full_name,VTA_resolution = VTA_parameters
 
         from Parallel_IFFT_on_VTA_array import scale_and_get_IFFT_on_VTA_array
-        Max_signal_for_point=scale_and_get_IFFT_on_VTA_array(S_vector,d["number_of_processors"],name_sorted_solution,d,FR_vector_signal,Xs_signal_norm,t_vector,N_segm,inx_start_octv)
+        Max_signal_for_point = scale_and_get_IFFT_on_VTA_array(S_vector,d["number_of_processors"],name_sorted_solution,d,FR_vector_signal,Xs_signal_norm,t_vector,N_segm,inx_start_octv)
         from VTA_from_array import get_VTA_scaled
         get_VTA_scaled(d,VTA_full_name,Max_signal_for_point,N_segm,VTA_edge,VTA_resolution,scaling_index)
         return True
 
-    from IFFT_with_scaling_factor import convolute_signal_with_field_and_compute_ifft
-    if d["spectrum_trunc_method"]=='Octave Band Method':
-        if isinstance(d["n_Ranvier"],list):             #if different populations
-            last_point=0
-            hf = h5py.File(os.environ['PATIENTDIR']+'/'+d["Name_prepared_neuron_array"], 'r')
-            lst_population_names=list(hf.keys())
-            hf.close()
-            for i in range(len(d["n_Ranvier"])):
-                #print("in ",lst_population_names[i]," population")
-                last_point=convolute_signal_with_field_and_compute_ifft(S_vector,d,Xs_signal_norm,N_models[i],N_segm[i],FR_vector_signal,t_vector,A,name_sorted_solution,inx_st_oct=inx_start_octv,dif_axons=True,last_point=last_point)
-        else:
-            convolute_signal_with_field_and_compute_ifft(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_st_oct=inx_start_octv,dif_axons=False,last_point=0)
-    else:
-        print("Not implemented")
-        raise SystemExit
-
-
-    print("----- Estimating neuron activity -----")
+    logging.critical("----- Estimating neuron activity -----")
     start_neuron=time.time()
 
+    oss_plat_cont = os.getcwd()
+
+    # we need to copy Axon_files to the patient folder to ensure stability
+    src = oss_plat_cont + "/Axon_files"
+    dst = os.environ['PATIENTDIR'] + "/Axon_files"
+
+    if os.path.isdir(dst):
+        os.chdir(os.environ['PATIENTDIR'])
+        os.system('rm -fr Axon_files')
+    os.makedirs(dst)
+
+    copytree(src, dst, symlinks=False, ignore=None)
+    os.chdir(dst)  # we now operate in Axon_files/ in the stim folder
+
     if d["Axon_Model_Type"] == 'McIntyre2002':
-        os.chdir("Axon_files/")
+
         with open(os.devnull, 'w') as FNULL: subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl axnode', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         from Axon_files.NEURON_direct_run_scaled import run_simulation_with_NEURON
     elif d["Axon_Model_Type"] == 'Reilly2016':
-        os.chdir("Axon_files/Reilly2016/")
-        print("Please, precompile Reilly2016 and comment out the next line")
-        raise SystemExit
-        #with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        os.chdir("Reilly2016/")
+        logging.critical("Please, precompile Reilly2016 and comment out the next line")
+        #raise SystemExit
+        with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         from Axon_files.Reilly2016.NEURON_Reilly2016_scaled import run_simulation_with_NEURON
 
     if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
-        Number_of_activated=0
+        Number_of_activated = 0
         last_point=0
         for i in range(len(d["n_Ranvier"])):
-            Number_of_activated_population=run_simulation_with_NEURON(last_point,i,d["diam_fib"][i],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"][i],N_models[i],d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d['Stim_side'],scaling_index,d["Name_prepared_neuron_array"])
-            Number_of_activated=Number_of_activated+Number_of_activated_population
+            Number_of_activated_population = run_simulation_with_NEURON(d, S_vector,last_point,i,d["diam_fib"][i],d["n_Ranvier"][i],N_models[i],d["Ampl_scale"],d["number_of_processors"],scaling_index,d["Name_prepared_neuron_array"])
+            Number_of_activated = Number_of_activated+Number_of_activated_population
 
-            os.chdir("Axon_files/")
-            if d["Axon_Model_Type"] == 'Reilly2016':
-                os.chdir("Reilly2016/")
+            #if d["Axon_Model_Type"] == 'Reilly2016':
+            #    os.chdir("Reilly2016/")
             last_point=N_segm[i]*N_models[i]+last_point
-        os.chdir("..")
-        if d["Axon_Model_Type"] == 'Reilly2016':
-            os.chdir("..")
+
+        #if d["Axon_Model_Type"] == 'Reilly2016':
+        #    os.chdir("..")
     else:
         if isinstance(d["diam_fib"],list):
             d["diam_fib"]=d["diam_fib"][0]
-            d["n_Ranvier"]=d["n_Ranvier"][0] 
-        Number_of_activated=run_simulation_with_NEURON(0,-1,d["diam_fib"],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"],N_models,d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d['Stim_side'],scaling_index)
+            d["n_Ranvier"]=d["n_Ranvier"][0]
+        Number_of_activated = run_simulation_with_NEURON(d,S_vector,0,-1,d["diam_fib"],d["n_Ranvier"],N_models[0],d["Ampl_scale"],d["number_of_processors"],scaling_index)
 
-    if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
-        with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_connections_activation.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-
+    os.chdir(oss_plat_cont)
 
     minutes=int((time.time() - start_neuron)/60)
     secnds=int(time.time() - start_neuron)-minutes*60
-    print("----- NEURON calculations took ",minutes," min ",secnds," s -----\n")
+    logging.critical("----- NEURON calculations took {} min {} sec -----\n".format(minutes, secnds))
 
     if d['Stim_side']==0:
         stim_folder='Results_rh/'
@@ -121,30 +154,64 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_ve
     else:
         activation_in_populations=Number_of_activated
 
+    if os.path.isdir(os.environ['PATIENTDIR']+'/Field_solutions/Activation'):     # we always re-run NEURON simulation
+        os.system('rm -fr '+os.environ['PATIENTDIR']+'/Field_solutions/Activation')
+        os.makedirs(os.environ['PATIENTDIR']+'/Field_solutions/Activation')
 
-    if os.path.isdir(os.environ['PATIENTDIR']+'/Axons_in_time'):     # we always re-run NEURON simulation
-        os.system('rm -fr '+os.environ['PATIENTDIR']+'/Axons_in_time')
-        os.makedirs(os.environ['PATIENTDIR']+'/Axons_in_time')
+    # if os.path.isdir(os.environ['PATIENTDIR']+'/Axons_in_time'):     # we always re-run NEURON simulation
+    #     os.system('rm -fr '+os.environ['PATIENTDIR']+'/Axons_in_time')
+    #     os.makedirs(os.environ['PATIENTDIR']+'/Axons_in_time')
 
 
     return activation_in_populations
 
-#def adapt_with_annealing(lb,ub,max_iterations,args_all):
-#
-#    from scipy.optimize import dual_annealing
-#
-#    if os.path.isfile('Best_scaling_yet.csv'):
-#        #initial_scaling=np.genfromtxt('Best_scaling_yet.csv', delimiter=' ')
-#        #initial_scaling=[-7.818776816129684448e-01,-1.069913357496261597e+00,2.497921139001846313e-01,-1.049459293484687805e+00]
-#        #initial_scaling=[3.374655917286872864e-01,-1.232426971197128296e+00,-3.297385610640048981e-01,-1.211972907185554504e+00]
-#        #initial_scaling=[1.126232415437698364e+00,1.097056448459625244e+00,3.340458869934082031e-01,1.117510512471199036e+00] #50,293 dif
-#        initial_scaling=[1.316384516656398773e+00,2.556199058890342712e-01,8.183348253369331360e-01,-5.758354514837265015e-01] #48,437 dif
-#        res = dual_annealing(test_scaling, bounds=list(zip(lb, ub)),args=args_all,maxfun=max_iterations, seed=19234394,x0=initial_scaling, no_local_search=True) #number of iterations by counter
-#    else:
-#        res = dual_annealing(test_scaling, bounds=list(zip(lb, ub)),args=args_all,maxfun=max_iterations, initial_temp=25000.0, visit=2.85, seed=int(np.random.random()*1000), no_local_search=True) #number of iterations by counter
-#
-#    print("Optimization results: ",res.x,res.fun)
-#    return(res.x,res.fun)
+
+def compute_similarity(S_vector, *args):
+    d, Xs_signal_norm, N_models, N_segm, FR_vector_signal, t_vector, A, name_sorted_solution, inx_start_octv = args
+
+    activation_profile = test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,d["Full_Field_IFFT"],0,0)
+    # scalar value if only one .mat for the whole connectome
+
+    # do clean-up in Results_
+    if os.path.isdir(os.environ['PATIENTDIR']+'/Results_rh'):
+        os.system('rm -fr '+os.environ['PATIENTDIR']+'/Results_rh')
+        os.makedirs(os.environ['PATIENTDIR']+'/Results_rh')
+
+    if os.path.isdir(os.environ['PATIENTDIR']+'/Results_lh'):
+        os.system('rm -fr '+os.environ['PATIENTDIR']+'/Results_lh')
+        os.makedirs(os.environ['PATIENTDIR']+'/Results_lh')
+
+    if len(d['optimal_profile']) == 1:
+        logging.critical("Computed activation rate - Optimal rate for {}: {}".format(S_vector, activation_profile - d['optimal_profile'][0]))
+        distance = abs(activation_profile - d['optimal_profile'][0])
+    else:
+        from scipy.spatial.distance import canberra, cityblock, euclidean, braycurtis, cosine
+        if d['similarity_metric'] == 'Canberra':
+            distance = canberra(activation_profile, d['optimal_profile'], w = d['profile_weighting'])
+        elif d['similarity_metric'] == 'Manhattan':
+            distance = cityblock(activation_profile, d['optimal_profile'], w = d['profile_weighting'])
+        elif d['similarity_metric'] == 'Euclidean':
+            distance = euclidean(activation_profile, d['optimal_profile'], w = d['profile_weighting'])
+        elif d['similarity_metric'] == 'Cosine':
+            distance = cosine(activation_profile, d['optimal_profile'], w = d['profile_weighting'])
+        elif d['similarity_metric'] == 'Bray-Curtis':
+            distance = braycurtis(activation_profile, d['optimal_profile'], w = d['profile_weighting'])
+        else:
+            logging.critical("Metric {} is not supported".format(d['similarity_metric']))
+            raise SystemExit
+        logging.critical("{} distance for {}: {}".format(d['similarity_metric'], S_vector, distance))
+
+    # store info of iterations
+    optim_data = []
+    for i in range(len(S_vector)):
+        optim_data.append(S_vector[i])
+    optim_data.append(distance)
+    optim_data_array = np.vstack((optim_data)).T
+    with open(os.environ['PATIENTDIR']+'/current_optim_iterations.csv', 'a') as f_handle:
+        np.savetxt(f_handle, optim_data_array)
+
+    return distance
+
 
 def find_activation(current_comb,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,scaling_index,VTA_param=0):
 
@@ -155,7 +222,7 @@ def find_activation(current_comb,d,Xs_signal_norm,N_models,N_segm,FR_vector_sign
 
     minutes=int((time.time() - start_current_run)/60)
     secnds=int(time.time() - start_current_run)-minutes*60
-    print("----- Solved for current protocol in: ",minutes," min ",secnds," s -----\n")
+    logging.critical("----- Solved for current protocol in {} min {} sec -----\n".format(minutes, secnds))
 
     return activation
 

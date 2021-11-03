@@ -5,6 +5,9 @@ Created on Sun Aug 19 13:23:54 2018
 @author: butenko
 """
 
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
 
 from dolfin import *
 from pandas import read_csv
@@ -265,7 +268,7 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
     parameters['linear_algebra_backend']='PETSc'
 
     if calc_with_MPI==False or MPI.comm_world.rank==1:
-        print("Calculating field with scaled voltage on contacts")
+        logging.critical("Calculating field with scaled voltage on contacts")
 
     if calc_with_MPI==False:
 
@@ -329,7 +332,9 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
 
     Dirichlet_bc_scaled=[]
     if calc_with_MPI==False or MPI.comm_world.rank==1:
-        print("Scaled complex potential on contacts: ", Phi_scaled[:])
+        logging.critical("Scaled complex potential on contacts: ")
+        for j in range(Phi_scaled.shape[0]):
+            logging.critical("{}".format(Phi_scaled[j]))
     for bc_i in range(len(Domains.Contacts)):
         if Laplace_mode == 'EQS':
             Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real(Phi_scaled[bc_i]), boundaries_sol,Domains.Contacts[bc_i]))
@@ -407,7 +412,7 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
 
     for bc_i in range(len(Domains.Contacts)):
         if calc_with_MPI==False or MPI.comm_world.rank==1:
-            print("J on contact ", Domains.Active_on_lead[bc_i],": ", J_r_contacts[bc_i]+1j*J_im_contacts[bc_i],"A")
+            logging.critical("J on contact {}: {} A".format(Domains.Active_on_lead[bc_i],J_r_contacts[bc_i]+1j*J_im_contacts[bc_i]))
 
         Quasi_imp_real[bc_i]=np.real(Phi_scaled[bc_i]/(J_r_contacts[bc_i]+1j*J_im_contacts[bc_i]))
         if Laplace_mode=='EQS':
@@ -415,7 +420,7 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
 
     if external_grounding==True:        # in the future I should choose a better metric
         if calc_with_MPI==False or MPI.comm_world.rank==1:
-            print("J on external grounding : ", J_r_contacts[-1]+1j*J_im_contacts[-1],"A")
+            logging.critical("J on external grounding :{} A".format(J_r_contacts[-1]+1j*J_im_contacts[-1]))
         Quasi_imp_real[-1]=np.real(1.0/(J_r_contacts[-1]+1j*J_im_contacts[-1]))
         if Laplace_mode=='EQS':
             Quasi_imp_im[-1]=np.imag(1.0/(J_r_contacts[-1]+1j*J_im_contacts[-1]))
@@ -447,7 +452,7 @@ def get_field_with_scaled_BC(external_grounding,mesh_sol,Domains,Phi_scaled,subd
 
         return True
     else:
-        print("Quasi_impedance (for current check):",sqrt(Quasi_imp_real_total**2+Quasi_imp_im_total**2))
+        logging.critical("Quasi_impedance (for current check): {}".format(sqrt(Quasi_imp_real_total**2+Quasi_imp_im_total**2)))
         E_norm=project(sqrt(inner(E_field,E_field)+inner(E_field_im,E_field_im)),V_normE,solver_type="cg", preconditioner_type="amg")
         max_E=E_norm.vector().max()
         if calc_with_MPI==False or MPI.comm_world.rank==1:
@@ -494,11 +499,11 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains_assigned,subdom
     #IMPORTANT: for get_field_with_floats when solving EQS we always use direct solver MUMPS for stability issues (multiple floating conductors)
 
     if Field_calc_param.element_order==1:
-        print("Selected element_order (1st) is too low for current-controlled stimulation, increasing to 2nd")
+        logging.critical("Selected element_order (1st) is too low for current-controlled stimulation, increasing to 2nd")
         Field_calc_param.element_order=2
 
-    print("Computing field with superposition on mesh with ",mesh_sol.num_cells(), " elements")
-    print(len(Domains.fi)," computations are required for the iteration")
+    logging.critical("Computing field with superposition on mesh with {} elements".format(mesh_sol.num_cells()))
+    logging.critical("{} computations are required for the iteration".format(len(Domains.fi)))
 
     contacts_with_current=[x for x in Domains.fi if x != 0.0]       #0.0 are grounded contacts
 
@@ -511,9 +516,6 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains_assigned,subdom
     if Field_calc_param.EQS_mode == 'EQS':
         phi_i_floating=np.zeros((len(contacts_with_current),len(contacts_with_current)-1),float)
         J_im_current_contacts=np.zeros(len(contacts_with_current),float)
-
-    #print("Active_on_lead: ",Domains.Active_on_lead)
-    #print("Float_on_lead: ",Domains.Float_on_lead)
 
     glob_counter=0
     for i in range(len(Domains.fi)):
@@ -572,7 +574,8 @@ def compute_field_with_superposition(mesh_sol,Domains,subdomains_assigned,subdom
 
     minutes=int((tm.time() - start_math)/60)
     secnds=int(tm.time() - start_math)-minutes*60
-    print("--- Field with superposition was calculated in ",minutes," min ",secnds," s ")
-    print("__________________________________")
+
+    logging.critical("----- Field with superposition was calculated in {} min {} sec -----\n".format(minutes, secnds))
+    logging.critical("__________________________________")
 
     return phi_r_sol,phi_i_sol,Field_real,Field_imag,max_E,quasi_imp_real,quasi_imp_im,j_dens_real,j_dens_im

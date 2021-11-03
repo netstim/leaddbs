@@ -8,6 +8,9 @@ Created on Tue Apr 24 14:56:19 2018
 #obtain_MRI_class and obtain_DTI_class are manager functions (called in Launcher)
 #The functions in the script import nifti voxel arrays or grid voxel arrays (COMSOL format) and resave them in the platform's format.
 
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
 
 from dolfin import *
 import numpy as np
@@ -93,7 +96,7 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
         Mx,My,Mz=(x_arr.shape[0],y_arr.shape[0],z_arr.shape[0])       #number of voxels along axes
 
         if Mx*My*Mz!=voxel_array_temp.shape[0]:
-            print("Error while processing MRI, maybe not all slices were extracted")
+            logging.critical("Error while processing MRI, maybe not all slices were extracted")
             raise SystemExit
     else:
         import nibabel as nib      #nibabel should be installed
@@ -193,7 +196,7 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
     np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/y_vector_MRI_Box.csv', y_vector_MRI_Box, delimiter=" ")
     np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/z_vector_MRI_Box.csv', z_vector_MRI_Box, delimiter=" ")
 
-    print("----- Preparation of MRI data took %s seconds -----" % (time.clock() - start_voxel))
+    logging.critical("----- Preparation of MRI data took {} seconds -----\n".format(time.clock() - start_voxel))
 
     return (Mx,My,Mz,round(min(x_arr),6),round(min(y_arr),6),round(min(z_arr),6),round(max(x_arr),6),round(max(y_arr),6),round(max(z_arr),6),voxel_size_x,voxel_size_y,voxel_size_z)
 
@@ -308,7 +311,7 @@ def map_DTI(d,DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor d
         Mx,My,Mz=(x_arr.shape[0],y_arr.shape[0],z_arr.shape[0])       #number of voxels along axes
 
         if Mx*My*Mz*6!=voxel_arr_c11.shape[0]+voxel_arr_c21.shape[0]+voxel_arr_c31.shape[0]+voxel_arr_c22.shape[0]+voxel_arr_c32.shape[0]+voxel_arr_c33.shape[0]:
-            print("Error while processing DTI data, maybe not all slices were extracted")
+            logging.critical("Error while processing DTI data, maybe not all slices were extracted")
             raise SystemExit
 
         if DTI_data_in_m==1:                  #if DTI data is in m
@@ -327,7 +330,7 @@ def map_DTI(d,DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor d
         img = nib.load(example_filename)
 
         if d["Brain_shape_name"]==0 and img.affine[0,1]==0.0 and img.affine[0,2]==0.0 and img.affine[1,2]==0.0:
-            print("Extracting a subset of the tensor data for the approx. volume")
+            logging.critical("Extracting a subset of the tensor data for the approx. volume")
             if DTI_data_in_m==1: 
                 res_x,res_y,res_z=(img.header.get_zooms()[0]*1000.0,img.header.get_zooms()[1]*1000.0,img.header.get_zooms()[2]*1000.0)
                 img_start_x,img_start_y,img_start_z=(img.affine[0,3]*1000,img.affine[1,3]*1000,img.affine[2,3]*1000)
@@ -350,7 +353,7 @@ def map_DTI(d,DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor d
                 vox_window_z=int(d['Approximating_Dimensions'][2]/(res_z))
             
                 if start_vox_x<0 or start_vox_y<0 or start_vox_z<0:
-                    print('Warning, the DTI data does not cover the whole computational domain (isotropic values will be assigned)')
+                    logging.critical('Warning, the DTI data does not cover the whole computational domain (isotropic values will be assigned)')
                     if start_vox_x<0: start_vox_x=0
                     if start_vox_y<0: start_vox_y=0
                     if start_vox_z<0: start_vox_z=0  
@@ -374,7 +377,7 @@ def map_DTI(d,DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor d
         Mx,My,Mz=(tissue_array.shape[0],tissue_array.shape[1],tissue_array.shape[2])       #number of voxels along axes
 
         if Mx*My*Mz*6!=voxel_arr_c11.shape[0]+voxel_arr_c21.shape[0]+voxel_arr_c31.shape[0]+voxel_arr_c22.shape[0]+voxel_arr_c32.shape[0]+voxel_arr_c33.shape[0]:
-            print("Error while processing DTI data, maybe not all slices were extracted")
+            logging.critical("Error while processing DTI data, maybe not all slices were extracted")
             raise SystemExit
 
         Tensor_array=np.zeros((voxel_arr_c11.shape[0],6),float)
@@ -427,7 +430,7 @@ def map_DTI(d,DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor d
 
     del Tensor_array,voxel_arr_c11,voxel_arr_c21,voxel_arr_c31,voxel_arr_c22,voxel_arr_c32,voxel_arr_c33
 
-    print("----- Preparation of DTI data took %s seconds -----" % (time.clock() - start_voxel))
+    logging.critical("----- Preparation of DTI data took {} seconds -----\n".format(time.clock() - start_voxel))
     #print("File MRI_DTI_derived_data/voxel_array_DTI.csv was created and can be visualized in Paraview to check the processed DTI data")
 
     return (Mx,My,Mz,round(min(x_arr),6),round(min(y_arr),6),round(min(z_arr),6),voxel_size_x,voxel_size_y,voxel_size_z)
@@ -436,11 +439,11 @@ def map_DTI(d,DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor d
 def obtain_MRI_class(inp_dict):
 
     if inp_dict["MRI_data_name"]==0:
-        print("MRI_data_name was not provided, exiting")
+        logging.critical("MRI_data_name was not provided, exiting")
         raise Exception('exit')
 
     if inp_dict["voxel_arr_MRI"]==0:		# 1 if MRI data were already processed by the platform and corresp. meta data were created
-        print("--- processing provided MRI data")
+        logging.critical("--- processing provided MRI data")
         if inp_dict["MRI_data_name"][-3:]=='nii' or inp_dict["MRI_data_name"][-6:]=='nii.gz':
             [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=map_MRI(inp_dict["MRI_data_name"],inp_dict["MRI_in_m"],inp_dict["default_material"],inp_dict["CSF_index"],inp_dict["WM_index"],inp_dict["GM_index"],False)       #will also prepare voxel_array!
         else:
@@ -449,10 +452,10 @@ def obtain_MRI_class(inp_dict):
         '''Save meta data for the future simulations with the current MRI data set'''
         MRI_misc=np.array([Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z])
         np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', MRI_misc, delimiter=" ")
-        print("--- MRI meta data were created\n")
+        #logging.critical("--- MRI meta data were created\n")
     else:
         [Mx_mri,My_mri,Mz_mri,x_min,y_min,z_min,x_max,y_max,z_max,MRI_voxel_size_x,MRI_voxel_size_y,MRI_voxel_size_z]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/MRI_misc.csv', delimiter=' ')
-        print("--- MRI meta data were loaded\n")
+        logging.critical("--- MRI meta data were loaded\n")
 
     x_shift,y_shift,z_shift=(-1*(x_min),-1*(y_min),-1*(z_min))  #shift of MRI to have it in the positive octant and start in (0,0,0)
 
@@ -474,19 +477,19 @@ def obtain_DTI_class(inp_dict,MRI_param):
         y_start_dti=y_min_dti-MRI_param.y_min
         z_start_dti=z_min_dti-MRI_param.z_min
 
-        eps = 0.1 * min(DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z)  
+        eps = 0.1 * min(DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z)
         if  x_start_dti < -1*eps or y_start_dti < -1*eps or z_start_dti < -1*eps:
-            print("DTI data is not in positive octant, exiting.")
+            logging.critical("DTI data is not in positive octant, exiting.")
             raise Exception('exit')
 
         DTI_misc=np.array([Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti])
         '''Save meta data for the future simulations with the current MRI data set'''
         np.savetxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/DTI_misc.csv', DTI_misc, delimiter=" ")
-        print("--- DTI meta data were created\n")
+        #logging.critical("--- DTI meta data were created\n")
 
     if inp_dict["voxel_arr_DTI"]==1:
         [Mx_dti,My_dti,Mz_dti,x_min_dti,y_min_dti,z_min_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti]=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/DTI_misc.csv', delimiter=' ')
-        print("--- DTI meta data were loaded\n")
+        logging.critical("--- DTI meta data were loaded\n")
 
     DTI_param=DTI_info(inp_dict["DTI_data_name"],Mx_dti,My_dti,Mz_dti,DTI_voxel_size_x,DTI_voxel_size_y,DTI_voxel_size_z,x_start_dti,y_start_dti,z_start_dti)
     with open(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/DTI_class.file', "wb") as f:

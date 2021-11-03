@@ -1,5 +1,6 @@
 #convolute_signal_with_field_and_compute_ifft is the manager function (called in Launcher)
 #compute_Z_ifft is called directly in Launcher
+import logging
 
 import matplotlib
 matplotlib.use('Agg')
@@ -102,7 +103,7 @@ def compute_Z_ifft(d,Xs_signal_normalized,t_vector,A,i_start_octv=0.0):      # g
     Y = np.concatenate((Z_conv, fv_conj), axis=0)
     Signal_t_Zconv=np.fft.ifft(Y).real
 
-    print("Max impedance: ",Signal_t_Zconv.max())
+    logging.critical("Max impedance: {}".format(Signal_t_Zconv.max()))
 
     plt.figure(111122112)
     plt.plot(t_vector,Signal_t_Zconv.real)
@@ -118,7 +119,7 @@ def compute_Z_ifft(d,Xs_signal_normalized,t_vector,A,i_start_octv=0.0):      # g
     return Signal_t_Zconv
 
 #get electric potential in time over the axon
-def convolute_and_ifft(last_point,Ind_trunc1,trunc_method,post_truncation,i_axon,num_segments,N_freq,phi_shift,T,output):
+def convolute_and_ifft(t_steps_trunc,last_point,Ind_trunc1,trunc_method,post_truncation,i_axon,num_segments,N_freq,phi_shift,T,output):
 
     global solution_sort
     global Xs_signal_normalized
@@ -191,12 +192,12 @@ def convolute_and_ifft(last_point,Ind_trunc1,trunc_method,post_truncation,i_axon
             plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_convoluted_1st_point.png', format='png', dpi=1000)
 
     # Number is the global point index of the last compartment on the neuron
-    np.save(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv)
+    np.save(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
 
     output.put(i_axon)
 
 #get electric potential in time over the axon when using octave band method for the frequency spectrum approximation
-def convolute_and_ifft_octaves(last_point,i_axon,num_segments,N_freq,N_freq_octv,phi_shift,Fr_corresp_ar,Fr_octave_vec,i_start_octv,T,output):
+def convolute_and_ifft_octaves(t_steps_trunc,last_point,i_axon,num_segments,N_freq,N_freq_octv,phi_shift,Fr_corresp_ar,Fr_octave_vec,i_start_octv,T,output):
 
     global solution_sort_octv
     global Xs_signal_normalized
@@ -255,7 +256,7 @@ def convolute_and_ifft_octaves(last_point,i_axon,num_segments,N_freq,N_freq_octv
 
         #np.save('Points_in_time/Signal_t_conv'+str(i_axon), Signal_t_conv)
     # Number is the global point index of the last compartment on the neuron
-    np.save(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv)
+    np.save(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
 
     output.put(i_axon)
 
@@ -263,6 +264,9 @@ def convolute_signal_with_field_and_compute_ifft(d,XS_signal,models_in_populatio
 
     # here I we don't want to pass large arrays so we use global variables
     start_ifft=time_lib.time()
+
+    t_steps_trunc = int(d['phi']/d['t_step']) + int(d['T']/d['t_step'])*17  # empirically defined number (i.e. we need 16*T after pulse period)
+
 
     if d["spectrum_trunc_method"]=='Octave Band Method':
         Fr_corresp_arr = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
@@ -332,14 +336,14 @@ def convolute_signal_with_field_and_compute_ifft(d,XS_signal,models_in_populatio
 
             if d["spectrum_trunc_method"]=='Octave Band Method':
                 N_freq_octv=(FR_vec_sign_octv.shape[0])
-                processes=mp.Process(target=convolute_and_ifft_octaves,args=(last_point,i,number_of_segments,N_freq,N_freq_octv,d["phi"],Fr_corresp_arr,Fr_octave_vect,inx_st_oct,d["T"],output))
+                processes=mp.Process(target=convolute_and_ifft_octaves,args=(t_steps_trunc,last_point,i,number_of_segments,N_freq,N_freq_octv,d["phi"],Fr_corresp_arr,Fr_octave_vect,inx_st_oct,d["T"],output))
             else:
-                processes=mp.Process(target=convolute_and_ifft,args=(last_point,Ind_trunc,d["spectrum_trunc_method"],d["Truncate_the_obtained_full_solution"],i,number_of_segments,N_freq,d["phi"],d["T"],output))
+                processes=mp.Process(target=convolute_and_ifft,args=(t_steps_trunc,last_point,Ind_trunc,d["spectrum_trunc_method"],d["Truncate_the_obtained_full_solution"],i,number_of_segments,N_freq,d["phi"],d["T"],output))
             proc.append(processes)
             j=j+1
             i=i+point_step
             if i in axons_quart:
-                print(int(i*100/models_in_population)+1,"% of neuron models were processed")
+                logging.critical("{}% of neuron models were processed".format(int(i*100/models_in_population)+1))
         j=0
         for p in proc:
             p.start()
@@ -360,7 +364,7 @@ def convolute_signal_with_field_and_compute_ifft(d,XS_signal,models_in_populatio
 
     minutes=int((time_lib.time() - start_ifft)/60)
     secnds=int(time_lib.time() - start_ifft)-minutes*60
-    print("----- Signal scaling and IFFT and took: ",minutes," min ",secnds," s -----\n")
+    logging.critical("----- Signal scaling and IFFT took {} min {} sec -----\n".format(minutes, secnds))
 
     return last_point
 
