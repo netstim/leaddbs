@@ -33,7 +33,7 @@ Check out the function before you use it. By default, it tries to match absolute
 run_full_model(master_dict) governs the simulation flow taking master_dict as the input that will modify the input dictionary (defined in GUI_inp_dict.py)
 
 '''
-print("\nOSS-DBS by K.Butenko --- version 0.3")
+print("\nOSS-DBS by K.Butenko --- version 0.4")
 print("Butenko K, Bahls C, Schroeder M, Koehling R, van Rienen U (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.' PLoS Comput Biol 16(7): e1008023. https://doi.org/10.1371/journal.pcbi.1008023")
 print("____________________________________\n")
 
@@ -44,49 +44,113 @@ import subprocess
 import importlib
 import os
 import warnings
+import json
 with warnings.catch_warnings():
-    warnings.filterwarnings("ignore",category=FutureWarning)
+    warnings.filterwarnings("ignore", category=FutureWarning)
     import h5py
 
+import shutil
+import logging
 
+def copytree(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
 
 def run_full_model(master_dict):
 
-    start_simulation_run=time.time()
+    start_simulation_run = time.time()
+
+    import os
+    os.environ['PATIENTDIR'] = '/opt/Patient' # Use fixed mount path for docker
 
     #===================Load and update input dictionary======================#
     #should be loaded this way for iterative studies (some simulation state variables change during a run)
+
+    # should be changed: load directly from the patient folder a json
+
+    import sys
+    sys.path.insert(1, os.environ['PATIENTDIR'])
     import GUI_inp_dict
     importlib.reload(GUI_inp_dict)
     from GUI_inp_dict import d
+
+    # all implicit parameters (not controlled in OSS-DBS GUI) should be passed like this
+    with open(os.environ['PATIENTDIR'] + '/Lead_DBS_input.json', 'r') as fp:
+        lead_dict = json.load(fp)
+    fp.close()
+    # IMPORTANT: do not just update the dictionary, some parameters are explicitly changed upstream
+    d['stretch'] = lead_dict['stretch']
+    logging.critical('Electrode array stretch: {}'.format(d['stretch']))
+    d['StimSets'] = lead_dict['StimSets']
+
+    log_file = open(os.environ['PATIENTDIR']+'/log_file_hemi_' + str(d["Stim_side"]) + '.log', 'w')
 
     from Dict_corrector import rearrange_Inp_dict
     d=rearrange_Inp_dict(d)             #misc. transformation of parameters to the platform's format
     d.update(master_dict)               #modifies the user provided input dictionary (e.g. for UQ study), check run_master_study() function . Warning: this does not work update the encap. layer properties and the solver during adaptive mesh refiment, because these data are realoaded from the original dictionary
 
+    # this is a block dedicated to a new module 'Optimizer'
+    # this is the internal loop of optimization (current protocol for a given position)
+    d['Optimizer'] = 0
+    if d['Optimizer'] == 1:  # run simulated annealing (no local search) from scipy on the unit current solutions, i.e., just recompute the NEURON model
+                             # but beware that the mesh is not specifically refined for all protocols
 
-    import os
-#    os.environ['PATIENTDIR'] = '/opt/Patient' # Use fixed mount path for docker
+        # just an example how it will look like (will be imported and transformed from Lead-DBS)
+        d['num_iterations'] = 5
+        d['min_bound_per_contact'] = [-0.003, -0.003, -0.003, -0.003]   # in A! same length as the electrode
+        d['max_bound_per_contact'] = [0.003, 0.003, 0.003, 0.003]  # same length as the electrode
+        d['optimal_profile'] = [0.5, 0.4, 0.3, 0.4, 0.5]    # activation rates (1.0 = 100%) as many as .mat files you have for the connectome
+                                                            # if one value, provide it still in list
 
+        # this snippet is only relevant if you have a profile, not a single .mat
+        d['profile_weighting'] = [1.0, 1.0, 1.0, 1.0, 1.0]  # weighting for pathways in the profile, not for symptoms!
+        d['similarity_metric'] = 'Canberra'  # Criterion to evaluate how similar two activation profiles are. Supported: Bray-Curtis, Canberra, Manhattan, Euclidean, Cosine
+
+        if len(d['min_bound_per_contact']) != len(d['Phi_vector']):
+            logging.critical('Error: the length of the bound vector does not match the number of contacts')
+            raise SystemExit
+
+        if d["Full_Field_IFFT"] == 1:
+            logging.critical("Optimization is yet not supported for VTA from E-field/Rattay's function")
+            raise SystemExit
+
+        d["current_control"], cc_multicontact, d["Skip_mesh_refinement"], d["external_grounding"], d["EQS_core"] = (1, 1, 1, True, "QS")
+        logging.critical("At the moment, optimization is limited to QS formulation of current-controlled mode without mesh refinement")
+        logging.critical("When running optimization, grounding is fixed to the casing (but optimization might create 'pseudo-grounding' contacts)")
+
+        d['Phi_vector'] = [1.0] * len(d['Phi_vector'])  # unit vector
+
+        # do we need an initial guess?
+
+    # This is a block dedicated to a new functionality: charge-balancing
+    d['Charge_balancing'] = False  # only required for symmetric balancing, but can be also used for low amplitude
+    if d['Charge_balancing'] == True:
+        d['Balancing_type'] = 'Symmetric' # Symmetric - Counter pulse is identical to the DBS pulse and follows right after
+                                          # Low_amplitude - always a rectangular counter pulse that has a pulse width = 1/(DBS_Freq) - DBS_pulse_width, and the amplitude is adjusted accordingly to have the same charge
 
     if d['StimSets'] == 1 and os.path.isfile(os.environ['PATIENTDIR']+'/Current_protocols_'+str(d['Stim_side'])+'.csv'):
         stim_protocols = np.genfromtxt(os.environ['PATIENTDIR']+'/Current_protocols_'+str(d['Stim_side'])+'.csv', dtype=float, delimiter=',', names=True)
         if stim_protocols.size:
             d['Current_sets']=True
             d["Skip_mesh_refinement"]=1
-            print("When testing different current set, adaptive refinement is unavailable, make sure the mesh is prerefined")
+            logging.critical("When testing different current set, adaptive refinement is unavailable, make sure the mesh is prerefined")
             d["EQS_core"]="QS"
-            print("When testing different current set, only QS formulation is currently available")
+            logging.critical("When testing different current set, only QS formulation is currently available")
             cc_multicontact=True
             d["spectrum_trunc_method"]="Octave Band Method"
-            print("When testing different current set, only Octave Band Method is currently available")
+            logging.critical("When testing different current set, only Octave Band Method is currently available")
             d['Phi_vector']=[1.0] * len(d['Phi_vector'])          # unit vector
-            print("When testing different current sets, grounding is fixed to the casing (but you can imitate grounding by assigning a value of -1.0*sum(Icontacts)) to one of the contacts")
+            logging.critical("When testing different current sets, grounding is fixed to the casing (but you can imitate grounding by assigning a value of -1.0*sum(Icontacts)) to one of the contacts")
             d["external_grounding"]=True
             d["current_control"]=1
 
             if d["Full_Field_IFFT"] == 1:
-                print("Field superposition is yet not supported for VTA from E-field/Rattay's function")
+                logging.critical("Field superposition is yet not supported for VTA from E-field/Rattay's function")
                 raise SystemExit
 
             import math
@@ -98,12 +162,12 @@ def run_full_model(master_dict):
                     if math.isnan(stim_prot[j]):
                         stim_prot[j]=None
                     elif stim_prot[j]==0.0:
-                        print('0.0 always refers to grounding in OSS-DBS. Please, type "passive" or "float" for contacts that do not deliver currents.')
+                        logging.critical('0.0 always refers to grounding in OSS-DBS. Please, type "passive" or "float" for contacts that do not deliver currents.')
                         raise SystemExit
                     else:
                         stim_prot[j]=stim_prot[j]*0.001            # Lead-DBS stores in mA
                 if len(d['Phi_vector']) != len(stim_prot):
-                    print("Current protocols do not match the number of contacts on the electrode, exiting")
+                    logging.critical("Current protocols do not match the number of contacts on the electrode, exiting")
                     raise SystemExit
                 Currents_to_check.append(stim_prot)
         else:
@@ -113,43 +177,30 @@ def run_full_model(master_dict):
 
     #=========Check the simulation setup and state, load the corresponding data=========#
 
-
-    if d["Stim_side"]==0:
-        print("Processing right hemisphere")
+    if d["Stim_side"] == 0:
+        logging.critical("Processing right hemisphere\n")
     else:
-        print("Processing left hemipshere")
+        logging.critical("Processing left hemisphere\n")
 
     if d["current_control"]==1 and d["CPE_activ"]==1:
         d["CPE_activ"]=0
-        print("Disabling CPE for current-controlled simulation")
+        logging.critical("Disabling CPE for current-controlled simulation")
 
-    Phi_vector_active_non_zero=[x for x in d["Phi_vector"] if (x is not None) and (x!=0.0)]
-    cc_multicontact=False
-    if d["current_control"]==1 and len(Phi_vector_active_non_zero)>1:       #multicontact current-controlled case
-        cc_multicontact=True
+    Phi_vector_active_non_zero = [x for x in d["Phi_vector"] if (x is not None) and (x != 0.0)]
+    cc_multicontact = False
+    if d["current_control"] == 1 and len(Phi_vector_active_non_zero) > 1:       #multicontact current-controlled case
+        cc_multicontact = True
 
     from Sim_state import check_state
     check_state(d)      #will switch the state of simulation depending on the corresp. data in the input_dictionary, will also manage project folders
 
-    if d["voxel_arr_MRI"]==0 and d["voxel_arr_DTI"]==1:
-        print("MRI data is new, the DTI data will be reprocessed")
-        d["voxel_arr_DTI"]=0
+    if d["voxel_arr_MRI"] == 0 and d["voxel_arr_DTI"] == 1:
+        logging.critical("MRI data is new, the DTI data will be reprocessed")
+        d["voxel_arr_DTI"] = 0
 
     #loading of meta data depending on the simulatation setup and state
     import os
-    if d["Init_neuron_model_ready"]==1:
-        [ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib,n_Ranvier,ROI_radius,N_segm]=np.genfromtxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_model_misc.csv', delimiter=' ')
-        param_axon=[ranvier_nodes, para1_nodes, para2_nodes, inter_nodes, ranvier_length, para1_length, para2_length, inter_length, deltax, diam_fib]
 
-        if d["Neuron_model_array_prepared"]==0:
-            with open(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_param_class.file', "rb") as f:
-                Neuron_param = pickle.load(f)
-        if d["Neuron_model_array_prepared"]==1:
-            Neuron_param=0          #not needed for a pre-defined neuron array
-            if d["Name_prepared_neuron_array"][-3:]=='.h5':
-                n_segments_fib_diam_array=np.load(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_populations_misc.npy')
-                N_segm=n_segments_fib_diam_array[:,0]
-                N_segm=N_segm.astype(int)
     if d["Init_mesh_ready"]==1:
         with open(os.environ['PATIENTDIR']+'/Meshes/Mesh_ind.file', "rb") as f:
             Domains = pickle.load(f)
@@ -191,90 +242,85 @@ def run_full_model(master_dict):
             d['gamma_array_glob']=[0]
 
 
-    if d["Init_mesh_ready"]==0:
+    if d["Init_mesh_ready"] == 0:
 
-        if d["Brain_shape_name"]==0:   #Creates a brain approximation (ellisploid)
+        if d["Brain_shape_name"] == 0:   #Creates a brain approximation (ellisploid)
             from CAD_Salome import build_brain_approx
-            x_length,y_length,z_length=build_brain_approx(d,MRI_param)      #also creates 'brain_subsitute.brep'
-            Brain_shape_name='Brain_substitute.brep'
+            x_length,y_length,z_length = build_brain_approx(d, MRI_param)      #also creates 'brain_subsitute.brep'
+            Brain_shape_name = 'Brain_substitute.brep'
 
-        if d["Brain_shape_name"]!=0:
-            Brain_shape_name=d["Brain_shape_name"]
+        if d["Brain_shape_name"] != 0:
+            Brain_shape_name = d["Brain_shape_name"]
 
         #==================Initial neuron array generation====================#
+        from Neural_array_processing import Neuron_array
+        N_array = Neuron_array(d, MRI_param)
+
         if d["Init_neuron_model_ready"]==0 and d["Neuron_model_array_prepared"]==0:
-            print("----- Creating initial neuron array -----")
+            logging.critical("----- Creating initial neuron array -----")
 
-            from Neuron_models_arangement_new import build_neuron_models
-            Neuron_param,param_axon,ROI_radius,N_segm=build_neuron_models(d,MRI_param)     #builds a pattern model, if not provided, then builds a neuron array and stores in 'Neuron_model_arrays/All_neuron_models.csv'. Also, creates corresp. meta data.
-
-        if d["Neuron_model_array_prepared"]==1 and d["Init_neuron_model_ready"]==0:
-            print("----- Creating initial neuron array from a provided neuron array -----")
-            from Neuron_models_arangement_new import create_meta_data_for_predefined_models, cut_models_by_domain
-
-            cut_models_by_domain(d,Brain_shape_name,d["Name_prepared_neuron_array"])      #to adjust the prepared neuron array to the computational domain (only for brain substitutes!)
-            ROI_radius,param_axon,N_segm=create_meta_data_for_predefined_models(d,MRI_param)  #shifts coordinates of the provided neuron array to the positive octant coord. and stores in 'Neuron_model_arrays/All_neuron_models.csv'. Also creates corresp. meta data.
-            Neuron_param=0  #This class is irrelevant if we have a full neuron array predefined
-
-        if d["Neuron_model_array_prepared"]==1 and d["Init_neuron_model_ready"]==1:
-            Neuron_param=0  #This class is irrelevant if we have a full neuron array predefined
-            print("--- Initial neuron array was loaded\n")
+            N_array.build_neuron_models() #builds a pattern model, if not provided, then builds a neuron array and stores in 'Neuron_model_arrays/All_neuron_models.csv'
+            with open(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_array_class.file', "wb") as f:
+                pickle.dump(N_array, f, pickle.HIGHEST_PROTOCOL)
+        elif d["Neuron_model_array_prepared"]==1 and d["Init_neuron_model_ready"]==0:
+            logging.critical("----- Creating initial neuron array from a provided neuron array -----")
+            N_array.process_external_array()   # adjusts the prepared neuron array to the computational domain (only for brain substitutes!), then stores the nueron array in 'Neuron_model_arrays/All_neuron_models.csv'
+            with open(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_array_class.file', "wb") as f:
+                pickle.dump(N_array, f, pickle.HIGHEST_PROTOCOL)
+        else:
+            logging.critical("--- Initial neuron array was loaded\n")
+            with open(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_array_class.file', "rb") as f:
+                N_array = pickle.load(f)
 
         #if brain substitute is used, it will be enlarged to encompass previosly defined neuron array (if necessary)
         if Brain_shape_name=='Brain_substitute.brep':
             needs_a_rebuid=0
-            if ROI_radius > (x_length/2):
-                d['Approximating_Dimensions'][0]=ROI_radius*2+0.1
-                print("increasing length along x to encompass the neuron array\n")
+            if N_array.ROI_radius > (x_length/2):
+                d['Approximating_Dimensions'][0] = N_array.ROI_radius*2+0.1
+                logging.critical("increasing length along x to encompass the neuron array\n")
                 needs_a_rebuid=1
-            if ROI_radius > (y_length/2):
-                d['Approximating_Dimensions'][1]=ROI_radius*2+0.1
-                print("increasing length along y to encompass the neuron array\n")
+            if N_array.ROI_radius > (y_length/2):
+                d['Approximating_Dimensions'][1] = N_array.ROI_radius*2+0.1
+                logging.critical("increasing length along y to encompass the neuron array\n")
                 needs_a_rebuid=1
-            if ROI_radius > (z_length/2):
-                d['Approximating_Dimensions'][2]=ROI_radius*2+0.1
-                print("increasing length along z to encompass the neuron array\n")
+            if N_array.ROI_radius > (z_length/2):
+                d['Approximating_Dimensions'][2] = N_array.ROI_radius*2+0.1
+                logging.critical("increasing length along z to encompass the neuron array\n")
                 needs_a_rebuid=1
-            if needs_a_rebuid==1:
+            if needs_a_rebuid == 1:
                 x_length,y_length,z_length=build_brain_approx(d,MRI_param)      #also creates 'brain_subsitute.brep'
-                print("\n")
-            if ROI_radius > min((x_length/2),(y_length/2),(z_length/2)):
-                print("ROI_radius: ",ROI_radius)
-                print("ROI is still bigger than the computational domain.")
+                logging.critical("\n")
+            if N_array.ROI_radius > min((x_length/2),(y_length/2),(z_length/2)):
+                logging.critical("ROI_radius: ", N_array.ROI_radius)
+                logging.critical("ROI is still bigger than the computational domain.")
                 raise SystemExit
 
         #===================Final geometry generation=========================#
         from CAD_Salome import build_final_geometry
-        Domains=build_final_geometry(d,MRI_param,Brain_shape_name,ROI_radius,cc_multicontact)       #creates and discretizes the geometry with the implanted electrode, encapsulation layer and ROI, converts to the approp. format. The files are stored in Meshes/
+        Domains = build_final_geometry(d,MRI_param,Brain_shape_name,N_array.ROI_radius,cc_multicontact)       #creates and discretizes the geometry with the implanted electrode, encapsulation layer and ROI, converts to the approp. format. The files are stored in Meshes/
 
     #===============Adjusting neuron array====================================#
 
-    if d["Adjusted_neuron_model_ready"]==0:
-        from Neuron_models_arangement_new import adjust_neuron_models
-        N_models=adjust_neuron_models(d,MRI_param,Domains,Neuron_param,param_axon)       #subtracts neurons from the previously define All_neuron_models.csv, if the are non-physical (inside encap. layer or CSF, outside of the domain, intersect with the electrode geometry.)
+    if d["Adjusted_neuron_model_ready"] == 0:
+
+        if d["Init_mesh_ready"]==1:
+            with open(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_array_class.file', "rb") as f:
+                N_array = pickle.load(f)
+
+        # subtracts neurons from the previously define All_neuron_models.csv, if the are non-physical (inside encap. layer or CSF, outside of the domain, intersect with the electrode geometry.)
+        N_array.adjust_neuron_models(Domains, MRI_param)
+        with open(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_array_class.file', "wb") as f:
+            pickle.dump(N_array, f, pickle.HIGHEST_PROTOCOL)
     else:
-        if d["Neuron_model_array_prepared"]==1:
-            if d["Name_prepared_neuron_array"][-3:]=='.h5':     #if imported with h5
-                N_models = np.genfromtxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Adjusted_neuron_array_info.csv', delimiter=' ')
-                N_models=N_models.astype(int)
-            else:
-                N_models,points_csf,points_encap_and_float_contacts,points_outside=np.genfromtxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Adjusted_neuron_array_info.csv', delimiter=' ')
-                N_models=int(N_models)
-        else:
-            N_models,points_csf,points_encap_and_float_contacts,points_outside=np.genfromtxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Adjusted_neuron_array_info.csv', delimiter=' ')
-            N_models=int(N_models)
-        print("--- Neuron array meta data were loaded\n")
+        logging.critical("--- Adjusted neuron array was loaded\n")
+        with open(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_array_class.file', "rb") as f:
+            N_array = pickle.load(f)
 
-    number_of_points=int(np.sum(N_segm*N_models))
+    number_of_points = int(np.sum(N_array.pattern['num_segments'] * N_array.N_models))
 
-    #subprocess.call('python Paraview_InitMesh_and_Neurons.py', shell=True)
-    #if d['Show_paraview_screenshots']==1:
-    #    subprocess.call('xdg-open os.environ['PATIENTDIR']+"/Images/InitMesh_and_Neurons.png"',shell=True)
 
-    #IFFT_on_VTA_array = 1
     if d["Full_Field_IFFT"] == 1:       # rename later
-    #if IFFT_on_VTA_array == 1:
-        #if we create internally
+
         from VTA_from_array import create_VTA_array,resave_as_verts,get_VTA
         VTA_edge,VTA_full_name,VTA_resolution= create_VTA_array(d['x_seed'],d['y_seed'],d['z_seed'],d['Electrode_type'])
         arrays_shape = resave_as_verts(VTA_full_name)
@@ -288,6 +334,8 @@ def run_full_model(master_dict):
     with open(os.environ['PATIENTDIR']+'/Meshes/Mesh_ind.file', "wb") as f:
         pickle.dump(Domains, f, pickle.HIGHEST_PROTOCOL)
 
+
+    #logging.critical('Domains fi: ',Domains.fi)
     if d["current_control"]==1 and cc_multicontact==False:     #if multicontact, then it will be scaled in parallel comp.
         A=max(Domains.fi[:], key=abs)
         Phi_max=1      #not needed
@@ -296,7 +344,7 @@ def run_full_model(master_dict):
         Phi_max=max(Domains.fi[:], key=abs)
 
     if d["signal_generation_ready"]==0:
-        print("----- Generating DBS signal -----")
+        logging.critical("----- Generating DBS signal -----")
 
         from Signal_generator import generate_signal
         [t_vector,signal_out,Xs_signal_norm,FR_vector_signal]=generate_signal(d,A,Phi_max,cc_multicontact)
@@ -309,7 +357,7 @@ def run_full_model(master_dict):
         np.savetxt(os.environ['PATIENTDIR']+'/Stim_Signal/t_vector.csv', t_vector, delimiter=" ")
         np.savetxt(os.environ['PATIENTDIR']+'/Stim_Signal/FR_vector_signal.csv', FR_vector_signal, delimiter=" ")
     else:
-        print("--- DBS signal is taken from the previous simulation\n")
+        logging.critical("--- DBS signal is taken from the previous simulation\n")
         Xs_recovered = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Xs_storage_full.csv', delimiter=' ')
         Xs_signal_norm=np.vectorize(complex)(Xs_recovered[:,0],Xs_recovered[:,1])
         FR_vector_signal = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/FR_vector_signal.csv', delimiter=' ')
@@ -330,7 +378,7 @@ def run_full_model(master_dict):
         Dummy_CSF()         #will resave 'Meshes/Mesh_unref.xml' as 'Results_adaptive/mesh_adapt.xml.gz' and the same for subdomains and boundaries
         d["CSF_mesh_ready"]=1
         d["Adapted_mesh_ready"]=1
-        print("CSF and adaptive mesh refinement was skipped\n")
+        logging.critical("CSF and adaptive mesh refinement was skipped\n")
     else:
         #from Signal_generator import pick_refinement_freqs
         if d["refinement_frequency"][0]==-1:   # frequencies basing on the power spectrum distribution
@@ -368,81 +416,104 @@ def run_full_model(master_dict):
 
 #==========Calculate freq in parallel and rearrange field array===============#
 
-    if d['Current_sets']==True:
+    if d['Current_sets'] == True or d['Optimizer'] == 1:
 
         if d["Parallel_comp_ready"]==0:
 
             if ["Parallel_comp_interrupted"]==1:
                 import os
-                if not (os.path.isfile(os.environ['PATIENTDIR']+'Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile(os.environ['PATIENTDIR']+'Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations
-                    print("There were no previous computations, 'Parallel_comp_interrupted' is put to 0")
-                    ["Parallel_comp_interrupted"]==0
+                if not (os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile(os.environ['PATIENTDIR']+'Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations
+                    logging.critical("There were no previous computations, 'Parallel_comp_interrupted' is put to 0")
+                    ["Parallel_comp_interrupted"] == 0
 
             from Parallel_unit_current_calc import calculate_in_parallel
             '''calculate_in_parallel will save a sorted_solution array if IFFT is pointwise or will save the whole field for each frequency in Field_solutions_functions/ if full_IFFT is requested'''
 
             if d["spectrum_trunc_method"]=='No Truncation':
-                print("----- Calculating electric field in the frequency spectrum -----")
+                logging.critical("----- Calculating electric field in the frequency spectrum -----")
                 calculate_in_parallel(d,FR_vector_signal,Domains,MRI_param,DTI_param,anisotrop,number_of_points,cc_multicontact)
 
             if d["spectrum_trunc_method"]=='High Amplitude Method' or d["spectrum_trunc_method"]=='Cutoff Method' or d["spectrum_trunc_method"]=='Octave Band Method':
-                print("----- Calculating electric field in the truncated frequency spectrum -----")
+                logging.critical("----- Calculating electric field in the truncated frequency spectrum -----")
                 calculate_in_parallel(d,FR_vector_signal_new,Domains,MRI_param,DTI_param,anisotrop,number_of_points,cc_multicontact)
         else:
-            print("--- Results of calculations in the frequency spectrum were loaded\n")
+            logging.critical("--- Results of calculations in the frequency spectrum were loaded\n")
 
         if d["spectrum_trunc_method"]=='No Truncation':
             name_sorted_solution=os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution_per_contact.csv'
         else:
             name_sorted_solution=os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution_per_contact_'+str(d["spectrum_trunc_method"])+'_'+str(d["trunc_param"])+'.csv'
 
+        d['number_of_processors'] = d['number_of_processors'] * 2  # use multithreading
+        logging.critical("Switching to multithreading")
+
+        if d["IFFT_ready"] == 0 and d["Full_Field_IFFT"] != 1:
+
+            if os.path.isdir(os.environ['PATIENTDIR']+'/Axons_in_time'):     # we always re-run NEURON simulation
+                os.system('rm -fr '+os.environ['PATIENTDIR']+'/Axons_in_time')
+                os.makedirs(os.environ['PATIENTDIR']+'/Axons_in_time')
+
+            from Current_scaler import conduct_unit_IFFT
+            conduct_unit_IFFT(d, Xs_signal_norm, N_array.N_models,N_array.pattern['num_segments'], FR_vector_signal, t_vector, name_sorted_solution,
+                              inx_start_octv)
+
+        if d["Full_Field_IFFT"] == 1:       # rename later
+            N_array.pattern['num_segments'] = arrays_shape
+            logging.critical('VTA approximation for current sets/optimization has to be enabled, contact the developers')
+        else:
+            VTA_parameters=0
 
 
-        if d["IFFT_ready"] == 0:
-            from Current_scaler import find_activation
-            #Currents_to_check=[[None,None,-0.001,None,None,None,None,None],[None,-0.001,None,None,None,0.001,None,None]]
-            #Currents_to_check=[[None,0.002,None,None,None,None,None,None],[None,-0.001,None,0.002,None,-0.001,None,None]]
-
-            if d["Full_Field_IFFT"] == 1:       # rename later
-                N_segm=arrays_shape
-            else:
-                VTA_parameters=0
-
-            it_num=0
+        if d['Current_sets'] == True:
+            it_num = 0
             for current_comb in Currents_to_check:
-                Activation=find_activation(current_comb,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,it_num,VTA_param=VTA_parameters)
-                it_num+=1
+                from Current_scaler import find_activation
+                Activation=find_activation(current_comb,d,Xs_signal_norm,N_array.N_models,N_array.pattern['num_segments'],FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,it_num,VTA_param=VTA_parameters)
+                it_num += 1
+        elif d['Optimizer'] == 1:
+            logging.critical('Running optimization of current protocol')
+            from scipy.optimize import dual_annealing
+            from Current_scaler import compute_similarity
 
+            args_all = [d, Xs_signal_norm, N_array.N_models,
+                        N_array.pattern['num_segments'], FR_vector_signal, t_vector, A, name_sorted_solution,
+                        inx_start_octv]
+            if os.path.isfile(os.environ['PATIENTDIR']+'/Best_scaling_yet.csv'):
+                initial_scaling = np.genfromtxt(os.environ['PATIENTDIR']+'/Best_scaling_yet.csv', delimiter = ' ')
+                res = dual_annealing(compute_similarity,bounds=list(zip(d['min_bound_per_contact'],d['max_bound_per_contact'])), args = args_all, x0 = initial_scaling, maxfun = d['num_iterations'], seed = 42, visit = 2.62, no_local_search = True)
+            else:
+                res = dual_annealing(compute_similarity,bounds=list(zip(d['min_bound_per_contact'],d['max_bound_per_contact'])), args = args_all, maxfun = d['num_iterations'], seed = 42, visit = 2.62, no_local_search = True)
 
-        if d["Stim_side"]==0:
+            # if you have outer loop for electrode placement optimization, you would want to compare res.fun against the previous best solution here
+            np.savetxt(os.environ['PATIENTDIR']+'Best_scaling_yet.csv', res.x, delimiter = ' ')
+            opt_res = np.append(res.x,res.fun)
+            logging.critical("Current optimization results: {}".format(' '.join(map(str, list(opt_res)))))
+
+        if d["Stim_side"] == 0:
             subprocess.call(['touch', os.environ['PATIENTDIR']+'/success_rh.txt'])
         else:
             subprocess.call(['touch', os.environ['PATIENTDIR']+'/success_lh.txt'])
 
         return True
 
-
-
-
-
-    if d["Parallel_comp_ready"]==0:
-        if ["Parallel_comp_interrupted"]==1:
+    if d["Parallel_comp_ready"] == 0:
+        if ["Parallel_comp_interrupted"] == 1:
             if not (os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_scaled_'+str(d["freq"])+'Hz.pvd') or os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_unscaled_'+str(d["freq"])+'Hz.pvd')):     #to make sure that there were interrupted computations
-                print("There were no previous computations, 'Parallel_comp_interrupted' is put to 0")
-                ["Parallel_comp_interrupted"]==0
+                logging.critical("There were no previous computations, 'Parallel_comp_interrupted' is put to 0")
+                ["Parallel_comp_interrupted"] == 0
 
         from Parallel_field_calc import calculate_in_parallel
         '''calculate_in_parallel will save a sorted_solution array if IFFT is pointwise or will save the whole field for each frequency in Field_solutions_functions/ if full_IFFT is requested'''
 
         if d["spectrum_trunc_method"]=='No Truncation':
-            print("----- Calculating electric field in the frequency spectrum -----")
+            logging.critical("----- Calculating electric field in the frequency spectrum -----")
             calculate_in_parallel(d,FR_vector_signal,Domains,MRI_param,DTI_param,anisotrop,number_of_points,cc_multicontact)
 
         if d["spectrum_trunc_method"]=='High Amplitude Method' or d["spectrum_trunc_method"]=='Cutoff Method' or d["spectrum_trunc_method"]=='Octave Band Method':
-            print("----- Calculating electric field in the truncated frequency spectrum -----")
+            logging.critical("----- Calculating electric field in the truncated frequency spectrum -----")
             calculate_in_parallel(d,FR_vector_signal_new,Domains,MRI_param,DTI_param,anisotrop,number_of_points,cc_multicontact)
     else:
-        print("--- Results of calculations in the frequency spectrum were loaded\n")
+        logging.critical("--- Results of calculations in the frequency spectrum were loaded\n")
 
     if d["spectrum_trunc_method"]=='No Truncation':
         name_sorted_solution=os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution.csv'
@@ -463,7 +534,7 @@ def run_full_model(master_dict):
 
 #=============================Full Field IFFT=================================#
     if d["IFFT_ready"] == 1:
-        print("--- Results of IFFT (FFEM) were loaded\n")
+        logging.critical("--- Results of IFFT (FFEM) were loaded\n")
 
     #if IFFT_on_VTA_array == 1:
     if d["Full_Field_IFFT"]  == 1:
@@ -495,7 +566,7 @@ def run_full_model(master_dict):
     #         minutes=int((time.time() - start_simulation_run)/60)
     #         secnds=int(time.time() - start_simulation_run)-minutes*60
     #         total_seconds=time.time() - start_simulation_run
-    #         print("---Simulation run took ",minutes," min ",secnds," s ")
+    #         logging.critical("---Simulation run took ",minutes," min ",secnds," s ")
 
     #         return None,VTA_size
 
@@ -503,7 +574,7 @@ def run_full_model(master_dict):
 
     if d["Truncate_the_obtained_full_solution"] == 1 and d["IFFT_ready"] == 0:
         if d["spectrum_trunc_method"]=='High Amplitude Method' or d["spectrum_trunc_method"] == 'Cutoff Method':
-            print("----- Conducting IFFT truncating already obtained full solution -----")
+            logging.critical("----- Conducting IFFT truncating already obtained full solution -----")
             from Field_IFFT_on_different_axons import convolute_signal_with_field_and_compute_ifft
             if isinstance(d["n_Ranvier"],list):             #if different populations
                 last_point=0
@@ -511,17 +582,17 @@ def run_full_model(master_dict):
                 lst_population_names=list(hf.keys())
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
-                    print("in ",lst_population_names[i]," population")
-                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models[i],N_segm[i],FR_vector_signal,t_vector,A,os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution.csv',dif_axons=True,last_point=last_point)
+                    logging.critical("in {} population".format(lst_population_names[i]))
+                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_array.N_models[i],N_array.pattern['num_segments'][i],FR_vector_signal,t_vector,A,os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution.csv',dif_axons=True,last_point=last_point)
             else:
-                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution.csv')
+                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_array.N_models,N_array.pattern['num_segments'],FR_vector_signal,t_vector,A,os.environ['PATIENTDIR']+'/Field_solutions/sorted_solution.csv')
         else:
-            print("Truncation of the obtained full solution is only for high. ampl and cutoff methods")
+            logging.critical("Truncation of the obtained full solution is only for high. ampl and cutoff methods")
 
 #==============================Parall. IFFT===================================#
 
     if d["IFFT_ready"]==0 and d["Truncate_the_obtained_full_solution"]!=1:
-        print("----- Conducting signal scaling and IFFT -----")
+        logging.critical("----- Conducting signal scaling and IFFT -----")
         from Field_IFFT_on_different_axons import convolute_signal_with_field_and_compute_ifft
 
         if d["spectrum_trunc_method"]=='No Truncation':
@@ -531,10 +602,10 @@ def run_full_model(master_dict):
                 lst_population_names=list(hf.keys())
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
-                    print("in ",lst_population_names[i]," population")
-                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models[i],N_segm[i],FR_vector_signal,t_vector,A,name_sorted_solution,dif_axons=True,last_point=last_point)
+                    logging.critical("in {} population".format(lst_population_names[i]))
+                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_array.N_models[i],N_array.pattern['num_segments'][i],FR_vector_signal,t_vector,A,name_sorted_solution,dif_axons=True,last_point=last_point)
             else:
-                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution)
+                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_array.N_models,N_array.pattern['num_segments'],FR_vector_signal,t_vector,A,name_sorted_solution)
 
         if (d["spectrum_trunc_method"]=='High Amplitude Method' or d["spectrum_trunc_method"]=='Cutoff Method') and d["Truncate_the_obtained_full_solution"]==0:
             if isinstance(d["n_Ranvier"],list):             #if different populations
@@ -543,10 +614,10 @@ def run_full_model(master_dict):
                 lst_population_names=list(hf.keys())
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
-                    print("in ",lst_population_names[i]," population")
-                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm_new,N_models[i],N_segm[i],FR_vector_signal_new,t_vector,A,name_sorted_solution,dif_axons=True,last_point=last_point)
+                    logging.critical("in {} population".format(lst_population_names[i]))
+                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm_new,N_array.N_models[i],N_array.pattern['num_segments'][i],FR_vector_signal_new,t_vector,A,name_sorted_solution,dif_axons=True,last_point=last_point)
             else:
-                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm_new,N_models,N_segm,FR_vector_signal_new,t_vector,A,name_sorted_solution)
+                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm_new,N_array.N_models,N_array.pattern['num_segments'],FR_vector_signal_new,t_vector,A,name_sorted_solution)
 
         if d["spectrum_trunc_method"]=='Octave Band Method':
             if isinstance(d["n_Ranvier"],list):             #if different populations
@@ -555,10 +626,10 @@ def run_full_model(master_dict):
                 lst_population_names=list(hf.keys())
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
-                    print("in ",lst_population_names[i]," population")
-                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models[i],N_segm[i],FR_vector_signal,t_vector,A,name_sorted_solution,inx_st_oct=inx_start_octv,dif_axons=True,last_point=last_point)
+                    logging.critical("in {} population".format(lst_population_names[i]))
+                    last_point=convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_array.N_models[i],N_array.pattern['num_segments'][i],FR_vector_signal,t_vector,A,name_sorted_solution,inx_st_oct=inx_start_octv,dif_axons=True,last_point=last_point)
             else:
-                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_st_oct=inx_start_octv,dif_axons=False,last_point=0)
+                convolute_signal_with_field_and_compute_ifft(d,Xs_signal_norm,N_array.N_models,N_array.pattern['num_segments'],FR_vector_signal,t_vector,A,name_sorted_solution,inx_st_oct=inx_start_octv,dif_axons=False,last_point=0)
 
 
 
@@ -566,7 +637,7 @@ def run_full_model(master_dict):
 
     if (d["CPE_activ"]==1 or d["current_control"]==1) and cc_multicontact==False:# and d["IFFT_ready"]==0:        #modify later
         from Field_IFFT_on_different_axons import compute_Z_ifft
-        print("-----Calculating impedance over time-----\n")
+        logging.critical("----- Calculating impedance -----\n")
         if d["spectrum_trunc_method"]=='No Truncation' or d["Truncate_the_obtained_full_solution"]==1:
             Imp_in_time=compute_Z_ifft(d,Xs_signal_norm,t_vector,A)
         elif d["spectrum_trunc_method"]=='Octave Band Method':
@@ -575,16 +646,29 @@ def run_full_model(master_dict):
             Imp_in_time=compute_Z_ifft(d,Xs_signal_norm_new,t_vector,A)
 #===========================NEURON model simulation===========================#
 
-    print("----- Estimating neuron activity -----")
-    start_neuron=time.time()
+    oss_plat_cont = os.getcwd()
+
+    # we need to copy Axon_files to the patient folder to ensure stability
+    src = oss_plat_cont + "/Axon_files"
+    dst = os.environ['PATIENTDIR'] + "/Axon_files"
+
+    if os.path.isdir(dst):
+        os.chdir(os.environ['PATIENTDIR'])
+        os.system('rm -fr Axon_files')
+    os.makedirs(dst)
+
+    copytree(src, dst, symlinks=False, ignore=None)
+    os.chdir(dst)  # we now operate in Axon_files/ in the stim folder
+
+    logging.critical("----- Estimating neuron activity -----")
+    start_neuron = time.time()
 
     if d["Axon_Model_Type"] == 'McIntyre2002':
-        os.chdir("Axon_files/")
         with open(os.devnull, 'w') as FNULL: subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         from Axon_files.NEURON_direct_run import run_simulation_with_NEURON
     elif d["Axon_Model_Type"] == 'Reilly2016':
-        os.chdir("Axon_files/Reilly2016/")
+        os.chdir("Reilly2016/")
         with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         from Axon_files.Reilly2016.NEURON_Reilly2016 import run_simulation_with_NEURON
 
@@ -592,17 +676,14 @@ def run_full_model(master_dict):
         Number_of_activated=0
         last_point=0
         for i in range(len(d["n_Ranvier"])):
-            Number_of_activated_population=run_simulation_with_NEURON(last_point,i,d["diam_fib"][i],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"][i],N_models[i],d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d["Stim_side"],d["Name_prepared_neuron_array"])
+            Number_of_activated_population=run_simulation_with_NEURON(d, last_point,i,d["diam_fib"][i],d["n_Ranvier"][i],N_array.N_models[i],d["Ampl_scale"],d["number_of_processors"],d["Name_prepared_neuron_array"])
             Number_of_activated=Number_of_activated+Number_of_activated_population
-            os.chdir("Axon_files/")
-            if d["Axon_Model_Type"] == 'Reilly2016':
-                os.chdir("Reilly2016/")
-            last_point=N_segm[i]*N_models[i]+last_point
-        os.chdir("..")
-        if d["Axon_Model_Type"] == 'Reilly2016':
-            os.chdir("..")
+
+            last_point=N_array.pattern['num_segments'][i]*N_array.N_models[i]+last_point
     else:
-        Number_of_activated=run_simulation_with_NEURON(0,-1,d["diam_fib"],1000*d["t_step"],1000.0/d["freq"],d["n_Ranvier"],N_models,d["v_init"],t_vector.shape[0],d["Ampl_scale"],d["number_of_processors"],d["Stim_side"])
+        Number_of_activated = run_simulation_with_NEURON(d, 0,-1,d["diam_fib"],d["n_Ranvier"],N_array.N_models[0],d["Ampl_scale"],d["number_of_processors"])
+
+    os.chdir(oss_plat_cont)
 
     #if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
         #with open(os.devnull, 'w') as FNULL: subprocess.call('python Visualization_files/Paraview_connections_activation.py', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
@@ -615,12 +696,14 @@ def run_full_model(master_dict):
 
     minutes=int((time.time() - start_neuron)/60)
     secnds=int(time.time() - start_neuron)-minutes*60
-    print("----- NEURON calculations took ",minutes," min ",secnds," s -----\n")
+    logging.critical("----- NEURON calculations took {} min {} sec ----- \n".format(minutes, secnds))
+    #logging.critical("----- NEURON calculations took ",minutes," min ",secnds," s -----\n")
 
     minutes=int((time.time() - start_simulation_run)/60)
     secnds=int(time.time() - start_simulation_run)-minutes*60
     total_seconds=time.time() - start_simulation_run
-    print("---Simulation run took ",minutes," min ",secnds," s ")
+    logging.critical("----- Simulation run took {} min {} sec -----".format(minutes, secnds))
+    #logging.critical("---Simulation run took ",minutes," min ",secnds," s ")
 
     #home_dir=os.path.expanduser("~")
     if d["Stim_side"]==0:
@@ -655,9 +738,9 @@ def run_master_study():
         Result_diff_profiles[i,:]=run_full_model(master_dict)
 
 
-    print("Number of activated neurons, the benchmark and the profiles : ", Number_of_activated_bench,Result_diff_profiles[:,1])
-    print("Time in seconds, the benchmark and the profiles : ", total_seconds_bench,Result_diff_profiles[:,0])
-    print("Choose the best option for 'Electrode_type'. Comment out '''Computations on initial mesh generated in SALOME''' section")
+    logging.critical("Number of activated neurons, the benchmark and the profiles : ", Number_of_activated_bench,Result_diff_profiles[:,1])
+    logging.critical("Time in seconds, the benchmark and the profiles : ", total_seconds_bench,Result_diff_profiles[:,0])
+    logging.critical("Choose the best option for 'Electrode_type'. Comment out '''Computations on initial mesh generated in SALOME''' section")
 
     raise SystemExit
 
@@ -701,24 +784,38 @@ def run_master_study():
         Run_time_oct,Number_of_activated_octaves=run_full_model(master_dict)
         N_freqs_oct=N_freqs_oct+5
         if Run_time_oct>Run_time_high_ampl:
-            print("Octave method is already slower than high amplitude method., no need to continue.")
+            logging.critical("Octave method is already slower than high amplitude method., no need to continue.")
             break
 
 
     if Run_time_oct<Run_time_high_ampl and Run_time_oct<Run_time:
-        print("Octave truncation is the fastest")
+        logging.critical("Octave truncation is the fastest")
     elif Run_time_oct>Run_time_high_ampl and Run_time_high_ampl<Run_time:
-        print("High amplitude truncation is the fastest")
+        logging.critical("High amplitude truncation is the fastest")
     else:
-        print("Truncation did not accelerate the computations")
+        logging.critical("Truncation did not accelerate the computations")
 
-    print("Time for Full_run,High_ampl,Octaves: ", Run_time,Run_time_high_ampl,Run_time_oct)
-    print("Activation for Full_run,High_ampl,Octaves: ", Number_of_activated_benchmark,Number_of_activated_high_ampl,Number_of_activated_octaves)
-
-
-#run_master_study()    #in case we want to find optimal spectrum truncation method and initial mesh settings.
-
-master_dict={}          #you can implement UQ or optimization by adding a function that will create master_dict with entries to be optimized. Name of entries should be the same as in GUI_inp_dict.py
-run_full_model(master_dict)
+    logging.critical("Time for Full_run,High_ampl,Octaves: ", Run_time,Run_time_high_ampl,Run_time_oct)
+    logging.critical("Activation for Full_run,High_ampl,Octaves: ", Number_of_activated_benchmark,Number_of_activated_high_ampl,Number_of_activated_octaves)
 
 
+#master_dict = {}
+#run_full_model(master_dict)
+
+from datetime import datetime
+
+# datetime object containing current date and time
+now = datetime.now()
+date_and_time = now.strftime("%d-%m-%Y___%H-%M-%S")  # EUROPEAN format
+
+import logging
+logging.basicConfig(filename='/opt/Patient' + '/complete_log_' + date_and_time + '.log', format='[%(asctime)s]:%(message)s', level=logging.ERROR)
+
+
+logf = open("/opt/Patient/last_error.log", "w")
+
+try:
+    master_dict = {}
+    run_full_model(master_dict)
+except Exception:
+    logging.exception("Fatal error in main loop")

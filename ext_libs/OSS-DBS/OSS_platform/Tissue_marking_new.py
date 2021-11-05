@@ -1,7 +1,9 @@
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
+
 from dolfin import *
 from pandas import read_csv
-#from MRI_DTI_prep import map_MRI
-#from MRI_DTI_prep import map_DTI
 from tissue_dielectrics import DielectricProperties
 import numpy as np
 import time
@@ -18,10 +20,6 @@ def get_cellmap(mesh,subdomains_assigned,Domains,MRI_param,default_material):
     Tissue_array=np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Tissue_array_MRI.npy')
     
     affine=np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/affine_MRI.npy')
-        
-    x_vect=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/x_vector_MRI_Box.csv', delimiter=' ')
-    y_vect=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/y_vector_MRI_Box.csv', delimiter=' ')
-    z_vect=np.genfromtxt(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/z_vector_MRI_Box.csv', delimiter=' ')
 
     '''structure of voxel array'''
     '''rows: x,y,z,material index'''

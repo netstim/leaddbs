@@ -11,6 +11,8 @@ from pop_up_control.mesh_refinement import PopUpMeshRefinement
 from functionalities import Functionalities
 from temp_dict import Dictionary
 
+import json
+
 APPLICATION_STATE = False
 
 import subprocess
@@ -18,18 +20,21 @@ from threading import Thread
 
 
 class MainWindow(Functionalities):
-    def __init__(self,path_to_patient,index_side,interactive_mode,patient_folder,StimSets):
+    def __init__(self, path_to_patient, index_side, interactive_mode, patient_folder, StimSets):
         self.main_win = QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.main_win)
 
-        self.path_to_patient=path_to_patient
+        self.path_to_patient = path_to_patient
         self.patient_folder = "'" + patient_folder + "'"
-        self.index_side=int(index_side)
-        self.interactive_mode=int(interactive_mode)
-        self.StimSets=int(StimSets)
+        self.index_side = int(index_side)
+        self.interactive_mode = int(interactive_mode)
+        self.StimSets = int(StimSets)
 
+        self.oss_plat_cont = os.getcwd()
         self.rel_folder = self.rel_folder()
+
+        os.makedirs(self.path_to_patient + '/subdicts',exist_ok=True)
 
         # Add stylesheet
         self.stylesheet_filename = '{}/UX/dark.qss'.format(self.rel_folder)
@@ -38,10 +43,10 @@ class MainWindow(Functionalities):
         self.current_file_name = " "
 
         # call classes
-        self.externalNeuronArray = PopUpExternalNeuronArray(self.main_win)
-        self.meshRefinement = PopUpMeshRefinement(self.main_win)
-        self.cpeActive = PopUpCPEActive(self.main_win)
-        self.fullFieldIFFT = PopUpFullFieldIFFT(self.main_win)
+        self.externalNeuronArray = PopUpExternalNeuronArray(self.main_win, self.path_to_patient)
+        self.meshRefinement = PopUpMeshRefinement(self.main_win, self.path_to_patient)
+        self.cpeActive = PopUpCPEActive(self.main_win, self.path_to_patient)
+        self.fullFieldIFFT = PopUpFullFieldIFFT(self.main_win, self.path_to_patient)
 
         # Initializations
         # Extra Widget Group Show/Hide state
@@ -141,7 +146,7 @@ class MainWindow(Functionalities):
                                                           self.ui.widget_Approximating_Dimensions_3))
         self.ui.checkBox_Dimensions_From_MRI.stateChanged.connect(
             lambda: self.ui.lineEdit_Approximating_Dimensions.setText('0'))
-        
+
         self.ui.checkBox_Approx_Geom_Centered_On_MRI.stateChanged.connect(
             lambda: self.hide_menu_item_on_checkbox_click(self.ui.checkBox_Approx_Geom_Centered_On_MRI,
                                                           self.ui.widget_Approx_Geometry_Center))
@@ -172,33 +177,33 @@ class MainWindow(Functionalities):
         self.load_last_save_state()
 
         # modify me!!!!!!!!!!!!!!
-        self.dict_list = ["pop_up_control/dictionaries/dict_cpe_active.py",
-                          "pop_up_control/dictionaries/dict_external_neuron_array.py",
-                          "pop_up_control/dictionaries/dict_full_field_ifft.py",
-                          "pop_up_control/dictionaries/dict_mesh_refinement.py"]
+        self.dict_list = ["/subdicts/dict_cpe_active.py",
+                          "/subdicts/dict_external_neuron_array.py",
+                          "/subdicts/dict_full_field_ifft.py",
+                          "/subdicts/dict_mesh_refinement.py"]
 
         # Display Images
         self.ui.pushButton_Placed_Neurons.clicked.connect(lambda: self.display(self.ui.label_Image_Placed_Neurons,
-                                                                               self.path_to_patient+'/Images/Axon_connections.png',
-                                                                               self.path_to_patient+'/Images/Placed_neurons.png'))
+                                                                               self.path_to_patient + '/Images/Axon_connections.png',
+                                                                               self.path_to_patient + '/Images/Placed_neurons.png'))
 
         self.ui.pushButton_Signal_Recovered.clicked.connect(lambda: self.display(self.ui.label_Image_Signal_Recovered,
-                                                                                 self.path_to_patient+'/Images/Signal_recovered_shape.png',
-                                                                                 self.path_to_patient+'/Images/Signal_recovered_shape.png'))
+                                                                                 self.path_to_patient + '/Images/Signal_recovered_shape.png',
+                                                                                 self.path_to_patient + '/Images/Signal_recovered_shape.png'))
         self.ui.pushButton_CSF_Full_Refinement.clicked.connect(
             lambda: self.display(self.ui.label_Image_CSF_Full_Refinement,
-                                 self.path_to_patient+'/Images/CSF_full_refinement.png',
-                                 self.path_to_patient+'/Images/CSF_full_refinement.png'))
+                                 self.path_to_patient + '/Images/CSF_full_refinement.png',
+                                 self.path_to_patient + '/Images/CSF_full_refinement.png'))
         self.ui.pushButton_Adapted_Mesh.clicked.connect(lambda: self.display(self.ui.label_Image_Adapted_Mesh,
-                                                                             self.path_to_patient+'/Images/Adapted_mesh.png',
-                                                                             self.path_to_patient+'/Images/Adapted_mesh.png'))
+                                                                             self.path_to_patient + '/Images/Adapted_mesh.png',
+                                                                             self.path_to_patient + '/Images/Adapted_mesh.png'))
         self.ui.pushButton_Signal_Convoluted_1st_Point.clicked.connect(
             lambda: self.display(self.ui.label_Image_Signal_Convoluted_1st_Point,
-                                 self.path_to_patient+'/Images/Signal_convoluted_1st_point.png',
-                                 self.path_to_patient+'/Images/Signal_convoluted_1st_point.png'))
+                                 self.path_to_patient + '/Images/Signal_convoluted_1st_point.png',
+                                 self.path_to_patient + '/Images/Signal_convoluted_1st_point.png'))
         self.ui.pushButton_Axon_Activation.clicked.connect(lambda: self.display(self.ui.label_Image_Axon_Activation,
-                                                                                self.path_to_patient+'/Images/Axon_activation.png',
-                                                                                self.path_to_patient+'/Images/Activated_neurons.png'))
+                                                                                self.path_to_patient + '/Images/Axon_activation.png',
+                                                                                self.path_to_patient + '/Images/Activated_neurons.png'))
 
         # Load/Save/Reset/Run to dictionary
         self.ui.pushButton_Run.clicked.connect(lambda: self.dict_write(self.output_dict(), self.current_file_name))
@@ -212,14 +217,14 @@ class MainWindow(Functionalities):
     def show(self):
         self.main_win.show()
         if not self.interactive_mode:
-            self.save_as(os.path.join(os.path.abspath(os.getcwd()),'GUI_inp_dict.py'))
+            self.save_as(os.path.join(self.path_to_patient, 'GUI_inp_dict.py'))
             self.run_thread()
 
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
-        #put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
-        dir_code=os.path.dirname(os.getcwd()) # OSS-DBS folder to be mount, NOT OSS_platform folder
-        if sys.platform=='linux':
+        # put a command for the "Run" button in the GUI. The command depends on whether you use Docker or not. In the former case, you have two different options: as a sudo user or not. Check the tutorial.
+        dir_code = os.path.dirname(os.getcwd())  # OSS-DBS folder to be mount, NOT OSS_platform folder
+        if sys.platform == 'linux':
             if os.environ.get('SINGULARITY_NAME'):
                 output = subprocess.run(['python3', 'Launcher_OSS_lite.py'])
             else:
@@ -227,52 +232,52 @@ class MainWindow(Functionalities):
                     ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
                      '--volume', self.path_to_patient + ':/opt/Patient',
                      '-it', '--rm', 'custom_oss-dbs', 'python3', 'Launcher_OSS_lite.py'])  #
-        elif sys.platform == 'darwin' or sys.platform=='win32':
+        elif sys.platform == 'darwin' or sys.platform == 'win32':
             output = subprocess.run(
                 ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
-                '--volume', self.path_to_patient + ':/opt/Patient',
-                '-it', '--rm', 'ningfei/oss-dbs', 'python3', 'Launcher_OSS_lite.py'])
+                 '--volume', self.path_to_patient + ':/opt/Patient',
+                 '-it', '--rm', 'ningfei/oss-dbs', 'python3', 'Launcher_OSS_lite.py'])
         else:
             print("The system's OS does not support OSS-DBS")
             raise SystemExit
 
         # does not work on macOS
-        #out2 = subprocess.run(['docker','logs','OSS_container'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #
-        #stdout_as_str = out2.stdout.decode("utf-8")
+        # out2 = subprocess.run(['docker','logs','OSS_container'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  #
+        # stdout_as_str = out2.stdout.decode("utf-8")
 
-        #text_file = open(self.path_to_patient+"/Docker_log.txt", "wt")
-        #n = text_file.write(stdout_as_str)
-        #text_file.close()
+        # text_file = open(self.path_to_patient+"/Docker_log.txt", "wt")
+        # n = text_file.write(stdout_as_str)
+        # text_file.close()
 
-        #print(output.returncode)
+        # print(output.returncode)
 
-        #if not os.path.exists(self.path_to_patient+'/success.txt'):
+        # if not os.path.exists(self.path_to_patient+'/success.txt'):
         #    subprocess.call(['touch', self.path_to_patient+'/fail.txt'])
         #    print("Error occurred, check the terminal")
-        #else:
+        # else:
         #    print("Simulation is completed")
         #    self.closeWindow()
 
-        if self.index_side==0:
-            if not os.path.exists(self.path_to_patient+'/success_rh.txt'):
-                subprocess.call(['touch', self.path_to_patient+'/fail_rh.txt'])
-                print("Error occurred when simulating rh, check the terminal")
+        if self.index_side == 0:
+            if not os.path.exists(self.path_to_patient + '/success_rh.txt'):
+                subprocess.call(['touch', self.path_to_patient + '/fail_rh.txt'])
+                print("Error occurred when simulating rh, check the log file in the stim folder")
             else:
                 print("Simulation is completed")
         else:
-            if not os.path.exists(self.path_to_patient+'/success_lh.txt'):
-                subprocess.call(['touch', self.path_to_patient+'/fail_lh.txt'])
-                print("Error occurred when simulating lh, check the terminal")
+            if not os.path.exists(self.path_to_patient + '/success_lh.txt'):
+                subprocess.call(['touch', self.path_to_patient + '/fail_lh.txt'])
+                print("Error occurred when simulating lh, check the log file in the stim folder")
             else:
                 print("Simulation is completed")
 
         self.closeWindow()
         # the commands below work only with a properly installed Paraview (supporting from paraview.simple import *)
 
-        #print(self.path_to_patient)
-        #prepare screenshots
-        #we need to insert the correct path here (use the already written python scripts)
-        #with open(os.devnull, 'w') as FNULL: subprocess.call(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient], shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+        # print(self.path_to_patient)
+        # prepare screenshots
+        # we need to insert the correct path here (use the already written python scripts)
+        # with open(os.devnull, 'w') as FNULL: subprocess.call(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient], shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
         # try:
         #     subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
@@ -287,17 +292,16 @@ class MainWindow(Functionalities):
         # subprocess.run(['python','Visualization_files/Paraview_CSFref.py',self.path_to_patient])
         # subprocess.run(['python','Visualization_files/Paraview_adapted.py',self.path_to_patient])
 
-        #subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
+        # subprocess.run(['python','Visualization_files/Paraview_csv_neurons.py',self.path_to_patient])
 
-        #subprocess.run(['xterm','-hold','-e','ls'])
-        #command_to_run='gnome-terminal -- bash -c "python3 Launcher_OSS_lite.py && read"'
-        #command_to_run='xterm -hold -e python3 Launcher_OSS_lite.py'
-        #subprocess.run(['xterm','-hold','-e','python3','Launcher_OSS_lite.py'])
-        #subprocess.run(['gnome-terminal','--execute','python3', 'Launcher_OSS_lite.py'])#
-        #substitute tilda
-        #subprocess.run([
+        # subprocess.run(['xterm','-hold','-e','ls'])
+        # command_to_run='gnome-terminal -- bash -c "python3 Launcher_OSS_lite.py && read"'
+        # command_to_run='xterm -hold -e python3 Launcher_OSS_lite.py'
+        # subprocess.run(['xterm','-hold','-e','python3','Launcher_OSS_lite.py'])
+        # subprocess.run(['gnome-terminal','--execute','python3', 'Launcher_OSS_lite.py'])#
+        # substitute tilda
+        # subprocess.run([
         """add the command you use to run OSS-DBS here (as shown above)"""
-
 
     def run_thread(self):
         t = Thread(target=self.run_command)
@@ -440,7 +444,6 @@ class MainWindow(Functionalities):
         output_dict = Dictionary(self).output_dict()
         output_dict['patient_folder'] = self.patient_folder
         output_dict['Stim_side'] = self.index_side
-        output_dict['stretch'] = self.stretch
         output_dict['StimSets'] = self.StimSets
 
         # # concatenate various dictionaries
@@ -456,7 +459,7 @@ class MainWindow(Functionalities):
         if os.path.isabs(filename):
             pass
         else:
-            filename = '{}/{}'.format(self.rel_folder, filename)
+            filename = '{}/{}'.format(self.path_to_patient, filename)
 
         if " " in filename or "default_dict.py" in filename or "last_save.py" in filename:
             self.save_as()
@@ -469,15 +472,25 @@ class MainWindow(Functionalities):
                     test_dict.write("    '{}': {},\n".format(x, output_dict[x]))
 
                 # append data from other dicts
-                for dict_filename in self.dict_list:
-                    dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
-                    with open(dict_filename, 'r') as f:
-                        content = f.read().split('{')[1].split('}')[0]
-                        test_dict.write(content.strip())
+                for i in range(len(self.dict_list)):
+                    try:
+                        with open(self.path_to_patient + self.dict_list[i], 'r') as f:
+                            content = f.read().split('{')[1].split('}')[0]
+                            test_dict.write(content.strip())
+                    except:
+                        original_dict_list = ["/dict_cpe_active.py",
+                                              "/dict_external_neuron_array.py",
+                                              "/dict_full_field_ifft.py",
+                                              "/dict_mesh_refinement.py"]
+                        with open(
+                                self.oss_plat_cont + "/GUI_tree_files/pop_up_control/dictionaries" + original_dict_list[i],
+                                'r') as f:
+                            content = f.read().split('{')[1].split('}')[0]
+                            test_dict.write(content.strip())
 
                 test_dict.write("}\n")
 
-            with open("{}/GUI_tree_files/last_save.py".format(self.rel_folder), 'w') as last_save:
+            with open(self.path_to_patient + "/last_save.py", 'w') as last_save:
                 last_save.write("d = {\n")
                 for x in output_dict:
                     last_save.write("    '{}': {},\n".format(x, output_dict[x]))
@@ -489,10 +502,13 @@ class MainWindow(Functionalities):
                 print("Setup state has been written to {}".format(filename))
 
     def save_as(self, filename=""):
+
+        os.chdir(self.path_to_patient)
+
         if filename == "":
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            filename, _ = QFileDialog.getSaveFileName(None, "Save State", "",
+            filename, _ = QFileDialog.getSaveFileName(None, "Save State", "GUI_inp_dict.py",
                                                       "All Files (*);;Text Files (*.txt)", options=options)
 
         if filename != "":
@@ -508,27 +524,40 @@ class MainWindow(Functionalities):
                         save_as_dict.write("    '{}': {},\n".format(x, self.output_dict()[x]))
 
                     # append data from other dicts
-                    for dict_filename in self.dict_list:
-                        dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
-                        with open(dict_filename, 'r') as f:
-                            content = f.read().split('{')[1].split('}')[0]
-                            save_as_dict.write(content.strip())
+
+                    # append data from other dicts
+                    for i in range(len(self.dict_list)):
+                        try:
+                            with open(self.path_to_patient + self.dict_list[i], 'r') as f:
+                                content = f.read().split('{')[1].split('}')[0]
+                                save_as_dict.write(content.strip())
+                        except:
+                            original_dict_list = ["/dict_cpe_active.py",
+                                                  "/dict_external_neuron_array.py",
+                                                  "/dict_full_field_ifft.py",
+                                                  "/dict_mesh_refinement.py"]
+                            with open(
+                                    self.oss_plat_cont + "/GUI_tree_files/pop_up_control/dictionaries" +
+                                    original_dict_list[i],
+                                    'r') as f:
+                                content = f.read().split('{')[1].split('}')[0]
+                                save_as_dict.write(content.strip())
 
                     save_as_dict.write("}\n")
 
-                with open("{}/GUI_tree_files/last_save.py".format(self.rel_folder), 'w') as last_save:
-                    last_save.write("d = {\n")
-                    for x in self.output_dict():
-                        last_save.write("    '{}': {},\n".format(x, self.output_dict()[x]))
-
-                    # append data from other dicts
-                    for dict_filename in self.dict_list:
-                        dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
-                        with open(dict_filename, 'r') as f:
-                            content = f.read().split('{')[1].split('}')[0]
-                            last_save.write(content.strip())
-
-                    last_save.write("}\n")
+                # with open("{}/GUI_tree_files/last_save.py".format(self.rel_folder), 'w') as last_save:
+                #     last_save.write("d = {\n")
+                #     for x in self.output_dict():
+                #         last_save.write("    '{}': {},\n".format(x, self.output_dict()[x]))
+                #
+                #     # append data from other dicts
+                #     for dict_filename in self.dict_list:
+                #         dict_filename = '{}/{}'.format(self.rel_folder, dict_filename)
+                #         with open(dict_filename, 'r') as f:
+                #             content = f.read().split('{')[1].split('}')[0]
+                #             last_save.write(content.strip())
+                #
+                #     last_save.write("}\n")
 
                 if self.interactive_mode:
                     self.info("Run", "Setup state has been written to {}.".format(filename))
@@ -536,14 +565,15 @@ class MainWindow(Functionalities):
                     print("Setup state has been written to {}".format(filename))
                 self.set_current_file_name(filename)
 
+        os.chdir(self.oss_plat_cont)
+
     def set_load_state(self, d):
-        self.stretch=d['stretch']
 
         # default choice of processors
-        if sys.platform=='linux':
-            physical_cores=os.popen("""lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l""").read()[:-1]
-            d['number_of_processors']=int(int(physical_cores)*0.5)     # leave some
-            print("Number of cores drawn by default: ",d['number_of_processors'])
+        if sys.platform == 'linux':
+            physical_cores = os.popen("""lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l""").read()[:-1]
+            d['number_of_processors'] = int(int(physical_cores) * 0.5)  # leave some
+            print("Number of cores drawn by default: ", d['number_of_processors'])
         else:
             print("All cores available for Docker will be drawn")
 
@@ -669,9 +699,11 @@ class MainWindow(Functionalities):
 
         self.ui.checkBox_Truncate_The_Obtained_Full_Solution.setCheckState(
             self.anti_corrector(d['Truncate_the_obtained_full_solution']))
-        #self.ui.checkBox_Show_Paraview_Screenshots.setCheckState(self.anti_corrector(d['Show_paraview_screenshots']))
+        # self.ui.checkBox_Show_Paraview_Screenshots.setCheckState(self.anti_corrector(d['Show_paraview_screenshots']))
 
         self.ui.checkBox_external_grounding.setCheckState(self.anti_corrector(d['external_grounding']))
+
+        os.chdir(self.oss_plat_cont)
 
         # save sub dictionaries
         self.cpeActive.saveDict()
@@ -679,7 +711,12 @@ class MainWindow(Functionalities):
         self.fullFieldIFFT.saveDict()
         self.externalNeuronArray.saveDict()
 
+        os.chdir(self.path_to_patient)
+
     def load_dict(self):
+
+        os.chdir(self.path_to_patient)
+
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
 
@@ -695,6 +732,8 @@ class MainWindow(Functionalities):
 
             self.info("Run", "{} has been loaded successfully.".format(filename))
             self.set_current_file_name(filename)
+
+        os.chdir(self.oss_plat_cont)
 
     def reset_state(self):
         filename = "{}/GUI_tree_files/default_dict.py".format(self.rel_folder)
@@ -726,32 +765,64 @@ class MainWindow(Functionalities):
                      '{}/icons/image_placeholder.png'.format(self.rel_folder), 2)
 
     def load_last_save_state(self):
+        #print('I am here', os.getcwd())
+
+        filename = "{}/GUI_tree_files/default_dict.py".format(self.rel_folder)
+
+        with open(filename, 'r') as f:
+            num = f.read().find('{')
+            f.seek(num)
+            content = f.read()
+            d = ast.literal_eval(content.strip())
+
         try:
-            filename = "{}/GUI_tree_files/default_dict.py".format(self.rel_folder)
+            filename = "GUI_inp_dict.py"
+            with open(self.path_to_patient + '/' + filename, 'r') as f:
+                num = f.read().find('{')
+                f.seek(num)
+                content = f.read()
+                d_modified = ast.literal_eval(content.strip())
+        except:
+            filename = "GUI_inp_dict_base.py"
             with open(filename, 'r') as f:
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d = ast.literal_eval(content.strip())
-                self.set_load_state(d)
-            # self.info("Run", "Last save state was loaded successfully")
-            # self.set_current_file_name(filename)
-        except AssertionError:
-            # self.info("Run", "Oopsie! There seems to have been a problem with loading the default settings")
-            pass
-        except ValueError:
-            # self.info("Run", "Oopsie! There seems to have been a problem with loading the default settings")
-            pass
+                d_modified = ast.literal_eval(content.strip())
 
-        except SyntaxError:
-            # self.info("Run", "Oopsie! There seems to be a syntax error with the last saved dictionary file.")
-            pass
+        d.update(d_modified)    # maybe te ordering of updating should be changed
 
-        except FileNotFoundError:
-            self.info("Run", "Oopsie! A default_dict.py file seems not to be found.")
-            pass
-        except:
-            self.info("Run", "Oopsie! There seems to have been a problem loading the last saved dictionary.")
+        with open(self.path_to_patient + '/Lead_DBS_input.json', 'r') as fp:
+            lead_dict = json.load(fp)
+        fp.close()
+        d.update(lead_dict)  # update from oss-dbs_parameters.mat directly for cluster version
+
+        with open(self.path_to_patient + '/Allocated_axons_parameters.json', 'r') as fp:
+            axon_dict = json.load(fp)
+        fp.close()
+        d.update(axon_dict)  # update from oss-dbs_parameters.mat directly for cluster version
+
+        self.set_load_state(d)
+        #except:
+        #    print('I am a stupid computer, I do shit')
+
+        # except AssertionError:
+        #     # self.info("Run", "Oopsie! There seems to have been a problem with loading the default settings")
+        #     pass
+        # except ValueError:
+        #     # self.info("Run", "Oopsie! There seems to have been a problem with loading the default settings")
+        #     pass
+        #
+        # except SyntaxError:
+        #     # self.info("Run", "Oopsie! There seems to be a syntax error with the last saved dictionary file.")
+        #     pass
+        #
+        # except FileNotFoundError:
+        #     self.info("Run", "Oops"
+        #                      "A default_dict.py file seems not to be found.")
+        #     pass
+        # except:
+        #     self.info("Run", "Default dictionary was loaded.")
 
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@ from pop_up_ui import pop_up_CPE_Active
 
 
 class PopUpCPEActive(Functionalities):
-    def __init__(self, parent):
+    def __init__(self, parent, patient_folder):
         self.main_win = QWidget()
         self.ui = pop_up_CPE_Active.Ui_centralwidget()
         self.ui.setupUi(self.main_win)
@@ -13,7 +13,10 @@ class PopUpCPEActive(Functionalities):
         self.mainWindow = parent
 
         # mini dictionary
-        self.filename = "{}/pop_up_control/dictionaries/dict_cpe_active.py".format(self.rel_folder())
+        #self.filename = "{}/pop_up_control/dictionaries/dict_cpe_active.py".format(self.rel_folder())
+
+        self.filename = "{}/subdicts/dict_cpe_active.py".format(patient_folder)
+
 
         # Save and cancel
         self.ui.pushButton_Save.clicked.connect(

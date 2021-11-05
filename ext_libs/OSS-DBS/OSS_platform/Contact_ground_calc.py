@@ -6,6 +6,11 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
     import h5py
+
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
+
 from dolfin import *
 from pandas import read_csv
 import numpy as np
@@ -269,8 +274,8 @@ def get_field_with_floats(external_grounding,mesh_sol,active_index,Domains,subdo
                 Phi_ROI[inx]=phi_r_sol(pnt)/J_real
 
             else:
-                print("Couldn't probe the potential at the point ",Vertices_array[inx,0],Vertices_array[inx,1],Vertices_array[inx,2])
-                print("check the neuron array, exiting....")
+                logging.critical("Couldn't probe the potential at the point {},{},{}".format (Vertices_array[inx,0],Vertices_array[inx,1],Vertices_array[inx,2]))
+                logging.critical("check the neuron array, exiting....")
                 raise SystemExit
 
 
@@ -303,12 +308,13 @@ def compute_fields_from_unit_currents(Field_calc_param,Solver_type,Vertices,Doma
 
     if Field_calc_param.element_order==1:
         if Field_calc_param.sine_freq==Field_calc_param.signal_freq:
-            print("Selected element_order (1st) is too low for current-controlled stimulation, increasing to 2nd")
+            logging.critical("Selected element_order (1st) is too low for current-controlled stimulation, increasing to 2nd")
         Field_calc_param.element_order=2
 
     if Field_calc_param.sine_freq==Field_calc_param.signal_freq:
-        print("Computing field with superposition on mesh with ",Field_calc_param.mesh.num_cells(), " elements")
-        print(len(Domains.fi)," computations are required for the iteration")
+
+        logging.critical("Computing field with superposition on mesh with {} elements".format(Field_calc_param.mesh.num_cells()))
+        logging.critical("{} computations are required for the iteration".format(len(Domains.fi)))
 
     #contacts_with_current=[x for x in Domains.fi if x != 0.0]       #0.0 are grounded contacts
     contacts_with_current=[x for x in Domains.fi if x != 0.0]       #0.0 are grounded contacts
@@ -328,7 +334,7 @@ def compute_fields_from_unit_currents(Field_calc_param,Solver_type,Vertices,Doma
     #print(len(contacts_with_current))
 
     if VTA_IFFT==1:
-        print("VTA from E-field metrics is not yet supported for current superposition mode")
+        logging.critical("VTA from E-field metrics is not yet supported for current superposition mode")
         raise SystemExit
     else:
         Solutions_on_points=np.zeros((Vertices.shape[0],len(contacts_with_current)),float)
@@ -362,7 +368,7 @@ def compute_fields_from_unit_currents(Field_calc_param,Solver_type,Vertices,Doma
     elif N_contacts==4:
         comb=np.vstack((Solutions_on_points[:,0],Solutions_on_points[:,1],Solutions_on_points[:,2],Solutions_on_points[:,3],fre_vector)).T
     else:
-        print("Electrode type is not supported or contacts were not counted correctly")    #comb=np.vstack((Solutions_on_points[:,:],fre_vector)).T
+        logging.critical("Electrode type is not supported or contacts were not counted correctly")    #comb=np.vstack((Solutions_on_points[:,:],fre_vector)).T
 
 
 

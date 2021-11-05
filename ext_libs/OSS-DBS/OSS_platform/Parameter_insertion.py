@@ -24,7 +24,8 @@ def paste_geom_dim(x_length,y_length,z_length,X_tip,Y_tip,Z_tip):
     Z_tip_line="Z_tip"
     Z_tip_input="Z_tip={}\n".format(Z_tip)            #NEURON uses ms
 
-    fl = fileinput.input(files="Brain_substitute.py", inplace=1)
+    brain_substitute_path = os.environ['PATIENTDIR']+"/Brain_substitute.py"
+    fl = fileinput.input(brain_substitute_path, inplace=1)
     for line in fl:
         if line.startswith(DX_MRI_line):
             line = DX_MRI_input
@@ -243,7 +244,7 @@ def paste_to_hoc(axonnodes,paranodes1,paranodes2,axoninter,axontotal,v_init,fibe
     #input_line="Tis_max={}\n".format(Tis_max)
 
 
-    x = fileinput.input(files="Axon_files/axon4pyfull.hoc", inplace=1)
+    x = fileinput.input(files="axon4pyfull.hoc", inplace=1)
     for line in x:
         if line.startswith(axonnodes_line):
             line = axonnodes_input

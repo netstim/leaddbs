@@ -5,6 +5,10 @@ Created on Sun Aug 19 13:23:54 2018
 @author: butenko
 """
 
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
+
 from dolfin import *
 from pandas import read_csv
 import numpy as np
@@ -15,7 +19,9 @@ from tissue_dielectrics import DielectricProperties
 
 parameters["allow_extrapolation"]=True
 parameters['linear_algebra_backend']='PETSc'
-set_log_active(False)   #turns off debugging info
+set_log_level(LogLevel.CRITICAL)
+if MPI.comm_world.rank == 0:
+  set_log_level(LogLevel.CRITICAL)
 
 
 def choose_solver_for_me(EQS_mode,float_conductors):
@@ -78,9 +84,8 @@ def get_current_density(mesh,element_order,EQS_mode,kappa,Cond_tensor,E_field_re
 
 def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
 
-
     set_log_active(False)   #turns off debugging info
-    print("_________________________")
+    logging.critical("_________________________")
     parameters['linear_algebra_backend']='PETSc'
 
     [cond_GM, perm_GM]=DielectricProperties(3).get_dielectrics(Field_calc_param.frequenc)        #3 for grey matter and so on (numeration as in voxel_data)
@@ -147,8 +152,8 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     V_space,Dirichlet_bc,ground_index,facets=get_solution_space_and_Dirichlet_BC(Field_calc_param.external_grounding,Field_calc_param.c_c,mesh_sol,subdomains,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,Domains.fi)
     #ground index refers to the ground in .med/.msh file
 
-    print("dofs: ",(max(V_space.dofmap().dofs())+1))
-    print("N of elements: ",mesh_sol.num_cells())
+    logging.critical("dofs: {}".format(max(V_space.dofmap().dofs())+1))
+    logging.critical("N of elements: {}".format(mesh_sol.num_cells()))
 
     #facets = MeshFunction('size_t',mesh_sol,2)
     #facets.set_all(0)
@@ -164,7 +169,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     phi_sol=define_variational_form_and_solve(V_space,Dirichlet_bc,kappa,Field_calc_param.EQS_mode,Cond_tensor,Solver_type)
     minutes=int((tm.time() - start_math)/60)
     secnds=int(tm.time() - start_math)-minutes*60
-    print("--- assembled and solved in ",minutes," min ",secnds," s ---")
+    logging.critical("--- assembled and solved in {} min {} sec ---".format(minutes, secnds))
 
     if Field_calc_param.EQS_mode == 'EQS':
         (phi_r_sol,phi_i_sol)=phi_sol.split(deepcopy=True)
@@ -251,12 +256,12 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     if Field_calc_param.c_c==1 or Field_calc_param.CPE==1:
 
         Z_tissue = V_across/J_ground      # Tissue impedance
-        print("Tissue impedance: ", Z_tissue)
+        logging.critical("Tissue impedance: {}".format(Z_tissue))
 
         if Field_calc_param.CPE==1:
 
             if len(Domains.fi)>2:
-                print("Currently, CPE can be used only for simulations with two contacts. Please, assign the rest to 'None'")
+                logging.critical("Currently, CPE can be used only for simulations with two contacts. Please, assign the rest to 'None'")
                 raise SystemExit
 
             from GUI_inp_dict import d as d_cpe
@@ -265,13 +270,13 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
             from FEM_in_spectrum import get_CPE_corrected_Dirichlet_BC
             Dirichlet_bc_with_CPE,total_impedance=get_CPE_corrected_Dirichlet_BC(Field_calc_param.external_grounding,facets,boundaries_sol,CPE_param,Field_calc_param.EQS_mode,Field_calc_param.frequenc,Field_calc_param.frequenc,Domains.Contacts,Domains.fi,V_across,Z_tissue,V_space)
 
-            print("Solving for an adjusted potential on contacts to account for CPE")
+            logging.critical("Solving for an adjusted potential on contacts to account for CPE")
             start_math=tm.time()
             # to solve the Laplace equation for the adjusted Dirichlet
             phi_sol_CPE=define_variational_form_and_solve(V_space,Dirichlet_bc_with_CPE,kappa,Field_calc_param.EQS_mode,Cond_tensor,Solver_type)
             minutes=int((tm.time() - start_math)/60)
             secnds=int(tm.time() - start_math)-minutes*60
-            print("--- assembled and solved in ",minutes," min ",secnds," s ")
+            logging.critical("--- assembled and solved in {} min {} sec ---".format(minutes, secnds))
             if Field_calc_param.EQS_mode=='EQS':
                 (phi_r_CPE,phi_i_CPE)=phi_sol_CPE.split(deepcopy=True)
             else:
@@ -328,13 +333,13 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
 
 
 
-                print("Solving for a scaled potential on contacts (to match the desired current)")
+                logging.critical("Solving for a scaled potential on contacts (to match the desired current)")
                 start_math=tm.time()
                 # to solve the Laplace equation for the adjusted Dirichlet
                 phi_sol_scaled=define_variational_form_and_solve(V_space,Dirichlet_bc_scaled,kappa,Field_calc_param.EQS_mode,Cond_tensor,Solver_type)
                 minutes=int((tm.time() - start_math)/60)
                 secnds=int(tm.time() - start_math)-minutes*60
-                print("--- assembled and solved in ",minutes," min ",secnds," s ---")
+                logging.critical("--- assembled and solved in {} min {} sec ---".format(minutes, secnds))
 
                 (phi_r_sol_scaled,phi_i_sol_scaled)=phi_sol_scaled.split(deepcopy=True)
 

@@ -11,11 +11,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+import logging
+
 
 #get_freqs_for_calc is the manager function (called in Launcher)
 
 def get_specific_freq(mode,freq,freq_param,FR_vector_signal,Xs_signal_norm,t_vect,signal_width):
-    print("----- Truncating the frequency spectrum -----")
+    logging.critical("----- Truncating the frequency spectrum -----")
     #solution_sort_get=read_csv('Field_solutions/sorted_solution.csv', delimiter=' ', header=None)
     #solution_sort=solution_sort_get.values
 
@@ -154,7 +156,7 @@ def get_specific_freq(mode,freq,freq_param,FR_vector_signal,Xs_signal_norm,t_vec
 
         #FR_vector_signal_new=FR_vector_signal_new.flatten()
         FR_vector_signal_new=FR_vector_signal_new[FR_vector_signal_new!=-1.0]
-        print("Number of frequencies after truncation with the octave method: ", FR_vector_signal_new.shape[0])
+        logging.critical("Number of frequencies after truncation with the octave method: {}".format(FR_vector_signal_new.shape[0]))
 
         Fr_octave_vector=np.asarray(Fr_octave_vector)
         np.savetxt(os.environ['PATIENTDIR']+'/Stim_Signal/Fr_octave_vector_'+str(freq_param*1.0)+'.csv', Fr_octave_vector, delimiter=" ")
@@ -191,14 +193,14 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         plt.stem(FR_vector_signal_new, Xs_unit, markerfmt=" ",linefmt="C1--",basefmt="C0-")      #we need to scale appropriately. Think about this image
         plt.xscale("log")
         plt.xlabel('Frequency, Hz')
+        plt.xlim(10e0, 10e6)
         #plt.ylabel('Magnitude')
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
         plt.savefig(os.environ['PATIENTDIR']+'/Images/FT_octave'+str(d["trunc_param"]*1.0)+'.eps', format='eps', dpi=1000)
 
         np.savetxt(os.environ['PATIENTDIR']+'/Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv', FR_vector_signal_new, delimiter=" ")
 
-        print('New frequency vector can be found in Stim_Signal/FR_vector_signal_octaves'+str(d["trunc_param"]*1.0)+'.csv')
-        print(" ")
+        logging.critical('New frequency vector can be found in Stim_Signal/FR_vector_signal_octaves{}\n.csv'.format(str(d["trunc_param"]*1.0)))
 
         return FR_vector_signal_new,inx_start_octv
 
@@ -213,7 +215,7 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         inx_start_octv_rslt=np.where(np.round(FR_vector_signal_new,6)==Fr_octave_vector[0])
         inx_start_octv=inx_start_octv_rslt[0][0]
 
-        print("Number of frequencies after truncation with the octave method: ", FR_vector_signal_new.shape[0])
+        logging.critical("Number of frequencies after truncation with the octave method: {}".format(FR_vector_signal_new.shape[0]))
 
         return FR_vector_signal_new,inx_start_octv
 
@@ -225,7 +227,7 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         #    np.savetxt(f_handle,FR_vector_signal_new)
         np.savetxt(os.environ['PATIENTDIR']+'/Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv', FR_vector_signal_new, delimiter=" ")
 
-        print('New frequency vector can be found in Stim_Signal/FR_vector_signal_high_ampl'+str(d["trunc_param"])+'.csv')
+        logging.critical('New frequency vector can be found in Stim_Signal/FR_vector_signal_high_ampl{}.csv\n'.format(str(d["trunc_param"])))
 
         Xs_storage_trunc=np.zeros((np.real(Xs_signal_norm_new).shape[0],2),float)
 
@@ -234,7 +236,6 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         #with open('Stim_Signal/Xs_storage_high_ampl'+str(d["trunc_param"])+'.csv','w') as f_handle:
         #    np.savetxt(f_handle,Xs_storage_trunc)
         np.savetxt(os.environ['PATIENTDIR']+'/Stim_Signal/Xs_storage_high_ampl'+str(d["trunc_param"])+'.csv', Xs_storage_trunc, delimiter=" ")
-        print(" ")
 
         return FR_vector_signal_new,Xs_signal_norm_new
 
@@ -252,7 +253,7 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         #    np.savetxt(f_handle,FR_vector_signal_new)
         np.savetxt(os.environ['PATIENTDIR']+'/Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv', FR_vector_signal_new, delimiter=" ")
 
-        print('New frequency vector can be found in Stim_Signal/FR_vector_signal_cutoff'+str(d["trunc_param"])+'.csv')
+        logging.critical('New frequency vector can be found in Stim_Signal/FR_vector_signal_cutoff{}.csv'.format(str(d["trunc_param"])))
 
         Xs_storage_trunc=np.zeros((np.real(Xs_signal_norm_new).shape[0],2),float)
 
@@ -261,7 +262,6 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         #with open('Stim_Signal/Xs_storage_cutoff'+str(d["trunc_param"])+'.csv','w') as f_handle:
         #    np.savetxt(f_handle,Xs_storage_trunc)
         np.savetxt(os.environ['PATIENTDIR']+'/Stim_Signal/Xs_storage_cutoff'+str(d["trunc_param"])+'.csv', Xs_storage_trunc, delimiter=" ")
-        print(" ")
 
         return FR_vector_signal_new,Xs_signal_norm_new
 

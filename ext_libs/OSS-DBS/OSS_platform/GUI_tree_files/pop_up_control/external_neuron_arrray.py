@@ -4,7 +4,7 @@ from pop_up_ui import pop_up_External_Neuron_Array
 
 
 class PopUpExternalNeuronArray(Functionalities):
-    def __init__(self, parent):
+    def __init__(self, parent, patient_folder):
         self.main_win = QWidget()
         self.ui = pop_up_External_Neuron_Array.Ui_centralwidget()
         self.ui.setupUi(self.main_win)
@@ -50,7 +50,8 @@ class PopUpExternalNeuronArray(Functionalities):
                                                         self.ui.lineEdit_Gamma_Array_Glob))
 
         # Save and cancel
-        self.filename = "{}/pop_up_control/dictionaries/dict_external_neuron_array.py".format(self.rel_folder)
+        #self.filename = "{}/pop_up_control/dictionaries/dict_external_neuron_array.py".format(self.rel_folder)
+        self.filename = "{}/subdicts/dict_external_neuron_array.py".format(patient_folder)
 
         self.ui.pushButton_Save.clicked.connect(
             lambda: self.saveCloseWindow(self.output_dict(), self.filename))
