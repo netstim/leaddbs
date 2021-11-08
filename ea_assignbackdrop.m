@@ -131,12 +131,12 @@ if native
     switch options.modality
         case 1 % MR
             Vtra = spm_vol(options.subj.coreg.anat.postop.ax_MRI);
-            if isfield(options.subj.coreg.anat.postop, 'cor_MRI') && ifile(options.subj.coreg.anat.postop.cor_MRI)
+            if isfield(options.subj.coreg.anat.postop, 'cor_MRI') && isfile(options.subj.coreg.anat.postop.cor_MRI)
                 Vcor = spm_vol(options.subj.coreg.anat.postop.cor_MRI);
             else
                 Vcor = Vtra;
             end
-            if isfield(options.subj.coreg.anat.postop, 'sag_MRI') && ifile(options.subj.coreg.anat.postop.sag_MRI)
+            if isfield(options.subj.coreg.anat.postop, 'sag_MRI') && isfile(options.subj.coreg.anat.postop.sag_MRI)
                 Vsag = spm_vol(options.subj.coreg.anat.postop.sag_MRI);
             else
                 Vsag = Vtra;
@@ -150,12 +150,12 @@ else
     switch options.modality
         case 1 % MR
             Vtra = spm_vol(options.subj.norm.anat.postop.ax_MRI);
-            if isfield(options.subj.norm.anat.postop, 'cor_MRI') && ifile(options.subj.norm.anat.postop.cor_MRI)
+            if isfield(options.subj.norm.anat.postop, 'cor_MRI') && isfile(options.subj.norm.anat.postop.cor_MRI)
                 Vcor = spm_vol(options.subj.norm.anat.postop.cor_MRI);
             else
                 Vcor = Vtra;
             end
-            if isfield(options.subj.norm.anat.postop, 'sag_MRI') && ifile(options.subj.norm.anat.postop.sag_MRI)
+            if isfield(options.subj.norm.anat.postop, 'sag_MRI') && isfile(options.subj.norm.anat.postop.sag_MRI)
                 Vsag = spm_vol(options.subj.norm.anat.postop.sag_MRI);
             else
                 Vsag = Vtra;
