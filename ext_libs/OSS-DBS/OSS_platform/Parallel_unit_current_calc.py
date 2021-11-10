@@ -213,6 +213,12 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
         for p in proc:
             p.join()
 
+        # check if solutions on all cores were obtained (not a perfect check, works just for the first pack)
+        for freq_i in range(j):
+            if not os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(freq_i)+'.h5'):
+                logging.critical('Not all cores returned results, check RAM consumption, exiting')
+                raise SystemExit
+
         last_completed_pack=np.asarray(freq_pack)
         np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/last_completed_pack.csv', last_completed_pack, delimiter=" ")       #to recover the last frequency of FFEM was interrupted
         if d["freq"] in freq_pack:

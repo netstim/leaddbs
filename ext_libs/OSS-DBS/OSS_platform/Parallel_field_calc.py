@@ -190,6 +190,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
 
             Sim_setup=Simulation_setup(sine_freq,d["freq"],mesh,boundaries,subdomains,cond_vector,perm_vector,d["el_order"],anisotropy,d["current_control"],DTI_tensor,d["CPE_activ"],CPE_param,d["EQS_core"],d["external_grounding"])
 
+
             if cc_multicontact==True:
                 import FEM_in_spectrum_multicontact
                 processes=mp.Process(target=FEM_in_spectrum_multicontact.solve_Laplace_multicontact,args=(Sim_setup,Solver_type,Vertices,Domains,j,Field_on_VTA,output))
@@ -205,6 +206,12 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
             p.start()
         for p in proc:
             p.join()
+
+        # check if solutions on all cores were obtained (not a perfect check, works just for the first pack)
+        for freq_i in range(j):
+            if not os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(freq_i)+'.h5'):
+                logging.critical('Not all cores returned results, check RAM consumption, exiting')
+                raise SystemExit
 
         last_completed_pack=np.asarray(freq_pack)
         np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/last_completed_pack.csv', last_completed_pack, delimiter=" ")       #to recover the last frequency of FFEM was interrupted

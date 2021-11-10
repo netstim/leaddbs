@@ -244,13 +244,11 @@ def run_full_model(master_dict):
 
     if d["Init_mesh_ready"] == 0:
 
-        if d["Brain_shape_name"] == 0:   #Creates a brain approximation (ellisploid)
+        if d["Brain_shape_name"] == 0 or d["Brain_shape_name"] == '0' or d["Brain_shape_name"] == '':   #Creates a brain approximation (ellisploid)
             from CAD_Salome import build_brain_approx
             x_length,y_length,z_length = build_brain_approx(d, MRI_param)      #also creates 'brain_subsitute.brep'
-            Brain_shape_name = 'Brain_substitute.brep'
+            d["Brain_shape_name"] = 'Brain_substitute.brep'
 
-        if d["Brain_shape_name"] != 0:
-            Brain_shape_name = d["Brain_shape_name"]
 
         #==================Initial neuron array generation====================#
         from Neural_array_processing import Neuron_array
@@ -273,7 +271,7 @@ def run_full_model(master_dict):
                 N_array = pickle.load(f)
 
         #if brain substitute is used, it will be enlarged to encompass previosly defined neuron array (if necessary)
-        if Brain_shape_name=='Brain_substitute.brep':
+        if d["Brain_shape_name"]=='Brain_substitute.brep':
             needs_a_rebuid=0
             if N_array.ROI_radius > (x_length/2):
                 d['Approximating_Dimensions'][0] = N_array.ROI_radius*2+0.1
@@ -297,7 +295,7 @@ def run_full_model(master_dict):
 
         #===================Final geometry generation=========================#
         from CAD_Salome import build_final_geometry
-        Domains = build_final_geometry(d,MRI_param,Brain_shape_name,N_array.ROI_radius,cc_multicontact)       #creates and discretizes the geometry with the implanted electrode, encapsulation layer and ROI, converts to the approp. format. The files are stored in Meshes/
+        Domains = build_final_geometry(d,MRI_param,d["Brain_shape_name"],N_array.ROI_radius,cc_multicontact)       #creates and discretizes the geometry with the implanted electrode, encapsulation layer and ROI, converts to the approp. format. The files are stored in Meshes/
 
     #===============Adjusting neuron array====================================#
 
