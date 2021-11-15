@@ -226,11 +226,6 @@ ea_storeui(handles); % save in pt folder
 
 ea_addrecent(handles, uipatdir, 'patients');
 
-% Return when BIDS dataset is not yet ready
-if ~getappdata(handles.leadfigure, 'rawImageJSONExist')
-    return;
-end
-
 % check if reconstruction is present and assign side-toggles accordingly:
 if length(uipatdir) == 1 && isfield(handles, 'side1')
     
