@@ -282,7 +282,7 @@ switch dataset.type
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
 
-            strippedConnName = regexprep(ocname, '\s|_|-|>|\([^()]+\))', '');
+            strippedConnName = regexprep(ocname, '\s|_|-|>|\([^()]+\)', '');
 
             if ~isBIDSFileName([outputfolder, seedfn{s}, '.nii'])
                 mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
