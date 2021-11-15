@@ -2,6 +2,9 @@ function json = ea_genrawimagesjson(BIDSRoot, subjId)
 % [Re-]generate rawimages json file in case it's not present in subject's
 % derivatives folder
 
+warning('off', 'backtrace');
+warning('Re-generating rawimages json file for "sub-%s" ...', subjId);
+
 rawdataFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId]);
 
 sessionFolders = flip(ea_regexpdir(rawdataFolder, '^ses-.*', 0, 'dir'));
@@ -27,3 +30,5 @@ end
 prefsFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId], 'prefs');
 ea_mkdir(prefsFolder);
 savejson('', json, fullfile(prefsFolder, ['sub-', subjId, '_desc-rawimages.json']));
+
+warning('on', 'backtrace');
