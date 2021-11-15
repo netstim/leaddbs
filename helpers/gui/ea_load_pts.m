@@ -28,9 +28,7 @@ if length(uipatdir) == 1 % Single folder
     end
     
     if ~isSubjFolder && ~isBIDSRoot
-        
         % try to find out what kind of folder structure was passed
-        
         folder_list = dir_without_dots(uipatdir{1});         % do a listing of the immediate directory first
         dcm_in_subfolder_list = dir(fullfile(uipatdir{1}, '**/*.dcm'));     % find out any .dcm files in any subdir
         raw_nifti_in_subfolder_list = {folder_list.name};
@@ -39,13 +37,13 @@ if length(uipatdir) == 1 % Single folder
         if isfile(fullfile(uipatdir{1}, 'ea_ui.mat'))
             folder_type = 'legacy_patient_folder';
             
-            % DICOM folder detected
+        % DICOM folder detected
         elseif isfolder(fullfile(uipatdir{1}, 'dicom')) ...
                 || isfolder(fullfile(uipatdir{1}, 'DICOM')) ...
                 || endsWith(uipatdir{1}, 'dicom', 'IgnoreCase',true)
             folder_type = 'patient_folder_dicom_folder';
             
-            % if DICOMDIR file inside, assume dicoms are present in one of the folders on this level
+        % if DICOMDIR file inside, assume dicoms are present in one of the folders on this level
         elseif any(strcmp('DICOMDIR', {folder_list.name}))
             mkdir(fullfile(uipatdir{1}, 'DICOM'));
             
@@ -58,7 +56,7 @@ if length(uipatdir) == 1 % Single folder
             end
             folder_type = 'patient_folder_dicom_folder';
             
-            % .dcm files are found inside one of the subfolders
+        % .dcm files are found inside one of the subfolders
         elseif ~isempty(dcm_in_subfolder_list)  %
             mkdir(fullfile(uipatdir{1}, 'DICOM'));
             
