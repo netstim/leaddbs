@@ -161,7 +161,7 @@ for s=1:length(sfile)
         [~, fname] = fileparts(sfile{s});
 
         strippedConnName = regexprep(connName, '\s|_|-|>|\([^()]+\))', '');
-        if ~isBIDSFileName
+        if ~isBIDSFileName([outputfolder, fname, '.nii'])
             mapFile = fullfile(outputfolder, [fname,'_struc_',cmd,'_',strippedConnName,'.nii']);
         else
             mapFile = setBIDSEntity([outputfolder, fname, '.nii'], 'seed', '', 'conn', strippedConnName, 'map', 'struc');
