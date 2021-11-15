@@ -44,6 +44,14 @@ classdef BIDSFetcher
             [~, subjFolderNames] = fileparts(subjDirs);
         end
 
+        function rawImages = getRawImages(obj, subjId)
+            if isfile(obj.getPrefs(subjId, 'rawimages'))
+                rawImages = loadjson(obj.getPrefs(subjId, 'rawimages'));
+            else
+                rawImages = ea_genrawimagesjson(obj.datasetDir, subjId);
+            end
+        end
+
         function LeadDBSDirs = getLeadDBSDirs(obj, subjId)
             subjDir = fullfile(obj.datasetDir, 'derivatives', 'leaddbs', ['sub-', subjId]);
             if ~isfolder(subjDir)
@@ -100,7 +108,7 @@ classdef BIDSFetcher
             end
 
             % Get raw images struct
-            rawImages = loadjson(obj.getPrefs(subjId, 'rawimages'));
+            rawImages = obj.getRawImages(subjId);
 
             % Get post-op image modalities
             modality = fieldnames(rawImages.postop.anat);
@@ -235,7 +243,7 @@ classdef BIDSFetcher
             rawDataDir = fullfile(obj.datasetDir, 'rawdata', ['sub-', subjId]);
 
             % Get raw images struct
-            rawImages = loadjson(obj.getPrefs(subjId, 'rawimages'));
+            rawImages = obj.getRawImages(subjId);
 
             % Get images and modalities
             images = fullfile(rawDataDir, 'ses-preop', 'anat', append(struct2cell(rawImages.preop.anat), obj.settings.niiFileExt));
@@ -283,7 +291,7 @@ classdef BIDSFetcher
             rawDataDir = fullfile(obj.datasetDir, 'rawdata', ['sub-', subjId]);
 
             % Get raw images struct
-            rawImages = loadjson(obj.getPrefs(subjId, 'rawimages'));
+            rawImages = obj.getRawImages(subjId);
 
             % Get images and modalities
             images = fullfile(rawDataDir, 'ses-postop', 'anat', append(struct2cell(rawImages.postop.anat), obj.settings.niiFileExt));
