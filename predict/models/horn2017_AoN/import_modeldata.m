@@ -19,7 +19,7 @@ for c=1:length(connectomes)
     for pt=pts
         [~, subPrefix] = fileparts([rootfolder,num2str(pt), '_']);
         subDir = fullfile(rootfolder,num2str(pt),'stimulations',ea_nt(options),gs,connectome);
-        connName = regexprep(connectome, '\s|_|-|>|\([^()]+\))', '');
+        connName = regexprep(connectome, '\s|_|-|>|\([^()]+\)', '');
         switch type
             case 'dMRI'
                 fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_conn-', connName, '_map-struc.nii']);
