@@ -160,7 +160,7 @@ for s=1:length(sfile)
         outputfolder=ea_getoutputfolder(sfile(s),connName);
         [~, fname] = fileparts(sfile{s});
 
-        strippedConnName = regexprep(connName, '\s|_|-|>|\([^()]+\))', '');
+        strippedConnName = regexprep(connName, '\s|_|-|>|\([^()]+\)', '');
         if ~isBIDSFileName([outputfolder, fname, '.nii'])
             mapFile = fullfile(outputfolder, [fname,'_struc_',cmd,'_',strippedConnName,'.nii']);
         else
