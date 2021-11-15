@@ -24,3 +24,7 @@ switch type
     case {'d', 'dir', 'folder'}
         list = fileparts(list(isfolder(list)));
 end
+
+if ischar(list)
+    list = {list};
+end
