@@ -240,7 +240,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     mmap.img=single(mmap.img);
     mmap.img(omaskidx)=M;
 
-    strippedConnName = regexprep(ocname, '\s|_|-|>|\([^()]+\))', '');
+    strippedConnName = regexprep(ocname, '\s|_|-|>|\([^()]+\)', '');
 
     if ~isBIDSFileName([outputfolder, seedfn{s}, '.nii'])
         mmap.fname = [outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
