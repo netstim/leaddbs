@@ -19,8 +19,8 @@ directory=[options.uivatdirs{pt},filesep];
 load(fullfile(ea_getearoot,'predict','models','horn2017_AoN','modeldata.mat'));
 
 [~, subPrefix] = fileparts([options.uivatdirs{pt}, '_']);
-fConnName = regexprep(options.predict.fMRIcon, '\s|_|-|>|\([^()]+\))', '');
-dConnName = regexprep(options.predict.dMRIcon, '\s|_|-|>|\([^()]+\))', '');
+fConnName = regexprep(options.predict.fMRIcon, '\s|_|-|>|\([^()]+\)', '');
+dConnName = regexprep(options.predict.dMRIcon, '\s|_|-|>|\([^()]+\)', '');
 fMRIMapName = [subPrefix, 'sim-binary_conn-', fConnName, '_map-funcseed_desc-AvgRFz.nii'];
 dMRIMapName = [subPrefix, 'sim-binary_conn-', dConnName, '_map-struc.nii'];
 SKdMRIMapName = [subPrefix, 'sim-binary_conn-', dConnName, '_map-struc_desc-NormSmooth.nii']; % Smoothed and normalized
