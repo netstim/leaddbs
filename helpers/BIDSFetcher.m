@@ -147,13 +147,6 @@ classdef BIDSFetcher
             subj.uiprefs = obj.getPrefs(subjId, 'uiprefs', 'mat');
             subj.methodLog = obj.getLog(subjId, 'methods');
 
-            if ~isfile(obj.getPrefs(subjId, 'rawimages'))
-                subj.rawImageJSONExist = 0;
-                return;
-            else
-                subj.rawImageJSONExist = 1;
-            end
-
             % Set pre-op anat field
             preopAnat = obj.getPreopAnat(subjId);
             preopFields = fieldnames(preopAnat);
