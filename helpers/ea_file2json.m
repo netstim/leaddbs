@@ -49,7 +49,7 @@ rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
                 end
             end
             
-            encodejson = jsonencode(json_mat);
+            encodejson = savejson(json_mat);
             json_fid = fopen(fname_out,'w');
             fprintf(json_fid,encodejson);
         elseif strcmp(filename,'ea_coregctmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
@@ -57,7 +57,7 @@ rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
           method_used = generateMethod(input_mat,'coregct_method_applied');
           modality = 'CT';
           json_mat.method.(modality) = method_used;
-          encodejson = jsonencode(json_mat);
+          encodejson = savejson(json_mat);
           json_fid = fopen(fname_out,'w');
           fprintf(json_fid,encodejson);
         elseif strcmp(filename,'ea_coregmrmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
@@ -65,7 +65,7 @@ rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
           method_used = generateMethod(input_mat,'coregmr_method_applied');
           modality = 'MR';
           json_mat.method.(modality) = method_used;
-          encodejson = jsonencode(json_mat);
+          encodejson = savejson(json_mat);
           json_fid = fopen(fname_out,'w');
           fprintf(json_fid,encodejson);
         %dealing with normalization
@@ -77,7 +77,7 @@ rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
                 json_mat.approval = 1;
                 json_mat.method = method_used;
             end
-            encodejson = jsonencode(json_mat);
+            encodejson = savejson(json_mat);
             json_fid = fopen(fname_out,'w');
             fprintf(json_fid,encodejson);
         end
