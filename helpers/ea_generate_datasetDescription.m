@@ -18,7 +18,7 @@ function ea_generate_datasetDescription(dest_filepath,flag,postop_modality)
     end
     output_file = fullfile(parent_dir,parent_file,'dataset_description.json');
     json_fid = fopen(output_file,'w');
-    encodejson = jsonencode(dataset_description);
+    encodejson = savejson(dataset_description);
     fprintf(json_fid,encodejson);
    
     if strcmp(flag,'root_folder')
