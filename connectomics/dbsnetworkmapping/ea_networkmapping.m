@@ -72,7 +72,7 @@ classdef ea_networkmapping < handle
         end
 
         function initialize(obj,datapath,resultfig)
-            D = load(datapath);
+            D = load(datapath, '-mat');
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
                 obj.leadgroup = datapath;

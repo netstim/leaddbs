@@ -75,7 +75,7 @@ classdef ea_disctract < handle
         
         function initialize(obj,datapath,resultfig)
             datapath = GetFullPath(datapath);
-            D = load(datapath);
+            D = load(datapath, '-mat');
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
                 obj.leadgroup = datapath;
