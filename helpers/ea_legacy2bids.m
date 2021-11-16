@@ -97,13 +97,32 @@ for patients = 1:length(source)
     %creates a cell of the files to move, later, we can create
     %the new dirrectory structure and move the files into the
     %correct "BIDS" directory
-    
+   
+    tag_cell = {};
+    mod_cell = {};
     files_to_move = {};
     files_in_pat_folder = dir_without_dots(source_patient);
     file_names = {files_in_pat_folder.name};
     file_index = 1;
     for j=1:length(file_names)
         if ~isdir(fullfile(source_patient,file_names{j}))
+            if ~any(regexpi(file_names{j},'(ct||tra||cor||sag)')) && any(regexpi(file_names{j},'raw_anat_.*.nii')) %we already know their tags in the case of cor,tra,sag
+                to_match = file_names{j};
+                for legacy_mod=1:length(legacy_modalities)
+                    modality_str = legacy_modalities{legacy_mod};
+                    if contains(to_match,modality_str,'IgnoreCase',true)
+                        bids_mod = rawdata_containers(modality_str);
+                        break;
+                    elseif legacy_mod == length(legacy_modalities)
+                        tmp = strsplit(modality_str,'.');
+                        bids_mod = upper(tmp(end:end-2));
+                    end
+                end
+                tag = check_acq(fullfile(source_patient,file_names{j}));
+                tag_cell{end+1} = tag;
+                mod_cell{end+1} = bids_mod;
+            end
+            %support for lead group files:
             files_to_move{file_index,1} = file_names{j};
             file_index = file_index + 1;
         end
@@ -147,7 +166,6 @@ for patients = 1:length(source)
             if ~exist(fullfile(new_path,which_pipeline),'dir')
                 mkdir(fullfile(new_path,which_pipeline))
             end
-            brainshift_path = fullfile(new_path,'brainshift');
             this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
             files_in_folder = {this_folder.name};
             for file_in_folder=1:length(files_in_folder)
@@ -155,6 +173,9 @@ for patients = 1:length(source)
                 if ismember(files_in_folder{file_in_folder},brainshift{:,1})
                     indx = cellfun(@(x)strcmp(x,files_in_folder{file_in_folder}),brainshift{:,1});
                     bids_name = brainshift{1,2}{indx};
+                    if contains(bids_name,'acqTag')
+                        bids_name = add_tag(bids_name,mod_cell,tag_cell);
+                    end
                     derivatives_cell = move_derivatives2bids(scrf_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                 end
             end
@@ -232,7 +253,9 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        
+                        if contains(bids_name,'acqTag')
+                            bids_name = add_tag(bids_name,mod_cell,tag_cell);
+                        end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         %coregistration: log, no fixed naming pattern and hence
                         %in an elseif command
@@ -256,7 +279,10 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        
+                        %replace tag in the bids name
+                        if contains(bids_name,'acqTag')
+                            bids_name = add_tag(bids_name,mod_cell,tag_cell);
+                        end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         %only for normalization
                     elseif ~isempty(regexp(files_to_move{files},'^normalize_.*.log'))
@@ -292,7 +318,9 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        
+                        if contains(bids_name,'acqTag')
+                            bids_name = add_tag(bids_name,mod_cell,tag_cell);
+                        end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         
                         
@@ -341,7 +369,9 @@ for patients = 1:length(source)
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
                         end
-                        
+                        if contains(bids_name,'acqTag')
+                            bids_name = add_tag(bids_name,mod_cell,tag_cell);
+                        end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         
                     elseif ~ismember(files_to_move{files},preprocessing{:,1}) && ~isempty(regexp(files_to_move{files},'raw_.*')) %support for other modalities in preproc
@@ -370,6 +400,8 @@ for patients = 1:length(source)
                         end
                         copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{3},'anat'));
                         movefile(fullfile(new_path,pipelines{3},'anat',files_to_move{files}),fullfile(new_path,pipelines{3},'anat',bids_name));
+                        %support for lead group files
+                    
                     end
                 end
                 for folders = 1:length(pipelines)
@@ -426,7 +458,7 @@ for patients = 1:length(source)
                 end
             otherwise
                 if doOnlyRaw
-                    raw_str = '(postop||ct)';
+                    raw_str = '(postop||ct||tra||cor||sag)';
                     tmp_preop = cellfun('isempty', regexpi(files_to_move, raw_str));
                     tmp_postop = ~cellfun('isempty', regexpi(files_to_move, raw_str));
                 else
@@ -458,13 +490,10 @@ for patients = 1:length(source)
                                             tmp = strsplit(modality_str,'.');
                                             bids_mod = upper(tmp(end:end-2));
                                         end
-                                    end
-                                    if ~any(regexpi(matching_files_preop{matching_files},'(ct||tra||cor||sag)')) %we already know their tags in the case of cor,tra,sag
-                                        tag = check_acq(fullfile(source_patient,matching_files_preop{matching_files}));
-                                        bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,'_',bids_mod,'.nii.gz'];     
-                                    else
-                                        bids_name = [patient_name,'_',sessions{j},'_',bids_mod,'.nii.gz'];
-                                    end
+                                    end  
+                                    indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
+                                    tag = tag_cell{indx};
+                                    bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,'_',bids_mod,'.nii.gz'];     
                                     %support for multiple modalities. If a
                                     %file already exists with that name (i.e., tag & mod are the same)
                                     %we rename the old file and append a
@@ -509,12 +538,8 @@ for patients = 1:length(source)
                                             bids_mod = upper(tmp(end:end-2));
                                         end
                                     end
-                                    if ~any(regexpi(matching_files_postop{matching_files},'(ct||tra||cor||sag)'))
-                                        tag = check_acq(fullfile(source_patient,matching_files_postop{matching_files}));
-                                        bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,'_',bids_mod,'.nii.gz'];
-                                    else
-                                        bids_name = [patient_name,'_',sessions{j},'_',bids_mod,'.nii.gz'];
-                                    end
+                                    bids_name = [patient_name,'_',sessions{j},'_',bids_mod,'.nii.gz'];
+                                    
                                     if exist(fullfile(new_path,bids_name),'file')
                                         new_bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,num2str(1),'_',bids_mod,'.nii.gz'];
                                         movefile(fullfile(new_path,bids_name),fullfile(new_path,new_bids_name));
@@ -572,7 +597,21 @@ for patients = 1:length(source)
     writecell(derivatives_cell,fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx'))
     disp(['Report saved at:' fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx')]);
 end
-
+%support for lead group
+[root_dir,filename,ext] = fileparts(source);
+root_files = dir_without_dots(root_dir);
+root_files = {root_files.name};
+lead_indx = find(~cellfun('isempty', regexpi(root_files, 'LEAD_groupanalysis.*.mat')));
+for indx=1:numel(lead_indx)
+    load(fullfile(root_dir,root_files{indx}))
+    lead_path = fullfile(dest,'derivatives','leadgroup',M.guid);
+    if ~exist(lead_path,'dir')
+        mkdir(lead_path)
+    end
+    bids_name = ['dataset-results_dataset_analysis-' M.guid '.mat'];
+    copyfile(fullfile(root_dir,root_files{indx}),lead_path)
+    movefile(fullfile(lead_path,root_files{indx}),fullfile(lead_path,bids_name));
+end
 toc;
 function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell)
     
@@ -745,6 +784,7 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
     preop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-preop','anat'));
     preop_files = {preop_files.name};
     for i=1:length(preop_files)
+        json_val = erase(preop_files{i},'.nii.gz');
         temp_tag = strsplit(preop_files{i},'_');
         modality_str = strsplit(temp_tag{end},'.');
         modality_str = modality_str{1};
@@ -755,12 +795,14 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
         else
             rawdata_fieldname = modality_str;
         end
-        anat_files_selected.preop.anat.(rawdata_fieldname) = preop_files{i};
+        anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
         
     end
     postop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-postop','anat'));
     postop_files = {postop_files.name};
+    
     for i=1:length(postop_files)
+        json_val = erase(postop_files{i},'.nii.gz');
         temp_tag = strsplit(postop_files{i},'_');
         modality_str = strsplit(temp_tag{end},'.');
         modality_str = modality_str{1};
@@ -771,7 +813,7 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
         else
             rawdata_fieldname = modality_str;
         end
-        anat_files_selected.postop.anat.(rawdata_fieldname) = postop_files{i};
+        anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
     end
     
 
@@ -782,19 +824,35 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
     
 function tag = check_acq(filename)
     hd_struct = ea_fslhd(filename);
-    if hd_struct.pixdim1 == hd_struct.pixdim2
-       if hd_struct.pixdim2 == hd_struct.pixdim3 %all three are equal
-            tag = 'iso';
-       elseif hd_struct.pixdim3 > hd_struct.pixdim2 %sag
-            tag = 'ax';
-       end
-    elseif hd_struct.pixdim1 > hd_struct.pixdim2
-      if hd_struct.pixdim2 == hd_struct.pixdim3 %
-        tag = 'sag';
-      end
-    elseif hd_struct.pixdim2 > hd_struct.pixdim1
-      if hd_struct.pixdim1 == hd_struct.pixdim3
-        tag = 'cor';
-      end
+    pixdim = [hd_struct.pixdim1, hd_struct.pixdim2, hd_struct.pixdim3];
+    [C,~, ic] = unique(pixdim);
+    if numel(C) == 1
+        tag = 'iso';
+    else
+        if numel(C) == 2
+            count = accumarray(ic, 1);
+            flag = find(pixdim == C(count==1));
+        else
+            multi = [pixdim(2)*pixdim(3), pixdim(1)*pixdim(3), pixdim(1)*pixdim(2)];
+            flag = find(multi == min(multi));
+        end
+        
+        switch flag
+            case 1
+                tag = 'sag';
+            case 2
+                tag = 'cor';
+            case 3
+                tag = 'ax';
+        end
     end
     return
+function bids_name = add_tag(bids_name,mod_cell,tag_cell)
+    if contains(bids_name,'acqTag') %we already know their tags in the case of cor,tra,sag
+        bids_mod = strsplit(bids_name,'_');
+        [~,bids_mod,~] = fileparts(bids_mod{end});
+        indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
+        tag = tag_cell{indx};
+        bids_name = strrep(bids_name,'acqTag',['acq-' tag]);
+    end
+return
