@@ -12,7 +12,6 @@ if ~strcmp(handles.groupdir_choosebox.String,'Choose Dataset Directory')
         case 'continue'
             projectexists=1;
     end
-    
 end
 
 if ~projectexists
@@ -29,11 +28,8 @@ if ~projectexists
     end
     
     nudir=[nudir,filesep];
-    M=ea_initializeM;
 
-    set(handles.groupdir_choosebox,'String',nudir);
-
-    if exist([nudir,'LEAD_groupanalysis.mat'],'file')
+    if ~isempty(ea_getGroupAnalysisFile(nudir))
         answ=questdlg('In the folder you selected, an old Lead-Group project was already found. Continuing will OVERWRITE the old project. Please press cancel to abort.','Existing Lead-Group project','Overwrite','Cancel','Cancel');
         switch lower(answ)
             case 'cancel'
@@ -41,10 +37,12 @@ if ~projectexists
         end
     end
 
-    % store blank M in folder.
-    save([nudir,'LEAD_groupanalysis.mat'],'M','-v7.3');
+    set(handles.groupdir_choosebox,'String',nudir);
 
-    M.ui.groupdir=nudir;
+    % store blank M in folder.
+    analysisFile = ea_genGroupAnalysisFile(nudir);
+
+    load(analysisFile, 'M');
     setappdata(handles.leadfigure,'M',M);
     try
         setappdata(handles.leadfigure,'S',M.S);
@@ -65,6 +63,6 @@ ea_refresh_lg(handles);
 
 % save M
 M=getappdata(handles.leadfigure,'M');
-save([handles.groupdir_choosebox.String,'LEAD_groupanalysis.mat'],'M','-v7.3');
+save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
 
 ea_busyaction('off',handles.leadfigure,'group');
