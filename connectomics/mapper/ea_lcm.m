@@ -170,7 +170,8 @@ switch modality
 
                     vtaFile = ea_regexpdir(vatdir, [subPrefix, '_sim-', vtaType, '_hemi-', sidec, '\.nii$'], 0);
                     if ~isempty(vtaFile)
-                        copyfile(vtaFile{1},[vatdir,'tmp_',sidec,'.nii']);
+                        vtaFile = vtaFile{1};
+                        copyfile(vtaFile,[vatdir,'tmp_',sidec,'.nii']);
                         warning('off');
                         ea_conformspaceto(bbfile,[vatdir,'tmp_',sidec,'.nii'],dinterp);
                         warning('on');
@@ -178,7 +179,7 @@ switch modality
                         nii(cnt).img(isnan(nii(cnt).img))=0;
                         cnt=cnt+1;
                     else
-                        error('Seed file %s doesn''t exist!', vtaFile{1});
+                        error('Seed file %s doesn''t exist!', vtaFile);
                     end
                 end
 
@@ -230,7 +231,8 @@ switch modality
                     end
 
                     vtaFile = ea_regexpdir(vatdir, [subPrefix, '_sim-', vtaType, '_hemi-', sidec, '\.nii$'], 0);
-                    if isfile(vtaFile)
+                    if ~isempty(vtaFile)
+                        vtaFile = vtaFile{1};
                         if ~strcmp(cname,'No functional connectome found.')
                             if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') && ~isfield(options.lcm,'onlygenvats') % patient specific rs-fMRI
                                 nii(cnt) = ea_warp_vat2rest(cname,vatdir,sidec,options);
