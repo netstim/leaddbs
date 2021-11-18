@@ -1,7 +1,7 @@
 function score = ea_discfibers_predict(atlas, groupAnalysis, improvement, mode, selection, side, posneg)
 
 if isfolder(groupAnalysis)
-    load(fullfile(groupAnalysis, 'LEAD_groupanalysis.mat'), 'M');
+    load(ea_getGroupAnalysisFile(groupAnalysis), 'M');
 elseif isfile(groupAnalysis)
     load(groupAnalysis, 'M');
 end
