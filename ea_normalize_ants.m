@@ -79,7 +79,7 @@ if ~isempty(segmentations)
         if ~isempty(segTemplate) % Found matching template in template space segmentations folder
             disp(['Including ', segName, ' segmentation for segment based assistance (weight = 20).']);
             moving = [segmentations{i}, moving]; % append to front (since last one is convergence critical)
-            template = [segTemplate, template];
+            template = [segTemplate{1}, template];
             weights = [20, weights]; % set weight to 20 - DO NOT CHANGE THIS VALUE BELOW 3. IF VALUE IS CHANGED, SEGMENTATIONS WILL BE CONSIDERED SLABS IN ea_ants_nonlinear ~line 63 - would need to be changed there, as well.
         end
     end
