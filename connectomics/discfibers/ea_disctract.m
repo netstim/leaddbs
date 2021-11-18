@@ -197,7 +197,7 @@ classdef ea_disctract < handle
         end
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
-                msgbox('LEAD_groupanalysis file has vanished. Please select file.');
+                msgbox('Groupan alysis file has vanished. Please select file.');
                 [fn,pth]=uigetfile();
                 obj.leadgroup=fullfile(pth,fn);
             end
