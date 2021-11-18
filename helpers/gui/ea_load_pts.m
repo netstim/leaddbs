@@ -147,10 +147,6 @@ if length(uipatdir) == 1 % Single folder
             % in the case of a BIDS dataset root folder as input and sourcedata available for one or more patients
             % trigger DICOM->nii conversion
             
-            if ~iscell(sourceData)
-                sourceData = {sourceData};
-            end
-            
             % BIDSRoot is the selected folder
             BIDSRoot = uipatdir{1};
             setappdata(handles.leadfigure, 'BIDSRoot', BIDSRoot);
@@ -259,9 +255,6 @@ end
 if isfield(handles,'seeddefpopup')
     for pt=1:length(uipatdir)
         [~, stims] = fileparts(ea_regexpdir(fullfile(uipatdir{pt}, 'stimulations', ea_getspace), '.*', 0, 'dir'));
-        if ischar(stims)
-            stims = {stims};
-        end
         
         if ~exist('commonStims', 'var')
             commonStims = stims;

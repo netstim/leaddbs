@@ -58,17 +58,18 @@ for pt=1:length(M.patient.list)
         patStimDir = [M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid];
     end
 
-    vatFiles = ea_regexpdir(patStimDir, '_sim-binary_hemi-(R|L)\.nii$');
-    fname_l = vatFiles{1};
-    fname_r = vatFiles{2};
+    fname_l = ea_regexpdir(patStimDir, '_sim-binary_hemi-L\.nii$');
+    fname_r = ea_regexpdir(patStimDir, '_sim-binary_hemi-R\.nii$');
 
-    if exist(fname_l,'file')>0
+    if ~isempty(fname_l)
         %if file exist, process the right side
         is_left_present=true;
+        fname_l = fname_l{1};
     end
-    if exist(fname_r,'file')>0
+    if ~isempty(fname_r)
         %if file exist, process the right side
         is_right_present=true;
+        fname_r = fname_r{1};
     end
     
     fns_isprocessed=[false false false];%lh, rh, rh_flipped
