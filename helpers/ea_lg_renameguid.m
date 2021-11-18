@@ -61,4 +61,4 @@ for i=1:length(M.patient.list)
 end
 
 % Save modified group analysis file
-save(fullfile(outputfolder, 'LEAD_groupanalysis.mat'), 'M');
+save(ea_getGroupAnalysisFile(outputfolder), 'M');

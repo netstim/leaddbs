@@ -37,4 +37,4 @@ if isfield(M, 'stats')
 end
 
 % Save modified group analysis file
-save(fullfile(outputfolder, 'LEAD_groupanalysis.mat'), 'M');
+save(ea_getGroupAnalysisFile(outputfolder), 'M');
