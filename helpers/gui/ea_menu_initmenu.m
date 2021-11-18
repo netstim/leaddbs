@@ -39,7 +39,6 @@ if isempty(menuprobe)
     if ismember('group',cmd)
        cr=uimenu(f,'Label','Group Tools');
        uimenu(cr,'Label','Check for outliers in localizations','Callback',{@ea_checkoutliers,handles});
-       uimenu(cr,'Label','Rebase root directory of patient folders...','Callback',{@ea_rebasegrouppts,handles});
     end
 
     if ismember('acpc',cmd)
