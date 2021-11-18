@@ -507,7 +507,7 @@ for patients = 1:length(source)
                                     indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
                                     unique_indx = find(indx);
                                     if length(unique_indx) > 1
-                                        indx = unique_indx{1};
+                                        indx = unique_indx(1);
                                     end
                                     tag = tag_cell{indx};
                                     bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,'_',bids_mod,'.nii.gz'];     
