@@ -215,7 +215,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
 
         # check if solutions on all cores were obtained (not a perfect check, works just for the first pack)
         for freq_i in range(j):
-            if not os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(freq_i)+'.h5'):
+            if not os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/sol_per_contact_cor'+str(freq_i)+'.h5'):
                 logging.critical('Not all cores returned results, check RAM consumption, exiting')
                 raise SystemExit
 
