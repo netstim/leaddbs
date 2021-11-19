@@ -254,6 +254,7 @@ settings.Rotation_Z = 0.0;
 
 %% Stimulation Information
 % Set stimSetMode flag
+%options.stimSetMode = false
 settings.stimSetMode = options.stimSetMode;
 
 % Initialize current control flag
@@ -451,6 +452,10 @@ settings.interactiveMode = options.prefs.machine.vatsettings.butenko_interactive
 parameterFile = [outputPath, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings', '-v7.3');
 
+
+% Delete previous results from stimSetMode
+ea_delete([outputPath, filesep,'Result_StimProt_*']);
+
 %% Run OSS-DBS
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
@@ -520,6 +525,11 @@ for side=0:1
         % I/O error
         % ea_delete([outputPath, filesep,'Axons_in_time']);
 
+        
+        fprintf('ea_getearoot %s \n\n', ea_getearoot)
+        fprintf('outputPath %s \n\n', outputPath)
+        fprintf('num2str(side) %s \n\n', num2str(side))
+        
         if isempty(getenv('SINGULARITY_NAME')) % Docker
             system(['docker run ', ...
                     '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
@@ -530,6 +540,9 @@ for side=0:1
             system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputPath, ' ', num2str(side)]);
         end
     end
+    
+    
+    
 
     % Call OSS-DBS GUI to start calculation
     system([pythonBinName, ' ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
@@ -597,11 +610,23 @@ for side=0:1
         axonState = ea_regexpdir([outputPath, filesep, 'Results_', sideCode], 'Axon_state.*\.mat', 0);
         if ~isempty(axonState)
             for f=1:length(axonState)
+                
                 % Determine tract name
                 if startsWith(settings.connectome, 'Multi-Tract: ')
                     tractName = regexp(axonState{f},'(?<=Axon_state_)(.*)(?=\.mat)', 'match', 'once');
                 end
 
+                % If stimSetMode, extract the index from tractName (but axonState is still checked on the indexed file)
+                if settings.stimSetMode
+                    if startsWith(settings.connectome, 'Multi-Tract: ')
+                        stimProt_index = regexp(tractName,'\d*','Match');
+                        tractName = regexprep(tractName,'\_\d*.?\d','');
+                    else
+                        stimProt_index = regexp(axonState{f},'\d*','Match');
+                    end
+                    stimProt_index = string(char(stimProt_index(end)));         
+                end
+                
                 % Get fiber id and state from OSS-DBS result
                 ftr = load(axonState{f});
                 [fibId, ind] = unique(ftr.fibers(:,4));
@@ -634,11 +659,24 @@ for side=0:1
                 ftr.fibers(:,4) = originalFibID;
 
                 % Save result for visualization
-                if startsWith(settings.connectome, 'Multi-Tract: ')
-                    fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                
+                % If stimSets, save to a corresponding folder
+                if settings.stimSetMode
+                    resultProtocol = append(outputPath, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index);
+                    mkdir(resultProtocol);
+                    if startsWith(settings.connectome, 'Multi-Tract: ')
+                        fiberActivation = append(resultProtocol, filesep, 'fiberActivation_', sideStr, '_', tractName,'_', stimProt_index, '.mat');
+                    else
+                        fiberActivation = append(resultProtocol, filesep, 'fiberActivation_', sideStr,'_', stimProt_index, '.mat');       
+                    end
                 else
-                    fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                    if startsWith(settings.connectome, 'Multi-Tract: ')
+                        fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                    else
+                        fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                    end
                 end
+                   
                 save(fiberActivation, '-struct', 'ftr');
 
                 if options.native % Generate fiber activation file in MNI space
@@ -661,10 +699,22 @@ for side=0:1
                     ftr.fibers(:,4) = originalFibID;
 
                     % Save MNI space fiber activation result
-                    if startsWith(settings.connectome, 'Multi-Tract: ')
-                        fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                    
+                    % If stimSets, save to a corresponding folder
+                    if settings.stimSetMode
+                        resultProtocol = append(MNIoutputPath, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index);
+                        mkdir(resultProtocol);
+                        if startsWith(settings.connectome, 'Multi-Tract: ')
+                            fiberActivationMNI = append(resultProtocol, filesep, 'fiberActivation_', sideStr, '_', tractName,'_',stimProt_index, '.mat');
+                        else
+                            fiberActivationMNI = append(resultProtocol, filesep, 'fiberActivation_', sideStr,'_',stimProt_index, '.mat');
+                        end                                        
                     else
-                        fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                        if startsWith(settings.connectome, 'Multi-Tract: ')
+                            fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                        else
+                            fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                        end
                     end
                     save(fiberActivationMNI, '-struct', 'conn');
 
@@ -673,10 +723,12 @@ for side=0:1
                     end
                 end
 
-                % Visualize fiber activation
-                if exist('resultfig', 'var')
-                    set(0, 'CurrentFigure', resultfig);
-                    ea_fiberactivation_viz(fiberActivation, resultfig);
+                % Visualize fiber activation, but not for stimSetMode
+                if ~settings.stimSetMode
+                    if exist('resultfig', 'var')
+                        set(0, 'CurrentFigure', resultfig);
+                        ea_fiberactivation_viz(fiberActivation, resultfig);
+                    end
                 end
             end
         end
@@ -686,12 +738,12 @@ for side=0:1
         warning('OSS-DBS calculation failed for %s side!\n', sideStr);
         warning('on', 'backtrace');
     end
-
+        
     % Clean up
     ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
     ea_delete([outputPath, filesep,'Allocated_axons.h5']);
     ea_delete(ea_regexpdir(outputPath, '^(?!Current_protocols_).*\.csv$', 0));
-    ea_delete([outputPath, filesep,'*.py']);
+    %ea_delete([outputPath, filesep,'*.py']);
 
     % Delete this folder in MATLAB since shutil.rmtree may raise
     % I/O error
