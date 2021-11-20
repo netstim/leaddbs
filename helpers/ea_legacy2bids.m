@@ -105,20 +105,13 @@ for patients = 1:length(source)
     file_names = {files_in_pat_folder.name};
     file_index = 1;
     for j=1:length(file_names)
+        
+            
         if ~isdir(fullfile(source_patient,file_names{j}))
             if ~any(contains(file_names{j},'\w*(ct|tra|cor|sag)\w*')) 
                 if any(regexpi(file_names{j},'raw_anat_.*.nii')) || doOnlyRaw || strcmp(file_names{j},'anat_t1.nii')  %we already know their tags in the case of cor,tra,sag
                     to_match = file_names{j};
-                    for legacy_mod=1:length(legacy_modalities)
-                        modality_str = legacy_modalities{legacy_mod};
-                        if contains(to_match,modality_str,'IgnoreCase',true)
-                            bids_mod = rawdata_containers(modality_str);
-                            break;
-                        elseif legacy_mod == length(legacy_modalities)
-                            tmp = strsplit(modality_str,'.');
-                            bids_mod = upper(tmp(end:end-2));
-                        end
-                    end
+                    bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
                     tag = check_acq(fullfile(source_patient,file_names{j}));
                     tag_cell{end+1} = tag;
                     mod_cell{end+1} = bids_mod;
@@ -241,16 +234,11 @@ for patients = 1:length(source)
                 disp("Migrating Derivatives folder...");
                 new_path = fullfile(dest,subfolder_cell{subfolders},'leaddbs',patient_name);
                 for files=1:length(files_to_move)
-                    mod_split = strsplit(files_to_move{files},'_');
-                    if ismember(mod_split,'postop')
-                        session = 'ses-postop';
+                    if contains(files_to_move{files},'postop')
+                        sess_tag = 'ses-postop';
                     else
-                        session = 'ses-preop';
+                        sess_tag = 'ses-preop';
                     end
-                    mod_str = mod_split{end};
-                    mod_str = strsplit(mod_str,'.');
-                    mod_str = [upper(mod_str{1}),'.nii'];
-                    
                     %coregistration
                     if ismember(files_to_move{files},coregistration{:,1})
                         
@@ -345,6 +333,12 @@ for patients = 1:length(source)
                         copyfile(fullfile(source_patient,'ea_ui.mat'),fullfile(new_path,pipelines{6}));
                         movefile(fullfile(new_path,pipelines{6},'ea_ui.mat'),fullfile(new_path,pipelines{6},bids_name));
                         
+                    elseif strcmp(files_to_move{files},'ea_stats.mat')
+                        bids_name = [patient_name,'_','desc-','stats.mat'];
+                        derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
+                        derivatives_cell{end,2} = fullfile(new_path,bids_name);
+                        copyfile(fullfile(source_patient,'ea_stats.mat'),new_path);
+                        movefile(fullfile(new_path,'ea_stats.mat'),fullfile(new_path,bids_name));
                         
                     elseif strcmp(files_to_move{files},'ea_methods.txt') && exist(fullfile(source_patient,'ea_methods.txt'),'file')
                         bids_name = [patient_name,'_','desc-','ea_methods.txt'];
@@ -373,34 +367,92 @@ for patients = 1:length(source)
                         
                     elseif ~ismember(files_to_move{files},preprocessing{:,1}) && ~isempty(regexp(files_to_move{files},'raw_.*')) %support for other modalities in preproc
                         %other raw files go to pre-processing folder.
-                        tag = check_acq(fullfile(source_patient,files_to_move{files}));  
-                        bids_name = [patient_name,'_','desc-preproc_',session,'_',mod_str];
-                        if ~exist(fullfile(new_path,pipelines{5},'anat'),'dir')
-                            mkdir(fullfile(new_path,pipelines{5},'anat'))
+                       
+                        if endsWith(files_to_move{files},'.nii')
+                            ext = '.nii';
+                            op_dir = fullfile(new_path,pipelines{5},'anat');
+                            if ~exist(fullfile(new_path,pipelines{5},'anat'),'dir')
+                                mkdir(op_dir);
+                            end
+                             source_path = source_patient;
+                        elseif endsWith(files_to_move{files},'.png')
+                            ext = '.png';
+                            op_dir = fullfile(new_path,pipelines{5},'checkreg');
+                            if ~exist(fullfile(new_path,pipelines{5},'checkreg'),'dir')
+                                mkdir(op_dir);
+                            end
+                             source_path = fullfile(source_patient,'checkreg');
+                            
                         end
-                        bids_name = CheckifAlreadyExists(fullfile(new_path,pipelines{5}),'anat',bids_name);
-                        copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{5},'anat'));
-                        movefile(fullfile(new_path,pipelines{5},'anat',files_to_move{files}),fullfile(new_path,pipelines{5},'anat',bids_name));
+                        bids_mod = add_mod(files_to_move{files},legacy_modalities,rawdata_containers);
+                        try
+                            tag = check_acq(fullfile(source_path,files_to_move{files}));
+                            bids_name = [patient_name,'_','desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
+                        catch
+                            try_bids_name = [patient_name,'_','desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
+                            bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
+                        end
+                        bids_name = CheckifAlreadyExists(op_dir,bids_name);
+                        copyfile(fullfile(source_path,files_to_move{files}),op_dir);
+                        movefile(fullfile(op_dir,files_to_move{files}),fullfile(op_dir,bids_name));
+                       
                         
-                  elseif ~ismember(files_to_move{files},coregistration{:,1}) && ~isempty(regexp(files_to_move{files},'^anat_.*.nii')) %support for other modalities in coreg
-                      tag = check_acq(fullfile(source_patient,files_to_move{files}));  
-                      bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',session,'_',mod_str];
-                      if ~exist(fullfile(new_path,pipelines{2},'anat'),'dir')
-                          mkdir(fullfile(new_path,pipelines{2},'anat'))
+                  elseif ~ismember(files_to_move{files},coregistration{:,1}) && ~isempty(regexp(files_to_move{files},'^anat_.*')) %support for other modalities in coreg
+                      
+                      if endsWith(files_to_move{files},'.nii')
+                          ext = '.nii';
+                          op_dir = fullfile(new_path,pipelines{2},'anat');
+                          if ~exist(fullfile(new_path,pipelines{2},'anat'),'dir')
+                              mkdir(op_dir);
+                          end
+                          source_path = source_patient;
+                      elseif endsWith(files_to_move{files},'.png')
+                          ext = '.png';
+                          op_dir = fullfile(new_path,pipelines{2},'checkreg');
+                          if ~exist(fullfile(new_path,pipelines{2},'checkreg'),'dir')
+                              mkdir(op_dir);
+                          end
+                          source_path = fullfile(source_patient,'checkreg');
                       end
-                      bids_name = CheckifAlreadyExists(fullfile(new_path,pipelines{2}),'anat',bids_name);
-                      copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{2},'anat'));
-                      movefile(fullfile(new_path,pipelines{2},'anat',files_to_move{files}),fullfile(new_path,pipelines{2},'anat',bids_name));
-                        
-                    elseif ~ismember(files_to_move{files},normalization{:,1}) && ~isempty(regexp(files_to_move{files},'^glanat_.*.nii')) %support for other modalities in normalization
-                        tag = check_acq(fullfile(source_patient,files_to_move{files}));
-                        bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',session,'_','acq-',tag,'_',mod_str];
-                        if ~exist(fullfile(new_path,pipelines{3},'anat'),'dir')
-                            mkdir(fullfile(new_path,pipelines{3},'anat'))
+                      bids_mod = add_mod(files_to_move{files},legacy_modalities,rawdata_containers);
+                      try
+                          tag = check_acq(fullfile(source_path,files_to_move{files}));
+                          bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
+                      catch
+                          try_bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
+                          bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
+                      end
+                      bids_name = CheckifAlreadyExists(op_dir,bids_name);
+                      copyfile(fullfile(source_path,files_to_move{files}),op_dir);
+                      movefile(fullfile(op_dir,files_to_move{files}),fullfile(op_dir,bids_name));
+                       
+                    elseif ~ismember(files_to_move{files},normalization{:,1}) && ~isempty(regexp(files_to_move{files},'^glanat_.*')) %support for other modalities in normalization
+                        if endsWith(files_to_move{files},'.nii')
+                            ext = '.nii';
+                            op_dir = fullfile(new_path,pipelines{3},'anat');
+                            if ~exist(fullfile(new_path,pipelines{3},'anat'),'dir')
+                                mkdir(op_dir);
+                            end
+                            source_path = source_patient;
+                        elseif endsWith(files_to_move{files},'.png')
+                            ext = '.png';
+                            op_dir = fullfile(new_path,pipelines{3},'checkreg');
+                            if ~exist(fullfile(new_path,pipelines{3},'checkreg'),'dir')
+                                mkdir(op_dir);
+                            end
+                            source_path = fullfile(source_patient,'checkreg');
                         end
-                        bids_name = CheckifAlreadyExists(fullfile(new_path,pipelines{3}),'anat',bids_name);
-                        copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{3},'anat'));
-                        movefile(fullfile(new_path,pipelines{3},'anat',files_to_move{files}),fullfile(new_path,pipelines{3},'anat',bids_name));
+                        bids_mod = add_mod(files_to_move{files},legacy_modalities,rawdata_containers);
+                        try
+                            tag = check_acq(fullfile(source_path,files_to_move{files}));
+                            bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
+                        catch
+                            try_bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
+                            bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
+                        end
+                        bids_name = CheckifAlreadyExists(op_dir,bids_name);
+                        copyfile(fullfile(source_path,files_to_move{files}),op_dir);
+                        movefile(fullfile(op_dir,files_to_move{files}),fullfile(op_dir,bids_name));
                         %support for lead group files
                     else 
                         disp(files_to_move{files});
@@ -495,29 +547,30 @@ for patients = 1:length(source)
                             for matching_files = 1:length(matching_files_preop)
                                 if exist(fullfile(source_patient,matching_files_preop{matching_files}),'file')
                                     to_match = matching_files_preop{matching_files};
-                                    for legacy_mod=1:length(legacy_modalities)
-                                        modality_str = legacy_modalities{legacy_mod};
-                                        if contains(to_match,modality_str,'IgnoreCase',true)
-                                            bids_mod = rawdata_containers(modality_str);
-                                            break
-                                        elseif legacy_mod == length(legacy_modalities) %gone to the end and still couldn't find a match
-                                            tmp = strsplit(modality_str,'.');
-                                            bids_mod = upper(tmp(end:end-2));
-                                        end
-                                    end  
+                                    bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
+                                    %for legacy_mod=1:length(legacy_modalities)
+                                    %    modality_str = legacy_modalities{legacy_mod};
+                                    %    if contains(to_match,modality_str,'IgnoreCase',true)
+                                    %        bids_mod = rawdata_containers(modality_str);
+                                    %        break
+                                    %    elseif legacy_mod == length(legacy_modalities) %gone to the end and still couldn't find a match
+                                    %        tmp = strsplit(modality_str,'.');
+                                    %        bids_mod = upper(tmp(end:end-2));
+                                    %    end
+                                    %end  
                                     indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
                                     unique_indx = find(indx);
                                     if length(unique_indx) > 1
                                         indx = unique_indx(1);
                                     end
                                     tag = tag_cell{indx};
-                                    bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,'_',bids_mod,'.nii.gz'];     
+                                    try_bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,'_',bids_mod,'.nii.gz'];     
                                     %support for multiple modalities. If a
                                     %file already exists with that name (i.e., tag & mod are the same)
                                     %we rename the old file and append a
                                     %1,2,or 3 to the acq tag of the new
                                     %file.
-                                    bids_name = CheckifAlreadyExists(new_path,bids_name);
+                                    bids_name = CheckifAlreadyExists(new_path,try_bids_name);
                                     which_file = matching_files_preop{matching_files};
                                     derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                                     derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
@@ -538,17 +591,18 @@ for patients = 1:length(source)
                                 end
                                 if exist(fullfile(source_patient,matching_files_postop{matching_files}),'file')
                                     to_match = matching_files_postop{matching_files};
-                                    for legacy_mod=1:length(legacy_modalities)
-                                        modality_str = legacy_modalities{legacy_mod};
-                                        to_match = matching_files_postop{matching_files};
-                                        if contains(to_match,modality_str,'IgnoreCase',true)
-                                            bids_mod = rawdata_containers(modality_str);
-                                            break
-                                        elseif legacy_mod == length(legacy_modalities) %gone to the end and still couldn't find a match
-                                            tmp = strsplit(modality_str,'.');
-                                            bids_mod = upper(tmp(end:end-2));
-                                        end
-                                    end
+                                    bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
+%                                     for legacy_mod=1:length(legacy_modalities)
+%                                         modality_str = legacy_modalities{legacy_mod};
+%                                         to_match = matching_files_postop{matching_files};
+%                                         if contains(to_match,modality_str,'IgnoreCase',true)
+%                                             bids_mod = rawdata_containers(modality_str);
+%                                             break
+%                                         elseif legacy_mod == length(legacy_modalities) %gone to the end and still couldn't find a match
+%                                             tmp = strsplit(modality_str,'.');
+%                                             bids_mod = upper(tmp(end:end-2));
+%                                         end
+%                                     end
                                     bids_name = [patient_name,'_',sessions{j},'_',bids_mod,'.nii.gz'];
                                     which_file = matching_files_postop{matching_files};
                                     derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
@@ -616,8 +670,7 @@ end
 toc;
 function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell)
     
-    %if strcmp(which_pipeline,'brainshift')
-    %    source_patient_path = fullfile(source_patient_path,'scrf');
+   
     if strcmp(which_pipeline,'coregistration')
         brainshift_log_dir = fullfile(new_path,'brainshift','log');
     end
@@ -778,8 +831,7 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
     if ~exist(output_dir,'dir')
         mkdir(output_dir)
     end
-    filename_out = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
-    fout_fid = fopen(filename_out,'w');
+    opt.FileName = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
     %special_case
     if ~isempty(regexp(files_to_move,'anat_t1.nii')) && all(cellfun('isempty',regexp(files_to_move,'raw_anat_t1.nii'))) && ~doOnlyRaw
         anat_files_selected.preop.T1w = [patient_name,'_','space-anchorNative_desc-preproc_ses-preop_T1w.nii'];
@@ -818,8 +870,8 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
         end
         anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
     end
-    encodejson = savejson('',anat_files_selected,'preop',anat_files_selected.preop,'postop',anat_files_selected.postop);
-    fprintf(fout_fid,encodejson);
+    savejson('',anat_files_selected,'preop',anat_files_selected.preop,'postop',anat_files_selected.postop,opt);
+    
     
     
 function tag = check_acq(filename)
@@ -848,24 +900,22 @@ function tag = check_acq(filename)
     end
     return
 function bids_name = add_tag(bids_name,mod_cell,tag_cell)
-    if contains(bids_name,'acqTag') %we already know their tags in the case of cor,tra,sag
-        bids_mod = strsplit(bids_name,'_');
-        [~,bids_mod,~] = fileparts(bids_mod{end});
-        indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
-        tag = tag_cell{indx};
-        bids_name = strrep(bids_name,'acqTag',['acq-' tag]);
-    end
+    bids_mod = strsplit(bids_name,'_');
+    [~,bids_mod,~] = fileparts(bids_mod{end});
+    indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
+    tag = tag_cell{indx};
+    bids_name = strrep(bids_name,'acqTag',['acq-' tag]);
 return
 
-function bids_name = CheckifAlreadyExists(path,bids_name)
-    split_bids_name = strsplit(bids_name,'acq-');
+function bids_name = CheckifAlreadyExists(path,try_bids_name)
+    split_bids_name = strsplit(try_bids_name,'acq-');
     tag_bids_name = split_bids_name{2};
     tag_bids_name = strsplit(tag_bids_name,'_');
     tag = tag_bids_name{1};
     bids_mod = tag_bids_name{2};
-    if exist(fullfile(path,bids_name),'file')
+    if exist(fullfile(path,try_bids_name),'file')
         new_bids_name = [split_bids_name{1},'acq-',tag,num2str(1),'_',bids_mod];
-        movefile(fullfile(path,bids_name),fullfile(path,new_bids_name));
+        movefile(fullfile(path,try_bids_name),fullfile(path,new_bids_name));
         bids_name = [split_bids_name{1},'acq-',tag,num2str(2),'_',bids_mod];
     elseif exist(fullfile(path,[split_bids_name{1},'acq-',tag,num2str(1),'_',bids_mod]),'file')
         suffix = 2;
@@ -875,10 +925,40 @@ function bids_name = CheckifAlreadyExists(path,bids_name)
             filename_to_check = [split_bids_name{1},'acq-',tag,num2str(suffix),'_',bids_mod];
         end
         bids_name = filename_to_check;
+    else
+        bids_name = try_bids_name;
     end
-%return
-function [matching_files,noMatch] = match_exact(cell_files,expr)
-tmp_cell = cellfun(@(x) ~isempty(x) && x(1) == 1,regexpi(cell_files, expr));
-matching_files = cell_files(tmp_cell);
-noMatch = cell_files(~tmp_cell);
 return
+function [matching_files,noMatch] = match_exact(cell_files,expr)
+    tmp_cell = cellfun(@(x) ~isempty(x) && x(1) == 1,regexpi(cell_files, expr));
+    matching_files = cell_files(tmp_cell);
+    noMatch = cell_files(~tmp_cell);
+return
+
+function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
+    for legacy_mod=1:length(legacy_modalities)
+         modality_str = legacy_modalities{legacy_mod};
+         if endsWith(to_match,'.nii') || endsWith(to_match,'.nii.gz')
+             if contains(to_match,modality_str,'IgnoreCase',true)
+                 bids_mod = rawdata_containers(modality_str);
+                 break;
+             elseif legacy_mod == length(legacy_modalities)
+                 tmp = strsplit(modality_str,'.');
+                 bids_mod = upper(tmp(end:end-2));
+             end
+         elseif endsWith(to_match,'.png') 
+             to_match_str = strsplit(to_match,'anat_t1');
+             to_match_mod = to_match_str{1};
+             if contains(to_match_mod,modality_str,'IgnoreCase',true)
+                 bids_mod = rawdata_containers(modality_str);
+                 break;
+             elseif legacy_mod == length(legacy_modalities)
+                 tmp = strsplit(modality_str,'.');
+                 bids_mod = upper(tmp(end:end-2));
+             end
+             
+          end
+             
+    end
+    return
+     
