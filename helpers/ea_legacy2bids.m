@@ -811,6 +811,9 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
     
 function move_raw2bids(source_patient_path,new_path,which_file,bids_name)
     tmp_path = fullfile(new_path,'tmp');
+    if ~exist(tmp_path,'dir')
+        mkdir(tmp_path)
+    end
     if exist(fullfile(source_patient_path,which_file),'file')
         copyfile(fullfile(source_patient_path,which_file),tmp_path);
          if endsWith(which_file,'.nii')
