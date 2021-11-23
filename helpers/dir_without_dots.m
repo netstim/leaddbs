@@ -11,13 +11,11 @@ end
 listing = dir(name);
 
 inds = [];
-n    = 0;
-k    = 1;
+k   = 1;
 
-while n < 3 && k <= length(listing)
-    if any(strcmp(listing(k).name, {'.', '..','.DS_Store'}))
+while k <= length(listing)
+    if startsWith(listing(k).name,'.')
         inds(end + 1) = k;
-        n = n + 1;
     end
     k = k + 1;
 end
