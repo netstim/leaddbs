@@ -53,13 +53,13 @@ opt.FileName = fname_out;
           method_used = generateMethod(input_mat,'coregct_method_applied');
           modality = 'CT';
           json_mat.method.(modality) = method_used;
-          savejson('',json_mat,'method',json_mat.method,opt);
+          savejson('',json_mat,opt);
         elseif strcmp(filename,'ea_coregmrmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
           input_mat = load(fname_in);  
           method_used = generateMethod(input_mat,'coregmr_method_applied');
           modality = 'MR';
           json_mat.method.(modality) = method_used;
-          savejson('',json_mat,'method',json_mat.method,opt);
+          savejson('',json_mat,opt);
         %dealing with normalization
         elseif strcmp(filename,'ea_normmethod_applied')
             input_mat = load(fname_in);
@@ -69,7 +69,7 @@ opt.FileName = fname_out;
                 json_mat.approval = 1;
                 json_mat.method = method_used;
             end
-            savejson('',json_mat,'method',json_mat.method,'approval',json_mat.approval,opt);
+            savejson('',json_mat,opt);
            
         end
     end

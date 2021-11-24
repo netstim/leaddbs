@@ -10,9 +10,6 @@ function ea_legacy2bids(source,dest,isdicom,dicom_source,doDcmConv,doOnlyRaw)
 %% v)  doDcmConv: Boolean, 1 if your dataset only contains DICOM folders, else 0
 %% vi) doOnlyRaw: Boolean, 1 if your dataset only contains RAW nifti files, else 0
 
-
-%SANTIY: first check the existence of your source and dest directory. If it is not there,
-%create a new directory.
 for j=1:length(source)
     if ~exist(source{j},'dir')
         warndlg("The source directory you have specified does not exist")
@@ -681,7 +678,11 @@ for patients = 1:length(source)
                     end
                 end
                 raw_path = fullfile(dest,subfolder_cell{subfolders});
-                ea_generate_datasetDescription(raw_path,'raw',postop_modality);
+                if exist('postop_modality','var')
+                    ea_generate_datasetDescription(raw_path,'raw',postop_modality);
+                else
+                    ea_generate_datasetDescription(raw_path,'raw')
+                end
         end
     end
     if ~isdicom
@@ -877,26 +878,38 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
     end
     opt.FileName = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
     %special_case
-    if ~isempty(regexp(files_to_move,'anat_t1.nii')) && all(cellfun('isempty',regexp(files_to_move,'raw_anat_t1.nii'))) && ~doOnlyRaw
-        anat_files_selected.preop.T1w = [patient_name,'_','space-anchorNative_desc-preproc_ses-preop_T1w.nii'];
-    end
+    
     preop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-preop','anat'));
+   
+    
     preop_files = {preop_files.name};
+    if ~isempty(regexp(files_to_move,'anat_t1.nii')) && all(cellfun('isempty',regexp(files_to_move,'raw_anat_t1.nii'))) && ~doOnlyRaw
+        preop_files{end+1} = 'anat_t1.nii';
+    end
     for i=1:length(preop_files)
         json_val = erase(preop_files{i},'.nii.gz');
-        temp_tag = strsplit(preop_files{i},'_');
-        modality_str = strsplit(temp_tag{end},'.');
-        modality_str = modality_str{1};
-        if ~contains(preop_files{i},'ct','IgnoreCase',true)
+        temp_tag = strsplit(json_val,'_');
+        %modality_str = strsplit(temp_tag{end},'.');
+        modality_str = json_val(end-2:end);
+        if strcmp(preop_files{i},'anat_t1.nii')
+            json_val = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_space-anchorNative_desc-preproc_ses-preop_acq-*_T1w.nii'));
+            temp_tag = strsplit(json_val.name,'_');
+            tag = strsplit(temp_tag{5},'-');
+            tag = tag{end};
+            rawdata_fieldname = [tag,'_','T1w'];
+            anat_files_selected.preop.anat.(rawdata_fieldname) = json_val.name;
+        elseif contains(preop_files{i},'acq-')
             tag = strsplit(temp_tag{3},'-');
             tag = tag{end};
             rawdata_fieldname = [tag,'_',modality_str];
+            anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
         else
             rawdata_fieldname = modality_str;
+            anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
         end
-        anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
         
     end
+    
     postop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-postop','anat'));
     postop_files = {postop_files.name};
     
@@ -914,7 +927,7 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
         end
         anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
     end
-    savejson('',anat_files_selected,'preop',anat_files_selected.preop,'postop',anat_files_selected.postop,opt);
+    savejson('',anat_files_selected,opt);
     
     
     
@@ -1039,4 +1052,3 @@ function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
              
     end
 return
-     
