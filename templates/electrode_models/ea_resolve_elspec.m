@@ -277,7 +277,7 @@ switch elmodel
         elspec.matfname='sceneray_sr1200';
         elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
-        elspec.contact_length=3.0;
+        elspec.contact_length=1.5;
         elspec.contact_diameter=1.27;
         elspec.contact_color=0.3;
         elspec.tip_diameter=1.27;
@@ -296,7 +296,7 @@ switch elmodel
         elspec.matfname='sceneray_sr1210';
         elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
-        elspec.contact_length=3.0;
+        elspec.contact_length=1.5;
         elspec.contact_diameter=1.27;
         elspec.contact_color=0.3;
         elspec.tip_diameter=1.27;
@@ -315,7 +315,7 @@ switch elmodel
         elspec.matfname='sceneray_sr1211';
         elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
-        elspec.contact_length=3.0;
+        elspec.contact_length=1.5;
         elspec.contact_diameter=1.27;
         elspec.contact_color=0.3;
         elspec.tip_diameter=1.27;
