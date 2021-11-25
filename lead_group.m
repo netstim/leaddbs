@@ -1447,11 +1447,9 @@ switch choice
         ea_dispercent(0,'Detaching group file');
         for pt=1:length(M.patient.list)
             [~, ptname] = fileparts(M.patient.list{pt});
-            if strcmp('Yes and copy localizations/VTAs please.',choice)
-                odir=[M.ui.groupdir,ptname,filesep];
-                ea_mkdir(odir);
-                copyfile([M.patient.list{pt},filesep,'ea_reconstruction.mat'],[odir,'ea_reconstruction.mat']);
-            end
+            odir=[M.ui.groupdir,ptname,filesep];
+            ea_mkdir(odir);
+            copyfile([M.patient.list{pt},filesep,'ea_reconstruction.mat'],[odir,'ea_reconstruction.mat']);
 
             M.patient.list{pt}=ptname;
 
@@ -1468,18 +1466,16 @@ switch choice
         ea_dispercent(0,'Detaching group file');
         for pt=1:length(M.patient.list)
             [~, ptname] = fileparts(M.patient.list{pt});
-            if strcmp('Yes and copy localizations/VTAs please.',choice)
-                odir=[M.ui.groupdir,ptname,filesep];
-                ea_mkdir([odir,'stimulations']);
-                copyfile([M.patient.list{pt},filesep,'ea_reconstruction.mat'],[odir,'ea_reconstruction.mat']);
-                if exist([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(0),'gs_',M.guid], 'dir')
-                    ea_mkdir([odir,'stimulations',filesep,ea_nt(0)])
-                    copyfile([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(0),'gs_',M.guid],[odir,'stimulations',filesep,ea_nt(0),'gs_',M.guid]);
-                end
-                if exist([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(1),'gs_',M.guid], 'dir')
-                    ea_mkdir([odir,'stimulations',filesep,ea_nt(1)])
-                    copyfile([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(1),'gs_',M.guid],[odir,'stimulations',filesep,ea_nt(1),'gs_',M.guid]);
-                end
+            odir=[M.ui.groupdir,ptname,filesep];
+            ea_mkdir([odir,'stimulations']);
+            copyfile([M.patient.list{pt},filesep,'ea_reconstruction.mat'],[odir,'ea_reconstruction.mat']);
+            if exist([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(0),'gs_',M.guid], 'dir')
+                ea_mkdir([odir,'stimulations',filesep,ea_nt(0)])
+                copyfile([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(0),'gs_',M.guid],[odir,'stimulations',filesep,ea_nt(0),'gs_',M.guid]);
+            end
+            if exist([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(1),'gs_',M.guid], 'dir')
+                ea_mkdir([odir,'stimulations',filesep,ea_nt(1)])
+                copyfile([M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(1),'gs_',M.guid],[odir,'stimulations',filesep,ea_nt(1),'gs_',M.guid]);
             end
 
             M.patient.list{pt}=ptname;
