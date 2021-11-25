@@ -254,7 +254,6 @@ settings.Rotation_Z = 0.0;
 
 %% Stimulation Information
 % Set stimSetMode flag
-%options.stimSetMode = false
 settings.stimSetMode = options.stimSetMode;
 
 % Initialize current control flag
@@ -454,7 +453,7 @@ save(parameterFile, 'settings', '-v7.3');
 
 
 % Delete previous results from stimSetMode
-ea_delete([outputPath, filesep,'Result_StimProt_*']);
+ea_delete([outputPath, filesep, 'Result_StimProt_*']);
 
 %% Run OSS-DBS
 libpath = getenv('LD_LIBRARY_PATH');
@@ -521,14 +520,12 @@ for side=0:1
         ea_delete(ea_regexpdir(outputPath, '^(?!Current_protocols_).*\.csv$', 0));
         ea_delete([outputPath, filesep,'*.py']);
 
-        % Delete this folder in MATLAB since shutil.rmtree may raise
-        % I/O error
+        % Delete this folder in MATLAB since shutil.rmtree may raise I/O error
         % ea_delete([outputPath, filesep,'Axons_in_time']);
 
-        
-        fprintf('ea_getearoot %s \n\n', ea_getearoot)
-        fprintf('outputPath %s \n\n', outputPath)
-        fprintf('num2str(side) %s \n\n', num2str(side))
+        % fprintf('ea_getearoot %s \n\n', ea_getearoot)
+        % fprintf('outputPath %s \n\n', outputPath)
+        % fprintf('num2str(side) %s \n\n', num2str(side))
         
         if isempty(getenv('SINGULARITY_NAME')) % Docker
             system(['docker run ', ...
@@ -540,9 +537,6 @@ for side=0:1
             system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputPath, ' ', num2str(side)]);
         end
     end
-    
-    
-    
 
     % Call OSS-DBS GUI to start calculation
     system([pythonBinName, ' ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/OSS-DBS_LeadDBS_integrator.py ', ...
@@ -613,18 +607,17 @@ for side=0:1
                 
                 % Determine tract name
                 if startsWith(settings.connectome, 'Multi-Tract: ')
-                    tractName = regexp(axonState{f},'(?<=Axon_state_)(.*)(?=\.mat)', 'match', 'once');
+                    tractName = regexp(axonState{f}, '(?<=Axon_state_).+(?=\.mat$)', 'match', 'once');
                 end
 
                 % If stimSetMode, extract the index from tractName (but axonState is still checked on the indexed file)
                 if settings.stimSetMode
                     if startsWith(settings.connectome, 'Multi-Tract: ')
-                        stimProt_index = regexp(tractName,'\d*','Match');
-                        tractName = regexprep(tractName,'\_\d*.?\d','');
+                        stimProt_index = regexp(tractName, '(?<=_)\d+$', 'match', 'once');
+                        tractName = regexprep(tractName, '.+(?=_\d+$)', 'match', 'once');
                     else
-                        stimProt_index = regexp(axonState{f},'\d*','Match');
+                        stimProt_index = regexp(axonState{f}, '(?<=Axon_state_)\d+(?=\.mat$)', 'match', 'once');
                     end
-                    stimProt_index = string(char(stimProt_index(end)));         
                 end
                 
                 % Get fiber id and state from OSS-DBS result
@@ -662,12 +655,12 @@ for side=0:1
                 
                 % If stimSets, save to a corresponding folder
                 if settings.stimSetMode
-                    resultProtocol = append(outputPath, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index);
-                    mkdir(resultProtocol);
+                    resultProtocol = [outputPath, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
+                    ea_mkdir(resultProtocol);
                     if startsWith(settings.connectome, 'Multi-Tract: ')
-                        fiberActivation = append(resultProtocol, filesep, 'fiberActivation_', sideStr, '_', tractName,'_', stimProt_index, '.mat');
+                        fiberActivation = [resultProtocol, filesep, 'fiberActivation_', sideStr, '_', tractName,'_', stimProt_index, '.mat'];
                     else
-                        fiberActivation = append(resultProtocol, filesep, 'fiberActivation_', sideStr,'_', stimProt_index, '.mat');       
+                        fiberActivation = [resultProtocol, filesep, 'fiberActivation_', sideStr,'_', stimProt_index, '.mat'];
                     end
                 else
                     if startsWith(settings.connectome, 'Multi-Tract: ')
@@ -702,12 +695,12 @@ for side=0:1
                     
                     % If stimSets, save to a corresponding folder
                     if settings.stimSetMode
-                        resultProtocol = append(MNIoutputPath, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index);
-                        mkdir(resultProtocol);
+                        resultProtocol = [MNIoutputPath, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
+                        ea_mkdir(resultProtocol);
                         if startsWith(settings.connectome, 'Multi-Tract: ')
-                            fiberActivationMNI = append(resultProtocol, filesep, 'fiberActivation_', sideStr, '_', tractName,'_',stimProt_index, '.mat');
+                            fiberActivationMNI = [resultProtocol, filesep, 'fiberActivation_', sideStr, '_', tractName,'_',stimProt_index, '.mat'];
                         else
-                            fiberActivationMNI = append(resultProtocol, filesep, 'fiberActivation_', sideStr,'_',stimProt_index, '.mat');
+                            fiberActivationMNI = [resultProtocol, filesep, 'fiberActivation_', sideStr,'_',stimProt_index, '.mat'];
                         end                                        
                     else
                         if startsWith(settings.connectome, 'Multi-Tract: ')
@@ -738,12 +731,12 @@ for side=0:1
         warning('OSS-DBS calculation failed for %s side!\n', sideStr);
         warning('on', 'backtrace');
     end
-        
+
     % Clean up
     ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
     ea_delete([outputPath, filesep,'Allocated_axons.h5']);
     ea_delete(ea_regexpdir(outputPath, '^(?!Current_protocols_).*\.csv$', 0));
-    %ea_delete([outputPath, filesep,'*.py']);
+    % ea_delete([outputPath, filesep,'*.py']);
 
     % Delete this folder in MATLAB since shutil.rmtree may raise
     % I/O error
