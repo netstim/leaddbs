@@ -62,6 +62,10 @@ if isfile([ea_gethome, '.ea_prefs.json.dev'])
     movefile([ea_gethome, '.ea_prefs.json.dev'], [ea_gethome, '.ea_prefs.json'])
 end
 
+disp('Switch LeadDBS branch to develop ...')
+system(['git -C ', LeadRoot, ' checkout .']);
+system(['git -C ', LeadRoot, ' checkout develop']);
+
 disp('Update LeadDBS search path ...');
 lead path;
 rehash toolboxcache;
