@@ -15,6 +15,7 @@ switch cmd
         success={'Redownload data files'
                  'Install development version of Lead'
                  '2009b Nonlinear Flip Transform'
+                 'Allan Institute Genetics Database'
                  '7T Cardiac Gated FLASH MRI (Backdrop visualization)'
                  '7T Ex Vivo 100um Brain Atlas (Backdrop visualization)'
                  'Macroscale Human Connectome Atlas (Yeh 2018)'
@@ -27,6 +28,7 @@ switch cmd
         commands={'leaddata'
                   'hotfix'
                   'nlinflip'
+                  'allengenetics'
                   '7tcgflash'
                   '7tev100um'
                   'macroscalehc'
@@ -72,6 +74,25 @@ switch cmd
                 'fliplr');
         else
             disp('2009b asym LR flip transform is installed.')
+        end
+    case 'allengenetics'
+        checkf=[ea_space,'genetics'];
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
+        if checkonly
+            success=~force;
+            return;
+        end
+        if force==-1
+            success=-1;
+            return;
+        end
+
+        if ~exist(checkf,'file') || force
+            success=ea_downloadasset('Allan Institute Genetics Database',...
+                [ea_space,'genetics.zip'],...
+                'allengenetics');
+        else
+            disp('Allan Institute Genetics Database is installed.')
         end
     case '7tcgflash'
         space = ea_space;
