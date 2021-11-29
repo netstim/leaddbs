@@ -313,7 +313,7 @@ classdef ea_disctract < handle
                     if ~exist('Iperm', 'var') || isempty(Iperm)
                         Improvement = obj.responsevar(patientsel,:);
                     else
-                        Improvement = Iperm(patientsel);
+                        Improvement = Iperm(patientsel,:);
                     end
             end
             % Ihat is the estimate of improvements (not scaled to real improvements)
