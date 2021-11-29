@@ -91,7 +91,7 @@ for group=groups
         gpatsel=patsel;
     end
     if obj.mirrorsides
-        gpatsel=[gpatsel,gpatsel+length(obj.patientselection)];
+        gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
     if dosubscores
         switch obj.multitractmode
@@ -205,16 +205,6 @@ for group=groups
                             end
                             usecovars=[usecovars,thiscv];
                         end
-%                         for cv = 1:size(covars_tr,1)
-%                              covars_tr = covars{1}';
-%                              usecovars=[];
-%                             thiscovar = covars_tr(cv,:);
-%                             thiscv = thiscovar.*gpatsel;
-%                             if (size(thiscv,2)==2)
-%                                 thiscv=thiscv(:,side);
-%                             end
-%                             usecovars=[usecovars,thiscv'];
-%                         end
                         if obj.showsignificantonly 
                             [outvals,outps]=partialcorr(invals,I(gpatsel,side),usecovars,'rows','pairwise','type',obj.corrtype); % generate optimality values on all but left out patients
                         else % no need to calc p-val here

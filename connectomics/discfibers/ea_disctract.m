@@ -118,8 +118,6 @@ classdef ea_disctract < handle
                 obj.subscore.weights = [];
                 obj.subscore.colors{1,1} = ea_color_wes('all');
                 obj.subscore.colors{1,2} = flip(ea_color_wes('all')); %TODO think about this a bit more
-                %obj.subscore.showposamount = repmat([25,25],10,1); %total of 10 subscores - will delete when we know the total number of subscores
-                %obj.subscore.shownegamount = repmat([25,25],10,1);
                 obj.subscore.negvisible = zeros(10,1);
                 obj.subscore.posvisible = ones(10,1);
                 obj.subscore.spitbysubscore = 0;
@@ -370,7 +368,7 @@ classdef ea_disctract < handle
                 Ihat_voters=[];
                 for voter=1:size(vals,1)
                     for side=1:size(vals,2)
-                        if ~isempty(vals{1,side})
+                        if ~isempty(vals{voter,side})
                             switch obj.statmetric % also differentiate between methods in the prediction part.
                                 case 1 % ttests
                                     switch lower(obj.basepredictionon)
