@@ -37,7 +37,7 @@ try
         data = baos.toByteArray;
     end
 catch
-    
+
     fid = fopen(filename,'r','ieee-le');
     data = fread(fid);
     fclose(fid);

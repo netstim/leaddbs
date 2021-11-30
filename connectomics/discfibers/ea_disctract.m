@@ -1,7 +1,7 @@
 classdef ea_disctract < handle
     % Discriminative fiber class to handle visualizations of discriminative fibers in lead dbs resultfig / 3D Matlab figures
     % A. Horn
-    
+
     properties (SetObservable)
         M % content of lead group project
         resultfig % figure handle to plot results
@@ -68,11 +68,11 @@ classdef ea_disctract < handle
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
     end
-    
+
     properties (Access = private)
         switchedFromSpace=3 % if switching space, this will protocol where from
     end
-    
+
     methods
         function obj=ea_disctract(analysispath) % class constructor
             if exist('analysispath', 'var') && ~isempty(analysispath)
@@ -81,14 +81,14 @@ classdef ea_disctract < handle
                 obj.ID = ID;
             end
         end
-        
+
         function initialize(obj,datapath,resultfig)
             datapath = GetFullPath(datapath);
             D = load(datapath, '-mat');
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
                 obj.leadgroup = datapath;
-                
+
                 testID = obj.M.guid;
                 ea_mkdir([fileparts(obj.leadgroup),filesep,'fiberfiltering',filesep]);
                 id = 1;
@@ -98,7 +98,7 @@ classdef ea_disctract < handle
                 end
                 obj.ID = testID;
                 obj.resultfig = resultfig;
-                
+
                 if isfield(obj.M,'pseudoM')
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
@@ -110,7 +110,7 @@ classdef ea_disctract < handle
                     obj.allpatients = obj.M.patient.list;
                     obj.patientselection = obj.M.ui.listselect;
                 end
-                
+
                 obj.responsevarlabel = obj.M.clinical.labels{1};
                 obj.subscore.vars = {};
                 obj.subscore.labels = {};
@@ -140,13 +140,13 @@ classdef ea_disctract < handle
                 ea_error('You have opened a file of unknown type.')
                 return
             end
-            
+
              addlistener(obj,'activateby','PostSet',...
                 @activatebychange);
-            
+
         end
-        
-        
+
+
         function calculate(obj)
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
@@ -157,7 +157,7 @@ classdef ea_disctract < handle
                     end
                 end
             end
-            
+
             cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
             if isfield(obj.M,'pseudoM')
                 vatlist = obj.M.ROI.list;
@@ -165,7 +165,7 @@ classdef ea_disctract < handle
                 vatlist = ea_discfibers_getvats(obj);
             end
             [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
-            
+
             obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
@@ -174,17 +174,17 @@ classdef ea_disctract < handle
             obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
         end
-        
-        
+
+
         function calculate_cleartune(obj,Efields)
             if isequal(obj.cleartuneefields,Efields) % cleartuneresults already calculated with exact same input.
                 return
             else
                 obj.cleartuneefields=Efields;
-                
+
                 fibcell=obj.results.(ea_conn2connid(obj.connectome)).fibcell;
                 [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals_cleartune(Efields, fibcell, obj.calcthreshold);
-                
+
                 obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
                 obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
                 obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
@@ -194,7 +194,7 @@ classdef ea_disctract < handle
                 obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
             end
         end
-        
+
         function Amps = getstimamp(obj)
             Amps=zeros(length(obj.M.patient.list),2);
             for pt=1:length(obj.M.patient.list)
@@ -205,7 +205,7 @@ classdef ea_disctract < handle
                 end
             end
         end
-        
+
         function VTAvolumes = getvtavolumes(obj)
             if ~isfield(obj.M.stats(1).ea_stats.stimulation.vat(1),'volume')
                 VTAvolumes = obj.getstimamp;
@@ -219,7 +219,7 @@ classdef ea_disctract < handle
                 end
             end
         end
-        
+
         function Efieldmags = getefieldmagnitudes(obj)
             if ~isfield(obj.M.stats(1).ea_stats.stimulation.efield(1),'volume')
                 Efieldmags = obj.getstimamp;
@@ -252,17 +252,17 @@ classdef ea_disctract < handle
             obj.M = D.M;
             obj.allpatients=obj.M.patient.list;
         end
-        
+
         function coh = getcohortregressor(obj)
             coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
         end
-        
+
         function [I, Ihat] = loocv(obj)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
             [I, Ihat] = crossval(obj, cvp);
         end
-        
+
         function [I, Ihat] = lococv(obj)
             if length(unique(obj.M.patient.group(obj.patientselection))) == 1
                 ea_error(sprintf(['Only one cohort in the analysis.\n', ...
@@ -270,13 +270,13 @@ classdef ea_disctract < handle
             end
             [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
         end
-        
+
         function [I, Ihat] = kfoldcv(obj)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
             [I, Ihat] = crossval(obj, cvp);
         end
-        
+
         function [I, Ihat] = lno(obj, Iperm)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
@@ -286,7 +286,7 @@ classdef ea_disctract < handle
                 [I, Ihat] = crossval(obj, cvp, Iperm);
             end
         end
-        
+
         function [Improvement, Ihat, actualimprovs] = crossval(obj, cvp, Iperm)
             if isnumeric(cvp) % cvp is crossvalind
                 cvIndices = cvp;
@@ -298,14 +298,14 @@ classdef ea_disctract < handle
                     cvp.test{i} = cvIndices==cvID(i);
                 end
             end
-            
+
             % Check if patients are selected in the custom training/test list
             if isempty(obj.customselection)
                 patientsel = obj.patientselection;
             else
                 patientsel = obj.customselection;
             end
-            
+
             switch obj.multitractmode
                 case 'Split & Color By PCA'
                     if ~exist('Iperm', 'var') || isempty(Iperm)
@@ -321,17 +321,17 @@ classdef ea_disctract < handle
                     end
             end
             % Ihat is the estimate of improvements (not scaled to real improvements)
-            
+
             Ihat = nan(length(patientsel),2);
             Ihattrain = Ihat;
-            
+
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
-            
+
             for c=1:cvp.NumTestSets
                 if cvp.NumTestSets ~= 1
                     fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
                 end
-                
+
                 if isobject(cvp)
                     training = cvp.training(c);
                     test = cvp.test(c);
@@ -339,7 +339,7 @@ classdef ea_disctract < handle
                     training = cvp.training{c};
                     test = cvp.test{c};
                 end
-                
+
                 if ~exist('Iperm', 'var')
                     if obj.cvlivevisualize
                         [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
@@ -357,8 +357,7 @@ classdef ea_disctract < handle
                         [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
                     end
                 end
-                
-                
+
                 switch obj.modelNormalization
                     case 'z-score'
                         for s=1:length(vals)
@@ -400,7 +399,7 @@ classdef ea_disctract < handle
                                                 ihatvals=sort(ihatvals);
                                                 Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                             end
-                                            
+
                                     end
                                 case 2 % efields
                                     switch lower(obj.basepredictionon)
@@ -433,7 +432,7 @@ classdef ea_disctract < handle
                                             end
                                         case 'mean of scores'
                                             if ~isempty(vals{voter,side})
-                                                Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);  
+                                                Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
                                             end
                                             if nargout>2
                                                 Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
@@ -494,9 +493,9 @@ classdef ea_disctract < handle
                             end
                         end
                     end
-                    
+
                     if nargout>2 % send out improvements of subscores
-                        
+
                         switch obj.multitractmode
                             case 'Split & Color By Subscore'
                                 useI=obj.subscore.vars{voter};
@@ -509,18 +508,17 @@ classdef ea_disctract < handle
                             mdl=fitglm(Ihattrain(training,side),useI(training),lower(obj.predictionmodel));
                             actualimprovs{voter,side}=predict(mdl,Ihat(test,side));
                         end
-                        
+
                     end
-                    
-                    
+
                     Ihat_voters=cat(3,Ihat_voters,Ihat);
                 end
             end
-            
+
             if obj.doactualprediction % repeat loops partly to fit to actual response variables:
                 Ihat_voters_prediction=nan(size(Ihat_voters));
                 for c=1:cvp.NumTestSets
-                    
+
                     if isobject(cvp)
                         training = cvp.training(c);
                         test = cvp.test(c);
@@ -537,14 +535,14 @@ classdef ea_disctract < handle
                             otherwise
                                 useI=obj.responsevar;
                         end
-                        
+
                         if size(useI,2)>1
                             ea_error('This has not been implemented for hemiscores.');
                         end
                         predictor=squeeze(ea_nanmean(Ihat_voters,2));
-                        
+
                         mdl=fitglm(predictor(training,voter),useI(training),lower(obj.predictionmodel));
-                        
+
                         if size(useI,2)==1 % global scores
                             Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,predictor(test,voter)),1,2); % fill both sides equally
                         end
@@ -552,8 +550,7 @@ classdef ea_disctract < handle
                 end
                 Ihat_voters=Ihat_voters_prediction; % replace with actual response variables.
             end
-            
-            
+
             switch obj.multitractmode
                 case 'Split & Color By Subscore'
                     % here we map back to the single response variable using a
@@ -576,23 +573,23 @@ classdef ea_disctract < handle
                             weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
                         end
                     end
-                    
+
                     Ihat=ea_nansum(Ihat_voters.*weightmatrix,3);
                 case 'Split & Color By PCA'
-                    
+
                     Ihat_voters=squeeze(ea_nanmean(Ihat_voters,2)); % need to assume global scores here for now.
-                    
+
                     % map back to PCA:
                     subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
                     [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
-                    
+
                     Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
-                    
+
                     Ihat=cell(1); % export in cell format as the Improvement itself.
                     for subsc=1:size(Ihatout,2)
                         Ihat{subsc}=Ihatout(:,subsc);
                     end
-                    
+
                 otherwise
                     Ihat=squeeze(Ihat_voters);
             end
@@ -601,7 +598,7 @@ classdef ea_disctract < handle
                     Ihat = Ihat(test,:);
                     Improvement = Improvement(test);
                 end
-                
+
                 if size(obj.responsevar,2)==2 % hemiscores
                     Ihat = Ihat(:); % compare hemiscores (electrode wise)
                     Improvement = Improvement(:);
@@ -609,28 +606,27 @@ classdef ea_disctract < handle
                     Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
                 end
             end
-            
+
             % restore original view in case of live drawing
             if obj.cvlivevisualize
                 obj.draw;
             end
-            
-            
         end
-        
+
+
         function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
             if ~exist('corrType', 'var')
                 corrType = 'Spearman';
             end
-            
+
             numPerm = obj.Nperm;
-            
+
             Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection, obj.rngseed)';
             Iperm = [obj.responsevar, Iperm];
             Ihat = cell(numPerm+1, 1);
-            
+
             R = zeros(numPerm+1, 1);
-            
+
             for perm=1:numPerm+1
                 if perm==1
                     fprintf('Calculating without permutation\n\n');
@@ -639,29 +635,29 @@ classdef ea_disctract < handle
                     fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
                     [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
                 end
-                
+
                 R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
             end
-            
+
             % generate null distribution
             R1 = R(1);
             R0 = sort((R(2:end)),'descend');
-            
+
             Rp95 = R0(round(0.05*numPerm));
             higherR0=R0>(R1);
             pperm=sum(higherR0)/numel(higherR0);
-            
+
             % old method below, using the one above to be consistent with
             % ea_plothistperm.
-            
+
             %v = ea_searchclosest(R0, R1);
             %pperm = v/numPerm;
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
-            
+
             % Return only selected I
             Iperm = Iperm(obj.patientselection,:);
         end
-        
+
         function save(obj)
             tractset=obj;
             pth = fileparts(tractset.leadgroup);
@@ -678,7 +674,7 @@ classdef ea_disctract < handle
             obj.resultfig=rf;
             obj.drawobject=rd;
         end
-        
+
         function draw(obj,vals,fibcell)
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
@@ -698,9 +694,9 @@ classdef ea_disctract < handle
                 obj.stats.pos.shown(2)=sum(allvals{2}>0);
                 obj.stats.neg.shown(2)=sum(allvals{2}<0);
             end
-            
+
             set(0,'CurrentFigure',obj.resultfig);
-            
+
             domultitract=size(vals,1)>1; % if color by groups is set will be positive.
             if ~isfield(obj.M,'groups')
                 obj.M.groups.group=1;
@@ -713,12 +709,12 @@ classdef ea_disctract < handle
                     linecols = obj.subscore.colors;
                 case 'Split & Color By PCA'
                     linecols = obj.subscore.pcacolors;
-                    
+
             end
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
             end
-            
+
             for tract=1:numel(obj.drawobject)
                 % try since could run into error when reopening from scratch.
                 try
@@ -732,7 +728,7 @@ classdef ea_disctract < handle
                     return
                 end
             end
-            
+
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % vals will also be >1 for subscore tracts
                 % Vertcat all values for colorbar construction
@@ -753,7 +749,7 @@ classdef ea_disctract < handle
                     end
                 end
                 allvals = full(vertcat(vals{group,:}));
-                
+
                 if isempty(allvals)
                     continue;
                 end
@@ -776,7 +772,7 @@ classdef ea_disctract < handle
                                 warning('on', 'backtrace');
                                 fprintf('\n')
                             end
-                            
+
                             if obj.negvisible && all(vals_across_subscores>0)
                                 obj.negvisible = 0;
                                 fprintf('\n')
@@ -795,7 +791,7 @@ classdef ea_disctract < handle
                             warning('on', 'backtrace');
                             fprintf('\n')
                         end
-                        
+
                         if obj.subscore.negvisible(group) && all(allvals>0)
                             obj.subscore.negvisible(group) = 0;
                             fprintf('\n')
@@ -805,7 +801,7 @@ classdef ea_disctract < handle
                             fprintf('\n')
                         end
                     end
-                    
+
                 else
                     if obj.posvisible && all(allvals<0)
                         obj.posvisible = 0;
@@ -815,7 +811,7 @@ classdef ea_disctract < handle
                         warning('on', 'backtrace');
                         fprintf('\n')
                     end
-                    
+
                     if obj.negvisible && all(allvals>0)
                         obj.negvisible = 0;
                         fprintf('\n')
@@ -832,14 +828,14 @@ classdef ea_disctract < handle
                 shiftedCmapEnd = gradientLevel-round(gradientLevel*cmapShiftRatio);
                 shiftedCmapLeftEnd = gradientLevel/2-round(gradientLevel/2*cmapShiftRatio);
                 shiftedCmapRightStart = round(gradientLevel/2*cmapShiftRatio)+1;
-                
+
                 if domultitract % also means subscores
                     switch obj.multitractmode
                         %logic is different for groups (pos & neg cannot be
                         %shown together), whereas for PCA it is not as
                         %such. Therefore, I am splitting the cases into
                         %two.
-                        case 'Split & Color By Group' 
+                        case 'Split & Color By Group'
                             obj.poscolor = obj.groupcolors(group,:);
                             obj.negcolor = [0.94,0.97,1.00];
                             if obj.subscore.special_case
@@ -882,7 +878,7 @@ classdef ea_disctract < handle
                         otherwise
                             if  strcmp(obj.multitractmode,'Split & Color By Subscore')
                                 obj.poscolor = obj.subscore.colors{1,2}(group,:); % positive main color
-                                obj.negcolor = obj.subscore.colors{1,1}(group,:); % negative main color 
+                                obj.negcolor = obj.subscore.colors{1,1}(group,:); % negative main color
                             elseif strcmp(obj.multitractmode,'Split & Color By PCA')
                                 obj.poscolor = obj.subscore.pcacolors(group,:);
                                 obj.negcolor = [0.94,0.97,1.00];
@@ -942,11 +938,11 @@ classdef ea_disctract < handle
                                     % alphaind = normalize(-1./(1+exp(-allvals)), 'range');
                                 end
                             end
-                    end     
+                    end
                 else
                     obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
                     obj.negcolor = [0.2824,0.6157,0.9725]; % negative main color
-                    
+
                     if obj.posvisible && obj.negvisible
                         cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
                         cmapLeft = ea_colorgradient(gradientLevel/2, obj.negcolor, cmap(shiftedCmapLeftEnd,:));
@@ -974,7 +970,7 @@ classdef ea_disctract < handle
                     end
                 end
                 setappdata(obj.resultfig, ['fibcmap',obj.ID], fibcmap);
-                
+
                 if size(vals,2)>1 % standard case
                     cmapind = mat2cell(cmapind, [numel(vals{group,1}), numel(vals{group,2})])';
                     alphaind = mat2cell(alphaind, [numel(vals{group,1}), numel(vals{group,2})])';
@@ -986,26 +982,26 @@ classdef ea_disctract < handle
                     if domultitract % introduce small jitter for visualization
                         fibcell{group,side}=ea_discfibers_addjitter(fibcell{group,side},0.03);
                     end
-                    
+
                     % Plot fibers if any survived
                     if ~isempty(fibcell{group,side})
                         obj.drawobject{group,side}=streamtube(fibcell{group,side},0.2);
                         nones=repmat({'none'},size(fibcell{group,side}));
                         [obj.drawobject{group,side}.EdgeColor]=nones{:};
-                        
+
                         % Calulate fiber colors alpha values
                         fibcolor = mat2cell(fibcmap{group}(cmapind{side},:), ones(size(fibcell{group,side})));
                         fibalpha = mat2cell(alphaind{side},ones(size(fibcell{group,side})));
-                        
+
                         % Set fiber colors and alphas
                         [obj.drawobject{group,side}.FaceColor]=fibcolor{:};
                         [obj.drawobject{group,side}.FaceAlpha]=fibalpha{:};
                     end
                 end
-                
+
                 % Set colorbar tick positions and labels
                 if ~isempty(allvals)
-                    if domultitract 
+                    if domultitract
                         if obj.subscore.special_case
                            if obj.posvisible && obj.negvisible
                                 tick{group} = [1, length(fibcmap{group})];
@@ -1027,7 +1023,7 @@ classdef ea_disctract < handle
                                 negvals = sort(allvals(allvals<0));
                                 ticklabel{group} = [negvals(1), negvals(end)];
                                 ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
-                            end 
+                            end
                         else
                             if obj.subscore.posvisible(group) && obj.subscore.negvisible(group)
                                 tick{group} = [1, length(fibcmap{group})];
@@ -1073,11 +1069,11 @@ classdef ea_disctract < handle
                     obj.colorbar.tick = tick;
                     obj.colorbar.ticklabel = ticklabel;
                 end
-                
+
             end
             obj.activate_tractset; % function to highlight tracts activated by a ROI / VTA.
         end
-        
+
         function activate_tractset(obj)
             if ~isempty(obj.activateby)
             for entry=1:length(obj.activateby)
@@ -1102,7 +1098,7 @@ classdef ea_disctract < handle
                     % ignore for now
                 end
             end
-            
+
             for side=1:size(obj.drawobject,2)
                 if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
                     weights{side}=ea_minmax(ea_contrast(weights{side},5))*0.5; % enhance constrast a bit
@@ -1127,7 +1123,7 @@ classdef ea_disctract < handle
                 end
             end
         end
-        
+
     end
     methods (Static)
         function changeevent(~,event)
@@ -1135,11 +1131,8 @@ classdef ea_disctract < handle
         end
     end
 end
-    
-    
+
+
 function activatebychange(~,event)
-activate_tractset();
+    activate_tractset();
 end
-
-
-

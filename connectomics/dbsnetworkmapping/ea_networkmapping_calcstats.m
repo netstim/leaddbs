@@ -86,7 +86,7 @@ for group=groups
                 vals{group}=A;
             end
     end
-                
+
     obj.stats.pos.available=sum(vals{1}>0); % only collected for first group (positives)
     obj.stats.neg.available=sum(vals{1}<0);
 end
@@ -103,7 +103,7 @@ switch lower(obj.multcompstrategy)
         [psort,idx]=sort(pnnan);
         pranks=zeros(length(psort),1);
         for rank=1:length(pranks)
-           pranks(idx(rank))=rank; 
+           pranks(idx(rank))=rank;
         end
         pnnan=pnnan.*numtests;
         pnnan=pnnan./pranks;
