@@ -84,7 +84,7 @@ classdef ea_disctract < handle
         
         function initialize(obj,datapath,resultfig)
             datapath = GetFullPath(datapath);
-            D = load(datapath);
+            D = load(datapath, '-mat');
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
                 obj.leadgroup = datapath;
@@ -716,7 +716,10 @@ classdef ea_disctract < handle
             end
             
             for tract=1:numel(obj.drawobject)
-                delete(obj.drawobject{tract});
+                % try since could run into error when reopening from scratch.
+                try
+                    delete(obj.drawobject{tract});
+                end
             end
            if strcmp(obj.multitractmode,'Single Tract Analysis') || obj.subscore.special_case
                 % reset colorbar
