@@ -117,7 +117,11 @@ classdef ea_disctract < handle
                 obj.subscore.pcavars = {};
                 obj.subscore.weights = [];
                 obj.subscore.colors{1,1} = ea_color_wes('all');
-                obj.subscore.colors{1,2} = flip(ea_color_wes('all')); %TODO think about this a bit more
+                obj.subscore.colors{1,2} = flip(ea_color_wes('all'));
+                obj.subscore.vis.showposamount = repmat([25,25],10,1); %total of 10 subscores - will delete when we know the total number of subscores
+                obj.subscore.vis.shownegamount = repmat([25,25],10,1);
+                obj.subscore.vis.pos_shown = repmat([25,25],10,1);
+                obj.subscore.vis.neg_shown = repmat([25,25],10,1);
                 obj.subscore.negvisible = zeros(10,1);
                 obj.subscore.posvisible = ones(10,1);
                 obj.subscore.spitbysubscore = 0;

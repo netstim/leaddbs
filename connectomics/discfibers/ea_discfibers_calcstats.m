@@ -36,12 +36,16 @@ if strcmp(obj.multitractmode,'Split & Color By PCA')
    % prep PCA:
    subvars=ea_nanzscore(cell2mat(obj.subscore.vars')); %standardize subscore stage
    try
-   [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
-   catch % pca failed, likely not enough variables selected.
+    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
+   catch %can fail due to presence of NaN/INF TODO
+       % pca failed, likely not enough variables selected.
        score=nan(length(obj.responsevar),obj.numpcs);
    end
-   %if ~isfield(obj.subscore,'pcavars')
-   obj.subscore.pcavars=cell(1);
+   if isempty(score) || isnan(score)
+       score=nan(length(obj.responsevar),obj.numpcs);
+   end
+   %if score is empty 
+   obj.subscore.pcavars=cell(obj.numpcs,1);
    %end
    for pc=1:obj.numpcs
       obj.subscore.pcavars{pc}=score(:,pc); %pca variables -> pca components, location of first subscore is replaced by first pc
