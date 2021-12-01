@@ -88,7 +88,8 @@ for pt=1:length(patselect)
             stimtmp = zeros(1,9);
             stimtmp(1,1) = allstims{1,2}(run);
             stimtmp(1,allstims{1,1}(run)+2) = -100;
-            S(run) = ea_initializeS_cleartune(options);
+            options.UsePreExistingStim = 0;
+            S(run) = ea_initializeS(options);
             S(run) = ea_cleartune_generateMfile(stimtmp,stimtmp,S(run),va);
             S(run).label = ['c',num2str(allstims{1}(run),'%02d'),'_a',num2str(allstims{2}(run)*10,'%02d')];
   
