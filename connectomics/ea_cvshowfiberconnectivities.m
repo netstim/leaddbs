@@ -434,7 +434,7 @@ for iside=1:length(options.sides)
 end
 
 % plot seed surface:
-setappdata(resultfig,[mode,'PL'],PL);
+setappdata(resultfig, [mode,'PL'], PL);
 
 
 function objvisible(hobj, evt, obj)
