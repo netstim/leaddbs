@@ -51,7 +51,7 @@ for source=S.sources
             impedance = [];
         end
 
-        [Efield_to_add] = get_efield(perc,elt.standard_efield,amp1,conductivity,amp_mode,impedance);
+        [Efield_to_add] = ea_get_efield(perc,elt.standard_efield,amp1,conductivity,amp_mode,impedance);
         Efield=Efield+Efield_to_add;
     end
 end
