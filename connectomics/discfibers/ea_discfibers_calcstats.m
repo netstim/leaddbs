@@ -286,7 +286,7 @@ for group=groups
                     upSet=invals(ImpBinary==1,:);
                     downSet=invals(ImpBinary==0,:);
 
-                    if obj.showsignificantonly 
+                    if obj.showsignificantonly
                         [~,ps,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
                         outvals=stats.tstat';
                         outps=ps;
