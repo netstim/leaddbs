@@ -297,7 +297,9 @@ for group=groups
                     end
 
                     vals{group,side}(nonempty)=outvals;
-                    pvals{group,side}(nonempty)=outps;
+                    if exist('outps','var') % only calculated if testing for significance.
+                        pvals{group,side}(nonempty)=outps;
+                    end
                 end
 
             case 6 % Plain Connection
