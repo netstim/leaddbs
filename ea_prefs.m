@@ -51,7 +51,6 @@ catch ME
     return
 end
 
-
 % combine default prefs and user prefs
 prefs = combinestructs(dprefs, uprefs);
 
