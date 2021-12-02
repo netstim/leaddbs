@@ -444,7 +444,7 @@ oemesh=emesh;
 emesh(:,5)=tissuetype;
 
 if vizz
-    %% plot the final tetrahedral mesh
+    % plot the final tetrahedral mesh
     figure
     hold on;
     plotmesh(nmesh,emesh,'linestyle','none','facealpha',0.2)
@@ -453,11 +453,12 @@ end
 if stlexport
     ea_dispt('Exporting STL files');
     tissuelabels={'grey','white','contacts','insulation'};
-    if ~exist([options.root,options.patientname,filesep,'headmodel',filesep],'file')
-        mkdir([options.root,options.patientname,filesep,'headmodel',filesep]);
-    end
+
+    headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+    ea_mkdir(headmodelDir);
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
     for tt=1:length(tissuelabels)
-        savestl(nmesh,emesh(emesh(:,5)==tt,1:4),[options.root,options.patientname,filesep,'headmodel',filesep,tissuelabels{tt},num2str(side),'.stl'],tissuelabels{tt});
+        savestl(nmesh, emesh(emesh(:,5)==tt,1:4), fullfile(headmodelDir, [filePrefix, 'headmodel', num2str(side), '_label-', tissuelabels{tt}, '.stl']), tissuelabels{tt});
     end
 end
 
