@@ -47,7 +47,7 @@ for pt = 1:length(uidir)
             fidpoints_vox = ea_getfidpoints(fidpoints_mm,normTemplate);
 
             % warp into patient space
-            [fpinsub_mm] = ea_map_coords(fidpoints_vox', normTemplate, [options.subj.subjDir,'forwardTransform'], '');
+            [fpinsub_mm] = ea_map_coords(fidpoints_vox', normTemplate, [options.subj.subjDir,filesep,'forwardTransform'], '');
             fpinsub_mm = fpinsub_mm';
 
             fid(pt).AC = fpinsub_mm(1,:);
