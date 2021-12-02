@@ -1,4 +1,4 @@
-function activeidx = jr_activeidx(S,side,conts,elspec)
+function activeidx = ea_activeidx(S,side,conts,elspec)
 
 % Load contact locations and assign active contact
 if side == 1
