@@ -1,7 +1,6 @@
 function [elrender,ellabel,eltype]=ea_showelectrode(obj,cmd,options)
-% This function renders the electrode as defined by options.elspec and
-% coords_mm.
-% __________________________________________________________________________________
+% This function renders the electrode as defined by options.elspec and coords_mm.
+% _______________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 

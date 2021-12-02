@@ -1,18 +1,18 @@
-function [el_render,el_label]=ea_showelectrodes(options,resultfig,elstruct,pt,el_render,el_label)
+function [el_render,el_label]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label)
+% Wrapper function to render lead trajectories based on elstruct
 
-%
 if ~exist('elstruct','var')
-                [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
-            elstruct(1).coords_mm=coords_mm;
-            elstruct(1).trajectory=trajectory;
-            elstruct(1).name=options.patientname;
-            elstruct(1).markers=markers;
+    [coords_mm,trajectory,markers]=ea_load_reconstruction(options);
+    elstruct(1).coords_mm=coords_mm;
+    elstruct(1).trajectory=trajectory;
+    elstruct(1).name=options.patientname;
+    elstruct(1).markers=markers;
 end
+
 if ~exist('pt','var')
     pt=1;
 end
 
-% show electrodes..
 popts=options;
 if strcmp(options.leadprod,'group')
     try
@@ -22,7 +22,7 @@ if strcmp(options.leadprod,'group')
     catch
         directory=[options.root,options.patientname,filesep];
     end
-    
+
     popts=ea_detsides(popts);
 else
     directory=[options.root,options.patientname,filesep];
@@ -41,15 +41,15 @@ for side=elSide{pt}
     pobj.elstruct=elstruct(pt);
     pobj.showMacro=1;
     pobj.side=side;
-    
+
     set(0,'CurrentFigure',resultfig);
     if exist('el_render','var')
         el_render(end+1)=ea_trajectory(pobj);
     else
         el_render(1)=ea_trajectory(pobj);
     end
-    
-    if ~exist('ellabel','var')
+
+    if ~exist('el_label','var')
         el_label=el_render(end).ellabel;
     else
         try

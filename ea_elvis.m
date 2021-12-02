@@ -136,20 +136,17 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         for pt=1:length(elstruct)
  
             if exist('el_render','var')
-                [el_render,el_label]=ea_showelectrodes(options,resultfig,elstruct,pt,el_render,el_label);
+                [el_render,el_label]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
             else
-                [el_render,el_label]=ea_showelectrodes(options,resultfig,elstruct,pt);
+                [el_render,el_label]=ea_renderelstruct(options,resultfig,elstruct,pt);
             end
+
             if strcmp(options.leadprod,'group')
                 try
                     directory=[options.patient_list{elstruct(pt).pt},filesep];
-                    [popts.root,popts.patientname]=fileparts(directory);
-                    popts.root=[popts.root,filesep];
                 catch
                     directory=[options.root,options.patientname,filesep];
                 end
-                
-                popts=ea_detsides(popts);
             else
                 directory=[options.root,options.patientname,filesep];
             end
