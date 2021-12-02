@@ -683,12 +683,12 @@ classdef ea_disctract < handle
             obj.fiberdrawn.vals = vals;
             obj.fiberdrawn.usedidx = usedidx;
             allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
-            if length(vals)==2 % can be a single cell in case of custom code (pseudoM setting).
+            if size(vals,2)==2 % can be a single cell in case of custom code (pseudoM setting).
                 allvals{2}=[];
             end
             for v=1:size(vals,1)
                 allvals{1}=[allvals{1};vals{v,1}];
-                if length(vals)==2
+                if size(vals,2)==2
                     allvals{2}=[allvals{2};vals{v,2}];
                 end
             end
