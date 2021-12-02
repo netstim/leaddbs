@@ -138,21 +138,15 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         elSide = cell(1, length(elstruct));
         for pt=1:length(elstruct)
-
             if exist('el_render','var')
-                [el_render,el_label]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
+                [el_render,el_label] = ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
             else
-                [el_render,el_label]=ea_renderelstruct(options,resultfig,elstruct,pt);
+                [el_render,el_label] = ea_renderelstruct(options,resultfig,elstruct,pt);
             end
 
             if strcmp(options.leadprod,'group')
-                try
-                    directory = [options.patient_list{elstruct(pt).pt},filesep];
-                catch
-                    directory = [options.root,options.patientname,filesep];
-                end
-            else
-                directory=options.subj.reconDir;
+                recon = ea_regexpdir([options.patient_list{elstruct(pt).pt}, filesep, 'reconstruction'], 'desc-reconstruction\.mat', 0, 'file');
+                options.subj.recon.recon = recon{1};
             end
 
             if ~multiplemode
