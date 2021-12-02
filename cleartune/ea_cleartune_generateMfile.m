@@ -6,7 +6,6 @@ leftsets(isnan(leftsets)) = 0;
 % Generates M. file out of stimulation data
 S.label = 'setting';
 
-
 % Stim OFF
 fields1 = fieldnames(S);
 for source = 2:9
@@ -27,9 +26,7 @@ S.activecontacts{1,2} = [0,0,0,0,0,0,0,0];
 S.amplitude{1,1} = [0,0,0,0];
 S.amplitude{1,2} = [0,0,0,0];
 
-
 % Stim ON
-
 S.Rs1.amp = rightsets(1);
 S.Ls1.amp = leftsets(1);
 S.active = [1,1];
@@ -59,12 +56,10 @@ else
     S.Ls1.case.pol = 0;
 end
 
-
 for cont = 1:8
-    
     kr = ['k' num2str(cont-1)];
     S.Rs1.(kr).perc = abs(rightsets(cont+1));
-    
+
     if rightsets(cont+1) > 0
         S.Rs1.(kr).pol = 2;
     elseif rightsets(cont+1) < 0
@@ -72,10 +67,10 @@ for cont = 1:8
     else
         S.Rs1.(kr).pol = 0;
     end
-    
+
     kl = ['k' num2str(cont+7)];
     S.Ls1.(kl).perc = abs(leftsets(cont+1));
-    
+
     if leftsets(cont+1) > 0
         S.Ls1.(kl).pol = 2;
     elseif leftsets(cont+1) < 0
@@ -83,5 +78,4 @@ for cont = 1:8
     else
         S.Ls1.(kl).pol = 0;
     end
-    
 end
