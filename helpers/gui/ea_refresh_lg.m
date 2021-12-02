@@ -412,6 +412,8 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
                         clindata.(scorename).postop=[];
                         clindata.(scorename).factors={};
                         clindata.(scorename).score={};
+                        clindata.(scorename).somatotopies=struct;
+                        clindata.(scorename).somatotopynames={};
                     end
                     
                     [ispresent,ix]=ismember(entries{entry},fieldnames(ea_scores));

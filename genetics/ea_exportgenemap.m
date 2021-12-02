@@ -12,7 +12,7 @@ else
     load([prefs.genetics.dbdir,'genedb.mat']);
 end
 if ~exist('smoothkernel','var')
-    smoothkernel=0;
+    smoothkernel=3;
 end
 if ~exist('outputfolder','var')
     outputfolder=pwd;
@@ -21,7 +21,7 @@ if ~exist('mirror','var')
    mirror=1;
 end
 if ~exist('intensnorm','var')
-    intensnorm='';
+    intensnorm='z';
 end
 if ~exist('resolution','var')
    resolution='222'; 

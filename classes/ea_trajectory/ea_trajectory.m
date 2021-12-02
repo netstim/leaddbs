@@ -7,7 +7,7 @@ classdef ea_trajectory < handle
         plan2elstruct % reconstruction (pseudo) of stereotactical plan
         plan2elstruct_model='Medtronic 3389' % electrode model of pseudo reconstruction of stereotactical plan
         electrodeRelativeToPlan=3;
-        elpatch % handle to macroelectrode patch
+        elpatch % handle to DBS electrode patch
         eltype % indexes 1 for electrode contacts in elpatch
         ellabel % handle to electrode label
         elmodel % elmodel to display

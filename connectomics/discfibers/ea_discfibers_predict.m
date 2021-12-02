@@ -34,7 +34,7 @@ switch lower(side)
         vatlist = leftVATs;
     case 'both'
         vatlist = [rightVATs;leftVATs];
-end 
+end
 
 [scoreBin, scoreSum, scoreMean, scorePeak, score5Peak] = ea_discfibers_vtascore(vatlist, atlas, 'both', posneg);
 

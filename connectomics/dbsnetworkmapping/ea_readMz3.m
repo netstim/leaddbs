@@ -16,11 +16,11 @@ if ~exist(filename,'file'), error('Unable to find MZ3 file named "%s"', filename
 try
     % Check if this is Octave:
     persistent isoct;
-    if isempty(isoct),
+    if isempty(isoct)
         isoct = exist('OCTAVE_VERSION','builtin') ~= 0;
     end
     % If it's Octave, use the built-in gzip stream:
-    if isoct,
+    if isoct
         fid = fopen(filename,'rz','l');
         data = uint8(fread(fid,'uint8'));
         fclose(fid);
@@ -37,7 +37,7 @@ try
         data = baos.toByteArray;
     end
 catch
-    
+
     fid = fopen(filename,'r','ieee-le');
     data = fread(fid);
     fclose(fid);
@@ -65,7 +65,7 @@ if isFace
     %faces = reshape(faces,3,nFace)';
     faces = reshape(faces,3, nFace)';
     hdrSz = hdrSz + facebytes;
-end;
+end
 %read vertices
 if isVert
     vertbytes = nVert * 3 * 4; %each vertex has 3 values (x,y,z), each 4 byte float
