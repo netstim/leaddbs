@@ -88,8 +88,6 @@ def run_full_model(master_dict):
     logging.critical('Electrode array stretch: {}'.format(d['stretch']))
     d['StimSets'] = lead_dict['StimSets']
 
-    log_file = open(os.environ['PATIENTDIR']+'/log_file_hemi_' + str(d["Stim_side"]) + '.log', 'w')
-
     from Dict_corrector import rearrange_Inp_dict
     d=rearrange_Inp_dict(d)             #misc. transformation of parameters to the platform's format
     d.update(master_dict)               #modifies the user provided input dictionary (e.g. for UQ study), check run_master_study() function . Warning: this does not work update the encap. layer properties and the solver during adaptive mesh refiment, because these data are realoaded from the original dictionary
@@ -809,8 +807,6 @@ date_and_time = now.strftime("%d-%m-%Y___%H-%M-%S")  # EUROPEAN format
 import logging
 logging.basicConfig(filename='/opt/Patient' + '/complete_log_' + date_and_time + '.log', format='[%(asctime)s]:%(message)s', level=logging.ERROR)
 
-
-logf = open("/opt/Patient/last_error.log", "w")
 
 try:
     master_dict = {}
