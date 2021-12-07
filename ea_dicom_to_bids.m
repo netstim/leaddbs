@@ -47,7 +47,7 @@ end
 close(h_wait);
 
 preop_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};
-postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};
+postop_modalities = {'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};
 
 % options that should appear in the table
 table_options = struct;
