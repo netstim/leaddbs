@@ -208,6 +208,9 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
+    if strcmp(modality, "CT")
+        uiapp.niiFileTable.Data.Acquisition(i) = "-";
+    end
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
     % check whether everything has been properly defined befor updating uitree
