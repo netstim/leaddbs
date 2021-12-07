@@ -177,12 +177,12 @@ class Neuron_array(object):
             Adds to self: seeding nodes for VTA axons (a 2D numpy array) """
 
         # contain coordinates of the VTA axons centered at (0,0,0)
-        self.N_models_in_plane = (self.VTA_structure['N_seeding_steps'][0] + 1) * (
-                    self.VTA_structure['N_seeding_steps'][1] + 1) * (self.VTA_structure['N_seeding_steps'][2] + 1)
-        self.N_total_of_axons = (self.VTA_structure['N_seeding_steps'][0] + 1) * (
+        self.N_models_in_plane = int((self.VTA_structure['N_seeding_steps'][0] + 1) * (
+                    self.VTA_structure['N_seeding_steps'][1] + 1) * (self.VTA_structure['N_seeding_steps'][2] + 1))
+        self.N_total_of_axons = int((self.VTA_structure['N_seeding_steps'][0] + 1) * (
                     self.VTA_structure['N_seeding_steps'][1] + 1) * (
                                             self.VTA_structure['N_seeding_steps'][2] + 1) * len(
-            self.VTA_structure["X_angles_glob"])  # +1 because we have the initial axon
+            self.VTA_structure["X_angles_glob"]))  # +1 because we have the initial axon
         self.VTA_seeds_O = np.zeros((self.N_total_of_axons, 3), float)
 
         # computed as x_start_point=0-(d["x_step"]*(d["x_steps"])/2)
@@ -196,8 +196,7 @@ class Neuron_array(object):
         z_one_dir = []
 
         # iterate over axes
-        for x_ind in range(self.VTA_structure['N_seeding_steps'][
-                               0] + 1):  # number of steps corresponds to additional axons along this axis besides the initial one centered at (0,0,0) along Y-axis
+        for x_ind in range(self.VTA_structure['N_seeding_steps'][0] + 1):  # number of steps corresponds to additional axons along this axis besides the initial one centered at (0,0,0) along Y-axis
             for y_ind in range(self.VTA_structure['N_seeding_steps'][1] + 1):
                 for z_ind in range(self.VTA_structure['N_seeding_steps'][2] + 1):
                     x_one_dir.append(start_point[0] + x_ind * self.VTA_structure['Dist_seeding_steps'][0])
