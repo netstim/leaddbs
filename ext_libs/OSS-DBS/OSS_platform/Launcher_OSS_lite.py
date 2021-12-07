@@ -242,7 +242,7 @@ def run_full_model(master_dict):
             d['beta_array_glob']=[0]
             d['gamma_array_glob']=[0]
 
-
+    if d["Init_mesh_ready"] == 0:
 
         if d["Brain_shape_name"] == 0 or d["Brain_shape_name"] == '0' or d["Brain_shape_name"] == '':   #Creates a brain approximation (ellisploid)
             from CAD_Salome import build_brain_approx
