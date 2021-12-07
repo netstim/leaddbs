@@ -78,11 +78,20 @@ if length(uipatdir) == 1 % Single folder
                 end
             end
             folder_type = 'patient_folder_dicom_folder';
-            
-        elseif all(endsWith(raw_nifti_in_subfolder_list, raw_nifti_filter)) % does not have ea_ui.mat, only has niftis
+
+        % does not have ea_ui.mat, only has niftis
+        elseif all(endsWith(raw_nifti_in_subfolder_list, raw_nifti_filter))
             folder_type = 'patient_folder_raw_nifti';
+
+        % Suppose it is a DICOM folder
         else
-            folder_type = '';
+            warning('off', 'backtrace');
+            warning('Trying to load as DICOM folder...');
+            warning('off', 'backtrace');
+            movefile(uipatdir{1}, [uipatdir{1}, '_DICOM']);
+            mkdir(uipatdir{1});
+            movefile([uipatdir{1}, '_DICOM'], fullfile(uipatdir{1}, 'DICOM'));
+            folder_type = 'patient_folder_dicom_folder';
         end
         
         switch folder_type
