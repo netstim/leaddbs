@@ -83,15 +83,41 @@ if length(uipatdir) == 1 % Single folder
         elseif ~isempty(raw_nifti_in_subfolder_list) && all(endsWith(raw_nifti_in_subfolder_list, raw_nifti_filter))
             folder_type = 'patient_folder_raw_nifti';
 
-        % Suppose it is a DICOM folder
+        % Otherwise, look for DICOMs
         else
             warning('off', 'backtrace');
-            warning('Trying to load as DICOM folder...');
-            warning('off', 'backtrace');
-            movefile(uipatdir{1}, [uipatdir{1}, '_DICOM']);
-            mkdir(uipatdir{1});
-            movefile([uipatdir{1}, '_DICOM'], fullfile(uipatdir{1}, 'DICOM'));
-            folder_type = 'patient_folder_dicom_folder';
+            warning('trying to load as DICOM folder...');
+            warning('on', 'backtrace');
+            movefile(uipatdir{1}, [uipatdir{1}, '_ORIG']);
+            mkdir(fullfile(uipatdir{1}, 'DICOM'));
+            movefile([uipatdir{1}, '_ORIG'], fullfile(uipatdir{1}, 'ORIG'));
+
+            if ispc
+                dcm2niix = fullfile(ea_getearoot, 'ext_libs', 'dcm2nii', 'dcm2niix.exe');
+            else
+                dcm2niix = fullfile(ea_getearoot, 'ext_libs', 'dcm2nii', ['dcm2niix.', computer('arch')]);
+            end
+
+            cmd = [dcm2niix, ' -r y', ' -o ', ea_path_helper(fullfile(uipatdir{1}, 'DICOM')), ' ', ea_path_helper(fullfile(uipatdir{1}, 'ORIG'))];
+
+            % Search for DICOM files and rename to *.dcm
+            if ~ispc
+                [~, cmdout] = system(['bash -c "', cmd, '"']);
+            else
+                [~, cmdout] = system(cmd);
+            end
+
+            numDICOMs = regexp(cmdout, '(?<=Converted )\d+(?= DICOMs)', 'match', 'once');
+            if strcmp(numDICOMs, '0')
+                warning('off', 'backtrace');
+                warning('%s DICOMs found!', numDICOMs);
+                warning('on', 'backtrace');
+                folder_type = '';
+            else
+                fprintf('%s DICOMs found!\n', numDICOMs);
+                ea_delete(fullfile(uipatdir{1}, 'ORIG'));
+                folder_type = 'patient_folder_dicom_folder';
+            end
         end
         
         switch folder_type
@@ -144,7 +170,7 @@ if length(uipatdir) == 1 % Single folder
                     return;
                 end
             otherwise
-                error('Neither BIDS dataset nor patient folder found!');
+                error('No compatible files/folders (BIDS dataset/NIfTIs/DICOMs) found!');
         end
     elseif isBIDSRoot % Is BIDS root folder
         BIDSRoot = uipatdir{1};
