@@ -29,7 +29,7 @@ function ea_dataset_import(source_dir, dest_dir, method, dicomimport)
 % Johannes Achtzehn 
 
 preop_modalities = {'T1w', 'T2w', 'PDw', 'FGATIR'};                         % TODO: get this from prefs
-postop_modalities = {'CT', 'ax_MR', 'sag_MR', 'cor_MR'};               % TODO: get this from prefs
+postop_modalities = {'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};               % TODO: get this from prefs
 
 if ~iscell(source_dir)   % if single string is passed, convert to cell
     source_dir = {source_dir};
@@ -134,7 +134,7 @@ else
             % copy DICOM data to sourcedata: 
             %without DICOM, error when subject only has DICOMS inside
             if ~exist(fullfile(dest_dir_subj, 'sourcedata', subjID,'DICOM'), 'dir')
-            copyfile(fullfile(source_dir{subj_idx}, 'DICOM'), fullfile(dest_dir_subj, 'sourcedata', subjID));
+                copyfile(fullfile(source_dir{subj_idx}, 'DICOM'), fullfile(dest_dir_subj, 'sourcedata', subjID));
             end
             subj_ids(subj_idx).name =char(subjID);
             
@@ -213,10 +213,10 @@ end
         found_files = struct();              % store found files in a struct
         for mod_idx = 1:numel(modalities)       % go through the different preop-image types according to prefs and see if we can find some files
             
-            if any(strcmp(modalities{mod_idx}, {'ax_MR', 'cor_MR', 'sag_MR'}))
+            if any(strcmp(modalities{mod_idx}, {'ax_MRI', 'cor_MRI', 'sag_MRI'}))
                 % find out which one was found
                 mri_dirs = {'ax', 'cor', 'sag'};
-                dir_idx = strcmp(modalities{mod_idx}, {'ax_MR', 'cor_MR', 'sag_MR'});
+                dir_idx = strcmp(modalities{mod_idx}, {'ax_MRI', 'cor_MRI', 'sag_MRI'});
                 all_files = dir(fullfile(folder, ['*_acq-', mri_dirs{dir_idx}, '_*', '.nii.gz']));
             else
                 all_files = dir(fullfile(folder, ['*_', modalities{mod_idx}, '.nii.gz']));
