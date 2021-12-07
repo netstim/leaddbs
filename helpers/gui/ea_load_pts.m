@@ -80,7 +80,7 @@ if length(uipatdir) == 1 % Single folder
             folder_type = 'patient_folder_dicom_folder';
 
         % does not have ea_ui.mat, only has niftis
-        elseif all(endsWith(raw_nifti_in_subfolder_list, raw_nifti_filter))
+        elseif ~isempty(raw_nifti_in_subfolder_list) && all(endsWith(raw_nifti_in_subfolder_list, raw_nifti_filter))
             folder_type = 'patient_folder_raw_nifti';
 
         % Suppose it is a DICOM folder
