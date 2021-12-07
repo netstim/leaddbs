@@ -88,6 +88,7 @@ def run_full_model(master_dict):
     logging.critical('Electrode array stretch: {}'.format(d['stretch']))
     d['StimSets'] = lead_dict['StimSets']
 
+
     from Dict_corrector import rearrange_Inp_dict
     d=rearrange_Inp_dict(d)             #misc. transformation of parameters to the platform's format
     d.update(master_dict)               #modifies the user provided input dictionary (e.g. for UQ study), check run_master_study() function . Warning: this does not work update the encap. layer properties and the solver during adaptive mesh refiment, because these data are realoaded from the original dictionary
@@ -222,25 +223,26 @@ def run_full_model(master_dict):
         d['diam_fib']=5.0
         d['n_Ranvier']=22
         d['x_step'],d['y_step'],d['z_step']=(1.0,1.0,1.0)
-        d['x_steps'],d['y_steps'],d['z_steps']=(20.0,0.0,20.0)  #we assume that Z-axis is ventra-dorsal in the MRI
+        d['x_steps'],d['y_steps'],d['z_steps']=(20,0,20)  #we assume that Z-axis is ventra-dorsal in the MRI
         d['Global_rot']=1
         d['alpha_array_glob']=[0]
         d['beta_array_glob']=[0]
         d['gamma_array_glob']=[0]
+        d["Neuron_model_array_prepared"] = 0
+                
         if d['Electrode_type']=="AA_rodent_monopolar" or d['Electrode_type']=="SR_rodent":    #rodent VTA
             d['Axon_Model_Type']='Reilly2016'
             d['x_seed'],d['y_seed'],d['z_seed']=(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z'])  # it makes sense to shift it a bit from the tip
             d['diam_fib']=5.0
             d['n_Ranvier']=3
             d['x_step'],d['y_step'],d['z_step']=(0.1,0.1,0.1)
-            d['x_steps'],d['y_steps'],d['z_steps']=(20.0,0.0,20.0)  #we assume that Z-axis is ventra-dorsal in the MRI
+            d['x_steps'],d['y_steps'],d['z_steps']=(20,0,20)  #we assume that Z-axis is ventra-dorsal in the MRI
             d['Global_rot']=1
             d['alpha_array_glob']=[0]
             d['beta_array_glob']=[0]
             d['gamma_array_glob']=[0]
 
 
-    if d["Init_mesh_ready"] == 0:
 
         if d["Brain_shape_name"] == 0 or d["Brain_shape_name"] == '0' or d["Brain_shape_name"] == '':   #Creates a brain approximation (ellisploid)
             from CAD_Salome import build_brain_approx
@@ -260,7 +262,7 @@ def run_full_model(master_dict):
                 pickle.dump(N_array, f, pickle.HIGHEST_PROTOCOL)
         elif d["Neuron_model_array_prepared"]==1 and d["Init_neuron_model_ready"]==0:
             logging.critical("----- Creating initial neuron array from a provided neuron array -----")
-            N_array.process_external_array()   # adjusts the prepared neuron array to the computational domain (only for brain substitutes!), then stores the nueron array in 'Neuron_model_arrays/All_neuron_models.csv'
+            N_array.process_external_array()   # adjusts the prepared neuron array to the computational domain (only for brain substitutes!), then stores the neuron array in 'Neuron_model_arrays/All_neuron_models.csv'
             with open(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Neuron_array_class.file', "wb") as f:
                 pickle.dump(N_array, f, pickle.HIGHEST_PROTOCOL)
         else:
@@ -806,7 +808,6 @@ date_and_time = now.strftime("%d-%m-%Y___%H-%M-%S")  # EUROPEAN format
 
 import logging
 logging.basicConfig(filename='/opt/Patient' + '/complete_log_' + date_and_time + '.log', format='[%(asctime)s]:%(message)s', level=logging.ERROR)
-
 
 try:
     master_dict = {}
