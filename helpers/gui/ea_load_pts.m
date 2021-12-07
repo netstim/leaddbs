@@ -36,11 +36,15 @@ if length(uipatdir) == 1 % Single folder
         % Old dataset detected
         if isfile(fullfile(uipatdir{1}, 'ea_ui.mat'))
             folder_type = 'legacy_patient_folder';
-            
+
         % DICOM folder detected
+        elseif endsWith(uipatdir{1}, 'dicom', 'IgnoreCase',true)
+            uipatdir = {fileparts(uipatdir{1})};
+            folder_type = 'patient_folder_dicom_folder';
+
+        % DICOM folder detected inside the folder
         elseif isfolder(fullfile(uipatdir{1}, 'dicom')) ...
-                || isfolder(fullfile(uipatdir{1}, 'DICOM')) ...
-                || endsWith(uipatdir{1}, 'dicom', 'IgnoreCase',true)
+                || isfolder(fullfile(uipatdir{1}, 'DICOM'))
             folder_type = 'patient_folder_dicom_folder';
             
         % if DICOMDIR file inside, assume dicoms are present in one of the folders on this level
