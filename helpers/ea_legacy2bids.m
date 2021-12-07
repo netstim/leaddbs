@@ -114,7 +114,7 @@ for patients = 1:length(source)
     for j=1:length(file_names)
         if ~isfolder(fullfile(source_patient,file_names{j})) %only filenames, not directories
             if ~any(contains(file_names{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
-                if any(regexpi(file_names{j},'raw_anat_.*.nii')) || doOnlyRaw || strcmp(file_names{j},'anat_t1.nii')  %we already know their tags in the case of cor,tra,sag
+                if any(regexpi(file_names{j},'raw_anat_.*.nii')) || doOnlyRaw || any(regexpi(file_names{j},'^anat_.*.nii'))  %we already know their tags in the case of cor,tra,sag
                     to_match = file_names{j};
                     bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
                     tag = check_acq(fullfile(source_patient,file_names{j})); %function for modalities, use of fslHD
@@ -259,7 +259,11 @@ for patients = 1:length(source)
                         if contains(bids_name,'acqTag')
                             bids_name = add_tag(bids_name,mod_cell,tag_cell);
                         end
+                        %find mod of the coreg and then check if you have a
+                        %raw_anat_mod in the folder. 
+                       
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
+
                         %coregistration: log, no fixed naming pattern and hence
                         %in an elseif command
                     elseif ~isempty(regexp(files_to_move{files},'^coreg.*.log'))
@@ -587,7 +591,7 @@ for patients = 1:length(source)
                     [matching_files_postop,~] = match_exact(files_to_move, raw_str);
                 else
                     [matching_files_preop,~] = match_exact(files_to_move,'raw_anat_.*.nii'); %remove postop files and get only preop
-                    [matching_files_postop,~] = match_exact(files_to_move,'(raw_postop_|postop_).*.nii');
+                    [matching_files_postop,~] = match_exact(files_to_move,'(raw_postop_|postop_ct).*.nii');
                 end
                 for i= 1:length(modes)
                     for j=1:length(sessions)
@@ -876,57 +880,107 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
     if ~exist(output_dir,'dir')
         mkdir(output_dir)
     end
+    coreg_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat');
+    preprocessing_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'preprocessing','anat');
     opt.FileName = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
     %special_case
     
     preop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-preop','anat'));
-   
-    
     preop_files = {preop_files.name};
-    if ~isempty(regexp(files_to_move,'anat_t1.nii')) && all(cellfun('isempty',regexp(files_to_move,'raw_anat_t1.nii'))) && ~doOnlyRaw
-        preop_files{end+1} = 'anat_t1.nii';
+    preop_modalities = {};
+    for comparing_files = 1:length(preop_files)
+        preop_file = regexprep(preop_files{comparing_files},'(.nii)|(.gz)','');
+        preop_mod = strsplit(preop_file,'_');
+        preop_mod = preop_mod{end};
+        preop_modalities{end+1} = preop_mod;
     end
-    for i=1:length(preop_files)
-        json_val = erase(preop_files{i},'.nii.gz');
-        temp_tag = strsplit(json_val,'_');
-        %modality_str = strsplit(temp_tag{end},'.');
-        modality_str = json_val(end-2:end);
-        if strcmp(preop_files{i},'anat_t1.nii')
-            json_val = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_space-anchorNative_desc-preproc_ses-preop_acq-*_T1w.nii'));
-            temp_tag = strsplit(json_val.name,'_');
-            tag = strsplit(temp_tag{5},'-');
-            tag = tag{end};
-            rawdata_fieldname = [tag,'_','T1w'];
-            anat_files_selected.preop.anat.(rawdata_fieldname) = json_val.name;
-        elseif contains(preop_files{i},'acq-')
-            tag = strsplit(temp_tag{3},'-');
-            tag = tag{end};
-            rawdata_fieldname = [tag,'_',modality_str];
-            anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
-        else
-            rawdata_fieldname = modality_str;
-            anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
+
+    %other preop files
+    coreg_preop_files = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_space-anchorNative_*_ses-preop_acq-*.nii'));
+    coreg_preop_files = {coreg_preop_files.name};
+    for coreg_files = 1:length(coreg_preop_files)
+        coreg_file = regexprep(coreg_preop_files{coreg_files}, '(.nii)|(.gz)', '');
+        coreg_mod = strsplit(coreg_file,'_');
+        coreg_mod = coreg_mod{end};
+        if ~ismember(coreg_mod,preop_modalities) || isempty(preop_modalities)
+           preop_files{end+1} = coreg_file;
+           %change the filename 
+           coreg_preproc_name = [strrep(coreg_file,'space-anchorNative_',''),'.nii'];
+           %also copy this file to the preproc folder
+           copyfile(fullfile(coreg_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,[coreg_file '.nii']));
+           movefile(fullfile(preprocessing_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,coreg_preproc_name));
+           
         end
-        
+
+    end
+
+    if ~isempty(preop_files)
+        for i=1:length(preop_files)
+            json_val = regexprep(preop_files{i},'(.nii)|(.gz)','');
+            if contains(preop_files{i},'acq-')
+                temp_tag = strsplit(json_val,'-');
+                modality_str = temp_tag{end};
+                rawdata_fieldname = modality_str;
+                anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
+            else
+                temp_tag = strsplit(json_val,'preop_');
+                rawdata_fieldname = temp_tag{end};
+                anat_files_selected.preop.anat.(rawdata_fieldname) = json_val;
+            end
+        end
     end
     
     postop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-postop','anat'));
     postop_files = {postop_files.name};
-    
-    for i=1:length(postop_files)
-        json_val = erase(postop_files{i},'.nii.gz');
-        temp_tag = strsplit(postop_files{i},'_');
-        modality_str = strsplit(temp_tag{end},'.');
-        modality_str = modality_str{1};
-        if ~contains(postop_files{i},'ct','IgnoreCase',true)
-            tag = strsplit(temp_tag{3},'-');
-            tag = tag{end};
-            rawdata_fieldname = [tag,'_',modality_str];
-        else
-            rawdata_fieldname = modality_str;
-        end
-        anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
+    postop_modalities = {};
+    for comparing_files = 1:length(postop_files)
+        postop_file = regexprep(postop_files{comparing_files},'(.nii)|(.gz)','');
+        postop_mod = strsplit(postop_file,'-');
+        postop_mod = postop_mod{end};
+        postop_modalities{end+1} = postop_mod;
     end
+    coreg_postop_files = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_space-anchorNative_*_ses-postop_acq-*.nii'));
+    coreg_postop_files = {coreg_postop_files.name};
+    for coreg_files = 1:length(coreg_postop_files)
+        coreg_file = regexprep(coreg_postop_files{coreg_files}, '(.nii)|(.gz)', '');
+        coreg_mod = strsplit(coreg_file,'-');
+        coreg_mod = coreg_mod{end};
+        if ~ismember(coreg_mod,postop_modalities) || isempty(postop_modalities)
+           postop_files{end+1} = coreg_file;
+           %change the filename 
+           coreg_postop_name = [strrep(coreg_file,'space-anchorNative_',''),'.nii'];
+           %also copy this file to the preproc folder
+           copyfile(fullfile(coreg_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,[coreg_file '.nii']));
+           movefile(fullfile(preprocessing_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,coreg_postop_name));
+           
+        end
+
+    end
+    for i=1:length(postop_files)
+        json_val = regexprep(postop_files{i},'(.nii)|(.gz)','');
+        if contains(postop_files{i},'ct','IgnoreCase',true)
+            rawdata_fieldname = 'CT';
+            anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
+        else
+            temp_tag = strsplit(json_val,'-');
+            rawdata_fieldname = temp_tag{end};
+            anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
+        
+        end
+    end
+%         json_val = erase(postop_files{i},'.nii.gz');
+%         temp_tag = strsplit(postop_files{i},'_');
+%         modality_str = strsplit(temp_tag{end},'.');
+%         modality_str = modality_str{1};
+%         if ~contains(postop_files{i},'ct','IgnoreCase',true)
+%             tag = strsplit(temp_tag{3},'-');
+%             tag = tag{end};
+%             rawdata_fieldname = [tag,'_',modality_str];
+%         else
+%             rawdata_fieldname = modality_str;
+%         end
+%         anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
+%     end
     savejson('',anat_files_selected,opt);
     
     
