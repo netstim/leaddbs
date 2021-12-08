@@ -881,6 +881,8 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
         mkdir(output_dir)
     end
     coreg_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat');
+    raw_preop_dir = fullfile(dest,'rawdata',patient_name,'ses-preop','anat');
+    raw_postop_dir = fullfile(dest,'rawdata',patient_name,'ses-postop','anat');
     preprocessing_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'preprocessing','anat');
     opt.FileName = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
     %special_case
@@ -903,12 +905,18 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
         coreg_mod = strsplit(coreg_file,'_');
         coreg_mod = coreg_mod{end};
         if ~ismember(coreg_mod,preop_modalities) || isempty(preop_modalities)
-           preop_files{end+1} = coreg_file;
-           %change the filename 
            coreg_preproc_name = [strrep(coreg_file,'space-anchorNative_',''),'.nii'];
+           coreg_raw_preop = [strrep(coreg_file,'space-anchorNative_desc-preproc_',''),'.nii'];
+           %change the filename 
            %also copy this file to the preproc folder
            copyfile(fullfile(coreg_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,[coreg_file '.nii']));
            movefile(fullfile(preprocessing_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,coreg_preproc_name));
+           copyfile(fullfile(coreg_dir,[coreg_file,'.nii']),fullfile(raw_preop_dir,[coreg_file,'.nii']));
+           movefile(fullfile(raw_preop_dir,[coreg_file,'.nii']),fullfile(raw_preop_dir,coreg_raw_preop));
+           gzip(fullfile(raw_preop_dir,coreg_raw_preop));
+           ea_delete(fullfile(raw_preop_dir,coreg_raw_preop));         
+           preop_files{end+1} = coreg_raw_preop;
+           %preop_files{end+1} = coreg_file;
            
         end
 
@@ -946,13 +954,18 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
         coreg_mod = strsplit(coreg_file,'-');
         coreg_mod = coreg_mod{end};
         if ~ismember(coreg_mod,postop_modalities) || isempty(postop_modalities)
-           postop_files{end+1} = coreg_file;
-           %change the filename 
            coreg_postop_name = [strrep(coreg_file,'space-anchorNative_',''),'.nii'];
+           coreg_raw_postop = [strrep(coreg_file,'space-anchorNative_desc-preproc_',''),'.nii'];
+           %change the filename 
            %also copy this file to the preproc folder
            copyfile(fullfile(coreg_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,[coreg_file '.nii']));
            movefile(fullfile(preprocessing_dir,[coreg_file '.nii']),fullfile(preprocessing_dir,coreg_postop_name));
-           
+           copyfile(fullfile(coreg_dir,[coreg_file,'.nii']),fullfile(raw_postop_dir,[coreg_file,'.nii']));
+           movefile(fullfile(raw_postop_dir,[coreg_file,'.nii']),fullfile(raw_postop_dir,coreg_raw_postop));
+           gzip(fullfile(raw_postop_dir,coreg_raw_postop));
+           ea_delete(fullfile(raw_postop_dir,coreg_raw_postop));
+           psotop_files{end+1} = coreg_raw_postop;
+           %postop_files{end+1} = coreg_file;
         end
 
     end
@@ -968,19 +981,6 @@ function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
         
         end
     end
-%         json_val = erase(postop_files{i},'.nii.gz');
-%         temp_tag = strsplit(postop_files{i},'_');
-%         modality_str = strsplit(temp_tag{end},'.');
-%         modality_str = modality_str{1};
-%         if ~contains(postop_files{i},'ct','IgnoreCase',true)
-%             tag = strsplit(temp_tag{3},'-');
-%             tag = tag{end};
-%             rawdata_fieldname = [tag,'_',modality_str];
-%         else
-%             rawdata_fieldname = modality_str;
-%         end
-%         anat_files_selected.postop.anat.(rawdata_fieldname) = json_val;
-%     end
     savejson('',anat_files_selected,opt);
     
     
