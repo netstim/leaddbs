@@ -1,4 +1,4 @@
-function [el_render,el_label]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label)
+function [el_render, el_label, elSide] = ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label)
 % Wrapper function to render lead trajectories based on elstruct
 
 if ~exist('elstruct','var')
@@ -28,9 +28,9 @@ else
     directory=[options.root,options.patientname,filesep];
 end
 
-elSide{pt}=popts.sides;
+elSide = popts.sides;
 
-for side=elSide{pt}
+for side=elSide
     try
         pobj=ea_load_electrode(directory,side);
         pobj.hasPlanning=1;

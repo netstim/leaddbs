@@ -134,11 +134,10 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         elSide = cell(1, length(elstruct));
         for pt=1:length(elstruct)
- 
             if exist('el_render','var')
-                [el_render,el_label]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
+                [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
             else
-                [el_render,el_label]=ea_renderelstruct(options,resultfig,elstruct,pt);
+                [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt);
             end
 
             if strcmp(options.leadprod,'group')
