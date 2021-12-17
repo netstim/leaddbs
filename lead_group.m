@@ -155,9 +155,12 @@ if options.prefs.env.dev
 end
 
 if ~isempty(varargin) && isfile(varargin{1}) % Path to group analysis file provided as input
-    load(varargin{1}, 'M');
-    set(handles.groupdir_choosebox,'String',M.root);
-    set(handles.groupdir_choosebox,'TooltipString', M.root);
+    groupFilePath = GetFullPath(varargin{1});
+    load(groupFilePath, 'M');
+    M.ui.groupdir = [fileparts(groupFilePath), filesep];
+    M.root = M.ui.groupdir;
+    set(handles.groupdir_choosebox,'String',M.ui.groupdir);
+    set(handles.groupdir_choosebox,'TooltipString', M.ui.groupdir);
     setappdata(handles.leadfigure, 'M', M);
     try
         setappdata(handles.leadfigure, 'S', M.S);
