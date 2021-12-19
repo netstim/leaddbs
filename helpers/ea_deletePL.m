@@ -12,51 +12,68 @@ else % Used in convis
     setappdata(resultfig, [mode,'targetsfile'], 'nan');
     setappdata(resultfig, [mode,'thresh'], 'nan');
 end
-
-for p=1:length(PL)
-    if isfield(PL(p),'vatsurfs')
-        delete(PL(p).vatsurfs);
-    end
-
-    if isfield(PL(p),'matsurf')
-        delete(PL(p).matsurf);
-    end
-
-    if isfield(PL(p),'matseedsurf')
-        delete(PL(p).matseedsurf);
-    end
-
-    if isfield(PL(p),'matsurf')
-        delete(PL(p).matsurf);
-    end
-
-    if isfield(PL(p),'quiv')
-        delete(PL(p).quiv);
-    end
-
-    if isfield(PL(p),'fib_plots')
-        if isfield(PL(p).fib_plots,'fibs')
-            delete(PL(p).fib_plots.fibs);
+if ~isempty(PL)
+    for p=1:length(PL)
+        if isfield(PL(p),'vatsurfs')
+            try delete(PL(p).vatsurfs); end
         end
 
-        if isfield(PL(p).fib_plots,'dcfibs')
-            delete(PL(p).fib_plots.dcfibs);
+        if isfield(PL(p),'matsurf')
+            if iscell(PL(p).matsurf)
+                for c=1:length(PL(p).matsurf)
+                    try delete(PL(p).matsurf{c}); end
+                end
+            else
+                try delete(PL(p).matsurf); end
+            end
         end
-    end
 
-    if isfield(PL(p),'regionsurfs')
-        delete(PL(p).regionsurfs);
-    end
+        if isfield(PL(p),'matseedsurf')
+            if iscell(PL(p).matseedsurf)
+                for c=1:length(PL(p).matseedsurf)
+                    try delete(PL(p).matseedsurf{c}); end
+                end
+            else
+                try delete(PL(p).matseedsurf); end
+            end
+        end
 
-    if isfield(PL(p),'conlabels')
-        delete(PL(p).conlabels);
-    end
 
-    if isfield(PL(p),'ht')
-        delete(PL(p).ht);
-    end
 
-    if isfield(PL(p),'fiberActivation')
-        cellfun(@delete, PL(p).fiberActivation);
+        if isfield(PL(p),'quiv')
+            try delete(PL(p).quiv); end
+        end
+
+        if isfield(PL(p),'fib_plots')
+            if isfield(PL(p).fib_plots,'fibs')
+                try delete(PL(p).fib_plots.fibs); end
+            end
+
+            if isfield(PL(p).fib_plots,'dcfibs')
+                try delete(PL(p).fib_plots.dcfibs); end
+            end
+        end
+
+        if isfield(PL(p),'regionsurfs')
+            try delete(PL(p).regionsurfs); end
+        end
+
+        if isfield(PL(p),'conlabels')
+            if iscell(PL(p).conlabels)
+                for c=1:length(PL(p).conlabels)
+                    try                    delete(PL(p).conlabels{c}); end
+                end
+            else
+                try delete(PL(p).conlabels); end
+            end
+        end
+
+        if isfield(PL(p),'ht')
+            try delete(PL(p).ht); end
+        end
+
+        if isfield(PL(p),'fiberActivation')
+            cellfun(@delete, PL(p).fiberActivation);
+        end
     end
 end
