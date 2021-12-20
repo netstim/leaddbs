@@ -369,7 +369,8 @@ classdef ea_disctract < handle
                 if ~exist('Iperm', 'var')
                     if obj.cvlivevisualize
                         [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
-                        obj.draw(vals,fibcell,usedidx);
+                        obj.drawn(vals,fibcell,usedidx)
+                        %obj.draw(vals,fibcell);
                         drawnow;
                     else
                         [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
@@ -377,7 +378,8 @@ classdef ea_disctract < handle
                 else
                     if obj.cvlivevisualize
                         [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
-                        obj.draw(vals,fibcell,usedidx);
+                        obj.drawn(vals,fibcell,usedidx)
+                        %obj.draw(vals,fibcell);
                         drawnow;
                     else
                         [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
@@ -700,8 +702,9 @@ classdef ea_disctract < handle
             obj.resultfig=rf;
             obj.drawobject=rd;
         end
-
-        function draw(obj,vals,fibcell,usedidx)
+        
+        function draw(obj,vals,fibcell,usedidx) %for cv live visualize
+        %function draw(obj,vals,fibcell)
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
             end
