@@ -15,5 +15,8 @@ if exist('cmd','var')
             base=[base,'dMRI',filesep];
         case 'fmri'
             base=[base,'fMRI',filesep];
+        case 'dmri_multitract'
+            base=[base,'dMRI_MultiTract',filesep];
+    
     end
 end

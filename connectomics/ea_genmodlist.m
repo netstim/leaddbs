@@ -12,12 +12,20 @@ switch lower(conntype)
     case 'both'
         checkdmri = 1;
         checkfmri = 1;
+        checkdmri_mt = 1;
     case 'dmri'
         checkdmri = 1;
         checkfmri = 0;
+        checkdmri_mt = 0;
     case 'fmri'
         checkdmri = 0;
         checkfmri = 1;
+        checkdmri_mt = 0;
+    case 'dmri_multitract'
+        checkdmri = 0;
+        checkdmri_mt = 1;
+        checkfmri = 0;
+        
 end
 
 % check for canonical fiber sets
@@ -48,7 +56,17 @@ if checkfmri
         end
     end
 end
-
+if checkdmri_mt
+    fdfibs=dir(ea_getconnectomebase('dmri_multitract'));
+    for fdf=1:length(fdfibs)
+        if fdfibs(fdf).isdir && ~strcmp(fdfibs(fdf).name(1),'.')
+            [~,fn]=fileparts(fdfibs(fdf).name);
+            modlist{cnt}=fn;
+            type(cnt)=3;
+            cnt=cnt+1;
+        end
+    end
+end
 % patientspecific part
 if exist('directory','var') && ~isempty(directory)
     % check if pat-specific fibertracts are present:
@@ -75,6 +93,14 @@ if exist('directory','var') && ~isempty(directory)
             [~, restfname] = fileparts(ffis(ff).name);
             modlist{cnt} = ['Patient''s fMRI - ', restfname];
             type(cnt)=2;
+            cnt=cnt+1;
+        end
+    end
+    
+    if checkdmri_mt
+        if exist([directory,'connectomes',filesep,'dMRI_MultiTract',filesep,options.prefs.FTR_normalized],'file')
+            modlist{cnt}='Patient''s fiber tracts';
+            type(cnt)=3;
             cnt=cnt+1;
         end
     end

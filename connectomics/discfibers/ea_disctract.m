@@ -14,6 +14,7 @@ classdef ea_disctract < handle
         connthreshold = 20
         efieldthreshold = 200
         statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations, 3 = OSS DBS pathway activations, 4 = Dice Coeff / VTAs for binary variables, 5 = reverse t-tests & e-fields for binary variables, 6 = show plain connections (no stats)
+        multi_pathways = 0 % if structural connectome is devided into pathways (multiple .mat in dMRI_MultiTract)
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [0.9176,0.2000,0.1373] % positive main color
@@ -144,10 +145,19 @@ classdef ea_disctract < handle
              addlistener(obj,'activateby','PostSet',...
                 @activatebychange);
 
+            if contains(obj.M.vatmodel, 'OSS-DBS (Butenko 2020)')
+                obj.statmetric = 3;
+            end
+            
+            % just for now, ask Nanditha to add dMRI_MultiTract files as
+            % option in the GUI
+            %obj.connectome = 
+            
         end
 
 
         function calculate(obj)
+            
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
@@ -158,14 +168,30 @@ classdef ea_disctract < handle
                 end
             end
 
-            cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
-            if isfield(obj.M,'pseudoM')
-                vatlist = obj.M.ROI.list;
+            % if multi_pathways = 1, assemble cfile from multiple
+            % pathway.dat files in dMRI_MultiTract/Connectome_name/
+            % stores the result in the LeadGroup folder
+            % also merges fiberActivation_.._.mat and stores them in
+            % stimulation folders
+            if obj.multi_pathways == 1
+                [cfile, map_list, pathway_list] = ea_discfibers_merge_pathways(obj);
             else
-                vatlist = ea_discfibers_getvats(obj);
+                cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
             end
-            [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
-
+            switch obj.statmetric
+                case 3    % if PAM, then just extracts activation states from fiberActivation.mat
+                    pamlist = ea_discfibers_getpams(obj);
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals_pam(pamlist,obj,cfile);
+                otherwise                    
+                    % this is not needed for OSS-DBS
+                    if isfield(obj.M,'pseudoM')
+                        vatlist = obj.M.ROI.list;
+                    else
+                        vatlist = ea_discfibers_getvats(obj);
+                    end
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
+            end
+            
             obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
@@ -343,7 +369,7 @@ classdef ea_disctract < handle
                 if ~exist('Iperm', 'var')
                     if obj.cvlivevisualize
                         [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
-                        obj.draw(vals,fibcell);
+                        obj.draw(vals,fibcell,usedidx);
                         drawnow;
                     else
                         [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
@@ -351,7 +377,7 @@ classdef ea_disctract < handle
                 else
                     if obj.cvlivevisualize
                         [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
-                        obj.draw(vals,fibcell);
+                        obj.draw(vals,fibcell,usedidx);
                         drawnow;
                     else
                         [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
@@ -675,7 +701,7 @@ classdef ea_disctract < handle
             obj.drawobject=rd;
         end
 
-        function draw(obj,vals,fibcell)
+        function draw(obj,vals,fibcell,usedidx)
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
             end

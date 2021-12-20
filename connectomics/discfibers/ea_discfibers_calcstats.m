@@ -115,12 +115,10 @@ for group=groups
     for side=1:numel(gfibsval)
         % check connthreshold
         switch obj.statmetric
-            case {1,4}
+            case {1,3,4}
                 sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
             case {2,5}
                 sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
-            case 3
-                keyboard % OSS-DBS not yet implemented.
             case 6
                 sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
         end
@@ -138,7 +136,7 @@ for group=groups
             pvals{group,side}=vals{group,side};
         end
         switch obj.statmetric
-            case 1 % t-tests
+            case {1,3} % t-tests
                 % check if covariates exist:
                 if exist('covars', 'var')
                     % they do:
@@ -254,8 +252,6 @@ for group=groups
                         pvals{group,side}(nonempty)=outps;
                     end
                 end
-            case 3 % OSS-DBS pathway activations & Ttests
-                keyboard
             case 4 % Dice Coeff / VTA for binary variables
 
                 nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
