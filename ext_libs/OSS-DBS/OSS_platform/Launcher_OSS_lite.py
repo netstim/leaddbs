@@ -36,6 +36,7 @@ run_full_model(master_dict) governs the simulation flow taking master_dict as th
 print("\nOSS-DBS by K.Butenko --- version 0.4")
 print("Butenko K, Bahls C, Schroeder M, Koehling R, van Rienen U (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.' PLoS Comput Biol 16(7): e1008023. https://doi.org/10.1371/journal.pcbi.1008023")
 print("____________________________________\n")
+print("Check out the simulation progress in complete_log_... in your stim. folder")
 
 import numpy as np
 import time
