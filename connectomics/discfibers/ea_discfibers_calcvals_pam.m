@@ -1,5 +1,5 @@
 function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals_pam(pamlist, obj, cfile)
-% Calculate fiber connection values based on the VATs and the connectome
+% Extract fiber connection values from OSS-DBS results (for a particular connectome)
 
 disp('Load Connectome...');
 load(cfile, 'fibers', 'idx');
@@ -41,7 +41,6 @@ for side = 1:numSide
             % we need to add filtered out fibers as not activated
             fib_state_raw = load(char(pamlist(pt,side)));
 
-
             load(cfile, 'fibers', 'idx');
             total_fibers = fibers(end,4); % load the actual .mat
             fib_state = zeros(total_fibers,1);
@@ -49,14 +48,16 @@ for side = 1:numSide
             last_loc_i = 1;  
             sub_i = 1;
             for fib_i = 1:total_fibers
-                % if the fiber was processed in OSS-DBS, check the status
-                if fib_state_raw.fibers(last_loc_i,4) == fib_i
-                    fib_state(fib_i) = fib_state_raw.fibers(last_loc_i,5);
-                    last_loc_i = fib_state_raw.idx(sub_i)+last_loc_i;
-                    sub_i = sub_i + 1;
-
-                else
+                if last_loc_i > fib_state_raw.fibers(end,4)
                     fib_state(fib_i) = 0;  % the fiber was pre-filtered out with Kuncel-VTA
+                else
+                    if fib_state_raw.fibers(last_loc_i,4) == fib_i
+                        fib_state(fib_i) = fib_state_raw.fibers(last_loc_i,5);
+                        last_loc_i = fib_state_raw.idx(sub_i)+last_loc_i;
+                        sub_i = sub_i + 1;    
+                    else
+                        fib_state(fib_i) = 0;  % the fiber was pre-filtered out with Kuncel-VTA
+                    end
                 end
             end
         end
