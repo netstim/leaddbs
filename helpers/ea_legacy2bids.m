@@ -785,7 +785,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                 if ~exist(brainshift_log_dir,'dir')
                     mkdir(brainshift_log_dir)
                 end
-                save(fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.json']),'brainshift_method')
+                save(fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.mat']),'brainshift_method')
             end
         end        
         fname_in = fullfile(source_patient_path,which_file);
