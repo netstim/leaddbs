@@ -369,7 +369,7 @@ classdef ea_disctract < handle
                 if ~exist('Iperm', 'var')
                     if obj.cvlivevisualize
                         [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
-                        obj.drawn(vals,fibcell,usedidx)
+                        obj.draw(vals,fibcell,usedidx)
                         %obj.draw(vals,fibcell);
                         drawnow;
                     else
@@ -378,7 +378,7 @@ classdef ea_disctract < handle
                 else
                     if obj.cvlivevisualize
                         [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
-                        obj.drawn(vals,fibcell,usedidx)
+                        obj.draw(vals,fibcell,usedidx)
                         %obj.draw(vals,fibcell);
                         drawnow;
                     else
@@ -401,7 +401,7 @@ classdef ea_disctract < handle
                     for side=1:size(vals,2)
                         if ~isempty(vals{voter,side})
                             switch obj.statmetric % also differentiate between methods in the prediction part.
-                                case 1 % ttests
+                                case {1,3,4} % ttests / OSS-DBS / reverse t-tests
                                     switch lower(obj.basepredictionon)
                                         case 'mean of scores'
                                             Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
@@ -429,7 +429,7 @@ classdef ea_disctract < handle
                                             end
 
                                     end
-                                case 2 % efields
+                                case {2,5} % efields
                                     switch lower(obj.basepredictionon)
                                         case 'profile of scores: spearman'
                                             Ihat(test,side) = atanh(corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','spearman'));
@@ -491,7 +491,8 @@ classdef ea_disctract < handle
                                                 Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                             end
                                     end
-                                case 3 % Plain Connection
+
+                                case 6 % Plain Connection
                                     switch lower(obj.basepredictionon)
                                         case 'mean of scores'
                                             Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);

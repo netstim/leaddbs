@@ -143,13 +143,14 @@ fs=3 * (25/length(labels{1}));
 if fs>30
     fs=40;
 end
-g.set_title([labels{1}, ' [R = ', sprintf('%.2f',R), '; ', pstr, ']'], 'FontSize', fs);
+%g.set_title([labels{1}, ' [R = ', sprintf('%.2f',R), '; ', pstr, ']'], 'FontSize', fs);
+g.set_title([labels{1}, ' [R = ', sprintf('%.2f',R), '; ', pstr, ']']);
 g.set_names('x',labels{2},'y',labels{3});
 fs=2*(35/max(cellfun(@length,labels(2:3))));
 if fs>30
     fs=40;
 end
-g.set_text_options('base_size',fs);
+%g.set_text_options('base_size',fs);
 g.no_legend();
 
 ratio = 7/8;
