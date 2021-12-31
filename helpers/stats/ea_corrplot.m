@@ -138,10 +138,18 @@ else
         pstr = [pstr, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
     end
 end
+fs=3 * (25/length(labels{1}));
 
-g.set_title([labels{1}, ' [R = ', sprintf('%.2f',R), '; ', pstr, ']'], 'FontSize', 20 * (25/length(labels{1})));
+if fs>30
+    fs=40;
+end
+g.set_title([labels{1}, ' [R = ', sprintf('%.2f',R), '; ', pstr, ']'], 'FontSize', fs);
 g.set_names('x',labels{2},'y',labels{3});
-g.set_text_options('base_size',22*(35/max(cellfun(@length,labels(2:3)))));
+fs=2*(35/max(cellfun(@length,labels(2:3))));
+if fs>30
+    fs=40;
+end
+g.set_text_options('base_size',fs);
 g.no_legend();
 
 ratio = 7/8;
