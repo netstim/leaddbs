@@ -49,6 +49,9 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
         end
         options = ea_resolve_elspec(options);
     end
+
+    options.bids=bids; % store bidsfetcher obj within options.
+
 else
     error('Not a BIDS dataset!')
 end
