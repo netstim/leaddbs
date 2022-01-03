@@ -15,6 +15,9 @@ classdef ea_disctract < handle
         efieldthreshold = 200
         statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations, 3 = OSS DBS pathway activations, 4 = Dice Coeff / VTAs for binary variables, 5 = reverse t-tests & e-fields for binary variables, 6 = show plain connections (no stats)
         multi_pathways = 0 % if structural connectome is devided into pathways (multiple .mat in dMRI_MultiTract)
+        map_list % list that contains global indices of the first fibers in each pathway (relevant when multi_pathways = 1) 
+        pathway_list % list that contains names of pathways (relevant when multi_pathways = 1
+        connFiberInd % list of indices of activated (connected) fibers (relevant when multi_pathways = 1)
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [0.9176,0.2000,0.1373] % positive main color
@@ -175,13 +178,16 @@ classdef ea_disctract < handle
             % stimulation folders
             if obj.multi_pathways == 1
                 [cfile, map_list, pathway_list] = ea_discfibers_merge_pathways(obj);
+                obj.map_list = map_list;
+                obj.pathway_list = pathway_list;
             else
                 cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
             end
             switch obj.statmetric
                 case 3    % if PAM, then just extracts activation states from fiberActivation.mat
                     pamlist = ea_discfibers_getpams(obj);
-                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals_pam(pamlist,obj,cfile);
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
+                    obj.connFiberInd = connFiberInd;
                 otherwise                    
                     % this is not needed for OSS-DBS
                     if isfield(obj.M,'pseudoM')
@@ -712,6 +718,26 @@ classdef ea_disctract < handle
             obj.fiberdrawn.fibcell = fibcell;
             obj.fiberdrawn.vals = vals;
             obj.fiberdrawn.usedidx = usedidx;
+            
+            % print number of significant displayed fibers per pathway
+            if obj.multi_pathways == 1 % at the moment, obj.connFiberInd is defined only for OSS-DBS
+                disp("number of significant drawn fibers per pathway")
+                num_per_path = cell(1, 2); % with obj.map_list, rates can be computed                
+                for side = 1:2
+                    num_per_path{side} = zeros(1,length(obj.map_list));
+                    for inx = 1:length(usedidx{side})
+                    
+                        % check the nearest via the difference, if positive, take one before
+                        [d, ix] = min(abs(obj.map_list-obj.connFiberInd(usedidx{side}(inx)))); 
+                        if d > 0
+                           ix = ix - 1; 
+                        end
+                        num_per_path{side}(ix) = num_per_path{side}(ix)+1;
+                    end  
+                    disp(num_per_path{side})  % for now just print number of fibers per pathway
+                end
+            end                
+            
             allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
             if size(vals,2)==2 % can be a single cell in case of custom code (pseudoM setting).
                 allvals{2}=[];
