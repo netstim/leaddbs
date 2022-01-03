@@ -1,4 +1,4 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals_pam(pamlist, obj, cfile)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile)
 % Extract fiber connection values from OSS-DBS results (for a particular connectome)
 
 disp('Load Connectome...');
@@ -82,7 +82,6 @@ for side = 1:numSide
     % Remove values for not connected fibers, convert to sparse matrix
     fibIsConnected = any(fibsvalBin{side}, 2);
     
-    % Might not work
     fibsvalBin{side} = sparse(fibsvalBin{side}(fibIsConnected, :));
     %fibsvalSum{side} = sparse(fibsvalSum{side}(fibIsConnected, :));
     %fibsvalMean{side} = sparse(fibsvalMean{side}(fibIsConnected, :));
