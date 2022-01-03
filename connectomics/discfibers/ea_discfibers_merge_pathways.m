@@ -5,7 +5,6 @@ function [cfile, map_list, pathway_list] = ea_discfibers_merge_pathways(obj)
 % also returns global indices of the first fibers in pathways and the
 % corresponding list of pathways' names
 
-%myDir = [ea_getconnectomebase('dMRI'), obj.connectome]; % temp
 myDir = [ea_getconnectomebase('dMRI_multitract'), obj.connectome];
 myFiles = dir(fullfile(myDir,'*.mat')); %gets all mat files in struct
 
@@ -65,19 +64,26 @@ pamlist = cell(numPatient,2);   % no mirroring
 
 disp('Merging fiberActivation files ...')
 
-C_fibState = cell(1,numel(myFiles));
-C_fibState_idx = cell(1,numel(myFiles));
+% for consistency, always check activation in other hemisphere
+% they will be filtered out later
+C_fibState = cell(1,numel(myFiles)*2);    % *2 for cases right_lh, left_rh
+C_fibState_idx = cell(1,numel(myFiles)*2);
 
 for sub=1:numPatient
     for side = 1:2 % hardcoded
         for k=1:length(myFiles)
+
+            total_fibers = length(C_idx{k});
+            fib_state = zeros(total_fibers,1);
+            
+            C_fibState{k} = C{k};
             
             if side == 1
                 side_name = 'right';
             else
                 side_name = 'left';
             end
-            
+            % 
             fiberActivation_file = ['fiberActivation_',side_name, '_', myFiles(k).name];
             
             pam_file = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
@@ -85,38 +91,37 @@ for sub=1:numPatient
             
             
             % we need to add filtered out fibers as not activated
-            fib_state_raw = load(char(pam_file));
-            
-            
-            %load(cfile, 'fibers', 'idx');
-            total_fibers = length(C_idx{k});
-            fib_state = zeros(total_fibers,1);
-            
-            C_fibState{k} = C{k};
+            try
+                fib_state_raw = load(char(pam_file));
+            catch  % if activation file for the pathway does not exist, assign 0 activation
+                C_fibState{k}(:,5) = 0;
+                C_fibState_idx{k} = C_idx{k};
+                continue
+            end
             
             last_loc_i = 1;
             sub_i = 1;
             last_glob = 1;
             for fib_i = 1:total_fibers
-                % if the fiber was processed in OSS-DBS, check the status
-                if fib_state_raw.fibers(last_loc_i,4) == fib_i
-                    fib_state(fib_i) = fib_state_raw.fibers(last_loc_i,5);
-                    last_loc_i = fib_state_raw.idx(sub_i)+last_loc_i;
-                    sub_i = sub_i + 1;
-                    
-                else
+                if last_loc_i > fib_state_raw.fibers(end,4)
                     fib_state(fib_i) = 0;  % the fiber was pre-filtered out with Kuncel-VTA
-                end
-                
+                else
+                    % if the fiber was processed in OSS-DBS, check the status
+                    if fib_state_raw.fibers(last_loc_i,4) == fib_i
+                        fib_state(fib_i) = fib_state_raw.fibers(last_loc_i,5);
+                        last_loc_i = fib_state_raw.idx(sub_i)+last_loc_i;
+                        sub_i = sub_i + 1;
+                    else
+                        fib_state(fib_i) = 0;  % the fiber was pre-filtered out with Kuncel-VTA
+                    end
+
                 end_index = last_glob+C_idx{k}(fib_i)-1;
-                
                 C_fibState{k}(last_glob:end_index,5) = fib_state(fib_i);
-                
                 last_glob = end_index + 1;
                 
+                end
             end
             
-            %C_fibState{k} = [C{k},fib_state];
             C_fibState_idx{k} = C_idx{k};
             
         end
