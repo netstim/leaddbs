@@ -307,15 +307,43 @@ if ~settings.stimSetMode
                 cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
         end
 
+        %  special rule of voltage splitting
+        if settings.current_control(i) == 0 && ~isnan(source(i))
+            perc = 100; % do not split with percents
+            polarities = 0;
+            stimSource = S.([sideCode, 's', num2str(source(i))]);
+            for cnt = 1:options.elspec.numel  %  how to iterate with any/all over structs?
+                if stimSource.(cntlabel{cnt}).pol == 1
+                    for cnt2 = 1:options.elspec.numel
+                        if stimSource.(cntlabel{cnt2}).pol == 2
+                            polarities = 2;                            
+                        end
+                    end
+                    break;
+                end
+            end                    
+            if polarities == 2  % split 50/50 if both polarities
+                amp = amp / 2; 
+            end
+        end
+
         if ~isnan(source(i))
             stimSource = S.([sideCode, 's', num2str(source(i))]);
             for cnt = 1:options.elspec.numel
                 if S.activecontacts{i}(cnt)
                     switch stimSource.(cntlabel{cnt}).pol
                         case 1 % Negative, cathode
-                            settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            if settings.current_control(i) == 0
+                                settings.Phi_vector(i, cnt) = -amp(i);
+                            else
+                                settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            end
                         case 2 % Postive, anode
-                            settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            if settings.current_control(i) == 0
+                                settings.Phi_vector(i, cnt) = amp(i);
+                            else
+                                settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            end
                     end
                 end
             end
