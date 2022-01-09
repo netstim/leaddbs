@@ -177,17 +177,14 @@ classdef ea_disctract < handle
             % also merges fiberActivation_.._.mat and stores them in
             % stimulation folders
             if obj.multi_pathways == 1
-                [cfile, map_list, pathway_list] = ea_discfibers_merge_pathways(obj);
-                obj.map_list = map_list;
-                obj.pathway_list = pathway_list;
+                [cfile, obj.map_list, obj.pathway_list] = ea_discfibers_merge_pathways(obj);
             else
                 cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
             end
             switch obj.statmetric
                 case 3    % if PAM, then just extracts activation states from fiberActivation.mat
                     pamlist = ea_discfibers_getpams(obj);
-                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
-                    obj.connFiberInd = connFiberInd;
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, obj.connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
                 otherwise                    
                     % this is not needed for OSS-DBS
                     if isfield(obj.M,'pseudoM')
@@ -195,7 +192,7 @@ classdef ea_disctract < handle
                     else
                         vatlist = ea_discfibers_getvats(obj);
                     end
-                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, obj.connFiberInd] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
             end
             
             obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
@@ -721,7 +718,7 @@ classdef ea_disctract < handle
             
             % print number of significant displayed fibers per pathway
             if obj.multi_pathways == 1 % at the moment, obj.connFiberInd is defined only for OSS-DBS
-                disp("number of significant drawn fibers per pathway")
+                disp("number of drawn fibers per pathway")
                 num_per_path = cell(1, 2); % with obj.map_list, rates can be computed                
                 for side = 1:2
                     num_per_path{side} = zeros(1,length(obj.map_list));
@@ -736,6 +733,21 @@ classdef ea_disctract < handle
                     end  
                     disp(num_per_path{side})  % for now just print number of fibers per pathway
                 end
+                
+                figure
+                t = tiledlayout(1,2,'TileSpacing','compact');            
+                % Create pie charts
+                ax1 = nexttile;
+                pie(ax1,num_per_path{1})
+                title('Right HS')
+
+                ax2 = nexttile;
+                pie(ax2,num_per_path{2})
+                title('Left HS')
+
+                % Create legend
+                lgd = legend(obj.pathway_list);
+                lgd.Layout.Tile = 'east';
             end                
             
             allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
