@@ -24,6 +24,8 @@ for k = 1:length(myFiles)
   
   map_list = [map_list, glob_index];
   pathway_list{k} = baseFileName;
+  % for printing
+  pathway_list{k} = regexprep(pathway_list{k}, '_', ' ');
   
   fiber_file = load(fullFileName);
   num_of_fibers = length(fiber_file.idx);
