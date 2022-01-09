@@ -309,13 +309,27 @@ if ~settings.stimSetMode
 
         if ~isnan(source(i))
             stimSource = S.([sideCode, 's', num2str(source(i))]);
+
+            % Split voltage in case contacts have both polarities
+            if stimSource.va == 1 && stimSource.case.pol == 0
+                amp(i) = amp(i)/2;
+            end
+
             for cnt = 1:options.elspec.numel
                 if S.activecontacts{i}(cnt)
                     switch stimSource.(cntlabel{cnt}).pol
                         case 1 % Negative, cathode
-                            settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            if settings.current_control(i) == 0
+                                settings.Phi_vector(i, cnt) = -amp(i);
+                            else
+                                settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            end
                         case 2 % Postive, anode
-                            settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            if settings.current_control(i) == 0
+                                settings.Phi_vector(i, cnt) = amp(i);
+                            else
+                                settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            end
                     end
                 end
             end
