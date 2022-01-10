@@ -32,29 +32,29 @@ if ~isempty(obj.covars)
 end
 
 if strcmp(obj.multitractmode,'Split & Color By PCA')
-   % prep PCA:
-   subvars=ea_nanzscore(cell2mat(obj.subscore.vars')); %standardize subscore stage
-   try
-    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
-   catch %can fail due to presence of NaN/INF TODO
-       % pca failed, likely not enough variables selected.
-       score=nan(length(obj.responsevar),obj.numpcs);
-   end
+    % prep PCA:
+    subvars=ea_nanzscore(cell2mat(obj.subscore.vars')); %standardize subscore stage
+    try
+        [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
+    catch %can fail due to presence of NaN/INF TODO
+        % pca failed, likely not enough variables selected.
+        score=nan(length(obj.responsevar),obj.numpcs);
+    end
 
-   if isempty(score) || isnan(score)
-       score=nan(length(obj.responsevar),obj.numpcs);
-   end
+    if isempty(score) || isnan(score)
+        score=nan(length(obj.responsevar),obj.numpcs);
+    end
 
-   %if score is empty
-   obj.subscore.pcavars=cell(obj.numpcs,1);
-   %end
+    %if score is empty
+    obj.subscore.pcavars=cell(obj.numpcs,1);
+    %end
 
-   for pc=1:obj.numpcs
-      obj.subscore.pcavars{pc}=score(:,pc); %pca variables -> pca components, location of first subscore is replaced by first pc
-   end
-   if ~isfield(obj.subscore,'pcacolors')
-       obj.subscore.pcacolors=ea_color_wes('all'); % assign some random colors.
-   end
+    for pc=1:obj.numpcs
+        obj.subscore.pcavars{pc}=score(:,pc); %pca variables -> pca components, location of first subscore is replaced by first pc
+    end
+    if ~isfield(obj.subscore,'pcacolors')
+        obj.subscore.pcacolors=ea_color_wes('all'); % assign some random colors.
+    end
 end
 
 switch obj.multitractmode
