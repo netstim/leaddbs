@@ -147,8 +147,9 @@ classdef ea_disctract < handle
 
              addlistener(obj,'activateby','PostSet',...
                 @activatebychange);
-
-            if contains(obj.M.vatmodel, 'OSS-DBS (Butenko 2020)')
+            %added a check here otherwise errors out for files w/o
+            %vatmodels
+            if ~isempty(obj.M.vatmodel) && contains(obj.M.vatmodel, 'OSS-DBS (Butenko 2020)')
                 obj.statmetric = 3;
             end
             
