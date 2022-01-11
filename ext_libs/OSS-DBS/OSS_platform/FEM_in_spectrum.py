@@ -46,7 +46,7 @@ def get_dielectric_properties_from_subdomains(mesh,subdomains,Laplace_formulatio
     if Laplace_formulation=='EQS':
         perm_default,perm_GM,perm_WM,perm_CSF,perm_encap=rel_permittivities
         V0_i=df.FunctionSpace(mesh,'DG',0)
-        kappa_i=df.unction(V0_i)
+        kappa_i=df.Function(V0_i)
         omega_eps0=2*np.pi*frequenc*8.854e-12           #2*pi*f*eps0
         if float_conductors==-1:    #[Default,CSF,WM,GM,Encap,Floating]
             k_val_i=[omega_eps0*perm_default*0.001,omega_eps0*perm_CSF*0.001,omega_eps0*perm_WM*0.001,omega_eps0*perm_GM*0.001,1*omega_eps0*perm_encap*0.001]
@@ -255,8 +255,8 @@ def define_variational_form_and_solve(V,dirichlet_bc,kappa,Laplace_eq,Cond_tenso
         v_r, v_i = df.TestFunction(V)
         if Cond_tensor!=False:
             a = (df.inner(Cond_tensor*df.grad(u_r), df.grad(v_r))*df.dx
-             -df.inner(kappa[1]*df.df.grad(u_i), df.grad(v_r))*df.dx
-             -df.inner(kappa[1]*df.df.grad(u_r), df.grad(v_i))*df.dx
+             -df.inner(kappa[1]*df.grad(u_i), df.grad(v_r))*df.dx
+             -df.inner(kappa[1]*df.grad(u_r), df.grad(v_i))*df.dx
              -df.inner(Cond_tensor*df.grad(u_i), df.grad(v_i))*df.dx
              +df.inner(Cond_tensor*df.grad(u_r), df.grad(v_i))*df.dx
              -df.inner(kappa[1]*df.grad(u_i), df.grad(v_i))*df.dx
