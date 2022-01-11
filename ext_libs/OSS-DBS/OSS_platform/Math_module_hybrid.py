@@ -19,9 +19,7 @@ from tissue_dielectrics import DielectricProperties
 
 parameters["allow_extrapolation"]=True
 parameters['linear_algebra_backend']='PETSc'
-set_log_level(LogLevel.CRITICAL)
-if MPI.comm_world.rank == 0:
-  set_log_level(LogLevel.CRITICAL)
+set_log_active(False)   #turns off debugging info
 
 
 def choose_solver_for_me(EQS_mode,float_conductors):
