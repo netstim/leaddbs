@@ -130,7 +130,14 @@ if(length(contactPositions) < 4 || strcmp(args.contactDetectionMethod, 'contactA
             error('Unknown electrode type given');
         end
     end
+    
     zeroT = invPolyArcLength3(refittedR3Poly2nd, contactAreaCenter-mean(electrodeInfo.ringContactCentersMm)); % calibrate zero
+    if strcmp(args.electrodeType, 'Aleva')
+        % MEMS support tube = 10.2mm, 
+        % lower most part of the first contact = 0.43
+        zeroT = invPolyArcLength3(refittedR3Poly2nd, contactAreaCenter-5.1+0.43); % calibrate zero
+    end
+
 
 %     refittedR3PolyReZeroed = fitParamPolyToSkeleton(polyval3(refittedR3Poly2nd, linspace(zeroT,1,totalLengthMm  / XY_RESOLUTION)'),FINAL_DEGREE); % <=== LOWER DEGREE IS BETTER (FOR TIP!!) (TRADE OF)
 %     
@@ -208,4 +215,5 @@ else
     refitReZeroedElecMod.useDetectedContactPositions = 1; 
     refitReZeroedElecMod.detectedContactPositions = refittedContactDistances(1:electrodeInfo.noRingContacts,:)';
 end
+
 
