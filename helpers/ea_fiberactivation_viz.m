@@ -75,7 +75,7 @@ if ~isempty(fibers)
 else
     fprintf('\n')
     warning('off', 'backtrace');
-    warning('No damaged fiber found!');
+    warning('No fibers in CSF found!');
     warning('on', 'backtrace');
 end
 
@@ -89,7 +89,7 @@ if ~isempty(fibers)
 else
     fprintf('\n')
     warning('off', 'backtrace');
-    warning('No damaged fiber found!');
+    warning('No fibers outside of the domain found!');
     warning('on', 'backtrace');
 end
 
