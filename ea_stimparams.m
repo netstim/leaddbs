@@ -1464,10 +1464,14 @@ function Rs1va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs1va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs1va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
 S.active(1)=1;
-S.Rs1.va=get(hObject,'Value');
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -1521,9 +1525,14 @@ function Rs2va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs2va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs2va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(1)=2;
-S.Rs2.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
+
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -1605,10 +1614,14 @@ function Ls1va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls1va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls1va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(2)=1;
-S.Ls1.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -1662,10 +1675,14 @@ function Ls2va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls2va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls2va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(2)=2;
-S.Ls2.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -2479,6 +2496,29 @@ for ohm=1:4
 end
 
 
+% Function to recalculate voltage percentage after switching from current
+% control to voltage control stimulation (voltage is always evenly
+% distributed across contacts)
+function S = ea_recalc_volperc(S)
+source = {{'Rs1', 'Rs2', 'Rs3', 'Rs4'}, {'Ls1', 'Ls2', 'Ls3', 'Ls4'}};
+contact = {{'k0','k1','k2','k3','k4','k5','k6','k7'}, {'k8','k9','k10','k11','k12','k13','k14','k15'}};
+for rl=1:2
+    for s=1:length(source{rl})
+        active = {};
+        for c=1:length(contact{rl})
+            if S.(source{rl}{s}).(contact{rl}{c}).pol == 1
+                active = [active; {['S.', source{rl}{s}, '.', contact{rl}{c}, '.perc']}];
+            end
+        end
+
+        perc = 1/length(active)*100;
+        for a=1:length(active)
+            eval([active{a}, '= perc;']);
+        end
+    end
+end
+
+
 function S=ea_redistribute_voltage(S,changedobj)
 Rconts={'k0','k1','k2','k3','k4','k5','k6','k7'};
 Lconts={'k8','k9','k10','k11','k12','k13','k14','k15'};
@@ -2831,10 +2871,14 @@ function Ls3va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls3va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls3va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(2)=3;
-S.Ls3.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -2888,10 +2932,14 @@ function Ls4va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls4va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls4va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(2)=4;
-S.Ls4.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -2945,9 +2993,14 @@ function Rs3va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs3va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs3va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(1)=3;
-S.Rs3.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
+
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -3001,10 +3054,14 @@ function Rs4va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs4va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs4va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(1)=4;
-S.Rs4.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
