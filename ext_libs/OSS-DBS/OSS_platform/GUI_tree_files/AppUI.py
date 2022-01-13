@@ -215,10 +215,11 @@ class MainWindow(Functionalities):
         self.ui.pushButton_Reset.clicked.connect(lambda: self.reset_state())
 
     def show(self):
-        self.main_win.show()
         if not self.interactive_mode:
             self.save_as(os.path.join(self.path_to_patient, 'GUI_inp_dict.py'))
             self.run_thread()
+        else:
+            self.main_win.show()
 
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
