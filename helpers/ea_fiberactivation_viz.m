@@ -50,7 +50,7 @@ else
     warning('on', 'backtrace');
 end
 
-% Damaged fibers
+% Damaged fibers (encapsulation)
 Ind = fiberActivation.fibers(:,5)==-1;
 fibers = fiberActivation.fibers(Ind,1:3);
 if ~isempty(fibers)
@@ -63,6 +63,36 @@ else
     warning('No damaged fiber found!');
     warning('on', 'backtrace');
 end
+
+
+% neuron passes through CSF
+Ind = fiberActivation.fibers(:,5)==-2;
+fibers = fiberActivation.fibers(Ind,1:3);
+if ~isempty(fibers)
+    [~,~,idx] = unique(fiberActivation.fibers(Ind,4));
+    idx = accumarray(idx,1);
+    PL.fiberActivation{fiberInd+4} = showFibers(fibers, idx, prefs.d3.fiber_csf_color, [fname, '_CSF'], toolbar);
+else
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('No damaged fiber found!');
+    warning('on', 'backtrace');
+end
+
+% Outside of the domain (or intersect with the electrode avoiding encapsulation, happens due to sparse sampling)
+Ind = fiberActivation.fibers(:,5)==-3;
+fibers = fiberActivation.fibers(Ind,1:3);
+if ~isempty(fibers)
+    [~,~,idx] = unique(fiberActivation.fibers(Ind,4));
+    idx = accumarray(idx,1);
+    PL.fiberActivation{fiberInd+5} = showFibers(fibers, idx, prefs.d3.fiber_outside_color, [fname, '_outside'], toolbar);
+else
+    fprintf('\n')
+    warning('off', 'backtrace');
+    warning('No damaged fiber found!');
+    warning('on', 'backtrace');
+end
+
 
 setappdata(resultfig, 'PL', PL);
 
