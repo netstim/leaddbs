@@ -297,6 +297,25 @@ if ~settings.stimSetMode
         end
     end
 
+    %  For VC, check all sources
+    if settings.current_control(1) == 0  % both hemisphere MUST have the same mode
+        numSources = 4;
+        amp = nan(eleNum,numSources);   % 4 - number of sources
+        for i=1:eleNum
+            for j=1:numSources
+                amp(i,j) = S.amplitude{i}(j);
+            end
+        end
+    else
+        amp = nan(eleNum,1);  % For CC, one source is used, add a check
+        for i=1:eleNum
+            if ~isnan(source(i))
+                amp(i) = S.amplitude{i}(source(i));
+            end
+        end        
+    end
+    
+    
     for i = 1:eleNum
         switch i
             case 1
@@ -309,27 +328,41 @@ if ~settings.stimSetMode
 
         if ~isnan(source(i))
             stimSource = S.([sideCode, 's', num2str(source(i))]);
-
+            
             % Split voltage in case contacts have both polarities
-            if stimSource.va == 1 && stimSource.case.pol == 0
-                amp(i) = amp(i)/2;
+            if stimSource.va == 1 
+                for j=1:numSources
+                    v_source = S.([sideCode, 's', num2str(j)]);
+                    if v_source.case.pol == 0
+                        amp(i,j) = amp(i,j)/2;
+                    end
+                end
             end
 
             for cnt = 1:options.elspec.numel
-                if S.activecontacts{i}(cnt)
-                    switch stimSource.(cntlabel{cnt}).pol
-                        case 1 % Negative, cathode
-                            if settings.current_control(i) == 0
-                                settings.Phi_vector(i, cnt) = -amp(i);
-                            else
+                if settings.current_control(i) == 1  % only one source for CC
+                    if S.activecontacts{i}(cnt)
+                        switch stimSource.(cntlabel{cnt}).pol
+                            case 1 % Negative, cathode
                                 settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
-                            end
-                        case 2 % Postive, anode
-                            if settings.current_control(i) == 0
-                                settings.Phi_vector(i, cnt) = amp(i);
-                            else
+                            case 2 % Postive, anode
                                 settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                        end             
+                    end
+                else
+                    for j=1:numSources  % go over sources
+                        v_source = S.([sideCode, 's', num2str(j)]);
+                        if v_source.(cntlabel{cnt}).perc    % the contact is active for this source
+                            if isnan(settings.Phi_vector(i, cnt))
+                                settings.Phi_vector(i, cnt) = 0.0;  % initialize
                             end
+                            switch v_source.(cntlabel{cnt}).pol  % sanity check needed: same polarity for a contact over all sources
+                                case 1
+                                    settings.Phi_vector(i, cnt) = settings.Phi_vector(i, cnt) - amp(i,j);
+                                case 2
+                                    settings.Phi_vector(i, cnt) = settings.Phi_vector(i, cnt) + amp(i,j);
+                            end
+                        end
                     end
                 end
             end
