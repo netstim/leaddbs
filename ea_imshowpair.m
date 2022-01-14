@@ -1,4 +1,4 @@
-function  ea_imshowpair(Img, options, addstring, callingfunction)
+function  ea_imshowpair(Img, options, addstring, callingfunction, helptext)
 % this function is based on IMSHOW3DFULL by Maysam Shahedi and supports
 % truecolor images. Windowed view is adapted from MAGNIFY by Rick Hindman.
 %
@@ -6,6 +6,10 @@ function  ea_imshowpair(Img, options, addstring, callingfunction)
 
 if ~exist('callingfunction','var')
    callingfunction='normalization dbs';
+end
+
+if ~exist('helptext', 'var')
+   helptext = '';
 end
 
 switch callingfunction
@@ -22,7 +26,7 @@ if nargin == 1
 elseif nargin == 2
     figtit = options.patientname;
 elseif nargin >= 3
-    figtit = [options.patientname,', ',addstring];
+    figtit = strjoin(cellstr(strvcat({options.patientname, addstring}))', ', ');
 end
 
 isp=figure('color','k','Name',figtit,'NumberTitle','off','MenuBar','none','DockControls','off','ToolBar','none');
@@ -154,7 +158,7 @@ catch
     ImHndl=imagesc(squeeze(Img(XImage,YImage,S,MainImage)), [Rmin Rmax]);
 end
 
-showhelptext(callingfunction);
+showhelptext(callingfunction, helptext);
 
 FigPos = get(gcf,'Position');
 S_Pos = [50 20 uint16(FigPos(3)-150)+1 20];
@@ -447,7 +451,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         if ~strfind(callingfunction,'normalization') % this on
             return
         end
-        %[options] = ea_assignpretra(options);
+
         ea_busyaction('on',gcf,'normcheck');
         PostOpView=0;
         PostOpLoaded={''};
@@ -515,7 +519,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         end
         ImgO(:,:,:,1)=pt.img;
 
-        w=load([ea_space(options),'wires.mat']);
+        w=load([ea_space,'wires.mat']);
         w.wires=single(w.wires);
         w.wires=w.wires/255;
         w.wires=w.wires.*0.2;
@@ -707,7 +711,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         catch
             ImHndl=imagesc(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
         end
-        showhelptext(callingfunction);
+        showhelptext(callingfunction, helptext);
 
         if sno > 1
         %    shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
@@ -758,7 +762,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         catch
             ImHndl=imagesc(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
         end
-        showhelptext(callingfunction);
+        showhelptext(callingfunction, helptext);
 
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
@@ -810,7 +814,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         catch
             ImHndl=imagesc(squeeze(Img(XImage,YImage,S,1)), [Rmin Rmax]);
         end
-        showhelptext(callingfunction);
+        showhelptext(callingfunction, helptext);
 
         if sno > 1
           %  shand = uicontrol('Style', 'slider','Min',1,'Max',sno,'Value',S,'SliderStep',[1/(sno-1) 10/(sno-1)],'Position', S_Pos,'Callback', {@SliceSlider, Img});
@@ -830,22 +834,27 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
     end
 end
 
-function showhelptext(callingfunction)
+function showhelptext(callingfunction, helptext)
     hold on
-    if strcmp(callingfunction,'normalization dbs')
-        helptext=text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
-            '1,2,...: Show preoperative acquisitions [FA=0]','Alt+1,2,...: Switch between available templates [FA=0]','P: Show postoperative acquisitions','',...
-            'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronal view','S: Saggital view',},...
-            'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
-    elseif strcmp(callingfunction,'normalization connectome')
-        helptext=text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
-            '1,2,...: Show preoperative acquisitions [FA=0]','Alt+1,2,...: Switch between available templates [FA=0]','',...
-            'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronal view','S: Saggital view',},...
-            'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+    if ~exist('helptext', 'var') || isempty(helptext)
+        switch callingfunction
+            case 'normalization dbs'
+                text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
+                    '1,2,...: Show preoperative acquisitions [FA=0]','Alt+1,2,...: Switch between available templates [FA=0]','P: Show postoperative acquisitions','',...
+                    'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronal view','S: Saggital view',},...
+                    'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+            case 'normalization connectome'
+                text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
+                    '1,2,...: Show preoperative acquisitions [FA=0]','Alt+1,2,...: Switch between available templates [FA=0]','',...
+                    'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronal view','S: Saggital view',},...
+                    'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+            otherwise
+                text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
+                    'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronal view','S: Saggital view'},...
+                    'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+        end
     else
-        helptext=text(5,5,{'Click to show reference image','Use </> to decrease/increase box size while clicking','Arrow keys / Mouse wheel: Scroll through image','',...
-            'Z: Zoom in/out','X: Hybrid view on/off','A: Axial view','C: Coronal view','S: Saggital view'},...
-            'Color','w','HorizontalAlignment','left','VerticalAlignment','top');
+        text(5, 5, helptext, 'Color', 'w', 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top');
     end
 end
 
