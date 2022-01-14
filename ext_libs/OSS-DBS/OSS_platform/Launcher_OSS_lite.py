@@ -231,7 +231,7 @@ def run_full_model(master_dict):
         d['gamma_array_glob']=[0]
         d["Neuron_model_array_prepared"] = 0
                 
-        if d['Electrode_type']=="AA_rodent_monopolar" or d['Electrode_type']=="SR_rodent":    #rodent VTA
+        if d['Electrode_type']=="AA_rodent_monopolar" or d['Electrode_type']=="SR_rodent" or d['Electrode_type']=='SNEX100':    #rodent VTA
             d['Axon_Model_Type']='Reilly2016'
             d['x_seed'],d['y_seed'],d['z_seed']=(d['Implantation_coordinate_X'],d['Implantation_coordinate_Y'],d['Implantation_coordinate_Z'])  # it makes sense to shift it a bit from the tip
             d['diam_fib']=5.0
@@ -453,8 +453,7 @@ def run_full_model(master_dict):
                 os.makedirs(os.environ['PATIENTDIR']+'/Axons_in_time')
 
             from Current_scaler import conduct_unit_IFFT
-            conduct_unit_IFFT(d, Xs_signal_norm, N_array.N_models,N_array.pattern['num_segments'], FR_vector_signal, t_vector, name_sorted_solution,
-                              inx_start_octv)
+            conduct_unit_IFFT(d, Xs_signal_norm, N_array.N_models,N_array.pattern['num_segments'],FR_vector_signal, t_vector, name_sorted_solution, inx_start_octv)
 
         if d["Full_Field_IFFT"] == 1:       # rename later
             N_array.pattern['num_segments'] = arrays_shape
@@ -475,7 +474,7 @@ def run_full_model(master_dict):
             from Current_scaler import compute_similarity
 
             args_all = [d, Xs_signal_norm, N_array.N_models,
-                        N_array.pattern['num_segments'], FR_vector_signal, t_vector, A, name_sorted_solution,
+                        N_array.pattern['num_segments'],N_array.neurons_idx_encap,N_array.neurons_idx_csf, FR_vector_signal, t_vector, A, name_sorted_solution,
                         inx_start_octv]
             if os.path.isfile(os.environ['PATIENTDIR']+'/Best_scaling_yet.csv'):
                 initial_scaling = np.genfromtxt(os.environ['PATIENTDIR']+'/Best_scaling_yet.csv', delimiter = ' ')
@@ -675,12 +674,12 @@ def run_full_model(master_dict):
         Number_of_activated=0
         last_point=0
         for i in range(len(d["n_Ranvier"])):
-            Number_of_activated_population=run_simulation_with_NEURON(d, last_point,i,d["diam_fib"][i],d["n_Ranvier"][i],N_array.N_models[i],d["Ampl_scale"],d["number_of_processors"],d["Name_prepared_neuron_array"])
+            Number_of_activated_population=run_simulation_with_NEURON(d, last_point,i,d["diam_fib"][i],d["n_Ranvier"][i],N_array.N_models[i],d["Ampl_scale"],d["number_of_processors"],N_array.neurons_idx_encap[i],N_array.neurons_idx_csf[i],d["Name_prepared_neuron_array"])
             Number_of_activated=Number_of_activated+Number_of_activated_population
 
             last_point=N_array.pattern['num_segments'][i]*N_array.N_models[i]+last_point
     else:
-        Number_of_activated = run_simulation_with_NEURON(d, 0,-1,d["diam_fib"],d["n_Ranvier"],N_array.N_models[0],d["Ampl_scale"],d["number_of_processors"])
+        Number_of_activated = run_simulation_with_NEURON(d, 0,-1,d["diam_fib"],d["n_Ranvier"],N_array.N_models[0],d["Ampl_scale"],d["number_of_processors"],N_array.neurons_idx_encap,N_array.neurons_idx_csf)
 
     os.chdir(oss_plat_cont)
 
