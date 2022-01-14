@@ -160,11 +160,12 @@ class Neuron_array(object):
         if nsegm == 0:  # if not passed from a list
             nsegm = self.pattern['num_segments']
 
-        inx_start = int(index / nsegm) * nsegm
+        inx_neuron = int(index / nsegm)
+        inx_start = inx_neuron * nsegm
         array[inx_start: inx_start + nsegm, :] = -100000000.0
         index = inx_start + nsegm
 
-        return array, index
+        return array, index, inx_neuron
 
     # creates a VTA grid based on settings in GUI_inp_dict.py when 'Global_rot' = 1
     # returns a 2D numpy array of middle (seeeding) nodes of axons centered around (0,0,0)
@@ -499,10 +500,11 @@ class Neuron_array(object):
                     if not (mesh_brain_sub.bounding_box_tree().compute_first_entity_collision(
                             pnt) < mesh_brain_sub.num_cells() * 100):  # if one point of the neural model is absent, the whole model is disabled
                         points_outside += 1
-                        Array_coord_in_MRI, inx = self.mark_to_remove(Array_coord_in_MRI, inx,
+                        Array_coord_in_MRI, inx, __ = self.mark_to_remove(Array_coord_in_MRI, inx,
                                                                       nsegm=self.pattern['num_segments'][
                                                                           population_index])  # will also shift inx to the end of the neuron
 
+                        
                 Array_coord_in_MRI = Array_coord_in_MRI[
                     ~np.all(Array_coord_in_MRI == -100000000.0, axis=1)]  # deletes all -10000000 enteries
                 n_models_after = int(Array_coord_in_MRI.shape[0] / self.pattern['num_segments'][population_index])
@@ -610,6 +612,10 @@ class Neuron_array(object):
 
         submesh_encup = SubMesh(mesh, subdomains_enc, 1)
 
+        # if multiple pathways, those will be lists of lists
+        self.neurons_idx_encap = []   # IMPORTANT: if the neuron does not intersect with encap. but with the electrode (sparse sampling), it will be treated as outside of the domain
+        self.neurons_idx_csf = []  
+
         inx = 0
         if self.Type != 'Imported':
 
@@ -620,13 +626,15 @@ class Neuron_array(object):
                 if (submesh_encup.bounding_box_tree().compute_first_entity_collision(
                         pnt) < submesh_encup.num_cells()):  # this is a condition to check whether the point is inside encap. layer or floating conductor
                     points_encap = points_encap + 1
-                    Array_coord, inx = self.mark_to_remove(Array_coord,
+                    Array_coord, inx, i_neuron_encap = self.mark_to_remove(Array_coord,
                                                            inx)  # will also shift inx to the end of the neuron
+                    self.neurons_idx_encap.append(i_neuron_encap)
+
                 else:
                     if not (mesh.bounding_box_tree().compute_first_entity_collision(
                             pnt) < mesh.num_cells() * 100):  # if one point of the neural model is absent, the whole model is disabled
                         points_outside = points_outside + 1
-                        Array_coord, inx = self.mark_to_remove(Array_coord,
+                        Array_coord, inx, __ = self.mark_to_remove(Array_coord,
                                                                inx)  # will also shift inx to the end of the neuron
                     else:
                         # finally checks whether the neuron compartment is inside the CSF voxel
@@ -645,13 +653,14 @@ class Neuron_array(object):
                         if str(a) != '(array([], dtype=int64),)':
                             points_csf = points_csf + 1
 
-                            Array_coord, inx = self.mark_to_remove(Array_coord,
+                            Array_coord, inx, i_neuron_csf = self.mark_to_remove(Array_coord,
                                                                    inx)  # will also shift inx to the end of the neuron
-
+                            self.neurons_idx_csf.append(i_neuron_csf)
                         else:
                             inx += 1
 
-            logging.critical("Points in CSF, encapsulation layer (and floating conductors) and outside (and intersecting with the electrode): {0}, {1}, {2}".format(points_csf, points_encap, points_outside))
+
+            logging.critical("Neurons in CSF, encapsulation layer (and floating conductors) and outside (and intersecting with the electrode): {0}, {1}, {2}".format(points_csf, points_encap, points_outside))
             inx = 0
 
             del voxel_array_CSF_shifted
@@ -666,6 +675,13 @@ class Neuron_array(object):
 
 
             N_models = int(Array_coord.shape[0] / self.pattern['num_segments'])
+
+            if len(self.neurons_idx_csf) > 0.25 * N_models:
+                logging.critical("!========================================================!")
+                logging.critical("WARNING: too many neurons are in CSF".format(lst[i]))
+                logging.critical("Check segmask and image normalizations")
+                logging.critical("!========================================================!")
+
 
             np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Adjusted_neuron_array_info.csv',
                        np.array([N_models, points_csf, points_encap, points_outside]), delimiter=" ")
@@ -683,14 +699,20 @@ class Neuron_array(object):
             N_models = np.zeros((len(List_of_arrays)), int)  # each entry will contain number of models per projection
 
             for i in range(len(List_of_arrays)):
-
+                
+                sublist_idx_encap = []
+                sublist_idx_csf = []
+                            
                 if not (type(List_of_arrays[i]) is np.ndarray):  # check for empty
                     hf3 = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'a')
                     hf3.create_dataset(lst[i], data=0)
                     hf3.close()
+                    
+                    self.neurons_idx_csf.append([-1])
+                    self.neurons_idx_encap.append([-1])
+                    
                 else:
                     Array_coord = List_of_arrays[i]
-
                     while inx < Array_coord.shape[0]:
 
                         pnt = Point(Array_coord[inx, 0], Array_coord[inx, 1], Array_coord[inx, 2])
@@ -698,13 +720,14 @@ class Neuron_array(object):
                         if (submesh_encup.bounding_box_tree().compute_first_entity_collision(
                                 pnt) < mesh.num_cells()):  # this is a condition to check whether the point is inside encap. layer or floating conductor
                             points_encap += 1
-                            Array_coord, inx = self.mark_to_remove(Array_coord, inx, nsegm=self.pattern['num_segments'][
+                            Array_coord, inx, i_neuron_encap = self.mark_to_remove(Array_coord, inx, nsegm=self.pattern['num_segments'][
                                 i])  # will also shift inx to the end of the neuron
+                            sublist_idx_encap.append(i_neuron_encap)
                         else:
                             if not (mesh.bounding_box_tree().compute_first_entity_collision(
                                     pnt) < mesh.num_cells() * 100):  # if one point of the neural model is absent, the whole model is disabled
                                 points_outside += 1
-                                Array_coord, inx = self.mark_to_remove(Array_coord, inx,
+                                Array_coord, inx, __ = self.mark_to_remove(Array_coord, inx,
                                                                        nsegm=self.pattern['num_segments'][i])
                             else:  # finally checks whether the neuron compartment is inside the CSF voxel
                                 check1_1 = (voxel_array_CSF_shifted[:, 0] - Array_coord[inx, 0] <= MRI_param.x_vox_size)
@@ -721,8 +744,9 @@ class Neuron_array(object):
                                 a = np.where((check3 == (True)))
                                 if str(a) != '(array([], dtype=int64),)':
                                     points_csf += 1
-                                    Array_coord, inx = self.mark_to_remove(Array_coord, inx,
+                                    Array_coord, inx, i_neuron_csf = self.mark_to_remove(Array_coord, inx,
                                                                            nsegm=self.pattern['num_segments'][i])
+                                    sublist_idx_csf.append(i_neuron_csf)                                    
                                 else:
                                     inx += 1
 
@@ -743,6 +767,15 @@ class Neuron_array(object):
 
                     number_of_points_filtered = number_of_points_filtered + Array_coord.shape[0]
 
+                    self.neurons_idx_csf.append(sublist_idx_csf)
+                    self.neurons_idx_encap.append(sublist_idx_encap)
+                    
+                    if len(sublist_idx_csf) > 0.25 * N_models[i]:
+                        logging.critical("!========================================================!")
+                        logging.critical("WARNING: too many neurons of {} are in CSF".format(lst[i]))
+                        logging.critical("Check segmask and image normalizations")
+                        logging.critical("!========================================================!")
+
             hf = h5py.File(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON_by_populations.h5', 'r')
             lst = list(hf.keys())
             result_total = []
@@ -759,9 +792,10 @@ class Neuron_array(object):
             np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Adjusted_neuron_array_info.csv', N_models, delimiter=" ")
             np.savetxt(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', Array_coord_total, delimiter=" ")
 
-            logging.critical("Points in CSF, encapsulation layer (and floating conductors) and outside (and intersecting with the electrode): {0}, {1}, {2}".format(points_csf, points_encap, points_outside))
+            logging.critical("Neurons in CSF, encapsulation layer (and floating conductors) and outside (and intersecting with the electrode): {0}, {1}, {2}".format(points_csf, points_encap, points_outside))
             logging.critical(
                 "Adjusted neuron models can be visualized from Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv in Paraview")
+
 
             # might not work like this
             # from Visualization_files.Paraview_connections_processed import show_connections

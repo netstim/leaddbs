@@ -66,7 +66,7 @@ def conduct_unit_IFFT(d, Xs_signal_norm, N_models, N_segm, FR_vector_signal, t_v
     return True
 
 
-def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,VTA_IFFT,scaling_index,VTA_parameters):
+def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in_csf,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,VTA_IFFT,scaling_index,VTA_parameters):
 
     if VTA_IFFT == 1:
 
@@ -111,7 +111,7 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_ve
         Number_of_activated = 0
         last_point=0
         for i in range(len(d["n_Ranvier"])):
-            Number_of_activated_population = run_simulation_with_NEURON(d, S_vector,last_point,i,d["diam_fib"][i],d["n_Ranvier"][i],N_models[i],d["Ampl_scale"],d["number_of_processors"],scaling_index,d["Name_prepared_neuron_array"])
+            Number_of_activated_population = run_simulation_with_NEURON(d, S_vector,last_point,i,d["diam_fib"][i],d["n_Ranvier"][i],N_models[i],d["Ampl_scale"],d["number_of_processors"],scaling_index,list_in_encap[i],list_in_csf[i],d["Name_prepared_neuron_array"])
             Number_of_activated = Number_of_activated+Number_of_activated_population
 
             #if d["Axon_Model_Type"] == 'Reilly2016':
@@ -124,7 +124,7 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_ve
         if isinstance(d["diam_fib"],list):
             d["diam_fib"]=d["diam_fib"][0]
             d["n_Ranvier"]=d["n_Ranvier"][0]
-        Number_of_activated = run_simulation_with_NEURON(d,S_vector,0,-1,d["diam_fib"],d["n_Ranvier"],N_models[0],d["Ampl_scale"],d["number_of_processors"],scaling_index)
+        Number_of_activated = run_simulation_with_NEURON(d,S_vector,0,-1,d["diam_fib"],d["n_Ranvier"],N_models[0],d["Ampl_scale"],d["number_of_processors"],scaling_index,list_in_encap,list_in_csf)
 
     os.chdir(oss_plat_cont)
 
@@ -167,9 +167,9 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_ve
 
 
 def compute_similarity(S_vector, *args):
-    d, Xs_signal_norm, N_models, N_segm, FR_vector_signal, t_vector, A, name_sorted_solution, inx_start_octv = args
+    d, Xs_signal_norm, N_models, N_segm,list_in_encap,list_in_csf, FR_vector_signal, t_vector, A, name_sorted_solution, inx_start_octv = args
 
-    activation_profile = test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,d["Full_Field_IFFT"],0,0)
+    activation_profile = test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in_csf,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,d["Full_Field_IFFT"],0,0)
     # scalar value if only one .mat for the whole connectome
 
     # do clean-up in Results_
@@ -213,12 +213,12 @@ def compute_similarity(S_vector, *args):
     return distance
 
 
-def find_activation(current_comb,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,scaling_index,VTA_param=0):
+def find_activation(current_comb,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in_csf,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,scaling_index,VTA_param=0):
 
     import time
     start_current_run=time.time()
 
-    activation=test_scaling(current_comb,d,Xs_signal_norm,N_models,N_segm,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,d["Full_Field_IFFT"],scaling_index,VTA_param)
+    activation=test_scaling(current_comb,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in_csf,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,d["Full_Field_IFFT"],scaling_index,VTA_param)
 
     minutes=int((time.time() - start_current_run)/60)
     secnds=int(time.time() - start_current_run)-minutes*60
