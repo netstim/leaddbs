@@ -117,7 +117,7 @@ else
 end
 
 if status
-   ea_error('ANTs normalization failed - likely due to out of memory problems. Please try a different normalization strategy or reduce the number of threads in the ANTs settings dialogue.');
+    error(sprintf('ANTs normalization failed! Please check the log above for details.\nIn case it''s an out of memory error, reduce the number of threads in the ANTs settings might help.'));
 end
 
 if refinewarp
