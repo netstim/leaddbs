@@ -18,6 +18,8 @@ general_stim_settings = get_stim_amp_freq_pwidth(procedure_data);
 contact_stim_settings = get_contact_settings(procedure_data, general_stim_settings{1, 1}.stim_amp.unit);
 
 
+disp('done')
+
 end
 
 %% utility functions
@@ -58,25 +60,40 @@ function output = get_contact_settings(procedure_data, stim_unit)
 
 output = {};
 for hemi = 1:2
-    
-    output{hemi}.polarity = {};
-    
+
+    output{hemi}.contact_polarity = {};
+    output{hemi}.case_polarity = {};
+
     % if current controlled, add percentage
     if ~strcmp(stim_unit, 'Volt')
-        output{hemi}.percentage = {};
+        output{hemi}.contact_percentage = {};
     end
 
-    output{hemi}.percentage = {};
     for extension_nr = 1:length(procedure_data{1, hemi}.resource.extension{1, 1}.extension)
-        
+
         % if extension is a field (so it is not amplitude, frequency or pulse-width
         if isfield(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}, 'extension')
-        % contact but not case
+            % contact but not case
             if strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.url, 'contact-label') && ~strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.valueCoding.display, 'case')
-                disp('done')
-    
+                if strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'n')
+                    output{hemi}.contact_polarity{end + 1, 1} = -1;
+                elseif strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'p')
+                    output{hemi}.contact_polarity{end + 1, 1} = 1;
+                else
+                    output{hemi}.contact_polarity{end + 1, 1} = 0;
+                end
+                % case
+            elseif strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.url, 'contact-label') && strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.valueCoding.display, 'case')
+                if strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'n')
+                    output{hemi}.case_polarity{end + 1, 1} = -1;
+                elseif strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'p')
+                    output{hemi}.case_polarity{end + 1, 1} = 1;
+                else
+                    output{hemi}.case_polarity{end + 1, 1} = 0;
+                end
             end
         end
     end
+
 end
 end
