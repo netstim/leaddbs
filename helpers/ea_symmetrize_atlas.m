@@ -16,24 +16,55 @@ load(fullfile(odir,'atlas_index.mat'));
 ea_delete(fullfile(odir,'atlas_index.mat'));
 
 
-for atlas=1:length(atlases)
+for atlas=1:length(atlases.fv)
     if ~isempty(atlases.fv{atlas,1}) % Nifti ROI
-        RH=load(fullfile(odir,'rh',atlases.names{atlas}));
-        LH=load(fullfile(odir,'lh',atlases.names{atlas}));
+        RH_orig = load(fullfile(odir,'rh',atlases.names{atlas}));
+        LH_orig = load(fullfile(odir,'lh',atlases.names{atlas}));
+        
 
-
-        rfibs=RH.fibers(:,1:3);
+        rfibs=RH_orig.fibers(:,1:3);
         rfibs=ea_flip_lr_nonlinear(double(rfibs));
         
-        lfibs=LH.fibers(:,1:3);
+        lfibs=LH_orig.fibers(:,1:3);
         lfibs=ea_flip_lr_nonlinear(double(lfibs));
+       
+        %write up the new 4th column of the fibers, after mirroring and
+        %adding the last index for continous indexing 
+        new_LH_fibers = LH_orig.fibers(:,4) + length(RH_orig.idx);
+        new_RH_fibers = RH_orig.fibers(:,4) + length(LH_orig.idx);
         
-        RH.fibers=[RH.fibers;[lfibs,LH.fibers(:,4)]];
-        LH.fibers=[LH.fibers;[rfibs,RH.fibers(:,4)]];
+        %replace the new Right side and Left side with the mirrored fibers
+        RH.fibers=[RH_orig.fibers;[lfibs,new_LH_fibers]];
+        LH.fibers=[LH_orig.fibers;[rfibs,new_RH_fibers]];
         
-        RH.idx=[RH.idx;LH.idx];
-        LH.idx=[LH.idx;RH.idx];
-
+        %now perform the count for 'idx'. It will remain the same since
+        %there is count of number of fibers will not change
+        
+        RH.idx = [RH_orig.idx;LH_orig.idx];
+        LH.idx = [LH_orig.idx;RH_orig.idx];
+        
+%% alternate code for calculating count of fibers, maybe useful for other applications
+%         uniq_new_LH_fibers = unique(new_LH_fibers);
+%         numel_uniq_new_LH_fibers = numel(uniq_new_LH_fibers);
+%         LH_new_indx = [];
+%         for k = 1:numel_uniq_new_LH_fibers
+%             LH_new_indx(k) = sum(new_LH_fibers==uniq_new_LH_fibers(k));
+%         end
+%         LH_new_indx = LH_new_indx';
+%         uniq_new_RH_fibers = unique(new_RH_fibers);
+%         numel_uniq_new_RH_fibers = numel(uniq_new_RH_fibers);
+%         RH_new_indx = [];
+%         for k = 1:numel_uniq_new_RH_fibers
+%             RH_new_indx(k) = sum(new_RH_fibers==uniq_new_RH_fibers(k));
+%         end
+%         RH_new_indx = RH_new_indx';
+%         
+%         RH.idx=[RH_orig.idx;LH_new_indx];
+%         LH.idx=[LH_orig.idx;RH_new_indx];
+        
+        RH.ea_fibformat = RH_orig.ea_fibformat;
+        LH.ea_fibformat = LH_orig.ea_fibformat;
+        
         save(fullfile(odir,'rh',atlases.names{atlas}),'-struct','RH');
         save(fullfile(odir,'lh',atlases.names{atlas}),'-struct','LH');
 
