@@ -9,6 +9,7 @@ function varargout=ea_resolve_elspec(varargin)
 if ~nargin
     varargout{1}={'Medtronic 3389', 'Medtronic 3387', 'Medtronic 3391', 'Medtronic B33005', 'Medtronic B33015', ...
         'Boston Scientific Vercise', 'Boston Scientific Vercise Directed', ...
+        'Boston Scientific Vercise Cartesia HX', 'Boston Scientific Vercise Cartesia X', ...
         'St. Jude ActiveTip (6146-6149)','St. Jude ActiveTip (6142-6145)', ...
         'St. Jude Directed 6172 (short)','St. Jude Directed 6173 (long)', ...
         'PINS Medical L301', 'PINS Medical L302', 'PINS Medical L303', .....
@@ -23,6 +24,7 @@ if ~nargin
         'ELAINE Rat Electrode', 'FHC WU Rat Electrode', 'NuMed Mini Lead'}';
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', 'medtronic_b33005', 'medtronic_b33015', ...
         'boston_vercise', 'boston_vercise_directed', ...
+        'boston_vercise_cartesia_hx', 'boston_vercise_cartesia_x', ...
         'stjude_activetip_2mm','stjude_activetip_3mm', ...
         'stjude_directed_05','stjude_directed_15', ...
         'pins_l301', 'pins_l302', 'pins_l303', ...
@@ -192,6 +194,50 @@ switch elmodel
         elspec.etagenames{1}={'K9 (R)','K10-12 (R)','K13-15 (R)','K16 (R)'};
         elspec.etagenames{2}={'K1 (L)','K2-4 (L)','K5-7 (L)','K8 (L)'};
         elspec.etageidx={1,2:4,5:7,8};
+        elspec.forstimulation=1;
+    case 'Boston Scientific Vercise Cartesia HX'
+        elspec.matfname='boston_vercise_cartesia_hx';
+        elspec.lead_diameter=1.3;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.3;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.3;
+        elspec.tip_color=0.3;
+        elspec.tip_length=1.1;
+        elspec.contact_spacing=0.5;
+        elspec.numel=16;
+        elspec.tipiscontact=0;
+        elspec.markerpos = 20;
+        elspec.markerlen = 3;
+        elspec.contactnames={'K17 (R)','K18 (R)','K19 (R)','K20 (R)','K21 (R)','K22 (R)','K23 (R)','K24 (R)','K25 (R)','K26 (R)','K27 (R)','K28 (R)','K29 (R)','K30 (R)','K31 (R)','K32 (R)',...
+            'K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)'};
+        elspec.isdirected=1;
+        elspec.etagenames{1}={'K17-19 (R)','K20-22 (R)','K23-25 (R)','K26-28 (R)','K29 (R)','K30 (R)','K31 (R)','K32 (R)'};
+        elspec.etagenames{2}={'K1-3 (L)','K4-6 (L)','K7-9 (L)','K10-12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)'};
+        elspec.etageidx={1:3,4:6,7:9,10:12,13,14,15,16};
+        elspec.forstimulation=1;
+    case 'Boston Scientific Vercise Cartesia X'
+        elspec.matfname='boston_vercise_cartesia_x';
+        elspec.lead_diameter=1.3;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.3;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.3;
+        elspec.tip_color=0.3;
+        elspec.tip_length=1.1;
+        elspec.contact_spacing=0.5;
+        elspec.numel=16;
+        elspec.tipiscontact=0;
+        elspec.markerpos = 16;
+        elspec.markerlen = 3;
+        elspec.contactnames={'K17 (R)','K18 (R)','K19 (R)','K20 (R)','K21 (R)','K22 (R)','K23 (R)','K24 (R)','K25 (R)','K26 (R)','K27 (R)','K28 (R)','K29 (R)','K30 (R)','K31 (R)','K32 (R)',...
+            'K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)'};
+        elspec.isdirected=1;
+        elspec.etagenames{1}={'K17-19 (R)','K20-22 (R)','K23-25 (R)','K26-28 (R)','K29-31 (R)','K32 (R)'};
+        elspec.etagenames{2}={'K1-3 (L)','K4-6 (L)','K7-9 (L)','K10-12 (L)','K13-15 (L)','K16 (L)'};
+        elspec.etageidx={1:3,4:6,7:9,10:12,13:15,16};
         elspec.forstimulation=1;
     case 'St. Jude ActiveTip (6146-6149)'
         elspec.matfname='stjude_activetip_2mm';
