@@ -1,4 +1,14 @@
-function import_dotbase_stimsettings()
+function import_dotbase_stimsettings(hobj, evt, handles)
+
+patient_dir = getappdata(handles.leadfigure,'uipatdir');
+
+% sanity check if only one patient has been selected
+if length(patient_dir) > 1
+    disp('More than one patient selected, but this import function only works for one patient!')
+    return;
+end
+
+options = ea_getptopts(patient_dir{1});
 
 % get the .json file and load data
 [json_file, json_path] = uigetfile('*.json');
@@ -15,8 +25,22 @@ end
 % get stimulation amplitude, frequencey and pulse width for both hemispheres
 general_stim_settings = get_stim_amp_freq_pwidth(procedure_data);
 
+% get polarity and percentages of contacts and casings
 contact_stim_settings = get_contact_settings(procedure_data, general_stim_settings{1, 1}.stim_amp.unit);
 
+% sanity check if number of electrodes equals to the one of the selected electrode
+if ~(options.elspec.numel == length(contact_stim_settings{1, 1}.contact_polarity))
+    disp('Number of contacts of selected electrode and imported .json file do not match!')
+    return;
+end
+
+% get name for stim
+stim_name = inputdlg('Please specify a stimulation name');
+
+% create stimparameters.mat file
+S_init = ea_initializeS(stim_name, options);
+
+S = construct_S(S_init, contact_stim_settings, general_stim_settings);
 
 disp('done')
 
@@ -64,36 +88,98 @@ for hemi = 1:2
     output{hemi}.contact_polarity = {};
     output{hemi}.case_polarity = {};
 
-    % if current controlled, add percentage
-    if ~strcmp(stim_unit, 'Volt')
-        output{hemi}.contact_percentage = {};
-    end
+    output{hemi}.contact_percentage = {};
+    output{hemi}.case_percentage = {};
+
 
     for extension_nr = 1:length(procedure_data{1, hemi}.resource.extension{1, 1}.extension)
 
         % if extension is a field (so it is not amplitude, frequency or pulse-width
         if isfield(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}, 'extension')
             % contact but not case
-            if strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.url, 'contact-label') && ~strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.valueCoding.display, 'case')
+            if strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.url, 'contact-label') && ...
+                    ~strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.valueCoding.display, 'case')
+
                 if strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'n')
-                    output{hemi}.contact_polarity{end + 1, 1} = -1;
-                elseif strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'p')
                     output{hemi}.contact_polarity{end + 1, 1} = 1;
+                elseif strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'p')
+                    output{hemi}.contact_polarity{end + 1, 1} = 2;
                 else
                     output{hemi}.contact_polarity{end + 1, 1} = 0;
                 end
+
+                %  get percentages of contacts
+                if isfield(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 2}.valueQuantity, 'value')
+                    output{hemi}.contact_percentage{end + 1, 1} = procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 2}.valueQuantity.value;
+                else
+                    output{hemi}.contact_percentage{end + 1, 1} = 0;
+                end
+
                 % case
-            elseif strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.url, 'contact-label') && strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.valueCoding.display, 'case')
+            elseif strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.url, 'contact-label') && ...
+                    strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 1}.valueCoding.display, 'case')
+
                 if strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'n')
-                    output{hemi}.case_polarity{end + 1, 1} = -1;
-                elseif strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'p')
                     output{hemi}.case_polarity{end + 1, 1} = 1;
+                elseif strcmp(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 3}.valueCode, 'p')
+                    output{hemi}.case_polarity{end + 1, 1} = 2;
                 else
                     output{hemi}.case_polarity{end + 1, 1} = 0;
                 end
+
+                % get percentages of case
+
+                if isfield(procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 2}.valueQuantity, 'value')
+                    output{hemi}.case_percentage{end + 1, 1} = procedure_data{1, hemi}.resource.extension{1, 1}.extension{1, extension_nr}.extension{1, 2}.valueQuantity.value;
+                else
+                    output{hemi}.case_percentage{end + 1, 1} = 0;
+                end
+
             end
         end
     end
 
 end
+end
+
+function output = construct_S(S_init, contact_stim_settings, general_stim_settings)
+
+output = S_init;
+
+for hemi = 1:2
+
+    % set amplitudes
+    output.amplitude{1, hemi}(1) = general_stim_settings{1, hemi}.stim_amp.value;
+
+    % 1 - right hemisphere, 2 - left hemisphere
+    if hemi == 1
+        prefix = 'Rs';
+        contact_offset = -1;
+    else
+        prefix = 'Ls';
+        contact_offset = 7;
+    end
+
+    % set amplitudes (again)
+    output.([prefix, '1']).amp = general_stim_settings{1, hemi}.stim_amp;
+
+    if strcmp(general_stim_settings{1, hemi}.stim_amp.unit, 'Volt')
+        output.([prefix, '1']).va = 1;      % voltage controlled - 1, current controlled - 2
+    else
+        output.([prefix, '1']).va = 2;      % voltage controlled - 1, current controlled - 2
+    end
+
+    % set case
+    if ~contact_stim_settings{1, hemi}.case_polarity{1} == 0
+        output.([prefix, '1']).case.perc = 100;
+    end
+    output.([prefix, '1']).case.pol = contact_stim_settings{1, hemi}.case_polarity{1};
+
+    % set contacts
+    for contactNr = 1:length(contact_stim_settings{1, hemi}.contact_polarity)
+        output.([prefix, num2str(1)]).(['k', num2str(contactNr + contact_offset)]).pol = contact_stim_settings{1, hemi}.contact_polarity{contactNr, 1};
+        output.([prefix, num2str(1)]).(['k', num2str(contactNr + contact_offset)]).perc = contact_stim_settings{1, hemi}.contact_percentage{contactNr, 1};
+    end
+end
+
 end
