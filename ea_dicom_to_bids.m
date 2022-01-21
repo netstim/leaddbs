@@ -307,7 +307,7 @@ for rowIdx = 1:height(table)
         resolution = imgs_resolution{rowIdx};
         
         % is isometric resolution
-        acq_tags = {'sag', 'cor', 'tra'};
+        acq_tags = {'sag', 'cor', 'ax'};
         if range(resolution) < 0.05
             table_preallocated.Acquisition(rowIdx) = "iso";
             % is not isometric resolution
