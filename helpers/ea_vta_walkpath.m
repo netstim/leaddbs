@@ -7,8 +7,8 @@ switch pipeline
         if ~exist(fullfile(new_path,pipeline),'dir')
            return 
         end
-        if exist(fullfile(new_path,pipeline,'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
-            mni_dir = fullfile(new_path,pipeline,'MNI_ICBM_2009b_NLIN_ASYM');
+        if exist(fullfile(new_path,pipeline,'MNI152NLin2009bAsym'),'dir')
+            mni_dir = fullfile(new_path,pipeline,'MNI152NLin2009bAsym');
             native_dir = fullfile(new_path,pipeline,'native');
             this_folder = dir_without_dots(mni_dir);
             this_folder_names = {this_folder.name};
@@ -46,20 +46,7 @@ switch pipeline
                 %can rename them.
             end
         end
-        
-    case 'current_headmodel'
-      mni_dir = fullfile(new_path,pipeline,'MNI_ICBM_2009b_NLIN_ASYM');
-      native_dir = fullfile(new_path,pipeline,'native');  
-      if exist(mni_dir,'dir')
-          this_folder = dir_without_dots(mni_dir);
-          mni_files = {this_folder.name};
-          for i=1:length(mni_files)
-              derivatives_cell{end+1,1} = fullfile(source_patient,pipeline,'MNI_ICBM_2009b_NLIN_ASYM',mni_files{i});
-              mni_files{i} = fullfile(mni_dir,mni_files{i});
-              derivatives_cell{end,2} = mni_files{i};
-          end
-      end
-          
+  
       if exist(native_dir,'dir')
           this_folder = dir_without_dots(native_dir);
           native_files = {this_folder.name};

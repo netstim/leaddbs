@@ -42,17 +42,7 @@ if isdicom && ~exist('dicom_source','var')
 end
 
 %define names of the new directorey structure
-modes = {'anat','func','dwi'};
-sessions = {'ses-preop','ses-postop'};
-if  doDcmConv && ~doOnlyRaw
-    subfolder_cell = {'sourcedata','legacy_rawdata','derivatives'};
-elseif doOnlyRaw && ~doDcmConv
-    subfolder_cell = {'rawdata'};
-elseif  doOnlyRaw && doDcmConv
-    subfolder_cell = {'legacy_rawdata'};
-elseif ~doOnlyRaw && ~doDcmConv
-    subfolder_cell = {'rawdata','derivatives'};
-end
+
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','headmodel','miscellaneous','ftracking'};
 
 
@@ -86,6 +76,22 @@ for patients = 1:length(source)
     %source patient filepath
     source_patient = source{patients};
     
+    modes = {'anat','func','dwi'};
+    sessions = {'ses-preop','ses-postop'};
+    if  doDcmConv && ~doOnlyRaw
+        subfolder_cell = {'sourcedata','legacy_rawdata','derivatives'};
+    elseif doOnlyRaw && ~doDcmConv
+        subfolder_cell = {'rawdata'};
+    elseif  doOnlyRaw && doDcmConv
+        subfolder_cell = {'legacy_rawdata'};
+    elseif ~doOnlyRaw && ~doDcmConv
+        if isempty(dir(fullfile(source_patient,'*.nii'))) && isempty(dir(fullfile(source_patient,'*.nii.gz')))
+            subfolder_cell = {'derivatives'};
+        else
+            subfolder_cell = {'rawdata','derivatives'};
+        end
+    end
+
     %dest directory is already specified
     if isdicom
         dicom_patient = dicom_source{patients};
@@ -135,21 +141,19 @@ for patients = 1:length(source)
             copyfile(fullfile(source_patient,'WarpDrive'),fullfile(dest,'derivatives','leaddbs',patient_name,'warpdrive'));
             dir_names{j} = '';
         elseif strcmp(dir_names{j},'stimulations')
-            %if mni dir exists
-            if ~exist(fullfile(source_patient,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),'dir') || ~exist(fullfile(source_patient,'stimulations','native'),'dir')
-                mkdir(fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'));
-                copyfile(fullfile(source_patient,'stimulations'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'));
-            else
-                copyfile(fullfile(source_patient,'stimulations'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations'));
+            %if mni dir exist
+            copyfile(fullfile(source_patient,'stimulations'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations'));
+            if exist(fullfile(source_patient,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),'dir')
+               movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym')) 
             end
             dir_names{j} = '';
-        elseif strcmp(dir_names{j},'current_headmodel')
-            if exist(fullfile(source_patient,'headmodel'),'dir')
-                movefile(fullfile(source_patient,'current_headmodel'),fullfile(source_patient,'headmodel'));
-            else %there is only a current headmodel but no headmodel
-                copyfile(fullfile(source_patient,'current_headmodel'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'))
+        elseif strcmp(dir_names{j},'headmodel') 
+            copyfile(fullfile(source_patient,'headmodel'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
+            if exist(fullfile(source_patient,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),'dir')
+                movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI152NLin2009bAsym'))
             end
             dir_names{j} = '';
+        
         elseif strcmp(dir_names{j},'DICOM')
             if ~exist(fullfile(dest,'sourcedata',patient_name,'DICOM'),'dir')
                 mkdir(fullfile(dest,'sourcedata',patient_name,'DICOM'))
@@ -207,10 +211,10 @@ for patients = 1:length(source)
                 end
             end
         else %all other directories
-            if ~exist(fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}),'dir')
-                mkdir(fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}))
+            if ~exist(fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous'),'dir')
+                mkdir(fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous'))
             end
-            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
+            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous',dir_names{j}));
             dir_names{j} = '';
         end
     end
@@ -241,6 +245,7 @@ for patients = 1:length(source)
                 disp("Migrating Derivatives folder...");
                 new_path = fullfile(dest,subfolder_cell{subfolders},'leaddbs',patient_name);
                 for files=1:length(files_to_move)
+                    which_file = files_to_move{files};
                     if contains(files_to_move{files},'postop')
                         sess_tag = 'ses-postop';
                     else
@@ -248,10 +253,8 @@ for patients = 1:length(source)
                     end
                     %coregistration
                     if ismember(files_to_move{files},coregistration{:,1})
-                        
                         which_pipeline = pipelines{2};
-                        which_file = files_to_move{files};
-                        indx = cellfun(@(x)strcmp(x,files_to_move{files}),coregistration{:,1});
+                        indx = cellfun(@(x)strcmp(x,which_file),coregistration{:,1});
                         bids_name = coregistration{1,2}{indx};
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
@@ -266,22 +269,21 @@ for patients = 1:length(source)
 
                         %coregistration: log, no fixed naming pattern and hence
                         %in an elseif command
-                    elseif ~isempty(regexp(files_to_move{files},'^coreg.*.log'))
-                        derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
-                        derivatives_cell{end,2} = fullfile(new_path,pipelines{2},'log',files_to_move{files});
+                    elseif ~isempty(regexp(which_file,'^coreg.*.log'))
+                        derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
+                        derivatives_cell{end,2} = fullfile(new_path,pipelines{2},'log',which_file);
                         if ~exist(fullfile(new_path,pipelines{2},'log'),'dir')
                             mkdir(fullfile(new_path,pipelines{2},'log'));
                         end
-                        if exist(fullfile(source_patient,files_to_move{files}),'file')
-                            copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{2},'log'));
+                        if exist(fullfile(source_patient,which_file),'file')
+                            copyfile(fullfile(source_patient,which_file),fullfile(new_path,pipelines{2},'log'));
                         end
                         
                         
-                    elseif ismember(files_to_move{files},normalization{:,1})
+                    elseif ismember(which_file,normalization{:,1})
                         %corresponding index of the new pat
-                        which_file = files_to_move{files};
                         which_pipeline = pipelines{3};
-                        indx = cellfun(@(x)strcmp(x,files_to_move{files}),normalization{:,1});
+                        indx = cellfun(@(x)strcmp(x,which_file),normalization{:,1});
                         bids_name = normalization{1,2}{indx};
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
@@ -292,34 +294,34 @@ for patients = 1:length(source)
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         %only for normalization
-                    elseif ~isempty(regexp(files_to_move{files},'^normalize_.*.log'))
-                        derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
-                        derivatives_cell{end,2} = fullfile(new_path,pipelines{3},'log',files_to_move{files});
+                    elseif ~isempty(regexp(which_file,'^normalize_.*.log'))
+                        derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
+                        derivatives_cell{end,2} = fullfile(new_path,pipelines{3},'log',which_file);
                         if ~exist(fullfile(new_path,pipelines{3},'log'),'dir')
                             mkdir(fullfile(new_path,pipelines{3},'log'));
                         end
-                        if exist(fullfile(source_patient,files_to_move{files}),'file')
-                            copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{3},'log'));
+                        if exist(fullfile(source_patient,which_file),'file')
+                            copyfile(fullfile(source_patient,which_file),fullfile(new_path,pipelines{3},'log'));
                         end
                         %special case for recon
-                    elseif ismember(files_to_move{files},reconstruction{:,1})
+                    elseif ismember(which_file,reconstruction{:,1})
                         recon_dir = fullfile(new_path,pipelines{4});
                         if ~exist(recon_dir,'dir')
                             mkdir(recon_dir)
                         end
                         
                         %corresponding index of the new pat
-                        indx = cellfun(@(x)strcmp(x,files_to_move{files}),reconstruction{:,1});
+                        indx = cellfun(@(x)strcmp(x,which_file),reconstruction{:,1});
                         bids_name = reconstruction{1,2}{indx};
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(recon_dir,[patient_name,'_',bids_name]);
-                        copyfile(fullfile(source_patient,files_to_move{files}),recon_dir)
-                        movefile(fullfile(new_path,pipelines{4},files_to_move{files}),fullfile(recon_dir,[patient_name,'_',reconstruction{1,2}{indx}]));
+                        copyfile(fullfile(source_patient,which_file),recon_dir)
+                        movefile(fullfile(new_path,pipelines{4},which_file),fullfile(recon_dir,[patient_name,'_',reconstruction{1,2}{indx}]));
                         
-                    elseif ismember(files_to_move{files},preprocessing{:,1})
-                        which_file = files_to_move{files};
+                    elseif ismember(which_file,preprocessing{:,1})
+                        which_file = which_file;
                         %corresponding index of the new pat
-                        indx = cellfun(@(x)strcmp(x,files_to_move{files}),preprocessing{:,1});
+                        indx = cellfun(@(x)strcmp(x,which_file),preprocessing{:,1});
                         which_pipeline = pipelines{5};
                         bids_name = preprocessing{1,2}{indx};
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
@@ -331,10 +333,10 @@ for patients = 1:length(source)
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         
                         
-                    elseif ismember(files_to_move{files},prefs{:,1})
+                    elseif ismember(which_file,prefs{:,1})
                         %corresponding index of the new pat
                         bids_name = [patient_name,'_','desc-','uiprefs.mat'];
-                        derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
+                        derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{6},bids_name);
                         which_pipeline = pipelines{6};
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
@@ -344,16 +346,16 @@ for patients = 1:length(source)
                         copyfile(fullfile(source_patient,'ea_ui.mat'),fullfile(new_path,pipelines{6}));
                         movefile(fullfile(new_path,pipelines{6},'ea_ui.mat'),fullfile(new_path,pipelines{6},bids_name));
                         
-                    elseif strcmp(files_to_move{files},'ea_stats.mat')
+                    elseif strcmp(which_file,'ea_stats.mat')
                         bids_name = [patient_name,'_','desc-','stats.mat'];
-                        derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
+                        derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(new_path,bids_name);
                         copyfile(fullfile(source_patient,'ea_stats.mat'),new_path);
                         movefile(fullfile(new_path,'ea_stats.mat'),fullfile(new_path,bids_name));
                         
-                    elseif strcmp(files_to_move{files},'ea_methods.txt') && exist(fullfile(source_patient,'ea_methods.txt'),'file')
+                    elseif strcmp(which_file,'ea_methods.txt') && exist(fullfile(source_patient,'ea_methods.txt'),'file')
                         bids_name = [patient_name,'_','desc-','ea_methods.txt'];
-                        derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
+                        derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{7},bids_name);
                         which_pipeline = pipelines{7};
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
@@ -363,10 +365,10 @@ for patients = 1:length(source)
                         copyfile(fullfile(source_patient,'ea_methods.txt'),fullfile(new_path,pipelines{7}));
                         movefile(fullfile(new_path,pipelines{7},'ea_methods.txt'),fullfile(new_path,pipelines{7},bids_name));
                         
-                    elseif ismember(files_to_move{files},ftracking{:,1})
-                        which_file = files_to_move{files};
+                    elseif ismember(which_file,ftracking{:,1})
+                        which_file = which_file;
                         which_pipeline = pipelines{12};
-                        indx = cellfun(@(x)strcmp(x,files_to_move{files}),ftracking{:,1});
+                        indx = cellfun(@(x)strcmp(x,which_file),ftracking{:,1});
                         bids_name = ftracking{1,2}{indx};
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline))
@@ -376,17 +378,17 @@ for patients = 1:length(source)
                         end
                         derivatives_cell = move_derivatives2bids(source_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
                         
-                    elseif ~ismember(files_to_move{files},preprocessing{:,1}) && ~isempty(regexp(files_to_move{files},'raw_.*.nii')) %support for other modalities in preproc
+                    elseif ~ismember(which_file,preprocessing{:,1}) && ~isempty(regexp(which_file,'raw_.*.nii')) %support for other modalities in preproc
                         %other raw files go to pre-processing folder.
                        
-                        if endsWith(files_to_move{files},'.nii')
+                        if endsWith(which_file,'.nii')
                             ext = '.nii';
                             op_dir = fullfile(new_path,pipelines{5},'anat');
                             if ~exist(fullfile(new_path,pipelines{5},'anat'),'dir')
                                 mkdir(op_dir);
                             end
                              source_path = source_patient;
-                        elseif endsWith(files_to_move{files},'.png')
+                        elseif endsWith(which_file,'.png')
                             ext = '.png';
                             op_dir = fullfile(new_path,pipelines{5},'checkreg');
                             if ~exist(fullfile(new_path,pipelines{5},'checkreg'),'dir')
@@ -395,36 +397,36 @@ for patients = 1:length(source)
                              source_path = fullfile(source_patient,'checkreg');
                             
                         end
-                        bids_mod = add_mod(files_to_move{files},legacy_modalities,rawdata_containers);
+                        bids_mod = add_mod(which_file,legacy_modalities,rawdata_containers);
                         if ~isempty(bids_mod)
                             try
-                                tag = check_acq(fullfile(source_path,files_to_move{files}));
+                                tag = check_acq(fullfile(source_path,which_file));
                                 bids_name = [patient_name,'_','desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
                             catch
                                 try_bids_name = [patient_name,'_','desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
                                 bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
                             end
                             bids_name = CheckifAlreadyExists(op_dir,bids_name);
-                            copyfile(fullfile(source_path,files_to_move{files}),op_dir);
-                            movefile(fullfile(op_dir,files_to_move{files}),fullfile(op_dir,bids_name));
+                            copyfile(fullfile(source_path,which_file),op_dir);
+                            movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                         else
                             op_dir = fullfile(new_path,'miscellaneous');
                             if ~exist(fullfile(new_path,'miscellaneous'),'dir')
                                 mkdir(op_dir);
                             end
-                            copyfile(fullfile(source_path,files_to_move{files}),op_dir);
+                            copyfile(fullfile(source_path,which_file),op_dir);
                         end
                         
-                  elseif ~ismember(files_to_move{files},coregistration{:,1}) && ~isempty(regexp(files_to_move{files},'^anat_.*')) %support for other modalities in coreg
+                  elseif ~ismember(which_file,coregistration{:,1}) && ~isempty(regexp(which_file,'^anat_.*')) %support for other modalities in coreg
                       
-                      if endsWith(files_to_move{files},'.nii')
+                      if endsWith(which_file,'.nii')
                           ext = '.nii';
                           op_dir = fullfile(new_path,pipelines{2},'anat');
                           if ~exist(fullfile(new_path,pipelines{2},'anat'),'dir')
                               mkdir(op_dir);
                           end
                           source_path = source_patient;
-                      elseif endsWith(files_to_move{files},'.png')
+                      elseif endsWith(which_file,'.png')
                           ext = '.png';
                           op_dir = fullfile(new_path,pipelines{2},'checkreg');
                           if ~exist(fullfile(new_path,pipelines{2},'checkreg'),'dir')
@@ -446,26 +448,26 @@ for patients = 1:length(source)
                               if ~exist(fullfile(new_path,'miscellaneous'),'dir')
                                   mkdir(op_dir);
                               end
-                              copyfile(fullfile(source_path,files_to_move{files}),op_dir);
+                              copyfile(fullfile(source_path,which_file),op_dir);
                           else
                               try
-                                  tag = check_acq(fullfile(source_path,files_to_move{files}));
+                                  tag = check_acq(fullfile(source_path,which_file));
                                   bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
                               catch
                                   try_bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
                                   bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
                               end
                               bids_name = CheckifAlreadyExists(op_dir,bids_name);
-                              if exist(fullfile(source_path,files_to_move{files}),'file')
-                                copyfile(fullfile(source_path,files_to_move{files}),op_dir);
-                              elseif exist(fullfile(source_patient,files_to_move{files}),'file')
-                                 copyfile(fullfile(source_patient,files_to_move{files}),op_dir); 
+                              if exist(fullfile(source_path,which_file),'file')
+                                copyfile(fullfile(source_path,which_file),op_dir);
+                              elseif exist(fullfile(source_patient,which_file),'file')
+                                 copyfile(fullfile(source_patient,which_file),op_dir); 
                               end
-                              movefile(fullfile(op_dir,files_to_move{files}),fullfile(op_dir,bids_name));
+                              movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                                   
                           end
-                      elseif endsWith(files_to_move{files},'.mat')
-                          mat_str = regexp(files_to_move{files},'[1-9].mat','split','once');
+                      elseif endsWith(which_file,'.mat')
+                          mat_str = regexp(which_file,'[1-9].mat','split','once');
                           mat_str = mat_str{1};
                           tf = any(~cellfun('isempty',strfind(coregistration{:,1},mat_str)));
                           if tf
@@ -474,28 +476,28 @@ for patients = 1:length(source)
                               if length(indx) == 1
                                 bids_name = [patient_name,'_',coregistration{1,2}{indx}];
                                 bids_name = CheckifAlreadyExists(op_dir,bids_name);
-                                copyfile(fullfile(source_path,files_to_move{files}),op_dir);
-                                movefile(fullfile(op_dir,files_to_move{files}),fullfile(op_dir,bids_name));
+                                copyfile(fullfile(source_path,which_file),op_dir);
+                                movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                               else
                                   op_dir = fullfile(new_path,'miscellaneous');
                                   if ~exist(fullfile(new_path,'miscellaneous'),'dir')
                                       mkdir(op_dir);
                                   end
-                                  copyfile(fullfile(source_path,files_to_move{files}),op_dir);
+                                  copyfile(fullfile(source_path,which_file),op_dir);
                               end
                           end
                       end
                       
                        
-                    elseif ~ismember(files_to_move{files},normalization{:,1}) && ~isempty(regexp(files_to_move{files},'^glanat_.*(.nii|.png)$')) %support for other modalities in normalization
-                        if endsWith(files_to_move{files},'.nii')
+                    elseif ~ismember(which_file,normalization{:,1}) && ~isempty(regexp(which_file,'^glanat_.*(.nii|.png)$')) %support for other modalities in normalization
+                        if endsWith(which_file,'.nii')
                             ext = '.nii';
                             op_dir = fullfile(new_path,pipelines{3},'anat');
                             if ~exist(fullfile(new_path,pipelines{3},'anat'),'dir')
                                 mkdir(op_dir);
                             end
                             source_path = source_patient;
-                        elseif endsWith(files_to_move{files},'.png')
+                        elseif endsWith(which_file,'.png')
                             ext = '.png';
                             op_dir = fullfile(new_path,pipelines{3},'checkreg');
                             if ~exist(fullfile(new_path,pipelines{3},'checkreg'),'dir')
@@ -503,31 +505,31 @@ for patients = 1:length(source)
                             end
                             source_path = fullfile(source_patient,'checkreg');
                         end
-                        bids_mod = add_mod(files_to_move{files},legacy_modalities,rawdata_containers);
+                        bids_mod = add_mod(which_file,legacy_modalities,rawdata_containers);
                         try
-                            tag = check_acq(fullfile(source_path,files_to_move{files}));
+                            tag = check_acq(fullfile(source_path,which_file));
                             bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
                         catch
                             try_bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
                             bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
                         end
                         bids_name = CheckifAlreadyExists(op_dir,bids_name);
-                        copyfile(fullfile(source_path,files_to_move{files}),op_dir);
-                        movefile(fullfile(op_dir,files_to_move{files}),fullfile(op_dir,bids_name));
+                        copyfile(fullfile(source_path,which_file),op_dir);
+                        movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                         %support for lead group files
                     else 
-                        disp(files_to_move{files});
-                        derivatives_cell{end+1,1} = fullfile(source_patient,files_to_move{files});
-                        derivatives_cell{end,2} = fullfile(new_path,pipelines{11},files_to_move{files});
+                        disp(which_file);
+                        derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
+                        derivatives_cell{end,2} = fullfile(new_path,pipelines{11},which_file);
                         
                         which_pipeline = pipelines{11};
                         if ~exist(fullfile(new_path,which_pipeline),'dir')
                             mkdir(fullfile(new_path,which_pipeline));
                         end
                         try
-                            copyfile(fullfile(source_patient,files_to_move{files}),fullfile(new_path,pipelines{11}));
+                            copyfile(fullfile(source_patient,which_file),fullfile(new_path,pipelines{11}));
                         catch
-                            copyfile(fullfile(source_patient,'checkreg',files_to_move{files}),fullfile(new_path,pipelines{11}));
+                            copyfile(fullfile(source_patient,'checkreg',which_file),fullfile(new_path,pipelines{11}));
                         end
                     
                     end
@@ -548,38 +550,21 @@ for patients = 1:length(source)
                         end
                         
                     elseif strcmp(pipelines{folders},'headmodel')
-                        
-                        if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
-                            headmodel_contents = dir_without_dots(fullfile(new_path,pipelines{folders}));
-                            headmodel_files = {headmodel_contents.name};
-                            for headmodel_file = 1:length(headmodel_files)
-                                if ismember(headmodel_files{headmodel_file},headmodel{:,1})
-                                    indx = cellfun(@(x)strcmp(x,headmodel_files{headmodel_file}),headmodel{:,1});
-                                    derivatives_cell{end+1,1} = fullfile(source_patient,pipelines{folders},headmodel_files{headmodel_file});
-                                    derivatives_cell{end,2} = fullfile(new_path,pipelines{folders},[patient_name,'_',headmodel{1,2}{indx}]);
-                                    movefile(fullfile(new_path,pipelines{folders},headmodel_files{headmodel_file}),fullfile(new_path,pipelines{folders},[patient_name,'_',headmodel{1,2}{indx}]));
-                                end
+                        if exist(fullfile(source_patient,'headmodel'),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
+                            if exist(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'),'dir')
+                                headmodel_mni_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'));
+                                headmodel_mni_files = {headmodel_mni_contents.name};
+                            else
+                                headmodel_mni_files = {};
                             end
-                            
-                            curr_pipeline = 'current_headmodel';
-                            new_path = fullfile(new_path,'headmodel');
-                            try
-                                [mni_files,native_files,derivatives_cell] = ea_vta_walkpath(source_patient,new_path,curr_pipeline,derivatives_cell);
-                                move_mni2bids(mni_files,native_files,'',headmodel,curr_pipeline,patient_name);
-                            catch
-                                disp("Could not detect headmodel files...");
+                            if exist(fullfile(new_path,pipelines{folders},'native'),'dir')
+                                headmodel_native_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'headmodel','native'));
+                                headmodel_native_files = {headmodel_native_contents.name};
+                            else
+                                headmodel_native_files = {};
                             end
-                        elseif exist(fullfile(source_patient,'current_headmodel'),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
-                            headmodel_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'MNI_ICBM_2009b_NLIN_ASYM'));
-                            headmodel_files = {headmodel_contents.name};
-                            for headmodel_file = 1:length(headmodel_files)
-                                if ismember(headmodel_files{headmodel_file},headmodel{:,1})
-                                    indx = cellfun(@(x)strcmp(x,headmodel_files{headmodel_file}),headmodel{:,1});
-                                    derivatives_cell{end+1,1} = fullfile(source_patient,pipelines{folders},headmodel_files{headmodel_file});
-                                    derivatives_cell{end,2} = fullfile(new_path,pipelines{folders},[patient_name,'_',headmodel{1,2}{indx}]);
-                                    movefile(fullfile(new_path,pipelines{folders},'MNI_ICBM_2009b_NLIN_ASYM',headmodel_files{headmodel_file}),fullfile(new_path,pipelines{folders},'MNI_ICBM_2009b_NLIN_ASYM',[patient_name,'_',headmodel{1,2}{indx}]));
-                                end
-                            end
+                            which_pipeline = 'headmodel';
+                            move_mni2bids(headmodel_mni_files,headmodel_native_files,'',headmodel,which_pipeline,patient_name,new_path)
                             
                         end
                     end
@@ -682,17 +667,20 @@ for patients = 1:length(source)
                     end
                 end
                 raw_path = fullfile(dest,subfolder_cell{subfolders});
-                if exist('postop_modality','var')
-                    ea_generate_datasetDescription(raw_path,'raw',postop_modality);
-                else
-                    ea_generate_datasetDescription(raw_path,'raw')
+                if ~isempty(dir_without_dots(raw_path))
+                    if exist('postop_modality','var')
+                        ea_generate_datasetDescription(raw_path,'raw',postop_modality);
+                    else
+                        ea_generate_datasetDescription(raw_path,'raw')
+                    end
+                    if ~isdicom
+                        %generate raw image json in the raw data folder
+                        generate_rawImagejson(patient_name,dest)
+                    end
                 end
         end
     end
-    if ~isdicom
-        %generate raw image json in the raw data folder
-        generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
-    end
+    
     disp(['Process finished for Patient:' patient_name]);
     disp("Generating excel sheet for the conversion...");
     writecell(derivatives_cell,fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx'))
@@ -781,11 +769,12 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
         elseif strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_coreg_approved.mat'))
             coreg_mat = load(fullfile(source_patient_path,'ea_coreg_approved.mat'));
             if isfield(coreg_mat,'brainshift')
+                opt.FileName = fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.json']);
                 brainshift_method.brainshift = coreg_mat.brainshift;
                 if ~exist(brainshift_log_dir,'dir')
                     mkdir(brainshift_log_dir)
                 end
-                save(fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.mat']),'brainshift_method')
+                savejson('',brainshift_method,opt)
             end
         end        
         fname_in = fullfile(source_patient_path,which_file);
@@ -830,7 +819,7 @@ function move_raw2bids(source_patient_path,new_path,which_file,bids_name)
         copyfile(fullfile(tmp_path,bids_name),new_path);
         
     end
-function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipeline,patient_name)
+function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipeline,patient_name,new_path)
     if strcmp(which_pipeline,'stimulations')
         if ~isempty(mni_files)
             for mni_file = 1:length(mni_files)
@@ -854,28 +843,28 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
                 end
             end
         end
-    elseif strcmp(which_pipeline,'current_headmodel')
+     
+    elseif strcmp(which_pipeline,'headmodel')
         if ~isempty(mni_files)
-            for mni_file = 1:length(mni_files)
-                [filepath,mni_filename,ext] = fileparts(mni_files{mni_file});
-                if ismember([mni_filename,ext],headmodel{:,1})
-                    indx = cellfun(@(x)strcmp(x,[mni_filename,ext]),headmodel{:,1});
-                    movefile(mni_files{mni_file},fullfile(filepath,[patient_name,'_',headmodel{1,2}{indx}]));
+            for headmodel_mni_file = 1:length(mni_files)
+                if ismember(mni_files{headmodel_mni_file},headmodel{:,1})
+                    indx = cellfun(@(x)strcmp(x,mni_files{headmodel_mni_file}),headmodel{:,1});
+                    movefile(fullfile(new_path,which_pipeline,'MNI152NLin2009bAsym',mni_files{headmodel_mni_file}),fullfile(new_path,which_pipeline,'MNI152NLin2009bAsym',[patient_name,'_',headmodel{1,2}{indx}]));
                 end
             end
         end
         if ~isempty(native_files)
-            for native_file = 1:length(native_files)
-                [filepath,native_filename,ext] = fileparts(native_files{native_file});
-                if ismember([native_filename,ext],headmodel{:,1})
-                    indx = cellfun(@(x)strcmp(x,[native_filename,ext]),headmodel{:,1});
-                    movefile(native_files{native_file},fullfile(filepath,[patient_name,'_',headmodel{1,2}{indx}]));
+            for headmodel_native_file = 1:length(native_files)
+                if ismember(native_files{headmodel_native_file},headmodel{:,1})
+                    indx = cellfun(@(x)strcmp(x,(native_files{headmodel_native_file}),headmodel{:,1}));
+                    movefile(fullfile(new_path,which_pipeline,'native',native_files{headmodel_native_file}),fullfile(new_path,which_pipeline,'native',[patient_name,'_',headmodel{1,2}{indx}]));
                 end
             end
         end
+        
     end
     
-function generate_rawImagejson(files_to_move,patient_name,dest,doOnlyRaw)
+function generate_rawImagejson(patient_name,dest)
     output_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs');
     if ~exist(output_dir,'dir')
         mkdir(output_dir)
