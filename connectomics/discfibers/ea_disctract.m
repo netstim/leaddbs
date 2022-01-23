@@ -719,37 +719,50 @@ classdef ea_disctract < handle
             
             % print number of significant displayed fibers per pathway
             if obj.multi_pathways == 1 % at the moment, obj.connFiberInd is defined only for OSS-DBS
-                disp("number of drawn fibers per pathway")
+                %disp("number of drawn fibers per pathway")
                 num_per_path = cell(1, 2); % with obj.map_list, rates can be computed                
                 for side = 1:2
                     num_per_path{side} = zeros(1,length(obj.map_list));
-                    for inx = 1:length(usedidx{side})
-                    
-                        % check the nearest via the difference, if positive, take one before
-                        [d, ix] = min(abs(obj.map_list-obj.connFiberInd(usedidx{side}(inx)))); 
-                        if d > 0
-                           ix = ix - 1; 
-                        end
-                        num_per_path{side}(ix) = num_per_path{side}(ix)+1;
-                    end  
-                    disp(num_per_path{side})  % for now just print number of fibers per pathway
+                    if length(usedidx{side}) 
+                        for inx = 1:length(usedidx{side})
+                            % check the nearest via the difference, if positive, take one before
+                            [d, ix] = min(abs(obj.map_list-obj.connFiberInd{side}(usedidx{side}(inx)))); 
+                            if (obj.map_list(ix)-obj.connFiberInd{side}(usedidx{side}(inx))) > 0
+                               ix = ix - 1; 
+                            end
+                            num_per_path{side}(ix) = num_per_path{side}(ix)+1;
+                        end 
+                    end
+                    %disp(num_per_path{side})  % for now just print number of fibers per pathway
                 end
                 
                 figure
                 t = tiledlayout(1,2,'TileSpacing','compact');            
-                % Create pie charts
-                ax1 = nexttile;
-                pie(ax1,num_per_path{1})
-                title('Right HS')
-
+                nonZero_idx = [num_per_path{1}] > 0;
+                num_per_path{1} = num_per_path{1}(nonZero_idx);
+                if ~isempty(num_per_path{1})
+                    % Create pie charts
+                    ax1 = nexttile;
+                    pie1 = pie(ax1,num_per_path{1});
+                    ax1.Colormap = parula(numel(pie1)/2);  % they are all ugl
+                    title('Right HS')
+                    % Create legend
+                    lgd = legend(obj.pathway_list(nonZero_idx));
+                    lgd.Layout.Tile = 'west';                    
+                end
+                
                 ax2 = nexttile;
-                pie(ax2,num_per_path{2})
-                title('Left HS')
-
-                % Create legend
-                lgd = legend(obj.pathway_list);
-                lgd.Layout.Tile = 'east';
-            end                
+                colormap(ax2,winter)
+                nonZero_idx = [num_per_path{2}] > 0;
+                num_per_path{2} = num_per_path{2}(nonZero_idx);
+                if ~isempty(num_per_path{2})
+                    pie(ax2,num_per_path{2})
+                    title('Left HS')
+                    % Create legend
+                    lgd2 = legend(obj.pathway_list(nonZero_idx));
+                    lgd2.Layout.Tile = 'east';
+                end
+            end          
             
             allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
             if size(vals,2)==2 % can be a single cell in case of custom code (pseudoM setting).

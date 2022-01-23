@@ -17,6 +17,7 @@ fibsvalPeak = cell(1, numSide);
 fibsval5Peak = cell(1, numSide);
 
 fibcell = cell(1, numSide);
+connFiberInd = cell(1, numSide);
 
 for side = 1:numSide
     fibsvalBin{side} = zeros(length(idx), numPatient);
@@ -81,7 +82,7 @@ for side = 1:numSide
     fibsval5Peak{side} = sparse(fibsval5Peak{side}(fibIsConnected, :));
 
     % Extract connected fiber cell
-    connFiberInd = find(fibIsConnected);
-    connFiber = fibers(ismember(fibers(:,4), connFiberInd), 1:3);
-    fibcell{side} = mat2cell(connFiber, idx(connFiberInd));
+    connFiberInd{side} = find(fibIsConnected);
+    connFiber = fibers(ismember(fibers(:,4), connFiberInd{side}), 1:3);
+    fibcell{side} = mat2cell(connFiber, idx(connFiberInd{side}));
 end
