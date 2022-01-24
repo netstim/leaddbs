@@ -1,4 +1,4 @@
-function import_dotbase_stimsettings(hobj, evt, handles)
+function ea_import_dotbase_stimsettings(hobj, evt, handles)
 
 patient_dir = getappdata(handles.leadfigure,'uipatdir');
 
