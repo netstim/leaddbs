@@ -47,14 +47,14 @@ class DrawToolEffect(AbstractDrawEffect):
         self.sourceFiducial = self.getFiducialFromDrawing()
 
         if self.sourceFiducial is None:
-          self.resetPolyData()
+          self.resetDrawing()
           return
 
         if self.parameterNode.GetParameter("DrawMode") == 'To Nearest Model': # get target fiducial from nearest model 
           targetFiducial = self.getFiducialFromSlicedModel()
         elif self.parameterNode.GetParameter("DrawMode") == 'To Following Line': # return and wait for following drawing
           self.sourceFiducial.GetDisplayNode().SetVisibility(1)
-          self.resetPolyData()
+          self.resetDrawing()
           return
 
       else: # use new drawing as target fiducial
@@ -63,7 +63,7 @@ class DrawToolEffect(AbstractDrawEffect):
       if targetFiducial is None:
         slicer.mrmlScene.RemoveNode(self.sourceFiducial)
         self.sourceFiducial = None
-        self.resetPolyData()
+        self.resetDrawing()
         return
 
       self.sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
@@ -74,7 +74,7 @@ class DrawToolEffect(AbstractDrawEffect):
 
       self.parameterNode.SetParameter("Update","true")
       self.sourceFiducial = None
-      self.resetPolyData()
+      self.resetDrawing()
 
     elif event == 'RightButtonPressEvent' or (event == 'KeyPressEvent' and self.interactor.GetKeySym()=='Escape'):
       slicer.mrmlScene.RemoveNode(self.sourceFiducial)
@@ -84,14 +84,10 @@ class DrawToolEffect(AbstractDrawEffect):
 
     # create curve from drawing and resample
     sourceCurve = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsCurveNode')
-    sourceCurve.SetControlPointPositionsWorld(self.rasPoints)
+    sourceCurve.Copy(self.drawnCurveNode)
     sourceCurve.ResampleCurveWorld(sampleDistance)
     if nPoints is not None: # resample to get specified number of points
       sourceCurve.ResampleCurveWorld(sourceCurve.GetCurveLengthWorld() / max((nPoints - 1), 1))
-
-    # get resampled points
-    resampledPoints = vtk.vtkPoints()
-    sourceCurve.GetControlPointPositionsWorld(resampledPoints)
 
     sourceFiducial = self.curveToFiducial(sourceCurve)
 
@@ -142,7 +138,7 @@ class DrawToolEffect(AbstractDrawEffect):
       label = '1'
     else:
       label = str( int(targetNode.GetNthFiducialLabel(targetNode.GetNumberOfControlPoints()-1)) + 1 )
-    p = [0]*3
+    p = np.zeros(3)
     for i in range(sourceNode.GetNumberOfControlPoints()):
       sourceNode.GetNthControlPointPosition(i,p)
       targetNode.AddFiducialFromArray(p, label)
@@ -150,6 +146,7 @@ class DrawToolEffect(AbstractDrawEffect):
 
   def curveToFiducial(self, curve):
     fiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    fiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
     fiducial.GetDisplayNode().SetVisibility(0)
     fiducial.GetDisplayNode().SetTextScale(0)
     points = vtk.vtkPoints()
