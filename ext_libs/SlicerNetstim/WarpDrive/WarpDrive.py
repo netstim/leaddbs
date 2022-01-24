@@ -193,7 +193,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """
     Called each time the user opens a different module.
     """
-    # Do not react to parameter node changes (GUI wlil be updated when the user enters into the module)
+    # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
     self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
     self.cleanTools()
 
@@ -250,7 +250,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if inputParameterNode:
       self.logic.setDefaultParameters(inputParameterNode)
 
-    # Unobserve previusly selected parameter node and add an observer to the newly selected.
+    # Unobserve previously selected parameter node and add an observer to the newly selected.
     # Changes of parameter node are observed so that whenever parameters are changed by a script or any other module
     # those are reflected immediately in the GUI.
     if self._parameterNode is not None:
@@ -316,6 +316,12 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if self._parameterNode is None or self._updatingGUIFromParameterNode:
       return
 
+    currentInputNode = self.ui.inputSelector.currentNode()
+    if isinstance(currentInputNode, slicer.vtkMRMLTransformNode):
+      if not (isinstance(currentInputNode.GetTransformFromParent(), slicer.vtkOrientedGridTransform) or isinstance(currentInputNode.GetTransformToParent(), slicer.vtkOrientedGridTransform)):
+        qt.QMessageBox().warning(qt.QWidget(), "", "Select a Transform Node containing a Grid Transform")
+        return
+
     wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
     self._parameterNode.SetNodeReferenceID("InputNode", self.ui.inputSelector.currentNodeID)
@@ -325,7 +331,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self._parameterNode.SetParameter("Stiffness", str(self.ui.stiffnessSpinBox.value))
     # spacing
     if self.ui.spacingSameAsInputCheckBox.checked:
-      size,origin,spacing = GridNodeHelper.getGridDefinition(self.ui.inputSelector.currentNode())
+      size,origin,spacing = GridNodeHelper.getGridDefinition(currentInputNode)
     else:
       spacing = [self.ui.spacingSpinBox.value]
     self._parameterNode.SetParameter("Spacing", str(spacing[0]))
@@ -346,7 +352,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       wasBlocked = self.ui.outputSelector.blockSignals(True)
       self.ui.outputSelector.currentNodeID = None
       self.ui.outputSelector.blockSignals(wasBlocked)
-    # obvserve
+    # observe
     if self.ui.inputSelector.currentNodeID:
       self.ui.inputSelector.currentNode().SetAndObserveTransformNodeID(self.ui.outputSelector.currentNodeID)
 
@@ -372,9 +378,11 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     sourceFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     sourceFiducial.SetControlPointPositionsWorld(sourcePoints)
     sourceFiducial.GetDisplayNode().SetTextScale(0)
+    sourceFiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
     targetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     targetFiducial.SetControlPointPositionsWorld(targetPoints)
     targetFiducial.GetDisplayNode().SetVisibility(0)
+    targetFiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
     # reference
     size,origin,spacing = GridNodeHelper.getGridDefinition(self._parameterNode.GetNodeReference("InputNode"))
     userSpacing = [float(self._parameterNode.GetParameter("Spacing"))] * 3

@@ -47,10 +47,12 @@ class PointToPointToolEffect(AbstractPointToPointEffect):
     # source
     sourceFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     sourceFiducial.SetControlPointPositionsWorld(self.transform.GetSourceLandmarks())
+    sourceFiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
     sourceFiducial.GetDisplayNode().SetVisibility(0)
     # target
     targetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     targetFiducial.SetControlPointPositionsWorld(self.transform.GetTargetLandmarks())
+    targetFiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
     targetFiducial.GetDisplayNode().SetVisibility(0)
     targetFiducial.SetName(slicer.mrmlScene.GenerateUniqueName('Point'))
     return sourceFiducial, targetFiducial
