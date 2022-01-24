@@ -1,4 +1,4 @@
-function ea_import_movbase_stimsettings(hobj, evt, handles)
+function ea_import_movebase_stimsettings(hobj, evt, handles)
 
 patient_dir = getappdata(handles.leadfigure,'uipatdir');
 

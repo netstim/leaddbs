@@ -56,7 +56,7 @@ if isempty(menuprobe)
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
     uimenu(f,'Label','Anonymize files for selected subjects','Callback',{@ea_run_deface,handles});
         
-    uimenu(f,'Label','Read in stimulation settings from mov.base','Callback',{@import_dotbase_stimsettings,handles});
+    uimenu(f,'Label','Read in stimulation settings from move.base','Callback',{@import_dotbase_stimsettings,handles});
 
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
