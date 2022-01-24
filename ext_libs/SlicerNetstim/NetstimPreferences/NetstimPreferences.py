@@ -45,7 +45,7 @@ class NetstimPreferencesSettingsUI(object):
       self.leadDBSPathButton = ctk.ctkDirectoryButton()
       self.leadDBSPathButton.directory = LeadDBSPath().getValue()
       self.leadDBSPathButton.setToolTip("Lead-DBS install directory")
-      self.leadDBSPathButton.directoryChanged.connect(self.onAtlasDirectoryChanged)
+      self.leadDBSPathButton.directoryChanged.connect(self.onLeadDBSPathChanged)
       layout.addRow("Lead-DBS Path: ", self.leadDBSPathButton)
 
       self.useSmoothAtlasCheckBox = qt.QCheckBox()
@@ -54,7 +54,7 @@ class NetstimPreferencesSettingsUI(object):
       self.useSmoothAtlasCheckBox.connect("toggled(bool)", self.onUseSmoothAtlasCheckBoxToggled)
       layout.addRow("Use smooth atlases: ", self.useSmoothAtlasCheckBox)
 
-  def onAtlasDirectoryChanged(self):
+  def onLeadDBSPathChanged(self):
     newDir = self.leadDBSPathButton.directory
     LeadDBSPath().setValue(newDir)
     if not os.path.isfile(os.path.join(newDir,"lead.m")):

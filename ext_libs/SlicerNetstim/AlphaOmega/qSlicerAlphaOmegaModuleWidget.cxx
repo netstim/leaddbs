@@ -269,7 +269,7 @@ void qSlicerAlphaOmegaModuleWidget::onAlphaOmegaChannelNodeChanged(vtkMRMLNode *
   if (node == nullptr) {return;}
 
   qvtkReconnect(d->CurrentChannelNode, node, vtkCommand::ModifiedEvent, this, SLOT(updateGUIFromMRML()));
-  d->CurrentChannelNode = node;
+  d->CurrentChannelNode = vtkMRMLAlphaOmegaChannelNode::SafeDownCast(node);
 
   this->updateGUIFromMRML();
 }

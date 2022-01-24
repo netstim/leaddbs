@@ -32,6 +32,7 @@
         <property name="nodeTypes">
          <stringlist>
           <string>vtkMRMLScalarVolumeNode</string>
+          <string>vtkMRMLTransformNode</string>
           <string>vtkMRMLGridTransformNode</string>
          </stringlist>
         </property>
