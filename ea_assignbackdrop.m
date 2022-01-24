@@ -115,7 +115,12 @@ elseif regexp(bdstring, ['^',ea_getspace,' '])    % pattern: "MNI_ICBM_2009b_NLI
     varargout{2}=varargout{1};
     varargout{3}=varargout{1};
 elseif strcmp(bdstring,'Choose...')
-    keyboard
+
+    [fn,pth]=uigetfile('*.nii');
+    template=fullfile(pth,fn);
+    varargout{1}=spm_vol(ea_niigz([template]));
+    varargout{2}=varargout{1};
+    varargout{3}=varargout{1};
 
 elseif ismember(bdstring,BDlist{2})
     [~,ix]=ismember(bdstring,BDlist{2});

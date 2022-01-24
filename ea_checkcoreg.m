@@ -258,7 +258,8 @@ if ~isempty(b0restanchor) && ~isempty(b0restanchor{activevolume}) % rest or b0 r
     set(handles.anchormod,'String',ea_stripext(b0restanchor{activevolume}));
 
 else % normal anatomical 2 anatomical registration
-    set(handles.substitute,'Visible','off');
+    set(handles.substitute,'Visible','on');
+    set(handles.substitute,'String',ea_get_approvedsubstitutes(options));
     checkfig=[directory,'checkreg',filesep,ea_stripext(currvol),'2',ea_stripext(anchor),'_',method,'.png'];
     set(handles.anchormod,'String',ea_stripext(anchor));
 
@@ -303,7 +304,7 @@ axis equal
 set(handles.depvolume,'String',[ea_stripext(currvol),'.nii']);
 
 
-function [pretras]=ea_getsubstitutes(options)
+function [pretras,raw]=ea_getsubstitutes(options)
 
 [~,presentfiles]=ea_assignpretra(options);
 for fi=1:length(presentfiles)
@@ -312,6 +313,21 @@ for fi=1:length(presentfiles)
     else
         pretras{fi}=['Substitute moving file with ',presentfiles{fi}];
     end
+    raw{fi}=presentfiles{fi};
+end
+
+
+function [pretras,raw]=ea_get_approvedsubstitutes(options)
+presentfiles=ea_getall_approved(options);
+presentfiles=[{['anat_',options.primarytemplate,'.nii']};presentfiles];
+
+for fi=1:length(presentfiles)
+    if fi==1
+        pretras{fi}=['Use ',presentfiles{fi}, ' (default)'];
+    else
+        pretras{fi}=['Substitute fixed file with ',presentfiles{fi}];
+    end
+    raw{fi}=presentfiles{fi};
 end
 
 
@@ -344,6 +360,41 @@ end
 todel=[];
 for pf=1:length(presentfiles)
     if ea_coreglocked(options,presentfiles{pf})
+        todel=[todel,pf];
+    end
+end
+presentfiles(todel)=[];
+
+
+function presentfiles=ea_getall_approved(options)
+directory=[options.root,options.patientname,filesep];
+[options,presentfiles]=ea_assignpretra(options);
+% add postoperative volumes:
+switch options.modality
+    case 1 % MR
+        if exist([directory,options.prefs.tranii_unnormalized],'file')
+            presentfiles=[presentfiles;options.prefs.tranii_unnormalized];
+        end
+        if exist([directory,options.prefs.cornii_unnormalized],'file')
+            presentfiles=[presentfiles;options.prefs.cornii_unnormalized];
+        end
+        if exist([directory,options.prefs.sagnii_unnormalized],'file')
+            presentfiles=[presentfiles;options.prefs.sagnii_unnormalized];
+        end
+    case 2 % CT
+        if exist([directory,'tp_',options.prefs.ctnii_coregistered],'file')
+            presentfiles=[presentfiles;['tp_',options.prefs.ctnii_coregistered]];
+        end
+end
+
+if exist([directory,options.prefs.fa2anat],'file')
+    presentfiles=[presentfiles;options.prefs.fa2anat];
+end
+
+% now check if those are already approved (only then show):
+todel=[];
+for pf=1:length(presentfiles)
+    if ~ea_coreglocked(options,presentfiles{pf})
         todel=[todel,pf];
     end
 end
@@ -447,7 +498,7 @@ switch ea_stripext(currvol)
             ea_delete([directory,ea_stripext(anchor),'2',thisrest,'_',ea_matext(options.coregmr.method)]);
 
             substitute=get(handles.substitute,'Value');
-            [~,pf]=ea_assignpretra(options);
+            [~,pf]=ea_getsubstitutes(options);
             useasanchor=pf{substitute};
 
             % in following line correct that useasanchor is the *moving*
@@ -465,8 +516,20 @@ switch ea_stripext(currvol)
             end
             ea_cleandownstream(directory,thisrest);
         else  % other images
+            substitute=get(handles.substitute,'Value');
+            [~,pf]=ea_get_approvedsubstitutes(options);
+            useasanchor=pf{substitute};
             ea_backuprestore([directory,presentfiles{activevolume}]);
-            ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,anchor],[directory,presentfiles{activevolume}],{},0);
+            ea_coreg2images(options,[directory,presentfiles{activevolume}],[directory,useasanchor],[directory,presentfiles{activevolume}],{},0);
+
+            if ~isequal([directory,ea_stripext(presentfiles{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
+                    [directory,ea_stripext(presentfiles{activevolume}),'2',ea_stripext(['anat_',options.primarytemplate]),'_',ea_matext(options.coregmr.method)])
+                movefile([directory,ea_stripext(presentfiles{activevolume}),'2',ea_stripext(useasanchor),'_',ea_matext(options.coregmr.method)],...
+                    [directory,ea_stripext(presentfiles{activevolume}),'2',ea_stripext(['anat_',options.primarytemplate]),'_',ea_matext(options.coregmr.method)]);
+                movefile([directory,ea_stripext(useasanchor),'2',ea_stripext(presentfiles{activevolume}),'_',ea_matext(options.coregmr.method)],...
+                    [directory,ea_stripext(['anat_',options.primarytemplate]),'2',ea_stripext(presentfiles{activevolume}),'_',ea_matext(options.coregmr.method)]);
+            end
+       
         end
         ea_dumpspecificmethod(handles,options.coregmr.method)
 end
