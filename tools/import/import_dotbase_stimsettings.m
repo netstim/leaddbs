@@ -8,7 +8,12 @@ if length(patient_dir) > 1
     return;
 end
 
-options = ea_getptopts(patient_dir{1});
+if ~isempty(patient_dir)
+    options = ea_getptopts(patient_dir{1});
+else
+    disp('No patient loaded. Please select a patient first.')
+    return;
+end
 
 % get the .json file and load data
 [json_file, json_path] = uigetfile('*.json');
@@ -42,8 +47,9 @@ S_init = ea_initializeS(stim_name, options);
 
 S = construct_S(S_init, contact_stim_settings, general_stim_settings);
 
-disp('done')
+ea_savestimulation(S,options)
 
+%disp(sprintf('%s '));
 end
 
 %% utility functions
@@ -161,7 +167,7 @@ for hemi = 1:2
     end
 
     % set amplitudes (again)
-    output.([prefix, '1']).amp = general_stim_settings{1, hemi}.stim_amp;
+    output.([prefix, '1']).amp = general_stim_settings{1, hemi}.stim_amp.value;
 
     if strcmp(general_stim_settings{1, hemi}.stim_amp.unit, 'Volt')
         output.([prefix, '1']).va = 1;      % voltage controlled - 1, current controlled - 2
