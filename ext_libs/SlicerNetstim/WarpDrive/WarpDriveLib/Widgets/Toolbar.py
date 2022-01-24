@@ -30,7 +30,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     self.addWidget(qt.QLabel('Modality:'))
     self.modalityComboBox = qt.QComboBox()
-    self.modalityComboBox.addItem('t1')
+    self.modalityComboBox.addItem('T1w')
     self.modalityComboBox.view().pressed.connect(self.onModalityPressed)
     self.addWidget(self.modalityComboBox)
 
@@ -285,6 +285,6 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     for fileName in fileNames:
       fileName = os.path.split(fileName)[-1] # remove directory
       fileName = os.path.splitext(fileName)[0] # remove extension
-      modality = re.search(r"(?<=ses-preop_)\w+", fileName)[0]
+      modality = re.search(r"(?<=acq-)\w+_\w+", fileName)[0].split('_')[-1]
       modalities.append(modality)
     return modalities

@@ -105,11 +105,13 @@ class SmudgeToolEffect(AbstractCircleEffect):
   def getSourceTargetFromPoints(self):
     # source points
     sourceFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    sourceFiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
     sourceFiducial.GetDisplayNode().SetVisibility(0)
     sourceFiducial.SetControlPointPositionsWorld(self.interactionPoints)
     sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
     # target
     targetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+    targetFiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
     targetFiducial.GetDisplayNode().SetVisibility(0)
     targetFiducial.SetControlPointPositionsWorld(self.interactionPoints)
     targetFiducial.ApplyTransform(self.auxTransformNode.GetTransformToParent()) # apply smudge
