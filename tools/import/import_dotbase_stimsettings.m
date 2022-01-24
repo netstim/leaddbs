@@ -31,7 +31,7 @@ end
 general_stim_settings = get_stim_amp_freq_pwidth(procedure_data);
 
 % get polarity and percentages of contacts and casings
-contact_stim_settings = get_contact_settings(procedure_data, general_stim_settings{1, 1}.stim_amp.unit);
+contact_stim_settings = get_contact_settings(procedure_data);
 
 % sanity check if number of electrodes equals to the one of the selected electrode
 if ~(options.elspec.numel == length(contact_stim_settings{1, 1}.contact_polarity))
@@ -47,12 +47,12 @@ S_init = ea_initializeS(stim_name, options);    % init S
 S = construct_S(S_init, contact_stim_settings, general_stim_settings);  % fill S values\
 
 if strcmp(general_stim_settings{1, 1}.stim_amp.unit, 'Volt')
-    S=ea_redistribute_voltage(S, options);  % get correct percentage if voltage controlled
+    S=calculate_even_voltage_percentage(S);  % get correct percentage if voltage controlled
 end
 
 ea_savestimulation(S,options)   % create stim folder and stimparameters.mat
 
-fprintf('Successfully created stimulation at %s', fullfile())
+fprintf('Successfully created stimulation at %s', fullfile(patient_dir{1}, 'stimulations', ea_getspace, S.label))
 end
 
 %% utility functions
@@ -88,8 +88,7 @@ for hemi = 1:2
 end
 end
 
-
-function output = get_contact_settings(procedure_data, stim_unit)
+function output = get_contact_settings(procedure_data)
 
 output = {};
 for hemi = 1:2
@@ -193,225 +192,61 @@ end
 
 end
 
-function S=ea_redistribute_voltage(S,changedobj)
-Rconts={'k0','k1','k2','k3','k4','k5','k6','k7'};
-Lconts={'k8','k9','k10','k11','k12','k13','k14','k15'};
-LcontsCase=[Lconts,{'case'}];
-RcontsCase=[Rconts,{'case'}];
-if ischar(changedobj) % different polarity on the block
-    switch changedobj
-        case Rconts
-            conts=Rconts;
-            contsCase=RcontsCase;
-            sidec='R';
-            side=1;
-        case Lconts
-            conts=Lconts;
-            contsCase=LcontsCase;
-            sidec='L';
-            side=2;
-        case 'Rcase'
-            conts=Rconts;
-            changedobj='case';
-            contsCase=RcontsCase;
+function S = calculate_even_voltage_percentage(S)
 
-            side=1;
-            sidec='R';
-        case 'Lcase'
-            conts=Lconts;
-            contsCase=LcontsCase;
+for hemi = 1:2
 
-            changedobj='case';
-            side=2;
-            sidec='L';
-    end
-
-    % check polarity of changed object:
-    polchanged=eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol']);
-
-    % check for monopolar models:
-    if S.monopolarmodel % these allow only 1 active anode contact per model.
-        for c=1:length(conts)
-            eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.pol=0;']);
-            eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.perc=0;']);
-        end
-        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
-        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
-
-        return
-
+    % 1 - right hemisphere, 2 - left hemisphere
+    if hemi == 1
+        prefix = 'Rs';
+        contact_offset = -1;
     else
-        %         if S.([sidec,'s',num2str(S.active(side))]).va==2 % ampere only allows one anode and one cathode
-        %             for c=1:length(contsCase)
-        %
-        %                 if S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol==polchanged % same polarity as changed object
-        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=ea_swappol(polchanged);
-        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=100;
-        %                 else
-        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).pol=0;
-        %                     S.([sidec,'s',num2str(S.active(side))]).(contsCase{c}).perc=0;
-        %                 end
-        %             end
-        %             S.([sidec,'s',num2str(S.active(side))]).(changedobj).pol=1;
-        %             S.([sidec,'s',num2str(S.active(side))]).(changedobj).perc=100;
-        %         end
+        prefix = 'Ls';
+        contact_offset = 7;
     end
 
-    if polchanged==0
-        % set changed contacts percentage to zero:
-        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=0;']);
-    else
-        % determine how many other nodes with this polarity exist:
-        divby=1;
-        contacts={};
-        for con=1:length(conts)
-            if eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.pol==polchanged'])
-                if ~strcmp(conts{con},changedobj)
-                    %voltages{divby}=eval(['S.Rs',num2str(S.active(side)),'.',Rconts{con},'.perc']);
-                    contacts{divby}=conts{con};
-                    divby=divby+1;
-                end
-            end
-        end
-
-        if eval(['S.',sidec,'s',num2str(S.active(side)),'.case.pol==polchanged'])
-            if ~strcmp(changedobj,'case')
-                contacts{divby}='case';
-                divby=divby+1;
-            end
-        end
-        % add case to calculation.
-
-        % set changed contacts percentage:
-        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100/divby;']);
-
-        % reduce all other contacts percentages:
-
-        try divby=divby/length(contacts); end
-        for c=1:length(contacts)
-            eval(['S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc=',...
-                'S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc/divby;']);
+    % find out how many contacts have positive and negative contacts ( 1- negative, 2 - positive)
+    nr_pos_contacts = 0;
+    nr_neg_contacts = 0;
+    for contactNr = 1:8
+        if S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).pol == 1
+            nr_neg_contacts = nr_neg_contacts + 1;
+        elseif S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).pol == 2
+            nr_pos_contacts = nr_pos_contacts + 1;
         end
     end
 
-    % now clean up mess from polarity that the contact used to have..
+    % do the same for case
+    if S.([prefix, '1']).case.pol == 1
+        nr_neg_contacts = nr_neg_contacts + 1;
+    elseif S.([prefix, '1']).case.pol == 2
+        nr_pos_contacts = nr_pos_contacts + 1;
+    end
+    
+    % small sanity check if no positive/negative contacts have been found
+    if nr_neg_contacts == 0
+        fprintf('No negative contacts found, please assign negative contacts manually after import.')
+        nr_neg_contacts = 1;   % set number to 1 to avoid division by 0
+    elseif nr_pos_contacts == 0
+        fprintf('No positive contacts found, please assign negative contacts manually after import.')
+        nr_pos_contacts = 1;   % set number to 1 to avoid division by 0
+    end
 
-    polchanged=ea_polminus(polchanged);
-    sumpercs=0;
-
-    if polchanged % polarization has changed from negative to positive. clean up negatives. or changed from positive to off. clean up positives.
-        contacts={};
-        cnt=0;
-        for con=1:length(conts)
-            if eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.pol==polchanged'])
-                if ~strcmp(conts{con},changedobj)
-                    %voltages{divby}=eval(['S.Rs',num2str(S.active(side)),'.',Rconts{con},'.perc']);
-
-                    cnt=cnt+1;
-                    contacts{cnt}=conts{con};
-                    sumpercs=sumpercs+eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.perc']);
-                end
-            end
-        end
-        % add case to calculation:
-        if eval(['S.',sidec,'s',num2str(S.active(side)),'.case.pol==polchanged'])
-            if ~strcmp(changedobj,'case')
-                cnt=cnt+1;
-                contacts{cnt}='case';
-                sumpercs=sumpercs+eval(['S.',sidec,'s',num2str(S.active(side)),'.case.perc']);
-            end
-        end
-
-        multby=(100/sumpercs);
-        if cnt
-            for c=1:length(contacts)
-                eval(['S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc=',...
-                    'S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc*multby;']);
-            end
+    % now go through them again and assign the correct percentage
+    for contactNr = 1:8
+        if S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).pol == 1
+            S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).perc = 100 / nr_neg_contacts;
+        elseif S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).pol == 2
+            S.([prefix, '1']).(['k', num2str(contactNr + contact_offset)]).perc = 100 / nr_pos_contacts;
         end
     end
 
-else % voltage percentage changed
-    changedobj=get(changedobj,'Tag');
-    changedobj=changedobj(1:end-1);
-
-    switch changedobj
-        case Rconts
-            conts=Rconts;
-            sidec='R';
-            side=1;
-        case Lconts
-            conts=Lconts;
-            sidec='L';
-            side=2;
-        case 'RC'
-            conts=Rconts;
-            changedobj='case';
-            side=1;
-            sidec='R';
-        case 'LC'
-            conts=Lconts;
-            changedobj='case';
-            side=2;
-            sidec='L';
+    % do the same for case
+    if S.([prefix, '1']).case.pol == 1
+        S.([prefix, '1']).case.perc = 100 / nr_neg_contacts;
+    elseif S.([prefix, '1']).case.pol == 2
+        S.([prefix, '1']).case.perc = 100 / nr_pos_contacts;
     end
 
-    % check for monopolar models:
-    if S.monopolarmodel % these allow only 1 active anode contact per model.
-        for c=1:length(conts)
-            eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.pol=0;']);
-            eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{c},'.perc=0;']);
-        end
-        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
-        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
-
-        return
-    end
-
-    % check polarity of changed object:
-    try
-        polchanged=eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol']);
-    catch
-        keyboard
-    end
-
-    if polchanged==0 % set changed contacts polarity to negative
-        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.pol=1;']);
-        polchanged=1;
-    end
-
-    % determine how many other nodes with this polarity exist:
-    divby=1;
-    contacts={};
-    sumpercent=0;
-    for con=1:length(conts)
-        if eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.pol==polchanged'])
-            if ~strcmp(conts{con},changedobj)
-                sumpercent=sumpercent+eval(['S.',sidec,'s',num2str(S.active(side)),'.',conts{con},'.perc']);
-                contacts{divby}=conts{con};
-                divby=divby+1;
-            end
-        end
-    end
-
-    % add case to calculation.
-    if eval(['S.',sidec,'s',num2str(S.active(side)),'.case.pol==polchanged'])
-        if ~strcmp(changedobj,'case')
-            contacts{divby}='case';
-            divby=divby+1;
-        end
-    end
-
-    if divby==1 % only one contact -> set to 100 percent.
-        eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc=100;']);
-    end
-
-    % reduce all other contacts percentages:
-    divby=sumpercent/(100-eval(['S.',sidec,'s',num2str(S.active(side)),'.',changedobj,'.perc']));
-
-    for c=1:length(contacts)
-        eval(['S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc=',...
-            'S.',sidec,'s',num2str(S.active(side)),'.',contacts{c},'.perc/divby;']);
-    end
-
+end
 end
