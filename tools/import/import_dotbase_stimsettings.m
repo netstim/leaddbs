@@ -42,12 +42,15 @@ end
 % get name for stim
 stim_name = inputdlg('Please specify a stimulation name');
 
-% create stimparameters.mat file
-S_init = ea_initializeS(stim_name, options);
+S_init = ea_initializeS(stim_name, options);    % init S
 
-S = construct_S(S_init, contact_stim_settings, general_stim_settings);
+S = construct_S(S_init, contact_stim_settings, general_stim_settings);  % fill S values\
 
-ea_savestimulation(S,options)
+if strcmp(general_stim_settings{1, 1}.stim_amp.unit, 'Volt')
+    S=ea_redistribute_voltage(S, options);  % get correct percentage if voltage controlled
+end
+
+ea_savestimulation(S,options)   % create stim folder and stimparameters.mat
 
 %disp(sprintf('%s '));
 end
