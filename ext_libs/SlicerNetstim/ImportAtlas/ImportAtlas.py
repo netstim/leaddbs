@@ -92,7 +92,7 @@ class ImportAtlasWidget(ScriptedLoadableModuleWidget):
   def onImportButton(self):
     leadDBSPath = slicer.util.settingsValue("NetstimPreferences/leadDBSPath", "", converter=str)
     if leadDBSPath is "": return
-    atlasPath = os.path.join(leadDBSPath, 'templates', 'space', 'MNI_ICBM_2009b_NLIN_ASYM', 'atlases', self.atlasComboBox.currentText)
+    atlasPath = os.path.join(leadDBSPath, 'templates', 'space', 'MNI152NLin2009bAsym', 'atlases', self.atlasComboBox.currentText)
     logic = ImportAtlasLogic()
     qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
     qt.QApplication.processEvents()
@@ -119,7 +119,10 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
     leadDBSPath = slicer.util.settingsValue("NetstimPreferences/leadDBSPath", "", converter=str)
     if leadDBSPath is "": return
     import glob
-    validAtlases = glob.glob(os.path.join(leadDBSPath, 'templates', 'space', 'MNI_ICBM_2009b_NLIN_ASYM', 'atlases', '*', 'atlas_index.mat'))
+    validAtlases = glob.glob(os.path.join(leadDBSPath, 'templates', 'space', 'MNI152NLin2009bAsym', 'atlases', '*', 'atlas_index.mat'))
+    if not validAtlases:
+      qt.QMessageBox().warning(qt.QWidget(), "", "Invalid Lead-DBS path in preferences.")
+      return
     validAtlases = [os.path.basename(os.path.dirname(a)) for a in validAtlases]
     validAtlases.sort()
     return validAtlases
