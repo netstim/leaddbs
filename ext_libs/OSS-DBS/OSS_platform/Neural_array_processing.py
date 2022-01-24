@@ -678,7 +678,7 @@ class Neuron_array(object):
 
             if len(self.neurons_idx_csf) > 0.25 * N_models:
                 logging.critical("!========================================================!")
-                logging.critical("WARNING: too many neurons are in CSF".format(lst[i]))
+                logging.critical("WARNING: too many neurons are in CSF")
                 logging.critical("Check segmask and image normalizations")
                 logging.critical("!========================================================!")
 
