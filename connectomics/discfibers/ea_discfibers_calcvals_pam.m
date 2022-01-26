@@ -49,7 +49,7 @@ for side = 1:numSide
             last_loc_i = 1;  
             sub_i = 1;
             for fib_i = 1:total_fibers
-                if last_loc_i > fib_state_raw.fibers(end,4)
+                if fib_i > fib_state_raw.fibers(end,4)
                     fib_state(fib_i) = 0;  % the fiber was pre-filtered out with Kuncel-VTA
                 else
                     if fib_state_raw.fibers(last_loc_i,4) == fib_i
