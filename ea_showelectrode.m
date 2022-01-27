@@ -184,6 +184,8 @@ for side=options.sides
                 case {'Medtronic B33005'
                       'Medtronic B33015'
                       'Boston Scientific Vercise Directed'
+                      'Boston Scientific Vercise Cartesia HX'
+                      'Boston Scientific Vercise Cartesia X'
                       'St. Jude Directed 6172 (short)'
                       'St. Jude Directed 6173 (long)'}
                     % Marker position relative to head position along z axis
