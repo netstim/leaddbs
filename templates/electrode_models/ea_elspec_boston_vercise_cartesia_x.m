@@ -43,7 +43,7 @@ cy = elspec.lead_diameter/2*sin(pi/6);
 
 % The segmented contacts are counter-clockwise arranged seen from the top
 % view, the same as in the models in the components folder.
-electrode.coords_mm = zeros(numCon,3);
+electrode.coords_mm = zeros(elspec.numel,3);
 
 % Segmented contacts
 for level=1:5
@@ -55,15 +55,15 @@ for level=1:5
 end
 
 % Normal contacts
-for ind=levelIndStart+3:numCon
+for ind=levelIndStart+3:elspec.numel
     level = level + 1;
     electrode.coords_mm(ind,3) = elspec.tip_length*~elspec.tipiscontact + ...
                      elspec.contact_length/2 + ...
                      (level-1)*(elspec.contact_spacing+elspec.contact_length);
 end
 
-electrode.head_position = electrode.coords_mm(1,:);
-electrode.tail_position = electrode.coords_mm(4,:);
+electrode.head_position = [0, 0, electrode.coords_mm(1,3)];
+electrode.tail_position = [0, 0, electrode.coords_mm(10,3)];
 electrode.x_position = [elspec.lead_diameter/2, 0, electrode.coords_mm(1,3)];
 electrode.y_position = [0, elspec.lead_diameter/2, electrode.coords_mm(1,3)];
 
