@@ -157,7 +157,11 @@ switch modality
                 bbfile = [ea_space,'bb.nii'];
             end
 
-            seedFile = [vatdir, subPrefix, '_sim-', vtaType, '_seed-dMRI.nii'];
+            stimParams = ea_regexpdir(vatdir, 'stimparameters\.mat$', 0);
+            load(stimParams{1}, 'S');
+            modelLabel = ea_simModel2Label(S.model);
+
+            seedFile = [vatdir, subPrefix, '_sim-', vtaType, '_model-', modelLabel, '_seed-dMRI.nii'];
             if ~isfile(seedFile)
                 cnt=1;
                 for side=1:2
@@ -168,7 +172,7 @@ switch modality
                             sidec='L';
                     end
 
-                    vtaFile = ea_regexpdir(vatdir, [subPrefix, '_sim-', vtaType, '_hemi-', sidec, '\.nii$'], 0);
+                    vtaFile = ea_regexpdir(vatdir, [subPrefix, '_sim-', vtaType, '_model-', modelLabel, '_hemi-', sidec, '\.nii$'], 0);
                     if ~isempty(vtaFile)
                         vtaFile = vtaFile{1};
                         copyfile(vtaFile,[vatdir,'tmp_',sidec,'.nii']);
@@ -218,7 +222,7 @@ switch modality
                 seedLabel = 'fMRI';
             end
 
-            seedFile = [vatdir, subPrefix, '_sim-', vtaType, '_seed-', seedLabel, '.nii'];
+            seedFile = [vatdir, subPrefix, '_sim-', vtaType, '_model-', modelLabel, '_seed-', seedLabel, '.nii'];
             % if ~isfile(seedFile)
             if 1 % for now always recreate
                 cnt=1;
@@ -230,7 +234,7 @@ switch modality
                             sidec='L';
                     end
 
-                    vtaFile = ea_regexpdir(vatdir, [subPrefix, '_sim-', vtaType, '_hemi-', sidec, '\.nii$'], 0);
+                    vtaFile = ea_regexpdir(vatdir, [subPrefix, '_sim-', vtaType, '_model-', modelLabel, '_hemi-', sidec, '\.nii$'], 0);
                     if ~isempty(vtaFile)
                         vtaFile = vtaFile{1};
                         if ~strcmp(cname,'No functional connectome found.')
