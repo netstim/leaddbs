@@ -46,6 +46,9 @@ ea_write_nii(nii);
 allV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'bb_nan.nii'];
 
 cnt=2;
+
+modelLabel = ea_simModel2Label(M.vatmodel);
+
 for pt=1:length(M.patient.list)
     %process left and right separately, check if file exists
     
@@ -58,8 +61,8 @@ for pt=1:length(M.patient.list)
         patStimDir = [M.patient.list{pt},filesep,'stimulations',filesep,ea_nt(options),'gs_',M.guid];
     end
 
-    fname_l = ea_regexpdir(patStimDir, '_sim-binary_hemi-L\.nii$');
-    fname_r = ea_regexpdir(patStimDir, '_sim-binary_hemi-R\.nii$');
+    fname_l = ea_regexpdir(patStimDir, ['_sim-binary_model-',modelLabel,'_hemi-L\.nii$']);
+    fname_r = ea_regexpdir(patStimDir, ['_sim-binary_model-',modelLabel,'_hemi-R\.nii$']);
 
     if ~isempty(fname_l)
         %if file exist, process the right side

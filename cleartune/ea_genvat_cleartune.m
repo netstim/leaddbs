@@ -573,9 +573,9 @@ switch side
         sideCode = 'L';
 end
 
-Vvat.fname = [stimDir, filesep, filePrefix, 'binary_hemi-', sideCode, addname, '.nii'];
-Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-', sideCode, addname, '.nii']
-Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-', sideCode, addname, '.nii'];
+Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-cleartunesimbio_hemi-', sideCode, addname, '.nii'];
+Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-cleartunesimbio_hemi-', sideCode, addname, '.nii']
+Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_model-cleartunesimbio_hemi-', sideCode, addname, '.nii'];
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);
 Vvate.dt=[16,0];
@@ -613,9 +613,9 @@ if ~multvat
     % visualization
     switch side
         case 1
-            vatfvname = [stimDir, filesep, filePrefix, 'binary_hemi-R.mat'];
+            vatfvname = [stimDir, filesep, filePrefix, 'binary_model-cleartunesimbio_hemi-R.mat'];
         case 2
-            vatfvname = [stimDir, filesep, filePrefix, 'binary_hemi-L.mat'];
+            vatfvname = [stimDir, filesep, filePrefix, 'binary_model-cleartunesimbio_hemi-L.mat'];
     end
     vatgrad = vatgrad(side);
     save(vatfvname,'vatfv','vatgrad','vatvolume');
