@@ -73,9 +73,9 @@ filePrefix = ['sub-', options.subj.subjId, '_sim-'];
 
 switch side
     case 1
-        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-R.nii'];
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-cleartunefastfield_hemi-R.nii'];
     case 2
-        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-L.nii'];
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-cleartunefastfield_hemi-L.nii'];
 end
 
 Vvate.img = Efield; % permute(eeg,[2,1,3]);
