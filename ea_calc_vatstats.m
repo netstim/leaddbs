@@ -28,22 +28,22 @@ fileBasePath = [stimDir, filesep, 'sub-', options.subj.subjId, '_sim-'];
 
 % clean downstreamfiles if necessary
 if hmchanged
-    ea_delete([fileBasePath, 'binary_hemi-R_hemidesc-FlippedFromLeft.nii']);
-    ea_delete([fileBasePath, 'binary_hemi-L_hemidesc-FlippedFromRight.nii']);
+    ea_delete([fileBasePath, 'binary_model-*_hemi-R_hemidesc-FlippedFromLeft.nii']);
+    ea_delete([fileBasePath, 'binary_model-*_hemi-L_hemidesc-FlippedFromRight.nii']);
 
-    ea_delete([fileBasePath, 'efield_hemi-R_hemidesc-FlippedFromLeft.nii']);
-    ea_delete([fileBasePath, 'efield_hemi-L_hemidesc-FlippedFromRight.nii']);
+    ea_delete([fileBasePath, 'efield_model-*_hemi-R_hemidesc-FlippedFromLeft.nii']);
+    ea_delete([fileBasePath, 'efield_model-*_hemi-L_hemidesc-FlippedFromRight.nii']);
 
-    ea_delete([fileBasePath, 'efieldgauss_hemi-R_hemidesc-FlippedFromLeft.nii']);
-    ea_delete([fileBasePath, 'efieldgauss_hemi-L_hemidesc-FlippedFromRight.nii']);
+    ea_delete([fileBasePath, 'efieldgauss_model-*_hemi-R_hemidesc-FlippedFromLeft.nii']);
+    ea_delete([fileBasePath, 'efieldgauss_model-*_hemi-L_hemidesc-FlippedFromRight.nii']);
 
-    ea_delete(fullfile(fileBasePath, 'binary_seed-dMRI.nii'));
-    ea_delete(fullfile(fileBasePath, 'binary_seed-dMRI_hemi-L.nii'));
-    ea_delete(fullfile(fileBasePath, 'binary_seed-dMRI_hemi-R.nii'));
+    ea_delete([fileBasePath, 'binary_model-*_seed-dMRI.nii']);
+    ea_delete([fileBasePath, 'binary_model-*_seed-dMRI_hemi-L.nii']);
+    ea_delete([fileBasePath, 'binary_model-*_seed-dMRI_hemi-R.nii']);
 
-    ea_delete(fullfile(fileBasePath, 'binary_seed-fMRI.nii'));
-    ea_delete(fullfile(fileBasePath, 'binary_seed-fMRI_hemi-L.nii'));
-    ea_delete(fullfile(fileBasePath, 'binary_seed-fMRI_hemi-R.nii'));
+    ea_delete([fileBasePath, 'binary_model-*_seed-fMRI.nii']);
+    ea_delete([fileBasePath, 'binary_model-*_seed-fMRI_hemi-L.nii']);
+    ea_delete([fileBasePath, 'binary_model-*_seed-fMRI_hemi-R.nii']);
 end
 
 %prepare statvat exports once if needed.
@@ -166,10 +166,12 @@ for iside=1:length(options.sides)
                 ea_stats.stimulation(thisstim).vat(side,vat).contact=vat;
                 ea_stats.stimulation(thisstim).vat(side,vat).side=side;
 
+                modelLabel = ea_simModel2Label(S.model);
+
                 % VTA volume and efield volume
                 ea_stats.stimulation(thisstim).vat(side,vat).volume=stimparams(1,side).volume(vat);
-                if isfile([fileBasePath, 'efield_hemi-', sidec, '.nii'])
-                    vefieldfile = [fileBasePath, 'efield_hemi-', sidec, '.nii'];
+                if isfile([fileBasePath, 'efield_model-', modelLabel, '_hemi-', sidec,  '.nii'])
+                    vefieldfile = [fileBasePath, 'efield_model-', modelLabel, '_hemi-', sidec,  '.nii'];
                 end
 
                 atlasName = options.atlasset;
@@ -206,7 +208,7 @@ for iside=1:length(options.sides)
                                 continue;
                             end
 
-                            vatfile = [fileBasePath, 'binary_hemi-', sidec, '.nii'];
+                            vatfile = [fileBasePath, 'binary_model-', modelLabel, '_hemi-', sidec,  '.nii'];
                             [~, mm_overlap, normVTAOverlap, normAtlasOverlap, mm_vta, mm_atlas]  = ea_vta_overlap(vatfile, atlasfile, sidec);
 
                             % Overriding the volume of the vat with the one

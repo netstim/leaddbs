@@ -144,19 +144,21 @@ stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
 ea_mkdir(stimDir);
 filePrefix = ['sub-', options.subj.subjId, '_sim-'];
 
+modelLabel = ea_simModel2Label(S.model);
+
 switch side
     case 1
-        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_hemi-R.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.nii'];
         Vvate=Vvat;
         Vvatne=Vvat;
-        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-R.nii'];
-        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-R.nii'];
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-', modelLabel, '_hemi-R.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_model-', modelLabel, '_hemi-R.nii'];
     case 2
-        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_hemi-L.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-L.nii'];
         Vvate = Vvat;
         Vvatne = Vvat;
-        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_hemi-L.nii'];
-        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_hemi-L.nii'];
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-', modelLabel, '_hemi-L.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_model-', modelLabel, '_hemi-L.nii'];
 end
 
 ea_savestimulation(S,options);
@@ -196,9 +198,9 @@ end
 % visualization
 switch side
     case 1
-        vatfvname = [stimDir, filesep, filePrefix, 'binary_hemi-R.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.mat'];
     case 2
-        vatfvname = [stimDir, filesep, filePrefix, 'binary_hemi-R.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.mat'];
 end
 
 vatgrad = vatgrad(side);

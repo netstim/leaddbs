@@ -107,9 +107,9 @@ ea_mkdir(stimDir);
 filePrefix = ['sub-', options.subj.subjId, '_sim-'];
 
 if side == 1
-    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_hemi-R.nii'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-kuncel_hemi-R.nii'];
 elseif side == 2
-    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_hemi-L.nii'];
+    Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-kuncel_hemi-L.nii'];
 end
 
 ea_savestimulation(S,options);
