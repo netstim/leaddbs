@@ -44,7 +44,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     for i=1:length(fields)
         if ~isfile(options.subj.postopAnat.(fields{i}).preproc)
             ea_mkdir(fileparts(options.subj.postopAnat.(fields{i}).preproc));
-            % Copy file tp preproc, take care of .nii.gz raw image
+            % Copy file to preproc, take care of .nii.gz raw image
             if strcmp(options.prefs.niiFileExt, '.nii')
                 copyfile(options.subj.postopAnat.(fields{i}).raw, [options.subj.postopAnat.(fields{i}).preproc, '.gz']);
                 gunzip([options.subj.postopAnat.(fields{i}).preproc, '.gz']);
