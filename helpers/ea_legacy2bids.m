@@ -542,8 +542,8 @@ for patients = 1:length(source)
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             pipeline = pipelines{folders};
                             try
-                                [mni_files,native_files,derivatives_cell] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
-                                move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name);
+                                [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
+                                move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
                             catch
                                 disp("Your stimulation folder might be empty...");
                             end
@@ -564,7 +564,7 @@ for patients = 1:length(source)
                                 headmodel_native_files = {};
                             end
                             which_pipeline = 'headmodel';
-                            move_mni2bids(headmodel_mni_files,headmodel_native_files,'',headmodel,which_pipeline,patient_name,new_path)
+                            move_mni2bids(headmodel_mni_files,headmodel_native_files,'',headmodel,which_pipeline,patient_name,new_path,'','')
                             
                         end
                     end
@@ -819,7 +819,7 @@ function move_raw2bids(source_patient_path,new_path,which_file,bids_name)
         copyfile(fullfile(tmp_path,bids_name),new_path);
         
     end
-function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipeline,patient_name,new_path)
+function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipeline,patient_name,new_path,mni_model_names,native_model_names)
     if strcmp(which_pipeline,'stimulations')
         if ~isempty(mni_files)
             for mni_file = 1:length(mni_files)
@@ -827,7 +827,15 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
                     [filepath,mni_filename,ext] = fileparts(mni_files{1,mni_file}{1,mni_subfile});
                     if ismember([mni_filename,ext],stimulations{:,1})
                         indx = cellfun(@(x)strcmp(x,[mni_filename,ext]),stimulations{:,1});
-                        movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,[patient_name,'_',stimulations{1,2}{indx}]));
+                        try_bids_name = [patient_name,'_',stimulations{1,2}{indx}];
+                        if contains(try_bids_name,'modelTag')
+                            bids_name = strrep(try_bids_name,'modelTag',mni_model_names{mni_file});
+                        else
+                            bids_name = try_bids_name;
+                        end
+                        %try_bids_name = [patient_name,'_',stimulations{1,2}{indx}];
+                        %bids_name = add_model(fullfile(filepath,[mni_filename,ext]),try_bids_name);
+                        movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,bids_name));
                     end
                 end
             end
@@ -838,7 +846,13 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
                     [filepath,native_filename,ext] = fileparts(native_files{1,native_file}{1,native_subfile});
                     if ismember([native_filename,ext],stimulations{:,1})
                         indx = cellfun(@(x)strcmp(x,[native_filename,ext]),stimulations{:,1});
-                        movefile(native_files{1,native_file}{1,native_subfile},fullfile(filepath,[patient_name,'_',stimulations{1,2}{indx}]));
+                        try_bids_name = [patient_name,'_',stimulations{1,2}{indx}];
+                        if contains(try_bids_name,'modelTag')
+                            bids_name = strrep(try_bids_name,'modelTag',native_model_names{mni_file});
+                        else
+                            bids_name = try_bids_name;
+                        end
+                        movefile(native_files{1,native_file}{1,native_subfile},fullfile(filepath,bids_name));
                     end
                 end
             end
