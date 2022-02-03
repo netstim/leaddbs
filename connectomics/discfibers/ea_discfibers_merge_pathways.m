@@ -105,7 +105,7 @@ for sub=1:numPatient
             sub_i = 1;
             last_glob = 1;
             for fib_i = 1:total_fibers
-                if last_loc_i > fib_state_raw.fibers(end,4)
+                if fib_i > fib_state_raw.fibers(end,4)
                     fib_state(fib_i) = 0;  % the fiber was pre-filtered out with Kuncel-VTA
                 else
                     % if the fiber was processed in OSS-DBS, check the status
