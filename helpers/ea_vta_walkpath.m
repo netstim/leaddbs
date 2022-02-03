@@ -69,8 +69,13 @@ end
 
 function model_name = add_model(stimFolder)
   stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
-  load(stimParams{1},'S')
-  model_name = ea_simModel2Label(S.model);
+  if ~isempty(stimParams)
+    load(stimParams{1},'S')
+    model_name = ea_simModel2Label(S.model);
+  else
+      warndlg("Could not detect the model in your parameters file. Please check manually. Adding a default name for now...");
+      model_name = 'default';
+  end
   return
 end
 
