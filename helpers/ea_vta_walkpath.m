@@ -1,7 +1,9 @@
-function [mni_files,native_files,derivatives_cell] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell)
+function [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell)
 
 mni_files = {};
 native_files = {};
+mni_model_names = {};
+native_model_names = {};
 switch pipeline
     case 'stimulations'
         if ~exist(fullfile(new_path,pipeline),'dir')
@@ -16,6 +18,8 @@ switch pipeline
             for folder_names = 1:length(this_folder_names)
                 files_in_this_folder = dir_without_dots(fullfile(mni_dir,this_folder_names{folder_names}));
                 mni_files{file_indx} = {files_in_this_folder.name};
+                mni_model_name = add_model(fullfile(source_patient,pipeline,'MNI_ICBM_2009b_NLIN_ASYM',this_folder_names{folder_names}));
+                mni_model_names{folder_names} = mni_model_name; 
                 for mni_file = 1:length(mni_files{1,file_indx})
                     derivatives_cell{end+1,1} = fullfile(source_patient,pipeline,'MNI_ICBM_2009b_NLIN_ASYM',mni_files{1,file_indx}{1,mni_file});
                     mni_files{1,file_indx}{1,mni_file} = fullfile(mni_dir,this_folder_names{folder_names},mni_files{1,file_indx}{1,mni_file});
@@ -35,6 +39,8 @@ switch pipeline
             for folder_names = 1:length(this_folder_names)
                 files_in_this_folder = dir_without_dots(fullfile(native_dir,this_folder_names{folder_names}));
                 native_files{file_indx} = {files_in_this_folder.name};
+                native_model_name = add_model(fullfile(source_patient,pipeline,'native',this_folder_names{folder_names}));
+                native_model_names{folder_names} = native_model_name; 
                 for native_file = 1:length(native_files{1,file_indx})
                     derivatives_cell{end+1,1} = fullfile(source_patient,pipeline,'native',native_files{1,file_indx}{1,native_file});
                     native_files{1,file_indx}{1,native_file} = fullfile(native_dir,this_folder_names{folder_names},native_files{1,file_indx}{1,native_file});
@@ -59,3 +65,12 @@ switch pipeline
       
 end
 return
+end
+
+function model_name = add_model(stimFolder)
+  stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
+  load(stimParams{1},'S')
+  model_name = ea_simModel2Label(S.model);
+  return
+end
+
