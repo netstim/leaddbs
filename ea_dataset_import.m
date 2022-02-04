@@ -61,11 +61,11 @@ if ~dicomimport
         
         % preop
         fprintf('\nSearching files for preoperative session...\n');
-        anat_files.('preop') = find_anat_files_bids(fullfile(rawdata_dir, subj_ids(subj_idx).name, 'ses-preop', 'anat'), preop_modalities);
+        anat_files.('preop').anat = find_anat_files_bids(fullfile(rawdata_dir, subj_ids(subj_idx).name, 'ses-preop', 'anat'), preop_modalities);
         
         % postop
         fprintf('\nSearching files for postoperative session...\n');
-        anat_files.('postop') = find_anat_files_bids(fullfile(rawdata_dir, subj_ids(subj_idx).name, 'ses-postop', 'anat'), postop_modalities);
+        anat_files.('postop').anat = find_anat_files_bids(fullfile(rawdata_dir, subj_ids(subj_idx).name, 'ses-postop', 'anat'), postop_modalities);
         
         % select which ones to use (if there are multiple)
         anat_files_selected = select_anat_files(anat_files);
@@ -245,42 +245,42 @@ end
         %   anat_files -> same as input, but with fields removed that have no filenames. Multiple entries are also deleted
         
         % preop
-        for mod_idx = 1:length(fieldnames(anat_files.preop))
+        for mod_idx = 1:length(fieldnames(anat_files.preop.anat))
             
-            if numel(anat_files.preop.(preop_modalities{mod_idx})) > 1         % if more than one is found
-                file_list = anat_files.preop.(preop_modalities{mod_idx});
+            if numel(anat_files.preop.anat.(preop_modalities{mod_idx})) > 1         % if more than one is found
+                file_list = anat_files.preop.anat.(preop_modalities{mod_idx});
                 
                 % prompt the user to select a preop image, here we only allow one selection
                 [index, tf] = listdlg('PromptString', {sprintf('Multiple preop files for modality %s found',preop_modalities{mod_idx}), ...
                     'Please select on file from the list'}, 'Name', 'Select preop images', 'SelectionMode', 'single', 'ListSize', [300, 500], 'ListString', file_list);
-                anat_files.preop.(preop_modalities{mod_idx}) = file_list{index, 1};
+                anat_files.preop.anat.(preop_modalities{mod_idx}) = file_list{index, 1};
                 
-            elseif numel(anat_files.preop.(preop_modalities{mod_idx})) == 0   % if none is found
-                anat_files.preop = rmfield(anat_files.preop, preop_modalities{mod_idx});
+            elseif numel(anat_files.preop.anat.(preop_modalities{mod_idx})) == 0   % if none is found
+                anat_files.preop.anat = rmfield(anat_files.preop.anat, preop_modalities{mod_idx});
                 
             else    % if only one convert (for better json readability)
-                anat_files.preop.(preop_modalities{mod_idx}) = cell2mat(anat_files.preop.(preop_modalities{mod_idx}));
+                anat_files.preop.anat.(preop_modalities{mod_idx}) = cell2mat(anat_files.preop.anat.(preop_modalities{mod_idx}));
             end
         end
         
         % postop
-        for mod_idx = 1:length(fieldnames(anat_files.postop))
+        for mod_idx = 1:length(fieldnames(anat_files.postop.anat))
             
-            if numel(anat_files.postop.(postop_modalities{mod_idx})) > 1   % if more than one is found
-                file_list = anat_files.postop.(postop_modalities{mod_idx});
+            if numel(anat_files.postop.anat.(postop_modalities{mod_idx})) > 1   % if more than one is found
+                file_list = anat_files.postop.anat.(postop_modalities{mod_idx});
                 
                 % prompt the user to select postop images, for everything other than CT, allow multiple selections (MRI)
                 [index, tf] = listdlg('PromptString', {sprintf('Multiple postop files for modality %s found',postop_modalities{mod_idx}), ...
                     'Please select on file from the list'}, 'Name', 'Select postop images', 'SelectionMode', 'single', ...
                     'ListSize', [300, 500], 'ListString', file_list);
                 
-                anat_files.postop.(postop_modalities{mod_idx}) = file_list{index, 1};
+                anat_files.postop.anat.(postop_modalities{mod_idx}) = file_list{index, 1};
                 
-            elseif numel(anat_files.postop.(postop_modalities{mod_idx})) == 0   % if none is found
-                anat_files.postop = rmfield(anat_files.postop, postop_modalities{mod_idx});
+            elseif numel(anat_files.postop.anat.(postop_modalities{mod_idx})) == 0   % if none is found
+                anat_files.postop.anat = rmfield(anat_files.postop.anat, postop_modalities{mod_idx});
                 
             else     % if only one convert (for better json readability)
-                anat_files.postop.(postop_modalities{mod_idx}) = cell2mat(anat_files.postop.(postop_modalities{mod_idx}));
+                anat_files.postop.anat.(postop_modalities{mod_idx}) = cell2mat(anat_files.postop.anat.(postop_modalities{mod_idx}));
             end
         end
     end
