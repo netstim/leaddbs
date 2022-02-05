@@ -140,7 +140,7 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in
 
     if isinstance(d["n_Ranvier"],list):
         activation_in_populations=np.zeros(len(d["n_Ranvier"]),int)
-        hf = h5py.File(os.environ['PATIENTDIR']+'/'+stim_folder+'Network_status_'+str(scaling_index)+'.h5', 'r')
+        hf = h5py.File(os.environ['PATIENTDIR']+'/'+stim_folder+'Neurons_status_'+str(scaling_index)+'.h5', 'r')
         lst=list(hf.keys())
         for i in range(len(lst)):
             Axon_status=hf.get(lst[i])
