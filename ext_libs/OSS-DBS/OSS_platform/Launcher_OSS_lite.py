@@ -466,7 +466,7 @@ def run_full_model(master_dict):
             it_num = 0
             for current_comb in Currents_to_check:
                 from Current_scaler import find_activation
-                Activation=find_activation(current_comb,d,Xs_signal_norm,N_array.N_models,N_array.pattern['num_segments'],FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,it_num,VTA_param=VTA_parameters)
+                Activation=find_activation(current_comb,d,Xs_signal_norm,N_array.N_models,N_array.pattern['num_segments'],N_array.neurons_idx_encap,N_array.neurons_idx_csf,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,it_num,VTA_param=VTA_parameters)
                 it_num += 1
         elif d['Optimizer'] == 1:
             logging.critical('Running optimization of current protocol')
