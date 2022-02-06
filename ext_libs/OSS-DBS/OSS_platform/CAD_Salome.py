@@ -85,7 +85,7 @@ def build_final_geometry(d,MRI_param,Brain_shape_name,ROI_radius,cc_multicontact
         Electrode_profile=d["Electrode_type"]+'_profile.py'
         position_script_name=os.environ['PATIENTDIR']+"/"+d["Electrode_type"]+"_position.py"
 
-    if ROI_radius<6.5 and d["Electrode_type"]!="SNEX100": # correction for human electrodes. Otherwise, SALOME might fail to find encap_outer
+    if ROI_radius<6.5 and (d["Electrode_type"]!="SNEX100" or d['Electrode_type']=="AA_rodent_monopolar" or d['Electrode_type']=="SR_rodent"): # correction for human electrodes. Otherwise, SALOME might fail to find encap_outer
         ROI_radius=6.5
         
         
