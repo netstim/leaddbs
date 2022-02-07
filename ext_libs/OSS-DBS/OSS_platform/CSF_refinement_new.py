@@ -196,16 +196,21 @@ def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
             min(min_values[:, 0]), min(min_values[:, 0]), min(min_values[:, 0]))
 
         space_from_neurons = 1.0  # here we do not need to check further away
-        for z_coord in z_vect:
-            for y_coord in y_vect:
-                for x_coord in x_vect:
 
-                    x_pos = x_coord - MRI_param.x_vox_size / 2.0
-                    y_pos = y_coord - MRI_param.y_vox_size / 2.0
-                    z_pos = z_coord - MRI_param.x_vox_size / 2.0
+        affine = np.load(os.environ['PATIENTDIR'] + '/MRI_DTI_derived_data/affine_MRI.npy')
 
-                    if (
-                            x_pos <= x_neuron_max + space_from_neurons and x_pos >= x_neuron_min - space_from_neurons and y_pos <= y_neuron_max + space_from_neurons and y_pos >= y_neuron_min - space_from_neurons and z_pos <= z_neuron_max + space_from_neurons and z_pos >= z_neuron_min - space_from_neurons):
+        for z_i in range(int(MRI_param.M_z)):
+            for y_i in range(int(MRI_param.M_y)):
+                for x_i in range(int(MRI_param.M_x)):
+                    coords_reals = np.dot(affine, np.array([x_i, y_i, z_i, 1.0]))
+
+                    x_pos = coords_reals[0] + MRI_param.x_shift + MRI_param.x_vox_size / 2.0
+                    y_pos = coords_reals[1] + MRI_param.y_shift + MRI_param.y_vox_size / 2.0
+                    z_pos = coords_reals[2] + MRI_param.z_shift + MRI_param.z_vox_size / 2.0
+
+                    x_coord, y_coord, z_coord = (x_pos + MRI_param.x_vox_size / 2.0, y_pos + MRI_param.y_vox_size / 2.0, z_pos + MRI_param.z_vox_size / 2.0)
+
+                    if x_neuron_max + space_from_neurons >= x_pos >= x_neuron_min - space_from_neurons and y_neuron_max + space_from_neurons >= y_pos >= y_neuron_min - space_from_neurons and z_neuron_max + space_from_neurons >= z_pos >= z_neuron_min - space_from_neurons:
 
                         xv_mri = int((
                                          x_coord) / MRI_param.x_vox_size - 0.000000001)  # defines number of steps to get to the voxels containing x[0] coordinate
@@ -331,7 +336,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
         voxel_array_CSF=np.zeros((Tissue_array.shape[0],3),float)      #array to store all CSF voxels in the specified ROI
 
         bb = mesh.bounding_box_tree()
-        #check the extent of the neuron array (loof for CSF only there + vicinity defined by CSF_ref_add)
+        #check the extent of the neuron array (look for CSF only there + vicinity defined by CSF_ref_add)
         x_neuron_max=max(Vertices_neur[:,0])
         y_neuron_max=max(Vertices_neur[:,1])
         z_neuron_max=max(Vertices_neur[:,2])
