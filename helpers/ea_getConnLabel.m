@@ -1,4 +1,4 @@
-function label = ea_getConnLabel(connectome)
+function label = ea_getConnLabel(connectome, subset)
 % Return a label for specific connectome
 
 connBaseFolder = ea_getconnectomebase;
@@ -9,10 +9,12 @@ if isempty(connFolder)
     error('Specified connectome "%s" not found!', connectome);
 elseif isfile(fullfile(connFolder{1}, 'dataset_info.json'))
     dataset = loadjson(fullfile(connFolder{1}, 'dataset_info.json'));
-elseif isfile(fullfile(connFolder{1}, 'dataset_info.mat'))
-    load(fullfile(connFolder{1}, 'dataset_info.mat'), 'dataset');
 else
     error('No dataset_info found for the specified connectome "%s"!', connectome);
 end
 
 label = dataset.tag;
+
+if exist('subset', 'var')
+    label = [label, 'x', regexprep(subset, '[\W_]', '')];
+end
