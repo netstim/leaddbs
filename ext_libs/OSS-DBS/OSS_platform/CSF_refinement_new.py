@@ -193,7 +193,7 @@ def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
             x_neuron_max, y_neuron_max, z_neuron_max = (
             max(max_values[:, 0]), max(max_values[:, 1]), max(max_values[:, 2]))
             x_neuron_min, y_neuron_min, z_neuron_min = (
-            min(min_values[:, 0]), min(min_values[:, 0]), min(min_values[:, 0]))
+            min(min_values[:, 0]), min(min_values[:, 1]), min(min_values[:, 2]))
 
         space_from_neurons = 1.0  # here we do not need to check further away
 
