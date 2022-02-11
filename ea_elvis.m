@@ -723,6 +723,8 @@ if ismember('alt', event.Modifier)
     %    disp('Altpressed');
 elseif ismember('shift', event.Modifier)
     setappdata(resultfig, 'shiftpressed', 1);
+elseif ismember('command', event.Modifier)
+    setappdata(resultfig, 'cmdpressed', 1);
 end
 
 % If the MER Control window is open
@@ -808,6 +810,8 @@ end
 
 function ea_keyrelease(resultfig,event)
 setappdata(resultfig,'altpressed',0);
+setappdata(resultfig,'shiftpressed',0);
+setappdata(resultfig,'cmdpressed',0);
 %disp('Altunpressed');
 
 
