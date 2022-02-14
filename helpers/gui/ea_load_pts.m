@@ -6,6 +6,7 @@ end
 
 uipatdir = GetFullPath(uipatdir);
 
+
 isSubjFolder = 0;
 isBIDSRoot = 0;
 
@@ -136,7 +137,11 @@ if length(uipatdir) == 1 % Single folder
                     waitfor(lead_import(uipatdir, options, handles));
                     BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                     subjId = getappdata(handles.leadfigure,'subjID');
-                    uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+                    if ~isempty(BIDSRoot) && ~isempty(subjId)
+                        uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+                    else
+                        return
+                    end
                 else
                     return;
                 end
@@ -149,7 +154,11 @@ if length(uipatdir) == 1 % Single folder
                 waitfor(lead_import(uipatdir, options, handles));
                 BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                 subjId = getappdata(handles.leadfigure,'subjID');
-                uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+                if ~isempty(BIDSRoot) && ~isempty(subjId)
+                    uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+                else
+                    return
+                end
             case 'patient_folder_raw_nifti'
                 msg = {'{\bfRaw dataset with Nifti files [only] detected, would you like to migrate it to BIDS?}';
                     ['Thank you for your interest in Lead-DBS! Since version 2.6, we have re-organized the way Lead-DBS acesses and stores data.' ,...
@@ -165,7 +174,11 @@ if length(uipatdir) == 1 % Single folder
                     waitfor(lead_import(uipatdir, options, handles));
                     BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                     subjId = getappdata(handles.leadfigure,'subjID');
-                    uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+                    if ~isempty(BIDSRoot) && ~isempty(subjId)
+                        uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+                    else
+                        return
+                    end
                 else
                     return;
                 end
@@ -174,6 +187,16 @@ if length(uipatdir) == 1 % Single folder
         end
     elseif isBIDSRoot % Is BIDS root folder
         BIDSRoot = uipatdir{1};
+        if isunix
+            match_chars = '[^a-z0-9\/_-]*';
+        else
+            match_chars = '[^a-z0-9\\_-]*';
+        end
+        if ~isempty(regexpi(BIDSRoot,match_chars))
+            message = sprintf('The folder %s\n contains the unsupported charaters. Please remove them and try again', BIDSRoot);
+            warndlg(message);
+            return
+        end
         rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0, 'dir');
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
         sourceData = ea_regexpdir([uipatdir{1}, filesep, 'sourcedata'], 'sub-', 0, 'dir');
