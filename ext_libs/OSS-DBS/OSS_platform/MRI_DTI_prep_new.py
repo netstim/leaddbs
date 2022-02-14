@@ -177,8 +177,9 @@ def map_MRI(MRI_name,MRI_data_in_m,default_material,CSF_inx,WM_inx,GM_inx,from_g
     
     #print(img.affine)
     if from_grid_txt==True:
-        #irrelevant here, only box data in txt
-        affine_MRI=np.eye(4)
+        affine_MRI = np.array([[voxel_size_x,0.0,0.0,img_start_x],
+                               [0.0,voxel_size_y,0.0,img_start_y],
+                               [0.0,0.0,voxel_size_z,img_start_z]])
     else:
         affine_MRI=img.affine
     np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/affine_MRI', affine_MRI)
@@ -400,7 +401,9 @@ def map_DTI(d,DTI_name,DTI_data_in_m,from_grid_txt):        # exctracts Tensor d
 
     if from_grid_txt==True:
         #irrelevant here, only box data in txt
-        affine_DTI=np.eye(4)
+        affine_DTI = np.array([[voxel_size_x,0.0,0.0,img_start_x],
+                               [0.0,voxel_size_y,0.0,img_start_y],
+                               [0.0,0.0,voxel_size_z,img_start_z]])
     else:
         affine_DTI=img.affine
     np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/affine_DTI', affine_DTI)
