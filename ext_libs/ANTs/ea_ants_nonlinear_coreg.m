@@ -1,4 +1,4 @@
-function ea_ants_nonlinear_coreg(varargin)
+function transforms = ea_ants_nonlinear_coreg(varargin)
 % Wrapper for ANTs 3-stage nonlinear coregistration
 
 fixedimage = varargin{1};
@@ -13,20 +13,24 @@ else
 end
 
 fixedmask = fullfile(fileparts(fixedimage), 'brainmask.nii'); % take by default
-if nargin >= 5
+if nargin >= 5 && ~isempty(varargin{5})
     fixedmask = varargin{5}; % replace if specified
 elseif ~isfile(fixedmask)
     fixedmask = 'NULL'; % NULL if default doesn't exist
 end
 
-if nargin >= 6
+if nargin >= 6 && ~isempty(varargin{4})
     movingmask = varargin{6};
 else
     movingmask = 'NULL';
 end
 
 % Overwrite the default setting from GUI
-normsettings.ants_preset = 'ea_antspreset_ants_wiki';
+if nargin >= 7 && isfile(fullfile(fileparts(mfilename('fullpath')), 'presets', [varargin{7}, '.m']))
+    normsettings.ants_preset = varargin{7};
+else
+    normsettings.ants_preset = 'ea_antspreset_ants_wiki';
+end
 
 [outputdir, outputname, ~] = fileparts(outputimage);
 if outputdir
@@ -99,3 +103,5 @@ cfg.directory = directory;
 cfg.ants_usepreexisting = 3; % Overwrite
 
 ea_ants_run(cfg);
+
+transforms = {[outputbase, 'Composite.nii.gz']; [outputbase, 'InverseComposite.nii.gz']};
