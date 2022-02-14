@@ -46,18 +46,7 @@ if ischar(uipatdirs)
 end
 
 % Check for special characters in the path
-if isunix
-    special_characters = cellfun(@(x) regexpi(x,'[^a-z0-9\/_-]*','match'), uipatdirs, 'uni', 0);
-else
-    special_characters = cellfun(@(x) regexpi(x(3:end),'[^a-z0-9\\_-]*','match'), uipatdirs, 'uni', 0);
-end
-warntxt = '';
-for i = find(~cellfun(@isempty, special_characters))'
-    warntxt = [warntxt sprintf('The folder: %s\ncontains the unsopported charaters: ''%s''.\n\n', uipatdirs{i}, strjoin(special_characters{i}, ''','''))];
-end
-if ~isempty(warntxt)
-    warndlg([warntxt 'This can make some routines like normalization fail. Please rename the folders and select them again.'], 'Unsupported characters');
-end
+ea_checkSpecialChars(uipatdirs);
 
 % do parallel processing if available and set in ea_prefs.
 if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~strcmp(cmd,'export')
