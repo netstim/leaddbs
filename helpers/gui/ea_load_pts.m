@@ -187,16 +187,7 @@ if length(uipatdir) == 1 % Single folder
         end
     elseif isBIDSRoot % Is BIDS root folder
         BIDSRoot = uipatdir{1};
-        if isunix
-            match_chars = '[^a-z0-9\/_-]*';
-        else
-            match_chars = '[^a-z0-9\\_-]*';
-        end
-        if ~isempty(regexpi(BIDSRoot,match_chars))
-            message = sprintf('The folder %s\n contains the unsupported charaters. Please remove them and try again', BIDSRoot);
-            warndlg(message);
-            return
-        end
+        ea_checkSpecialChars(BIDSRoot);
         rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0, 'dir');
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
         sourceData = ea_regexpdir([uipatdir{1}, filesep, 'sourcedata'], 'sub-', 0, 'dir');
