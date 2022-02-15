@@ -57,6 +57,7 @@ if isempty(menuprobe)
     uimenu(f,'Label','Clean folders from unnecessary/legacy files','Callback',{@ea_cleanlegacy,handles});
 
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
+
     uimenu(f,'Label','Anonymize files for selected subjects','Callback',{@ea_run_deface,handles});
         
     uimenu(f,'Label','Read in stimulation settings from move.base','Callback',{@ea_import_movebase_stimsettings,handles});
