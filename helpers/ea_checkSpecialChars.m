@@ -1,6 +1,10 @@
 function ea_checkSpecialChars(paths)
 % Check for special characters (and space) in the path
 
+if ~isempty(paths) && strcmp(paths{1}, 'No Patient Selected')
+    return
+end
+
 if isunix
     special_characters = cellfun(@(x) regexprep(x,'[\w-\/]',''), paths, 'uni', 0);
 else
