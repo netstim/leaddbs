@@ -19,12 +19,12 @@ for c=1:length(connectomes)
     for pt=pts
         [~, subPrefix] = fileparts([rootfolder,num2str(pt), '_']);
         subDir = fullfile(rootfolder,num2str(pt),'stimulations',ea_nt(options),gs,connectome);
-        connName = regexprep(connectome, '\s|_|-|>|\([^()]+\)', '');
+        connName = ea_getConnLabel(connectome);
         switch type
             case 'dMRI'
-                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_conn-', connName, '_map-struc.nii']);
+                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_model-simbio_seed-dMRI_conn-', connName, '_strucmap.nii']);
             case 'fMRI'
-                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_conn-', connName, '_map-funcseed_desc-AvgRFz.nii']);
+                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_model-simbio_seed-fMRI_conn-', connName, '_desc-AvgRFz_funcmap.nii']);
         end
     end
     mkdir([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'combined_maps',filesep,type,filesep,connectome]);

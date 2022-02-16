@@ -9,10 +9,10 @@ end
 
 for pat=1:length(uipatdirs)
     [~, subPrefix] = fileparts([uipatdir{pt}, '_']);
-    fConnName = regexprep(fdmri.fmriconnectome, '\s|_|-|>|\([^()]+\)', '');
-    dConnName = regexprep(fdmri.dmriconnectome, '\s|_|-|>|\([^()]+\)', '');
-    fis.fmri{pat}=fullfile(uipatdirs{pat},'stimulations',ea_nt(0),stimname,fdmri.fmriconnectome,[subPrefix, 'sim-binary_conn-', fConnName, '_map-funcseed_desc-AvgRFz.nii']);
-    fis.dmri{pat}=fullfile(uipatdirs{pat},'stimulations',ea_nt(0),stimname,fdmri.dmriconnectome,[subPrefix, 'sim-binary_conn-', dConnName, '_map-struc.nii']);
+    fConnName = ea_getConnLabel(fdmri.fmriconnectome);
+    dConnName = ea_getConnLabel(fdmri.dmriconnectome);
+    fis.fmri{pat}=fullfile(uipatdirs{pat},'stimulations',ea_nt(0),stimname,[subPrefix, 'sim-binary_model-simbio_seed-fMRI_conn-', fConnName, '_desc-AvgRFz_funcmap.nii']);
+    fis.dmri{pat}=fullfile(uipatdirs{pat},'stimulations',ea_nt(0),stimname,[subPrefix, 'sim-binary_model-simbio_seed-dMRI_conn-', dConnName, '_strucmap.nii']);
 end
 if ~exist('dowhat','var')
     dowhat='both';
