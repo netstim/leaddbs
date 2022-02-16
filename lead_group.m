@@ -461,6 +461,7 @@ ea_busyaction('on',handles.leadfigure,'group');
 options=ea_setopts_local(handles);
 options.leadprod = 'group';
 options.groupdir = M.ui.groupdir;
+
 % set pt specific options
 [options.root, options.patientname] = fileparts(handles.groupdir_choosebox.String);
 options.root = [options.root, filesep];
