@@ -15,7 +15,7 @@ end
 
 popts = options;
 if strcmp(options.leadprod,'group')
-    directory = options.patient_list{elstruct(pt).pt};
+    directory = options.patient_list{pt};
     [popts.root, popts.patientname] = fileparts(directory);
     popts.root = [popts.root,filesep];
     popts = ea_detsides(popts);

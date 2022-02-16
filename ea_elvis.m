@@ -145,7 +145,7 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             end
 
             if strcmp(options.leadprod,'group')
-                recon = ea_regexpdir([options.patient_list{elstruct(pt).pt}, filesep, 'reconstruction'], 'desc-reconstruction\.mat', 0, 'file');
+                recon = ea_regexpdir([options.patient_list{pt}, filesep, 'reconstruction'], 'desc-reconstruction\.mat', 0, 'file');
                 options.subj.recon.recon = recon{1};
             end
 
