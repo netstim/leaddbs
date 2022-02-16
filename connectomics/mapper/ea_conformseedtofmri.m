@@ -6,7 +6,7 @@ function seed = ea_conformseedtofmri(dataset,seed,interp)
 % (affine) or 9 DOF (traditional) transformation might be needed.
 
 if ~isstruct(dataset) && isfile(dataset)
-    load(dataset, 'dataset');
+    dataset = load(dataset);
 end
 
 if ~isstruct(seed) && isfile(seed)

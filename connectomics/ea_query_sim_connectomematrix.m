@@ -8,9 +8,9 @@ out=s;
 out.fname=outputfname;
 
 C=matfile([ea_space([],'connectomes'),'fMRI',filesep,connectomename,filesep,'AllX.mat'],'Writable',false);
-ds=load([ea_space([],'connectomes'),'fMRI',filesep,connectomename,filesep,'dataset_info.mat']);
+dataset=load([ea_space([],'connectomes'),'fMRI',filesep,connectomename,filesep,'dataset_volsurf.mat']);
 
-ix=ds.dataset.vol.outidx;
+ix=dataset.vol.outidx;
 
 chunk=10000;
 ea_dispercent(0,'Iterating connectome');

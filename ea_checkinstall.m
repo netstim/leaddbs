@@ -284,7 +284,7 @@ switch cmd
             disp('Structural Group Connectome (Ewert 2017) is installed.')
         end
     case 'fgroupconnectome_ppmi2017'
-        checkf=[ea_getconnectomebase('fmri',prefs),'PPMI 74_15 (Horn 2017)',filesep,'dataset_info.mat'];
+        checkf=[ea_getconnectomebase('fmri',prefs),'PPMI 74_15 (Horn 2017)',filesep,'dataset_info.json'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
             success=~force;
