@@ -461,6 +461,7 @@ ea_busyaction('on',handles.leadfigure,'group');
 % set options
 options=ea_setopts_local(handles);
 options.leadprod = 'group';
+options.groupdir = M.ui.groupdir;
 
 % set pt specific options
 [options.root, options.patientname] = fileparts(handles.groupdir_choosebox.String);
@@ -906,6 +907,7 @@ options=ea_setopts_local(handles);
 
 options.groupmode = 1;
 options.groupid = M.guid;
+options.groupdir = M.ui.groupdir;
 
 if isfield(M.ui, 'stimSetMode') && M.ui.stimSetMode
     options.stimSetMode = 1;
