@@ -676,8 +676,10 @@ for side=0:1
                 if startsWith(settings.connectome, 'Multi-Tract: ')
                     ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat'], tractName);
                     ftr = ftr.(tractName);
+                    ftr.connectome_name = connName;
                 else
                     ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
+                    ftr.connectome_name = settings.connectome;
                 end
                 ftr.fibers = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
                 originalFibID = ftr.fibers(:,5);
