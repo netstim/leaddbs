@@ -18,15 +18,7 @@ else
     allfeatsix=cell2mat(fts.idx');
 end
 
-switch options.prefs.lcm.vatseed
-    case 'binary'
-        efsx='';
-    case 'efield_gauss'
-        efsx='efield_gauss_';
-    case 'efield'
-        efsx='efield_';
-end
-
+vtaType = options.prefs.lcm.vatseed
 
 options.native=0;
 for pt=1:length(uipatdirs)
@@ -39,10 +31,11 @@ for pt=1:length(uipatdirs)
     end
 
     [~, subPrefix] = fileparts([thispt, '_']);
-    fConnName = regexprep(options.lcm.func.connectome, '\s|_|-|>|\([^()]+\)', '');
-    dConnName = regexprep(options.lcm.struc.connectome, '\s|_|-|>|\([^()]+\)', '');
-    funcnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,options.lcm.func.connectome,[subPrefix, 'sim-', options.prefs.lcm.vatseed, '_conn-', fConnName, '_map-funcseed_desc-AvgR.nii']));
-    strucnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,options.lcm.struc.connectome,[subPrefix, 'sim-', options.prefs.lcm.vatseed, '_conn-', dConnName, '_map-struc.nii']));
+    modelLabel = ea_simModel2Label(S.model);
+    fConnName = ea_getConnLabel(options.lcm.func.connectome);
+    dConnName = ea_getConnLabel(options.lcm.struc.connectome);
+    funcnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,[subPrefix, 'sim-', vtaType, '_model-', modelLabel, '_seed-fMRI_conn-', fConnName, '_desc-AvgRFz_funcmap.nii']));
+    strucnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,[subPrefix, 'sim-', vtaType, '_model-', modelLabel, '_seed-dMRI_conn-', dConnName, '_strucmap.nii']));
 
     % assign feature vector X:
     if iscell(allfeatsix)
