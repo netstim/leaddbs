@@ -356,6 +356,7 @@ elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
 end
 
 % go through all the files, check if session, type and modality have been set correctly
+postop_modality_found = 0;
 for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
@@ -369,14 +370,16 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     end
     
     % check if postop images have the correct modality
-    if strcmp(session, 'postop') && ~any(strcmp(modality, postop_modalities))
-        warning_str = ['You have selected an invalid modality for the postop session, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
-        uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
-        return
+    if strcmp(session, 'postop') && any(strcmp(modality, postop_modalities))
+        postop_modality_found = 1;
     end
-    
 end
 
+if ~(postop_modality_found == 1)
+     warning_str = ['No valid modality for the postop session has been found, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
+        uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
+        return
+end
 
 N_sessions = length(table_options.Session);
 anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
