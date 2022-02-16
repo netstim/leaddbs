@@ -47,7 +47,7 @@ end
 close(h_wait);
 
 supported_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw', 'bold', 'sbref', 'dwi', 'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};  % a list of all supported modalities
-postop_modalities = {'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI', 'dwi', 'bold'};  % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
+postop_modalities = {'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};  % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
 
 % options that should appear in the table
 table_options = struct;
