@@ -25,19 +25,19 @@ ea_run('run', options);
 
 %% Load in nifti files as matrix
 for s=1:size(vatlist,1)
-
-        [pth,fn,ext]=fileparts(vatlist{s});
+        connLabel = ea_getConnLabel(cfile);
         switch sf(ix)
             case 1 % structural
-                suffix='_struc_seed';
+                fingerprint = setBIDSEntity(vatlist{s}, 'conn', connLabel, 'suffix', 'strucmap');
             case 2 % functional
-                suffix='_func_seed_AvgR_Fz';
+                fingerprint = setBIDSEntity(vatlist{s}, 'conn', connLabel, 'desc', 'AvgRFz', 'suffix', 'funcmap');
         end
-        nii=ea_load_nii(ea_niigz(fullfile(pth,strrep(cfile,' > ','_'),[fn,suffix,ext])));
+
+        nii = ea_load_nii(ea_niigz(fingerprint));
         if ~exist('AllX','var')
-           AllX=zeros(size(vatlist,1),numel(nii.img));
+           AllX = zeros(size(vatlist,1),numel(nii.img));
         end
-        AllX(s,:)=nii.img(:);
+        AllX(s,:) = nii.img(:);
 end
 
 
