@@ -301,8 +301,8 @@ for rowIdx = 1:height(table)
         end
     end
     
-    % prepopulate acq tag by resolution for preop
-    if  ~strcmp(string(table_preallocated.Session(rowIdx)), 'postop')
+    % prepopulate acq tag by resolution for preop MRIs (just anat)
+    if  ~strcmp(string(table_preallocated.Session(rowIdx)), 'postop') && ~strcmp(string(table_preallocated.Type(rowIdx)), 'func')
         
         resolution = imgs_resolution{rowIdx};
         
