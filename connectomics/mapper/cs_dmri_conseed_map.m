@@ -157,14 +157,12 @@ for s=1:length(sfile)
             map.img(utopaint)=c;
         end
 
-        outputfolder=ea_getoutputfolder(sfile(s),connName);
-        [~, fname] = fileparts(sfile{s});
-
-        strippedConnName = regexprep(connName, '\s|_|-|>|\([^()]+\)', '');
-        if ~isBIDSFileName([outputfolder, fname, '.nii'])
-            mapFile = fullfile(outputfolder, [fname,'_struc_',cmd,'_',strippedConnName,'.nii']);
+        connLabel = ea_getConnLabel(connName);
+        if ~isBIDSFileName(sfile{s})
+            [outputfolder, fname] = fileparts(sfile{s});
+            mapFile = fullfile(outputfolder, [fname, '_conn-', connLabel, '_strucmap.nii']);
         else
-            mapFile = setBIDSEntity([outputfolder, fname, '.nii'], 'seed', '', 'conn', strippedConnName, 'map', 'struc');
+            mapFile = setBIDSEntity(sfile{s}, 'conn', connLabel, 'suffix', 'strucmap');
         end
 
         if evalin('base','exist(''SB_SEED_BOUNCE'',''var'')')
@@ -196,6 +194,3 @@ for s=1:length(sfile)
         end
     end
 end
-
-
-
