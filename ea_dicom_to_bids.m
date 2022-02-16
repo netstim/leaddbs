@@ -137,7 +137,7 @@ lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(
 waitfor(lookup_table_gui.UIFigure);
 end
 
-function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution,  table_options, subjID)
+function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution, table_options, subjID)
 
 lookup_table = convert_table_to_lookup_struct(lookup_table_gui.UITable.Data);
 
@@ -338,8 +338,7 @@ end
 %% ok button
 function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities)
 
-% sanity check
-
+% sanity checks first
 % if preop is empty
 if isempty(uiapp.previewtree_preop_anat.Children)
     uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Warning', 'Icon','warning');
@@ -357,7 +356,6 @@ elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
 end
 
 % go through all the files, check if session, type and modality have been set correctly
-
 for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
@@ -383,7 +381,7 @@ end
 N_sessions = length(table_options.Session);
 anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
 
-extensions = {'.nii.gz', '.json'};
+
 
 for i = find(uiapp.niiFileTable.Data.Include)'
     
@@ -392,13 +390,20 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     type = char(uiapp.niiFileTable.Data.Type(i));
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
+    % depending on the modality, choose extensions of files to be copied
+    if ~strcmp(modality, 'dwi')
+        extensions = {'.nii.gz', '.json'};
+    else
+        extensions = {'.nii.gz', '.json', '.bval', '.bvec'};
+    end
+
     if strcmp('-', desc) || strcmp('', desc)
         fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
     else
         fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
     end
     
-    export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], 'anat');
+    export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], type);
     if ~isfolder(export_folder)
         mkdir(export_folder);
     end
