@@ -62,13 +62,16 @@ end
 
 
 function options=ea_resolveparcseeds(options,modality)
+
+tmp = ea_getleadtempdir;
+uuid = ea_generate_uuid;
+
+[pth,fn,ext]=fileparts(options.lcm.seeds{1});
+options.lcm.parcSeedFolder = [pth, filesep];
+options.lcm.parcSeedName = regexprep(strrep(fn, ' ', '_'), '\W', '');
+
 switch modality
     case 'fMRI'
-        tmp=ea_getleadtempdir;
-        uuid=ea_generate_uuid;
-        [pth,fn,ext]=ea_niifileparts(options.lcm.seeds{1});
-        options.lcm.parcSeedFolder = [pth, filesep];
-        options.lcm.parcSeedName = strrep(fn, ' ', '_');
         copyfile(options.lcm.seeds{1},fullfile(tmp,[uuid,ext]));
         if strcmp(ext,'.nii.gz')
             gunzip(fullfile(tmp,[uuid,ext]));
@@ -84,12 +87,6 @@ switch modality
             0,[],fullfile(tmp,[uuid,'.nii']),0);
         options.lcm.seeds={fullfile(tmp,[uuid,'.nii'])};
     case 'dMRI'
-        tmp=ea_getleadtempdir;
-        uuid=ea_generate_uuid;
-
-        [pth,fn,ext]=fileparts(options.lcm.seeds{1});
-        options.lcm.parcSeedFolder = [pth, filesep];
-        options.lcm.parcSeedName = strrep(fn, ' ', '_');
         switch ext
             case {'.nii','.gz'}
                 parctxt=fullfile(pth,[ea_stripext(fn),'.txt']);
@@ -216,11 +213,15 @@ switch modality
                 cname=cname(1:delim-1);
             end
 
-            if ~strcmp(cname,'No functional connectome found.') && ~isfile([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat']) % patient specific rs-fMRI
+            if ~strcmp(cname,'No functional connectome found.') && ~isfile([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_volsurf.mat']) % patient specific rs-fMRI
                 seedLabel = erase(cname, 'Patient''s fMRI - ');
             else
                 seedLabel = 'fMRI';
             end
+
+            stimParams = ea_regexpdir(vatdir, 'stimparameters\.mat$', 0);
+            load(stimParams{1}, 'S');
+            modelLabel = ea_simModel2Label(S.model);
 
             seedFile = [vatdir, subPrefix, '_sim-', vtaType, '_model-', modelLabel, '_seed-', seedLabel, '.nii'];
             % if ~isfile(seedFile)
@@ -238,10 +239,10 @@ switch modality
                     if ~isempty(vtaFile)
                         vtaFile = vtaFile{1};
                         if ~strcmp(cname,'No functional connectome found.')
-                            if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'],'file') && ~isfield(options.lcm,'onlygenvats') % patient specific rs-fMRI
+                            if ~exist([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_volsurf.mat'],'file') && ~isfield(options.lcm,'onlygenvats') % patient specific rs-fMRI
                                 nii(cnt) = ea_warp_vat2rest(cname,vatdir,sidec,options);
                             else
-                                nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_info.mat'], vtaFile);
+                                nii(cnt) = ea_conformseedtofmri([ea_getconnectomebase('fMRI'),cname,filesep,'dataset_volsurf.mat'], vtaFile);
                             end
 
                             nii(cnt).img(isnan(nii(cnt).img))=0;
