@@ -46,14 +46,15 @@ for image_idx = 1:N_fnames
 end
 close(h_wait);
 
-supported_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw', 'bold', 'sbref', 'dwi', 'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};  % a list of all supported modalities
+anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};  % a list of all supported modalities
+func_dwi_modalities = {'bold', 'sbref', 'dwi'};
 postop_modalities = {'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};  % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
 
 % options that should appear in the table
 table_options = struct;
 table_options.Session = {'preop', 'postop'};
 table_options.Type = {'anat', 'func', 'dwi'};
-table_options.Modality = supported_modalities;
+table_options.Modality = [anat_modalities, func_dwi_modalities, postop_modalities];
 
 nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
 nifti_table.Include = false(N_fnames,1);
@@ -86,10 +87,10 @@ uiapp.previewtree_subj.Text = subjID;
 expand(uiapp.Tree, 'all');
 
 preview_nii(uiapp, imgs{1,1}); % set initial image to the first one
-cell_change_callback(uiapp, table_options, subjID, []) % call preview tree updater to get preallocated changes
+cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
 
 uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
-uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, table_options, subjID, event); % callback for cell change -> update uiapp tree on the right
+uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, event); % callback for cell change -> update uiapp tree and adjacent cells
 
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
@@ -147,7 +148,7 @@ T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table, img
 
 main_gui.niiFileTable.Data = T_preallocated;
 
-cell_change_callback(main_gui, table_options, subjID, [])
+cell_change_callback(main_gui, table_options, subjID, anat_modalities, postop_modalities, [])
  
 delete(lookup_table_gui);
 
@@ -197,12 +198,59 @@ lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 %% cell change callback
-function cell_change_callback(uiapp, table_options, subjID, event)
+function cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, event)
 
-uiapp.previewtree_preop_anat.Children.delete;      % delete children
+uiapp.previewtree_preop_anat.Children.delete;     % delete children
 uiapp.previewtree_postop_anat.Children.delete;    % delete children
 
-% go through all the files that have been selected to include
+uiapp.previewtree_preop_dwi.Children.delete;      % delete children
+uiapp.previewtree_postop_dwi.Children.delete;     % delete children
+
+uiapp.previewtree_preop_func.Children.delete;     % delete children
+uiapp.previewtree_postop_func.Children.delete;    % delete children
+
+% go through all of the items and automatically set columns based on others
+for i = 1:height(uiapp.niiFileTable.Data)
+    session = char(uiapp.niiFileTable.Data.Session(i));
+    type = char(uiapp.niiFileTable.Data.Type(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
+    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
+    
+    if ~isempty(event) % check this only for the current selected one
+        if any(strcmp(modality, anat_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Type(i) = 'anat';
+        elseif any(strcmp(modality, postop_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Type(i) = 'anat';
+        end
+    end
+end
+
+% go through all the ones that are not included but have session, modality and type set and enable them
+for i = find(~uiapp.niiFileTable.Data.Include)'
+    session = char(uiapp.niiFileTable.Data.Session(i));
+    type = char(uiapp.niiFileTable.Data.Type(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
+    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
+    
+    if ~isempty(event) % check this only for the current selected one
+        if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Include(i) = true;
+            if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
+                fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
+            else
+                fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
+            end
+            ui_field = ['previewtree_' session '_anat'];
+            if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
+                fname = ['>> ', fname, ' <<'];
+            end
+            uitreenode(uiapp.(ui_field), 'Text', fname);
+        end
+    end
+    
+end
+
+% finally, go through all the files that have been selected to include and update them in the uitree
 for i = find(uiapp.niiFileTable.Data.Include)'
     
     session = char(uiapp.niiFileTable.Data.Session(i));
@@ -221,36 +269,11 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         else
             fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
         end
-        ui_field = ['previewtree_' session '_anat'];
+        ui_field = ['previewtree_' session '_' type];
         if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
             fname = ['>> ', fname, ' <<'];
         end
         uitreenode(uiapp.(ui_field), 'Text', fname);
-    end
-    
-end
-
-% go through all the ones that are not included but have ession, modality and type set and enable them
-for i = find(~uiapp.niiFileTable.Data.Include)'
-    session = char(uiapp.niiFileTable.Data.Session(i));
-    type = char(uiapp.niiFileTable.Data.Type(i));
-    modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
-    
-    if ~isempty(event)
-        if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
-            uiapp.niiFileTable.Data.Include(i) = true;
-            if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
-                fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
-            else
-                fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
-            end
-            ui_field = ['previewtree_' session '_anat'];
-            if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
-                fname = ['>> ', fname, ' <<'];
-            end
-            uitreenode(uiapp.(ui_field), 'Text', fname);
-        end
     end
     
 end
