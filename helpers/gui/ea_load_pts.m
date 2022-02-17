@@ -15,6 +15,21 @@ if length(uipatdir) == 1 % Single folder
         isSubjFolder = 1;
         BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives)'], 'match', 'once');
         subjId = regexp(uipatdir{1}, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match');
+    elseif contains(uipatdir{1}, ['rawdata', filesep, 'sub-']) % rawdata folder has been selected
+        isSubjFolder = 1;
+        BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'rawdata)'], 'match', 'once');
+        subjId = regexp(uipatdir{1}, ['(?<=rawdata\', filesep, 'sub-).*'], 'match');
+
+        % now check if derivatives/sub-xx exists
+        if isfile(fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}], 'prefs', ['sub-', subjId{1}, '_desc-rawimages.json']))
+            uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+        else
+            % if not, trigger ea_dataset_import to sort out files
+            disp('You have selected a rawdata of a subject that does not have a leaddbs derivatives folder yet. Will try to sort available rawdata...')
+            ea_dataset_import({fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}])}, [], 1, 0);
+            uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+        end
+
     else % Check if it's BIDS root folder
         folders = dir(uipatdir{1});
         folders = {folders.name};
