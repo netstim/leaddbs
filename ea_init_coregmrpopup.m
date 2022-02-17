@@ -11,6 +11,11 @@ names = {'ANTs (Avants 2008)'
     'Hybrid SPM & FLIRT'
     'SPM (Friston 2007)'};
 
+prefs = ea_prefs;
+if prefs.env.dev
+    names = [names; 'ANTs Nonlinear Coregistration'];
+end
+
 % Set names to popupmenu
 set(handles.coregmrmethod, 'String', names);
 
