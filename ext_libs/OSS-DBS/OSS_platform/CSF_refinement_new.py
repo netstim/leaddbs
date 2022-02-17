@@ -212,14 +212,7 @@ def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
 
                     if x_neuron_max + space_from_neurons >= x_pos >= x_neuron_min - space_from_neurons and y_neuron_max + space_from_neurons >= y_pos >= y_neuron_min - space_from_neurons and z_neuron_max + space_from_neurons >= z_pos >= z_neuron_min - space_from_neurons:
 
-                        xv_mri = int((
-                                         x_coord) / MRI_param.x_vox_size - 0.000000001)  # defines number of steps to get to the voxels containing x[0] coordinate
-                        yv_mri = (int((
-                                          y_coord) / MRI_param.y_vox_size - 0.000000001)) * MRI_param.M_x  # defines number of steps to get to the voxels containing x[0] and x[1] coordinates
-                        zv_mri = (int((
-                                          z_coord) / MRI_param.z_vox_size - 0.000000001)) * MRI_param.M_x * MRI_param.M_y  # defines number of steps to get to the voxels containing x[0], x[1] and x[2] coordinates
-
-                        glob_index = xv_mri + yv_mri + zv_mri
+                        glob_index = x_i + y_i*int(MRI_param.M_x) + z_i*int(MRI_param.M_x)*int(MRI_param.M_y)
                         glob_index = int(glob_index)
 
                         if Tissue_array[glob_index] == 1:
