@@ -255,7 +255,16 @@ end
                     found_files_list = {};
                     for name_idx = 1:length(all_files)
                         fprintf('Found file %s for modality %s\n', all_files(name_idx).name, modalities{mod_idx});
-                        found_files_list{name_idx, 1} = all_files(name_idx).name;
+
+                        % remove extension from filename
+                        dot_idx = strfind(all_files(name_idx).name, '.');
+                        
+                        if length(dot_idx) > 1  % for .nii.gz, we have 2 dots...
+                            dot_idx = dot_idx(1);
+                        end
+                        
+                        fname = all_files(name_idx).name(1:dot_idx - 1);
+                        found_files_list{name_idx, 1} = fname;
                     end
                     found_files.(modalities{mod_idx}) = found_files_list;
             end
