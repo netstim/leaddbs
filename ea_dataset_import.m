@@ -45,38 +45,64 @@ end
 if ~dicomimport
     
     % TODO: also use dicom_to_bids gui?
- 
-    rawdata_dir = fullfile(source_dir{1}, 'rawdata');
-    lead_derivatives_dir = fullfile(source_dir{1}, 'derivatives', 'leaddbs');
     
-    % find all subjects within the BIDS dataset
-    all_files = dir(fullfile(rawdata_dir, 'sub-*'));    % get subjects in dataset root
-    dirFlags = [all_files.isdir];                              % get a logical vector that tells which is a directory
-    subj_ids = all_files(dirFlags);                         % struct with subject names inside
-    
-    fprintf('Found %s subjects and importing directly from BIDS rawdata folder...\n', num2str(numel(subj_ids)))
-    for subj_idx = 1:numel(subj_ids)
-        
-        fprintf('Importing BIDS data from subject %s...\n', subj_ids(subj_idx).name);
-        
+    if ~contains(source_dir{1}, 'sub-') % root dataset folder has been passed
+        rawdata_dir = fullfile(source_dir{1}, 'rawdata');
+        lead_derivatives_dir = fullfile(source_dir{1}, 'derivatives', 'leaddbs');
+
+        % find all subjects within the BIDS dataset
+        all_files = dir(fullfile(rawdata_dir, 'sub-*'));    % get subjects in dataset root
+        dirFlags = [all_files.isdir];                              % get a logical vector that tells which is a directory
+        subj_ids = all_files(dirFlags);                         % struct with subject names inside
+
+        fprintf('Found %s subjects and importing directly from BIDS rawdata folder...\n', num2str(numel(subj_ids)))
+        for subj_idx = 1:numel(subj_ids)
+
+            fprintf('Importing BIDS data from subject %s...\n', subj_ids(subj_idx).name);
+
+            % preop
+            fprintf('\nSearching files for preoperative session...\n');
+            anat_files.('preop').anat = find_anat_files_bids(fullfile(rawdata_dir, subj_ids(subj_idx).name, 'ses-preop', 'anat'), preop_modalities);
+
+            % postop
+            fprintf('\nSearching files for postoperative session...\n');
+            anat_files.('postop').anat = find_anat_files_bids(fullfile(rawdata_dir, subj_ids(subj_idx).name, 'ses-postop', 'anat'), postop_modalities);
+
+            % select which ones to use (if there are multiple)
+            anat_files_selected = select_anat_files(anat_files);
+
+            % write into json file
+            if ~exist(fullfile(lead_derivatives_dir, subj_ids(subj_idx).name, 'prefs'), 'dir')
+                mkdir(fullfile(lead_derivatives_dir, subj_ids(subj_idx).name, 'prefs'));
+            end
+            savejson('', anat_files_selected, fullfile(lead_derivatives_dir, subj_ids(subj_idx).name, 'prefs', [subj_ids(subj_idx).name, '_desc-rawimages.json']));
+        end
+
+    else % only a single rawdata subject folder has been passed
+        subjId = regexp(source_dir{1}, ['(?<=rawdata\', filesep, 'sub-).*'], 'match');
+        BIDSRoot = regexp(source_dir{1}, ['^.*(?=\', filesep, 'rawdata)'], 'match', 'once');
+
+        fprintf('Importing BIDS data from subject %s...\n', ['sub-', subjId{1}]);
+
         % preop
         fprintf('\nSearching files for preoperative session...\n');
-        anat_files.('preop').anat = find_anat_files_bids(fullfile(rawdata_dir, subj_ids(subj_idx).name, 'ses-preop', 'anat'), preop_modalities);
-        
+        anat_files.('preop').anat = find_anat_files_bids(fullfile(source_dir{1}, 'ses-preop', 'anat'), preop_modalities);
+
         % postop
         fprintf('\nSearching files for postoperative session...\n');
-        anat_files.('postop').anat = find_anat_files_bids(fullfile(rawdata_dir, subj_ids(subj_idx).name, 'ses-postop', 'anat'), postop_modalities);
-        
+        anat_files.('postop').anat = find_anat_files_bids(fullfile(source_dir{1}, 'ses-postop', 'anat'), postop_modalities);
+
         % select which ones to use (if there are multiple)
         anat_files_selected = select_anat_files(anat_files);
-        
+
         % write into json file
-        if ~exist(fullfile(lead_derivatives_dir, subj_ids(subj_idx).name, 'prefs'), 'dir')
-            mkdir(fullfile(lead_derivatives_dir, subj_ids(subj_idx).name, 'prefs'));
+        if ~exist(fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}], 'prefs'), 'dir')
+            mkdir(fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}], 'prefs'));
         end
-        savejson('', anat_files_selected, fullfile(lead_derivatives_dir, subj_ids(subj_idx).name, 'prefs', [subj_ids(subj_idx).name, '_desc-rawimages.json']));
+        savejson('', anat_files_selected, fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}], 'prefs', [['sub-', subjId{1}], '_desc-rawimages.json']));
+
+
     end
-    
     %% import from DICOM
 else
     % 1. first check to see if this is already a BIDS root folder or just a
@@ -229,7 +255,16 @@ end
                     found_files_list = {};
                     for name_idx = 1:length(all_files)
                         fprintf('Found file %s for modality %s\n', all_files(name_idx).name, modalities{mod_idx});
-                        found_files_list{name_idx, 1} = all_files(name_idx).name;
+
+                        % remove extension from filename
+                        dot_idx = strfind(all_files(name_idx).name, '.');
+                        
+                        if length(dot_idx) > 1  % for .nii.gz, we have 2 dots...
+                            dot_idx = dot_idx(1);
+                        end
+                        
+                        fname = all_files(name_idx).name(1:dot_idx - 1);
+                        found_files_list{name_idx, 1} = fname;
                     end
                     found_files.(modalities{mod_idx}) = found_files_list;
             end

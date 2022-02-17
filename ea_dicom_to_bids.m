@@ -46,14 +46,15 @@ for image_idx = 1:N_fnames
 end
 close(h_wait);
 
-preop_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};
-postop_modalities = {'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};
+anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};  % a list of all supported modalities
+func_dwi_modalities = {'bold', 'sbref', 'dwi'};
+postop_modalities = {'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};  % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
 
 % options that should appear in the table
 table_options = struct;
 table_options.Session = {'preop', 'postop'};
-table_options.Type = {'anat'};
-table_options.Modality = [preop_modalities, postop_modalities];
+table_options.Type = {'anat', 'func', 'dwi'};
+table_options.Modality = [anat_modalities, func_dwi_modalities, postop_modalities];
 
 nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
 nifti_table.Include = false(N_fnames,1);
@@ -86,10 +87,10 @@ uiapp.previewtree_subj.Text = subjID;
 expand(uiapp.Tree, 'all');
 
 preview_nii(uiapp, imgs{1,1}); % set initial image to the first one
-cell_change_callback(uiapp, table_options, subjID, []) % call preview tree updater to get preallocated changes
+cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
 
 uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
-uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, table_options, subjID, event); % callback for cell change -> update uiapp tree on the right
+uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, event); % callback for cell change -> update uiapp tree and adjacent cells
 
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
@@ -137,7 +138,7 @@ lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(
 waitfor(lookup_table_gui.UIFigure);
 end
 
-function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution,  table_options, subjID)
+function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution, table_options, subjID)
 
 lookup_table = convert_table_to_lookup_struct(lookup_table_gui.UITable.Data);
 
@@ -147,7 +148,7 @@ T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table, img
 
 main_gui.niiFileTable.Data = T_preallocated;
 
-cell_change_callback(main_gui, table_options, subjID, [])
+cell_change_callback(main_gui, table_options, subjID, anat_modalities, postop_modalities, [])
  
 delete(lookup_table_gui);
 
@@ -197,12 +198,59 @@ lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 %% cell change callback
-function cell_change_callback(uiapp, table_options, subjID, event)
+function cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, event)
 
-uiapp.previewtree_preop_anat.Children.delete;      % delete children
+uiapp.previewtree_preop_anat.Children.delete;     % delete children
 uiapp.previewtree_postop_anat.Children.delete;    % delete children
 
-% go through all the files that have been selected to include
+uiapp.previewtree_preop_dwi.Children.delete;      % delete children
+uiapp.previewtree_postop_dwi.Children.delete;     % delete children
+
+uiapp.previewtree_preop_func.Children.delete;     % delete children
+uiapp.previewtree_postop_func.Children.delete;    % delete children
+
+% go through all of the items and automatically set columns based on others
+for i = 1:height(uiapp.niiFileTable.Data)
+    session = char(uiapp.niiFileTable.Data.Session(i));
+    type = char(uiapp.niiFileTable.Data.Type(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
+    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
+    
+    if ~isempty(event) % check this only for the current selected one
+        if any(strcmp(modality, anat_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Type(i) = 'anat';
+        elseif any(strcmp(modality, postop_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Type(i) = 'anat';
+        end
+    end
+end
+
+% go through all the ones that are not included but have session, modality and type set and enable them
+for i = find(~uiapp.niiFileTable.Data.Include)'
+    session = char(uiapp.niiFileTable.Data.Session(i));
+    type = char(uiapp.niiFileTable.Data.Type(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
+    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
+    
+    if ~isempty(event) % check this only for the current selected one
+        if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Include(i) = true;
+            if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
+                fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
+            else
+                fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
+            end
+            ui_field = ['previewtree_' session '_anat'];
+            if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
+                fname = ['>> ', fname, ' <<'];
+            end
+            uitreenode(uiapp.(ui_field), 'Text', fname);
+        end
+    end
+    
+end
+
+% finally, go through all the files that have been selected to include and update them in the uitree
 for i = find(uiapp.niiFileTable.Data.Include)'
     
     session = char(uiapp.niiFileTable.Data.Session(i));
@@ -221,36 +269,11 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         else
             fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
         end
-        ui_field = ['previewtree_' session '_anat'];
+        ui_field = ['previewtree_' session '_' type];
         if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
             fname = ['>> ', fname, ' <<'];
         end
         uitreenode(uiapp.(ui_field), 'Text', fname);
-    end
-    
-end
-
-% go through all the ones that are not included but have ession, modality and type set and enable them
-for i = find(~uiapp.niiFileTable.Data.Include)'
-    session = char(uiapp.niiFileTable.Data.Session(i));
-    type = char(uiapp.niiFileTable.Data.Type(i));
-    modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
-    
-    if ~isempty(event)
-        if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
-            uiapp.niiFileTable.Data.Include(i) = true;
-            if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
-                fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
-            else
-                fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
-            end
-            ui_field = ['previewtree_' session '_anat'];
-            if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
-                fname = ['>> ', fname, ' <<'];
-            end
-            uitreenode(uiapp.(ui_field), 'Text', fname);
-        end
     end
     
 end
@@ -301,8 +324,8 @@ for rowIdx = 1:height(table)
         end
     end
     
-    % prepopulate acq tag by resolution for preop
-    if  ~strcmp(string(table_preallocated.Session(rowIdx)), 'postop')
+    % prepopulate acq tag by resolution for preop MRIs (just anat)
+    if  ~strcmp(string(table_preallocated.Session(rowIdx)), 'postop') && ~strcmp(string(table_preallocated.Type(rowIdx)), 'func') && ~strcmp(string(table_preallocated.Type(rowIdx)), 'dwi')
         
         resolution = imgs_resolution{rowIdx};
         
@@ -338,8 +361,7 @@ end
 %% ok button
 function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities)
 
-% sanity check
-
+% sanity checks first
 % if preop is empty
 if isempty(uiapp.previewtree_preop_anat.Children)
     uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Warning', 'Icon','warning');
@@ -357,7 +379,7 @@ elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
 end
 
 % go through all the files, check if session, type and modality have been set correctly
-
+postop_modality_found = 0;
 for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
@@ -371,19 +393,21 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     end
     
     % check if postop images have the correct modality
-    if strcmp(session, 'postop') && ~any(strcmp(modality, postop_modalities))
-        warning_str = ['You have selected an invalid modality for the postop session, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
-        uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
-        return
+    if strcmp(session, 'postop') && any(strcmp(modality, postop_modalities))
+        postop_modality_found = 1;
     end
-    
 end
 
+if ~(postop_modality_found == 1)
+     warning_str = ['No valid modality for the postop session has been found, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
+        uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
+        return
+end
 
 N_sessions = length(table_options.Session);
 anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
 
-extensions = {'.nii.gz', '.json'};
+
 
 for i = find(uiapp.niiFileTable.Data.Include)'
     
@@ -392,13 +416,20 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     type = char(uiapp.niiFileTable.Data.Type(i));
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
+    % depending on the modality, choose extensions of files to be copied
+    if ~strcmp(modality, 'dwi')
+        extensions = {'.nii.gz', '.json'};
+    else
+        extensions = {'.nii.gz', '.json', '.bval', '.bvec'};
+    end
+
     if strcmp('-', desc) || strcmp('', desc)
         fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
     else
         fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
     end
     
-    export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], 'anat');
+    export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], type);
     if ~isfolder(export_folder)
         mkdir(export_folder);
     end
