@@ -88,6 +88,10 @@ switch lower(options.coregmr.method)
             spmoutput = [fileparts(fpth), filesep, 'r', fname, ext];
             movefile(spmoutput, [fpth, ext]);
         end
+    case lower({'ANTs Nonlinear Coregistration', 'ANTsNonLinear'})
+        transforms = ea_ants_nonlinear_coreg(fixed, moving, ofile, ...
+            options.prefs.machine.normsettings, 'NULL', 'NULL', 'ea_antspreset_ants_wiki');
+        ea_delete(transforms);
     otherwise
         warning('Coregistrion method not recognized...');
         return;

@@ -34,6 +34,13 @@ if options.prefs.diary
     diary([options.subj.coreg.log.logBaseName, 'MR', datestr(now, 'yyyymmddTHHMMss'), '.log']);
 end
 
+if strcmp(options.coregmr.method, 'ANTs Nonlinear Coregistration')
+    warning('off', 'backtrace');
+    warning('ANTs nonlinear coregistration only supports pre-op to pre-op registration, falling back to linear coregistration now!')
+    warning('on', 'backtrace');
+    options.coregmr.method = 'ANTs';
+end
+
 % Do coregistration
 for i=1:length(moving)
     ea_dumpmethod(options, 'coreg', ea_getmodality(moving{i}));
