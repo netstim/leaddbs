@@ -101,7 +101,7 @@ uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_op
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
 
 % looup table behaviour
-uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs_resolution, table_options, subjID);
+uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
 waitfor(uiapp.UIFigure);
 
 try
@@ -114,7 +114,7 @@ end
 end
 
 %% lookup button function
-function lookup_button_function(uiapp,imgs_resolution, table_options, subjID)
+function lookup_button_function(uiapp,imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
 
 lookup_table_gui = ea_default_lookup;
 lookup_table = getpref('dcm2bids', 'lookuptable');
@@ -133,12 +133,12 @@ lookup_table_gui.LoadjsonButton.ButtonPushedFcn = @(btn,event) load_json_file(lo
 lookup_table_gui.CancelButton.ButtonPushedFcn = @(btn,event) cancel_lookup_function(lookup_table_gui);
 
 % save button
-lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(uiapp, lookup_table_gui, imgs_resolution,  table_options, subjID);
+lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(uiapp, lookup_table_gui, imgs_resolution,  table_options, subjID, anat_modalities, postop_modalities);
 
 waitfor(lookup_table_gui.UIFigure);
 end
 
-function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution, table_options, subjID)
+function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
 
 lookup_table = convert_table_to_lookup_struct(lookup_table_gui.UITable.Data);
 
