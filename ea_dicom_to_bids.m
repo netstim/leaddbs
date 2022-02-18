@@ -60,8 +60,10 @@ nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), 
 nifti_table.Include = false(N_fnames,1);
 nifti_table.Filename = fnames;
 nifti_table.Acquisition = repmat("-", [N_fnames,1]);
+nifti_table.Run = repmat("-", [N_fnames,1]);
+nifti_table.Task = repmat("-", [N_fnames,1]);
 
-nifti_table = orderfields(nifti_table, [4 5 1 2 3 6]);
+nifti_table = orderfields(nifti_table, [4 5 1 7 8 2 3 6]);
 nifti_table = struct2table(nifti_table);
 
 try
@@ -76,7 +78,7 @@ uiapp = dicom_to_bids;
 
 % populate table
 uiapp.niiFileTable.Data = nifti_table_preallocated;
-uiapp.niiFileTable.ColumnEditable = [true false true true true true];
+uiapp.niiFileTable.ColumnEditable = [true false true true true true true true];
 
 % set subject ID and file path
 uiapp.SubjectIDLabel.Text = sprintf('Conversion for subject: %s',subjID);
@@ -231,6 +233,8 @@ end
 % go through all the ones that are not included but have session, modality and type set and enable them
 for i = find(~uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
+    run = char(uiapp.niiFileTable.Data.Run(i));
+    task = char(uiapp.niiFileTable.Data.Task(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
@@ -238,16 +242,16 @@ for i = find(~uiapp.niiFileTable.Data.Include)'
     if ~isempty(event) % check this only for the current selected one
         if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Include(i) = true;
-            if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
-                fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
-            else
-                fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
-            end
-            ui_field = ['previewtree_' session '_anat'];
-            if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
-                fname = ['>> ', fname, ' <<'];
-            end
-            uitreenode(uiapp.(ui_field), 'Text', fname);
+%             if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
+%                 fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
+%             else
+%                 fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
+%             end
+%             ui_field = ['previewtree_' session '_anat'];
+%             if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
+%                 fname = ['>> ', fname, ' <<'];
+%             end
+%             uitreenode(uiapp.(ui_field), 'Text', fname);
         end
     end
     
@@ -258,6 +262,8 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
+    run = char(uiapp.niiFileTable.Data.Run(i));
+    task = char(uiapp.niiFileTable.Data.Task(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
     if strcmp(modality, "CT")
         uiapp.niiFileTable.Data.Acquisition(i) = "-";
