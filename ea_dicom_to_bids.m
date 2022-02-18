@@ -223,6 +223,7 @@ for i = 1:height(uiapp.niiFileTable.Data)
             uiapp.niiFileTable.Data.Type(i) = 'anat';
         elseif any(strcmp(modality, postop_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Type(i) = 'anat';
+            uiapp.niiFileTable.Data.Session(i) = 'postop';
         end
     end
 end
