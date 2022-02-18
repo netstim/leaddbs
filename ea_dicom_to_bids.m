@@ -101,7 +101,7 @@ uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_op
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
 
 % looup table behaviour
-uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs_resolution, table_options, subjID);
+uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
 waitfor(uiapp.UIFigure);
 
 try
@@ -114,7 +114,7 @@ end
 end
 
 %% lookup button function
-function lookup_button_function(uiapp,imgs_resolution, table_options, subjID)
+function lookup_button_function(uiapp,imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
 
 lookup_table_gui = ea_default_lookup;
 lookup_table = getpref('dcm2bids', 'lookuptable');
@@ -133,12 +133,12 @@ lookup_table_gui.LoadjsonButton.ButtonPushedFcn = @(btn,event) load_json_file(lo
 lookup_table_gui.CancelButton.ButtonPushedFcn = @(btn,event) cancel_lookup_function(lookup_table_gui);
 
 % save button
-lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(uiapp, lookup_table_gui, imgs_resolution,  table_options, subjID);
+lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(uiapp, lookup_table_gui, imgs_resolution,  table_options, subjID, anat_modalities, postop_modalities);
 
 waitfor(lookup_table_gui.UIFigure);
 end
 
-function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution, table_options, subjID)
+function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
 
 lookup_table = convert_table_to_lookup_struct(lookup_table_gui.UITable.Data);
 
@@ -502,7 +502,7 @@ set(uiapp.axes_axi, 'view', [90, -90]);
 
 % coronal
 cut_slice = round(img.dim(2)/2);
-imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :)));
+imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :, 1)));
 uiapp.axes_cor.Colormap = gray(128);
 setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
 uiapp.axes_cor.DataAspectRatioMode = 'manual';
@@ -511,7 +511,7 @@ set(uiapp.axes_cor, 'view', [90, -90]);
 
 % sagittal
 cut_slice = round(img.dim(1)/2);
-imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :)));
+imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :, 1)));
 uiapp.axes_sag.Colormap = gray(128);
 setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
 uiapp.axes_sag.DataAspectRatioMode = 'manual';
@@ -555,7 +555,7 @@ if ~isempty(hAxes)
                 end
                 
             end
-            imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :)));
+            imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :, 1)));
             setappdata(uiapp.UIFigure, 'cut_slice_cor', sliceNr);
         case 'sag'
             sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_sag');
@@ -569,7 +569,7 @@ if ~isempty(hAxes)
                 end
                 
             end
-            imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :)));
+            imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :, 1)));
             setappdata(uiapp.UIFigure, 'cut_slice_sag', sliceNr);
         otherwise
             
