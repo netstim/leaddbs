@@ -242,16 +242,6 @@ for i = find(~uiapp.niiFileTable.Data.Include)'
     if ~isempty(event) % check this only for the current selected one
         if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Include(i) = true;
-%             if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
-%                 fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
-%             else
-%                 fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
-%             end
-%             ui_field = ['previewtree_' session '_anat'];
-%             if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
-%                 fname = ['>> ', fname, ' <<'];
-%             end
-%             uitreenode(uiapp.(ui_field), 'Text', fname);
         end
     end
     
