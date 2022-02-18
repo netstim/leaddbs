@@ -8,7 +8,7 @@ if isempty(menuprobe)
     f = uimenu('Label','Tools');
     pp= uimenu('Label','Preferences');
     uimenu(pp,'Label','Edit Preferences File...','Callback',{@ea_editprefs},'Accelerator','P');
-    uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
+    uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@(src, evt) ea_restoreprefs});
 
     p_c=uimenu(pp,'Label','Play sound on completed tasks.','Callback',{@ea_toggle_chirp});
     if prefs.machine.chirp
