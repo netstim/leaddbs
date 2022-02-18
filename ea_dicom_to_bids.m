@@ -87,6 +87,8 @@ uiapp.previewtree_subj.Text = subjID;
 expand(uiapp.Tree, 'all');
 
 preview_nii(uiapp, imgs{1,1}); % set initial image to the first one
+
+%% callbacks of main GUI
 cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
 
 uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
@@ -363,14 +365,22 @@ function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, su
 
 % sanity checks first
 % if preop is empty
+nopostop_set = 0;   % we will use this to detect if no postop as been set, because in this case the user may proceed
 if isempty(uiapp.previewtree_preop_anat.Children)
-    uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Warning', 'Icon','warning');
+    uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Invalid file selection');
     return
     
-    % if postop is empty
+    % if postop is empty, only give out warning
 elseif isempty(uiapp.previewtree_postop_anat.Children)
-    uialert(uiapp.UIFigure, 'No postop files included. Please select at least one postop image.', 'Warning', 'Icon','warning');
-    return
+    s = uiconfirm(uiapp.UIFigure, 'No postop files included. Do you still want to proceed?', 'Confirm missing postop files', ...
+        'Options', {'Yes', 'No'}, 'Icon', 'warning');
+
+    switch s
+        case 'No'
+            return
+        case 'Yes'
+            nopostop_set = 1;
+    end
     % if multiple files for same session/modality/type are detected
 elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
         (~isempty(uiapp.previewtree_postop_anat.Children) && contains([uiapp.previewtree_postop_anat.Children.Text], '>>'))
@@ -388,7 +398,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     
     % check whether there is one that has not been defined properly
     if any(strcmp('-', {session, type, modality}))
-        uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Warning', 'Icon','warning');
+        uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Invalid file selection');
         return
     end
     
@@ -398,9 +408,9 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     end
 end
 
-if ~(postop_modality_found == 1)
+if ~(postop_modality_found == 1) && ~(nopostop_set == 1)    % only halt if user has specified postop, but it has the wrong modality
      warning_str = ['No valid modality for the postop session has been found, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
-        uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
+        uialert(uiapp.UIFigure, warning_str, 'Invalid file selection');
         return
 end
 
