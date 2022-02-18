@@ -271,22 +271,6 @@ for i = find(uiapp.niiFileTable.Data.Include)'
 end
 end
 
-function bids_fname = generate_bids_filename(subjID, session, run, task, desc, modality)
-
-tag_names = {{'ses' session}, {'run', run}, {'task', task}, {'acq', desc}};
-
-bids_fname = sprintf('%s', subjID);
-
-for i = 1:numel(tag_names)
-    if ~(strcmp(tag_names{1, i}{2}, '-')) && ~(strcmp(tag_names{1, i}{2}, '')) && ~isempty(tag_names{1, i}{2})
-        bids_fname = sprintf('%s_%s-%s', bids_fname, tag_names{1, i}{1}, tag_names{1, i}{2});
-    end
-end
-
-bids_fname = [bids_fname, '_', modality];
-
-end
-
 %% preallocate table on the left
 function table_preallocated = preallocate_table(table, lookup_table, imgs_resolution)
 
@@ -399,7 +383,6 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
     % check whether there is one that has not been defined properly
     if any(strcmp('-', {session, type, modality}))
@@ -423,13 +406,15 @@ N_sessions = length(table_options.Session);
 anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
 
 
-
 for i = find(uiapp.niiFileTable.Data.Include)'
     
     session = char(uiapp.niiFileTable.Data.Session(i));
-    modality = char(uiapp.niiFileTable.Data.Modality(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
+    run = char(uiapp.niiFileTable.Data.Run(i));
+    task = char(uiapp.niiFileTable.Data.Task(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
+    
     
     % depending on the modality, choose extensions of files to be copied
     if ~strcmp(modality, 'dwi')
@@ -438,11 +423,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         extensions = {'.nii.gz', '.json', '.bval', '.bvec'};
     end
 
-    if strcmp('-', desc) || strcmp('', desc)
-        fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
-    else
-        fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
-    end
+    fname = generate_bids_filename(subjID, session, type, run, task, desc, modality);
     
     export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], type);
     if ~isfolder(export_folder)
@@ -891,4 +872,22 @@ if rg(1)==rg(2), rg(1) = mi; end
 if abs(rg(1))>10, rg(1) = floor(rg(1)/2)*2; end % even number
 if abs(rg(2))>10, rg(2) = ceil(rg(2)/2)*2; end % even number
 end
+
+%% misc helper functions
+function bids_fname = generate_bids_filename(subjID, session, run, task, desc, modality)
+
+tag_names = {{'ses' session}, {'run', run}, {'task', task}, {'acq', desc}};
+
+bids_fname = sprintf('%s', subjID);
+
+for i = 1:numel(tag_names)
+    if ~(strcmp(tag_names{1, i}{2}, '-')) && ~(strcmp(tag_names{1, i}{2}, '')) && ~isempty(tag_names{1, i}{2})
+        bids_fname = sprintf('%s_%s-%s', bids_fname, tag_names{1, i}{1}, tag_names{1, i}{2});
+    end
+end
+
+bids_fname = [bids_fname, '_', modality];
+
+end
+
 
