@@ -502,7 +502,7 @@ set(uiapp.axes_axi, 'view', [90, -90]);
 
 % coronal
 cut_slice = round(img.dim(2)/2);
-imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :)));
+imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :, 1)));
 uiapp.axes_cor.Colormap = gray(128);
 setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
 uiapp.axes_cor.DataAspectRatioMode = 'manual';
@@ -511,7 +511,7 @@ set(uiapp.axes_cor, 'view', [90, -90]);
 
 % sagittal
 cut_slice = round(img.dim(1)/2);
-imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :)));
+imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :, 1)));
 uiapp.axes_sag.Colormap = gray(128);
 setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
 uiapp.axes_sag.DataAspectRatioMode = 'manual';
@@ -555,7 +555,7 @@ if ~isempty(hAxes)
                 end
                 
             end
-            imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :)));
+            imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :, 1)));
             setappdata(uiapp.UIFigure, 'cut_slice_cor', sliceNr);
         case 'sag'
             sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_sag');
@@ -569,7 +569,7 @@ if ~isempty(hAxes)
                 end
                 
             end
-            imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :)));
+            imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :, 1)));
             setappdata(uiapp.UIFigure, 'cut_slice_sag', sliceNr);
         otherwise
             
