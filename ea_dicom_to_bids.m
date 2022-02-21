@@ -227,16 +227,19 @@ for i = 1:height(uiapp.niiFileTable.Data)
         % set type automatically for anat modalities
         if any(strcmp(modality, anat_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Type(i) = 'anat';
+            uiapp.niiFileTable.Data.Task(i) = '-';
         % set type and session automatically for postop modalities
         elseif any(strcmp(modality, postop_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Type(i) = 'anat';
             uiapp.niiFileTable.Data.Session(i) = 'postop';
+            uiapp.niiFileTable.Data.Task(i) = '-';
         % set type to func for bold modality
         elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData(i) == 1
             uiapp.niiFileTable.Data.Type(i) = 'func';
         % set type to dwi for dwi modality
         elseif strcmp(modality, 'dwi') && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Type(i) = 'dwi';
+            uiapp.niiFileTable.Data.Task(i) = '-';
         % set task to rest if bold is selected and task is not set and has not been automatically set before (do this only once)
         elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData(i) == 0
             uiapp.niiFileTable.Data.Type(i) = 'func';
