@@ -253,6 +253,12 @@ for i = 1:height(uiapp.niiFileTable.Data)
             uiapp.niiFileTable.Data.Task(i) = 'rest';
             uiapp.niiFileTable.UserData.task_set(i) = 1;
         end
+    else    % automatically set rest as task if func is detected (this is not covered by the lookupable as of yet)
+        if strcmp(modality, 'bold') && uiapp.niiFileTable.UserData.task_set(i) == 0
+            uiapp.niiFileTable.Data.Type(i) = 'func';
+            uiapp.niiFileTable.Data.Task(i) = 'rest';
+            uiapp.niiFileTable.UserData.task_set(i) = 1;
+        end
     end
 end
 
@@ -326,22 +332,6 @@ for i = find(uiapp.niiFileTable.Data.Include)'
 end
 end
 
-function dupl_row = find_dupl_file(niitable, current_row, session, type, run, task, modality)
-
-dupl_row = [];
-for i = 1:height(niitable.Data)
-    if strcmp(session, char(niitable.Data.Session(i))) ...
-            && strcmp(type, char(niitable.Data.Type(i))) ...
-            && strcmp(run, char(niitable.Data.Run(i))) ...
-            && strcmp(task, char(niitable.Data.Task(i))) ...
-            && strcmp(modality, char(niitable.Data.Modality(i))) ...
-            && i ~= current_row ...
-            && niitable.Data.Include(i) == 1
-        dupl_row = i;
-    end
-
-end
-end
 
 %% preallocate table on the left
 function table_preallocated = preallocate_table(table, lookup_table, imgs_resolution)
@@ -986,6 +976,24 @@ if isfield(json_sidecar, 'PhaseEncodingDirection')
     end
 else
     ped = '';
+end
+end
+
+
+function dupl_row = find_dupl_file(niitable, current_row, session, type, run, task, modality)
+
+dupl_row = [];
+for i = 1:height(niitable.Data)
+    if strcmp(session, char(niitable.Data.Session(i))) ...
+            && strcmp(type, char(niitable.Data.Type(i))) ...
+            && strcmp(run, char(niitable.Data.Run(i))) ...
+            && strcmp(task, char(niitable.Data.Task(i))) ...
+            && strcmp(modality, char(niitable.Data.Modality(i))) ...
+            && i ~= current_row ...
+            && niitable.Data.Include(i) == 1
+        dupl_row = i;
+    end
+
 end
 end
 
