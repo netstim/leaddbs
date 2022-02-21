@@ -402,8 +402,10 @@ elseif isempty(uiapp.previewtree_postop_anat.Children)
         case 'Yes'
             nopostop_set = 1;
     end
-    % if multiple files for same session/modality/type are detected
-elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
+end
+
+% if multiple files for same session/modality/type are detected
+if contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
         (~isempty(uiapp.previewtree_postop_anat.Children) && contains([uiapp.previewtree_postop_anat.Children.Text], '>>'))
     uialert(uiapp.UIFigure, 'Multiple files with same modality inluded (look for >> filename << in preview window). Please select only one file per modality and session or seperate them by specifying a description.', 'Warning', 'Icon','warning');
     return
