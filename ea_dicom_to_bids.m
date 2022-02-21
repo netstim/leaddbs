@@ -536,13 +536,28 @@ try
 catch
     time_and_date_pretty = 'N/A';
 end
-info_str = sprintf('Size:\t\t\t[%s x %s x %s]\nPixel dimensions:\t[%.2f x %.2f x %.2f]\nAcquistion date:\t%s\nIntensity range:\t[%.0f, %.0f]\nHistogram range:\t[%.0f, %.0f]', ...
-    num2str(img.dim(1)), num2str(img.dim(2)), num2str(img.dim(3)), ...
+info_str = sprintf('Size:\t\t\t[%s x %s x %s x %s]\nPixel dimensions:\t[%.2f x %.2f x %.2f]\nAcquistion date:\t%s\nIntensity range:\t[%.0f, %.0f]\nHistogram range:\t[%.0f, %.0f]', ...
+    num2str(img.p.nii.hdr.dim(2)), num2str(img.p.nii.hdr.dim(3)), num2str(img.p.nii.hdr.dim(4)), num2str(img.p.nii.hdr.dim(5)), ...
     img.p.pixdim(1), img.p.pixdim(2), img.p.pixdim(3), ...
     time_and_date_pretty, ...
     min(img.p.nii.img(:)), max(img.p.nii.img(:)), ...
     min(img.img_thresholded), max(img.img_thresholded));
 
+% if .json has been found, insert this into the info string as well
+if img.json_found == 1
+    info_str = sprintf('%s\n\nInfo found in JSON sidecar:\n', info_str);
+
+    keys = fieldnames(img.json_sidecar);
+    for i = 1:length(keys)
+        try
+            value = getfield(img.json_sidecar, keys{i});
+            if ~ischar(value)
+                value = num2str(value);
+            end
+            info_str = sprintf('%s\n%s:\t%s', info_str, keys{i}, value);
+        end
+    end
+end
 uiapp.infoArea.Value = {info_str};
 
 % update histgram
