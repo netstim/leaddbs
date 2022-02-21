@@ -405,10 +405,10 @@ s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'C
 
 switch s
     case 'Yes'
+        anat_files = [];
+        setappdata(groot, 'anat_files', anat_files);
         delete(uiapp);
 end
-
-
 end
 
 %% ok button
