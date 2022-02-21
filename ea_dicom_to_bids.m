@@ -43,6 +43,15 @@ for image_idx = 1:N_fnames
     imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded < median(imgs{image_idx}.p.nii.img(:))) = nan;
     imgs{image_idx}.img_thresholded = imgs{image_idx}.img_thresholded(~isnan(imgs{image_idx}.img_thresholded));
     imgs_resolution{image_idx} = [imgs{image_idx}.p.pixdim(1), imgs{image_idx}.p.pixdim(2), imgs{image_idx}.p.pixdim(3)];
+
+    % get .json and read it if possible
+    if isfile(fullfile(nii_folder, [fnames{image_idx}, '.json']))
+        imgs{image_idx}.json_sidecar = loadjson(fullfile(nii_folder, [fnames{image_idx}, '.json']));
+        img{image_idx}.json_found = 1;
+    else
+        img{image_idx}.json_found = 0;
+    end
+
     waitbar(image_idx / N_fnames, h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(fnames)));
 end
 close(h_wait);
@@ -218,10 +227,7 @@ uiapp.previewtree_postop_func.Children.delete;    % delete children
 
 % go through all of the items and automatically set columns based on others
 for i = 1:height(uiapp.niiFileTable.Data)
-    session = char(uiapp.niiFileTable.Data.Session(i));
-    type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
     if ~isempty(event) % check this only for the current selected one
         % set type automatically for anat modalities
@@ -271,20 +277,27 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     run = char(uiapp.niiFileTable.Data.Run(i));
     task = char(uiapp.niiFileTable.Data.Task(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
+
     if strcmp(modality, "CT")
         uiapp.niiFileTable.Data.Acquisition(i) = "-";
     end
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
 
-    % check whether everything has been properly defined befor updating uitree
-    if ~any(strcmp('-', {session, type, modality}))
+    if ~any(strcmp('-', {session, type, modality}))  % check whether everything has been properly defined befor updating uitree
 
         fname = generate_bids_filename(subjID, session, run, task, desc, modality);
         ui_field = ['previewtree_' session '_' type];
+
+        % now check if there are duplicate filenames in the tree
         if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
-            fname = ['>> ', fname, ' <<'];
+
+            % if duplicate file names have been found, also update the already present filename 
+            row_idx_duplicate = find(cellfun(@(c) ischar(c) && strcmp(c, fname), {uiapp.(ui_field).Children.Text}));    % find the row of the other duplicate
+            
+            fname = ['>> ', fname, ' <<'];  % change filename to indicate duplicate
+            uiapp.(ui_field).Children(row_idx_duplicate).Text = fname;  % set the other duplicate to this filename as well
         end
-        uitreenode(uiapp.(ui_field), 'Text', fname);
+        uitreenode(uiapp.(ui_field), 'Text', fname);    % set the filename of the current row
     end
     
 end
