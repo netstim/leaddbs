@@ -210,6 +210,11 @@ else
                 mkdir(fullfile(lead_derivatives_dir_subj, subj_ids(subj_idx).name, 'prefs'));
             end
             savejson('', anat_files_selected, fullfile(lead_derivatives_dir_subj, subj_ids(subj_idx).name, 'prefs', [subj_ids(subj_idx).name, '_desc-rawimages.json']));
+            rmdir(fullfile(dicom_dir, 'tmp'), 's');
+        else
+            % delete temporary files and folder
+            rmdir(dicom_dir, 's');
+            rmdir(fullfile(root_dataset_dir, 'rawdata', subjID));
         end
         
         % second option: use lookup table to find files and convert them to BIDS
@@ -222,7 +227,6 @@ else
         % fourth option: just leave them and user has to manually rename files
         %anat_files.preop = find_anat_files_dicom(tmp_dir, bids_naming_heuristics.preop);
         
-        rmdir(fullfile(dicom_dir, 'tmp'), 's');
     end
     
 end
