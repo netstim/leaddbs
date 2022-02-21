@@ -241,7 +241,7 @@ for i = 1:height(uiapp.niiFileTable.Data)
             uiapp.niiFileTable.Data.Session(i) = 'postop';
             uiapp.niiFileTable.Data.Task(i) = '-';
         % set type to func for bold modality
-        elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData(i) == 1
+        elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData.task_set(i) == 1
             uiapp.niiFileTable.Data.Type(i) = 'func';
         % set type to dwi for dwi modality
         elseif strcmp(modality, 'dwi') && event.Indices(2) > 2 && event.Indices(1) == i
