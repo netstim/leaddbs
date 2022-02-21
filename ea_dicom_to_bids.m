@@ -19,6 +19,7 @@ function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
 % Johannes Achtzehn
 % Part of this code is inspired by the dicm2nii tool of xiangrui.li@gmail.com
 
+%% preparations
 % lookup table to pre-allocate options for the table.% check whether pref exists, if not create it
 if ~ispref('dcm2bids', 'lookuptable')
     lookup_table = loadjson(fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
@@ -79,6 +80,7 @@ uiapp = dicom_to_bids;
 % populate table
 uiapp.niiFileTable.Data = nifti_table_preallocated;
 uiapp.niiFileTable.ColumnEditable = [true false true true true true true true];
+uiapp.niiFileTable.UserData = zeros(N_fnames, 1);   % this will be used to only set task to 'rest' automatically one time (the first time), potentially other fields in the future
 
 % set subject ID and file path
 uiapp.SubjectIDLabel.Text = sprintf('Conversion for subject: %s',subjID);
@@ -90,7 +92,7 @@ expand(uiapp.Tree, 'all');
 
 preview_nii(uiapp, imgs{1,1}); % set initial image to the first one
 
-%% callbacks of main GUI
+%% set callbacks of main GUI
 cell_change_callback(uiapp, subjID, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
 
 uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
@@ -117,6 +119,7 @@ end
 
 end
 
+%% define callback of man GUI
 %% lookup button function
 function lookup_button_function(uiapp,imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
 
@@ -221,15 +224,24 @@ for i = 1:height(uiapp.niiFileTable.Data)
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
     
     if ~isempty(event) % check this only for the current selected one
+        % set type automatically for anat modalities
         if any(strcmp(modality, anat_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Type(i) = 'anat';
+        % set type and session automatically for postop modalities
         elseif any(strcmp(modality, postop_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Type(i) = 'anat';
             uiapp.niiFileTable.Data.Session(i) = 'postop';
-        elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i
+        % set type to func for bold modality
+        elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData(i) == 1
             uiapp.niiFileTable.Data.Type(i) = 'func';
+        % set type to dwi for dwi modality
         elseif strcmp(modality, 'dwi') && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Type(i) = 'dwi';
+        % set task to rest if bold is selected and task is not set and has not been automatically set before (do this only once)
+        elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData(i) == 0
+            uiapp.niiFileTable.Data.Type(i) = 'func';
+            uiapp.niiFileTable.Data.Task(i) = 'rest';
+            uiapp.niiFileTable.UserData(i) = 1;
         end
     end
 end
