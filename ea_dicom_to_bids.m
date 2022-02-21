@@ -47,9 +47,9 @@ for image_idx = 1:N_fnames
     % get .json and read it if possible
     if isfile(fullfile(nii_folder, [fnames{image_idx}, '.json']))
         imgs{image_idx}.json_sidecar = loadjson(fullfile(nii_folder, [fnames{image_idx}, '.json']));
-        img{image_idx}.json_found = 1;
+        imgs{image_idx}.json_found = 1;
     else
-        img{image_idx}.json_found = 0;
+        imgs{image_idx}.json_found = 0;
     end
 
     waitbar(image_idx / N_fnames, h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(fnames)));
@@ -89,7 +89,8 @@ uiapp = dicom_to_bids;
 % populate table
 uiapp.niiFileTable.Data = nifti_table_preallocated;
 uiapp.niiFileTable.ColumnEditable = [true false true true true true true true];
-uiapp.niiFileTable.UserData = zeros(N_fnames, 1);   % this will be used to only set task to 'rest' automatically one time (the first time), potentially other fields in the future
+uiapp.niiFileTable.UserData.task_set = zeros(N_fnames, 1);   % this will be used to only set task to 'rest' automatically one time (the first time), potentially other fields in the future
+uiapp.niiFileTable.UserData.fnames = repmat("", [N_fnames,1]);   % this will be used to keep track of the filenames
 
 % set subject ID and file path
 uiapp.SubjectIDLabel.Text = sprintf('Conversion for subject: %s',subjID);
@@ -123,7 +124,7 @@ try
     anat_files = getappdata(groot, 'anat_files');
 catch
     anat_files = [];
-    
+
 end
 
 end
@@ -441,53 +442,52 @@ anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
 
 
 for i = find(uiapp.niiFileTable.Data.Include)'
-    
+
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     run = char(uiapp.niiFileTable.Data.Run(i));
     task = char(uiapp.niiFileTable.Data.Task(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
-    
-    
+
+
     % depending on the modality, choose extensions of files to be copied
     if ~strcmp(modality, 'dwi')
         extensions = {'.nii.gz', '.json'};
     else
         extensions = {'.nii.gz', '.json', '.bval', '.bvec'};
     end
-    
+
     % get filename
-    ui_field = ['previewtree_' session '_' type];
-    fname = uiapp.(ui_field).Children(i).Text;
-    
+    fname = char(uiapp.niiFileTable.UserData.fnames(i));
+
     export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], type);
     if ~isfolder(export_folder)
         mkdir(export_folder);
-    end
-    
+    end 
+
     destin_no_ext = fullfile(export_folder, fname);
     source_no_ext = fullfile(nii_folder, uiapp.niiFileTable.Data.Filename{i});
-    
+
     for j = 1:length(extensions)
         source = [source_no_ext extensions{j}];
         if isfile(source)
-            copyfile(source, [destin_no_ext extensions{j}])
+            copyfile(source, [destin_no_ext, extensions{j}])
         else
             warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', source);
         end
     end
-   
+
     % generate key for .json file
-     if strcmp('-', desc) || strcmp('', desc)
-         acq_mod = modality;
-     else
+    if strcmp('-', desc) || strcmp('', desc)
+        acq_mod = modality;
+    else
         acq_mod = [desc, '_', modality];
-     end
-     
+    end
+
     % add file to anat_files
     anat_files.(session).(type).(acq_mod) = fname; % set output struct
-    
+
 end
 
 setappdata(groot, 'anat_files', anat_files);
