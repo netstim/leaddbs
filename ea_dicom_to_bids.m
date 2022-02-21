@@ -454,8 +454,10 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     else
         extensions = {'.nii.gz', '.json', '.bval', '.bvec'};
     end
-
-    fname = generate_bids_filename(subjID, session, type, run, task, desc, modality);
+    
+    % get filename
+    ui_field = ['previewtree_' session '_' type];
+    fname = uiapp.(ui_field).Children(i).Text;
     
     export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], type);
     if ~isfolder(export_folder)
