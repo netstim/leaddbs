@@ -91,10 +91,10 @@ expand(uiapp.Tree, 'all');
 preview_nii(uiapp, imgs{1,1}); % set initial image to the first one
 
 %% callbacks of main GUI
-cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
+cell_change_callback(uiapp, subjID, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
 
 uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
-uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, event); % callback for cell change -> update uiapp tree and adjacent cells
+uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, subjID, anat_modalities, postop_modalities, event); % callback for cell change -> update uiapp tree and adjacent cells
 
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
@@ -202,7 +202,7 @@ lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 %% cell change callback
-function cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, event)
+function cell_change_callback(uiapp, subjID, anat_modalities, postop_modalities, event)
 
 uiapp.previewtree_preop_anat.Children.delete;     % delete children
 uiapp.previewtree_postop_anat.Children.delete;    % delete children
