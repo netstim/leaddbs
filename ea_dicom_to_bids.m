@@ -251,7 +251,7 @@ for i = 1:height(uiapp.niiFileTable.Data)
         elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData(i) == 0
             uiapp.niiFileTable.Data.Type(i) = 'func';
             uiapp.niiFileTable.Data.Task(i) = 'rest';
-            uiapp.niiFileTable.UserData(i) = 1;
+            uiapp.niiFileTable.UserData.task_set(i) = 1;
         end
     end
 end
