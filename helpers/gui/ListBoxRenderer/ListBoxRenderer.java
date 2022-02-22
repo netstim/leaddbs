@@ -2,7 +2,6 @@ import java.awt.*;
 import javax.swing.*;
 public class ListBoxRenderer extends JLabel implements ListCellRenderer
 {
-    private String folderPath;
     // Class constructors
     public ListBoxRenderer() {
         setOpaque(true);
