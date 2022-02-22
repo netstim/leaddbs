@@ -103,6 +103,8 @@ catch
     set(handles.mirrorsides, 'Value', 0);
 end
 
+ea_ListBoxRenderer(handles.elmodelselect);
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ea_lg_3dsetting_OutputFcn(hObject, eventdata, handles)

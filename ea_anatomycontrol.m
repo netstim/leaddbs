@@ -57,7 +57,6 @@ set(hObject,'Name','Anatomy Slices');
 % Choose default command line output for ea_anatomycontrol
 handles.output = hObject;
 
-
 % Update handles structure
 guidata(hObject, handles);
 
@@ -65,7 +64,6 @@ guidata(hObject, handles);
 % uiwait(handles.acontrolfig);
 resultfig=varargin{1};
 options=varargin{2};
-
 
 setappdata(hObject,'resultfig',resultfig);
 setappdata(hObject,'options',options);
@@ -94,6 +92,7 @@ end
 if ~isfield(options,'native')
     options.native=0;
 end
+
 list=ea_assignbackdrop('list',options,'Patient',options.native);
 set(handles.templatepopup,'String',list);
 
@@ -142,6 +141,8 @@ else
     togglestates.refreshcuts=1;
     setappdata(getappdata(handles.acontrolfig,'resultfig'),'togglestates',togglestates);
 end
+
+ea_ListBoxRenderer(handles.templatepopup);
 
 pos=get(hObject,'position');
 set(hObject,'position',[0,0,pos(3),pos(4)]);

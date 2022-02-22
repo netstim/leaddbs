@@ -141,6 +141,8 @@ ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
 
+ea_ListBoxRenderer(handles.parcellation);
+
 ea_firstrun(handles,options);
 
 % Choose default command line output for leadfigure
