@@ -312,11 +312,11 @@ for i = find(uiapp.niiFileTable.Data.Include)'
                 if ~strcmp(ped_current_row, '') && ~strcmp(ped_dupl_row, '') && ~strcmp(ped_current_row, ped_dupl_row)   % if encoding directions have been found
                     fname = generate_bids_filename(subjID, session, run, task, desc, modality, ped_current_row);
                     uiapp.(ui_field).Children(row_idx_duplicate_previewtree).Text = generate_bids_filename(subjID, session, run, task, desc, modality, ped_dupl_row);
-                    uiapp.niiFileTable.UserData.fnames(row_idx_duplicate_previewtree) = generate_bids_filename(subjID, session, run, task, desc, modality, ped_dupl_row);
+                    uiapp.niiFileTable.UserData.fnames(row_idx_duplicate_filetable) = generate_bids_filename(subjID, session, run, task, desc, modality, ped_dupl_row);
                 else
                     fname = ['>> ', fname, ' <<'];  % change filename to indicate duplicate
                     uiapp.(ui_field).Children(row_idx_duplicate_previewtree).Text = fname;  % set the other duplicate to this filename as well
-                    uiapp.niiFileTable.UserData.fnames(row_idx_duplicate_previewtree) = fname;
+                    uiapp.niiFileTable.UserData.fnames(row_idx_duplicate_filetable) = fname;
                 end
                 % for others, just set the filename with >><< to warn the user
             else
@@ -491,7 +491,6 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     modality = char(uiapp.niiFileTable.Data.Modality(i));
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
 
-
     % depending on the modality, choose extensions of files to be copied
     if ~strcmp(modality, 'dwi')
         extensions = {'.nii.gz', '.json'};
@@ -527,7 +526,11 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     end
 
     % add file to anat_files
-    anat_files.(session).(type).(acq_mod) = fname; % set output struct
+    if ~isfield(anat_files.(session), type) || ~isfield(anat_files.(session).(type), acq_mod) % if no other filename exists for this combination
+        anat_files.(session).(type).(acq_mod) = {fname}; % set output struct
+    else % otherwise, append
+        anat_files.(session).(type).(acq_mod){end+1} = fname;
+    end
 
 end
 

@@ -209,7 +209,9 @@ else
             if ~exist(fullfile(lead_derivatives_dir_subj, subj_ids(subj_idx).name, 'prefs'), 'dir')
                 mkdir(fullfile(lead_derivatives_dir_subj, subj_ids(subj_idx).name, 'prefs'));
             end
-            savejson('', anat_files_selected, fullfile(lead_derivatives_dir_subj, subj_ids(subj_idx).name, 'prefs', [subj_ids(subj_idx).name, '_desc-rawimages.json']));
+            savejson_struct = struct('filename', fullfile(lead_derivatives_dir_subj, subj_ids(subj_idx).name, 'prefs', [subj_ids(subj_idx).name, '_desc-rawimages.json']), ...
+                'singletcell', 0);
+            savejson('', anat_files_selected, savejson_struct);
             rmdir(fullfile(dicom_dir, 'tmp'), 's');
         else
             % delete temporary files and folder
