@@ -81,6 +81,9 @@ ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
 
+ea_ListBoxRenderer(handles.fiberspopup);
+ea_ListBoxRenderer(handles.fmripopup);
+
 % Choose default command line output for lead_mapper
 handles.output = hObject;
 

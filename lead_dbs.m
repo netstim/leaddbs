@@ -111,6 +111,11 @@ ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
 
+ea_ListBoxRenderer(handles.electrode_model_popup);
+ea_ListBoxRenderer(handles.normmethod);
+ea_ListBoxRenderer(handles.scrfmask);
+ea_ListBoxRenderer(handles.atlassetpopup);
+
 % Choose default command line output for lead_dbs
 handles.output = hObject;
 

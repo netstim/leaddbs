@@ -80,7 +80,10 @@ try
     d2=options.prefs.machine.d2;
     ea_options2tdhandles(handles,d2);
 end
+
 set(handles.ea_spec2dwrite,'Name','Specify 2D Output options');
+
+ea_ListBoxRenderer(handles.tdbackdrop);
 
 
 % --- Outputs from this function are returned to the command line.
