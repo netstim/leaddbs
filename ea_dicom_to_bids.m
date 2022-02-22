@@ -423,7 +423,7 @@ if isempty(uiapp.previewtree_preop_anat.Children)
 
     % if postop is empty, only give out warning
 elseif isempty(uiapp.previewtree_postop_anat.Children)
-    s = uiconfirm(uiapp.UIFigure, 'No postop files included. Do you still want to proceed?', 'Confirm missing postop files', ...
+    s = uiconfirm(uiapp.UIFigure, 'No postop anatomical files included. Do you still want to proceed?', 'Confirm missing postop files', ...
         'Options', {'Yes', 'No'}, 'Icon', 'warning');
 
     switch s
@@ -435,8 +435,22 @@ elseif isempty(uiapp.previewtree_postop_anat.Children)
 end
 
 % if multiple files for same session/modality/type are detected
-if contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
-        (~isempty(uiapp.previewtree_postop_anat.Children) && contains([uiapp.previewtree_postop_anat.Children.Text], '>>'))
+duplicates_found = 0;
+N_sessions = length(table_options.Session);
+N_types = length(table_options.Type);
+
+for s = 1:N_sessions
+    for t = 1:N_types
+        uifield = ['previewtree_', table_options.Session{s}, '_', table_options.Type{t}];
+        if ~isa(uiapp.(uifield).Children, 'matlab.graphics.GraphicsPlaceholder')
+            if contains([uiapp.(uifield).Children.Text], '>>')
+                duplicates_found = 1;
+            end
+        end
+    end
+end
+
+if duplicates_found
     uialert(uiapp.UIFigure, 'Multiple files with same modality inluded (look for >> filename << in preview window). Please select only one file per modality and session or seperate them by specifying a description.', 'Warning', 'Icon','warning');
     return
 end
@@ -466,9 +480,7 @@ if ~(postop_modality_found == 1) && ~(nopostop_set == 1)    % only halt if user 
     return
 end
 
-N_sessions = length(table_options.Session);
 anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
-
 
 for i = find(uiapp.niiFileTable.Data.Include)'
 
