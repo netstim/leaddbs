@@ -546,6 +546,8 @@ if isempty(event)
     img_idx = 1;
 elseif isempty(event.Indices)
     img_idx = [];
+elseif event.Indices(2) ~= 2
+    img_idx = [];
 else
     img_idx = event.Indices(1);
 end
