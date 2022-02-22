@@ -2,7 +2,8 @@ function ea_ListBoxRenderer(control)
 % Add dynamic tooltip to ListBox and Popupmenu by overriding Renderer
 
 if exist('ListBoxRenderer','class') ~= 8
-    javaaddpath(fileparts(mfilename('fullpath')));
+    ea_checkJavaClassPath;
+    return;
 end
 
 switch control.Style
