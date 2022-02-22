@@ -100,12 +100,12 @@ uiapp.FilepathLabel.Text = sprintf('BIDS root: %s',dataset_folder);
 uiapp.previewtree_subj.Text = subjID;
 expand(uiapp.Tree, 'all');
 
-preview_nii(uiapp, imgs{1,1}); % set initial image to the first one
+preview_nii(uiapp, imgs, []); % set initial image to the first one
 
 %% set callbacks of main GUI
 cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
 
-uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
+uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp, imgs, event); % callback for table selection -> display current selected image
 uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, event); % callback for cell change -> update uiapp tree and adjacent cells
 
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
@@ -117,7 +117,7 @@ uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_op
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
 
 % looup table behaviour
-uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
+uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
 waitfor(uiapp.UIFigure);
 
 try
@@ -131,7 +131,7 @@ end
 
 %% define callback of man GUI
 %% lookup button function
-function lookup_button_function(uiapp,imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
+function lookup_button_function(uiapp, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
 
 lookup_table_gui = ea_default_lookup;
 lookup_table = getpref('dcm2bids', 'lookuptable');
@@ -165,7 +165,7 @@ T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table, img
 
 main_gui.niiFileTable.Data = T_preallocated;
 
-cell_change_callback(main_gui, table_options, subjID, imgs, anat_modalities, postop_modalities, [])
+cell_change_callback(main_gui, subjID, imgs, anat_modalities, postop_modalities, [])
 
 delete(lookup_table_gui);
 
@@ -324,7 +324,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
                 uiapp.(ui_field).Children(row_idx_duplicate_previewtree).Text = fname;  % set the other duplicate to this filename as well
             end
         end
-        
+
         uiapp.niiFileTable.UserData.fnames(i) = fname;
         uitreenode(uiapp.(ui_field), 'Text', fname);    % set the filename of the current row
     end
@@ -493,7 +493,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], type);
     if ~isfolder(export_folder)
         mkdir(export_folder);
-    end 
+    end
 
     destin_no_ext = fullfile(export_folder, fname);
     source_no_ext = fullfile(nii_folder, uiapp.niiFileTable.Data.Filename{i});
@@ -525,75 +525,87 @@ delete(uiapp);      % close window
 end
 
 %% preview images in the middle
-function preview_nii(uiapp, img)
+function preview_nii(uiapp, imgs, event)
 
-% update info area
-try
-    time_and_date_ugly = img.p.nii.ext.edata_decoded.AcquisitionDateTime;
-    time_and_date_pretty = sprintf('%s.%s.%s %s:%s', num2str(time_and_date_ugly(7:8)), ...
-        num2str(time_and_date_ugly(5:6)), num2str(time_and_date_ugly(1:4)), ...
-        num2str(time_and_date_ugly(9:10)), num2str(time_and_date_ugly(11:12)));
-catch
-    time_and_date_pretty = 'N/A';
+if isempty(event)
+    img_idx = 1;
+elseif isempty(event.Indices)
+    img_idx = [];
+else
+    img_idx = event.Indices(1);
 end
-info_str = sprintf('Size:\t\t\t[%s x %s x %s x %s]\nPixel dimensions:\t[%.2f x %.2f x %.2f]\nAcquistion date:\t%s\nIntensity range:\t[%.0f, %.0f]\nHistogram range:\t[%.0f, %.0f]', ...
-    num2str(img.p.nii.hdr.dim(2)), num2str(img.p.nii.hdr.dim(3)), num2str(img.p.nii.hdr.dim(4)), num2str(img.p.nii.hdr.dim(5)), ...
-    img.p.pixdim(1), img.p.pixdim(2), img.p.pixdim(3), ...
-    time_and_date_pretty, ...
-    min(img.p.nii.img(:)), max(img.p.nii.img(:)), ...
-    min(img.img_thresholded), max(img.img_thresholded));
 
-% if .json has been found, insert this into the info string as well
-if img.json_found == 1
-    info_str = sprintf('%s\n\nInfo found in JSON sidecar:\n', info_str);
+if ~isempty(img_idx)
 
-    keys = fieldnames(img.json_sidecar);
-    for i = 1:length(keys)
-        try
-            value = getfield(img.json_sidecar, keys{i});
-            if ~ischar(value)
-                value = num2str(value);
+    img = imgs{img_idx, 1};
+
+    % update info area
+    try
+        time_and_date_ugly = img.p.nii.ext.edata_decoded.AcquisitionDateTime;
+        time_and_date_pretty = sprintf('%s.%s.%s %s:%s', num2str(time_and_date_ugly(7:8)), ...
+            num2str(time_and_date_ugly(5:6)), num2str(time_and_date_ugly(1:4)), ...
+            num2str(time_and_date_ugly(9:10)), num2str(time_and_date_ugly(11:12)));
+    catch
+        time_and_date_pretty = 'N/A';
+    end
+    info_str = sprintf('Size:\t\t\t[%s x %s x %s x %s]\nPixel dimensions:\t[%.2f x %.2f x %.2f]\nAcquistion date:\t%s\nIntensity range:\t[%.0f, %.0f]\nHistogram range:\t[%.0f, %.0f]', ...
+        num2str(img.p.nii.hdr.dim(2)), num2str(img.p.nii.hdr.dim(3)), num2str(img.p.nii.hdr.dim(4)), num2str(img.p.nii.hdr.dim(5)), ...
+        img.p.pixdim(1), img.p.pixdim(2), img.p.pixdim(3), ...
+        time_and_date_pretty, ...
+        min(img.p.nii.img(:)), max(img.p.nii.img(:)), ...
+        min(img.img_thresholded), max(img.img_thresholded));
+
+    % if .json has been found, insert this into the info string as well
+    if img.json_found == 1
+        info_str = sprintf('%s\n\nInfo found in JSON sidecar:\n', info_str);
+
+        keys = fieldnames(img.json_sidecar);
+        for i = 1:length(keys)
+            try
+                value = getfield(img.json_sidecar, keys{i});
+                if ~ischar(value)
+                    value = num2str(value);
+                end
+                info_str = sprintf('%s\n%s:\t%s', info_str, keys{i}, value);
             end
-            info_str = sprintf('%s\n%s:\t%s', info_str, keys{i}, value);
         end
     end
+    uiapp.infoArea.Value = {info_str};
+
+    % update histgram
+    h = histogram(uiapp.histogramAxes, img.img_thresholded, 'EdgeAlpha', 0.1, 'FaceColor', [1 1 1], 'EdgeColor', [1 1 1]);
+    uiapp.histogramAxes.Color = [0,0,0];
+
+    % plot images
+    setappdata(uiapp.UIFigure, 'img', img);
+
+    % axial
+    cut_slice = round(img.dim(3)/2);
+    imagesc(uiapp.axes_axi, img.p.nii.img(:, :, cut_slice));
+    uiapp.axes_axi.Colormap = gray(128);
+    setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
+    uiapp.axes_axi.DataAspectRatioMode = 'manual';
+    uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+    set(uiapp.axes_axi, 'view', [90, -90]);
+
+    % coronal
+    cut_slice = round(img.dim(2)/2);
+    imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :, 1)));
+    uiapp.axes_cor.Colormap = gray(128);
+    setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
+    uiapp.axes_cor.DataAspectRatioMode = 'manual';
+    uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+    set(uiapp.axes_cor, 'view', [90, -90]);
+
+    % sagittal
+    cut_slice = round(img.dim(1)/2);
+    imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :, 1)));
+    uiapp.axes_sag.Colormap = gray(128);
+    setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
+    uiapp.axes_sag.DataAspectRatioMode = 'manual';
+    uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+    set(uiapp.axes_sag, 'view', [90, -90]);
 end
-uiapp.infoArea.Value = {info_str};
-
-% update histgram
-h = histogram(uiapp.histogramAxes, img.img_thresholded, 'EdgeAlpha', 0.1, 'FaceColor', [1 1 1], 'EdgeColor', [1 1 1]);
-uiapp.histogramAxes.Color = [0,0,0];
-
-% plot images
-setappdata(uiapp.UIFigure, 'img', img);
-
-% axial
-cut_slice = round(img.dim(3)/2);
-imagesc(uiapp.axes_axi, img.p.nii.img(:, :, cut_slice));
-uiapp.axes_axi.Colormap = gray(128);
-setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
-uiapp.axes_axi.DataAspectRatioMode = 'manual';
-uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
-set(uiapp.axes_axi, 'view', [90, -90]);
-
-% coronal
-cut_slice = round(img.dim(2)/2);
-imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :, 1)));
-uiapp.axes_cor.Colormap = gray(128);
-setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
-uiapp.axes_cor.DataAspectRatioMode = 'manual';
-uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-set(uiapp.axes_cor, 'view', [90, -90]);
-
-% sagittal
-cut_slice = round(img.dim(1)/2);
-imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :, 1)));
-uiapp.axes_sag.Colormap = gray(128);
-setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
-uiapp.axes_sag.DataAspectRatioMode = 'manual';
-uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-set(uiapp.axes_sag, 'view', [90, -90]);
-
 end
 
 %% scroll images
