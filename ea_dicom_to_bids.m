@@ -19,6 +19,7 @@ function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
 % Johannes Achtzehn
 % Part of this code is inspired by the dicm2nii tool of xiangrui.li@gmail.com
 
+%% preparations
 % lookup table to pre-allocate options for the table.% check whether pref exists, if not create it
 if ~ispref('dcm2bids', 'lookuptable')
     lookup_table = loadjson(fullfile(ea_getearoot(), 'helpers', 'dicom_bids_lookuptable.json'));
@@ -42,6 +43,15 @@ for image_idx = 1:N_fnames
     imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded < median(imgs{image_idx}.p.nii.img(:))) = nan;
     imgs{image_idx}.img_thresholded = imgs{image_idx}.img_thresholded(~isnan(imgs{image_idx}.img_thresholded));
     imgs_resolution{image_idx} = [imgs{image_idx}.p.pixdim(1), imgs{image_idx}.p.pixdim(2), imgs{image_idx}.p.pixdim(3)];
+
+    % get .json and read it if possible
+    if isfile(fullfile(nii_folder, [fnames{image_idx}, '.json']))
+        imgs{image_idx}.json_sidecar = loadjson(fullfile(nii_folder, [fnames{image_idx}, '.json']));
+        imgs{image_idx}.json_found = 1;
+    else
+        imgs{image_idx}.json_found = 0;
+    end
+
     waitbar(image_idx / N_fnames, h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(fnames)));
 end
 close(h_wait);
@@ -60,8 +70,10 @@ nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), 
 nifti_table.Include = false(N_fnames,1);
 nifti_table.Filename = fnames;
 nifti_table.Acquisition = repmat("-", [N_fnames,1]);
+nifti_table.Run = repmat("-", [N_fnames,1]);
+nifti_table.Task = repmat("-", [N_fnames,1]);
 
-nifti_table = orderfields(nifti_table, [4 5 1 2 3 6]);
+nifti_table = orderfields(nifti_table, [4 5 1 7 8 2 3 6]);
 nifti_table = struct2table(nifti_table);
 
 try
@@ -76,7 +88,9 @@ uiapp = dicom_to_bids;
 
 % populate table
 uiapp.niiFileTable.Data = nifti_table_preallocated;
-uiapp.niiFileTable.ColumnEditable = [true false true true true true];
+uiapp.niiFileTable.ColumnEditable = [true false true true true true true true];
+uiapp.niiFileTable.UserData.task_set = zeros(N_fnames, 1);   % this will be used to only set task to 'rest' automatically one time (the first time), potentially other fields in the future
+uiapp.niiFileTable.UserData.fnames = repmat("", [N_fnames,1]);   % this will be used to keep track of the filenames
 
 % set subject ID and file path
 uiapp.SubjectIDLabel.Text = sprintf('Conversion for subject: %s',subjID);
@@ -86,11 +100,13 @@ uiapp.FilepathLabel.Text = sprintf('BIDS root: %s',dataset_folder);
 uiapp.previewtree_subj.Text = subjID;
 expand(uiapp.Tree, 'all');
 
-preview_nii(uiapp, imgs{1,1}); % set initial image to the first one
-cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
+preview_nii(uiapp, imgs, []); % set initial image to the first one
 
-uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp,imgs{event.Indices(1), 1}); % callback for table selection -> display current selected image
-uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, event); % callback for cell change -> update uiapp tree and adjacent cells
+%% set callbacks of main GUI
+cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
+
+uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp, imgs, event); % callback for table selection -> display current selected image
+uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, event); % callback for cell change -> update uiapp tree and adjacent cells
 
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
@@ -101,20 +117,21 @@ uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_op
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
 
 % looup table behaviour
-uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
+uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
 waitfor(uiapp.UIFigure);
 
 try
     anat_files = getappdata(groot, 'anat_files');
 catch
     anat_files = [];
-    
-end
 
 end
 
+end
+
+%% define callback of man GUI
 %% lookup button function
-function lookup_button_function(uiapp,imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
+function lookup_button_function(uiapp, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
 
 lookup_table_gui = ea_default_lookup;
 lookup_table = getpref('dcm2bids', 'lookuptable');
@@ -133,12 +150,12 @@ lookup_table_gui.LoadjsonButton.ButtonPushedFcn = @(btn,event) load_json_file(lo
 lookup_table_gui.CancelButton.ButtonPushedFcn = @(btn,event) cancel_lookup_function(lookup_table_gui);
 
 % save button
-lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(uiapp, lookup_table_gui, imgs_resolution,  table_options, subjID, anat_modalities, postop_modalities);
+lookup_table_gui.SaveButton.ButtonPushedFcn = @(btn,event) save_lookup_function(uiapp, lookup_table_gui, imgs, imgs_resolution,  table_options, subjID, anat_modalities, postop_modalities);
 
 waitfor(lookup_table_gui.UIFigure);
 end
 
-function save_lookup_function(main_gui, lookup_table_gui, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
+function save_lookup_function(main_gui, lookup_table_gui, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities)
 
 lookup_table = convert_table_to_lookup_struct(lookup_table_gui.UITable.Data);
 
@@ -148,8 +165,8 @@ T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table, img
 
 main_gui.niiFileTable.Data = T_preallocated;
 
-cell_change_callback(main_gui, table_options, subjID, anat_modalities, postop_modalities, [])
- 
+cell_change_callback(main_gui, subjID, imgs, anat_modalities, postop_modalities, [])
+
 delete(lookup_table_gui);
 
 end
@@ -159,14 +176,14 @@ function table_struct = convert_table_to_lookup_struct(table_strings)
 table_struct = struct();
 
 for row_idx = 1:height(table_strings)
-    
+
     keywords_string = strsplit(table_strings.Keywords(row_idx), ',');
-    
+
     keywords_cell = cell(1, length(keywords_string));
     for word = 1:length(keywords_string)
         keywords_cell{1, word} = keywords_string(word);
     end
-    
+
     table_struct.(table_strings.Type(row_idx)).(table_strings.Session(row_idx)).(table_strings.Modality(row_idx)) = keywords_cell;
 end
 
@@ -198,7 +215,7 @@ lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 %% cell change callback
-function cell_change_callback(uiapp, table_options, subjID, anat_modalities, postop_modalities, event)
+function cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, event)
 
 uiapp.previewtree_preop_anat.Children.delete;     % delete children
 uiapp.previewtree_postop_anat.Children.delete;    % delete children
@@ -211,16 +228,36 @@ uiapp.previewtree_postop_func.Children.delete;    % delete children
 
 % go through all of the items and automatically set columns based on others
 for i = 1:height(uiapp.niiFileTable.Data)
-    session = char(uiapp.niiFileTable.Data.Session(i));
-    type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
-    
+
     if ~isempty(event) % check this only for the current selected one
+        % set type automatically for anat modalities
         if any(strcmp(modality, anat_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Type(i) = 'anat';
+            uiapp.niiFileTable.Data.Task(i) = '-';
+            % set type and session automatically for postop modalities
         elseif any(strcmp(modality, postop_modalities)) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Type(i) = 'anat';
+            uiapp.niiFileTable.Data.Session(i) = 'postop';
+            uiapp.niiFileTable.Data.Task(i) = '-';
+            % set type to func for bold modality
+        elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData.task_set(i) == 1
+            uiapp.niiFileTable.Data.Type(i) = 'func';
+            % set type to dwi for dwi modality
+        elseif strcmp(modality, 'dwi') && event.Indices(2) > 2 && event.Indices(1) == i
+            uiapp.niiFileTable.Data.Type(i) = 'dwi';
+            uiapp.niiFileTable.Data.Task(i) = '-';
+            % set task to rest if bold is selected and task is not set and has not been automatically set before (do this only once)
+        elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData.task_set(i) == 0
+            uiapp.niiFileTable.Data.Type(i) = 'func';
+            uiapp.niiFileTable.Data.Task(i) = 'rest';
+            uiapp.niiFileTable.UserData.task_set(i) = 1;
+        end
+    else    % automatically set rest as task if func is detected (this is not covered by the lookupable as of yet)
+        if strcmp(modality, 'bold') && uiapp.niiFileTable.UserData.task_set(i) == 0
+            uiapp.niiFileTable.Data.Type(i) = 'func';
+            uiapp.niiFileTable.Data.Task(i) = 'rest';
+            uiapp.niiFileTable.UserData.task_set(i) = 1;
         end
     end
 end
@@ -230,55 +267,71 @@ for i = find(~uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
-    
+
     if ~isempty(event) % check this only for the current selected one
         if ~any(strcmp('-', {session, type, modality})) && event.Indices(2) > 2 && event.Indices(1) == i
             uiapp.niiFileTable.Data.Include(i) = true;
-            if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
-                fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
-            else
-                fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
-            end
-            ui_field = ['previewtree_' session '_anat'];
-            if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
-                fname = ['>> ', fname, ' <<'];
-            end
-            uitreenode(uiapp.(ui_field), 'Text', fname);
         end
     end
-    
+
 end
 
 % finally, go through all the files that have been selected to include and update them in the uitree
 for i = find(uiapp.niiFileTable.Data.Include)'
-    
+
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
+    run = char(uiapp.niiFileTable.Data.Run(i));
+    task = char(uiapp.niiFileTable.Data.Task(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
+
     if strcmp(modality, "CT")
         uiapp.niiFileTable.Data.Acquisition(i) = "-";
     end
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
-    
-    % check whether everything has been properly defined befor updating uitree
-    if ~any(strcmp('-', {session, type, modality}))
-        
-        if strcmp('-', desc) || strcmp('', desc) || isempty(desc)
-            fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
-        else
-            fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
-        end
+
+    if ~any(strcmp('-', {session, type, modality}))  % check whether everything has been properly defined befor updating uitree
+
+        fname = generate_bids_filename(subjID, session, run, task, desc, modality, []);
         ui_field = ['previewtree_' session '_' type];
+
+        % now check if there are duplicate filenames in the tree
         if ~isempty(uiapp.(ui_field).Children) && any(ismember(fname, {uiapp.(ui_field).Children.Text}))
-            fname = ['>> ', fname, ' <<'];
+
+            % if duplicate file names have been found, also update the already present filename
+            row_idx_duplicate_previewtree = find(cellfun(@(c) ischar(c) && strcmp(c, fname), {uiapp.(ui_field).Children.Text}));    % find the row of the other duplicate in the previewtree
+            row_idx_duplicate_filetable = find_dupl_file(uiapp.niiFileTable, i, session, type, run, task, modality);
+
+            % for bold and dwi data, try to sort out duplicates automatically with direction tag
+            if strcmp(modality, 'bold') || strcmp(modality, 'dwi') && imgs{i, 1}.json_found == 1 && ~isempty(row_idx_duplicate_filetable)
+
+                % get phase encoding for the current row
+                ped_current_row = get_phase_encoding_direction(imgs{i, 1}.json_sidecar);
+                ped_dupl_row = get_phase_encoding_direction(imgs{row_idx_duplicate_filetable, 1}.json_sidecar);
+
+                if ~strcmp(ped_current_row, '') && ~strcmp(ped_dupl_row, '') && ~strcmp(ped_current_row, ped_dupl_row)   % if encoding directions have been found
+                    fname = generate_bids_filename(subjID, session, run, task, desc, modality, ped_current_row);
+                    uiapp.(ui_field).Children(row_idx_duplicate_previewtree).Text = generate_bids_filename(subjID, session, run, task, desc, modality, ped_dupl_row);
+                    uiapp.niiFileTable.UserData.fnames(row_idx_duplicate_filetable) = generate_bids_filename(subjID, session, run, task, desc, modality, ped_dupl_row);
+                else
+                    fname = ['>> ', fname, ' <<'];  % change filename to indicate duplicate
+                    uiapp.(ui_field).Children(row_idx_duplicate_previewtree).Text = fname;  % set the other duplicate to this filename as well
+                    uiapp.niiFileTable.UserData.fnames(row_idx_duplicate_filetable) = fname;
+                end
+                % for others, just set the filename with >><< to warn the user
+            else
+                fname = ['>> ', fname, ' <<'];  % change filename to indicate duplicate
+                uiapp.(ui_field).Children(row_idx_duplicate_previewtree).Text = fname;  % set the other duplicate to this filename as well
+            end
         end
-        uitreenode(uiapp.(ui_field), 'Text', fname);
+
+        uiapp.niiFileTable.UserData.fnames(i) = fname;
+        uitreenode(uiapp.(ui_field), 'Text', fname);    % set the filename of the current row
     end
-    
-end
 
 end
+end
+
 
 %% preallocate table on the left
 function table_preallocated = preallocate_table(table, lookup_table, imgs_resolution)
@@ -290,29 +343,29 @@ image_types = fieldnames(lookup_table);
 
 % filenames
 for rowIdx = 1:height(table)
-    
+
     fname = table.Filename{rowIdx};
 
     % image types (anat, func, ...)
     for img_type_idx = 1:length(image_types)
-        
+
         img_type = image_types{img_type_idx};
         sessions = fieldnames(lookup_table.(img_type));
-        
+
         % sessions (preop, postop, ...)
         for session_idx = 1:length(sessions)
-            
+
             session = sessions{session_idx};
             modalities = fieldnames(lookup_table.(img_type).(session));
-            
+
             % modalities (T1w, T2w, ...)
             for modality_idx = 1:length(modalities)
-                
+
                 modality = modalities{modality_idx};
                 for name_idx = 1:length(lookup_table.(img_type).(session).(modality))
-                    
+
                     name = char(lookup_table.(image_types{img_type_idx}).(sessions{session_idx}).(modalities{modality_idx}){name_idx});
-                    
+
                     if regexp(fname, name)
                         table_preallocated.Session(rowIdx) = session;
                         table_preallocated.Type(rowIdx) = img_type;
@@ -323,12 +376,12 @@ for rowIdx = 1:height(table)
             end
         end
     end
-    
+
     % prepopulate acq tag by resolution for preop MRIs (just anat)
     if  ~strcmp(string(table_preallocated.Session(rowIdx)), 'postop') && ~strcmp(string(table_preallocated.Type(rowIdx)), 'func') && ~strcmp(string(table_preallocated.Type(rowIdx)), 'dwi')
-        
+
         resolution = imgs_resolution{rowIdx};
-        
+
         % is isometric resolution
         acq_tags = {'sag', 'cor', 'ax'};
         if range(resolution) < 0.05
@@ -339,7 +392,7 @@ for rowIdx = 1:height(table)
             table_preallocated.Acquisition(rowIdx) = string(acq_tags{idx});
         end
     end
-    
+
 end
 
 end
@@ -352,10 +405,10 @@ s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'C
 
 switch s
     case 'Yes'
+        anat_files = [];
+        setappdata(groot, 'anat_files', anat_files);
         delete(uiapp);
 end
-
-
 end
 
 %% ok button
@@ -363,17 +416,41 @@ function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, su
 
 % sanity checks first
 % if preop is empty
+nopostop_set = 0;   % we will use this to detect if no postop as been set, because in this case the user may proceed
 if isempty(uiapp.previewtree_preop_anat.Children)
-    uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Warning', 'Icon','warning');
+    uialert(uiapp.UIFigure, 'No preop files included. Please select at least one preop image.', 'Invalid file selection');
     return
-    
-    % if postop is empty
+
+    % if postop is empty, only give out warning
 elseif isempty(uiapp.previewtree_postop_anat.Children)
-    uialert(uiapp.UIFigure, 'No postop files included. Please select at least one postop image.', 'Warning', 'Icon','warning');
-    return
-    % if multiple files for same session/modality/type are detected
-elseif contains([uiapp.previewtree_preop_anat.Children.Text], '>>') || ...
-        (~isempty(uiapp.previewtree_postop_anat.Children) && contains([uiapp.previewtree_postop_anat.Children.Text], '>>'))
+    s = uiconfirm(uiapp.UIFigure, 'No postop anatomical files included. Do you still want to proceed?', 'Confirm missing postop files', ...
+        'Options', {'Yes', 'No'}, 'Icon', 'warning');
+
+    switch s
+        case 'No'
+            return
+        case 'Yes'
+            nopostop_set = 1;
+    end
+end
+
+% if multiple files for same session/modality/type are detected
+duplicates_found = 0;
+N_sessions = length(table_options.Session);
+N_types = length(table_options.Type);
+
+for s = 1:N_sessions
+    for t = 1:N_types
+        uifield = ['previewtree_', table_options.Session{s}, '_', table_options.Type{t}];
+        if ~isa(uiapp.(uifield).Children, 'matlab.graphics.GraphicsPlaceholder')
+            if contains([uiapp.(uifield).Children.Text], '>>')
+                duplicates_found = 1;
+            end
+        end
+    end
+end
+
+if duplicates_found
     uialert(uiapp.UIFigure, 'Multiple files with same modality inluded (look for >> filename << in preview window). Please select only one file per modality and session or seperate them by specifying a description.', 'Warning', 'Icon','warning');
     return
 end
@@ -384,38 +461,36 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
     modality = char(uiapp.niiFileTable.Data.Modality(i));
-    desc = char(uiapp.niiFileTable.Data.Acquisition(i));
-    
+
     % check whether there is one that has not been defined properly
     if any(strcmp('-', {session, type, modality}))
-        uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Warning', 'Icon','warning');
+        uialert(uiapp.UIFigure, 'Please specify session, type and modality for all Included images.', 'Invalid file selection');
         return
     end
-    
+
     % check if postop images have the correct modality
     if strcmp(session, 'postop') && any(strcmp(modality, postop_modalities))
         postop_modality_found = 1;
     end
 end
 
-if ~(postop_modality_found == 1)
-     warning_str = ['No valid modality for the postop session has been found, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
-        uialert(uiapp.UIFigure, warning_str, 'Warning', 'Icon','warning');
-        return
+if ~(postop_modality_found == 1) && ~(nopostop_set == 1)    % only halt if user has specified postop, but it has the wrong modality
+    warning_str = ['No valid modality for the postop session has been found, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
+    uialert(uiapp.UIFigure, warning_str, 'Invalid file selection');
+    return
 end
 
-N_sessions = length(table_options.Session);
 anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
 
-
-
 for i = find(uiapp.niiFileTable.Data.Include)'
-    
+
     session = char(uiapp.niiFileTable.Data.Session(i));
-    modality = char(uiapp.niiFileTable.Data.Modality(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
+    run = char(uiapp.niiFileTable.Data.Run(i));
+    task = char(uiapp.niiFileTable.Data.Task(i));
+    modality = char(uiapp.niiFileTable.Data.Modality(i));
     desc = char(uiapp.niiFileTable.Data.Acquisition(i));
-    
+
     % depending on the modality, choose extensions of files to be copied
     if ~strcmp(modality, 'dwi')
         extensions = {'.nii.gz', '.json'};
@@ -423,39 +498,40 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         extensions = {'.nii.gz', '.json', '.bval', '.bvec'};
     end
 
-    if strcmp('-', desc) || strcmp('', desc)
-        fname = sprintf('%s_ses-%s_%s', subjID, session, modality);   % generate BIDS filename
-    else
-        fname = sprintf('%s_ses-%s_acq-%s_%s', subjID, session, desc, modality);   % generate BIDS filename
-    end
-    
+    % get filename
+    fname = char(uiapp.niiFileTable.UserData.fnames(i));
+
     export_folder = fullfile(dataset_folder, 'rawdata', subjID, ['ses-', session], type);
     if ~isfolder(export_folder)
         mkdir(export_folder);
     end
-    
+
     destin_no_ext = fullfile(export_folder, fname);
     source_no_ext = fullfile(nii_folder, uiapp.niiFileTable.Data.Filename{i});
-    
+
     for j = 1:length(extensions)
         source = [source_no_ext extensions{j}];
         if isfile(source)
-            copyfile(source, [destin_no_ext extensions{j}])
+            copyfile(source, [destin_no_ext, extensions{j}])
         else
             warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', source);
         end
     end
-   
+
     % generate key for .json file
-     if strcmp('-', desc) || strcmp('', desc)
-         acq_mod = modality;
-     else
+    if strcmp('-', desc) || strcmp('', desc)
+        acq_mod = modality;
+    else
         acq_mod = [desc, '_', modality];
-     end
-     
+    end
+
     % add file to anat_files
-    anat_files.(session).(type).(acq_mod) = fname; % set output struct
-    
+    if ~isfield(anat_files.(session), type) || ~isfield(anat_files.(session).(type), acq_mod) % if no other filename exists for this combination
+        anat_files.(session).(type).(acq_mod) = {fname}; % set output struct
+    else % otherwise, append
+        anat_files.(session).(type).(acq_mod){end+1} = fname;
+    end
+
 end
 
 setappdata(groot, 'anat_files', anat_files);
@@ -464,60 +540,89 @@ delete(uiapp);      % close window
 end
 
 %% preview images in the middle
-function preview_nii(uiapp, img)
+function preview_nii(uiapp, imgs, event)
 
-% update info area
-try
-    time_and_date_ugly = img.p.nii.ext.edata_decoded.AcquisitionDateTime;
-    time_and_date_pretty = sprintf('%s.%s.%s %s:%s', num2str(time_and_date_ugly(7:8)), ...
-        num2str(time_and_date_ugly(5:6)), num2str(time_and_date_ugly(1:4)), ...
-        num2str(time_and_date_ugly(9:10)), num2str(time_and_date_ugly(11:12)));
-catch
-    time_and_date_pretty = 'N/A';
+if isempty(event)
+    img_idx = 1;
+elseif isempty(event.Indices)
+    img_idx = [];
+elseif event.Indices(2) ~= 2
+    img_idx = [];
+else
+    img_idx = event.Indices(1);
 end
-info_str = sprintf('Size:\t\t\t[%s x %s x %s]\nPixel dimensions:\t[%.2f x %.2f x %.2f]\nAcquistion date:\t%s\nIntensity range:\t[%.0f, %.0f]\nHistogram range:\t[%.0f, %.0f]', ...
-    num2str(img.dim(1)), num2str(img.dim(2)), num2str(img.dim(3)), ...
-    img.p.pixdim(1), img.p.pixdim(2), img.p.pixdim(3), ...
-    time_and_date_pretty, ...
-    min(img.p.nii.img(:)), max(img.p.nii.img(:)), ...
-    min(img.img_thresholded), max(img.img_thresholded));
 
-uiapp.infoArea.Value = {info_str};
+if ~isempty(img_idx)
 
-% update histgram
-h = histogram(uiapp.histogramAxes, img.img_thresholded, 'EdgeAlpha', 0.1, 'FaceColor', [1 1 1], 'EdgeColor', [1 1 1]);
-uiapp.histogramAxes.Color = [0,0,0];
+    img = imgs{img_idx, 1};
 
-% plot images
-setappdata(uiapp.UIFigure, 'img', img);
+    % update info area
+    try
+        time_and_date_ugly = img.p.nii.ext.edata_decoded.AcquisitionDateTime;
+        time_and_date_pretty = sprintf('%s.%s.%s %s:%s', num2str(time_and_date_ugly(7:8)), ...
+            num2str(time_and_date_ugly(5:6)), num2str(time_and_date_ugly(1:4)), ...
+            num2str(time_and_date_ugly(9:10)), num2str(time_and_date_ugly(11:12)));
+    catch
+        time_and_date_pretty = 'N/A';
+    end
+    info_str = sprintf('Size:\t\t\t[%s x %s x %s x %s]\nPixel dimensions:\t[%.2f x %.2f x %.2f]\nAcquistion date:\t%s\nIntensity range:\t[%.0f, %.0f]\nHistogram range:\t[%.0f, %.0f]', ...
+        num2str(img.p.nii.hdr.dim(2)), num2str(img.p.nii.hdr.dim(3)), num2str(img.p.nii.hdr.dim(4)), num2str(img.p.nii.hdr.dim(5)), ...
+        img.p.pixdim(1), img.p.pixdim(2), img.p.pixdim(3), ...
+        time_and_date_pretty, ...
+        min(img.p.nii.img(:)), max(img.p.nii.img(:)), ...
+        min(img.img_thresholded), max(img.img_thresholded));
 
-% axial
-cut_slice = round(img.dim(3)/2);
-imagesc(uiapp.axes_axi, img.p.nii.img(:, :, cut_slice));
-uiapp.axes_axi.Colormap = gray(128);
-setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
-uiapp.axes_axi.DataAspectRatioMode = 'manual';
-uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
-set(uiapp.axes_axi, 'view', [90, -90]);
+    % if .json has been found, insert this into the info string as well
+    if img.json_found == 1
+        info_str = sprintf('%s\n\nInfo found in JSON sidecar:\n', info_str);
 
-% coronal
-cut_slice = round(img.dim(2)/2);
-imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :, 1)));
-uiapp.axes_cor.Colormap = gray(128);
-setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
-uiapp.axes_cor.DataAspectRatioMode = 'manual';
-uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-set(uiapp.axes_cor, 'view', [90, -90]);
+        keys = fieldnames(img.json_sidecar);
+        for i = 1:length(keys)
+            try
+                value = getfield(img.json_sidecar, keys{i});
+                if ~ischar(value)
+                    value = num2str(value);
+                end
+                info_str = sprintf('%s\n%s:\t%s', info_str, keys{i}, value);
+            end
+        end
+    end
+    uiapp.infoArea.Value = {info_str};
 
-% sagittal
-cut_slice = round(img.dim(1)/2);
-imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :, 1)));
-uiapp.axes_sag.Colormap = gray(128);
-setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
-uiapp.axes_sag.DataAspectRatioMode = 'manual';
-uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-set(uiapp.axes_sag, 'view', [90, -90]);
+    % update histgram
+    h = histogram(uiapp.histogramAxes, img.img_thresholded, 'EdgeAlpha', 0.1, 'FaceColor', [1 1 1], 'EdgeColor', [1 1 1]);
+    uiapp.histogramAxes.Color = [0,0,0];
 
+    % plot images
+    setappdata(uiapp.UIFigure, 'img', img);
+
+    % axial
+    cut_slice = round(img.dim(3)/2);
+    imagesc(uiapp.axes_axi, img.p.nii.img(:, :, cut_slice));
+    uiapp.axes_axi.Colormap = gray(128);
+    setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
+    uiapp.axes_axi.DataAspectRatioMode = 'manual';
+    uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+    set(uiapp.axes_axi, 'view', [90, -90]);
+
+    % coronal
+    cut_slice = round(img.dim(2)/2);
+    imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :, 1)));
+    uiapp.axes_cor.Colormap = gray(128);
+    setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
+    uiapp.axes_cor.DataAspectRatioMode = 'manual';
+    uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+    set(uiapp.axes_cor, 'view', [90, -90]);
+
+    % sagittal
+    cut_slice = round(img.dim(1)/2);
+    imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :, 1)));
+    uiapp.axes_sag.Colormap = gray(128);
+    setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
+    uiapp.axes_sag.DataAspectRatioMode = 'manual';
+    uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+    set(uiapp.axes_sag, 'view', [90, -90]);
+end
 end
 
 %% scroll images
@@ -539,7 +644,7 @@ if ~isempty(hAxes)
                 if ~(sliceNr <= 2)
                     sliceNr = sliceNr - 2;
                 end
-                
+
             end
             imagesc(uiapp.axes_axi, img.p.nii.img(:, :, sliceNr));
             setappdata(uiapp.UIFigure, 'cut_slice_axi', sliceNr);
@@ -553,7 +658,7 @@ if ~isempty(hAxes)
                 if ~(sliceNr <= 2)
                     sliceNr = sliceNr - 2;
                 end
-                
+
             end
             imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :, 1)));
             setappdata(uiapp.UIFigure, 'cut_slice_cor', sliceNr);
@@ -567,12 +672,12 @@ if ~isempty(hAxes)
                 if ~(sliceNr <= 2)
                     sliceNr = sliceNr - 2;
                 end
-                
+
             end
             imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :, 1)));
             setappdata(uiapp.UIFigure, 'cut_slice_sag', sliceNr);
         otherwise
-            
+
     end
 end
 
@@ -596,17 +701,17 @@ panelPos = getpixelposition(panel);
 % Loop over all figure descendants
 c = findobj(get(fig,'Children'), 'type', 'axes');
 for h = c'
-    
+
     axesPos = getpixelposition(h);  % Note: cache this for improved performance
-    
+
     x_lower = figPos(1) + panelPos(1) + axesPos(1);
     x_upper = x_lower + axesPos(3);
-    
+
     y_lower = figPos(2) + panelPos(2) + axesPos(2);
     y_upper = y_lower + axesPos(4);
-    
+
     % If descendant contains the mouse pointer position, exit
-    
+
     if (p(1) > x_lower) && (p(1) < x_upper) && (p(2) > y_lower) && (p(2) < y_upper)
         return
     end
@@ -692,27 +797,27 @@ types = fieldnames(lookup_table);
 lookup_table_data = table();
 
 for type_idx = 1:length(types)
-    
+
     type = types{type_idx};
-    
+
     sessions = fieldnames(lookup_table.(type));
-    
+
     for ses_idx = 1:length(sessions)
-        
+
         session = sessions{ses_idx};
-        
+
         modalities = fieldnames(lookup_table.(type).(session));
-        
+
         temp_table = table();
         for mod_idx = 1:length(modalities)
-            
+
             modality = modalities{mod_idx};
-            
+
             keywords =  lookup_table.(type).(session).(modality);
             keywords_table = "";
-            
+
             if ~isempty(keywords)
-                
+
                 for keyword_idx = 1:length(keywords)
                     if keyword_idx == 1
                         keywords_table = string(sprintf('%s', keywords{keyword_idx}));
@@ -721,14 +826,14 @@ for type_idx = 1:length(types)
                     end
                 end
             end
-            
+
             temp_table.Keywords = string(keywords_table);
             temp_table.Type = string(type);
             temp_table.Session = string(session);
             temp_table.Modality = string(modality);
-            
+
             lookup_table_data = [lookup_table_data; temp_table];
-            
+
         end
     end
 end
@@ -876,4 +981,64 @@ if rg(1)==rg(2), rg(1) = mi; end
 if abs(rg(1))>10, rg(1) = floor(rg(1)/2)*2; end % even number
 if abs(rg(2))>10, rg(2) = ceil(rg(2)/2)*2; end % even number
 end
+
+%% misc helper functions
+function bids_fname = generate_bids_filename(subjID, session, run, task, desc, modality, phase_enc_dir)
+
+tag_names = {{'ses' session}, {'run', run}, {'task', task}, {'acq', desc}};
+
+bids_fname = sprintf('%s', subjID);
+
+for i = 1:numel(tag_names)
+    if ~(strcmp(tag_names{1, i}{2}, '-')) && ~(strcmp(tag_names{1, i}{2}, '')) && ~isempty(tag_names{1, i}{2})
+        bids_fname = sprintf('%s_%s-%s', bids_fname, tag_names{1, i}{1}, tag_names{1, i}{2});
+    end
+end
+
+if ~isempty(phase_enc_dir)
+    bids_fname = [bids_fname, '_', 'dir-', phase_enc_dir, '_', modality];
+else
+    bids_fname = [bids_fname, '_', modality];
+end
+
+end
+
+function ped = get_phase_encoding_direction(json_sidecar)
+
+if isfield(json_sidecar, 'PhaseEncodingDirection')
+    switch json_sidecar.PhaseEncodingDirection
+        case 'j-'
+            ped = 'AP';
+        case 'j'
+            ped = 'PA';
+        case 'i'
+            ped = 'LR';
+        case 'i-'
+            ped = 'RL';
+        otherwise
+            ped = '';
+    end
+else
+    ped = '';
+end
+end
+
+
+function dupl_row = find_dupl_file(niitable, current_row, session, type, run, task, modality)
+
+dupl_row = [];
+for i = 1:height(niitable.Data)
+    if strcmp(session, char(niitable.Data.Session(i))) ...
+            && strcmp(type, char(niitable.Data.Type(i))) ...
+            && strcmp(run, char(niitable.Data.Run(i))) ...
+            && strcmp(task, char(niitable.Data.Task(i))) ...
+            && strcmp(modality, char(niitable.Data.Modality(i))) ...
+            && i ~= current_row ...
+            && niitable.Data.Include(i) == 1
+        dupl_row = i;
+    end
+
+end
+end
+
 
