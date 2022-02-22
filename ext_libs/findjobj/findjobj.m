@@ -1,4 +1,4 @@
-function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<*CTCH,*ASGLU,*MSNU,*NASGU>
+function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<*CTCH,*ASGLU,*MSNU,*NASGU,*CHARTEN,*STREMP,*SPRINTFN>
 %findjobj Find java objects contained within a specified java container or Matlab GUI handle
 %
 % Syntax:
@@ -70,8 +70,8 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
 %    jEdit.requestFocus;
 %
 % Technical explanation & details:
-%    http://undocumentedmatlab.com/blog/findjobj/
-%    http://undocumentedmatlab.com/blog/findjobj-gui-display-container-hierarchy/
+%    https://undocumentedmatlab.com/articles/findjobj
+%    https://undocumentedmatlab.com/articles/findjobj-gui-display-container-hierarchy
 %
 % Known issues/limitations:
 %    - Cannot currently process multiple container objects - just one at a time
@@ -88,6 +88,9 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
 %    Please send to Yair Altman (altmany at gmail dot com)
 %
 % Change log:
+%    2019-12-15: Fix for changed warning IDs in R2019b; removed javacomponent warning; added promo message
+%    2019-07-03: Additional fix for R2018b; added separate findjobj_fast utility
+%    2018-09-21: Fix for R2018b suggested by Eddie (FEX); speedup suggested by Martin Lehmann (FEX); alert if trying to use with uifigure
 %    2017-04-13: Fixed two edge-cases (one suggested by H. Koch)
 %    2016-04-19: Fixed edge-cases in old Matlab release; slightly improved performance even further
 %    2016-04-14: Improved performance for the most common use-case (single input/output): improved code + allow inspecting groot
@@ -145,12 +148,12 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
 % referenced and attributed as such. The original author maintains the right to be solely associated with this work.
 
 % Programmed and Copyright by Yair M. Altman: altmany(at)gmail.com
-% $Revision: 1.50 $  $Date: 2017/04/13 20:47:08 $
+% $Revision: 1.53 $  $Date: 2019/12/15 12:21:37 $
 
     % Ensure Java AWT is enabled
     error(javachk('awt'));
 
-    persistent pContainer pHandles pLevels pParentIdx pPositions
+    persistent pContainer pHandles pLevels pParentIdx pPositions promo
 
     try
         % Initialize
@@ -166,9 +169,25 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         nomenu = false;
         menuBarFoundFlag = false;
         hFig = [];
+        promo = true;
 
         % Force an EDT redraw before processing, to ensure all uicontrols etc. are rendered
         drawnow;  pause(0.02);
+
+        % Display promo (just once!)
+        if isempty(promo)
+            msg = 'If you need expert assistance with Matlab GUI, consider my professional consulting/training services';
+            website = 'https://undocumentedmatlab.com';
+            msg = [msg ' (' website ')'];
+            if ~isdeployed
+                link = ['<a href="' website];
+                msg = regexprep(msg,website,[link '">$0</a>']);
+                msg = regexprep(msg,{'consulting','training'},[link '/$0">$0</a>']);
+            end
+            %warning('YMA:findjobj:promo',msg);
+            disp(['[' 8 msg ']' 8]);
+            promo = true;
+        end
 
         % Default container is the current figure's root panel
         if nargin
@@ -185,6 +204,13 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             elseif ishghandle(container) % && ~isa(container,'java.awt.Container')
                 container = container(1);  % another current limitation...
                 hFig = ancestor(container,'figure');
+                oldWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+                warning('off','MATLAB:ui:javaframe:PropertyToBeRemoved')
+                try hJavaFrame = get(hFig,'JavaFrame'); catch, hJavaFrame = []; end
+                warning(oldWarn);
+                if isempty(hJavaFrame)  % alert if trying to use with web-based (not Java-based) uifigure
+                    error('YMA:findjobj:NonJavaFigure', 'Findjobj only works with Java-based figures, not web-based (App Designer) uifigures');
+                end
                 origContainer = handle(container);
                 if isa(origContainer,'uimenu') || isa(origContainer,'matlab.ui.container.Menu')
                     % getpixelposition doesn't work for menus... - damn!
@@ -220,9 +246,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                             jFig = mde.getClient(figName);
                             if isempty(jFig), error('dummy');  end
                         catch
-                            warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
-                            warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
-                            jFig = get(get(hFig,'JavaFrame'),'FigurePanelContainer');
+                            jFig = get(hJavaFrame,'FigurePanelContainer');
                         end
                         pos = [];
                         try
@@ -360,7 +384,11 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                     % Assign a new random tooltip to the original (Matlab) handle
                     oldTooltip = get(thisContainer,'Tooltip');
                     newTooltip = num2str(rand,99);
-                    set(thisContainer,'Tooltip',newTooltip);
+                    try
+                        set(thisContainer,'TooltipString',newTooltip);
+                    catch
+                        set(thisContainer,'Tooltip',newTooltip);
+                    end
                     drawnow;  % force the Java handle to sync with the Matlab prop-change
                     try
                         % Search for a Java handle that has the newly-generated tooltip
@@ -406,7 +434,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         % 'Cleaner' error handling - strip the stack info etc.
         err = lasterror;  %#ok
         err.message = regexprep(err.message,'Error using ==> [^\n]+\n','');
-        if isempty(findstr(mfilename,err.message))
+        if isempty(strfind(err.message,mfilename))
             % Indicate error origin, if not already stated within the error message
             err.message = [mfilename ': ' err.message];
         end
@@ -458,6 +486,9 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
 
     %% Get Java reference to top-level (root) panel - actually, a reference to the java figure
     function [jRootPane,contentSize] = getRootPanel(hFig)
+        oldWarn2 = warning;
+        warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+        warning('off','MATLAB:ui:javaframe:PropertyToBeRemoved')
         try
             contentSize = [0,0];  % initialize
             jRootPane = hFig;
@@ -471,8 +502,6 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             jRootPane = jFigPanel.getRootPane;
         catch
             try
-                warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
-                warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
                 jFrame = get(hFig,'JavaFrame');
                 jFigPanel = get(jFrame,'FigurePanelContainer');
                 jRootPane = jFigPanel;
@@ -483,14 +512,13 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         end
         try
             % If invalid RootPane - try another method...
-            warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
-            warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
             jFrame = get(hFig,'JavaFrame');
             jAxisComponent = get(jFrame,'AxisComponent');
             jRootPane = jAxisComponent.getParent.getParent.getRootPane;
         catch
             % Never mind
         end
+        warning(oldWarn2);
         try
             % If invalid RootPane, retry up to N times
             tries = 10;
@@ -559,7 +587,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             catch
                 % Probably not a Menu container, but maybe a top-level JMenu, so discard duplicates
                 %if isa(handles(end).java,'javax.swing.JMenuBar')
-                if ~menuRootFound && strcmp(class(java(handles(end))),'javax.swing.JMenuBar')  %faster...
+                if ~menuRootFound && strcmp(class(java(handles(end))),'javax.swing.JMenuBar') %#ok<STISA> %faster...
                     if removeDuplicateNode(thisIdx)
                         menuRootFound = true;
                         return;
@@ -572,7 +600,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         %if isa(jcontainer,'java.awt.Container')
         try  % try-catch is faster than checking isa(jcontainer,'java.awt.Container')...
             %if jcontainer.getComponentCount,  jcontainer.getComponents,  end
-            if ~nomenu || menuBarFoundFlag || ~contains(class(jcontainer),'FigureMenuBar')
+            if ~nomenu || menuBarFoundFlag || isempty(strfind(class(jcontainer),'FigureMenuBar'))
                 lastChildComponent = java.lang.Object;
                 child = 0;
                 while (child < jcontainer.getComponentCount)
@@ -757,7 +785,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                 % Return just the children (the parent panels are uninteresting)
                 foundIdx(1:2:end) = [];
             end
-
+            
             % If several possible handles were found and the first is the container of the second
             if length(foundIdx) == 2 && isequal(handles(foundIdx(1)).java, handles(foundIdx(2)).getParent)
                 % Discard the uninteresting component container
@@ -1270,9 +1298,10 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                 jTreeFig = mde.getClient('FindJObj').getTopLevelAncestor;
                 jTreeFig.setIcon(figIcon);
             catch
-                warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
-                warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');  % New warning in R2019b
+                oldWarn3 = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+                warning('off','MATLAB:ui:javaframe:PropertyToBeRemoved')
                 jTreeFig = get(hTreeFig,'JavaFrame');
+                warning(oldWarn3);
                 jTreeFig.setFigureIcon(figIcon);
             end
             vsplitPaneLocation = 0.8;
@@ -1522,8 +1551,8 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
 
         % Prepare the bottom pane with all buttons
         lowerPanel = JPanel(FlowLayout);
-        blogUrlLabel = '<a href="http://UndocumentedMatlab.com">Undocumented<br>Matlab.com</a>';
-        jWebsite = createJButton(blogUrlLabel, @btWebsite_Callback, 'Visit the UndocumentedMatlab.com blog');
+        blogUrlLabel = '<a href="https://UndocumentedMatlab.com">Undocumented<br>Matlab.com</a>';
+        jWebsite = createJButton(blogUrlLabel, @btWebsite_Callback, 'Additional Matlab GUI resources on UndocumentedMatlab.com');
         jWebsite.setContentAreaFilled(0);
         lowerPanel.add(jWebsite);
         lowerPanel.add(createJButton('Refresh<br>tree',        {@btRefresh_Callback, origContainer, hTreeFig}, 'Rescan the component tree, from the root down'));
@@ -1536,7 +1565,9 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
         globalPanel = JPanel(BorderLayout);
         globalPanel.add(hsplitPane, BorderLayout.CENTER);
         globalPanel.add(lowerPanel, BorderLayout.SOUTH);
-        [obj, hcontainer] = ea_javacomponent(globalPanel, [0,0,pos(3:4)], hTreeFig);
+        oldWarn2 = warning('off','MATLAB:ui:javacomponent:FunctionToBeRemoved');
+        [obj, hcontainer] = javacomponent(globalPanel, [0,0,pos(3:4)], hTreeFig);
+        warning(oldWarn2);
         set(hcontainer,'units','normalized');
         drawnow;
         hsplitPane.setDividerLocation(hsplitPaneLocation);  % this only works after the JSplitPane is displayed...
@@ -1767,7 +1798,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                     catch
                         visible = 1;
                     end
-                    visible = visible && isempty(findstr(get(childNode,'Name'),'color="gray"'));
+                    visible = visible && isempty(strfind(get(childNode,'Name'),'color="gray"'));
                     %if any(strcmp(childNode.getName,nodesToUnExpand))
                     %name = char(childNode.getName);
                     if any(cellfun(@(s)~isempty(strmatch(s,char(childNode.getName))),nodesToUnExpand)) || ~visible
@@ -1995,7 +2026,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                             % Use JideTable if available on this system
                             list = getTreeData(cbData);  %#ok
                             callbacksTableModel = eval('com.jidesoft.grid.PropertyTableModel(list);');  %#ok prevent JIDE alert by run-time (not load-time) evaluation
-
+                            
                             % Expand if only one category
                             if length(callbacksTableModel.getCategories)==1
                                 callbacksTableModel.expandFirstLevel;
@@ -2116,7 +2147,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                             % Use JideTable if available on this system
                             list = getTreeData(cbData);  %#ok
                             callbacksTableModel = eval('com.jidesoft.grid.PropertyTableModel(list);');  %#ok prevent JIDE alert by run-time (not load-time) evaluation
-
+                            
                             % Expand if only one category
                             if length(callbacksTableModel.getCategories)==1
                                 callbacksTableModel.expandFirstLevel;
@@ -2685,7 +2716,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
     %% Callback function for <UndocumentedMatlab.com> button
     function btWebsite_Callback(src, evd, varargin)  %#ok
         try
-            web('http://UndocumentedMatlab.com','-browser');
+            web('https://UndocumentedMatlab.com','-browser');
         catch
             % Never mind...
             dispError
@@ -2819,7 +2850,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                             end
 
                             % ...and now run it...
-                            %pause(0.1);
+                            %pause(0.1); 
                             drawnow;
                             dummy = which('uiinspect');  %#ok used only to load into memory
                             uiinspect(object);
@@ -3286,7 +3317,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             nodeTitleStr = sprintf('<html>Class name: <font color="blue">%s</font><br>Text/title: %s',objClass,objName);
 
             % If the component is invisible, state this in the tooltip
-            if contains(nodeName,'color="gray"')
+            if ~isempty(strfind(nodeName,'color="gray"'))
                 nodeTitleStr = [nodeTitleStr '<br><font color="gray"><i><b>*** Invisible ***</b></i></font>'];
             end
             nodeTitleStr = [nodeTitleStr '<hr>Right-click for context-menu'];
@@ -3377,10 +3408,10 @@ end  % FINDJOBJ
 
 % Fast implementation
 function jControl = findjobj_fast(hControl, jContainer)
-    try jControl = hControl.Table; return, catch, end  % fast bail-out for old uitables
+    try jControl = hControl.getTable; return, catch, end  % fast bail-out for old uitables
     try jControl = hControl.JavaFrame.getGUIDEView; return, catch, end  % bail-out for HG2 matlab.ui.container.Panel
     oldWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
-    oldWarn1 = warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');
+    warning('off','MATLAB:ui:javaframe:PropertyToBeRemoved')
     if nargin < 2 || isempty(jContainer)
         % Use a HG2 matlab.ui.container.Panel jContainer if the control's parent is a uipanel
         try
@@ -3397,31 +3428,38 @@ function jControl = findjobj_fast(hControl, jContainer)
         jf = get(hFig, 'JavaFrame');
         jContainer = jf.getFigurePanelContainer.getComponent(0);
     end
-    warning(oldWarn1);
     warning(oldWarn);
     jControl = [];
-    counter = 100;
-    oldTooltip = get(hControl,'Tooltip');
-    set(hControl,'Tooltip','!@#$%^&*');
+    counter = 20;  % 2018-09-21 speedup (100 x 0.001 => 20 x 0.005) - Martin Lehmann suggestion on FEX 2016-06-07
+    specialTooltipStr = '!@#$%^&*';
+    try  % Fix for R2018b suggested by Eddie (FEX comment 2018-09-19)
+        tooltipPropName = 'TooltipString';
+        oldTooltip = get(hControl,tooltipPropName);
+        set(hControl,tooltipPropName,specialTooltipStr);
+    catch
+        tooltipPropName = 'Tooltip';
+        oldTooltip = get(hControl,tooltipPropName);
+        set(hControl,tooltipPropName,specialTooltipStr);
+    end
     while isempty(jControl) && counter>0
         counter = counter - 1;
-        pause(0.001);
-        jControl = findTooltipIn(jContainer);
+        pause(0.005);
+        jControl = findTooltipIn(jContainer, specialTooltipStr);
     end
-    set(hControl,'Tooltip',oldTooltip);
+    set(hControl,tooltipPropName,oldTooltip);
     try jControl.setToolTipText(oldTooltip); catch, end
     try jControl = jControl.getParent.getView.getParent.getParent; catch, end  % return JScrollPane if exists
 end
-function jControl = findTooltipIn(jContainer)
+function jControl = findTooltipIn(jContainer, specialTooltipStr)
     try
         jControl = [];  % Fix suggested by H. Koch 11/4/2017
         tooltipStr = jContainer.getToolTipText;
-        %if strcmp(char(tooltipStr),'!@#$%^&*')
-        if ~isempty(tooltipStr) && tooltipStr.startsWith('!@#$%^&*')  % a bit faster
+        %if strcmp(char(tooltipStr),specialTooltipStr)
+        if ~isempty(tooltipStr) && tooltipStr.startsWith(specialTooltipStr)  % a bit faster
             jControl = jContainer;
         else
             for idx = 1 : jContainer.getComponentCount
-                jControl = findTooltipIn(jContainer.getComponent(idx-1));
+                jControl = findTooltipIn(jContainer.getComponent(idx-1), specialTooltipStr);
                 if ~isempty(jControl), return; end
             end
         end
