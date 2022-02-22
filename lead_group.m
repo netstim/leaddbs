@@ -335,9 +335,9 @@ groupdir = uigetdir;
 if ~groupdir % user pressed cancel
     return
 else
-    analysisFile = ea_getGroupAnalysisFile(folder);
+    analysisFile = ea_getGroupAnalysisFile(groupdir);
     if isempty(analysisFile) % Create new analysis file in case not found
-        analysisFile = ea_genGroupAnalysisFile(folder);
+        analysisFile = ea_genGroupAnalysisFile(groupdir);
     end
     groupdir = fileparts(analysisFile);
 end
