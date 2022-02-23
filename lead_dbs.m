@@ -978,8 +978,6 @@ if ~isempty(getappdata(handles.leadfigure,'uipatdir'))
     bids = getappdata(handles.leadfigure, 'bids');
     subjId = getappdata(handles.leadfigure, 'subjId');
     options.subj = bids.getSubj(subjId{1}, options.modality);
-else
-    options.subj.subjId = '';
 end
 ea_spec2dwrite(options);
 
