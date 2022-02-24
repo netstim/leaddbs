@@ -36,7 +36,7 @@ end
 
 if strcmp(options.coregmr.method, 'ANTs Nonlinear Coregistration')
     warning('off', 'backtrace');
-    warning('ANTs nonlinear coregistration only supports pre-op to pre-op registration, falling back to linear coregistration now!')
+    warndlg(sprintf('ANTs nonlinear coregistration only supports pre-op to pre-op!\nFalling back to ANTs linear coregistration for post-op to pre-op now.'))
     warning('on', 'backtrace');
     options.coregmr.method = 'ANTs';
 end
