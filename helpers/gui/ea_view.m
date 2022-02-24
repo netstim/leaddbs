@@ -24,6 +24,7 @@ if nargin
             case {'i', 'inferior'}
                 view(180, -90);
         end
+        v = ea_view;
     end
 
     if nargin>1
