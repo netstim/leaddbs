@@ -100,7 +100,7 @@ if solution.polar1 > 40
 end
 
 %% select axial slices at the level of the marker
-h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'NumberTitle','off','Position',[100 100 600 800],'Color','w');
+h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'NumberTitle','off','Position',[100 100 600 800],'Color','w','MenuBar','none');
 txt1 = uicontrol('style','text','units','pixels','Background','w',...
     'position',[10,770,600,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
     'string',sprintf(['Please specify the slice with the most clearly defined artifact:']));
@@ -145,7 +145,7 @@ close(h)
 clear txt1 sliceButton tmp answer nummarkerslices marker_vx_z marker_mm_z marker_scale
 
 %% respecify center of the marker Artifact
-h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'NumberTitle','off','Position',[100 100 600 800],'Color','w');
+h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'NumberTitle','off','Position',[100 100 600 800],'Color','w','MenuBar','none');
 txt1 = uicontrol('style','text','units','pixels','Background','w',...
     'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
     'string',sprintf(['Please mark the center of the artifact by doubleclicking:']));
@@ -184,7 +184,7 @@ center_marker = [(size(artifact_marker,1)+1)/2 (size(artifact_marker,1)+1)/2];
 close(h)
 clear a b h txt1
 %% select axial slices at the level of the directional levels
-h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'NumberTitle','off','Position',[100 100 600 800],'Color','w');
+h = figure('Name',['Respicify Slices for ' sides{side} ' Lead'],'NumberTitle','off','Position',[100 100 600 800],'Color','w','MenuBar','none');
 txt1 = uicontrol('style','text','units','pixels','Background','w',...
     'position',[10,770,600,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
     'string',sprintf(['Please specify the slice with the most clearly defined artifact:']));
@@ -228,7 +228,7 @@ close(h)
 clear h txt1 sliceButton tmp answer numdirslices dirlevelnew_vx_z dirlevelnew_mm_z dirlevelnew_scale
 
 %% respecify center of the marker Artifact
-h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'NumberTitle','off','Position',[100 100 600 800],'Color','w');
+h = figure('Name',['Respicify Artifact Centers for ' sides{side} ' Lead'],'NumberTitle','off','Position',[100 100 600 800],'Color','w','MenuBar','none');
 txt1 = uicontrol('style','text','units','pixels','Background','w',...
     'position',[50,770,550,25],'FontSize',12,'HorizontalAlignment','center','FontWeight','bold',...
     'string',sprintf(['Please mark the center of the artifact by doubleclicking:']));
@@ -540,7 +540,7 @@ dirnew_valleys = round(rad2deg(dirnew_angles) +1);
 dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 360;
 
 %% final figure
-fig(side).figure = figure('Name',['Lead ' sides{side}],'NumberTitle','off','Position',[100 100 800 800],'Color','w','Toolbar','none');
+fig(side).figure = figure('Name',['Lead ' sides{side}],'NumberTitle','off','Position',[100 100 800 800],'Color','w','Toolbar','none','MenuBar','none');
 
 if peakangle(side) > pi
     tempangle = peakangle(side) - 2 * pi;
@@ -844,5 +844,7 @@ end
 
 function buttonPress(hObject,eventdata)
 hObject.UserData = 1;
+drawnow
+uiresume
 uiresume
 end
