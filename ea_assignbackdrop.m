@@ -115,8 +115,10 @@ elseif regexp(bdstring, ['^',ea_getspace,' '])    % pattern: "MNI_ICBM_2009b_NLI
     varargout{2}=varargout{1};
     varargout{3}=varargout{1};
 elseif strcmp(bdstring,'Choose...')
-    keyboard
-
+    [file,path]=uigetfile('*.nii',"MultiSelect","off");
+    varargout{1}=spm_vol(ea_niigz(fullfile(path,file)));
+    varargout{2}=varargout{1};
+    varargout{3}=varargout{1};
 elseif ismember(bdstring,BDlist{2})
     [~,ix]=ismember(bdstring,BDlist{2});
     varargout{1}=ea_load_nii([ea_space,'backdrops',filesep,BDlist{1}{ix}]);
