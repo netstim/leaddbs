@@ -77,7 +77,7 @@ switch cmd
             success=ea_hotfix;
         end
     case 'fliplr'
-        checkf=[ea_space,'fliplr'];
+        checkf=[ea_space, 'fliplr', filesep, 'normmethod.json'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
             success=~force;
@@ -276,7 +276,7 @@ switch cmd
             disp([assetName, ' is installed.'])
         end
     case 'allengenetics'
-        checkf=[ea_space,'genetics'];
+        checkf = [ea_space, 'genetics', filesep, 'geneinfo.mat'];
         force=ea_alreadyinstalled(checkf,checkonly,robot);
         if checkonly
             success=~force;
@@ -405,7 +405,7 @@ end
 
 
 function force=ea_alreadyinstalled(checkf,checkonly,robot)
-if ~exist(checkf,'file') % then file not there, should install anyways.
+if ~isfile(checkf) % then file not there, should install anyways.
     force=1;
     return
 end
