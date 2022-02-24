@@ -106,7 +106,7 @@ ea_addnormmethods(handles,options);
 ea_processguiargs(handles,varargin)
 
 %% add tools menu
-ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'});
+ea_menu_initmenu(handles,{'acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
 
 handles.prod='dbs';
 ea_firstrun(handles,options);
@@ -1559,6 +1559,7 @@ else
 end
 
 ea_load_pts(handles,{[pth,filesep,pts{nuix}]});
+fprintf('\nSwitched to previous patient: %s\n\n', pts{nuix});
 if isfield(handles,'atlassetpopup') % not present in connectome mapper
     options.prefs=ea_prefs;
     atlasset=get(handles.atlassetpopup,'String');
@@ -1614,6 +1615,7 @@ else
     nuix=ix;
 end
 ea_load_pts(handles,{[pth,filesep,pts{nuix}]});
+fprintf('\nSwitched to next patient: %s\n\n', pts{nuix});
 if isfield(handles,'atlassetpopup') % not present in connectome mapper
     options.prefs=ea_prefs;
     atlasset=get(handles.atlassetpopup,'String');

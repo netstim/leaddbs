@@ -7,7 +7,7 @@ classdef ea_trajectory < handle
         plan2elstruct % reconstruction (pseudo) of stereotactical plan
         plan2elstruct_model='Medtronic 3389' % electrode model of pseudo reconstruction of stereotactical plan
         electrodeRelativeToPlan=3;
-        elpatch % handle to macroelectrode patch
+        elpatch % handle to DBS electrode patch
         eltype % indexes 1 for electrode contacts in elpatch
         ellabel % handle to electrode label
         elmodel % elmodel to display
@@ -543,7 +543,7 @@ end
 
 function rightcallback(src, evnt, obj)
     if evnt.getButton() == 3
-        ea_editfiducial(src,evnt, obj)
+        
     end
 end
 
@@ -553,7 +553,7 @@ function ea_editfiducial(Hobj, evt, obj)
 end
 
 
-function ea_trajvisible(~, evt, onoff, obj)
+function ea_trajvisible(src, evt, onoff, obj)
     if getappdata(obj.plotFigureH,'altpressed') % hide all
         el_render=getappdata(obj.plotFigureH,'el_render');
 
@@ -562,6 +562,8 @@ function ea_trajvisible(~, evt, onoff, obj)
             el_render(el).showMacro=ea_bool2onoff(onoff);
             el_render(el).showMicro=ea_bool2onoff('off');
         end
+    elseif getappdata(obj.plotFigureH,'cmdpressed') % rightclick
+        ea_editfiducial(src,evt,obj)
     else
         if ~isempty(obj.controlH) ...
            && ~strcmp(evt.Source.Type, 'uitoggletool') % From control figure

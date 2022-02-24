@@ -75,7 +75,7 @@ classdef ea_sweetspot < handle
         end
 
         function initialize(obj,datapath,resultfig)
-            D = load(datapath);
+            D = load(datapath, '-mat');
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
                 obj.leadgroup = datapath;
@@ -268,9 +268,9 @@ classdef ea_sweetspot < handle
             end
 
             if ~exist('Iperm', 'var') || isempty(Iperm)
-                I = obj.responsevar(patientsel);
+                I = obj.responsevar(patientsel,:);
             else
-                I = Iperm(patientsel);
+                I = Iperm(patientsel,:);
             end
 
             % Ihat is the estimate of improvements (not scaled to real improvements)

@@ -12,7 +12,7 @@ else
     load([prefs.genetics.dbdir,'genedb.mat']);
 end
 if ~exist('smoothkernel','var')
-    smoothkernel=0;
+    smoothkernel=3;
 end
 if ~exist('outputfolder','var')
     outputfolder=pwd;
@@ -21,7 +21,7 @@ if ~exist('mirror','var')
    mirror=1;
 end
 if ~exist('intensnorm','var')
-    intensnorm='';
+    intensnorm='z';
 end
 if ~exist('resolution','var')
    resolution='222'; 
@@ -41,7 +41,7 @@ end
 if ~iscell(geneidx)
     geneidx={geneidx};
 end
-
+genedb=double(genedb);
 load([prefs.genetics.dbdir,'geneinfo.mat'],'geneinfo');
 for g=1:length(geneidx)
     id{g}=[];
@@ -69,7 +69,11 @@ for g=1:length(geneidx)
     else
         useidxmm=idxmm;
     end
-    
+
+    if size(useidxmm,1)==3
+        useidxmm=[useidxmm;ones(1,size(useidxmm,2))];
+    end
+
     querypoints=nii.mat\useidxmm;
     querypoints=querypoints(1:3,:)';
  

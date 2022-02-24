@@ -1,39 +1,52 @@
 function S = ea_initializeS(varargin)
 
-if nargin>1
-    options=varargin{2};
-    handles=varargin{3};
-end
+preexist = 0;
 
-if nargin
-    if isempty(varargin{1})
-        [labels, preexist] = ea_detstimname(options);
-        set(handles.stimlabel, 'String', labels);
-    elseif (isfield(options, 'gen_newstim') && options.gen_newstim==1)
-        labels = ea_detstimname(options);
-        preexist = 0;
-        options.gen_newstim = 0;
-        set(handles.stimlabel, 'String', labels);
-    else
-        labels = varargin{1};
-        preexist = 0;
+if nargin == 1
+    if isstruct(varargin{1})
+        options = varargin{1};
+        [label, preexist] = ea_detstimname(options);
+    elseif ischar(varargin{1})
+        label = varargin{1};
     end
+elseif nargin > 1
+    label = varargin{1};
+    options = varargin{2};
+
+    if nargin == 3
+        handles = varargin{3};
+    end
+
+    if isempty(label)
+        [label, preexist] = ea_detstimname(options);
+        if exist('handles', 'var') && isfield(handles, 'stimlabel')
+            set(handles.stimlabel, 'String', label);
+        end
+    elseif isfield(options, 'gen_newstim') && options.gen_newstim==1
+        label = ea_detstimname(options);
+        options.gen_newstim = 0;
+        if exist('handles', 'var') && isfield(handles, 'stimlabel')
+            set(handles.stimlabel, 'String', label);
+        end
+    end
+end
+
+if isfield(options, 'UsePreExistingStim')
+    preexist = options.UsePreExistingStim;
+end
+
+if ~iscell(label)
+    label = {label};
+end
+
+if exist('handles', 'var') && isfield(handles, 'stimlabel')
+    S.label = label{get(handles.stimlabel,'Value')};
 else
-    [labels, preexist] = ea_detstimname(options);
-end
-
-if ~iscell(labels)
-    labels={labels};
-end
-
-try
-    S.label = labels{get(handles.stimlabel,'Value')};
-catch
-    S.label = labels{1};
+    S.label = label{1};
 end
 
 if preexist
-    load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'stimparameters.mat']);
+    load([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),S.label,filesep,'stimparameters.mat'], 'S');
     return
 end
 

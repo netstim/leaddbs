@@ -97,11 +97,10 @@ d = {
     'VTA_from_E': 1,
     'Activation_threshold_VTA': 0.343,
     'spectrum_trunc_method': 'Octave Band Method',
-    'trunc_param': 1000.0,
+    'trunc_param': 130.0,
     'Truncate_the_obtained_full_solution': 0,
     'Show_paraview_screenshots': 0,
     'external_grounding': True,
     'Stim_side': 0,
-    'stretch': 1.0,
     'patient_folder' : 'John_Doe',   
 }

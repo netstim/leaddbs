@@ -89,8 +89,8 @@ for source=S.sources
             impedence = [];
         end
 
-        [Efield2] = get_efield(perc,standard_efield,amp1,conductivity,amp_mode,impedence);
-        Efield_all=Efield_all+Efield2;
+        [Efield2] = ea_get_efield(perc,standard_efield,amp1,conductivity,amp_mode,impedence);
+        Efield_all = Efield_all+Efield2;
     end
 end
 

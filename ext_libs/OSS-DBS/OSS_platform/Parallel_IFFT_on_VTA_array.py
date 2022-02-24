@@ -26,6 +26,8 @@ from functools import partial
 import time as time_lib
 import os
 
+import logging
+
 # parallelized IFFT on VTA array
 
 
@@ -165,13 +167,10 @@ def get_IFFT_on_VTA_array(num_of_proc,name_sol,d,FREQ_vector_signal,Xs_signal_no
 
     minutes=int((time_lib.time() - start_IFFT)/60)
     secnds=int(time_lib.time() - start_IFFT)-minutes*60
-    print("----- IFFT took ",minutes," min ",secnds," s -----")
+    logging.critical("----- IFFT took {} min {} sec -----\n".format(minutes, secnds))
 
     return Max_field_on_VTA_array
 
-
-
-#S_vector,d,XS_signal,models_in_population,number_of_segments,FR_vec_sign,t_vec,A,name_sol,inx_st_oct=0
 def scale_and_get_IFFT_on_VTA_array(S_vector,num_of_proc,name_sol,d,FREQ_vector_signal,Xs_signal_normalized,t_vect,arrays_shape,i_start_octv):
 
     start_IFFT=time_lib.time()
@@ -197,16 +196,12 @@ def scale_and_get_IFFT_on_VTA_array(S_vector,num_of_proc,name_sol,d,FREQ_vector_
     N_freq_octv=(FR_vec_sign_octv.shape[0])
 
 
-
-
     hf = h5py.File(name_sol[:-4]+'.h5', 'r')
     solution_over_contacts = hf.get('dataset_1')
     solution_over_contacts = np.array(solution_over_contacts)
     hf.close()
 
     solution_sort_octv=np.zeros((solution_over_contacts.shape[0],2),float)
-
-
 
     #now we want to go over all points of this data set and scale the solutions with S_vector
     #print("S_factor: ",S_vector)
@@ -221,14 +216,6 @@ def scale_and_get_IFFT_on_VTA_array(S_vector,num_of_proc,name_sol,d,FREQ_vector_
         #solution_sort_octv[point_i:(point_i+FR_vec_sign_octv.shape[0]),0]=np.sum(solution_over_contacts[point_i:(point_i+FR_vec_sign_octv.shape[0]),:8]*S_vector, axis=1)
         solution_sort_octv[point_i:(point_i+FR_vec_sign_octv.shape[0]),0]=np.sum(solution_over_contacts[point_i:(point_i+FR_vec_sign_octv.shape[0]),:N_contacts]*S_vector, axis=1)
 
-
-
-
-
-
-
-
-
     p = Pool(num_of_proc)
     res = p.map(partial(scaled_ifft_on_VTA_array, Xs_signal_normalized,FREQ_vector_signal.shape[0],N_freq_octv,FR_vec_sign_octv,Fr_corresp_ar,t_vect,d["T"],i_start_octv),np.arange(num_segments))
     Max_field_on_VTA_array = np.ctypeslib.as_array(shared_array)
@@ -236,7 +223,7 @@ def scale_and_get_IFFT_on_VTA_array(S_vector,num_of_proc,name_sol,d,FREQ_vector_
 
     minutes=int((time_lib.time() - start_IFFT)/60)
     secnds=int(time_lib.time() - start_IFFT)-minutes*60
-    print("----- IFFT took ",minutes," min ",secnds," s -----")
+    logging.critical("----- IFFT took {} min {} sec -----\n".format(minutes, secnds))
 
     return Max_field_on_VTA_array
 

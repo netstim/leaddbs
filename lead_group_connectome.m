@@ -118,7 +118,7 @@ ea_refresh_lg_connectome(handles);
 handles.prod='group';
 ea_firstrun(handles,options);
 
-ea_menu_initmenu(handles,{'prefs','transfer'});
+ea_menu_initmenu(handles,{'prefs','transfer'},options.prefs);
 
 ea_processguiargs(handles,varargin)
 

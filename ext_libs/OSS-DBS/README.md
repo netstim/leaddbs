@@ -17,7 +17,7 @@ The rest is documentation and Docker files. If you prefer to run the platform wi
 
 ### Contribution and Requests
 
-Contact us via konstantin.butenko@uni-rostock.de
+Contact us via konstantin.butenko@charite.de
 
 ### License
 This project is licensed under the GNU General Public License v3.0 - see the LICENSE file for details

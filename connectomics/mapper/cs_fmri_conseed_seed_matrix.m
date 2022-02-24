@@ -212,12 +212,26 @@ for subj = 1:numSubUse % iterate across subjects
             Rw=sum(Rw,1); % sum is fine since sum of sweightidxmx{s} == 1
         end
 
+        if owasempty
+            outputfolder=ea_getoutputfolder({sfile{s}},ocname);
+        end
+
         mmap=dataset.vol.space;
         mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR.nii'];
         mmap.dt=[16,0];
         mmap.img(:)=0;
         mmap.img=single(mmap.img);
         mmap.img(omaskidx)=Rw;
+        ea_write_nii(mmap);
+        if usegzip
+            gzip(mmap.fname);
+            delete(mmap.fname);
+        end
+
+        mmap.fname=[outputfolder,seedfn{s},'_func_',cmd,'_AvgR_Fz.nii'];
+        mmap.img(:)=0;
+        mmap.img=single(mmap.img);
+        mmap.img(omaskidx)=atanh(Rw);
         ea_write_nii(mmap);
         if usegzip
             gzip(mmap.fname);

@@ -13,6 +13,8 @@
 *.zip
 *.6
 *.pyc
+*.mat.bids
+*.mat.dev
 .idea
 __pycache__
 CMakeLists.txt
@@ -26,6 +28,8 @@ tmp/
 lead_standalone/
 connectomes/
 coverage_html/
+
+/templates/space/MNI152NLin2009bAsym/
 
 # dev only
 ea_make_release.m

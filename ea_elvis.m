@@ -134,52 +134,24 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         elSide = cell(1, length(elstruct));
         for pt=1:length(elstruct)
-            % show electrodes..
-            popts=options;
+            if exist('el_render','var')
+                [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
+            else
+                [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt);
+            end
+
             if strcmp(options.leadprod,'group')
                 try
                     directory=[options.patient_list{elstruct(pt).pt},filesep];
-                    [popts.root,popts.patientname]=fileparts(directory);
-                    popts.root=[popts.root,filesep];
                 catch
                     directory=[options.root,options.patientname,filesep];
                 end
-
-                popts=ea_detsides(popts);
             else
                 directory=[options.root,options.patientname,filesep];
             end
 
-            elSide{pt}=popts.sides;
-
-            for side=elSide{pt}
-                try
-                    pobj=ea_load_electrode(directory,side);
-                    pobj.hasPlanning=1;
-                    pobj.showPlanning=strcmp(options.leadprod,'or');
-                end
-                pobj.pt=pt;
-                pobj.options=popts;
-                pobj.elstruct=elstruct(pt);
-                pobj.showMacro=1;
-                pobj.side=side;
-
-                set(0,'CurrentFigure',resultfig);
-                if exist('el_render','var')
-                    el_render(end+1)=ea_trajectory(pobj);
-                else
-                    el_render(1)=ea_trajectory(pobj);
-                end
-
-                if ~exist('ellabel','var')
-                    ellabel=el_render(end).ellabel;
-                else
-                    try
-                        ellabel(end+1)=el_render(end).ellabel;
-                    end
-                end
-            end
             if ~multiplemode
+                side=options.sides(end);
                 d=load([directory,'ea_reconstruction.mat']);
                 plans=d.reco.electrode(side+1:end);
                 if ~isempty(plans)
@@ -256,14 +228,14 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             sweetspotadd = uipushtool(ht, 'CData', ea_get_icn('sweetspot_add'),...
                 'TooltipString', ['Add sweetspot analysis'],...
                 'Tag', ['Add sweetspot analysis'],...
-                'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});        
+                'ClickedCallback', {@ea_add_sweetspot,fullfile(options.groupdir,'LEAD_groupanalysis.mat'),resultfig});
 
             di=dir([options.root,options.patientname,filesep,'sweetspots',filesep,'*.sweetspot']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('sweetspot'),...
                     'TooltipString', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
                     'Tag', ['Explore sweetspot analysis ',ea_stripext(di(d).name)],...
-                    'ClickedCallback', {@ea_add_sweetspot,[options.root,options.patientname,filesep,'sweetspots',filesep,di(d).name],resultfig});
+                    'ClickedCallback', {@ea_add_sweetspot,fullfile(options.groupdir,'sweetspots',di(d).name),resultfig});
             end
 
 
@@ -271,28 +243,28 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
             discfiberadd = uipushtool(ht, 'CData', ea_get_icn('discfiber_add'),...
                 'TooltipString', ['Add Fiber Filtering analysis'],...
                 'Tag', ['Add fiber filtering analysis'],...
-                'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
+                'ClickedCallback', {@ea_add_discfiber,fullfile(options.groupdir,'LEAD_groupanalysis.mat'),resultfig});
 
             di=dir([options.root,options.patientname,filesep,'fiberfiltering',filesep,'*.fibfilt']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('discfiber'),...
                     'TooltipString', ['Explore fiber filtering analysis ',ea_stripext(di(d).name)],...
                     'Tag', ['Explore fiber filtering analysis ',ea_stripext(di(d).name)],...
-                    'ClickedCallback', {@ea_add_discfiber,[options.root,options.patientname,filesep,'fiberfiltering',filesep,di(d).name],resultfig});
+                    'ClickedCallback', {@ea_add_discfiber,fullfile(options.groupdir,'fiberfiltering',di(d).name),resultfig});
             end
 
             % add networkmapping explorer button.
             netmapadd = uipushtool(ht, 'CData', ea_get_icn('networkmapping_add'),...
                 'TooltipString', ['Add DBS Network Mapping analysis'],...
                 'Tag', ['Add DBS Network Mapping analysis'],...
-                'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'LEAD_groupanalysis.mat'],resultfig});
+                'ClickedCallback', {@ea_add_networkmapping,fullfile(options.groupdir,'LEAD_groupanalysis.mat'),resultfig});
 
             di=dir([options.root,options.patientname,filesep,'networkmapping',filesep,'*.netmap']);
             for d=1:length(di)
                 uipushtool(ht, 'CData', ea_get_icn('networkmapping'),...
                     'TooltipString', ['Explore DBS Network Mapping analysis ',ea_stripext(di(d).name)],...
                     'Tag', ['Explore DBS Network Mapping analysis ',ea_stripext(di(d).name)],...
-                    'ClickedCallback', {@ea_add_networkmapping,[options.root,options.patientname,filesep,'networkmapping',filesep,di(d).name],resultfig});
+                    'ClickedCallback', {@ea_add_networkmapping,fullfile(options.groupdir,'networkmapping',di(d).name),resultfig});
             end
 
 
@@ -307,11 +279,11 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
         end
 
         try
-            set(ellabel,'Visible','off');
+            set(el_label,'Visible','off');
             ellabeltog = uitoggletool(ht, 'CData', ea_get_icn('labels'),...
                 'TooltipString', 'Electrode Labels',...
-                'OnCallback', {@objvisible,ellabel},...
-                'OffCallback', {@objinvisible,ellabel}, 'State','off');
+                'OnCallback', {@objvisible,el_label},...
+                'OffCallback', {@objinvisible,el_label}, 'State','off');
 
             % Move eleLabel toggle to front
             if strcmp(options.leadprod,'dbs')
@@ -751,6 +723,8 @@ if ismember('alt', event.Modifier)
     %    disp('Altpressed');
 elseif ismember('shift', event.Modifier)
     setappdata(resultfig, 'shiftpressed', 1);
+elseif ismember('command', event.Modifier)
+    setappdata(resultfig, 'cmdpressed', 1);
 end
 
 % If the MER Control window is open
@@ -836,6 +810,8 @@ end
 
 function ea_keyrelease(resultfig,event)
 setappdata(resultfig,'altpressed',0);
+setappdata(resultfig,'shiftpressed',0);
+setappdata(resultfig,'cmdpressed',0);
 %disp('Altunpressed');
 
 

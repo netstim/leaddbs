@@ -10,6 +10,7 @@ end
 numPatient = length(obj.allpatients);
 vatlist = cell(numPatient*2,2);
 
+
 disp('Construct VAT list...')
 for sub=1:numPatient % Original VAT E-field
     vatlist{sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
@@ -27,4 +28,10 @@ for sub=1:numPatient % Mirrored VAT E-field
         ea_nt(0), 'gs_',obj.M.guid,filesep, 'fl_vat_efield_left.nii'];
     vatlist{numPatient+sub,2} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
         ea_nt(0), 'gs_',obj.M.guid,filesep, 'fl_vat_efield_right.nii'];
+    
+
+
+%     vatlist{numPatient+sub,1} = vatlist{sub,1};
+%     vatlist{numPatient+sub,2} = vatlist{sub,2};
+    
 end

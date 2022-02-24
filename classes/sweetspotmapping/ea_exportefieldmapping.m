@@ -10,7 +10,6 @@ nii.img(:)=nan;
 ea_write_nii(nii);
 allV{1}=[outdir,'bb_nan.nii'];
 
-
 cnt=2;
 for vat=1:size(vatlist,1)
     for side=1:size(vatlist,2)
@@ -18,7 +17,6 @@ for vat=1:size(vatlist,1)
         cnt=cnt+1;
     end
 end
-
 
 % export mean to get bounding box
 matlabbatch{1}.spm.util.imcalc.input = allV';
@@ -51,8 +49,6 @@ for side=1:size(vatlist,2)
     space{side}=nii;
 end
 
-
-
 % now conform each VTA to space
 AllX=cell(size(vatlist,2),1);
 for vat=1:size(vatlist,1)
@@ -60,8 +56,8 @@ for vat=1:size(vatlist,1)
         copyfile(vatlist{vat,side},[outdir,'tmp_efield.nii']);
         ea_conformspaceto([outdir,'efield_bb',sidesuffices{side},'.nii'],...
             [outdir,'tmp_efield.nii'],0);
-        nii=ea_load_nii([outdir,'tmp_efield.nii']); 
-        
+        nii=ea_load_nii([outdir,'tmp_efield.nii']);
+
        if ~exist('AllX','var')
           AllX{side}=zeros(size(vatlist,1),numel(nii.img));
        end
@@ -74,5 +70,3 @@ ea_delete([outdir,'efield_bb_r.nii']);
 ea_delete([outdir,'tmp_efield.nii']);
 ea_delete([outdir,'bb_nan.nii']);
 ea_delete(outdir);
-
-

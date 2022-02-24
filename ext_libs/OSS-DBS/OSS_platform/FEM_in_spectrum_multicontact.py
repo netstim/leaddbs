@@ -8,6 +8,11 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore",category=FutureWarning)
     import h5py
+
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
+
 from dolfin import *
 import numpy as np
 import time
@@ -245,7 +250,7 @@ def scale_bc_potentials_with_superposition(Sim_setup,Domains,Solver_type):
 
     set_log_active(False)   #turns off debugging info
     if Sim_setup.element_order==1:
-        print("element_order is 1, increasing to 2 for current-controlled stimulation")
+        logging.critical("element_order is 1, increasing to 2 for current-controlled stimulation")
         Sim_setup.element_order=2
 
     contacts_with_current=[x for x in Domains.fi if x != 0.0]       #0.0 are grounded contacts
@@ -380,17 +385,18 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
     if int(Sim_setup.sine_freq)==int(Sim_setup.signal_freq):
         file=File(os.environ['PATIENTDIR']+'/Field_solutions/Phi_real_scaled_'+str(Sim_setup.signal_freq)+'Hz.pvd')
         file<<phi_r,Sim_setup.mesh
-        print("DoFs on the mesh for "+Sim_setup.Laplace_eq+" : ", (max(V_space.dofmap().dofs())+1))
+        logging.critical("DoFs on the mesh for {} : {}".format(Sim_setup.Laplace_eq, max(V_space.dofmap().dofs()) + 1))
 
         # to get function space and manual projections for the E-field
         E_field,E_field_im=get_E_field(Sim_setup.mesh,Sim_setup.element_order,Sim_setup.Laplace_eq,phi_r,phi_i)
         #if QS, E_field_im is 0
 
-        # to get current on the active contacts (inlcuding the ground)
+        # to get current on the active contacts (including the ground)
         J_currents_real,J_currents_imag = get_current_on_multiple_contacts(Sim_setup.external_grounding,facets,Sim_setup.mesh,Sim_setup.boundaries,Sim_setup.Laplace_eq,Domains.Contacts,Phi_scaled,E_field,E_field_im,kappa,Cond_tensor)
         # J_currents_imag is a zero array if 'QS' mode
-
-        print("Complex currents on contacts at the base frequency (signal repetition rate): ",J_currents_real,J_currents_imag)
+        logging.critical("Complex currents on contacts at the base frequency (signal repetition rate):")
+        for j in range(J_currents_real.shape[0]):
+            logging.critical("{} {}".format(J_currents_real[j],J_currents_imag[j]))
         file=File(os.environ['PATIENTDIR']+'/Field_solutions/E_real_scaled_'+str(Sim_setup.sine_freq)+'Hz.pvd')
         file<<E_field,Sim_setup.mesh
 
@@ -477,8 +483,8 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
                 Phi_ROI[inx,4]=phi_i(pnt)
 
             else:
-                print("Couldn't probe the potential at the point ",Vertices_array[inx,0],Vertices_array[inx,1],Vertices_array[inx,2])
-                print("check the neuron array, exitting....")
+                logging.critical("Couldn't probe the potential at the point {}, {}, {}".format(Vertices_array[inx,0],Vertices_array[inx,1],Vertices_array[inx,2]))
+                logging.critical("check the neuron array, exitting....")
                 raise SystemExit
 
         fre_vector=[Sim_setup.sine_freq]*Phi_ROI.shape[0]

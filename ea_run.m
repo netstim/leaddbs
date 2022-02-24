@@ -45,6 +45,9 @@ if ischar(uipatdirs)
     uipatdirs = {uipatdirs};
 end
 
+% Check for special characters in the path
+ea_checkSpecialChars(uipatdirs);
+
 % do parallel processing if available and set in ea_prefs.
 if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~strcmp(cmd,'export')
     try

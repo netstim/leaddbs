@@ -449,8 +449,8 @@ for nativemni=nm % switch between native and mni space atlases.
                 vals = disctract.vals;
                 fibcolor = disctract.fibcolor;
 
-                % Compatibility for fibers combining both sides
-                if size(fibcell,2) == 1
+                % Compatibility for fibercell stored as N * 1 cell
+                if size(fibcell,2) == 1 && isnumeric(fibcell{1})
                     fibcell = {fibcell};
                 end
 
@@ -502,10 +502,10 @@ for nativemni=nm % switch between native and mni space atlases.
                     % alphaind = normalize(-allvals, 'range');
                 end
 
-                cmapind = mat2cell(cmapind, [numel(vals{1}), numel(vals{2})])';
-                alphaind = mat2cell(alphaind, [numel(vals{1}), numel(vals{2})])';
+                cmapind = mat2cell(cmapind, cellfun(@numel, vals))';
+                alphaind = mat2cell(alphaind, cellfun(@numel, vals))';
 
-                for fibside=1:2
+                for fibside=1:length(fibcell)
                     if isempty(fibcell{fibside}) || isempty(vals{fibside})
                         continue;
                     end
@@ -589,7 +589,7 @@ for nativemni=nm % switch between native and mni space atlases.
     negdiscfiberset = findobj(resultfig, 'Type', 'Surface', 'Tag', 'NegativeFiber');
     if ~isempty(negdiscfiberset)
         uitoggletool(ht, 'CData', ea_get_icn('discfiber'),...
-                'TooltipString', 'Positive fibers',...
+                'TooltipString', 'Negative fibers',...
                 'Tag', 'ShowPositiveToggle',...
                 'OnCallback', {@showfiber, negdiscfiberset},'OffCallback', {@hidefiber, negdiscfiberset}, 'State', 'on');
     end

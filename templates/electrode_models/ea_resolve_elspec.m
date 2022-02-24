@@ -9,22 +9,26 @@ function varargout=ea_resolve_elspec(varargin)
 if ~nargin
     varargout{1}={'Medtronic 3389', 'Medtronic 3387', 'Medtronic 3391', 'Medtronic B33005', 'Medtronic B33015', ...
         'Boston Scientific Vercise', 'Boston Scientific Vercise Directed', ...
+        'Boston Scientific Vercise Cartesia HX', 'Boston Scientific Vercise Cartesia X', ...
         'St. Jude ActiveTip (6146-6149)','St. Jude ActiveTip (6142-6145)', ...
         'St. Jude Directed 6172 (short)','St. Jude Directed 6173 (long)', ...
         'PINS Medical L301', 'PINS Medical L302', 'PINS Medical L303', .....
+        'SceneRay SR1200', 'SceneRay SR1210', 'SceneRay SR1211', 'SceneRay SR1242', ...
         'SDE-08 S8 Legacy', 'SDE-08 S10 Legacy', 'SDE-08 S12 Legacy', 'SDE-08 S16 Legacy', ...
         'SDE-08 S8', 'SDE-08 S10', 'SDE-08 S12', 'SDE-08 S14', 'SDE-08 S16', ...
         'PMT 2102-16-092', 'PMT 2102-16-093', 'PMT 2102-16-131', 'PMT 2102-16-142', ...
         '2069-EPC-05C-35', '2069-EPC-15C-35', 'NeuroPace DL-344-3.5', 'NeuroPace DL-344-10', ...
         'DIXI D08-05AM', 'DIXI D08-08AM', 'DIXI D08-10AM', 'DIXI D08-12AM', 'DIXI D08-15AM', 'DIXI D08-18AM', ...
         'AdTech SD10R-SP05X Choi', 'AdTech RD10R-SP03X', 'AdTech BF08R-SP05X', 'AdTech BF08R-SP21X', 'AdTech BF08R-SP61X', ...
-        'AdTech SD08R-SP05X', 'AdTech SD10R-SP05X', ...
+        'AdTech SD08R-SP05X', 'AdTech SD14R-SP05X', ...
         'ELAINE Rat Electrode', 'FHC WU Rat Electrode', 'NuMed Mini Lead'}';
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', 'medtronic_b33005', 'medtronic_b33015', ...
         'boston_vercise', 'boston_vercise_directed', ...
+        'boston_vercise_cartesia_hx', 'boston_vercise_cartesia_x', ...
         'stjude_activetip_2mm','stjude_activetip_3mm', ...
         'stjude_directed_05','stjude_directed_15', ...
         'pins_l301', 'pins_l302', 'pins_l303', ...
+        'sceneray_sr1200', 'sceneray_sr1210', 'sceneray_sr1211', 'sceneray_sr1242', ...
         'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy',...
         'sde_08_s8', 'sde_08_s10', 'sde_08_s12', 'sde_08_s14', 'sde_08_s16', ...
         'pmt_2102_16_092', 'pmt_2102_16_093', 'pmt_2102_16_131', 'pmt_2102_16_142', ...
@@ -191,6 +195,50 @@ switch elmodel
         elspec.etagenames{2}={'K1 (L)','K2-4 (L)','K5-7 (L)','K8 (L)'};
         elspec.etageidx={1,2:4,5:7,8};
         elspec.forstimulation=1;
+    case 'Boston Scientific Vercise Cartesia HX'
+        elspec.matfname='boston_vercise_cartesia_hx';
+        elspec.lead_diameter=1.3;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.3;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.3;
+        elspec.tip_color=0.3;
+        elspec.tip_length=1.1;
+        elspec.contact_spacing=0.5;
+        elspec.numel=16;
+        elspec.tipiscontact=0;
+        elspec.markerpos = 20;
+        elspec.markerlen = 3;
+        elspec.contactnames={'K17 (R)','K18 (R)','K19 (R)','K20 (R)','K21 (R)','K22 (R)','K23 (R)','K24 (R)','K25 (R)','K26 (R)','K27 (R)','K28 (R)','K29 (R)','K30 (R)','K31 (R)','K32 (R)',...
+            'K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)'};
+        elspec.isdirected=1;
+        elspec.etagenames{1}={'K17-19 (R)','K20-22 (R)','K23-25 (R)','K26-28 (R)','K29 (R)','K30 (R)','K31 (R)','K32 (R)'};
+        elspec.etagenames{2}={'K1-3 (L)','K4-6 (L)','K7-9 (L)','K10-12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)'};
+        elspec.etageidx={1:3,4:6,7:9,10:12,13,14,15,16};
+        elspec.forstimulation=1;
+    case 'Boston Scientific Vercise Cartesia X'
+        elspec.matfname='boston_vercise_cartesia_x';
+        elspec.lead_diameter=1.3;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.3;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.3;
+        elspec.tip_color=0.3;
+        elspec.tip_length=1.1;
+        elspec.contact_spacing=0.5;
+        elspec.numel=16;
+        elspec.tipiscontact=0;
+        elspec.markerpos = 16;
+        elspec.markerlen = 3;
+        elspec.contactnames={'K17 (R)','K18 (R)','K19 (R)','K20 (R)','K21 (R)','K22 (R)','K23 (R)','K24 (R)','K25 (R)','K26 (R)','K27 (R)','K28 (R)','K29 (R)','K30 (R)','K31 (R)','K32 (R)',...
+            'K1 (L)','K2 (L)','K3 (L)','K4 (L)','K5 (L)','K6 (L)','K7 (L)','K8 (L)','K9 (L)','K10 (L)','K11 (L)','K12 (L)','K13 (L)','K14 (L)','K15 (L)','K16 (L)'};
+        elspec.isdirected=1;
+        elspec.etagenames{1}={'K17-19 (R)','K20-22 (R)','K23-25 (R)','K26-28 (R)','K29-31 (R)','K32 (R)'};
+        elspec.etagenames{2}={'K1-3 (L)','K4-6 (L)','K7-9 (L)','K10-12 (L)','K13-15 (L)','K16 (L)'};
+        elspec.etageidx={1:3,4:6,7:9,10:12,13:15,16};
+        elspec.forstimulation=1;
     case 'St. Jude ActiveTip (6146-6149)'
         elspec.matfname='stjude_activetip_2mm';
         elspec.lead_diameter=1.4;
@@ -270,6 +318,82 @@ switch elmodel
         elspec.etagenames{1}={'K1 (R)','K2 (R)','K3 (R)','K4 (R)'};
         elspec.etagenames{2}={'K1 (L)','K2 (L)','K3 (L)','K4 (L)'};
         elspec.etageidx={1,2:4,5:7,8};
+        elspec.forstimulation=1;
+    case 'SceneRay SR1200'
+        elspec.matfname='sceneray_sr1200';
+        elspec.lead_diameter=1.27;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.27;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.27;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1.5;
+        elspec.contact_spacing=0.5;
+        elspec.numel=4;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K4 (R)','K5 (R)','K6 (R)','K7 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=1;
+    case 'SceneRay SR1210'
+        elspec.matfname='sceneray_sr1210';
+        elspec.lead_diameter=1.27;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.27;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.27;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1.5;
+        elspec.contact_spacing=1.5;
+        elspec.numel=4;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K4 (R)','K5 (R)','K6 (R)','K7 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=1;
+    case 'SceneRay SR1211'
+        elspec.matfname='sceneray_sr1211';
+        elspec.lead_diameter=1.27;
+        elspec.lead_color=0.7;
+        elspec.contact_length=1.5;
+        elspec.contact_diameter=1.27;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.27;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1.5;
+        elspec.contact_spacing=1.0;
+        elspec.numel=4;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K4 (R)','K5 (R)','K6 (R)','K7 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=1;
+    case 'SceneRay SR1242'
+        elspec.matfname='sceneray_sr1242';
+        elspec.lead_diameter=1.27;
+        elspec.lead_color=0.7;
+        elspec.contact_length=3.0;
+        elspec.contact_diameter=1.27;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=1.27;
+        elspec.tip_color=0.7;
+        elspec.tip_length=1.5;
+        elspec.contact_spacing=[2.0,4.0,4.0];
+        elspec.numel=4;
+        elspec.tipiscontact=0;
+        elspec.contactnames={'K4 (R)','K5 (R)','K6 (R)','K7 (R)','K0 (L)','K1 (L)','K2 (L)','K3 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
         elspec.forstimulation=1;
     case 'PINS Medical L301'
         elspec.matfname='pins_l301';

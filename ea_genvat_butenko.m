@@ -297,6 +297,25 @@ if ~settings.stimSetMode
         end
     end
 
+    %  For VC, check all sources
+    if settings.current_control(1) == 0  % both hemisphere MUST have the same mode
+        numSources = 4;
+        amp = nan(eleNum,numSources);   % 4 - number of sources
+        for i=1:eleNum
+            for j=1:numSources
+                amp(i,j) = S.amplitude{i}(j);
+            end
+        end
+    else
+        amp = nan(eleNum,1);  % For CC, one source is used, add a check
+        for i=1:eleNum
+            if ~isnan(source(i))
+                amp(i) = S.amplitude{i}(source(i));
+            end
+        end        
+    end
+    
+    
     for i = 1:eleNum
         switch i
             case 1
@@ -309,13 +328,41 @@ if ~settings.stimSetMode
 
         if ~isnan(source(i))
             stimSource = S.([sideCode, 's', num2str(source(i))]);
+            
+            % Split voltage in case contacts have both polarities
+            if stimSource.va == 1 
+                for j=1:numSources
+                    v_source = S.([sideCode, 's', num2str(j)]);
+                    if v_source.case.pol == 0
+                        amp(i,j) = amp(i,j)/2;
+                    end
+                end
+            end
+
             for cnt = 1:options.elspec.numel
-                if S.activecontacts{i}(cnt)
-                    switch stimSource.(cntlabel{cnt}).pol
-                        case 1 % Negative, cathode
-                            settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
-                        case 2 % Postive, anode
-                            settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                if settings.current_control(i) == 1  % only one source for CC
+                    if S.activecontacts{i}(cnt)
+                        switch stimSource.(cntlabel{cnt}).pol
+                            case 1 % Negative, cathode
+                                settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                            case 2 % Postive, anode
+                                settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
+                        end             
+                    end
+                else
+                    for j=1:numSources  % go over sources
+                        v_source = S.([sideCode, 's', num2str(j)]);
+                        if v_source.(cntlabel{cnt}).perc    % the contact is active for this source
+                            if isnan(settings.Phi_vector(i, cnt))
+                                settings.Phi_vector(i, cnt) = 0.0;  % initialize
+                            end
+                            switch v_source.(cntlabel{cnt}).pol  % sanity check needed: same polarity for a contact over all sources
+                                case 1
+                                    settings.Phi_vector(i, cnt) = settings.Phi_vector(i, cnt) - amp(i,j);
+                                case 2
+                                    settings.Phi_vector(i, cnt) = settings.Phi_vector(i, cnt) + amp(i,j);
+                            end
+                        end
                     end
                 end
             end
@@ -451,6 +498,10 @@ settings.interactiveMode = options.prefs.machine.vatsettings.butenko_interactive
 parameterFile = [outputPath, filesep, 'oss-dbs_parameters.mat'];
 save(parameterFile, 'settings', '-v7.3');
 
+
+% Delete previous results from stimSetMode
+ea_delete([outputPath, filesep, 'Result_StimProt_*']);
+
 %% Run OSS-DBS
 libpath = getenv('LD_LIBRARY_PATH');
 setenv('LD_LIBRARY_PATH', ''); % Clear LD_LIBRARY_PATH to resolve conflicts
@@ -516,10 +567,13 @@ for side=0:1
         ea_delete(ea_regexpdir(outputPath, '^(?!Current_protocols_).*\.csv$', 0));
         ea_delete([outputPath, filesep,'*.py']);
 
-        % Delete this folder in MATLAB since shutil.rmtree may raise
-        % I/O error
+        % Delete this folder in MATLAB since shutil.rmtree may raise I/O error
         % ea_delete([outputPath, filesep,'Axons_in_time']);
 
+        % fprintf('ea_getearoot %s \n\n', ea_getearoot)
+        % fprintf('outputPath %s \n\n', outputPath)
+        % fprintf('num2str(side) %s \n\n', num2str(side))
+        
         if isempty(getenv('SINGULARITY_NAME')) % Docker
             system(['docker run ', ...
                     '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
@@ -597,11 +651,22 @@ for side=0:1
         axonState = ea_regexpdir([outputPath, filesep, 'Results_', sideCode], 'Axon_state.*\.mat', 0);
         if ~isempty(axonState)
             for f=1:length(axonState)
+                
                 % Determine tract name
                 if startsWith(settings.connectome, 'Multi-Tract: ')
-                    tractName = regexp(axonState{f},'(?<=Axon_state_)(.*)(?=\.mat)', 'match', 'once');
+                    tractName = regexp(axonState{f}, '(?<=Axon_state_).+(?=\.mat$)', 'match', 'once');
                 end
 
+                % If stimSetMode, extract the index from tractName (but axonState is still checked on the indexed file)
+                if settings.stimSetMode
+                    if startsWith(settings.connectome, 'Multi-Tract: ')
+                        stimProt_index = regexp(tractName, '(?<=_)\d+$', 'match', 'once');
+                        tractName = regexprep(tractName, '.+(?=_\d+$)', 'match', 'once');
+                    else
+                        stimProt_index = regexp(axonState{f}, '(?<=Axon_state_)\d+(?=\.mat$)', 'match', 'once');
+                    end
+                end
+                
                 % Get fiber id and state from OSS-DBS result
                 ftr = load(axonState{f});
                 [fibId, ind] = unique(ftr.fibers(:,4));
@@ -611,8 +676,10 @@ for side=0:1
                 if startsWith(settings.connectome, 'Multi-Tract: ')
                     ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat'], tractName);
                     ftr = ftr.(tractName);
+                    ftr.connectome_name = connName;
                 else
                     ftr = load([settings.connectomePath, filesep, 'data', num2str(side+1), '.mat']);
+                    ftr.connectome_name = settings.connectome;
                 end
                 ftr.fibers = ftr.fibers(ismember(ftr.fibers(:,4), fibId), :);
                 originalFibID = ftr.fibers(:,5);
@@ -634,11 +701,24 @@ for side=0:1
                 ftr.fibers(:,4) = originalFibID;
 
                 % Save result for visualization
-                if startsWith(settings.connectome, 'Multi-Tract: ')
-                    fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                
+                % If stimSets, save to a corresponding folder
+                if settings.stimSetMode
+                    resultProtocol = [outputPath, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
+                    ea_mkdir(resultProtocol);
+                    if startsWith(settings.connectome, 'Multi-Tract: ')
+                        fiberActivation = [resultProtocol, filesep, 'fiberActivation_', sideStr, '_', tractName,'_', stimProt_index, '.mat'];
+                    else
+                        fiberActivation = [resultProtocol, filesep, 'fiberActivation_', sideStr,'_', stimProt_index, '.mat'];
+                    end
                 else
-                    fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                    if startsWith(settings.connectome, 'Multi-Tract: ')
+                        fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                    else
+                        fiberActivation = [outputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                    end
                 end
+                   
                 save(fiberActivation, '-struct', 'ftr');
 
                 if options.native % Generate fiber activation file in MNI space
@@ -661,10 +741,22 @@ for side=0:1
                     ftr.fibers(:,4) = originalFibID;
 
                     % Save MNI space fiber activation result
-                    if startsWith(settings.connectome, 'Multi-Tract: ')
-                        fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                    
+                    % If stimSets, save to a corresponding folder
+                    if settings.stimSetMode
+                        resultProtocol = [MNIoutputPath, filesep, 'Result_StimProt_', sideStr, '_', stimProt_index];
+                        ea_mkdir(resultProtocol);
+                        if startsWith(settings.connectome, 'Multi-Tract: ')
+                            fiberActivationMNI = [resultProtocol, filesep, 'fiberActivation_', sideStr, '_', tractName,'_',stimProt_index, '.mat'];
+                        else
+                            fiberActivationMNI = [resultProtocol, filesep, 'fiberActivation_', sideStr,'_',stimProt_index, '.mat'];
+                        end                                        
                     else
-                        fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                        if startsWith(settings.connectome, 'Multi-Tract: ')
+                            fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '_', tractName, '.mat'];
+                        else
+                            fiberActivationMNI = [MNIoutputPath, filesep, 'fiberActivation_', sideStr, '.mat'];
+                        end
                     end
                     save(fiberActivationMNI, '-struct', 'conn');
 
@@ -673,10 +765,12 @@ for side=0:1
                     end
                 end
 
-                % Visualize fiber activation
-                if exist('resultfig', 'var')
-                    set(0, 'CurrentFigure', resultfig);
-                    ea_fiberactivation_viz(fiberActivation, resultfig);
+                % Visualize fiber activation, but not for stimSetMode
+                if ~settings.stimSetMode
+                    if exist('resultfig', 'var')
+                        set(0, 'CurrentFigure', resultfig);
+                        ea_fiberactivation_viz(fiberActivation, resultfig);
+                    end
                 end
             end
         end
@@ -691,7 +785,7 @@ for side=0:1
     ea_delete([outputPath, filesep, 'Brain_substitute.brep']);
     ea_delete([outputPath, filesep,'Allocated_axons.h5']);
     ea_delete(ea_regexpdir(outputPath, '^(?!Current_protocols_).*\.csv$', 0));
-    ea_delete([outputPath, filesep,'*.py']);
+    % ea_delete([outputPath, filesep,'*.py']);
 
     % Delete this folder in MATLAB since shutil.rmtree may raise
     % I/O error

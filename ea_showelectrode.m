@@ -1,7 +1,6 @@
 function [elrender,ellabel,eltype]=ea_showelectrode(obj,cmd,options)
-% This function renders the electrode as defined by options.elspec and
-% coords_mm.
-% __________________________________________________________________________________
+% This function renders the electrode as defined by options.elspec and coords_mm.
+% _______________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
@@ -185,6 +184,8 @@ for side=options.sides
                 case {'Medtronic B33005'
                       'Medtronic B33015'
                       'Boston Scientific Vercise Directed'
+                      'Boston Scientific Vercise Cartesia HX'
+                      'Boston Scientific Vercise Cartesia X'
                       'St. Jude Directed 6172 (short)'
                       'St. Jude Directed 6173 (long)'}
                     % Marker position relative to head position along z axis

@@ -15,6 +15,7 @@ It will also manage the output folders accordingly using manage_folders(inp_dict
 #import numpy as np
 import os
 import shutil
+import logging
 
 def copy_rename(old_file_name, new_file_name):
         src_dir= os.curdir
@@ -108,10 +109,10 @@ def manage_folders(d):
 def check_state(d):
     if d['number_of_processors']==0:
         physical_cores=os.popen("""lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l""").read()[:-1]
-        d['number_of_processors']=int(physical_cores)     # this option is only active if Docker App is used (on macOS and Windows)
-        print("Number of cores available for Docker: ",d['number_of_processors'])
+        d['number_of_processors'] = int(physical_cores)     # this option is only active if Docker App is used (on macOS and Windows)
+        logging.critical("Number of cores available for Docker: {}".format(d['number_of_processors']))
 
-    print("Number of processors used: ",d['number_of_processors'])
+    logging.critical("Number of processors used: {}".format(d['number_of_processors']))
 
     if d["IFFT_ready"]==1:
         d["voxel_arr_MRI"]=1
@@ -160,6 +161,6 @@ def check_state(d):
 
     manage_folders(d)
 
-    print("Folders were adjusted\n")
+    logging.critical("Folders were adjusted\n")
 
     return True

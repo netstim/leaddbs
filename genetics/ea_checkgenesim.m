@@ -6,18 +6,18 @@ end
 
 load([prefs.genetics.dbdir,'geneinfo.mat'],'geneinfo');
 for g=1:length(geneidx)
-id{g}=[];
-tableheaders=fieldnames(geneinfo);
-for header=[2,4,5]
-    id{g}=ismember(geneinfo.(tableheaders{header}),geneidx{g});
-    if any(id{g})
-        break
+    id{g}=[];
+    tableheaders=fieldnames(geneinfo);
+    for header=[2,4,5]
+        id{g}=ismember(geneinfo.(tableheaders{header}),geneidx{g});
+        if any(id{g})
+            break
+        end
     end
-end
-if ~any(id{g})
-    ea_error(['Could not find gene: ',geneidx{g},'.']);
-end
-id{g}=find(id{g});
+    if ~any(id{g})
+        ea_error(['Could not find gene: ',geneidx{g},'.']);
+    end
+    id{g}=find(id{g});
 end
 
 if iscell(map)

@@ -35,7 +35,7 @@ for s=1:size(vatlist,1)
         end
         nii=ea_load_nii(ea_niigz(fullfile(pth,strrep(cfile,' > ','_'),[fn,suffix,ext])));
         if ~exist('AllX','var')
-           AllX=zeros(size(vatlist,1),numel(nii.img)); 
+           AllX=zeros(size(vatlist,1),numel(nii.img));
         end
         AllX(s,:)=nii.img(:);
 end

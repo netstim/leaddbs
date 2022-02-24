@@ -1,6 +1,9 @@
-function base=ea_getconnectomebase(cmd)
+function base=ea_getconnectomebase(cmd,prefs)
 
-prefs=ea_prefs('');
+if ~exist('prefs','var') || isempty(prefs)
+    prefs=ea_prefs('');
+end
+
 if isfield(prefs.lc,'datadir')
     base=prefs.lc.datadir;
 else
@@ -12,5 +15,8 @@ if exist('cmd','var')
             base=[base,'dMRI',filesep];
         case 'fmri'
             base=[base,'fMRI',filesep];
+        case 'dmri_multitract'
+            base=[base,'dMRI_MultiTract',filesep];
+    
     end
 end

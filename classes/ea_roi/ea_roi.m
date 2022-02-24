@@ -20,8 +20,8 @@ classdef ea_roi < handle
         smooth % smooth by FWHM
         binary % is binary ROI
         hullsimplify % simplify hull
-        max % maxvalue in nifti - 0.1 of the way
-        min % minvalue in nifti + 0.1 of the way
+        max % maxvalue in nifti
+        min % minvalue in nifti
         controlH % handle to color / threshold control figure
         plotFigureH % handle of figure on which to plot
         patchH % handle of patch
@@ -142,8 +142,8 @@ classdef ea_roi < handle
                 obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));
                 obj.min=ea_nanmin(obj.nii.img(~(obj.nii.img==0)));
                 maxmindiff=obj.max-obj.min;
-                obj.max=obj.max-0.1*maxmindiff;
-                obj.min=obj.min+0.1*maxmindiff;
+                obj.max=obj.max; %-0.1*maxmindiff;
+                obj.min=obj.min; %+0.1*maxmindiff;
                 try
                     obj.threshold=pobj.threshold;
                 catch

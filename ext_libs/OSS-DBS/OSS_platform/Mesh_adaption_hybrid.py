@@ -11,6 +11,10 @@ import h5py     #testing
 
 import time as time_lib
 
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
+
 from dolfin import *
 from pandas import read_csv
 from tissue_dielectrics import DielectricProperties
@@ -58,7 +62,7 @@ def save_mesh(mesh_designation,mesh,boundaries,subdomains):
     return True
 
 def save_mesh_and_kappa_to_h5(mesh_to_h5,subdomains_to_h5,boundaries_to_h5,Field_calc_param):
-    print("Number of mesh elements: ",mesh_to_h5.num_cells())
+    logging.critical("Number of mesh elements: {}".format(mesh_to_h5.num_cells()))
     #due to the glitch with the ghost model and subdomains. Used only for c-c multicontact, so always with floating
     V0_r=FunctionSpace(mesh_to_h5,'DG',0)
     kappa_r=Function(V0_r)
@@ -201,17 +205,17 @@ def mark_cells(ext_ground,mesh_for_ref,ref_mode,Field_r,Field_im,Field_r_new,Fie
     affected_points=affected_points[~np.all(affected_points==0.0,axis=1)]  #deletes all zero enteries
 
 
-    print("Av. dev. on the neuron segments: ",Div_sum/Ampl_p.shape[0], "V")
+    logging.critical("Av. dev. on the neuron segments: {} V".format(Div_sum/Ampl_p.shape[0]))
     with open(os.environ['PATIENTDIR']+'/Results_adaptive/Av_dev.txt','a') as f:
         f.write(str(Div_sum/float(Ampl_p.shape[0])))
         f.write('\n')
 
-    print("Max dev. on the neuron segments:", max_div,"V")
+    logging.critical("Max dev. on the neuron segments: {} V".format(max_div))
     with open(os.environ['PATIENTDIR']+'/Results_adaptive/Max_dev.txt','a') as f:
         f.write(str(max_div))
         f.write('\n')
 
-    print("Absolute error threshold on neuron compartments:",phi_error)
+    logging.critical("Absolute error threshold on neuron compartments: {} V".format(phi_error))
 
     if np.any(affected_points!=0.0):
         np.savetxt(os.environ['PATIENTDIR']+'/Results_adaptive/affected_points.csv', affected_points, delimiter=" ")
@@ -224,7 +228,7 @@ def mark_cells(ext_ground,mesh_for_ref,ref_mode,Field_r,Field_im,Field_r_new,Fie
     for cell in cells(mesh_for_ref):
 
         if cell_counter in cell_quart:
-            print(int(cell_counter*100/cell_counter_total)+1,"% of cells were processed")
+            logging.critical("{}% of cells were processed".format(int(cell_counter*100/cell_counter_total)+1))
 
         cell_counter=cell_counter+1
 
@@ -298,11 +302,11 @@ def check_current_conv(J_real,J_imag,J_real_new,J_imag_new,rel_error_current,inf
     #print("Sum(J_ampl_new): ", J_ampl_new)
 
 
-    print("Current deviation: ", abs((J_ampl_new-J_ampl)/J_ampl_new)*100, "%")
-    print("Relative error threshold for current convergence: ",rel_error_current*100.0,"%")
+    logging.critical("Current deviation: {}%".format(abs((J_ampl_new-J_ampl)/J_ampl_new)*100))
+    logging.critical("Relative error threshold for current convergence: {}%".format(rel_error_current*100.0))
     if info_only==0:
         if abs(J_ampl_new-J_ampl)/J_ampl_new>rel_error_current:
-            print("Current deviation is high, refining...")
+            logging.critical("Current deviation is high, refining...")
             return True
         else:
             return False
@@ -344,7 +348,7 @@ def mark_cell_loc_J(ext_ground,subdomains_imp,j_real,j_im,j_real_new,j_im_new,me
     else:
         threshold_current_in_element=0.25
 
-    print("threshold_current_in_element: ",threshold_current_in_element)
+    logging.critical("threshold_current_in_element: {}".format(threshold_current_in_element))
 
     int_cell_ref= MeshFunction('bool',mesh_old,3)       #cell marker for mesh_old
     int_cell_ref.set_all(False)
@@ -367,7 +371,7 @@ def mark_cell_loc_J(ext_ground,subdomains_imp,j_real,j_im,j_real_new,j_im_new,me
 
     for cell in cells(mesh_old):
         if cl_number in cell_quart:
-            print(int(cl_number*100/cell_counter_total)+1,"% of cells were processed")
+            logging.critical("{}% of cells were processed".format(int(cl_number*100/cell_counter_total)+1))
 
         cl_number=cl_number+1
 
@@ -399,7 +403,7 @@ def mark_cell_loc_J(ext_ground,subdomains_imp,j_real,j_im,j_real_new,j_im_new,me
 
 def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initial,MRI_param,DTI_param,Domains,d,cc_multicontact,num_proc,anisotropy,Field_calc_param,previous_results):
 
-    print("----- Conducting "+region+" -----")
+    logging.critical("----- Conducting refinement in {} -----".format(region))
     start_adapt_region=time_lib.clock()
 
     save_mesh('initial_for_the_step',mesh_initial,boundaries_initial,subdomains_assigned_initial)
@@ -442,13 +446,13 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
         current_checked=0           #always check current when refining around contacts
         if d["current_control"]==0:     #in this case we need to check current convergence
             d["rel_div_current"]=0.012
-            print("Although VC mode is used, current convergence will be checked during refinement around contacts with 1.2% rel. deviation. You can change the threshold in Mesh_adaption_hybrid.py")
+            logging.critical("Although VC mode is used, current convergence will be checked during refinement around contacts with 1.2% rel. deviation. You can change the threshold in Mesh_adaption_hybrid.py")
 
         if d["rel_div"]>=0.01:
             d["rel_div"] = d["rel_div"]
         else:
             d["rel_div"] = 0.01          #always fixed to 1% to avoid flickering
-            print("Rel. error threshold during refinement around contacts is set to 1% (to discard flickering effect)")
+            logging.critical("Rel. error threshold during refinement around contacts is set to 1% (to discard flickering effect)")
     elif region == 'it_in_ROI':
         ref_mode = 2
 
@@ -488,10 +492,10 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
         else:
             phi_error=abs((max(Phi_r.vector()[:])-min(Phi_r.vector()[:]))*d["Adaptive_frac_div"])   #should be scaled
 
-    print("Absolute error threshold on neuron compartments: ",phi_error,"V")
+    logging.critical("Absolute error threshold on neuron compartments: {} V".format(phi_error))
 
     # mesh refined uniformly in the specified region by ref_mode
-    print("\n--- Initial uniform refinement step for "+region)
+    logging.critical("\n--- Initial uniform refinement step for {}".format(region))
     cells_ref=mark_cells_start(mesh_initial,ref_mode,subdomains_assigned_initial, Domains)
     [mesh_new,boundaries_new,subdomains_assigned_new]=mesh_refiner(mesh_initial,boundaries_initial,subdomains_assigned_initial,cells_ref,Domains,cc_multicontact)
 
@@ -532,7 +536,7 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
 
         ###### check current convergence if necessary #####
         if current_checked==0 and not(cells_ref.where_equal(True)):
-            print("Checking current convergence for " + region)
+            logging.critical("Checking current convergence for {}".format(region))
             if check_current_conv(J_r,J_im,J_r_new,J_im_new,d["rel_div_current"]):           # True if current deviation above rel_div_current
                 if ref_it==1:       #marking will be on the initial mesh
                     cells_ref=mark_cell_loc_J(Field_calc_param.external_grounding,subdomains_assigned_initial,j_dens_real,j_dens_im,j_dens_real_new,j_dens_im_new,mesh_initial,mesh_new,ref_mode,1,Domains,d["rel_div_current"])
@@ -548,7 +552,7 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
 
                 if not (cells_ref.where_equal(True)):
                     current_checked=1
-                    print("Current did not converge, but nothing marked to refine! Consider decreasing threshold_current_in_element in Mesh_adaptation.py")
+                    logging.critical("Current did not converge, but nothing marked to refine! Consider decreasing threshold_current_in_element in Mesh_adaptation.py")
                 else:
                     if ref_it>2:
                         if ref_due_to_phi_dev==1:   #if this is a refinement due to current right after phi_dev check, refine on mesh (resaved as mesh_new). Otherwise, on mesh_new
@@ -560,7 +564,7 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
 
             else:
                 current_checked=1
-                print("Current converged\n")
+                logging.critical("Current converged\n")
 
 
         if not(cells_ref.where_equal(True)) and ref_it==2:       # written on the envelope.   if we refine adaptively only once, we want to evaluate mesh that we just refined. Otherwise, we will evaluate already saved mesh
@@ -570,7 +574,7 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
 
         # if we got local convergence, let us check with uniform refinement again and mark cells, where high deviation occurs
         if not (cells_ref.where_equal(True)) and ref_it>1:
-            print("\n--- Uniform refinement step for "+ region)
+            logging.critical("\n--- Uniform refinement step for {}".format(region))
             if ref_it==2:
                 mesh,boundaries,subdomains_assigned=load_mesh('adapt_it2')
             else:
@@ -607,7 +611,7 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
                 hdf.close()
                 np.savetxt(os.environ['PATIENTDIR']+'/Results_adaptive/current_in_uni_ref_'+str(mesh_uni.num_cells())+'.csv', np.array([J_r_uni,J_im_uni]), delimiter=" ")
             else:       #the field was already computed for this uniform refinement
-                print("Cells for refinement after uniform check were loaded from the previous iteration\n")
+                logging.critical("Cells for refinement after uniform check were loaded from the previous iteration\n")
                 hdf = HDF5File(mesh.mpi_comm(), os.environ['PATIENTDIR']+'/Results_adaptive/cells_to_ref_after_uni_'+str(mesh_uni.num_cells())+'.h5', 'r')
                 cells_ref = MeshFunction('bool', mesh,3)
                 hdf.read(cells_ref, "/cells_ref_after_uni")
@@ -638,19 +642,19 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
                 ref_due_to_phi_dev=1
 
             if check_current_conv(J_r,J_im,J_r_uni,J_im_uni,d["rel_div_current"]):
-                print("Current ref. will be conducted only if deviation on neuron compartments was high")
+                logging.critical("Current ref. will be conducted only if deviation on neuron compartments was high")
                 current_checked=0
             else:
                 if ref_mode==1:   #
                     if cells_ref.where_equal(True):
-                        print("After uniform check, the current converged, the iteration is complete (only when refining around the contacts)")
+                        logging.critical("After uniform check, the current converged, the iteration is complete (only when refining around the contacts)")
                         cells_ref.set_all(False)
 
             ###
             #if uniform refinement on mesh revealed deviation, but number of marked cells is <= than in mesh_new, then uniformly refine mesh_new. Do this step only if the last local refinement was due to phi ref. If current ref, refine on mesh (no danger of repetition as we have a different criterion)
             if (cells_ref.where_equal(True) and ref_it!=2 and (mesh_new.num_cells()>=num_cells_mesh_check) and ref_due_to_phi_dev==1):       #if mesh and mesh_uni have a high deviation in the solution, then create new mesh_uni from mesh_new using uniform refinement (otherwise it might stuck in the loop mesh-mesh_uni-mesh_new-mesh)
                 cells_ref=mark_cells_start(mesh_new,ref_mode,subdomains_assigned_new, Domains)
-                print("Deviation is high, now uniformly refining mesh_new")
+                logging.critical("Deviation is high, now uniformly refining mesh_new")
                 save_mesh('adapt',mesh_new,boundaries_new,subdomains_assigned_new)
 
                 [mesh_uni,boundaries_uni,subdomains_assigned_uni]=mesh_refiner(mesh_new,boundaries_new,subdomains_assigned_new,cells_ref,Domains,cc_multicontact)
@@ -683,7 +687,7 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
 
                 if d["current_control"]==1 or ref_mode==1:
                     if check_current_conv(J_r_new,J_im_new,J_r_uni,J_im_uni,d["rel_div_current"]):
-                        print("Current ref. will be conducted only if deviation on neuron compartments was high")
+                        logging.critical("Current ref. will be conducted only if deviation on neuron compartments was high")
                         current_checked=0
 
                 #save field solution
@@ -700,27 +704,27 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
         #exiting from here if no cells marked, otherwise a new iteration
         if not (cells_ref.where_equal(True)):
             if ref_it==1:
-                print("mesh meets the requirements (or no cells were marked for refinement) "+region+" was completed\n")
+                logging.critical("mesh meets the requirements (or no cells were marked for refinement) in {} was completed\n".format(region))
                 save_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initial)
                 if ref_mode == 2:
                     save_mesh('adapt',mesh_initial,boundaries_initial,subdomains_assigned_initial)
             elif ref_it==2:
-                print("mesh_new meets the requirements (or no cells were marked for refinement) "+region+" was completed\n")
+                logging.critical("mesh_new meets the requirements (or no cells were marked for refinement) in {} was completed\n".format(region))
                 mesh_2it,boundaries_2it,subdomains_assigned_2it=load_mesh('adapt_it2')
                 save_mesh(region,mesh_2it,boundaries_2it,subdomains_assigned_2it)
                 if ref_mode == 2:
                     save_mesh('adapt',mesh_initial,boundaries_initial,subdomains_assigned_initial)
             else:
-                print("mesh_new meets the requirements (or no cells were marked for refinement) "+region+" was completed\n")
+                logging.critical("mesh_new meets the requirements (or no cells were marked for refinement) in {} was completed\n".format(region))
                 mesh_adapted,boundaries_adapted,subdomains_assigned_adapted=load_mesh('adapt')
                 save_mesh(region,mesh_adapted,boundaries_adapted,subdomains_assigned_adapted)
 
         else:
-            print("--- Local refinement step for "+region)
+            logging.critical("--- Local refinement step for {}".format(region))
             if ref_it==1:
                 mesh_initial,boundaries_initial,subdomains_assigned_initial=load_mesh('initial_for_the_step')   #for stability
                 [mesh_new,boundaries_new,subdomains_assigned_new]=mesh_refiner(mesh_initial,boundaries_initial,subdomains_assigned_initial,cells_ref,Domains,cc_multicontact)
-                print("mesh size after adaptive refinement: ", mesh_new.num_cells())
+                logging.critical("mesh size after adaptive refinement: {}".format(mesh_new.num_cells()))
                 ref_it=ref_it+1
             else:
                 Phi_r,Phi_im,J_r,J_im,j_dens_real,j_dens_im,Field_real,Field_imag,Phi_amp_on_neuron,max_E=(Phi_r_new,Phi_im_new,J_r_new,J_im_new,j_dens_real_new,j_dens_im_new,Field_real_new,Field_imag_new,Phi_amp_on_neuron_new,max_E_new)
@@ -731,7 +735,7 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
 
     minutes=int((time_lib.clock() - start_adapt_region)/60)
     secnds=int(time_lib.clock() - start_adapt_region)-minutes*60
-    print("--- For "+region+" was adapted in ",minutes," min ",secnds," s \n")
+    logging.critical("----- Mesh in {} was adapted in {} min {} sec -----\n".format(region,minutes, secnds))
 
     status=1        #for now always 1
 
@@ -773,8 +777,8 @@ def mesh_refiner(mesh_old,boundaries,subdomains_assigned,cell_markers,Domains,cc
 
 
     if (An_surface_size_new-An_surface_size_old)/An_surface_size_new>0.02:
-        print((An_surface_size_new-An_surface_size_old)/An_surface_size_new)
-        print("Refinement broke the imposed B.C.!")
+        #print((An_surface_size_new-An_surface_size_old)/An_surface_size_new)
+        logging.critical("Refinement broke the imposed B.C.!")
         exit()
 
     return (mesh_new,boundaries_new,subdomains_assigned_new)
@@ -801,11 +805,11 @@ def stupid_prerefiner(mesh_old,boundaries,subdomains_assigned):
 
 
 def mesh_adapter(MRI_param,DTI_param,Scaling,Domains,d,anisotropy,cc_multicontact,ref_freqs):
-    print("----- Conducting mesh convergence study -----")
+    logging.critical("----- Conducting mesh convergence study -----")
     start_adapt=time_lib.clock()
 
     for i in range(len(ref_freqs)):     # go over the refinement frequencies
-        print("At frequency: ",ref_freqs[i])
+        logging.critical("At frequency: {} Hz".format(ref_freqs[i]))
         if i==0:    # load mesh after the CSF refinement
             mesh = Mesh(os.environ['PATIENTDIR']+'/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
             boundaries = MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
@@ -826,7 +830,7 @@ def mesh_adapter(MRI_param,DTI_param,Scaling,Domains,d,anisotropy,cc_multicontac
 
         for region in ref_regions:
             if region in regions_to_skip:
-                print(region," was skipped. Make sure you are working with the desired mesh (i.e. initial or after some ref. iterations)")
+                logging.critical("{} was skipped. Make sure you are working with the desired mesh (i.e. initial or after some ref. iterations)".format(region))
                 #mesh,boundaries,subdomain=load_mesh('adapt_CSF'+str(Scaling))     #loading the initial mesh here
                 convergence_status.append(0)
             else:       #also saves the mesh with the name of the refined region. The last iteration will also save it as mesh_adapt.xml.gz
@@ -837,15 +841,15 @@ def mesh_adapter(MRI_param,DTI_param,Scaling,Domains,d,anisotropy,cc_multicontac
                 #reloading mesh to ensure stability using the name of the last refined region
                 mesh,boundaries,subdomains_assigned=load_mesh(region)
 
-    print("Mesh was adapted, stored as mesh_adapt.xml.gz in Results_adaptive/")
+    logging.critical("Mesh was adapted, stored as mesh_adapt.xml.gz in Results_adaptive/")
     mesh_fin = Mesh(os.environ['PATIENTDIR']+"/Results_adaptive/mesh_it_in_ROI.xml.gz")
-    print("number of elements: ", mesh_fin.num_cells())
+    logging.critical("number of elements: {}".format(mesh_fin.num_cells()))
     Field_real = previous_results[0]
     file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Adapted_Field_real.pvd')
     file<<Field_real
 
     minutes=int((time_lib.clock() - start_adapt)/60)
     secnds=int(time_lib.clock() - start_adapt)-minutes*60
-    print("--- Mesh adaptation took ",minutes," min ",secnds," s\n")
+    logging.critical("----- Mesh adaptation took {} min {} sec -----\n".format(minutes, secnds))
 
     return previous_results[-2]     #Ampl of the potential on the neuron compartments

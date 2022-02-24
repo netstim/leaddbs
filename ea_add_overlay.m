@@ -203,7 +203,11 @@ for atlas=showidx
                 if options.d2.lab_overlay
                     if any(slice(:))
                         centr=mean(xyatlmm(valatl>thresh,:));%ea_centroid(logical(slice));
-                        an=ea_underscore2space(atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1));
+                        if isfield(atlases,'label2d')
+                            an=ea_underscore2space(atlases.labels{atlases.label2d}{atlas});
+                        else
+                            an=ea_underscore2space(atlases.names{atlas}(1:find(atlases.names{atlas}=='.')-1));
+                        end
                         try
                             set(0,'CurrentFigure',cuts)
                             text(centr(1),centr(2),an,'color',options.d2.con_color,'VerticalAlignment','middle','HorizontalAlignment','center');

@@ -1,4 +1,4 @@
-function ea_menu_initmenu(handles,cmd)
+function ea_menu_initmenu(handles,cmd,prefs)
 
 callingfunction=dbstack;
 callingfunction=callingfunction(4).name;
@@ -11,7 +11,6 @@ if isempty(menuprobe)
     uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
 
     p_c=uimenu(pp,'Label','Play sound on completed tasks.','Callback',{@ea_toggle_chirp});
-    prefs=ea_prefs;
     if prefs.machine.chirp
         p_c.Checked='on';
     else
@@ -19,7 +18,6 @@ if isempty(menuprobe)
     end
 
     m_c=uimenu(pp,'Label','Show methods popup on completed tasks.','Callback',{@ea_toggle_methods});
-    prefs=ea_prefs;
     if prefs.machine.methods_show
         m_c.Checked='on';
     else
@@ -57,7 +55,8 @@ if isempty(menuprobe)
 
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
     uimenu(f,'Label','Anonymize files for selected subjects','Callback',{@ea_run_deface,handles});
-
+        
+    uimenu(f,'Label','Read in stimulation settings from move.base','Callback',{@ea_import_movebase_stimsettings,handles});
 
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
@@ -129,7 +128,7 @@ if isempty(menuprobe)
 
 
     if ismember('transfer',cmd)
-       ea_menu_addtransfer(handles,callingfunction);
+       ea_menu_addtransfer(handles,callingfunction,prefs);
     end
 
     if ismember('vats',cmd)
@@ -140,11 +139,15 @@ if isempty(menuprobe)
     g = uimenu('Label','Install');
     [list,commands]=ea_checkinstall('list');
     for l=1:length(list)
-        insit(l)=uimenu(g,'Label',[list{l}],'Callback',{@ea_menuinstall,commands{l}});
-        if ea_checkinstall(commands{l},1)
-        	insit(l).Checked='on';
-        else
-            insit(l).Checked='off';
+        if isa([list{l}], 'char')
+            insit(l) = uimenu(g,'Label',[list{l}],'Callback',{@ea_menuinstall,commands{l}});
+            insit(l).Checked = ea_checkinstall(commands{l},1,0,prefs);
+        else % cell. create menu in above item
+            insit(l-1).Callback = [];
+            for j = 1:length(list{l})
+                m = uimenu(insit(l-1),'Label',[list{l}{j}],'Callback',{@ea_menuinstall,commands{l}{j}});
+                m.Checked = ea_checkinstall(commands{l}{j},1);
+            end
         end
         % disable for compiled app
         if isdeployed && any(strcmp(insit(l).Text,{'Install development version of Lead'}))

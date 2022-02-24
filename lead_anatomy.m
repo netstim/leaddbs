@@ -92,7 +92,7 @@ ea_addnormmethods(handles,options,'normmethod');
 ea_processguiargs(handles,varargin)
 
 % add tools menu
-ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'});
+ea_menu_initmenu(handles,{'export','cluster','prefs','transfer','space'},options.prefs);
 
 handles.prod='anatomy';
 ea_firstrun(handles,options);
@@ -371,6 +371,8 @@ for pt=1:length(options.uipatdirs)
     options.d2.depth=[str2double(get(handles.depth,'String')),...
         str2double(get(handles.depth,'String')),...
         str2double(get(handles.depth,'String'))];
+    setzero=[1,1,1]; setzero(ea_getdims(options.d2.tracor,1))=0;
+    options.d2.depth(logical(setzero))=0;
     options.d2.showlegend=0;
     [Vtra,Vcor,Vsag]=ea_assignbackdrop(options.d2.backdrop,options,'Patient');
     Vs={Vtra,Vcor,Vsag};

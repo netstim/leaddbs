@@ -100,7 +100,17 @@ switch cmd
             ea_dispercent(1,'end');
         end
 
-        fiberstrength=cell2mat(fiberstrength);
+        % Manually convert cell to mat and do cleanup simultaneously, more
+        % efficient in case the matrix is very large
+        clear fibers fiberidx tree fiberstrengthn fidx nzz;
+        temp = zeros(length(fiberstrength{1}),length(fiberstrength));
+        for i=1:length(fiberstrength)
+            temp(:,i) = fiberstrength{1};
+            fiberstrength(1) = [];
+        end
+        fiberstrength = temp;
+        clear temp;
+
         mat=zeros(length(sfile));
 
         for sxx=1:length(sfile)

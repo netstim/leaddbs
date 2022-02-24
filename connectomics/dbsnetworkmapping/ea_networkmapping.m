@@ -72,7 +72,7 @@ classdef ea_networkmapping < handle
         end
 
         function initialize(obj,datapath,resultfig)
-            D = load(datapath);
+            D = load(datapath, '-mat');
             if isfield(D, 'M') % Lead Group analysis path loaded
                 obj.M = D.M;
                 obj.leadgroup = datapath;
@@ -194,6 +194,7 @@ classdef ea_networkmapping < handle
             end
             D = load(obj.leadgroup);
             obj.M = D.M;
+            obj.allpatients = D.M.patient.list;
         end
 
         function coh = getcohortregressor(obj)
@@ -250,9 +251,9 @@ classdef ea_networkmapping < handle
             end
 
             if ~exist('Iperm', 'var') || isempty(Iperm)
-                I = obj.responsevar(patientsel);
+                I = obj.responsevar(patientsel,:);
             else
-                I = Iperm(patientsel);
+                I = Iperm(patientsel,:);
             end
 
             % Ihat is the estimate of improvements (not scaled to real improvements)
@@ -290,11 +291,11 @@ classdef ea_networkmapping < handle
                         [vals] = ea_networkmapping_calcstats(obj, patientsel(training), Iperm);
                     end
                 end
-                
-                if obj.exportmodelsAsNifti 
-                   
+
+                if obj.exportmodelsAsNifti
+
                     % determine how to call selected patients
-                    
+
                     for set=1:length(obj.setlabels)
                         if isequal(obj.patientselection,find(obj.setselections{set}))
                             setname=ea_space2sub(obj.setlabels{set});
@@ -304,42 +305,36 @@ classdef ea_networkmapping < handle
                         setname='All_Patients';
                     end
                     if ~exist('setname','var') % custom selection
-                       setname=['N=',num2str(length(obj.patientselection))]; 
+                       setname=['N=',num2str(length(obj.patientselection))];
                     end
-                    
+
                     % determine which cv is running
                    st = dbstack;
                    callingfunction = st(2).name;
                    callingfunction = strrep(callingfunction,'ea_networkmapping.','');
-                   
-                   
-                   
-                   
+
                    res=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
                    res.dt=[16,1];
                    res.img(:)=vals{1};
-                   
+
                    ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction));
                    res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction,[ea_space2sub(obj.statmetric),'_',num2str(c),'.nii']);
                    ea_write_nii(res);
-                   
-                   
+
                    % also check if fingerprints have already been exported
                    if c==1
                        odir=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints');
                        if exist(odir,'dir')
-                          ea_warning(['An analysis with the same name (',setname,') already exists under ',odir,'. Dumping novel NIfTI files in there - but better reexport and clean up before.']); 
+                          ea_warning(['An analysis with the same name (',setname,') already exists under ',odir,'. Dumping novel NIfTI files in there - but better reexport and clean up before.']);
                        end
                        ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints'));
                        for pt=obj.patientselection
-                           
+
                            res.img(:)=obj.results.(ea_conn2connid(obj.connectome)).connval(pt,:);
                            res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints',['Fingerprint_',num2str(pt),'.nii']);
                            ea_write_nii(res);
-                       end                       
+                       end
                    end
-
-                   
                 end
 
                 switch lower(obj.basepredictionon)
@@ -605,11 +600,11 @@ classdef ea_networkmapping < handle
                         % first draw correct surface
                         switch obj.model
                             case 'Smoothed'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf_smoothed.rh.mz3']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf_smoothed.lh.mz3']); end
+                                if obj.modelRH; [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf_smoothed.rh.mz3']); end
+                                if obj.modelLH; [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf_smoothed.lh.mz3']); end
                             case 'Full'
-                                if obj.modelRH; rh=ea_readObj([ea_space,'surf.rh.mz3']); end
-                                if obj.modelLH; lh=ea_readObj([ea_space,'surf.lh.mz3']); end
+                                if obj.modelRH; [rh.faces, rh.vertices] = ea_readMz3([ea_space,'surf.rh.mz3']); end
+                                if obj.modelLH; [lh.faces, lh.vertices] = ea_readMz3([ea_space,'surf.lh.mz3']); end
                         end
 
                         % Check cmap
@@ -681,26 +676,32 @@ classdef ea_networkmapping < handle
                             case 'Smoothed'
                                 if obj.modelRH && ~obj.modelLH
                                     mesh=([ea_space,'surf_smoothed.rh.mz3']);
-                                    side=1;
+                                    azimuth = '90'; % Right lateral side
+                                    hemiCode = '1'; % Show right hemishpere of the bilateral mesh
                                 elseif obj.modelLH && ~obj.modelRH
                                     mesh=([ea_space,'surf_smoothed.lh.mz3']);
-                                    side=2;
+                                    azimuth = '-90'; % Left lateral side
+                                    hemiCode = '-1'; % Show left hemishpere of the bilateral mesh
                                 elseif obj.modelRH && obj.modelLH
                                     mesh=([ea_space,'surf_smoothed.mz3']);
-                                    side=1;
+                                    azimuth = '90'; % Right lateral side
+                                    hemiCode = '0'; % Show both hemishperes
                                 elseif ~obj.modelRH && ~obj.modelLH
                                     ea_error('Please switch on at least one hemisphere');
                                 end
                             case 'Full'
                                 if obj.modelRH && ~obj.modelLH
                                     mesh=([ea_space,'surf.rh.mz3']);
-                                    side=1;
+                                    azimuth = '90'; % Right lateral side
+                                    hemiCode = '1'; % Show right hemishpere of the bilateral mesh
                                 elseif obj.modelLH && ~obj.modelRH
                                     mesh=([ea_space,'surf.lh.mz3']);
-                                    side=2;
+                                    azimuth = '-90'; % Left lateral side
+                                    hemiCode = '-1'; % Show left hemishpere of the bilateral mesh
                                 elseif obj.modelRH && obj.modelLH
                                     mesh=([ea_space,'surf.mz3']);
-                                    side=1;
+                                    azimuth = '90'; % Right lateral side
+                                    hemiCode = '0'; % Show both hemishperes
                                 elseif ~obj.modelRH && ~obj.modelLH
                                     ea_error('Please switch on at least one hemisphere');
                                 end
@@ -717,6 +718,7 @@ classdef ea_networkmapping < handle
                             ' MESHCOLOR(255,255,255);'];
 
                         cnt=1;
+
                         if ~any(isnan(threshs(1,1:2)))
                             script=[script,...
                             ' OVERLAYLOAD(''',ea_path_helper(res.fname),''');',...
@@ -734,7 +736,8 @@ classdef ea_networkmapping < handle
 
                         script=[script,...
                             ' COLORBARVISIBLE(','false',');',...
-                            ' AZIMUTHELEVATION(',num2str(90+(180*side)),', 0);'];
+                            ' AZIMUTHELEVATION(',azimuth,', 0);',...
+                            ' MESHHEMISPHERE(',hemiCode,');'];
 
                         script=[script,...
                             ' END.'];

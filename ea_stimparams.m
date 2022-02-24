@@ -257,7 +257,7 @@ if ~strcmp(options.leadprod, 'group')
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
@@ -266,7 +266,7 @@ if ~strcmp(options.leadprod, 'group')
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
@@ -274,7 +274,7 @@ if ~strcmp(options.leadprod, 'group')
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
@@ -285,7 +285,7 @@ if ~strcmp(options.leadprod, 'group')
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             if exist('vatgrad')
@@ -1144,7 +1144,7 @@ end
 options.native=options.orignative;
 PL=getappdata(resultfig,'PL');
 for group=1:length(PL)
-    deletePL(PL(group));
+    ea_deletePL(PL(group));
 end
 clear PL
 
@@ -1172,68 +1172,7 @@ setappdata(resultfig,'PL',PL);
 ea_busyaction('off',handles.stimfig,'stim');
 
 
-function deletePL(PL)
-if verLessThan('matlab','8.5') % ML <2014a support
-    for p=1:length(PL)
-        if isfield(PL(p),'vatsurfs')
-            delete(PL(p).vatsurfs(logical(PL(p).vatsurfs)));
-        end
-        if isfield(PL(p),'quiv')
-            delete(PL(p).quiv(logical(PL(p).quiv)));
-        end
-        if isfield(PL(p),'fib_plots')
-            if isfield(PL(p).fib_plots,'fibs')
-                delete(PL(p).fib_plots.fibs(logical(PL(p).fib_plots.fibs)));
-            end
 
-            if isfield(PL(p).fib_plots,'dcfibs')
-                todelete=PL(p).fib_plots.dcfibs((PL(p).fib_plots.dcfibs(:)>0));
-                delete(todelete(:));
-            end
-        end
-        if isfield(PL(p),'regionsurfs')
-            todelete=PL(p).regionsurfs(logical(PL(p).regionsurfs));
-            delete(todelete(:));
-        end
-        if isfield(PL(p),'conlabels')
-            todelete=PL(p).conlabels(logical(PL(p).conlabels));
-            delete(todelete(:));
-        end
-        if isfield(PL(p),'ht')
-            delete(PL(p).ht);
-        end
-    end
-else
-    for p=1:length(PL)
-        if isfield(PL(p),'vatsurfs')
-            delete(PL(p).vatsurfs);
-        end
-        if isfield(PL(p),'quiv')
-            delete(PL(p).quiv);
-        end
-        if isfield(PL(p),'fib_plots')
-            if isfield(PL(p).fib_plots,'fibs')
-                delete(PL(p).fib_plots.fibs);
-            end
-
-            if isfield(PL(p).fib_plots,'dcfibs')
-                delete(PL(p).fib_plots.dcfibs);
-            end
-        end
-        if isfield(PL(p),'regionsurfs')
-            delete(PL(p).regionsurfs);
-        end
-        if isfield(PL(p),'conlabels')
-            delete(PL(p).conlabels);
-        end
-        if isfield(PL(p),'ht')
-            delete(PL(p).ht);
-        end
-        if isfield(PL(p),'fiberActivation')
-            cellfun(@delete, PL(p).fiberActivation);
-        end
-    end
-end
 
 
 function k12u_Callback(hObject, eventdata, handles)
@@ -1525,10 +1464,14 @@ function Rs1va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs1va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs1va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
 S.active(1)=1;
-S.Rs1.va=get(hObject,'Value');
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -1582,9 +1525,14 @@ function Rs2va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs2va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs2va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(1)=2;
-S.Rs2.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
+
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -1666,10 +1614,14 @@ function Ls1va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls1va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls1va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(2)=1;
-S.Ls1.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -1723,10 +1675,14 @@ function Ls2va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls2va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls2va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(2)=2;
-S.Ls2.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -1771,7 +1727,7 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
             resultfig = getappdata(handles.stimfig,'resultfig');
             PL=getappdata(resultfig,'PL');
             for group=1:length(PL)
-                deletePL(PL(group));
+                ea_deletePL(PL(group));
             end
             clear PL
             ea_savestimulation(S,options);
@@ -1813,7 +1769,7 @@ if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
                 resultfig = getappdata(handles.stimfig,'resultfig');
                 PL=getappdata(resultfig,'PL');
                 for group=1:length(PL)
-                    deletePL(PL(group));
+                    ea_deletePL(PL(group));
                 end
                 clear PL
                 ea_delete([directory,'stimulations',filesep,ea_nt(0),S.label]);
@@ -1900,7 +1856,7 @@ else
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
-            deletePL(PL(group));
+            ea_deletePL(PL(group));
         end
         clear PL
         ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
@@ -1909,7 +1865,7 @@ else
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
-            deletePL(PL(group));
+            ea_deletePL(PL(group));
         end
         clear PL
         ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_right.mat'], resultfig);
@@ -1917,7 +1873,7 @@ else
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
-            deletePL(PL(group));
+            ea_deletePL(PL(group));
         end
         clear PL
         ea_fiberactivation_viz([directory,'stimulations',filesep,ea_nt(options),label,filesep,'fiberActivation_left.mat'], resultfig);
@@ -1930,7 +1886,7 @@ else
         resultfig = getappdata(handles.stimfig,'resultfig');
         PL=getappdata(resultfig,'PL');
         for group=1:length(PL)
-            deletePL(PL(group));
+            ea_deletePL(PL(group));
         end
         clear PL
         if exist('vatgrad')
@@ -2540,6 +2496,29 @@ for ohm=1:4
 end
 
 
+% Function to recalculate voltage percentage after switching from current
+% control to voltage control stimulation (voltage is always evenly
+% distributed across contacts)
+function S = ea_recalc_volperc(S)
+source = {{'Rs1', 'Rs2', 'Rs3', 'Rs4'}, {'Ls1', 'Ls2', 'Ls3', 'Ls4'}};
+contact = {{'k0','k1','k2','k3','k4','k5','k6','k7'}, {'k8','k9','k10','k11','k12','k13','k14','k15'}};
+for rl=1:2
+    for s=1:length(source{rl})
+        active = {};
+        for c=1:length(contact{rl})
+            if S.(source{rl}{s}).(contact{rl}{c}).pol == 1
+                active = [active; {['S.', source{rl}{s}, '.', contact{rl}{c}, '.perc']}];
+            end
+        end
+
+        perc = 1/length(active)*100;
+        for a=1:length(active)
+            eval([active{a}, '= perc;']);
+        end
+    end
+end
+
+
 function S=ea_redistribute_voltage(S,changedobj)
 Rconts={'k0','k1','k2','k3','k4','k5','k6','k7'};
 Lconts={'k8','k9','k10','k11','k12','k13','k14','k15'};
@@ -2892,10 +2871,14 @@ function Ls3va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls3va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls3va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(2)=3;
-S.Ls3.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -2949,10 +2932,14 @@ function Ls4va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Ls4va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Ls4va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(2)=4;
-S.Ls4.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -3006,9 +2993,14 @@ function Rs3va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs3va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs3va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(1)=3;
-S.Rs3.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
+
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -3062,10 +3054,14 @@ function Rs4va_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Rs4va contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Rs4va
-S=getappdata(handles.stimfig,'S'); options=getappdata(handles.stimfig,'options');
-S.active(1)=4;
-S.Rs4.va=get(hObject,'Value');
+S = getappdata(handles.stimfig,'S');
+options = getappdata(handles.stimfig,'options');
+S.active(1)=1;
+S.(hObject.Tag(1:3)).va = hObject.Value;
 
+if  S.(hObject.Tag(1:3)).va == 1
+    S = ea_recalc_volperc(S);
+end
 setappdata(handles.stimfig,'S',S);
 ea_refreshguisp(handles,options);
 
@@ -3516,9 +3512,28 @@ function addStimSet_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of addStimSet
 if hObject.Value
     options = getappdata(handles.stimfig, 'options');
-    numContacts = options.elspec.numel;
     stimLabel = getappdata(handles.stimfig, 'stimlabel');
-    stimFolder = [options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(~handles.estimateInTemplate.Value),stimLabel];
+    if strcmp(options.leadprod, 'dbs')
+        patdir = [options.root, options.patientname];
+        numContacts = options.elspec.numel;
+    else % Special case when call from Lead Group
+        actpt = getappdata(handles.stimfig, 'actpt');
+        resultfig = getappdata(handles.stimfig, 'resultfig');
+        M = getappdata(resultfig, 'M');
+        if M.ui.detached
+            patdir = fullfile(M.root, M.patient.list{actpt});
+        else
+            patdir = M.patient.list{actpt};
+        end
+        numContacts = size(M.elstruct(actpt).coords_mm{1}, 1);
+    end
+    stimFolder = fullfile(patdir ,'stimulations', ea_nt(~handles.estimateInTemplate.Value), stimLabel);
     ea_mkdir(stimFolder);
     ea_addStimSet(numContacts, stimFolder, hObject);
+
+    % Set stimSetMode flag for Lead Group
+    if hObject.Value && strcmp(options.leadprod, 'group')
+        M.ui.stimSetMode = 1;
+        setappdata(resultfig, 'M');
+    end
 end

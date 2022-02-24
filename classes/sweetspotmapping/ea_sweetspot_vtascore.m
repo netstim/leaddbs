@@ -1,4 +1,4 @@
-function [vatFibScoreBin, vatFibScoreSum, vatFibScoreMean, vatFibScorePeak, vatFibScore5Peak] = ea_discfibers_vtascore(vatlist, atlas, side, posneg)
+function [vatFibScoreBin, vatFibScoreSum, vatFibScoreMean, vatFibScorePeak, vatFibScore5Peak] = ea_discfibers_vtascore(vatlist, atlas, side, posneg, threshold)
 % Calculate VAT fiber connection scores based on the discfiber atlas
 
 if ischar(vatlist)
@@ -61,9 +61,12 @@ fibers = vertcat(fibcell{:});
 idx = cellfun(@(fib) size(fib,1), fibcell);
 fibers(:,4) = repelem(1:numel(fibcell), idx);
 
-% Threshold for E-field
-prefs = ea_prefs;
-thresh = prefs.machine.vatsettings.horn_ethresh*1000;
+% Use E-field threshold by default. Otherwise, the input vatlist should be
+% properly binarized.
+if ~exist('threshold', 'var')
+    prefs = ea_prefs;
+    threshold = prefs.machine.vatsettings.horn_ethresh*1000;
+end
 
 numVAT = numel(vatlist);
 
@@ -80,9 +83,16 @@ for pt = 1:numVAT
 
     % Threshold the vat efield
     if numel(unique(vat.img(:))) ~= 2
-        vatInd = find(vat.img(:)>thresh);
+        vatInd = find(vat.img(:)>threshold);
     else
         vatInd = find(vat.img(:));
+    end
+
+    if isempty(vatInd)
+        warning('off', 'backtrace');
+        warning('Skip empty VTA %s ...', vat.fname);
+        warning('on', 'backtrace');
+        continue;
     end
 
     % Trim connectome fibers
@@ -92,6 +102,9 @@ for pt = 1:numVAT
 
     % Skip further calculation in case VAT is totally not connected
     if ~any(filter)
+        warning('off', 'backtrace');
+        warning('Skip unconnected VTA %s ...', vat.fname);
+        warning('on', 'backtrace');
         continue;
     end
 

@@ -167,6 +167,16 @@ if options.elspec.numel > 1
                 A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
                 emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
             end
+        case {'Boston Scientific Vercise Cartesia HX'
+              'Boston Scientific Vercise Cartesia X'}
+            for side=options.sides
+                coords_temp{side}(1,:) = mean(coords_mm{side}(1:3,:));
+                coords_temp{side}(2,:) = mean(coords_mm{side}(4:6,:));
+                coords_temp{side}(3,:) = mean(coords_mm{side}(7:9,:));
+                coords_temp{side}(4,:) = mean(coords_mm{side}(10:12,:));
+                A{side}=sqrt(ea_sqdist(coords_temp{side}',coords_temp{side}'));
+                emp_eldist{side}=sum(sum(tril(triu(A{side},1),1)))/(3);
+            end
         otherwise
             for side=options.sides
                 A{side}=sqrt(ea_sqdist(coords_mm{side}',coords_mm{side}'));

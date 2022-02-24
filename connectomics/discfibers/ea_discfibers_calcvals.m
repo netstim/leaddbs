@@ -1,4 +1,4 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals(vatlist, cfile, thresh)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals(vatlist, cfile, thresh)
 % Calculate fiber connection values based on the VATs and the connectome
 
 disp('Load Connectome...');
@@ -17,6 +17,7 @@ fibsvalPeak = cell(1, numSide);
 fibsval5Peak = cell(1, numSide);
 
 fibcell = cell(1, numSide);
+connFiberInd = cell(1, numSide);
 
 for side = 1:numSide
     fibsvalBin{side} = zeros(length(idx), numPatient);
@@ -28,10 +29,13 @@ for side = 1:numSide
     disp(['Calculate for side ', num2str(side), ':']);
     for pt = 1:numPatient
         disp(['VAT ', num2str(pt, ['%0',num2str(numel(num2str(numPatient))),'d']), '/', num2str(numPatient), '...']);
-        vat = ea_load_nii(vatlist{pt,side});
-
+        if isstruct(vatlist) % direct nifti structs supplied
+            vat = vatlist(pt,side);
+        elseif iscell(vatlist) % filenames
+            vat = ea_load_nii(vatlist{pt,side});
+        end
         % Threshold the vat efield
-        vatInd = find(vat.img(:)>thresh);
+        vatInd = find(abs(vat.img(:))>thresh);
 
         % Trim connectome fibers
         [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
@@ -78,7 +82,7 @@ for side = 1:numSide
     fibsval5Peak{side} = sparse(fibsval5Peak{side}(fibIsConnected, :));
 
     % Extract connected fiber cell
-    connFiberInd = find(fibIsConnected);
-    connFiber = fibers(ismember(fibers(:,4), connFiberInd), 1:3);
-    fibcell{side} = mat2cell(connFiber, idx(connFiberInd));
+    connFiberInd{side} = find(fibIsConnected);
+    connFiber = fibers(ismember(fibers(:,4), connFiberInd{side}), 1:3);
+    fibcell{side} = mat2cell(connFiber, idx(connFiberInd{side}));
 end

@@ -44,7 +44,7 @@ if update
             catch
                 if update==1
                     fprintf(['\nDownload error! You may try to download Lead-DBS manually from:\n',...
-                             '%s_dropbox\nOR\n%s_pcloud\n\n'], [updurl,'?id=',id], [updurl,'?id=',id]);
+                             '%s_pcloud\nOR\n%s_onedrive\n\n'], [updurl,'?id=',id], [updurl,'?id=',id]);
 
                 elseif update==2
                     fprintf(['\nDownload error! You may try to download the update package manually from:\n',...

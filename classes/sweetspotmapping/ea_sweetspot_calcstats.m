@@ -38,12 +38,11 @@ for side=1:size(I,2)
         case 'z-score'
             I(:,side)=ea_nanzscore(I(:,side));
     end
-    
-    
+
     if exist('covars', 'var') % for now take care of covariates by cleaning main variable only.
         I(:,side) = ea_resid(cell2mat(covars),I(:,side));
     end
-    
+
 end
 
 if obj.splitbygroup
@@ -65,7 +64,7 @@ for group=groups
     if obj.mirrorsides
         gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
     end
-    
+
     for side=1:numel(gval)
         % check connthreshold
         switch obj.statlevel
@@ -85,7 +84,7 @@ for group=groups
                 end
                 %get VTA Size
                 VTAsize(:,side) = sum(gval{side},2);
-                
+
                 %% define null-hypothesis for statistical testing
                 switch obj.stat0hypothesis
                     case 'Zero'
@@ -100,7 +99,7 @@ for group=groups
                                 AvOutcome = nan(size(Outcome));
                                 Amplitude = amps(gpatsel,side);
                                 for k=1:length(Outcome)
-                                    avOutcome(k) = nanmean(Outcome(Amplitude == Amplitude(k)));                                
+                                    avOutcome(k) = nanmean(Outcome(Amplitude == Amplitude(k)));
                                 end
                                 H0(gpatsel,side) = avOutcome;
                                 clear avOutcome Outcome Amplitude
@@ -120,7 +119,7 @@ for group=groups
                                 H0 = mean(I(gpatsel,side) ./ VTAsize(gpatsel,side));
                         end
                 end
-                
+
                 %% apply amplitude-correction for outcomes (I)
                 switch obj.statamplitudecorrection
                     case 'Amplitude'
@@ -128,7 +127,7 @@ for group=groups
                     case 'VTA Size'
                         I(gpatsel,side) = I(gpatsel,side) ./ VTAsize(gpatsel,side);
                 end
-                
+
                 %% perform statistical-tests / image creation
                 switch obj.stattest
                     case 'Mean-Image'
@@ -146,32 +145,32 @@ for group=groups
                     case 'T-Test'
                         gval{side} = double(gval{side});
                         gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
-                        
+
                         thisvals=gval{side}(gpatsel,:).*repmat(I(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
-                        
+
                         Nmap=nansum(gval{side}(gpatsel,:));
                         nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
                         thisvals(:,nanidx)=nan;
-                        
+
                         if numel(H0) ~= 1 % in case H0 is different for each setting
                             H0vals = double(gval{side}(gpatsel,:)).*repmat(H0(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
                             [~,ps,~,stats]=ttest(thisvals(:,~nanidx),H0vals(:,~nanidx));
                         else
                             [~,ps,~,stats]=ttest(thisvals(:,~nanidx),H0);
                         end
-                        
+
                         if obj.showsignificantonly
                             stats.tstat=ea_corrsignan(stats.tstat',ps',obj);
                         end
                         vals{group,side}=nan(size(thisvals,2),1);
                         vals{group,side}(~nanidx)=stats.tstat;
-                        
+
                     case 'Wilcoxon-Test'
                         gval{side} = double(gval{side});
                         gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
-                        
+
                         thisvals=gval{side}(gpatsel,:).*repmat(I(gpatsel,side),1,size(gval{side}(gpatsel,:),2));
-                        
+
                         Nmap=nansum(gval{side}(gpatsel,:));
                         nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
                         thisvals(:,nanidx)=nan;
@@ -193,11 +192,10 @@ for group=groups
                                 diffvals(k) = nanmedian(tmpvals(:,k)) - H0;
                             end
                         end
-                        
-                        
+
                         logpvals = -log10(ps);
                         logpvals(diffvals <0) = -logpvals(diffvals <0);
-                        
+
                         if obj.showsignificantonly
                             meanvals=ea_corrsignan(meanvals',ps',obj);
                             logpvals=ea_corrsignan(logpvals',ps',obj);
@@ -206,14 +204,14 @@ for group=groups
 %                         vals{group,side}(~nanidx)=meanvals;
                         vals{group,side}(~nanidx)=logpvals;
                 end
-                
+
             case 'E-Fields'
                 switch obj.stattest
                     case 'Correlations'
-                        
+
                         thisvals=gval{side}(gpatsel,:);
                         Nmap=ea_nansum(~isnan(thisvals));
-                        
+
                         nanidx=Nmap<round(size(thisvals,1)*(obj.coverthreshold/100));
                         thisvals=thisvals(:,~nanidx);
                         if obj.showsignificantonly
@@ -222,7 +220,7 @@ for group=groups
                         else
                             R=ea_corr(thisvals,I(gpatsel,side),obj.corrtype);
                         end
-                        
+
                         vals{group,side}=nan(size(gval{side}(gpatsel,:),2),1);
                         vals{group,side}(~nanidx)=R;
                 end

@@ -24,7 +24,12 @@ if smoothkernel
 else
     testnii=ea_open_vol(testmap);
 end
-querypoints=testnii.mat\idxmm;
+
+if size(idxmm,1)==3
+    idxmm=[idxmm;ones(1,size(idxmm,2))];
+end
+
+querypoints=testnii.mat\idxmm; % in voxel space of test map image (which has to be in MNI space)
 
 vals=spm_sample_vol(testnii,querypoints(1,:),querypoints(2,:),querypoints(3,:),1)';
 

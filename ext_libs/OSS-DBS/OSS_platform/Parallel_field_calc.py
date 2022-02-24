@@ -7,6 +7,11 @@ import subprocess
 import matplotlib.pyplot as plt
 import os
 from pandas import read_csv
+
+import logging
+logging.getLogger('UFL').setLevel(logging.WARNING)
+logging.getLogger('FFC').setLevel(logging.WARNING)
+
 from dolfin import *
 import h5py
 
@@ -38,7 +43,7 @@ def sort_full_solution(d,FR_vector,full_solution,number_of_points):
     FR_jump=FR_vector.shape[0]
     solution_sort=np.zeros((number_of_points*FR_vector.shape[0],6),float)
 
-    print("--- Sorting the obtained solution")
+    logging.critical("--- Sorting the obtained solution")
     inx_sol_sort=0
     for point_number in np.arange(number_of_points):
 
@@ -67,7 +72,7 @@ def sort_full_solution(d,FR_vector,full_solution,number_of_points):
         hf.create_dataset('dataset_1', data=solution_sort)
         hf.close()
 
-    print("Saved sorted solution in Field_solutions/ \n")
+    logging.critical("Saved sorted solution in Field_solutions/")
 
     del full_solution,solution_sort
 
@@ -129,7 +134,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
         subdomains=get_cellmap(mesh,subdomains_assigned,Domains,MRI_param,d["default_material"])    #mapping of tissue onto the mesh
         DTI_tensor=[0,0,0,0,0,0]       #initiating
 
-    print("Subdomains file for parallel is saved in Field_solutions/parallel_Subdomains.pvd")
+    logging.critical("Subdomains file for parallel is saved in Field_solutions/parallel_Subdomains.pvd")
     file=File(os.environ['PATIENTDIR']+'/Field_solutions/parallel_Subdomains.pvd')
     file<<subdomains,mesh
 
@@ -154,7 +159,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
             i=rslt[0][0]+1
         elif pack_to_start_after[-1]==freq_list[-1]:
             i=freq_list.shape[0]
-            print("All computations in frequency spectrum were already conducted")
+            logging.critical("All computations in frequency spectrum were already conducted")
         else:
             rslt=np.where(freq_list == pack_to_start_after[-1])
             i=rslt[0][0]+1
@@ -185,6 +190,7 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
 
             Sim_setup=Simulation_setup(sine_freq,d["freq"],mesh,boundaries,subdomains,cond_vector,perm_vector,d["el_order"],anisotropy,d["current_control"],DTI_tensor,d["CPE_activ"],CPE_param,d["EQS_core"],d["external_grounding"])
 
+
             if cc_multicontact==True:
                 import FEM_in_spectrum_multicontact
                 processes=mp.Process(target=FEM_in_spectrum_multicontact.solve_Laplace_multicontact,args=(Sim_setup,Solver_type,Vertices,Domains,j,Field_on_VTA,output))
@@ -201,11 +207,17 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
         for p in proc:
             p.join()
 
+        # check if solutions on all cores were obtained (not a perfect check, works just for the first pack)
+        for freq_i in range(j):
+            if not os.path.isfile(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(freq_i)+'.h5'):
+                logging.critical('Not all cores returned results, check RAM consumption, exiting')
+                raise SystemExit
+
         last_completed_pack=np.asarray(freq_pack)
         np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/last_completed_pack.csv', last_completed_pack, delimiter=" ")       #to recover the last frequency of FFEM was interrupted
         if d["freq"] in freq_pack:
-            print("Processed frequencies: ")
-        print(freq_pack)
+            logging.critical("Processed frequencies: ")
+        logging.critical("{}".format(' '.join(map(str, freq_pack))))
     if d["number_of_processors"]>freq_list.shape[0]:
         n_files=freq_list.shape[0]
     else:
@@ -226,9 +238,9 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
             sorted_impedance=complete_impedance[complete_impedance[:,2].argsort(axis=0)]      #sort by freq
             np.savetxt(os.environ['PATIENTDIR']+'/Field_solutions/sorted_impedance.csv', sorted_impedance, delimiter=" ")
 
-        minutes=int((tm.time() - start_paral)/60)
-        secnds=int(tm.time() - start_paral)-minutes*60
-        print("----- parallel calculations took ",minutes," min ",secnds," s -----")
+        minutes = int((tm.time() - start_paral)/60)
+        secnds = int(tm.time() - start_paral)-minutes*60
+        logging.critical("----- Parallel calculations took {} min {} sec -----\n".format(minutes, secnds))
 
         return True
     else:
@@ -277,17 +289,15 @@ def calculate_in_parallel(d,freq_list,Domains,MRI_param,DTI_param,anisotropy,num
             plt.grid(True)
             plt.savefig(os.environ['PATIENTDIR']+'/Images/Imp_Ampl_plot.eps', format='eps', dpi=1000)
 
-        minutes=int((tm.time() - start_paral)/60)
-        secnds=int(tm.time() - start_paral)-minutes*60
-        print("----- Parallel calculations took ",minutes," min ",secnds," s -----\n")
-
         sort_full_solution(d,freq_list,complete_solution,number_of_points)
         del complete_solution
+
+        minutes=int((tm.time() - start_paral)/60)
+        secnds=int(tm.time() - start_paral)-minutes*60
+        logging.critical("----- Parallel calculations took {} min {} sec -----\n".format(minutes, secnds))
+
 
         if Field_on_VTA==1:
             d["Full_Field_IFFT"]=1
 
         return True
-
-#return True
-

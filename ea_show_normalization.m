@@ -62,7 +62,7 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
                 suff='_fa';
         end
 
-        w=load([ea_space(options),'wires.mat']);
+        w=load([ea_space,'wires.mat']);
         pt=ea_load_nii(checkf);
 
         if ~isequal(size(w.wires),size(pt.img))
@@ -103,9 +103,9 @@ for export=expdo % if CT, only do 1, if MR, do 1:3.
         %joint_im=0.5*wires.img+pt.img;
         joint_im=pt.img;
         if strcmp(options.prefs.dev.profile,'se') % do siobhan specific stuff (here don't show wires to enable any template to be used as normalization template)
-                        joint_im=joint_im.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
+            joint_im=joint_im.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
         else
-        joint_im=joint_im.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
+            joint_im=joint_im.*w.wires; %shows white wires, if commented out, normalizations are shown without the wires, useful if other templates than the MNI are used to normalize images to
         end
         %joint_im(w.wires>0.9)=1;
         stand=std(joint_im(:));
