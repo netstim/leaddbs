@@ -30,8 +30,8 @@ if ~isfolder(fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym', 'at
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'])
-    disp('Backup recent groups from develop branch ...');
-    movefile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'], [LeadRoot, 'common', filesep, 'ea_recentgroups.mat.dev'])
+    disp('Backup recent groups from classic branch ...');
+    movefile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'], [LeadRoot, 'common', filesep, 'ea_recentgroups.mat.classic'])
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.bids'])
@@ -40,8 +40,8 @@ if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.bids'])
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'])
-    disp('Backup recent patients from develop branch  ...');
-    movefile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'], [LeadRoot, 'common', filesep, 'ea_recentpatients.mat.dev'])
+    disp('Backup recent patients from classic branch  ...');
+    movefile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'], [LeadRoot, 'common', filesep, 'ea_recentpatients.mat.classic'])
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.bids'])
@@ -50,8 +50,8 @@ if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.bids'])
 end
 
 if isfile([LeadRoot, 'ea_ui.mat'])
-    disp('Backup ea_ui.mat from develop branch  ...');
-    movefile([LeadRoot, 'ea_ui.mat'], [LeadRoot, 'ea_ui.mat.dev'])
+    disp('Backup ea_ui.mat from classic branch  ...');
+    movefile([LeadRoot, 'ea_ui.mat'], [LeadRoot, 'ea_ui.mat.classic'])
 end
 
 if isfile([LeadRoot, 'ea_ui.mat.bids'])
@@ -60,8 +60,8 @@ if isfile([LeadRoot, 'ea_ui.mat.bids'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.m'])
-    disp('Backup .ea_prefs.m from develop branch  ...');
-    movefile([ea_gethome, '.ea_prefs.m'], [ea_gethome, '.ea_prefs.m.dev'])
+    disp('Backup .ea_prefs.m from classic branch  ...');
+    movefile([ea_gethome, '.ea_prefs.m'], [ea_gethome, '.ea_prefs.m.classic'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.m.bids'])
@@ -70,8 +70,8 @@ if isfile([ea_gethome, '.ea_prefs.m.bids'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.mat'])
-    disp('Backup .ea_prefs.mat from develop branch ...');
-    movefile([ea_gethome, '.ea_prefs.mat'], [ea_gethome, '.ea_prefs.mat.dev'])
+    disp('Backup .ea_prefs.mat from classic branch ...');
+    movefile([ea_gethome, '.ea_prefs.mat'], [ea_gethome, '.ea_prefs.mat.classic'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.mat.bids'])
@@ -80,8 +80,8 @@ if isfile([ea_gethome, '.ea_prefs.mat.bids'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.json'])
-    disp('Backup .ea_prefs.json from develop branch  ...');
-    movefile([ea_gethome, '.ea_prefs.json'], [ea_gethome, '.ea_prefs.json.dev'])
+    disp('Backup .ea_prefs.json from classic branch  ...');
+    movefile([ea_gethome, '.ea_prefs.json'], [ea_gethome, '.ea_prefs.json.classic'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.json.bids'])
