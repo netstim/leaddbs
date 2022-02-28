@@ -2,8 +2,7 @@ function rawImages = ea_genrawimagesjson(BIDSRoot, subjId)
 % [Re-]generate rawimages json file in case it's not present in subject's
 % derivatives folder
 
-warning('off', 'backtrace');
-warning('generating rawimages.json file for ''sub-%s'' ...', subjId);
+ea_cprintf('CmdWinWarnings', 'Generating rawimages.json for "sub-%s":\n', subjId);
 
 % Get all images
 rawdataFolder = fullfile(GetFullPath(BIDSRoot), 'rawdata', ['sub-', subjId]);
@@ -31,7 +30,5 @@ ea_mkdir(prefsFolder);
 
 % Save rawimages.json
 jsonPath = fullfile(prefsFolder, ['sub-', subjId, '_desc-rawimages.json']);
-warning('%s\n\n', jsonPath);
+ea_cprintf('CmdWinWarnings', '%s\n\n', jsonPath);
 savejson('', rawImages, jsonPath);
-
-warning('on', 'backtrace');
