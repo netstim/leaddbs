@@ -51,7 +51,7 @@ if length(uipatdir) == 1 % Single folder
             end
         end
     end
-    
+
     if ~isSubjFolder && ~isBIDSRoot
         % try to find out what kind of folder structure was passed
         folder_list = dir_without_dots(uipatdir{1});         % do a listing of the immediate directory first
@@ -71,26 +71,26 @@ if length(uipatdir) == 1 % Single folder
         elseif isfolder(fullfile(uipatdir{1}, 'dicom')) ...
                 || isfolder(fullfile(uipatdir{1}, 'DICOM'))
             folder_type = 'patient_folder_dicom_folder';
-            
+
         % if DICOMDIR file inside, assume dicoms are present in one of the folders on this level
         elseif any(strcmp('DICOMDIR', {folder_list.name}))
             mkdir(fullfile(uipatdir{1}, 'DICOM'));
-            
+
             for f = 1:length(folder_list)
                 % if .dcm file is inside subfolder, just move the folder
                 if folder_list(f).isdir && ~(any(strcmp(folder_list(f).name, {'.', '..'})))
                     movefile(fullfile(uipatdir{1}, folder_list(f).name), fullfile(uipatdir{1}, 'DICOM'));
-                    
+
                 end
             end
             folder_type = 'patient_folder_dicom_folder';
-            
+
         % .dcm files are found inside one of the subfolders
         elseif ~isempty(dcm_in_subfolder_list)  %
             mkdir(fullfile(uipatdir{1}, 'DICOM'));
-            
+
             folders_with_dicoms = unique({dcm_in_subfolder_list.folder});
-            
+
             for f = 1:length(folders_with_dicoms)
                 % .dcm files are directly in uipatdir without subfolders
                 if strcmp(folders_with_dicoms{f}, uipatdir{1})
@@ -144,7 +144,7 @@ if length(uipatdir) == 1 % Single folder
                 folder_type = 'patient_folder_dicom_folder';
             end
         end
-        
+
         switch folder_type
             case 'legacy_patient_folder'
                 msg = {'{\bfOld dataset detected, would you like to migrate it to BIDS?}';
@@ -216,18 +216,18 @@ if length(uipatdir) == 1 % Single folder
         rawData = regexprep(rawData, ['\', filesep, '$'], '');
         sourceData = ea_regexpdir([uipatdir{1}, filesep, 'sourcedata'], 'sub-', 0, 'dir');
         sourceData = regexprep(sourceData, ['\', filesep, '$'], '');
-        
+
         if ~isempty(rawData) % rawdata folder already exists
             uipatdir = strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs']);
             subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match', 'once');
         elseif ~isempty(sourceData) % sourcedata folder exists
             % in the case of a BIDS dataset root folder as input and sourcedata available for one or more patients
             % trigger DICOM->nii conversion
-            
+
             % BIDSRoot is the selected folder
             BIDSRoot = uipatdir{1};
             setappdata(handles.leadfigure, 'BIDSRoot', BIDSRoot);
-            
+
             subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match', 'once');
             % call lead_migrate
             msg = {'{\bfBIDS dataset with sourcedata found, will run DICOM to NIfTI conversion!}'};
@@ -237,7 +237,7 @@ if length(uipatdir) == 1 % Single folder
             options.prefs = ea_prefs;
             waitfor(lead_import(sourceData, options, handles));
             uipatdir = strrep(sourceData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
-            
+
         else
             error('BIDS dataset detected but both sourcedata and rawdata folders are empty!');
         end
@@ -301,24 +301,24 @@ ea_addrecent(handles, uipatdir, 'patients');
 
 % check if reconstruction is present and assign side-toggles accordingly:
 if length(uipatdir) == 1 && isfield(handles, 'side1')
-    
+
     recon = bids.getRecon(subjId{1});
     if isfile(recon.recon)
         load(recon.recon);
         elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
-        
+
         % Reset electrode button status
         for el=1:elnum
             set(handles.(['side',num2str(el)]), 'Value', 0);
         end
-        
+
         % Set electrode button status
         for el=1:length(reco.native.coords_mm)
             if ~isempty(reco.native.markers(el).head)
                 set(handles.(['side',num2str(el)]), 'Value', 1);
             end
         end
-        
+
         try
             elmodel=ea_get_first_notempty_elmodel(reco.props);
             [~,locb] = ismember({elmodel},handles.electrode_model_popup.String);
@@ -335,14 +335,14 @@ if isfield(handles,'seeddefpopup')
         if ischar(stims)
             stims = {stims};
         end
-        
+
         if ~exist('commonStims', 'var')
             commonStims = stims;
         else
             commonStims = intersect(commonStims, stims);
         end
     end
-    
+
     % for now only check first subject for pt. specific fibers..
     % find out whether mapper or predict were calling
     if strcmp(handles.prod, 'mapper')
@@ -352,7 +352,7 @@ if isfield(handles,'seeddefpopup')
         set(handles.seeddefpopup, 'String', commonStims);
     end
     ea_resetpopup(handles.seeddefpopup);
-    
+
     % update cons
     if ~strcmp(get(handles.patdir_choosebox,'String'), 'Choose Patient Directory')
         directory = [uipatdir{1}, filesep];
