@@ -1,4 +1,4 @@
-function count = cprintf(style,format,varargin) %#ok<*JAPIMATHWORKS>
+function count = ea_cprintf(style,format,varargin) %#ok<*JAPIMATHWORKS>
 % CPRINTF displays styled formatted text in the Command Window
 %
 % Syntax:
