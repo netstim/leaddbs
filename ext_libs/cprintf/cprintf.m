@@ -22,7 +22,10 @@ function count = cprintf(style,format,varargin) %#ok<*JAPIMATHWORKS>
 %       'UnterminatedStrings'  - default: dark red
 %       'SystemCommands'       - default: orange
 %       'Errors'               - default: light red
+%       'Warnings'             - default: light orange
 %       'Hyperlinks'           - default: underlined blue
+%       'CmdWinErrors'         - default: same as Command window Error text
+%       'CmdWinWarnings'       - default: smae as Command window Warning text
 %
 %       'Black','Cyan','Magenta','Blue','Green','Red','Yellow','White'
 %
@@ -364,7 +367,7 @@ function [underlineFlag,boldFlag,style,debugFlag] = processStyleInfo(style)
   % Style name
   else
       % Try case-insensitive partial/full match with the accepted style names
-      matlabStyles = {'Text','Keywords','Comments','Strings','UnterminatedStrings','SystemCommands','Errors'};
+      matlabStyles = {'Text','Keywords','Comments','Strings','UnterminatedStrings','SystemCommands','Errors','Warnings','CmdWinErrors','CmdWinWarnings'};
       validStyles  = [matlabStyles, ...
                       'Black','Cyan','Magenta','Blue','Green','Red','Yellow','White', ...
                       'Hyperlinks'];
@@ -384,7 +387,11 @@ function [underlineFlag,boldFlag,style,debugFlag] = processStyleInfo(style)
 
       % Highlight preference style name
       elseif matches <= length(matlabStyles)
-          style = ['Colors_M_' validStyles{matches}];
+          if ~startsWith(style, 'Cmd')
+              style = ['Colors_M_' validStyles{matches}];
+          else
+              style = ['Color_' validStyles{matches}];
+          end
 
       % Color name
       elseif matches < length(validStyles)
