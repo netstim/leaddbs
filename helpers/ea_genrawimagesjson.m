@@ -1,34 +1,37 @@
-function json = ea_genrawimagesjson(BIDSRoot, subjId)
+function rawImages = ea_genrawimagesjson(BIDSRoot, subjId)
 % [Re-]generate rawimages json file in case it's not present in subject's
 % derivatives folder
 
 warning('off', 'backtrace');
-warning('Re-generating rawimages json file for "sub-%s" ...', subjId);
+warning('generating rawimages.json file for ''sub-%s'' ...', subjId);
 
-rawdataFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId]);
+% Get all images
+rawdataFolder = fullfile(GetFullPath(BIDSRoot), 'rawdata', ['sub-', subjId]);
+niftiFiles = ea_regexpdir(rawdataFolder, '.*\.nii(\.gz)?$', 1, 'f');
 
-sessionFolders = flip(ea_regexpdir(rawdataFolder, '^ses-.*', 0, 'dir'));
-sessions = regexp(sessionFolders, ['(?<=\', filesep, 'ses-)(.*)$'], 'match', 'once');
-
-for s=1:length(sessions)
-    datatypeFolders = ea_regexpdir(sessionFolders{s}, '[a-z]+', 0, 'dir');
-    datatypes = regexp(datatypeFolders, ['(?<=\', filesep, ')([a-z]+)$'], 'match', 'once');
-    for d=1:length(datatypes)
-        niftiFiles = ea_regexpdir(datatypeFolders{d}, '.*\.nii(\.gz)?$', 0, 'file');
-        for n=1:length(niftiFiles)
-            parsed = parseBIDSFilePath(niftiFiles{n});
-            if isfield(parsed, 'acq')
-                key = [parsed.acq, '_', parsed.suffix];
-            else
-                key = parsed.suffix;
-            end
-            [~, json.(sessions{s}).(datatypes{d}).(key)] = ea_niifileparts(niftiFiles{n});
-        end
+% Iterate all images
+rawImages = struct;
+for f = 1:length(niftiFiles)
+    parsed = parseBIDSFilePath(niftiFiles{f});
+    session = parsed.ses; % preop, postop
+    [~, type] = fileparts(parsed.dir); % anat, func, dwi
+    if isfield(parsed, 'acq')
+        suffix = [parsed.acq, '_', parsed.suffix]; % e.g., ax_T1w
+    else
+        suffix = parsed.suffix; % e.g., CT
     end
+    [~, value] = ea_niifileparts(niftiFiles{f}); % File name without ext
+    rawImages.(session).(type).(suffix) = value;
 end
+rawImages = orderfields(rawImages, {'preop', 'postop'}); % Re-order
 
-prefsFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId], 'prefs');
+% Get prefs folder
+prefsFolder = fullfile(GetFullPath(BIDSRoot), 'derivatives', 'leaddbs', ['sub-', subjId], 'prefs');
 ea_mkdir(prefsFolder);
-savejson('', json, fullfile(prefsFolder, ['sub-', subjId, '_desc-rawimages.json']));
+
+% Save rawimages.json
+jsonPath = fullfile(prefsFolder, ['sub-', subjId, '_desc-rawimages.json']);
+warning('%s\n\n', jsonPath);
+savejson('', rawImages, jsonPath);
 
 warning('on', 'backtrace');
