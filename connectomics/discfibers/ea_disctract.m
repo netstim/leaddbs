@@ -563,10 +563,23 @@ classdef ea_disctract < handle
                             pred_train=ea_nanmean(Ihat_voters_train,2);
                             predictor(training,voter)=pred_train(training,voter);
                         end
-                        mdl=fitglm(predictor(training,voter),useI(training),lower(obj.predictionmodel));
-
+                        covariates=[];
+                        for cv=1:length(obj.covars)
+                        covariates=[covariates,obj.covars{cv}];
+                        end
+                        if ~isempty(covariates)
+                        mdl=fitglm([predictor(training,voter),covariates(training,:)],useI(training),lower(obj.predictionmodel));
+                        else
+                        mdl=fitglm([predictor(training,voter)],useI(training),lower(obj.predictionmodel));
+                        end
                         if size(useI,2)==1 % global scores
-                            Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,predictor(test,voter)),1,2); % fill both sides equally
+                            if ~isempty(covariates)
+                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor(test,voter),covariates(test,:)]),1,2); % fill both sides equally
+                            else
+                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor(test,voter)]),1,2); % fill both sides equally
+                            end
+                        elseif size(useI,2)==2 % bihemispheric scores
+                            ea_error('Fitting to scores has not been implemented for bihemispheric scores.');
                         end
                     end
                 end
