@@ -13,7 +13,7 @@ function electrode=ea_elspec_Aleva_directSTIM(varargin)
 % from cell
 % Use : fileparts(mfilename('fullpath')) otherwise
 elemodelPath = fileparts(which('ea_elspec_aleva_directSTIM_directed.m'));
-modelFolder = 'Aleva_directSTIM_Directed_components_square';
+modelFolder = 'Aleva_directSTIM_Directed_components_round';
 
 % Get specification
 options.elmodel = 'Aleva Neurotherapeutics directSTIM Directed';

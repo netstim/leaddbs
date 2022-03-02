@@ -17,6 +17,8 @@ ylim([0 max(intensityProfile(filterIdxs))*1.05]);
 xlim([0 20]) % show only first 20 mm
 hold on;
 hProfile = plot(skelScaleMm, intensityProfile);
+% Add the threshold used to detect the ContactArea as a line
+plot(skelScaleMm, ones(size(skelScaleMm))*mean(intensityProfile(filterIdxs)))
 plot(peakLocs, peakValues + 0.03 * peakValues, 'v', 'MarkerFaceColor', hProfile.Color, 'MarkerEdgeColor', hProfile.Color);
 ax.ColorOrderIndex = ax.ColorOrderIndex - 1;
 plot(skelScaleMm(filterIdxs), threshIntensityProfile(filterIdxs));

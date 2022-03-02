@@ -131,11 +131,12 @@ if(length(contactPositions) < 4 || strcmp(args.contactDetectionMethod, 'contactA
         end
     end
     
-    zeroT = invPolyArcLength3(refittedR3Poly2nd, contactAreaCenter-mean(electrodeInfo.ringContactCentersMm)); % calibrate zero
-    if strcmp(args.electrodeType, 'Aleva')
+    if contains(args.electrodeType, 'Aleva')
         % MEMS support tube = 10.2mm, 
         % lower most part of the first contact = 0.43
         zeroT = invPolyArcLength3(refittedR3Poly2nd, contactAreaCenter-5.1+0.43); % calibrate zero
+    else
+        zeroT = invPolyArcLength3(refittedR3Poly2nd, contactAreaCenter-mean(electrodeInfo.ringContactCentersMm)); % calibrate zero
     end
 
 
@@ -215,5 +216,4 @@ else
     refitReZeroedElecMod.useDetectedContactPositions = 1; 
     refitReZeroedElecMod.detectedContactPositions = refittedContactDistances(1:electrodeInfo.noRingContacts,:)';
 end
-
 
