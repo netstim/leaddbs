@@ -35,6 +35,14 @@ for side=1:length(markers) %valid for unilateral support
                 A=sqrt(ea_sqdist(coords_temp',coords_temp'));
                 can_eldist=sum(sum(tril(triu(A,1),1)))/(3);
                 clear coords_temp
+            case 'Aleva Neurotherapeutics directSTIM Directed'
+                coords_temp(1,:) = mean(electrode.coords_mm(1:3,:));
+                coords_temp(2,:) = mean(electrode.coords_mm(4:6,:));
+                coords_temp(3,:) = mean(electrode.coords_mm(7:9,:));
+                coords_temp(4,:) = mean(electrode.coords_mm(10:12,:));
+                A{side}=sqrt(ea_sqdist(coords_temp',coords_temp'));
+                can_eldist=sum(sum(tril(triu(A{side},1),1)))/(3);
+                clear coords_temp
             otherwise
                 A=sqrt(ea_sqdist(electrode.coords_mm',electrode.coords_mm'));
                 can_eldist=sum(sum(tril(triu(A,1),1)))/(options.elspec.numel-1);
