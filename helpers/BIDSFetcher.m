@@ -338,7 +338,7 @@ classdef BIDSFetcher
             baseDir = fullfile(LeadDBSDirs.preprocDir, 'anat');
 
             % Get preprocessed pre-op anat images
-            baseName = ['sub-', subjId, '_desc-preproc_ses-preop_'];
+            baseName = ['sub-', subjId, '_ses-preop_desc-preproc_'];
             fields = fieldnames(preopAnat);
             for i=1:length(fields)
                 modality = fields{i};
@@ -347,7 +347,7 @@ classdef BIDSFetcher
             end
 
             % Get preprocessed post-op anat images
-            baseName = ['sub-', subjId, '_desc-preproc_ses-postop_'];
+            baseName = ['sub-', subjId, '_ses-postop_desc-preproc_'];
             if isfield(postopAnat, 'CT')
                 parsed = parseBIDSFilePath(postopAnat.CT);
                 preprocAnat.postop.CT = fullfile(baseDir, [baseName, 'CT', parsed.ext]);
@@ -379,7 +379,7 @@ classdef BIDSFetcher
                 modality = fieldnames(preprocAnat.(session{i}));
                 for j=1:length(modality)
                     anat = strrep(preprocAnat.(session{i}).(modality{j}), LeadDBSDirs.preprocDir, LeadDBSDirs.coregDir);
-                    coregAnat.(session{i}).(modality{j}) = strrep(anat , [subjId, '_'], [subjId, '_space-', obj.anchorSpace, '_']);
+                    coregAnat.(session{i}).(modality{j}) = strrep(anat , ['ses-', session{i}, '_'], ['ses-', session{i}, '_space-', obj.anchorSpace, '_']);
                 end
             end
 
