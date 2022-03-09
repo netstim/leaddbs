@@ -84,6 +84,7 @@ for group=groups
                 end
                 %get VTA Size
                 VTAsize(:,side) = sum(gval{side},2);
+                VTAsize((VTAsize==0))=nan; % will prevent division by zero issue in case of empty VTAs
 
                 %% define null-hypothesis for statistical testing
                 switch obj.stat0hypothesis
@@ -112,11 +113,11 @@ for group=groups
                                 H0(gpatsel,side) = predict(lm,lmtable.Amplitude);
                                 clear lm lmtable Outcome Amplitude
                             case 'Amplitude'
-                                H0 = mean(I(gpatsel,side) ./ amps(gpatsel,side));
+                                H0 = ea_nanmean(I(gpatsel,side) ./ amps(gpatsel,side));
                             case 'None'
-                                H0 = mean(I(gpatsel,side));
+                                H0 = ea_nanmean(I(gpatsel,side));
                             case 'VTA Size'
-                                H0 = mean(I(gpatsel,side) ./ VTAsize(gpatsel,side));
+                                H0 = ea_nanmean(I(gpatsel,side) ./ VTAsize(gpatsel,side));
                         end
                 end
 
