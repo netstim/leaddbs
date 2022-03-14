@@ -15,10 +15,10 @@ if length(uipatdir) == 1 % Single folder
         isSubjFolder = 1;
         BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives)'], 'match', 'once');
         subjId = regexp(uipatdir{1}, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match');
-    elseif contains(uipatdir{1}, ['rawdata', filesep, 'sub-']) % rawdata folder has been selected
+    elseif contains(uipatdir{1}, {['rawdata', filesep, 'sub-'], ['sourcedata', filesep, 'sub-']}) % rawdata folder has been selected
         isSubjFolder = 1;
-        BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'rawdata)'], 'match', 'once');
-        subjId = regexp(uipatdir{1}, ['(?<=rawdata\', filesep, 'sub-).*'], 'match');
+        BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, '(rawdata|sourcedata))'], 'match', 'once');
+        subjId = regexp(uipatdir{1}, ['(?<=(rawdata|sourcedata)\', filesep, 'sub-).*'], 'match');
 
         subjDerivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}]);
         subjRawdataFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}]);
