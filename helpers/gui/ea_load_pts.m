@@ -20,14 +20,23 @@ if length(uipatdir) == 1 % Single folder
         BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'rawdata)'], 'match', 'once');
         subjId = regexp(uipatdir{1}, ['(?<=rawdata\', filesep, 'sub-).*'], 'match');
 
+        subjDerivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}]);
+        subjRawdataFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}]);
+        subjSourcedataFolder = fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{1}]);
+
         % now check if derivatives/sub-xx exists
-        if isfile(fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}], 'prefs', ['sub-', subjId{1}, '_desc-rawimages.json']))
+        if isfile(fullfile(subjDerivativesFolder, 'prefs', ['sub-', subjId{1}, '_desc-rawimages.json']))
+            ea_cprintf('CmdWinWarnings', 'rawimages.json detected for "sub-%s":\n', subjId{1});
             uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-        else
-            % if not, trigger ea_dataset_import to sort out files
-            disp('You have selected a rawdata of a subject that does not have a leaddbs derivatives folder yet. Will try to sort available rawdata...')
-            ea_dataset_import({fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}])}, [], 1, 0);
-            uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+        elseif ~isempty(ea_regexpdir(subjRawdataFolder, '.*\.nii(\.gz)$', 1, 'f')) % rawimages.json missing, but images exist in rawdata folder
+            ea_cprintf('CmdWinWarnings', 'rawdata exists but rawimages.json is not present!\n');
+            ea_genrawimagesjson(BIDSRoot, subjId{1});
+            uipatdir = {subjDerivativesFolder};
+        elseif isfolder(subjSourcedataFolder) && ~isempty(ea_regexpdir(subjSourcedataFolder, '.*', 1, 'f'))
+            ea_cprintf('CmdWinErrors', 'rawdata folder is empty! Will try to import data from sourcedata folder...\n');
+            options.prefs = ea_prefs;
+            waitfor(lead_import(subjSourcedataFolder, options, handles, BIDSRoot));
+            uipatdir = {subjDerivativesFolder};
         end
 
     else % Check if it's BIDS root folder
