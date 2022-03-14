@@ -1,4 +1,4 @@
-function ea_switch2bids
+function ea_switch2dev
 
 LeadRoot = ea_getearoot;
 
@@ -34,9 +34,9 @@ if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'])
     movefile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat'], [LeadRoot, 'common', filesep, 'ea_recentgroups.mat.classic'])
 end
 
-if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.bids'])
-    disp('Restore recent groups from bids branch  ...');
-    movefile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.bids'], [LeadRoot, 'common', filesep, 'ea_recentgroups.mat'])
+if isfile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.dev'])
+    disp('Restore recent groups from develop branch  ...');
+    movefile([LeadRoot, 'common', filesep, 'ea_recentgroups.mat.dev'], [LeadRoot, 'common', filesep, 'ea_recentgroups.mat'])
 end
 
 if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'])
@@ -44,9 +44,9 @@ if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'])
     movefile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat'], [LeadRoot, 'common', filesep, 'ea_recentpatients.mat.classic'])
 end
 
-if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.bids'])
-    disp('Restore recent patients from bids branch  ...');
-    movefile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.bids'], [LeadRoot, 'common', filesep, 'ea_recentpatients.mat'])
+if isfile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.dev'])
+    disp('Restore recent patients from develop branch  ...');
+    movefile([LeadRoot, 'common', filesep, 'ea_recentpatients.mat.dev'], [LeadRoot, 'common', filesep, 'ea_recentpatients.mat'])
 end
 
 if isfile([LeadRoot, 'ea_ui.mat'])
@@ -54,9 +54,9 @@ if isfile([LeadRoot, 'ea_ui.mat'])
     movefile([LeadRoot, 'ea_ui.mat'], [LeadRoot, 'ea_ui.mat.classic'])
 end
 
-if isfile([LeadRoot, 'ea_ui.mat.bids'])
-    disp('Restore ea_ui.mat from bids branch  ...');
-    movefile([LeadRoot, 'ea_ui.mat.bids'], [LeadRoot, 'ea_ui.mat'])
+if isfile([LeadRoot, 'ea_ui.mat.dev'])
+    disp('Restore ea_ui.mat from develop branch  ...');
+    movefile([LeadRoot, 'ea_ui.mat.dev'], [LeadRoot, 'ea_ui.mat'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.m'])
@@ -64,9 +64,9 @@ if isfile([ea_gethome, '.ea_prefs.m'])
     movefile([ea_gethome, '.ea_prefs.m'], [ea_gethome, '.ea_prefs.m.classic'])
 end
 
-if isfile([ea_gethome, '.ea_prefs.m.bids'])
-    disp('Restore .ea_prefs.m from bids branch  ...');
-    movefile([ea_gethome, '.ea_prefs.m.bids'], [ea_gethome, '.ea_prefs.m'])
+if isfile([ea_gethome, '.ea_prefs.m.dev'])
+    disp('Restore .ea_prefs.m from develop branch  ...');
+    movefile([ea_gethome, '.ea_prefs.m.dev'], [ea_gethome, '.ea_prefs.m'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.mat'])
@@ -74,9 +74,9 @@ if isfile([ea_gethome, '.ea_prefs.mat'])
     movefile([ea_gethome, '.ea_prefs.mat'], [ea_gethome, '.ea_prefs.mat.classic'])
 end
 
-if isfile([ea_gethome, '.ea_prefs.mat.bids'])
-    disp('Restore .ea_prefs.mat from bids branch  ...');
-    movefile([ea_gethome, '.ea_prefs.mat.bids'], [ea_gethome, '.ea_prefs.mat'])
+if isfile([ea_gethome, '.ea_prefs.mat.dev'])
+    disp('Restore .ea_prefs.mat from develop branch  ...');
+    movefile([ea_gethome, '.ea_prefs.mat.dev'], [ea_gethome, '.ea_prefs.mat'])
 end
 
 if isfile([ea_gethome, '.ea_prefs.json'])
@@ -84,15 +84,15 @@ if isfile([ea_gethome, '.ea_prefs.json'])
     movefile([ea_gethome, '.ea_prefs.json'], [ea_gethome, '.ea_prefs.json.classic'])
 end
 
-if isfile([ea_gethome, '.ea_prefs.json.bids'])
-    disp('Restore .ea_prefs.json from bids branch  ...');
-    movefile([ea_gethome, '.ea_prefs.json.bids'], [ea_gethome, '.ea_prefs.json'])
+if isfile([ea_gethome, '.ea_prefs.json.dev'])
+    disp('Restore .ea_prefs.json from develop branch  ...');
+    movefile([ea_gethome, '.ea_prefs.json.dev'], [ea_gethome, '.ea_prefs.json'])
 end
 
-disp('Switch LeadDBS branch to bids ...')
+disp('Switch LeadDBS branch to develop ...')
 system(['git -C ', LeadRoot, ' checkout .']);
-system(['git -C ', LeadRoot, ' checkout bids']);
+system(['git -C ', LeadRoot, ' checkout develop']);
 
-disp('Update LeadDBS search path ...');
 lead path;
 rehash toolboxcache;
+disp('LeadDBS search path updated.');
