@@ -8,7 +8,7 @@ outputimage = varargin{3};
 if nargin >= 4
     writeoutmat = varargin{4};
 else
-    writeoutmat = 0;
+    writeoutmat = 1;
 end
 
 if nargin >= 5
@@ -27,18 +27,48 @@ fprintf('\n\nRunning FSL FLIRT: %s\n\n', movingimage);
 
 umachine = load([ea_gethome, '.ea_prefs.mat']);
 normsettings = umachine.machine.normsettings;
+% Prepare bet image for flirt
 if normsettings.fsl_skullstrip % skullstripping is on
-    fprintf('\nStart skullstripping...\n\n');
-    % Prepare bet image for flirt, generate the brain masks '*_bet_mask.nii'
-    [movpath, movname] = ea_niifileparts(movingimage);
-    [fixpath, fixname] = ea_niifileparts(fixedimage);
-    inimage = [fileparts(movpath), filesep, 'bet_', movname];
-    refimage = [fileparts(fixpath), filesep, 'bet_', fixname];
-    if isempty(dir([inimage,'.nii*']))
-        ea_bet(movingimage, 1, inimage);
+    % Set skullstripped file name
+    if isBIDSFileName(movingimage)
+        inimage = ea_niifileparts(setBIDSEntity(movingimage, 'label', 'Brain'));
+    else
+        inimage = [ea_niifileparts(movingimage), '_brain'];
     end
-    if isempty(dir([refimage,'.nii*']))
-        ea_bet(fixedimage, 1, refimage);
+
+    % Run BET2
+    fprintf('\nSkullstripping moving image...\n');
+    ea_bet(movingimage, 1, inimage);
+
+    % Rename mask file
+    mask = dir([inimage, '_mask*']);
+    ext = regexp(mask(end).name, '(?<=_mask)\.nii(\.gz)?$', 'match', 'once');
+    if isBIDSFileName(movingimage)
+        parsedStruct = parseBIDSFilePath(movingimage);
+        movefile([inimage, '_mask', ext], setBIDSEntity(movingimage, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask'));
+    else
+        movefile([inimage, '_mask', ext], [ea_niifileparts(movingimage), '_brainmask', ext]);
+    end
+
+	% Set skullstripped file name
+    if isBIDSFileName(fixedimage)
+        refimage = ea_niifileparts(setBIDSEntity(fixedimage, 'label', 'Brain'));
+    else
+        refimage = [ea_niifileparts(fixedimage), '_brain'];
+    end
+
+    % Run BET2
+    fprintf('\nSkullstripping reference image...\n');
+    ea_bet(fixedimage, 1, refimage);
+
+    % Rename mask file
+    mask = dir([refimage, '_mask*']);
+    ext = regexp(mask(end).name, '(?<=_mask)\.nii(\.gz)?$', 'match', 'once');
+    if isBIDSFileName(fixedimage)
+        parsedStruct = parseBIDSFilePath(fixedimage);
+        movefile([refimage, '_mask', ext], setBIDSEntity(fixedimage, 'label', 'Brain', 'mod', parsedStruct.suffix, 'suffix', 'mask'));
+    else
+        movefile([refimage, '_mask', ext], [ea_niifileparts(fixedimage), '_brainmask', ext]);
     end
 else % skullstripping is off
     fprintf('\nSkip skullstripping...\n\n');
@@ -46,7 +76,7 @@ else % skullstripping is off
     refimage = ea_niifileparts(fixedimage);
 end
 
-volumedir = [fileparts(ea_niifileparts(movingimage)), filesep];
+volumedir = [fileparts(ea_niifileparts(outputimage)), filesep];
 
 % name of the output transformation
 [~, mov] = ea_niifileparts(movingimage);
@@ -122,6 +152,11 @@ else
                   [volumedir, invxfm, num2str(runs+1), '.mat']};
 end
 
+% Clean up BET image when skullstripping is on
+if normsettings.fsl_skullstrip
+    ea_delete({inimage, refimage});
+end
+
 fprintf('\nFSL FLIRT done.\n');
 
 %% add methods dump:
@@ -130,6 +165,5 @@ cits={
     'M. Jenkinson, P.R. Bannister, J.M. Brady, and S.M. Smith. Improved optimisation for the robust and accurate linear registration and motion correction of brain images. NeuroImage, 17(2):825-841, 2002.'
 };
 
-ea_methods(volumedir,[mov,' was linearly co-registered to ',fix,' using FLIRT as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],...
-    cits);
+ea_methods(volumedir,[mov,' was linearly co-registered to ',fix,' using FLIRT as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],cits);
 

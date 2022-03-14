@@ -94,7 +94,7 @@ if numel(transform) == 0
         ea_delete([directory,ea_stripext(options.prefs.b0), '2', options.prefs.prenii_unnormalized]);
     else
         ea_backuprestore(refb0);
-        ea_coreg2images(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
+        ea_coregimages(options,refb0,refanat,[options.root,options.patientname,filesep,'tmp.nii'],{},1);
         ea_delete([options.root,options.patientname,filesep,'tmp.nii']);
     end
 end
@@ -132,7 +132,7 @@ end
 fprintf('\nMapping from anat to mni...\n');
 [wfibsmm_mni, wfibsvox_mni] = ea_map_coords(wfibsvox_anat', ...
                                             refanat, ...
-                                            [directory,'y_ea_inv_normparams.nii'], ...
+                                            [directory,'inverseTransform'], ...
                                             refnorm);
 
 wfibsmm_mni = wfibsmm_mni';

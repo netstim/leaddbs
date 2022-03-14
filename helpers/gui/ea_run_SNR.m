@@ -28,7 +28,7 @@ if ~strcmp(directory(end),filesep)
 end
 
 if ~exist([directory,'c6',presentfiles{1}],'file')
-    ea_newseg(directory,presentfiles,0,options,1,2)
+    ea_newseg(fullfile(directory,presentfiles),0,1,2)
 end
 
 noisemask=ea_load_nii([directory,'c6',presentfiles{1}]);

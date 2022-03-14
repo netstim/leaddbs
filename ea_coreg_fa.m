@@ -23,12 +23,12 @@ if ~exist([directory,options.prefs.fa2anat],'file')
     if exist([directory,options.prefs.fa],'file') % check again since could have been built above
         if exist([directory,options.prefs.fa],'file') % recheck if has been built.
             ea_backuprestore([directory,options.prefs.fa]);
-            ea_coreg2images(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
+            ea_coregimages(options,[directory,options.prefs.fa],[directory,options.prefs.prenii_unnormalized],[directory,options.prefs.fa2anat]);
         end
     end
 end
 if exist([directory,options.prefs.fa2anat],'file') % recheck if now is present.
-    if usebrainmask && (~includeatlas) % if includeatlas is set we can assume that images have been coregistered and skulstripped already
+    if usebrainmask
         ea_maskimg(options,[directory,options.prefs.fa2anat],bprfx);
     end
 end

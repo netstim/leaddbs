@@ -18,15 +18,7 @@ else
     allfeatsix=cell2mat(fts.idx');
 end
 
-switch options.prefs.lcm.vatseed
-    case 'binary'
-        efsx='';
-    case 'efield_gauss'
-        efsx='efield_gauss_';
-    case 'efield'
-        efsx='efield_';
-end
-
+vtaType = options.prefs.lcm.vatseed
 
 options.native=0;
 for pt=1:length(uipatdirs)
@@ -37,8 +29,14 @@ for pt=1:length(uipatdirs)
     for side=1:2
         acnt{side}=mean(coords_mm{side}(logical(S.activecontacts{side}),:),1);
     end
-    strucnii=ea_load_nii([thispt,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_seed_compound_dMRI_',efsx,'struc_seed.nii']);
-    funcnii=ea_load_nii([thispt,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_seed_compound_fMRI_',efsx,'func_seed_AvgR.nii']);
+
+    [~, subPrefix] = fileparts([thispt, '_']);
+    modelLabel = ea_simModel2Label(S.model);
+    fConnName = ea_getConnLabel(options.lcm.func.connectome);
+    dConnName = ea_getConnLabel(options.lcm.struc.connectome);
+    funcnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,[subPrefix, 'sim-', vtaType, '_model-', modelLabel, '_seed-fMRI_conn-', fConnName, '_desc-AvgRFz_funcmap.nii']));
+    strucnii=ea_load_nii(fullfile(thispt,'stimulations',ea_nt(options),stimname,[subPrefix, 'sim-', vtaType, '_model-', modelLabel, '_seed-dMRI_conn-', dConnName, '_strucmap.nii']));
+
     % assign feature vector X:
     if iscell(allfeatsix)
        for c=1:length(allfeatsix)
@@ -92,10 +90,9 @@ options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
 options.earoot = ea_getearoot;
-options.dicomimp.do = 0;
 options.normalize.do = 0;
 options.normalize.method = [];
-options.normalize.check = 0;
+options.checkreg = false;
 options.coregmr.method = '';
 options.coregct.do = 0;
 options.coregctcheck = 0;

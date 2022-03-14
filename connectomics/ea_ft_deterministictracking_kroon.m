@@ -11,7 +11,7 @@ end
 
 %% mask for tracking
 directory=[options.root,options.patientname,filesep];
-ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0);
 
 %% Coreg options.prefs.prenii_unnormalized to b0 (for label.mat and FTR-Normalization)
 matlabbatch{1}.spm.spatial.coreg.estwrite.ref = {[directory,options.prefs.b0,',1']};

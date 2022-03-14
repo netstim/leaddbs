@@ -3,8 +3,8 @@ function outcoords = ea_fsl_apply_normalization_to_points(varargin)
 % For linear transformation, please use ea_fsl_img2imgcoord directly
 % mm to mm
 
-directory=fullfile(varargin{1},filesep);
-incoords=varargin{2};
+options = ea_getptopts(varargin{1}); % varargin{1} is patient folder
+incoords = varargin{2};
 
 % INVERSE means REALLY inverse: map from mni coords to anat coords
 if nargin == 3
@@ -19,21 +19,18 @@ else
     transform = '';
 end
 
-options.prefs=ea_prefs(fileparts(directory));
-[~, warpprefix] = ea_niifileparts(options.prefs.gprenii);
-
 if inversemap
-    src = [ea_space,'t2.nii'];
-    dest = [directory, options.prefs.prenii_unnormalized];
+    src = [ea_space, 't2.nii'];
+    dest = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
     if isempty(transform)
-        transform = [directory, warpprefix, 'WarpField.nii'];
+        transform = [options.subj.norm.transform.forwardBaseName, 'fnirt.nii'];
     end
 else
-    src = [directory, options.prefs.prenii_unnormalized];
-    dest = [ea_space,'t2.nii'];
+    src = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
+    dest = [ea_space, 't2.nii'];
     if isempty(transform)
-        transform = [directory, warpprefix, 'InverseWarpField.nii'];
+        transform = [options.subj.norm.transform.inverseBaseName, 'fnirt.nii'];
     end
 end
 
-outcoords = ea_fsl_img2imgcoord(incoords, src, dest, transform, 'n');
+outcoords = ea_fsl_img2imgcoord(incoords, src, dest, transform, 'nonlinear');

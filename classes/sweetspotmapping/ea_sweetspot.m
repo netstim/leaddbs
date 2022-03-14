@@ -94,7 +94,7 @@ classdef ea_sweetspot < handle
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
                     obj.M = ea_map_pseudoM(obj.M);
-                    obj.M.root = fileparts(datapath);
+                    obj.M.root = [fileparts(datapath),filesep];
                     obj.M.patient.list=obj.M.ROI.list; % copies
                     obj.M.patient.group=obj.M.ROI.group; % copies
                 else
@@ -206,7 +206,7 @@ classdef ea_sweetspot < handle
 
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
-               msgbox('LEAD_groupanalysis file has vanished. Please select file.');
+               msgbox('Groupan alysis file has vanished. Please select file.');
                [fn,pth]=uigetfile();
                obj.leadgroup=fullfile(pth,fn);
             end

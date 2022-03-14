@@ -100,9 +100,6 @@ Vvat.dim=[res,res,res];
 Vvat.dt=[4,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)]);
-end
 
 ea_dispt('Filling data with values from interpolant...');
 eeg = F(gv);
@@ -142,22 +139,26 @@ S.volume(side)=vatvolume;
 
 ea_dispt('Writing files...');
 
-% determine stimulation name:
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname]);
-end
+% determine stimulation name
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+ea_mkdir(stimDir);
+filePrefix = ['sub-', options.subj.subjId, '_sim-'];
+
+modelLabel = ea_simModel2Label(S.model);
 
 switch side
     case 1
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.nii'];
-        Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_right.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_gauss_right.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.nii'];
+        Vvate=Vvat;
+        Vvatne=Vvat;
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-', modelLabel, '_hemi-R.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_model-', modelLabel, '_hemi-R.nii'];
     case 2
-        Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.nii'];
-        Vvate=Vvat; Vvatne=Vvat;
-        Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_left.nii'];
-        Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_efield_gauss_left.nii'];
+        Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-L.nii'];
+        Vvate = Vvat;
+        Vvatne = Vvat;
+        Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-', modelLabel, '_hemi-L.nii'];
+        Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_model-', modelLabel, '_hemi-L.nii'];
 end
 
 ea_savestimulation(S,options);
@@ -197,10 +198,11 @@ end
 % visualization
 switch side
     case 1
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.mat'];
     case 2
-        vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-', modelLabel, '_hemi-R.mat'];
 end
+
 vatgrad = vatgrad(side);
 save(vatfvname,'vatfv','vatgrad','vatvolume');
 

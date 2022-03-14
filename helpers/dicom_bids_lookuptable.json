@@ -1,0 +1,18 @@
+{
+	"anat": {
+		"preop": {
+			"T1w": ["t1", "mprage"],
+			"T2w": ["t2", "tse"],
+			"FGATIR": ["FGATIR"],
+			"PDw": ["pd"],
+			"T2starw": ["t2star"],
+			"FLAIR": ["flair"]
+		},
+		"postop": {
+			"CT": ["Navigation", "CT"],
+			"ax_MR": [],
+			"sag_MR": [],
+			"cor_MR":[]
+		}
+	}
+}

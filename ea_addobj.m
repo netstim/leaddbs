@@ -1,4 +1,4 @@
-function ea_addobj(src, evt, resultfig, obj, options)
+function ea_addobj(resultfig, obj, options)
 
 addht = getappdata(resultfig,'addht');
 if isempty(addht)
@@ -181,7 +181,7 @@ if ischar(obj) % addobj
             end
 
             % Check fiber format
-            if size(fibers,2) == 5 && contains(obj,'fiberActivation') % fiber activation result loaded
+            if size(fibers,2) == 5 && contains(obj,'fiberactivation') % fiber activation result loaded
                 ea_fiberactivation_viz(obj, resultfig);
                 return;
             elseif size(fibers,2) == 4 % with index

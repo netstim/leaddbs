@@ -1,4 +1,4 @@
-function fn=ea_niigz(base)
+function [fn,ext]=ea_niigz(base)
 % wrapper for nifti file names. will return the filename present, if none
 % present will return .nii.gz (e.g. used for writing output nonexistent
 % files)
@@ -15,15 +15,20 @@ if ~isempty(nii) && ~isempty(niigz)
         case '.nii' % explicitly asked for .nii
             fn=[pth,'.nii'];
             warning('Using .nii version since explicitly asked for.');
+            ext='.nii';
         otherwise
             fn=[pth,'.nii.gz'];
+            ext='.nii.gz';
     end
     warning('on', 'backtrace');
 elseif isempty(nii) && ~isempty(niigz)
     fn=[pth,'.nii.gz'];
+    ext='.nii.gz';
 elseif ~isempty(nii) && isempty(niigz)
     fn=[pth,'.nii'];
+    ext='.nii';
 else % file not (yet) present, for now use .nii as default for output.
     fn=[pth,'.nii'];
+    ext='.nii';
 end
 

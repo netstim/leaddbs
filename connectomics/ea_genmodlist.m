@@ -45,11 +45,11 @@ if checkfmri
     fc=dir(ea_getconnectomebase('fmri'));
     for fdf=1:length(fc)
         if fc(fdf).isdir && ~strcmp(fc(fdf).name(1),'.') && ...
-           exist([ea_getconnectomebase('fmri'),fc(fdf).name,filesep,'dataset_info.mat'], 'file')
-                d=load([ea_getconnectomebase('fmri'),fc(fdf).name,filesep,'dataset_info.mat']);
+           exist([ea_getconnectomebase('fmri'),fc(fdf).name,filesep,'dataset_info.json'], 'file')
+                dataset=loadjson([ea_getconnectomebase('fmri'),fc(fdf).name,filesep,'dataset_info.json']);
                 [~,fn]=fileparts(fc(fdf).name);
-                for ds=1:length(d.dataset.subsets)
-                    modlist{cnt}=[fn,' > ',d.dataset.subsets(ds).name];
+                for ds=1:length(dataset.subsets)
+                    modlist{cnt}=[fn,' > ',dataset.subsets{ds}.name];
                     type(cnt)=2;
                     cnt=cnt+1;
                 end

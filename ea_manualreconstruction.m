@@ -31,7 +31,7 @@ options.loadnativereco = 1; % Load native reco intead of scrf
 options.xray=0;
 setappdata(mcfig,'options',options);
 
-if ~exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+if ~isfile(options.subj.recon.recon)
     close(mcfig);
     msgbox('Please run pre-Reconstruct module first.');
     return
@@ -249,7 +249,7 @@ options=getappdata(mcfig,'options');
 if ~isfield(options,'visible')
     options.visible=1;
 end
-if ~exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+if  ~isfile(options.subj.recon.recon)
     close(mcfig);
     return
 end
@@ -546,8 +546,6 @@ switch what
         end
 end
 
-%setappdata(mcfig,'trajectory',trajectory);
-
 
 function sp=getsuplots(sides)
 if isequal(sides,[1:2])
@@ -557,7 +555,6 @@ elseif isequal(sides,1)
 elseif isequal(sides,2)
     sp=3:4;
 end
-%setappdata(mcfig,['C',ID,addon],C);
 
 
 function markers=moveonecoord(markers,selectrode,command,options)

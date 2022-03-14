@@ -8,7 +8,7 @@ def getGridDefinition(node):
     # get origin (defined in volume node)
     origin = node.GetOrigin()
 
-  elif isinstance(node, slicer.vtkMRMLGridTransformNode):
+  elif isinstance(node, slicer.vtkMRMLTransformNode):
     fp = node.GetTransformFromParent()
     tp = node.GetTransformToParent()
     if isinstance(fp, slicer.vtkOrientedGridTransform) and fp.GetDisplacementGrid():

@@ -85,6 +85,12 @@ else
     elstruct.stretchfactor=0.5;
 end
 
+stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
+ea_mkdir(stimDir);
+headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+ea_mkdir(headmodelDir);
+filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+
 hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test once.
 assignin('caller','hmchanged',hmchanged);
 % if hmchanged && firstrun==1
@@ -205,25 +211,24 @@ if firstrun==1
         tmesh.tet=tmesh.tet(:,[1 2 4 3]);
         vol=ea_ft_headmodel_simbio(tmesh,'conductivity',SIfx*[options.prefs.machine.vatsettings.horn_cgm options.prefs.machine.vatsettings.horn_cwm 1/(10^(-8)) 1/(10^16)]); % multiply by thousand to use S/mm
     end
+
     if useSI % convert back before saving headmodel
         mesh.pnt=mesh.pnt*1000; % in meter
         mesh.unit='mm';
     end
-    if ~exist([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)],'dir')
-        mkdir([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options)]);
-    end
-    save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat'],'vol','mesh','centroids','wmboundary','elfv','meshregions','conts','-v7.3');
+
+    save(fullfile(headmodelDir, [filePrefix, 'headmodel', num2str(side),'.mat']),'vol','mesh','centroids','wmboundary','elfv','meshregions','conts','-v7.3');
     ea_save_hmprotocol(options,side,elstruct,1);
     
 else
     % simply load vol.
     ea_dispt('Loading headmodel...');
-    load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'headmodel',num2str(side),'.mat']);
+    load(fullfile(headmodelDir, [filePrefix, 'headmodel', num2str(side),'.mat']));
     
     if multvat
-         activeidx = jr_activeidx(S,side,conts,elspec);   % Load contactidx instead of searching for activecontacts
+        activeidx = ea_activeidx(S,side,conts,elspec);   % Load contactidx instead of searching for activecontacts
     else
-        activeidx=ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
+        activeidx = ea_getactiveidx(S,side,centroids,mesh,elfv,elspec,meshregions);
     end
 end
 
@@ -239,7 +244,6 @@ end
 if ~isfield(S, 'sources')
     S.sources=1:4;
 end
-
 
 for source=S.sources
     stimsource=S.([sidec,'s',num2str(source)]);
@@ -292,9 +296,9 @@ for source=S.sources
             
         end
         
-%         if isempty(ix)
-%             ea_error('Something went wrong. Active vertex index not found.');
-%         end
+        % if isempty(ix)
+        %     ea_error('Something went wrong. Active vertex index not found.');
+        % end
         
         if ~constvol
             voltix(:,1)=voltix(:,1)/1000; % from mA to A
@@ -363,12 +367,11 @@ indices(indices>length(midpts))=[];
 % transform midpts to template if necessary:
 if options.native==1 && (multvat ||options.orignative==0) % case if we are visualizing in MNI but want to calc VTA in native space -> now transform back to MNI
     c=midpts';
-    [~,anatpresent]=ea_assignpretra(options);
-    V=ea_open_vol([options.root,options.patientname,filesep,anatpresent{1}]);
-    c=V.mat\[c;ones(1,size(c,2))];
-    midpts=ea_map_coords(c(1:3,:), ...
-        [options.root,options.patientname,filesep,anatpresent{1}], ...
-        [options.root,options.patientname,filesep,'y_ea_inv_normparams.nii'], ...
+    V = ea_open_vol(options.subj.preopAnat.(options.subj.AnchorModality).coreg);
+    c = V.mat\[c;ones(1,size(c,2))];
+    midpts = ea_map_coords(c(1:3,:), ...
+        options.subj.preopAnat.(options.subj.AnchorModality).coreg, ...
+        [options.subj.subjDir, filesep, 'inverseTransform'], ...
         '')';
     midpts=midpts(:,1:3);
     options.native=options.orignative; % go back to template space
@@ -504,10 +507,6 @@ Vvat.dt=[16,0];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
 
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options)]);
-end
-
 ea_dispt('Filling data with values from interpolant...');
 eeg = F(gv);
 eeg(isnan(eeg))=0;
@@ -562,33 +561,21 @@ ea_dispt('Writing files...');
 Vvate=Vvat; Vvatne=Vvat; Vvatvx=Vvat; Vvatvy=Vvat; Vvatvz=Vvat;
 
 if multvat
-    addname = [S.label,'_'];
+    addname = ['_', S.label];
 else
     addname = [];
-end
-if ~exist([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname],'file')
-    mkdir([options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname]);
 end
 
 switch side
     case 1
-        sidename = 'right';
+        sideCode = 'R';
     case 2
-        sidename = 'left';
+        sideCode = 'L';
 end
 
-Vvat.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,addname,'vat_',sidename,'.nii'];
-Vvate.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,addname,'vat_efield_',sidename,'.nii'];
-Vvatne.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,addname,'vat_efield_gauss_',sidename,'.nii'];
-% Vvatvx.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,addname,'vat_evecx_',sidename,'.nii'];
-% Vvatvy.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,addname,'vat_evecy_',sidename,'.nii'];
-% Vvatvz.fname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),filesep,stimname,filesep,addname,'vat_evecz_',sidename,'.nii'];
-
-%save(stimfile,'S');
-% ea_savestimulation(S,options);
-% setappdata(lgfigure,'curS',S);
-
-%spm_write_vol(Vvat,flipdim(eg,3));
+Vvat.fname = [stimDir, filesep, filePrefix, 'binary_model-cleartunesimbio_hemi-', sideCode, addname, '.nii'];
+Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-cleartunesimbio_hemi-', sideCode, addname, '.nii']
+Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_model-cleartunesimbio_hemi-', sideCode, addname, '.nii'];
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);
 Vvate.dt=[16,0];
@@ -600,18 +587,6 @@ ea_write_nii(Vvatne);
 Vvat.img=eg; %permute(eg,[1,2,3]);
 ea_write_nii(Vvat);
 
-% Vvatvx.img=egx; %permute(eeg,[2,1,3]);
-% Vvatvx.dt=[16,0];
-% ea_write_nii(Vvatvx);
-
-% Vvatvy.img=egy; %permute(eeg,[2,1,3]);
-% Vvatvy.dt=[16,0];
-% ea_write_nii(Vvatvy);
-
-% Vvatvz.img=egz; %permute(eeg,[2,1,3]);
-% Vvatvz.dt=[16,0];
-% ea_write_nii(Vvatvz);
-
 if ~multvat
     ea_dispt('Calculating isosurface to display...');
     vatfv=isosurface(xg,yg,zg,permute(Vvat.img,[2,1,3]),0.75);
@@ -621,7 +596,7 @@ if ~multvat
     vatfv.faces=[vatfv.faces;caps.faces+size(vatfv.vertices,1)];
     vatfv.vertices=[vatfv.vertices;caps.vertices];
 
-    try
+    trysave
         vatfv=ea_smoothpatch(vatfv,1,35);
     catch
         try
@@ -638,9 +613,9 @@ if ~multvat
     % visualization
     switch side
         case 1
-            vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_right.mat'];
+            vatfvname = [stimDir, filesep, filePrefix, 'binary_model-cleartunesimbio_hemi-R.mat'];
         case 2
-            vatfvname=[options.root,options.patientname,filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,'vat_left.mat'];
+            vatfvname = [stimDir, filesep, filePrefix, 'binary_model-cleartunesimbio_hemi-L.mat'];
     end
     vatgrad = vatgrad(side);
     save(vatfvname,'vatfv','vatgrad','vatvolume');
@@ -652,12 +627,6 @@ if ~multvat
     Vvat.img = imerode(Vvat.img,SE);
     Vvat.img = imdilate(Vvat.img,SE);
     ea_write_nii(Vvat);
-
-    %% old vta.nii which lead to slight systematic shifts
-    % Vvat.img=surf2vol(vatfv.vertices,vatfv.faces,gv{1},gv{2},gv{3});
-    % Vvat.img=imfill(Vvat.img,'holes');
-    % Vvat.fname = [Vvat.fname(1:end-4) '_old.nii'];
-    % ea_write_nii(Vvat);
 
     % define function outputs
     varargout{1}=vatfv;
@@ -722,14 +691,18 @@ protocol.version=1.1;
 protocol.vatsettings=options.prefs.machine.vatsettings;
 
 if sv % save protocol to disk
-    save([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'hmprotocol',num2str(side),'.mat'],'protocol');
+    headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+    save(fullfile(headmodelDir, [filePrefix, 'hmprotocol',num2str(side),'.mat']),'protocol');
 end
 
 
 function protocol=ea_load_hmprotocol(options,side)
 % function that loads protocol
 try
-    load([options.root,options.patientname,filesep,'current_headmodel',filesep,ea_nt(options),'hmprotocol',num2str(side),'.mat']);
+    headmodelDir = fullfile(options.subj.subjDir, 'headmodel', ea_nt(options));
+    filePrefix = ['sub-', options.subj.subjId, '_desc-'];
+    load(fullfile(headmodelDir, [filePrefix, 'hmprotocol',num2str(side),'.mat']));
 catch
     protocol=struct; % default for errors or if not present
 end
@@ -882,10 +855,6 @@ if max(moved)>0.2
 end
 
 vat.pos = vat.pos';
-
-
-
-
 
 
 function [stiff,rhs] = ea_dbs(stiff,rhs,dirinodes,dirival)
@@ -2874,7 +2843,6 @@ elseif strcmp(current, 'sparsewithpow') && any(strcmp(desired, {'full', 'fullfas
 end % convert from one to another bivariate representation
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2920,7 +2888,6 @@ end
 
 % copy over fields (these are necessary for visualising the data in ft_sourceplot)
 source = copyfields(data, source, {'time', 'freq'});
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3007,8 +2974,6 @@ if isfield(freq, 'trialinfo')
 end
 
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3061,7 +3026,6 @@ for iUnit = 1:nUnits
     
     if iUnit==1, spike.trialtime             = trialTimes; end
 end
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3910,9 +3874,6 @@ if isempty(val) && ~isempty(default) && ~emptymeaningful
 end
 
 
-
-
-
 function [output] = ea_ft_transform_geometry(transform, input)
 
 % FT_TRANSFORM_GEOMETRY applies a homogeneous coordinate transformation to
@@ -4219,7 +4180,6 @@ elseif haslabel
 else
     sens = [];
 end
-
 
 if isfield(sens, 'type')
     % preferably the structure specifies its own type
@@ -8257,7 +8217,6 @@ function vol = ea_ft_headmodel_simbio(geom, varargin)
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % $Id: ft_headmodel_simbio.m 8445 2013-09-03 10:01:42Z johvor $
-
 
 % get the optional arguments
 conductivity    = ea_ft_getopt(varargin, 'conductivity');

@@ -35,7 +35,7 @@ if ~exist([directory,'mean',restfname,'_mask.nii'], 'file')
     % Warp mask from MNI space to patient T1 space
     ea_apply_normalization_tofile(ea_getptopts(directory),...
         {[directory,'temp.nii']},...
-        {[directory,'temp.nii']}, directory, 1, 0);
+        {[directory,'temp.nii']}, 1, 0);
 
     % Check coregistration method
     coregmethodsused = load([directory,'ea_coregmrmethod_applied.mat']);
@@ -56,7 +56,7 @@ if ~exist([directory,'mean',restfname,'_mask.nii'], 'file')
 
     if numel(transform) == 0
         warning('Transformation not found! Running coregistration now!');
-        transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
+        transform = ea_coregimages(options,[directory,options.prefs.prenii_unnormalized],...
             [directory,'mean',restfname,'.nii'],...
             [directory,'r',restfname,'_',options.prefs.prenii_unnormalized],...
             [],1,[],1);
@@ -259,12 +259,12 @@ for s=1:length(seedfile)
             allvoxelmask.locsvx(:,2),allvoxelmask.locsvx(:,1),allvoxelmask.locsvx(:,3));
 
         seed{s}.img(:)=interpvol;
-        [pth,sf]=fileparts(seed{s}.fname);
+        [pth,seedfn]=fileparts(seed{s}.fname);
         outputfolder = options.lcm.func.connectome;
-        if strfind(sf,'rest')
-            sf(strfind(sf,'rest')-1:end)=[];
+        if strfind(seedfn,'rest')
+            seedfn(strfind(seedfn,'rest')-1:end)=[];
         end
-        seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii']);
+        seed{s}.fname=fullfile(pth,outputfolder,[seedfn,'_AvgR_native_unsmoothed.nii']);
 
         if ~exist(fullfile(pth,outputfolder),'dir')
             mkdir(fullfile(pth,outputfolder))
@@ -272,25 +272,25 @@ for s=1:length(seedfile)
         ea_write_nii(seed{s});
         seed{s}.dt(1)=16;
         seed{s}.img(:)=atanh(seed{s}.img(:));
-        seed{s}.fname=fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']);
+        seed{s}.fname=fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz_native_unsmoothed.nii']);
         ea_write_nii(seed{s});
 
-        matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,outputfolder,[sf,'_AvgR_native_unsmoothed.nii'])
-            fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii'])};
+        matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,outputfolder,[seedfn,'_AvgR_native_unsmoothed.nii'])
+            fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz_native_unsmoothed.nii'])};
         matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
         matlabbatch{1}.spm.spatial.smooth.dtype = 0;
         matlabbatch{1}.spm.spatial.smooth.im = 0;
         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
         spm_jobman('run',{matlabbatch}); clear matlabbatch
-        movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_native_unsmoothed.nii']),...
-            fullfile(pth,outputfolder,[sf,'_AvgR_native.nii']));
-        movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_Fz_native_unsmoothed.nii']),...
-            fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native.nii']));
+        movefile(fullfile(pth,outputfolder,['s',seedfn,'_AvgR_native_unsmoothed.nii']),...
+            fullfile(pth,outputfolder,[seedfn,'_AvgR_native.nii']));
+        movefile(fullfile(pth,outputfolder,['s',seedfn,'_AvgR_Fz_native_unsmoothed.nii']),...
+            fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz_native.nii']));
 
         % warp back to MNI:
 
-        copyfile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz_native_unsmoothed.nii']),...
-            fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
+        copyfile(fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz_native_unsmoothed.nii']),...
+            fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz.nii']));
 
         % Check coregistration method
         coregmethodsused = load([directory,'ea_coregmrmethod_applied.mat']);
@@ -311,7 +311,7 @@ for s=1:length(seedfile)
 
         if numel(transform) == 0
             warning('Transformation not found! Running coregistration now!');
-            transform = ea_coreg2images(options,[directory,options.prefs.prenii_unnormalized],...
+            transform = ea_coregimages(options,[directory,options.prefs.prenii_unnormalized],...
                 [directory, 'hdmean', restfname, '.nii'],...
                 [directory,'tmp.nii'],...
                 [],1,[],1);
@@ -327,28 +327,28 @@ for s=1:length(seedfile)
 
         % Apply coregistration
         ea_apply_coregistration([directory,options.prefs.prenii_unnormalized], ...
-            fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
-            fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']), ...
+            fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz.nii']), ...
+            fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz.nii']), ...
             transform, 'linear');
 
         % Apply normalization
         ea_apply_normalization_tofile(options,...
-            {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
-            {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])},...
-            directory,0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']));
+            {fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz.nii'])},...
+            {fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz.nii'])},...
+            0,1,ea_niigz([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,'222.nii']));
 
-        nii=ea_load_nii(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
+        nii=ea_load_nii(fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz.nii']));
         nii.img(nii.img==0)=nan;
         nii.dt(2)=1;
         ea_write_nii(nii);
-        matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii'])};
+        matlabbatch{1}.spm.spatial.smooth.data = {fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz.nii'])};
         matlabbatch{1}.spm.spatial.smooth.fwhm = [8 8 8];
         matlabbatch{1}.spm.spatial.smooth.dtype = 0;
         matlabbatch{1}.spm.spatial.smooth.im = 1;
         matlabbatch{1}.spm.spatial.smooth.prefix = 's';
         spm_jobman('run',{matlabbatch}); clear matlabbatch
-        movefile(fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']),fullfile(pth,outputfolder,[sf,'_AvgR_Fz_unsmoothed.nii']));
-        movefile(fullfile(pth,outputfolder,['s',sf,'_AvgR_Fz.nii']),fullfile(pth,outputfolder,[sf,'_AvgR_Fz.nii']));
+        movefile(fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz.nii']),fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz_unsmoothed.nii']));
+        movefile(fullfile(pth,outputfolder,['s',seedfn,'_AvgR_Fz.nii']),fullfile(pth,outputfolder,[seedfn,'_AvgR_Fz.nii']));
     end
 end
 

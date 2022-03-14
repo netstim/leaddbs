@@ -52,46 +52,36 @@ function ea_subcorticalrefine_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ea_subcorticalrefine (see VARARGIN)
 
-options=varargin{1};
-directory=[options.root,options.patientname,filesep];
+options = varargin{1};
 
-setappdata(handles.scrf,'options',options);
-setappdata(handles.scrf,'directory',directory);
+setappdata(handles.scrf, 'options', options);
+handles.patientname.String = options.subj.subjId;
 
-[pth,patientname]=fileparts(fileparts(directory));
-handles.patientname.String=patientname;
-
-set(handles.scrf,'name',['Brainshift Correction: ',patientname]);
-options.init=1;
-ispresent=ea_refreshscrf(options,handles,directory);
+set(handles.scrf, 'name', ['Brainshift Correction: ', options.subj.subjId]);
+options.init = 1;
+ispresent = ea_refreshscrf(options,handles);
 
 switch options.scrf.mask
-    case 1
-        handles.mask0.Value=1;
-        handles.mask1.Value=0;
-        handles.mask2.Value=0;
-        if ~ispresent || isfield(options,'autobrainshift')
-            %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
+    case 'No mask'
+        handles.mask0.Value = 1;
+        handles.mask1.Value = 0;
+        handles.mask2.Value = 0;
+        if ~ispresent || isfield(options, 'autobrainshift')
             ea_compute_scrf(handles)
-            %end
         end
-    case 3
-        handles.mask0.Value=0;
-        handles.mask1.Value=0;
-        handles.mask2.Value=1;
-        if ~ispresent || isfield(options,'autobrainshift')
-            %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
+    case 'Coarse + Fine mask (Schönecker 2008)'
+        handles.mask0.Value = 0;
+        handles.mask1.Value = 0;
+        handles.mask2.Value = 1;
+        if ~ispresent || isfield(options, 'autobrainshift')
             ea_compute_scrf(handles)
-            %end
         end
-    otherwise % make default to run on mask1.
-        handles.mask0.Value=0;
-        handles.mask1.Value=1;
-        handles.mask2.Value=0;
-        if ~ispresent || isfield(options,'autobrainshift')
-            %if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file') && ~exist([directory,'scrf',filesep,'scrf.mat'],'file')
+    otherwise % 'Coarse mask (Schönecker 2008)'
+        handles.mask0.Value = 0;
+        handles.mask1.Value = 1;
+        handles.mask2.Value = 0;
+        if ~ispresent || isfield(options, 'autobrainshift')
             ea_compute_scrf(handles)
-            %end
         end
 end
 
@@ -102,10 +92,10 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes ea_subcorticalrefine wait for user response (see UIRESUME)
-
 if options.d2.write || options.d3.write
     uiwait(handles.scrf);
 end
+
 if isfield(options,'autobrainshift') && options.autobrainshift
     saveandclose([], [], handles); % close figure again.
 end
@@ -159,23 +149,24 @@ function approvebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to approvebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-directory=getappdata(handles.scrf,'directory');
-if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
+
+options = getappdata(handles.scrf,'options');
+if ~isfile(options.subj.brainshift.transform.instore)
 	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
-    copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
-    if exist([directory,'ea_reconstruction.mat'],'file')
-        ea_recalc_reco([],[],directory);
+    copyfile(options.subj.brainshift.transform.converted, options.subj.brainshift.transform.scrf);
+    if isfile(options.subj.recon.recon)
+        ea_recalc_reco([],[],options.subj.subjDir);
     end
 
-    % add to protocol:
-    if exist([directory,'ea_coreg_approved.mat'],'file')
-        approved=load([directory,'ea_coreg_approved.mat']);
+    % Set approval status
+    if isfile(options.subj.brainshift.log.method)
+        json = loadjson(options.subj.brainshift.log.method);
+        json.approval = 1;
+        savejson('', json, options.subj.brainshift.log.method);
     end
-    approved.brainshift=1;
-    save([directory,'ea_coreg_approved.mat'],'-struct','approved');
 
-    ea_methods(directory,...
+    ea_methods(options,...
         ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
         'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
         ' (Horn & Kuehn 2005; SCR_002915; https://www.lead-dbs.org).'],...
@@ -189,16 +180,17 @@ function saveandclose(hObject, eventdata, handles)
 % hObject    handle to approvebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-directory=getappdata(handles.scrf,'directory');
-if ~exist([directory,'scrf',filesep,'scrf_instore.mat'],'file')
+
+options=getappdata(handles.scrf,'options');
+if ~isfile(options.subj.brainshift.transform.instore)
 	msgbox('Please generate a transform first (Click on "Compute subcortical refine transform"). If you don''t want to compute a transform, simply click on "Continue without subcortical transform".');
 else
-    copyfile([directory,'scrf',filesep,'scrf_instore_converted.mat'],[directory,'scrf',filesep,'scrf_converted.mat']);
-    if exist([directory,'ea_reconstruction.mat'],'file')
-        ea_recalc_reco([],[],directory);
+    copyfile(options.subj.brainshift.transform.converted, options.subj.brainshift.transform.scrf);
+    if isfile(options.subj.recon.recon)
+        ea_recalc_reco([],[],options.subj.subjDir);
     end
 
-    ea_methods(directory,...
+    ea_methods(options,...
         ['DBS electrode localizations were corrected for brainshift in postoperative acquisitions by applying a refined affine transform calculated between ',...
         'pre- and postoperative acquisitions that were restricted to a subcortical area of interest as implemented in the brainshift-correction module of Lead-DBS software',...
         ' (Horn & Kuehn 2005; SCR_002915; https://www.lead-dbs.org).'],...
@@ -212,19 +204,17 @@ function disapprovebutn_Callback(hObject, eventdata, handles)
 % hObject    handle to disapprovebutn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-directory=getappdata(handles.scrf,'directory');
-if exist([directory,'scrf',filesep,'scrf.mat'],'file');
-    delete([directory,'scrf',filesep,'scrf.mat']);
-end
 
-if exist([directory,'scrf',filesep,'scrf_converted.mat'],'file');
-    delete([directory,'scrf',filesep,'scrf_converted.mat']);
-end
+options=getappdata(handles.scrf,'options');
+ea_delete(options.subj.brainshift.transform.converted);
+ea_delete(options.subj.brainshift.transform.scrf);
 
-% add to protocol:
-approved=load([directory,'ea_coreg_approved.mat']);
-approved.brainshift=0;
-save([directory,'ea_coreg_approved.mat'],'-struct','approved');
+% Set approval status
+if isfile(options.subj.brainshift.log.method)
+    json = loadjson(options.subj.brainshift.log.method);
+    json.approval = 0;
+    savejson('', json, options.subj.brainshift.log.method);
+end
 
 closescrf(handles);
 
@@ -236,6 +226,18 @@ if options.d2.write || options.d3.write
     uiresume(handles.scrf);
 end
 delete(handles.scrf);
+
+
+% --- Executes on button press in mask0.
+function mask0_Callback(hObject, eventdata, handles)
+% hObject    handle to mask0 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of mask0
+handles.mask1.Value=0;
+handles.mask2.Value=0;
+% --- Executes on button press in mask1.
 
 
 % --- Executes on button press in mask1.
@@ -258,26 +260,13 @@ handles.mask1.Value=0;
 % Hint: get(hObject,'Value') returns toggle state of mask2
 
 
-% --- Executes on button press in mask0.
-function mask0_Callback(hObject, eventdata, handles)
-% hObject    handle to mask0 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of mask0
-handles.mask1.Value=0;
-handles.mask2.Value=0;
-% --- Executes on button press in mask1.
-
-
 % --- Executes on button press in back.
 function back_Callback(hObject, eventdata, handles)
 % hObject    handle to back (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 options=getappdata(handles.scrf,'options');
-options.normcoreg='coreg';
-ea_checkcoreg(options);
+ea_checkreg(options);
 closescrf(handles);
 
 
@@ -286,4 +275,5 @@ function openpatientdir_Callback(hObject, eventdata, handles)
 % hObject    handle to openpatientdir (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-ea_opendir(getappdata(handles.scrf,'directory'));
+options = getappdata(handles.scrf,'options');
+ea_opendir(options.subj.subjDir);

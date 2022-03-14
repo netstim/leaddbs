@@ -43,7 +43,7 @@ for pt=1:length(uidir)
 
     % warp into patient space:
 
-    [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'y_ea_normparams.nii'], '');
+    [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'forwardTransform'], '');
     fpinsub_mm=fpinsub_mm';
 
 
