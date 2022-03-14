@@ -347,7 +347,7 @@ if isfield(handles,'seeddefpopup')
     % find out whether mapper or predict were calling
     if strcmp(handles.prod, 'mapper')
         commonStims =strcat('Use VAT:', {' '}, commonStims);
-        set(handles.seeddefpopup, 'String', [{'Manually choose seeds','Manually choose parcellation'}, commonStims]);
+        set(handles.seeddefpopup, 'String', [{'Manually choose seeds'; 'Manually choose parcellation'}; commonStims]);
     else
         set(handles.seeddefpopup, 'String', commonStims);
     end
