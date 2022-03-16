@@ -55,4 +55,4 @@ if is_quote
     trimpath = ['"',trimpath,'"']; % add double quotes if originally present
 end
 
-[~, basename] = fileparts(trimpath);
+basename = regexprep(trimpath, ['.*\', filesep], '');
