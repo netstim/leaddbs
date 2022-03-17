@@ -13,8 +13,15 @@ sides = {'right','left','3','4','5','6','7','8'};
 % head position
 level1centerRelative = elspec.contact_length + elspec.contact_spacing;
 level2centerRelative = (elspec.contact_length + elspec.contact_spacing) * 2;
-markercenterRelative = elspec.markerpos - elspec.tip_length*~elspec.tipiscontact - elspec.contact_length/2;
-markercenterRelative = 12.75;
+switch elspec.matfname
+    case 'medtronic_b33005'
+        markercenterRelative = 12.75;
+    case 'medtronic_b33015'
+        markercenterRelative = 15.75;
+    otherwise
+        keyboard
+end
+        
 load(elspec.matfname);
 
 %% load CTs
@@ -32,6 +39,7 @@ samplingvector_mm = vertcat([head_mm(1):unitvector_mm(1)./2:head_mm(1)+ samplele
 samplingvector_vx = round(tmat_vx2mm\samplingvector_mm);
 
 newcentervector_vx = nan(size(samplingvector_vx));
+
 % for each slice calculate center of mass, if more than one
 % center of mass is found, choose the one nearest to the
 % original lead position
@@ -158,7 +166,7 @@ Vnew = permute(ct.img,[2,1,3]);
 % direction of deviation for these slices with respect to anterior
 % orientation are calculated.
 extract_width = 5; % in mm
-samplingres = .2;
+samplingres = .1;
 
 %% lower marker
 count = 1;
@@ -191,14 +199,14 @@ for x = [-4:2*samplingres:0]
 end
 
 [~,bestslice] = max(distance);
-finalcenter{1} = center(bestslice,:);
-finalcenter_vx{1} = round(tmat_vx2mm\finalcenter{1}');
-finalCOG{1} = COG_mm(bestslice,:);
-finalCOG_vx{1} = round(tmat_vx2mm\[finalCOG{1} 1]');
-finalCOG_dir{1} = COG_dir(bestslice,:);
+finalcenter{2} = center(bestslice,:);
+finalcenter_vx{2} = round(tmat_vx2mm\finalcenter{2}');
+finalCOG{2} = COG_mm(bestslice,:);
+finalCOG_vx{2} = round(tmat_vx2mm\[finalCOG{2} 1]');
+finalCOG_dir{2} = COG_dir(bestslice,:);
 figure
 plot([-4:2*samplingres:0],distance)
-%     close
+close
 clear bestslice center COG_mm COG_dir distance count x
 %% upper marker
 count = 1;
@@ -233,14 +241,14 @@ for x = [0:2*samplingres:4]
 end
 
 [~,bestslice] = max(distance);
-finalcenter{2} = center(bestslice,:);
-finalcenter_vx{2} = round(tmat_vx2mm\finalcenter{2}');
-finalCOG{2} = COG_mm(bestslice,:);
-finalCOG_vx{2} = round(tmat_vx2mm\[finalCOG{2} 1]');
-finalCOG_dir{2} = COG_dir(bestslice,:);
+finalcenter{1} = center(bestslice,:);
+finalcenter_vx{1} = round(tmat_vx2mm\finalcenter{1}');
+finalCOG{1} = COG_mm(bestslice,:);
+finalCOG_vx{1} = round(tmat_vx2mm\[finalCOG{1} 1]');
+finalCOG_dir{1} = COG_dir(bestslice,:);
 hold on
 plot([0:2*samplingres:4],distance)
-close
+% close
 clear bestslice center COG_mm COG_dir distance count x
 
 %% loop over markers
@@ -266,46 +274,72 @@ for x=1:2
     [valleyfft{x},~] = ea_diode_intensitypeaksFFT(-intensity{x},2);
     windowwidth = 20;
     for k = 1:length(valleyfft{x})
-        [~,loctemp] = min(intensity{x}(valleyfft{x}(k)-windowwidth:valleyfft{x}(k)+windowwidth));
+        tmpind = (valleyfft{x}(k)-windowwidth:valleyfft{x}(k)+windowwidth);
+        tmpind(tmpind<1) = tmpind(tmpind<1) +360;
+        tmpind(tmpind>360) = tmpind(tmpind>360) -360;
+        [~,loctemp] = min(intensity{x}(tmpind));
         valleyreal{x}(k) = valleyfft{x}(k)-windowwidth+loctemp;
-        clear loctemp
+        clear loctemp tmpind
     end
+    valleyreal{x}(valleyreal{x}<1) = valleyreal{x}(valleyreal{x}<1) +360;
+        valleyreal{x}(valleyreal{x}>360) = valleyreal{x}(valleyreal{x}>360) -360;
+    
     %% Detect angles of the white streak of the marker (only for intensityprofile-based ambiguity features)    
     figure
     plot(rad2deg(angle{x}),intensity{x})
     hold on
     plot(rad2deg(angle{x}),markerfft{x})    
-    scatter(rad2deg(angle{x}(valleyreal{x})), intensity{x}(valleyreal{x}),'r')
+    scatter(rad2deg(angle{x}(valleyreal{x}-1)), intensity{x}(valleyreal{x}-1),'r')
     close
     
     valleycalc{x} = [round(mean(valleyfft{x}))-90, round(mean(valleyfft{x}))+90];    
     valley_roll(x) = ea_diode_angle2roll(angle{x}(valleycalc{x}(1)),yaw,pitch);
     marker_angles{x} = ea_diode_lightmarker(valley_roll(x),pitch,yaw,marker_mm);    
 end
-%
-% solution.peaks = peak;
-% solution.rolls_rad = [ea_diode_angle2roll(angle(peak(1)),yaw,pitch),ea_diode_angle2roll(angle(peak(2)),yaw,pitch)];
-% solution.rolls_deg = rad2deg(solution.rolls_rad);
-% solution.rolls_streak_deg = rad2deg(marker_angles);
 
-
-
-%%
+%% Angles from COG_dir
 finalangle(1) = rad2deg(atan2(norm(cross(finalCOG_dir{1},yvec_mm)),dot(finalCOG_dir{1},yvec_mm)));
 finalangle(2) = rad2deg(atan2(norm(cross(finalCOG_dir{2},yvec_mm)),dot(finalCOG_dir{2},yvec_mm)));
-diffangle = abs(diff(finalangle));
 
-
-if finalangle(2) <0 || finalangle(2) > 180
+if finalangle(1) <0 || finalangle(1) > 180
     keyboard
 end
-
-if finalCOG_dir{2}(1) > yvec_mm(1)
-    finalangle(2) = -finalangle(2);
-    finalangle(1) = finalangle(2) + diffangle;
+%% Protection against left<->right switches
+if finalCOG_dir{1}(1) > yvec_mm(1) && finalangle(1) > 0 
+    finalangle(1) = -finalangle(1)+360;
+end
+if finalCOG_dir{2}(1) > yvec_mm(1) && finalangle(2) > 0 
+    finalangle(2) = -finalangle(2)+360;
 end
 
-roll = deg2rad(mean(finalangle) -60);
+%% Angles from intensityprofile
+[~,tmpind] = min(abs(rad2deg(marker_angles{1})-finalangle(1)));
+finalintensityangle(1) = rad2deg(marker_angles{1}(tmpind));
+[~,tmpind] = min(abs(rad2deg(marker_angles{2})-finalangle(2)));
+finalintensityangle(2) = rad2deg(marker_angles{2}(tmpind));
+clear tmpind
+
+if finalangle(2) < finalangle(1)
+    finalangle(2) = finalangle(2) + 360;
+end
+if finalintensityangle(2) < finalintensityangle(1)
+    finalintensityangle(2) = finalintensityangle(2) + 360;
+end    
+% finalangle(finalangle > 180) = finalangle(finalangle > 180) - 360;
+% finalintensityangle(finalintensityangle > 180) = finalintensityangle(finalintensityangle > 180) - 360;
+
+diffangle = abs(diff(finalangle));
+diffintensityangle = abs(diff(finalintensityangle));
+roll = deg2rad(mean(finalangle) -60);    
+rollintensity = deg2rad(mean(finalintensityangle) -60);
+
+if roll > pi
+    roll = roll - 2*pi;
+end
+if rollintensity > pi
+    rollintensity = rollintensity - 2*pi;
+end
+
 
 %% Slice parralel for visualization
 % a 10mm slice with .1mm resolution is sampled vertically
@@ -434,23 +468,18 @@ dirnew_angles = ea_diode_darkstar(rollnew,pitch,yaw,dirlevelnew_mm,radius);
 dirnew_valleys = round(rad2deg(dirnew_angles) +1);
 dirnew_valleys(dirnew_valleys > 360) = dirnew_valleys(dirnew_valleys > 360) - 360;
 
-%             sumintensitynew = sumintensitynew(darkstarslice,:);
-%             rollangles = rollangles(darkstarslice,:);
-
-
-
-
 %% final figure
 fig(side).figure = figure('Name',['Lead ' sides{side}],'Position',[100 100 800 800],'Color','w','Toolbar','none');
 
-if peakangle(side) > pi
-    tempangle = peakangle(side) - 2 * pi;
+if peakangle(side) > 180
+    tempangle = peakangle(side) - 360;
 else
     tempangle = peakangle(side);
 end
-fig(side).txt1 = uicontrol('style','text','units','normalized','Position',[.8,.8,.3,.1],...
+
+fig(side).txt1 = uicontrol('style','text','units','normalized','Position',[.8,.75,.3,.15],...
     'Background','w', 'FontSize',12,'HorizontalAlignment','left',...
-    'string',sprintf(['Artifact Angle:\n' num2str(rad2deg(tempangle),'%.1f') ' deg\nMarker Angle:\n' num2str(rad2deg(roll),'%.1f') ' deg']));
+    'string',sprintf(['Roll Angle based on...\n...COG:\n' num2str(rad2deg(roll),'%.1f') ' deg\n...Intensity Profiles:\n' num2str(rad2deg(rollintensity),'%.1f') ' deg']));
 
 fig(side).txt3 = uicontrol('style','text','units','normalized','Position',[.8,.46,.3,.1],...
     'Background','w','FontSize',12,'HorizontalAlignment','left',...
@@ -458,42 +487,6 @@ fig(side).txt3 = uicontrol('style','text','units','normalized','Position',[.8,.4
 
 fig(side).chk1 = uicontrol('style','checkbox','units','normalized','Position',[.8,.41,.3,.05],...
     'string','Accept','FontSize',12,'Background','w');
-
-% fig(side).txt6 = uicontrol('style','text','units','pixels','Background','w',...
-%     'position',[100,250,720,20],'FontSize',12,'HorizontalAlignment','left',...
-%     'string',sprintf([...
-%     'COM-Transversal Solution is: ' num2str(round(solution.rolls_deg(solution.COGtrans),1)) ' deg\n' ...
-%     ]));
-% if solution.COGsag ~= solution.COGtrans
-%     txtcolor = [1 .5 .25];
-% else
-%     txtcolor = 'k';
-% end
-% fig(side).txt7 = uicontrol('style','text','units','pixels','Background','w',...
-%     'position',[100,230,720,20],'FontSize',12,'HorizontalAlignment','left','ForegroundColor',txtcolor,...
-%     'string',sprintf([...
-%     'COM-Sagittal Solution is: ' num2str(round(solution.rolls_deg(solution.COGsag),1)) ' deg\n' ...
-%     ]));
-% if solution.Darkstar ~= solution.COGtrans
-%     txtcolor = [1 .5 .25];
-% else
-%     txtcolor = 'k';
-% end
-% fig(side).txt8 = uicontrol('style','text','units','pixels','Background','w',...
-%     'position',[100,210,720,20],'FontSize',12,'HorizontalAlignment','left','ForegroundColor',txtcolor,...
-%     'string',sprintf([...
-%     'STARS Solution is: ' num2str(round(solution.rolls_deg(solution.Darkstar),1)) ' deg\n' ...
-%     ]));
-% if solution.ASM ~= solution.COGtrans
-%     txtcolor = [1 .5 .25];
-% else
-%     txtcolor = 'k';
-% end
-% fig(side).txt9 = uicontrol('style','text','units','pixels','Background','w',...
-%     'position',[100,190,720,20],'FontSize',12,'HorizontalAlignment','left','ForegroundColor',txtcolor,...
-%     'string',sprintf([...
-%     'ASM Solution is: ' num2str(round(solution.rolls_deg(solution.ASM),1)) ' deg\n' ...
-%     ]));
 
 
 fig(side).txt4 = uicontrol('style','text','units','pixels','Background','w',...
@@ -504,15 +497,15 @@ if rad2deg(abs(pitch)) > 40 || rad2deg(abs(yaw)) > 40
     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
         'string',sprintf(['WARNING: The polar angle of the lead is larger than 40 deg and results could be inaccurate.\nPlease inspect the results carefully and use manual refinement if necessary.']));
-    % elseif rad2deg(abs(roll)) > 60
-    %     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
-    %         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
-    %         'string',sprintf(['WARNING: The orientation of the lead is far from ' defaultdirection '.\nPlease verify whether the correct marker orientation has been chosen.']));
 else
     fig(side).txt5 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','k',...
         'position',[60,100,720,40],'FontSize',12,'HorizontalAlignment','left',...
         'string',sprintf(['No warnings: The polar angle and lead orientation are within normal ranges.']));
 end
+
+    fig(side).txt6 = uicontrol('style','text','units','pixels','Background','w','ForegroundColor','r',...
+        'position',[60,160,720,80],'FontSize',14,'HorizontalAlignment','left',...
+        'string',sprintf(['WARNING: DiODe for Medtronic leads was never validated in phantom measurements! Results might be bogus. If you want to help with development contact till.dembek@uk-koeln.de!']));
 
 SaveButton = uicontrol('Style', 'pushbutton', 'String', 'Accept & Save',...
     'Position', [150 20 150 25],'FontSize',12,...
@@ -523,52 +516,44 @@ ManualButton = uicontrol('Style', 'pushbutton', 'String', 'Manual Refine',...
 DiscardButton = uicontrol('Style', 'pushbutton', 'String', 'Discard',...
     'Position', [500 20 150 25],'FontSize',12,...
     'Callback', @buttonPress);
-%% marker
+
+%% upper marker
 ax1 = subplot(3,3,1);
 hold on
-title(ax1,'Lower Marker')
+title(ax1,'Upper Marker')
 imagesc(finalartifact{1}')
+
 view(-180,-90)
 axis equal
 axis off
 colormap(gray)
 caxis manual
 caxis(cscale)
-
+% caxis([-50 600])
 
 centertmp = [(size(finalartifact{1},1)+1)./2, (size(finalartifact{1},2)+1)./2];
-% COGtmp = [(finalCOG_dir{1}(1) ./ ct.voxsize(1))+centertmp(1),(finalCOG_dir{1}(2) ./ ct.voxsize(2)) + centertmp(2)];
 scatter(ax1,centertmp(1),centertmp(2),'g');
-plot(ax1,vector{1}(:,1),vector{2}(:,2),'g','LineStyle',':')
+plot(ax1,vector{1}(:,1),vector{1}(:,2),'g','LineStyle',':')
 scatter(ax1,vector{1}(valleyreal{1},1), vector{1}(valleyreal{1},2),'r');
+tmpind = round(finalintensityangle(1))-1;
+if tmpind < 1
+    tmpind = tmpind +360;
+elseif tmpind > 360
+    tmpind = tmpind -360;
+end
+scatter(ax1,vector{1}(tmpind,1), vector{1}(tmpind,2),'g');
+clear tmpind
 plot(ax1,...
     [vector{1}(valleyreal{1}(1),1),vector{1}(valleyreal{1}(2),1)],...
     [vector{1}(valleyreal{1}(1),2),vector{1}(valleyreal{1}(2),2)],'r','LineStyle','--');
 quiver(centertmp(1),centertmp(2),(6./ct.voxsize(1))*finalCOG_dir{1}(1),(6./ct.voxsize(2))*finalCOG_dir{1}(2),2,'LineWidth',1,'Color','g','MaxHeadSize',2)
 
-% centershift = centertmp - [(size(finalartifact{1},1)+1)./2, (size(finalartifact{1},2)+1)./2];
-% plot(ax1,vector{1}(:,1)+centershift(1),vector{2}(:,2)+centershift(2),'g','LineStyle',':')
-% scatter(ax1,COGtmp(1),COGtmp(2),'r');
-% plot(ax1,...
-%     [(COGtmp(1) + 1.5 * (vector{1}(valleyreal{1}(1),1)-COGtmp(1))),(COGtmp(1) + 1.5 * (vector{1}(valleyreal{1}(2),1)-COGtmp(1)))],...
-%     [(COGtmp(2) + 1.5 * (vector{1}(valleyreal{1}(1),2)-COGtmp(2))),(COGtmp(2) + 1.5 * (vector{1}(valleyreal{1}(2),2)-COGtmp(2)))],'r','LineStyle','--');
-% scatter(ax1,vector{1}(valleyreal{1},1)+centershift(1), vector{1}(valleyreal{1},2)+centershift(2),'g','filled');
-% for k = 1:length(valleycalc{1})    
-%     plot(ax1,[centertmp(1) (centertmp(1) + 1.5 * (vector{1}(valleyreal{1}(k),1)-centertmp(1)))],...
-%         [centertmp(2) (centertmp(2) + 1.5 * (vector{1}(valleyreal{1}(k),2)-centertmp(2)))],'r','LineStyle','--')
-% end
 clear centertmp COGtmp COGdirtmp
-
-% xlimit = get(ax1,'Xlim');
-% ylimit = get(ax1,'Ylim');
-% text(mean(xlimit),ylimit(2) - 0.15 * mean(ylimit),'A','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-% text(mean(xlimit),ylimit(1) + 0.15 * mean(ylimit),'P','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-% text(xlimit(1) + 0.1 * mean(xlimit),mean(ylimit),'L','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-% text(xlimit(2) - 0.1 * mean(xlimit),mean(ylimit),'R','Color','w','FontSize',14,'HorizontalAlignment','center','VerticalAlignment','middle')
-
+zoom(2)
+%% lower marker
 ax2 = subplot(3,3,2);
 hold on
-title(ax2,'Upper Marker')
+title(ax2,'Lower Marker')
 imagesc(finalartifact{2}')
 view(-180,-90)
 axis equal
@@ -576,29 +561,29 @@ axis off
 colormap(gray)
 caxis manual
 caxis(cscale)
+% caxis([-50 600])
+
 
 centertmp = [(size(finalartifact{2},1)+1)./2, (size(finalartifact{2},2)+1)./2];
-% COGtmp = [(finalCOG_dir{2}(1) ./ ct.voxsize(1))+centertmp(1),(finalCOG_dir{2}(2) ./ ct.voxsize(2)) + centertmp(2)];
 scatter(ax2,centertmp(1),centertmp(2),'g');
 plot(ax2,vector{2}(:,1),vector{2}(:,2),'g','LineStyle',':')
 scatter(ax2,vector{2}(valleyreal{2},1), vector{2}(valleyreal{2},2),'r');
+tmpind = round(finalintensityangle(2))-1;
+if tmpind < 1
+    tmpind = tmpind +360;
+elseif tmpind > 360
+    tmpind = tmpind -360;
+end
+scatter(ax2,vector{2}(tmpind,1), vector{2}(tmpind,2),'g');
+clear tmpind
 plot(ax2,...
     [vector{2}(valleyreal{2}(1),1),vector{2}(valleyreal{2}(2),1)],...
     [vector{2}(valleyreal{2}(1),2),vector{2}(valleyreal{2}(2),2)],'r','LineStyle','--');
 quiver(centertmp(1),centertmp(2),(6./ct.voxsize(1))*finalCOG_dir{2}(1),(6./ct.voxsize(2))*finalCOG_dir{2}(2),2,'LineWidth',1,'Color','g','MaxHeadSize',2)
 
-% centershift = centertmp - [(size(finalartifact{2},1)+1)./2, (size(finalartifact{2},2)+1)./2];
-% plot(ax2,vector{2}(:,1)+centershift(1),vector{2}(:,2)+centershift(2),'g','LineStyle',':')
-% scatter(ax2,COGtmp(1),COGtmp(2),'r');
-% plot(ax2,...
-%     [(COGtmp(1) + 1.5 * (vector{2}(valleyreal{2}(1),1)-COGtmp(1))),(COGtmp(1) + 1.5 * (vector{2}(valleyreal{2}(2),1)-COGtmp(1)))],...
-%     [(COGtmp(2) + 1.5 * (vector{2}(valleyreal{2}(1),2)-COGtmp(2))),(COGtmp(2) + 1.5 * (vector{2}(valleyreal{2}(2),2)-COGtmp(2)))],'r','LineStyle','--');
-% scatter(ax2,vector{2}(valleyreal{2},1)+centershift(1), vector{2}(valleyreal{2},2)+centershift(2),'g','filled');
-% for k = 1:length(valleycalc{2})    
-%     plot(ax2,[centertmp(1) (centertmp(1) + 1.5 * (vector{2}(valleyreal{2}(k),1)-centertmp(1)))],...
-%         [centertmp(2) (centertmp(2) + 1.5 * (vector{2}(valleyreal{2}(k),2)-centertmp(2)))],'r','LineStyle','--')
-% end
 clear centertmp COGtmp COGdirtmp
+
+zoom(2)
 %%
 ax3 = subplot(3,3,3);
 hold on
@@ -706,9 +691,6 @@ camorbit(-rad2deg(tempangle),0)
 tempvec = [0; 1; 0];
 temp3x3 = ea_diode_rollpitchyaw(-tempangle,0,0);
 tempvec = temp3x3 * tempvec;
-%         text(tempvec(1),tempvec(2),markercenter,'M','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-%         text(tempvec(1),tempvec(2),level1center,'1','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
-%         text(tempvec(1),tempvec(2),level2center,'2','FontSize',32,'HorizontalAlignment','center','VerticalAlignment','middle');
 clear tempangle
 
 set(ax_elec,'Position',[-0.16 0.38 0.43 0.6])

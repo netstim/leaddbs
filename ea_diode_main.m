@@ -107,9 +107,11 @@ for side = options.elside
             'Boston Scientific Vercise Cartesia X', ...
             'St. Jude Directed 6172 (short)', ...
             'St. Jude Directed 6173 (long)'})
-        [roll_y,y,~] = ea_diode_auto(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
+%         [roll_y,y,~] = ea_diode_auto(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
+                [roll_y,y,~] = ea_diode_manualGUI(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
     elseif ismember(options.elmodel, {'Medtronic B33005', 'Medtronic B33015'})
         [roll_y,y,~] = ea_diode_medtronic(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
+%         [roll_y,y,~] = ea_diode_manualGUI(side,ct,head_mm,unitvector_mm,tmat_vx2mm,options.elspec);
     else  % check for electrode type and postoperative imaging
         msg = sprintf(['No Valid Directional Lead Selected!']);
         choice = questdlg(msg,'No Directional Lead!','Abort','Abort');
