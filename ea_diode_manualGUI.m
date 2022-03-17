@@ -176,12 +176,12 @@ for k = 1:length(allrolls)
     Zslice = ea_diode_perpendicularplane(xvec_mm,tail_mm,Xslice,Yslice);
     parallelslices{k} = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
     parallelslices{k} = parallelslices{k}';
-%     parallelslices{k} = flipdim(parallelslices{k},1);
+    parallelslices{k} = flipdim(parallelslices{k},2);
 end
 
 %% get parralel slices from head to 20mm above head;
 extract_width = 10;
-myslices = [0:samplingres:20-samplingres];
+myslices = [sagittal_shift-extract_height:samplingres:sagittal_shift+extract_height-samplingres];
 roll_act = 0;
 [M,~,~,~] = ea_diode_rollpitchyaw(roll_act,pitch,yaw);
 yvec_mm = M * [0;1;0];
@@ -228,14 +228,16 @@ set(ax1,'colormap',gray)
 caxis(ax1,cscale2)
 
 %% transversal Plot axis
+tmpcenter = [round(size(transversalslices{level_act},2)/2),round(size(transversalslices{level_act},1)/2)];
+redline_angles = [orientation_act-90, orientation_act+90] + [((orientation_act-90)<1) .* 360 , ((orientation_act+90)>360) .* (-360)];
+
 ax2 = uiaxes(fig(side).figure,'Position',[450 430 280 280]);
 hold(ax2,'on')
-tmpcenter = [round(size(transversalslices{level_act},2)/2),round(size(transversalslices{level_act},1)/2)];
-
 transversalslice1_act = imagesc(ax2,transversalslices{level_act});
 scatter(ax2,tmpcenter(1),tmpcenter(2),[],[0 0.4470 0.7410],'filled')
-plot(ax2,vector(:,1),vector(:,2),'g','LineStyle',':')
+% plot(ax2,vector(:,1),vector(:,2),'g','LineStyle',':')
 arrow1_act = quiver(ax2,tmpcenter(1),tmpcenter(2),(vector(orientation_act,1)-tmpcenter(1))/2,(vector(orientation_act,2)-tmpcenter(2))/2,2,'LineWidth',1,'Color','g','MaxHeadSize',2);
+redline1 = plot(ax2,vector(redline_angles,1),vector(redline_angles,2),'r','LineStyle','--');
 hold(ax2,'off')
 axis(ax2,'equal')
 axis(ax2,'off')
@@ -247,8 +249,9 @@ ax3 = uiaxes(fig(side).figure,'Position',[450 150 280 280]);
 hold(ax3,'on')
 transversalslice2_act = imagesc(ax3,transversalslices{level_act});
 scatter(ax3,round(size(transversalslices{level_act},2)/2),round(size(transversalslices{level_act},1)/2),[],[0 0.4470 0.7410],'filled')
-plot(ax3,vector(:,1),vector(:,2),'g','LineStyle',':')
+% plot(ax3,vector(:,1),vector(:,2),'g','LineStyle',':')
 arrow2_act = quiver(ax3,tmpcenter(1),tmpcenter(2),(vector(orientation_act,1)-tmpcenter(1))/2,(vector(orientation_act,2)-tmpcenter(2))/2,2,'LineWidth',1,'Color','g','MaxHeadSize',2);
+redline2 = plot(ax3,vector(redline_angles,1),vector(redline_angles,2),'r','LineStyle','--');
 hold(ax3,'on')
 axis(ax3,'equal')
 axis(ax3,'off')
@@ -256,23 +259,22 @@ view(ax3,[-180 -90])
 set(ax3,'colormap',gray)
 caxis(ax3,cscale)
 
+%% Texts
+orientation_label = uilabel(fig(side).figure, 'Position', [450 120 280 40],'HorizontalAlignment','center','VerticalAlignment','bottom','Fontsize',24,...
+    'Text', ['Orientation: ' num2str(orientation_act - ((orientation_act > 180).*360)) '°']);
 %% Controls
 RotationSlider = uislider(fig(side).figure,'Value',0,'Limits',[-180 180],'MajorTicks',[-180:90:180],...
     'Position', [90 140 300 3],'FontSize',12,...
-    'ValueChangedFcn',@(RotationSlider,eventdata) rotationChanged(eventdata,parallelslices,parralelslice_act,transversalslices,arrow1_act,arrow2_act,vector),'ValueChangingFcn',@(RotationSlider,eventdata) rotationChanged(eventdata,parallelslices,parralelslice_act,transversalslices,arrow1_act,arrow2_act,vector));
+    'ValueChangedFcn',@(RotationSlider,eventdata) rotationChanged(eventdata,parallelslices,parralelslice_act,transversalslices,arrow1_act,arrow2_act,redline1,redline2,vector,orientation_label),'ValueChangingFcn',@(RotationSlider,eventdata) rotationChanged(eventdata,parallelslices,parralelslice_act,transversalslices,arrow1_act,arrow2_act,redline1,redline2,vector,orientation_label));
 LevelSlider = uislider(fig(side).figure,'Value',level_act,'Limits',[1 length(transversalslices)],'Orientation','vertical',...
-    'Position', [420 200 3 450],'FontSize',12,...
+    'Position', [420 167 3 534],'FontSize',12,...
     'ValueChangedFcn',@(LevelSlider,eventdata) levelChanged(eventdata,transversalslices,parallelslices,orientation_act,level_marking,transversalslice1_act,transversalslice2_act),'ValueChangingFcn',@(LevelSlider,eventdata) levelChanged(eventdata,transversalslices,parallelslices,orientation_act,level_marking,transversalslice1_act,transversalslice2_act));
 SaveButton = uicontrol(fig(side).figure,'Style', 'pushbutton', 'String', 'Accept & Save',...
     'Position', [150 20 150 25],'FontSize',12,...
     'Callback', @buttonPress);
-ManualButton = uicontrol(fig(side).figure,'Style', 'pushbutton', 'String', 'Manual Refine',...
-    'Position', [325 20 150 25],'FontSize',12,...
-    'Callback', @buttonPress);
 DiscardButton = uicontrol(fig(side).figure,'Style', 'pushbutton', 'String', 'Discard',...
     'Position', [500 20 150 25],'FontSize',12,...
     'Callback', @buttonPress);
-
 
 %% graphics lead
 ax_elec = uiaxes(fig(side).figure,'Position',[20 200 100 510]);
@@ -299,24 +301,12 @@ if SaveButton.UserData == 1
 elseif DiscardButton.UserData == 1
     savestate = 0;
     retrystate = 0;
-elseif ManualButton.UserData == 1
-    savestate = 0;
-    retrystate = 1;
-    disp(['Retry with manual refinement!'])
-    [roll_y_retry,y_retry] = ea_diode_manual(side,ct,head_mm,unitvector_mm,tmat_vx2mm,elspec);
 end
 
 %% saving results
 if savestate == 1
     clear x y
-    checkbox1 = get(fig(side).chk1,'Value');
-    if ~checkbox1
-        roll_y = roll;
-        disp(['Using roll angle defined by stereotactic marker: ' num2str(rad2deg(roll)) ' deg'])
-    elseif checkbox1
-        roll_y = rollnew;
-        disp(['Using corrected roll angle defined by directional level 1: ' num2str(rad2deg(rollnew)) ' deg'])
-    end
+    roll_y = deg2rad(RotationSlider.Value);
     %% calculate y
     [M,~,~,~] = ea_diode_rollpitchyaw(roll_y,pitch,yaw);
     y = M * [0;1;0];
@@ -327,10 +317,6 @@ elseif retrystate == 0
     disp(['Changes to rotation not saved'])
     roll_y = [];
     y = [];
-elseif retrystate == 1
-    disp(['Rotation saved after manual refinement'])
-    roll_y = roll_y_retry;
-    y = y_retry;
 end
 close(fig(side).figure)
 end
@@ -340,7 +326,7 @@ hObject.UserData = 1;
 uiresume
 end
 
-function [orientation_act] = rotationChanged(eventdata,parallelslices,parralelslice_act,transversalslices,arrow1_act,arrow2_act,vector)
+function [orientation_act] = rotationChanged(eventdata,parallelslices,parralelslice_act,transversalslices,arrow1_act,arrow2_act,redline1,redline2,vector,orientation_label)
 orientation_act = round(eventdata.Value);
 if orientation_act < 1
     orientation_act = orientation_act + 360;
@@ -350,6 +336,10 @@ set(parralelslice_act,'CData',parallelslices{orientation_act})
 tmpcenter = [round(size(transversalslices{1},2)/2),round(size(transversalslices{1},1)/2)];
 set(arrow1_act,'UData',(vector(orientation_act,1)-tmpcenter(1))/2,'VData',(vector(orientation_act,2)-tmpcenter(2))/2);
 set(arrow2_act,'UData',(vector(orientation_act,1)-tmpcenter(1))/2,'VData',(vector(orientation_act,2)-tmpcenter(2))/2);
+redline_angles = [orientation_act-90, orientation_act+90] + [((orientation_act-90)<1) .* 360 , ((orientation_act+90)>360) .* (-360)];
+set(redline1,'XData',vector(redline_angles,1),'YData',vector(redline_angles,2));
+set(redline2,'XData',vector(redline_angles,1),'YData',vector(redline_angles,2));
+set(orientation_label,'Text',['Orientation: ' num2str(orientation_act - ((orientation_act > 180).*360)) '°']);
 end
 
 function [level_act] = levelChanged(eventdata,transversalslices,parallelslices,orientation_act,level_marking,transversalslice1_act,transversalslice2_act)
