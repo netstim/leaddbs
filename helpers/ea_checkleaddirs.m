@@ -6,7 +6,7 @@ if ~isfolder(prefs.lc.datadir)
         try
             ea_mkdir(prefs.lc.datadir);
         catch
-            ea_cprintf('CmdWinWarnings', 'Failed to create connectome directory. Please set prefs.lc.datadir to a valid directory in preferences.');
+            ea_cprintf('CmdWinWarnings', 'Failed to create connectome directory.\nPlease set prefs.lc.datadir to a valid directory in preferences.\n');
         end
     end
 end
