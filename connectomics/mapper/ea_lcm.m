@@ -248,7 +248,7 @@ switch modality
                             nii(cnt).img(isnan(nii(cnt).img))=0;
                             nii(cnt).img(nii(cnt).img<0)=0; % safety measure: VTAs should not have negative entries
 
-                            if strcmp(vtaType,'_efield')
+                            if strcmp(vtaType,'efield')
                                 nii(cnt).img(nii(cnt).img<multithresh(nii(cnt).img)) = 0; % remove small electric field values.
                             end
 
