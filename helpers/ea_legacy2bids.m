@@ -541,14 +541,20 @@ for patients = 1:length(source)
                         %there in the dest directory.
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             pipeline = pipelines{folders};
-                            %try
-                            [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
-                            move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
-                            %catch
-                            %    disp("Your stimulation folder might be empty...");
-                            %end
+                            try
+                                [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
+                                move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
+                            catch ME
+                            if contains(ME.message,'Specified connectome')
+                                disp("Connectome used for performing calculations not found under the leaddbs/connectome folder. Please verify and use standardized connectome names");
+                            elseif strcmp(ME.message,'BIDS tag could not be assigned')
+                                disp("Migrate could not place your files with the correct tag. Please try to manually rename your files")
+                            else
+                                disp("Your stimulation folder might be empty...");
+                            end
+
+                            end
                         end
-                        
                     elseif strcmp(pipelines{folders},'headmodel')
                         if exist(fullfile(source_patient,'headmodel'),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             if exist(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'),'dir')
