@@ -457,11 +457,13 @@ classdef ea_sweetspot < handle
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Vertcat all values for colorbar construction
                 allvals = vertcat(vals{group,:});
-                if isempty(allvals)
+                if isempty(allvals) || all(isnan(allvals))
                     continue;
+                else
+                    allvals(isnan(allvals)) = 0;
                 end
 
-                if obj.posvisible && all(allvals<0)
+                if obj.posvisible && all(allvals<=0)
                     obj.posvisible = 0;
                     fprintf('\n')
                     warning('off', 'backtrace');
@@ -470,7 +472,7 @@ classdef ea_sweetspot < handle
                     fprintf('\n')
                 end
 
-                if obj.negvisible && all(allvals>0)
+                if obj.negvisible && all(allvals>=0)
                     obj.negvisible = 0;
                     fprintf('\n')
                     warning('off', 'backtrace');
