@@ -17,7 +17,15 @@ for c=1:length(connectomes)
     connectome=connectomes{c};
     type=types{c};
     for pt=pts
-        fis{pt}=[rootfolder,num2str(pt),filesep,'stimulations',filesep,ea_nt(options),gs,filesep,connectome,filesep,getfiname(type),'.nii'];
+        [~, subPrefix] = fileparts([rootfolder,num2str(pt), '_']);
+        subDir = fullfile(rootfolder,num2str(pt),'stimulations',ea_nt(options),gs,connectome);
+        connName = ea_getConnLabel(connectome);
+        switch type
+            case 'dMRI'
+                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_model-simbio_seed-dMRI_conn-', connName, '_strucmap.nii']);
+            case 'fMRI'
+                fis{pt} = fullfile(subDir, [subPrefix, 'sim-binary_model-simbio_seed-fMRI_conn-', connName, '_desc-AvgRFz_funcmap.nii']);
+        end
     end
     mkdir([ea_getearoot,'predict',filesep,'models',filesep,'horn2017_AoN',filesep,'combined_maps',filesep,type,filesep,connectome]);
     ea_Cmap(fis,improvements,...
@@ -72,12 +80,4 @@ switch type
         sk='sk';
     case 'fMRI'
         sk='';
-end
-
-function fn=getfiname(type)
-switch type
-    case 'dMRI'
-        fn='vat_seed_compound_dMRI_struc_seed';
-    case 'fMRI'
-        fn='vat_seed_compound_fMRI_func_seed_AvgR_Fz';
 end

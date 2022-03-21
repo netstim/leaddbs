@@ -24,7 +24,8 @@ end
 fprintf('\n\nRunning FSL BET2: %s\n\n', inputimage);
 
 inputimage = ea_path_helper(ea_niigz(inputimage));
-outputimage = ea_path_helper(ea_niigz(outputimage));
+[outputimage,ext] = (ea_niigz(outputimage));
+outputimage=ea_path_helper(outputimage);
 
 % Remove the '.nii' or '.nii.gz' ext
 outputimage = ea_niifileparts(outputimage);
@@ -46,8 +47,12 @@ if outputmask
 end
 
 cmd = [cmd, ' -f ' ,num2str(fraintthreshold)];
-
-setenv('FSLOUTPUTTYPE','NIFTI');
+switch ext
+    case '.nii'
+        setenv('FSLOUTPUTTYPE','NIFTI');
+    case '.nii.gz'
+        setenv('FSLOUTPUTTYPE','NIFTI_GZ');
+end
 if ~ispc
     system(['bash -c "', cmd, '"']);
 else

@@ -89,6 +89,9 @@ ea_createpcmenu(handles);
 setappdata(handles.atlasselect,'treeinit',1);
 setuptree([{handles}, varargin])
 
+ea_ListBoxRenderer(handles.atlassetpopup);
+ea_ListBoxRenderer(handles.presets);
+
 
 function setuptree(varargin)
 

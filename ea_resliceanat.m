@@ -1,14 +1,13 @@
-function ea_resliceanat(options)
-% Reslice the preoperative anatomical image if the resolution is not sufficient
+function ea_resliceanat(preopAnchorImage)
+% Reslice the pre-op anchor image if the resolution is not sufficient
 
-directory=[options.root,options.patientname,filesep];
-V=spm_vol([directory,options.prefs.prenii_unnormalized]);
+V = spm_vol(preopAnchorImage);
+dim = V.mat(logical(eye(4)));
+dim = abs(dim(1:3));
 
-dim=V.mat(logical(eye(4)));
-dim=abs(dim(1:3));
 if any(dim>0.7)
-    fprintf('\nInterpolating preoperative anatomical image...')
-    ea_resample_image_by_spacing([directory,options.prefs.prenii_unnormalized],[0.7 0.7 0.7],0,5,0,[directory,options.prefs.prenii_unnormalized]);
-    % ea_reslice_nii([directory,options.prefs.prenii_unnormalized],[directory,options.prefs.prenii_unnormalized],[0.7 0.7 0.7],0,[],1);
+    fprintf('\nInterpolating pre-op anchor image to increase resolution to 0.7...')
+    ea_resample_image_by_spacing(preopAnchorImage,[0.7 0.7 0.7],0,5,0,preopAnchorImage);
+    % ea_reslice_nii(preopAnchorImage,preopAnchorImage,[0.7 0.7 0.7],0,[],1);
     fprintf('\n\n');
 end

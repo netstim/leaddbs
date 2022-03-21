@@ -65,13 +65,13 @@ for atlas=1:length(atlases.names)
     end
 
     if atlases.types(atlas)==3
-        ea_apply_normalization_tofile(options,{ea_niigz([pratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
-        ea_apply_normalization_tofile(options,{ea_niigz([platlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([pratlf,atlases.names{atlas}])},{ea_niigz([pratlf,atlases.names{atlas}])},1,interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([platlf,atlases.names{atlas}])},{ea_niigz([platlf,atlases.names{atlas}])},1,interp);
 
         ea_crop_nii(ea_niigz([pratlf,atlases.names{atlas}]));
         ea_crop_nii(ea_niigz([platlf,atlases.names{atlas}]));
     else
-        ea_apply_normalization_tofile(options,{ea_niigz([patlf,atlases.names{atlas}])},{ea_niigz([patlf,atlases.names{atlas}])},[options.root,options.patientname,filesep],1,interp);
+        ea_apply_normalization_tofile(options,{ea_niigz([patlf,atlases.names{atlas}])},{ea_niigz([patlf,atlases.names{atlas}])},1,interp);
         ea_crop_nii(ea_niigz([patlf,atlases.names{atlas}]));
     end
 end
@@ -259,17 +259,6 @@ if options.prefs.normalize.inverse.customtpm
 else
     warpfile=[proot,'y_ea_inv_normparams.nii'];
 end
-
-
-% check if inv has correct size:
-Vinv=spm_vol(warpfile);
-Vanat=spm_vol([proot,options.prefs.prenii_unnormalized]);
-
-if ~isequal(Vinv.dim,Vanat.dim)
-    ea_redo_inv(proot,options);
-end
-
-%apply deformation fields to respective atlas.
 
 % warp atlas to patient space
 for fi=1:length(oatlasfile)

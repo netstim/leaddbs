@@ -10,33 +10,33 @@ end
 numPatient = length(obj.allpatients);
 vatlist = cell(numPatient*2,1);
 
-[modlist,sf]=ea_genmodlist;
-[~,ix]=ismember(obj.connectome,modlist);
+[modlist,modType] = ea_genmodlist;
+[~,ix] = ismember(obj.connectome,modlist);
 if ~ix
     ea_error('Something went wrong, connectome disappeared?');
 end
-sf=sf(ix);
-sfstrings={'dMRI','fMRI'};
-sfstring=sfstrings{sf};
+modType = modType(ix);
+modStr = {'dMRI', 'fMRI'};
+modStr = modStr{modType};
 
 disp('Construct VAT list...')
-for sub=1:numPatient % Original VAT E-field
-    vatlist{sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_',sfstring,'_efield.nii'];
-    % if ~exist(vatlist{sub},'file') % create joint VTA
+for sub=1:numPatient
+    [~, subPrefix] = fileparts([obj.allpatients{sub}, '_']);
+    % Original VAT E-field
+    stimFolder = [pthprefix, obj.allpatients{sub}, filesep, 'stimulations', filesep, ea_nt(0), 'gs_', obj.M.guid];
+    stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
+    load(stimParams{1}, 'S');
+    modelLabel = ea_simModel2Label(S.model);
+    vatlist{sub,1} = fullfile(stimFolder, [subPrefix, 'sim-efield_model-', modelLabel, '_seed-', modStr, '.nii']);
+
     if 1 % for now always recreate compound VTA seed
         rungenlocalmapper(obj,sub)
     end
-end
 
-for sub=1:numPatient % Mirrored VAT E-field
-    vatlist{numPatient+sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), ['gs_',obj.M.guid],filesep, 'fl_vat_seed_compound_',sfstring,'_efield.nii'];
-    if ~exist(vatlist{numPatient+sub,1},'file')
-        ea_flip_lr_nonlinear([pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-            ea_nt(0), ['gs_',obj.M.guid],filesep, 'vat_seed_compound_',sfstring,'_efield.nii'],...
-            [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-            ea_nt(0), ['gs_',obj.M.guid],filesep, 'fl_vat_seed_compound_',sfstring,'_efield.nii'],0);
+    % Mirrored VAT E-field
+    vatlist{numPatient+sub,1} = fullfile(stimFolder, [subPrefix, 'sim-efield_model-', modelLabel, '_seed-', modStr, '_hemidesc-flipped.nii']);
+    if ~isfile(vatlist{numPatient+sub,1})
+        ea_flip_lr_nonlinear(vatlist{sub,1}, vatlist{numPatient+sub,1}, 0);
     end
 end
 
@@ -78,11 +78,9 @@ options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
 options.earoot = ea_getearoot;
-options.dicomimp.do = 0;
-options.assignnii = 0;
 options.normalize.do = 0;
 options.normalize.method = [];
-options.normalize.check = 0;
+options.checkreg = false;
 options.normalize.refine = 0;
 options.coregmr.check = 0;
 options.coregmr.do = 0;
@@ -112,7 +110,7 @@ options.d2.write = 0;
 options.d2.atlasopacity = 0.15;
 options.manualheightcorrection = 0;
 options.scrf.do = 0;
-options.scrf.mask = 2;
+options.scrf.mask = 'Coarse mask (Schönecker 2008)';
 options.d3.write = 0;
 options.d3.prolong_electrode = 2;
 options.d3.verbose = 'on';
@@ -267,7 +265,7 @@ options.prefs.reco.mancoruse = 'rpostop';
 options.prefs.reco.saveACPC = 0;
 options.prefs.reco.saveimg = 0;
 options.prefs.reco.exportfiducials = 0;
-options.prefs.ctcoreg.default = 'ea_coregctmri_ants';
+options.prefs.ctcoreg.default = 'ea_coregpostopct_ants';
 options.prefs.mrcoreg.default = 'spm';
 options.prefs.mrcoreg.writeoutcoreg = 0;
 options.prefs.scrf.tonemap = 'tp_';
@@ -391,7 +389,6 @@ options.prefs.machine.normsettings.fsl_skullstrip = 0;
 options.prefs.machine.normsettings.ants_usefa = 0;
 options.prefs.machine.normsettings.ants_skullstripped = 0;
 options.prefs.machine.normsettings.spmnewseg_scalereg = 1;
-options.prefs.machine.normsettings.ants_reinforcetargets = 0;
 options.prefs.machine.normsettings.ants_usepreexisting = 2;
 options.prefs.machine.space = 'MNI_ICBM_2009b_NLIN_ASYM';
 options.prefs.machine.togglestates.cutview = '3d';

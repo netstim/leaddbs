@@ -4,8 +4,10 @@ try
     ea_updatemodel(options);
 end
 
-% check if sides is specified correctly for visualization:
-options=ea_detsides(options);
+% check if sides is specified correctly for visualization
+if isfield(options, 'subj')
+    options=ea_detsides(options);
+end
 
 if options.d2.write || options.d3.write
    if strcmp(options.atlasset,'Segment patient anatomy')
@@ -30,7 +32,7 @@ end
 if options.d2.write
     % Prior Results are loaded here inside the function (this way, function
     % can be called just by giving the patient directory.
-    cuts=ea_writeplanes(options);
+    ea_writeplanes(options);
 end
 
 % Render 3D Visualization

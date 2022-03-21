@@ -64,7 +64,9 @@ end
 
 scrsz = get(0,'ScreenSize');
 
-cuts=figure('name',[options.patientname,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible,'MenuBar', 'none', 'ToolBar', 'none');
+titilePrefix = erase(options.patientname, 'sub-');
+
+cuts=figure('name',[titilePrefix,': 2D cut views...'],'numbertitle','off','Position',[1 scrsz(4)/1.2 scrsz(3)/1.2 scrsz(4)/1.2],'Visible',figvisible,'MenuBar', 'none', 'ToolBar', 'none');
 axis off
 set(cuts,'position',[100, 100, 800 ,800]);
 set(cuts,'color','w');
@@ -88,7 +90,15 @@ else
     planedim=ea_getdims(manualtracor,1);
 end
 
-fid=fopen([options.root,options.patientname,filesep,'2D_cuts_export_coordinates.txt'],'w');
+if startsWith(options.patientname, 'gs_')
+    export_2D_folder = fullfile(options.root, options.patientname, '2D');
+else
+    export_2D_folder = fullfile(options.root, options.patientname, 'export', '2D');
+end
+ea_mkdir(export_2D_folder);
+fileBaseName = fullfile(export_2D_folder, [options.patientname, '_desc-']);
+
+fid = fopen([fileBaseName 'coordinates.txt'],'w');
 for iside=1:length(options.sides)
     side=options.sides(iside);
     % write out axial/coronal/sagittal images
@@ -415,18 +425,21 @@ for iside=1:length(options.sides)
             expslice=ea_crop_img(expslice);
 
             if svfig==1 % only export if figure needs to be saved.
-                if options.d3.showisovolume
+                if options.d3.showisovolume % TODO: Fix export name
                     isofnadd=['_',options.prefs.d2.isovolsmoothed,options.d3.isomatrix_name,'_',options.prefs.d2.isovolsepcomb];
                 else
                     isofnadd='';
                 end
+                contactTag = strjoin(options.elspec.contactnames(el), '_');
+                contactTag = erase(contactTag, {' ', '(', ')'});
+                desc = [contactTag, isofnadd];
                 switch tracor
                     case 1
-                        ea_screenshot([options.root,options.patientname,filesep,'2D_axial_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'ax_',desc,'.png'],'myaa');
                     case 2
-                        ea_screenshot([options.root,options.patientname,filesep,'2D_coronal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'cor_',desc,'.png'],'myaa');
                     case 3
-                        ea_screenshot([options.root,options.patientname,filesep,'2D_sagittal_',strjoin(options.elspec.contactnames(el), '_'),isofnadd,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'sag_',desc,'.png'],'myaa');
                 end
             end
             axis xy

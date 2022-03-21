@@ -38,7 +38,7 @@ if genmaps
         [~,template]=ea_whichnormmethod(directory);
         V=spm_vol(template);
         pts=V.mat\pts;
-        pts=ea_map_coords(pts,template,[directory,'y_ea_normparams.nii'],[directory,options.prefs.prenii_unnormalized]);
+        pts=ea_map_coords(pts,template,[directory,'forwardTransform'],[directory,options.prefs.prenii_unnormalized]);
         label=structures{s};
 
         ea_generate_probmaps(pts(1:3,:)',label,srcs,directory);
@@ -181,7 +181,7 @@ for m=1:length(mults)
                 movefile([directory,'r',mults{m}], [directory,mults{m}])
             end
         case 'ANTs' % ANTs
-            ea_ants([directory,options.prefs.prenii_unnormalized],...
+            ea_ants_linear([directory,options.prefs.prenii_unnormalized],...
                 [directory,mults{m}],...
                 [directory,mults{m}],0);
         case 'BRAINSFIT' % BRAINSFit
@@ -190,7 +190,7 @@ for m=1:length(mults)
                 [directory,mults{m}],0);
         case 'Hybrid SPM & ANTs' % Hybrid SPM -> ANTs
             ea_spm_coreg(options,[directory,mults{m}],[directory,options.prefs.prenii_unnormalized],'nmi',0)
-            ea_ants([directory,options.prefs.prenii_unnormalized],...
+            ea_ants_linear([directory,options.prefs.prenii_unnormalized],...
                 [directory,mults{m}],...
                 [directory,mults{m}],0);
         case 'Hybrid SPM & ' % Hybrid SPM -> Brainsfit

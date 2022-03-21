@@ -8,7 +8,7 @@ if isempty(menuprobe)
     f = uimenu('Label','Tools');
     pp= uimenu('Label','Preferences');
     uimenu(pp,'Label','Edit Preferences File...','Callback',{@ea_editprefs},'Accelerator','P');
-    uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@ea_restoreprefs});
+    uimenu(pp,'Label','Reset Preferences to Default...','Callback',{@(src, evt) ea_restoreprefs});
 
     p_c=uimenu(pp,'Label','Play sound on completed tasks.','Callback',{@ea_toggle_chirp});
     if prefs.machine.chirp
@@ -24,6 +24,9 @@ if isempty(menuprobe)
         m_c.Checked='off';
     end
 
+    if ismember('import',cmd)
+        uimenu(f,'Label','Import DICOM or Migrate Dataset to BIDS','Callback',{@(src, evt) lead_import});
+    end
 
     if ismember('checkregfigs',cmd)
         cr=uimenu(f,'Label','Checkreg');
@@ -32,10 +35,10 @@ if isempty(menuprobe)
         uimenu(cr,'Label','Aggregate all checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'allcheckreg'});
         uimenu(cr,'Label','Aggregate most recent normalization checkreg images for selected patient(s) to folder...','Callback',{@ea_aggregate,handles,'normcheckreg'});
     end
+
     if ismember('group',cmd)
        cr=uimenu(f,'Label','Group Tools');
        uimenu(cr,'Label','Check for outliers in localizations','Callback',{@ea_checkoutliers,handles});
-       uimenu(cr,'Label','Rebase root directory of patient folders...','Callback',{@ea_rebasegrouppts,handles});
     end
 
     if ismember('acpc',cmd)
@@ -54,6 +57,7 @@ if isempty(menuprobe)
     uimenu(f,'Label','Clean folders from unnecessary/legacy files','Callback',{@ea_cleanlegacy,handles});
 
     uimenu(f,'Label','Calculate SNR ratio for selected subjects','Callback',{@ea_run_SNR,handles});
+
     uimenu(f,'Label','Anonymize files for selected subjects','Callback',{@ea_run_deface,handles});
         
     uimenu(f,'Label','Read in stimulation settings from move.base','Callback',{@ea_import_movebase_stimsettings,handles});

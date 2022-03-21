@@ -1,25 +1,27 @@
-function ea_init_coregmrpopup(handles,refine)
-% Initializes MR coregistration methods popupmenu.
-%
-% USAGE:
-%
-%    ea_init_coregmrpopup(handles,refine)
-%
-% INPUTS:
-%    handles:       LEAD GUI handle
-%    refine:        deprecated
+function ea_init_coregmrpopup(handles, defaultmethod)
+% Initialize MR coregistration methods popupmenu.
 
-if ~exist('refine','var')
-    refine=0;
+% Set methods
+names = {'ANTs (Avants 2008)'
+    'BRAINSFit (Johnson 2007)'
+    'FLIRT (Jenkinson 2001 & 2002)'
+    'FLIRT BBR (Greve and Fischl 2009)'
+    'Hybrid SPM & ANTs'
+    'Hybrid SPM & BRAINSFIT'
+    'Hybrid SPM & FLIRT'
+    'SPM (Friston 2007)'};
+
+prefs = ea_prefs;
+if prefs.env.dev
+    names = [names; 'ANTs Nonlinear Coregistration'];
 end
 
-cmethods={'SPM',...
-    'FSL FLIRT',...
-    'ANTs',...
-    'BRAINSFIT',...
-    'Hybrid SPM & ANTs',...
-    'Hybrid SPM & FSL',...
-    'Hybrid SPM & BRAINSFIT'};
+% Set names to popupmenu
+set(handles.coregmrmethod, 'String', names);
 
-set(handles.coregmrpopup,'String',cmethods)
-set(handles.coregmrpopup,'Value',1); % default SPM
+% Set default method
+if ~ismember(defaultmethod, names)
+    defaultmethod = 'SPM (Friston 2007)';
+end
+
+set(handles.coregmrmethod, 'Value', find(ismember(names, defaultmethod), 1));

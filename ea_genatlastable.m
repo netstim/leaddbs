@@ -418,8 +418,6 @@ switch atlases.types(atlas)
         atlnames{2}=[root,filesep,mifix,options.atlasset,filesep,'rh',filesep,atlases.names{atlas}];
 end
 
-options = ea_assignpretra(options);
-
 for atl=1:length(atlnames)
     atlname=atlnames{atl};
 
@@ -440,7 +438,7 @@ for atl=1:length(atlnames)
                 ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],...
                     [0.3,0.3,0.3],0,0,1,[],[],1);
             else
-                copyfile([options.root,options.patientname,filesep,options.prefs.prenii_unnormalized],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
+                copyfile(options.subj.coreg.anat.preop.(options.subj.AnchorModality),[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             end
             V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             X=spm_read_vols(V);

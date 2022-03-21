@@ -4,7 +4,7 @@ directory=[options.root,options.patientname,filesep];
 copyfile([ea_space,'brainmask.nii.gz'],[directory,'brainmask.nii.gz']);
 gunzip([directory,'brainmask.nii.gz']);
 ea_delete([directory,'brainmask.nii.gz']);
-ea_apply_normalization_tofile(options, {[directory,'brainmask.nii']}, {[directory,'brainmask.nii']}, directory, 1, 0);
+ea_apply_normalization_tofile(options, {[directory,'brainmask.nii']}, {[directory,'brainmask.nii']}, 1, 0);
 
 b0_anat = [ea_stripext(options.prefs.b0),'_',ea_stripext(options.prefs.prenii_unnormalized)];
 
@@ -84,7 +84,7 @@ if docoreg
             [directory,ea_stripext(options.prefs.b0), '2', ea_stripext(options.prefs.prenii_unnormalized), 'InverseComposite.nii.gz'], 'Linear');
     else
         copyfile([directory,'brainmask.nii'],[directory,'cbrainmask.nii']);
-        affinefile = ea_coreg2images(options, ...
+        affinefile = ea_coregimages(options, ...
             [directory,options.prefs.prenii_unnormalized], ... % moving
             [directory,options.prefs.b0], ... % fix
             [directory,'c',options.prefs.prenii_unnormalized], ... % out

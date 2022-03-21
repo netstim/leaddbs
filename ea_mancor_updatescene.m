@@ -576,14 +576,14 @@ hdtrajectory(:,3)=interp1q([1:length(trajectory)]',trajectory(:,3),[1:1/resoluti
 function V=getV(mcfig,ID,options)
 directory = [options.root,options.patientname,filesep];
 if options.native
-    addon='_unnormalized';
+    type='coreg';
 else
-    addon='';
+    type='norm';
 end
 
 switch options.modality
     case 1 % MR
-        V=getappdata(mcfig,[ID,addon]);
+        V=getappdata(mcfig,[ID,type]);
 
         if isempty(V)
             flags.interp=4;
@@ -592,41 +592,39 @@ switch options.modality
             switch ID
                 case 'Vcor'
                     try
-                        V=spm_vol([directory,options.prefs.(['cornii',addon])]);
+                        V=spm_vol(options.subj.(type).anat.postop.cor_MRI);
                     catch
-                        V=spm_vol([directory,options.prefs.(['tranii',addon])]);
+                        V=spm_vol(options.subj.(type).anat.postop.ax_MRI);
                     end
                 case 'Vtra'
-                    V=spm_vol([directory,options.prefs.(['tranii',addon])]);
+                    V=spm_vol(options.subj.(type).anat.postop.ax_MRI);
                 case 'Vsag'
                     try
-                        V=spm_vol([directory,options.prefs.(['sagnii',addon])]);
+                        V=spm_vol(options.subj.(type).anat.postop.sag_MRI);
                     catch
                         try
-                            V=spm_vol([directory,options.prefs.(['cornii',addon])]);
+                            V=spm_vol(options.subj.(type).anat.postop.ax_MRI);
                         catch
-                            V=spm_vol([directory,options.prefs.(['tranii',addon])]);
+                            V=spm_vol(options.subj.(type).anat.postop.ax_MRI);
                         end
                     end
             end
-            %             C=spm_bsplinc(V,d);
         end
-        setappdata(mcfig,[ID,addon],V);
+        setappdata(mcfig,[ID,type],V);
     case 2 % CT - ignore wishes, always feed out V as CT.
         if options.native
             V=getappdata(mcfig,'VCTnative');
             if isempty(V)
-                options=ea_assignpretra(options);
                 [mat,ctfile]=ea_getrawct2preniimat(options,0);
                 V=spm_vol(ctfile);
                 V.mat=mat*V.mat;
                 setappdata(mcfig,'VCTnative',V);
             end
         else
-            V=getappdata(mcfig,'VCTmni');
+            V=getappdata(mcfig,'VCTnorm');
             if isempty(V)
-                V=spm_vol([directory,options.prefs.ctnii]);
-                setappdata(mcfig,'VCTmni',V);
+                V=spm_vol(options.subj.norm.anat.postop.CT);
+                setappdata(mcfig,'VCTnorm',V);
             end
         end
 end

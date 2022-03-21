@@ -1,7 +1,7 @@
 function ea_gentrackingmask(options,threshold)
 directory=[options.root,options.patientname,filesep];
 
-ea_newseg(directory,options.prefs.prenii_unnormalized,0,options);
+ea_newseg(fullfile(directory,options.prefs.prenii_unnormalized),0);
 
 b0_anat = [ea_stripext(options.prefs.b0),'_',ea_stripext(options.prefs.prenii_unnormalized)];
 
@@ -75,7 +75,7 @@ if docoreg
     ea_conformspaceto([directory,'c',options.prefs.prenii_unnormalized],[directory,'cc2',options.prefs.prenii_unnormalized],1,[],[],0);
     ea_backuprestore([directory,'c',options.prefs.prenii_unnormalized]);
 
-    affinefile = ea_coreg2images(options, ...
+    affinefile = ea_coregimages(options, ...
         [directory,'c',options.prefs.prenii_unnormalized], ... % moving
         [directory,options.prefs.b0], ... % fix
         [directory,'c',options.prefs.prenii_unnormalized], ... % out

@@ -32,7 +32,7 @@ fibersMNIVox = ea_mm2vox(cell2mat(fibcell), refMNI)';
 % Convert discfibers from MNI space to anchor space
 [fibersAnchor, fibersAnchorVox]  = ea_map_coords(fibersMNIVox, ...
     refMNI, ...
-    [patientdir,'y_ea_normparams.nii'], ...
+    fullfile(patientdir,'forwardTransform'), ...
     refAnchor);
 
 % Convert fiber matrix to fibcell
@@ -46,8 +46,8 @@ save(outputMAT, 'fibcell', 'opts', 'vals');
 
 % Register anchor to raw anchor
 options = ea_getptopts(patientdir);
-options.coregmr.method = 'SPM'; % 'SPM', 'ANTs', 'FSL FLIRT'
-affinefile = ea_coreg2images(options, refAnchor, refRawAnchor, [patientdir,'tmp.nii'],{},1);
+options.coregmr.method = 'SPM (Friston 2007)';
+affinefile = ea_coregimages(options, refAnchor, refRawAnchor, [patientdir,'tmp.nii'],{},1);
 ea_delete([patientdir,'tmp.nii']);
 
 % Convert discfibers from achor space to raw anchor space

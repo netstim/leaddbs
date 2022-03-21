@@ -107,7 +107,7 @@ classdef ea_disctract < handle
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
                     obj.M = ea_map_pseudoM(obj.M);
-                    obj.M.root = fileparts(datapath);
+                    obj.M.root = [fileparts(datapath),filesep];
                     obj.M.patient.list=obj.M.ROI.list; % copies
                     obj.M.patient.group=obj.M.ROI.group; % copies
                 else
@@ -274,7 +274,7 @@ classdef ea_disctract < handle
         end
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
-                msgbox('LEAD_groupanalysis file has vanished. Please select file.');
+                msgbox('Groupan alysis file has vanished. Please select file.');
                 [fn,pth]=uigetfile();
                 obj.leadgroup=fullfile(pth,fn);
             end
@@ -401,6 +401,7 @@ classdef ea_disctract < handle
                         end
                 end
                 Ihat_voters=[];
+                Ihat_voters_train=[];
                 for voter=1:size(vals,1)
                     for side=1:size(vals,2)
                         if ~isempty(vals{voter,side})
@@ -409,119 +410,102 @@ classdef ea_disctract < handle
                                     switch lower(obj.basepredictionon)
                                         case 'mean of scores'
                                             Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            if nargout>2
                                                 Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            end
+                                            
                                         case 'sum of scores'
                                             Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            if nargout>2
                                                 Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            end
+                                            
                                         case 'peak of scores'
                                             Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            if nargout>2
                                                 Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            end
+                                            
                                         case 'peak 5% of scores'
                                             ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
                                             ihatvals=sort(ihatvals);
                                             Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                             if nargout>2
                                                 ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
                                                 ihatvals=sort(ihatvals);
                                                 Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                            end
+                                            
 
                                     end
                                 case {2,5} % efields
                                     switch lower(obj.basepredictionon)
                                         case 'profile of scores: spearman'
-                                            Ihat(test,side) = atanh(corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','spearman'));
+                                            Ihat(test,side) = (corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','spearman'));
                                             if any(isnan(Ihat(test,side)))
                                                 Ihat(isnan(Ihat(test,side)),side)=0;
                                                 warning('Profiles of scores could not be evaluated for some patients. Displaying these points as zero entries. Lower threshold or carefully check results.');
                                             end
-                                            if nargout>2
                                                 Ihattrain(training,side) = atanh(corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','spearman'));
-                                            end
+                                            
                                         case 'profile of scores: pearson'
-                                            Ihat(test,side) = atanh(corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','pearson'));
+                                            Ihat(test,side) = (corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','pearson'));
                                             if any(isnan(Ihat(test,side)))
                                                 Ihat(isnan(Ihat(test,side)),side)=0;
                                                 warning('Profiles of scores could not be evaluated for some patients. Displaying these points as zero entries. Lower threshold or carefully check results.');
                                             end
-                                            if nargout>2
                                                 Ihattrain(training,side) = atanh(corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','pearson'));
-                                            end
+                                            
                                         case 'profile of scores: bend'
-                                            Ihat(test,side) = atanh(ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test))));
+                                            Ihat(test,side) = (ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test))));
                                             if any(isnan(Ihat(test,side)))
                                                 Ihat(isnan(Ihat(test,side)),side)=0;
                                                 warning('Profiles of scores could not be evaluated for some patients. Displaying these points as zero entries. Lower threshold or carefully check results.');
                                             end
-                                            if nargout>2
                                                 Ihattrain(training,side) = atanh(ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training))));
-                                            end
+                                            
                                         case 'mean of scores'
                                             if ~isempty(vals{voter,side})
                                                 Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
                                             end
-                                            if nargout>2
                                                 Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            end
+                                            
                                         case 'sum of scores'
                                             if ~isempty(vals{voter,side})
                                                 Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
                                             end
-                                            if nargout>2
                                                 Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            end
+                                            
                                         case 'peak of scores'
                                             if ~isempty(vals{voter,side})
                                                 Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
                                             end
-                                            if nargout>2
                                                 Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            end
+                                            
                                         case 'peak 5% of scores'
                                             if ~isempty(vals{voter,side})
                                                 ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
                                             end
                                             ihatvals=sort(ihatvals);
                                             Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                            if nargout>2
                                                 ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
                                                 ihatvals=sort(ihatvals);
                                                 Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                            end
+                                            
                                     end
 
                                 case 6 % Plain Connection
                                     switch lower(obj.basepredictionon)
                                         case 'mean of scores'
                                             Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            if nargout>2
                                                 Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            end
+                                            
                                         case 'sum of scores'
                                             Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            if nargout>2
                                                 Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            end
+                                            
                                         case 'peak of scores'
                                             Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            if nargout>2
-                                                Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            end
+                                            Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                         case 'peak 5% of scores'
                                             ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
                                             ihatvals=sort(ihatvals);
                                             Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                            if nargout>2
-                                                ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
-                                                ihatvals=sort(ihatvals);
-                                                Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                            end
+                                            ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
+                                            ihatvals=sort(ihatvals);
+                                            Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                     end
                             end
                         end
@@ -545,6 +529,7 @@ classdef ea_disctract < handle
                     end
 
                     Ihat_voters=cat(3,Ihat_voters,Ihat);
+                    Ihat_voters_train=cat(3,Ihat_voters_train,Ihattrain);
                 end
             end
 
@@ -572,12 +557,29 @@ classdef ea_disctract < handle
                         if size(useI,2)>1
                             ea_error('This has not been implemented for hemiscores.');
                         end
+
                         predictor=squeeze(ea_nanmean(Ihat_voters,2));
-
-                        mdl=fitglm(predictor(training,voter),useI(training),lower(obj.predictionmodel));
-
+                        if all(isnan(predictor(training,voter))) && cvp.NumTestSets == 1 % this is the case if e.g. using cohort A to predict B (not a kfold/loo case).
+                            pred_train=ea_nanmean(Ihat_voters_train,2);
+                            predictor(training,voter)=pred_train(training,voter);
+                        end
+                        covariates=[];
+                        for cv=1:length(obj.covars)
+                        covariates=[covariates,obj.covars{cv}];
+                        end
+                        if ~isempty(covariates)
+                        mdl=fitglm([predictor(training,voter),covariates(training,:)],useI(training),lower(obj.predictionmodel));
+                        else
+                        mdl=fitglm([predictor(training,voter)],useI(training),lower(obj.predictionmodel));
+                        end
                         if size(useI,2)==1 % global scores
-                            Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,predictor(test,voter)),1,2); % fill both sides equally
+                            if ~isempty(covariates)
+                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor(test,voter),covariates(test,:)]),1,2); % fill both sides equally
+                            else
+                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor(test,voter)]),1,2); % fill both sides equally
+                            end
+                        elseif size(useI,2)==2 % bihemispheric scores
+                            ea_error('Fitting to scores has not been implemented for bihemispheric scores.');
                         end
                     end
                 end

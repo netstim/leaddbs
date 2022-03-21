@@ -1,16 +1,16 @@
-function [coords_mm,trajectory,markers]=ea_runpacer(options)
+function [coords_mm,trajectory,markers] = ea_runpacer(options)
 
-[tmat,ctnii]=ea_getrawct2preniimat(options);
+[tmat,ctnii] = ea_getrawct2preniimat(options);
 niiCTSPM = NiftiModSPM(ctnii); % load nifti using SPM instead of PaCER default Nifti Toolbox
 
-if ~(exist([options.root options.patientname filesep 'ct_mask.nii'], 'file'))
+if ~isfile(options.subj.recon.rawCTMask)
     ea_genctmask(options);
 end
 switch options.prefs.reco.mancoruse
     case 'postop'
-        brainMask = [options.root options.patientname filesep 'ct_mask.nii'];
+        brainMask = options.subj.recon.rawCTMask;
     case 'rpostop'
-        brainMask = [options.root options.patientname filesep 'rct_mask.nii'];
+        brainMask = options.subj.recon.anchorNativeMask;
 end
 
 elecmodels=PaCER(niiCTSPM,'finalDegree',1,'electrodeType',ea_mod2pacermod(options.elmodel), 'brainMask', brainMask);

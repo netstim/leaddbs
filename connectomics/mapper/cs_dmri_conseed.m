@@ -21,10 +21,11 @@ else
         warning('off', 'backtrace');
         warning('Custom output folder not specified! Will save result to current folder.');
         warning('on', 'backtrace');
-        outputfolder = ea_getoutputfolder({[pwd, filesep]},connName);
+        outputfolder = [pwd, filesep];
     elseif ~strcmp(outputfolder(end),filesep)
-        outputfolder = [outputfolder,filesep];
+        outputfolder = [outputfolder, filesep];
     end
+    connLabel = ea_getConnLabel(connName);
 end
 
 disp(['Command: ',cmd]);
@@ -131,14 +132,21 @@ switch cmd
                 end
             end
         end
+
         mat=mat+mat'; % symmetrize matrix
         mat(logical(eye(length(sfile))))=mat(logical(eye(length(sfile))))/2;
+
         if isfield(options.lcm, 'parcSeedName') && ~isempty(options.lcm.parcSeedName)
-            fn = options.lcm.parcSeedName;
+            save(fullfile(outputfolder, [options.lcm.parcSeedName, '_conn-', connLabel, '_struc', cmd, '.mat']), 'mat');
         else
-            [~,fn]=fileparts(sfile{1});
+            seeds = sfile;
+            if ~isBIDSFileName(sfile{1})
+                [~, fn] = fileparts(sfile{1});
+                save(fullfile(outputfolder, [fn, '_conn-', connLabel, '_struc', cmd, '.mat']), 'mat', 'seeds', '-v7.3');
+            else
+                save(setBIDSEntity(sfile{s}, 'dir', outputfolder, 'sub', '', 'conn', connLabel, 'suffix', ['struc',cmd], 'ext', 'mat'), 'mat', 'seeds', '-v7.3');
+            end
         end
-        save(fullfile(outputfolder,[fn,'_struc_',cmd,'.mat']),'mat');
     otherwise
         warning('Structural connectivity only supported for seed / matrix / pmatrix commands.');
 end

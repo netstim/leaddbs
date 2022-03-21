@@ -18,6 +18,13 @@ pt=varargin{2}; % patient number (of options.uivatdirs) defined in outer loop.
 directory=[options.uivatdirs{pt},filesep];
 load(fullfile(ea_getearoot,'predict','models','horn2017_AoN','modeldata.mat'));
 
+[~, subPrefix] = fileparts([options.uivatdirs{pt}, '_']);
+fConnName = ea_getConnLabel(options.predict.fMRIcon);
+dConnName = ea_getConnLabel(options.predict.dMRIcon);
+fMRIMapName = [subPrefix, 'sim-binary_model-simbio_seed-fMRI_conn-', fConnName, '_desc-AvgRFz_funcmap.nii'];
+dMRIMapName = [subPrefix, 'sim-binary_model-simbio_seed-dMRI_conn-', dConnName, '_strucmap.nii'];
+SKdMRIMapName = [subPrefix, 'sim-binary_model-simbio_seed-dMRI_conn-', dConnName, '_desc-NormSmooth_strucmap.nii']; % Smoothed and normalized
+
 feats=[0,0];
 stimname=options.predict.stimulation;
 
@@ -30,10 +37,10 @@ if ismember('dMRI',options.predict.includes)
         % -> run connectome mapper on patient
         run_mapper_vat_local(uivatdirs{pt},stimname,0,options.predict.dMRIcon,1,options.predict.fMRIcon)
     end
-    if ~exist([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii'],'file')
-        ea_dosk([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'vat_seed_compound_dMRI_struc_seed.nii'],modeldata.mask)
+    if ~exist([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,SKdMRIMapName],'file')
+        ea_dosk([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,dMRIMapName],modeldata.mask)
     end
-    dMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.dMRIcon,'>','_'),filesep,'skvat_seed_compound_dMRI_struc_seed.nii']);
+    dMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,SKdMRIMapName]);
 end
 
 if ismember('fMRI',options.predict.includes)
@@ -44,7 +51,7 @@ if ismember('fMRI',options.predict.includes)
         % -> run connectome mapper on patient
         run_mapper_vat_local(uivatdirs{pt},stimname,1,options.predict.dMRIcon,0,options.predict.fMRIcon)
     end
-    fMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,strrep(options.predict.fMRIcon,'>','_'),filesep,'vat_seed_compound_fMRI_func_seed_AvgR_Fz.nii']);
+    fMRImap=ea_load_nii([options.uivatdirs{pt},filesep,'stimulations',filesep,ea_nt(options),stimname,filesep,fMRIMapName]);
 end
 
 % model
@@ -192,11 +199,9 @@ options.refinesteps = 0;
 options.tra_stdfactor = 0.9;
 options.cor_stdfactor = 1;
 options.earoot = ea_getearoot;
-options.dicomimp.do = 0;
-options.assignnii = 0;
 options.normalize.do = 0;
 options.normalize.method = [];
-options.normalize.check = 0;
+options.checkreg = false;
 options.coregmr.check = 0;
 options.coregmr.do = 0;
 options.coregmr.method = '';

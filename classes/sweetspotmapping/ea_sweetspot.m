@@ -16,7 +16,7 @@ classdef ea_sweetspot < handle
         statimpthreshold = 0;
         statNthreshold = 0;
         statamplitudecorrection = 'None';
-        statnormalization = 'van Albada 2017';
+        statnormalization = 'None';
         corrtype = 'Spearman' % correlation strategy in case of using E-Fields.
         coverthreshold = 20; % of vtas needed to cover a single voxel to be considered
         posBaseColor = [1,1,1] % positive main color
@@ -94,7 +94,7 @@ classdef ea_sweetspot < handle
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
                     obj.M = ea_map_pseudoM(obj.M);
-                    obj.M.root = fileparts(datapath);
+                    obj.M.root = [fileparts(datapath),filesep];
                     obj.M.patient.list=obj.M.ROI.list; % copies
                     obj.M.patient.group=obj.M.ROI.group; % copies
                 else
@@ -206,7 +206,7 @@ classdef ea_sweetspot < handle
 
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
-               msgbox('LEAD_groupanalysis file has vanished. Please select file.');
+               msgbox('Groupan alysis file has vanished. Please select file.');
                [fn,pth]=uigetfile();
                obj.leadgroup=fullfile(pth,fn);
             end
@@ -457,11 +457,13 @@ classdef ea_sweetspot < handle
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Vertcat all values for colorbar construction
                 allvals = vertcat(vals{group,:});
-                if isempty(allvals)
+                if isempty(allvals) || all(isnan(allvals))
                     continue;
+                else
+                    allvals(isnan(allvals)) = 0;
                 end
 
-                if obj.posvisible && all(allvals<0)
+                if obj.posvisible && all(allvals<=0)
                     obj.posvisible = 0;
                     fprintf('\n')
                     warning('off', 'backtrace');
@@ -470,7 +472,7 @@ classdef ea_sweetspot < handle
                     fprintf('\n')
                 end
 
-                if obj.negvisible && all(allvals>0)
+                if obj.negvisible && all(allvals>=0)
                     obj.negvisible = 0;
                     fprintf('\n')
                     warning('off', 'backtrace');
