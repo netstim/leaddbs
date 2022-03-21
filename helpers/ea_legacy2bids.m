@@ -541,12 +541,12 @@ for patients = 1:length(source)
                         %there in the dest directory.
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             pipeline = pipelines{folders};
-                            try
-                                [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
-                                move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
-                            catch
-                                disp("Your stimulation folder might be empty...");
-                            end
+                            %try
+                            [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
+                            move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
+                            %catch
+                            %    disp("Your stimulation folder might be empty...");
+                            %end
                         end
                         
                     elseif strcmp(pipelines{folders},'headmodel')
@@ -848,7 +848,7 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
                         indx = cellfun(@(x)strcmp(x,[native_filename,ext]),stimulations{:,1});
                         try_bids_name = [patient_name,'_',stimulations{1,2}{indx}];
                         if contains(try_bids_name,'modelTag')
-                            bids_name = strrep(try_bids_name,'modelTag',native_model_names{mni_file});
+                            bids_name = strrep(try_bids_name,'modelTag',native_model_names{native_file});
                         else
                             bids_name = try_bids_name;
                         end
