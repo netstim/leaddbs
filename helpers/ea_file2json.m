@@ -77,7 +77,10 @@ opt.FileName = fname_out;
      if iscell(modality_field)
          modality_field = modality_field{1};
      end
-     if isfield(input_mat,modality_field) 
+     if isfield(input_mat,modality_field)
+         if ischar(input_mat.(modality_field))
+             input_mat.(modality_field) = {input_mat.(modality_field)};
+         end
          if strcmp(input_mat.(modality_field){end},'ANTs') || contains(input_mat.(modality_field){end},'_ants')
              method_used = ea_normalize_ants('promt');
          elseif strcmp(input_mat.(modality_field){end},'BRAINSFit')
