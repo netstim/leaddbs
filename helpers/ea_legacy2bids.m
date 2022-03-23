@@ -681,10 +681,10 @@ for patients = 1:length(source)
         end
     end
     
-    disp(['Process finished for Patient:' patient_name]);
+    disp(['Process finished for Patient: ' patient_name]);
     disp("Generating excel sheet for the conversion...");
     writecell(derivatives_cell,fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx'))
-    disp(['Report saved at:' fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx')]);
+    disp(['Report saved at: ' fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx')]);
 end
 %support for lead group
 [root_dir,filename,ext] = fileparts(source{1});
