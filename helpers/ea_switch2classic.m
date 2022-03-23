@@ -63,7 +63,7 @@ if isfile([ea_gethome, '.ea_prefs.json.classic'])
 end
 
 disp('Switch LeadDBS branch to classic ...')
-system(['git -C ', LeadRoot, ' checkout .']);
+system(['git -C ', LeadRoot, ' stash']);
 system(['git -C ', LeadRoot, ' checkout classic']);
 
 disp('Update LeadDBS search path ...');
