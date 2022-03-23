@@ -774,7 +774,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                 if ~exist(brainshift_log_dir,'dir')
                     mkdir(brainshift_log_dir)
                 end
-                savejson('',brainshift_method,opt)
+                savejson('',brainshift_method,opt);
             end
         end        
         fname_in = fullfile(source_patient_path,which_file);
