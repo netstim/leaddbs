@@ -91,7 +91,7 @@ if isfile([ea_gethome, '.ea_prefs.json.dev'])
 end
 
 disp('Switch LeadDBS branch to develop ...')
-system(['git -C ', LeadRoot, ' checkout .']);
+system(['git -C ', LeadRoot, ' stash']);
 system(['git -C ', LeadRoot, ' checkout develop']);
 
 lead path;
