@@ -725,7 +725,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             %first move%
             copyfile(old_path,new_path);
             %then rename%
-            disp(['Renaming file:' which_file ' to:' bids_name]);
+            disp(['Renaming file ' which_file ' to ' bids_name]);
             rename_path = fullfile(new_path,which_file);
             derivatives_cell{end+1,1} = fullfile(old_path);
             derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
@@ -744,7 +744,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             %first move%
             copyfile(old_path,new_path);
             %then rename%
-            disp(['Renaming file:' which_file ' to:' bids_name]);
+            disp(['Renaming file ' which_file ' to ' bids_name]);
             rename_path = fullfile(new_path,which_file);
             derivatives_cell{end+1,1} = fullfile(old_path);
             derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
@@ -753,7 +753,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
         elseif exist(old_path_scrf,'file')
             copyfile(old_path_scrf,new_path);
             rename_path = fullfile(new_path,which_file);
-            disp(['Renaming file:' which_file ' to:' bids_name]);
+            disp(['Renaming file ' which_file ' to ' bids_name]);
             derivatives_cell{end+1,1} = fullfile(old_path);
             derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
             movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
@@ -792,7 +792,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             %first move%
             copyfile(old_path,new_path);
             %then rename%
-            disp(['Renaming file:' which_file ' to:' bids_name]);
+            disp(['Renaming file ' which_file ' to ' bids_name]);
             rename_path = fullfile(new_path,which_file);
             derivatives_cell{end+1,1} = fullfile(old_path);
             derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
