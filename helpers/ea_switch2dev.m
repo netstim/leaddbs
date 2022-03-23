@@ -6,14 +6,15 @@ if ~isfolder(fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym', 'at
     disp('Copy "MNI_ICBM_2009b_NLIN_ASYM" to "MNI152NLin2009bAsym" ...');
     copyfile(fullfile(LeadRoot, 'templates', 'space', 'MNI_ICBM_2009b_NLIN_ASYM', '*'), fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym'));
 
-    if isfile([ea_space, 'IITmean_tensor.nii.gz'])
+    newSpace = [fileparts(fileparts(ea_space)), filesep, 'MNI152NLin2009bAsym', filesep];
+    if isfile([newSpace, 'IITmean_tensor.nii.gz'])
         disp('Rename IIT Mean Tensor ...');
-        movefile([ea_space, 'IITmean_tensor.nii.gz'], [ea_space, 'IITmeanTensor.nii.gz'])
+        movefile([newSpace, 'IITmean_tensor.nii.gz'], [newSpace, 'IITmeanTensor.nii.gz'])
     end
 
-    if isfile([ea_space, 'IITmean_tensor_Norm_mapping.nii.gz'])
+    if isfile([newSpace, 'IITmean_tensor_Norm_mapping.nii.gz'])
         disp('Rename scaled IIT Mean Tensor ...');
-        movefile([ea_space, 'IITmean_tensor_Norm_mapping.nii.gz'], [ea_space, 'IITmeanTensorNormMapping.nii.gz'])
+        movefile([newSpace, 'IITmean_tensor_Norm_mapping.nii.gz'], [newSpace, 'IITmeanTensorNormMapping.nii.gz'])
     end
 
     try
