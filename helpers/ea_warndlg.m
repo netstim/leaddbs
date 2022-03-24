@@ -3,5 +3,5 @@ function ea_warndlg(varargin)
 
 warning('off', 'backtrace');
 warning(varargin{:});
-warndlg(sprintf(varargin{:}));
+warndlg(sprintf(varargin{:}), 'Warning');
 warning('on', 'backtrace');
