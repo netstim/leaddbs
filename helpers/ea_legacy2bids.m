@@ -52,7 +52,7 @@ legacy_modalities = {'t1','t2star','pd','ct','tra','cor','sag','fgatir','fa','dt
 %legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
 bids_modalities = {'T1w','T2starw','PDw','CT','acq-ax_MRI','acq-cor_MRI','acq-sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2w','FLAIR'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
-[brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking] = ea_create_bids_mapping();
+[brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking,log,lead_mapper] = ea_create_bids_mapping();
 
 %data structure for excel sheet later on
 derivatives_cell = {};
@@ -88,7 +88,7 @@ for patients = 1:length(source)
         if isempty(dir(fullfile(source_patient,'*.nii'))) && isempty(dir(fullfile(source_patient,'*.nii.gz')))
             subfolder_cell = {'derivatives'};
         else
-            subfolder_cell = {'rawdata','derivatives'};
+            subfolder_cell = {'derivatives','rawdata'};
         end
     end
 
@@ -147,9 +147,9 @@ for patients = 1:length(source)
                movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym')) 
             end
             dir_names{j} = '';
-        elseif strcmp(dir_names{j},'headmodel') 
-            copyfile(fullfile(source_patient,'headmodel'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
-            if exist(fullfile(source_patient,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),'dir')
+        elseif strcmp(dir_names{j},'current_headmodel')  
+            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
+            if exist(fullfile(source_patient,dir_names{j},'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
                 movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI152NLin2009bAsym'))
             end
             dir_names{j} = '';
@@ -211,10 +211,8 @@ for patients = 1:length(source)
                 end
             end
         else %all other directories
-            if ~exist(fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous'),'dir')
-                mkdir(fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous'))
-            end
-            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous',dir_names{j}));
+            
+            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
             dir_names{j} = '';
         end
     end
@@ -518,7 +516,6 @@ for patients = 1:length(source)
                         movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                         %support for lead group files
                     else 
-                        disp(which_file);
                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                         derivatives_cell{end,2} = fullfile(new_path,pipelines{11},which_file);
                         
@@ -556,7 +553,7 @@ for patients = 1:length(source)
                             end
                         end
                     elseif strcmp(pipelines{folders},'headmodel')
-                        if exist(fullfile(source_patient,'headmodel'),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
+                        if exist(fullfile(source_patient,'current_headmodel'),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             if exist(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'),'dir')
                                 headmodel_mni_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'));
                                 headmodel_mni_files = {headmodel_mni_contents.name};
@@ -907,7 +904,7 @@ function generate_rawImagejson(patient_name,dest)
     end
 
     %other preop files
-    coreg_preop_files = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_space-anchorNative_*_ses-preop_acq-*.nii'));
+    coreg_preop_files = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_ses-preop_space-anchorNative_*_acq-*.nii'));
     coreg_preop_files = {coreg_preop_files.name};
     for coreg_files = 1:length(coreg_preop_files)
         coreg_file = regexprep(coreg_preop_files{coreg_files}, '(.nii)|(.gz)', '');
