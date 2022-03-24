@@ -122,7 +122,7 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
            copyfile(fullfile(connectome_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,mapper_output_files{mapper_file}));
            movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
        else
-           warndlg('Could not place your lead mapper files correctly. Please re-calculate sor rename manually...');
+           error('BIDS tag could not be assigned');
        end
        
    end
