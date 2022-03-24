@@ -136,6 +136,7 @@ for patients = 1:length(source)
     
     %collect directories inside the patient folder.
     dir_names = {files_in_pat_folder([files_in_pat_folder.isdir]).name}; %deal with dir names
+    new_path = fullfile(dest,'derivatives','leaddbs',patient_name);
     for j=1:length(dir_names)
         if strcmp(dir_names{j},'WarpDrive')
             disp("Migrating warpdrive folder...");
@@ -167,7 +168,7 @@ for patients = 1:length(source)
             %in order to ensure there are no conflicts, we move scrf files
             %first.
         elseif strcmp(dir_names{j},'scrf')
-            new_path = fullfile(dest,'derivatives','leaddbs',patient_name);
+            
             scrf_patient = fullfile(source_patient,'scrf');
             which_pipeline = pipelines{1};
             if ~exist(fullfile(new_path,which_pipeline),'dir')
@@ -211,8 +212,14 @@ for patients = 1:length(source)
                     files_to_move{checkreg} = files_in_checkreg_folder{checkreg};
                 end
             end
-        else %all other directories
-            
+        elseif strcmp(dir_names{j},'headmodel')
+            %all other directories
+            misc_dir = fullfile(new_path,'miscellaneous');
+            if ~exist(misc_dir,'dir')
+                mkdir(misc_dir)
+            end
+            copyfile(fullfile(source_patient,dir_names{j}),fullfile(misc_dir,dir_names{j}));
+        else
             copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
             dir_names{j} = '';
         end
