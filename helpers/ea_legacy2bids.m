@@ -149,7 +149,7 @@ for patients = 1:length(source)
                movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym')) 
             end
             dir_names{j} = '';
-        elseif strcmp(dir_names{j},'current_headmodel')  
+        elseif strcmp(dir_names{j},'current_headmodel')
             copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
             if exist(fullfile(source_patient,dir_names{j},'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
                 movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI152NLin2009bAsym'))
@@ -212,15 +212,15 @@ for patients = 1:length(source)
                     files_to_move{checkreg} = files_in_checkreg_folder{checkreg};
                 end
             end
-        elseif strcmp(dir_names{j},'headmodel')
-            %all other directories
+        elseif strcmp(dir_names{j},'atlases')
+            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
+            dir_names{j} = '';
+        else
             misc_dir = fullfile(new_path,'miscellaneous');
             if ~exist(misc_dir,'dir')
                 mkdir(misc_dir)
             end
-            copyfile(fullfile(source_patient,dir_names{j}),fullfile(misc_dir,dir_names{j}));
-        else
-            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
+            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous',dir_names{j}));
             dir_names{j} = '';
         end
     end
@@ -569,7 +569,7 @@ for patients = 1:length(source)
                                 headmodel_mni_files = {};
                             end
                             if exist(fullfile(new_path,pipelines{folders},'native'),'dir')
-                                headmodel_native_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'headmodel','native'));
+                                headmodel_native_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'native'));
                                 headmodel_native_files = {headmodel_native_contents.name};
                             else
                                 headmodel_native_files = {};
@@ -881,7 +881,7 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
         if ~isempty(native_files)
             for headmodel_native_file = 1:length(native_files)
                 if ismember(native_files{headmodel_native_file},headmodel{:,1})
-                    indx = cellfun(@(x)strcmp(x,(native_files{headmodel_native_file}),headmodel{:,1}));
+                    indx = cellfun(@(x)strcmp(x,native_files{headmodel_native_file}),headmodel{:,1});
                     movefile(fullfile(new_path,which_pipeline,'native',native_files{headmodel_native_file}),fullfile(new_path,which_pipeline,'native',[patient_name,'_',headmodel{1,2}{indx}]));
                 end
             end
