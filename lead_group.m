@@ -1603,7 +1603,7 @@ options.modality=3; % use template image
 options=ea_amendtoolboxoptions(options);
 
 if strcmp(options.atlasset,'Use none')
-    options.d2.writeatlases=1;
+    options.d2.writeatlases=0;
 else
     options.d2.writeatlases=1;
 end
