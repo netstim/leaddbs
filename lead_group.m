@@ -148,7 +148,7 @@ if options.prefs.env.dev
     set(handles.mercheck,'Visible','on')
 end
 
-if ~isempty(varargin) && isfile(varargin{1}) % Path to group analysis file provided as input
+if ~isempty(varargin) && isfile(GetFullPath(varargin{1})) % Path to group analysis file provided as input
     groupFilePath = GetFullPath(varargin{1});
     load(groupFilePath, 'M');
     M.ui.groupdir = [fileparts(groupFilePath), filesep];
