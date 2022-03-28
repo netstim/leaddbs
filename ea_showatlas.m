@@ -56,8 +56,10 @@ for nativemni=nm % switch between native and mni space atlases.
         atlases.discfibersonly = 0;
     end
 
-    if options.writeoutstats
+    if options.writeoutstats && ~strcmp(options.leadprod, 'group')
         statsFile = [options.root, options.patientname, filesep, options.patientname, '_desc-stats.mat'];
+        statsBackupFile = [options.root, options.patientname, filesep, options.patientname, '_desc-statsbackup.mat'];
+
         try
             load(statsFile);
             prioratlasnames=ea_stats.atlases.names;
@@ -631,8 +633,7 @@ for nativemni=nm % switch between native and mni space atlases.
         ea_methods(options, ['Atlas used for 3D visualization: ', atlases.citation.name], atlases.citation.long);
     end
 
-    if options.writeoutstats
-        statsBackupFile = [options.root, options.patientname, filesep, options.patientname, '_desc-statsbackup.mat'];
+    if options.writeoutstats && ~strcmp(options.leadprod, 'group')
         if exist('prioratlasnames','var')
             if ~isequal(ea_stats.atlases.names,prioratlasnames)
                 warning('off', 'backtrace');
