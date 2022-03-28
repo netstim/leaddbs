@@ -541,24 +541,23 @@ for patients = 1:length(source)
                 end
                 for folders = 1:length(pipelines)
                     if strcmp(pipelines{folders},'stimulations')
-                        
                         %the stimulations folder should already be
                         %there in the dest directory.
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             pipeline = pipelines{folders};
-                            try
-                                [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
-                                move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
-                            catch ME
-                            if contains(ME.message,'Specified connectome')
-                                disp("Connectome used for performing calculations not found under the leaddbs/connectome folder. Please verify and use standardized connectome names");
-                            elseif strcmp(ME.message,'BIDS tag could not be assigned')
-                                disp("Migrate could not place your files with the correct tag. Please try to manually rename your files")
-                            else
-                                disp("Your stimulation folder might be empty...");
-                            end
+                            %try
+                            [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
+                            move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
+                            %catch ME
+                            %if contains(ME.message,'Specified connectome')
+                            %    disp("Connectome used for performing calculations not found under the leaddbs/connectome folder. Please verify and use standardized connectome names");
+                            %elseif strcmp(ME.message,'BIDS tag could not be assigned')
+                            %    disp("Migrate could not place your files with the correct tag. Please try to manually rename your files")
+                            %else
+                            %    disp("Your stimulation folder might be empty...");
+                            %end
 
-                            end
+                            %end
                         end
                     elseif strcmp(pipelines{folders},'headmodel')
                         if exist(fullfile(source_patient,'current_headmodel'),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
@@ -846,6 +845,7 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
                         end
                         %try_bids_name = [patient_name,'_',stimulations{1,2}{indx}];
                         %bids_name = add_model(fullfile(filepath,[mni_filename,ext]),try_bids_name);
+                        fprintf('Renaming file %s as %s.\n',mni_files{1,mni_file}{1,mni_subfile},bids_name);
                         movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,bids_name));
                     end
                 end
