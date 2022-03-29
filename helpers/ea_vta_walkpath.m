@@ -1,8 +1,6 @@
 function [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell)
 [~,~,~,~,~,~,~,~,~,~,~,lead_mapper] = ea_create_bids_mapping();
-old_simtags = {'vat','efield','efield_gauss'};
-bids_simtags = {'binary','efield','efieldgauss'};
-simtag_container = containers.Map(old_simtags,bids_simtags);
+%subjID = regexp(new_path,'[sub-].*[Aa-Zz][0-9]$','match');
 extract_subjID_str = strsplit(new_path,'leaddbs/');
 subjID = extract_subjID_str{2};
 mni_files = {};
@@ -18,7 +16,6 @@ switch pipeline
             mni_dir = fullfile(new_path,pipeline,'MNI152NLin2009bAsym');
             native_dir = fullfile(new_path,pipeline,'native');
             old_mni_dir = fullfile(source_patient,pipeline,'MNI_ICBM_2009b_NLIN_ASYM');
-            old_native_dir = fullfile(source_patient,pipeline,'native');
             this_folder = dir_without_dots(mni_dir);
             this_folder_names = {this_folder.name};
             file_indx = 1;
@@ -26,22 +23,18 @@ switch pipeline
                 files_in_this_folder = dir_without_dots(fullfile(mni_dir,this_folder_names{folder_names}));
                 % files_in_this_folder = files_in_this_folder(~files_in_this_folder.isdir);
                 mni_files{file_indx} = {files_in_this_folder.name};
-                mni_model_name = add_model(fullfile(old_mni_dir,this_folder_names{folder_names}));
+                mni_model_name = add_model(fullfile(mni_dir,this_folder_names{folder_names}));
                 mni_model_names{folder_names} = mni_model_name;
                 for mni_file = 1:length(mni_files{1,file_indx})
-
-                    if isfolder(fullfile(old_mni_dir,this_folder_names{folder_names},mni_files{1,file_indx}{1,mni_file}))
-                        possible_connectome_folder = fullfile(old_mni_dir,this_folder_names{folder_names});
-                        possible_dMRI_file = cellfun(@(c)[c '_seed_compound_dMRI_struc_seed.nii'],old_simtags,'uni',false);
-                        possible_fMRI_file = cellfun(@(c)[c '_seed_compound_fMRI_func_seed_VarR.nii'],old_simtags,'uni',false);
-                        if any(isfile(fullfile(possible_connectome_folder,mni_files{1,file_indx}{1,mni_file},possible_dMRI_file))) ...
-                                || any(isfile(fullfile(possible_connectome_folder,mni_files{1,file_indx}{1,mni_file},possible_fMRI_file)))
+                    if isfolder(fullfile(mni_dir,this_folder_names{folder_names},mni_files{1,file_indx}{1,mni_file}))
+                        possible_connectome_folder = fullfile(mni_dir,this_folder_names{folder_names},mni_files{1,file_indx}{1,mni_file});
+                        possible_MRI_file = ea_regexpdir(possible_connectome_folder,'.*vat_seed_compound_[df]MRI.*',0);
+                        if ~isempty(possible_MRI_file)
                             bids_connectome_name = ea_getConnLabel(mni_files{1,file_indx}{1,mni_file});
                             stimulation_folder = fullfile(mni_dir,this_folder_names{folder_names});
                             connectome_folder = fullfile(mni_dir,this_folder_names{folder_names},mni_files{1,file_indx}{1,mni_file});
                             %create a struct of all the properties
                             %associated with this file
-                            tag_struct.simtagDict = simtag_container;
                             tag_struct.subjID = subjID;
                             tag_struct.modeltag = mni_model_name;
                             tag_struct.conntag = bids_connectome_name;
@@ -106,13 +99,26 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
    mapper_output_files = {mapper_output_files(~[mapper_output_files.isdir]).name};
    
    for mapper_file = 1:length(mapper_output_files)
-       matching_file = regexprep(mapper_output_files{mapper_file},'(vat|efield|efield_gauss)', '');
+       matching_file = regexprep(mapper_output_files{mapper_file},'(fl_|efield_|efield_gauss)', '');
+       matching_file = ['_' matching_file];
        if ismember(matching_file,lead_mapper{:,1})
-           extract_old_simtag_str = strsplit(mapper_output_files{mapper_file},'_seed');
-           old_simtag = extract_old_simtag_str{1};
-           tag_struct.simtag = tag_struct.simtagDict(old_simtag);
+           if contains(mapper_output_files{mapper_file},'efield')
+               tag_struct.simtag = 'efield';
+           elseif contains(mapper_output_files{mapper_file},'efield_gauss')
+               tag_struct.simtag = 'efieldgauss';
+           else %doesn't contain either
+               tag_struct.simtag = 'binary';
+           end
+           extract_old_hemisdesc_str = strsplit(mapper_output_files{mapper_file},'_');
+           
            indx = cellfun(@(x)strcmp(x,matching_file),lead_mapper{:,1});
            bids_name = lead_mapper{1,2}{indx};
+           %replace hemidesc tag
+           if strcmp(extract_old_hemisdesc_str{1},'fl')
+               bids_name = strrep(bids_name,'flippedTag','flipped');
+           else
+               bids_name = strrep(bids_name,'_hemidesc-flippedTag','');
+           end
            %replace sim tag
            bids_name = strrep(bids_name,'simTag',tag_struct.simtag);
            %replace model tag
@@ -121,11 +127,17 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
            bids_name = strrep(bids_name,'conTag',tag_struct.conntag);
            copyfile(fullfile(connectome_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,mapper_output_files{mapper_file}));
            movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
+           fprintf('Renaming file %s as %s.\n',mapper_output_files{mapper_file},[tag_struct.subjID,'_',bids_name]);
+           
        else
-           error('BIDS tag could not be assigned');
+           evalin('base','WARNINGSILENT=1;');
+           ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',matching_file));
        end
        
    end
+   evalin('base','WARNINGSILENT=1;');
+   ea_warning(sprintf('Deleting old copy of connectome folder %s. You can find it in the source patient folder if you need.',connectome_folder));
+   ea_delete(fullfile(connectome_folder));
 end
 
 

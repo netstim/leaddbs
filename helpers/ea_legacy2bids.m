@@ -139,22 +139,28 @@ for patients = 1:length(source)
     new_path = fullfile(dest,'derivatives','leaddbs',patient_name);
     for j=1:length(dir_names)
         if strcmp(dir_names{j},'WarpDrive')
-            disp("Migrating warpdrive folder...");
-            copyfile(fullfile(source_patient,'WarpDrive'),fullfile(dest,'derivatives','leaddbs',patient_name,'warpdrive'));
-            dir_names{j} = '';
+            if ~exist(fullfile(new_path,'warpdrive'),'dir')
+                disp("Migrating warpdrive folder...");
+                copyfile(fullfile(source_patient,'WarpDrive'),fullfile(dest,'derivatives','leaddbs',patient_name,'warpdrive'));
+                dir_names{j} = '';
+            end
         elseif strcmp(dir_names{j},'stimulations')
             %if mni dir exist
-            copyfile(fullfile(source_patient,'stimulations'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations'));
-            if exist(fullfile(source_patient,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),'dir')
-               movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym')) 
+            if ~exist(fullfile(new_path,'stimulations'),'dir')
+                copyfile(fullfile(source_patient,'stimulations'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations'));
+                if exist(fullfile(source_patient,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),'dir')
+                    movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'stimulations','MNI152NLin2009bAsym'))
+                end
+                dir_names{j} = '';
             end
-            dir_names{j} = '';
         elseif strcmp(dir_names{j},'current_headmodel')
-            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
-            if exist(fullfile(source_patient,dir_names{j},'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
-                movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI152NLin2009bAsym'))
+            if ~exist(fullfile(new_path,'headmodel'),'dir')
+                copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
+                if exist(fullfile(source_patient,dir_names{j},'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
+                    movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI152NLin2009bAsym'))
+                end
+                dir_names{j} = '';
             end
-            dir_names{j} = '';
         
         elseif strcmp(dir_names{j},'DICOM')
             if ~exist(fullfile(dest,'sourcedata',patient_name,'DICOM'),'dir')
@@ -168,32 +174,33 @@ for patients = 1:length(source)
             %in order to ensure there are no conflicts, we move scrf files
             %first.
         elseif strcmp(dir_names{j},'scrf')
-            
-            scrf_patient = fullfile(source_patient,'scrf');
             which_pipeline = pipelines{1};
             if ~exist(fullfile(new_path,which_pipeline),'dir')
-                mkdir(fullfile(new_path,which_pipeline))
-            end
-            this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
-            files_in_folder = {this_folder.name};
-            for file_in_folder=1:length(files_in_folder)
-                which_file = files_in_folder{file_in_folder};
-                if ismember(files_in_folder{file_in_folder},brainshift{:,1})
-                    indx = cellfun(@(x)strcmp(x,files_in_folder{file_in_folder}),brainshift{:,1});
-                    bids_name = brainshift{1,2}{indx};
-                    if contains(bids_name,'acqTag')
-                        bids_name = add_tag(bids_name,mod_cell,tag_cell);
-                    end
-                    derivatives_cell = move_derivatives2bids(scrf_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
-                else
-                    misc_dir = fullfile(new_path,'miscellaneous');
-                    if ~exist(misc_dir,'dir')
-                        mkdir(misc_dir)
-                    end
-                    copyfile(fullfile(scrf_patient,files_in_folder{file_in_folder}),fullfile(new_path,'miscellaneous'))
+                scrf_patient = fullfile(source_patient,'scrf');
+                if ~exist(fullfile(new_path,which_pipeline),'dir')
+                    mkdir(fullfile(new_path,which_pipeline))
                 end
-            end
-            dir_names{j} = ''; % delete entry from the dir names structure so as to not handle it again
+                this_folder = dir_without_dots(fullfile(source_patient,dir_names{j}));
+                files_in_folder = {this_folder.name};
+                for file_in_folder=1:length(files_in_folder)
+                    which_file = files_in_folder{file_in_folder};
+                    if ismember(files_in_folder{file_in_folder},brainshift{:,1})
+                        indx = cellfun(@(x)strcmp(x,files_in_folder{file_in_folder}),brainshift{:,1});
+                        bids_name = brainshift{1,2}{indx};
+                        if contains(bids_name,'acqTag')
+                            bids_name = add_tag(bids_name,mod_cell,tag_cell);
+                        end
+                        derivatives_cell = move_derivatives2bids(scrf_patient,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell);
+                    else
+                        misc_dir = fullfile(new_path,'miscellaneous');
+                        if ~exist(misc_dir,'dir')
+                            mkdir(misc_dir)
+                        end
+                        copyfile(fullfile(scrf_patient,files_in_folder{file_in_folder}),fullfile(new_path,'miscellaneous'))
+                    end
+                end
+                dir_names{j} = '';
+            end% delete entry from the dir names structure so as to not handle it again
             %other directories the user may have
         elseif strcmp(dir_names{j},'fiberfiltering') || strcmp(dir_names{j},'networkmapping') || strcmp(dir_names{j},'sweetspotmapping')
             if ~exist(fullfile(dest,'derivatives','leadgroup',patient_name,dir_names{j}),'dir')
@@ -213,8 +220,10 @@ for patients = 1:length(source)
                 end
             end
         elseif strcmp(dir_names{j},'atlases')
-            copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
-            dir_names{j} = '';
+            if ~exist(fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}),'dir')
+                copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,dir_names{j}));
+                dir_names{j} = '';
+            end
         else
             misc_dir = fullfile(new_path,'miscellaneous');
             if ~exist(misc_dir,'dir')
@@ -541,24 +550,23 @@ for patients = 1:length(source)
                 end
                 for folders = 1:length(pipelines)
                     if strcmp(pipelines{folders},'stimulations')
-                        
                         %the stimulations folder should already be
                         %there in the dest directory.
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
                             pipeline = pipelines{folders};
-                            try
-                                [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
-                                move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
-                            catch ME
-                            if contains(ME.message,'Specified connectome')
-                                disp("Connectome used for performing calculations not found under the leaddbs/connectome folder. Please verify and use standardized connectome names");
-                            elseif strcmp(ME.message,'BIDS tag could not be assigned')
-                                disp("Migrate could not place your files with the correct tag. Please try to manually rename your files")
-                            else
-                                disp("Your stimulation folder might be empty...");
-                            end
+                            %try
+                            [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
+                            move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
+                            %catch ME
+                            %if contains(ME.message,'Specified connectome')
+                            %    disp("Connectome used for performing calculations not found under the leaddbs/connectome folder. Please verify and use standardized connectome names");
+                            %elseif strcmp(ME.message,'BIDS tag could not be assigned')
+                            %    disp("Migrate could not place your files with the correct tag. Please try to manually rename your files")
+                            %else
+                            %    disp("Your stimulation folder might be empty...");
+                            %end
 
-                            end
+                            %end
                         end
                     elseif strcmp(pipelines{folders},'headmodel')
                         if exist(fullfile(source_patient,'current_headmodel'),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
@@ -846,6 +854,7 @@ function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipel
                         end
                         %try_bids_name = [patient_name,'_',stimulations{1,2}{indx}];
                         %bids_name = add_model(fullfile(filepath,[mni_filename,ext]),try_bids_name);
+                        fprintf('Renaming file %s as %s.\n',mni_files{1,mni_file}{1,mni_subfile},bids_name);
                         movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,bids_name));
                     end
                 end
