@@ -68,8 +68,7 @@ if length(uipatdir) == 1 % Single folder
             folder_type = 'patient_folder_dicom_folder';
 
         % DICOM folder detected inside the folder
-        elseif isfolder(fullfile(uipatdir{1}, 'dicom')) ...
-                || isfolder(fullfile(uipatdir{1}, 'DICOM'))
+        elseif ~isempty(ea_regexpdir(uipatdir{1}, 'DICOM', 0, 'd'))
             folder_type = 'patient_folder_dicom_folder';
 
         % if DICOMDIR file inside, assume dicoms are present in one of the folders on this level
