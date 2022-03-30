@@ -9,5 +9,5 @@ warning(msg);
 if ismember('WARNINGSILENT', evalin('base', 'who')) && evalin('base','WARNINGSILENT')
     return;
 else
-    errordlg(msg, 'Error');
+    errordlg(msg, '');
 end
