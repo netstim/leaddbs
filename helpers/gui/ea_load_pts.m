@@ -87,21 +87,14 @@ if length(uipatdir) == 1 % Single folder
 
         % .dcm files are found inside one of the subfolders
         elseif ~isempty(dcm_in_subfolder_list)  %
-            mkdir(fullfile(uipatdir{1}, 'DICOM'));
-
-            folders_with_dicoms = unique({dcm_in_subfolder_list.folder});
-
-            for f = 1:length(folders_with_dicoms)
-                % .dcm files are directly in uipatdir without subfolders
-                if strcmp(folders_with_dicoms{f}, uipatdir{1})
-                    for i = 1:length(dcm_in_subfolder_list)
-                        movefile(fullfile(dcm_in_subfolder_list(i).folder, dcm_in_subfolder_list(i).name), fullfile(uipatdir{1}, 'DICOM'));
-                    end
-                    % .dcm files are in subfolders, move the whole folder
-                else
-                    movefile(folders_with_dicoms{f}, fullfile(uipatdir{1}, 'DICOM'));
-                end
+            for f=1:length(dcm_in_subfolder_list)
+                from = fullfile(dcm_in_subfolder_list(f).folder, dcm_in_subfolder_list(f).name);
+                destFolder = strrep(dcm_in_subfolder_list(f).folder, uipatdir{1}, fullfile(uipatdir{1}, 'DICOM'));
+                ea_mkdir(destFolder);
+                to = fullfile(destFolder, dcm_in_subfolder_list(f).name);
+                movefile(from, to);
             end
+
             folder_type = 'patient_folder_dicom_folder';
 
         % does not have ea_ui.mat, only has niftis
