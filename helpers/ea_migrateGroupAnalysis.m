@@ -9,7 +9,7 @@ ea_warning('Migrating lead group analysis in the patient folder. If you have dif
 
 load(LeadGroupFiles{1})
 if exist('M','var')
-    lead_path = fullfile(dest,'derivatives','leadgroup',['gs_' M.guid]);
+    lead_path = fullfile(dest,'derivatives','leadgroup',M.guid);
     if ~exist(lead_path,'dir')
         mkdir(lead_path)
     end
