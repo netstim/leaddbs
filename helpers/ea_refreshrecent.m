@@ -11,7 +11,7 @@ else
         recentfolders = regexp(recentfolders, ['(?<=\', filesep, 'leaddbs\', filesep, 'sub-).+'], 'match', 'once');
     elseif strcmp(type, 'groups')
         dataset = regexp(recentfolders, ['(?<=\', filesep, ')[^\', filesep, ']+', '(?=\', filesep, 'derivatives)'], 'match', 'once');
-        analysis = regexp(recentfolders, ['(?<=\', filesep, 'leadgroup\', filesep, 'gs_).+'], 'match', 'once');
+        analysis = regexp(recentfolders, ['(?<=\', filesep, 'leadgroup\', filesep, ').+'], 'match', 'once');
         recentfolders = strcat('dataset-', dataset, '_analysis-', analysis);
     end
 end
