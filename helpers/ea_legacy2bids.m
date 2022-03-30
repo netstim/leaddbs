@@ -71,7 +71,8 @@ log_path = fullfile(dest,'derivatives','leaddbs','logs');
 if ~exist(log_path,'dir')
     mkdir(log_path)
 end
-
+%support for lead group
+ea_migrateGroupAnalysis(source{1},dest)
 
 for patients = 1:length(source)
     %source patient filepath
@@ -103,6 +104,8 @@ for patients = 1:length(source)
     [~,patient_name,~] = fileparts(source_patient);
     if ~startsWith(patient_name,'sub-')
         patient_name = ['sub-', regexprep(patient_name, '[\W_]', '')];
+    elseif startsWith(patient_name,'sub')
+        patient_name = strrep(patient_name,'sub','sub-');
     end
     spaces_in_pat_name = isspace(patient_name);
     patient_name = patient_name(~spaces_in_pat_name);
@@ -705,21 +708,7 @@ for patients = 1:length(source)
     writecell(derivatives_cell,fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx'))
     disp(['Report saved at: ' fullfile(dest,'derivatives','leaddbs','logs','legacy2bids_naming.xlsx')]);
 end
-%support for lead group
-[root_dir,filename,ext] = fileparts(source{1});
-root_files = dir_without_dots(root_dir);
-root_files = {root_files.name};
-lead_indx = find(~cellfun('isempty', regexpi(root_files, 'LEAD_groupanalysis.*.mat')));
-for indx=1:numel(lead_indx)
-    load(fullfile(root_dir,root_files{lead_indx(indx)}))
-    lead_path = fullfile(dest,'derivatives','leadgroup',M.guid);
-    if ~exist(lead_path,'dir')
-        mkdir(lead_path)
-    end
-    bids_name = ['dataset-results_dataset_analysis-' M.guid '.mat'];
-    copyfile(fullfile(root_dir,root_files{lead_indx(indx)}),lead_path)
-    movefile(fullfile(lead_path,root_files{lead_indx(indx)}),fullfile(lead_path,bids_name));
-end
+
 toc;
 function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,which_pipeline,which_file,patient_name,bids_name,derivatives_cell)
     
