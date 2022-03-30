@@ -366,7 +366,7 @@ for rowIdx = 1:height(table)
 
                     name = char(lookup_table.(image_types{img_type_idx}).(sessions{session_idx}).(modalities{modality_idx}){name_idx});
 
-                    if regexp(fname, name)
+                    if regexpi(fname, name)
                         table_preallocated.Session(rowIdx) = session;
                         table_preallocated.Type(rowIdx) = img_type;
                         table_preallocated.Modality(rowIdx) = modality;
