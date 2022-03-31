@@ -170,6 +170,7 @@ for patients = 1:length(source)
             if ~exist(fullfile(dest,'sourcedata',patient_name,'DICOM'),'dir')
                 mkdir(fullfile(dest,'sourcedata',patient_name,'DICOM'))
             end
+            
             copyfile(fullfile(source_patient,'DICOM'),fullfile(dest,'sourcedata',patient_name,'DICOM'));
             dir_names{j} = '';
             
