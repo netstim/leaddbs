@@ -266,8 +266,12 @@ for x=1:2
     [valleyfft{x},~] = ea_diode_intensitypeaksFFT(-intensity{x},2);
     windowwidth = 20;
     for k = 1:length(valleyfft{x})
-        [~,loctemp] = min(intensity{x}(valleyfft{x}(k)-windowwidth:valleyfft{x}(k)+windowwidth));
-        valleyreal{x}(k) = valleyfft{x}(k)-windowwidth+loctemp;
+        %variable window
+        window_var=[(valleyfft{x}(k)-windowwidth):(valleyfft{x}(k)+windowwidth)];
+        window_var(window_var<1)=[];
+        
+        [~,loctemp] = min(intensity{x}(window_var));
+        valleyreal{x}(k) = (window_var(1)-1)+loctemp;
         clear loctemp
     end
     %% Detect angles of the white streak of the marker (only for intensityprofile-based ambiguity features)    
@@ -413,7 +417,7 @@ else
 end
 
 %% Take peak
-peakangle(side) = rad2deg(roll);
+peakangle(side) = roll;%keep in radians
 realsolution = 1;
 
 dirlevelnew_mm = dirlevelnew_mm + (unitvector_mm * checkslices(darkstarslice(realsolution)));
@@ -608,9 +612,9 @@ imagesc(finalslice)
 axis equal
 axis off
 caxis([1500 3000])
-if peakangle(side) < 90 || peakangle(side) > 270
+if peakangle(side) < pi/2 || peakangle(side) > 3/2*pi
     quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, -round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
-elseif peakangle(side) >= 90 && peakangle(side) <=270
+elseif peakangle(side) >= pi/2 && peakangle(side) <=3/2*pi
     quiver(round(size(finalslice,2)/2), round(size(finalslice,1)/2).*1.7, +round(size(finalslice,1)/8), 0, 2,'LineWidth',1.5,'Color','g','MaxHeadSize',2)
 end
 scatter(ax3,round(size(finalslice,2)/2),round(size(finalslice,1)/2).*1.7,[],[0 0.4470 0.7410],'filled')
