@@ -1,27 +1,29 @@
 function ea_migrateGroupAnalysis(source,dest)
 
-[root_dir,~,~] = fileparts(source);
-[~,op_filename,~] = fileparts(dest); 
+LeadGroupFiles = ea_regexpdir(fileparts(source), '(?-i)LEAD_groupanalysis\.mat$', 0, 'f');
+
+if isempty(LeadGroupFiles)
+    return;
+end
+
+[~, op_filename] = fileparts(dest);
 op_filename = regexprep(op_filename, '[\W_]', '');
-LeadGroupFiles = ea_regexpdir(root_dir, 'lead_groupanalysis.*.mat$',0,'file');
+
 evalin('base','WARNINGSILENT=1;');
 ea_warning('Migrating lead group analysis in the patient folder. If you have different lead group files, please rename them manually.');
 
-load(LeadGroupFiles{1})
-if exist('M','var')
-    lead_path = fullfile(dest,'derivatives','leadgroup',M.guid);
-    if ~exist(lead_path,'dir')
-        mkdir(lead_path)
-    end
-    M.root = [dest '/'];
+try
+    load(LeadGroupFiles{1}, 'M');
+    groupFolder = fullfile(dest, 'derivatives', 'leadgroup', M.guid);
+    ea_mkdir(groupFolder);
+    M.root = fullfile(dest, filesep);
     if isfield(M.ui,'groupdir')
-        M.ui.groupdir = [dest '/'];
+        M.ui.groupdir = fullfile(dest, filesep);
     end
     
     bids_name = ['dataset-' op_filename  '_analysis-' M.guid '.mat'];
-    save(fullfile(lead_path,bids_name),'M');
-else
+    save(fullfile(groupFolder, bids_name), 'M');
+catch
     evalin('base','WARNINGSILENT=1;');
-    ea_warning(['Could not load %s.',LeadGroupFiles]);
-   
+    ea_warning(['Could not load %s.', LeadGroupFiles]);
 end

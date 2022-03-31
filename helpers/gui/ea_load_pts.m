@@ -6,7 +6,6 @@ end
 
 uipatdir = GetFullPath(uipatdir);
 
-
 isSubjFolder = 0;
 isBIDSRoot = 0;
 

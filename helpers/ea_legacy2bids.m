@@ -71,6 +71,7 @@ log_path = fullfile(dest,'derivatives','leaddbs','logs');
 if ~exist(log_path,'dir')
     mkdir(log_path)
 end
+
 %support for lead group
 ea_migrateGroupAnalysis(source{1},dest)
 
