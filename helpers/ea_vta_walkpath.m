@@ -30,13 +30,7 @@ switch pipeline
                         possible_connectome_folder = fullfile(mni_dir,this_folder_names{folder_names},mni_files{1,file_indx}{1,mni_file});
                         possible_MRI_file = ea_regexpdir(possible_connectome_folder,'.*vat_seed_compound_[df]MRI.*',0);
                         if ~isempty(possible_MRI_file)
-                            try
-                                bids_connectome_name = ea_getConnLabel(mni_files{1,file_indx}{1,mni_file});
-                            catch ME
-                                if contains(ME.identifier,'Specified connectome not found')
-                                    return;
-                                end
-                            end
+                            bids_connectome_name = ea_getConnLabel(mni_files{1,file_indx}{1,mni_file});
                             stimulation_folder = fullfile(mni_dir,this_folder_names{folder_names});
                             connectome_folder = fullfile(mni_dir,this_folder_names{folder_names},mni_files{1,file_indx}{1,mni_file});
                             %create a struct of all the properties
@@ -137,7 +131,7 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
            
        else
            evalin('base','WARNINGSILENT=1;');
-           ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',matching_file));
+           ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',mapper_output_files{mapper_file}));
        end
        
    end
