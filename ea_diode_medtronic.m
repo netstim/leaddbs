@@ -266,12 +266,17 @@ for x=1:2
     [valleyfft{x},~] = ea_diode_intensitypeaksFFT(-intensity{x},2);
     windowwidth = 20;
     for k = 1:length(valleyfft{x})
-        %variable window
+        %window vals get wrapped around to have values between 1 and 360
         window_var=[(valleyfft{x}(k)-windowwidth):(valleyfft{x}(k)+windowwidth)];
-        window_var(window_var<1)=[];
+        window_var(window_var<1)=window_var(window_var<1)+360;
+        window_var(window_var>360)=window_var(window_var<1)-360;
         
         [~,loctemp] = min(intensity{x}(window_var));
-        valleyreal{x}(k) = (window_var(1)-1)+loctemp;
+        val_ii=window_var(1)+loctemp;
+        %idxs get wrapped around to have values between 1 and 360
+        val_ii(val_ii<1)=val_ii(val_ii<1)+360;
+        val_ii(val_ii>360)=val_ii(val_ii>360)-360;
+        valleyreal{x}(k) = val_ii;
         clear loctemp
     end
     %% Detect angles of the white streak of the marker (only for intensityprofile-based ambiguity features)    
