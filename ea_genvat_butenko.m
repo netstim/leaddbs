@@ -1,6 +1,9 @@
 function varargout = ea_genvat_butenko(varargin)
 % Wrapper for OSS-DBS for VTA calculation
 
+% set to 1 if you only want to prep files for cluster comp. 
+prepFiles_cluster = 0; % for now hardcoded 
+
 if nargin==2
     S=varargin{1};
     options=varargin{2};
@@ -423,9 +426,9 @@ if settings.calcAxonActivation
 
         % Filter fibers based on the spherical ROI
         if options.native
-        	fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
+        	fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, settings.Phi_vector, 'kuncel', 2, preopAnchor);
         else
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
+            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, settings.Phi_vector, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
         end
 
         % Filter fibers based on the minimal length
@@ -483,7 +486,7 @@ if settings.calcAxonActivation
             end
 
             % Filter fibers based on the spherical ROI
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2);
+            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, settings.Phi_vector, 'kuncel', 2);
 
             % Filter fibers based on the minimal length
             fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
@@ -531,6 +534,12 @@ ea_delete([outputDir, filesep, 'skip_rh.txt']);
 ea_delete([outputDir, filesep, 'success_lh.txt']);
 ea_delete([outputDir, filesep, 'fail_lh.txt']);
 ea_delete([outputDir, filesep, 'skip_lh.txt']);
+
+if prepFiles_cluster == 1
+    % Restore working directory and environment variables
+    setenv('LD_LIBRARY_PATH', libpath);
+    return
+end
 
 % Iterate sides, index side: 0 - rh , 1 - lh
 runStatus = [0 0]; % Succeed or not

@@ -1,7 +1,8 @@
-function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type, factor, ref)
+function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, OSS_stim_vector, type, factor, ref)
 % Filter fibers based on the active contacts and stimulation amplitudes
 
 fprintf('\nCollecting stimulation parameters...\n')
+
 
 % Active contacts indices
 if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
@@ -11,6 +12,12 @@ if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
     for i=1:length(activeContacts)
         activeContacts{i} = find(~isnan(max(stimProtocol{i}))); % Find contact with stimulation input
     end
+    
+    stimAmplitudes = cell(size(stimProtocol));
+    for i=1:length(stimAmplitudes)
+        stimAmplitudes{i} = max(abs(stimProtocol{i})); % Use maximum absolute amplitude
+    end
+    
 else % normal mode
     if ischar(S) && isfile(S) % stimparameters.mat provided
         load(S, 'S');
@@ -20,50 +27,24 @@ else % normal mode
     for i=1:length(activeContacts)
         activeContacts{i} = find(S.activecontacts{i});
     end
+    
+    % define the stim vector as in OSS-DBS (sources are merged)
+    stimAmplitudes = cell(size(S.amplitude));
+    for side = 1:size(S.amplitude,2)
+        for cnt = 1:size(OSS_stim_vector(side,:),2)
+            if isnan(OSS_stim_vector(side,cnt))
+                stimAmplitudes{side}(cnt) = 0.0;
+            else 
+                stimAmplitudes{side}(cnt) = abs(OSS_stim_vector(side,cnt)); % sign does not matter for Kuncel-VTA
+            end
+        end
+    end
 end
 
 % Active contacts coordinates
 stimCoords = cell(size(coords));
 for i=1:length(stimCoords)
     stimCoords{i} = coords{i}(activeContacts{i},:);
-end
-
-% Stimulation amplitude, V or mA.
-if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
-    stimAmplitudes = cell(size(stimProtocol));
-    for i=1:length(stimAmplitudes)
-        stimAmplitudes{i} = max(abs(stimProtocol{i})); % Use maximum absolute amplitude
-    end
-else % normal mode
-    stimAmplitudes = cell(size(S.amplitude));
-    for i=1:length(stimAmplitudes)
-        stimAmplitudes{i} = zeros(1, size(coords{1},1));
-    end
-
-    for side = 1:length(S.amplitude)
-        % Set stimulation source label and contacts labels
-        switch side
-            case 1
-                sideCode = 'R';
-                cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
-            case 2
-                sideCode = 'L';
-                cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
-        end
-
-        % Index of stimulation source, only support 1 input source for now
-        sourceIndex = find(S.amplitude{side},1);
-        if ~isempty(sourceIndex)
-            stimSource = S.([sideCode, 's', num2str(sourceIndex)]);
-
-            % Collect stimulation amplitudes
-            for cnt = 1:length(stimAmplitudes{side})
-                if S.activecontacts{side}(cnt)
-                    stimAmplitudes{side}(cnt) = S.amplitude{side}(sourceIndex)*stimSource.(cntlabel{cnt}).perc/100;
-                end
-            end
-        end
-    end
 end
 
 % Only keep amplitudes for active contacts
@@ -84,6 +65,8 @@ switch lower(type)
         calcr = @(U) maedler12_eq3(U);
         fprintf('\nEstimating radius based on Maedler et al. 2012...\n')
 end
+
+
 
 % Calculate radius
 if ~exist('factor', 'var')
