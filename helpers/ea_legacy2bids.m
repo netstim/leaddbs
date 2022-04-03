@@ -158,14 +158,33 @@ for patients = 1:length(source)
                 dir_names{j} = '';
             end
         elseif strcmp(dir_names{j},'current_headmodel')
-            if ~exist(fullfile(new_path,'headmodel'),'dir')
+                %if you have both headmodel and current_headmodel, choose
+                %current_headmodel
+
+                if exist(fullfile(source_patient,'headmodel'),'dir') %give precedence to curr_headmodel & stash headmodel into misc folder
+                    misc_dir = fullfile(new_path,'miscellaneous');
+                    if ~exist(misc_dir,'dir')
+                        mkdir(misc_dir)
+                    end
+                    copyfile(fullfile(source_patient,'headmodel'),fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous','headmodel'));
+                end
+
+                if ~exist(fullfile(new_path,'headmodel'),'dir')
+                    copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
+                    if exist(fullfile(source_patient,dir_names{j},'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
+                        movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI152NLin2009bAsym'))
+                    end
+                    dir_names{j} = '';
+                end
+                
+        elseif strcmp(dir_names{j},'headmodel')
+            if ~exist(fullfile(source_patient,'current_headmodel'),'dir') %if current_headmodel does not exist then this is the headmodel file
                 copyfile(fullfile(source_patient,dir_names{j}),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel'));
                 if exist(fullfile(source_patient,dir_names{j},'MNI_ICBM_2009b_NLIN_ASYM'),'dir')
                     movefile(fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI_ICBM_2009b_NLIN_ASYM'),fullfile(dest,'derivatives','leaddbs',patient_name,'headmodel','MNI152NLin2009bAsym'))
                 end
-                dir_names{j} = '';
             end
-        
+            dir_names{j} = '';
         elseif strcmp(dir_names{j},'DICOM')
             if ~exist(fullfile(dest,'sourcedata',patient_name,'DICOM'),'dir')
                 mkdir(fullfile(dest,'sourcedata',patient_name,'DICOM'))
@@ -574,23 +593,21 @@ for patients = 1:length(source)
                             %end
                         end
                     elseif strcmp(pipelines{folders},'headmodel')
-                        if exist(fullfile(source_patient,'current_headmodel'),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
-                            if exist(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'),'dir')
-                                headmodel_mni_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'));
-                                headmodel_mni_files = {headmodel_mni_contents.name};
-                            else
-                                headmodel_mni_files = {};
-                            end
-                            if exist(fullfile(new_path,pipelines{folders},'native'),'dir')
-                                headmodel_native_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'native'));
-                                headmodel_native_files = {headmodel_native_contents.name};
-                            else
-                                headmodel_native_files = {};
-                            end
-                            which_pipeline = 'headmodel';
-                            move_mni2bids(headmodel_mni_files,headmodel_native_files,'',headmodel,which_pipeline,patient_name,new_path,'','')
-                            
+                        if exist(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'),'dir')
+                            headmodel_mni_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'));
+                            headmodel_mni_files = {headmodel_mni_contents.name};
+                        else
+                            headmodel_mni_files = {};
                         end
+                        if exist(fullfile(new_path,pipelines{folders},'native'),'dir')
+                            headmodel_native_contents = dir_without_dots(fullfile(new_path,pipelines{folders},'native'));
+                            headmodel_native_files = {headmodel_native_contents.name};
+                        else
+                            headmodel_native_files = {};
+                        end
+                        which_pipeline = 'headmodel';
+                        move_mni2bids(headmodel_mni_files,headmodel_native_files,'',headmodel,which_pipeline,patient_name,new_path,'','')
+
                     end
                 end
             otherwise
