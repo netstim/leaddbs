@@ -192,7 +192,7 @@ def convolute_and_ifft(t_steps_trunc,last_point,Ind_trunc1,trunc_method,post_tru
             plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_convoluted_1st_point.png', format='png', dpi=1000)
 
     # Number is the global point index of the last compartment on the neuron
-    np.save(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
+    np.save(os.environ['TMPDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
 
     output.put(i_axon)
 
@@ -256,7 +256,7 @@ def convolute_and_ifft_octaves(t_steps_trunc,last_point,i_axon,num_segments,N_fr
 
         #np.save('Points_in_time/Signal_t_conv'+str(i_axon), Signal_t_conv)
     # Number is the global point index of the last compartment on the neuron
-    np.save(os.environ['PATIENTDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
+    np.save(os.environ['TMPDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
 
     output.put(i_axon)
 
@@ -264,9 +264,6 @@ def convolute_signal_with_field_and_compute_ifft(d,XS_signal,models_in_populatio
 
     # here I we don't want to pass large arrays so we use global variables
     start_ifft=time_lib.time()
-
-    t_steps_trunc = int(d['phi']/d['t_step']) + int(d['T']/d['t_step'])*17  # empirically defined number (i.e. we need 16*T after pulse period)
-
 
     if d["spectrum_trunc_method"]=='Octave Band Method':
         Fr_corresp_arr = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Fr_corresp_array'+str(d["trunc_param"]*1.0)+'.csv', delimiter=' ')
@@ -336,9 +333,9 @@ def convolute_signal_with_field_and_compute_ifft(d,XS_signal,models_in_populatio
 
             if d["spectrum_trunc_method"]=='Octave Band Method':
                 N_freq_octv=(FR_vec_sign_octv.shape[0])
-                processes=mp.Process(target=convolute_and_ifft_octaves,args=(t_steps_trunc,last_point,i,number_of_segments,N_freq,N_freq_octv,d["phi"],Fr_corresp_arr,Fr_octave_vect,inx_st_oct,d["T"],output))
+                processes=mp.Process(target=convolute_and_ifft_octaves,args=(d['t_steps_trunc'],last_point,i,number_of_segments,N_freq,N_freq_octv,d["phi"],Fr_corresp_arr,Fr_octave_vect,inx_st_oct,d["T"],output))
             else:
-                processes=mp.Process(target=convolute_and_ifft,args=(t_steps_trunc,last_point,Ind_trunc,d["spectrum_trunc_method"],d["Truncate_the_obtained_full_solution"],i,number_of_segments,N_freq,d["phi"],d["T"],output))
+                processes=mp.Process(target=convolute_and_ifft,args=(d['t_steps_trunc'],last_point,Ind_trunc,d["spectrum_trunc_method"],d["Truncate_the_obtained_full_solution"],i,number_of_segments,N_freq,d["phi"],d["T"],output))
             proc.append(processes)
             j=j+1
             i=i+point_step

@@ -1,12 +1,12 @@
 d = {
-    'voxel_arr_MRI': 0,
-    'voxel_arr_DTI': 0,
+    'Segm_MRI_processed': 0,
+    'DTI_processed': 0,
     'Init_neuron_model_ready': 0,
     'Init_mesh_ready': 0,
     'Adjusted_neuron_model_ready': 0,
     'CSF_mesh_ready': 0,
     'Adapted_mesh_ready': 0,
-    'signal_generation_ready': 0,
+    'Signal_generated': 0,
     'Parallel_comp_ready': 0,
     'Parallel_comp_interrupted': 0,
     'IFFT_ready': 0,
@@ -46,7 +46,7 @@ d = {
     'number_of_processors': 0,
     'FEniCS_MPI': 0,
     'current_control': 1,
-    'Phi_vector': [-0.0001, 0.0],
+    'Pulse_amp': [-0.002, 0.0],  # can be negative (i.e. cathode in VC)
     'Solver_Type': 'GMRES',
     'freq': 130.0,
     'T': 60.0,
@@ -55,7 +55,7 @@ d = {
     'Signal_type': 'Rectangle',
     'Ampl_scale': 1.0,
     'CPE_activ': 0,
-    'Full_Field_IFFT': 0,
+    'VTA_approx': 0,  # !!! Here it refers to |E|-field based VTA approximation !!!
     'spectrum_trunc_method': 'Octave Band Method',
     'trunc_param': 130.0,
     'Truncate_the_obtained_full_solution': 0,

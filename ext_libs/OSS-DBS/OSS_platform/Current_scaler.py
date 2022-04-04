@@ -37,7 +37,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
             shutil.copy2(s, d)
 
 
-def conduct_unit_IFFT(d, Xs_signal_norm, N_models, N_segm, FR_vector_signal, t_vector, name_sorted_solution,
+def conduct_unit_IFFT(d, Xs_signal_norm, N_array, FR_vector_signal, t_vector, name_sorted_solution,
                       inx_start_octv):
     # stores sunit solution (el. potential on axons in space and time) over contacts
 
@@ -50,13 +50,13 @@ def conduct_unit_IFFT(d, Xs_signal_norm, N_models, N_segm, FR_vector_signal, t_v
             hf.close()
             for i in range(len(d["n_Ranvier"])):
                 # print("in ",lst_population_names[i]," population")
-                last_point = convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm, N_models[i], N_segm[i],
+                last_point = convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm, N_array.N_models[i], N_array.pattern['num_segments'][i],
                                                                           FR_vector_signal, t_vector,
                                                                           name_sorted_solution,
                                                                           inx_st_oct = inx_start_octv, dif_axons=True,
                                                                           last_point = last_point)
         else:
-            convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm, N_models, N_segm, FR_vector_signal,
+            convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm, N_array.N_models, N_array.pattern['num_segments'], FR_vector_signal,
                                                          t_vector, name_sorted_solution, inx_st_oct=inx_start_octv,
                                                          dif_axons=False, last_point=0)
     else:
@@ -66,16 +66,14 @@ def conduct_unit_IFFT(d, Xs_signal_norm, N_models, N_segm, FR_vector_signal, t_v
     return True
 
 
-def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in_csf,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,VTA_IFFT,scaling_index,VTA_parameters):
+def test_scaling(S_vector,d,MRI_param,Xs_signal_norm,Neuron_models,FR_vector_signal,t_vector,name_sorted_solution,inx_start_octv,scaling_index,VTA_edge):
 
-    if VTA_IFFT == 1:
-
-        VTA_edge,VTA_full_name,VTA_resolution = VTA_parameters
+    if d['VTA_approx'] == 1:
 
         from Parallel_IFFT_on_VTA_array import scale_and_get_IFFT_on_VTA_array
-        Max_signal_for_point = scale_and_get_IFFT_on_VTA_array(S_vector,d["number_of_processors"],name_sorted_solution,d,FR_vector_signal,Xs_signal_norm,t_vector,N_segm,inx_start_octv)
+        Max_signal_for_point = scale_and_get_IFFT_on_VTA_array(S_vector,d["number_of_processors"],name_sorted_solution,d,FR_vector_signal,Xs_signal_norm,t_vector,Neuron_models.pattern['num_segments'],inx_start_octv)
         from VTA_from_array import get_VTA_scaled
-        get_VTA_scaled(d,VTA_full_name,Max_signal_for_point,N_segm,VTA_edge,VTA_resolution,scaling_index)
+        get_VTA_scaled(d,Max_signal_for_point,Neuron_models.pattern['num_segments'],VTA_edge,scaling_index)
         return True
 
     logging.critical("----- Estimating neuron activity -----")
@@ -96,35 +94,26 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in
     os.chdir(dst)  # we now operate in Axon_files/ in the stim folder
 
     if d["Axon_Model_Type"] == 'McIntyre2002':
-
         with open(os.devnull, 'w') as FNULL: subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
         with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl axnode', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        from Axon_files.NEURON_direct_run_scaled import run_simulation_with_NEURON
+        
     elif d["Axon_Model_Type"] == 'Reilly2016':
         os.chdir("Reilly2016/")
         logging.critical("Please, precompile Reilly2016 and comment out the next line")
-        #raise SystemExit
+        raise SystemExit
         with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-        from Axon_files.Reilly2016.NEURON_Reilly2016_scaled import run_simulation_with_NEURON
 
+    from Axon_files.NEURON_run import run_simulation_with_NEURON
     if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
         Number_of_activated = 0
         last_point=0
         for i in range(len(d["n_Ranvier"])):
-            Number_of_activated_population = run_simulation_with_NEURON(d, S_vector,last_point,i,d["diam_fib"][i],d["n_Ranvier"][i],N_models[i],d["Ampl_scale"],d["number_of_processors"],scaling_index,list_in_encap[i],list_in_csf[i],d["Name_prepared_neuron_array"])
+            Number_of_activated_population = run_simulation_with_NEURON(d, Neuron_models, np.array(MRI_param.MRI_shift), population_index=i, last_point=last_point, S_vector=S_vector, scaling_index=scaling_index)
             Number_of_activated = Number_of_activated+Number_of_activated_population
-
-            #if d["Axon_Model_Type"] == 'Reilly2016':
-            #    os.chdir("Reilly2016/")
-            last_point=N_segm[i]*N_models[i]+last_point
-
-        #if d["Axon_Model_Type"] == 'Reilly2016':
-        #    os.chdir("..")
+            
+            last_point=Neuron_models.pattern['num_segments'][i]*Neuron_models.N_models[i]+last_point
     else:
-        if isinstance(d["diam_fib"],list):
-            d["diam_fib"]=d["diam_fib"][0]
-            d["n_Ranvier"]=d["n_Ranvier"][0]
-        Number_of_activated = run_simulation_with_NEURON(d,S_vector,0,-1,d["diam_fib"],d["n_Ranvier"],N_models[0],d["Ampl_scale"],d["number_of_processors"],scaling_index,list_in_encap,list_in_csf)
+        Number_of_activated = run_simulation_with_NEURON(d, Neuron_models, np.array(MRI_param.MRI_shift), S_vector=S_vector, scaling_index=scaling_index)
 
     os.chdir(oss_plat_cont)
 
@@ -167,9 +156,9 @@ def test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in
 
 
 def compute_similarity(S_vector, *args):
-    d, Xs_signal_norm, N_models, N_segm,list_in_encap,list_in_csf, FR_vector_signal, t_vector, A, name_sorted_solution, inx_start_octv = args
+    d, MRI_param, Xs_signal_norm, N_array, FR_vector_signal, t_vector, name_sorted_solution, inx_start_octv = args
 
-    activation_profile = test_scaling(S_vector,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in_csf,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,d["Full_Field_IFFT"],0,0)
+    activation_profile = test_scaling(S_vector,d,MRI_param,Xs_signal_norm,N_array,FR_vector_signal,t_vector,name_sorted_solution,inx_start_octv,0,0)
     # scalar value if only one .mat for the whole connectome
 
     # do clean-up in Results_
@@ -213,12 +202,12 @@ def compute_similarity(S_vector, *args):
     return distance
 
 
-def find_activation(current_comb,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in_csf,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,scaling_index,VTA_param=0):
+def find_activation(current_comb,d,MRI_param,Xs_signal_norm,N_array,FR_vector_signal,t_vector,name_sorted_solution,inx_start_octv,scaling_index,VTA_edge=0):
 
     import time
     start_current_run=time.time()
 
-    activation=test_scaling(current_comb,d,Xs_signal_norm,N_models,N_segm,list_in_encap,list_in_csf,FR_vector_signal,t_vector,A,name_sorted_solution,inx_start_octv,d["Full_Field_IFFT"],scaling_index,VTA_param)
+    activation=test_scaling(current_comb,d,MRI_param,Xs_signal_norm,N_array,FR_vector_signal,t_vector,name_sorted_solution,inx_start_octv,scaling_index,VTA_edge)
 
     minutes=int((time.time() - start_current_run)/60)
     secnds=int(time.time() - start_current_run)-minutes*60
