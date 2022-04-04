@@ -131,13 +131,13 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
            
        else
            evalin('base','WARNINGSILENT=1;');
-           ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',matching_file));
+           ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',mapper_output_files{mapper_file}));
        end
        
    end
    evalin('base','WARNINGSILENT=1;');
    ea_warning(sprintf('Deleting old copy of connectome folder %s. You can find it in the source patient folder if you need.',connectome_folder));
-   ea_delete(fullfile(connectome_folder));
+   %ea_delete(fullfile(connectome_folder));
 end
 
 
