@@ -43,7 +43,7 @@ end
 
 % Set output path
 subDescPrefix = ['sub-', options.subj.subjDir, '_desc-'];
-subsubSimPrefix = ['sub-', options.subj.subjDir, '_sim-'];
+subSimPrefix = ['sub-', options.subj.subjDir, '_sim-'];
 outputDir = [options.subj.stimDir, filesep, ea_nt(options.native), S.label];
 outputBasePath = [outputDir, filesep, subSimPrefix];
 ea_mkdir(outputDir);
