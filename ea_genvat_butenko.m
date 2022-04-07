@@ -42,6 +42,7 @@ if ~ismember(options.elmodel, ea_ossdbs_elmodel)
 end
 
 % Set output path
+[~,options.subj.subjDir,~] = fileparts(options.subj.subjDir);
 subDescPrefix = ['sub-', options.subj.subjDir, '_desc-'];
 subSimPrefix = ['sub-', options.subj.subjDir, '_sim-'];
 outputDir = [options.subj.stimDir, filesep, ea_nt(options.native), S.label];
@@ -518,7 +519,9 @@ save(parameterFile, 'settings', '-v7.3');
 
 % Delete previous results from stimSetMode
 ea_delete([outputDir, filesep, 'Result_StimProt_*']);
-ea_delete([templateOutputDir, filesep, 'Result_StimProt_*']);
+if options.native
+    ea_delete([templateOutputDir, filesep, 'Result_StimProt_*']);
+end
 
 %% Run OSS-DBS
 libpath = getenv('LD_LIBRARY_PATH');
