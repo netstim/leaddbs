@@ -1,8 +1,7 @@
-function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, OSS_stim_vector, type, factor, ref)
+function fiberFiltered = ea_filterfiber_stim(ftr, coords, S, type, factor, ref)
 % Filter fibers based on the active contacts and stimulation amplitudes
 
 fprintf('\nCollecting stimulation parameters...\n')
-
 
 % Active contacts indices
 if iscell(S) % stimSetMode, stimProtocol (cell of csv files) provided
@@ -30,12 +29,16 @@ else % normal mode
     
     % define the stim vector as in OSS-DBS (sources are merged)
     stimAmplitudes = cell(size(S.amplitude));
+    eleNum = length(coords); % Number of electrodes
+    conNum = cellfun(@(x) size(x,1), coords); % Number of contacts per electrode
+    conNum = conNum(find(conNum, 1));
+    stimVector = ea_getStimVector(S, eleNum, conNum);
     for side = 1:size(S.amplitude,2)
-        for cnt = 1:size(OSS_stim_vector(side,:),2)
-            if isnan(OSS_stim_vector(side,cnt))
+        for cnt = 1:size(stimVector(side,:),2)
+            if isnan(stimVector(side,cnt))
                 stimAmplitudes{side}(cnt) = 0.0;
             else 
-                stimAmplitudes{side}(cnt) = abs(OSS_stim_vector(side,cnt)); % sign does not matter for Kuncel-VTA
+                stimAmplitudes{side}(cnt) = abs(stimVector(side,cnt)); % sign does not matter for Kuncel-VTA
             end
         end
     end

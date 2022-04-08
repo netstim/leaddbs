@@ -224,6 +224,7 @@ settings.Electrode_type = options.elmodel;
 coords_mm = ea_load_reconstruction(options);
 settings.contactLocation = coords_mm;
 eleNum = length(coords_mm); % Number of electrodes
+conNum = options.elspec.numel; % Number of contacts per electrode
 
 % Save both native and MNI space y and head markers for OSS-DBS
 settings.yMarkerNative = nan(eleNum, 3);
@@ -257,7 +258,7 @@ end
 % Tail
 settings.Second_coordinate = nan(eleNum, 3);
 for i=1:eleNum
-    if options.elspec.numel == 1 % Exception for electrode with only one contact
+    if conNum == 1 % Exception for electrode with only one contact
         if options.native
             settings.Second_coordinate(i,:) = markersNative(i).tail;
         else
@@ -276,120 +277,18 @@ settings.Rotation_Z = 0.0;
 settings.stimSetMode = options.stimSetMode;
 
 % Initialize current control flag
-settings.current_control = nan(eleNum,1);
+settings.current_control = nan(eleNum, 1);
 
 % Initalize Phi vector
-settings.Phi_vector = nan(eleNum,options.elspec.numel);
+settings.Phi_vector = nan(eleNum, conNum);
 
 % Initialize grounding
-settings.Case_grounding = zeros(eleNum,1);
+settings.Case_grounding = zeros(eleNum, 1);
 
 % Get the stimulation parameters from S in case stimSetMode is 0, otherwise
 % they will be loaded directly from the Current_protocols_[0|1].csv files
 if ~settings.stimSetMode
-    source = nan(eleNum,1);
-    for i=1:eleNum
-        if any(S.amplitude{i})
-            source(i) = find(S.amplitude{i},1);
-        end
-    end
-
-    % 0 - Voltage Control; 1 - Current Control
-    for i=1:eleNum
-        switch i
-            case 1
-                sideCode = 'R';
-            case 2
-                sideCode = 'L';
-        end
-
-        if ~isnan(source(i))
-            settings.current_control(i) = uint8(S.([sideCode, 's', num2str(source(i))]).va==2);
-        end
-    end
-
-    % Get stimulation amplitude
-    amp = nan(eleNum,1);
-    for i=1:eleNum
-        if ~isnan(source(i))
-            amp(i) = S.amplitude{i}(source(i));
-        end
-    end
-
-    %  For VC, check all sources
-    if settings.current_control(1) == 0  % both hemisphere MUST have the same mode
-        numSources = 4;
-        amp = nan(eleNum,numSources);   % 4 - number of sources
-        for i=1:eleNum
-            for j=1:numSources
-                amp(i,j) = S.amplitude{i}(j);
-            end
-        end
-    else
-        amp = nan(eleNum,1);  % For CC, one source is used, add a check
-        for i=1:eleNum
-            if ~isnan(source(i))
-                amp(i) = S.amplitude{i}(source(i));
-            end
-        end        
-    end
-    
-    
-    for i = 1:eleNum
-        switch i
-            case 1
-                sideCode = 'R';
-                cntlabel = {'k0','k1','k2','k3','k4','k5','k6','k7'};
-            case 2
-                sideCode = 'L';
-                cntlabel = {'k8','k9','k10','k11','k12','k13','k14','k15'};
-        end
-
-        if ~isnan(source(i))
-            stimSource = S.([sideCode, 's', num2str(source(i))]);
-            
-            % Split voltage in case contacts have both polarities
-            if stimSource.va == 1 
-                for j=1:numSources
-                    v_source = S.([sideCode, 's', num2str(j)]);
-                    if v_source.case.pol == 0
-                        amp(i,j) = amp(i,j)/2;
-                    end
-                end
-            end
-
-            for cnt = 1:options.elspec.numel
-                if settings.current_control(i) == 1  % only one source for CC
-                    if S.activecontacts{i}(cnt)
-                        switch stimSource.(cntlabel{cnt}).pol
-                            case 1 % Negative, cathode
-                                settings.Phi_vector(i, cnt) = -amp(i)*stimSource.(cntlabel{cnt}).perc/100;
-                            case 2 % Postive, anode
-                                settings.Phi_vector(i, cnt) = amp(i)*stimSource.(cntlabel{cnt}).perc/100;
-                        end             
-                    end
-                else
-                    for j=1:numSources  % go over sources
-                        v_source = S.([sideCode, 's', num2str(j)]);
-                        if v_source.(cntlabel{cnt}).perc    % the contact is active for this source
-                            if isnan(settings.Phi_vector(i, cnt))
-                                settings.Phi_vector(i, cnt) = 0.0;  % initialize
-                            end
-                            switch v_source.(cntlabel{cnt}).pol  % sanity check needed: same polarity for a contact over all sources
-                                case 1
-                                    settings.Phi_vector(i, cnt) = settings.Phi_vector(i, cnt) - amp(i,j);
-                                case 2
-                                    settings.Phi_vector(i, cnt) = settings.Phi_vector(i, cnt) + amp(i,j);
-                            end
-                        end
-                    end
-                end
-            end
-            if stimSource.case.perc == 100
-                settings.Case_grounding(i) = 1;
-            end
-        end
-    end
+    [settings.Phi_vector, settings.current_control, settings.Case_grounding] = ea_getStimVector(S, eleNum, conNum);
 end
 
 % Threshold for Astrom VTA (V/mm)
@@ -426,9 +325,9 @@ if settings.calcAxonActivation
 
         % Filter fibers based on the spherical ROI
         if options.native
-        	fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, settings.Phi_vector, 'kuncel', 2, preopAnchor);
+        	fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
         else
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, settings.Phi_vector, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
+            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
         end
 
         % Filter fibers based on the minimal length
