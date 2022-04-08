@@ -803,10 +803,13 @@ class MainWindow(Functionalities):
         except:
             print("No input from Lead-DBS was detected")
 
-        with open(self.path_to_patient + '/Allocated_axons_parameters.json', 'r') as fp:
-            axon_dict = json.load(fp)
-        fp.close()
-        d.update(axon_dict)  # update from oss-dbs_parameters.mat directly for cluster version
+        try:
+            with open(self.path_to_patient + '/Allocated_axons_parameters.json', 'r') as fp:
+                axon_dict = json.load(fp)
+            fp.close()
+            d.update(axon_dict)  # update from oss-dbs_parameters.mat directly for cluster version
+        except:
+            print("No Allocated_axons_parameters.json was detected")
 
         self.set_load_state(d)
         #except:

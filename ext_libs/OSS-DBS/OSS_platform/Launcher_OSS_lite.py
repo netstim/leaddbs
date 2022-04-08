@@ -31,23 +31,23 @@ run_full_model(master_dict) governs the simulation flow taking master_dict as th
 print("\nOSS-DBS by K.Butenko --- version 0.5")
 print("Butenko K, Bahls C, Schroeder M, Koehling R, van Rienen U (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.' PLoS Comput Biol 16(7): e1008023. https://doi.org/10.1371/journal.pcbi.1008023")
 print("____________________________________\n")
-print("Check out the simulation progress in complete_log_... in your stim. folder")
+print("Check out the progress in complete_log_*.log in your stimulation folder")
 
+import importlib
+import json
 import numpy as np
-import time
+import os
 import pickle
 import subprocess
-import importlib
-import os
+import time
 import warnings
-import json
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category = FutureWarning)
     import h5py
 
-import shutil
 import logging
+import shutil
 
 # a function to copy folders
 def copytree(src, dst, symlinks=False, ignore=None):
