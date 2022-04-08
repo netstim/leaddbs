@@ -126,7 +126,7 @@ switch elmodel
         elspec.contact_spacing=0.5;
         elspec.numel=8;
         elspec.tipiscontact=0;
-        elspec.markerpos = 15.65;
+        elspec.markerpos = 14.4;
         elspec.markerlen = 2.3;
         elspec.contactnames={'K0 (R)','K1A (R)','K1B (R)','K1C (R)','K2A (R)','K2B (R)','K2C (R)','K3 (R)','K0 (L)','K1A (L)','K1B (L)','K1C (L)','K2A (L)','K2B (L)','K2C (L)','K3 (L)'};
         elspec.isdirected=1;
@@ -147,7 +147,7 @@ switch elmodel
         elspec.contact_spacing=1.5;
         elspec.numel=8;
         elspec.tipiscontact=0;
-        elspec.markerpos = 18.65;
+        elspec.markerpos = 17.4;
         elspec.markerlen = 2.3;
         elspec.contactnames={'K0 (R)','K1A (R)','K1B (R)','K1C (R)','K2A (R)','K2B (R)','K2C (R)','K3 (R)','K0 (L)','K1A (L)','K1B (L)','K1C (L)','K2A (L)','K2B (L)','K2C (L)','K3 (L)'};
         elspec.isdirected=1;

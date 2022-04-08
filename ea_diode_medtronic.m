@@ -13,14 +13,7 @@ sides = {'right','left','3','4','5','6','7','8'};
 % head position
 level1centerRelative = elspec.contact_length + elspec.contact_spacing;
 level2centerRelative = (elspec.contact_length + elspec.contact_spacing) * 2;
-switch elspec.matfname
-    case 'medtronic_b33005'
-        markercenterRelative = 12.75;
-    case 'medtronic_b33015'
-        markercenterRelative = 15.75;
-    otherwise
-        keyboard
-end
+markercenterRelative = elspec.markerpos - elspec.tip_length*~elspec.tipiscontact - elspec.contact_length/2;
         
 load(elspec.matfname);
 
