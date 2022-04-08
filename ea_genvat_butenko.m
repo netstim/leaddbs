@@ -681,9 +681,9 @@ for side=0:1
                         end
                     else
                         if startsWith(settings.connectome, 'Multi-Tract: ')
-                            fiberActivationMNI = [templateOutputBasePath, filesep, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, '.mat'];
+                            fiberActivationMNI = [templateOutputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '_tract-', tractName, '.mat'];
                         else
-                            fiberActivationMNI = [templateOutputBasePath, filesep, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '.mat'];
+                            fiberActivationMNI = [templateOutputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '.mat'];
                         end
                     end
                     save(fiberActivationMNI, '-struct', 'conn');
