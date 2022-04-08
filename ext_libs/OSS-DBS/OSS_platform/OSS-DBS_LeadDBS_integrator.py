@@ -107,12 +107,7 @@ def get_input_from_LeadDBS(settings_location, index_side, cluster_run=False):  #
     # list_ascii = map(lambda s: s.strip(), list_ascii)
     name_split = ''.join(chr(i) for i in list_ascii)
     input_dict['MRI_data_name'] = name_split.rsplit(os.sep, 1)[-1]
-
-    if cluster_run == True:
-        stim_folder = os.path.dirname(str(settings_location))
-    else:
-        stim_folder = name_split.rsplit(os.sep, 1)[:-1]
-        stim_folder = stim_folder[0]
+    stim_folder = os.path.dirname(str(settings_location))
     print("Stim folder:", stim_folder)
 
     # array_ascii=file.root.settings.DTI_data_name[:]
