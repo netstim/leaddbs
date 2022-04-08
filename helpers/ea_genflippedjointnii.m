@@ -16,7 +16,13 @@ for f=1:2
         end
     end
 
+    if contains(flippedFile, 'efield')
+        interp = 1;
+    else
+        interp = 0;
+    end
+
     if ~isfile(flippedFile)
-        ea_flip_lr_nonlinear(files{f}, flippedFile, 0);
+        ea_flip_lr_nonlinear(files{f}, flippedFile, interp);
     end
 end

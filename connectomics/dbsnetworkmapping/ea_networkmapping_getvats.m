@@ -36,7 +36,7 @@ for sub=1:numPatient
     % Mirrored VAT E-field
     vatlist{numPatient+sub,1} = fullfile(stimFolder, [subPrefix, 'sim-efield_model-', modelLabel, '_seed-', modStr, '_hemidesc-flipped.nii']);
     if ~isfile(vatlist{numPatient+sub,1})
-        ea_flip_lr_nonlinear(vatlist{sub,1}, vatlist{numPatient+sub,1}, 0);
+        ea_flip_lr_nonlinear(vatlist{sub,1}, vatlist{numPatient+sub,1}, 1);
     end
 end
 
