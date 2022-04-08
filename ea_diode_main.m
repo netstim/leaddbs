@@ -64,8 +64,14 @@ try
         ct = ct_reg;
     end
 catch
-    reg2org = load(fullfile(options.subj.coregDir, 'transform', 'Postop_CT_2_T1.mat'));
-    tmat_reg2org =ea_antsmat2mat(reg2org.AffineTransform_double_3_3,reg2org.fixed);
+    json = loadjson(options.subj.coreg.log.method);
+    coregMethod = lower(regexprep(json.method.CT, ' \(.*$', ''));
+    reg2org = load([options.subj.coreg.transform.CT.forwardBaseName, coregMethod, '.mat']);
+    if isfield(reg2org, 'AffineTransform_double_3_3')
+        tmat_reg2org = ea_antsmat2mat(reg2org.AffineTransform_double_3_3,reg2org.fixed);
+    elseif isfield(reg2org, 'AffineTransform_float_3_3')
+        tmat_reg2org = ea_antsmat2mat(reg2org.AffineTransform_float_3_3,reg2org.fixed);
+    end
     tmat_reg2org = inv(tmat_reg2org);
 end
 
