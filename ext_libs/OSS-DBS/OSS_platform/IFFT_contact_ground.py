@@ -205,7 +205,7 @@ def convolute_and_ifft(t_steps_trunc,contact_i,last_point, Ind_trunc1, trunc_met
         # np.save('Points_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv.real)
     # np.save('Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv)
 
-    np.save(os.environ['PATIENTDIR'] + '/Axons_in_time/Signal_t_conv' + str(global_i_point + last_point) + "_" + str(
+    np.save(os.environ['TMPDIR'] + '/Axons_in_time/Signal_t_conv' + str(global_i_point + last_point) + "_" + str(
         contact_i), Signal_t_conv[:t_steps_trunc])
 
     output.put(i_axon)
@@ -270,12 +270,12 @@ def convolute_and_ifft_octaves(t_steps_trunc,contact_i, last_point, i_axon, num_
             plt.xlabel('t, sec')
             plt.ylabel('Potential, V')
             plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-            plt.savefig(os.environ['PATIENTDIR'] + '/Images/1V_scaled_convoluted_1st_point_' + str(contact_i) + '.png',
+            plt.savefig(os.environ['PATIENTDIR'] + '/Images/1A_scaled_convoluted_1st_point_' + str(contact_i) + '.png',
                         format='png', dpi=500)
 
         # np.save('Points_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv.real)
 
-    np.save(os.environ['PATIENTDIR'] + '/Axons_in_time/Signal_t_conv' + str(global_i_point + last_point) + "_" + str(
+    np.save(os.environ['TMPDIR'] + '/Axons_in_time/Signal_t_conv' + str(global_i_point + last_point) + "_" + str(
         contact_i), Signal_t_conv[:t_steps_trunc])
 
     # might be slow
@@ -291,9 +291,6 @@ def convolute_signal_with_field_and_compute_ifft(d, XS_signal, models_in_populat
                                                  t_vec, name_sol, inx_st_oct=0, dif_axons=False, last_point=0):
     # here I we don't want to pass large arrays so we use global variables
     start_ifft = time_lib.time()
-
-    # to avoid confusion, always simulate from 0.0, even if there is a phase shift
-    t_steps_trunc = int(d['phi']/d['t_step']) + int(d['T']/d['t_step'])*17  # empirically defined number (i.e. we need 16*T after pulse period)
 
     if d["spectrum_trunc_method"] == 'Octave Band Method':
         Fr_corresp_arr = np.genfromtxt(
@@ -370,11 +367,11 @@ def convolute_signal_with_field_and_compute_ifft(d, XS_signal, models_in_populat
 
                 if d["spectrum_trunc_method"] == 'Octave Band Method':
                     N_freq_octv = (FR_vec_sign_octv.shape[0])
-                    processes = mp.Process(target=convolute_and_ifft_octaves, args=(t_steps_trunc,
+                    processes = mp.Process(target=convolute_and_ifft_octaves, args=(d['t_steps_trunc'],
                     contact_i, last_point, i, number_of_segments, N_freq, N_freq_octv, d["phi"], Fr_corresp_arr,
                     Fr_octave_vect, inx_st_oct, d["T"], output))
                 else:
-                    processes = mp.Process(target=convolute_and_ifft, args=(t_steps_trunc,contact_i,
+                    processes = mp.Process(target=convolute_and_ifft, args=(d['t_steps_trunc'],contact_i,
                     last_point, Ind_trunc, d["spectrum_trunc_method"], d["Truncate_the_obtained_full_solution"], i,
                     number_of_segments, N_freq, d["phi"], d["T"], output))
                 proc.append(processes)

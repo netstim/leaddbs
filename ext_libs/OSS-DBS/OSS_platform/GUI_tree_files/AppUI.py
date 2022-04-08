@@ -10,6 +10,7 @@ from pop_up_control.full_field_ifft import PopUpFullFieldIFFT
 from pop_up_control.mesh_refinement import PopUpMeshRefinement
 from functionalities import Functionalities
 from temp_dict import Dictionary
+from time import sleep
 
 import json
 
@@ -215,11 +216,10 @@ class MainWindow(Functionalities):
         self.ui.pushButton_Reset.clicked.connect(lambda: self.reset_state())
 
     def show(self):
+        self.main_win.show()
         if not self.interactive_mode:
             self.save_as(os.path.join(self.path_to_patient, 'GUI_inp_dict.py'))
             self.run_thread()
-        else:
-            self.main_win.show()
 
     def run_command(self):
         """The subprocess takes the terminal command as a list."""
@@ -272,7 +272,9 @@ class MainWindow(Functionalities):
             else:
                 print("Simulation is completed")
 
-        self.closeWindow()        
+        sleep(5)
+        self.closeWindow()
+
         # the commands below work only with a properly installed Paraview (supporting from paraview.simple import *)
 
         # print(self.path_to_patient)
@@ -578,15 +580,15 @@ class MainWindow(Functionalities):
         else:
             print("All cores available for Docker will be drawn")
 
-        self.ui.checkBox_Voxel_orr_MRI.setCheckState(self.anti_corrector(d['voxel_arr_MRI']))
-        self.ui.checkBox_Voxel_orr_DTI.setCheckState(----self.anti_corrector(d['voxel_arr_DTI']))
+        self.ui.checkBox_Voxel_orr_MRI.setCheckState(self.anti_corrector(d['Segm_MRI_processed']))
+        self.ui.checkBox_Voxel_orr_DTI.setCheckState(----self.anti_corrector(d['DTI_processed']))
         self.ui.checkBox_Init_Neuron_Model_Ready.setCheckState(self.anti_corrector(d['Init_neuron_model_ready']))
         self.ui.checkBox_Init_Mesh_Ready.setCheckState(self.anti_corrector(d['Init_mesh_ready']))
         self.ui.checkBox_Adjusted_Neuron_Model_Ready.setCheckState(
             self.anti_corrector(d['Adjusted_neuron_model_ready']))
         self.ui.checkBox_CSF_Mesh_Ready.setCheckState(self.anti_corrector(d['CSF_mesh_ready']))
         self.ui.checkBox_Adapted_Mesh_Ready.setCheckState(self.anti_corrector(d['Adapted_mesh_ready']))
-        self.ui.checkBox_Signal_Generation_Ready.setCheckState(self.anti_corrector(d['signal_generation_ready']))
+        self.ui.checkBox_Signal_Generation_Ready.setCheckState(self.anti_corrector(d['Signal_generated']))
         self.ui.checkBox_Parallel_Computing_Ready.setCheckState(self.anti_corrector(d['Parallel_comp_ready']))
         self.ui.checkBox_Parallel_Computing_Interrupted.setCheckState(
             self.anti_corrector(d['Parallel_comp_interrupted']))
@@ -670,7 +672,7 @@ class MainWindow(Functionalities):
         except:
             pass
         self.ui.checkBox_Current_Control.setCheckState(self.anti_corrector(d['current_control']))
-        self.get_lineedit_entry(d['Phi_vector'], self.ui.lineEdit_Phi_Vector)
+        self.get_lineedit_entry(d['Pulse_amp'], self.ui.lineEdit_Phi_Vector)
         try:
             self.ui.comboBox_Solver_Type.setCurrentText("{}".format(d['Solver_Type']))
         except:
@@ -686,7 +688,7 @@ class MainWindow(Functionalities):
         self.cpeActive.ui.doubleSpinBox_K_S.setValue(d['K_A'])
         self.cpeActive.ui.doubleSpinBox_Alpha_Ground.setValue(d['beta_ground'])
         self.cpeActive.ui.doubleSpinBox_K_S_Ground.setValue(d['K_A_ground'])
-        self.ui.checkBox_Full_Field_IFFT.setCheckState(self.anti_corrector(d['Full_Field_IFFT']))
+        self.ui.checkBox_Full_Field_IFFT.setCheckState(self.anti_corrector(d['VTA_approx']))
         self.fullFieldIFFT.ui.spinBox_T_Step_End.setValue(d['t_step_end'])
         self.fullFieldIFFT.ui.checkBox_VTA_From_DivE.setCheckState(self.anti_corrector(d['VTA_from_divE']))
         self.fullFieldIFFT.ui.checkBox_VTA_From_NEURON.setCheckState(self.anti_corrector(d['VTA_from_NEURON']))
@@ -793,18 +795,18 @@ class MainWindow(Functionalities):
 
         d.update(d_modified)    # maybe te ordering of updating should be changed
 
-        with open(self.path_to_patient + '/Lead_DBS_input.json', 'r') as fp:
-            lead_dict = json.load(fp)
-        fp.close()
-        d.update(lead_dict)  # update from oss-dbs_parameters.mat directly for cluster version
-
         try:
-            with open(self.path_to_patient + '/Allocated_axons_parameters.json', 'r') as fp:
-                axon_dict = json.load(fp)
+            with open(self.path_to_patient + '/Lead_DBS_input.json', 'r') as fp:
+                lead_dict = json.load(fp)
             fp.close()
-            d.update(axon_dict)  # update from oss-dbs_parameters.mat directly for cluster version
+            d.update(lead_dict)  # update from oss-dbs_parameters.mat directly for cluster version
         except:
-            print("Neuron models will be defined in OSS-DBS")
+            print("No input from Lead-DBS was detected")
+
+        with open(self.path_to_patient + '/Allocated_axons_parameters.json', 'r') as fp:
+            axon_dict = json.load(fp)
+        fp.close()
+        d.update(axon_dict)  # update from oss-dbs_parameters.mat directly for cluster version
 
         self.set_load_state(d)
         #except:

@@ -1,6 +1,9 @@
 function varargout = ea_genvat_butenko(varargin)
 % Wrapper for OSS-DBS for VTA calculation
 
+% set to 1 if you only want to prep files for cluster comp. 
+prepFiles_cluster = 0; % for now hardcoded 
+
 if nargin==2
     S=varargin{1};
     options=varargin{2};
@@ -533,6 +536,12 @@ ea_delete([outputDir, filesep, 'skip_rh.txt']);
 ea_delete([outputDir, filesep, 'success_lh.txt']);
 ea_delete([outputDir, filesep, 'fail_lh.txt']);
 ea_delete([outputDir, filesep, 'skip_lh.txt']);
+
+if prepFiles_cluster == 1
+    % Restore working directory and environment variables
+    setenv('LD_LIBRARY_PATH', libpath);
+    return
+end
 
 % Iterate sides, index side: 0 - rh , 1 - lh
 runStatus = [0 0]; % Succeed or not

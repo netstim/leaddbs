@@ -19,7 +19,9 @@ from tissue_dielectrics import DielectricProperties
 
 parameters["allow_extrapolation"]=True
 parameters['linear_algebra_backend']='PETSc'
-set_log_active(False)   #turns off debugging info
+set_log_level(LogLevel.CRITICAL)
+if MPI.comm_world.rank == 0:
+  set_log_level(LogLevel.CRITICAL)
 
 
 def choose_solver_for_me(EQS_mode,float_conductors):
@@ -147,7 +149,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
 
     #In case of current-controlled stimulation, Dirichlet_bc or the whole potential distribution will be scaled afterwards (due to the system's linearity)
     from FEM_in_spectrum import get_solution_space_and_Dirichlet_BC
-    V_space,Dirichlet_bc,ground_index,facets=get_solution_space_and_Dirichlet_BC(Field_calc_param.external_grounding,Field_calc_param.c_c,mesh_sol,subdomains,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,Domains.fi)
+    V_space,Dirichlet_bc,ground_index,facets=get_solution_space_and_Dirichlet_BC(Field_calc_param.external_grounding,Field_calc_param.c_c,mesh_sol,subdomains,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Active_contacts,Domains.Amp_vector)
     #ground index refers to the ground in .med/.msh file
 
     logging.critical("dofs: {}".format(max(V_space.dofmap().dofs())+1))
@@ -156,7 +158,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     #facets = MeshFunction('size_t',mesh_sol,2)
     #facets.set_all(0)
     if Field_calc_param.external_grounding==False:       # otherwise we have it already from get_solution_space_and_Dirichlet_BC()
-        facets.array()[boundaries_sol.array()==Domains.Contacts[ground_index]]=1
+        facets.array()[boundaries_sol.array()==Domains.Active_contacts[ground_index]]=1
     dsS=Measure("ds",domain=mesh_sol,subdomain_data=facets)
     Ground_surface_size=assemble(1.0*dsS(1))
     dx = Measure("dx",domain=mesh_sol)
@@ -178,7 +180,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
 
     # get current flowing through the grounded contact and the electric field in the whole domain
     from FEM_in_spectrum import get_current
-    J_ground,E_field,E_field_im = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_sol,phi_i_sol,ground_index,get_E_field=True)
+    J_ground,E_field,E_field_im = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Active_contacts,kappa,Cond_tensor,phi_r_sol,phi_i_sol,ground_index,get_E_field=True)
 
     #print("J_ground_unscaled: ",J_ground)
     # If EQS, J_ground is a complex number. If QS, E_field_im is a null function
@@ -199,17 +201,17 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
     else:
         V_normE=FunctionSpace(mesh_sol,"CG",Field_calc_param.element_order)
 
-    #V_across=max(Domains.fi[:], key=abs)    #actually, not across, but against ground!!!
+    #V_across=max(Domains.Amp_vector[:], key=abs)    #actually, not across, but against ground!!!
 
-    if Field_calc_param.external_grounding==True and (Field_calc_param.c_c==1 or len(Domains.fi)==1):
-        V_max=max(Domains.fi[:], key=abs)
+    if Field_calc_param.external_grounding==True and (Field_calc_param.c_c==1 or len(Domains.Amp_vector)==1):
+        V_max=max(Domains.Amp_vector[:], key=abs)
         V_min=0.0
-    elif -1*Domains.fi[0]==Domains.fi[1]:     # V_across is needed only for 2 active contact systems
-        V_min=-1*abs(Domains.fi[0])
-        V_max=abs(Domains.fi[0])
+    elif -1*Domains.Amp_vector[0]==Domains.Amp_vector[1]:     # V_across is needed only for 2 active contact systems
+        V_min=-1*abs(Domains.Amp_vector[0])
+        V_max=abs(Domains.Amp_vector[0])
     else:
-        V_min=min(Domains.fi[:], key=abs)
-        V_max=max(Domains.fi[:], key=abs)
+        V_min=min(Domains.Amp_vector[:], key=abs)
+        V_max=max(Domains.Amp_vector[:], key=abs)
     V_across=V_max-V_min   # this can be negative
 
 
@@ -258,7 +260,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
 
         if Field_calc_param.CPE==1:
 
-            if len(Domains.fi)>2:
+            if len(Domains.Amp_vector)>2:
                 logging.critical("Currently, CPE can be used only for simulations with two contacts. Please, assign the rest to 'None'")
                 raise SystemExit
 
@@ -266,7 +268,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
             CPE_param=[d_cpe["K_A"],d_cpe["beta"],d_cpe["K_A_ground"],d_cpe["beta_ground"]]
 
             from FEM_in_spectrum import get_CPE_corrected_Dirichlet_BC
-            Dirichlet_bc_with_CPE,total_impedance=get_CPE_corrected_Dirichlet_BC(Field_calc_param.external_grounding,facets,boundaries_sol,CPE_param,Field_calc_param.EQS_mode,Field_calc_param.frequenc,Field_calc_param.frequenc,Domains.Contacts,Domains.fi,V_across,Z_tissue,V_space)
+            Dirichlet_bc_with_CPE,total_impedance=get_CPE_corrected_Dirichlet_BC(Field_calc_param.external_grounding,facets,boundaries_sol,CPE_param,Field_calc_param.EQS_mode,Field_calc_param.frequenc,Field_calc_param.frequenc,Domains.Active_contacts,Domains.Amp_vector,V_across,Z_tissue,V_space)
 
             logging.critical("Solving for an adjusted potential on contacts to account for CPE")
             start_math=tm.time()
@@ -283,7 +285,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
                 phi_i_CPE.vector()[:] = 0.0
 
             # get current flowing through the grounded contact and the electric field in the whole domain
-            J_ground_CPE,E_field_CPE,E_field_im_CPE = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_CPE,phi_i_CPE,ground_index,get_E_field=True)
+            J_ground_CPE,E_field_CPE,E_field_im_CPE = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Active_contacts,kappa,Cond_tensor,phi_r_CPE,phi_i_CPE,ground_index,get_E_field=True)
             # If EQS, J_ground is a complex number. If QS, E_field_CPE is a null function
 
             # to get current density function which is required for mesh refinement when checking current convergence
@@ -312,15 +314,15 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
         if Field_calc_param.c_c==1:
             if Field_calc_param.EQS_mode=='EQS':     # For EQS, we need to scale the potential on boundaries (because the error is absolute) and recompute field, etc. Maybe we can scale them also directly?
                 Dirichlet_bc_scaled=[]
-                for bc_i in range(len(Domains.Contacts)):          #CPE estimation is valid only for one activa and one ground contact configuration
+                for bc_i in range(len(Domains.Active_contacts)):          #CPE estimation is valid only for one activa and one ground contact configuration
                     if Field_calc_param.EQS_mode=='EQS':
-                        if Domains.fi[bc_i]!=0.0:
+                        if Domains.Amp_vector[bc_i]!=0.0:
                             Active_with_CC=V_across*V_across/J_ground          #(impedance * current through the contact (V_across coincides with the assigned current magnitude))
-                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real(Active_with_CC), boundaries_sol,Domains.Contacts[bc_i]))
-                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), np.imag(Active_with_CC), boundaries_sol,Domains.Contacts[bc_i]))
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), np.real(Active_with_CC), boundaries_sol,Domains.Active_contacts[bc_i]))
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), np.imag(Active_with_CC), boundaries_sol,Domains.Active_contacts[bc_i]))
                         else:
-                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), Constant(0.0), boundaries_sol,Domains.Contacts[bc_i]))
-                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), Constant(0.0), boundaries_sol,Domains.Contacts[bc_i]))
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(0), Constant(0.0), boundaries_sol,Domains.Active_contacts[bc_i]))
+                            Dirichlet_bc_scaled.append(DirichletBC(V_space.sub(1), Constant(0.0), boundaries_sol,Domains.Active_contacts[bc_i]))
 
                 if Field_calc_param.external_grounding==True:
                     if Field_calc_param.EQS_mode == 'EQS':
@@ -342,7 +344,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
                 (phi_r_sol_scaled,phi_i_sol_scaled)=phi_sol_scaled.split(deepcopy=True)
 
                 # get current flowing through the grounded contact and the electric field in the whole domain
-                J_ground_scaled,E_field_scaled,E_field_im_scaled = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_sol_scaled,phi_i_sol_scaled,ground_index,get_E_field=True)
+                J_ground_scaled,E_field_scaled,E_field_im_scaled = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Active_contacts,kappa,Cond_tensor,phi_r_sol_scaled,phi_i_sol_scaled,ground_index,get_E_field=True)
                 # If EQS, J_ground is a complex number. If QS, E_field_im is 0
             else:   # here we can simply scale the potential in the domain and recompute the E-field
                 phi_i_sol_scaled=Function(V_space)
@@ -350,7 +352,7 @@ def get_field(mesh_sol,Domains,subdomains,boundaries_sol,Field_calc_param):
                 phi_r_sol_scaled=Function(V_space)
                 phi_r_sol_scaled.vector()[:]=V_across*phi_r_sol.vector()[:]/J_ground
 
-                J_ground_scaled,E_field_scaled,E_field_im_scaled = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Contacts,kappa,Cond_tensor,phi_r_sol_scaled,phi_i_sol_scaled,ground_index,get_E_field=True)
+                J_ground_scaled,E_field_scaled,E_field_im_scaled = get_current(mesh_sol,facets,boundaries_sol,Field_calc_param.element_order,Field_calc_param.EQS_mode,Domains.Active_contacts,kappa,Cond_tensor,phi_r_sol_scaled,phi_i_sol_scaled,ground_index,get_E_field=True)
                 #E_field_im_scale is a null function
 
             E_norm=project(sqrt(inner(E_field_scaled,E_field_scaled)+inner(E_field_im_scaled,E_field_im_scaled)),V_normE,solver_type="cg", preconditioner_type="amg")

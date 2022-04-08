@@ -6,18 +6,14 @@ Created on Fri May 29 12:11:41 2020
 """
 
 import os
-#from nibabel.testing import data_path
-import matplotlib.pyplot as plt
 import nibabel as nib
+import matplotlib.pyplot as plt
 
-
+from multiprocessing import sharedctypes,cpu_count,Pool
 from functools import partial
-from multiprocessing import Pool #  Process pool
-from multiprocessing import cpu_count
-from multiprocessing import sharedctypes
 
-import itertools
 import numpy as np
+import itertools
 
 import sys
 
@@ -103,7 +99,7 @@ def fill_out_in_parallel(z_ind_vector,tensor_order,scaling_method,args):
                 eigVals_scaled=eigVals/(eigVals[0]*eigVals[1]*eigVals[2])**(1/3.0)
 
             ##Load preservation method as in Howell, B., McIntyre, C.C., 2016.
-            elif scaling_method=='Load_preservation':
+            elif scaling_method=='LoadPreservation':
                 w12 = eigVals[0]/(eigVals[1]+eps)
                 w13 = eigVals[0]/(eigVals[1]+eps)
                 theta = theta_star(w12, w13)

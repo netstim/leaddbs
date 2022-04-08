@@ -2205,7 +2205,7 @@ class Ui_MainWindow(object):
         self.pushButton_Number_Of_Processors_2.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Choose number of processors that will be used for parallel field calculation in frequency spectrum, IFFT and neuron model simulations, as well as for solving the FEM system of Laplace equation (if FEniCS MPI is checked). We recommend not to choose the amount higher than number of physical cores on your computer/server.</span></p><p><span style=\" font-size:14pt; font-weight:600;\">Important</span><span style=\" font-size:14pt;\">: On Linux, the default number is half of all available cores. On other systems, GUI shows 0: by default all cores available for Docker App will be drawn, but users can reduce the number providing it here.</span></p></body></html>"))
         self.pushButton_Skip_Mesh_Refinement_2.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Check if CSF refinement and adaptive mesh refinement should be skipped. </span></p></body></html>"))
         self.label_Laplace_Transformation.setText(_translate("MainWindow", "Laplace Formulation"))
-        self.label_Full_Field_IFFT.setText(_translate("MainWindow", "Full Field IFFT"))
+        self.label_Full_Field_IFFT.setText(_translate("MainWindow", "VTA approximation"))
         self.label_El_Order.setText(_translate("MainWindow", "FEM Element Order"))
         self.comboBox_Laplace_Formulation.setItemText(0, _translate("MainWindow", "QS"))
         self.comboBox_Laplace_Formulation.setItemText(1, _translate("MainWindow", "EQS"))
