@@ -3,6 +3,7 @@ function analysisFile = ea_genGroupAnalysisFile(folder)
 
 if contains(folder, ['derivatives', filesep, 'leadgroup', filesep]) % Input is group analysis folder
     groupdir = fullfile(folder, filesep);
+    [~, guid] = fileparts(fileparts(groupdir));
 elseif isfolder(fullfile(folder, 'derivatives')) % Input is dataset root folder
     groupFolderExists = 1; 
     while groupFolderExists
