@@ -162,6 +162,7 @@ extract_width = 5; % in mm
 samplingres = .1;
 
 %% lower marker
+disp('Inspecting lower marker...');
 count = 1;
 for x = [-4:2*samplingres:0]
     center(count,:) = marker_mm + (x.*unitvector_mm);
@@ -202,6 +203,7 @@ plot([-4:2*samplingres:0],distance)
 close
 clear bestslice center COG_mm COG_dir distance count x
 %% upper marker
+disp('Inspecting upper marker...');
 count = 1;
 for x = [0:2*samplingres:4]
     center(count,:) = marker_mm + (x.*unitvector_mm);
