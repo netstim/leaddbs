@@ -385,7 +385,7 @@ if settings.calcAxonActivation
             end
 
             % Filter fibers based on the spherical ROI
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, settings.Phi_vector, 'kuncel', 2);
+            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2);
 
             % Filter fibers based on the minimal length
             fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
