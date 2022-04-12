@@ -126,10 +126,11 @@ tensorName = options.prefs.machine.vatsettings.butenko_tensorFileName;
 scalingMethod = options.prefs.machine.vatsettings.butenko_tensorScalingMethod;
 scaledTensorName = strrep(tensorName, '.nii', ['_', scalingMethod, '.nii']);
 
+ea_mkdir([options.subj.coregDir, filesep, 'dwi']);
 nativeTensor = [options.subj.coregDir, filesep, 'dwi', filesep, subDescPrefix, tensorName];
 nativeTensorScaled = [options.subj.coregDir, filesep, 'dwi', filesep, subDescPrefix, scaledTensorName];
-templateTensor = [ea_space, filesep, tensorName];
-templateTensorScaled = [ea_space, filesep, scaledTensorName];
+templateTensor = [ea_space, tensorName];
+templateTensorScaled = [ea_space, scaledTensorName];
 tensorData = [outputDir, filesep, scaledTensorName]; % Final tensor data input for OSS-DBS
 
 % Set to empty by default
@@ -200,7 +201,7 @@ if options.prefs.machine.vatsettings.butenko_useTensorData
             end
 
             % Copy scaled tensor data to stimulation directory, update setting
-            copyfile([tensorDir, tensorPrefix, scaledTensorName], tensorData);
+            copyfile([tensorDir, filesep, tensorPrefix, scaledTensorName], tensorData);
             settings.DTI_data_name = scaledTensorName;
         end
     end
