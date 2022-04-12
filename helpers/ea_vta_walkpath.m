@@ -53,7 +53,7 @@ switch pipeline
             end
 
         end
-        if exist(native_dir,'dir')
+        if exist('native_dir','dir')
             this_folder = dir_without_dots(native_dir);
             this_folder_names = {this_folder.name};
             file_indx = 1;
