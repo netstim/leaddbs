@@ -124,17 +124,22 @@ for patients = 1:length(source)
     file_index = 1;
     for j=1:length(file_names)
         if ~isfolder(fullfile(source_patient,file_names{j})) %only filenames, not directories
-            if ~any(contains(file_names{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
-                if any(regexpi(file_names{j},'raw_anat_.*.nii')) || doOnlyRaw || any(regexpi(file_names{j},'^anat_.*.nii'))  %we already know their tags in the case of cor,tra,sag
-                    to_match = file_names{j};
-                    bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
-                    tag = check_acq(fullfile(source_patient,file_names{j})); %function for modalities, use of fslHD
-                    tag_cell{end+1} = tag;
-                    mod_cell{end+1} = bids_mod;
+            if isempty(regexpi(file_names{j},'.*.(nii|nii.gz$)','match'))
+               continue
+            else
+                if ~any(contains(file_names{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
+                    if any(regexpi(file_names{j},'raw_anat_.*.nii')) || any(regexpi(file_names{j},'^anat_.*.nii'))  %we already know their tags in the case of cor,tra,sag
+                        to_match = file_names{j};
+                        bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
+                        tag = check_acq(fullfile(source_patient,file_names{j})); %function for modalities, use of fslHD
+                        tag_cell{end+1} = tag;
+                        mod_cell{end+1} = bids_mod;
+                    end
+                    files_to_move{file_index,1} = file_names{j};
+                    file_index = file_index + 1;
                 end
             end
-            files_to_move{file_index,1} = file_names{j};
-            file_index = file_index + 1;
+            
         end
     end
     
@@ -611,14 +616,32 @@ for patients = 1:length(source)
                     end
                 end
             otherwise
+                %clean up the files to move (anything outside of nii not
+                %accepted)
+                for i=1:length(files_to_move)
+                    if isempty(regexpi(files_to_move{i},'.*.(nii|nii.gz$)','match'))
+                        misc_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous');
+                        if ~exist(misc_dir,'dir')
+                            mkdir(misc_dir)
+                        end
+                        copyfile(fullfile(source_patient,file_names{j}),fullfile(misc_dir));
+                        files_to_move{i} = [];
+                    end
+                end
+                
+                files_to_move = files_to_move(~cellfun(@isempty, files_to_move));
                 if doOnlyRaw
-                    raw_str = '\w*(postop|ct|tra|cor|sag)\w*';
+                    raw_str = '\w*(postop|ct|tra|cor|sag|auto|ignore)\w*';
                     [~,matching_files_preop] = match_exact(files_to_move,raw_str);
                     [matching_files_postop,~] = match_exact(files_to_move, raw_str);
                 else
                     [matching_files_preop,~] = match_exact(files_to_move,'raw_anat_.*.nii'); %remove postop files and get only preop
                     [matching_files_postop,~] = match_exact(files_to_move,'(raw_postop_|postop_ct).*.nii');
                 end
+                
+
+
+
                 for i= 1:length(modes)
                     for j=1:length(sessions)
                         new_path = fullfile(dest,subfolder_cell{subfolders},patient_name,sessions{j},modes{i});
@@ -1135,7 +1158,8 @@ function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
                      bids_mod = 'misc';
                  end
              end
-        
+         else
+            bids_mod = '';
           end
              
     end
