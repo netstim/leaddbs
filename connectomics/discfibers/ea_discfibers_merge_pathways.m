@@ -54,7 +54,7 @@ end
 cfile = [filepath,filesep,'merged_pathways.mat'];
 save(cfile, '-struct', 'ftr');
 
-if obj.statmetric ~= 3
+if obj.connectivity_type ~= 2
     return
 end
 
@@ -82,15 +82,24 @@ for sub=1:numPatient
             
             if side == 1
                 side_name = 'right';
+                BIDS_side = '_model-ossdbs_hemi-R_tract-'; % this block is only executed for OSS-DBS
             else
                 side_name = 'left';
+                BIDS_side = '_model-ossdbs_hemi-L_tract-';
             end
-            % 
-            fiberActivation_file = ['fiberActivation_',side_name, '_', myFiles(k).name];
+
+
+            %BIDS notation
+            [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
+            subSimPrefix = [subj_tag, '_sim-'];
+            %fiberActivation_file = [subSimPrefix,'fiberActivation_',side_name, '_', myFiles(k).name];
+            fiberActivation_file = [subSimPrefix,'fiberActivation',BIDS_side, myFiles(k).name];
+            
+
+            %sub-sub-01_sim-fiberActivation_model-ossdbs_hemi-L_tract-stn2gpe_sm__mir_left.mat
             
             pam_file = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
                 ea_nt(0), 'gs_',obj.M.guid,filesep, fiberActivation_file];
-            
             
             % we need to add filtered out fibers as not activated
             try
@@ -100,7 +109,14 @@ for sub=1:numPatient
                 C_fibState_idx{k} = C_idx{k};
                 continue
             end
-            
+
+%             if ~strcmp(obj.connectome, fib_state_raw.connectome_name)
+%                 disp("==========================================================================") 
+%                 disp("WARNING: Activation of this pathway was computed for another connectome!!!") 
+%                 disp("==========================================================================") 
+%                 continue
+%             end   
+
             last_loc_i = 1;
             sub_i = 1;
             last_glob = 1;
@@ -134,8 +150,11 @@ for sub=1:numPatient
         ftr2.idx = cat(1, C_fibState_idx{:});
         
         % store as fiberActivation_side.mat in the corresp. stim folder
-        [filepath,name,ext] = fileparts(pam_file);
-        fiberActivation_merged = [filepath,filesep,'fiberActivation_',side_name,'.mat'];
+        [filepath,~,~] = fileparts(pam_file);
+        %BIDS notation
+        [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
+        subSimPrefix = [subj_tag, '_sim-'];
+        fiberActivation_merged = [filepath,filesep,subSimPrefix,'fiberActivation_',side_name,'.mat'];
         save(fiberActivation_merged, '-struct', 'ftr2');
         
     end

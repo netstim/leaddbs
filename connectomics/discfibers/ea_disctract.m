@@ -13,11 +13,15 @@ classdef ea_disctract < handle
         shownegamount = [25 25] % two entries for right and left
         connthreshold = 20
         efieldthreshold = 200
-        statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations, 3 = OSS DBS pathway activations, 4 = Dice Coeff / VTAs for binary variables, 5 = reverse t-tests & e-fields for binary variables, 6 = show plain connections (no stats)
+        statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations, 3 = vacant, 4 = Dice Coeff / VTAs for binary variables, 5 = reverse t-tests & e-fields for binary variables, 6 = show plain connections (no stats)
         multi_pathways = 0 % if structural connectome is devided into pathways (multiple .mat in dMRI_MultiTract)
         map_list % list that contains global indices of the first fibers in each pathway (relevant when multi_pathways = 1) 
         pathway_list % list that contains names of pathways (relevant when multi_pathways = 1
-        connFiberInd % list of indices of activated (connected) fibers (relevant when multi_pathways = 1)
+        connFiberInd_PAM % list of indices of activated (connected) fibers using PAM
+        connFiberInd_VAT % list of indices of activated (connected) fibers using VAT
+        connectivity_type = 0 % 1 - VAT, 2 - PAM
+        switch_connectivity = 0 % flag if connectivity type was changed in the GUI
+        nestedLOO = false
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [0.9176,0.2000,0.1373] % positive main color
@@ -152,16 +156,35 @@ classdef ea_disctract < handle
             if ~isempty(obj.M.vatmodel) && contains(obj.M.vatmodel, 'OSS-DBS (Butenko 2020)')
                 obj.statmetric = 3;
             end
-            
-            % just for now, ask Nanditha to add dMRI_MultiTract files as
-            % option in the GUI
-            %obj.connectome = 
-            
         end
 
 
         function calculate(obj)
+            obj.connectivity_type = 1;
+
+%             numPatient = length(obj.allpatients);
+%             for sub=1:numPatient
+%                 [filepath,name,ext] = fileparts(obj.allpatients{sub});
+%                 obj.allpatients{sub} = ['/home/konstantin/Documents/Results4Konst/derivatives/leaddbs',filesep,name];  
+%             end
             
+
+            switch obj.connectivity_type
+                case 2
+                    obj.M.vatmodel = 'OSS-DBS (Butenko 2020)';
+                otherwise
+                    obj.M.vatmodel= 'SimBio/FieldTrip (see Horn 2017)';
+            end
+
+            % check that this has not been calculated before:
+            if ~isempty(obj.results) % something has been calculated
+                if isfield(obj.results,ea_conn2connid(obj.connectome))
+                    answ=questdlg('This has already been calculated. Are you sure you want to re-calculate everything?','Recalculate Results','No','Yes','No');
+                    if ~strcmp(answ,'Yes')
+                        return
+                    end
+                end
+            end            
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
@@ -182,21 +205,23 @@ classdef ea_disctract < handle
             else
                 cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
             end
-            switch obj.statmetric
-                case 3    % if PAM, then just extracts activation states from fiberActivation.mat
+            switch obj.connectivity_type
+                case 2    % if PAM, then just extracts activation states from fiberActivation.mat
                     pamlist = ea_discfibers_getpams(obj);
-                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, obj.connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
-                otherwise                    
-                    % this is not needed for OSS-DBS
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
+                    obj.results.(ea_conn2connid(obj.connectome)).('PAM_Ttest').fibsval = fibsvalBin;
+                    obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM = connFiberInd;
+                otherwise     % check fiber recruitment via intersection with VTA             
                     if isfield(obj.M,'pseudoM')
                         vatlist = obj.M.ROI.list;
                     else
                         vatlist = ea_discfibers_getvats(obj);
                     end
-                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, obj.connFiberInd] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell,  connFiberInd] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
+                    obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
+                    obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd;
             end
             
-            obj.results.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_peak').fibsval = fibsvalPeak;
@@ -350,12 +375,19 @@ classdef ea_disctract < handle
                         Improvement = Iperm(patientsel,:);
                     end
             end
-            % Ihat is the estimate of improvements (not scaled to real improvements)
 
+            % Ihat is the estimate of improvements (not scaled to real improvements)
             Ihat = nan(length(patientsel),2);
             Ihattrain = Ihat;
 
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
+            obj.nestedLOO = false;
+            if obj.nestedLOO
+                Abs_pred_error = zeros(cvp.NumTestSets, 1);
+                Predicted_dif_models = zeros(cvp.NumTestSets, 1);
+                Slope = zeros(cvp.NumTestSets, 1);
+                Intercept = zeros(cvp.NumTestSets, 1);
+            end
 
             for c=1:cvp.NumTestSets
                 if cvp.NumTestSets ~= 1
@@ -370,167 +402,62 @@ classdef ea_disctract < handle
                     test = cvp.test{c};
                 end
 
-                if ~exist('Iperm', 'var')
-                    if obj.cvlivevisualize
-                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
-                        obj.draw(vals,fibcell,usedidx)
-                        %obj.draw(vals,fibcell);
-                        drawnow;
-                    else
-                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+                % now do LOO within the training group                
+                if obj.nestedLOO
+
+                    % use all patients, but outer loop left-out is always 0
+                    Ihat_inner = nan(length(patientsel),2); 
+                    Ihattrain_inner = nan(length(patientsel),2); 
+
+                    for test_i = 1:length(training)
+                        training_inner = training;
+                        training_inner(test_i) = 0; 
+
+                        % check if inner and outer left-out match
+                        if all(training_inner == training) 
+                            continue 
+                        end
+                        
+                        test_inner = logical(zeros(length(training), 1));
+                        test_inner(test_i) = logical(training(test_i));
+                        
+                        % updates Ihat_inner(test_inner)
+                        [Ihat_inner, Ihat_voters_inner, Ihat_voters_train_inner] = compute_fibscore_model(obj, fibsval, Ihat_inner, Ihattrain_inner, patientsel, training_inner, test_inner,0);
                     end
-                else
-                    if obj.cvlivevisualize
-                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
-                        obj.draw(vals,fibcell,usedidx)
-                        %obj.draw(vals,fibcell);
-                        drawnow;
-                    else
-                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
-                    end
+
+                    predictor=squeeze(ea_nanmean(Ihat_inner,2));
+                    % iteration over all test_inner gives us training
+                    mdl=fitglm(predictor(training),Improvement(training),lower(obj.predictionmodel));
+                    Intercept(c) = mdl.Coefficients.Estimate(1);
+                    Slope(c) = mdl.Coefficients.Estimate(2);  
+                    %disp('LM params (slope, intercept):')
+                    %disp(Slope(c))
+                    %disp(Intercept(c))
+                end   
+
+                % now compute Ihat for the true 'test' left out
+                % updates Ihat(test)
+                [Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fibsval, Ihat, Ihattrain, patientsel, training, test,0);
+
+                if obj.nestedLOO
+                    predictor=squeeze(ea_nanmean(Ihat,2));
+                    Ihat_voters_prediction = repmat(predict(mdl,predictor(test)),1,2);
+                    %Abs_pred_error(c) = abs(Improvement(test) - Ihat_voters_prediction(test));
+                    Predicted_dif_models(test) = Ihat_voters_prediction(1); % only one value here atm
                 end
+                         
+            end
 
-                switch obj.modelNormalization
-                    case 'z-score'
-                        for s=1:length(vals)
-                            vals{s}=ea_nanzscore(vals{s});
-                        end
-                    case 'van Albada 2007'
-                        for s=1:length(vals)
-                            vals{s}=ea_normal(vals{s});
-                        end
-                end
-                Ihat_voters=[];
-                Ihat_voters_train=[];
-                for voter=1:size(vals,1)
-                    for side=1:size(vals,2)
-                        if ~isempty(vals{voter,side})
-                            switch obj.statmetric % also differentiate between methods in the prediction part.
-                                case {1,3,4} % ttests / OSS-DBS / reverse t-tests
-                                    switch lower(obj.basepredictionon)
-                                        case 'mean of scores'
-                                            Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                                Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            
-                                        case 'sum of scores'
-                                            Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                                Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            
-                                        case 'peak of scores'
-                                            Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                                Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            
-                                        case 'peak 5% of scores'
-                                            ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
-                                            ihatvals=sort(ihatvals);
-                                            Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                                ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
-                                                ihatvals=sort(ihatvals);
-                                                Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                            
-
-                                    end
-                                case {2,5} % efields
-                                    switch lower(obj.basepredictionon)
-                                        case 'profile of scores: spearman'
-                                            Ihat(test,side) = (corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','spearman'));
-                                            if any(isnan(Ihat(test,side)))
-                                                Ihat(isnan(Ihat(test,side)),side)=0;
-                                                warning('Profiles of scores could not be evaluated for some patients. Displaying these points as zero entries. Lower threshold or carefully check results.');
-                                            end
-                                                Ihattrain(training,side) = atanh(corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','spearman'));
-                                            
-                                        case 'profile of scores: pearson'
-                                            Ihat(test,side) = (corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','pearson'));
-                                            if any(isnan(Ihat(test,side)))
-                                                Ihat(isnan(Ihat(test,side)),side)=0;
-                                                warning('Profiles of scores could not be evaluated for some patients. Displaying these points as zero entries. Lower threshold or carefully check results.');
-                                            end
-                                                Ihattrain(training,side) = atanh(corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','pearson'));
-                                            
-                                        case 'profile of scores: bend'
-                                            Ihat(test,side) = (ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test))));
-                                            if any(isnan(Ihat(test,side)))
-                                                Ihat(isnan(Ihat(test,side)),side)=0;
-                                                warning('Profiles of scores could not be evaluated for some patients. Displaying these points as zero entries. Lower threshold or carefully check results.');
-                                            end
-                                                Ihattrain(training,side) = atanh(ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training))));
-                                            
-                                        case 'mean of scores'
-                                            if ~isempty(vals{voter,side})
-                                                Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            end
-                                                Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            
-                                        case 'sum of scores'
-                                            if ~isempty(vals{voter,side})
-                                                Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            end
-                                                Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            
-                                        case 'peak of scores'
-                                            if ~isempty(vals{voter,side})
-                                                Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            end
-                                                Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            
-                                        case 'peak 5% of scores'
-                                            if ~isempty(vals{voter,side})
-                                                ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
-                                            end
-                                            ihatvals=sort(ihatvals);
-                                            Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                                ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
-                                                ihatvals=sort(ihatvals);
-                                                Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                            
-                                    end
-
-                                case 6 % Plain Connection
-                                    switch lower(obj.basepredictionon)
-                                        case 'mean of scores'
-                                            Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                                Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            
-                                        case 'sum of scores'
-                                            Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                                Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                            
-                                        case 'peak of scores'
-                                            Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                            Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
-                                        case 'peak 5% of scores'
-                                            ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
-                                            ihatvals=sort(ihatvals);
-                                            Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                            ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
-                                            ihatvals=sort(ihatvals);
-                                            Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                    end
-                            end
-                        end
-                    end
-
-                    if nargout>2 % send out improvements of subscores
-
-                        switch obj.multitractmode
-                            case 'Split & Color By Subscore'
-                                useI=obj.subscore.vars{voter};
-                            case 'Split & Color By PCA'
-                                useI=obj.subscore.pcavars{voter};
-                            otherwise
-                                useI=obj.responsevar;
-                        end
-                        for side=1:2
-                            mdl=fitglm(Ihattrain(training,side),useI(training),lower(obj.predictionmodel));
-                            actualimprovs{voter,side}=predict(mdl,Ihat(test,side));
-                        end
-
-                    end
-
-                    Ihat_voters=cat(3,Ihat_voters,Ihat);
-                    Ihat_voters_train=cat(3,Ihat_voters_train,Ihattrain);
-                end
+            if obj.nestedLOO
+                %empiricallabel = 'ADAS-COG 11 CHANGE (%)';
+                %fibscorelabel = 'Predicted Improvement (%)';
+                %cvs = 'L-O-O-O';
+                %h=ea_corrbox(Improvement,(Predicted_dif_models),{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel},'permutation_spearman',[],[],[],[]);    
+                LM_values_slope = [num2str(mean(Slope)) ' ' char(177) ' ' num2str(std(Slope))];
+                LM_values_intercept = [num2str(mean(Intercept)) ' ' char(177) ' ' num2str(std(Intercept))];
+                disp('Mean and STD for slopes and intercepts of LMs')
+                disp(LM_values_slope)
+                disp(LM_values_intercept)
             end
 
             if obj.doactualprediction % repeat loops partly to fit to actual response variables:
@@ -703,6 +630,14 @@ classdef ea_disctract < handle
             try % could be figure is already closed.
                 setappdata(rf,['dt_',tractset.ID],rd); % store handle of tract to figure.
             end
+
+            %we do not need to store plainconn separately since it is a
+            %duplicate of PAM or VAT connectivity
+            if isfield(obj.results.(ea_conn2connid(obj.connectome)),'plainconn')
+               connectomeName = ea_conn2connid(obj.connectome);
+               obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn');
+            end            
+
             tractset.resultfig=[]; % rm figure handle before saving.
             tractset.drawobject=[]; % rm drawobject.
             save(tractset.analysispath,'tractset','-v7.3');
@@ -712,6 +647,55 @@ classdef ea_disctract < handle
         
         function draw(obj,vals,fibcell,usedidx) %for cv live visualize
         %function draw(obj,vals,fibcell)
+
+            obj.connectivity_type = 1;
+
+            % re-define plainconn (since we do not store it)
+            try
+                if obj.connectivity_type == 2
+                    obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = obj.results.(ea_conn2connid(obj.connectome)).('PAM_Ttest').fibsval;
+                else
+                    obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval;
+                end
+            catch
+                disp("=================== WARNING ========================")
+                disp("Connectivity indices connFiberInd were not stored")
+                disp("Recalculate or stay with the same model (VAT or PAM)")
+                disp("====================================================")
+            end
+                
+            disp(obj.switch_connectivity)
+
+            % update the connectivity if switched between PAM and VAT
+            if obj.switch_connectivity == 1
+                if obj.multi_pathways == 1
+                    [filepath,name,ext] = fileparts(obj.leadgroup);
+                    cfile = [filepath,filesep,'merged_pathways.mat'];
+                else
+                    cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
+                end                
+                load(cfile, 'fibers', 'idx');
+                disp('Conn Type')
+                disp(obj.connectivity_type)
+                try
+                    for side = 1:2
+                        if obj.connectivity_type == 2
+                            connFiber = fibers(ismember(fibers(:,4), obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}), 1:3);
+                            obj.results.(ea_conn2connid(obj.connectome)).fibcell{side} = mat2cell(connFiber, idx(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}));
+                        else 
+                            connFiber = fibers(ismember(fibers(:,4), obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}), 1:3);
+                            obj.results.(ea_conn2connid(obj.connectome)).fibcell{side} = mat2cell(connFiber, idx(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}));
+                        end
+                    end
+                catch
+                    disp("=================== WARNING ========================")
+                    disp("Connectivity indices connFiberInd were not stored")
+                    disp("Recalculate or stay with the same model (VAT or PAM)")
+                    disp("====================================================")
+                end
+            end
+
+
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
             end
@@ -719,8 +703,8 @@ classdef ea_disctract < handle
             obj.fiberdrawn.vals = vals;
             obj.fiberdrawn.usedidx = usedidx;
             
-            % print number of significant displayed fibers per pathway
-            if obj.multi_pathways == 1 % at the moment, obj.connFiberInd is defined only for OSS-DBS
+            % print number of significant displayed fibers per pathway (atm only for binary metrics)
+            if obj.multi_pathways == 1 && (isequal(ea_method2methodid(obj),'VAT_Ttest') || isequal(ea_method2methodid(obj),'PAM_Ttest') || isequal(ea_method2methodid(obj),'plainconn'))% at the moment, obj.connFiberInd is defined only for OSS-DBS
                 %disp("number of drawn fibers per pathway")
                 num_per_path = cell(1, 2); % with obj.map_list, rates can be computed                
                 for side = 1:2
@@ -728,9 +712,21 @@ classdef ea_disctract < handle
                     if length(usedidx{side}) 
                         for inx = 1:length(usedidx{side})
                             % check the nearest via the difference, if positive, take one before
-                            [d, ix] = min(abs(obj.map_list-obj.connFiberInd{side}(usedidx{side}(inx)))); 
-                            if (obj.map_list(ix)-obj.connFiberInd{side}(usedidx{side}(inx))) > 0
-                               ix = ix - 1; 
+                            % I think we can easily add plainconnectivity
+                            % here (just try to disable if check)
+
+                            % usedidx will be different for
+                            % plainconnectivity, so it should work!
+                            if obj.connectivity_type == 2
+                                [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx)))); 
+                                if (obj.map_list(ix)-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx))) > 0
+                                   ix = ix - 1; 
+                                end
+                            else
+                                [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx)))); 
+                                if (obj.map_list(ix)-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx))) > 0
+                                   ix = ix - 1; 
+                                end
                             end
                             num_per_path{side}(ix) = num_per_path{side}(ix)+1;
                         end 
