@@ -9,12 +9,12 @@ if ~isfolder(fullfile(LeadRoot, 'templates', 'space', 'MNI152NLin2009bAsym', 'at
     newSpace = [fileparts(fileparts(ea_space)), filesep, 'MNI152NLin2009bAsym', filesep];
     if isfile([newSpace, 'IITmean_tensor.nii.gz'])
         disp('Rename IIT Mean Tensor ...');
-        movefile([newSpace, 'IITmean_tensor.nii.gz'], [newSpace, 'IITmeanTensor.nii.gz'])
+        movefile([newSpace, 'IITmean_tensor.nii.gz'], [newSpace, 'IITMeanTensor.nii.gz'])
     end
 
     if isfile([newSpace, 'IITmean_tensor_Norm_mapping.nii.gz'])
         disp('Rename scaled IIT Mean Tensor ...');
-        movefile([newSpace, 'IITmean_tensor_Norm_mapping.nii.gz'], [newSpace, 'IITmeanTensorNormMapping.nii.gz'])
+        movefile([newSpace, 'IITmean_tensor_Norm_mapping.nii.gz'], [newSpace, 'IITMeanTensor_NormMapping.nii.gz'])
     end
 
     try
