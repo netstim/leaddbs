@@ -79,7 +79,8 @@ for f=1:length(overlay)
     if numel(threshold(f,:))>2 && ~isnan(threshold(f,3))
         script = [script, 'overlayload(''', overlay{f}, ''');', ...
             'overlayminmax(2, ', num2str(threshold(f,3)), ', ', num2str(threshold(f,4)), ');', ...
-            'overlaycolorname(2, ''Blue-Green'');'];
+            'overlaycolorname(2, ''Blue-Green'');', ...
+            'overlayinvert(2, true);'];
     end
 
     % Base path of images to be exported (.nii.gz or .nii stripped)
