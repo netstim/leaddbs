@@ -136,6 +136,12 @@ classdef ea_networkmapping < handle
 
             obj.results.(ea_conn2connid(obj.connectome)).connval = AllX;
 
+            % Functional connectome, add spacedef to results
+            if contains(obj.connectome, ' > ')
+                connName = regexprep(obj.connectome, ' > .*$', '');
+                load([ea_getconnectomebase('fmri'), connName, filesep, 'dataset_info.mat'], 'dataset');
+                obj.results.(ea_conn2connid(obj.connectome)).space = dataset.vol.space;
+            end
         end
 
         function Amps = getstimamp(obj)
@@ -313,7 +319,12 @@ classdef ea_networkmapping < handle
                     callingfunction = st(2).name;
                     callingfunction = strrep(callingfunction,'ea_networkmapping.','');
 
-                   res=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+                    if contains(obj.connectome, ' > ')
+                        % For functional connectome, should use the spacedef provided by the connectome itself
+                        res = obj.results.(ea_conn2connid(obj.connectome)).space;
+                    else
+                        res = ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+                    end
                     res.dt=[16,1];
 
                     res.img(:)=vals{1};
@@ -504,8 +515,14 @@ classdef ea_networkmapping < handle
                 return
             end
 
-            res=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+            if contains(obj.connectome, ' > ')
+                % For functional connectome, should use the spacedef provided by the connectome itself
+                res = obj.results.(ea_conn2connid(obj.connectome)).space;
+            else
+                res = ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
+            end
             res.dt=[16,1];
+
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Horzvat all values for colorbar construction
                 allvals = horzcat(vals{group,:})';
