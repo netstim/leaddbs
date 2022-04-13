@@ -309,32 +309,32 @@ classdef ea_networkmapping < handle
                     end
 
                     % determine which cv is running
-                   st = dbstack;
-                   callingfunction = st(2).name;
-                   callingfunction = strrep(callingfunction,'ea_networkmapping.','');
+                    st = dbstack;
+                    callingfunction = st(2).name;
+                    callingfunction = strrep(callingfunction,'ea_networkmapping.','');
 
                    res=ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
-                   res.dt=[16,1];
-                   res.img(:)=vals{1};
+                    res.dt=[16,1];
 
-                   ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction));
-                   res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction,[ea_space2sub(obj.statmetric),'_',num2str(c),'.nii']);
-                   ea_write_nii(res);
+                    res.img(:)=vals{1};
+
+                    ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction));
+                    res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction,[ea_space2sub(obj.statmetric),'_',num2str(c),'.nii']);
+                    ea_write_nii(res);
 
                    % also check if fingerprints have already been exported
-                   if c==1
-                       odir=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints');
-                       if exist(odir,'dir')
-                          ea_warning(['An analysis with the same name (',setname,') already exists under ',odir,'. Dumping novel NIfTI files in there - but better reexport and clean up before.']);
-                       end
-                       ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints'));
-                       for pt=obj.patientselection
-
-                           res.img(:)=obj.results.(ea_conn2connid(obj.connectome)).connval(pt,:);
-                           res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints',['Fingerprint_',num2str(pt),'.nii']);
-                           ea_write_nii(res);
-                       end
-                   end
+                    if c==1
+                        odir=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints');
+                        if exist(odir,'dir')
+                            ea_warning(['An analysis with the same name (',setname,') already exists under ',odir,'. Dumping novel NIfTI files in there - but better reexport and clean up before.']);
+                        end
+                        ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints'));
+                        for pt=obj.patientselection
+                            res.img(:)=obj.results.(ea_conn2connid(obj.connectome)).connval(pt,:);
+                            res.fname=fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'fingerprints',['Fingerprint_',num2str(pt),'.nii']);
+                            ea_write_nii(res);
+                        end
+                    end
                 end
 
                 switch lower(obj.basepredictionon)
