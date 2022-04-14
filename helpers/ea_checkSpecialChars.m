@@ -9,6 +9,10 @@ elseif ischar(paths)
     paths = {paths};
 end
 
+if iscolumn(paths)
+    paths = paths';
+end
+
 if strcmp(paths{1}, 'No Patient Selected')
     return
 end
@@ -20,7 +24,7 @@ else
 end
 
 warntxt = '';
-for i = find(~cellfun(@isempty, special_characters))'
+for i = find(~cellfun(@isempty, special_characters))
     warntxt = [warntxt sprintf('The folder: %s\ncontains the unsopported characters (or space): ''%s''.\n\n', paths{i}, special_characters{i})];
 end
 
