@@ -148,8 +148,8 @@ if ismember('fMRI',options.predict.includes)
 end
 
 if hasfMRI
-    cfg.fMRI.model=ea_getsurficeplots(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','fMRI',strrep(fMRIcon,'>','_'),'fMRI_optimal.nii'),[0.01,0.1,-0.1,-0.01]);
-    cfg.fMRI.vta=ea_getsurficeplots(fMRImap.fname,[0.01,0.1,-0.1,-0.01]);
+    cfg.fMRI.model=ea_getsurficeplots(fullfile(ea_getearoot,'predict','models','horn2017_AoN','combined_maps','fMRI',strrep(fMRIcon,'>','_'),'fMRI_optimal.nii'),[0.01,0.1,-0.01,-0.1]);
+    cfg.fMRI.vta=ea_getsurficeplots(fMRImap.fname,[0.01,0.1,-0.01,-0.1]);
 end
 
 if hasdMRI

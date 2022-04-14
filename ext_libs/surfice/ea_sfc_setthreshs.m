@@ -64,7 +64,7 @@ fnames=varargin{2};
 setappdata(handles.threshsfigure,'threshs',threshs);
 handles.threshs.Data=threshs;
 handles.threshs.ColumnEditable=logical([1 1 1 1]);
-handles.threshs.ColumnName={'MinPos','MaxPos','MinNeg','MaxNeg'};
+handles.threshs.ColumnName={'MinPos','MaxPos','MaxNeg','MinNeg'};
 handles.threshs.RowName=fnames;
 
 % UIWAIT makes ea_sfc_setthreshs wait for user response (see UIRESUME)

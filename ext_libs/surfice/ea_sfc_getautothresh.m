@@ -14,8 +14,8 @@ for f=1:length(images)
     if min(nii.img(:))<0 % has negative values, calculate 4 vals
         threshold(f,1) = 0.5*imgstd;
         threshold(f,2) = 2.7*imgstd;
-        threshold(f,3) = -2.7*imgstd;
-        threshold(f,4) = -0.5*imgstd;
+        threshold(f,3) = -0.5*imgstd;
+        threshold(f,4) = -2.7*imgstd;
     else % only positive vals
         threshold(f,1) = 0.04*imgstd;
         threshold(f,2) = 1.9*imgstd;
