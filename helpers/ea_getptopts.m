@@ -5,6 +5,8 @@ if isempty(directory)
     directory = pwd;
 end
 
+directory = GetFullPath(directory);
+
 options.earoot = ea_getearoot;
 options.native = 0;
 
