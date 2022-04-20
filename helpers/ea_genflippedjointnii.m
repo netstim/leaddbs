@@ -4,6 +4,11 @@ function ea_genflippedjointnii(rightFile, leftFile)
 files = {rightFile; leftFile};
 
 for f=1:2
+    if ~isfile(files{f})
+        ea_cprintf('CmdWinWarnings', 'Skipping flipping image: VTA doesn''t exist!\n');
+        continue;
+    end
+
     [fPath, fName, fExt] = fileparts(files{f});
     if ~isBIDSFileName(files{f})
         flippedFile = fullfile(fPath, ['fl_', fName, fExt]);

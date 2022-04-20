@@ -28,7 +28,12 @@ for side = 1:numSide
     disp(['Calculate for side ', num2str(side), ':']);
     for pt = 1:numPatient
         disp(['VAT ', num2str(pt, ['%0',num2str(numel(num2str(numPatient))),'d']), '/', num2str(numPatient), '...']);
-        vat = ea_load_nii(vatlist{pt,side});
+        if isfile(vatlist{pt,side})
+            vat = ea_load_nii(vatlist{pt,side});
+        else
+            ea_cprintf('CmdWinWarnings', 'Skipping calculating connectivity: VTA doesn''t exist!\n');
+            continue;
+        end
 
         % Threshold the vat efield
         vatInd = find(vat.img(:)>thresh);
