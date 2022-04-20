@@ -175,7 +175,9 @@ else % Call in lead 'group'
 end
 
 setappdata(gcf,'genvatfunctions',genvatfunctions);
-set(handles.modelselect,'String',ndc);
+value = find(contains(ndc, handles.modelselect.String(handles.modelselect.Value)));
+set(handles.modelselect, 'String', ndc);
+set(handles.modelselect, 'Value', value);
 
 % if ~isempty(stimparams) % stimfigure has been used before..
 %     for side=1:2
