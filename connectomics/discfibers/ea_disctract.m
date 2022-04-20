@@ -311,12 +311,17 @@ classdef ea_disctract < handle
         function coh = getcohortregressor(obj)
             coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
         end
-
         function [I, Ihat] = loocv(obj)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
-            [I, Ihat] = crossval(obj, cvp);
+            [R_mean,p_mean] = crossval(obj, cvp);
         end
+
+%         function [I, Ihat] = loocv(obj)
+%             rng(obj.rngseed);
+%             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
+%             [I, Ihat] = crossval(obj, cvp);
+%         end
 
         function [I, Ihat] = lococv(obj)
             if length(unique(obj.M.patient.group(obj.patientselection))) == 1
@@ -327,9 +332,18 @@ classdef ea_disctract < handle
         end
 
         function [I, Ihat] = kfoldcv(obj)
+       
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
             [I, Ihat] = crossval(obj, cvp);
+%             cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
+%             [R_mean,p_mean] = crossval(obj, cvp);
+%             R_iter{end+1} = R_mean;
+%             p_iter{end+1} = p_mean;
+%             R = cell2mat(R_iter);
+%             p = cell2mat(p_iter);
+%             final_R = median(R,'omitnan');
+%             fprintf("\nfinal R value: %d", final_R)
         end
 
         function [I, Ihat] = lno(obj, Iperm)
@@ -402,25 +416,25 @@ classdef ea_disctract < handle
                     test = cvp.test{c};
                 end
 
-                % now do LOO within the training group                
+                % now do LOO within the training group
                 if obj.nestedLOO
 
                     % use all patients, but outer loop left-out is always 0
-                    Ihat_inner = nan(length(patientsel),2); 
-                    Ihattrain_inner = nan(length(patientsel),2); 
+                    Ihat_inner = nan(length(patientsel),2);
+                    Ihattrain_inner = nan(length(patientsel),2);
 
                     for test_i = 1:length(training)
                         training_inner = training;
-                        training_inner(test_i) = 0; 
+                        training_inner(test_i) = 0;
 
                         % check if inner and outer left-out match
-                        if all(training_inner == training) 
-                            continue 
+                        if all(training_inner == training)
+                            continue
                         end
-                        
+
                         test_inner = logical(zeros(length(training), 1));
                         test_inner(test_i) = logical(training(test_i));
-                        
+
                         % updates Ihat_inner(test_inner)
                         [Ihat_inner, Ihat_voters_inner, Ihat_voters_train_inner] = compute_fibscore_model(obj, fibsval, Ihat_inner, Ihattrain_inner, patientsel, training_inner, test_inner,0);
                     end
@@ -429,15 +443,16 @@ classdef ea_disctract < handle
                     % iteration over all test_inner gives us training
                     mdl=fitglm(predictor(training),Improvement(training),lower(obj.predictionmodel));
                     Intercept(c) = mdl.Coefficients.Estimate(1);
-                    Slope(c) = mdl.Coefficients.Estimate(2);  
+                    Slope(c) = mdl.Coefficients.Estimate(2);
                     %disp('LM params (slope, intercept):')
                     %disp(Slope(c))
                     %disp(Intercept(c))
-                end   
+                end
 
                 % now compute Ihat for the true 'test' left out
                 % updates Ihat(test)
-                [Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fibsval, Ihat, Ihattrain, patientsel, training, test,0);
+                [Ihat, Ihat_train] = compute_fibscore_model(obj, fibsval, Ihat, Ihattrain, patientsel, training, test,0);
+                %[Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fibsval, Ihat, Ihattrain, patientsel, training, test,0);
 
                 if obj.nestedLOO
                     predictor=squeeze(ea_nanmean(Ihat,2));
@@ -445,14 +460,14 @@ classdef ea_disctract < handle
                     %Abs_pred_error(c) = abs(Improvement(test) - Ihat_voters_prediction(test));
                     Predicted_dif_models(test) = Ihat_voters_prediction(1); % only one value here atm
                 end
-                         
+
             end
 
             if obj.nestedLOO
                 %empiricallabel = 'ADAS-COG 11 CHANGE (%)';
                 %fibscorelabel = 'Predicted Improvement (%)';
                 %cvs = 'L-O-O-O';
-                %h=ea_corrbox(Improvement,(Predicted_dif_models),{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel},'permutation_spearman',[],[],[],[]);    
+                %h=ea_corrbox(Improvement,(Predicted_dif_models),{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel},'permutation_spearman',[],[],[],[]);
                 LM_values_slope = [num2str(mean(Slope)) ' ' char(177) ' ' num2str(std(Slope))];
                 LM_values_intercept = [num2str(mean(Intercept)) ' ' char(177) ' ' num2str(std(Intercept))];
                 disp('Mean and STD for slopes and intercepts of LMs')
@@ -461,7 +476,27 @@ classdef ea_disctract < handle
             end
 
             if obj.doactualprediction % repeat loops partly to fit to actual response variables:
-                Ihat_voters_prediction=nan(size(Ihat_voters));
+                if ~exist('Iperm', 'var')
+                    if obj.cvlivevisualize
+                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+                        obj.draw(vals,fibcell,usedidx)
+                        %obj.draw(vals,fibcell);
+                        drawnow;
+                    else
+                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+                    end
+                else
+                    if obj.cvlivevisualize
+                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
+                        obj.draw(vals,fibcell,usedidx)
+                        %obj.draw(vals,fibcell);
+                        drawnow;
+                    else
+                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
+                    end
+                end
+                Ihat_voters_prediction=nan(size(Ihat));
+                %Ihat_voters_prediction=nan(size(Ihat_voters));
                 for c=1:cvp.NumTestSets
 
                     if isobject(cvp)
@@ -484,20 +519,20 @@ classdef ea_disctract < handle
                         if size(useI,2)>1
                             ea_error('This has not been implemented for hemiscores.');
                         end
-
-                        predictor=squeeze(ea_nanmean(Ihat_voters,2));
+                        predictor=squeeze(ea_nanmean(Ihat,2));
+                        %predictor=squeeze(ea_nanmean(Ihat_voters,2));
                         if all(isnan(predictor(training,voter))) && cvp.NumTestSets == 1 % this is the case if e.g. using cohort A to predict B (not a kfold/loo case).
-                            pred_train=ea_nanmean(Ihat_voters_train,2);
+                            pred_train=ea_nanmean(Ihat_train,2);
                             predictor(training,voter)=pred_train(training,voter);
                         end
                         covariates=[];
                         for cv=1:length(obj.covars)
-                        covariates=[covariates,obj.covars{cv}];
+                            covariates=[covariates,obj.covars{cv}];
                         end
                         if ~isempty(covariates)
-                        mdl=fitglm([predictor(training,voter),covariates(training,:)],useI(training),lower(obj.predictionmodel));
+                            mdl=fitglm([predictor(training,voter),covariates(training,:)],useI(training),lower(obj.predictionmodel));
                         else
-                        mdl=fitglm([predictor(training,voter)],useI(training),lower(obj.predictionmodel));
+                            mdl=fitglm([predictor(training,voter)],useI(training),lower(obj.predictionmodel));
                         end
                         if size(useI,2)==1 % global scores
                             if ~isempty(covariates)
@@ -510,7 +545,7 @@ classdef ea_disctract < handle
                         end
                     end
                 end
-                Ihat_voters=Ihat_voters_prediction; % replace with actual response variables.
+                Ihat=Ihat_voters_prediction; % replace with actual response variables.
             end
 
             switch obj.multitractmode
@@ -522,21 +557,25 @@ classdef ea_disctract < handle
                     else
                         selected_pts = obj.customselection;
                     end
-                    weightmatrix=zeros(size(Ihat_voters));
-                    for voter=1:size(Ihat_voters,3)
+                    weightmatrix=zeros(size(Ihat));
+                    for voter=1:size(Ihat,3)
+                    %weightmatrix=zeros(size(Ihat_voters));
+                    %for voter=1:size(Ihat_voters,3)
                         if ~isnan(obj.subscore.weights(voter)) % same weight for all subjects in that voter (slider was used)
                             weightmatrix(:,:,voter)=obj.subscore.weights(voter);
                         else % if the weight value is nan, this means we will need to derive a weight from the variable of choice
                             weightmatrix(:,:,voter)=repmat(obj.subscore.weightvars{voter}(selected_pts),1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter}(selected_pts),2));
                         end
                     end
-                    for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
-                        for yy=1:size(Ihat_voters,2)
+                    for xx=1:size(Ihat,1) % make sure voter weights sum up to 1
+                        for yy=1:size(Ihat,2)
+                    %                     for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
+                    %                         for yy=1:size(Ihat_voters,2)
                             weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
                         end
                     end
 
-                    Ihat=ea_nansum(Ihat_voters.*weightmatrix,3);
+                    Ihat=ea_nansum(Ihat.*weightmatrix,3);
                 case 'Split & Color By PCA'
 
                     Ihat_voters=squeeze(ea_nanmean(Ihat_voters,2)); % need to assume global scores here for now.
@@ -553,7 +592,8 @@ classdef ea_disctract < handle
                     end
 
                 otherwise
-                    Ihat=squeeze(Ihat_voters);
+                    Ihat=squeeze(Ihat);
+                    %Ihat=squeeze(Ihat_voters);
             end
             if ~iscell(Ihat)
                 if cvp.NumTestSets == 1
@@ -569,6 +609,7 @@ classdef ea_disctract < handle
                 end
             end
 
+            
             % restore original view in case of live drawing
             if obj.cvlivevisualize
                 obj.draw;

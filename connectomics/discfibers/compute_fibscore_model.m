@@ -1,8 +1,8 @@
-function [Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fibsval, Ihat, Ihattrain, patientsel, training, test, Iperm_dummy)
+function [Ihat,Ihattrain] = compute_fibscore_model(obj, fibsval, Ihat, Ihattrain, patientsel, training, test, Iperm_dummy,Improvement,test_index)
 
     % args: vals, obj, I_hat, training, test, fibsval,
     % Iperm, patientsel, opt: Slope, Intercept
-
+    corrtype = 'spearman';
     if ~exist('Iperm', 'var')
         if obj.cvlivevisualize
             [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
@@ -34,8 +34,8 @@ function [Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fi
             end
     end
     
-    Ihat_voters = [];
-    Ihat_voters_train = [];
+    %Ihat_voters = [];
+    %Ihat_voters_train = [];
     for voter=1:size(vals,1)
         for side=1:size(vals,2)
             if ~isempty(vals{voter,side})
@@ -44,7 +44,7 @@ function [Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fi
                         switch lower(obj.basepredictionon)
                             case 'mean of scores'
                                 Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihattrain(training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                 
                             case 'sum of scores'
                                 Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
@@ -52,7 +52,7 @@ function [Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fi
                                 
                             case 'peak of scores'
                                 Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                 
                             case 'peak 5% of scores'
                                 ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
@@ -92,21 +92,21 @@ function [Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fi
                                 
                             case 'mean of scores'
                                 if ~isempty(vals{voter,side})
-                                    Ihat(test,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    Ihat(test,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
                                 end
-                                    Ihattrain(training,side) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                Ihattrain(training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                 
                             case 'sum of scores'
                                 if ~isempty(vals{voter,side})
-                                    Ihat(test,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    Ihat(test,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
                                 end
-                                    Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                Ihattrain(training,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                 
                             case 'peak of scores'
                                 if ~isempty(vals{voter,side})
-                                    Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                    Ihat(test,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
                                 end
-                                    Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                Ihattrain(training,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                 
                             case 'peak 5% of scores'
                                 if ~isempty(vals{voter,side})
@@ -114,9 +114,9 @@ function [Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fi
                                 end
                                 ihatvals=sort(ihatvals);
                                 Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
-                                    ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
-                                    ihatvals=sort(ihatvals);
-                                    Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
+                                ihatvals=sort(ihatvals);
+                                Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                 
                         end
 
@@ -144,18 +144,28 @@ function [Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fi
                 end
             end
         end
-% 
-%         % weight hemiscores by number of selected fibers, sum and take
-%         % atanh (only in some cases!)
-%         total_num_sig = length(usedidx{voter,1})+length(usedidx{voter,2});
-%         disp(Ihat(test))
-%         Ihat(test,1) = atanh((Ihat(test,1)*length(usedidx{voter,1}) + Ihat(test,2)*length(usedidx{voter,2}))/total_num_sig);
-%         Ihat(test,2) = Ihat(test,1);
-%         disp(Ihat(test))
-%         % add here block
-%         % if nargout>2 % send out improvements of subscores
-        
-        Ihat_voters=cat(3,Ihat_voters,Ihat);
-        Ihat_voters_train=cat(3,Ihat_voters_train,Ihattrain);
     end
+%     Ihat = Ihat(test_index,:,:);
+%     selected_pts = test;
+%     weightmatrix=zeros(size(Ihat));
+%     for voter=1:size(Ihat,3)
+%         if ~isnan(obj.subscore.weights(voter)) % same weight for all subjects in that voter (slider was used)
+%             weightmatrix(:,:,voter)=obj.subscore.weights(voter);
+%         else % if the weight value is nan, this means we will need to derive a weight from the variable of choice
+%             weightmatrix(:,:,voter)=repmat(obj.subscore.weightvars{voter}(selected_pts),1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter}(selected_pts),2));
+%         end
+%     end
+%     for xx=1:length(test_index)
+%         for yy=1:size(Ihat,2)
+%             %for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
+%             %    for yy=1:size(Ihat_voters,2)
+%             weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
+%         end
+%     end
+%     Ihat=ea_nansum(Ihat.*weightmatrix,3);
+%     Ihat = ea_nanmean(Ihat,2);
+%     I = Improvement(test_index);
+%     [R,p]=corr(I,Ihat,'rows','pairwise','type',corrtype);
+%     fprintf("R value for set is %.2f\n",R);
+%     fprintf("p value for set is %.2f\n",p);
 end
