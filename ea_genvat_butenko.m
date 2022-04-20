@@ -590,7 +590,7 @@ for side=0:1
                 if settings.stimSetMode
                     if startsWith(settings.connectome, 'Multi-Tract: ')
                         stimProt_index = regexp(tractName, '(?<=_)\d+$', 'match', 'once');
-                        tractName = regexprep(tractName, '.+(?=_\d+$)', 'match', 'once');
+                        tractName = regexp(tractName, '.+(?=_\d+$)', 'match', 'once');
                     else
                         stimProt_index = regexp(axonState{f}, '(?<=Axon_state_)\d+(?=\.mat$)', 'match', 'once');
                     end
