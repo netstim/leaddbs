@@ -6,6 +6,9 @@ set(handles.groupdir_choosebox, 'String', groupdir);
 set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
 analysisFile = ea_getGroupAnalysisFile(groupdir);
+if isempty(analysisFile) % Create new analysis file in case not found
+    analysisFile = ea_genGroupAnalysisFile(groupdir);
+end
 load(analysisFile, 'M');
 if ~isfield(M.ui, 'mirrorsides')
     % Fix missing 'mirrorsides' field for old analysis

@@ -19,8 +19,9 @@ elseif isfolder(fullfile(folder, 'derivatives')) % Input is dataset root folder
             waitfor(errordlg('Specified ID/Label already exists!', 'Error', 'modal'));
         end
     end
-    mkdir(groupdir);
 end
+
+ea_mkdir(groupdir);
 
 M = ea_initializeM(guid);
 M.ui.groupdir = groupdir;
