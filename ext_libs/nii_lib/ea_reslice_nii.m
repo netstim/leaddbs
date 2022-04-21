@@ -108,10 +108,8 @@ elseif tool==2 % Use FSL
     setenv('FSLOUTPUTTYPE','NIFTI');
     if ~ispc
         system(['bash -c "', flirtcmd, '"']);
-        system(['bash -c "', convertxfmcmd, '"']);
     else
         system(flirtcmd);
-        system(convertxfmcmd);
     end
 
 elseif tool==3 % Use ANTs
