@@ -94,7 +94,7 @@ if ~strcmp(spacedef.tpm(1:6),'custom')
     for c=1:tpmnum
         fina=[ea_space([],'dartel'),'dartelmni_6_hires_',sprintf('%05d',c),'.nii'];
         nii=ea_load_nii(fina); % change datatype to something high for reslicing and smoothing.
-        nii.dt=[16,0];
+        nii.dt(1) = 16;
         ea_write_nii(nii);
         if ~(prefs.normalize.spm.resolution==0.5) % reslice images
             ea_reslice_nii(fina,fina,ones(1,3)*prefs.normalize.spm.resolution,1,[],1);
@@ -111,7 +111,7 @@ if ~strcmp(spacedef.tpm(1:6),'custom')
         movefile(fullfile(pth,['s',fn,ext]),fullfile(pth,[fn,ext]));
 
         nii=ea_load_nii(fina); % change datatype back to uint8
-        nii.dt=[2,0];
+        nii.dt(1) = 2;
         ea_delete(fina);
         ea_write_nii(nii);
 

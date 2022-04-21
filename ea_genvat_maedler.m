@@ -99,7 +99,7 @@ end
 Vvat.mat=mat;
 %voxspace=permute(voxspace,[2,1,3]);
 Vvat.dim=size(voxspace);
-Vvat.dt=[4,0];
+Vvat.dt(1) = 4;
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
 

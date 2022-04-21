@@ -86,7 +86,7 @@ end
 slab_present = any(is_slab);
 
 if slab_present
-    mnii.dt = [4,0];
+    mnii.dt(1) = 4;
     mnii.img = AllMX;
     tmaskdir = fullfile(fileparts(movingimage{1}), 'tmp');
     if ~exist(tmaskdir, 'dir')

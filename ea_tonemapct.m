@@ -10,7 +10,7 @@ switch nativenorm
             ct = ea_load_nii(options.subj.postopAnat.CT.coreg);
             ct.fname = options.subj.postopAnat.CT.coregTonemap;
             ct.img = tonemap(ct.img);
-            ct.dt = [16,0];
+            ct.dt(1) = 16;
             ea_write_nii(ct);
         else
             fprintf('Coregistered CT image not present. Skipping tonemapping.\n');

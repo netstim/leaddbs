@@ -221,7 +221,7 @@ for subj = 1:numSubUse % iterate across subjects
             end
         end
 
-        mmap.dt=[16,0];
+        mmap.dt(1) = 16;
         mmap.img(:)=0;
         mmap.img=single(mmap.img);
         mmap.img(omaskidx)=Rw;

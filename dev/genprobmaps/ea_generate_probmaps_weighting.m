@@ -166,7 +166,7 @@ if ~ischar(pts)
 
     labout=S{1};
     labout.img=in;
-    labout.dt=[16,1];
+    labout.dt(1) = 16;
     labout.fname=[directory,label,'_firstlevel.nii'];
     spm_write_vol(labout,labout.img);
 
@@ -270,7 +270,7 @@ end
 
 labout=S{1};
 labout.img=1/exp(0.1*Aprob);
-labout.dt=[16,1];
+labout.dt(1) = 16;
 labout.fname=[directory,label,'_secondlevel.nii'];
 spm_write_vol(labout,labout.img);
 matlabbatch{1}.spm.spatial.smooth.data = {labout.fname};

@@ -97,7 +97,7 @@ ea_dispt('Creating nifti header for export...');
 chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
 Vvat.mat=mldivide([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
 Vvat.dim=[res,res,res];
-Vvat.dt=[4,0];
+Vvat.dt(1) = 4;
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
 
@@ -164,7 +164,7 @@ end
 ea_savestimulation(S,options);
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);
-Vvate.dt=[16,0];
+Vvate.dt(1) = 16;
 ea_write_nii(Vvate);
 
 Vvatne.img=neeg; %permute(neeg,[2,1,3]);

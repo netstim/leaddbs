@@ -251,7 +251,7 @@ for mcfi=usesubjects % iterate across subjects
             end
 
             ccmap.img(omaskidx)=mean(thiscorr,2);
-            ccmap.dt=[16,0];
+            ccmap.dt(1) = 16;
             spm_write_vol(ccmap,ccmap.img);
 
             % surfs, too:
@@ -271,7 +271,7 @@ for mcfi=usesubjects % iterate across subjects
 
                 ccmap.img(:,:,:,2:end)=[];
                 ccmap.img(:)=mean(ls.thiscorr,2);
-                ccmap.dt=[16,0];
+                ccmap.dt(1) = 16;
                 spm_write_vol(ccmap,ccmap.img);
             end
 
@@ -291,7 +291,7 @@ for mcfi=usesubjects % iterate across subjects
                 end
 
                 ccmap.img(:)=mean(rs.thiscorr,2);
-                ccmap.dt=[16,0];
+                ccmap.dt(1) = 16;
                 spm_write_vol(ccmap,ccmap.img);
             end
         end
@@ -309,7 +309,7 @@ switch dataset.type
             % export mean
             M=ea_nanmean(fX{s}',1);
             mmap=dataset.vol.space;
-            mmap.dt=[16,0];
+            mmap.dt(1) = 16;
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
@@ -333,7 +333,7 @@ switch dataset.type
             % export variance
             M=ea_nanvar(fX{s}');
             mmap=dataset.vol.space;
-            mmap.dt=[16,0];
+            mmap.dt(1) = 16;
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
@@ -358,7 +358,7 @@ switch dataset.type
                 % lh surf
                 lM=ea_nanmean(lh.fX{s}');
                 lmmap=dataset.surf.l.space;
-                lmmap.dt=[16,0];
+                lmmap.dt(1) = 16;
                 lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
                 lmmap.img=single(lmmap.img);
                 lmmap.img(:)=lM(:);
@@ -382,7 +382,7 @@ switch dataset.type
                 % rh surf
                 rM=ea_nanmean(rh.fX{s}');
                 rmmap=dataset.surf.r.space;
-                rmmap.dt=[16,0];
+                rmmap.dt(1) = 16;
                 rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
                 rmmap.img=single(rmmap.img);
                 rmmap.img(:)=rM(:);
@@ -414,7 +414,7 @@ switch dataset.type
 
             M=nanmean(fX{s}');
             mmap=dataset.vol.space;
-            mmap.dt=[16,0];
+            mmap.dt(1) = 16;
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
@@ -439,7 +439,7 @@ switch dataset.type
                 % lh surf
                 lM=nanmean(lh.fX{s}');
                 lmmap=dataset.surf.l.space;
-                lmmap.dt=[16,0];
+                lmmap.dt(1) = 16;
                 lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
                 lmmap.img=single(lmmap.img);
                 lmmap.img(:)=lM(:);
@@ -463,7 +463,7 @@ switch dataset.type
                 % rh surf
                 rM=nanmean(rh.fX{s}');
                 rmmap=dataset.surf.r.space;
-                rmmap.dt=[16,0];
+                rmmap.dt(1) = 16;
                 rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
                 rmmap.img=single(rmmap.img);
                 rmmap.img(:)=rM(:);
@@ -489,7 +489,7 @@ switch dataset.type
             [~,~,~,tstat]=ttest(fX{s}');
             tmap=dataset.vol.space;
             tmap.img(:)=0;
-            tmap.dt=[16,0];
+            tmap.dt(1) = 16;
             tmap.img=single(tmap.img);
 
             tmap.img(omaskidx)=tstat.tstat;
@@ -514,7 +514,7 @@ switch dataset.type
                 % lh surf
                 [~,~,~,ltstat]=ttest(lh.fX{s}');
                 lmmap=dataset.surf.l.space;
-                lmmap.dt=[16,0];
+                lmmap.dt(1) = 16;
                 lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
                 lmmap.img=single(lmmap.img);
                 lmmap.img(:)=ltstat.tstat(:);
@@ -538,7 +538,7 @@ switch dataset.type
                 % rh surf
                 [~,~,~,rtstat]=ttest(rh.fX{s}');
                 rmmap=dataset.surf.r.space;
-                rmmap.dt=[16,0];
+                rmmap.dt(1) = 16;
                 rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
                 rmmap.img=single(rmmap.img);
                 rmmap.img(:)=rtstat.tstat(:);

@@ -697,7 +697,7 @@ if ~isempty(uuid)
         if ~exist([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'],'file')
             nii=ea_load_nii([ea_space,'t1.nii']);
             nii.fname=[directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii'];
-            nii.dt=[16,0];
+            nii.dt(1) = 16;
             nii.img(:)=0;
         else
             nii=ea_load_nii([directory,'fiducials',filesep,ea_getspace,filesep,uuid,'.nii']);
@@ -718,7 +718,7 @@ if ~isempty(uuid)
         if ~exist([directory,'fiducials',filesep,'native',filesep,uuid,'.nii'],'file')
             nii=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
             nii.fname=[directory,'fiducials',filesep,'native',filesep,uuid,'.nii'];
-            nii.dt=[16,0];
+            nii.dt(1) = 16;
             nii.img(:)=0;
         else
             nii=ea_load_nii([directory,'fiducials',filesep,'native',filesep,uuid,'.nii']);

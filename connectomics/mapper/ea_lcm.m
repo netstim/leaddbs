@@ -110,7 +110,7 @@ switch modality
         cnt=1;
         for p=parcels'
             pnii=parc;
-            pnii.dt=[2,0];
+            pnii.dt(1) = 2;
             pnii.img=parc.img==p;
             pnii.fname=fullfile(tmp,[uuid,sprintf('%05.0f',cnt),'.nii']);
             ea_write_nii(pnii);

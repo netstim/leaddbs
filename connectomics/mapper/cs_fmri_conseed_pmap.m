@@ -238,7 +238,7 @@ switch dataset.type
             % export mean
             M=ea_nanmean(fX{s}',1);
             mmap=dataset.vol.space;
-            mmap.dt=[16,0];
+            mmap.dt(1) = 16;
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
@@ -262,7 +262,7 @@ switch dataset.type
             % export variance
             M=ea_nanvar(fX{s}');
             mmap=dataset.vol.space;
-            mmap.dt=[16,0];
+            mmap.dt(1) = 16;
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
@@ -289,7 +289,7 @@ switch dataset.type
             % export fz-mean
             M=nanmean(fX{s}');
             mmap=dataset.vol.space;
-            mmap.dt=[16,0];
+            mmap.dt(1) = 16;
             mmap.img(:)=0;
             mmap.img=single(mmap.img);
             mmap.img(omaskidx)=M;
@@ -314,7 +314,7 @@ switch dataset.type
             [~,~,~,tstat]=ttest(fX{s}');
             tmap=dataset.vol.space;
             tmap.img(:)=0;
-            tmap.dt=[16,0];
+            tmap.dt(1) = 16;
             tmap.img=single(tmap.img);
 
             tmap.img(omaskidx)=tstat.tstat;

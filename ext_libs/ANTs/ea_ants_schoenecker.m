@@ -70,7 +70,7 @@ if slabsupport
 
             % write out slab mask
             slabspresent=1;
-            mnii.dt=[4,0];
+            mnii.dt(1) = 4;
             mnii.img=AllMX;
 
             tmaskdir = fullfile(outputdir, 'tmp');

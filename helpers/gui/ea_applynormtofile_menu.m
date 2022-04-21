@@ -93,7 +93,7 @@ if useinverse % from template space to [untouched] achor space
                 fused.img=fused.img+overlay.img;
                 fused.img=ea_rescale(fused.img);
                 fused.img=fused.img*255;
-                fused.dt=[2,0];
+                fused.dt(1) = 2;
                 [natpath,natfn,natext]=fileparts(untouchedanchorImage.fname);
                 fused.fname=fullfile(natpath,[natfn,'_overlay',natext]);
                 ea_write_nii(fused);
@@ -142,7 +142,7 @@ else % from [untouched] achor space to template space
             ea_reslice_nii([ea_space,'resliced_templates',filesep,trstr,'.nii'],[ea_space,'resliced_templates',filesep,trstr,'.nii'],repmat(templateresolution,1,3));
             nii=ea_load_nii([ea_space,'resliced_templates',filesep,trstr,'.nii']);
             nii.img(:)=0;
-            nii.dt=[4,0];
+            nii.dt(1) = 4;
             ea_write_nii(nii);
             gzip(nii.fname);
             delete(nii.fname);

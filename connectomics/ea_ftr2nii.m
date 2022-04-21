@@ -41,5 +41,5 @@ refnii.img(unifibImgInd) = refnii.img(unifibImgInd) + fibImgVal;
 
 % Save nifti
 refnii.fname = outputName;
-refnii.dt = [16,0];
+refnii.dt(1) = 16;
 ea_write_nii(refnii);

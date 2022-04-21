@@ -196,14 +196,14 @@ end
     end
     ea_dispercent(1,'end');
     
-    fovimg.dt=[64,0];
-    distimg.dt=[64,0];
-    pimg.dt=[64,0];
+    fovimg.dt(1) = 64;
+    distimg.dt(1) = 64;
+    pimg.dt(1) = 64;
     ea_write_nii(fovimg);
     ea_write_nii(distimg);
     ea_write_nii(pimg);
     if permute
-        sigimg.dt=[64,0];
+        sigimg.dt(1) = 64;
         ea_write_nii(sigimg);
     end
 end

@@ -234,7 +234,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     % export mean
     M=ea_nanmean(fX{s}',1);
     mmap=dataset.vol.space;
-    mmap.dt=[16,0];
+    mmap.dt(1) = 16;
     mmap.img(:)=0;
     mmap.img=single(mmap.img);
     mmap.img(omaskidx)=M;
@@ -258,7 +258,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     % export variance
     M=ea_nanvar(fX{s}');
     mmap=dataset.vol.space;
-    mmap.dt=[16,0];
+    mmap.dt(1) = 16;
     mmap.img(:)=0;
     mmap.img=single(mmap.img);
     mmap.img(omaskidx)=M;
@@ -283,7 +283,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         % lh surf
         lM=ea_nanmean(lhfX{s}');
         lmmap=dataset.surf.l.space;
-        lmmap.dt=[16,0];
+        lmmap.dt(1) = 16;
         lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
         lmmap.img=single(lmmap.img);
         lmmap.img(:)=lM(:);
@@ -307,7 +307,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         % rh surf
         rM=ea_nanmean(rhfX{s}');
         rmmap=dataset.surf.r.space;
-        rmmap.dt=[16,0];
+        rmmap.dt(1) = 16;
         rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
         rmmap.img=single(rmmap.img);
         rmmap.img(:)=rM(:);
@@ -339,7 +339,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     % export fz-mean
     M=nanmean(fX{s}');
     mmap=dataset.vol.space;
-    mmap.dt=[16,0];
+    mmap.dt(1) = 16;
     mmap.img(:)=0;
     mmap.img=single(mmap.img);
     mmap.img(omaskidx)=M;
@@ -365,7 +365,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         % lh surf
         lM=nanmean(lhfX{s}');
         lmmap=dataset.surf.l.space;
-        lmmap.dt=[16,0];
+        lmmap.dt(1) = 16;
         lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
         lmmap.img=single(lmmap.img);
         lmmap.img(:)=lM(:);
@@ -389,7 +389,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         % rh surf
         rM=nanmean(rhfX{s}');
         rmmap=dataset.surf.r.space;
-        rmmap.dt=[16,0];
+        rmmap.dt(1) = 16;
         rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
         rmmap.img=single(rmmap.img);
         rmmap.img(:)=rM(:);
@@ -415,7 +415,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     [~,~,~,tstat]=ttest(fX{s}');
     tmap=dataset.vol.space;
     tmap.img(:)=0;
-    tmap.dt=[16,0];
+    tmap.dt(1) = 16;
     tmap.img=single(tmap.img);
     tmap.img(omaskidx)=tstat.tstat;
 
@@ -439,7 +439,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         % lh surf
         [~,~,~,ltstat]=ttest(lhfX{s}');
         lmmap=dataset.surf.l.space;
-        lmmap.dt=[16,0];
+        lmmap.dt(1) = 16;
         lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
         lmmap.img=single(lmmap.img);
         lmmap.img(:)=ltstat.tstat(:);
@@ -463,7 +463,7 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
         % rh surf
         [~,~,~,rtstat]=ttest(rhfX{s}');
         rmmap=dataset.surf.r.space;
-        rmmap.dt=[16,0];
+        rmmap.dt(1) = 16;
         rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
         rmmap.img=single(rmmap.img);
         rmmap.img(:)=rtstat.tstat(:);
@@ -505,7 +505,7 @@ else
 end
 
 ccmap.img(omaskidx)=mean(thiscorr,2);
-ccmap.dt=[16,0];
+ccmap.dt(1) = 16;
 spm_write_vol(ccmap,ccmap.img);
 
 % surfs, too:
@@ -526,7 +526,7 @@ if isfield(dataset,'surf') && exist('lsthiscorr', 'var')
 
     ccmap.img(:,:,:,2:end)=[];
     ccmap.img(:)=mean(lsthiscorr,2);
-    ccmap.dt=[16,0];
+    ccmap.dt(1) = 16;
     spm_write_vol(ccmap,ccmap.img);
 end
 
@@ -547,7 +547,7 @@ if isfield(dataset,'surf') && exist('rsthiscorr', 'var')
     end
 
     ccmap.img(:)=mean(rsthiscorr,2);
-    ccmap.dt=[16,0];
+    ccmap.dt(1) = 16;
     spm_write_vol(ccmap,ccmap.img);
 end
 

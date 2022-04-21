@@ -48,6 +48,6 @@ for s=1:length(seedfiles)
     [pth,fn]=fileparts(seedfiles{s});
     
     map.fname=fullfile(pth,[fn,'_conn.nii']);
-    map.dt=[16,0];
+    map.dt(1) = 16;
     spm_write_vol(map,map.img);
 end

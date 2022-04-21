@@ -170,7 +170,7 @@ for s=1:length(sfile)
         end
 
         map.fname = mapFile;
-        map.dt=[16,0];
+        map.dt(1) = 16;
         spm_write_vol(map,map.img);
         if useNativeSeed
             mniMap = strrep(mapFile, [filesep,ea_nt(1)], [filesep,ea_nt(0)]);

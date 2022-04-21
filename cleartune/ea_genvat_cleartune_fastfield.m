@@ -63,7 +63,7 @@ chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
 Vvate.mat=mldivide([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
 Vvate.mat = trans_mat * Vvate.mat;
 Vvate.dim=[res,res,res];
-Vvate.dt=[16,0];
+Vvate.dt(1) = 16;
 Vvate.n=[1 1];
 Vvate.descrip='lead dbs - vat';
 

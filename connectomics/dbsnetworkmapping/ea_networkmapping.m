@@ -323,7 +323,7 @@ classdef ea_networkmapping < handle
                     else
                         res = ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
                     end
-                    res.dt=[16,1];
+                    res.dt(1) = 16;
                     res.img(:)=vals{1};
 
                     ea_mkdir(fullfile(fileparts(obj.leadgroup),'networkmapping',setname,'models',callingfunction));
@@ -518,7 +518,7 @@ classdef ea_networkmapping < handle
             else
                 res = ea_load_nii([ea_getearoot,'templates',filesep,'spacedefinitions',filesep,obj.outputspace,'.nii.gz']);
             end
-            res.dt=[16,1];
+            res.dt(1) = 16;
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Horzvat all values for colorbar construction
                 allvals = horzcat(vals{group,:})';

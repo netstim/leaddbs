@@ -57,10 +57,10 @@ function ea_binmasks
 nii=ea_load_nii([ea_space,'c1mask.nii']);
 delete([ea_space,'c1mask.nii']);
 nii.img=nii.img>0.5;
-nii.dt=[2,0];
+nii.dt(1) = 2;
 ea_write_nii(nii);
 nii=ea_load_nii([ea_space,'c2mask.nii']);
 delete([ea_space,'c2mask.nii']);
 nii.img=nii.img>0.5;
-nii.dt=[2,0];
+nii.dt(1) = 2;
 ea_write_nii(nii);

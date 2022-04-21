@@ -3,7 +3,7 @@ function ea_exportmap(n,M,fis,regressor,output,mask,sk,corrtype)
 n.img(:)=M;
 n.fname=output;
 
-n.dt=[16,0];
+n.dt(1) = 16;
 ea_write_nii(n);
 if ~exist('mask','var')
     mask=nan;

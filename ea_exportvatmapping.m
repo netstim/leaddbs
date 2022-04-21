@@ -40,7 +40,7 @@ disp('Need to export VTAs in proper format, this may take a while');
 ea_mkdir([options.root,options.patientname,filesep,'statvat_results']);
 copyfile([ea_space(options),'bb.nii'],[options.root,options.patientname,filesep,'statvat_results',filesep,'bb_nan.nii']);
 nii=ea_load_nii([options.root,options.patientname,filesep,'statvat_results',filesep,'bb_nan.nii']);
-nii.dt=[16,1];
+nii.dt(1) = 16;
 nii.img(:)=nan;
 ea_write_nii(nii);
 allV{1}=[options.root,options.patientname,filesep,'statvat_results',filesep,'bb_nan.nii'];
@@ -135,7 +135,7 @@ clear matlabbatch
 
 % no conform each VTA to bb
 nii=ea_load_nii([options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_bb.nii']);
-nii.dt=[2,0];
+nii.dt(1) = 2;
 delete([options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_bb.nii']);
 ea_write_nii(nii);
 for pt=1:length(M.patient.list)
@@ -150,7 +150,7 @@ for pt=1:length(M.patient.list)
         fn=fns{f};
         ea_conformspaceto([options.root,options.patientname,filesep,'statvat_results',filesep,'statvat_bb.nii'],...
             fn,0);
-        nii=ea_load_nii(fn); delete(fn); nii.dt=[2,0]; ea_write_nii(nii);
+        nii=ea_load_nii(fn); delete(fn); nii.dt(1) = 2; ea_write_nii(nii);
     end
 end
 delete([options.root,options.patientname,filesep,'statvat_results',filesep,'bb_nan.nii']);

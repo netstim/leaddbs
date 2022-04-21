@@ -65,7 +65,7 @@ for i=1:size(center,1)
 end
 
 % Adapt ROI NIfTI structure
-ref.dt = [16,0];
+ref.dt(1) = 16;
 ref.fname = fname;
 
 roi = ref;

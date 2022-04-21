@@ -5,7 +5,7 @@ outdir=[fileparts(obj.leadgroup),filesep,'sweetspots',filesep,obj.ID,filesep];
 ea_mkdir(outdir);
 copyfile([ea_space,'bb.nii'],[outdir,'bb_nan.nii']);
 nii=ea_load_nii([outdir,'bb_nan.nii']);
-nii.dt=[16,1];
+nii.dt(1) = 16;
 nii.img(:)=nan;
 ea_write_nii(nii);
 allV{1}=[outdir,'bb_nan.nii'];

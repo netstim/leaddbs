@@ -508,7 +508,7 @@ classdef ea_sweetspot < handle
 
                 for side=1:size(vals,2)
                     res=obj.results.space{side};
-                    res.dt=[16,1];
+                    res.dt(1) = 16;
                     res.img(:)=nan;
                     % Plot voxels if any survived
                     if obj.posvisible

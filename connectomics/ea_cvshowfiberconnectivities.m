@@ -329,7 +329,7 @@ clear tareas
 
 % Write out probability map of fiber terminals
 if options.writeoutpm
-    pm.dt=[16,0];
+    pm.dt(1) = 16;
     pm.fname=[options.root,options.patientname,filesep,'ea_pm','.nii'];
     spm_write_vol(pm,pm.img);
 end

@@ -60,4 +60,4 @@ for pt=1:length(M.patient.list)
     X(cnt,:)=logical(X(cnt,:));    
     cnt=cnt+1;
 end
-nii.dt=[8,0];
+nii.dt(1) = 8;

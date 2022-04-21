@@ -233,7 +233,7 @@ if checkrebuild(atlases,options,root,mifix)
             X(X<1.5)=0;
             X(X>1.5)=1;
 
-            V.dt=[16,0];
+            V.dt(1) = 16;
             delete([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             spm_write_vol(V,X);
             ea_crop_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
@@ -442,7 +442,7 @@ for atl=1:length(atlnames)
             end
             V=spm_vol([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
             X=spm_read_vols(V);
-            V.dt=[16,0];
+            V.dt(1) = 16;
             V.pinfo=[1;0;352];
             X(:)=0;
             spm_write_vol(V,X);

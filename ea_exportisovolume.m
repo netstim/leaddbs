@@ -139,7 +139,7 @@ for iside=1:length(options.sides)
         %% Also write out volume with combined information on both sides (symmetric image).
 
         niic=ea_load_nii([ea_space,'bb.nii']);
-        niic.dt=[16,1];
+        niic.dt(1) = 16;
 
         %niic=spm_read_vols(Vol);
         niic.img(:)=nan;
