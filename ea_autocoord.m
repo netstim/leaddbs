@@ -90,8 +90,9 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     % Set primary template
-    if ismember(options.subj.AnchorModality, fieldnames(bids.spacedef.norm_mapping))
-        options.primarytemplate = bids.spacedef.norm_mapping.(options.subj.AnchorModality);
+    subjAnchor = regexprep(options.subj.AnchorModality, '[^\W_]+_', '');
+    if ismember(subjAnchor, fieldnames(bids.spacedef.norm_mapping))
+        options.primarytemplate = bids.spacedef.norm_mapping.(subjAnchor);
     else
         options.primarytemplate = bids.spacedef.misfit_template;
     end
