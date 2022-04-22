@@ -95,10 +95,18 @@ for source=S.sources
 end
 
 % write nifti of VAT
+[~, ~, endian] = computer;
+switch endian
+    case 'L'
+        endian = 0;
+    case 'B'
+        endian = 1;
+end
+
 Vvat.mat=mat;
 %voxspace=permute(voxspace,[2,1,3]);
 Vvat.dim=size(voxspace);
-Vvat.dt(1) = 4;
+Vvat.dt = [4, endian];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
 

@@ -105,12 +105,20 @@ gv=grid_vec;
 
 ea_dispt('Creating nifti header for export...');
 % create nifti
+[~, ~, endian] = computer;
+switch endian
+    case 'L'
+        endian = 0;
+    case 'B'
+        endian = 1;
+end
+
 res=100;
 chun1=randperm(res); chun2=randperm(res); chun3=randperm(res);
 Vvat.mat=mldivide([(chun1);(chun2);(chun3);ones(1,res)]',[gv{1}(chun1);gv{2}(chun2);gv{3}(chun3);ones(1,res)]')';
 Vvat.mat = trans_mat * Vvat.mat;
 Vvat.dim=[res,res,res];
-Vvat.dt(1) = 4;
+Vvat.dt = [4, endian];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
 
@@ -163,7 +171,7 @@ end
 ea_savestimulation(S,options);
 
 Vvate.img=eeg;
-Vvate.dt(1) = 16;
+Vvate.dt = [16, endian];
 ea_write_nii(Vvate);
 
 Vvatne.img=neeg;

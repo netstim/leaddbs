@@ -503,7 +503,15 @@ else
     Vvat.dim=[res,res,res];
 end
 
-Vvat.dt(1) = 16;
+[~, ~, endian] = computer;
+switch endian
+    case 'L'
+        endian = 0;
+    case 'B'
+        endian = 1;
+end
+
+Vvat.dt = [16, endian];
 Vvat.n=[1 1];
 Vvat.descrip='lead dbs - vat';
 
@@ -578,7 +586,7 @@ Vvate.fname = [stimDir, filesep, filePrefix, 'efield_model-cleartunesimbio_hemi-
 Vvatne.fname = [stimDir, filesep, filePrefix, 'efieldgauss_model-cleartunesimbio_hemi-', sideCode, addname, '.nii'];
 
 Vvate.img=eeg; %permute(eeg,[2,1,3]);
-Vvate.dt(1) = 16;
+Vvate.dt = [16, endian];
 ea_write_nii(Vvate);
 
 Vvatne.img=neeg; %permute(neeg,[2,1,3]);
