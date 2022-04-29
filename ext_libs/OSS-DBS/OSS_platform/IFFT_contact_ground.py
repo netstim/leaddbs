@@ -205,7 +205,7 @@ def convolute_and_ifft(t_steps_trunc,contact_i,last_point, Ind_trunc1, trunc_met
         # np.save('Points_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv.real)
     # np.save('Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv)
 
-    np.save(os.environ['TMPDIR'] + '/Axons_in_time/Signal_t_conv' + str(global_i_point + last_point) + "_" + str(
+    np.save(os.environ['LGFDIR'] + '/Axons_in_time/Signal_t_conv' + str(global_i_point + last_point) + "_" + str(
         contact_i), Signal_t_conv[:t_steps_trunc])
 
     output.put(i_axon)
@@ -275,7 +275,7 @@ def convolute_and_ifft_octaves(t_steps_trunc,contact_i, last_point, i_axon, num_
 
         # np.save('Points_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv.real)
 
-    np.save(os.environ['TMPDIR'] + '/Axons_in_time/Signal_t_conv' + str(global_i_point + last_point) + "_" + str(
+    np.save(os.environ['LGFDIR'] + '/Axons_in_time/Signal_t_conv' + str(global_i_point + last_point) + "_" + str(
         contact_i), Signal_t_conv[:t_steps_trunc])
 
     # might be slow

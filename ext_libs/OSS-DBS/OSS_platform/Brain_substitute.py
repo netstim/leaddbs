@@ -34,7 +34,7 @@ Z_tip=-9.62969801365702
 
 ##################
 geompy = geomBuilder.New(theStudy)
-print"brain modle file is saved at"+ os.getcwd()+"/Brain_substitute.brep"
+print("brain model file is saved at"+ os.getcwd()+"/Brain_substitute.brep")
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
 OY = geompy.MakeVectorDXDYDZ(0, 1, 0)
@@ -81,7 +81,7 @@ NETGEN_3D_Parameters_1.SetQuadAllowed( 0 )
 isDone = Mesh_1.Compute()
 smesh.SetName(Mesh_1, 'Mesh_1')
 
-Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.med')
+Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.med', 0, 33)
 
 smesh.SetName(NETGEN_1D_2D_3D.GetAlgorithm(), 'NETGEN 1D-2D-3D')
 smesh.SetName(NETGEN_3D_Parameters_1, 'NETGEN 3D Parameters_1')

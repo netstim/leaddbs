@@ -40,7 +40,7 @@ def solve_parallel_NEURON(d, last_point, N_index_glob, N_index, n_segments, S_ve
     V_art = np.zeros((n_segments, d["t_steps_trunc"]), float)
 
     if S_vector == None:
-        axon_in_time = np.load(os.environ['TMPDIR'] + '/Axons_in_time/Signal_t_conv' + str(
+        axon_in_time = np.load(os.environ['LGFDIR'] + '/Axons_in_time/Signal_t_conv' + str(
             n_segments - 1 + N_index * n_segments + last_point) + '.npy')  #to distinguish axons in different populations, we indexed them with the global index of the last compartment
         for i in range(n_segments):
             V_art[i, :] = axon_in_time[i, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"]  # convert to mV
@@ -53,7 +53,7 @@ def solve_parallel_NEURON(d, last_point, N_index_glob, N_index, n_segments, S_ve
             if S_vector[contact_i] == 0.0:
                 continue
             else:
-                axon_in_time = np.load(os.environ['TMPDIR'] + '/Axons_in_time/Signal_t_conv' + str(
+                axon_in_time = np.load(os.environ['LGFDIR'] + '/Axons_in_time/Signal_t_conv' + str(
                     n_segments - 1 + N_index * n_segments + last_point) + "_" + str(contact_i) + '.npy')
 
                 for i in range(n_segments):
@@ -255,7 +255,7 @@ def run_simulation_with_NEURON(d, Neuron_models, shift_to_MRI_space, population_
     num_removed = 0
     # iterate over all neurons initially placed by OSS-DBS and assign their states
     for axon_i in range(number_neurons_initially):
-        Axon_Lead_DBS[axon_i*n_segments:n_segments*(axon_i+1),:3] = Vert_full[axon_i*n_segments:n_segments*(axon_i+1), :3] + shift_to_MRI_space
+        Axon_Lead_DBS[axon_i*n_segments:n_segments*(axon_i+1),:3] = Vert_full[axon_i*n_segments:n_segments*(axon_i+1), :3] - shift_to_MRI_space
         Axon_Lead_DBS[axon_i*n_segments:n_segments*(axon_i+1),3] = axon_i+1   # because Lead-DBS number them from 1
         if axon_i in List_of_activated:
             Vert_full_status[axon_i] = 1
@@ -278,14 +278,14 @@ def run_simulation_with_NEURON(d, Neuron_models, shift_to_MRI_space, population_
 
     loc_ind_start = 0
     for i in range(Neuron_models.N_models[population_index]):
-        connection_status_MRI[i,:3] = Nodes_status[loc_ind_start,:3] + shift_to_MRI_space
-        connection_status_MRI[i,3:6] = Nodes_status[loc_ind_start+n_segments-1,:3] + shift_to_MRI_space
+        connection_status_MRI[i,:3] = Nodes_status[loc_ind_start,:3] - shift_to_MRI_space
+        connection_status_MRI[i,3:6] = Nodes_status[loc_ind_start+n_segments-1,:3] - shift_to_MRI_space
         connection_status_MRI[i,6] = Nodes_status[loc_ind_start,3]
         loc_ind_start = loc_ind_start+n_segments
 
     # #for Paraview visualization purposes in MRI space (only activated models)
     # Nodes_status_MRI_space=np.zeros((Neuron_models.N_models*n_segments,4),float)
-    # Nodes_status_MRI_space[:,:3]=Nodes_status[:,:3]+shift_to_MRI_space
+    # Nodes_status_MRI_space[:,:3]=Nodes_status[:,:3]-shift_to_MRI_space
     # Nodes_status_MRI_space[:,3]=Nodes_status[:,3]
     # Nodes_status_MRI_space_only_activated = np.delete(Nodes_status_MRI_space, np.where(Nodes_status_MRI_space[:,3] == 0.0)[0], axis=0)
 

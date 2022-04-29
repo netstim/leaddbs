@@ -39,7 +39,7 @@ def kill_SALOME_port():         #to ensure that Salome processes were terminated
     killPort = int(port_file.readline())
     port_file.close()
     #Kill the session with the specified port:
-    subprocess.call('/opt/SALOME-8.3.0-UB16.04/BINARIES-UB16.04/KERNEL/bin/salome/killSalomeWithPort.py %s' % killPort, shell = True)
+    subprocess.call('/opt/SALOME-9.7.0-UB16.04-SRC/BINARIES-UB16.04/KERNEL/bin/salome/killSalomeWithPort.py %s' % killPort,shell=True)
     # if you run without docker, this command should be changing according to the setup on your machine
     return True
 
@@ -104,8 +104,8 @@ def build_brain_approx(approx_dimensions, approx_geom_center, MRI_param = 0):
     logging.critical("----- Creating brain approximation in SALOME -----")
 
     #  run Brain_substitute.py using Salome
-    with open(os.devnull, 'w') as FNULL: subprocess.call('salome -t python '+ brain_substitute_path +' --ns-port-log='+direct+'/salomePort.txt', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-    kill_SALOME_port()
+    with open(os.devnull, 'w') as FNULL: subprocess.call('salome -t python3 '+ brain_substitute_path +' --ns-port-log='+direct+'/salomePort.txt', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    #kill_SALOME_port()
     logging.critical("Brain_substitute.brep was created\n")
 
     #  run mesh converters (med -> msh2 -> msh -> xml)
@@ -148,8 +148,8 @@ def build_final_geometry(d, MRI_param, ROI_radius, cc_multicontact):
 
     logging.critical("----- Creating final geometry in SALOME -----")
     # Make a subprocess call to the salome executable and store the used port in a text file:
-    with open(os.devnull, 'w') as FNULL: subprocess.call('salome -t python '+ position_script_name +' --ns-port-log='+direct+'/salomePort.txt', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
-    kill_SALOME_port()  # terminate SALOME
+    with open(os.devnull, 'w') as FNULL: subprocess.call('salome -t python3 '+ position_script_name +' --ns-port-log='+direct+'/salomePort.txt', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    #kill_SALOME_port()  # terminate SALOME
 
     #  run mesh converters (med -> msh2 -> msh)
     with open(os.devnull, 'w') as FNULL: subprocess.call('gmsh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med -3 -v 0 -o ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh2 && mv ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh2 ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.msh',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)

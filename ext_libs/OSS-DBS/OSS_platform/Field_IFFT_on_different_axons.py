@@ -192,7 +192,7 @@ def convolute_and_ifft(t_steps_trunc,last_point,Ind_trunc1,trunc_method,post_tru
             plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_convoluted_1st_point.png', format='png', dpi=1000)
 
     # Number is the global point index of the last compartment on the neuron
-    np.save(os.environ['TMPDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
+    np.save(os.environ['LGFDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
 
     output.put(i_axon)
 
@@ -256,7 +256,7 @@ def convolute_and_ifft_octaves(t_steps_trunc,last_point,i_axon,num_segments,N_fr
 
         #np.save('Points_in_time/Signal_t_conv'+str(i_axon), Signal_t_conv)
     # Number is the global point index of the last compartment on the neuron
-    np.save(os.environ['TMPDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
+    np.save(os.environ['LGFDIR']+'/Axons_in_time/Signal_t_conv'+str(global_i_point+last_point), Signal_t_conv[:t_steps_trunc])
 
     output.put(i_axon)
 

@@ -64,7 +64,6 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
 
     start_simulation_run = time.time()
 
-    import progress
     from progress.bar import Bar
     bar = Bar('Processing', max=11)
     print("\n Setting up the simulation...")
@@ -74,7 +73,7 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
     
     #  comment this out if you run via on MATLAB inside Singularity (cluster)
     os.environ['PATIENTDIR'] = '/opt/Patient'  # Use fixed mount path for docker
-    os.environ['TMPDIR'] = '/opt/Patient' # either '/Patient' (same folder) or '/temp' (mounted specifically for large files)
+    os.environ['LGFDIR'] = '/opt/Patient' # either '/Patient' (same folder) or '/temp' (mounted specifically for large files)
     # on clusters, always use TMPDIR option
                                                # IMPORTANT: this is actually a stim folder within the patient folder
 
@@ -130,6 +129,8 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
         d['rodent_electrode'] = True
     else:
         d['rodent_electrode'] = False
+
+    d['Current_sets_simple'] = False
 
     # to save diskspace, we truncate DBS afterpulse
     # '17' is empirically defined number (i.e. we need 16*T after DBS pulse)
@@ -222,6 +223,12 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
                     logging.critical("Current protocols do not match the number of contacts on the electrode, exiting")
                     raise SystemExit
                 Currents_to_check.append(stim_prot)
+
+                if len(d['Pulse_amp']) == 1:  #  For one contact electrodes, the simplified StimSets is used
+                    #logging.critical('For one contact electrodes, the simplified StimSets is used')
+                    d['Current_sets'] = False
+                    d['Current_sets_simple'] = True
+                    d['Pulse_amp'] = Currents_to_check[0]
         else:
             d['Current_sets'] = False
     else:
@@ -773,16 +780,30 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
             subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     from Axon_files.NEURON_run import run_simulation_with_NEURON
 
-    if isinstance(d["n_Ranvier"], list):
-        Number_of_activated = 0
-        last_point = 0
-        for i in range(len(d["n_Ranvier"])):
-            Number_of_activated_population = run_simulation_with_NEURON(d, N_array, np.array(MRI_seg_param.MRI_shift), population_index=i, last_point=last_point)
-            Number_of_activated = Number_of_activated + Number_of_activated_population
+    if d['Current_sets_simple'] == True:
+        for k in range(len(Currents_to_check)):
+            d["Ampl_scale"] = Currents_to_check[k][0]/d['Pulse_amp'][0]
+            if isinstance(d["n_Ranvier"], list):
+                Number_of_activated = 0
+                last_point = 0
+                for i in range(len(d["n_Ranvier"])):
+                    Number_of_activated_population = run_simulation_with_NEURON(d, N_array, np.array(MRI_seg_param.MRI_shift), population_index=i, last_point=last_point, scaling_index=k)
+                    Number_of_activated = Number_of_activated + Number_of_activated_population
 
-            last_point = N_array.pattern['num_segments'][i] * N_array.N_models[i] + last_point
+                    last_point = N_array.pattern['num_segments'][i] * N_array.N_models[i] + last_point
+            else:
+                Number_of_activated = run_simulation_with_NEURON(d, N_array, np.array(MRI_seg_param.MRI_shift), scaling_index=k)
     else:
-        Number_of_activated = run_simulation_with_NEURON(d, N_array, np.array(MRI_seg_param.MRI_shift))
+        if isinstance(d["n_Ranvier"], list):
+            Number_of_activated = 0
+            last_point = 0
+            for i in range(len(d["n_Ranvier"])):
+                Number_of_activated_population = run_simulation_with_NEURON(d, N_array, np.array(MRI_seg_param.MRI_shift), population_index=i, last_point=last_point)
+                Number_of_activated = Number_of_activated + Number_of_activated_population
+
+                last_point = N_array.pattern['num_segments'][i] * N_array.N_models[i] + last_point
+        else:
+            Number_of_activated = run_simulation_with_NEURON(d, N_array, np.array(MRI_seg_param.MRI_shift))
     bar.next()
     os.chdir(oss_plat_cont)
 

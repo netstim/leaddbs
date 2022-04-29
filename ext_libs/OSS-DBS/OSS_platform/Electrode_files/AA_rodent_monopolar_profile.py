@@ -456,8 +456,8 @@ smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
 smesh.SetName(Sub_mesh_4, 'Sub-mesh_4')
 
 #Mesh_1.ExportMED('opt/patient/Meshes/Mesh_unref.med')
-Mesh_1.ExportMED('Mesh_unref.med')
-Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med')
+#Mesh_1.ExportMED('Mesh_unref.med')
+Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med', 0, 33)
 
 print("Mesh was saved\n")
 print(os.getcwd())
