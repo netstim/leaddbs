@@ -8,10 +8,6 @@ import sys
 import salome
 import os
 salome.salome_init()
-theStudy = salome.myStudy
-
-import salome_notebook
-notebook = salome_notebook.NoteBook(theStudy)
 sys.path.insert( 0, "r'"+os.getcwd())
 
 ###
@@ -33,7 +29,7 @@ Y_tip=-14.7114212603611
 Z_tip=-9.62969801365702
 
 ##################
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 print("brain model file is saved at"+ os.getcwd()+"/Brain_substitute.brep")
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -66,7 +62,7 @@ geompy.addToStudy( Brain_model_ROI, 'Brain_model_ROI' )
 import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Brain_model_ROI)
 NETGEN_1D_2D_3D = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D)
 NETGEN_3D_Parameters_1 = NETGEN_1D_2D_3D.Parameters()

@@ -8,10 +8,6 @@ import sys
 import salome
 
 salome.salome_init()
-theStudy = salome.myStudy
-
-import salome_notebook
-notebook = salome_notebook.NoteBook(theStudy)
 sys.path.insert( 0, r'/data/trieu/electrode')
 
 ###
@@ -84,11 +80,13 @@ from salome.geom import geomBuilder
 import math
 import SALOMEDS
 
+import salome_notebook
+notebook = salome_notebook.notebook
 notebook.set("ground_start", 3.0)              # 2.22 is the lowest (on the border with ROI)
 #notebook.set("ground_length", "7.0-ground_start")
 notebook.set("ground_length", 2.0)    
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -500,7 +498,7 @@ from salome.smesh import smeshBuilder
 anode_mesh_max=0.005
 cathode_mesh_max=0.1
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Partition_profile)
 NETGEN_1D_2D_3D = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D)
 NETGEN_3D_Parameters_1 = NETGEN_1D_2D_3D.Parameters()

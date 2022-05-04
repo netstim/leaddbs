@@ -8,10 +8,6 @@ import sys
 import salome
 
 salome.salome_init()
-theStudy = salome.myStudy
-
-import salome_notebook
-notebook = salome_notebook.NoteBook(theStudy)
 sys.path.insert( 0, r'/data/trieu/electrode')
 
 ###
@@ -88,7 +84,7 @@ import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -484,7 +480,7 @@ Min_size_encap_inner=0.00000001
 #Another way to control the mesh quality is by changing the Fineness. Remember, this is an initial meshing, its aim is to preserve the shape of the geometries. Physics-based refinement will be conducted later.
 
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Partition_profile)
 NETGEN_1D_2D_3D = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D)
 NETGEN_3D_Parameters_1 = NETGEN_1D_2D_3D.Parameters()
