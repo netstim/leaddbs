@@ -75,6 +75,7 @@ classdef ea_disctract < handle
         kfold = 5 % divide into k sets when doing k-fold CV
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
+        kIter = 1;
     end
 
     properties (Access = private)
@@ -314,14 +315,9 @@ classdef ea_disctract < handle
         function [I, Ihat] = loocv(obj)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
-            [R_mean,p_mean] = crossval(obj, cvp);
+            [I,Ihat] = crossval(obj, cvp);
         end
 
-%         function [I, Ihat] = loocv(obj)
-%             rng(obj.rngseed);
-%             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
-%             [I, Ihat] = crossval(obj, cvp);
-%         end
 
         function [I, Ihat] = lococv(obj)
             if length(unique(obj.M.patient.group(obj.patientselection))) == 1
@@ -332,18 +328,19 @@ classdef ea_disctract < handle
         end
 
         function [I, Ihat] = kfoldcv(obj)
-       
+            I_iter = {};
+            Ihat_iter = {};
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
-            [I, Ihat] = crossval(obj, cvp);
-%             cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
-%             [R_mean,p_mean] = crossval(obj, cvp);
-%             R_iter{end+1} = R_mean;
-%             p_iter{end+1} = p_mean;
-%             R = cell2mat(R_iter);
-%             p = cell2mat(p_iter);
-%             final_R = median(R,'omitnan');
-%             fprintf("\nfinal R value: %d", final_R)
+            iter = obj.kIter;
+            for i=1:iter
+                fprintf("Iterating set: %d",i)
+                [I_iter{end+1}, Ihat_iter{end+1}] = crossval(obj, cvp);
+            end
+            I_iter = cell2mat(I_iter);
+            Ihat_iter = cell2mat(Ihat_iter);
+            I = mean(I_iter,2,'omitnan');
+            Ihat = mean(Ihat_iter,2,'omitnan');
         end
 
         function [I, Ihat] = lno(obj, Iperm)
@@ -391,11 +388,16 @@ classdef ea_disctract < handle
             end
 
             % Ihat is the estimate of improvements (not scaled to real improvements)
-            Ihat = nan(length(patientsel),2);
-            Ihattrain = Ihat;
+            if strcmp(obj.multitractmode,'Single Tract Analysis')
+                Ihat = nan(length(patientsel),2);
+                Ihattrain = Ihat;
+            else
+                Ihat = nan(length(patientsel),2,length(obj.subscore.vars));
+                Ihattrain = Ihat;
+            end
 
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
-            obj.nestedLOO = false;
+           % obj.nestedLOO = false;
             if obj.nestedLOO
                 Abs_pred_error = zeros(cvp.NumTestSets, 1);
                 Predicted_dif_models = zeros(cvp.NumTestSets, 1);
@@ -434,9 +436,9 @@ classdef ea_disctract < handle
 
                         test_inner = logical(zeros(length(training), 1));
                         test_inner(test_i) = logical(training(test_i));
-
+                        [Ihat, Ihat_train] = compute_fibscore_model(obj, fibsval, Ihat_inner, Ihattrain_inner, patientsel, training_inner, test_inner,0);
                         % updates Ihat_inner(test_inner)
-                        [Ihat_inner, Ihat_voters_inner, Ihat_voters_train_inner] = compute_fibscore_model(obj, fibsval, Ihat_inner, Ihattrain_inner, patientsel, training_inner, test_inner,0);
+                        %[Ihat_inner, Ihat_voters_inner, Ihat_voters_train_inner] = compute_fibscore_model(obj, fibsval, Ihat_inner, Ihattrain_inner, patientsel, training_inner, test_inner,0);
                     end
 
                     predictor=squeeze(ea_nanmean(Ihat_inner,2));
@@ -689,8 +691,6 @@ classdef ea_disctract < handle
         function draw(obj,vals,fibcell,usedidx) %for cv live visualize
         %function draw(obj,vals,fibcell)
 
-            obj.connectivity_type = 1;
-
             % re-define plainconn (since we do not store it)
             try
                 if obj.connectivity_type == 2
@@ -705,9 +705,10 @@ classdef ea_disctract < handle
                 disp("====================================================")
             end
                 
-            disp(obj.switch_connectivity)
+           % disp(obj.switch_connectivity)
 
             % update the connectivity if switched between PAM and VAT
+            
             if obj.switch_connectivity == 1
                 if obj.multi_pathways == 1
                     [filepath,name,ext] = fileparts(obj.leadgroup);
@@ -729,6 +730,7 @@ classdef ea_disctract < handle
                         end
                     end
                 catch
+                    ea_warndlg("Connectivity indices connFiberInd were not stored \n, Recalculate or stay with the same model (VAT or PAM)")
                     disp("=================== WARNING ========================")
                     disp("Connectivity indices connFiberInd were not stored")
                     disp("Recalculate or stay with the same model (VAT or PAM)")
