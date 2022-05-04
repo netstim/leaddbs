@@ -29,7 +29,7 @@ class MRI_segm_data:
         self.obtain_MRI_class(inp_dict)
 
     def process_segm_MRI(self, inp_dict):
-        start_MRI_processing = time.clock()
+        start_MRI_processing = time.time()
         import os
 
         #  PREFERRED: extract everything from the nifti file, meta data is in the header
@@ -133,7 +133,7 @@ class MRI_segm_data:
         # we actually store it in the class as well, so this is redundant
         np.save(os.environ['PATIENTDIR'] + '/MRI_DTI_derived_data/affine_MRI', self.affine_MRI)
 
-        logging.critical("----- Processing of segmented (MRI) data took {} seconds -----\n".format(time.clock() - start_MRI_processing))
+        logging.critical("----- Processing of segmented (MRI) data took {} seconds -----\n".format(time.time() - start_MRI_processing))
 
     def obtain_MRI_class(self, inp_dict):
         if self.name == 0:
@@ -172,7 +172,7 @@ class DTI_meta_data:
 
     def process_DTI(self, inp_dict):
 
-        start_DTI_processing = time.clock()
+        start_DTI_processing = time.time()
         import os
 
         #  PREFERRED: extract everything from the nifti file, meta data is in the header
@@ -360,7 +360,7 @@ class DTI_meta_data:
 
         del Tensor_array, voxel_arr_c11, voxel_arr_c21, voxel_arr_c31, voxel_arr_c22, voxel_arr_c32, voxel_arr_c33
 
-        logging.critical("----- Processing of DTI data took {} seconds -----\n".format(time.clock() - start_DTI_processing))
+        logging.critical("----- Processing of DTI data took {} seconds -----\n".format(time.time() - start_DTI_processing))
 
 
     def obtain_DTI_class(self, inp_dict, Segm_param):

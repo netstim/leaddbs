@@ -254,7 +254,7 @@ def get_CSF_voxels(MRI_param, Array_coord, Array_Type):
 
 def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_frac_div,CSF_ref_add,EQS_mode,cc_multicontact,ref_freq,Best_scaling=0,scaling_old=0):
 
-    start_CSF_refinement=tim.clock()
+    start_CSF_refinement=tim.time()
 
     if cc_multicontact==True:
         from Math_module_hybrid_floating import compute_field_with_superposition,get_field_on_points
@@ -332,7 +332,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
 
         logging.critical("voxel_array_CSF in {} mm vicinity is loaded".format(str(CSF_ref_add)))
     else:
-        start_voxel_array_CSF=tim.clock()
+        start_voxel_array_CSF=tim.time()
 
         Tissue_array=np.load(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/Tissue_array_MRI.npy')
         voxel_array_CSF=np.zeros((Tissue_array.shape[0],3),float)      #array to store all CSF voxels in the specified ROI
@@ -382,7 +382,7 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
             np.save(os.environ['PATIENTDIR']+'/MRI_DTI_derived_data/'+MRI_param.name[:-4]+'_voxel_array_CSF_'+str(CSF_ref_add), voxel_array_CSF)
 
         del Tissue_array
-        logging.critical("----- voxel_array_CSF for {} mm vicinity was prepared in {} seconds -----".format(str(CSF_ref_add),tim.clock() - start_voxel_array_CSF))
+        logging.critical("----- voxel_array_CSF for {} mm vicinity was prepared in {} seconds -----".format(str(CSF_ref_add),tim.time() - start_voxel_array_CSF))
 
 
     '''Here we pre-refine mesh on elements with CSF voxels'''
@@ -540,8 +540,8 @@ def Refine_CSF(MRI_param,DTI_param,Scaling,Domains,Field_calc_param,rel_div,CSF_
 
     del voxel_array_CSF
 
-    minutes=int((tim.clock() - start_CSF_refinement)/60)
-    secnds=int(tim.clock() - start_CSF_refinement)-minutes*60
+    minutes=int((tim.time() - start_CSF_refinement)/60)
+    secnds=int(tim.time() - start_CSF_refinement)-minutes*60
     logging.critical("----- CSF refinement iteration took {} min {} sec -----\n".format(minutes, secnds))
 
     return csf_refined

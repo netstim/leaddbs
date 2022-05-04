@@ -63,7 +63,7 @@ class Stim_pulse(object):
 
     def create_pulse(self, d):
 
-        start_signal_generation = time_lib.clock()
+        start_signal_generation = time_lib.time()
         logging.critical("{} with repetition rate {} Hz and {} ms pulse width".format(d["Signal_type"], d["freq"], np.round(d["T"]*1000, 8)))
 
         # analyt. definition in the frequency domain
@@ -168,8 +168,8 @@ class Stim_pulse(object):
         # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
         # plt.savefig(os.environ['PATIENTDIR']+'/Images/FT_full_ampl.png', format='png', dpi=750)
 
-        minutes=int((time_lib.clock() - start_signal_generation)/60)
-        secnds=int(time_lib.clock() - start_signal_generation)-minutes*60
+        minutes=int((time_lib.time() - start_signal_generation)/60)
+        secnds=int(time_lib.time() - start_signal_generation)-minutes*60
         logging.critical("----- Signal generation took {} min {} sec -----\n".format(minutes, secnds))
 
         return True

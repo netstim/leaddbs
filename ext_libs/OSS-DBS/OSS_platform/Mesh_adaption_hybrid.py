@@ -404,7 +404,7 @@ def mark_cell_loc_J(ext_ground,subdomains_imp,j_real,j_im,j_real_new,j_im_new,me
 def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initial,MRI_param,DTI_param,Domains,d,cc_multicontact,num_proc,anisotropy,Field_calc_param,previous_results):
 
     logging.critical("----- Conducting refinement in {} -----".format(region))
-    start_adapt_region=time_lib.clock()
+    start_adapt_region=time_lib.time()
 
     save_mesh('initial_for_the_step',mesh_initial,boundaries_initial,subdomains_assigned_initial)
 
@@ -733,8 +733,8 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
                 save_mesh('adapt',mesh_new,boundaries_new,subdomains_assigned_new)
                 [mesh_new,boundaries_new,subdomains_assigned_new]=mesh_refiner(mesh_new,boundaries_new,subdomains_assigned_new,cells_ref,Domains,cc_multicontact)
 
-    minutes=int((time_lib.clock() - start_adapt_region)/60)
-    secnds=int(time_lib.clock() - start_adapt_region)-minutes*60
+    minutes=int((time_lib.time() - start_adapt_region)/60)
+    secnds=int(time_lib.time() - start_adapt_region)-minutes*60
     logging.critical("----- Mesh in {} was adapted in {} min {} sec -----\n".format(region,minutes, secnds))
 
     status=1        #for now always 1
@@ -806,7 +806,7 @@ def stupid_prerefiner(mesh_old,boundaries,subdomains_assigned):
 
 def mesh_adapter(MRI_param,DTI_param,Scaling,Domains,d,anisotropy,cc_multicontact,ref_freqs):
     logging.critical("----- Conducting mesh convergence study -----")
-    start_adapt=time_lib.clock()
+    start_adapt=time_lib.time()
 
     for i in range(len(ref_freqs)):     # go over the refinement frequencies
         logging.critical("At frequency: {} Hz".format(ref_freqs[i]))
@@ -848,8 +848,8 @@ def mesh_adapter(MRI_param,DTI_param,Scaling,Domains,d,anisotropy,cc_multicontac
     file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Adapted_Field_real.pvd')
     file<<Field_real
 
-    minutes=int((time_lib.clock() - start_adapt)/60)
-    secnds=int(time_lib.clock() - start_adapt)-minutes*60
+    minutes=int((time_lib.time() - start_adapt)/60)
+    secnds=int(time_lib.time() - start_adapt)-minutes*60
     logging.critical("----- Mesh adaptation took {} min {} sec -----\n".format(minutes, secnds))
 
     return previous_results[-2]     #Ampl of the potential on the neuron compartments

@@ -29,7 +29,7 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
     if d["current_control"]==1 and len(Phi_vector_active_non_zero)>1:       #multicontact current-controlled case
         cc_multicontact=True
 
-    start_full_IFFT=time_lib.clock()
+    start_full_IFFT=time_lib.time()
 
     mesh = Mesh()
     f = HDF5File(mesh.mpi_comm(),os.environ['PATIENTDIR']+'/Field_solutions_functions/solution'+str(d["freq"]*1.0)+'.h5','r')
@@ -409,17 +409,17 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
     #np.savetxt('MPI_stuff/Phi_Global_conv.csv', Phi_Global_conv, delimiter=" ")
 
 
-    minutes=int((time_lib.clock() - start_full_IFFT)/60)
-    secnds=int(time_lib.clock() - start_full_IFFT)-minutes*60
+    minutes=int((time_lib.time() - start_full_IFFT)/60)
+    secnds=int(time_lib.time() - start_full_IFFT)-minutes*60
     print("--- Signal scaling and IFFT for the whole domain took ",minutes," min ",secnds," s ")
 
     if d["VTA_from_NEURON"]==True:
-        start_VTA_NEURON=time_lib.clock()
+        start_VTA_NEURON=time_lib.time()
         Vert_get=read_csv(os.environ['PATIENTDIR']+'/Neuron_model_arrays/Vert_of_Neural_model_NEURON.csv', delimiter=' ', header=None)
         Vert=Vert_get.values
         Signal_t_points=np.zeros((Vert.shape[0],t_vect.shape[0]),float)
     else:
-        start_VTA_divE=time_lib.clock()
+        start_VTA_divE=time_lib.time()
 
 
     file=File(os.environ['PATIENTDIR']+'/Animation_Field_in_time/Field.pvd')
@@ -453,8 +453,8 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
             #np.savetxt('Points_in_time/Signal_t_conv'+str(i_point)+'.csv', Signal_t_points[i_point,:], delimiter=" ")
             np.save(os.environ['PATIENTDIR']+'/Points_in_time/Signal_t_conv'+str(i_point), Signal_t_points[i_point,:])
 
-        minutes=int((time_lib.clock() - start_VTA_NEURON)/60)
-        secnds=int(time_lib.clock() - start_VTA_NEURON)-minutes*60
+        minutes=int((time_lib.time() - start_VTA_NEURON)/60)
+        secnds=int(time_lib.time() - start_VTA_NEURON)-minutes*60
         print("----- Extracting a pointwise solution from the whole domain IFFT took ",minutes," min ",secnds," s -----\n")
 
         return 0.0
@@ -600,8 +600,8 @@ def get_field_in_time(d,FR_vector_signal,Xs_signal_norm,t_vector):
 #        print("VTA size in STN in mm3: ", VTA_STN)
 #        print("VTA size in EPN in mm3: ", VTA_EPN)
 
-        minutes=int((time_lib.clock() - start_VTA_divE)/60)
-        secnds=int(time_lib.clock() - start_VTA_divE)-minutes*60
+        minutes=int((time_lib.time() - start_VTA_divE)/60)
+        secnds=int(time_lib.time() - start_VTA_divE)-minutes*60
         print("----- Direct evaluation of VTA from Full IFFT took ",minutes," min ",secnds," s -----\n")
 
         return VTA_size#,VTA_SN,VTA_STN,VTA_EPN

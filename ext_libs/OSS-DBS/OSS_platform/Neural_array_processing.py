@@ -555,7 +555,7 @@ class Neuron_array(object):
             (if one projection or from .csv, stores just one dataset in .h5) """
 
         import os
-        start_neuron_models = time.clock()
+        start_neuron_models = time.time()
 
         if self.Type != 'Imported':  # if the neuron array was created internally
 
@@ -827,8 +827,8 @@ class Neuron_array(object):
             del List_of_arrays
         del Array_coord
 
-        minutes = int((time.clock() - start_neuron_models) / 60)
-        secnds = int(time.clock() - start_neuron_models) - minutes * 60
+        minutes = int((time.time() - start_neuron_models) / 60)
+        secnds = int(time.time() - start_neuron_models) - minutes * 60
         logging.critical("----- Adjustment of the neuron models took {} min {} sec -----\n".format(minutes, secnds))
 
         self.N_models = N_models

@@ -189,8 +189,8 @@ def get_freqs_for_calc(d,FR_vector_signal,Xs_signal_norm,t_vector):
         Xs_unit=3*(np.absolute(Xs_signal_norm)).max()*np.ones(FR_vector_signal_new.shape[0],float)
 
         plt.figure(161)
-        plt.stem(FR_vector_signal, np.absolute(Xs_signal_norm), markerfmt=" ",linefmt='C0',basefmt="C0-")
-        plt.stem(FR_vector_signal_new, Xs_unit, markerfmt=" ",linefmt="C1--",basefmt="C0-")      #we need to scale appropriately. Think about this image
+        plt.stem(FR_vector_signal, np.absolute(Xs_signal_norm), markerfmt=" ",linefmt='C0',basefmt="C0-",use_line_collection=True)
+        plt.stem(FR_vector_signal_new, Xs_unit, markerfmt=" ",linefmt="C1--",basefmt="C0-",use_line_collection=True)      #we need to scale appropriately. Think about this image
         plt.xscale("log")
         plt.xlabel('Frequency, Hz')
         plt.xlim(10e0, 10e6)
