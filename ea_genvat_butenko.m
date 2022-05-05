@@ -34,9 +34,9 @@ end
 
 % docker image name
 if ispc || ismac
-    dockerImage = 'ningfei/oss-dbs';
+    dockerImage = 'ningfei/oss-dbs:latest';
 else % Linux
-    dockerImage = 'custom_oss-dbs';
+    dockerImage = 'ningfei/oss-dbs:custom';
 end
 
 % Double check if lead is supported by OSS-DBS.

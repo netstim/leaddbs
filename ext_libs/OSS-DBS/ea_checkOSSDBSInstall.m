@@ -32,16 +32,16 @@ if isempty(dockerPath)
     end
 else
     if ismac || ispc % Use upstream image since there's no permission issue
-        [~, id] = system('docker images -q ningfei/oss-dbs');
+        [~, id] = system('docker images -q ningfei/oss-dbs:latest');
         if ~isempty(id)
-            fprintf('docker image found: ningfei/oss-dbs\n');
+            fprintf('docker image found: ningfei/oss-dbs:latest\n');
         end
         fprintf('\nPulling docker image...\n'); % Always pull to update local image
         system('docker pull ningfei/oss-dbs:latest');
     else % Use local built image
-        [~, id] = system('docker images -q custom_oss-dbs');
+        [~, id] = system('docker images -q ningfei/oss-dbs:custom');
         if ~isempty(id)
-            fprintf('docker image found: custom_oss-dbs\n');
+            fprintf('docker image found: ningfei/oss-dbs:custom\n');
             fprintf('\nRebuilding docker image...\n');
         else
             fprintf('\nBuilding docker image...\n');
@@ -49,7 +49,7 @@ else
         currentPath = pwd;
         cd([ea_getearoot, 'ext_libs/OSS-DBS']);
         system('docker pull ningfei/oss-dbs:latest'); % Pull to update base image
-        system('docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t custom_oss-dbs .');
+        system('docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t ningfei/oss-dbs:custom -f custom.Dockerfile .');
         cd(currentPath);
     end
 end
