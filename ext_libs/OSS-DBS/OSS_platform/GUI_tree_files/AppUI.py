@@ -231,12 +231,12 @@ class MainWindow(Functionalities):
                 output = subprocess.run(['python3', 'Launcher_OSS_lite.py'])
             else:
                 output = subprocess.run(
-                    ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
+                    ['docker', 'run', '-e', 'PATIENTDIR', '-e', 'TZ', '--volume', dir_code + ':/opt/OSS-DBS',
                      '--volume', self.path_to_patient + ':/opt/Patient',
                      '-it', '--rm', 'custom_oss-dbs', 'python3', 'Launcher_OSS_lite.py'])  #
         elif sys.platform == 'darwin' or sys.platform == 'win32':
             output = subprocess.run(
-                ['docker', 'run', '-e', 'PATIENTDIR', '--volume', dir_code + ':/opt/OSS-DBS',
+                ['docker', 'run', '-e', 'PATIENTDIR', '-e', 'TZ', '--volume', dir_code + ':/opt/OSS-DBS',
                  '--volume', self.path_to_patient + ':/opt/Patient',
                  '-it', '--rm', 'ningfei/oss-dbs', 'python3', 'Launcher_OSS_lite.py'])
         else:
