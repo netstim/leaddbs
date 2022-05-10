@@ -541,9 +541,9 @@ function fn=stripext(fn)
 end
 
 
-function rightcallback(src, evnt, obj)
-    if evnt.getButton() == 3
-        
+function rightcallback(src, evt, obj)
+    if evt.getButton() == 3
+        ea_editfiducial(src,evt,obj)
     end
 end
 
