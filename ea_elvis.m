@@ -721,7 +721,6 @@ function ea_keypress(resultfig, event)
 % listeners here.
 if ismember('alt', event.Modifier)
     setappdata(resultfig, 'altpressed', 1);
-    %    disp('Altpressed');
 elseif ismember('shift', event.Modifier)
     setappdata(resultfig, 'shiftpressed', 1);
 elseif ismember('command', event.Modifier)
