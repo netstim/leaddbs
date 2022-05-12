@@ -352,16 +352,21 @@ classdef ea_disctract < handle
             I_iter = {};
             Ihat_iter = {};
             rng(obj.rngseed);
-            cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
             iter = obj.kIter;
-            for i=1:iter
-                fprintf("Iterating fold set: %d",i)
-                [I_iter{end+1}, Ihat_iter{end+1}] = crossval(obj, cvp);
+            if iter == 1
+                cvp = cvpartition(length(obj.patientselection),'KFold',obj.kfold);
+                [I,Ihat] = crossval(obj,cvp);
+            else
+                for i=1:iter
+                    cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
+                    fprintf("Iterating fold set: %d",i)
+                    [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp);
+                end
+                I_iter = cell2mat(I_iter);
+                Ihat_iter = cell2mat(Ihat_iter);
+                I = mean(I_iter,2,'omitnan');
+                Ihat = mean(Ihat_iter,2,'omitnan');
             end
-            I_iter = cell2mat(I_iter);
-            Ihat_iter = cell2mat(Ihat_iter);
-            I = mean(I_iter,2,'omitnan');
-            Ihat = mean(Ihat_iter,2,'omitnan');
         end
 
         function [I, Ihat] = lno(obj, Iperm)
@@ -755,6 +760,7 @@ classdef ea_disctract < handle
                     obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval;
                 end
             catch
+                ea_warndlg("Connectivity indices were not stored. Please recalculate or stay with the same model (VAT or PAM)");
                 disp("=================== WARNING ========================")
                 disp("Connectivity indices connFiberInd were not stored")
                 disp("Recalculate or stay with the same model (VAT or PAM)")
@@ -786,6 +792,7 @@ classdef ea_disctract < handle
                         end
                     end
                 catch
+                    ea_warndlg("Connectivity indices were not stored. Please recalculate or stay with the same model (VAT or PAM)");
                     disp("=================== WARNING ========================")
                     disp("Connectivity indices connFiberInd were not stored")
                     disp("Recalculate or stay with the same model (VAT or PAM)")

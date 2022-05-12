@@ -1,4 +1,4 @@
-function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
+function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
 
     if ~exist('Iperm', 'var')
         if obj.cvlivevisualize
@@ -85,13 +85,10 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel)); 
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
                                         % compute the score for both
-                                        % hemispheres together, obj.adj_scaler defines the extent of 'smoothing' 
-                                        Ihat_ADJ_test = transpose(obj.adj_scaler*ea_nanmean(Ihat_ADJ_comb(1:end,test),1));
-                                        Ihat_ADJ_training = obj.adj_scaler*ea_nanmean(Ihat_ADJ_comb(1:end,training),1);
-                                        %disp('____________')
-                                        %disp(Ihat(test,1,voter))
+                                        % hemispheres together, adj_scaler defines the extent of 'smoothing' 
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nanmean(Ihat_ADJ_comb(1:end,test),1));
+                                        Ihat_ADJ_training = adj_scaler*ea_nanmean(Ihat_ADJ_comb(1:end,training),1);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
-                                        %disp(Ihat(test,1,voter))
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;
                                         Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1, voter);
@@ -120,8 +117,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel)); 
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel)); 
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
-                                        Ihat_ADJ_test = transpose(obj.adj_scaler*ea_nansum(Ihat_ADJ_comb(1:end,test),1));
-                                        Ihat_ADJ_training = obj.adj_scaler*ea_nansum(Ihat_ADJ_comb(1:end,training),1);
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nansum(Ihat_ADJ_comb(1:end,test),1));
+                                        Ihat_ADJ_training = adj_scaler*ea_nansum(Ihat_ADJ_comb(1:end,training),1);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;
@@ -151,8 +148,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel)); 
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel)); 
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
-                                        Ihat_ADJ_test = transpose(obj.adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,test),1));
-                                        Ihat_ADJ_training = obj.adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,training),1);
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,test),1));
+                                        Ihat_ADJ_training = adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,training),1);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;
@@ -185,8 +182,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                         ihatvals_test = sort(Ihat_ADJ_comb(test)); 
                                         ihatvals_training = sort(Ihat_ADJ_comb(training)); 
 
-                                        Ihat_ADJ_test = transpose(obj.adj_scaler*ea_nansum(ihatvals_test(1:ceil(size(ihatvals_test,1).*0.05),:),1));
-                                        Ihat_ADJ_training = obj.adj_scaler*ea_nansum(ihatvals_training(1:ceil(size(ihatvals_training,1).*0.05),:),1);
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nansum(ihatvals_test(1:ceil(size(ihatvals_test,1).*0.05),:),1));
+                                        Ihat_ADJ_training = adj_scaler*ea_nansum(ihatvals_training(1:ceil(size(ihatvals_training,1).*0.05),:),1);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;
@@ -219,8 +216,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
 
                                     if isstruct(obj.ADJ) 
-                                        fibsval_ADJ_right = obj.adj_scaler*obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{voter,1}(1:end,patientsel);
-                                        fibsval_ADJ_left = obj.adj_scaler*obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{voter,2}(1:end,patientsel);
+                                        fibsval_ADJ_right = adj_scaler*obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{voter,1}(1:end,patientsel);
+                                        fibsval_ADJ_left = adj_scaler*obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{voter,2}(1:end,patientsel);
                                         fibsval_ADJ_comb = [fibsval_ADJ_right;fibsval_ADJ_left];
                                         fibsval_ADJ_comb_full = fibsval_usedidx_flat + fibsval_ADJ_comb;
 
@@ -247,8 +244,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
 
                                     if isstruct(obj.ADJ) 
-                                        fibsval_ADJ_right = obj.adj_scaler*obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{voter,1}(1:end,patientsel);
-                                        fibsval_ADJ_left = obj.adj_scaler*obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{voter,2}(1:end,patientsel);
+                                        fibsval_ADJ_right = adj_scaler*obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{voter,1}(1:end,patientsel);
+                                        fibsval_ADJ_left = adj_scaler*obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{voter,2}(1:end,patientsel);
                                         fibsval_ADJ_comb = [fibsval_ADJ_right;fibsval_ADJ_left];
                                         fibsval_ADJ_comb_full = fibsval_usedidx_flat + fibsval_ADJ_comb;
 
@@ -275,8 +272,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                     Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
 
                                     if isstruct(obj.ADJ) 
-                                        fibsval_ADJ_right = obj.adj_scaler*obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{voter,1}(1:end,patientsel);
-                                        fibsval_ADJ_left = obj.adj_scaler*obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{voter,2}(1:end,patientsel);
+                                        fibsval_ADJ_right = adj_scaler*obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{voter,1}(1:end,patientsel);
+                                        fibsval_ADJ_left = adj_scaler*obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{voter,2}(1:end,patientsel);
                                         fibsval_ADJ_comb = [fibsval_ADJ_right;fibsval_ADJ_left];
                                         fibsval_ADJ_comb_full = fibsval_usedidx_flat + fibsval_ADJ_comb;
 
@@ -306,8 +303,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel)); 
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel)); 
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
-                                        Ihat_ADJ_test = transpose(obj.adj_scaler*ea_nanmean(Ihat_ADJ_comb(1:end,test),1));
-                                        Ihat_ADJ_training = obj.adj_scaler*ea_nanmean(Ihat_ADJ_comb(1:end,training),1);
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nanmean(Ihat_ADJ_comb(1:end,test),1));
+                                        Ihat_ADJ_training = adj_scaler*ea_nanmean(Ihat_ADJ_comb(1:end,training),1);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;
@@ -334,8 +331,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel)); 
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel)); 
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
-                                        Ihat_ADJ_test = transpose(obj.adj_scaler*ea_nansum(Ihat_ADJ_comb(1:end,test),1));
-                                        Ihat_ADJ_training = obj.adj_scaler*ea_nansum(Ihat_ADJ_comb(1:end,training),1);
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nansum(Ihat_ADJ_comb(1:end,test),1));
+                                        Ihat_ADJ_training = adj_scaler*ea_nansum(Ihat_ADJ_comb(1:end,training),1);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;
@@ -362,8 +359,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel)); 
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel)); 
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
-                                        Ihat_ADJ_test = transpose(obj.adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,test),1));
-                                        Ihat_ADJ_training = obj.adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,training),1);
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,test),1));
+                                        Ihat_ADJ_training = adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,training),1);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;
@@ -396,8 +393,8 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt, ob
                                         ihatvals_test = sort(Ihat_ADJ_comb(test)); % double check
                                         ihatvals_training = sort(Ihat_ADJ_comb(training)); % double check
 
-                                        Ihat_ADJ_test = transpose(obj.adj_scaler*ea_nansum(ihatvals_test(1:ceil(size(ihatvals_test,1).*0.05),:),1));
-                                        Ihat_ADJ_training = obj.adj_scaler*ea_nansum(ihatvals_training(1:ceil(size(ihatvals_training,1).*0.05),:),1);
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nansum(ihatvals_test(1:ceil(size(ihatvals_test,1).*0.05),:),1));
+                                        Ihat_ADJ_training = adj_scaler*ea_nansum(ihatvals_training(1:ceil(size(ihatvals_training,1).*0.05),:),1);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;

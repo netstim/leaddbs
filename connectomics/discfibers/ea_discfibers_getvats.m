@@ -28,7 +28,7 @@ for sub=1:numPatient
         ea_cprintf('CmdWinWarnings', 'Left side VTA doesn''t exist under stimulation folder:\n%s\n', stimFolder);
         vatlist(sub,2) = {''};
     end
-    
+
     % Mirrored VAT E-field
     ea_genflippedjointnii(vatlist{sub,1}, vatlist{sub,2});
     try
