@@ -1,4 +1,4 @@
-function pth=ea_fileparts(pth)
+function [pth,name,ext]=ea_fileparts(pth)
 %handling path wrapped with quotes "" (this would happen if ea_path_helper was used on a windows platform (ispc))
 %handle also the case of bad termination (e.g. only one quote at the
 %beginning, and none at the end)
@@ -13,8 +13,7 @@ if strcmp(pth(end),'"')
     pth(end)=[];
 end
 
-pth=fileparts(pth);
-
+[pth, name, ext] = fileparts(pth);
 
 if starts_with_quote || ends_with_quote
     pth=['"' pth '"'];
