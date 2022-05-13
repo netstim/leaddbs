@@ -14,6 +14,14 @@ for i=1:length(filepath)
     end
 
     if ispc
+        %ensure quotes are not added two times
+        if ea_string_startendwithquotes(filepath{i})
+            %strip quotes (in the case there was a badly formatted path,
+            %with only the quote at the beginning of the string-path
+            %(Example: pth='"D:/path/to/dir')
+            filepath{i}=ea_stripquotes(filepath{i});
+        end
+        %add quotes (to take care of spaces in the path)
         filepath{i} = ['"',filepath{i},'"'];
     else
         filepath{i} = regexprep(filepath{i},'[[''() &]]', '\\$0');
