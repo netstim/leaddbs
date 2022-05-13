@@ -2,10 +2,10 @@ function ea_ants_run(cfg)
 % Proxy to run ANTs registration based on provided configurations
 
 % Make sure the transformation folder and output folder exist.
-ea_mkdir(fileparts(cfg.outputbase));
-ea_mkdir(fileparts(cfg.outputimage));
+ea_mkdir(ea_fileparts(cfg.outputbase));
+ea_mkdir(ea_fileparts(cfg.outputimage));
 
-ants_transforms = dir(fullfile(fileparts(cfg.outputbase), '*_desc-ants.*'));
+ants_transforms = dir(fullfile(ea_path_formatlab(ea_fileparts(cfg.outputbase)), '*_desc-ants.*'));
 
 refinewarp = 0;
 if ~isempty(ants_transforms) % prior ANTs transform found.
@@ -39,14 +39,21 @@ if ~isempty(ants_transforms) % prior ANTs transform found.
     end
 end
 
-fixedinit = fullfile(fileparts(fileparts(fileparts(cfg.moving))), 'masks', 'mask_template.nii');
+base_path_fld_pat_img=fileparts(fileparts(fileparts(ea_path_formatlab(cfg.moving))));
+fixedinit = fullfile(base_path_fld_pat_img, 'masks', 'mask_template.nii');
 if ~isfile(fixedinit)
     fixedinit = cfg.fixed;
+else
+    %re-add quotes to path if necessary (windows)
+    fixedinit=ea_path_helper(fixedinit);
 end
 
-movinginit = fullfile(fileparts(fileparts(fileparts(cfg.moving))), 'masks', 'mask_anatomy.nii');
+movinginit = fullfile(base_path_fld_pat_img, 'masks', 'mask_anatomy.nii');
 if ~isfile(movinginit)
     movinginit = cfg.moving;
+else
+    %re-add quotes to path if necessary (windows)
+    movinginit=ea_path_helper(movinginit);
 end
 
 if refinewarp
@@ -98,12 +105,14 @@ if isfield(cfg, 'synmaskstage')
 end
 
 if isBIDSFileName(cfg.outputimage)
-    logDir = fullfile(fileparts(fileparts(cfg.outputimage)), 'log');
+    base_path_fld_pat_outimg=fileparts(fileparts(ea_path_formatlab(cfg.outputimage)));
+    logDir = fullfile(base_path_fld_pat_outimg, 'log');
     parsedStruct = parseBIDSFilePath(cfg.outputimage);
     ea_mkdir(logDir);
     antsCMDFile = [logDir, filesep, 'sub-', parsedStruct.sub, '_desc-antscmd.txt'];
 else
-    antsCMDFile = [fileparts(cfg.outputimage), filesep, 'ea_ants_command.txt'];
+    base_path_fld_pat_outimg=fileparts(ea_path_formatlab(cfg.outputimage));
+    antsCMDFile = [base_path_fld_pat_outimg, filesep, 'ea_ants_command.txt'];
 end
 
 fid = fopen(antsCMDFile, 'a');
