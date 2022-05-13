@@ -1,5 +1,15 @@
 function varargout = ea_methodsdisp(varargin)
 % EA_METHODSDISP MATLAB code for ea_methodsdisp.fig
+% This will show the method window.
+% Requires a c formatted string (printf) as input, within a cell array
+% String passed requires to be terminated with '\n'
+% Text before the 5th character will be ignored
+% Example: {'\n\nText to print\nReferences: 1) ref1\n'}
+% will appear as :
+%   Text to print
+%   References: 1) ref1
+%
+%
 %      EA_METHODSDISP, by itself, creates a new EA_METHODSDISP or raises the existing
 %      singleton*.
 %
@@ -54,12 +64,15 @@ function ea_methodsdisp_OpeningFcn(hObject, eventdata, handles, varargin)
 
 
 if isempty(handles.methodstxt.String)
-    handles.methodstxt.String=ea_strsplit(sprintf('%s',varargin{1}{1}(5:end)));
+    %this will parse the string that is passed as c (printf) formatted string
+    handles.methodstxt.String=ea_strsplit(sprintf(varargin{1}{1}(5:end)));
 else
     try
-        handles.methodstxt.String=ea_strsplit(sprintf('%s\n\n%s',handles.methodstxt.String,varargin{1}{1}));
+        %this will parse the string that is passed as c (printf) formatted string
+        handles.methodstxt.String=ea_strsplit([sprintf('%s\n\n',handles.methodstxt.String),sprintf(varargin{1}{1})]);
     catch
-        handles.methodstxt.String=ea_strsplit(sprintf('%s',varargin{1}{1}(5:end)));
+        %this will parse the string that is passed as c (printf) formatted string
+        handles.methodstxt.String=ea_strsplit(sprintf(varargin{1}{1}(5:end)));
     end
 end
 
@@ -77,12 +90,12 @@ guidata(hObject, handles);
 
 function cellstr=ea_strsplit(str)
 cnt=1;
-ns=strfind(str,'\n');
+ns=strfind(str,sprintf('\n'));
 offs=1;
 
 for n=1:length(ns)
     cellstr{cnt}=str(offs:ns(n)-1);
-    offs=ns(n)+2;
+    offs=ns(n)+1;
     cnt=cnt+1;
 end
 
