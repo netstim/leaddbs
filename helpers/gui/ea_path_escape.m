@@ -5,7 +5,7 @@ function [pth]=ea_path_escape(pth)
 
     if iscell(pth)
         %assume cell array of string paths
-        for str_i=1:length(pth)
+        for str_i=1:numel(pth)
             pth{str_i}=escape_path_str(pth{str_i});
         end
     else
