@@ -1,6 +1,9 @@
 function ea_delete(object, warn)
 % wrapper for file/dir deleting, check existence beforehand
 
+%ensure path is compatible with matlab tools (does not need ea_path_helper features for PC platforms)
+object=ea_path_formatlab(object);
+
 if nargin < 2
     warn = 0;
     warning('off');
