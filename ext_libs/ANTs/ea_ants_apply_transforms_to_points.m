@@ -60,6 +60,7 @@ ea_delete(output_file)
 
 
 function coord = ea_readcsv(pth)
+pth=ea_path_formatlab(pth);%ensure path is compatible with matlab tools
 fid = fopen(pth);
 C = textscan(fid,'%f %f %f %f','commentStyle', '#','delimiter', ',','Headerlines',1);
 fclose(fid);
@@ -67,6 +68,7 @@ coord = cell2mat(C(1:3));
 
 
 function ea_writecsv(pth,input)
+pth=ea_path_formatlab(pth);%ensure path is compatible with matlab tools
 fid = fopen(pth,'w');
 try
     fprintf(fid,'x,y,z,t \n');
