@@ -21,7 +21,10 @@ classdef ea_disctract < handle
         connFiberInd_VAT % list of indices of activated (connected) fibers using VAT
         connectivity_type = 0 % 1 - VAT, 2 - PAM
         switch_connectivity = 0 % flag if connectivity type was changed in the GUI
-        nestedLOO = false
+        nestedLOO = false       % if true, will conducted LOO in the training set
+        use_adjacency = false   % if true, 'smoothes' the fiber model by addings scores of fibers next to the pivotal ones
+        ADJ = false             % contains the large but sparse adjacency matrix
+        adj_scaler = 0.025 % coefficient that determines the degree of smoothing. Atm, hardwired, but could adaptive
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [0.9176,0.2000,0.1373] % positive main color
@@ -161,19 +164,11 @@ classdef ea_disctract < handle
 
 
         function calculate(obj)
-            obj.connectivity_type = 1;
-
-%             numPatient = length(obj.allpatients);
-%             for sub=1:numPatient
-%                 [filepath,name,ext] = fileparts(obj.allpatients{sub});
-%                 obj.allpatients{sub} = ['/home/konstantin/Documents/Results4Konst/derivatives/leaddbs',filesep,name];  
-%             end
-            
-
+              
             switch obj.connectivity_type
-                case 2
+                case 2 % PAM
                     obj.M.vatmodel = 'OSS-DBS (Butenko 2020)';
-                otherwise
+                otherwise % Stim. volumes
                     obj.M.vatmodel= 'SimBio/FieldTrip (see Horn 2017)';
             end
 
@@ -206,6 +201,32 @@ classdef ea_disctract < handle
             else
                 cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
             end
+
+            % if multi_pathway = 1, use the adjacency defined for
+            % merged_pathways.mat
+            if obj.use_adjacency
+                if obj.multi_pathways == 1
+                    connectome_folder = [ea_getconnectomebase('dMRI_multitract'), obj.connectome];
+                    ADJ_connectome_path = [connectome_folder,filesep,'merged_pathways_ADJ.mat'];
+                    obj.ADJ = load(ADJ_connectome_path); % but we need to precompute (ourselves!)
+                else
+                    [connectome_folder,name,~] = fileparts(cfile);
+                    ADJ_connectome_path = [connectome_folder,filesep,name,'_ADJ.mat'];
+                end
+
+                try 
+                    obj.ADJ = load(ADJ_connectome_path);
+                catch
+                    disp('The adjacency matrix is missing for the chosen connectome')
+                    disp('Please, pre-compute it using ea_compute_adj_matrix.m and store the file in the connectome folder')
+                    obj.ADJ = false;
+                    obj.use_adjacency = false;
+                end
+            else
+                obj.ADJ = false;
+            end
+
+
             switch obj.connectivity_type
                 case 2    % if PAM, then just extracts activation states from fiberActivation.mat
                     pamlist = ea_discfibers_getpams(obj);
@@ -220,7 +241,7 @@ classdef ea_disctract < handle
                     end
                     [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell,  connFiberInd] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
                     obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
-                    obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd;
+                    obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
             end
             
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
@@ -312,12 +333,12 @@ classdef ea_disctract < handle
         function coh = getcohortregressor(obj)
             coh=ea_cohortregressor(obj.M.patient.group(obj.patientselection));
         end
+
         function [I, Ihat] = loocv(obj)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
-            [I,Ihat] = crossval(obj, cvp);
+            [I, Ihat] = crossval(obj, cvp);
         end
-
 
         function [I, Ihat] = lococv(obj)
             if length(unique(obj.M.patient.group(obj.patientselection))) == 1
@@ -331,16 +352,21 @@ classdef ea_disctract < handle
             I_iter = {};
             Ihat_iter = {};
             rng(obj.rngseed);
-            cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
             iter = obj.kIter;
-            for i=1:iter
-                fprintf("Iterating set: %d",i)
-                [I_iter{end+1}, Ihat_iter{end+1}] = crossval(obj, cvp);
+            if iter == 1
+                cvp = cvpartition(length(obj.patientselection),'KFold',obj.kfold);
+                [I,Ihat] = crossval(obj,cvp);
+            else
+                for i=1:iter
+                    cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
+                    fprintf("Iterating fold set: %d",i)
+                    [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp);
+                end
+                I_iter = cell2mat(I_iter);
+                Ihat_iter = cell2mat(Ihat_iter);
+                I = mean(I_iter,2,'omitnan');
+                Ihat = mean(Ihat_iter,2,'omitnan');
             end
-            I_iter = cell2mat(I_iter);
-            Ihat_iter = cell2mat(Ihat_iter);
-            I = mean(I_iter,2,'omitnan');
-            Ihat = mean(Ihat_iter,2,'omitnan');
         end
 
         function [I, Ihat] = lno(obj, Iperm)
@@ -390,19 +416,26 @@ classdef ea_disctract < handle
             % Ihat is the estimate of improvements (not scaled to real improvements)
             if strcmp(obj.multitractmode,'Single Tract Analysis')
                 Ihat = nan(length(patientsel),2);
-                Ihattrain = Ihat;
+                Ihat_train_global = nan(cvp.NumTestSets,length(patientsel),2);
             else
                 Ihat = nan(length(patientsel),2,length(obj.subscore.vars));
-                Ihattrain = Ihat;
+                Ihat_train_global = nan(cvp.NumTestSets,length(patientsel),2,length(obj.subscore.vars));
             end
 
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
-           % obj.nestedLOO = false;
+            
+            % for nested LOO, store some statistics
             if obj.nestedLOO
                 Abs_pred_error = zeros(cvp.NumTestSets, 1);
-                Predicted_dif_models = zeros(cvp.NumTestSets, 1);
+                Predicted_scores = zeros(length(patientsel), 1);
                 Slope = zeros(cvp.NumTestSets, 1);
                 Intercept = zeros(cvp.NumTestSets, 1);
+
+            end
+
+            % no smoothing if the adjacency matrix was not defined
+            if ~isstruct(obj.ADJ)
+                obj.adj_scaler = 0.0;
             end
 
             for c=1:cvp.NumTestSets
@@ -422,8 +455,13 @@ classdef ea_disctract < handle
                 if obj.nestedLOO
 
                     % use all patients, but outer loop left-out is always 0
-                    Ihat_inner = nan(length(patientsel),2);
-                    Ihattrain_inner = nan(length(patientsel),2);
+                    if strcmp(obj.multitractmode,'Single Tract Analysis')
+                        Ihat_inner = nan(length(patientsel),2);
+                        Ihat_train_global_inner = nan(cvp.NumTestSets,length(patientsel),2);
+                    else
+                        Ihat_inner = nan(length(patientsel),2,length(obj.subscore.vars));
+                        Ihat_train_global_inner = nan(cvp.NumTestSets,length(patientsel),2,length(obj.subscore.vars));
+                    end
 
                     for test_i = 1:length(training)
                         training_inner = training;
@@ -436,38 +474,43 @@ classdef ea_disctract < handle
 
                         test_inner = logical(zeros(length(training), 1));
                         test_inner(test_i) = logical(training(test_i));
-                        [Ihat, Ihat_train] = compute_fibscore_model(obj, fibsval, Ihat_inner, Ihattrain_inner, patientsel, training_inner, test_inner,0);
+
                         % updates Ihat_inner(test_inner)
-                        %[Ihat_inner, Ihat_voters_inner, Ihat_voters_train_inner] = compute_fibscore_model(obj, fibsval, Ihat_inner, Ihattrain_inner, patientsel, training_inner, test_inner,0);
+                        if ~exist('Iperm', 'var')
+                            [Ihat_inner, ~, ~] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat_inner, Ihat_train_global_inner, patientsel, training_inner, test_inner);
+                        else
+                            [Ihat_inner, ~, ~] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat_inner, Ihat_train_global_inner, patientsel, training_inner, test_inner,Iperm);
+                        end
                     end
 
+                    % fit the linear model based on inner loop fibscores
                     predictor=squeeze(ea_nanmean(Ihat_inner,2));
-                    % iteration over all test_inner gives us training
+                    % iterating over all test_inner gives us training
                     mdl=fitglm(predictor(training),Improvement(training),lower(obj.predictionmodel));
                     Intercept(c) = mdl.Coefficients.Estimate(1);
                     Slope(c) = mdl.Coefficients.Estimate(2);
-                    %disp('LM params (slope, intercept):')
-                    %disp(Slope(c))
-                    %disp(Intercept(c))
                 end
 
                 % now compute Ihat for the true 'test' left out
                 % updates Ihat(test)
-                [Ihat, Ihat_train] = compute_fibscore_model(obj, fibsval, Ihat, Ihattrain, patientsel, training, test,0);
-                %[Ihat, Ihat_voters, Ihat_voters_train] = compute_fibscore_model(obj, fibsval, Ihat, Ihattrain, patientsel, training, test,0);
+                if ~exist('Iperm', 'var')
+                    [Ihat, Ihat_train_global, vals] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test);
+                else
+                    [Ihat, Ihat_train_global, vals] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test,Iperm);
+                end
 
+                % predict the improvement in the left-out patient (fold) of
+                % the outer loop
                 if obj.nestedLOO
                     predictor=squeeze(ea_nanmean(Ihat,2));
                     Ihat_voters_prediction = repmat(predict(mdl,predictor(test)),1,2);
                     %Abs_pred_error(c) = abs(Improvement(test) - Ihat_voters_prediction(test));
-                    Predicted_dif_models(test) = Ihat_voters_prediction(1); % only one value here atm
+                    Predicted_scores(test) = Ihat_voters_prediction(1:end,1); % only one value here atm
                 end
 
             end
 
             if obj.nestedLOO
-                %empiricallabel = 'ADAS-COG 11 CHANGE (%)';
-                %fibscorelabel = 'Predicted Improvement (%)';
                 %cvs = 'L-O-O-O';
                 %h=ea_corrbox(Improvement,(Predicted_dif_models),{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel},'permutation_spearman',[],[],[],[]);
                 LM_values_slope = [num2str(mean(Slope)) ' ' char(177) ' ' num2str(std(Slope))];
@@ -475,28 +518,23 @@ classdef ea_disctract < handle
                 disp('Mean and STD for slopes and intercepts of LMs')
                 disp(LM_values_slope)
                 disp(LM_values_intercept)
+
+                % visualize lms and CIs for 5-fold or less
+                if cvp.NumTestSets < 6
+                    groups_nested = zeros(length(Predicted_scores),1);
+                    for group_idx = 1:cvp.NumTestSets
+                        groups_nested(cvp.test(group_idx)) = group_idx;
+                    end
+                    side = 1;
+                    plotName = 'Fitting of linear models for K-folds using nested LOO';
+                    empiricallabel = 'Empirical score';
+                    pred_label = 'Predicted score';
+                    h=ea_corrbox(Improvement,(Predicted_scores),{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, LM_values_slope, LM_values_intercept},'permutation_spearman',groups_nested,[],[],[]);
+                end
             end
 
             if obj.doactualprediction % repeat loops partly to fit to actual response variables:
-                if ~exist('Iperm', 'var')
-                    if obj.cvlivevisualize
-                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
-                        obj.draw(vals,fibcell,usedidx)
-                        %obj.draw(vals,fibcell);
-                        drawnow;
-                    else
-                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
-                    end
-                else
-                    if obj.cvlivevisualize
-                        [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
-                        obj.draw(vals,fibcell,usedidx)
-                        %obj.draw(vals,fibcell);
-                        drawnow;
-                    else
-                        [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
-                    end
-                end
+
                 Ihat_voters_prediction=nan(size(Ihat));
                 %Ihat_voters_prediction=nan(size(Ihat_voters));
                 for c=1:cvp.NumTestSets
@@ -521,32 +559,55 @@ classdef ea_disctract < handle
                         if size(useI,2)>1
                             ea_error('This has not been implemented for hemiscores.');
                         end
-                        predictor=squeeze(ea_nanmean(Ihat,2));
+
+                        % these predictors are defined within the same ff model
+                        % of iteration 'c'
+                        predictor_training = squeeze(ea_nanmean(Ihat_train_global,3));
+                        predictor_test = squeeze(ea_nanmean(Ihat,2));
                         %predictor=squeeze(ea_nanmean(Ihat_voters,2));
-                        if all(isnan(predictor(training,voter))) && cvp.NumTestSets == 1 % this is the case if e.g. using cohort A to predict B (not a kfold/loo case).
-                            pred_train=ea_nanmean(Ihat_train,2);
-                            predictor(training,voter)=pred_train(training,voter);
-                        end
+
                         covariates=[];
-                        for cv=1:length(obj.covars)
-                            covariates=[covariates,obj.covars{cv}];
+                        for cv = 1:length(obj.covars)
+                            covariates = [covariates,obj.covars{cv}];
                         end
                         if ~isempty(covariates)
-                            mdl=fitglm([predictor(training,voter),covariates(training,:)],useI(training),lower(obj.predictionmodel));
+                            mdl=fitglm([predictor_training(c,training,voter),covariates(training,:)],useI(training),lower(obj.predictionmodel));
                         else
-                            mdl=fitglm([predictor(training,voter)],useI(training),lower(obj.predictionmodel));
+                            mdl=fitglm([predictor_training(c,training,voter)],useI(training),lower(obj.predictionmodel));
                         end
-                        if size(useI,2)==1 % global scores
+                        if size(useI,2) == 1 % global scores
                             if ~isempty(covariates)
-                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor(test,voter),covariates(test,:)]),1,2); % fill both sides equally
+                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter),covariates(test,:)]),1,2); % fill both sides equally
                             else
-                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor(test,voter)]),1,2); % fill both sides equally
+                                Ihat_voters_prediction(test,:,voter)=repmat(predict(mdl,[predictor_test(test,voter)]),1,2); % fill both sides equally
                             end
                         elseif size(useI,2)==2 % bihemispheric scores
                             ea_error('Fitting to scores has not been implemented for bihemispheric scores.');
                         end
                     end
                 end
+
+                % quantify the prediction accuracy (if Train-Test)
+                if cvp.NumTestSets == 1 && voter == 1 && size(obj.responsevar,2) == 1
+                    side = 1;
+                    SS_tot = var(useI(test)) * (length(useI(test)) - 1); % just a trick to use one line
+                    SS_res = sum((Ihat_voters_prediction(test,side,1) - useI(test)).^2);
+                    R2 = 1 - SS_res/SS_tot;        
+                    RMS = sqrt(mean((Ihat_voters_prediction(test,side,1) - useI(test)).^2));
+                    MAD = median(abs(Ihat_voters_prediction(test,side,1) - useI(test)));
+                    MAE = mean(abs(Ihat_voters_prediction(test,side,1) - useI(test)));
+
+                    plotName = 'TRAIN-TEST';
+                    R2_label = ['R2 = ', sprintf('%.3f',R2)];
+                    RMS_label = ['RMS = ', sprintf('%.3f',RMS)];
+                    MAD_label = ['MAD = ', sprintf('%.3f',MAD)];
+            
+                    empiricallabel = 'Empirical score';
+                    pred_label = 'Predicted score';
+                    h=ea_corrbox(useI(test),(Ihat_voters_prediction(test,side,1)),{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, R2_label, RMS_label, MAD_label},'permutation_spearman',[],[],[],[]);
+                    %h2=ea_corrbox(-1*useI(test),(Ihat_voters_prediction(test,side,1)),{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, R2_label, RMS_label, MAD_label},'permutation_spearman',[],[],[],[]);
+                end
+
                 Ihat=Ihat_voters_prediction; % replace with actual response variables.
             end
 
@@ -699,16 +760,17 @@ classdef ea_disctract < handle
                     obj.results.(ea_conn2connid(obj.connectome)).('plainconn').fibsval = obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval;
                 end
             catch
+                ea_warndlg("Connectivity indices were not stored. Please recalculate or stay with the same model (VAT or PAM)");
                 disp("=================== WARNING ========================")
                 disp("Connectivity indices connFiberInd were not stored")
                 disp("Recalculate or stay with the same model (VAT or PAM)")
                 disp("====================================================")
             end
-                
-           % disp(obj.switch_connectivity)
+            
+            %disp('Connectivity switch')
+            %disp(obj.switch_connectivity)
 
             % update the connectivity if switched between PAM and VAT
-            
             if obj.switch_connectivity == 1
                 if obj.multi_pathways == 1
                     [filepath,name,ext] = fileparts(obj.leadgroup);
@@ -717,8 +779,8 @@ classdef ea_disctract < handle
                     cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
                 end                
                 load(cfile, 'fibers', 'idx');
-                disp('Conn Type')
-                disp(obj.connectivity_type)
+                %disp('Conn. Type:')
+                %disp(ea_method2methodid(obj))
                 try
                     for side = 1:2
                         if obj.connectivity_type == 2
@@ -730,7 +792,7 @@ classdef ea_disctract < handle
                         end
                     end
                 catch
-                    ea_warndlg("Connectivity indices connFiberInd were not stored \n, Recalculate or stay with the same model (VAT or PAM)")
+                    ea_warndlg("Connectivity indices were not stored. Please recalculate or stay with the same model (VAT or PAM)");
                     disp("=================== WARNING ========================")
                     disp("Connectivity indices connFiberInd were not stored")
                     disp("Recalculate or stay with the same model (VAT or PAM)")

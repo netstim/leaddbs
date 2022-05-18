@@ -7,6 +7,7 @@ function [cfile, map_list, pathway_list] = ea_discfibers_merge_pathways(obj)
 
 myDir = [ea_getconnectomebase('dMRI_multitract'), obj.connectome];
 myFiles = dir(fullfile(myDir,'*.mat')); %gets all mat files in struct
+myFiles = myFiles(~endsWith({myFiles.name}, '_ADJ.mat'));
 
 glob_index = 1;
 map_list = []; % contains global indices of the first fibers in pathways
@@ -28,6 +29,10 @@ for k = 1:length(myFiles)
   pathway_list{k} = regexprep(pathway_list{k}, '_', ' ');
   
   fiber_file = load(fullFileName);
+  % skip the adjacency matrix file
+  if contains(fullFileName, '_ADJ')
+      continue 
+  end
   num_of_fibers = length(fiber_file.idx);
   fiber_file.fibers(:,4) = fiber_file.fibers(:,4) + glob_index - 1;
   
@@ -101,7 +106,12 @@ for sub=1:numPatient
             pam_file = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
                 ea_nt(0), 'gs_',obj.M.guid,filesep, fiberActivation_file];
             
+         
             % we need to add filtered out fibers as not activated
+            if contains(pam_file, '_ADJ')
+                continue 
+            end
+
             try
                 fib_state_raw = load(char(pam_file));
             catch  % if activation file for the pathway does not exist, assign 0 activation
