@@ -622,14 +622,21 @@ classdef ea_disctract < handle
                     end
                     weightmatrix=zeros(size(Ihat));
                     for voter=1:size(Ihat,3)
-                    %weightmatrix=zeros(size(Ihat_voters));
-                    %for voter=1:size(Ihat_voters,3)
                         if ~isnan(obj.subscore.weights(voter)) % same weight for all subjects in that voter (slider was used)
                             weightmatrix(:,:,voter)=obj.subscore.weights(voter);
                         else % if the weight value is nan, this means we will need to derive a weight from the variable of choice
-                            weightmatrix(:,:,voter)=repmat(obj.subscore.weightvars{voter}(selected_pts),1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter}(selected_pts),2));
+                            weightmatrix(:,:,voter)=repmat(ea_minmax(obj.subscore.weightvars{voter}(selected_pts)),1,size(weightmatrix,2)/size(obj.subscore.weightvars{voter}(selected_pts),2));
+                            weightmatrix(:,:,voter)=weightmatrix(:,:,voter)./max(obj.subscore.weightvars{voter}(selected_pts)); % weight for unnormalized data across voters *
+                            % *) e.g. in case one symptom - bradykinesia -
+                            % has a max of 20, while a second - tremor -
+                            % will have a max of 5, we want to equilize
+                            % those. We use minmax() in the line above to
+                            % get rid of negative values and use
+                            % ./ea_nansum below to take the average.
                         end
                     end
+
+
                     for xx=1:size(Ihat,1) % make sure voter weights sum up to 1
                         for yy=1:size(Ihat,2)
                     %                     for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
