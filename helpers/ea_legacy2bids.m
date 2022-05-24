@@ -118,24 +118,25 @@ for patients = 1:length(source)
    
     tag_cell = {}; %initializing cell for the tags
     mod_cell = {}; %initializing cell for the mods
-    
+    files_to_move = {}; % initializing cell for files
     files_in_pat_folder = dir_without_dots(source_patient); %all the files which do not start with '.'
-    files_to_move = {files_in_pat_folder.name}; 
-    
-    for j=1:length(files_to_move)
-        if ~isfolder(fullfile(source_patient,files_to_move{j})) %only filenames, not directories
-            if isempty(regexpi(files_to_move{j},'.*.(nii|nii.gz$)','match'))
+    file_names = {files_in_pat_folder.name}; 
+    file_index = 1;
+    for j=1:length(file_names)
+        if ~isfolder(fullfile(source_patient,file_names{j})) %only filenames, not directories
+            if isempty(regexpi(file_names{j},'.*.(nii|nii.gz$)','match'))
                continue
             else
-                if ~any(contains(files_to_move{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
-                    if any(regexpi(files_to_move{j},'raw_anat_.*.nii')) || any(regexpi(files_to_move{j},'^anat_.*.nii'))  %we already know their tags in the case of cor,tra,sag
-                        to_match = files_to_move{j};
+                if ~any(contains(file_names{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
+                    if any(regexpi(file_names{j},'raw_anat_.*.nii')) || any(regexpi(file_names{j},'^anat_.*.nii'))  %we already know their tags in the case of cor,tra,sag
+                        to_match = file_names{j};
                         bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
-                        tag = check_acq(fullfile(source_patient,files_to_move{j})); %function for modalities, use of fslHD
+                        tag = check_acq(fullfile(source_patient,file_names{j})); %function for modalities, use of fslHD
                         tag_cell{end+1} = tag;
                         mod_cell{end+1} = bids_mod;
                     end
-                    
+                    files_to_move{file_index,1} = file_names{j};
+                    file_index = file_index + 1;
                 end
             end
             
@@ -492,44 +493,45 @@ for patients = 1:length(source)
                                   mkdir(op_dir);
                               end
                               copyfile(fullfile(source_path,which_file),op_dir);
-                          else
+                          elseif endsWith(files_to_move{files},'.nii')
                               try
                                   tag = check_acq(fullfile(source_path,which_file));
-                                  bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
+                                  bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_','acq-',tag,'_',bids_mod,ext];
                               catch
-                                  try_bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
+                                  try_bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_',acqTag','_',bids_mod,ext];
                                   bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
                               end
-                              bids_name = CheckifAlreadyExists(op_dir,bids_name);
-                              if exist(fullfile(source_path,which_file),'file')
-                                copyfile(fullfile(source_path,which_file),op_dir);
-                              elseif exist(fullfile(source_patient,which_file),'file')
-                                 copyfile(fullfile(source_patient,which_file),op_dir); 
-                              end
-                              movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
-                                  
+                          elseif endsWith(files_to_move{files},'.png')
+                              bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_',bids_mod,ext];
                           end
-                      elseif endsWith(which_file,'.mat')
-                          mat_str = regexp(which_file,'[1-9].mat','split','once');
-                          mat_str = mat_str{1};
-                          tf = any(~cellfun('isempty',strfind(coregistration{:,1},mat_str)));
-                          if tf
-                              indx_arr = cellfun(@(x)strfind(x,mat_str),coregistration{:,1},'UniformOutput',false);
-                              indx = find(~cellfun(@isempty,indx_arr));
-                              if length(indx) == 1
+                          bids_name = CheckifAlreadyExists(op_dir,bids_name);
+                          if exist(fullfile(source_path,which_file),'file')
+                              copyfile(fullfile(source_path,which_file),op_dir);
+                          elseif exist(fullfile(source_patient,which_file),'file')
+                              copyfile(fullfile(source_patient,which_file),op_dir);
+                          end
+                          movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
+                    elseif endsWith(which_file,'.mat')
+                        mat_str = regexp(which_file,'[1-9].mat','split','once');
+                        mat_str = mat_str{1};
+                        tf = any(~cellfun('isempty',strfind(coregistration{:,1},mat_str)));
+                        if tf
+                            indx_arr = cellfun(@(x)strfind(x,mat_str),coregistration{:,1},'UniformOutput',false);
+                            indx = find(~cellfun(@isempty,indx_arr));
+                            if length(indx) == 1
                                 bids_name = [patient_name,'_',coregistration{1,2}{indx}];
                                 bids_name = CheckifAlreadyExists(op_dir,bids_name);
                                 copyfile(fullfile(source_path,which_file),op_dir);
                                 movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
-                              else
-                                  op_dir = fullfile(new_path,'miscellaneous');
-                                  if ~exist(fullfile(new_path,'miscellaneous'),'dir')
-                                      mkdir(op_dir);
-                                  end
-                                  copyfile(fullfile(source_path,which_file),op_dir);
-                              end
-                          end
-                      end
+                            else
+                                op_dir = fullfile(new_path,'miscellaneous');
+                                if ~exist(fullfile(new_path,'miscellaneous'),'dir')
+                                    mkdir(op_dir);
+                                end
+                                copyfile(fullfile(source_path,which_file),op_dir);
+                            end
+                        end
+                    end
                       
                        
                     elseif ~ismember(which_file,normalization{:,1}) && ~isempty(regexp(which_file,'^glanat_.*(.nii|.png)$')) %support for other modalities in normalization
@@ -619,6 +621,11 @@ for patients = 1:length(source)
                 %accepted)
                 for i=1:length(files_to_move)
                     if isempty(regexpi(files_to_move{i},'.*.(nii|nii.gz$)','match'))
+                        misc_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'miscellaneous');
+                        if ~exist(misc_dir,'dir')
+                            mkdir(misc_dir)
+                        end
+                        copyfile(fullfile(source_patient,file_names{j}),fullfile(misc_dir));
                         files_to_move{i} = [];
                     end
                 end
@@ -1037,6 +1044,7 @@ function generate_rawImagejson(patient_name,dest)
     
     
 function tag = check_acq(filename)
+if endsWith(filename,'.nii') || endsWith(filename,'.nii.gz')
     hd_struct = ea_fslhd(filename);
     pixdim = [hd_struct.pixdim1, hd_struct.pixdim2, hd_struct.pixdim3];
     [C,~, ic] = unique(pixdim);
@@ -1061,6 +1069,9 @@ function tag = check_acq(filename)
         end
     end
     return
+else
+    return
+end
 function bids_name = add_tag(try_bids_name,mod_cell,tag_cell)
     bids_mod = strsplit(try_bids_name,'_');
     [~,bids_mod,~] = fileparts(bids_mod{end});
