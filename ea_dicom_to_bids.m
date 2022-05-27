@@ -112,7 +112,7 @@ uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, s
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
 % OK button behaviour
-uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities);
+uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities, postop_acq_tags);
 
 % cancel button behaviour
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
@@ -244,7 +244,7 @@ for i = 1:height(uiapp.niiFileTable.Data)
             uiapp.niiFileTable.Data.Task(i) = '-';
 
             % if current acquistion tag is not ax, cor or sag, reset it
-            if ~any(strcmp(uiapp.niiFileTable.Data.Acquisition(i), postop_acq_tags))
+            if ~any(strcmp(uiapp.niiFileTable.Data.Acquisition(i), postop_acq_tags)) && strcmp(modality, 'MRI')
                 uiapp.niiFileTable.Data.Acquisition(i) = '';
                 uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to <ax>, <sag> or <cor>.', 'Invalid acquisition tag in postop MRI');
             end
@@ -422,7 +422,7 @@ end
 end
 
 %% ok button
-function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities)
+function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities, postop_acq_tags)
 
 % sanity checks first
 % if preop is empty
@@ -467,6 +467,7 @@ end
 
 % go through all the files, check if session, type and modality have been set correctly
 postop_modality_found = 0;
+nr_postop_images = 0;
 for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
@@ -481,13 +482,48 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     % check if postop images have the correct modality
     if strcmp(session, 'postop') && any(strcmp(modality, postop_modalities))
         postop_modality_found = 1;
+        nr_postop_images = nr_postop_images + 1;
     end
 end
 
+% if a postop image should be included and has not been set properly, catch this here
 if ~(postop_modality_found == 1) && ~(nopostop_set == 1)    % only halt if user has specified postop, but it has the wrong modality
-    warning_str = ['No valid modality for the postop session has been found, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
+    warning_str = ['No valid modality for the postop session has been found, please choose one of the following:', newline, ...
+        sprintf('%s, ', postop_modalities{:})];
     uialert(uiapp.UIFigure, warning_str, 'Invalid file selection');
     return
+end
+
+% for the postop MRIs, check whether acquisition tags have been set correctly
+if ~(nopostop_set == 1)
+
+    for i = find(uiapp.niiFileTable.Data.Include)'
+        session = char(uiapp.niiFileTable.Data.Session(i));
+        modality = char(uiapp.niiFileTable.Data.Modality(i));
+        acq = char(uiapp.niiFileTable.Data.Acquisition(i));
+
+        % check if postop images have the correct modality
+        if strcmp(session, 'postop') && strcmp(modality, 'MRI')
+            if ~any(strcmp(acq, postop_acq_tags)) && nr_postop_images > 1
+                uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to <ax>, <sag> or <cor>.', 'Invalid acquisition tag in postop MRI');
+                return
+            elseif ~any(strcmp(acq, 'ax')) && nr_postop_images == 1
+                answer = uiconfirm(uiapp.UIFigure, ...
+                    'Only one postop MRI was selected, so acquisition must be <ax>.', 'Only axial acqusition supported for a single MRI postop', ...
+                    'Options', {'Set to <ax>', 'Cancel'}, 'DefaultOption', 1, ...
+                    'Icon', 'warning');
+
+                switch answer
+                    case 'Set to <ax>'
+                        uiapp.niiFileTable.Data.Acquisition(i) = 'ax';   
+                    otherwise
+                        return
+                end
+                
+            end
+
+        end
+    end
 end
 
 anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
