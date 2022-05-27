@@ -467,7 +467,7 @@ end
 
 % go through all the files, check if session, type and modality have been set correctly
 postop_modality_found = 0;
-nr_postop_images = 0;
+postop_mri_found = 0;
 for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
@@ -482,8 +482,12 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     % check if postop images have the correct modality
     if strcmp(session, 'postop') && any(strcmp(modality, postop_modalities))
         postop_modality_found = 1;
-        nr_postop_images = nr_postop_images + 1;
     end
+
+    if strcmp(session, 'postop') && strcmp(modality, 'MRI')
+        postop_mri_found = 1;
+    end
+
 end
 
 % if a postop image should be included and has not been set properly, catch this here
@@ -495,8 +499,9 @@ if ~(postop_modality_found == 1) && ~(nopostop_set == 1)    % only halt if user 
 end
 
 % for the postop MRIs, check whether acquisition tags have been set correctly
-if ~(nopostop_set == 1)
+if ~(nopostop_set == 1) && postop_mri_found == 1
 
+    ax_postop_mri_found = 0;
     for i = find(uiapp.niiFileTable.Data.Include)'
         session = char(uiapp.niiFileTable.Data.Session(i));
         modality = char(uiapp.niiFileTable.Data.Modality(i));
@@ -504,25 +509,21 @@ if ~(nopostop_set == 1)
 
         % check if postop images have the correct modality
         if strcmp(session, 'postop') && strcmp(modality, 'MRI')
-            if ~any(strcmp(acq, postop_acq_tags)) && nr_postop_images > 1
+            if ~any(strcmp(acq, postop_acq_tags))
                 uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to <ax>, <sag> or <cor>.', 'Invalid acquisition tag in postop MRI');
                 return
-            elseif ~any(strcmp(acq, 'ax')) && nr_postop_images == 1
-                answer = uiconfirm(uiapp.UIFigure, ...
-                    'Only one postop MRI was selected, so acquisition must be <ax>.', 'Only axial acqusition supported for a single MRI postop', ...
-                    'Options', {'Set to <ax>', 'Cancel'}, 'DefaultOption', 1, ...
-                    'Icon', 'warning');
-
-                switch answer
-                    case 'Set to <ax>'
-                        uiapp.niiFileTable.Data.Acquisition(i) = 'ax';   
-                    otherwise
-                        return
-                end
-                
+            end
+            if strcmp(acq, 'ax')
+                ax_postop_mri_found = 1;
             end
 
         end
+    end
+
+    if ~(ax_postop_mri_found == 1)
+        uialert(uiapp.UIFigure, 'No postop MRI with the acquisition <ax> found. At least one needs to be present that will be used to reconstruct electrode position.', ...
+            'Invalid acquisition tag in postop MRI');
+        return
     end
 end
 
