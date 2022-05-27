@@ -492,23 +492,24 @@ for patients = 1:length(source)
                                   mkdir(op_dir);
                               end
                               copyfile(fullfile(source_path,which_file),op_dir);
-                          else
+                          elseif endsWith(files_to_move{files},'.nii')
                               try
                                   tag = check_acq(fullfile(source_path,which_file));
-                                  bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
+                                  bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_','acq-',tag,'_',bids_mod,ext];
                               catch
-                                  try_bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
+                                  try_bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_',acqTag','_',bids_mod,ext];
                                   bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
                               end
-                              bids_name = CheckifAlreadyExists(op_dir,bids_name);
-                              if exist(fullfile(source_path,which_file),'file')
-                                copyfile(fullfile(source_path,which_file),op_dir);
-                              elseif exist(fullfile(source_patient,which_file),'file')
-                                 copyfile(fullfile(source_patient,which_file),op_dir); 
-                              end
-                              movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
-                                  
+                          elseif endsWith(files_to_move{files},'.png')
+                              bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_',bids_mod,ext];
                           end
+                          bids_name = CheckifAlreadyExists(op_dir,bids_name);
+                          if exist(fullfile(source_path,which_file),'file')
+                              copyfile(fullfile(source_path,which_file),op_dir);
+                          elseif exist(fullfile(source_patient,which_file),'file')
+                              copyfile(fullfile(source_patient,which_file),op_dir);
+                          end
+                          movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                       elseif endsWith(which_file,'.mat')
                           mat_str = regexp(which_file,'[1-9].mat','split','once');
                           mat_str = mat_str{1};
@@ -1037,6 +1038,7 @@ function generate_rawImagejson(patient_name,dest)
     
     
 function tag = check_acq(filename)
+if endsWith(filename,'.nii') || endsWith(filename,'.nii.gz')
     hd_struct = ea_fslhd(filename);
     pixdim = [hd_struct.pixdim1, hd_struct.pixdim2, hd_struct.pixdim3];
     [C,~, ic] = unique(pixdim);
@@ -1050,7 +1052,7 @@ function tag = check_acq(filename)
             multi = [pixdim(2)*pixdim(3), pixdim(1)*pixdim(3), pixdim(1)*pixdim(2)];
             flag = find(multi == min(multi));
         end
-        
+
         switch flag
             case 1
                 tag = 'sag';
@@ -1061,6 +1063,9 @@ function tag = check_acq(filename)
         end
     end
     return
+else
+    return
+end
 function bids_name = add_tag(try_bids_name,mod_cell,tag_cell)
     bids_mod = strsplit(try_bids_name,'_');
     [~,bids_mod,~] = fileparts(bids_mod{end});
