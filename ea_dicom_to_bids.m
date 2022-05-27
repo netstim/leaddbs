@@ -58,7 +58,8 @@ close(h_wait);
 
 anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};  % a list of all supported modalities
 func_dwi_modalities = {'bold', 'sbref', 'dwi'};
-postop_modalities = {'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};  % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
+postop_modalities = {'CT', 'MRI'};          % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
+postop_acq_tags = {'ax', 'cor', 'sag'};     % a list of required acq-tags for the postop MRI images
 
 % options that should appear in the table
 table_options = struct;
@@ -103,10 +104,10 @@ expand(uiapp.Tree, 'all');
 preview_nii(uiapp, imgs, []); % set initial image to the first one
 
 %% set callbacks of main GUI
-cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
+cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, postop_acq_tags, []) % call preview tree updater to get preallocated changes
 
 uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp, imgs, event); % callback for table selection -> display current selected image
-uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, event); % callback for cell change -> update uiapp tree and adjacent cells
+uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, postop_acq_tags, event); % callback for cell change -> update uiapp tree and adjacent cells
 
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
@@ -165,7 +166,7 @@ T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table, img
 
 main_gui.niiFileTable.Data = T_preallocated;
 
-cell_change_callback(main_gui, subjID, imgs, anat_modalities, postop_modalities, [])
+cell_change_callback(main_gui, subjID, imgs, anat_modalities, postop_modalities, postop_acq_tags, [])
 
 delete(lookup_table_gui);
 
@@ -215,7 +216,7 @@ lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 %% cell change callback
-function cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, event)
+function cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, postop_acq_tags, event)
 
 uiapp.previewtree_preop_anat.Children.delete;     % delete children
 uiapp.previewtree_postop_anat.Children.delete;    % delete children
@@ -241,6 +242,13 @@ for i = 1:height(uiapp.niiFileTable.Data)
             uiapp.niiFileTable.Data.Type(i) = 'anat';
             uiapp.niiFileTable.Data.Session(i) = 'postop';
             uiapp.niiFileTable.Data.Task(i) = '-';
+
+            % if current acquistion tag is not ax, cor or sag, reset it
+            if ~any(strcmp(uiapp.niiFileTable.Data.Acquisition(i), postop_acq_tags))
+                uiapp.niiFileTable.Data.Acquisition(i) = '';
+                uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to <ax>, <sag> or <cor>.', 'Invalid acquisition tag in postop MRI');
+            end
+
         % set type to func for bold modality
         elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData.task_set(i) == 1
             uiapp.niiFileTable.Data.Type(i) = 'func';
@@ -276,6 +284,7 @@ for i = find(~uiapp.niiFileTable.Data.Include)'
     end
 
 end
+
 
 % finally, go through all the files that have been selected to include and update them in the uitree
 for i = find(uiapp.niiFileTable.Data.Include)'
@@ -331,6 +340,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     end
 
 end
+
 end
 
 
@@ -371,7 +381,6 @@ for rowIdx = 1:height(table)
                         table_preallocated.Session(rowIdx) = session;
                         table_preallocated.Type(rowIdx) = img_type;
                         table_preallocated.Modality(rowIdx) = modality;
-                        table_preallocated.Include(rowIdx) = true;
                     end
                 end
             end
