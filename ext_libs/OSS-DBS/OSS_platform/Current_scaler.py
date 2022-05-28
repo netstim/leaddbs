@@ -37,11 +37,11 @@ def copytree(src, dst, symlinks=False, ignore=None):
             shutil.copy2(s, d)
 
 
-def conduct_unit_IFFT(d, Xs_signal_norm, N_array, FR_vector_signal, t_vector, name_sorted_solution,
-                      inx_start_octv):
-    # stores sunit solution (el. potential on axons in space and time) over contacts
+def conduct_unit_IFFT(d, DBS_pulse, N_array, name_sorted_solution,
+                      Truncated_pulse):
 
-    from IFFT_contact_ground import convolute_signal_with_field_and_compute_ifft
+    # stores unit solution (el. potential on axons in space and time) over contacts
+    from Field_IFFT_on_different_axons import convolute_signal_with_unit_field_and_compute_ifft
     if d["spectrum_trunc_method"] == 'Octave Band Method':
         if isinstance(d["n_Ranvier"], list):  # if different populations
             last_point = 0
@@ -50,14 +50,12 @@ def conduct_unit_IFFT(d, Xs_signal_norm, N_array, FR_vector_signal, t_vector, na
             hf.close()
             for i in range(len(d["n_Ranvier"])):
                 # print("in ",lst_population_names[i]," population")
-                last_point = convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm, N_array.N_models[i], N_array.pattern['num_segments'][i],
-                                                                          FR_vector_signal, t_vector,
+                last_point = convolute_signal_with_unit_field_and_compute_ifft(d, DBS_pulse, N_array.N_models[i], N_array.pattern['num_segments'][i],
                                                                           name_sorted_solution,
-                                                                          inx_st_oct = inx_start_octv, dif_axons=True,
+                                                                          trunc_pulse = Truncated_pulse, dif_axons=True,
                                                                           last_point = last_point)
         else:
-            convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm, N_array.N_models, N_array.pattern['num_segments'], FR_vector_signal,
-                                                         t_vector, name_sorted_solution, inx_st_oct=inx_start_octv,
+            convolute_signal_with_unit_field_and_compute_ifft(d, DBS_pulse, N_array.N_models, N_array.pattern['num_segments'], name_sorted_solution, trunc_pulse=Truncated_pulse,
                                                          dif_axons=False, last_point=0)
     else:
         logging.scale("Spectrum truncation with Octave Band Method has to be enabled")
@@ -104,6 +102,7 @@ def test_scaling(S_vector,d,MRI_param,Xs_signal_norm,Neuron_models,FR_vector_sig
         with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     from Axon_files.NEURON_run import run_simulation_with_NEURON
+
     if isinstance(d["n_Ranvier"],list) and len(d["n_Ranvier"])>1:
         Number_of_activated = 0
         last_point=0

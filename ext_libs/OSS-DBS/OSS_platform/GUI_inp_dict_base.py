@@ -92,7 +92,7 @@ d = {
     'spectrum_trunc_method': 'Octave Band Method',
     # 'No Truncation' or 'Octave Band Method' (recommended, see Butenko et al, EMBC proceedings, 2019)
     'trunc_param': 130.0,  # octave bands will be deployed after this frequency
-    'Truncate_the_obtained_full_solution': 0,  # irrelevant
+    'Truncate_the_obtained_full_solution': 0,  # true only if we want to use truncation of already computed full power spectrum solution (useful for benchmarks)
 
     # DBS signal (you can set charge-balancing in OSS_platform/Launcher_OSS_lite.py)
     'current_control': 1,  # 0 for voltage-controlled
