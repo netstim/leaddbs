@@ -58,7 +58,8 @@ close(h_wait);
 
 anat_modalities = {'T1w', 'T2w', 'FGATIR', 'FLAIR', 'T2starw', 'PDw'};  % a list of all supported modalities
 func_dwi_modalities = {'bold', 'sbref', 'dwi'};
-postop_modalities = {'CT', 'ax_MRI', 'sag_MRI', 'cor_MRI'};  % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
+postop_modalities = {'CT', 'MRI'};          % specifically a list of modalities required for postoperative sessions, will be used to check if postop modalities have been found
+postop_acq_tags = {'ax', 'cor', 'sag'};     % a list of required acq-tags for the postop MRI images
 
 % options that should appear in the table
 table_options = struct;
@@ -103,15 +104,15 @@ expand(uiapp.Tree, 'all');
 preview_nii(uiapp, imgs, []); % set initial image to the first one
 
 %% set callbacks of main GUI
-cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, []) % call preview tree updater to get preallocated changes
+cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, postop_acq_tags, []) % call preview tree updater to get preallocated changes
 
 uiapp.niiFileTable.CellSelectionCallback = @(src,event) preview_nii(uiapp, imgs, event); % callback for table selection -> display current selected image
-uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, event); % callback for cell change -> update uiapp tree and adjacent cells
+uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, postop_acq_tags, event); % callback for cell change -> update uiapp tree and adjacent cells
 
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
 % OK button behaviour
-uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities);
+uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities, postop_acq_tags);
 
 % cancel button behaviour
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
@@ -165,7 +166,7 @@ T_preallocated = preallocate_table(main_gui.niiFileTable.Data, lookup_table, img
 
 main_gui.niiFileTable.Data = T_preallocated;
 
-cell_change_callback(main_gui, subjID, imgs, anat_modalities, postop_modalities, [])
+cell_change_callback(main_gui, subjID, imgs, anat_modalities, postop_modalities, postop_acq_tags, [])
 
 delete(lookup_table_gui);
 
@@ -215,7 +216,7 @@ lookup_table_gui.UITable.Data = lookup_table_data;
 end
 
 %% cell change callback
-function cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, event)
+function cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, postop_acq_tags, event)
 
 uiapp.previewtree_preop_anat.Children.delete;     % delete children
 uiapp.previewtree_postop_anat.Children.delete;    % delete children
@@ -241,6 +242,13 @@ for i = 1:height(uiapp.niiFileTable.Data)
             uiapp.niiFileTable.Data.Type(i) = 'anat';
             uiapp.niiFileTable.Data.Session(i) = 'postop';
             uiapp.niiFileTable.Data.Task(i) = '-';
+
+            % if current acquistion tag is not ax, cor or sag, reset it
+            if ~any(strcmp(uiapp.niiFileTable.Data.Acquisition(i), postop_acq_tags)) && strcmp(modality, 'MRI')
+                uiapp.niiFileTable.Data.Acquisition(i) = '';
+                uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to <ax>, <sag> or <cor>.', 'Invalid acquisition tag in postop MRI');
+            end
+
         % set type to func for bold modality
         elseif strcmp(modality, 'bold') && event.Indices(2) > 2 && event.Indices(1) == i && uiapp.niiFileTable.UserData.task_set(i) == 1
             uiapp.niiFileTable.Data.Type(i) = 'func';
@@ -276,6 +284,7 @@ for i = find(~uiapp.niiFileTable.Data.Include)'
     end
 
 end
+
 
 % finally, go through all the files that have been selected to include and update them in the uitree
 for i = find(uiapp.niiFileTable.Data.Include)'
@@ -331,6 +340,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     end
 
 end
+
 end
 
 
@@ -371,7 +381,6 @@ for rowIdx = 1:height(table)
                         table_preallocated.Session(rowIdx) = session;
                         table_preallocated.Type(rowIdx) = img_type;
                         table_preallocated.Modality(rowIdx) = modality;
-                        table_preallocated.Include(rowIdx) = true;
                     end
                 end
             end
@@ -413,7 +422,7 @@ end
 end
 
 %% ok button
-function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities)
+function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities, postop_acq_tags)
 
 % sanity checks first
 % if preop is empty
@@ -458,6 +467,7 @@ end
 
 % go through all the files, check if session, type and modality have been set correctly
 postop_modality_found = 0;
+postop_mri_found = 0;
 for i = find(uiapp.niiFileTable.Data.Include)'
     session = char(uiapp.niiFileTable.Data.Session(i));
     type = char(uiapp.niiFileTable.Data.Type(i));
@@ -473,12 +483,48 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     if strcmp(session, 'postop') && any(strcmp(modality, postop_modalities))
         postop_modality_found = 1;
     end
+
+    if strcmp(session, 'postop') && strcmp(modality, 'MRI')
+        postop_mri_found = 1;
+    end
+
 end
 
+% if a postop image should be included and has not been set properly, catch this here
 if ~(postop_modality_found == 1) && ~(nopostop_set == 1)    % only halt if user has specified postop, but it has the wrong modality
-    warning_str = ['No valid modality for the postop session has been found, please choose one of the following:', newline, sprintf('%s, ', postop_modalities{:})];
+    warning_str = ['No valid modality for the postop session has been found, please choose one of the following:', newline, ...
+        sprintf('%s, ', postop_modalities{:})];
     uialert(uiapp.UIFigure, warning_str, 'Invalid file selection');
     return
+end
+
+% for the postop MRIs, check whether acquisition tags have been set correctly
+if ~(nopostop_set == 1) && postop_mri_found == 1
+
+    ax_postop_mri_found = 0;
+    for i = find(uiapp.niiFileTable.Data.Include)'
+        session = char(uiapp.niiFileTable.Data.Session(i));
+        modality = char(uiapp.niiFileTable.Data.Modality(i));
+        acq = char(uiapp.niiFileTable.Data.Acquisition(i));
+
+        % check if postop images have the correct modality
+        if strcmp(session, 'postop') && strcmp(modality, 'MRI')
+            if ~any(strcmp(acq, postop_acq_tags))
+                uialert(uiapp.UIFigure, 'For postop MRIs, the acquisition tag may only be set to <ax>, <sag> or <cor>.', 'Invalid acquisition tag in postop MRI');
+                return
+            end
+            if strcmp(acq, 'ax')
+                ax_postop_mri_found = 1;
+            end
+
+        end
+    end
+
+    if ~(ax_postop_mri_found == 1)
+        uialert(uiapp.UIFigure, 'No postop MRI with the acquisition <ax> found. At least one needs to be present that will be used to reconstruct electrode position.', ...
+            'Invalid acquisition tag in postop MRI');
+        return
+    end
 end
 
 anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
