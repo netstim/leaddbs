@@ -304,7 +304,6 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
     from Neural_array_processing import Neuron_array
     N_array = Neuron_array(d, MRI_seg_param)    # initialize a class instance that describes neuron models
 
-
     if d["Init_mesh_ready"] == 1:
         with open(os.environ['PATIENTDIR'] + '/Meshes/Mesh_ind.file', "rb") as f:
             Domains = pickle.load(f)    # instance of Mesh_ind class containing indices for mesh entities (defined in CAD_Salome.py)
@@ -402,7 +401,6 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
     if d["Signal_generated"] == 0:
         print("\n Generating DBS pulse...")
         logging.critical("----- Generating DBS signal -----")
-        from Signal_generator import Stim_pulse  # description of a single DBS period
         DBS_pulse.create_pulse(d)
         with open(os.environ['PATIENTDIR'] + '/Stim_Signal/DBS_pulse.file', "wb") as f:
             pickle.dump(DBS_pulse, f, pickle.HIGHEST_PROTOCOL)
@@ -458,12 +456,27 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
 
     # ===================Truncate the frequency spectrum===========================#
     if d["spectrum_trunc_method"] != 'No Truncation':
-        from Truncation_of_spectrum import get_freqs_for_calc
-        FR_vector_signal_new, add_trunc_data = get_freqs_for_calc(d, DBS_pulse.FR_vector_signal, DBS_pulse.Xs_signal_norm, DBS_pulse.t_vector)
-        if d["spectrum_trunc_method"] == 'Octave Band Method':
-            inx_start_octv = add_trunc_data
+
+        from Truncation_of_spectrum import Truncated_spectrum # description of a single DBS period
+        Truncated_pulse = Truncated_spectrum(d, DBS_pulse)  # initialize a class instance that describes neuron models
+
+        if os.path.isfile(os.environ['PATIENTDIR']+'/Stim_Signal/Truncated_pulse_'+str(d['trunc_param']*1.0)+'.file'):
+            logging.critical("--- Truncated DBS spectrum is taken from the previous simulation\n")
+            with open(os.environ['PATIENTDIR'] + '/Stim_Signal/Truncated_pulse_' + str(d['trunc_param'] * 1.0) + '.file', "rb") as f:
+                Truncated_pulse = pickle.load(f)
+                # check for consistency
+                if d["spectrum_trunc_method"] != Truncated_pulse.trunc_method:
+                    logging.critical('The truncation method was changed, calculating a new truncated spectrum')
+                    Truncated_pulse.get_freqs_for_calc()
+                    with open(os.environ['PATIENTDIR'] + '/Stim_Signal/Truncated_pulse_'+str(d['trunc_param']*1.0)+'.file', "wb") as f:
+                        pickle.dump(Truncated_pulse, f, pickle.HIGHEST_PROTOCOL)
+            logging.critical("Number of frequencies after truncation: {}".format(
+            Truncated_pulse.FR_vector_signal_new.shape[0]))
         else:
-            Xs_signal_norm_new = add_trunc_data
+            Truncated_pulse.get_freqs_for_calc()
+            with open(os.environ['PATIENTDIR'] + '/Stim_Signal/Truncated_pulse_'+str(d['trunc_param']*1.0)+'.file', "wb") as f:
+                pickle.dump(Truncated_pulse, f, pickle.HIGHEST_PROTOCOL)
+
 
     # ==========Calculate freq in parallel and rearrange field array===============#
 
@@ -491,7 +504,7 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
             if d["spectrum_trunc_method"] == 'High Amplitude Method' or d["spectrum_trunc_method"] == 'Cutoff Method' or \
                     d["spectrum_trunc_method"] == 'Octave Band Method':
                 logging.critical("----- Calculating electric field in the truncated frequency spectrum -----")
-                calculate_in_parallel(d, FR_vector_signal_new, Domains, MRI_seg_param, DTI_param, tensor_conduct,
+                calculate_in_parallel(d, Truncated_pulse.FR_vector_signal_new, Domains, MRI_seg_param, DTI_param, tensor_conduct,
                                       number_of_points, cc_multicontact)
         else:
             logging.critical("--- Results of calculations in the frequency spectrum were loaded\n")
@@ -513,9 +526,8 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
                 os.makedirs(os.environ['PATIENTDIR'] + '/Axons_in_time')
 
             from Current_scaler import conduct_unit_IFFT
-            conduct_unit_IFFT(d, DBS_pulse.Xs_signal_norm, N_array, DBS_pulse.FR_vector_signal,
-                              DBS_pulse.t_vector, name_sorted_solution,
-                              inx_start_octv)
+            conduct_unit_IFFT(d, DBS_pulse, N_array, name_sorted_solution,
+                              Truncated_pulse)
 
         bar.next()
 
@@ -525,7 +537,7 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
             for current_comb in Currents_to_check:
                 from Current_scaler import find_activation
                 Activation = find_activation(current_comb, d, MRI_seg_param, DBS_pulse.Xs_signal_norm, N_array, DBS_pulse.FR_vector_signal, DBS_pulse.t_vector,
-                                             name_sorted_solution, inx_start_octv, it_num, VTA_edge=VTA_edge)
+                                             name_sorted_solution, Truncated_pulse.inx_start_octv, it_num, VTA_edge=VTA_edge)
                 it_num += 1
             bar.next()
         elif d['Optimizer'] == 1:
@@ -535,7 +547,7 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
             from Current_scaler import compute_similarity
 
             args_all = [d, MRI_seg_param, DBS_pulse.Xs_signal_norm, N_array, DBS_pulse.FR_vector_signal, DBS_pulse.t_vector, name_sorted_solution,
-                        inx_start_octv]
+                        Truncated_pulse.inx_start_octv]
             if os.path.isfile(os.environ['PATIENTDIR'] + '/Best_scaling_yet.csv'):
                 initial_scaling = np.genfromtxt(os.environ['PATIENTDIR'] + '/Best_scaling_yet.csv', delimiter=' ')
                 res = dual_annealing(compute_similarity,
@@ -581,7 +593,7 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
         if d["spectrum_trunc_method"] == 'High Amplitude Method' or d["spectrum_trunc_method"] == 'Cutoff Method' or d[
             "spectrum_trunc_method"] == 'Octave Band Method':
             logging.critical("----- Calculating electric field in the truncated frequency spectrum -----")
-            calculate_in_parallel(d, FR_vector_signal_new, Domains, MRI_seg_param, DTI_param, tensor_conduct, number_of_points,
+            calculate_in_parallel(d, Truncated_pulse.FR_vector_signal_new, Domains, MRI_seg_param, DTI_param, tensor_conduct, number_of_points,
                                   cc_multicontact)
     else:
         logging.critical("--- Results of calculations in the frequency spectrum were loaded\n")
@@ -614,7 +626,7 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
         if d["IFFT_ready"] == 0:
             from Parallel_IFFT_on_VTA_array import get_IFFT_on_VTA_array
             Max_signal_for_point = get_IFFT_on_VTA_array(d['number_of_processors'], name_sorted_solution, d,
-                                                         DBS_pulse.FR_vector_signal, DBS_pulse.Xs_signal_norm, DBS_pulse.t_vector, d["T"], inx_start_octv,
+                                                         DBS_pulse.FR_vector_signal, DBS_pulse.Xs_signal_norm, DBS_pulse.t_vector, d["T"], Truncated_pulse.inx_start_octv,
                                                          number_of_points)
         else:
             Max_signal_for_point = np.load(os.environ['PATIENTDIR']+'/Field_solutions/Max_voltage_resp.npy')
@@ -654,7 +666,7 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
             from Field_IFFT_on_different_axons import convolute_signal_with_field_and_compute_ifft
             if isinstance(d["n_Ranvier"], list):  # if different populations
                 last_point = 0
-                hf = h5py.File(d["Name_prepared_neuron_array"], 'r')
+                hf = h5py.File(os.environ['PATIENTDIR'] + '/' +d["Name_prepared_neuron_array"], 'r')
                 lst_population_names = list(hf.keys())
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
@@ -682,42 +694,20 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
         if d["spectrum_trunc_method"] == 'No Truncation':
             if isinstance(d["n_Ranvier"], list):  # if different populations
                 last_point = 0
-                hf = h5py.File(d["Name_prepared_neuron_array"], 'r')
+                hf = h5py.File(os.environ['PATIENTDIR'] + '/' + d["Name_prepared_neuron_array"], 'r')
                 lst_population_names = list(hf.keys())
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
                     logging.critical("in {} population".format(lst_population_names[i]))
-                    last_point = convolute_signal_with_field_and_compute_ifft(d, DBS_pulse.Xs_signal_norm, N_array.N_models[i],
+                    last_point = convolute_signal_with_field_and_compute_ifft(d, DBS_pulse, N_array.N_models[i],
                                                                               N_array.pattern['num_segments'][i],
-                                                                              DBS_pulse.FR_vector_signal, DBS_pulse.t_vector, DBS_pulse.A,
                                                                               name_sorted_solution, dif_axons=True,
                                                                               last_point=last_point)
             else:
-                convolute_signal_with_field_and_compute_ifft(d, DBS_pulse.Xs_signal_norm, N_array.N_models,
-                                                             N_array.pattern['num_segments'], DBS_pulse.FR_vector_signal,
-                                                             DBS_pulse.t_vector, DBS_pulse.A, name_sorted_solution)
+                convolute_signal_with_field_and_compute_ifft(d, DBS_pulse, N_array.N_models,
+                                                             N_array.pattern['num_segments'], name_sorted_solution)
 
-        if (d["spectrum_trunc_method"] == 'High Amplitude Method' or d["spectrum_trunc_method"] == 'Cutoff Method') and \
-                d["Truncate_the_obtained_full_solution"] == 0:
-            if isinstance(d["n_Ranvier"], list):  # if different populations
-                last_point = 0
-                hf = h5py.File(d["Name_prepared_neuron_array"], 'r')
-                lst_population_names = list(hf.keys())
-                hf.close()
-                for i in range(len(d["n_Ranvier"])):
-                    logging.critical("in {} population".format(lst_population_names[i]))
-                    last_point = convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm_new,
-                                                                              N_array.N_models[i],
-                                                                              N_array.pattern['num_segments'][i],
-                                                                              FR_vector_signal_new, DBS_pulse.t_vector, DBS_pulse.A,
-                                                                              name_sorted_solution, dif_axons=True,
-                                                                              last_point=last_point)
-            else:
-                convolute_signal_with_field_and_compute_ifft(d, Xs_signal_norm_new, N_array.N_models,
-                                                             N_array.pattern['num_segments'], FR_vector_signal_new,
-                                                             DBS_pulse.t_vector, DBS_pulse.A, name_sorted_solution)
-
-        if d["spectrum_trunc_method"] == 'Octave Band Method':
+        else:
             if isinstance(d["n_Ranvier"], list):  # if different populations
                 last_point = 0
                 hf = h5py.File(os.environ['PATIENTDIR'] + '/' + d["Name_prepared_neuron_array"], 'r')
@@ -725,17 +715,16 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
                     logging.critical("in {} population".format(lst_population_names[i]))
-                    last_point = convolute_signal_with_field_and_compute_ifft(d, DBS_pulse.Xs_signal_norm, N_array.N_models[i],
+                    last_point = convolute_signal_with_field_and_compute_ifft(d, DBS_pulse,
+                                                                              N_array.N_models[i],
                                                                               N_array.pattern['num_segments'][i],
-                                                                              DBS_pulse.FR_vector_signal, DBS_pulse.t_vector, DBS_pulse.A,
-                                                                              name_sorted_solution,
-                                                                              inx_st_oct=inx_start_octv, dif_axons=True,
+                                                                              name_sorted_solution, trunc_pulse=Truncated_pulse,dif_axons=True,
                                                                               last_point=last_point)
-            else:
-                convolute_signal_with_field_and_compute_ifft(d, DBS_pulse.Xs_signal_norm, N_array.N_models,
-                                                             N_array.pattern['num_segments'], DBS_pulse.FR_vector_signal,
-                                                             DBS_pulse.t_vector, DBS_pulse.A, name_sorted_solution,
-                                                             inx_st_oct=inx_start_octv, dif_axons=False, last_point=0)
+            else: # here pass new ones, in octave band old ones
+                convolute_signal_with_field_and_compute_ifft(d, DBS_pulse, N_array.N_models,
+                                                             N_array.pattern['num_segments'],
+                                                             name_sorted_solution, trunc_pulse=Truncated_pulse)
+
     bar.next()
     '''Just to compute impedance in time, on if CPE is added or current-control mode'''
 
@@ -744,11 +733,11 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
         from Field_IFFT_on_different_axons import compute_Z_ifft
         logging.critical("----- Calculating impedance -----\n")
         if d["spectrum_trunc_method"] == 'No Truncation' or d["Truncate_the_obtained_full_solution"] == 1:
-            Imp_in_time = compute_Z_ifft(d, DBS_pulse.Xs_signal_norm, DBS_pulse.t_vector, DBS_pulse.A)
+            Imp_in_time = compute_Z_ifft(d, DBS_pulse)
         elif d["spectrum_trunc_method"] == 'Octave Band Method':
-            Imp_in_time = compute_Z_ifft(d, DBS_pulse.Xs_signal_norm, DBS_pulse.t_vector, DBS_pulse.A, i_start_octv=inx_start_octv)
+            Imp_in_time = compute_Z_ifft(d, DBS_pulse, trunc_pulse=Truncated_pulse)
         else:
-            Imp_in_time = compute_Z_ifft(d, Xs_signal_norm_new, DBS_pulse.t_vector, A)
+            Imp_in_time = compute_Z_ifft(d, DBS_pulse)
     # ===========================NEURON model simulation===========================#
 
     oss_plat_cont = os.getcwd()
