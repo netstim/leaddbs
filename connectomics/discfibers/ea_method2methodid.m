@@ -5,7 +5,7 @@ end
 switch obj.connectivity_type
     case 2 % PAM
         switch obj.statmetric
-            case {1,3}  % both refer to T-test atm
+            case {1,3,4}  % both refer to T-test atm
                 id = 'PAM_Ttest'; 
             case 6
                 id = 'plainconn';
@@ -14,7 +14,7 @@ switch obj.connectivity_type
         end
     otherwise % E-field based
         switch obj.statmetric
-            case {1,3}
+            case {1,3,4}
                 id = 'VAT_Ttest';
             case {2,5}
                 id='spearman';
