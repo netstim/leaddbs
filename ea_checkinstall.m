@@ -71,7 +71,7 @@ switch cmd
         if ~exist(checkf,'file') || force
             success=ea_downloadasset('FlipLR',...
                 [ea_space,'fliplr.zip'],...
-                'fliplr');
+                'fliplr_classic');
         else
             disp('2009b asym LR flip transform is installed.')
         end
