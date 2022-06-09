@@ -1,4 +1,4 @@
-function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
+function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
 
     if ~exist('Iperm', 'var')
         if obj.cvlivevisualize
@@ -419,22 +419,20 @@ function [Ihat,Ihat_train_global,vals] = ea_compute_fibscore_model(numTestIt,adj
             end
         end
 
-        % if nargout>2 % send out improvements of subscores
-
-        %     switch obj.multitractmode
-        %         case 'Split & Color By Subscore'
-        %             useI=obj.subscore.vars{voter};
-        %         case 'Split & Color By PCA'
-        %             useI=obj.subscore.pcavars{voter};
-        %         otherwise
-        %             useI=obj.responsevar;
-        %     end
-        %     for side=1:2
-        %         mdl=fitglm(Ihat_train_global(numTestIt,training,side),useI(training),lower(obj.predictionmodel));
-        %         actualimprovs{voter,side}=predict(mdl,Ihat(test,side));
-        %     end
-
-        % end
-
     end
+     %send out improvements of subscores
+
+     switch obj.multitractmode
+         case 'Split & Color By Subscore'
+             useI=obj.subscore.vars{voter};
+         case 'Split & Color By PCA'
+             useI=obj.subscore.pcavars{voter};
+         otherwise
+             useI=obj.responsevar;
+     end
+     for side=1:2
+         mdl=fitglm(Ihat_train_global(numTestIt,training,side),useI(training),lower(obj.predictionmodel));
+         actualimprovs{voter,side}=predict(mdl,Ihat(test,side));
+     end
+
 end

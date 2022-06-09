@@ -5,6 +5,12 @@ prefs = ea_prefs;
 if ~exist('thresh','var')
     thresh = prefs.machine.vatsettings.horn_ethresh*1000;
 end
+if thresh < 150
+    answer = questdlg("Threshold values less than 150 may cause errors in processing, setting default threshold value is 200");
+    if strcmp(answer,'Yes')
+        thresh=200;
+    end
+end
 [numPatient, numSide] = size(vatlist);
 
 fibsvalBin = cell(1, numSide);
@@ -19,7 +25,7 @@ for side = 1:numSide
     fibsvalMean{side} = zeros(length(fibcell{side}), numPatient);
     fibsvalPeak{side} = zeros(length(fibcell{side}), numPatient);
     fibsval5Peak{side} = zeros(length(fibcell{side}), numPatient);
-
+    fibers=ea_fibcell2fibmat(fibcell{side});
     disp(['Calculate for side ', num2str(side), ':']);
     for pt = 1:numPatient
         disp(['VAT ', num2str(pt, ['%0',num2str(numel(num2str(numPatient))),'d']), '/', num2str(numPatient), '...']);
@@ -35,8 +41,7 @@ for side = 1:numSide
         [xvox, yvox, zvox] = ind2sub(size(vat.img), vatInd);
         vatmm = ea_vox2mm([xvox, yvox, zvox], vat.mat);
 
-        fibers=ea_fibcell2fibmat(fibcell{side});
-
+        
         filter = all(fibers(:,1:3)>=min(vatmm),2) & all(fibers(:,1:3)<=max(vatmm), 2);
 
         % Skip further calculation in case VAT is totally not connected
@@ -85,6 +90,7 @@ fibers=cell2mat(fibers);
 idxv=zeros(size(fibers,1),1);
 lid=1; cnt=1;
 for id=idx'
+
     idxv(lid:lid+id-1)=cnt;
     lid=lid+id;
     cnt=cnt+1;

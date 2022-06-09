@@ -342,7 +342,7 @@ classdef ea_disctract < handle
         function [I, Ihat] = lococv(obj)
             if length(unique(obj.M.patient.group(obj.patientselection))) == 1
                 ea_error(sprintf(['Only one cohort in the analysis.\n', ...
-                    'Leave-One-Cohort-Out cross-validation not possible.']));
+                    'Leave-One-Cohort-Out-validation not possible.']));
             end
             [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
         end
@@ -436,7 +436,7 @@ classdef ea_disctract < handle
             if ~isstruct(obj.ADJ)
                 obj.adj_scaler = 0.0;
             end
-
+            obj.adj_scaler = 0.0;
             for c=1:cvp.NumTestSets
                 if cvp.NumTestSets ~= 1
                     fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
@@ -476,9 +476,9 @@ classdef ea_disctract < handle
 
                         % updates Ihat_inner(test_inner)
                         if ~exist('Iperm', 'var')
-                            [Ihat_inner, ~, ~] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat_inner, Ihat_train_global_inner, patientsel, training_inner, test_inner);
+                            [Ihat_inner, ~, ~,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat_inner, Ihat_train_global_inner, patientsel, training_inner, test_inner);
                         else
-                            [Ihat_inner, ~, ~] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat_inner, Ihat_train_global_inner, patientsel, training_inner, test_inner,Iperm);
+                            [Ihat_inner, ~, ~,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat_inner, Ihat_train_global_inner, patientsel, training_inner, test_inner,Iperm);
                         end
                     end
 
@@ -493,9 +493,9 @@ classdef ea_disctract < handle
                 % now compute Ihat for the true 'test' left out
                 % updates Ihat(test)
                 if ~exist('Iperm', 'var')
-                    [Ihat, Ihat_train_global, vals] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test);
+                    [Ihat, Ihat_train_global, vals,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test);
                 else
-                    [Ihat, Ihat_train_global, vals] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test,Iperm);
+                    [Ihat, Ihat_train_global, vals,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test,Iperm);
                 end
 
                 % predict the improvement in the left-out patient (fold) of

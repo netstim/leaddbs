@@ -77,7 +77,7 @@ Vvate.descrip='lead dbs - vat';
 
 stimDir = fullfile(options.subj.stimDir, ea_nt(options), stimname);
 ea_mkdir(stimDir);
-filePrefix = ['sub-', options.subj.subjId, '_sim-'];
+filePrefix = ['sub-', options.subj.subjId, '_label-',S.label, '_sim-'];
 
 switch side
     case 1
