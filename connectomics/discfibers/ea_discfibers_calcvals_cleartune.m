@@ -5,12 +5,6 @@ prefs = ea_prefs;
 if ~exist('thresh','var')
     thresh = prefs.machine.vatsettings.horn_ethresh*1000;
 end
-if thresh < 150
-    answer = questdlg("Threshold values less than 150 may cause errors in processing, setting default threshold value is 200");
-    if strcmp(answer,'Yes')
-        thresh=200;
-    end
-end
 [numPatient, numSide] = size(vatlist);
 
 fibsvalBin = cell(1, numSide);
@@ -54,7 +48,7 @@ for side = 1:numSide
         % Map mm connectome fibers into VAT voxel space
         [trimmedFiberInd, ~, trimmedFiberID] = unique(trimmedFiber(:,4), 'stable');
         fibVoxInd = splitapply(@(fib) {ea_mm2uniqueVoxInd(fib, vat)}, trimmedFiber(:,1:3), trimmedFiberID);
-
+   
         % Remove outliers
         fibVoxInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];
         trimmedFiberInd(cellfun(@(x) any(isnan(x)), fibVoxInd)) = [];

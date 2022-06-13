@@ -417,22 +417,24 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                         end
                 end
             end
+
+%             switch obj.multitractmode
+%                 case 'Split & Color By Subscore'
+%                     useI=obj.subscore.vars{voter};
+%                 case 'Split & Color By PCA'
+%                     useI=obj.subscore.pcavars{voter};
+%                 otherwise
+%                     useI=obj.responsevar;
+%             end
+%             mdl=fitglm(Ihat_train_global(numTestIt,training,side),useI(training),lower(obj.predictionmodel));
+%             actualimprovs{voter,side}=predict(mdl,Ihat(test,side));
+%
+actualimprovs=nan; % need to fix for cleartune -> estimate actual improvements here, as well?
         end
 
     end
      %send out improvements of subscores
 
-     switch obj.multitractmode
-         case 'Split & Color By Subscore'
-             useI=obj.subscore.vars{voter};
-         case 'Split & Color By PCA'
-             useI=obj.subscore.pcavars{voter};
-         otherwise
-             useI=obj.responsevar;
-     end
-     for side=1:2
-         mdl=fitglm(Ihat_train_global(numTestIt,training,side),useI(training),lower(obj.predictionmodel));
-         actualimprovs{voter,side}=predict(mdl,Ihat(test,side));
-     end
+
 
 end
