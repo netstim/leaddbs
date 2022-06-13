@@ -1315,7 +1315,18 @@ classdef ea_disctract < handle
                 end
             end
         end
-
+        function copyobj(thisObj,newObj)
+            % Construct a new object based on a deep copy of the current
+            % object of this class by copying properties over.
+            props = properties(thisObj);
+            for i = 1:length(props)
+                % Use Dynamic Expressions to copy the required property.
+                % For more info on usage of Dynamic Expressions, refer to
+                % the section "Creating Field Names Dynamically" in:
+                % web([docroot '/techdoc/matlab_prog/br04bw6-38.html#br1v5a9-1'])
+                newObj.(props{i}) = thisObj.(props{i});
+            end
+        end
     end
     methods (Static)
         function changeevent(~,event)

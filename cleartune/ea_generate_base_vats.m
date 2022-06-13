@@ -10,6 +10,7 @@ va=varargin{5};
 options = ea_setopts_local;
 options.native = 0;
 options.groupmode = 1;
+options.groupid = 'cleartune';
 
 switch va
     case 'mA'
