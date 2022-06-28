@@ -246,11 +246,11 @@ classdef BIDSFetcher
             preniiOrder = obj.settings.prenii_order;
             templateOrder = fieldnames(obj.spacedef.norm_mapping)';
             preopImageOrder = [preniiOrder, setdiff(templateOrder, preniiOrder, 'stable')];
-
+            
             % Set pre-op anat images according to pre-defined orders
             for i=1:length(preopImageOrder)
                 % Find the index in the present images
-                idx = find(ismember(regexp(modality, '(?<=[^\W_]+_)[^\W_]+', 'match', 'once'), preopImageOrder{i}));
+                idx = find(contains(modality, preopImageOrder{i}));
                 if ~isempty(idx)
                     [~, ind] = ea_sortalike(lower(regexp(modality(idx), '[^\W_]+(?=_[^\W_]+)', 'match', 'once')), {'iso', 'ax', 'cor', 'sag'});
                     idx = idx(ind);
@@ -272,6 +272,7 @@ classdef BIDSFetcher
                     preopAnat.(modality{i}) = images{i};
                 end
             end
+
         end
 
         function postopAnat = getPostopAnat(obj, subjId, preferMRCT)
