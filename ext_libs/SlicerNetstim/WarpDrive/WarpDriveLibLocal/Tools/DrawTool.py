@@ -157,7 +157,7 @@ class DrawToolEffect(AbstractDrawEffect):
   def sliceClosestModel(self, point):
     originalModel = None
     # set up plane
-    normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in slicer.app.layoutManager().sliceViewNames()])
+    normal = np.array([float(self.sliceLogic.GetSliceNode().GetOrientation()==orientation) for orientation in ['Sagittal','Coronal','Axial']])
     plane = vtk.vtkPlane()
     plane.SetOrigin(point) # point in plane
     plane.SetNormal(normal)

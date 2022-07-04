@@ -19,6 +19,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     VTKObservationMixin.__init__(self)
 
     self.parameterNode = WarpDrive.WarpDriveLogic().getParameterNode()
+    self.parameterNode.SetParameter("modality", 'ax_T2w')
     self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateToolbarFromParameterNode)
     
     self.setWindowTitle(qt.QObject().tr("LeadDBS"))
@@ -36,7 +37,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     #
     self.addWidget(qt.QLabel('Modality:'))
     self.modalityComboBox = qt.QComboBox()
-    self.modalityComboBox.addItem('T1w')
+    self.modalityComboBox.addItem('ax_T2w')
     self.modalityComboBox.view().pressed.connect(self.onModalityPressed)
     self.addWidget(self.modalityComboBox)
 
@@ -125,7 +126,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.parameterNode.SetNodeReferenceID("TargetFiducial", targetFiducial.GetID())
 
     self.updateModalities()
-    self.onModalityPressed([], self.modalityComboBox.currentText)
+    self.onModalityPressed([], self.parameterNode.GetParameter("modality"))
 
     self.setUpAtlases()
 
