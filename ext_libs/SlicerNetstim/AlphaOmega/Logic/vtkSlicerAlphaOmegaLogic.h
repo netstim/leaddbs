@@ -28,6 +28,8 @@
 #include "vtkSlicerModuleLogic.h"
 #include <vtkVariantArray.h>
 
+// VTK
+#include <vtkMultiThreader.h>
 
 // MRML includes
 class vtkMRMLTransformNode;
@@ -36,6 +38,7 @@ class vtkMRMLScriptedModuleNode;
 
 // STD includes
 #include <cstdlib>
+#include <mutex>
 
 #include "vtkSlicerAlphaOmegaModuleLogicExport.h"
 
@@ -61,8 +64,12 @@ public:
   int AOAddBufferChannel(const char* channelName, int BufferSizeMSec);
   int AOGetChannelData(int nChannelID, short* pData, int nData, int pDataCapture);
   int AOGetChannelData(const char* channelName, short* pData, int nData, int pDataCapture);
-  int AOGetAlignedData(short* pData, int nData, int* pDataCapture, int* pChannels, int nChannels, unsigned long* pBeginTS);
+  int AOGetAlignedData(short* pData, int nData, int* pChannels, int nChannels, int pDataCapture);
   int AOClearBuffers();
+
+  void ThreadedGatherAlignedData();
+  void TerminateGatherAlignedData();
+  void ContinuousGatherAlignedData();
 
   vtkMRMLScriptedModuleNode* getParameterNode();
   
@@ -84,6 +91,11 @@ private:
 
   void createParameterNode();
   std::string GetModuleName();
+
+  vtkMultiThreader *MultiThreader;
+  std::mutex ThreadActiveLock;
+  int ThreadActive{false};
+  int ThreadID{-1};
 
   vtkSlicerAlphaOmegaLogic(const vtkSlicerAlphaOmegaLogic&); // Not implemented
   void operator=(const vtkSlicerAlphaOmegaLogic&); // Not implemented

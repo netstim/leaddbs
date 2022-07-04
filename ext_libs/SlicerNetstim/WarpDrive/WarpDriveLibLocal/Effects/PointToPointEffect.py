@@ -78,6 +78,7 @@ class AbstractPointToPointEffect(AbstractCircleEffect):
   def initTransform(self):
     sourceFiducialNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     sourceFiducialNode.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
+    sourceFiducialNode.GetDisplayNode().SetGlyphScale(1)
     sourceFiducialNode.GetDisplayNode().SetVisibility(0)
     sourceFiducialNode.SetControlPointPositionsWorld(self.rasPoints)
     self.transform.SetSourceLandmarks(self.rasPoints)

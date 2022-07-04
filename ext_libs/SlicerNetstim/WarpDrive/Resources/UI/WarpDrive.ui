@@ -20,18 +20,20 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Input Node:</string>
+         <string>Input displacement field:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
        <widget class="qMRMLNodeComboBox" name="inputSelector">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="toolTip">
          <string>Pick the input to the algorithm.</string>
         </property>
         <property name="nodeTypes">
          <stringlist>
-          <string>vtkMRMLScalarVolumeNode</string>
           <string>vtkMRMLTransformNode</string>
           <string>vtkMRMLGridTransformNode</string>
          </stringlist>
@@ -50,14 +52,14 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>Output Warp:</string>
+         <string>Output displacement field:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="3" column="1">
        <widget class="qMRMLNodeComboBox" name="outputSelector">
         <property name="toolTip">
          <string>Pick the output to the algorithm.</string>
@@ -81,6 +83,56 @@
         </property>
         <property name="editEnabled">
          <bool>false</bool>
+        </property>
+        <property name="renameEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Source fiducials:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Target fiducials:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="qMRMLNodeComboBox" name="sourceFiducialsComboBox">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLMarkupsFiducialNode</string>
+         </stringlist>
+        </property>
+        <property name="noneEnabled">
+         <bool>true</bool>
+        </property>
+        <property name="renameEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="qMRMLNodeComboBox" name="targetFiducialsComboBox">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLMarkupsFiducialNode</string>
+         </stringlist>
+        </property>
+        <property name="noneEnabled">
+         <bool>true</bool>
         </property>
         <property name="renameEnabled">
          <bool>true</bool>
@@ -121,12 +173,12 @@
          <item row="0" column="0">
           <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>Spread:</string>
+            <string>Radius:</string>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="ctkSliderWidget" name="spreadSlider">
+          <widget class="ctkSliderWidget" name="radiusSlider">
            <property name="toolTip">
             <string>Set threshold value for computing the output image. Voxels that have intensities lower than this value will set to zero.</string>
            </property>
@@ -150,41 +202,72 @@
      </layout>
     </widget>
    </item>
-   <item row="7" column="0" colspan="2">
-    <widget class="ctkCollapsibleButton" name="dataControlCollapsibleButton">
+   <item row="6" column="1">
+    <widget class="QTabWidget" name="tabWidget">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>1</verstretch>
       </sizepolicy>
      </property>
-     <property name="text">
-      <string>Data Control</string>
+     <property name="currentIndex">
+      <number>0</number>
      </property>
-     <layout class="QFormLayout" name="formLayout_5">
-      <item row="0" column="1">
-       <widget class="QFrame" name="dataControlFrame">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QWidget" name="correctionsTab">
+      <attribute name="title">
+       <string>Corrections</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QFrame" name="correctionsFrame">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>1</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="atlasesTab">
+      <attribute name="title">
+       <string>Atlases</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QFrame" name="atlasesFrame">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>1</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
-   <item row="10" column="0" colspan="2">
+   <item row="9" column="0" colspan="2">
     <widget class="ctkCollapsibleButton" name="outputCollapsibleButton">
      <property name="text">
       <string>Output</string>
+     </property>
+     <property name="collapsed">
+      <bool>true</bool>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <item row="0" column="0">
@@ -246,71 +329,13 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>RBF Radius: </string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QFrame" name="frame_3">
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QDoubleSpinBox" name="RBFRadiusSpinBox">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="decimals">
-            <number>1</number>
-           </property>
-           <property name="minimum">
-            <double>1.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>60.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="autoRBFRadiusCheckBox">
-           <property name="text">
-            <string>Auto</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="3" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Stiffness: </string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="2" column="1">
        <widget class="QFrame" name="frame_4">
         <property name="frameShape">
          <enum>QFrame::NoFrame</enum>
@@ -351,7 +376,7 @@
      </layout>
     </widget>
    </item>
-   <item row="11" column="0" colspan="2">
+   <item row="10" column="0" colspan="2">
     <widget class="QFrame" name="calculateFrame">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -461,6 +486,38 @@
     <hint type="destinationlabel">
      <x>193</x>
      <y>102</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>WarpDrive</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>sourceFiducialsComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>183</x>
+     <y>399</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>271</x>
+     <y>135</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>WarpDrive</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>targetFiducialsComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>183</x>
+     <y>399</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>271</x>
+     <y>177</y>
     </hint>
    </hints>
   </connection>

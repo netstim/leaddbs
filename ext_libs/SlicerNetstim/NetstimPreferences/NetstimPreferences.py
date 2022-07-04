@@ -38,7 +38,7 @@ class NetstimPreferencesSettingsPanel(ctk.ctkSettingsPanel):
     self.ui = NetstimPreferencesSettingsUI(self)
 
 
-class NetstimPreferencesSettingsUI(object):
+class NetstimPreferencesSettingsUI:
   def __init__(self, parent):
       layout = qt.QFormLayout(parent)
 

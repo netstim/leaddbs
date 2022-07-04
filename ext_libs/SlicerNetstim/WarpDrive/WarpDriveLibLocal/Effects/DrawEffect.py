@@ -16,11 +16,9 @@ class AbstractDrawEffect(AbstractCircleEffect):
     AbstractCircleEffect.__init__(self, sliceWidget)
 
     self.drawnCurveNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsCurveNode")
-    self.drawnCurveNode.GetDisplayNode().SetGlyphTypeFromString('Vertex2D')
-    self.drawnCurveNode.GetDisplayNode().SetCurveLineSizeModeFromString('UseLineDiameter')
-    self.drawnCurveNode.GetDisplayNode().SetTextScale(0)
-    self.drawnCurveNode.GetDisplayNode().SetGlyphScale(0)
-    self.drawnCurveNode.GetDisplayNode().SetLineDiameter(0.5)
+    self.drawnCurveNode.GetDisplayNode().SetPropertiesLabelVisibility(0)
+    self.drawnCurveNode.GetDisplayNode().SetLineThickness(1)
+    self.drawnCurveNode.GetDisplayNode().SetGlyphScale(1)
 
     # interaction state variables
     self.activeSlice = None

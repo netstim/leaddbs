@@ -6,6 +6,7 @@ from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 
 import LeadORLib
+import LeadORLib.util
 
 #
 # LeadOR

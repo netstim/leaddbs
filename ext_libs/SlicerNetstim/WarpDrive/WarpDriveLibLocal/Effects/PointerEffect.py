@@ -61,3 +61,9 @@ class AbstractPointerEffect(AbstractEffect):
         self.previousTransformNodeID = None
       
 
+  def setFiducialNodeAs(self, type, fromNode, name, radius):
+    toNode = self.parameterNode.GetNodeReference(type + "Fiducial")
+    for i in range(fromNode.GetNumberOfControlPoints()):
+      toNode.AddControlPoint(vtk.vtkVector3d(fromNode.GetNthControlPointPosition(i)), name)
+      toNode.SetNthControlPointDescription(toNode.GetNumberOfControlPoints()-1, radius)
+    slicer.mrmlScene.RemoveNode(fromNode)

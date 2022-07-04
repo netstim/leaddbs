@@ -118,7 +118,7 @@ class LeadDBSSubject():
 
   def getModalityFromSeriesDescription(self, seriesDescription):
     for g in glob.glob(os.path.join(self.path, 'anat_*.nii')):
-      modality = re.search('(?<=anat_)\w+', g).group(0)
+      modality = re.search(r'(?<=anat_)\w+', g).group(0)
       if modality.lower() in seriesDescription.lower():
         return modality
     return 't1'

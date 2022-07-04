@@ -79,12 +79,15 @@ class Trajectory(VTKObservationMixin):
       self.RMSNode = slicer.cli.run(slicer.modules.rootmeansquare, None, {'dataFileName': self.alphaOmegaChannelNode.GetChannelFullSavePath()})
       self.addObserver(self.RMSNode, slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, self.onRMSModified)
     if hasattr(slicer.modules,'matlabcommander'):
-      self.WCNode = slicer.cli.run(slicer.modules.matlabcommander, None, {'cmd':'addpath("C:\\repo\\SlicerNetstim\\LeadOR\\LeadORLib");addpath(genpath("C:\\Users\\simon\\Documents\\MATLAB\\wave_clus"))'}) # TODO
+      initCommand = 'addpath("' + os.path.dirname(__file__) + '");addpath(genpath("' + os.path.join(os.path.expanduser('~'),'Documents','MATLAB','wave_clus') + '"))'
+      self.WCNode = slicer.cli.run(slicer.modules.matlabcommander, None, {'cmd':initCommand})
       self.addObserver(self.WCNode, slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, self.onWCModified)
 
   def onRMSModified(self, caller, event):
     rmsValue = self.RMSNode.GetParameterAsString('rootMeanSquare')
     fullFileName = self.RMSNode.GetParameterAsString('dataFileName')
+    if slicer.modules.alphaomega.logic().getParameterNode().GetParameter("AlignedRunning") == "false":
+      return
     if self.RMSNode.GetStatusString() == 'Completed':
       fiducialIndex = self.getFiducialIndexFromLabel("D = " + os.path.basename(fullFileName)[7:-6])
       if fiducialIndex > -1:
@@ -92,7 +95,7 @@ class Trajectory(VTKObservationMixin):
     if self.RMSNode.GetStatusString() in ['Completed', 'Cancelled']:
       self.RMSNode.SetParameterAsString('dataFileName', self.alphaOmegaChannelNode.GetChannelFullSavePath())
       slicer.cli.run(slicer.modules.rootmeansquare, self.RMSNode)
-    if (rmsValue not in ['', 'nan']) and (fullFileName != self.RMSNode.GetParameterAsString('dataFileName')):
+    if (rmsValue not in ['', 'nan']) and (fullFileName != self.RMSNode.GetParameterAsString('dataFileName')) and hasattr(self,'WCNode'):
       self.WCNode.SetParameterAsString('cmd', 'get_is_cluster("' + fullFileName + '")')
       slicer.cli.run(slicer.modules.matlabcommander, self.WCNode)
 
