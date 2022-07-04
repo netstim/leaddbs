@@ -5,7 +5,7 @@ import numpy as np
 from ..Widgets.ToolWidget   import AbstractToolWidget
 from ..Effects.DrawEffect import AbstractDrawEffect
 
-from ..Helpers import GridNodeHelper, WarpDriveUtil
+from ..Helpers import GridNodeHelper
 
 class DrawToolWidget(AbstractToolWidget):
   
@@ -58,7 +58,8 @@ class DrawToolEffect(AbstractDrawEffect):
           return
 
       else: # use new drawing as target fiducial
-        targetFiducial = self.getFiducialFromDrawing(nPoints = self.sourceFiducial.GetNumberOfControlPoints())  
+        targetFiducial = self.getFiducialFromDrawing(nPoints = self.sourceFiducial.GetNumberOfControlPoints())
+        targetFiducial.SetName(slicer.mrmlScene.GenerateUniqueName('drawing'))
 
       if targetFiducial is None:
         slicer.mrmlScene.RemoveNode(self.sourceFiducial)
@@ -68,9 +69,8 @@ class DrawToolEffect(AbstractDrawEffect):
 
       self.sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
 
-      WarpDriveUtil.addCorrection(self.sourceFiducial, targetFiducial, 
-                              spread=int(round(float(self.parameterNode.GetParameter("Spread")))),
-                              referenceNode = self.parameterNode.GetNodeReference("InputNode"))   
+      self.setFiducialNodeAs("Source", self.sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
+      self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
 
       self.parameterNode.SetParameter("Update","true")
       self.sourceFiducial = None
@@ -115,7 +115,6 @@ class DrawToolEffect(AbstractDrawEffect):
     targetCurve.GetDisplayNode().SetVisibility(0)
     targetCurve.SetControlPointPositionsWorld(resampledPoints)
     targetCurve.SetCurveTypeToShortestDistanceOnSurface(slicedModel)
-    targetCurve.ResampleCurveSurface(sampleDistance, slicer.vtkMRMLModelNode().SafeDownCast(slicedModel), 0.0025)
     targetCurve.ResampleCurveWorld(targetCurve.GetCurveLengthWorld() / max((resampledPoints.GetNumberOfPoints() - 1), 1))
       
     # curve to fiducial
@@ -147,8 +146,9 @@ class DrawToolEffect(AbstractDrawEffect):
   def curveToFiducial(self, curve):
     fiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     fiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
+    fiducial.GetDisplayNode().SetGlyphScale(1)
     fiducial.GetDisplayNode().SetVisibility(0)
-    fiducial.GetDisplayNode().SetTextScale(0)
+    fiducial.GetDisplayNode().SetPointLabelsVisibility(0)
     points = vtk.vtkPoints()
     curve.GetControlPointPositionsWorld(points)
     fiducial.SetControlPointPositionsWorld(points)
@@ -157,7 +157,7 @@ class DrawToolEffect(AbstractDrawEffect):
   def sliceClosestModel(self, point):
     originalModel = None
     # set up plane
-    normal = np.array([float(self.sliceLogic.GetSliceNode().GetName()==name) for name in ['Yellow','Green','Red']])
+    normal = np.array([float(self.sliceLogic.GetSliceNode().GetOrientation()==orientation) for orientation in ['Sagittal','Coronal','Axial']])
     plane = vtk.vtkPlane()
     plane.SetOrigin(point) # point in plane
     plane.SetNormal(normal)

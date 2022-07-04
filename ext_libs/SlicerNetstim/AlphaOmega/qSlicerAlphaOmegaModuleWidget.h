@@ -48,9 +48,11 @@ public slots:
 
   void onConnectPushButton();
   void onTestPushButton();
+  void onAlignedSignalsButton();
   void onDistanceToTargetTransformAdded(vtkMRMLNode * node);
   void onDistanceToTargetTransformModified(vtkMRMLNode * node);
   void onAlphaOmegaChannelNodeChanged(vtkMRMLNode * node);
+  void onAlignedSignalsTableNodeChanged(vtkMRMLNode * node);
   void updateGUIFromMRML();
   void updateChannelNodeFromGUI();
   void updateChannelsTables();

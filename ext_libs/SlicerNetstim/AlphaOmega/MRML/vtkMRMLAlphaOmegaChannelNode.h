@@ -89,6 +89,7 @@ public:
   // Preview
   vtkSetMacro(ChannelPreviewLengthMiliSeconds, int);
   vtkGetMacro(ChannelPreviewLengthMiliSeconds, int);
+  vtkSetMacro(NewDataArraySize, int);
   void InitializeChannelPreview();
 
   void SetChannelPreviewTableNode(vtkMRMLTableNode* tableNode);
@@ -108,6 +109,7 @@ public:
 
   // Distance to target
   static void SetDriveDistanceToTarget(float dtt){DriveDistanceToTarget = dtt;};
+  static float GetDriveDistanceToTarget(){return DriveDistanceToTarget;};
 
 protected:
   vtkMRMLAlphaOmegaChannelNode();
@@ -137,6 +139,7 @@ protected:
   int ChannelPreviewLengthMiliSeconds;
   vtkMRMLTableNode *ChannelPreviewTableNode;
   vtkMRMLPlotSeriesNode *ChannelPreviewPlotSeriesNode;
+  int NewDataArraySize;
 
   // Save File
   static std::string ChannelRootSavePath;
@@ -149,7 +152,6 @@ protected:
 private:
   short* DataBuffer;
   float* CreateNewDataArray();
-  int NewDataArraySize;
 
   int ChannelPreviewArrayIndex{0};
   vtkFloatArray *ChannelPreviewTimeArray;

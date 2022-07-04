@@ -3,6 +3,7 @@ import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 import logging
+import glob
 
 import sys
 import numpy as np
@@ -90,10 +91,8 @@ class ImportAtlasWidget(ScriptedLoadableModuleWidget):
 
 
   def onImportButton(self):
-    leadDBSPath = slicer.util.settingsValue("NetstimPreferences/leadDBSPath", "", converter=str)
-    if leadDBSPath is "": return
-    atlasPath = os.path.join(leadDBSPath, 'templates', 'space', 'MNI152NLin2009bAsym', 'atlases', self.atlasComboBox.currentText)
     logic = ImportAtlasLogic()
+    atlasPath = os.path.join(logic.getAtlasesPath(), self.atlasComboBox.currentText)
     qt.QApplication.setOverrideCursor(qt.Qt.WaitCursor)
     qt.QApplication.processEvents()
     try:
@@ -115,14 +114,20 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
 
-  def getValidAtlases(self):
+
+  def getAtlasesPath(self):
     leadDBSPath = slicer.util.settingsValue("NetstimPreferences/leadDBSPath", "", converter=str)
-    if leadDBSPath is "": return
-    import glob
-    validAtlases = glob.glob(os.path.join(leadDBSPath, 'templates', 'space', 'MNI152NLin2009bAsym', 'atlases', '*', 'atlas_index.mat'))
+    for possibleName in ["MNI_ICBM_2009b_NLIN_ASYM", "MNI152NLin2009bAsym"]:
+      possiblePath = os.path.join(leadDBSPath, "templates", "space", possibleName, "atlases")
+      if os.path.isdir(possiblePath):
+        return possiblePath
+    return ""
+
+  def getValidAtlases(self):
+    validAtlases = glob.glob(os.path.join(self.getAtlasesPath(), '*', 'atlas_index.mat'))
     if not validAtlases:
       qt.QMessageBox().warning(qt.QWidget(), "", "Invalid Lead-DBS path in preferences.")
-      return
+      return []
     validAtlases = [os.path.basename(os.path.dirname(a)) for a in validAtlases]
     validAtlases.sort()
     return validAtlases
@@ -181,7 +186,7 @@ class ImportAtlasLogic(ScriptedLoadableModuleLogic):
 # Atlas Structure
 #
 
-class LeadDBSAtlasStructure(object):
+class LeadDBSAtlasStructure:
   def __init__(self):
     self.atlasPath = None
     self.index = None
@@ -362,7 +367,7 @@ class DiscFibersStructure(FibersStructure):
 # Lead-DBS Atlas
 #
 
-class LeadDBSAtlas(object):
+class LeadDBSAtlas:
   def __init__(self, atlasPath):
 
     try:
@@ -414,7 +419,7 @@ class LeadDBSAtlas(object):
     names = []
     atlases = atlasFile['atlases']
     for column in atlases['names']:
-      name = ''.join(map(chr, atlases[column[0]][:]))
+      name = ''.join(map(chr, np.squeeze(atlases[column[0]][:])))
       names.append(name.split('.')[0])
     return names
   
@@ -444,7 +449,7 @@ class LeadDBSAtlas(object):
       ref = atlasFile['atlases']['pixdim'][0,i]
       data = atlasFile[ref][()]
       if data.dtype == np.dtype('uint16'):
-        pixdimType.append(''.join(map(chr, data)))
+        pixdimType.append(''.join(map(chr, np.squeeze(data))))
       else:
         pixdimType.append('numeric')
     return pixdimType

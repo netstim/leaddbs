@@ -23,6 +23,7 @@
 #include <QDirIterator>
 #include <QDateTime>
 #include <QTimer>
+#include <QSettings>
 
 // SlicerQt includes
 #include "qSlicerAlphaOmegaModuleWidget.h"
@@ -106,12 +107,20 @@ void qSlicerAlphaOmegaModuleWidget::setup()
   d->setupUi(this);
   this->Superclass::setup();
 
+  QSettings settings;
+  bool developerModeEnabled = settings.value("Developer/DeveloperMode", false).toBool();
+  d->testPushButton->setVisible(developerModeEnabled);
+
   // UI
   connect(d->connectPushButton, SIGNAL(clicked()), this, SLOT(onConnectPushButton()));
   connect(d->testPushButton, SIGNAL(clicked()), this, SLOT(onTestPushButton()));
   connect(d->distanceToTargetTransformComboBox, SIGNAL(nodeAddedByUser(vtkMRMLNode *)), this, SLOT(onDistanceToTargetTransformAdded(vtkMRMLNode *)));
   connect(d->distanceToTargetTransformComboBox, SIGNAL(currentNodeChanged(vtkMRMLNode *)), this, SLOT(onDistanceToTargetTransformModified(vtkMRMLNode *)));
   connect(d->alphaOmegaChannelComboBox, SIGNAL(currentNodeChanged(vtkMRMLNode *)), this, SLOT(onAlphaOmegaChannelNodeChanged(vtkMRMLNode *)));
+
+  // Aligned Signals
+  connect(d->alignedSignalsButton, SIGNAL(clicked()), this, SLOT(onAlignedSignalsButton()));
+  connect(d->alignedSignalsTableNode, SIGNAL(currentNodeChanged(vtkMRMLNode *)), this, SLOT(onAlignedSignalsTableNodeChanged(vtkMRMLNode *)));
 
   // Channel Node
   connect(d->channelsNamesComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateChannelNodeFromGUI()));
@@ -132,7 +141,7 @@ void qSlicerAlphaOmegaModuleWidget::setup()
 
   // Timer
   d->updateChannelsTablesTimer = new QTimer(this);
-  QObject::connect(d->updateChannelsTablesTimer, SIGNAL(timeout()), this, SLOT(updateChannelsTables()));
+  // QObject::connect(d->updateChannelsTablesTimer, SIGNAL(timeout()), this, SLOT(updateChannelsTables()));
 
 }
 
@@ -248,6 +257,19 @@ void qSlicerAlphaOmegaModuleWidget::onDistanceToTargetTransformModified(vtkMRMLN
 }
 
 //-----------------------------------------------------------------------------
+void qSlicerAlphaOmegaModuleWidget::onAlignedSignalsTableNodeChanged(vtkMRMLNode * node)
+{
+  Q_D(qSlicerAlphaOmegaModuleWidget);
+  const char * nodeID = "";
+  if (node != nullptr)  
+  {
+    nodeID = node->GetID(); 
+    QObject::connect(d->updateChannelsTablesTimer, &QTimer::timeout, [this,node] () {node->Modified();} );
+  }
+  d->parameterNode->SetNodeReferenceID("AlignedDataTable", nodeID);
+}
+
+//-----------------------------------------------------------------------------
 void qSlicerAlphaOmegaModuleWidget::updateChannelsTables()
 {
   Q_D(qSlicerAlphaOmegaModuleWidget);
@@ -262,10 +284,46 @@ void qSlicerAlphaOmegaModuleWidget::updateChannelsTables()
   }
 }
 
+
+//-----------------------------------------------------------------------------
+void qSlicerAlphaOmegaModuleWidget::onAlignedSignalsButton()
+{
+  Q_D(qSlicerAlphaOmegaModuleWidget);
+  vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(d->alignedSignalsTableNode->currentNode());
+  if (tableNode == nullptr)
+  {
+    return;
+  }
+
+  if (strcmp(d->alignedSignalsButton->text().toLocal8Bit().constData(), "Start") == 0)
+  {
+    d->logic()->sayHelloWorld();
+    d->logic()->ThreadedGatherAlignedData();
+    d->alignedSignalsButton->setText("Stop");
+    d->alignedSignalsTableNode->setEnabled(false);
+    d->alphaOmegaChannelComboBox->setEnabled(false);
+    this->setChannelWidgetEnabled(false);
+    d->parameterNode->SetParameter("AlignedRunning", "true");
+  }
+  else
+  {
+    d->logic()->TerminateGatherAlignedData();
+    d->alignedSignalsButton->setText("Start");
+    d->alignedSignalsTableNode->setEnabled(true);
+    d->alphaOmegaChannelComboBox->setEnabled(true);
+    this->setChannelWidgetEnabled(true);
+    d->parameterNode->SetParameter("AlignedRunning", "false");
+  }
+}
+
 //-----------------------------------------------------------------------------
 void qSlicerAlphaOmegaModuleWidget::onAlphaOmegaChannelNodeChanged(vtkMRMLNode * node)
 {
   Q_D(qSlicerAlphaOmegaModuleWidget);
+
+  int numberOfChannels = d->logic()->GetMRMLScene()->GetNumberOfNodesByClass("vtkMRMLAlphaOmegaChannelNode");
+  d->alignedSignalsButton->setEnabled(numberOfChannels > 0);
+
   if (node == nullptr) {return;}
 
   qvtkReconnect(d->CurrentChannelNode, node, vtkCommand::ModifiedEvent, this, SLOT(updateGUIFromMRML()));
@@ -312,13 +370,19 @@ void qSlicerAlphaOmegaModuleWidget::updateChannelNodeFromGUI()
     d->channelsNamesComboBox->setCurrentText(QString::fromUtf8(newChannelName));
   }
 
+  vtkMRMLTableNode* tableNode = vtkMRMLTableNode::SafeDownCast(d->previewTableNodeComboBox->currentNode());
+  // if (tableNode != nullptr)
+  // {
+  //   QObject::connect(d->updateChannelsTablesTimer, &QTimer::timeout, [this,tableNode] () {tableNode->Modified();} );
+  // }
+
   alphaOmegaChannelNode->SetChannelNameAndID(newChannelName);
   alphaOmegaChannelNode->SetChannelSamplingRate(d->samplingRateSpinBox->value());
   alphaOmegaChannelNode->SetChannelGain(d->gainSpinBox->value());
   alphaOmegaChannelNode->SetChannelBitResolution(d->bitResolutionSpinBox->value());
   alphaOmegaChannelNode->SetChannelBufferSizeMiliSeconds(d->bufferSizeSpinBox->value());
   alphaOmegaChannelNode->SetChannelPreviewLengthMiliSeconds(d->previewLengthSpinBox->value());
-  alphaOmegaChannelNode->SetChannelPreviewTableNode(vtkMRMLTableNode::SafeDownCast(d->previewTableNodeComboBox->currentNode()));
+  alphaOmegaChannelNode->SetChannelPreviewTableNode(tableNode);
 
   this->updateGUIFromMRML();
 }

@@ -4,26 +4,25 @@ set(MODULE_NAME WarpDrive)
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}.py
-  WarpDriveLib/Effects/CircleEffect.py
-  WarpDriveLib/Effects/DrawEffect.py
-  WarpDriveLib/Effects/Effect.py
-  WarpDriveLib/Effects/PointerEffect.py
-  WarpDriveLib/Effects/PointToPointEffect.py
-  WarpDriveLib/Effects/__init__.py
-  WarpDriveLib/Helpers/GridNodeHelper.py
-  WarpDriveLib/Helpers/LeadDBSCall.py
-  WarpDriveLib/Helpers/WarpDriveUtil.py
-  WarpDriveLib/Helpers/__init__.py
-  WarpDriveLib/Tools/DrawTool.py
-  WarpDriveLib/Tools/NoneTool.py
-  WarpDriveLib/Tools/PointToPointTool.py
-  WarpDriveLib/Tools/SmudgeTool.py
-  WarpDriveLib/Tools/__init__.py
-  WarpDriveLib/Widgets/Toolbar.py
-  WarpDriveLib/Widgets/ToolWidget.py
-  WarpDriveLib/Widgets/TreeView.py
-  WarpDriveLib/Widgets/__init__.py
-  WarpDriveLib/__init__.py
+  WarpDriveLibLocal/Effects/CircleEffect.py
+  WarpDriveLibLocal/Effects/DrawEffect.py
+  WarpDriveLibLocal/Effects/Effect.py
+  WarpDriveLibLocal/Effects/PointerEffect.py
+  WarpDriveLibLocal/Effects/PointToPointEffect.py
+  WarpDriveLibLocal/Effects/__init__.py
+  WarpDriveLibLocal/Helpers/GridNodeHelper.py
+  WarpDriveLibLocal/Helpers/LeadDBSCall.py
+  WarpDriveLibLocal/Helpers/__init__.py
+  WarpDriveLibLocal/Tools/DrawTool.py
+  WarpDriveLibLocal/Tools/NoneTool.py
+  WarpDriveLibLocal/Tools/PointToPointTool.py
+  WarpDriveLibLocal/Tools/SmudgeTool.py
+  WarpDriveLibLocal/Tools/__init__.py
+  WarpDriveLibLocal/Widgets/Toolbar.py
+  WarpDriveLibLocal/Widgets/ToolWidget.py
+  WarpDriveLibLocal/Widgets/Tables.py
+  WarpDriveLibLocal/Widgets/__init__.py
+  WarpDriveLibLocal/__init__.py
   )
 
 set(MODULE_PYTHON_RESOURCES
@@ -35,6 +34,7 @@ set(MODULE_PYTHON_RESOURCES
   Resources/Icons/PointToPoint.png
   Resources/Icons/Rename.png
   Resources/Icons/Smudge.png
+  Resources/Icons/SlicerVisible.png
   Resources/UI/${MODULE_NAME}.ui
   )
 

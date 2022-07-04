@@ -64,13 +64,13 @@ class StereotaxyReport():
 
   def getCoordinates(self, queryPoint, queryCoordinateSystem, outCoordinateSystem=None):
     # define crop bounding box and transform to RAS
-    if queryCoordinateSystem is 'Headring':
+    if queryCoordinateSystem == 'Headring':
       cropBoundingBox = (0, self.pdfHeight * 0.57 , self.pdfWidth/2, self.pdfHeight * 0.85)     
       toRAS = np.array([[ -1,  0,  0,  100],
                         [  0,  1,  0, -100],
                         [  0,  0, -1,  100],
                         [  0,  0,  0,    1]])
-    elif queryCoordinateSystem is 'DICOM':
+    elif queryCoordinateSystem == 'DICOM':
       cropBoundingBox = (self.pdfWidth/2, self.pdfHeight * 0.57 , self.pdfWidth, self.pdfHeight * 0.85)  
       toRAS = np.array([[ -1,  0,  0,  0],
                         [  0, -1,  0,  0],
@@ -81,11 +81,11 @@ class StereotaxyReport():
     # extract text
     PDFText = self.pdf.pages[1].crop(cropBoundingBox).extract_text()
     # extract coords
-    m = re.search('(?<=' + queryPoint + ' Point)' + ' [-]?\d+[.]\d+ mm' * 3, PDFText)
+    m = re.search('(?<=' + queryPoint + ' Point)' + r' [-]?\d+[.]\d+ mm' * 3, PDFText)
     xyz_str = m.group(0).split('mm')
     xyz_flt = [float(x) for x in xyz_str[:-1]]
     # transform
-    if outCoordinateSystem is 'RAS':
+    if outCoordinateSystem == 'RAS':
       xyz_flt = np.dot(toRAS, np.append(xyz_flt, 1))[:3]
     return xyz_flt
 
@@ -140,4 +140,3 @@ def setDefaultResliceDriver(transformNode):
     logic.SetModeForSlice(      settings['mode'],   settings['node'])
     logic.SetRotationForSlice(  settings['angle'],  settings['node'])
     logic.SetFlipForSlice(      settings['flip'],   settings['node'])
-      

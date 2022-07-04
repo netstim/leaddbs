@@ -198,11 +198,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     if options.normalize.refine
-        if options.prefs.env.dev
-            ea_runwarpdrive(options);
-        else
-            ea_checkstructures(options);
-        end
+        ea_runwarpdrive(options);
     end
 
     if options.ecog.extractsurface.do

@@ -565,9 +565,5 @@ void vtkMRMLAlphaOmegaChannelNode::AppendNewDataToSaveFile(float* newDataArray)
 
   vtkMRMLAlphaOmegaChannelNode::H5Busy.unlock();
 
-  if (dims[0] > (this->ChannelSamplingRate * 5.0))
-  {
-    this->CloseSaveFile();
-  }
 
 }

@@ -1,11 +1,11 @@
-import vtk, slicer
+import qt, vtk, slicer
 import numpy as np
 
 
 from ..Widgets.ToolWidget   import AbstractToolWidget
 from ..Effects.CircleEffect import AbstractCircleEffect
 
-from ..Helpers import GridNodeHelper, WarpDriveUtil
+from ..Helpers import GridNodeHelper
 
 class SmudgeToolWidget(AbstractToolWidget):
     
@@ -55,11 +55,11 @@ class SmudgeToolEffect(AbstractCircleEffect):
       # get source and target
       sourceFiducial, targetFiducial = self.getSourceTargetFromPoints()
       # apply
-      WarpDriveUtil.addCorrection(sourceFiducial, targetFiducial, 
-                              spread=int(round(float(self.parameterNode.GetParameter("Spread")))),
-                              referenceNode = self.parameterNode.GetNodeReference("InputNode"))
+      self.setFiducialNodeAs("Source", sourceFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
+      self.setFiducialNodeAs("Target", targetFiducial, targetFiducial.GetName(), self.parameterNode.GetParameter("Radius"))
       self.parameterNode.SetParameter("Update","true")
       # reset
+      self.parameterNode.GetNodeReference("OutputGridTransform").HardenTransform()
       self.interactionPoints = vtk.vtkPoints()
       self.auxTransformArray[:] = np.zeros(self.auxTransformArray.shape)
       self.auxTransformNode.Modified()
@@ -70,7 +70,7 @@ class SmudgeToolEffect(AbstractCircleEffect):
 
     elif event == 'MouseMoveEvent' and self.smudging:
 
-      r = int(round(float(self.parameterNode.GetParameter("Spread")) / self.auxTransformNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0])) # Asume isotropic!
+      r = int(round(float(self.parameterNode.GetParameter("Radius")) / self.auxTransformNode.GetTransformFromParent().GetDisplacementGrid().GetSpacing()[0])) # Asume isotropic!
       sphereResult = self.createSphere(r)
       currentPoint = self.xyToRAS(self.interactor.GetEventPosition())
       currentIndex = self.getCurrentIndex(r, currentPoint, self.auxTransfromRASToIJK)
@@ -106,15 +106,18 @@ class SmudgeToolEffect(AbstractCircleEffect):
     # source points
     sourceFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     sourceFiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
+    sourceFiducial.GetDisplayNode().SetGlyphScale(1)
     sourceFiducial.GetDisplayNode().SetVisibility(0)
     sourceFiducial.SetControlPointPositionsWorld(self.interactionPoints)
     sourceFiducial.ApplyTransform(self.parameterNode.GetNodeReference("OutputGridTransform").GetTransformFromParent()) # undo current
     # target
     targetFiducial = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
     targetFiducial.GetDisplayNode().SetGlyphTypeFromString('Sphere3D')
+    targetFiducial.GetDisplayNode().SetGlyphScale(1)
     targetFiducial.GetDisplayNode().SetVisibility(0)
     targetFiducial.SetControlPointPositionsWorld(self.interactionPoints)
     targetFiducial.ApplyTransform(self.auxTransformNode.GetTransformToParent()) # apply smudge
+    targetFiducial.SetName(slicer.mrmlScene.GenerateUniqueName('smudge'))
 
     return sourceFiducial, targetFiducial
 
