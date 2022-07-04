@@ -142,8 +142,9 @@ command = ['"' slicer_path '"' ...
            ' --additional-module-paths "' char(strjoin(string(slicer_netstim_modules),'" "')) '"'...
            ' --python-code "' char(strjoin(python_commands,";")) '"'];
 
+save_log = [' >> "' fullfile(warpdrive_subs(1).logDir, ['warpdrive_' char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt']) '"'];
        
-system([command ' &']); % with & return control to Matlab
+system([command save_log ' &']); % with & return control to Matlab
 disp('Running WarpDrive in Slicer');
 
 end
