@@ -1,6 +1,6 @@
 function options = ea_detsides(options)
 
-reconFile = fullfile(options.root, options.patientname, 'reconstruction', [options.patientname, '_desc-reconstruction.mat']);
+reconFile = fullfile(options.subj.reconDir, [options.subj.subjId, '_desc-reconstruction.mat']);
 if isfile(reconFile)
     load(reconFile, 'reco');
     sides = [];

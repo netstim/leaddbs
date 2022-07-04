@@ -20,10 +20,11 @@ viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']
 options.atlasset=viewsets.(target).atlas;
 options.sidecolor=1;
 options.writeoutstats=0;
+options.patientname = options.subj.subjId;
 resultfig=ea_elvis(options);
 
-if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'dir')
-    mkdir([options.root,options.patientname,filesep,'export',filesep,'views']);
+if ~exist(fullfile(options.subj.subjDir, 'export', 'views'),'dir')
+    mkdir(fullfile(options.subj.subjDir, 'export', 'views'));
 end
 
 views=viewsets.(target).views;
@@ -35,6 +36,6 @@ for view=1:length(views)
     set(0,'CurrentFigure',resultfig);
     ea_view(views(view).v,resultfig);
     set(0,'CurrentFigure',resultfig);
-    ea_screenshot([options.root,options.patientname,filesep,'export',filesep,'views',filesep,'view_',sprintf('%03.0f',view),'.png'],'ld', resultfig);
+    ea_screenshot(fullfile(options.subj.subjDir, 'export', 'views', ['view_',sprintf('%03.0f',view),'.png']),'ld', resultfig);
 end
 close(resultfig);
