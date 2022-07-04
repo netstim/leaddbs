@@ -14,8 +14,10 @@ function varargout =  ea_runslicer(options, task)
 %  Things to note: user must set the path of the slicer executable. It would
 %  be nice if there was an easy method to determine the path automatically.
 
-    ea_hastoolbox('slicer');
-
+    if ~isfield(options.prefs,'slicer') || isempty(options.prefs.slicer.dir)
+        ea_hastoolbox('slicer');
+    end
+    
     options.prefs = ea_prefs('');
     if ~isfield(options.prefs, 'slicer')
         warning(sprintf('3D Slicer path not set!\nPlease set ''prefs.slicer.dir'' in your preference file.'))
@@ -62,7 +64,7 @@ function varargout =  ea_runslicer(options, task)
     if isempty(options.uipatdirs)
         warning('No patient selected!');
         return;
-    elseif length(options.uipatdirs)>1
+    elseif length(options.uipatdirs)>1 && task ~= 5
         warning('Slicer module only works for single patient!');
         return;
     end
