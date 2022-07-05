@@ -88,12 +88,14 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
 
   def nextSubject(self):
+    print("Going to next subject")
     if self.parameterNode.GetParameter("CurrentSubject"):
       keep_same_subject = self.finalizeCurrentSubject()
       if keep_same_subject:
         return
     leadSubjects  = json.loads(self.parameterNode.GetParameter("LeadSubjects"))
     if not leadSubjects:
+      print("No more subjects. Terminate Slicer")
       slicer.util.exit()
     if isinstance(leadSubjects, dict):
       leadSubjects = [leadSubjects]
@@ -102,13 +104,15 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.initializeCurrentSubject()
 
   def initializeCurrentSubject(self):
-
     currentSubject = json.loads(self.parameterNode.GetParameter("CurrentSubject"))
+    print("Initialize subject: %s" % currentSubject["id"])
+
     inputNode = slicer.util.loadTransform(currentSubject["forward_transform"])
     outputNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLGridTransformNode')
     inputNode.SetAndObserveTransformNodeID(outputNode.GetID())
 
     if os.path.isfile(os.path.join(currentSubject["warpdrive_path"],'target.json')):
+      print("Loading previious session")
       targetFiducial = slicer.util.loadMarkups(os.path.join(currentSubject["warpdrive_path"],'target.json'))
       sourceFiducial = slicer.util.loadMarkups(os.path.join(currentSubject["warpdrive_path"],'source.json'))
     else:
@@ -129,6 +133,8 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     self.onModalityPressed([], self.parameterNode.GetParameter("modality"))
 
     self.setUpAtlases()
+    print("Finish loading subject %s" % currentSubject["id"])
+
 
 
   def finalizeCurrentSubject(self):
@@ -157,6 +163,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("OutputGridTransform"))
     
   def setUpAtlases(self):
+    print("Set up atlases")
     currentSubject = json.loads(self.parameterNode.GetParameter("CurrentSubject"))
     jsonFileName = os.path.join(currentSubject["warpdrive_path"],'info.json')
     if os.path.isfile(jsonFileName):
@@ -174,12 +181,16 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
       if ('atlas' in shNode.GetItemAttributeNames(shNode.GetItemByDataNode(folderNode))) and (folderNode.GetName() in atlasNames):
         atlasNames.pop(atlasNames.index(folderNode.GetName()))
     for name in atlasNames:
-      ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(ImportAtlas.ImportAtlasLogic().getAtlasesPath(), name, 'atlas_index.mat'))
-
+      print("Loading atlas %s" % name)
+      try:
+        ImportAtlas.ImportAtlasLogic().readAtlas(os.path.join(ImportAtlas.ImportAtlasLogic().getAtlasesPath(), name, 'atlas_index.mat'))
+      except:
+        print("Could not load atlas %s" % name)
 
   def onModalityPressed(self, item, modality=None):
     if modality is None:
       modality = self.modalityComboBox.itemText(item.row())
+    print("Loading %s modality" % modality)
     # find old nodes and delete
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("ImageNode"))
     slicer.mrmlScene.RemoveNode(self.parameterNode.GetNodeReference("TemplateNode"))
@@ -212,6 +223,7 @@ class reducedToolbar(QToolBar, VTKObservationMixin):
 
 
   def updateModalities(self):
+    print("Update modalities")
     currentSubject = json.loads(self.parameterNode.GetParameter("CurrentSubject"))
     currentModality = self.modalityComboBox.currentText
     subjectModalities = list(currentSubject["anat_files"].keys())
