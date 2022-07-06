@@ -113,6 +113,9 @@ def build_brain_approx(approx_dimensions, approx_geom_center, MRI_param = 0):
     with open(os.devnull, 'w') as FNULL: subprocess.call('gmsh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.med -3 -v 0 -o ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh2 && mv ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh2 ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     with open(os.devnull, 'w') as FNULL: subprocess.call('dolfin-convert ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.msh ' + os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.xml',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
+    #  make sure Salome processes are terminated
+    pro = subprocess.Popen(['salome','killall'])  
+        
     # the dimensions might need to be adjusted later
     return [x_length, y_length, z_length]
 
