@@ -19,7 +19,7 @@ classdef ea_disctract < handle
         pathway_list % list that contains names of pathways (relevant when multi_pathways = 1
         connFiberInd_PAM % list of indices of activated (connected) fibers using PAM
         connFiberInd_VAT % list of indices of activated (connected) fibers using VAT
-        connectivity_type = 0 % 1 - VAT, 2 - PAM
+        connectivity_type = 1 % 1 - VAT, 2 - PAM
         switch_connectivity = 0 % flag if connectivity type was changed in the GUI
         nestedLOO = false       % if true, will conducted LOO in the training set
         use_adjacency = false   % if true, 'smoothes' the fiber model by addings scores of fibers next to the pivotal ones
