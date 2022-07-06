@@ -29,10 +29,6 @@ for k = 1:length(myFiles)
   pathway_list{k} = regexprep(pathway_list{k}, '_', ' ');
   
   fiber_file = load(fullFileName);
-  % skip the adjacency matrix file
-  if contains(fullFileName, '_ADJ')
-      continue 
-  end
   num_of_fibers = length(fiber_file.idx);
   fiber_file.fibers(:,4) = fiber_file.fibers(:,4) + glob_index - 1;
   
@@ -88,9 +84,11 @@ for sub=1:numPatient
             if side == 1
                 side_name = 'right';
                 BIDS_side = '_model-ossdbs_hemi-R_tract-'; % this block is only executed for OSS-DBS
+                BIDS_side_merged = '_model-ossdbs_hemi-R'
             else
                 side_name = 'left';
                 BIDS_side = '_model-ossdbs_hemi-L_tract-';
+                BIDS_side_merged = '_model-ossdbs_hemi-L'
             end
 
 
@@ -100,8 +98,6 @@ for sub=1:numPatient
             %fiberActivation_file = [subSimPrefix,'fiberActivation_',side_name, '_', myFiles(k).name];
             fiberActivation_file = [subSimPrefix,'fiberActivation',BIDS_side, myFiles(k).name];
             
-
-            %sub-sub-01_sim-fiberActivation_model-ossdbs_hemi-L_tract-stn2gpe_sm__mir_left.mat
             
             pam_file = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
                 ea_nt(0), 'gs_',obj.M.guid,filesep, fiberActivation_file];
@@ -164,7 +160,7 @@ for sub=1:numPatient
         %BIDS notation
         [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
         subSimPrefix = [subj_tag, '_sim-'];
-        fiberActivation_merged = [filepath,filesep,subSimPrefix,'fiberActivation_',side_name,'.mat'];
+        fiberActivation_merged = [filepath,filesep,subSimPrefix,'fiberActivation',BIDS_side_merged,'.mat'];
         save(fiberActivation_merged, '-struct', 'ftr2');
         
     end

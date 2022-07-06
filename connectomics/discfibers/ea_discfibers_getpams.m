@@ -24,9 +24,9 @@ for sub=1:numPatient % Original VAT E-field
     subSimPrefix = [subj_tag, '_sim-'];
     
     pamlist{sub,1} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_right.mat'];
+        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-R.mat'];
     pamlist{sub,2} = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
-        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_left.mat'];
+        ea_nt(0), 'gs_',obj.M.guid,filesep,subSimPrefix, 'fiberActivation_model-ossdbs_hemi-L.mat'];
 end
 
 end
