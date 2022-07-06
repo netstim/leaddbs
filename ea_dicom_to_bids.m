@@ -46,8 +46,13 @@ for image_idx = 1:N_fnames
 
     % get .json and read it if possible
     if isfile(fullfile(nii_folder, [fnames{image_idx}, '.json']))
-        imgs{image_idx}.json_sidecar = loadjson(fullfile(nii_folder, [fnames{image_idx}, '.json']));
-        imgs{image_idx}.json_found = 1;
+        try
+            imgs{image_idx}.json_sidecar = loadjson(fullfile(nii_folder, [fnames{image_idx}, '.json']));
+            imgs{image_idx}.json_found = 1;
+        catch
+            warning('There was a problem while loading the .json file at %s, please ensure correct .json format.', fullfile(nii_folder, [fnames{image_idx}, '.json']))
+            imgs{image_idx}.json_found = 0;
+        end
     else
         imgs{image_idx}.json_found = 0;
     end
