@@ -343,6 +343,8 @@ for group=groups
         allvals = vertcat(vals{group,:});
         posvals = sort(allvals(allvals>0),'descend');
         negvals = sort(allvals(allvals<0),'ascend');
+        
+        % positive thresholds
         if dosubscores || dogroups
             if obj.subscore.special_case
                 if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
@@ -372,15 +374,26 @@ for group=groups
             if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
                 posthresh = inf;
             else
-                posrange = posvals(1) - posvals(end);
-                posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-
-                if posrange == 0
-                    posthresh = posthresh - eps*10;
+                switch obj.threshstrategy
+                    case 'Relative to Peak'
+                        posrange = posvals(1) - posvals(end);
+                        posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
+                        if posrange == 0
+                            posthresh = posthresh - eps*10;
+                        end
+                    case 'Relative to Amount'
+                        posthresh = posvals(round((obj.showposamount(side)/100)*length(posvals)));
+                    case 'Fixed Amount'
+                        if length(posvals)>round(obj.showposamount(side))
+                            posthresh=posvals(round(obj.showposamount(side)));
+                        else                        
+                            posthresh=posvals(end);
+                        end
                 end
             end
-
         end
+
+        % negative thresholds
         if dosubscores || dogroups
             if obj.subscore.special_case
                 if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
@@ -397,13 +410,32 @@ for group=groups
                 if ~obj.subscore.negvisible(group) || ~obj.subscore.vis.shownegamount(group,side) || isempty(negvals)
                     negthresh = -inf;
                 else
-                    negrange = negvals(1) - negvals(end);
-                    negthresh = negvals(1) - obj.subscore.vis.shownegamount(group,side)/100 * negrange;
 
-                    if negrange == 0
-                        negthresh = negthresh + eps*10;
+                    switch obj.threshstrategy
+                        case 'Relative to Peak'
+                            negrange = negvals(1) - negvals(end);
+                            negthresh = negvals(1) - obj.subscore.vis.shownegamount(group,side)/100 * negrange;
+                            if negrange == 0
+                                negthresh = negthresh + eps*10;
+                            end
+                        case 'Relative to Amount'
+                            negthresh = negvals(round((obj.showposamount(side)/100)*length(posvals)));
+                        case 'Absolute Amount'
+                            if length(negvals)>round(obj.shownegamount(side))
+                                negthresh=negvals(round(obj.shownegamount(side)));
+                            else
+                                negthresh=negvals(end);
+                            end
                     end
                 end
+
+
+
+
+
+
+                    
+                
             end
         else
             if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
