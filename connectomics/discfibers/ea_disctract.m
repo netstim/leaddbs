@@ -742,8 +742,8 @@ classdef ea_disctract < handle
             %we do not need to store plainconn separately since it is a
             %duplicate of PAM or VAT connectivity
             if isfield(obj.results.(ea_conn2connid(obj.connectome)),'plainconn')
-               connectomeName = ea_conn2connid(obj.connectome);
-               obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn');
+                connectomeName = ea_conn2connid(obj.connectome);
+                obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn');
             end
 
             tractset.resultfig=[]; % rm figure handle before saving.
