@@ -39,12 +39,25 @@ for side = 1:numSide
             end
             
         else
-            % we need to add filtered out fibers as not activated
-            fib_state_raw = load(char(pamlist(pt,side)));
 
             load(cfile, 'fibers', 'idx');
             total_fibers = fibers(end,4); % load the actual .mat
             fib_state = zeros(total_fibers,1);
+
+            try
+                fib_state_raw = load(char(pamlist(pt,side)));
+            catch
+                disp("=================== WARNING ==================")
+                disp("fiberActivation was not found for this patient")
+                disp("perhaps Kuncel-VTA removed all fibers")
+                disp("assigning zero activation")
+                disp("==============================================")
+                continue
+            end
+                
+            %if ~strcmp(obj.connectome, fib_state_raw.connectome_name)
+            %    error("=== Fiber activation was computed for another connectome!!! ===") 
+            %end    
 
             last_loc_i = 1;  
             sub_i = 1;
@@ -62,7 +75,7 @@ for side = 1:numSide
                 end
             end
         end
-        %fib_state
+
         
         %maybe this is a wrong way
         % Skip further calculation in case no fibers were activated
