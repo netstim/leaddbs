@@ -111,7 +111,7 @@ switch corrtype
         [R,p]=corr(X,Y,'rows','pairwise','type',corrtype);
 end
 
-if contains(labels{4},'nested LOO')
+if contains(labels{4}, 'nested LOO', 'IgnoreCase', true)
     g=gramm('x',X,'y',Y,'color',group1.idx);
 else
     g=gramm('x',X,'y',Y);
@@ -167,7 +167,7 @@ else
     end
 end
 
-if contains(labels{4}, 'nested LOO')
+if contains(labels{4}, 'nested LOO', 'IgnoreCase', true)
     g.set_title({'Mean and STD of linear models from nested LOO', ['Slope: ',labels{5}], ['Intercept: ',labels{6}]})
 elseif length(labels) > 4
     g.set_title({[labels{1}], ['Spearman: [r = ', sprintf('%.2f',R), '; ', pstr, ']'], ['Pearson: [r = ', sprintf('%.2f',R_pear), '; ', pstr_pear, ']'], [labels{5}, '; ',labels{6}, '; ',labels{7}]});
