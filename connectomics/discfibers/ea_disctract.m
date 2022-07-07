@@ -13,9 +13,9 @@ classdef ea_disctract < handle
         shownegamount = [25 25] % two entries for right and left
         connthreshold = 20
         efieldthreshold = 200
-        statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations, 3 = vacant, 4 = Dice Coeff / VTAs for binary variables, 5 = reverse t-tests & e-fields for binary variables, 6 = show plain connections (no stats)
+        statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations, 3 = vacant (OSS DBS pathway activations), 4 = Dice Coeff / VTAs for binary variables, 5 = reverse t-tests & e-fields for binary variables, 6 = show plain connections (no stats)
         multi_pathways = 0 % if structural connectome is devided into pathways (multiple .mat in dMRI_MultiTract)
-        map_list % list that contains global indices of the first fibers in each pathway (relevant when multi_pathways = 1) 
+        map_list % list that contains global indices of the first fibers in each pathway (relevant when multi_pathways = 1)
         pathway_list % list that contains names of pathways (relevant when multi_pathways = 1
         connFiberInd_PAM % list of indices of activated (connected) fibers using PAM
         connFiberInd_VAT % list of indices of activated (connected) fibers using VAT
@@ -164,7 +164,7 @@ classdef ea_disctract < handle
 
 
         function calculate(obj)
-              
+
             switch obj.connectivity_type
                 case 2 % PAM
                     obj.M.vatmodel = 'OSS-DBS (Butenko 2020)';
@@ -180,7 +180,7 @@ classdef ea_disctract < handle
                         return
                     end
                 end
-            end            
+            end
             % check that this has not been calculated before:
             if ~isempty(obj.results) % something has been calculated
                 if isfield(obj.results,ea_conn2connid(obj.connectome))
@@ -214,7 +214,7 @@ classdef ea_disctract < handle
                     ADJ_connectome_path = [connectome_folder,filesep,name,'_ADJ.mat'];
                 end
 
-                try 
+                try
                     obj.ADJ = load(ADJ_connectome_path);
                 catch
                     disp('The adjacency matrix is missing for the chosen connectome')
@@ -226,14 +226,13 @@ classdef ea_disctract < handle
                 obj.ADJ = false;
             end
 
-
             switch obj.connectivity_type
                 case 2    % if PAM, then just extracts activation states from fiberActivation.mat
                     pamlist = ea_discfibers_getpams(obj);
                     [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
                     obj.results.(ea_conn2connid(obj.connectome)).('PAM_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM = connFiberInd;
-                otherwise     % check fiber recruitment via intersection with VTA             
+                otherwise     % check fiber recruitment via intersection with VTA
                     if isfield(obj.M,'pseudoM')
                         vatlist = obj.M.ROI.list;
                     else
@@ -243,7 +242,7 @@ classdef ea_disctract < handle
                     obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
             end
-            
+
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_peak').fibsval = fibsvalPeak;
@@ -423,7 +422,7 @@ classdef ea_disctract < handle
             end
 
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
-            
+
             % for nested LOO, store some statistics
             if obj.nestedLOO
                 Abs_pred_error = zeros(cvp.NumTestSets, 1);
@@ -592,7 +591,7 @@ classdef ea_disctract < handle
                     side = 1;
                     SS_tot = var(useI(test)) * (length(useI(test)) - 1); % just a trick to use one line
                     SS_res = sum((Ihat_voters_prediction(test,side,1) - useI(test)).^2);
-                    R2 = 1 - SS_res/SS_tot;        
+                    R2 = 1 - SS_res/SS_tot;
                     RMS = sqrt(mean((Ihat_voters_prediction(test,side,1) - useI(test)).^2));
                     MAD = median(abs(Ihat_voters_prediction(test,side,1) - useI(test)));
                     MAE = mean(abs(Ihat_voters_prediction(test,side,1) - useI(test)));
@@ -601,7 +600,7 @@ classdef ea_disctract < handle
                     R2_label = ['R2 = ', sprintf('%.3f',R2)];
                     RMS_label = ['RMS = ', sprintf('%.3f',RMS)];
                     MAD_label = ['MAD = ', sprintf('%.3f',MAD)];
-            
+
                     empiricallabel = 'Empirical score';
                     pred_label = 'Predicted score';
                     h=ea_corrbox(useI(test),(Ihat_voters_prediction(test,side,1)),{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, R2_label, RMS_label, MAD_label},'permutation_spearman',[],[],[],[]);
@@ -635,7 +634,6 @@ classdef ea_disctract < handle
                             % ./ea_nansum below to take the average.
                         end
                     end
-
 
                     for xx=1:size(Ihat,1) % make sure voter weights sum up to 1
                         for yy=1:size(Ihat,2)
@@ -679,7 +677,6 @@ classdef ea_disctract < handle
                 end
             end
 
-            
             % restore original view in case of live drawing
             if obj.cvlivevisualize
                 obj.draw;
@@ -747,7 +744,7 @@ classdef ea_disctract < handle
             if isfield(obj.results.(ea_conn2connid(obj.connectome)),'plainconn')
                connectomeName = ea_conn2connid(obj.connectome);
                obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn');
-            end            
+            end
 
             tractset.resultfig=[]; % rm figure handle before saving.
             tractset.drawobject=[]; % rm drawobject.
@@ -755,7 +752,7 @@ classdef ea_disctract < handle
             obj.resultfig=rf;
             obj.drawobject=rd;
         end
-        
+
         function draw(obj,vals,fibcell,usedidx) %for cv live visualize
         %function draw(obj,vals,fibcell)
 
@@ -773,7 +770,7 @@ classdef ea_disctract < handle
                 disp("Recalculate or stay with the same model (VAT or PAM)")
                 disp("====================================================")
             end
-            
+
             %disp('Connectivity switch')
             %disp(obj.switch_connectivity)
 
@@ -784,7 +781,7 @@ classdef ea_disctract < handle
                     cfile = [filepath,filesep,'merged_pathways.mat'];
                 else
                     cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
-                end                
+                end
                 load(cfile, 'fibers', 'idx');
                 %disp('Conn. Type:')
                 %disp(ea_method2methodid(obj))
@@ -793,7 +790,7 @@ classdef ea_disctract < handle
                         if obj.connectivity_type == 2
                             connFiber = fibers(ismember(fibers(:,4), obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}), 1:3);
                             obj.results.(ea_conn2connid(obj.connectome)).fibcell{side} = mat2cell(connFiber, idx(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}));
-                        else 
+                        else
                             connFiber = fibers(ismember(fibers(:,4), obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}), 1:3);
                             obj.results.(ea_conn2connid(obj.connectome)).fibcell{side} = mat2cell(connFiber, idx(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}));
                         end
@@ -807,21 +804,20 @@ classdef ea_disctract < handle
                 end
             end
 
-
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
             end
             obj.fiberdrawn.fibcell = fibcell;
             obj.fiberdrawn.vals = vals;
             obj.fiberdrawn.usedidx = usedidx;
-            
+
             % print number of significant displayed fibers per pathway (atm only for binary metrics)
             if obj.multi_pathways == 1 && (isequal(ea_method2methodid(obj),'VAT_Ttest') || isequal(ea_method2methodid(obj),'PAM_Ttest') || isequal(ea_method2methodid(obj),'plainconn'))% at the moment, obj.connFiberInd is defined only for OSS-DBS
                 %disp("number of drawn fibers per pathway")
-                num_per_path = cell(1, 2); % with obj.map_list, rates can be computed                
+                num_per_path = cell(1, 2); % with obj.map_list, rates can be computed
                 for side = 1:2
                     num_per_path{side} = zeros(1,length(obj.map_list));
-                    if length(usedidx{side}) 
+                    if length(usedidx{side})
                         for inx = 1:length(usedidx{side})
                             % check the nearest via the difference, if positive, take one before
                             % I think we can easily add plainconnectivity
@@ -830,24 +826,24 @@ classdef ea_disctract < handle
                             % usedidx will be different for
                             % plainconnectivity, so it should work!
                             if obj.connectivity_type == 2
-                                [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx)))); 
+                                [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx))));
                                 if (obj.map_list(ix)-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx))) > 0
-                                   ix = ix - 1; 
+                                   ix = ix - 1;
                                 end
                             else
-                                [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx)))); 
+                                [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx))));
                                 if (obj.map_list(ix)-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx))) > 0
-                                   ix = ix - 1; 
+                                   ix = ix - 1;
                                 end
                             end
                             num_per_path{side}(ix) = num_per_path{side}(ix)+1;
-                        end 
+                        end
                     end
                     %disp(num_per_path{side})  % for now just print number of fibers per pathway
                 end
-                
+
                 figure
-                t = tiledlayout(1,2,'TileSpacing','compact');            
+                t = tiledlayout(1,2,'TileSpacing','compact');
                 nonZero_idx = [num_per_path{1}] > 0;
                 num_per_path{1} = num_per_path{1}(nonZero_idx);
                 if ~isempty(num_per_path{1})
@@ -858,9 +854,9 @@ classdef ea_disctract < handle
                     title('Right HS')
                     % Create legend
                     lgd = legend(obj.pathway_list(nonZero_idx));
-                    lgd.Layout.Tile = 'west';                    
+                    lgd.Layout.Tile = 'west';
                 end
-                
+
                 ax2 = nexttile;
                 colormap(ax2,winter)
                 nonZero_idx = [num_per_path{2}] > 0;
@@ -872,8 +868,8 @@ classdef ea_disctract < handle
                     lgd2 = legend(obj.pathway_list(nonZero_idx));
                     lgd2.Layout.Tile = 'east';
                 end
-            end          
-            
+            end
+
             allvals{1}=[]; % need to use a loop here - cat doesnt work in all cases with partly empty cells..
             if size(vals,2)==2 % can be a single cell in case of custom code (pseudoM setting).
                 allvals{2}=[];

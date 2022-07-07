@@ -19,24 +19,23 @@ C_idx = cell(1,numel(myFiles));
 disp('Merging different pathways ...')
 
 for k = 1:length(myFiles)
-  baseFileName = myFiles(k).name;
-  fullFileName = fullfile(myFiles(k).folder, baseFileName);
-  fprintf(1, 'Now reading %s\n', fullFileName);
-  
-  map_list = [map_list, glob_index];
-  pathway_list{k} = baseFileName;
-  % for printing
-  pathway_list{k} = regexprep(pathway_list{k}, '_', ' ');
-  
-  fiber_file = load(fullFileName);
-  num_of_fibers = length(fiber_file.idx);
-  fiber_file.fibers(:,4) = fiber_file.fibers(:,4) + glob_index - 1;
-  
-  C{k} = fiber_file.fibers;
-  C_idx{k} = fiber_file.idx;
-  
-  glob_index = glob_index + num_of_fibers;
-  
+    baseFileName = myFiles(k).name;
+    fullFileName = fullfile(myFiles(k).folder, baseFileName);
+    fprintf(1, 'Now reading %s\n', fullFileName);
+
+    map_list = [map_list, glob_index];
+    pathway_list{k} = baseFileName;
+    % for printing
+    pathway_list{k} = regexprep(pathway_list{k}, '_', ' ');
+
+    fiber_file = load(fullFileName);
+    num_of_fibers = length(fiber_file.idx);
+    fiber_file.fibers(:,4) = fiber_file.fibers(:,4) + glob_index - 1;
+
+    C{k} = fiber_file.fibers;
+    C_idx{k} = fiber_file.idx;
+
+    glob_index = glob_index + num_of_fibers;
 end
 
 ftr = fiber_file; % just initialization
@@ -51,7 +50,7 @@ else
 end
 
 % store the merged pathways in the leadgroup folder for now
-[filepath,name,ext] = fileparts(obj.leadgroup);
+filepath = fileparts(obj.leadgroup);
 cfile = [filepath,filesep,'merged_pathways.mat'];
 save(cfile, '-struct', 'ftr');
 
@@ -63,7 +62,6 @@ end
 % also adds 0 activation for those filtered out by Kuncel-VTA
 
 numPatient = length(obj.allpatients);
-pamlist = cell(numPatient,2);   % no mirroring
 
 disp('Merging fiberActivation files ...')
 
@@ -75,38 +73,26 @@ C_fibState_idx = cell(1,numel(myFiles)*2);
 for sub=1:numPatient
     for side = 1:2 % hardcoded
         for k=1:length(myFiles)
-
             total_fibers = length(C_idx{k});
             fib_state = zeros(total_fibers,1);
-            
-            C_fibState{k} = C{k};
-            
-            if side == 1
-                side_name = 'right';
-                BIDS_side = '_model-ossdbs_hemi-R_tract-'; % this block is only executed for OSS-DBS
-                BIDS_side_merged = '_model-ossdbs_hemi-R'
-            else
-                side_name = 'left';
-                BIDS_side = '_model-ossdbs_hemi-L_tract-';
-                BIDS_side_merged = '_model-ossdbs_hemi-L'
-            end
 
+            C_fibState{k} = C{k};
+
+            if side == 1
+                BIDS_side = '_model-ossdbs_hemi-R_tract-'; % this block is only executed for OSS-DBS
+                BIDS_side_merged = '_model-ossdbs_hemi-R';
+            else
+                BIDS_side = '_model-ossdbs_hemi-L_tract-';
+                BIDS_side_merged = '_model-ossdbs_hemi-L';
+            end
 
             %BIDS notation
             [~,subj_tag,~] = fileparts(obj.M.patient.list{sub});
             subSimPrefix = [subj_tag, '_sim-'];
-            %fiberActivation_file = [subSimPrefix,'fiberActivation_',side_name, '_', myFiles(k).name];
             fiberActivation_file = [subSimPrefix,'fiberActivation',BIDS_side, myFiles(k).name];
-            
-            
+
             pam_file = [pthprefix, obj.allpatients{sub},filesep, 'stimulations',filesep,...
                 ea_nt(0), 'gs_',obj.M.guid,filesep, fiberActivation_file];
-            
-         
-            % we need to add filtered out fibers as not activated
-            if contains(pam_file, '_ADJ')
-                continue 
-            end
 
             try
                 fib_state_raw = load(char(pam_file));
@@ -116,12 +102,12 @@ for sub=1:numPatient
                 continue
             end
 
-%             if ~strcmp(obj.connectome, fib_state_raw.connectome_name)
-%                 disp("==========================================================================") 
-%                 disp("WARNING: Activation of this pathway was computed for another connectome!!!") 
-%                 disp("==========================================================================") 
-%                 continue
-%             end   
+            % if ~strcmp(obj.connectome, fib_state_raw.connectome_name)
+            %     disp("==========================================================================")
+            %     disp("WARNING: Activation of this pathway was computed for another connectome!!!")
+            %     disp("==========================================================================")
+            %     continue
+            % end
 
             last_loc_i = 1;
             sub_i = 1;
@@ -142,19 +128,17 @@ for sub=1:numPatient
                 end_index = last_glob+C_idx{k}(fib_i)-1;
                 C_fibState{k}(last_glob:end_index,5) = fib_state(fib_i);
                 last_glob = end_index + 1;
-                
                 end
             end
-            
+
             C_fibState_idx{k} = C_idx{k};
-            
         end
-        
+
         ftr2 = fib_state_raw; % just initialization
         % merge cell contents along axis 0
         ftr2.fibers = cat(1, C_fibState{:});
         ftr2.idx = cat(1, C_fibState_idx{:});
-        
+
         % store as fiberActivation_side.mat in the corresp. stim folder
         [filepath,~,~] = fileparts(pam_file);
         %BIDS notation
@@ -162,7 +146,5 @@ for sub=1:numPatient
         subSimPrefix = [subj_tag, '_sim-'];
         fiberActivation_merged = [filepath,filesep,subSimPrefix,'fiberActivation',BIDS_side_merged,'.mat'];
         save(fiberActivation_merged, '-struct', 'ftr2');
-        
     end
-end
 end
