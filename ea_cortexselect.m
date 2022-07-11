@@ -110,7 +110,7 @@ function setuptree(varargin)
 % IO handling
 handles=varargin{1}{1};
 
-ea_busyaction('on',handles.cortexselect,'atlcontrol');
+ea_busyaction('on',handles.cortexselect,'cortex_control');
 
 cortex=varargin{1}{2};
 annot=varargin{1}{3};
