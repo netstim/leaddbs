@@ -372,7 +372,7 @@ class DTI_meta_data:
             # check relative shift of DTI from segmented MRI
             rel_DTI_coords = [self.first_vox_coords[i] - Segm_param.first_vox_coords[i] for i in range(3)]
 
-            eps = 0.1 * min(rel_DTI_coords)
+            eps = 0.1 * min(Segm_param.voxel_dims)
             if any(x < -1 * eps for x in rel_DTI_coords):
                 logging.critical("DTI data is outside of the segmented MRI data, please truncate the former.")
                 raise Exception('exit')
