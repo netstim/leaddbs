@@ -1,8 +1,7 @@
 function options = ea_detsides(options)
 
-reconFile = fullfile(options.subj.reconDir, [options.subj.subjId, '_desc-reconstruction.mat']);
-if isfile(reconFile)
-    load(reconFile, 'reco');
+if isfile(options.subj.recon.recon)
+    load(options.subj.recon.recon, 'reco');
     sides = [];
     if isfield(reco,'native')
         for el=1:length(reco.native.markers)
