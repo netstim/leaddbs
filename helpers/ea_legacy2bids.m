@@ -53,8 +53,7 @@ legacy_modalities = {'t1','t2star','pd','ct','tra','cor','sag','fgatir','fa','dt
 %legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
 bids_modalities = {'T1w','T2starw','PDw','CT','acq-ax_MRI','acq-cor_MRI','acq-sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2w','FLAIR'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
-[brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking,log,lead_mapper] = ea_create_bids_mapping();
-
+[rawdata,brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking,log,lead_mapper] = ea_create_bids_mapping();
 %data structure for excel sheet later on
 derivatives_cell = {};
 
@@ -492,24 +491,23 @@ for patients = 1:length(source)
                                   mkdir(op_dir);
                               end
                               copyfile(fullfile(source_path,which_file),op_dir);
-                          elseif endsWith(files_to_move{files},'.nii')
+                          else
                               try
                                   tag = check_acq(fullfile(source_path,which_file));
-                                  bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_','acq-',tag,'_',bids_mod,ext];
+                                  bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
                               catch
-                                  try_bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_',acqTag','_',bids_mod,ext];
+                                  try_bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
                                   bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
                               end
-                          elseif endsWith(files_to_move{files},'.png')
-                              bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_',bids_mod,ext];
+                              bids_name = CheckifAlreadyExists(op_dir,bids_name);
+                              if exist(fullfile(source_path,which_file),'file')
+                                copyfile(fullfile(source_path,which_file),op_dir);
+                              elseif exist(fullfile(source_patient,which_file),'file')
+                                 copyfile(fullfile(source_patient,which_file),op_dir); 
+                              end
+                              movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
+                                  
                           end
-                          bids_name = CheckifAlreadyExists(op_dir,bids_name);
-                          if exist(fullfile(source_path,which_file),'file')
-                              copyfile(fullfile(source_path,which_file),op_dir);
-                          elseif exist(fullfile(source_patient,which_file),'file')
-                              copyfile(fullfile(source_patient,which_file),op_dir);
-                          end
-                          movefile(fullfile(op_dir,which_file),fullfile(op_dir,bids_name));
                       elseif endsWith(which_file,'.mat')
                           mat_str = regexp(which_file,'[1-9].mat','split','once');
                           mat_str = mat_str{1};
@@ -579,22 +577,51 @@ for patients = 1:length(source)
                 end
                 for folders = 1:length(pipelines)
                     if strcmp(pipelines{folders},'stimulations')
+                        
                         %the stimulations folder should already be
                         %there in the dest directory.
                         if exist(fullfile(source_patient,pipelines{folders}),'dir') && exist(fullfile(new_path,pipelines{folders}),'dir')
-                            pipeline = pipelines{folders};
-                            %try
-                            [mni_files,native_files,derivatives_cell,mni_model_names,native_model_names] = ea_vta_walkpath(source_patient,new_path,pipeline,derivatives_cell);
-                            move_mni2bids(mni_files,native_files,stimulations,'',pipeline,patient_name,new_path,mni_model_names,native_model_names);
-                            %catch ME
-                            %if contains(ME.message,'Specified connectome')
-                            %    disp("Connectome used for performing calculations not found under the leaddbs/connectome folder. Please verify and use standardized connectome names");
-                            %elseif strcmp(ME.message,'BIDS tag could not be assigned')
-                            %    disp("Migrate could not place your files with the correct tag. Please try to manually rename your files")
-                            %else
-                            %    disp("Your stimulation folder might be empty...");
-                            %end
-
+                            
+                            %pipeline = pipelines{folders};
+                            MNI152_folders = ea_regexpdir(fullfile(new_path,pipelines{folders},'MNI152NLin2009bAsym'),'.*',0,'d');
+                            native_folders = ea_regexpdir(fullfile(new_path,pipelines{folders},'native'),'.*',0,'d');
+                            all_gs_folders = [MNI152_folders;native_folders];
+                            for i=1:length(all_gs_folders)
+                                stim_files = ea_regexpdir(all_gs_folders{i},'.*',0,'f'); 
+                                for j=1:length(stim_files)
+                                    [filepath,filename,ext] = fileparts(stim_files{j});
+                                    classic_stim_file = [filename,ext];
+                                    if ismember(classic_stim_file,stimulations{:,1})
+                                        indx = cellfun(@(x)strcmp(x,classic_stim_file),stimulations{:,1});
+                                        bids_name = [patient_name,'_',stimulations{1,2}{indx}];
+                                        if contains(bids_name,'modelTag')
+                                            model_name = add_model(all_gs_folders{i});
+                                            bids_name = strrep(bids_name,'modelTag',model_name);
+                                        end
+                                        if ~isempty(indx)
+                                            movefile(stim_files{j},fullfile(filepath,bids_name));
+                                        end
+                                    end
+                                end
+                                leadMapper_folder = ea_regexpdir(all_gs_folders{i},'.*',0,'d');
+                                for k=1:length(leadMapper_folder)
+                                    is_it_aconnectome = ea_regexpdir(leadMapper_folder{k},'.*vat_seed_compound_[df]MRI.*',0,'f');
+                                    if ~isempty(is_it_aconnectome)
+                                        [~,connectome_filename,ext] = fileparts(leadMapper_folder{k});
+                                        bids_connectome_name = ea_getConnLabel(connectome_filename);
+                                        model_name = add_model(all_gs_folders{i});
+                                        stimulation_folder = all_gs_folders{i};
+                                        connectome_folder = fullfile(leadMapper_folder{k});
+                                        %create a struct of all the properties
+                                        %associated with this file
+                                        tag_struct.subjID = patient_name;
+                                        tag_struct.modeltag = model_name;
+                                        tag_struct.conntag = bids_connectome_name;
+                                        generate_bidsConnectome_name(stimulation_folder,connectome_folder,lead_mapper,tag_struct)
+                                    end
+                                end
+                            end
+                            
                             %end
                         end
                     elseif strcmp(pipelines{folders},'headmodel')
@@ -611,7 +638,8 @@ for patients = 1:length(source)
                             headmodel_native_files = {};
                         end
                         which_pipeline = 'headmodel';
-                        move_mni2bids(headmodel_mni_files,headmodel_native_files,'',headmodel,which_pipeline,patient_name,new_path,'','')
+                        
+                        move_mni2bids(headmodel_mni_files,headmodel_native_files,'',headmodel,which_pipeline,patient_name,new_path)
 
                     end
                 end
@@ -812,6 +840,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
         if strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_methods.txt'))
             bids_name = 'desc-brainshiftmethod.txt';
         elseif strcmp(fullfile(source_patient_path,which_file),fullfile(source_patient_path,'ea_coreg_approved.mat'))
+            brainshift_log_dir = fullfile(new_path,'brainshift','log');
             coreg_mat = load(fullfile(source_patient_path,'ea_coreg_approved.mat'));
             if isfield(coreg_mat,'brainshift')
                 opt.FileName = fullfile(brainshift_log_dir,[patient_name,'_','desc-brainshiftmethod.json']);
@@ -864,47 +893,8 @@ function move_raw2bids(source_patient_path,new_path,which_file,bids_name)
         copyfile(fullfile(tmp_path,bids_name),new_path);
         
     end
-function move_mni2bids(mni_files,native_files,stimulations,headmodel,which_pipeline,patient_name,new_path,mni_model_names,native_model_names)
-    if strcmp(which_pipeline,'stimulations')
-        if ~isempty(mni_files)
-            for mni_file = 1:length(mni_files)
-                for mni_subfile = 1:length(mni_files{1,mni_file})
-                    [filepath,mni_filename,ext] = fileparts(mni_files{1,mni_file}{1,mni_subfile});
-                    if ismember([mni_filename,ext],stimulations{:,1})
-                        indx = cellfun(@(x)strcmp(x,[mni_filename,ext]),stimulations{:,1});
-                        try_bids_name = [patient_name,'_',stimulations{1,2}{indx}];
-                        if contains(try_bids_name,'modelTag')
-                            bids_name = strrep(try_bids_name,'modelTag',mni_model_names{mni_file});
-                        else
-                            bids_name = try_bids_name;
-                        end
-                        %try_bids_name = [patient_name,'_',stimulations{1,2}{indx}];
-                        %bids_name = add_model(fullfile(filepath,[mni_filename,ext]),try_bids_name);
-                        fprintf('Renaming file %s as %s.\n',mni_files{1,mni_file}{1,mni_subfile},bids_name);
-                        movefile(mni_files{1,mni_file}{1,mni_subfile},fullfile(filepath,bids_name));
-                    end
-                end
-            end
-        end
-        if ~isempty(native_files)
-            for native_file = 1:length(native_files)
-                for native_subfile = 1:length(native_files{1,native_file})
-                    [filepath,native_filename,ext] = fileparts(native_files{1,native_file}{1,native_subfile});
-                    if ismember([native_filename,ext],stimulations{:,1})
-                        indx = cellfun(@(x)strcmp(x,[native_filename,ext]),stimulations{:,1});
-                        try_bids_name = [patient_name,'_',stimulations{1,2}{indx}];
-                        if contains(try_bids_name,'modelTag')
-                            bids_name = strrep(try_bids_name,'modelTag',native_model_names{native_file});
-                        else
-                            bids_name = try_bids_name;
-                        end
-                        movefile(native_files{1,native_file}{1,native_subfile},fullfile(filepath,bids_name));
-                    end
-                end
-            end
-        end
-     
-    elseif strcmp(which_pipeline,'headmodel')
+function move_mni2bids(mni_files,native_files,~,headmodel,which_pipeline,patient_name,new_path)
+    if strcmp(which_pipeline,'headmodel')
         if ~isempty(mni_files)
             for headmodel_mni_file = 1:length(mni_files)
                 if ismember(mni_files{headmodel_mni_file},headmodel{:,1})
@@ -1038,7 +1028,6 @@ function generate_rawImagejson(patient_name,dest)
     
     
 function tag = check_acq(filename)
-if endsWith(filename,'.nii') || endsWith(filename,'.nii.gz')
     hd_struct = ea_fslhd(filename);
     pixdim = [hd_struct.pixdim1, hd_struct.pixdim2, hd_struct.pixdim3];
     [C,~, ic] = unique(pixdim);
@@ -1052,7 +1041,7 @@ if endsWith(filename,'.nii') || endsWith(filename,'.nii.gz')
             multi = [pixdim(2)*pixdim(3), pixdim(1)*pixdim(3), pixdim(1)*pixdim(2)];
             flag = find(multi == min(multi));
         end
-
+        
         switch flag
             case 1
                 tag = 'sag';
@@ -1063,9 +1052,6 @@ if endsWith(filename,'.nii') || endsWith(filename,'.nii.gz')
         end
     end
     return
-else
-    return
-end
 function bids_name = add_tag(try_bids_name,mod_cell,tag_cell)
     bids_mod = strsplit(try_bids_name,'_');
     [~,bids_mod,~] = fileparts(bids_mod{end});
@@ -1163,3 +1149,63 @@ function bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers)
              
     end
 return
+function model_name = add_model(stimFolder)
+    stimParams = ea_regexpdir(stimFolder, 'stimparameters\.mat$', 0);
+    if ~isempty(stimParams)
+        load(stimParams{1},'S')
+        model_name = ea_simModel2Label(S.model);
+    else
+        ea_warndlg('Missing stimparameters under %s\nSet to SimBio model by default, please check manually.', stimFolder);
+        model_name = 'simbio';
+    end
+return
+function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,tag_struct)
+   %connectome_folder should be the full path of the connectome files,
+   %mni_folder =
+   %fullfile(new_path,pipeline,'MNI152NLinAsym','stimulations',stimulation
+   %name)
+   mapper_output_files = dir_without_dots(connectome_folder);
+   mapper_output_files = {mapper_output_files(~[mapper_output_files.isdir]).name};
+   
+   for mapper_file = 1:length(mapper_output_files)
+       matching_file = regexprep(mapper_output_files{mapper_file},'(fl_|efield_|efield_gauss)', '');
+       matching_file = ['_' matching_file];
+       if ismember(matching_file,lead_mapper{:,1})
+           if contains(mapper_output_files{mapper_file},'efield')
+               tag_struct.simtag = 'efield';
+           elseif contains(mapper_output_files{mapper_file},'efield_gauss')
+               tag_struct.simtag = 'efieldgauss';
+           else %doesn't contain either
+               tag_struct.simtag = 'binary';
+           end
+           extract_old_hemisdesc_str = strsplit(mapper_output_files{mapper_file},'_');
+           
+           indx = cellfun(@(x)strcmp(x,matching_file),lead_mapper{:,1});
+           bids_name = lead_mapper{1,2}{indx};
+           %replace hemidesc tag
+           if strcmp(extract_old_hemisdesc_str{1},'fl')
+               bids_name = strrep(bids_name,'flippedTag','flipped');
+           else
+               bids_name = strrep(bids_name,'_hemidesc-flippedTag','');
+           end
+           %replace sim tag
+           bids_name = strrep(bids_name,'simTag',tag_struct.simtag);
+           %replace model tag
+           bids_name = strrep(bids_name,'modelTag',tag_struct.modeltag);
+           %replace connectome tag
+           bids_name = strrep(bids_name,'conTag',tag_struct.conntag);
+           copyfile(fullfile(connectome_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,mapper_output_files{mapper_file}));
+           movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
+           fprintf('Renaming file %s as %s.\n',mapper_output_files{mapper_file},[tag_struct.subjID,'_',bids_name]);
+           
+       else
+           evalin('base','WARNINGSILENT=1;');
+           ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',mapper_output_files{mapper_file}));
+       end
+       
+   end
+   %evalin('base','WARNINGSILENT=1;');
+   %ea_warning(sprintf('Deleting old copy of connectome folder %s. You can find it in the source patient folder if you need.',connectome_folder));
+   %ea_delete(fullfile(connectome_folder));
+
+
