@@ -373,96 +373,166 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
                 end
             end
         end
-        
-        
-        % load clinical data for group
-        disp('Loading clinical data for group...');
+        disp('Trying to load clinical data for group...');
         for pt=1:length(M.patient.list)
-            
-            if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
-                ptscores=load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
-                if ~exist('ea_scores','var') % set up automatic assignment struct
-                    ea_scores=load(fullfile(ea_getearoot,'clinical','ea_scores.mat'));
+            [~,subj_id,~] = fileparts(M.patient.list{pt});
+            if exist(fullfile(M.patient.list{pt},'clinical',[subj_id,'_desc-clinicalScores.mat']),'file')
+                load(fullfile(M.patient.list{pt},'clinical',[subj_id,'_desc-clinicalScores.mat']), 'scores');
+                scoreTypes = fieldnames(scores);
+                if ~isfield(M,'clinical')
+                    varLabelIndex = 1;
                 end
-                entries=fieldnames(ptscores);
-                for entry=1:length(entries) % iterate scores available in patient
-                    
-                    switch entries{entry}
-                        case {'Motor_UPDRS','Motor_MDSUPDRS'} % group these two together
-                            
-                            scorename='mUPDRS';
-                        otherwise
-                            
-                            scorename=entries{entry};
-                    end
-                    if exist('clindata','var') && isfield(clindata,scorename)
+                for t=1:length(scoreTypes)
+                    scoreType = scoreTypes{t};
+                    if strcmp(scoreType,'Motor_MDSUPDRS') || strcmp(scoreType,'Motor_UPDRS')
+                        % Use 'Motor_Mixed' var label prefix for the two types
+                        type = 'Motor_Mixed';
                     else
-                        clindata.(scorename).baseline=[];
-                        clindata.(scorename).postop=[];
-                        clindata.(scorename).factors={};
-                        clindata.(scorename).score={};
-                        clindata.(scorename).somatotopies=struct;
-                        clindata.(scorename).somatotopynames={};
+                        type = scoreType;
                     end
-                    
-                    [ispresent,ix]=ismember(entries{entry},fieldnames(ea_scores));
-                    if ispresent % does lead-dbs know what to do with a score named like this?
-                        if isfield(ptscores.(entries{entry}),ea_scores.(entries{entry}).default_baseline)
-                            baseline=ptscores.(entries{entry}).(ea_scores.(entries{entry}).default_baseline).score;
-                            success=1;
-                        else
-                            success=0;
-                            continue
-                        end
-                        if isfield(ptscores.(entries{entry}),M.guid)
-                            postop=ptscores.(entries{entry}).(M.guid).score;
-                            success=1;
-                        else
-                            success=0;
-                            continue
-                        end
-                        if success % both baseline and postop available
-                            clindata.(scorename).baseline(pt,:)=table2array(baseline);
-                            clindata.(scorename).postop(pt,:)=table2array(postop);
-                            clindata.(scorename).score{pt,1}=entries{entry};
-                            clindata.(scorename).factornames=ea_scores.(entries{entry}).factornames;
-                            clindata.(scorename).factors.(entries{entry})=ea_scores.(entries{entry}).factors;
-                            clindata.(scorename).somatotopies.(entries{entry})=ea_scores.(entries{entry}).somatotopies;
-                            clindata.(scorename).somatotopynames=ea_scores.(entries{entry}).somatotopynames;
-                        end
-                    end
-                    
-                end
-            end
-        end
-        if exist('clindata','var')
-            fns=fieldnames(clindata);
-            for fn=1:length(fns)
-                scorename=fns{fn};
-                clindata.(scorename).scores=unique(clindata.(scorename).score);
-                
-                modes={'absolute','percent','cleaned'};
-                
-                % now auto-query improvements for all factors:
-                for s=1:length(clindata.(scorename).somatotopynames)
-                    for f=1:length(clindata.(scorename).factornames)
-                        for mode=1:length(modes)
-                            I=ea_getimprovs_fctr_smtp(clindata.(scorename),modes{mode},1:length(M.patient.list),clindata.(scorename).factornames{f},clindata.(scorename).somatotopynames{s});
-                            Ilabel=[scorename,'_',clindata.(scorename).somatotopynames{s},'_',clindata.(scorename).factornames{f},'_',modes{mode}];
-                            
-                            [is,ix]=ismember(Ilabel,M.clinical.labels);
-                            if ~is
-                                M.clinical.labels{end+1}=Ilabel;
-                                M.clinical.vars{end+1}=I;
-                            else % update
-                                M.clinical.labels{ix}=Ilabel;
-                                M.clinical.vars{ix}=I;
+                    %Get postop flags, can be Postop6M for example
+                    postopFlags = fieldnames(scores.(scoreType));
+                    %define possible fields, used to check for any misc.
+                    %scores
+                    field_list = {'Baseline', 'Postop'};
+                    %Further check fields
+                    for p=1:length(postopFlags)
+                        postopFlag = postopFlags{p};
+                        fields = fieldnames(scores.(scoreType).(postopFlag));
+                        for f=1:length(fields)
+                            varname = fields{f};
+                            all_vars = fieldnames(scores.(scoreType).(postopFlag).(varname));
+                            for CurrVar=1:length(all_vars)
+                                if ~ismember(field_list,all_vars{CurrVar})
+                                    varLabel = [type '-' postopFlag '-' varname '-' all_vars{CurrVar}];
+                                    if isfield(M,'clinical')
+                                        varLabelIndex = find(ismember(M.clinical.labels, varLabel), 1);
+                                        success = 0;
+                                        if isempty(varLabelIndex) % Variable not existing.
+                                            % Append variable label
+                                            varLabelIndex = length(M.clinical.labels) + 1;
+                                            M.clinical.labels{varLabelIndex} = varLabel;
+                                            % Append variable, initialized with nan
+                                            M.clinical.vars{varLabelIndex} = nan(length(M.patient.list),1);
+                                        end
+                                    else
+                                        M.clinical.labels{varLabelIndex} = varLabel;
+                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(varname).(all_vars{CurrVar});
+                                        success = 1;
+                                        varLabelIndex = varLabelIndex + 1;
+                                    end
+                                    %Set score to variable
+                                    if success == 0
+                                        M.clinical.vars{varLabelIndex}(pt,:) = scores.(scoreType).(postopFlag).(varname).(all_vars{CurrVar});
+                                    end
+                                    
+                                end
                             end
                         end
                     end
                 end
             end
         end
+      
+        if isfield(M,'clinical') 
+                % Refresh clinical variable list
+                disp('Refreshing clinical list...');
+                set(handles.clinicallist, 'String', M.clinical.labels);
+                if M.ui.clinicallist <= length(M.clinical.labels)
+                    set(handles.clinicallist, 'Value', M.ui.clinicallist);
+                else % Reset to the 1st variable in case out of range
+                    set(handles.clinicallist, 'Value', 1);
+                end
+        end
+%         
+%         % load clinical data for group
+%         disp('Loading clinical data for group...');
+%         for pt=1:length(M.patient.list)
+%             
+%             if exist(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'),'file')
+%                 ptscores=load(fullfile(M.patient.list{pt},'clinical','clinical_scores.mat'));
+%                 if ~exist('ea_scores','var') % set up automatic assignment struct
+%                     ea_scores=load(fullfile(ea_getearoot,'clinical','ea_scores.mat'));
+%                 end
+%                 entries=fieldnames(ptscores);
+%                 for entry=1:length(entries) % iterate scores available in patient
+%                     
+%                     switch entries{entry}
+%                         case {'Motor_UPDRS','Motor_MDSUPDRS'} % group these two together
+%                             
+%                             scorename='mUPDRS';
+%                         otherwise
+%                             
+%                             scorename=entries{entry};
+%                     end
+%                     if exist('clindata','var') && isfield(clindata,scorename)
+%                     else
+%                         clindata.(scorename).baseline=[];
+%                         clindata.(scorename).postop=[];
+%                         clindata.(scorename).factors={};
+%                         clindata.(scorename).score={};
+%                         clindata.(scorename).somatotopies=struct;
+%                         clindata.(scorename).somatotopynames={};
+%                     end
+%                     
+%                     [ispresent,ix]=ismember(entries{entry},fieldnames(ea_scores));
+%                     if ispresent % does lead-dbs know what to do with a score named like this?
+%                         if isfield(ptscores.(entries{entry}),ea_scores.(entries{entry}).default_baseline)
+%                             baseline=ptscores.(entries{entry}).(ea_scores.(entries{entry}).default_baseline).score;
+%                             success=1;
+%                         else
+%                             success=0;
+%                             continue
+%                         end
+%                         if isfield(ptscores.(entries{entry}),M.guid)
+%                             postop=ptscores.(entries{entry}).(M.guid).score;
+%                             success=1;
+%                         else
+%                             success=0;
+%                             continue
+%                         end
+%                         if success % both baseline and postop available
+%                             clindata.(scorename).baseline(pt,:)=table2array(baseline);
+%                             clindata.(scorename).postop(pt,:)=table2array(postop);
+%                             clindata.(scorename).score{pt,1}=entries{entry};
+%                             clindata.(scorename).factornames=ea_scores.(entries{entry}).factornames;
+%                             clindata.(scorename).factors.(entries{entry})=ea_scores.(entries{entry}).factors;
+%                             clindata.(scorename).somatotopies.(entries{entry})=ea_scores.(entries{entry}).somatotopies;
+%                             clindata.(scorename).somatotopynames=ea_scores.(entries{entry}).somatotopynames;
+%                         end
+%                     end
+%                     
+%                 end
+%             end
+%         end
+%         if exist('clindata','var')
+%             fns=fieldnames(clindata);
+%             for fn=1:length(fns)
+%                 scorename=fns{fn};
+%                 clindata.(scorename).scores=unique(clindata.(scorename).score);
+%                 
+%                 modes={'absolute','percent','cleaned'};
+%                 
+%                 % now auto-query improvements for all factors:
+%                 for s=1:length(clindata.(scorename).somatotopynames)
+%                     for f=1:length(clindata.(scorename).factornames)
+%                         for mode=1:length(modes)
+%                             I=ea_getimprovs_fctr_smtp(clindata.(scorename),modes{mode},1:length(M.patient.list),clindata.(scorename).factornames{f},clindata.(scorename).somatotopynames{s});
+%                             Ilabel=[scorename,'_',clindata.(scorename).somatotopynames{s},'_',clindata.(scorename).factornames{f},'_',modes{mode}];
+%                             
+%                             [is,ix]=ismember(Ilabel,M.clinical.labels);
+%                             if ~is
+%                                 M.clinical.labels{end+1}=Ilabel;
+%                                 M.clinical.vars{end+1}=I;
+%                             else % update
+%                                 M.clinical.labels{ix}=Ilabel;
+%                                 M.clinical.vars{ix}=I;
+%                             end
+%                         end
+%                     end
+%                 end
+%             end
+%         end
         
         
         % sync stimulation parameters for group
@@ -498,14 +568,26 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
     end
 end
 
-disp('Refreshing clinical list...');
-% refresh clinical list
-set(handles.clinicallist,'String',M.clinical.labels);
-try set(handles.clinicallist,'Value',M.ui.clinicallist); end
 
-if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
-    set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
+if isfield(M,'clinical') 
+    % Refresh clinical variable list
+    disp('Refreshing clinical list...');
+    set(handles.clinicallist, 'String', M.clinical.labels);
+    if M.ui.clinicallist <= length(M.clinical.labels)
+        set(handles.clinicallist, 'Value', M.ui.clinicallist);
+    else % Reset to the 1st variable in case out of range
+        set(handles.clinicallist, 'Value', 1);
+    end
 end
+%%old code
+% disp('Refreshing clinical list...');
+% % refresh clinical list
+% set(handles.clinicallist,'String',M.clinical.labels);
+% try set(handles.clinicallist,'Value',M.ui.clinicallist); end
+% 
+% if get(handles.clinicallist,'Value')>length(get(handles.clinicallist,'String'))
+%     set(handles.clinicallist,'Value',length(get(handles.clinicallist,'String')));
+% end
 
 % store everything in Model
 disp('Storing everything in model...');

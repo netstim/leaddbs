@@ -22,7 +22,9 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
+
 % Last Modified by GUIDE v2.5 23-Feb-2023 11:08:23
+
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -766,10 +768,29 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% % --- Executes on button press in removeallvarbutton.
+% function removeallvarbutton_Callback(hObject, eventdata, handles)
+% %Temp name but actually this clears ALL scores
+% answer = questdlg('This action will delete all variables, are you sure you would like to continue?', ...
+% 	'Yes','No!');
+% switch answer
+%     case 'Yes'
+%         M = getappdata(gcf, 'M');
+%         %deletes scores from patient directory
+%         ea_write_scores(M,'','','','all');
+%         if isfield(M,'clinical')
+%            M.clinical.labels = [];
+%            M.clinical.vars = [];
+%         end
+%         setappdata(gcf,'M',M);
+%         ea_refresh_lg(handles);
+%     case 'No!'
+%         close(questdlg);
+% end
 
-% --- Executes on button press in addvarbutton.
+% --- Executes on button press in clinical_score_generator.
 function addvarbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to addvarbutton (see GCBO)
+% hObject    handle to clinical_score_generator (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
@@ -789,19 +810,24 @@ ea_refresh_lg(handles);
 function [mat,matname]=ea_get_clinical(M)
 try
     mat=M.clinical.vars{M.ui.clinicallist};
+    new_var = 0;
 catch % new variable
     mat=[];
+    new_var = 1;
 end
 try
     matname=M.clinical.labels{M.ui.clinicallist};
+    new_var = 0;
 catch
     matname='New variable';
+    new_var = 1;
 end
 [numat,nuname]=ea_edit_regressor(M);
 
 if ~isempty(numat) % user did not press cancel
     mat=numat;
     matname=nuname;
+    ea_write_scores(M,mat,matname,new_var,'');
 end
 
 
@@ -813,8 +839,23 @@ function removevarbutton_Callback(hObject, eventdata, handles)
 M=getappdata(gcf,'M');
 
 % delete data
-M.clinical.vars(get(handles.clinicallist,'Value'))=[];
-M.clinical.labels(get(handles.clinicallist,'Value'))=[];
+if isfield(M, 'clinical')
+    val_to_rm = M.clinical.labels(get(handles.clinicallist,'Value'));
+    %support for creation of variables w/o using app
+    try
+        ea_write_scores(M,'','','',val_to_rm) % First do it in the patient folder because it uses M.
+    catch
+        disp("This score does not seem to be present in your score directory, deleting from the lead group file instead.")
+    end
+    M.clinical.vars(get(handles.clinicallist,'Value'))=[];
+    M.clinical.labels(get(handles.clinicallist,'Value'))=[];
+        
+    
+end
+
+% delete data: old code
+%%%%M.clinical.vars(get(handles.clinicallist,'Value'))=[];
+%%%%M.clinical.labels(get(handles.clinicallist,'Value'))=[];
 
 % store model and refresh UI
 setappdata(gcf,'M',M);
@@ -934,36 +975,113 @@ function moveptupbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to moveptupbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
 M=getappdata(gcf,'M');
 whichmoved=get(handles.patientlist,'Value');
-
 if whichmoved(1)==1 % first entry anyways
     return
 end
+success = 0;
+if length(whichmoved) > 1 %for group selections
+    ix=1:length(M.patient.list);
+    for movIndx=1:length(whichmoved) - 1 %start from zero so the loop doesn't repeat twice for odd entries
+        if (whichmoved(movIndx+1) - whichmoved(movIndx)) == 1 %for continous blocks only
+            success = 1;
+        else
+            success = 0;
+        end
+    end
+    %store the variable before the group of variables: this will be
+    %overwritten in the loop
+    pt2move = M.patient.list(whichmoved(1) - 1);
+    grp2move = M.patient.group(whichmoved(1) - 1);
+    stim2move = M.S(whichmoved(1)-1);
+    indx2move = ix(whichmoved(length(whichmoved))); 
+    if success == 1
+        for pt_indx = 1:length(whichmoved)
+            M.patient.list(whichmoved(pt_indx)-1)=M.patient.list(whichmoved(pt_indx));
+            M.patient.group(whichmoved(pt_indx)-1) = M.patient.group(whichmoved(pt_indx));
+            %M.ui.listselect=whichmoved(pt_indx)-1;
+            %do not need to do this, because the M clinical vars keep
+            %getting refreshed & keeps getting re-loaded.            
+            try
+                M.S(whichmoved(pt_indx)-1) = M.S(whichmoved(pt_indx));
+            end            
+        end
+        %add the overwritten var back
+        M.patient.list(indx2move) = pt2move;
+        M.patient.group(indx2move) = grp2move;
+        M.S(indx2move) = stim2move;
+        setappdata(gcf,'M',M);
+        set(handles.patientlist,'String',M.patient.list)
+        set(handles.patientlist,'Value',whichmoved);
+        ea_refresh_lg(handles);
+    %after moving, add the stored score in later
+    else %if it is not continous, don't do anything.
+        disp(['Your patient list is not continous, so there will be no change in the order of patient! '...
+            'select a continous list of patients to proceed'])
+    end
+else
+    ix=1:length(M.patient.list);
+    ix(whichmoved)=ix(whichmoved)-1;
+    ix(whichmoved-1)=ix(whichmoved-1)+1;
+    
+    M.patient.list=M.patient.list(ix);
+    M.patient.group=M.patient.group(ix);
+    M.ui.listselect=whichmoved-1;
+    if isfield(M,'clinical') && ~isempty(M.clinical)
+        for c=1:length(M.clinical.vars)
+            M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+        end
+    end
+    try
+        M.S = M.S(ix);
+    end
+    try
+        M=rmfield(M,'elstruct');
+    end
+    try
+        M=rmfield(M,'stats');
+    end
+    setappdata(gcf,'M',M);
+    
+    set(handles.patientlist,'Value',whichmoved-1);
+    ea_refresh_lg(handles);
+end
+%%%%old code
 
-ix=1:length(M.patient.list);
-ix(whichmoved)=ix(whichmoved)-1;
-ix(whichmoved-1)=ix(whichmoved-1)+1;
 
-M.patient.list=M.patient.list(ix);
-M.patient.group=M.patient.group(ix);
-M.ui.listselect=whichmoved-1;
-for c=1:length(M.clinical.vars)
-    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
-end
-try
-    M.S = M.S(ix);
-end
-try
-    M=rmfield(M,'elstruct');
-end
-try
-    M=rmfield(M,'stats');
-end
-setappdata(gcf,'M',M);
-
-set(handles.patientlist,'Value',whichmoved-1);
-ea_refresh_lg(handles);
+% M=getappdata(gcf,'M');
+% whichmoved=get(handles.patientlist,'Value');
+% 
+% if whichmoved(1)==1 % first entry anyways
+%     return
+% end
+% 
+% ix=1:length(M.patient.list);
+% ix(whichmoved)=ix(whichmoved)-1;
+% ix(whichmoved-1)=ix(whichmoved-1)+1;
+% 
+% M.patient.list=M.patient.list(ix);
+% M.patient.group=M.patient.group(ix);
+% M.ui.listselect=whichmoved-1;
+% for c=1:length(M.clinical.vars)
+%     M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+% end
+% try
+%     M.S = M.S(ix);
+% end
+% try
+%     M=rmfield(M,'elstruct');
+% end
+% try
+%     M=rmfield(M,'stats');
+% end
+% setappdata(gcf,'M',M);
+% 
+% set(handles.patientlist,'Value',whichmoved-1);
+% ea_refresh_lg(handles);
 
 
 % --- Executes on button press in moveptdownbutton.
@@ -972,36 +1090,118 @@ function moveptdownbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% --- Executes on button press in moveptdown.
+function moveptdown_Callback(hObject, eventdata, handles)
+% hObject    handle to moveptdown (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 M=getappdata(gcf,'M');
 whichmoved=get(handles.patientlist,'Value');
 
 if whichmoved(end)==length(M.patient.list) % last entry anyways
     return
 end
+success = 0;
+if length(whichmoved) > 1 %for group selections
+    ix=1:length(M.patient.list);
+    for movIndx=1:length(whichmoved) - 1 %start from zero so the loop doesn't repeat twice for odd entries
+        if (whichmoved(movIndx+1) - whichmoved(movIndx)) == 1 %for continous blocks only
+            success = 1;
+        else
+            success = 0;
+        end
+    end
+    %store the variable immediately after the group of variables: this will be
+    %overwritten in the loop
+    pt2move = M.patient.list(whichmoved(end) + 1);
+    grp2move = M.patient.group(whichmoved(end) + 1);
+    stim2move = M.S(whichmoved(end)+1);
+    indx2move = ix(whichmoved(1)); %move it to BEFORE the group of variables
+    if success == 1
+        pt_indx = length(whichmoved);
+        for ascending_indx = 1:length(whichmoved)
+            %here, pt_indx has to go down from the last. i.e., when pt_indx
+            %is one, the indx should be = length(whichmoved)
+            M.patient.list(whichmoved(pt_indx)+1)  = M.patient.list(whichmoved(pt_indx));
+            M.patient.group(whichmoved(pt_indx)+1) = M.patient.group(whichmoved(pt_indx));
+            %M.ui.listselect=whichmoved(pt_indx)-1;
+            %do not need to do this, because the M clinical vars keep
+            %getting refreshed & keeps getting re-loaded.            
+            try
+                M.S(whichmoved(pt_indx)+1) = M.S(whichmoved(pt_indx));
+            end  
+            pt_indx = pt_indx - 1;
+        end
+        %add the overwritten var back
+        M.patient.list(indx2move) = pt2move;
+        M.patient.group(indx2move) = grp2move;
+        M.S(indx2move) = stim2move;
+        setappdata(gcf,'M',M);
+        set(handles.patientlist,'String',M.patient.list);
+        set(handles.patientlist,'Value',whichmoved);
+        ea_refresh_lg(handles);
+    %after moving, add the stored score in later
+    else %if it is not continous, don't do anything.
+        disp(['Your patient list is not continous, so there will be no change in the order of patient! '...
+            'select a continous list of patients to proceed']) 
+    end
+else
+    ix=1:length(M.patient.list);
+    ix(whichmoved)=ix(whichmoved)+1;
+    ix(whichmoved+1)=ix(whichmoved+1)-1;
+    
+    M.patient.list=M.patient.list(ix);
+    M.patient.group=M.patient.group(ix);
+    M.ui.listselect=whichmoved+1;
+    for c=1:length(M.clinical.vars)
+        M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+    end
+    try
+        M.S = M.S(ix);
+    end
+    try
+        M=rmfield(M,'elstruct');
+    end
+    try
+        M=rmfield(M,'stats');
+    end
+    setappdata(gcf,'M',M);
+    
+    set(handles.patientlist,'Value',whichmoved+1);
+    ea_refresh_lg(handles);
+end
 
-ix=1:length(M.patient.list);
-ix(whichmoved)=ix(whichmoved)+1;
-ix(whichmoved+1)=ix(whichmoved+1)-1;
-
-M.patient.list=M.patient.list(ix);
-M.patient.group=M.patient.group(ix);
-M.ui.listselect=whichmoved+1;
-for c=1:length(M.clinical.vars)
-    M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
-end
-try
-    M.S = M.S(ix);
-end
-try
-    M=rmfield(M,'elstruct');
-end
-try
-    M=rmfield(M,'stats');
-end
-setappdata(gcf,'M',M);
-
-set(handles.patientlist,'Value',whichmoved+1);
-ea_refresh_lg(handles);
+%%%old code
+% M=getappdata(gcf,'M');
+% whichmoved=get(handles.patientlist,'Value');
+% 
+% if whichmoved(end)==length(M.patient.list) % last entry anyways
+%     return
+% end
+% 
+% ix=1:length(M.patient.list);
+% ix(whichmoved)=ix(whichmoved)+1;
+% ix(whichmoved+1)=ix(whichmoved+1)-1;
+% 
+% M.patient.list=M.patient.list(ix);
+% M.patient.group=M.patient.group(ix);
+% M.ui.listselect=whichmoved+1;
+% for c=1:length(M.clinical.vars)
+%     M.clinical.vars{c} = M.clinical.vars{c}(ix,:);
+% end
+% try
+%     M.S = M.S(ix);
+% end
+% try
+%     M=rmfield(M,'elstruct');
+% end
+% try
+%     M=rmfield(M,'stats');
+% end
+% setappdata(gcf,'M',M);
+% 
+% set(handles.patientlist,'Value',whichmoved+1);
+% ea_refresh_lg(handles);
 
 
 % --- Executes on button press in calculatebutton.
@@ -1772,8 +1972,6 @@ if file % make sure user didnt press cancel
     fprintf('\nDBS Stats exported to:\n%s\n\n', [path, file]);
 end
 
-
-
 % --- Executes on button press in minisetbutton.
 function minisetbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to minisetbutton (see GCBO)
@@ -1781,3 +1979,62 @@ function minisetbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 M = getappdata(gcf,'M');
 ea_generate_min_dataset(M);
+
+% --- Executes on button press in clinical_score_generator.
+function clinical_score_generator_Callback(hObject, eventdata, handles)
+% hObject    handle to clinical_score_generator (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M = getappdata(gcf,'M');
+
+ea_score_gen('',M,handles);
+
+
+% --- Executes on button press in syncFunction.
+function syncFunction_Callback(hObject, eventdata, handles)
+% hObject    handle to syncFunction (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+ea_busyaction('on',handles.leadfigure,'group');
+M=getappdata(gcf,'M');
+%%First we sync clinical scores
+if isfield(M,'clinical')
+    if ~isempty(M.clinical)
+        disp("Syncing scores from Lead Group file to Patient Directory");
+        for pt = 1:length(M.patient.list)
+            [~,subj_id,~] = fileparts(M.patient.list{pt});
+            score_file = [M.patient.list{pt},'/clinical/',subj_id,'_desc-clinicalScores.mat'];
+            if exist(score_file,'file')
+                load(score_file)
+            else
+                mkdir([M.patient.list{pt},'/clinical'])
+            end
+            for i=1:length(M.clinical.labels)
+                split_cell = strsplit(M.clinical.labels{i},'-');
+                str_to_cmp = split_cell{1};
+                if strcmp(str_to_cmp,'Motor_Mixed') || strcmp(str_to_cmp,'Custom')
+                    score_type = split_cell{1};
+                    postop_flag = split_cell{2};
+                    scores.(score_type).(postop_flag).(split_cell{3}).(split_cell{4}) = M.clinical.vars{1,i}(pt);
+                else
+                    score_type = 'Default';
+                    postop_flag = 'Postop';
+                    if contains(str_to_cmp,' ')
+                        str_to_cmp = strrep(str_to_cmp);
+                    end
+                    scores.(score_type).(postop_flag).(str_to_cmp).value = M.clinical.vars{1,i}(pt);   
+                end
+            end
+            save(score_file,'scores')
+            disp("Process Done ***")
+        end
+        setappdata(gcf,'M',M);
+    end
+else
+    disp("Please first generate the clinical scores using either the clinical score generator OR by manually editing the Lead group file.")
+end
+%%then we sync stim params values
+S = getappdata(handles.stimfig,'S');
+options.gen_newstim = 0;
+ea_savestimulation(S,options)
