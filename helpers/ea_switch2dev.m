@@ -95,5 +95,6 @@ system(['git -C ', LeadRoot, ' stash']);
 system(['git -C ', LeadRoot, ' checkout develop']);
 
 lead path;
+savepath;
 rehash toolboxcache;
 disp('LeadDBS search path updated.');
