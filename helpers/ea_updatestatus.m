@@ -19,6 +19,8 @@ elseif strcmp(subj.postopModality, 'MRI')
     if isfile(subj.postopAnat.(fields{1}).coreg)
         statusone = 'Coregistered post-op MRI found. Please run normalization.';
     end
+elseif strcmp(subj.postopModality, 'None')
+    statusone = 'No post-op images found.';
 end
 
 fields = fieldnames(subj.preopAnat);
@@ -31,7 +33,9 @@ end
 set(handles.statusone, 'String', statusone);
 set(handles.statusone, 'TooltipString', statusone);
 
-if isfile(subj.recon.recon)
+if strcmp(subj.postopModality, 'None')
+    statustwo = '';
+elseif isfile(subj.recon.recon)
     statustwo = 'Reconstruction found.';
 else
     statustwo = 'Reconstruction not found. Please run reconstruction.';

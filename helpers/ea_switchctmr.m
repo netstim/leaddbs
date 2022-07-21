@@ -18,7 +18,7 @@ if length(subjId) > 1 % Mutiple patient mode
     postopModality = 2;
 else % Only one patient loaded
     % Make sure MR/CT popupmenu is set correctly
-    set(handles.MRCT, 'TooltipString', '<html>Post-operative image modality (MR/CT) will be automatically detected.<br>In case both MR and CT images are present, CT will be chosen by default.<br>You can change this in your preference file by setting ''prefs.preferMRCT'' (1 for MR and 2 for CT).');
+    set(handles.MRCT, 'TooltipString', '<html>Post-operative image modality (MR/CT/None) will be automatically detected.<br>In case both MR and CT images are present, CT will be chosen by default.<br>You can change this in your preference file by setting ''prefs.preferMRCT'' (1 for MR and 2 for CT).');
 
     % Check MR/CT preference: first check uiprefs, then LeadDBS settings
     if ~exist('preferMRCT', 'var') || isempty(preferMRCT)
@@ -46,6 +46,8 @@ else % Only one patient loaded
             postopModality = 1;
         case 'CT'
             postopModality = 2;
+        case 'None'
+            postopModality = 3;
     end
 
     % Set status text
@@ -60,27 +62,40 @@ if  ~strcmp(handles.prod, 'anatomy')
     switch postopModality
         case 1 % MR
             set(handles.coregctmethod,'Enable','off');
+            set(handles.doreconstruction_checkbox,'Enable','on');
+            set(handles.manualheight_checkbox,'Enable','on');
             set(handles.reconmethod,'String',{'TRAC/CORE (Horn 2015)','Manual', 'Slicer (Manual)'});
             % default TRAC/CORE:
-            set(handles.reconmethod,'enable','on');
+            set(handles.reconmethod,'Enable','on');
             if ismember(ea_getspace,{'Waxholm_Space_Atlas_SD_Rat_Brain','MNI_Macaque'})
                 set(handles.reconmethod,'Value',2);
             else
                 set(handles.reconmethod,'Value',1); % set to TRAC/CORE algorithm.
             end
-            set(handles.targetpopup,'enable','on');
-            set(handles.maskwindow_txt,'enable','on');
+            set(handles.targetpopup,'Enable','on');
+            set(handles.maskwindow_txt,'Enable','on');
         case 2 % CT
             set(handles.coregctmethod,'Enable','on');
+            set(handles.doreconstruction_checkbox,'Enable','on');
+            set(handles.manualheight_checkbox,'Enable','on');
             set(handles.reconmethod,'String',{'Refined TRAC/CORE','TRAC/CORE (Horn 2015)','PaCER (Husch 2017)','Manual', 'Slicer (Manual)'});
             % default PaCER:
-            set(handles.reconmethod,'enable','on');
+            set(handles.reconmethod,'Enable','on');
             if ismember(ea_getspace,{'Waxholm_Space_Atlas_SD_Rat_Brain','MNI_Macaque'})
                 set(handles.reconmethod,'Value',4);
             else
                 set(handles.reconmethod,'Value',3); % set to PaCER algorithm.
             end
-            set(handles.targetpopup,'enable','off');
-            set(handles.maskwindow_txt,'enable','off');
+            set(handles.targetpopup,'Enable','off');
+            set(handles.maskwindow_txt,'Enable','off');
+        case 3 % None
+            set(handles.coregctmethod,'Enable','off');
+            set(handles.scrf,'Enable','off');
+            set(handles.scrf,'Value',0);
+            set(handles.doreconstruction_checkbox,'Enable','off');
+            set(handles.manualheight_checkbox,'Enable','off');
+            set(handles.reconmethod,'Enable','off');
+            set(handles.targetpopup,'Enable','off');
+            set(handles.maskwindow_txt,'Enable','off');
     end
 end
