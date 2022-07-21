@@ -20,18 +20,25 @@ if ismember('coreg', type)
     % Remove CT from subj.coreg.anat.postop struct, will use tone-mapped image
     if options.modality == 2
         postop = rmfield(options.subj.coreg.anat.postop, 'CT');
-    else
+    elseif options.modality == 1
         postop = options.subj.coreg.anat.postop;
+    else
+        postop = struct;
     end
 
     % Get paths of coregistered image
     coregImage = [struct2cell(preop); struct2cell(postop)];
 
     % Get paths of output figures
-    if isempty(struct2cell(preop)) % Only one pre-op modality available
-        checkregFigure = struct2cell(options.subj.coreg.checkreg.postop);
-    else
+    if isempty(struct2cell(preop)) && isempty(struct2cell(postop))
+        ea_cprintf('CmdWinWarnings', 'No coregistration performed, checkcoreg shipped!\n');
+        return;
+    elseif ~isempty(struct2cell(preop)) && ~isempty(struct2cell(postop))
         checkregFigure = [struct2cell(options.subj.coreg.checkreg.preop); struct2cell(options.subj.coreg.checkreg.postop)];
+    elseif isempty(struct2cell(preop)) % Only one pre-op modality available
+        checkregFigure = struct2cell(options.subj.coreg.checkreg.postop);
+    elseif isempty(struct2cell(postop)) % Only one pre-op modality available
+        checkregFigure = struct2cell(options.subj.coreg.checkreg.preop);
     end
 
     % Generate checkreg figures
@@ -70,15 +77,21 @@ if ismember('norm', type)
     % Remove CT from subj.norm.anat.postop struct, will use tone-mapped image
     if options.modality == 2
         postop = rmfield(options.subj.norm.anat.postop, 'CT');
-    else
+    elseif options.modality == 1
         postop = options.subj.norm.anat.postop;
+    else
+        postop = struct;
     end
 
     % Get paths of coregistered image
     normImage = [struct2cell(options.subj.norm.anat.preop); struct2cell(postop)];
 
     % Get paths of output figures
-    checkregFigure = [struct2cell(options.subj.norm.checkreg.preop); struct2cell(options.subj.norm.checkreg.postop)];
+    if ~isempty(struct2cell(postop))
+        checkregFigure = [struct2cell(options.subj.norm.checkreg.preop); struct2cell(options.subj.norm.checkreg.postop)];
+    else
+        checkregFigure = struct2cell(options.subj.norm.checkreg.preop);
+    end
 
     % Generate checkreg figures
     for i=1:length(normImage)

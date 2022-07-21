@@ -292,29 +292,30 @@ ea_addrecent(handles, uipatdir, 'patients');
 
 % check if reconstruction is present and assign side-toggles accordingly:
 if length(uipatdir) == 1 && isfield(handles, 'side1')
-
-    recon = bids.getRecon(subjId{1});
-    if isfile(recon.recon)
-        load(recon.recon);
-        elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
-
-        % Reset electrode button status
-        for el=1:elnum
-            set(handles.(['side',num2str(el)]), 'Value', 0);
-        end
-
-        % Set electrode button status
-        for el=1:length(reco.native.coords_mm)
-            if ~isempty(reco.native.markers(el).head)
-                set(handles.(['side',num2str(el)]), 'Value', 1);
+    if bids.checkModality(subjId{1}, bids.settings.preferMRCT) ~= 3
+        recon = bids.getRecon(subjId{1});
+        if isfile(recon.recon)
+            load(recon.recon);
+            elnum = sum(cellfun(@(f) ~isempty(f), regexp(fieldnames(handles),'^side\d+$','match')));
+    
+            % Reset electrode button status
+            for el=1:elnum
+                set(handles.(['side',num2str(el)]), 'Value', 0);
             end
-        end
-
-        try
-            elmodel=ea_get_first_notempty_elmodel(reco.props);
-            [~,locb] = ismember({elmodel},handles.electrode_model_popup.String);
-            set(handles.electrode_model_popup,'Value',locb);
-            clear locb
+    
+            % Set electrode button status
+            for el=1:length(reco.native.coords_mm)
+                if ~isempty(reco.native.markers(el).head)
+                    set(handles.(['side',num2str(el)]), 'Value', 1);
+                end
+            end
+    
+            try
+                elmodel=ea_get_first_notempty_elmodel(reco.props);
+                [~,locb] = ismember({elmodel},handles.electrode_model_popup.String);
+                set(handles.electrode_model_popup,'Value',locb);
+                clear locb
+            end
         end
     end
 end

@@ -39,7 +39,11 @@ end
 % only 3D-rendering viewer can be opened if no patient is selected.
 if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patientname)
     % Copy post-op images to preprocessing folder, no preproc is done for now
-    fields = fieldnames(options.subj.postopAnat);
+    if isfield(options.subj, 'postopAnat')
+        fields = fieldnames(options.subj.postopAnat);
+    else
+        fields = {};
+    end
 
     for i=1:length(fields)
         if ~isfile(options.subj.postopAnat.(fields{i}).preproc)
