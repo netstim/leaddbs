@@ -5,15 +5,15 @@ if ~exist('type', 'var')
     type = 'patients';
 end
 
-earoot = ea_getearoot;
+recentLog = [ea_getearoot, 'common', filesep, 'ea_recent', type, '.mat'];
 
-try
-    load([earoot, 'common', filesep, 'ea_recent', type, '.mat'], 'recentfolders');
-catch
+if isfile(recentLog) && ismember('recentfolders', who('-file', recentLog))
+    load(recentLog, 'recentfolders');
+else
     recentfolders = {['No recent ', type, ' found']};
 end
 
-save([earoot, 'common', filesep, 'ea_recent', type, '.mat'], 'recentfolders');
+save(recentLog, 'recentfolders');
 
 % Refresh popupmenu
 ea_refreshrecent(handles, type);
