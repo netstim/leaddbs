@@ -268,32 +268,33 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
         
         %uniform the data (by checking the missing sides and filling them)
         num_sides=length(options.sides);%minimum number of sides is 2 (R and L); (Hardcorded for now)
-        for pt=1:length(M.patient.list)
-            if length(M.elstruct(pt).coords_mm)>num_sides
-                num_sides=M.elstruct(pt).coords_mm;
+        if isfield(M.elstruct(pt),'coords_mm')
+            for pt=1:length(M.patient.list)
+                if length(M.elstruct(pt).coords_mm)>num_sides
+                    num_sides=M.elstruct(pt).coords_mm;
+                end
             end
-        end
-        for pt=1:length(M.patient.list)
-            for check_side=1:num_sides %options.sides
-                if ea_arenopoints4side(M.elstruct(pt).coords_mm, check_side)
-                    %force to have empty values if side is not present
-                    M.elstruct(pt).coords_mm{check_side}=[];
-                    if isfield(M.elstruct(pt),'coords_acpc') && iscell(M.elstruct(pt).coords_acpc)
-                        if ea_arenopoints4side(M.elstruct(pt).coords_acpc, check_side)
-                            M.elstruct(pt).coords_acpc{check_side}=[];
+            for pt=1:length(M.patient.list)
+                for check_side=1:num_sides %options.sides
+                    if ea_arenopoints4side(M.elstruct(pt).coords_mm, check_side)
+                        %force to have empty values if side is not present
+                        M.elstruct(pt).coords_mm{check_side}=[];
+                        if isfield(M.elstruct(pt),'coords_acpc') && iscell(M.elstruct(pt).coords_acpc)
+                            if ea_arenopoints4side(M.elstruct(pt).coords_acpc, check_side)
+                                M.elstruct(pt).coords_acpc{check_side}=[];
+                            end
                         end
+                        M.elstruct(pt).trajectory{check_side}=[];
+
+                        %this will create the missing structure
+                        M.elstruct(pt).markers(check_side).head=[];
+                        M.elstruct(pt).markers(check_side).tail=[];
+                        M.elstruct(pt).markers(check_side).x=[];
+                        M.elstruct(pt).markers(check_side).y=[];
                     end
-                    M.elstruct(pt).trajectory{check_side}=[];
-                    
-                    %this will create the missing structure
-                    M.elstruct(pt).markers(check_side).head=[];
-                    M.elstruct(pt).markers(check_side).tail=[];
-                    M.elstruct(pt).markers(check_side).x=[];
-                    M.elstruct(pt).markers(check_side).y=[];
                 end
             end
         end
-        
         % load stats for group
         disp('Loading stats for group...');
         for pt=1:length(M.patient.list)
@@ -379,6 +380,9 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
             if exist(fullfile(M.patient.list{pt},'clinical',[subj_id,'_desc-clinicalScores.mat']),'file')
                 load(fullfile(M.patient.list{pt},'clinical',[subj_id,'_desc-clinicalScores.mat']), 'scores');
                 scoreTypes = fieldnames(scores);
+                %remov guid from importing into matlab
+                guidIdx = find(strcmp(scoreTypes,'guid'));
+                scoreTypes(guidIdx) = [];
                 if ~isfield(M,'clinical')
                     varLabelIndex = 1;
                 end
