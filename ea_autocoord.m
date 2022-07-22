@@ -79,9 +79,12 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
             % Run reorientation, cropping and bias field correction
             ea_anatpreprocess(options.subj.preopAnat.(fields{i}).preproc);
 
-            % Preprocessing only for pre-op anchor image
+            % Preprocessing steps only for pre-op anchor image
             if i==1
-                ea_resliceanat(options.subj.preopAnat.(fields{i}).preproc);
+                % Skip reslicing anchor image to 0.7^3 resolution when only pre-op images exist
+                if isfield(options.subj, 'postopAnat')
+                    ea_resliceanat(options.subj.preopAnat.(fields{i}).preproc);
+                end
                 % ea_acpcdetect(options.subj.preopAnat.(fields{i}).preproc);
             end
 
