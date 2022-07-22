@@ -66,6 +66,7 @@ disp('Switch LeadDBS branch to classic ...')
 system(['git -C ', LeadRoot, ' stash']);
 system(['git -C ', LeadRoot, ' checkout classic']);
 
-disp('Update LeadDBS search path ...');
 lead path;
+savepath;
 rehash toolboxcache;
+disp('LeadDBS search path updated.');
