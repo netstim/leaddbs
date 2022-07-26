@@ -26,6 +26,7 @@ menuItems = {'Redownload data files'
              'Structural Group Connectome 32 MGH-USC HCP subjects GQI (Horn 2017)'
              'Structural Group Connectome 85 PPMI PD-patients GQI (Ewert 2017)'
              'Functional Group Connectome 74 PPMI PD-patients 15 controls (Horn 2017)'
+             'Functional Group Connectome 75 Toronto PD-patients (Loh & Boutet 2020)'
              'Allan Institute Genetics Database'};
 
 downloadIDs = {'leaddata'
@@ -41,6 +42,7 @@ downloadIDs = {'leaddata'
                'group2017'
                'group2017_ppmi'
                'fgroup2017_ppmi'
+               'TorPD'
                'allengenetics'};
 
 assetNames = menuItems(5:end);
@@ -271,6 +273,25 @@ switch cmd
         if ~exist(checkf,'file') || force
             success=ea_downloadasset(assetName,...
                 [ea_getconnectomebase('fmri',prefs),'fgroupconnectome_ppmi2017.zip'],...
+                cmd);
+        else
+            disp([assetName, ' is installed.'])
+        end
+    case 'TorPD'
+        checkf=[ea_getconnectomebase('fmri',prefs),'Tor PD (Loh & Boutet 2020)',filesep,'dataset_info.json'];
+        force=ea_alreadyinstalled(checkf,checkonly,robot);
+        if checkonly
+            success=~force;
+            return;
+        end
+        if force==-1
+            success=-1;
+            return;
+        end
+
+        if ~exist(checkf,'file') || force
+            success=ea_downloadasset(assetName,...
+                [ea_getconnectomebase('fmri',prefs),'TorPD_Loh_Boutet_2020.zip'],...
                 cmd);
         else
             disp([assetName, ' is installed.'])
