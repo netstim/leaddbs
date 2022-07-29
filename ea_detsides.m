@@ -1,6 +1,6 @@
 function options = ea_detsides(options)
 
-if isfile(options.subj.recon.recon)
+if isfield(options.subj, 'recon') && isfile(options.subj.recon.recon)
     load(options.subj.recon.recon, 'reco');
     sides = [];
     if isfield(reco,'native')

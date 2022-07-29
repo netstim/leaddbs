@@ -66,15 +66,21 @@ preopCoregImages = preopCoregImages(2:end);
 % Get coregistered post-op images
 if strcmp(options.subj.postopModality, 'CT')
     postopCoregImages = options.subj.coreg.anat.postop.tonemapCT;
-else
+elseif strcmp(options.subj.postopModality, 'MRI')
     postopCoregImages = struct2cell(options.subj.coreg.anat.postop);
+else
+    postopCoregImages = [];
 end
 
 % Get normalized pre-op anchor image
 preopNormImage = options.subj.norm.anat.preop.(options.subj.AnchorModality);
 
 % Get brain shift corrected image
-brainshiftImage = options.subj.brainshift.anat.scrf;
+if isfield(options.subj, 'brainshift')
+    brainshiftImage = options.subj.brainshift.anat.scrf;
+else
+    brainshiftImage = [];
+end
 
 % List pf images for checkreg
 checkregImages = [preopCoregImages; postopCoregImages; preopNormImage; brainshiftImage];
@@ -150,7 +156,7 @@ end
 currvol = checkregImages{activevolume};
 
 % Brain shift corrected image
-if strcmp(currvol, options.subj.brainshift.anat.scrf)
+if isfield(options.subj, 'brainshift') && strcmp(currvol, options.subj.brainshift.anat.scrf)
     ea_subcorticalrefine(options);
     close(handles.leadfigure);
     return
@@ -556,6 +562,7 @@ if activevolume == length(checkregImages)
     close(handles.leadfigure);
     return
 elseif activevolume==length(checkregImages)-1 ...
+        && isfield(options.subj, 'brainshift') ...
         && strcmp(checkregImages{end}, options.subj.brainshift.anat.scrf)
     close(handles.leadfigure);
     ea_subcorticalrefine(options);

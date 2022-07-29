@@ -22,7 +22,6 @@ else % assume coordinate list
     XYZ_vox = ea_mm2vox(from, ref);
     
     % Flip the coordinates
-    %XYZ = ea_map_coords(XYZ_vox, ref, fullfile(ea_space, 'fliplr', 'Composite.h5'), ref, 'ANTs');
-    XYZ = ea_map_coords([XYZ_vox,ones(size(from,1),1)]',ref, fullfile(ea_space, 'fliplr', 'Composite.h5'), ref, 'ANTs');
+    XYZ = ea_map_coords(XYZ_vox', ref, fullfile(ea_space, 'fliplr', 'Composite.nii.gz'), ref, 'ANTs');
     XYZ=XYZ';
 end
