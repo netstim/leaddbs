@@ -412,7 +412,12 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     end
 
     % export T
-    [~,~,~,tstat]=ttest(fX{s}');
+    try
+        [~,~,~,tstat]=ttest(fX{s}');
+    catch
+        warning(strcat(seedfn{s}, ' failed. Please run this channel again and adjust parameters. Moving on to next channel.'));
+        continue
+    end
     tmap=dataset.vol.space;
     tmap.img(:)=0;
     tmap.dt(1) = 16;
