@@ -97,7 +97,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihat_train_global(training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -128,7 +128,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihat_train_global(training,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -159,7 +159,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihat_train_global(training,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -230,7 +230,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','spearman');
-                                    Ihat_train_global(training,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','spearman');
+                                    Ihat_train_global(numTestIt,training,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','spearman');
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -258,7 +258,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)),'rows','pairwise','type','pearson');
-                                    Ihat_train_global(training,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','pearson');
+                                    Ihat_train_global(numTestIt,training,side,voter) = corr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)),'rows','pairwise','type','pearson');
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -286,7 +286,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(test)));
-                                    Ihat_train_global(training,side,voter) = ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)));
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_bendcorr(vals{voter,side},fibsval{1,side}(usedidx{voter,side},patientsel(training)));
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -314,7 +314,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihat_train_global(training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmean(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -342,7 +342,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihat_train_global(training,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -370,7 +370,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     Ihat(test,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihat_train_global(training,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -421,33 +421,20 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
 
     end
      %send out improvements of subscores
-
-     switch obj.multitractmode
-         case 'Split & Color By Subscore'
-             useI=obj.subscore.vars{voter};
-         case 'Split & Color By PCA'
-             useI=obj.subscore.pcavars{voter};
-         otherwise
-             useI=obj.responsevar;
+     for voter=1:size(vals,1)
+         switch obj.multitractmode
+             case 'Split & Color By Subscore'
+                 useI=obj.subscore.vars{voter};
+             case 'Split & Color By PCA'
+                 useI=obj.subscore.pcavars{voter};
+             otherwise
+                 useI=obj.responsevar;
+         end
+         for side=1:2
+             mdl=fitglm(Ihat_train_global(numTestIt,training,side,voter),useI(training),lower(obj.predictionmodel));
+             actualimprovs{voter,side}=predict(mdl,Ihat(test,side,voter));
+         end
      end
-     for side=1:2
-         mdl=fitglm(Ihat_train_global(numTestIt,training,side),useI(training),lower(obj.predictionmodel));
-         actualimprovs{voter,side}=predict(mdl,Ihat(test,side));
-     end
 
-        %     switch obj.multitractmode
-        %         case 'Split & Color By Subscore'
-        %             useI=obj.subscore.vars{voter};
-        %         case 'Split & Color By PCA'
-        %             useI=obj.subscore.pcavars{voter};
-        %         otherwise
-        %             useI=obj.responsevar;
-        %     end
-        %     for side=1:2
-        %         mdl=fitglm(Ihat_train_global(numTestIt,training,side),useI(training),lower(obj.predictionmodel));
-        %         actualimprovs{voter,side}=predict(mdl,Ihat(test,side));
-        %     end
-
-        % end
 
 end
