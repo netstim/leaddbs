@@ -53,7 +53,7 @@ legacy_modalities = {'t1','t2star','pd','ct','tra','cor','sag','fgatir','fa','dt
 %legacy_modalities = {'t1.nii','t2.nii','pd.nii','ct.nii','tra.nii','cor.nii','sag.nii','fgatir.nii','fa.nii','dti.nii','dti.bval','dti.bvec','t2star.nii'};
 bids_modalities = {'T1w','T2starw','PDw','CT','acq-ax_MRI','acq-cor_MRI','acq-sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2w','FLAIR'};
 rawdata_containers = containers.Map(legacy_modalities,bids_modalities);
-[rawdata,brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking,log,lead_mapper] = ea_create_bids_mapping();
+[~,brainshift,coregistration,normalization,preprocessing,reconstruction,prefs,stimulations,headmodel,miscellaneous,ftracking,log,lead_mapper] = ea_create_bids_mapping();
 %data structure for excel sheet later on
 derivatives_cell = {};
 
@@ -988,7 +988,7 @@ function generate_rawImagejson(patient_name,dest)
         postop_modalities{end+1} = postop_mod;
     end
     if isempty(postop_files)
-        coreg_postop_files = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_space-anchorNative_*_ses-postop_acq-*.nii'));
+        coreg_postop_files = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_ses-postop_space-anchorNative_desc-preproc_*.nii'));
         coreg_postop_files = {coreg_postop_files.name};
         for coreg_files = 1:length(coreg_postop_files)
             coreg_file = regexprep(coreg_postop_files{coreg_files}, '(.nii)|(.gz)', '');
@@ -1005,7 +1005,7 @@ function generate_rawImagejson(patient_name,dest)
                 movefile(fullfile(raw_postop_dir,[coreg_file,'.nii']),fullfile(raw_postop_dir,coreg_raw_postop));
                 gzip(fullfile(raw_postop_dir,coreg_raw_postop));
                 ea_delete(fullfile(raw_postop_dir,coreg_raw_postop));
-                psotop_files{end+1} = coreg_raw_postop;
+                postop_files{end+1} = coreg_raw_postop;
                 %postop_files{end+1} = coreg_file;
             end
         end
