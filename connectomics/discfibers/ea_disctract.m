@@ -149,8 +149,10 @@ classdef ea_disctract < handle
                 @activatebychange);
             %added a check here otherwise errors out for files w/o
             %vatmodels
-            if ~isempty(obj.M.vatmodel) && contains(obj.M.vatmodel, 'OSS-DBS (Butenko 2020)')
-                obj.statmetric = 3;
+            if ~isfield(obj.M,'pseudoM')
+                if ~isempty(obj.M.vatmodel) && contains(obj.M.vatmodel, 'OSS-DBS (Butenko 2020)')
+                    obj.statmetric = 3;
+                end
             end
             
             % just for now, ask Nanditha to add dMRI_MultiTract files as
