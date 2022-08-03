@@ -138,11 +138,6 @@ if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty 
 
         elSide = cell(1, length(elstruct));
         for pt=1:length(elstruct)
-            if strcmp(options.leadprod,'group')
-                recon = ea_regexpdir([options.patient_list{pt}, filesep, 'reconstruction'], 'desc-reconstruction\.mat', 0, 'file');
-                options.subj.recon.recon = recon{1};
-            end
-
             if exist('el_render','var')
                 [el_render,el_label,elSide{pt}]=ea_renderelstruct(options,resultfig,elstruct,pt,el_render,el_label);
             else

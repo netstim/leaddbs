@@ -15,12 +15,11 @@ end
 
 popts = options;
 if strcmp(options.leadprod,'group')
-    directory = options.patient_list{pt};
-    [popts.root, popts.patientname] = fileparts(directory);
-    popts.root = [popts.root,filesep];
+    [popts.root, popts.patientname] = fileparts(options.patient_list{pt});
+    popts.root = [popts.root, filesep];
+    recon = ea_regexpdir([options.patient_list{pt}, filesep, 'reconstruction'], 'desc-reconstruction\.mat$', 0, 'file');
+    popts.subj.recon.recon = recon{1};
     popts = ea_detsides(popts);
-    recon = ea_regexpdir([directory, filesep, 'reconstruction'], 'desc-reconstruction\.mat', 0, 'file');
-    options.subj.recon.recon = recon{1};
 end
 
 elSide = popts.sides;
