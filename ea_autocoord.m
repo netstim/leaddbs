@@ -184,11 +184,11 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     if options.checkreg
         % Export checkreg figures
-        if isempty(ea_regexpdir([options.subj.coregDir, filesep, 'checkreg'], '.*\.png'))
+        if isempty(ea_regexpdir([options.subj.coregDir, filesep, 'checkreg'], '^(?!\.).*\.png$'))
             ea_gencheckregfigs(options, 'coreg');
         end
 
-        if isempty(ea_regexpdir([options.subj.normDir, filesep, 'checkreg'], '.*\.png'))
+        if isempty(ea_regexpdir([options.subj.normDir, filesep, 'checkreg'], '^(?!\.).*\.png$'))
             ea_gencheckregfigs(options, 'norm');
         end
 
