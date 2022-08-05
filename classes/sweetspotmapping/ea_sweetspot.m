@@ -578,6 +578,15 @@ classdef ea_sweetspot < handle
                 end
             end
 
+            if ~exist('export','var') % all empty
+                for side=1:size(vals,2)
+                    res=obj.results.space{side};
+                    res.dt(1) = 16;
+                    res.img(:)=nan;
+                    export{side}=res;
+                end
+            end
+
             setappdata(obj.resultfig,['dt_',obj.ID],obj.drawobject); % store handle of surf to figure.
 
             % store colorbar in object
