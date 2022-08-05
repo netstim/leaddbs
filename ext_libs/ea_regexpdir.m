@@ -11,8 +11,12 @@ if ~exist('type','var')
 end
 
 % Fix to use '^STR' pattern recursively
-if recursive && strcmp(expstr(1),'^')
-    expstr = ['(^|.+[/\\])', expstr(2:end)];
+if recursive && startsWith(expstr, '^')
+    if endsWith(expstr, '$')
+        expstr = ['(^|.+[/\\])', expstr(2:end)];
+    else
+        expstr = ['(^|.+[/\\])', expstr(2:end), '[^/\\]*$'];
+    end
 end
 
 clear regexpdir
