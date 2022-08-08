@@ -671,16 +671,13 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
                 hf.close()
                 for i in range(len(d["n_Ranvier"])):
                     logging.critical("in {} population".format(lst_population_names[i]))
-                    last_point = convolute_signal_with_field_and_compute_ifft(d, DBS_pulse.Xs_signal_norm, N_array.N_models[i],
+                    last_point = convolute_signal_with_field_and_compute_ifft(d, DBS_pulse, N_array.N_models[i],
                                                                               N_array.pattern['num_segments'][i],
-                                                                              DBS_pulse.FR_vector_signal, DBS_pulse.t_vector, DBS_pulse.A, os.environ[
-                                                                                  'PATIENTDIR'] + '/Field_solutions/sorted_solution.csv',
+                                                                              name_sorted_solution,
                                                                               dif_axons=True, last_point=last_point)
             else:
-                convolute_signal_with_field_and_compute_ifft(d, DBS_pulse.Xs_signal_norm, N_array.N_models,
-                                                             N_array.pattern['num_segments'], DBS_pulse.FR_vector_signal,
-                                                             DBS_pulse.t_vector, DBS_pulse.A, os.environ[
-                                                                 'PATIENTDIR'] + '/Field_solutions/sorted_solution.csv')
+                convolute_signal_with_field_and_compute_ifft(d, DBS_pulse, N_array.N_models,
+                                                             N_array.pattern['num_segments'], name_sorted_solution)
         else:
             logging.critical("Truncation of the obtained full solution is only for high. ampl and cutoff methods")
 
