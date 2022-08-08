@@ -118,7 +118,7 @@ class Truncated_spectrum(object):
         # load the complete correspondence array and assign it to  self.Fr_corresp_array
         Fr_corresp_arr_full = np.genfromtxt(os.environ['PATIENTDIR']+'/Stim_Signal/Fr_corresp_array'+str(self.trunc_param * 1.0)+'.csv', delimiter=' ')
         self.Fr_corresp_array = np.round(Fr_corresp_arr_full, 6)        
-                
+
         self.FR_vector_signal_new = self.FR_vector_signal_new[self.FR_vector_signal_new != -1.0] # remove not filled entries
         logging.critical("Number of frequencies after truncation with the octave method: {}".format(self.FR_vector_signal_new.shape[0]))
 

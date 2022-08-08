@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 13-Nov-2020 13:22:10
+% Last Modified by GUIDE v2.5 08-Aug-2022 23:55:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -216,6 +216,9 @@ if strcmp(target, 'groupDir')
         % save M
         ea_refresh_lg(handles);
         M = getappdata(handles.leadfigure,'M');
+
+
+
         disp('Saving data to disk...');
         try
             save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
@@ -237,6 +240,19 @@ if strcmp(target, 'groupDir')
         if ~isempty(regexp(folders{1}, ['\', filesep, 'dataset-.+_analysis-.+\.mat$'], 'match', 'once'))
             groupdir = [fileparts(folders{1}), filesep];
             load(folders{1}, 'M');
+
+            %out = regexp(groupdir,'/','split');
+            %rem_end = length(out{end-1})+ length(out{end-2}) + 2; 
+            derivative_folder = split(groupdir,'leadgroup');
+            if isfile([derivative_folder{1},'leaddbs/Miniset_flag.json'])            
+                for i = 1:size(M.patient.list,1)
+                    [~,patient_tag,~] = fileparts(M.patient.list{i});
+                    M.patient.list{i} = [derivative_folder{1},'leaddbs/',patient_tag];
+                end
+                M.root = [groupdir, '/'];
+                save(folders{1}, 'M')
+            end
+
         else
             ea_error('Not a Lead Group Analysis file!', 'Error', dbstack);
         end
@@ -247,6 +263,19 @@ if strcmp(target, 'groupDir')
         end
         groupdir = [fileparts(analysisFile), filesep];
         load(analysisFile, 'M');
+
+        %out = regexp(groupdir,'/','split');
+        %rem_end = length(out{end-1})+ length(out{end-2}) + 2; 
+        derivative_folder = split(groupdir,'leadgroup');
+        if isfile([derivative_folder{1},'leaddbs/Miniset_flag.json'])
+            for i = 1:size(M.patient.list,1)
+                [~,patient_tag,~] = fileparts(M.patient.list{i});
+                M.patient.list{i} = [derivative_folder{1},'leaddbs/',patient_tag];
+            end
+            M.root = [groupdir, '/'];
+            save(analysisFile, 'M')
+        end
+
     end
 
     set(handles.groupdir_choosebox, 'String', groupdir);
@@ -1723,3 +1752,13 @@ if file % make sure user didnt press cancel
     ea_lg_exportstats(M, [path, file]);
     fprintf('\nDBS Stats exported to:\n%s\n\n', [path, file]);
 end
+
+
+
+% --- Executes on button press in minisetbutton.
+function minisetbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to minisetbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+M = getappdata(gcf,'M');
+ea_generate_min_dataset(M);
