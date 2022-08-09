@@ -252,7 +252,7 @@ for group=groups
                         pvals{group,side}(nonempty)=outps;
                     end
                 end
-            case 4 % Dice Coeff / VTA for binary variables
+            case 4 % Proportion Test (Chi-Square) / VTAs (binary vars)
 
                 nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
                 invals=gfibsval{side}(nonempty,gpatsel)';
@@ -261,15 +261,23 @@ for group=groups
                     ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
                     % restore nans
                     ImpBinary(isnan(I(gpatsel,side)))=nan;
+                    suminvals=full(sum(invals(logical(ImpBinary),:),1));
+                    Ninvals=sum(logical(ImpBinary),1);
+                    sumoutvals=full(sum(invals(~logical(ImpBinary),:),1));
+                    Noutvals=sum(~logical(ImpBinary),1);
 
-                    DC=zeros(size(invals,2),1); % calculate dice coefficients between each fiber (conn / unconn to each VTA) and (binary) improvement vector
+                    prop=zeros(size(invals,2),1); % 
+                    outps=prop; % 
+
                     for fib=1:size(invals,2)
-                        DC(fib) = 2*(ea_nansum(invals(:,fib).*ImpBinary))/ea_nansum(invals(:,fib) + ImpBinary);
+                        [h,outps(fib), prop(fib)]  = ea_prop_test([suminvals(fib),sumoutvals(fib)],[Ninvals,Noutvals],1);
                     end
-                    if obj.showsignificantonly
-                        ea_error('Calculating significance for Dice coefficients is not possible');
+     
+                    vals{group,side}(nonempty)=prop;
+                    
+                    if exist('outps','var') % only calculated if testing for significance.
+                        pvals{group,side}(nonempty)=outps;
                     end
-                    vals{group,side}(nonempty)=DC;
                 end
 
             case 5 % Reverse t-tests with efields for binary variables
@@ -286,7 +294,6 @@ for group=groups
                         [~,ps,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
                         outvals=stats.tstat';
                         outps=ps;
-                        %outvals=ea_corrsignan(outvals,ps,obj);
                     else % no need to calc p-val here
                         [~,~,~,stats]=ttest2(full(upSet),full(downSet)); % Run two-sample t-test across connected / unconnected values
                         outvals=stats.tstat';

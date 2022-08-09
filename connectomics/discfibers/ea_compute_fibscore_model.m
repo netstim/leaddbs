@@ -61,7 +61,9 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                 % just concatenate values from both hemispheres
                 fibsval_usedidx = cell(1,2);
                 fibsval_usedidx{1} = fibsval{1,1}(usedidx{voter,1},patientsel);
-                fibsval_usedidx{2} = fibsval{1,2}(usedidx{voter,2},patientsel);
+                if size(vals,2)>1
+                    fibsval_usedidx{2} = fibsval{1,2}(usedidx{voter,2},patientsel);
+                end
                 vals_flat = vertcat(vals{voter,:});
                 fibsval_usedidx_flat = vertcat(fibsval_usedidx{:});
             end
