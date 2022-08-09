@@ -100,10 +100,33 @@ if nargin == 1
 
     switch options.modality
         case 1 % MR
-            input = [input; struct2cell(options.subj.coreg.anat.postop)];
+            if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
+                fn=fieldnames(options.subj.coreg.anat.postop);
+                for postopfile=1:length(fn)
+                    uuid=ea_generate_uuid;
+                    copyfile(options.subj.coreg.anat.postop.(fn{postopfile}),[ea_getleadtempdir,uuid,'.nii']);
+                    nii=ea_load_nii([ea_getleadtempdir,uuid,'.nii']);
+                    scrf=load(options.subj.brainshift.transform.scrf);
+                    nii.mat=scrf.mat*nii.mat;
+                    ea_write_nii(nii);
+                    input = [input; [ea_getleadtempdir,uuid,'.nii']];
+                end
+            else
+                input = [input; struct2cell(options.subj.coreg.anat.postop)];
+            end
             output = [output; struct2cell(options.subj.norm.anat.postop)];
         case 2 % CT
-            input = [input; options.subj.coreg.anat.postop.CT];
+            if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
+                uuid=ea_generate_uuid;
+                copyfile(options.subj.coreg.anat.postop.CT,[ea_getleadtempdir,uuid,'.nii']);
+                nii=ea_load_nii([ea_getleadtempdir,uuid,'.nii']);
+                scrf=load(options.subj.brainshift.transform.scrf);
+                nii.mat=scrf.mat*nii.mat;
+                ea_write_nii(nii);
+                input = [input; [ea_getleadtempdir,uuid,'.nii']];
+            else
+                input = [input; options.subj.coreg.anat.postop.CT];
+            end
             output = [output; options.subj.norm.anat.postop.CT];
     end
 end

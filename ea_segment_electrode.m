@@ -4,17 +4,17 @@ directory=[options.root,options.patientname,filesep];
 if options.native
     switch options.modality
         case 1
-            elnii=options.prefs.tranii_unnormalized;
+            elnii = options.subj.coreg.anat.postop.ax_MRI;
         case 2
-            elnii=options.prefs.ctnii_coregistered;
+            elnii = options.subj.coreg.anat.postop.CT;
     end
     elssubf='native';
 else
     switch options.modality
         case 1
-            elnii=options.prefs.ltranii;
+            elnii=options.subj.norm.anat.postop.ax_MRI;
         case 2
-            elnii=options.prefs.gctnii;
+            elnii=options.subj.norm.anat.postop.CT;
     end
     elssubf='template';
 end
@@ -34,7 +34,14 @@ switch onoff
             elseg.Visible='on';
         else
             % check if segmentation exists
-            nii=ea_load_nii([directory,elnii]);
+            nii=ea_load_nii(elnii);
+
+            if options.native
+                if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to files on the fly.
+                    scrf=load(options.subj.brainshift.transform.scrf);
+                    nii.mat=scrf.mat*nii.mat;
+                end
+            end
 
             if options.modality==1 % not yet implemented for MR.
                 nii.img=-nii.img;

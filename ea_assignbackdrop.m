@@ -85,7 +85,7 @@ if strcmp(bdstring, 'list')
 
 elseif regexp(bdstring, ['^', subpat,' Pre-OP \(.*\)$'])    % pattern: "Patient Pre-OP (*)"
     whichpreop = (regexp(bdstring, ['(?<=^', subpat,' Pre-OP \()(.*)(?=\))'],'match','once'));
-    options = ea_switchpost2pre(options, native, whichpreop);
+    options = ea_switchpost2pre(options, native, whichpreop); % dangerous, likely best to replace sooner or later - took me a while to read
     [Vtra,Vcor,Vsag] = assignpatspecific(options, native);
     varargout{1} = Vtra;
     varargout{2} = Vcor;
@@ -93,9 +93,17 @@ elseif regexp(bdstring, ['^', subpat,' Pre-OP \(.*\)$'])    % pattern: "Patient 
 
 elseif strcmp(bdstring, [subpat, ' Post-OP'])
     [Vtra,Vcor,Vsag] = assignpatspecific(options, native);
+    if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to files on the fly.
+        scrf=load(options.subj.brainshift.transform.scrf);
+        Vtra.mat=scrf.mat*Vtra.mat;
+        Vcor.mat=scrf.mat*Vcor.mat;
+        Vsag.mat=scrf.mat*Vsag.mat;
+    end
+
     varargout{1} = Vtra;
     varargout{2} = Vcor;
     varargout{3} = Vsag;
+    
 
 elseif strcmp(bdstring, 'BigBrain 100 um ICBM 152 2009b Sym (Amunts 2013)')
 %     if ~ea_checkinstall('bigbrain',0,1)
@@ -144,10 +152,13 @@ if native
                 Vsag = Vtra;
             end
         case 2 % CT
-            Vtra = spm_vol(options.subj.coreg.anat.postop.tonemapCT);
+            Vtra = spm_vol(options.subj.coreg.anat.postop.CT);
             Vcor = Vtra;
             Vsag = Vtra;
     end
+
+
+
 else
     switch options.modality
         case 1 % MR
