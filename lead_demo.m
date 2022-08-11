@@ -36,7 +36,6 @@ options.autoimprove = 0;
 options.axiscontrast = 8;
 options.zresolution = 10;
 options.atl.genpt = false;
-options.atl.normalize = 0;
 options.atl.can = true;
 options.atl.pt = 0;
 options.atl.ptnative = false;

@@ -178,10 +178,6 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         if options.atl.genpt % generate patient specific atlas set
             ea_ptspecific_atl(options);
         end
-
-        if options.atl.normalize % normalize patient's atlas-set.
-            ea_norm_ptspecific_atl(options)
-        end
     end
 
     if options.checkreg
