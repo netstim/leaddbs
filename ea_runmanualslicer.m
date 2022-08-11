@@ -25,7 +25,7 @@ disp('returned');
 % Read Slicer fiducial markup file
 fiducial_path = setBIDSEntity(options.subj.recon.recon, 'desc', 'electrodefiducials', 'ext', 'fcsv');
 fid = fopen(fiducial_path, 'r');
-F = textscan(fid, '%*s %f %f %f %*f %*f %*f %*f %*f %*f %*f %*s %*c %*s', 'HeaderLines', 3, 'Delimiter', ',');
+F = textscan(fid, '%*s %f %f %f %*[^\n]', 'HeaderLines', 3, 'Delimiter', ',');
 fclose(fid);
 F = cell2mat(F);
 
