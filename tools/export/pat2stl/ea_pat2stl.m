@@ -8,7 +8,7 @@ cfv(1)=ea_atlas2stl({atlasset},[uipatdir,filesep,'export',filesep,'stl',filesep,
 options=ea_detsides(ea_getptopts(uipatdir));
 cnt=1;
 for side=options.sides
-    cfv(1+cnt)=ea_electrode2stl([uipatdir,filesep],side,handles);
+    cfv(1+cnt)=ea_electrode2stl(uipatdir,side,handles);
     cnt=cnt+1;
 end
 

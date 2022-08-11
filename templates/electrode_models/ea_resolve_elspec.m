@@ -46,7 +46,7 @@ end
 
 if ~isfield(options, 'elmodel')
     try
-        load(options.subj.recon.recon,'reco');
+        load([options.root,options.patientname,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'],'reco');
         elmodel = ea_get_first_notempty_elmodel(reco.props);
     catch
         %no model was found

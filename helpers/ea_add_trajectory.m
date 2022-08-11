@@ -1,6 +1,6 @@
 function ea_add_trajectory(~,~,options,pobj,side)
 
-d=load([options.root,options.patientname,filesep,'ea_reconstruction.mat']);
+d=load([options.root,options.patientname,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat']);
 if ~exist('side', 'var')
     if isfield(d.reco,'electrode')
         side=length(d.reco.electrode)+1;

@@ -1,7 +1,6 @@
 function [roll_out] = ea_diode_main(options)
 %% Determine Orientation for BSCI directed leads from postoperative CT
 % has an unsupervised and a supervised version
-folder = [options.root options.patientname filesep];
 
 if  options.modality == 1 % check for electrode type and postoperative imaging
     msg = sprintf('Automatic rotation detection works only for post-op CT images.');
@@ -35,7 +34,7 @@ if isfile(options.subj.preproc.anat.postop.CT)
     end
     ct = ct_org;
 else
-    msg = sprintf(['No post-op CT found for patient ' options.subj.subjId '\nScript will run using coregistered rpostop_ct.nii which may lead to inaccurate results.']);
+    msg = sprintf(['No post-op CT found for patient ' options.subj.subjId '\nScript will run using coregistered CT which may lead to inaccurate results.']);
     choice = questdlg(msg,'Warning!','Continue','Abort','Abort');
     switch choice
         case 'Continue'

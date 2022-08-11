@@ -148,7 +148,7 @@ if eventdata.Source.Value ~= M.ui.elmodelselect
                 [options.root,options.patientname] = fileparts(M.patient.list{pt});
                 options.root = [options.root, filesep];
                 options = ea_resolve_elspec(options);
-                if exist([options.root,options.patientname,filesep,'ea_reconstruction.mat'],'file')
+                if isfile([options.root,options.patientname,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'])
                     [~,~,markers,elmodel,~,coords_acpc] = ea_load_reconstruction(options);
 
                     if M.ui.elmodelselect == 1 % use patient specific elmodel
