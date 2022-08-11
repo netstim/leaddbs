@@ -56,9 +56,15 @@ for nativemni=nm % switch between native and mni space atlases.
         atlases.discfibersonly = 0;
     end
 
-    if options.writeoutstats && ~strcmp(options.leadprod, 'group')
-        statsFile = [options.root, options.patientname, filesep, options.patientname, '_desc-stats.mat'];
-        statsBackupFile = [options.root, options.patientname, filesep, options.patientname, '_desc-statsbackup.mat'];
+    if options.writeoutstats
+        if ~strcmp(options.leadprod, 'group')
+            statsFile = [options.root, options.patientname, filesep, options.patientname, '_desc-stats.mat'];
+            statsBackupFile = [options.root, options.patientname, filesep, options.patientname, '_desc-statsbackup.mat'];
+        else
+            groupAnalysisFile = ea_getGroupAnalysisFile([options.root, options.patientname]);
+            statsFile = strrep(groupAnalysisFile, '.mat', '_desc-stats.mat');
+            statsBackupFile = strrep(groupAnalysisFile, '.mat', '_desc-statsbackup.mat');
+        end
 
         try
             load(statsFile);
@@ -633,18 +639,14 @@ for nativemni=nm % switch between native and mni space atlases.
         ea_methods(options, ['Atlas used for 3D visualization: ', atlases.citation.name], atlases.citation.long);
     end
 
-    if options.writeoutstats && ~strcmp(options.leadprod, 'group')
-        if exist('prioratlasnames','var')
-            if ~isequal(ea_stats.atlases.names,prioratlasnames)
-                warning('off', 'backtrace');
-                warning('%s: other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.', options.patientname);
-                warning('on', 'backtrace');
-                ds=load(statsFile);
-                save(statsFile,'ea_stats','-v7.3');
-                save(statsBackupFile,'-struct','ds','-v7.3');
-            else
-                save(statsFile,'ea_stats','-v7.3');
-            end
+    if options.writeoutstats
+        if exist('prioratlasnames','var') && ~isequal(ea_stats.atlases.names, prioratlasnames)
+            warning('off', 'backtrace');
+            warning('%s: other atlasset used as before. Deleting VAT and Fiberinfo. Saving backup copy.', options.patientname);
+            warning('on', 'backtrace');
+            ds=load(statsFile);
+            save(statsFile,'ea_stats','-v7.3');
+            save(statsBackupFile,'-struct','ds','-v7.3');
         else
             save(statsFile,'ea_stats','-v7.3');
         end
