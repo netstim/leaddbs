@@ -11,12 +11,12 @@ track = '';
 str_parts = ea_strsplit(str, '_');
 if length(str_parts) == 2
     str = str_parts{2};
-    if (length(str_parts{1}) > 8) && strcmpi(str_parts{1}(1:8), 'keycheck')
-        track = str_parts{1}(9:end);
-    elseif (length(str_parts{1}) > 6) && strcmpi(str_parts{1}(1:6), 'toggle')
-        track = str_parts{1}(7:end);
-    elseif (length(str_parts{1}) > 3) && any(strcmpi(str_parts{1}(1:3), {'key', 'pos'}))
-        track = str_parts{1}(4:end);
+    if startsWith(str_parts{1}, 'keycheck', 'IgnoreCase', true)
+        track = regexprep(str_parts{1}, '^keycheck', '');
+    elseif startsWith(str_parts{1}, 'toggle', 'IgnoreCase', true)
+        track = regexprep(str_parts{1}, '^toggle', '');
+    elseif startsWith(str_parts{1}, {'key', 'pos'}, 'IgnoreCase', true)
+        track = regexprep(str_parts{1}, '^(key|pos))', '');
     end
 end
 

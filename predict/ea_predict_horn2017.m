@@ -31,8 +31,8 @@ stimname=options.predict.stimulation;
 %% get seed maps of VTAs
 if ismember('dMRI',options.predict.includes)
     feats(1)=1;
-    if strcmp(options.predict.dMRIcon(1:13),'Precomputed: ')
-            options.predict.dMRIcon=options.predict.dMRIcon(14:end);
+    if startsWith(options.predict.dMRIcon,'Precomputed: ')
+        options.predict.dMRIcon = erase(options.predict.dMRIcon, 'Precomputed: ');
     else
         % -> run connectome mapper on patient
         run_mapper_vat_local(uivatdirs{pt},stimname,0,options.predict.dMRIcon,1,options.predict.fMRIcon)
@@ -45,8 +45,8 @@ end
 
 if ismember('fMRI',options.predict.includes)
     feats(2)=1;
-    if strcmp(options.predict.fMRIcon(1:13),'Precomputed: ')
-            options.predict.fMRIcon=options.predict.fMRIcon(14:end);
+    if startsWith(options.predict.fMRIcon,'Precomputed: ')
+        options.predict.fMRIcon = erase(options.predict.fMRIcon, 'Precomputed: ');
     else
         % -> run connectome mapper on patient
         run_mapper_vat_local(uivatdirs{pt},stimname,1,options.predict.dMRIcon,0,options.predict.fMRIcon)

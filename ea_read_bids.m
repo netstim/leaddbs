@@ -19,7 +19,7 @@ end
 [bids_folder,id]=fileparts(bids_subject_folder);
 
 % at this point lead checks that the subject folder begins with 'sub', not sure this is necessary:
-if ~strcmp(id(1:3),'sub')
+if ~startsWith(id,'sub')
     error('Not a valid BIDS subject folder')
 end
 

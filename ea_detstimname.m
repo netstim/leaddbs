@@ -44,7 +44,7 @@ while 1
     if length(stimc{1})<3
         break
     else
-        if strcmp(stimc{1}(1:3),'gs_')
+        if startsWith(stimc{1},'gs_')
             msgbox('Please do not choose a stimulation label that starts with "gs_". These are reserved letters used in stimulations programmed inside Lead Group.')
         else
             break

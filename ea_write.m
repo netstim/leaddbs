@@ -20,8 +20,8 @@ if options.d2.write || options.d3.write
       options.atl.pt=1;
       options.atl.can=0;
 
-   elseif length(options.atlasset)>=13 && strcmp(options.atlasset(1:13),'Local atlas: ')
-       options.atlasset=options.atlasset(14:end);
+   elseif startsWith(options.atlasset, 'Local atlas: ')
+       options.atlasset = erase(options.atlasset, 'Local atlas: ');
 
    elseif strcmp(options.atlasset,'Use none')
        % do nothing

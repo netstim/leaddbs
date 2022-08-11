@@ -38,7 +38,7 @@ function  ea_run_anonymize_pt(directory, method, options, outdir, newID)
 if length(newID)<4
     newID=['sub-',newID];
 else
-    if ~strcmp(newID(1:4),'sub-')
+    if ~startsWith(newID,'sub-')
         newID=['sub-',newID];
     end
 end

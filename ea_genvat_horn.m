@@ -2252,7 +2252,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
     autoindx = indx(indx(:,1)==indx(:,2), 1);
     cmbindx  = setdiff([1:size(indx,1)]', autoindx);
 
-    if strcmp(data.dimord(1:3), 'rpt')
+    if startsWith(data.dimord, 'rpt')
         data.powspctrm = data.crsspctrm(:, autoindx, :, :);
         data.crsspctrm = data.crsspctrm(:, cmbindx,  :, :);
     else

@@ -1729,7 +1729,7 @@ S = getappdata(handles.stimfig,'S');
 options = getappdata(handles.stimfig,'options');
 sel = get(handles.stimlabel,'String');
 sel = sel{get(handles.stimlabel,'Value')};
-if length(sel)>4 && strcmp(sel(1:4),' => ') % command, not entry
+if startsWith(sel,' => ') % command, not entry
     switch sel(5:end)
         case 'New stimulation'
             resultfig = getappdata(handles.stimfig,'resultfig');

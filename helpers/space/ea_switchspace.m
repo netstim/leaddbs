@@ -1,5 +1,5 @@
 function ea_switchspace(~,~,spacename,mute)
-if strcmp(spacename(1:2),'->')
+if startsWith(spacename,'->')
     return
 end
 

@@ -207,8 +207,7 @@ function n_rows = count_table_rows(handles)
 ui_tags = {handles.figure1.Children.Tag};
 n_rows = 0;
 for tag_ix = 1:length(ui_tags)
-    if (length(ui_tags{tag_ix}) > 11) &&...
-        strcmpi(ui_tags{tag_ix}(1:11), 'popup_side_')
+    if startsWith(ui_tags{tag_ix}, 'popup_side_', 'IgnoreCase', true)
         n_rows = max(n_rows, str2double(handles.figure1.Children(tag_ix).Tag(12)));
     end
 end
