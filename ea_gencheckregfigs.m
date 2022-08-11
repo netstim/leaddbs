@@ -1,5 +1,5 @@
 function ea_gencheckregfigs(options, type)
-fprintf('\nExporting coregistration check images to %scheckreg...\n', [options.root,options.patientname,filesep]);
+fprintf('\nExporting coregistration check images to %scheckreg...\n', [options.subj.coregDir,filesep]);
 
 if ~exist('type', 'var')
     type = {'coreg', 'norm'};
