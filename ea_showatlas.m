@@ -57,10 +57,10 @@ for nativemni=nm % switch between native and mni space atlases.
     end
 
     if options.writeoutstats
-        if ~strcmp(options.leadprod, 'group')
+        if isfield(options, 'subj')
             statsFile = options.subj.stats;
             statsBackupFile = strrep(options.subj.stats, 'stats.mat', 'stats_backup.mat');
-        else
+        else % Visualization button clicked in Lead Group
             groupAnalysisFile = ea_getGroupAnalysisFile([options.root, options.patientname]);
             statsFile = strrep(groupAnalysisFile, '.mat', '_desc-stats.mat');
             statsBackupFile = strrep(groupAnalysisFile, '.mat', '_desc-stats_backup.mat');
