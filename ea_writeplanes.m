@@ -96,9 +96,9 @@ else
     export_2D_folder = fullfile(options.root, options.patientname, 'export', '2D');
 end
 ea_mkdir(export_2D_folder);
-fileBaseName = fullfile(export_2D_folder, [options.patientname, '_desc-']);
+fileBaseName = fullfile(export_2D_folder, [options.patientname, '_desc-2D_']);
 
-fid = fopen([fileBaseName 'coordinates.txt'],'w');
+fid = fopen([fileBaseName 'viewplane.txt'],'w');
 for iside=1:length(options.sides)
     side=options.sides(iside);
     % write out axial/coronal/sagittal images
@@ -430,16 +430,16 @@ for iside=1:length(options.sides)
                 else
                     isofnadd='';
                 end
-                contactTag = strjoin(options.elspec.contactnames(el), '_');
+                contactTag = strjoin(options.elspec.contactnames(el), '');
                 contactTag = erase(contactTag, {' ', '(', ')'});
                 desc = [contactTag, isofnadd];
                 switch tracor
                     case 1
-                        ea_screenshot([fileBaseName 'ax_',desc,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'view-ax_',desc,'.png'],'myaa');
                     case 2
-                        ea_screenshot([fileBaseName 'cor_',desc,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'view-cor_',desc,'.png'],'myaa');
                     case 3
-                        ea_screenshot([fileBaseName 'sag_',desc,'.png'],'myaa');
+                        ea_screenshot([fileBaseName 'view-sag_',desc,'.png'],'myaa');
                 end
             end
             axis xy
