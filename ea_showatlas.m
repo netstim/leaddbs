@@ -450,7 +450,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     drawnow
                 end
             elseif strcmp(atlases.pixdim{atlas,side}, 'discfibers')
-                tractPath = [ea_space([],'atlases'),options.atlasset,filesep,getsidec(side,sidestr)];
+                tractPath = [atlasFolder,options.atlasset,filesep,getsidec(side,sidestr)];
                 tractName = ea_stripext(atlases.names{atlas});
 
                 disctract = load([tractPath, filesep, atlases.names{atlas}]);
