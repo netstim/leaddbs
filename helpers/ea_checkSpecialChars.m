@@ -24,8 +24,11 @@ else
 end
 
 warntxt = '';
-for i = find(~cellfun(@isempty, special_characters))
-    warntxt = [warntxt sprintf('The folder: %s\ncontains the unsopported characters (or space): ''%s''.\n\n', paths{i}, special_characters{i})];
+nonEmptyChars = find(~cellfun(@isempty, special_characters))';
+if ~isempty(nonEmptyChars)
+    for i = find(~cellfun(@isempty, special_characters))
+        warntxt = [warntxt sprintf('The folder: %s\ncontains the unsopported characters (or space): ''%s''.\n\n', paths{i}, special_characters{i})];
+    end
 end
 
 if ~isempty(warntxt)
