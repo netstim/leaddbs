@@ -167,7 +167,7 @@ end
 
 if ~isfield(options,'writeoutpm')
     
-    options.writeoutpm=1;
+    options.writeoutpm = 0;
 end
 
 if ~isfield(options,'prefs')

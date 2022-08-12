@@ -199,7 +199,7 @@ try
     options.entrypointn=get(handles.targetpopup,'Value');
 end
 
-options.writeoutpm=1;
+options.writeoutpm = 0;
 
 try
     options.elmodeln = get(handles.electrode_model_popup,'Value');

@@ -1268,7 +1268,7 @@ catch % too many entries..
     set(handles.labelpopup,'Value',1);
     options.labelatlas=1;
 end
-options.writeoutpm=1;
+options.writeoutpm = 0;
 options.colormap=parula(64);
 options.d3.write=1;
 options.d3.prolong_electrode=2;

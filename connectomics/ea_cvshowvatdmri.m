@@ -51,7 +51,7 @@ end
 targetsfile=[ea_space(options,'labeling'),selectedparc,'.nii'];
 
 options.writeoutstats=1;
-options.writeoutpm=1;
+options.writeoutpm = 0;
 
 try
     load([directory,'connvisfibers/','fiberstate.mat'])
