@@ -25,7 +25,7 @@ d = {
     # Details of segmented MRI and DTI
     'MRI_data_name': 'segmask.nii',
     'MRI_in_m': 0,
-    'DTI_data_name': 'IITmean_tensor_Norm_mapping.nii.gz',
+    'DTI_data_name': 'IITMeanTensor_NormMapping.nii.gz',
     'DTI_in_m': 0,
     'CSF_index': 3.0,  # indexing as from segmask
     'WM_index': 2.0,
