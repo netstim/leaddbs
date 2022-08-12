@@ -246,6 +246,9 @@ classdef BIDSFetcher
     
                 % Set reconstruction
                 subj.recon = obj.getRecon(subjId, preferMRCT);
+
+                % Set stats
+                subj.stats = obj.getStats(subjId);
             end
         end
 
@@ -672,6 +675,14 @@ classdef BIDSFetcher
                 recon.rawCTMask = [baseName, 'space-', rawCTSpace, '_desc-brainmask', obj.settings.niiFileExt];
                 recon.anchorNativeMask = [baseName, 'space-', obj.anchorSpace, '_desc-brainmask', obj.settings.niiFileExt];
             end
+        end
+
+        function stats = getStats(obj, subjId)
+            % Get dirs
+            LeadDBSDirs = obj.getLeadDBSDirs(subjId);
+
+            % Get stats
+            stats = fullfile(LeadDBSDirs.subjDir, ['sub-', subjId, '_desc-stats.mat']);
         end
 
         function log = getLog(obj, subjId, label)

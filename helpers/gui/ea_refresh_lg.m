@@ -329,7 +329,7 @@ if ~isfield(M.ui,'lastupdated') || t-M.ui.lastupdated>0 % 0 mins time limit
                     % also correct single subject file:
                     load(statsFile, 'ea_stats');
                     ea_stats.atlases=M.stats(pt).ea_stats.atlases;
-                    save(statsFile,'ea_stats','-v7.3');
+                    save(statsFile, 'ea_stats', '-v7.3');
                 end
             catch ME
                 ea_cprintf('CmdWinWarnings', '%s\n', ME.message);
