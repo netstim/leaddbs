@@ -78,6 +78,10 @@ end
 if isfile([ea_gethome, '.ea_prefs.mat.dev'])
     disp('Restore .ea_prefs.mat from develop branch  ...');
     movefile([ea_gethome, '.ea_prefs.mat.dev'], [ea_gethome, '.ea_prefs.mat'])
+    load([ea_gethome, '.ea_prefs.mat'], 'machine');
+    machine.d2.backdrop = 'MNI152NLin2009bAsym T1 (Fonov)';
+    machine.togglestates.template = 'MNI152NLin2009bAsym T1 (Fonov)';
+    save([ea_gethome, '.ea_prefs.mat'], 'machine');
 end
 
 if isfile([ea_gethome, '.ea_prefs.json'])
