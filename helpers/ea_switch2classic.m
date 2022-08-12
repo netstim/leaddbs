@@ -50,6 +50,11 @@ end
 if isfile([ea_gethome, '.ea_prefs.mat.classic'])
     disp('Restore .ea_prefs.mat from classic branch  ...');
     movefile([ea_gethome, '.ea_prefs.mat.classic'], [ea_gethome, '.ea_prefs.mat'])
+    % Fix possible wrong template string
+    load([ea_gethome, '.ea_prefs.mat'], 'machine');
+    machine.d2.backdrop = 'MNI_ICBM_2009b_NLIN_ASYM T1 (Fonov)';
+    machine.togglestates.template = 'MNI_ICBM_2009b_NLIN_ASYM T1 (Fonov)';
+    save([ea_gethome, '.ea_prefs.mat'], 'machine');
 end
 
 if isfile([ea_gethome, '.ea_prefs.json'])
