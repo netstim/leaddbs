@@ -462,24 +462,7 @@ if isfield(atlases,'presets')
         %        uimenu(pcmenu, 'Label',atlases.presets(ps).label,'Callback',{@ea_makeselection,handles,atlases.presets(ps)});
     end
 end
-% add from prefs:
-prefs=ea_prefs;
-options=getappdata(handles.atlasselect,'options');
-if isfield(prefs.machine.atlaspresets,getridofspaces(options.atlasset))
-    for ps=1:length(prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets)
-        try
-            prescell{end+1}=prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}.label;
-            presetactions{end+1}=prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps};
 
-            %        uimenu(pcmenu, 'Label',prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}.label,'Callback',{@ea_makeselection,handles,prefs.machine.atlaspresets.(getridofspaces(options.atlasset)).presets{ps}});
-        catch
-            keyboard
-        end
-    end
-end
-
-% add save prefs:
-%uimenu(pcmenu,'Label','Save current selection as preset...','Callback',{@ea_saveselection,handles,options});
 handles.presets.String=prescell;
 handles.presets.Value=1;
 
@@ -489,7 +472,7 @@ if isfield(atlases,'defaultset')
     end
 end
 setappdata(handles.presets,'presetactions',presetactions);
-%setappdata(handles.presets,'uimenu',pcmenu);
+
 
 function ea_saveselection(~,~,handles,options)
 ea_busyaction('on',handles.atlasselect,'atlcontrol');
@@ -530,27 +513,6 @@ try WinOnTop(handles.atlasselect,false); end
 tag=inputdlg('Please enter a name for the preset:','Preset name');
 pres.label=tag{1};
 try WinOnTop(handles.atlasselect,true); end
-
-
-prefs=ea_prefs;
-machine=prefs.machine;
-
-if ~isfield(machine.atlaspresets,getridofspaces(options.atlasset))
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.default=pres.default;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.show=pres.show;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.hide=pres.hide;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{1}.label=pres.label;
-
-else
-
-    clen=length(machine.atlaspresets.(getridofspaces(options.atlasset)).presets);
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{clen+1}.default=pres.default;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{clen+1}.show=pres.show;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{clen+1}.hide=pres.hide;
-    machine.atlaspresets.(getridofspaces(options.atlasset)).presets{clen+1}.label=pres.label;
-end
-
-save([ea_gethome,'.ea_prefs.mat'],'machine');
 
 % refresh content menu.
 ea_createpcmenu(handles)
