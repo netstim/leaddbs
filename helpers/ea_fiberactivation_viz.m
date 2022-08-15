@@ -93,7 +93,6 @@ else
     warning('on', 'backtrace');
 end
 
-
 setappdata(resultfig, 'PL', PL);
 
 

@@ -37,7 +37,7 @@ if ~usecork
     voffset=1;
     fcoffset=1;
 
-    % fprintf('\n\n');
+    fprintf('\n\n');
     ea_dispercent(0,'Concatenating patch');
     for f=1:length(fv)
         fsize=size(fv(f).faces,1);

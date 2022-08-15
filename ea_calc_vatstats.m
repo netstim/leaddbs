@@ -76,8 +76,7 @@ for but=1:length(togglenames)
 end
 clear expand
 
-statsFile = [options.subj.subjDir, filesep, 'sub-', options.subj.subjId, '_desc-stats.mat'];
-load(statsFile);
+load(options.subj.stats, 'ea_stats');
 
 % assign the place where to write stim stats into struct
 
@@ -159,7 +158,7 @@ for iside=1:length(options.sides)
 
             if options.writeoutstats
                 ea_dispt('Writing out stats...');
-                load(statsFile);
+                load(options.subj.stats, 'ea_stats');
                 ea_stats.stimulation(thisstim).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
                 ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
@@ -236,7 +235,7 @@ for iside=1:length(options.sides)
                     end
                 end
 
-                save(statsFile,'ea_stats','-v7.3');
+                save(options.subj.stats, 'ea_stats', '-v7.3');
             end
         end
     end

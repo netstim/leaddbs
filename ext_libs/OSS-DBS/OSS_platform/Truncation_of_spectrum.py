@@ -132,9 +132,9 @@ class Truncated_spectrum(object):
         # plot the octave bands
         Xs_unit = 3 * (np.absolute(self.Xs_signal_norm)).max() * np.ones(self.FR_vector_signal_new.shape[0], float)
         plt.figure(161)
-        plt.stem(self.FR_vector_signal, np.absolute(self.Xs_signal_norm), markerfmt=" ", linefmt='C0', basefmt="C0-")
+        plt.stem(self.FR_vector_signal, np.absolute(self.Xs_signal_norm), markerfmt=" ", linefmt='C0', basefmt="C0-", use_line_collection=True)
         plt.stem(self.FR_vector_signal_new, Xs_unit, markerfmt=" ", linefmt="C1--",
-                 basefmt="C0-")  # we need to scale appropriately. Think about this image
+                 basefmt="C0-", use_line_collection=True)  # we need to scale appropriately. Think about this image
         plt.xscale("log")
         plt.xlabel('Frequency, Hz')
         plt.xlim(10e0, 10e6)

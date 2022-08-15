@@ -14,5 +14,5 @@ if nargin==2
         fprintf(1,[varargin{2},':        ']);
     end
 else
-    fprintf(1,[repmat('\b',1,8),'%7.3f','%%'],percent);
+    fprintf(1,[repmat('\b',1,8),'%7.2f','%%'],percent);
 end
