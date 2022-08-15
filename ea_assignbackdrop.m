@@ -198,8 +198,7 @@ if native
     options.subj.coreg.anat.postop.tonemapCT = options.subj.coreg.anat.preop.(whichpreop);
 else
     normImage = options.subj.preopAnat.(options.subj.AnchorModality).norm;
-    normImage = strrep(normImage, ['_', options.subj.AnchorModality, '.'], ['_', whichpreop, '.']);
-
+    normImage = strrep(normImage,options.subj.AnchorModality,whichpreop);
     if ~isfile(normImage)
         to{1} = normImage;
         from{1} = options.subj.preopAnat.(whichpreop).coreg;
