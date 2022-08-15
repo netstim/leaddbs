@@ -654,6 +654,7 @@ for side=0:1
                     end
                 end
 
+                ftr.type = 'fiberactivation';
                 save(fiberActivation, '-struct', 'ftr');
 
                 if options.native % Generate fiber activation file in MNI space
@@ -693,6 +694,8 @@ for side=0:1
                             fiberActivationMNI = [templateOutputBasePath, 'fiberActivation_model-ossdbs_hemi-', sideLabel, '.mat'];
                         end
                     end
+
+                    conn.type = 'fiberactivation';
                     save(fiberActivationMNI, '-struct', 'conn');
 
                     if ~options.orignative % Visualize MNI space result
