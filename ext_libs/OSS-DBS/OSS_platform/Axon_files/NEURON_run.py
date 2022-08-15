@@ -310,7 +310,7 @@ def run_simulation_with_NEURON(d, Neuron_models, shift_to_MRI_space, population_
 #        hf.create_dataset(str(lst[population_index])+'_'+str(Activated_models), data=Nodes_status_MRI_space_only_activated)
 #        hf.close()
 
-    mdic = {"fibers": Axon_Lead_DBS, "ea_fibformat": "1.0"}  # For Lead-DBS .mat files
+    mdic = {"fibers": Axon_Lead_DBS, "ea_fibformat": "1.0", "type_obj": "fiberactivation", "connectome_name": d["Name_prepared_neuron_array"][:-3]}  # For Lead-DBS .mat files
     if population_index == -1:
         logging.critical("{}% activation (including damaged neurons)\n".format(np.round(Activated_models/float(number_neurons_initially)*100,2)))
 
