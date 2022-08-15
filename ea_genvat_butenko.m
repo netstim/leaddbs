@@ -695,6 +695,12 @@ for side=0:1
                         end
                     end
 
+                    if startsWith(settings.connectome, 'Multi-Tract: ')
+                        conn.connectome_name = connName;
+                    else
+                        conn.connectome_name = settings.connectome;
+                    end
+
                     conn.type = 'fiberactivation';
                     save(fiberActivationMNI, '-struct', 'conn');
 
