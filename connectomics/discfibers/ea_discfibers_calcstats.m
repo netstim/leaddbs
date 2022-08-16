@@ -428,12 +428,12 @@ for group=groups
                 switch obj.threshstrategy
                     case 'Relative to Peak'
                         negrange = negvals(1) - negvals(end);
-                        negthresh = negvals(1) - obj.subscore.vis.shownegamount(group,side)/100 * negrange;
+                        negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
                         if negrange == 0
                             negthresh = negthresh + eps*10;
                         end
                     case 'Relative to Amount'
-                        negthresh = negvals(round((obj.showposamount(side)/100)*length(posvals)));
+                        negthresh = negvals(round((obj.shownegamount(side)/100)*length(posvals)));
                     case 'Fixed Amount'
                         if length(negvals)>round(obj.shownegamount(side))
                             negthresh=negvals(round(obj.shownegamount(side)));
