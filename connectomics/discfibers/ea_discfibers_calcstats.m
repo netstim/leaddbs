@@ -351,48 +351,20 @@ for group=groups
                 if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
                     posthresh = inf;
                 else
-                    posrange = posvals(1) - posvals(end);
-                    posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-
-                    if posrange == 0
-                        posthresh = posthresh - eps*10;
-                    end
+                    posthresh = ea_fibValThresh(obj.threshstrategy, posvals, obj.showposamount(side));
                 end
             else
                 if ~obj.subscore.posvisible(group) || ~obj.subscore.vis.showposamount(group,side) || isempty(posvals)
                     posthresh = inf;
                 else
-                    posrange = posvals(1) - posvals(end);
-                    posthresh = posvals(1) - obj.subscore.vis.showposamount(group,side)/100 * posrange;
-
-                    if posrange == 0
-                        posthresh = posthresh - eps*10;
-                    end
+                    posthresh = ea_fibValThresh(obj.threshstrategy, posvals, obj.subscore.vis.showposamount(group,side));
                 end
             end
         else
             if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
                 posthresh = inf;
             else
-                switch obj.threshstrategy
-                    case 'Relative to Peak'
-                        posrange = posvals(1) - posvals(end);
-                        posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-                        if posrange == 0
-                            posthresh = posthresh - eps*10;
-                        end
-                    case 'Relative to Amount'
-                        posthresh = posvals(round((obj.showposamount(side)/100)*length(posvals)));
-                    case 'Fixed Amount'
-                        if length(posvals)>round(obj.showposamount(side))
-                            posthresh=posvals(round(obj.showposamount(side)));
-                        else                        
-                            posthresh=posvals(end);
-                        end
-                    case 'Histogram (CDF)'
-                        [fx, x] = ecdf(posvals);
-                        posthresh = x(find(fx>=(1-obj.showposamount(side)), 1));
-                end
+                posthresh = ea_fibValThresh(obj.threshstrategy, posvals, obj.showposamount(side));
             end
         end
 
@@ -402,48 +374,20 @@ for group=groups
                 if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
                     negthresh = -inf;
                 else
-                    negrange = negvals(1) - negvals(end);
-                    negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-
-                    if negrange == 0
-                        negthresh = negthresh + eps*10;
-                    end
+                    negthresh = ea_fibValThresh(obj.threshstrategy, negvals, obj.shownegamount(side));
                 end
             else
                 if ~obj.subscore.negvisible(group) || ~obj.subscore.vis.shownegamount(group,side) || isempty(negvals)
                     negthresh = -inf;
                 else
-                    negrange = negvals(1) - negvals(end);
-                    negthresh = negvals(1) - obj.subscore.vis.shownegamount(group,side)/100 * negrange;
-
-                    if negrange == 0
-                        negthresh = negthresh + eps*10;
-                    end
+                    negthresh = ea_fibValThresh(obj.threshstrategy, negvals, obj.subscore.vis.shownegamount(group,side));
                 end     
             end
         else
             if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
                 negthresh = -inf;
             else
-                switch obj.threshstrategy
-                    case 'Relative to Peak'
-                        negrange = negvals(1) - negvals(end);
-                        negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-                        if negrange == 0
-                            negthresh = negthresh + eps*10;
-                        end
-                    case 'Relative to Amount'
-                        negthresh = negvals(round((obj.shownegamount(side)/100)*length(posvals)));
-                    case 'Fixed Amount'
-                        if length(negvals)>round(obj.shownegamount(side))
-                            negthresh=negvals(round(obj.shownegamount(side)));
-                        else
-                            negthresh=negvals(end);
-                        end
-                    case 'Histogram (CDF)'
-                        [fx, x] = ecdf(-negvals);
-                        negthresh = -x(find(fx>=(1-obj.shownegamount(side)), 1));
-                end
+                negthresh = ea_fibValThresh(obj.threshstrategy, negvals, obj.shownegamount(side));
             end
         end
         % Remove vals and fibers outside the thresholding range (set by
@@ -488,4 +432,35 @@ for cellentry=1:numel(vals)
     vals{cellentry}(:)=allvals(cnt:cnt+length(vals{cellentry})-1);
     ps{cellentry}(:)=allps(cnt:cnt+length(vals{cellentry})-1);
     cnt=cnt+length(vals{cellentry});
+end
+
+
+function fibValThreshold = ea_fibValThresh(threshstrategy, vals, threshold)
+switch threshstrategy
+    case 'Relative to Peak'
+        range = vals(1) - vals(end);
+        fibValThreshold = vals(1) - threshold/100 * range;
+        if range == 0
+            if vals(1) > 0
+                fibValThreshold = fibValThreshold - eps*10;
+            else
+                fibValThreshold = fibValThreshold + eps*10;
+            end
+        end
+    case 'Relative to Amount'
+        fibValThreshold = vals(round((threshold/100)*length(posvals)));
+    case 'Fixed Amount'
+        if length(vals)>round(threshold)
+            fibValThreshold=vals(round(threshold));
+        else
+            fibValThreshold=vals(end);
+        end
+    case 'Histogram (CDF)'
+        if vals(1) > 0
+            [fx, x] = ecdf(vals);
+            fibValThreshold = x(find(fx>=(1-threshold), 1));
+        else
+            [fx, x] = ecdf(-vals);
+            fibValThreshold = -x(find(fx>=(1-threshold), 1));
+        end
 end
