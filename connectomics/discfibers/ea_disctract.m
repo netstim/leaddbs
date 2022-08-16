@@ -154,12 +154,13 @@ classdef ea_disctract < handle
                 return
             end
 
-             addlistener(obj,'activateby','PostSet',...
-                @activatebychange);
-            %added a check here otherwise errors out for files w/o
-            %vatmodels
-            if ~isempty(obj.M.vatmodel) && contains(obj.M.vatmodel, 'OSS-DBS (Butenko 2020)')
-                obj.statmetric = 3;
+            addlistener(obj,'activateby','PostSet',@activatebychange);
+
+            % added a check here otherwise errors out for files w/o vatmodels
+            if ~isfield(obj.M,'pseudoM')
+                if ~isempty(obj.M.vatmodel) && contains(obj.M.vatmodel, 'OSS-DBS (Butenko 2020)')
+                    obj.statmetric = 3;
+                end
             end
         end
 
@@ -319,6 +320,7 @@ classdef ea_disctract < handle
                 end
             end
         end
+
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
                 msgbox('Groupan alysis file has vanished. Please select file.');
