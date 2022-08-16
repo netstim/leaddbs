@@ -340,6 +340,7 @@ for group=groups
         if exist('pvals','var')
             pvals{group,side}=pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
         end
+
         allvals = vertcat(vals{group,:});
         posvals = sort(allvals(allvals>0),'descend');
         negvals = sort(allvals(allvals<0),'ascend');
@@ -369,7 +370,6 @@ for group=groups
                     end
                 end
             end
-
         else
             if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
                 posthresh = inf;
@@ -389,6 +389,9 @@ for group=groups
                         else                        
                             posthresh=posvals(end);
                         end
+                    case 'Histogram (CDF)'
+                        [fx, x] = ecdf(posvals);
+                        posthresh = x(find(fx>=(1-obj.showposamount(side)), 1));
                 end
             end
         end
@@ -410,42 +413,36 @@ for group=groups
                 if ~obj.subscore.negvisible(group) || ~obj.subscore.vis.shownegamount(group,side) || isempty(negvals)
                     negthresh = -inf;
                 else
+                    negrange = negvals(1) - negvals(end);
+                    negthresh = negvals(1) - obj.subscore.vis.shownegamount(group,side)/100 * negrange;
 
-                    switch obj.threshstrategy
-                        case 'Relative to Peak'
-                            negrange = negvals(1) - negvals(end);
-                            negthresh = negvals(1) - obj.subscore.vis.shownegamount(group,side)/100 * negrange;
-                            if negrange == 0
-                                negthresh = negthresh + eps*10;
-                            end
-                        case 'Relative to Amount'
-                            negthresh = negvals(round((obj.showposamount(side)/100)*length(posvals)));
-                        case 'Absolute Amount'
-                            if length(negvals)>round(obj.shownegamount(side))
-                                negthresh=negvals(round(obj.shownegamount(side)));
-                            else
-                                negthresh=negvals(end);
-                            end
+                    if negrange == 0
+                        negthresh = negthresh + eps*10;
                     end
-                end
-
-
-
-
-
-
-                    
-                
+                end     
             end
         else
             if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
                 negthresh = -inf;
             else
-                negrange = negvals(1) - negvals(end);
-                negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-
-                if negrange == 0
-                    negthresh = negthresh + eps*10;
+                switch obj.threshstrategy
+                    case 'Relative to Peak'
+                        negrange = negvals(1) - negvals(end);
+                        negthresh = negvals(1) - obj.subscore.vis.shownegamount(group,side)/100 * negrange;
+                        if negrange == 0
+                            negthresh = negthresh + eps*10;
+                        end
+                    case 'Relative to Amount'
+                        negthresh = negvals(round((obj.showposamount(side)/100)*length(posvals)));
+                    case 'Fixed Amount'
+                        if length(negvals)>round(obj.shownegamount(side))
+                            negthresh=negvals(round(obj.shownegamount(side)));
+                        else
+                            negthresh=negvals(end);
+                        end
+                    case 'Histogram (CDF)'
+                        [fx, x] = ecdf(-negvals);
+                        negthresh = -x(find(fx>=(1-obj.shownegamount(side)), 1));
                 end
             end
         end
