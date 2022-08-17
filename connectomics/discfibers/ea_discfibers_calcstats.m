@@ -463,4 +463,6 @@ switch threshstrategy
             [fx, x] = ecdf(-vals);
             fibValThreshold = -x(find(fx>=(1-threshold), 1));
         end
+    case 'Fixed Fiber Value'
+        fibValThreshold = threshold;
 end
