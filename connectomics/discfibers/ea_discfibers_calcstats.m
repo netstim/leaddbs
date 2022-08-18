@@ -437,7 +437,7 @@ end
 
 function fibValThreshold = ea_fibValThresh(threshstrategy, vals, threshold)
 switch threshstrategy
-    case 'Relative to Peak'
+    case 'Percentage Relative to Peak'
         range = vals(1) - vals(end);
         fibValThreshold = vals(1) - threshold/100 * range;
         if range == 0
@@ -447,7 +447,7 @@ switch threshstrategy
                 fibValThreshold = fibValThreshold + eps*10;
             end
         end
-    case 'Relative to Amount'
+    case 'Percentage Relative to Amount'
         fibValThreshold = vals(round((threshold/100)*length(vals)));
     case 'Fixed Amount'
         if length(vals)>round(threshold)
