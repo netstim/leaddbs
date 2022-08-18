@@ -381,7 +381,7 @@ for group=groups
                     negthresh = -inf;
                 else
                     negthresh = ea_fibValThresh(obj.threshstrategy, negvals, obj.subscore.vis.shownegamount(group,side));
-                end     
+                end
             end
         else
             if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
@@ -390,13 +390,13 @@ for group=groups
                 negthresh = ea_fibValThresh(obj.threshstrategy, negvals, obj.shownegamount(side));
             end
         end
+
         % Remove vals and fibers outside the thresholding range (set by
         % sliders)
         remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
         vals{group,side}(remove)=[];
         fibcell{group,side}(remove)=[];
         usedidx{group,side}(remove)=[];
-
     end
 end
 
@@ -448,7 +448,7 @@ switch threshstrategy
             end
         end
     case 'Relative to Amount'
-        fibValThreshold = vals(round((threshold/100)*length(posvals)));
+        fibValThreshold = vals(round((threshold/100)*length(vals)));
     case 'Fixed Amount'
         if length(vals)>round(threshold)
             fibValThreshold=vals(round(threshold));
