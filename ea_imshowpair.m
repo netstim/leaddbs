@@ -495,7 +495,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         elseif ~isnan(numkey)  % numkey is the index of the preopCoregImages cell
             normAnchor = options.subj.norm.anat.preop.(options.subj.AnchorModality);
             modality = ea_getmodality(preopCoregImages{numkey});
-            normImage = strrep(normAnchor, ['ses-preop_', options.subj.AnchorModality], ['ses-preop_', modality]);
+            normImage = strrep(normAnchor, options.subj.AnchorModality, modality);
             if ~isfile(normImage)
                 ea_apply_normalization_tofile(options, preopCoregImages{numkey}, normImage, 0);
             end
@@ -507,7 +507,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 msgbox(sprintf('The file you selected seems unnormalized!\nWill try to apply the normalization now.'), 'Warning', 'warn');
                 normAnchor = options.subj.norm.anat.preop.(options.subj.AnchorModality);
                 modality = ea_getmodality(imagePath);
-                normImage = strrep(normAnchor, ['ses-preop_', options.subj.AnchorModality], ['ses-preop_', modality]);
+                normImage = strrep(normAnchor, options.subj.AnchorModality, modality);
                 if ~isfile(normImage)
                     ea_apply_normalization_tofile(options, imagePath, normImage, 0);
                 end
