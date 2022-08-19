@@ -39,9 +39,7 @@ try
 catch
     options=struct;
 end
-ea_anatomyslices(resultfig,...
-    togglestates,...
-    options,handles);
+ea_anatomyslices(resultfig, togglestates, options, handles);
 
 nativemni = ea_getnativemni;
 if togglestates.refreshcuts && nativemni==1
