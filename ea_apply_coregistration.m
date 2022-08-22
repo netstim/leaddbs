@@ -32,6 +32,7 @@ if nargin < 4
         transform = transform{1};
     end
 elseif regexp(varargin{4}, '^[a-zA-Z]+( +[a-zA-Z]+)*$')
+% elseif isfile(varargin{4})
     transformType = lower(varargin{4});
     if regexp(transformType, '^fsl') % Determine FSL transformation name
         transformType = regexp(transformType, '(?<=^fsl )(.+)$', 'match', 'once');
@@ -140,6 +141,9 @@ switch transformType
         ea_ants_apply_transforms([], movingimage, outputimage, ...
             0, fixedimage, transform, interp)
     case 'FSL'
+        ea_fsl_apply_coregistration(fixedimage, movingimage, outputimage, ...
+            transform, interp)
+    case 'FLIRT'
         ea_fsl_apply_coregistration(fixedimage, movingimage, outputimage, ...
             transform, interp)
     case 'BRAINSFIT'
