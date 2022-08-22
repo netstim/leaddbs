@@ -137,7 +137,7 @@ classdef ea_disctract < handle
                 obj.subscore.vis.neg_shown = repmat([25,25],10,1);
                 obj.subscore.negvisible = zeros(10,1);
                 obj.subscore.posvisible = ones(10,1);
-                obj.subscore.spitbysubscore = 0;
+                obj.subscore.splitbysubscore = 0;
                 obj.subscore.special_case = 0;
                 obj.covarlabels={};
             elseif  isfield(D, 'tractset')  % Saved tractset class loaded
