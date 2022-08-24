@@ -1,23 +1,26 @@
 function ea_updatestatus(handles, subj)
 % subj is the struct returned by BIDSFetcher.getSubj(subjId)
 
-if strcmp(subj.postopModality, 'CT')
-    if isfile(subj.postopAnat.CT.raw)
-        statusone = 'Raw post-op CT found. Please coregister to pre-op MRI first.';
-    end
+[leaddbs_dir,~,~] = fileparts(subj.subjDir);
+Miniset_flag = [leaddbs_dir, filesep, 'Miniset_flag.json'];
 
-    if isfile(subj.postopAnat.CT.coreg)
+if strcmp(subj.postopModality, 'CT')
+    if isfile(Miniset_flag)
+        statusone = 'Miniset is used.';
+    elseif isfile(subj.postopAnat.CT.coreg)
         statusone = 'Coregistered post-op CT found. Please run normalization.';
+    elseif isfile(subj.postopAnat.CT.raw)
+        statusone = 'Raw post-op CT found. Please coregister to pre-op MRI first.';
     end
 elseif strcmp(subj.postopModality, 'MRI')
     fields = fieldnames(subj.postopAnat);
 
-    if isfile(subj.postopAnat.(fields{1}).raw)
-        statusone = 'Raw post-op MRI found. Please coregister to pre-op MRI first.';
-    end
-
-    if isfile(subj.postopAnat.(fields{1}).coreg)
+    if isfile(Miniset_flag)
+        statusone = 'Miniset is used.';
+    elseif isfile(subj.postopAnat.(fields{1}).coreg)
         statusone = 'Coregistered post-op MRI found. Please run normalization.';
+    elseif isfile(subj.postopAnat.(fields{1}).raw)
+        statusone = 'Raw post-op MRI found. Please coregister to pre-op MRI first.';
     end
 elseif strcmp(subj.postopModality, 'None')
     statusone = 'No post-op images found.';
