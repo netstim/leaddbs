@@ -36,7 +36,7 @@ end
 copyfile(aroot, [proot,'atlases',filesep,options.atlasset]);
 p=load([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat']);
 p.atlases.rebuild=1;
-save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'],'-struct','p');
+save([proot,'atlases',filesep,options.atlasset,filesep,'atlas_index.mat'], '-struct', 'p', '-v7.3');
 
 ea_delete([proot,'atlases',filesep,options.atlasset,filesep,'gm_mask.nii*']);
 
@@ -97,7 +97,7 @@ for atlas=1:length(atlases.names)
                     delete(file);
             end
             
-            save(file, '-struct', 'fib_load');
+            save(file, '-struct', 'fib_load', '-v7.3');
             
         else
             warning(['Unrecognized pixdim for ' atlases.names{atlas}]);
