@@ -167,69 +167,69 @@ for subgroup=1:length(atlases.subgroups)
             [~,thisatlname]=ea_niifileparts(thisatlname);
         end
 
-        color = round(squeeze(atlases.colormap(ceil(atlases.colors(node)),:))*256);
+        color = round(squeeze(atlases.colormap(ceil(atlases.colors(atlases.subgroups(subgroup).entries(node))),:))*256);
         color = sprintf('rgb(%d,%d,%d)', color(1),color(2),color(3));
 
         atlaslabel = ['<HTML><BODY>' ...
-                      '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                      '<FONT color="black">&nbsp;&nbsp;',thisatlname,'</FONT>' ...
-                      '</BODY></HTML>'];
+            '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+            '<FONT color="black">&nbsp;&nbsp;',thisatlname,'</FONT>' ...
+            '</BODY></HTML>'];
         h.sgsub{subgroup}{node}=DefaultCheckBoxNode(atlaslabel,true);
         h.sg{subgroup}.add(h.sgsub{subgroup}{node});
+        switch atlases.types(atlases.subgroups(subgroup).entries(node))
+            case {3,4,6,10} % need lh and rh entries
+                [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
+                try
+                    checked=onoff2bool(togglebuttons(thistb).State);
+                catch
+                    keyboard
+                end
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+                h.sgsubfi{subgroup}{node}=thisatlfname;
 
-        if (atlases.types(atlases.subgroups(subgroup).entries(node))==3) || (atlases.types(atlases.subgroups(subgroup).entries(node))==4) || (atlases.types(atlases.subgroups(subgroup).entries(node))==6) % need lh and rh entries
-            [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
-            try
+                [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
                 checked=onoff2bool(togglebuttons(thistb).State);
-            catch
-                keyboard
-            end
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-            h.sgsubfi{subgroup}{node}=thisatlfname;
-
-            [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
-            checked=onoff2bool(togglebuttons(thistb).State);
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{2});
-        elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==1) % RH only
-            [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
-            checked=onoff2bool(togglebuttons(thistb).State);
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-            h.sgsubfi{subgroup}{node}=thisatlfname;
-        elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==2) % LH only
-            [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
-            checked=onoff2bool(togglebuttons(thistb).State);
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-            h.sgsubfi{subgroup}{node}=thisatlfname;
-        elseif (atlases.types(atlases.subgroups(subgroup).entries(node))==5) % Midline
-            [~,thistb]=ismember([thisatlfname,'_midline'],tbcell);
-            checked=onoff2bool(togglebuttons(thistb).State);
-            lrlabel = ['<HTML><BODY>' ...
-                       '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
-                       '<FONT color="black">&nbsp;&nbsp;Midline</FONT>' ...
-                       '</BODY></HTML>'];
-            h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
-            h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
-            h.sgsubfi{subgroup}{node}=thisatlfname;
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{2}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{2});
+            case 1 % RH only
+                [~,thistb]=ismember([thisatlfname,'_right'],tbcell);
+                checked=onoff2bool(togglebuttons(thistb).State);
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;RH</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+                h.sgsubfi{subgroup}{node}=thisatlfname;
+            case 2 % LH only
+                [~,thistb]=ismember([thisatlfname,'_left'],tbcell);
+                checked=onoff2bool(togglebuttons(thistb).State);
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;LH</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+                h.sgsubfi{subgroup}{node}=thisatlfname;
+            case 5 % Midline
+                [~,thistb]=ismember([thisatlfname,'_midline'],tbcell);
+                checked=onoff2bool(togglebuttons(thistb).State);
+                lrlabel = ['<HTML><BODY>' ...
+                    '<FONT color=',color,' bgcolor=',color,'>ico</FONT>' ...
+                    '<FONT color="black">&nbsp;&nbsp;Midline</FONT>' ...
+                    '</BODY></HTML>'];
+                h.sgsubside{subgroup}{node}{1}=DefaultCheckBoxNode(lrlabel,checked);
+                h.sgsub{subgroup}{node}.add(h.sgsubside{subgroup}{node}{1});
+                h.sgsubfi{subgroup}{node}=thisatlfname;
         end
         atlchecks{atlases.subgroups(subgroup).entries(node)}=...
             [atlchecks{atlases.subgroups(subgroup).entries(node)},h.sgsub{subgroup}{node}];
