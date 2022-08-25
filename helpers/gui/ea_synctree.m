@@ -32,7 +32,7 @@ branchsel=[];
                     else
                         set(h.sgsub{branch}{leaf},'SelectionState',SelectionState.MIXED)
                     end
-                    if ~strcmp(h.atlassurfs{ixs}.Visible,'on'); % also make sure surface is right
+                    if ~strcmp(h.atlassurfs{ixs}.Visible,'on') % also make sure surface is right
                         h.atlassurfs{ixs}.Visible='on';
                     end
 
