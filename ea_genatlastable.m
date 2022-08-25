@@ -33,36 +33,36 @@ if isempty(atlases)
 
     lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
 
-    delete([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.ni*']);
-    lhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.ni*']);
-    lhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.tr*']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.nii*']);
+    lhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.nii*']);
+    lhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.trk*']);
     lhmats=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.mat']);
     lhatlases=[lhatlases;lhtrks;lhmats];
     for i=1:length(lhatlases)
         lhcell{i}=lhatlases(i).name;
     end
 
-    delete([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*_temp.ni*']);
-    rhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.ni*']);
-    rhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.tr*']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*_temp.nii*']);
+    rhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.nii*']);
+    rhtrks=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.trk*']);
     rhmats=dir([root,filesep,mifix,options.atlasset,filesep,'rh',filesep,'*.mat']);
     rhatlases=[rhatlases;rhtrks;rhmats];
     for i=1:length(rhatlases)
         rhcell{i}=rhatlases(i).name;
     end
 
-    delete([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*_temp.ni*']);
-    mixedatlases=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.ni*']);
-    mixedtrks=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.tr*']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*_temp.nii*']);
+    mixedatlases=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.nii*']);
+    mixedtrks=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.trk*']);
     mixedmats=dir([root,filesep,mifix,options.atlasset,filesep,'mixed',filesep,'*.mat']);
     mixedatlases=[mixedatlases;mixedtrks;mixedmats];
     for i=1:length(mixedatlases)
         mixedcell{i}=mixedatlases(i).name;
     end
 
-    delete([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.ni*']);
-    midlineatlases=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.ni*']);
-    midlinetrks=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.tr*']);
+    delete([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*_temp.nii*']);
+    midlineatlases=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.nii*']);
+    midlinetrks=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.trk*']);
     midlinemats=dir([root,filesep,mifix,options.atlasset,filesep,'midline',filesep,'*.mat']);
     midlineatlases=[midlineatlases;midlinetrks;midlinemats];
     for i=1:length(midlineatlases)
@@ -80,7 +80,7 @@ if isempty(atlases)
         end
     end
 
-    heatmapatlases=dir([root,filesep,mifix,options.atlasset,filesep,'heatmap',filesep,'*.ni*']);
+    heatmapatlases=dir([root,filesep,mifix,options.atlasset,filesep,'heatmap',filesep,'*.nii*']);
     for i=1:length(heatmapatlases)
         heatmapcell{i}=heatmapatlases(i).name;
     end
