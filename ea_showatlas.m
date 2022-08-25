@@ -275,6 +275,34 @@ for nativemni=nm % switch between native and mni space atlases.
                 if rand(1)>0.8 % we don't want to show every buildup step due to speed but want to show some buildup.
                     drawnow
                 end
+            elseif strcmp(atlases.pixdim{atlas,side}, 'surface')
+                
+                [~, surfTag] = fileparts(atlases.names{atlas});
+                surfTag=ea_stripext(surfTag);
+                visible='on';
+                if isfield(atlases,'presets')
+                    if ~ismember(atlas,atlases.presets(atlases.defaultset).show)
+                        visible='off';
+                    end
+                end
+                atlassurfs{atlascnt,1}=patch('vertices',atlases.fv{atlas,side}.vertices,'faces',atlases.fv{atlas,side}.faces,...
+                    'FaceVertexCData',atlases.fv{atlas,side}.facevertexcdata,'FaceColor','interp','EdgeColor','none',...
+                    'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
+
+                colorbuttons(atlascnt)=uitoggletool(ht,'CData',ea_get_icn('atlas',atlases.heatcolormap(end,:)),...
+                    'TooltipString',[surfTag,'_',sidestr{side}],...
+                    'ClickedCallback',{@atlasvisible,resultfig,atlascnt},...
+                    'State',visible);
+
+                % set Tags
+                try
+                    set(colorbuttons(atlascnt),'Tag', [surfTag,'_',sidestr{side}])
+                    set(atlassurfs{atlascnt,1},'Tag',[surfTag,'_',sidestr{side}]);
+                catch
+                    keyboard
+                end
+                
+                atlascnt=atlascnt+1;
             elseif strcmp(atlases.pixdim{atlas,side}, 'fibers')
                 fv=atlases.fv{atlas,side};
 
@@ -741,6 +769,9 @@ switch type
         sides=1; % midline
         sidestr={'midline'};
     case 6 % probabilistic
+        sides=1:2;
+        sidestr={'right','left'};
+    case 10 % surface
         sides=1:2;
         sidestr={'right','left'};
 end
