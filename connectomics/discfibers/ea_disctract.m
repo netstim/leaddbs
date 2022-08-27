@@ -1031,7 +1031,7 @@ classdef ea_disctract < handle
                         %such. Therefore, I am splitting the cases into
                         %two.
                         case 'Split & Color By Group'
-                            obj.poscolor = obj.groupcolors(group,:);
+                            obj.poscolor = linecols(group,:);
                             obj.negcolor = [0.94,0.97,1.00];
                             if obj.subscore.special_case
                                 cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
