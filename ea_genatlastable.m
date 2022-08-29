@@ -31,7 +31,7 @@ end
 if isempty(atlases)
     disp('Generating Atlas table. This may take a while...');
 
-    lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0);
+    lhcell=cell(0); rhcell=cell(0); mixedcell=cell(0); midlinecell=cell(0); heatmapcell=cell(0);
 
     delete([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*_temp.nii*']);
     lhatlases=dir([root,filesep,mifix,options.atlasset,filesep,'lh',filesep,'*.nii*']);
