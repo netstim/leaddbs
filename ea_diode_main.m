@@ -151,7 +151,7 @@ for side = options.elside
     end
     %% methods dump:
     ea_methods(options,...
-        'Orientation of directional DBS leads was determined using the algorithm published by Dembek et al. 2019 as implemented in Lead-DBS software.',...
-        {'T.A. Dembek, M. Hoevels, A. Hellerbach, A. Horn, J.N. Petry-Schmelzer, J. Borggrefe, J. Wirths, H.S. Dafsari, M.T. Barbe, V. Visser-Vandewalle & H. Treuer (2019). Directional DBS leads show large deviations from their intended implantation orientation. Parkinsonism Relat Disord. 2019 Oct;67:117-121. doi: 10.1016/j.parkreldis.2019.08.017.'});
+        'Orientation of directional DBS leads was determined using the algorithm published by Dembek et al. 2021 as implemented in Lead-DBS software.',...
+        {'TA Dembek, A Hellerbach, H Jergas, M Eichner, J Wirths, HS Dafsari, MT Barbe, S Hunsche, V Visser-Vandewalle, H Treuer (2021). DiODe v2: Unambiguous and Fully-Automated Detection of Directional DBS Lead Orientation. Brain Sci. 2021 Oct 31;11(11):1450. doi: 10.3390/brainsci11111450.'});
 
 end
