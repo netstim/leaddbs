@@ -1153,8 +1153,8 @@ classdef ea_disctract < handle
                             end
                     end
                 else
-                    obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
-                    obj.negcolor = [0.2824,0.6157,0.9725]; % negative main color
+                    obj.poscolor = obj.poscolor; % positive main color
+                    obj.negcolor = obj.negcolor; % negative main color
 
                     if obj.posvisible && obj.negvisible
                         cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);
