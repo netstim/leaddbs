@@ -403,7 +403,10 @@ classdef ea_disctract < handle
             switch obj.multitractmode
                 case 'Split & Color By PCA'
                     if ~exist('Iperm', 'var') || isempty(Iperm)
-                        Improvement = obj.subscore.vars;
+                        %Improvement = obj.subscore.vars;
+                        for i=1:length(obj.subscore.vars)
+                            Improvement{i} = obj.subscore.vars{i}(obj.patientselection);
+                        end           
                     else
                         ea_error('Permutation based test not yet coded in for PCA mode.');
                     end
@@ -649,13 +652,28 @@ classdef ea_disctract < handle
                     Ihat=ea_nansum(Ihat.*weightmatrix,3);
                 case 'Split & Color By PCA'
 
-                    Ihat_voters=squeeze(ea_nanmean(Ihat_voters,2)); % need to assume global scores here for now.
+                    Ihat=squeeze(ea_nanmean(Ihat,2));
+                    %Ihat_voters=squeeze(ea_nanmean(Ihat_voters,2)); % need to assume global scores here for now.
 
                     % map back to PCA:
-                    subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
-                    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
+                    for i=1:length(obj.subscore.vars)
+                        selected_subscores{i} = obj.subscore.vars{i}(obj.patientselection);
+                    end
+                    subvars=ea_nanzscore(cell2mat(selected_subscores));
+                    if size(subvars,2) <= 2
+                        ea_warndlg("You may not have enough subscores & this might result in errors. Please consider selecting more subscores.")
+                    end
 
-                    Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
+                    %subvars=ea_nanzscore(cell2mat(app.tractset.subscore.vars'));
+                    %try
+                    [coeff,score,latent,tsquared,explained]=pca(subvars,'Rows','complete');
+
+
+                    %subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
+                    %[coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
+
+                    Ihatout = Ihat*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
+                    %Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
 
                     Ihat=cell(1); % export in cell format as the Improvement itself.
                     for subsc=1:size(Ihatout,2)

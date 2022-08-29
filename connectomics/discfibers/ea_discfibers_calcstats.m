@@ -33,15 +33,19 @@ end
 
 if strcmp(obj.multitractmode,'Split & Color By PCA')
     % prep PCA:
-    subvars=ea_nanzscore(cell2mat(obj.subscore.vars')); %standardize subscore stage
-    try
-        [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
-    catch %can fail due to presence of NaN/INF TODO
+    %here, you will not select a predefined set of patient scores yet since
+    %this happpens later on.
+    subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
+    %standardize subscore stage
+    %try
+    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','complete');
+        % [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
+    %catch %can fail due to presence of NaN/INF TODO
         % pca failed, likely not enough variables selected.
-        score=nan(length(obj.responsevar),obj.numpcs);
-    end
-
-    if isempty(score) || isnan(score)
+    %    score=nan(length(obj.responsevar),obj.numpcs);
+    %end
+    
+    if isempty(score) || ea_isnan(score,'any')
         score=nan(length(obj.responsevar),obj.numpcs);
     end
 
@@ -465,4 +469,25 @@ switch threshstrategy
         end
     case 'Fixed Fiber Value'
         fibValThreshold = threshold;
+end
+
+function result = ea_isnan(input_array,flag)
+if size(input_array,2) > 1
+    if strcmp(flag,'any')
+        op = any(isnan(input_array));
+    elseif strcmp(flag,'all')
+        op = all(isnan(input_array));
+    end
+    if length(find(op)) > 1
+        result = 1;
+    else
+        result = 0;
+
+    end
+else
+    if strcmp(flag,'any')
+        result = any(isnan(input_array));
+    elseif strcmp(flag,'all')
+        result = all(isnan(input_array));
+    end
 end
