@@ -131,7 +131,7 @@ classdef ea_roi < handle
                     if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
                         obj.binary=1;
                     else
-                        obj.nii.img=obj.nii.img-nanmin(obj.nii.img(:)); % set min to zero
+                        obj.nii.img=obj.nii.img-ea_nanmin(obj.nii.img(:)); % set min to zero
                         obj.binary=0;
                     end
                     obj.nii.img(isnan(obj.nii.img)) = 0;
