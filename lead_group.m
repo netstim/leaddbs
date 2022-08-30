@@ -241,15 +241,13 @@ if strcmp(target, 'groupDir')
             groupdir = [fileparts(folders{1}), filesep];
             load(folders{1}, 'M');
 
-            %out = regexp(groupdir,'/','split');
-            %rem_end = length(out{end-1})+ length(out{end-2}) + 2; 
             derivative_folder = split(groupdir,'leadgroup');
-            if isfile([derivative_folder{1},'leaddbs/Miniset_flag.json'])            
+            if isfile([derivative_folder{1}, 'leaddbs', filesep, 'Miniset_flag.json'])            
                 for i = 1:size(M.patient.list,1)
-                    [~,patient_tag,~] = fileparts(M.patient.list{i});
-                    M.patient.list{i} = [derivative_folder{1},'leaddbs/',patient_tag];
+                    [~, patient_tag] = fileparts(M.patient.list{i});
+                    M.patient.list{i} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];
                 end
-                M.root = [groupdir, '/'];
+                M.root = groupdir;
                 save(folders{1}, 'M')
             end
 
@@ -264,15 +262,13 @@ if strcmp(target, 'groupDir')
         groupdir = [fileparts(analysisFile), filesep];
         load(analysisFile, 'M');
 
-        %out = regexp(groupdir,'/','split');
-        %rem_end = length(out{end-1})+ length(out{end-2}) + 2; 
-        derivative_folder = split(groupdir,'leadgroup');
-        if isfile([derivative_folder{1},'leaddbs/Miniset_flag.json'])
+        derivative_folder = split(groupdir, 'leadgroup');
+        if isfile([derivative_folder{1}, 'leaddbs', filesep, 'Miniset_flag.json'])
             for i = 1:size(M.patient.list,1)
-                [~,patient_tag,~] = fileparts(M.patient.list{i});
-                M.patient.list{i} = [derivative_folder{1},'leaddbs/',patient_tag];
+                [~, patient_tag] = fileparts(M.patient.list{i});
+                M.patient.list{i} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];
             end
-            M.root = [groupdir, '/'];
+            M.root = groupdir;
             save(analysisFile, 'M')
         end
 

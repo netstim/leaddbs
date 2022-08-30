@@ -17,4 +17,12 @@ transform = ea_flirt([options.subj.preopAnat.(options.subj.AnchorModality).coreg
 movefile(transform{1}, [options.subj.coreg.transform.CT.forwardBaseName, 'flirt.mat']);
 movefile(transform{2}, [options.subj.coreg.transform.CT.inverseBaseName, 'flirt.mat']);
 
+%% transform FLIRT coregistration matrix to world matrix CT->native and native->CT
+[tmat, ~, ~] = flirtmat2worldmatPaCER(str2num(fileread([options.subj.coreg.transform.CT.forwardBaseName, 'flirt.mat'])),...
+    [options.subj.postopAnat.CT.preproc], [options.subj.preopAnat.(options.subj.AnchorModality).coreg], 0);
+
+save([options.subj.coreg.transform.CT.inverseBaseName 'world.mat'],'tmat')
+tmat = inv(tmat);
+save([options.subj.coreg.transform.CT.forwardBaseName 'world.mat'],'tmat')
+
 disp('Coregistration done.');
