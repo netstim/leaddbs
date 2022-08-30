@@ -140,31 +140,25 @@ end
 % [balanced,colormap] = ea_autocontrast(double(V{1}.dat),2.5);
 % end
 
-if togglestates.xyztoggles(1)
-    usesag=(length(V)>2)*2; % check if explicit saggital volume is available
-    if strcmp(class(V{1+usesag}),'nifti') % memory mapped, nifti function
-        xsliceplot=slice3i(resultfig,V{1+usesag}.dat,V{1+usesag}.mat,1,xyzv(1),controlhandles);
-    else
-        xsliceplot=slice3i(resultfig,V{1+usesag}.img,V{1+usesag}.mat,1,xyzv(1),controlhandles);
-    end
+usesag=(length(V)>2)*2; % check if explicit saggital volume is available
+if strcmp(class(V{1+usesag}),'nifti') % memory mapped, nifti function
+    xsliceplot=slice3i(resultfig,V{1+usesag}.dat,V{1+usesag}.mat,1,xyzv(1),controlhandles);
+else
+    xsliceplot=slice3i(resultfig,V{1+usesag}.img,V{1+usesag}.mat,1,xyzv(1),controlhandles);
 end
 
-if togglestates.xyztoggles(2)
-    % check whether second nii is being used:
-    usecor=length(V)>1; % check if explicit coronal volume is available    
-    if strcmp(class(V{1+usecor}),'nifti') % memory mapped, nifti function
-        ysliceplot=slice3i(resultfig,V{1+usecor}.dat,V{1+usecor}.mat,2,xyzv(2),controlhandles);
-    else
-        ysliceplot=slice3i(resultfig,V{1+usecor}.img,V{1+usecor}.mat,2,xyzv(2),controlhandles);
-    end
+% check whether second nii is being used:
+usecor=length(V)>1; % check if explicit coronal volume is available    
+if strcmp(class(V{1+usecor}),'nifti') % memory mapped, nifti function
+    ysliceplot=slice3i(resultfig,V{1+usecor}.dat,V{1+usecor}.mat,2,xyzv(2),controlhandles);
+else
+    ysliceplot=slice3i(resultfig,V{1+usecor}.img,V{1+usecor}.mat,2,xyzv(2),controlhandles);
 end
 
-if togglestates.xyztoggles(3)
-    if strcmp(class(V{1}),'nifti') % memory mapped, nifti function        
-        zsliceplot=slice3i(resultfig,V{1}.dat,V{1}.mat,3,xyzv(3),controlhandles);
-    else
-        zsliceplot=slice3i(resultfig,V{1}.img,V{1}.mat,3,xyzv(3),controlhandles);
-    end
+if strcmp(class(V{1}),'nifti') % memory mapped, nifti function        
+    zsliceplot=slice3i(resultfig,V{1}.dat,V{1}.mat,3,xyzv(3),controlhandles);
+else
+    zsliceplot=slice3i(resultfig,V{1}.img,V{1}.mat,3,xyzv(3),controlhandles);
 end
 
 %colormap(cmap);
