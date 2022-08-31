@@ -13,7 +13,8 @@ classdef ea_disctract < handle
         shownegamount = [25 25] % two entries for right and left
         connthreshold = 20
         efieldthreshold = 200
-        statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations, 3 = vacant (OSS DBS pathway activations), 4 = Proportion Test (Chi-Square) / VTAs (binary vars), 5 = reverse t-tests & e-fields for binary variables, 6 = show plain connections (no stats)
+        statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations, 3 = vacant (OSS DBS pathway activations), 4 = Dice Coeff / VTAs for binary variables, 5 = reverse t-tests & e-fields for binary variables, 6 = show plain connections (no stats)
+        threshstrategy = 'Percentage Relative to Peak'; % can be 'Relative to Amount' or 'Fixed Amount'
         multi_pathways = 0 % if structural connectome is devided into pathways (multiple .mat in dMRI_MultiTract)
         map_list % list that contains global indices of the first fibers in each pathway (relevant when multi_pathways = 1)
         pathway_list % list that contains names of pathways (relevant when multi_pathways = 1
@@ -136,7 +137,7 @@ classdef ea_disctract < handle
                 obj.subscore.vis.neg_shown = repmat([25,25],10,1);
                 obj.subscore.negvisible = zeros(10,1);
                 obj.subscore.posvisible = ones(10,1);
-                obj.subscore.spitbysubscore = 0;
+                obj.subscore.splitbysubscore = 0;
                 obj.subscore.special_case = 0;
                 obj.covarlabels={};
             elseif  isfield(D, 'tractset')  % Saved tractset class loaded
@@ -153,10 +154,9 @@ classdef ea_disctract < handle
                 return
             end
 
-             addlistener(obj,'activateby','PostSet',...
-                @activatebychange);
-            %added a check here otherwise errors out for files w/o
-            %vatmodels
+            addlistener(obj,'activateby','PostSet',@activatebychange);
+
+            % added a check here otherwise errors out for files w/o vatmodels
             if ~isfield(obj.M,'pseudoM')
                 if ~isempty(obj.M.vatmodel) && contains(obj.M.vatmodel, 'OSS-DBS (Butenko 2020)')
                     obj.statmetric = 3;
@@ -320,6 +320,7 @@ classdef ea_disctract < handle
                 end
             end
         end
+
         function refreshlg(obj)
             if ~exist(obj.leadgroup,'file')
                 msgbox('Groupan alysis file has vanished. Please select file.');
@@ -402,7 +403,10 @@ classdef ea_disctract < handle
             switch obj.multitractmode
                 case 'Split & Color By PCA'
                     if ~exist('Iperm', 'var') || isempty(Iperm)
-                        Improvement = obj.subscore.vars;
+                        %Improvement = obj.subscore.vars;
+                        for i=1:length(obj.subscore.vars)
+                            Improvement{i} = obj.subscore.vars{i}(obj.patientselection);
+                        end           
                     else
                         ea_error('Permutation based test not yet coded in for PCA mode.');
                     end
@@ -648,13 +652,28 @@ classdef ea_disctract < handle
                     Ihat=ea_nansum(Ihat.*weightmatrix,3);
                 case 'Split & Color By PCA'
 
-                    Ihat_voters=squeeze(ea_nanmean(Ihat_voters,2)); % need to assume global scores here for now.
+                    Ihat=squeeze(ea_nanmean(Ihat,2));
+                    %Ihat_voters=squeeze(ea_nanmean(Ihat_voters,2)); % need to assume global scores here for now.
 
                     % map back to PCA:
-                    subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
-                    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
+                    for i=1:length(obj.subscore.vars)
+                        selected_subscores{i} = obj.subscore.vars{i}(obj.patientselection);
+                    end
+                    subvars=ea_nanzscore(cell2mat(selected_subscores));
+                    if size(subvars,2) <= 2
+                        ea_warndlg("You may not have enough subscores & this might result in errors. Please consider selecting more subscores.")
+                    end
 
-                    Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
+                    %subvars=ea_nanzscore(cell2mat(app.tractset.subscore.vars'));
+                    %try
+                    [coeff,score,latent,tsquared,explained]=pca(subvars,'Rows','complete');
+
+
+                    %subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
+                    %[coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
+
+                    Ihatout = Ihat*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
+                    %Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
 
                     Ihat=cell(1); % export in cell format as the Improvement itself.
                     for subsc=1:size(Ihatout,2)
@@ -699,7 +718,7 @@ classdef ea_disctract < handle
 
             R = zeros(numPerm+1, 1);
 
-            for perm=1:numPerm+1
+            parfor perm=1:numPerm+1
                 if perm==1
                     fprintf('Calculating without permutation\n\n');
                     [~, Ihat{perm}] = lno(obj);
@@ -743,9 +762,11 @@ classdef ea_disctract < handle
 
             %we do not need to store plainconn separately since it is a
             %duplicate of PAM or VAT connectivity
-            if isfield(obj.results.(ea_conn2connid(obj.connectome)),'plainconn')
-                connectomeName = ea_conn2connid(obj.connectome);
-                obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn');
+            if ~isempty(obj.results)
+                if  isfield(obj.results.(ea_conn2connid(obj.connectome)),'plainconn')
+                    connectomeName = ea_conn2connid(obj.connectome);
+                    obj.results.(connectomeName) = rmfield(obj.results.(connectomeName),'plainconn');
+                end
             end
 
             tractset.resultfig=[]; % rm figure handle before saving.
@@ -1030,7 +1051,7 @@ classdef ea_disctract < handle
                         %such. Therefore, I am splitting the cases into
                         %two.
                         case 'Split & Color By Group'
-                            obj.poscolor = obj.groupcolors(group,:);
+                            obj.poscolor = linecols(group,:);
                             obj.negcolor = [0.94,0.97,1.00];
                             if obj.subscore.special_case
                                 cmap = ea_colorgradient(gradientLevel, [1,1,1], obj.poscolor);
@@ -1134,8 +1155,8 @@ classdef ea_disctract < handle
                             end
                     end
                 else
-                    obj.poscolor = [0.9176,0.2000,0.1373]; % positive main color
-                    obj.negcolor = [0.2824,0.6157,0.9725]; % negative main color
+                    obj.poscolor = obj.poscolor; % positive main color
+                    obj.negcolor = obj.negcolor; % negative main color
 
                     if obj.posvisible && obj.negvisible
                         cmap = ea_colorgradient(gradientLevel/2, obj.negcolor, [1,1,1]);

@@ -33,15 +33,19 @@ end
 
 if strcmp(obj.multitractmode,'Split & Color By PCA')
     % prep PCA:
-    subvars=ea_nanzscore(cell2mat(obj.subscore.vars')); %standardize subscore stage
-    try
-        [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
-    catch %can fail due to presence of NaN/INF TODO
+    %here, you will not select a predefined set of patient scores yet since
+    %this happpens later on.
+    subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
+    %standardize subscore stage
+    %try
+    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','complete');
+        % [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
+    %catch %can fail due to presence of NaN/INF TODO
         % pca failed, likely not enough variables selected.
-        score=nan(length(obj.responsevar),obj.numpcs);
-    end
-
-    if isempty(score) || isnan(score)
+    %    score=nan(length(obj.responsevar),obj.numpcs);
+    %end
+    
+    if isempty(score) || ea_isnan(score,'any')
         score=nan(length(obj.responsevar),obj.numpcs);
     end
 
@@ -340,90 +344,63 @@ for group=groups
         if exist('pvals','var')
             pvals{group,side}=pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
         end
+
         allvals = vertcat(vals{group,:});
         posvals = sort(allvals(allvals>0),'descend');
         negvals = sort(allvals(allvals<0),'ascend');
+        
+        % positive thresholds
         if dosubscores || dogroups
             if obj.subscore.special_case
                 if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
                     posthresh = inf;
                 else
-                    posrange = posvals(1) - posvals(end);
-                    posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-
-                    if posrange == 0
-                        posthresh = posthresh - eps*10;
-                    end
+                    posthresh = ea_fibValThresh(obj.threshstrategy, posvals, obj.showposamount(side));
                 end
             else
                 if ~obj.subscore.posvisible(group) || ~obj.subscore.vis.showposamount(group,side) || isempty(posvals)
                     posthresh = inf;
                 else
-                    posrange = posvals(1) - posvals(end);
-                    posthresh = posvals(1) - obj.subscore.vis.showposamount(group,side)/100 * posrange;
-
-                    if posrange == 0
-                        posthresh = posthresh - eps*10;
-                    end
+                    posthresh = ea_fibValThresh(obj.threshstrategy, posvals, obj.subscore.vis.showposamount(group,side));
                 end
             end
-
         else
             if ~obj.posvisible || ~obj.showposamount(side) || isempty(posvals)
                 posthresh = inf;
             else
-                posrange = posvals(1) - posvals(end);
-                posthresh = posvals(1) - obj.showposamount(side)/100 * posrange;
-
-                if posrange == 0
-                    posthresh = posthresh - eps*10;
-                end
+                posthresh = ea_fibValThresh(obj.threshstrategy, posvals, obj.showposamount(side));
             end
-
         end
+
+        % negative thresholds
         if dosubscores || dogroups
             if obj.subscore.special_case
                 if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
                     negthresh = -inf;
                 else
-                    negrange = negvals(1) - negvals(end);
-                    negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-
-                    if negrange == 0
-                        negthresh = negthresh + eps*10;
-                    end
+                    negthresh = ea_fibValThresh(obj.threshstrategy, negvals, obj.shownegamount(side));
                 end
             else
                 if ~obj.subscore.negvisible(group) || ~obj.subscore.vis.shownegamount(group,side) || isempty(negvals)
                     negthresh = -inf;
                 else
-                    negrange = negvals(1) - negvals(end);
-                    negthresh = negvals(1) - obj.subscore.vis.shownegamount(group,side)/100 * negrange;
-
-                    if negrange == 0
-                        negthresh = negthresh + eps*10;
-                    end
+                    negthresh = ea_fibValThresh(obj.threshstrategy, negvals, obj.subscore.vis.shownegamount(group,side));
                 end
             end
         else
             if ~obj.negvisible || ~obj.shownegamount(side) || isempty(negvals)
                 negthresh = -inf;
             else
-                negrange = negvals(1) - negvals(end);
-                negthresh = negvals(1) - obj.shownegamount(side)/100 * negrange;
-
-                if negrange == 0
-                    negthresh = negthresh + eps*10;
-                end
+                negthresh = ea_fibValThresh(obj.threshstrategy, negvals, obj.shownegamount(side));
             end
         end
+
         % Remove vals and fibers outside the thresholding range (set by
         % sliders)
         remove = logical(logical(vals{group,side}<posthresh) .* logical(vals{group,side}>negthresh));
         vals{group,side}(remove)=[];
         fibcell{group,side}(remove)=[];
         usedidx{group,side}(remove)=[];
-
     end
 end
 
@@ -459,4 +436,58 @@ for cellentry=1:numel(vals)
     vals{cellentry}(:)=allvals(cnt:cnt+length(vals{cellentry})-1);
     ps{cellentry}(:)=allps(cnt:cnt+length(vals{cellentry})-1);
     cnt=cnt+length(vals{cellentry});
+end
+
+
+function fibValThreshold = ea_fibValThresh(threshstrategy, vals, threshold)
+switch threshstrategy
+    case 'Percentage Relative to Peak'
+        range = vals(1) - vals(end);
+        fibValThreshold = vals(1) - threshold/100 * range;
+        if range == 0
+            if vals(1) > 0
+                fibValThreshold = fibValThreshold - eps*10;
+            else
+                fibValThreshold = fibValThreshold + eps*10;
+            end
+        end
+    case 'Percentage Relative to Amount'
+        fibValThreshold = vals(round((threshold/100)*length(vals)));
+    case 'Fixed Amount'
+        if length(vals)>round(threshold)
+            fibValThreshold=vals(round(threshold));
+        else
+            fibValThreshold=vals(end);
+        end
+    case 'Histogram (CDF)'
+        if vals(1) > 0
+            [fx, x] = ecdf(vals);
+            fibValThreshold = x(find(fx>=(1-threshold), 1));
+        else
+            [fx, x] = ecdf(-vals);
+            fibValThreshold = -x(find(fx>=(1-threshold), 1));
+        end
+    case 'Fixed Fiber Value'
+        fibValThreshold = threshold;
+end
+
+function result = ea_isnan(input_array,flag)
+if size(input_array,2) > 1
+    if strcmp(flag,'any')
+        op = any(isnan(input_array));
+    elseif strcmp(flag,'all')
+        op = all(isnan(input_array));
+    end
+    if length(find(op)) > 1
+        result = 1;
+    else
+        result = 0;
+
+    end
+else
+    if strcmp(flag,'any')
+        result = any(isnan(input_array));
+    elseif strcmp(flag,'all')
+        result = all(isnan(input_array));
+    end
 end
