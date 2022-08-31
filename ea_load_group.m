@@ -10,6 +10,9 @@ set(handles.groupdir_choosebox, 'TooltipString', groupdir);
 
 try % if file already exists, load it (and overwrite M).
     load([groupdir, 'LEAD_groupanalysis.mat']);
+    if M.ui.detached
+        cd(groupdir);
+    end
     if ~isfield(M.ui, 'mirrorsides')
         % Fix missing 'mirrorsides' field for old analysis
         try
