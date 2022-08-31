@@ -44,8 +44,7 @@ switch options.prefs.reco.mancoruse
                 transform_file_name = [options.subj.coreg.transform.CT.forwardBaseName 'flirt.mat'];
                 tmat_flirt = readmatrix(transform_file_name, 'FileType', 'text');
                 %TODO check if add + 1 is nessesary, check the inverse case
-                tmat = flirtmat2worldmatPaCER(tmat_flirt, postopct, options.subj.coreg.anat.preop.(options.subj.AnchorModality), 0);
-                tmat = inv(tmat); % for some reasen the way flirtmat2worldmatPaCER is coded, it returns the inverse matrix by default
+                tmat = flirtmat2worldmatPaCER(tmat_flirt, options.subj.coreg.anat.preop.(options.subj.AnchorModality), postopct, false );
                 % use inv() function to return inverse when queried (for example DiODe)
                 if inverse
                     tmat = inv(tmat);

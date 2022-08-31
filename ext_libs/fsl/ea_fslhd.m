@@ -24,13 +24,9 @@ end
 cmd = [FSLHD, ' ', xmlarg, ' ', input, ];
 
 if ~ispc
-    [status, cmdout] = system(['bash -c "', cmd, '"']);
+    [~, cmdout] = system(['bash -c "', cmd, '"']);
 else
-    [status, cmdout] = system(cmd);
-end
-
-if status ~= 0
-    error('%s', strip(cmdout));
+    [~, cmdout] = system(cmd);
 end
 
 % Trim string
