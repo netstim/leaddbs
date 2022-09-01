@@ -150,7 +150,7 @@ try
             ea_setnewatlas(h,[],options,handles);
     end
 catch % default (e.g. when changing to a different space
-    sd=load([ea_space,'ea_space_def.mat']);
+    sd=load([ea_space,'spacedef.mat']);
     defaultnucleus=sd.spacedef.defaultnucleus;
     parts=ea_strsplit(defaultnucleus,'@');
     h.Parent.Label=parts{1};

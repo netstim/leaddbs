@@ -113,7 +113,7 @@ if isfield(ftr, 'voxmm') && strcmp(ftr.voxmm, 'vox')
     end
 end
 
-load([ea_space, 'ea_space_def.mat'], 'spacedef');
+load([ea_space, 'spacedef.mat'], 'spacedef');
 primarytemplate = spacedef.templates{1};
 
 % Reference image when construct the spherical ROI, use MNI t1 by default

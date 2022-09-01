@@ -388,7 +388,7 @@ end
 
 function [startslice,endslice,masksz]=ea_getstartslice(options) % get reconstruction default dimensions for current space
 spacedef=ea_getspacedef;
-standardspacedef=load([ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'ea_space_def.mat']);
+standardspacedef=load([ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM',filesep,'spacedef.mat']);
 if isfield(spacedef,'guidef')
     whichentry=ismember(options.entrypoint,spacedef.guidef.entrypoints);
     masksz=spacedef.guidef.masks(whichentry,:);

@@ -11,7 +11,7 @@ if ~exist('mute','var')
     end
 end
 
-load([ea_space,'ea_space_def.mat']);
+load([ea_space,'spacedef.mat']);
 
 if ~exist([ea_space,'dartel'], 'dir')
     mkdir([ea_space,'dartel']);

@@ -17,21 +17,21 @@ if strcmp(answ,'Sure')
     % Check if there's space specific togglestates setting
     if ~isfield(spacedef, 'togglestates') % Fallback
         mnispace = [ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM'];
-        load([mnispace, filesep, 'ea_space_def.mat'], 'spacedef');
+        load([mnispace, filesep, 'spacedef.mat'], 'spacedef');
     end
     ea_storemachineprefs('togglestates', spacedef.togglestates);
 
     % Check if there's space specific view setting
     if ~isfield(spacedef, 'view') % Fallback
         mnispace = [ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM'];
-        load([mnispace, filesep, 'ea_space_def.mat'], 'spacedef');
+        load([mnispace, filesep, 'spacedef.mat'], 'spacedef');
     end
     ea_storemachineprefs('view', spacedef.view);
 
     % Check if there's space specific default atlas setting
     if ~isfield(spacedef, 'defaultatlas') % Fallback
         mnispace = [ea_getearoot,'templates',filesep,'space',filesep,'MNI_ICBM_2009b_NLIN_ASYM'];
-        load([mnispace, filesep, 'ea_space_def.mat'], 'spacedef');
+        load([mnispace, filesep, 'spacedef.mat'], 'spacedef');
     end
     ea_storemachineprefs('defaultatlas', spacedef.defaultatlas);
 

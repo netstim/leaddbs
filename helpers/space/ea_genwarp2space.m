@@ -9,7 +9,7 @@ if exist([ea_space,fromwhich],'dir') && exist([ea_space,fromwhich,filesep,'glana
 end
 
 foreignspaceroot=[ea_getearoot,'templates',filesep,'space',filesep,fromwhich,filesep];
-load([foreignspaceroot,'ea_space_def.mat'])
+load([foreignspaceroot,'spacedef.mat'])
 
 mkdir([ea_space,fromwhich]);
 for t=1:length(spacedef.templates)

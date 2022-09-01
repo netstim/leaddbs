@@ -564,7 +564,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
             return
         end
 
-        options.sd=load([ea_space,'ea_space_def.mat'],'spacedef');
+        options.sd=load([ea_space,'spacedef.mat'],'spacedef');
         if str2double(numkey)>length(options.sd.spacedef.templates)
             ea_busyaction('off',gcf,'normcheck');
             return
@@ -608,7 +608,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         [options,presentfiles] = ea_assignpretra(options);
         if str2double(numkey)==1
             pt=ea_load_nii([options.root,options.patientname,filesep,options.prefs.gprenii]);
-            sd=load([ea_space,'ea_space_def.mat']);
+            sd=load([ea_space,'spacedef.mat']);
             [~,anchor]=ismember(options.primarytemplate,sd.spacedef.templates); % in this case, "1" could e.g. be the T2 as well, so pass on the T2 in this case to also load the correct template.
             anchor=num2str(anchor);
         elseif str2double(numkey)>length(presentfiles)

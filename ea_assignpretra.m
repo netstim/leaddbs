@@ -20,7 +20,7 @@ prenii_order = cellfun(@(x) strrep(options.prefs.prenii_searchstring,'*',x), opt
 [~,idx] = ismember(ea_stripext(prenii_order), ea_stripext(pfcell));
 presentfiles = pfcell([nonzeros(idx)',setdiff(1:numel(pfcell),nonzeros(idx))]);
 
-load([ea_space,'ea_space_def.mat']);
+load([ea_space,'spacedef.mat']);
 
 options.primarytemplate = spacedef.templates{1}; % default T1.
 
