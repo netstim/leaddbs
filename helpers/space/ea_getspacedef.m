@@ -1,3 +1,3 @@
 function spacedef = ea_getspacedef
 
-load([ea_space,'ea_space_def.mat'], 'spacedef');
+load([ea_space,'spacedef.mat'], 'spacedef');

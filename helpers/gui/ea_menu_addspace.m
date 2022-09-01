@@ -3,7 +3,7 @@ function ea_menu_addspace(handles)
 space_menu = uimenu('Label','Space');
 change_space_menu = uimenu(space_menu,'Label','Change current space to');
 
-spaces = dir(fullfile(ea_getearoot,'templates','space','*','ea_space_def.mat'));
+spaces = dir(fullfile(ea_getearoot,'templates','space','*','spacedef.mat'));
 [~, spaces] = cellfun(@fileparts,{spaces.folder}','UniformOutput',false);
 spacesLabel = ea_underscore2space(spaces);
 
