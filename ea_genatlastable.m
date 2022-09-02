@@ -485,7 +485,7 @@ for atl=1:length(atlnames)
     if ~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],'file') % first atlas, generate empty hdtemplate in atlas dir...
         if (~exist([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii.gz'],'file'))
             if ~options.native
-                load([ea_space,'ea_space_def.mat'])
+                load([ea_space,'spacedef.mat'])
                 copyfile([ea_space,spacedef.templates{1},'.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii']);
                 ea_reslice_nii([root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],[root,filesep,mifix,options.atlasset,filesep,'gm_mask.nii'],...
                     [0.3,0.3,0.3],0,0,1,[],[],1);

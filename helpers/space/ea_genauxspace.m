@@ -2,8 +2,8 @@ function ea_genauxspace(~,~,handles)
 
 
 options.prefs=ea_prefs('');
-if exist([ea_space,'ea_space_def.mat'],'file')
-    load([ea_space,'ea_space_def.mat'])
+if exist([ea_space,'spacedef.mat'],'file')
+    load([ea_space,'spacedef.mat'])
 else
     spacedef=ea_gendefspacedef; % generate default spacedefiniton
 end
