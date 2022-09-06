@@ -169,7 +169,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                             case 'peak 5% of scores'
                                 if lateral_score == false
                                     ihatvals = vals_flat.*fibsval_usedidx_flat;
-                                    ihatvals = sort(ihatvals);
+                                    ihatvals = sort(ihatvals, 'descend');
                                     Ihat_all = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -181,8 +181,8 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel));
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel));
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
-                                        ihatvals_test = sort(Ihat_ADJ_comb(test));
-                                        ihatvals_training = sort(Ihat_ADJ_comb(training));
+                                        ihatvals_test = sort(Ihat_ADJ_comb(test), 'descend');
+                                        ihatvals_training = sort(Ihat_ADJ_comb(training), 'descend');
 
                                         Ihat_ADJ_test = transpose(adj_scaler*ea_nansum(ihatvals_test(1:ceil(size(ihatvals_test,1).*0.05),:),1));
                                         Ihat_ADJ_training = adj_scaler*ea_nansum(ihatvals_training(1:ceil(size(ihatvals_training,1).*0.05),:),1);
@@ -195,10 +195,10 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel);
-                                    ihatvals_test=sort(ihatvals(test));
+                                    ihatvals_test=sort(ihatvals(test), 'descend');
                                     Ihat(test,side,voter) = ea_nansum(ihatvals_test(1:ceil(size(ihatvals_test,1).*0.05),:),1);
 
-                                    ihatvals_training=sort(ihatvals(training));
+                                    ihatvals_training=sort(ihatvals(training), 'descend');
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(ihatvals_training(1:ceil(size(ihatvals_training,1).*0.05),:),1);
 
                                     if isstruct(obj.ADJ)
@@ -380,7 +380,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                             case 'peak 5% of scores'
                                 if lateral_score == false
                                     ihatvals = vals_flat.*fibsval_usedidx_flat;
-                                    ihatvals = sort(ihatvals);
+                                    ihatvals = sort(ihatvals, 'descend');
                                     Ihat_all = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
@@ -392,8 +392,8 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel));
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel));
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
-                                        ihatvals_test = sort(Ihat_ADJ_comb(test)); % double check
-                                        ihatvals_training = sort(Ihat_ADJ_comb(training)); % double check
+                                        ihatvals_test = sort(Ihat_ADJ_comb(test), 'descend'); % double check
+                                        ihatvals_training = sort(Ihat_ADJ_comb(training), 'descend'); % double check
 
                                         Ihat_ADJ_test = transpose(adj_scaler*ea_nansum(ihatvals_test(1:ceil(size(ihatvals_test,1).*0.05),:),1));
                                         Ihat_ADJ_training = adj_scaler*ea_nansum(ihatvals_training(1:ceil(size(ihatvals_training,1).*0.05),:),1);
@@ -406,10 +406,10 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     break % both sides are already filled out!
                                 else
                                     ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel);
-                                    ihatvals_test=sort(ihatvals(test));
+                                    ihatvals_test=sort(ihatvals(test), 'descend');
                                     Ihat(test,side,voter) = ea_nansum(ihatvals_test(1:ceil(size(ihatvals_test,1).*0.05),:),1);
 
-                                    ihatvals_training=sort(ihatvals(training));
+                                    ihatvals_training=sort(ihatvals(training), 'descend');
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_nansum(ihatvals_training(1:ceil(size(ihatvals_training,1).*0.05),:),1);
 
                                     if isstruct(obj.ADJ)
