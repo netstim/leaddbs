@@ -138,7 +138,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
 
                             case 'peak of scores'
                                 if lateral_score == false
-                                    Ihat_all = ea_nanmax(vals_flat.*fibsval_usedidx_flat,1);
+                                    Ihat_all = ea_discfibers_getpeak(vals_flat.*fibsval_usedidx_flat, obj.posvisible, obj.negvisible);
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
@@ -150,8 +150,8 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel));
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel));
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
-                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,test),1));
-                                        Ihat_ADJ_training = adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,training),1);
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_discfibers_getpeak(Ihat_ADJ_comb(1:end,test), obj.posvisible, obj.negvisible));
+                                        Ihat_ADJ_training = adj_scaler*ea_discfibers_getpeak(Ihat_ADJ_comb(1:end,training), obj.posvisible, obj.negvisible);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;
@@ -160,8 +160,8 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
 
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat(test,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
@@ -351,7 +351,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                 end
                             case 'peak of scores'
                                 if lateral_score == false
-                                    Ihat_all = ea_nanmax(vals_flat.*fibsval_usedidx_flat,1);
+                                    Ihat_all = ea_discfibers_getpeak(vals_flat.*fibsval_usedidx_flat, obj.posvisible, obj.negvisible);
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
@@ -361,8 +361,8 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel));
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel));
                                         Ihat_ADJ_comb = [Ihat_ADJ_rh;Ihat_ADJ_lh];
-                                        Ihat_ADJ_test = transpose(adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,test),1));
-                                        Ihat_ADJ_training = adj_scaler*ea_nanmax(Ihat_ADJ_comb(1:end,training),1);
+                                        Ihat_ADJ_test = transpose(adj_scaler*ea_discfibers_getpeak(Ihat_ADJ_comb(1:end,test), obj.posvisible, obj.negvisible));
+                                        Ihat_ADJ_training = adj_scaler*ea_discfibers_getpeak(Ihat_ADJ_comb(1:end,training), obj.posvisible, obj.negvisible);
                                         Ihat(test,1,voter) = Ihat(test,1,voter) + Ihat_ADJ_test;
                                         Ihat(test,2, voter) = Ihat(test,1, voter);
                                         Ihat_train_global(numTestIt,training,1, voter) = Ihat_train_global(numTestIt,training,1, voter) + Ihat_ADJ_training;
@@ -371,8 +371,8 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
 
                                     break % both sides are already filled out!
                                 else
-                                    Ihat(test,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
-                                    Ihat_train_global(numTestIt,training,side,voter) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                    Ihat(test,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible);
+                                    Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible);
                                     if isstruct(obj.ADJ)
                                         disp('Adjacency matrix for lateral symptoms is currently not supported')
                                     end
