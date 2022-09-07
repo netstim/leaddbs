@@ -208,7 +208,7 @@ switch side
     case 1
         vatfvname = [stimDir, filesep, filePrefix, 'binary_model-fastfield_hemi-R.mat'];
     case 2
-        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-fastfield_hemi-R.mat'];
+        vatfvname = [stimDir, filesep, filePrefix, 'binary_model-fastfield_hemi-L.mat'];
 end
 
 save(vatfvname,'vatfv','vatvolume');
