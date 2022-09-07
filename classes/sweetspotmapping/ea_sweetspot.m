@@ -320,7 +320,7 @@ classdef ea_sweetspot < handle
                                         Ihat(test,side) = ea_nanmax(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)',1);
                                     case 'peak 5% of scores'
                                         ihatvals=vals{1,side}.*obj.results.efield{side}(patientsel(test),:)';
-                                        ihatvals=sort(ihatvals);
+                                        ihatvals=sort(ihatvals, 'descend');
                                         Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                 end
                             case 'E-Fields'
@@ -339,7 +339,7 @@ classdef ea_sweetspot < handle
                                         Ihat(test,side) = ea_nanmax(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)',1);
                                     case 'peak 5% of scores'
                                         ihatvals=vals{1,side}.*obj.results.efield{side}(patientsel(test),:)';
-                                        ihatvals=sort(ihatvals);
+                                        ihatvals=sort(ihatvals, 'descend');
                                         Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                 end
                         end
