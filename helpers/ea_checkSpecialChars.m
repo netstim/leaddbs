@@ -30,5 +30,5 @@ end
 
 if ~isempty(warntxt)
     found = 1;
-    warndlg([warntxt 'This is not recommended. Please rename and try again.'], 'Unsupported characters');
+    uigetpref('LeadDBS','SpecialCharShowWarningHint','Unsupported Characters',[warntxt 'This is not recommended. Please rename and try again.'],'Ok');
 end
