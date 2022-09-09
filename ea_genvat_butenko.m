@@ -314,6 +314,8 @@ if settings.calcAxonActivation
     settings.axonLength = options.prefs.machine.vatsettings.butenko_axonLength;
     settings.fiberDiameter = options.prefs.machine.vatsettings.butenko_fiberDiameter;
 
+    %settings.AxonModel = options.prefs.machine.vatsettings.butenko_AxonModel;
+
     preopAnchor = options.subj.preopAnat.(options.subj.AnchorModality).coreg;
     if ~startsWith(settings.connectome, 'Multi-Tract: ') % Normal connectome
         fprintf('Loading connectome: %s ...\n', settings.connectome);
@@ -403,6 +405,11 @@ if settings.calcAxonActivation
                     fibers(:,[1,2,3,5]) = fiberFiltered{i}.fibers;
                     fibers(:,4) = repelem(1:length(fiberFiltered{i}.idx), fiberFiltered{i}.idx)';
                     fiberFiltered{i}.fibers = fibers;
+
+                    % store the original number of fibers
+                    % to compute percent activation
+                    fiberFiltered{i}.origNum = size(conn.idx,1);
+
                     fibersFound(t,i) = 1;
                 end
             end
@@ -516,9 +523,9 @@ for side=0:1
                     '--volume ', ea_getearoot, 'ext_libs/OSS-DBS:/opt/OSS-DBS ', ...
                     '--volume ', outputDir, ':/opt/Patient ', ...
                     '--rm ', dockerImage, ' ', ...
-                    'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side)]);
+                    'python3 /opt/OSS-DBS/OSS_platform/Axon_allocation.py /opt/Patient ', num2str(side), ' McIntyre2002_ds']);
         else % Singularity
-            system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputDir, ' ', num2str(side)]);
+            system(['python3 ', ea_getearoot, 'ext_libs/OSS-DBS/OSS_platform/Axon_allocation.py ', outputDir, ' ', num2str(side), ' McIntyre2002_ds']);
         end
     end
 

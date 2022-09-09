@@ -26,7 +26,7 @@ import logging
 from scipy.io import savemat
 
 
-def solve_parallel_NEURON(d, last_point, N_index_glob, N_index, n_segments, S_vector, output):
+def solve_parallel_NEURON(d, last_point, N_index_glob, N_index, n_segments, fib_diam, S_vector, output):
 
     """ For the given neuron (defined by N_index and last_point) loads the distribution of the electric potential
         in space and time and imports it to the NEURON model. If the model responses with an action potential the
@@ -37,13 +37,91 @@ def solve_parallel_NEURON(d, last_point, N_index_glob, N_index, n_segments, S_ve
     dt = d['t_step'] * 1000.0
     n_pulse = 1  # we always simulate only one pulse from DBS. If need more, we should just copy the array and make sure the time vectors are in order
 
-    V_art = np.zeros((n_segments, d["t_steps_trunc"]), float)
+    # upsample McIntyre's model
+    if d['downsampled_axon'] == True:
+        if d["Axon_Model_Type"] == "McIntyre2002" and fib_diam >= 5.7:
+            n_segments_true = ((n_segments - 1) / 3) * 11 + 1
+        elif d["Axon_Model_Type"] == "McIntyre2002" and fib_diam < 5.7:
+            n_segments_true = ((n_segments - 1) / 2) * 8 + 1
 
-    if S_vector == None:
+        if n_segments_true.is_integer():
+            n_segments_true = int(n_segments_true)
+            V_art = np.zeros((n_segments_true, d["t_steps_trunc"]), float)
+        else:
+            logging.critical('Mismatch between the downsampled and the full model')
+            raise SystemExit
+    else:
+        V_art = np.zeros((n_segments, d["t_steps_trunc"]), float)
+
+
+    if type(S_vector) is not np.ndarray and not isinstance(S_vector, list):
         axon_in_time = np.load(os.environ['LGFDIR'] + '/Axons_in_time/Signal_t_conv' + str(
             n_segments - 1 + N_index * n_segments + last_point) + '.npy')  #to distinguish axons in different populations, we indexed them with the global index of the last compartment
-        for i in range(n_segments):
-            V_art[i, :] = axon_in_time[i, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"]  # convert to mV
+        if d['downsampled_axon'] == False:
+            for i in range(n_segments):
+                V_art[i, :] = axon_in_time[i, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"]  # convert to mV
+        else:
+            # let's interpolate voltage between node - center_l - center_r - node
+            # assume 11 segments
+            # n_segments_new = ((n_segments - 1) / 11) * 3 +1
+
+            if fib_diam >= 5.7:
+                # fill out nodes first
+                for k in np.arange(0, n_segments_true, 11):
+                    z = int(k / 11) * 3
+                    V_art[k, :] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"]  # convert to mV
+
+                # now two segments in between
+                for k in np.arange(3, n_segments_true, 11):
+                    z = int(k / 11) * 3 + 1
+                    V_art[k, :] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"]  # convert to mV
+
+                for k in np.arange(8, n_segments_true, 11):
+                    z = int(k / 11) * 3 + 2
+                    V_art[k, :] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"]  # convert to mV
+
+                # now interpolate to the rest
+                list_interp = [[1, 2], [4, 5, 6, 7], [9, 10]]  # local indices of interpolated segments
+                for interv in range(len(list_interp)):
+                    for j in np.arange(0, n_segments_true - 1, 11):
+                        if interv == 0:
+                            V_art[j + 1, :] = 0.66 * V_art[j, :] + 0.33 * V_art[j + 3, :]
+                            V_art[j + 2, :] = 0.33 * V_art[j, :] + 0.66 * V_art[j + 3, :]
+                        elif interv == 1:
+                            V_art[j + 4, :] = 0.80 * V_art[j + 3, :] + 0.20 * V_art[j + 8, :]
+                            V_art[j + 5, :] = 0.60 * V_art[j + 3, :] + 0.40 * V_art[j + 8, :]
+                            V_art[j + 6, :] = 0.40 * V_art[j + 3, :] + 0.60 * V_art[j + 8, :]
+                            V_art[j + 7, :] = 0.20 * V_art[j + 3, :] + 0.80 * V_art[j + 8, :]
+                        else:
+                            V_art[j + 9, :] = 0.66 * V_art[j + 8, :] + 0.33 * V_art[j + 11, :]
+                            V_art[j + 10, :] = 0.33 * V_art[j + 8, :] + 0.66 * V_art[j + 11, :]
+
+            else:
+                # let's interpolate voltage between node - center - node
+                # assume 8 segments
+                # fill out nodes first
+                for k in np.arange(0, n_segments_true, 8):
+                    z = int(k / 8) * 2
+                    V_art[k, :] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"]  # convert to mV
+
+                # now the center between nodes
+                for k in np.arange(4, n_segments_true, 8):
+                    z = int(k / 8) * 2 + 1
+                    V_art[k, :] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"]  # convert to mV
+
+                # now interpolate to the rest
+                list_interp = [[1, 2, 3], [5, 6, 7]]  # local indices of interpolated segments
+                for interv in range(len(list_interp)):
+                    for j in np.arange(0, n_segments_true - 1, 8):
+                        if interv == 0: # ratios based on intercompartment distances
+                            V_art[j + 1, :] = 0.985 * V_art[j, :] + 0.015 * V_art[j + 4, :]
+                            V_art[j + 2, :] = 0.90 * V_art[j, :] + 0.10 * V_art[j + 4, :]
+                            V_art[j + 3, :] = 0.60 * V_art[j, :] + 0.40 * V_art[j + 4, :]
+                        else:
+                            V_art[j + 5, :] = 0.40 * V_art[j + 4, :] + 0.60 * V_art[j + 8, :]
+                            V_art[j + 6, :] = 0.10 * V_art[j + 4, :] + 0.90 * V_art[j + 8, :]
+                            V_art[j + 7, :] = 0.015 * V_art[j + 4, :] + 0.985 * V_art[j + 8, :]
+
     else:
         for j in range(len(S_vector)):
             if S_vector[j] == None:
@@ -56,9 +134,76 @@ def solve_parallel_NEURON(d, last_point, N_index_glob, N_index, n_segments, S_ve
                 axon_in_time = np.load(os.environ['LGFDIR'] + '/Axons_in_time/Signal_t_conv' + str(
                     n_segments - 1 + N_index * n_segments + last_point) + "_" + str(contact_i) + '.npy')
 
-                for i in range(n_segments):
-                    # print(S_vector[contact_i])
-                    V_art[i, :] = V_art[i, :] + axon_in_time[i, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"] * S_vector[contact_i]  # convert to mV
+                if d['downsampled_axon'] == False:
+                    for i in range(n_segments):
+                        # print(S_vector[contact_i])
+                        V_art[i, :] = V_art[i, :] + axon_in_time[i, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"] * S_vector[contact_i]  # convert to mV
+                else:
+                    # let's interpolate voltage between node - center_l - center_r - node
+                    # assume 11 segments
+                    # n_segments_new = ((n_segments - 1) / 11) * 3 +1
+
+                    if fib_diam >= 5.7:
+                        # fill out nodes first
+                        for k in np.arange(0, n_segments_true, 11):
+                            z = int(k / 11) * 3
+                            V_art[k, :] = V_art[k, :] + axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d[
+                                "Ampl_scale"]  * S_vector[contact_i] # convert to mV
+
+                        # now two segments in between
+                        for k in np.arange(3, n_segments_true, 11):
+                            z = int(k / 11) * 3 + 1
+                            V_art[k, :] = V_art[k, :] + axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d[
+                                "Ampl_scale"] * S_vector[contact_i] # convert to mV
+
+                        for k in np.arange(8, n_segments_true, 11):
+                            z = int(k / 11) * 3 + 2
+                            V_art[k, :] = V_art[k, :] + axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d[
+                                "Ampl_scale"]  * S_vector[contact_i]  # convert to mV
+
+                        # now interpolate to the rest
+                        list_interp = [[1, 2], [4, 5, 6, 7], [9, 10]]  # local indices of interpolated segments
+                        for interv in range(len(list_interp)):
+                            for j in np.arange(0, n_segments_true - 1, 11):
+                                if interv == 0:
+                                    V_art[j + 1, :] = V_art[j + 1, :] + 0.66 * V_art[j, :] + 0.33 * V_art[j + 3, :]
+                                    V_art[j + 2, :] = V_art[j + 2, :] + 0.33 * V_art[j, :] + 0.66 * V_art[j + 3, :]
+                                elif interv == 1:
+                                    V_art[j + 4, :] = V_art[j + 4, :] + 0.80 * V_art[j + 3, :] + 0.20 * V_art[j + 8, :]
+                                    V_art[j + 5, :] = V_art[j + 5, :] + 0.60 * V_art[j + 3, :] + 0.40 * V_art[j + 8, :]
+                                    V_art[j + 6, :] = V_art[j + 6, :] + 0.40 * V_art[j + 3, :] + 0.60 * V_art[j + 8, :]
+                                    V_art[j + 7, :] = V_art[j + 7, :] + 0.20 * V_art[j + 3, :] + 0.80 * V_art[j + 8, :]
+                                else:
+                                    V_art[j + 9, :] = V_art[j + 9, :] + 0.66 * V_art[j + 8, :] + 0.33 * V_art[j + 11, :]
+                                    V_art[j + 10, :] = V_art[j + 10, :] + 0.33 * V_art[j + 8, :] + 0.66 * V_art[j + 11, :]
+
+                    else:
+                        # let's interpolate voltage between node - center - node
+                        # assume 8 segments
+                        # fill out nodes first
+                        for k in np.arange(0, n_segments_true, 8):
+                            z = int(k / 8) * 2
+                            V_art[k, :] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d[
+                                "Ampl_scale"] * S_vector[contact_i]  # convert to mV
+
+                        # now the center between nodes
+                        for k in np.arange(4, n_segments_true, 8):
+                            z = int(k / 8) * 2 + 1
+                            V_art[k, :] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d[
+                                "Ampl_scale"] * S_vector[contact_i]  # convert to mV
+
+                        # now interpolate to the rest
+                        list_interp = [[1, 2, 3], [5, 6, 7]]  # local indices of interpolated segments
+                        for interv in range(len(list_interp)):
+                            for j in np.arange(0, n_segments_true - 1, 8):
+                                if interv == 0:  # ratios based on intercompartment distances
+                                    V_art[j + 1, :] = V_art[j + 1, :] + 0.985 * V_art[j, :] + 0.015 * V_art[j + 4, :]
+                                    V_art[j + 2, :] = V_art[j + 2, :] + 0.90 * V_art[j, :] + 0.10 * V_art[j + 4, :]
+                                    V_art[j + 3, :] = V_art[j + 3, :] + 0.60 * V_art[j, :] + 0.40 * V_art[j + 4, :]
+                                else:
+                                    V_art[j + 5, :] = V_art[j + 5, :] + 0.40 * V_art[j + 4, :] + 0.60 * V_art[j + 8, :]
+                                    V_art[j + 6, :] = V_art[j + 6, :] + 0.10 * V_art[j + 4, :] + 0.90 * V_art[j + 8, :]
+                                    V_art[j + 7, :] = V_art[j + 7, :] + 0.015 * V_art[j + 4, :] + 0.985 * V_art[j + 8, :]
 
     ##  only if we want to save potential in time on axons
     #np.save(os.environ['PATIENTDIR'] + '/Field_on_axons_in_time/'+str(population_name)+'axon_'+str(N_index_glob), V_art)
@@ -169,6 +314,9 @@ def run_simulation_with_NEURON(d, Neuron_models, shift_to_MRI_space, population_
         from Axon_files.Reilly2016.Parameter_insertion_python3_Reilly import paste_to_hoc_python3
         paste_to_hoc_python3(Neuron_models.pattern['num_Ranvier'][population_index],axoninter,n_segments,d['v_init'],int(1.0/(d['t_step'] * 1000.0)))
 
+    if d['downsampled_axon'] == True:
+        # reassign here to downsampled
+        n_segments = Neuron_models.pattern['num_segments'][population_index]
 
     number_neurons_initially = int(Vert_full.shape[0] / n_segments)
 
@@ -223,7 +371,7 @@ def run_simulation_with_NEURON(d, Neuron_models, shift_to_MRI_space, population_
 
             neuron_global_index_array[neuron_index] = int(inx_first_true/n_segments)
 
-            processes = mp.Process(target = solve_parallel_NEURON, args=(d,last_point,neuron_global_index_array[neuron_index],neuron_index,n_segments,S_vector,output))
+            processes = mp.Process(target = solve_parallel_NEURON, args=(d,last_point,neuron_global_index_array[neuron_index],neuron_index,n_segments,Neuron_models.pattern['fiber_diameter'][population_index],S_vector,output))
             proc.append(processes)
 
             j_proc += 1
@@ -356,4 +504,5 @@ def run_simulation_with_NEURON(d, Neuron_models, shift_to_MRI_space, population_
         hf2.close()
 
     return Activated_models
+
 

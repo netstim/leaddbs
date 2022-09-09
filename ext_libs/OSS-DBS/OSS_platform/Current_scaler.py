@@ -14,6 +14,7 @@ import numpy as np
 import time
 import pickle
 import subprocess
+import sys
 import importlib
 import os
 import warnings
@@ -97,8 +98,10 @@ def test_scaling(S_vector,d,MRI_param,Xs_signal_norm,Neuron_models,FR_vector_sig
         
     elif d["Axon_Model_Type"] == 'Reilly2016':
         os.chdir("Reilly2016/")
-        logging.critical("Please, precompile Reilly2016 and comment out the next line")
-        raise SystemExit
+        if sys.platform == 'win32':
+            logging.critical(
+                "If using Windows, please make sure your precompile Reilly2016 and comment out the next line")
+            raise SystemExit
         with open(os.devnull, 'w') as FNULL: subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     from Axon_files.NEURON_run import run_simulation_with_NEURON
@@ -140,7 +143,7 @@ def test_scaling(S_vector,d,MRI_param,Xs_signal_norm,Neuron_models,FR_vector_sig
             activation_in_populations[i]=num_activ_in_population
         hf.close()
     else:
-        activation_in_populations=Number_of_activated
+        activation_in_populations = Number_of_activated
 
     if os.path.isdir(os.environ['PATIENTDIR']+'/Field_solutions/Activation'):     # we always re-run NEURON simulation
         os.system('rm -fr '+os.environ['PATIENTDIR']+'/Field_solutions/Activation')
@@ -150,6 +153,25 @@ def test_scaling(S_vector,d,MRI_param,Xs_signal_norm,Neuron_models,FR_vector_sig
     #     os.system('rm -fr '+os.environ['PATIENTDIR']+'/Axons_in_time')
     #     os.makedirs(os.environ['PATIENTDIR']+'/Axons_in_time')
 
+    # store activations over iterations
+    if d['Current_sets'] == True:
+        iter_results = []
+        iter_results.append(scaling_index)
+        if type(activation_in_populations) is np.ndarray:
+            for result in activation_in_populations:
+                iter_results.append(result)
+        else:
+            iter_results.append(activation_in_populations)
+        iter_results = np.vstack((iter_results)).T
+
+        if scaling_index == 0:
+            with open(os.environ['PATIENTDIR'] + '/Activations_over_iterations.csv', 'w') as f_handle:
+                np.savetxt(f_handle, iter_results)
+        else:
+            with open(os.environ['PATIENTDIR'] + '/Activations_over_iterations.csv', 'a') as f_handle:
+                np.savetxt(f_handle, iter_results)
+
+    # results for the optimizer are stored in compute_similarity()
 
     return activation_in_populations
 
@@ -193,6 +215,12 @@ def compute_similarity(S_vector, *args):
     optim_data = []
     for i in range(len(S_vector)):
         optim_data.append(S_vector[i])
+
+    # store also activation if profile
+    if len(d['optimal_profile']) != 1:
+        for act in activation_profile:
+            optim_data.append(act)
+
     optim_data.append(distance)
     optim_data_array = np.vstack((optim_data)).T
     with open(os.environ['PATIENTDIR']+'/current_optim_iterations.csv', 'a') as f_handle:
