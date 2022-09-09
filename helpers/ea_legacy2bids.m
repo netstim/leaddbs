@@ -550,7 +550,14 @@ for patients = 1:length(source)
                                     is_it_aconnectome = ea_regexpdir(leadMapper_folder{k},'.*vat_seed_compound_[df]MRI.*',0,'f');
                                     if ~isempty(is_it_aconnectome)
                                         [~,connectome_filename,ext] = fileparts(leadMapper_folder{k});
-                                        bids_connectome_name = ea_getConnLabel(connectome_filename);
+                                        if ~contains(connectome_filename, '_') % Structural connectome
+                                            bids_connectome_name = ea_getConnLabel(connectome_filename);
+                                        else % Functional connectome, subset in the name
+                                            connectome_filename = strsplit(connectome_filename, '_');
+                                            connectome = connectome_filename{1};
+                                            subset = connectome_filename{2};
+                                            bids_connectome_name = ea_getConnLabel(connectome, subset);
+                                        end
                                         model_name = add_model(all_gs_folders{i});
                                         stimulation_folder = all_gs_folders{i};
                                         connectome_folder = fullfile(leadMapper_folder{k});
@@ -877,7 +884,12 @@ function generate_rawImagejson(patient_name,dest)
         preop_mod = preop_mod{end};
         preop_modalities{end+1} = preop_mod;
     end
-    if isempty(preop_files)
+    coreg_t1 = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_ses-preop_space-anchorNative_*_acq-*_T1w.nii'));
+    rawdata_t1 = dir(fullfile(dest,'rawdata',patient_name,'ses-preop','anat','sub-*_ses-preop_acq-*_T1w.nii'));
+    if ~isempty(coreg_t1) && isempty(rawdata_t1)
+        transfer_t1 = 1;
+    end
+    if isempty(preop_files) || transfer_t1
         %other preop files
         coreg_preop_files = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_ses-preop_space-anchorNative_*_acq-*.nii'));
         coreg_preop_files = {coreg_preop_files.name};
