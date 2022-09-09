@@ -77,6 +77,30 @@ def fibers_to_axons(name_of_combined_file, name_of_fiber_file, projection_name, 
         n_segments = int((n_Ranviers - 1) * n_comp + 1)  # overall number of points on Axon incl. internodal
 
         n_total = (n_Ranviers - 1) * n_comp + 1  # total incl. Ranvier
+    elif axon_model == 'McIntyre2002_ds':
+        from Axon_files.axon import Axon
+
+        param_ax = {
+            'centered': True,
+            'diameter': diam_fib
+        }
+        a = Axon(param_ax)
+        nr = Axon.get_axonparams(a)
+        if diam_fib >= 5.7:
+            n_comp = 3  # node -- -- internodal -- -- -- -- internodal -- -- node
+        else:
+            n_comp = 2  # mode -- -- -- internodal -- -- -- node
+
+        ranvier_length, para1_length, para2_length, node_step = (
+        nr["ranvier_length"] * 1e-3, nr["para1_length"] * 1e-3, nr["para2_length"] * 1e-3, nr["deltax"] * 1e-3)
+        if diam_fib >= 5.7:
+            inter_length = (node_step - para1_length * 2 - para2_length * 2) / 6
+        else:
+            inter_length = (node_step - para1_length * 2 - para2_length * 2) / 3
+
+        n_Ranviers = int(axon_length / node_step)
+        n_segments = int((n_Ranviers - 1) * n_comp + 1)  # overall number of points on Axon incl. internodal
+        n_total = (n_Ranviers - 1) * n_comp + 1  # total incl. Ranvier
     elif axon_model == 'Reilly2016':
         n_comp = 2  # only nodes and one internodal per segment
 
@@ -304,6 +328,53 @@ def fibers_to_axons(name_of_combined_file, name_of_fiber_file, projection_name, 
 
                     inx_comp = inx_comp + 8
 
+        elif axon_model == 'McIntyre2002_ds': # downsampled version
+            inx_comp = 0
+            for inx in range(n_Ranviers - 1):  # the last node is not included
+                Array_coord[inx_comp, :, inx_axn] = streamlines_ROI_centered[inx_axn][inx]
+
+                if diam_fib >= 5.7:
+                    Array_coord[inx_comp + 3, :, inx_axn] = streamlines_ROI_centered[inx_axn][inx + 1]
+                    internodal_vector = Array_coord[inx_comp + 3, :, inx_axn] - Array_coord[inx_comp, :, inx_axn]
+                else:
+                    Array_coord[inx_comp + 2, :, inx_axn] = streamlines_ROI_centered[inx_axn][inx + 1]
+                    internodal_vector = Array_coord[inx_comp + 2, :, inx_axn] - Array_coord[inx_comp, :, inx_axn]
+
+                # internodal_vector_normalized=preprocessing.normalize(internodal_vector,norm='l2')
+                internodal_vector_normalized = normalized(internodal_vector)
+
+                loc_pos = 0.0
+                if diam_fib >= 5.7:   # node -- -- internodal -- -- -- -- internodal -- -- node
+                    for inx_loc in np.arange(1,
+                                             n_comp):  # only internodal compartments. The distances will be computed from the node of Ranvier using loc_pos
+                        inx_loc = int(inx_loc)
+                        if inx_loc == 1:
+                            loc_pos = (ranvier_length + inter_length) / 2 + para1_length + para2_length
+                        elif inx_loc == 2:
+                            loc_pos = loc_pos + 5 * inter_length
+                        else:
+                            print('wrong number of compartments')
+
+                        Array_coord[inx_comp + inx_loc, 0, inx_axn] = Array_coord[inx_comp, 0, inx_axn] + loc_pos * \
+                                                                      internodal_vector_normalized[0][0]
+                        Array_coord[inx_comp + inx_loc, 1, inx_axn] = Array_coord[inx_comp, 1, inx_axn] + loc_pos * \
+                                                                      internodal_vector_normalized[0][1]
+                        Array_coord[inx_comp + inx_loc, 2, inx_axn] = Array_coord[inx_comp, 2, inx_axn] + loc_pos * \
+                                                                      internodal_vector_normalized[0][2]
+
+                    inx_comp = inx_comp + 3
+
+                if diam_fib < 5.7:   # mode -- -- -- internodal -- -- -- node
+
+                    loc_pos = 0.5 * ranvier_length + 1.5 * inter_length + para1_length + para2_length
+
+                    Array_coord[inx_comp + 1, 0, inx_axn] = Array_coord[inx_comp, 0, inx_axn] + loc_pos * \
+                                                                  internodal_vector_normalized[0][0]
+                    Array_coord[inx_comp + 1, 1, inx_axn] = Array_coord[inx_comp, 1, inx_axn] + loc_pos * \
+                                                                  internodal_vector_normalized[0][1]
+                    Array_coord[inx_comp + 1, 2, inx_axn] = Array_coord[inx_comp, 2, inx_axn] + loc_pos * \
+                                                                  internodal_vector_normalized[0][2]
+                    inx_comp = inx_comp + 2
 
         elif axon_model == 'Reilly2016':
             inx_comp = 0
@@ -369,7 +440,10 @@ def fibers_to_axons(name_of_combined_file, name_of_fiber_file, projection_name, 
 if __name__ == '__main__':
 
     """ To ensure the proper input, use Lead-DBS to call this function
-        args - stim. (patient) directory, hemisphere index (0-rh, 1-lh),  """
+        args - stim. (patient) directory, hemisphere index (0-rh, 1-lh), 
+        
+        optional: NEURON model ('McIntyre2002', 'McIntyre2002_ds' (downsampled), 'Reilly2016' (classic McNeil's)) 
+                  cluster call (1-yes, 0 - no) """
 
     import json
 
@@ -377,16 +451,35 @@ if __name__ == '__main__':
     oss_dbs_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
     os.chdir(oss_dbs_folder)
 
-    cluster_run = int(sys.argv[-1])
-
     patient_dir = sys.argv[1:][0]   # patient dir refers to the stim. folder here
     index_side = int(sys.argv[1:][1])
 
     # not necessary to use env.variable, but just for consistency
     os.environ['PATIENTDIR'] = patient_dir
 
+    if len(sys.argv[1:]) > 3:
+        cluster_run = int(sys.argv[1:][3])
+
     # load parameters from the file prepared by Lead-DBS
     file_inp = h5py.File(os.environ['PATIENTDIR'] + '/oss-dbs_parameters.mat', mode='r')
+
+    if len(sys.argv[1:]) > 2:
+        Axon_model = str(sys.argv[1:][2])
+        print('here')
+    elif 'neuronModel' in file_inp['settings']:
+        array_ascii = file_inp['settings']['neuronModel'][:]
+        list_ascii = []
+        for i in range(array_ascii.shape[0]):
+            list_ascii.append(array_ascii[i][0])
+        # list_ascii = map(lambda s: s.strip(), list_ascii)
+        Axon_Model = ''.join(chr(i) for i in list_ascii)
+        if Axon_Model not in ['McIntyre2002', 'McIntyre2002_ds', 'Reilly2016']:
+            print('The selected NEURON models is not recognized, check oss-dbs_parameters.mat')
+            raise SystemExit
+    else:
+        Axon_model = 'McIntyre2002'  # Assume McIntyre by default
+        
+    print(Axon_model)    
 
     array_ascii = file_inp['settings']['connectomePath'][:]
     list_ascii = []
@@ -423,7 +516,6 @@ if __name__ == '__main__':
             Projections.append(projection_name)
 
     Name_to_save = 'Allocated_axons'  # hardcoded name for axons pre-filtered by Lead-DBS
-    Axon_model = 'McIntyre2002'       # hardcoded atm, but Reilly 2016 is supported
 
     axon_length = list(file_inp['settings']['axonLength'][:][0][:])
     diams_fib = list(file_inp['settings']['fiberDiameter'][:][0][:])

@@ -37,6 +37,7 @@ import importlib
 import json
 import numpy as np
 import os
+import sys
 import pickle
 import subprocess
 import time
@@ -147,8 +148,10 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
         d['num_iterations'] = 5
         d['min_bound_per_contact'] = [-0.003, -0.003, -0.003, -0.003]  # in A! same length as the electrode
         d['max_bound_per_contact'] = [0.003, 0.003, 0.003, 0.003]  # same length as the electrode
-        d['optimal_profile'] = [0.5, 0.4, 0.3, 0.4, 0.5]  # activation rates (1.0 = 100%) as many as .mat files you have for the connectome
-        # if one value, provide it still in list
+
+        d['optimal_profile'] = [30, 24, 31, 105, 10]  # activation (in absolute numbers), length is defined by the number of .mat files you have for the connectome
+                                                      # if one value, provide it still as a list
+                                                      # if percent activation to be used, make sure you also normalized activation in Current_scaler.py - compute_similarity()
 
         # this snippet is only relevant if you have a profile, not a single .mat
         d['profile_weighting'] = [1.0, 1.0, 1.0, 1.0, 1.0]  # weighting for pathways in the profile, not for symptoms!
@@ -376,6 +379,13 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
     bar.next()
 
     number_of_points = int(np.sum(N_array.pattern['num_segments'] * N_array.N_models))
+
+    # later should be added to GUI
+    if d['Axon_Model_Type'] == 'McIntyre2002_ds':
+        d['Axon_Model_Type'] = 'McIntyre2002'
+        d['downsampled_axon'] = True
+    else:
+        d['downsampled_axon'] = False
 
     #  In this case we actually don't need steps above
     #  If VTA is computed from |E| or |div(E)|, sample probing points equidistantly (VTA array)
@@ -757,11 +767,15 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
 
     if d["Axon_Model_Type"] == 'McIntyre2002':
         with open(os.devnull, 'w') as FNULL:
-            subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+            subprocess.call('nocmodl axnode.mod', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)   # might not work with remote hard drives
         with open(os.devnull, 'w') as FNULL:
             subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     elif d["Axon_Model_Type"] == 'Reilly2016':
         os.chdir("Reilly2016/")
+        if sys.platform == 'win32':
+            logging.critical(
+                "If using Windows, please make sure your precompile Reilly2016 and comment out the next line")
+            raise SystemExit
         with open(os.devnull, 'w') as FNULL:
             subprocess.call('nrnivmodl', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     from Axon_files.NEURON_run import run_simulation_with_NEURON
