@@ -465,7 +465,6 @@ if __name__ == '__main__':
 
     if len(sys.argv[1:]) > 2:
         Axon_model = str(sys.argv[1:][2])
-        print('here')
     elif 'neuronModel' in file_inp['settings']:
         array_ascii = file_inp['settings']['neuronModel'][:]
         list_ascii = []
@@ -478,9 +477,7 @@ if __name__ == '__main__':
             raise SystemExit
     else:
         Axon_model = 'McIntyre2002'  # Assume McIntyre by default
-        
-    print(Axon_model)    
-
+            
     array_ascii = file_inp['settings']['connectomePath'][:]
     list_ascii = []
     for i in range(array_ascii.shape[0]):
