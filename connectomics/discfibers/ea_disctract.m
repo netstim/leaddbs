@@ -420,18 +420,14 @@ classdef ea_disctract < handle
                                                 Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                             end
                                         case 'peak of scores'
-                                            Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                            Ihat(test,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak');
                                             if nargout>2
-                                                Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                                Ihattrain(training,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak');
                                             end
                                         case 'peak 5% of scores'
-                                            ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
-                                            ihatvals=sort(ihatvals);
-                                            Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                            Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak5');
                                              if nargout>2
-                                                ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
-                                                ihatvals=sort(ihatvals);
-                                                Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                                Ihattrain(training,side) = ea_discfibers_getpeak(vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak5');
                                             end
 
                                     end
@@ -480,21 +476,15 @@ classdef ea_disctract < handle
                                             end
                                         case 'peak of scores'
                                             if ~isempty(vals{voter,side})
-                                                Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                                Ihat(test,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak');
                                             end
                                             if nargout>2
-                                                Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                                Ihattrain(training,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak');
                                             end
                                         case 'peak 5% of scores'
-                                            if ~isempty(vals{voter,side})
-                                                ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
-                                            end
-                                            ihatvals=sort(ihatvals);
-                                            Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                            Ihat(test,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak5');
                                             if nargout>2
-                                                ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
-                                                ihatvals=sort(ihatvals);
-                                                Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                                Ihattrain(training,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak5');
                                             end
                                     end
 
@@ -511,18 +501,14 @@ classdef ea_disctract < handle
                                                 Ihattrain(training,side) = ea_nansum(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
                                             end
                                         case 'peak of scores'
-                                            Ihat(test,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)),1);
+                                            Ihat(test,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak');
                                             if nargout>2
-                                                Ihattrain(training,side) = ea_nanmax(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)),1);
+                                                Ihattrain(training,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak');
                                             end
                                         case 'peak 5% of scores'
-                                            ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test));
-                                            ihatvals=sort(ihatvals);
-                                            Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                            Ihat(test,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(test)), obj.posvisible, obj.negvisible, 'peak5');
                                             if nargout>2
-                                                ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training));
-                                                ihatvals=sort(ihatvals);
-                                                Ihattrain(training,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
+                                                Ihattrain(training,side) = ea_discfibers_getpeak(vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel(training)), obj.posvisible, obj.negvisible, 'peak5');
                                             end
                                     end
                             end
