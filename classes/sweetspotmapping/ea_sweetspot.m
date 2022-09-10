@@ -94,7 +94,7 @@ classdef ea_sweetspot < handle
                     obj.allpatients = obj.M.ROI.list;
                     obj.patientselection = 1:length(obj.M.ROI.list);
                     obj.M = ea_map_pseudoM(obj.M);
-                    obj.M.root = fileparts(datapath);
+                    obj.M.root = [fileparts(datapath),filesep];
                     obj.M.patient.list=obj.M.ROI.list; % copies
                     obj.M.patient.group=obj.M.ROI.group; % copies
                 else
@@ -320,7 +320,7 @@ classdef ea_sweetspot < handle
                                         Ihat(test,side) = ea_nanmax(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)',1);
                                     case 'peak 5% of scores'
                                         ihatvals=vals{1,side}.*obj.results.efield{side}(patientsel(test),:)';
-                                        ihatvals=sort(ihatvals);
+                                        ihatvals=sort(ihatvals, 'descend');
                                         Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                 end
                             case 'E-Fields'
@@ -339,7 +339,7 @@ classdef ea_sweetspot < handle
                                         Ihat(test,side) = ea_nanmax(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)',1);
                                     case 'peak 5% of scores'
                                         ihatvals=vals{1,side}.*obj.results.efield{side}(patientsel(test),:)';
-                                        ihatvals=sort(ihatvals);
+                                        ihatvals=sort(ihatvals, 'descend');
                                         Ihat(test,side) = ea_nansum(ihatvals(1:ceil(size(ihatvals,1).*0.05),:),1);
                                 end
                         end
@@ -457,11 +457,13 @@ classdef ea_sweetspot < handle
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Vertcat all values for colorbar construction
                 allvals = vertcat(vals{group,:});
-                if isempty(allvals)
+                if isempty(allvals) || all(isnan(allvals))
                     continue;
+                else
+                    allvals(isnan(allvals)) = 0;
                 end
 
-                if obj.posvisible && all(allvals<0)
+                if obj.posvisible && all(allvals<=0)
                     obj.posvisible = 0;
                     fprintf('\n')
                     warning('off', 'backtrace');
@@ -470,7 +472,7 @@ classdef ea_sweetspot < handle
                     fprintf('\n')
                 end
 
-                if obj.negvisible && all(allvals>0)
+                if obj.negvisible && all(allvals>=0)
                     obj.negvisible = 0;
                     fprintf('\n')
                     warning('off', 'backtrace');
@@ -573,6 +575,15 @@ classdef ea_sweetspot < handle
                         ticklabel{group} = [negvals(1), negvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     end
+                end
+            end
+
+            if ~exist('export','var') % all empty
+                for side=1:size(vals,2)
+                    res=obj.results.space{side};
+                    res.dt(1) = 16;
+                    res.img(:)=nan;
+                    export{side}=res;
                 end
             end
 
