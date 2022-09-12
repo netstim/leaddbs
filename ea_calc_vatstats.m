@@ -79,8 +79,6 @@ for but=1:length(togglenames)
 end
 clear expand
 
-load([options.root,options.patientname,filesep,'ea_stats']);
-
 % assign the place where to write stim stats into struct
 
 if isfield(options,'groupmode')
@@ -89,6 +87,11 @@ if isfield(options,'groupmode')
     end
 end
 
+try
+    load([options.root,options.patientname,filesep,'ea_stats'], 'ea_stats');
+catch
+    ea_stats = struct;
+end
 [ea_stats,thisstim]=ea_assignstimcnt(ea_stats,S);
 
 if (isfield(VAT{1},'VAT') && isstruct(VAT{1}.VAT)) || ((length(VAT)>1) && isfield(VAT{2},'VAT') && isstruct(VAT{2}.VAT)) % e.g. simbio model used
@@ -161,7 +164,11 @@ for iside=1:length(options.sides)
 
             if options.writeoutstats
                 ea_dispt('Writing out stats...');
-                load([options.root,options.patientname,filesep,'ea_stats']);
+                try
+                    load([options.root,options.patientname,filesep,'ea_stats'], 'ea_stats');
+                catch
+                    ea_stats = struct;
+                end
                 ea_stats.stimulation(thisstim).label=S.label;
                 ea_stats.stimulation(thisstim).vat(side,vat).amp=S.amplitude{side};
                 ea_stats.stimulation(thisstim).vat(side,vat).label=S.label;
