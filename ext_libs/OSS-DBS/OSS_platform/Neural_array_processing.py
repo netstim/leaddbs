@@ -648,9 +648,18 @@ class Neuron_array(object):
         subdomains_enc = MeshFunction("size_t", mesh, mesh.topology().dim())
         subdomains_enc.set_all(0)
 
-        for i in range(len(Domains.Encup_index)):
-            subdomains_enc.array()[
-                subdomains_assigned.array() == Domains.Encup_index[i]] = 1  # neuron models cannot be located in CSF
+        #for i in range(len(Domains.Encup_index)):
+        #    subdomains_enc.array()[
+        #        subdomains_assigned.array() == Domains.Encup_index[i]] = 1  # neuron models cannot be located in CSF
+
+        # encap at the electrode array only (defined by ROI)
+        subdomains_enc.array()[subdomains_assigned.array() == Domains.Encup_index[1]] = 1  # neuron models cannot be located in encap
+
+        # encap outside of ROI
+        subdomains_enc_out = MeshFunction("size_t", mesh, mesh.topology().dim())
+        subdomains_enc_out.set_all(0)
+        subdomains_enc_out.array()[
+            subdomains_assigned.array() == Domains.Encup_index[0]] = 1  # neuron models cannot be located in encap
 
         if isinstance(Domains.Float_contacts, list):
             for i in range(len(Domains.Float_contacts)):
@@ -661,6 +670,7 @@ class Neuron_array(object):
                 subdomains_assigned.array() == Domains.Float_contacts] = 1  # neuron models cannot be located in floating conductors
 
         submesh_encup = SubMesh(mesh, subdomains_enc, 1)
+        submesh_encup_out = SubMesh(mesh, subdomains_enc_out, 1)
 
         # if multiple pathways, those will be lists of lists
         self.neurons_idx_encap = []  # IMPORTANT: if the neuron does not intersect with encap. but with the electrode (sparse sampling), it will be treated as outside of the domain
@@ -679,9 +689,13 @@ class Neuron_array(object):
                     Array_coord, inx, i_neuron_encap = self.mark_to_remove(Array_coord,
                                                                            inx)  # will also shift inx to the end of the neuron
                     self.neurons_idx_encap.append(i_neuron_encap)
-
                 else:
-                    if not (mesh.bounding_box_tree().compute_first_entity_collision(
+                    if (submesh_encup_out.bounding_box_tree().compute_first_entity_collision(
+                            pnt) < submesh_encup_out.num_cells()):  # this is a condition to check whether the point is inside encap. layer or floating conductor
+                        points_outside = points_outside + 1
+                        Array_coord, inx, __ = self.mark_to_remove(Array_coord,inx)  # will also shift inx to the end of the neuron
+
+                    elif not (mesh.bounding_box_tree().compute_first_entity_collision(
                             pnt) < mesh.num_cells() * 100):  # if one point of the neural model is absent, the whole model is disabled
                         points_outside = points_outside + 1
                         Array_coord, inx, __ = self.mark_to_remove(Array_coord,
