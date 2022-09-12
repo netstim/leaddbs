@@ -728,6 +728,10 @@ classdef ea_disctract < handle
                 end
 
                 R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
+                % do not kick out NaN scores
+                if isnan(R(perm))
+                    R(perm) = 0.00001;
+                end
             end
 
             % generate null distribution
@@ -1293,16 +1297,16 @@ classdef ea_disctract < handle
             if ~isempty(obj.activateby)
             for entry=1:length(obj.activateby)
                 thisentry=obj.activateby{entry};
-                weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
-                        ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
-                if contains(thisentry,'cleartune')
+                if strfind(thisentry,'cleartune')
                     thisentry=strrep(thisentry,'cleartune','');
                     k=strfind(thisentry,'_');
                     ctentry=str2double(thisentry(1:k-1));
                     ctside=str2double(thisentry(k+1:end));
                     weights{ctside}=weights{ctside}+...
                         full(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
-                elseif contains(thisentry,'results')
+                elseif strfind(thisentry,'results')
+                    weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
+                        ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
                     thisentry=strrep(thisentry,'results','');
                     k=strfind(thisentry,'_');
                     ctentry=str2double(thisentry(1:k-1));

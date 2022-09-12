@@ -1,5 +1,4 @@
 function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
-
     if ~exist('Iperm', 'var')
         if obj.cvlivevisualize
             [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
@@ -18,6 +17,19 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
         else
             [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training), Iperm);
         end
+    end
+
+    % if no fibers were selected for the permutation iteration, 
+    % assign dummies that will have r = 0
+    if isempty(vals{1}) && isempty(vals{2}) && exist('Iperm', 'var')
+        for voter=1:size(vals,1)
+            for side=1:size(vals,2)
+                actualimprovs{voter,side} = 42;
+                Ihat(test,side,voter) = 42;
+                Ihat_train_global(numTestIt,training,side,voter) = 42;
+            end
+        end
+        return
     end
 
     if size(obj.responsevar,2)>1
@@ -209,7 +221,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
-                                    Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
+                                    Ihat_train_global(numTestIt,training,2, voter) = Ihat_all(training);
 
                                     if isstruct(obj.ADJ)
                                         fibsval_ADJ_right = adj_scaler*obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{voter,1}(1:end,patientsel);
@@ -293,8 +305,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     Ihat(test,1, voter) = Ihat_all(test);
                                     Ihat(test,2, voter) = Ihat(test,1, voter);
                                     Ihat_train_global(numTestIt,training,1,voter) = Ihat_all(training);
-                                    Ihat_train_global(numTestIt,training,2, voter) = Ihat_train_global(numTestIt,training,1,voter);
-
+                                    Ihat_train_global(numTestIt,training,2, voter) = Ihat_all(training);
                                     if isstruct(obj.ADJ)
                                         Ihat_ADJ_rh = vals{voter,1}.*(obj.ADJ.ADJ(global_val_ind,global_conn_ind)*fibsval{1,1}(1:end,patientsel));
                                         Ihat_ADJ_lh = vals{voter,2}.*(obj.ADJ.ADJ(global_val_ind_lh,global_conn_ind_lh)*fibsval{1,2}(1:end,patientsel));
@@ -410,21 +421,22 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
         end
 
     end
-     %send out improvements of subscores
-     for voter=1:size(vals,1)
-         switch obj.multitractmode
-             case 'Split & Color By Subscore'
-                 useI=obj.subscore.vars{voter};
-             case 'Split & Color By PCA'
-                 useI=obj.subscore.pcavars{voter};
-             otherwise
-                 useI=obj.responsevar;
-         end
-         for side=1:2
-             mdl=fitglm(Ihat_train_global(numTestIt,training,side,voter),useI(training),lower(obj.predictionmodel));
-             actualimprovs{voter,side}=predict(mdl,Ihat(test,side,voter));
-         end
-     end
+    %send out improvements of subscores
+    for voter=1:size(vals,1)
+        switch obj.multitractmode
+            case 'Split & Color By Subscore'
+                useI=obj.subscore.vars{voter};
+            case 'Split & Color By PCA'
+                useI=obj.subscore.pcavars{voter};
+            otherwise
+                useI=obj.responsevar;
+        end
+        for side=1:2
+            mdl=fitglm(Ihat_train_global(numTestIt,training,side,voter),useI(training),lower(obj.predictionmodel));
+            actualimprovs{voter,side}=predict(mdl,Ihat(test,side,voter));
+        end
+    end
+
 
 
 end
