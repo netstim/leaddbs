@@ -28,7 +28,7 @@ switch type
         isdir = 0;
     case {'d', 'dir', 'folder'}
         % Remove filesep from the end of the folder path
-        list = cellfun(@fileparts,list(isfolder(list)),'UniformOutput',false);
+        list = fileparts(list(isfolder(list)));
         isdir = 1;
     case {'a', 'all'}
         % Remove filesep from the end of the folder path
