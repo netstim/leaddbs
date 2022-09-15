@@ -11,22 +11,22 @@ end
 
 ea_libs_helper;
 
-basedir = [fileparts(mfilename('fullpath')), filesep];
+basedir = fileparts(mfilename('fullpath'));
 
 if ispc
-    ACPCDETECT = ea_path_helper([basedir, 'acpcdetect.exe']);
+    ACPCDETECT = ea_path_helper([basedir, filesep, 'acpcdetect.exe']);
 else
-    ACPCDETECT = [basedir, 'acpcdetect.', computer('arch')];
+    ACPCDETECT = [basedir, filesep, 'acpcdetect.', computer('arch')];
 end
 
-cmd=[ACPCDETECT, ' -v -no-tilt-correction -noppm -nopng -notxt -i ', ea_path_helper(inputimage)];
+cmd = [ACPCDETECT, ' -v -no-tilt-correction -noppm -nopng -notxt -i ', ea_path_helper(inputimage)];
 
 setenv('ARTHOME', basedir);
 fprintf('\nacpcdetect ...\n\n');
 if ~ispc
-    [~,cmdout] = system(['bash -c "', cmd, '"']);
+    [~, cmdout] = system(['bash -c "', cmd, '"']);
 else
-    [~,cmdout] = system(cmd);
+    [~, cmdout] = system(cmd);
 end
 
 disp(cmdout);
@@ -34,4 +34,8 @@ disp(cmdout);
 niipath = ea_niifileparts(inputimage);
 ea_delete([niipath, '.mrx']);
 ea_delete([niipath, '_FSL.mat']);
-movefile([niipath, '_RAS.nii'], outputimage)
+if isfile([niipath, '_RAS.nii'])
+    movefile([niipath, '_RAS.nii'], outputimage);
+else
+    ea_cprintf('CmdWinWarnings', 'Failed to do acpcdetect!\n');
+end
