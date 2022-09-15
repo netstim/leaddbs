@@ -1293,16 +1293,16 @@ classdef ea_disctract < handle
             if ~isempty(obj.activateby)
             for entry=1:length(obj.activateby)
                 thisentry=obj.activateby{entry};
-                if strfind(thisentry,'cleartune')
+                weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
+                        ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
+                if contains(thisentry,'cleartune')
                     thisentry=strrep(thisentry,'cleartune','');
                     k=strfind(thisentry,'_');
                     ctentry=str2double(thisentry(1:k-1));
                     ctside=str2double(thisentry(k+1:end));
                     weights{ctside}=weights{ctside}+...
                         full(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
-                elseif strfind(thisentry,'results')
-                    weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
-                        ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
+                elseif contains(thisentry,'results')
                     thisentry=strrep(thisentry,'results','');
                     k=strfind(thisentry,'_');
                     ctentry=str2double(thisentry(1:k-1));
