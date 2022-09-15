@@ -473,6 +473,7 @@ classdef BIDSFetcher
             checkregDir = fullfile(LeadDBSDirs.coregDir, 'checkreg');
 
             % Set coregistered anat images
+            coregCheckreg = struct;
             session = fieldnames(coregAnat);
             for i=1:length(session)
                 modality = fieldnames(coregAnat.(session{i}));
