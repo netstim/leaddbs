@@ -130,7 +130,13 @@ try
     anat_files = getappdata(groot, 'anat_files');
 catch
     anat_files = [];
+end
 
+if ~isempty(anat_files)
+    field_names = fieldnames(anat_files);
+    empty_fields = cellfun(@(x) isempty(anat_files.(x)), field_names);
+    remove_fields = field_names(empty_fields);
+    anat_files = rmfield(anat_files, remove_fields);
 end
 
 end
