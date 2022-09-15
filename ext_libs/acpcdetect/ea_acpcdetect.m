@@ -19,10 +19,10 @@ else
     ACPCDETECT = [basedir, 'acpcdetect.', computer('arch')];
 end
 
-cmd=[ACPCDETECT, ' -v -noppm -nopng -notxt -i ', ea_path_helper(inputimage)];
+cmd=[ACPCDETECT, ' -v -no-tilt-correction -noppm -nopng -notxt -i ', ea_path_helper(inputimage)];
 
 setenv('ARTHOME', basedir);
-fprintf('\nacpcdetect image...\n\n');
+fprintf('\nacpcdetect ...\n\n');
 if ~ispc
     [~,cmdout] = system(['bash -c "', cmd, '"']);
 else
