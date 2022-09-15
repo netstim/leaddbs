@@ -29,10 +29,12 @@ switch cmd
         setenv('PATH', [getenv('PATH') ':',options.prefs.fspath,'bin']);
         setenv('PATH', [getenv('PATH') ':',options.prefs.fspath,'mni/bin']);
         if ismac
-            copyfile([ea_gethome,'.bash_profile'],[ea_getearoot,'bp']);
-            system(['chmod +x ',ea_getearoot,'bp']);
-            system([ea_getearoot,'bp']);
-            delete([ea_getearoot,'bp']);
+            try
+                copyfile([ea_gethome,'.bash_profile'],[ea_getearoot,'bp']);
+                system(['chmod +x ',ea_getearoot,'bp']);
+                system([ea_getearoot,'bp']);
+                delete([ea_getearoot,'bp']);
+            end
         end
         success=1;
         

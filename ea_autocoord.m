@@ -222,27 +222,21 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                end
                ea_cat_seg(options);
            case 2 % FS
-               hastb=ea_hastoolbox('freesurfer');
+               if exist([options.subj.freesurferDir,filesep,'sub-',options.subj.subjId,filesep],'dir')
+                   if options.overwriteapproved
+                       % for now still ask user to confirm recalculation
+                       % since fs takes so long.
+                       answ=questdlg('Existing Freesurfer output folder found. Are you sure you want to recalculate results & overwrite?', ...
+                          'Freesurfer output found','Recalculate & Overwrite','Skip','Skip');
 
-               if ~hastb
-                   ea_error('Freesurfer needs to be installed and connected to Lead-DBS');
+                       switch lower(answ)
+                           case 'recalculate & overwrite'
+                               ea_runfreesurfer(options)
+                       end
+                   end
+               else
+                    ea_runfreesurfer(options);
                end
-               hastb=ea_hastoolbox('fsl');
-               if ~hastb
-                   ea_error('FSL needs to be installed and connected to Lead-DBS');
-               end
-
-               options.prefs=ea_prefs;
-               [options,presentfiles]=ea_assignpretra(options);
-               setenv('SUBJECTS_DIR',[options.root,options.patientname,filesep]);
-               if exist([options.root,options.patientname,filesep,'fs'],'dir')
-                   rmdir([options.root,options.patientname,filesep,'fs'],'s');
-               end
-               system([options.prefs.fspath,filesep,'bin',filesep,...
-                   'recon-all',...
-                   ' -subjid fs',...
-                   ' -i ',[options.root,options.patientname,filesep,presentfiles{1}],...
-                   ' -all']);
        end
     end
 
