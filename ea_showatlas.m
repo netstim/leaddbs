@@ -187,8 +187,11 @@ for nativemni=nm % switch between native and mni space atlases.
 
                 atlassurfs{atlascnt,1}=atlases.roi{atlas,side};
                 colorbuttons(atlascnt)=atlases.roi{atlas,side}.toggleH;
-                
-                while 1
+                if ~any(atlases.roi{atlas,side}.nii.img(:)) % empty nucleus
+                    continue
+                end
+                clear centroid
+                for iter=1:200
                     try
                         centroid=mean(atlases.roi{atlas,side}.fv.vertices(:,1:3));
                         break
@@ -196,6 +199,7 @@ for nativemni=nm % switch between native and mni space atlases.
                         atlases.roi{atlas,side}.threshold=atlases.roi{atlas,side}.threshold./2;
                     end
                 end
+            
                 set(0,'CurrentFigure',resultfig);
 
                 atlases.roi{atlas,side}.Visible='on';

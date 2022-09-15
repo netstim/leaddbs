@@ -78,7 +78,10 @@ set(handles.atlasselect,'Visible',options.d3.verbose); % set invisible if called
 ea_listatlassets(options,handles,options.native);
 
 [~,handles.atlassetpopup.Value]=ismember(options.atlasset,handles.atlassetpopup.String);
-
+if handles.atlassetpopup.Value==0
+handles.atlassetpopup.String=[handles.atlassetpopup.String;{options.atlasset}];
+[~,handles.atlassetpopup.Value]=ismember(options.atlasset,handles.atlassetpopup.String);
+end
 setappdata(handles.atlasselect,'handles',handles);
 setappdata(handles.atlasselect,'atlases',atlases);
 setappdata(handles.atlasselect,'options',options);

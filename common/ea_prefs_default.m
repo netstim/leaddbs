@@ -196,6 +196,13 @@ prefs.d3.cortex_defaultatlas='DKT'; % Currently supports 'DKT','DKT_aseg','a2009
 
 %% Freesurfer Preferences
 prefs.d3.fs.dev=0;
+prefs.fs.reconall.do=1;
+prefs.fs.subcorticalseg.do=1;
+prefs.fs.subcorticalseg.thalamus=1;
+prefs.fs.subcorticalseg.hippo_amygdala=0;
+prefs.fs.subcorticalseg.brainstem=0;
+prefs.fs.samseg.do=0;
+
 
 %% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.
