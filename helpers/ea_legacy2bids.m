@@ -888,6 +888,8 @@ function generate_rawImagejson(patient_name,dest)
     rawdata_t1 = dir(fullfile(dest,'rawdata',patient_name,'ses-preop','anat','sub-*_ses-preop_acq-*_T1w.nii'));
     if ~isempty(coreg_t1) && isempty(rawdata_t1)
         transfer_t1 = 1;
+    else
+        transfer_t1 = 0;
     end
     if isempty(preop_files) || transfer_t1
         %other preop files
