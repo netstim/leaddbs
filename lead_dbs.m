@@ -1015,6 +1015,9 @@ function vizspacepopup_Callback(hObject, eventdata, handles)
 %    %set(handles.writeout2d_checkbox,'Value',1);
 % end
 atlasset=get(handles.atlassetpopup,'String');
+if get(handles.atlassetpopup,'Value')>length(atlasset)
+    set(handles.atlassetpopup,'Value',length(atlasset));
+end
 atlasset=atlasset{get(handles.atlassetpopup,'Value')};
 options.prefs=ea_prefs('');
 ea_listatlassets(options,handles,get(handles.vizspacepopup,'Value'),atlasset);
