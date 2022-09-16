@@ -72,25 +72,23 @@ if length(uipatdir) == 1 % Single folder
 
         % if DICOMDIR file inside, assume dicoms are present in one of the folders on this level
         elseif any(strcmp('DICOMDIR', {folder_list.name}))
-            mkdir(fullfile(uipatdir{1}, 'DICOM'));
-
-            for f = 1:length(folder_list)
+            folder_list(~[folder_list.isdir]' | startsWith({folder_list.name}', {'.', '..'})) = [];
+            from = fullfile(uipatdir{1}, {folder_list.name}');
+            to = fullfile(uipatdir{1}, 'DICOM');
+            ea_mkdir(to);
+            parfor f = 1:length(from)
                 % if .dcm file is inside subfolder, just move the folder
-                if folder_list(f).isdir && ~(any(strcmp(folder_list(f).name, {'.', '..'})))
-                    movefile(fullfile(uipatdir{1}, folder_list(f).name), fullfile(uipatdir{1}, 'DICOM'));
-
-                end
+                movefile(from{f}, to);
             end
             folder_type = 'patient_folder_dicom_folder';
 
         % .dcm files are found inside one of the subfolders
         elseif ~isempty(dcm_in_subfolder_list)  %
-            for f=1:length(dcm_in_subfolder_list)
-                from = fullfile(dcm_in_subfolder_list(f).folder, dcm_in_subfolder_list(f).name);
-                destFolder = strrep(dcm_in_subfolder_list(f).folder, uipatdir{1}, fullfile(uipatdir{1}, 'DICOM'));
-                ea_mkdir(destFolder);
-                to = fullfile(destFolder, dcm_in_subfolder_list(f).name);
-                movefile(from, to);
+            from = fullfile({dcm_in_subfolder_list.folder}', {dcm_in_subfolder_list.name}');
+            to = strrep({dcm_in_subfolder_list.folder}', uipatdir{1}, fullfile(uipatdir{1}, 'DICOM'));
+            ea_mkdir(to);
+            parfor f=1:length(dcm_in_subfolder_list)
+                movefile(from{f}, to{f});
             end
 
             folder_type = 'patient_folder_dicom_folder';
