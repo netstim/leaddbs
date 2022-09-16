@@ -215,12 +215,8 @@ else
             rmdir(fullfile(dicom_dir, 'tmp'), 's');
         else
             % delete temporary files and folder
-            if isfolder(dicom_dir)
-                rmdir(dicom_dir, 's');
-            end
-            if isfolder(fullfile(root_dataset_dir, 'rawdata', subjID))
-                rmdir(fullfile(root_dataset_dir, 'rawdata', subjID));
-            end
+            ea_delete(fullfile(dicom_dir, 'tmp'));
+            ea_delete(fullfile(root_dataset_dir, 'rawdata', subjID));
         end
 
         % second option: use lookup table to find files and convert them to BIDS
