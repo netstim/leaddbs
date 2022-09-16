@@ -338,7 +338,10 @@ currvol = checkregImages{activevolume};
 anchorImage = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
 
 if strcmp(currvol, options.subj.norm.anat.preop.(options.subj.AnchorModality))
-    ea_delete([struct2cell(options.subj.norm.anat.preop); struct2cell(options.subj.norm.anat.postop)]);
+    ea_delete(struct2cell(options.subj.norm.anat.preop));
+    if isfield(options.subj.norm.anat, 'postop')
+        ea_delete(struct2cell(options.subj.norm.anat.postop));
+    end
 
     % Get normalization method
     options.normalize.method = handles.coregmrmethod.String{handles.coregmrmethod.Value};
