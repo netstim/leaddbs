@@ -110,7 +110,7 @@ prefs=ea_prefs;
 
 %% Patient specific part (skipped if no patient is selected or no reco available):
 if ~strcmp(options.patientname,'No Patient Selected') % if not initialize empty viewer
-    if nargin>1 || isfile(options.subj.recon.recon)
+    if nargin>1 || isfield(options.subj, 'recon') && isfile(options.subj.recon.recon)
         if nargin>1
             multiplemode=1;
 
