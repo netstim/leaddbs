@@ -13,7 +13,7 @@ if options.prefs.fs.subcorticalseg.thalamus
 
     thalnii=ea_load_nii(fullfile(temp,'thalamic.nii'));
 
-    outdir=fullfile(options.subj.atlasDir,'Freesurfer_Segmentations');
+    outdir=fullfile(options.subj.atlasDir,'FreeSurfer_Segmentations');
     ea_mkdir(fullfile(outdir,'lh'));
     ea_mkdir(fullfile(outdir,'rh'));
     ea_mkdir(fullfile(outdir,'midline'));
@@ -61,7 +61,7 @@ if options.prefs.fs.subcorticalseg.hippo_amygdala
     lhippnii=ea_load_nii(fullfile(temp,'lh_hippo.nii'));
 
 
-    outdir=fullfile(options.subj.atlasDir,'Freesurfer_Segmentations');
+    outdir=fullfile(options.subj.atlasDir,'FreeSurfer_Segmentations');
     ea_mkdir(fullfile(outdir,'lh'));
     ea_mkdir(fullfile(outdir,'rh'));
 
@@ -103,7 +103,7 @@ if options.prefs.fs.subcorticalseg.brainstem
 
     bsnii=ea_load_nii(fullfile(temp,'brainstem.nii'));
 
-    outdir=fullfile(options.subj.atlasDir,'Freesurfer_Segmentations');
+    outdir=fullfile(options.subj.atlasDir,'FreeSurfer_Segmentations');
     ea_mkdir(fullfile(outdir,'lh'));
     ea_mkdir(fullfile(outdir,'rh'));
 

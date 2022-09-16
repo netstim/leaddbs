@@ -3,7 +3,7 @@ function ea_runfreesurfer(options)
 hastb=ea_hastoolbox('freesurfer');
 
 if ~hastb
-    ea_error('Freesurfer needs to be installed and connected to Lead-DBS');
+    ea_error('FreeSurfer needs to be installed and connected to Lead-DBS');
 end
 hastb=ea_hastoolbox('fsl');
 if ~hastb
@@ -36,7 +36,7 @@ if options.prefs.fs.subcorticalseg.do
             ' --cross ',['sub-',options.subj.subjId],...
             ' thalamus']);
         [~,fsver]=fileparts(options.prefs.fs.dir(1:end-1));
-        parsestr=['Thalamic nuclei were automatically segmented using freesurfer version ',fsver,' following the approach introduced by Iglesias et al. 2018.'];
+        parsestr=['Thalamic nuclei were automatically segmented using FreeSurfer version ',fsver,' following the approach introduced by Iglesias et al. 2018.'];
         refs={'Iglesias JE, Insausti R, Lerma-Usabiaga G, Bocchetta M, Van Leemput K, Greve DN, van der Kouwe A, Fischl B, Caballero-Gaudes C, Paz-Alonso PM. A probabilistic atlas of the human thalamic nuclei combining ex vivo MRI and histology. NeuroImage. 2018;183:314-326. doi:10.1016/j.neuroimage.2018.08.012'};
         ea_methods(options,parsestr,refs)
     end
@@ -57,7 +57,7 @@ if options.prefs.fs.subcorticalseg.do
             ' --cross ',['sub-',options.subj.subjId],...
             ' brainstem']);
         [~,fsver]=fileparts(options.prefs.fs.dir(1:end-1));
-        parsestr=['Brainstem structures were automatically segmented using freesurfer version ',fsver,' following the approach introduced by Iglesias et al. 2015.'];
+        parsestr=['Brainstem structures were automatically segmented using FreeSurfer version ',fsver,' following the approach introduced by Iglesias et al. 2015.'];
         refs={'Iglesias JE, Van Leemput K, Bhatt P, Casillas C, Dutt S, Schuff N, Truran-Sacrey D, Boxer A, Fischl B. Bayesian segmentation of brainstem structures in MRI. NeuroImage. 2015;113:184-195. doi:10.1016/j.neuroimage.2015.02.065'};
         ea_methods(options,parsestr,refs)
     end

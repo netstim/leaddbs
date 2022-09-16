@@ -4,7 +4,7 @@ switch cmd
     case 'freesurfer'
         
         if ispc
-           errordlg('Freesurfer is not available for Windows.'); 
+           errordlg('FreeSurfer is not available for Windows.');
            return
         end
         
@@ -14,7 +14,7 @@ switch cmd
         while ~isfield(options.prefs,'fspath')
             errordlg('FreeSurfer installation not set properly, please select FreeSurfer base folder in the next step.');
             uiwait
-            pth=uigetdir('','Please select freesurfer installation folder');
+            pth=uigetdir('','Please select FreeSurfer installation folder');
             if ~ischar(pth) % user pressed cancel
                 return
             end

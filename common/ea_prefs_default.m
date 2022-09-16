@@ -194,7 +194,7 @@ prefs.d3.cortexcolor=[0.65 0.65 0.65]; % default color is gray
 prefs.d3.cortexalpha=0.5; % default alpha is 0.5
 prefs.d3.cortex_defaultatlas='DKT'; % Currently supports 'DKT','DKT_aseg','a2009'
 
-%% Freesurfer Preferences
+%% FreeSurfer Preferences
 prefs.d3.fs.dev=0;
 prefs.fs.dir = '';
 prefs.fs.reconall.do=1;
