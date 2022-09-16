@@ -24,10 +24,10 @@ switch cmd
             end
             options.prefs=ea_prefs;
         end
-        setenv('FREESURFER_HOME',options.prefs.fspath);
-        system(['source ',options.prefs.fspath,filesep,'SetUpFreeSurfer.sh']);
-        setenv('PATH', [getenv('PATH') ':',options.prefs.fspath,'bin']);
-        setenv('PATH', [getenv('PATH') ':',options.prefs.fspath,'mni/bin']);
+        setenv('FREESURFER_HOME',options.prefs.fs.dir);
+        system(['source ',options.prefs.fs.dir,filesep,'SetUpFreeSurfer.sh']);
+        setenv('PATH', [getenv('PATH') ':',options.prefs.fs.dir,'bin']);
+        setenv('PATH', [getenv('PATH') ':',options.prefs.fs.dir,'mni/bin']);
         if ismac
             try
                 copyfile([ea_gethome,'.bash_profile'],[ea_getearoot,'bp']);
