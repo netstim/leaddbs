@@ -47,7 +47,7 @@ for i = 1 : size(M.patient.list, 1)
     % now we copy some essential files
     copyfile(fullfile(M.patient.list{i}, 'prefs', [patient_tag, '_desc-rawimages.json']), newPrefsFolder);
     copyfile(fullfile(M.patient.list{i}, 'reconstruction', [patient_tag, '_desc-reconstruction.mat']), newReconstFolder);  
-    if isfile(fullfile(M.patient.list{i}, [patient_tag, '_desc-stats.mat'])
+    if isfile(fullfile(M.patient.list{i}, [patient_tag, '_desc-stats.mat']))
         copyfile(fullfile(M.patient.list{i}, [patient_tag, '_desc-stats.mat']), M_mini.patient.list{i});
     end
 
