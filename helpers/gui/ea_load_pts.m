@@ -270,6 +270,16 @@ end
 % Initialize BIDS class
 bids = BIDSFetcher(BIDSRoot);
 
+if ~any(ismember(subjId, bids.subjId))
+    % Return when import for all subjs cancelled or failed
+    ea_cprintf('CmdWinWarnings', 'Import for sub-%s didn''t go through!\n', subjId{:})
+    return;
+elseif ~all(ismember(subjId, bids.subjId))
+    % Warn if import for some subjs cancelled or failed
+    warnSubjId = subjId(~ismember(subjId, bids.subjId));
+    ea_cprintf('CmdWinWarnings', 'Import for sub-%s didn''t go through!\n', warnSubjId{:})
+end
+
 % store patient directories in figure
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
 setappdata(handles.leadfigure, 'bids', bids);
