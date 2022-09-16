@@ -567,6 +567,11 @@ classdef ea_disctract < handle
 
                         % these predictors are defined within the same ff model
                         % of iteration 'c'
+%                         % do not get rid of the first dimension when it has size of 1
+%                         predictor_training = reshape(ea_nanmean(Ihat_train_global,3), ...
+%                             size(ea_nanmean(Ihat_train_global,3),1),...
+%                             size(ea_nanmean(Ihat_train_global,3),2),...
+%                             size(ea_nanmean(Ihat_train_global,3),4) );
                         predictor_training = squeeze(ea_nanmean(Ihat_train_global,3));
                         predictor_test = squeeze(ea_nanmean(Ihat,2));
                         %predictor=squeeze(ea_nanmean(Ihat_voters,2));
@@ -666,13 +671,23 @@ classdef ea_disctract < handle
 
                     %subvars=ea_nanzscore(cell2mat(app.tractset.subscore.vars'));
                     %try
-                    [coeff,score,latent,tsquared,explained]=pca(subvars,'Rows','complete');
+                    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'Rows','complete');
 
 
                     %subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
                     %[coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
-
-                    Ihatout = Ihat*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
+                    % if 1
+                    %     for pcc=1:obj.numpcs
+                    %         ea_corrplot(Ihat(:,pcc),obj.subscore.pcavars{pcc}(obj.patientselection),{['PC ',num2str(pcc)],'Estimate','Actual'});
+                    %     end
+                    % end
+                    % data is zscored, such as mu is 0 (+ some computer rounding error)
+                    % then adding mean is not required 
+                    % also, we want to take scores of the chosen PCs ONLY,
+                    % and multiply by coeff of these PCs (= how they map to
+                    % the variables) to get estimated clinical scores
+                    Ihatout = Ihat(:,1:obj.numpcs)*coeff(:,1:obj.numpcs)';
+                    %Ihatout = Ihat*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
                     %Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
 
                     Ihat=cell(1); % export in cell format as the Improvement itself.
