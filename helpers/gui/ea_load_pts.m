@@ -278,7 +278,11 @@ else % Multiple patient folders, suppose dataset has already been migrated to BI
         if isempty(dest_folder) %user pressed cancel
             return
         end
-        ea_lead_import(uipatdir,options,handles,dest_folder)
+        if options.prefs.migrate.interactive
+            waitfor(lead_import(uipatdir, options, handles))
+        else
+            ea_lead_import(uipatdir,options,handles,dest_folder)
+        end
         BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
         subjId = getappdata(handles.leadfigure,'subjID');
         derivatives_folder = fullfile(BIDSRoot,'derivatives');
