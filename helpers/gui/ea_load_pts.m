@@ -148,13 +148,18 @@ if length(uipatdir) == 1 % Single folder
                 choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
                 
                 if strcmp(choice, 'Yes')
-                    dest_folder = ea_uigetdir('*','Select BIDS Dataset folder');
-                    if isempty(dest_folder) %user pressed cancel
-                        return
-                    end
+                    
                     options.prefs = ea_prefs;
-                    ea_lead_import(uipatdir,options,handles,dest_folder)
-                    %waitfor(lead_import(uipatdir, options, handles));
+                    if options.prefs.migrate.interactive
+                        waitfor(lead_import(uipatdir, options, handles));
+                    else
+                        dest_folder = ea_uigetdir('*','Select BIDS Dataset folder');
+                        if isempty(dest_folder) %user pressed cancel
+                            return
+                        end
+                        ea_lead_import(uipatdir,options,handles,dest_folder)
+                    end
+                    %
                     BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                     subjId = getappdata(handles.leadfigure,'subjID');
                     if ~isempty(BIDSRoot) && ~isempty(subjId)
@@ -171,13 +176,18 @@ if length(uipatdir) == 1 % Single folder
                 opts.Interpreter = 'tex';
                 opts.WindowStyle = 'modal';
                 waitfor(msgbox(msg, '', 'help', opts));
-                dest_folder = ea_uigetdir('*','Select BIDS Dataset folder');
-                if isempty(dest_folder) %user pressed cancel
-                    return
-                end
+                
                 options.prefs = ea_prefs;
-                ea_lead_import(uipatdir,options,handles,dest_folder)
-                %waitfor(lead_import(uipatdir, options, handles));
+                if options.prefs.migrate.interactive
+                    waitfor(lead_import(uipatdir, options, handles));
+                else
+                    dest_folder = ea_uigetdir('*','Select BIDS Dataset folder');
+                    if isempty(dest_folder) %user pressed cancel
+                        return
+                    end
+                    ea_lead_import(uipatdir,options,handles,dest_folder);
+                end
+                %
                 BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                 subjId = getappdata(handles.leadfigure,'subjID');
                 if ~isempty(BIDSRoot) && ~isempty(subjId)
@@ -196,13 +206,18 @@ if length(uipatdir) == 1 % Single folder
                 opts.Interpreter = 'tex';
                 choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
                 if strcmp(choice, 'Yes')
-                    dest_folder = ea_uigetdir('*','Select BIDS Dataset folder');
-                    if isempty(dest_folder) %user pressed cancel
-                        return
-                    end
+                    
                     options.prefs = ea_prefs;
-                    ea_lead_import(uipatdir,options,handles,dest_folder)
-                    %waitfor(lead_import(uipatdir, options, handles));
+                    if options.prefs.migrate.interactive
+                        waitfor(lead_import(uipatdir, options, handles));
+                    else
+                        dest_folder = ea_uigetdir('*','Select BIDS Dataset folder');
+                        if isempty(dest_folder) %user pressed cancel
+                            return
+                        end
+                        ea_lead_import(uipatdir,options,handles,dest_folder);
+                    end
+                    %
                     BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                     subjId = getappdata(handles.leadfigure,'subjID');
                     if ~isempty(BIDSRoot) && ~isempty(subjId)
@@ -243,8 +258,12 @@ if length(uipatdir) == 1 % Single folder
             waitfor(msgbox(msg, '', 'help', opts));
             options.prefs = ea_prefs;
             dest_folder = BIDSRoot; %source and dest are same
-            ea_lead_import(uipatdir,options,handles,dest_folder)
-            %waitfor(lead_import(sourceData, options, handles));
+            if options.prefs.migrate.interactive
+                waitfor(lead_import(sourceData, options, handles));
+            else
+                ea_lead_import(uipatdir,options,handles,dest_folder)
+            end
+            %
             uipatdir = strrep(sourceData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
 
         else
@@ -259,11 +278,7 @@ else % Multiple patient folders, suppose dataset has already been migrated to BI
         if isempty(dest_folder) %user pressed cancel
             return
         end
-        if options.prefs.migrate.interactive
-            waitfor(lead_import(uipatdir, options, handles));
-        else
-            ea_lead_import(uipatdir,options,handles,dest_folder)
-        end
+        ea_lead_import(uipatdir,options,handles,dest_folder)
         BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
         subjId = getappdata(handles.leadfigure,'subjID');
         derivatives_folder = fullfile(BIDSRoot,'derivatives');
