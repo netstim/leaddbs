@@ -38,8 +38,11 @@ classdef ea_conda_env
 
         function create(obj)
             environment_file = fullfile(fileparts(mfilename('fullpath')), 'environments', [obj.name '.yml']);
-            disp(['Creating environment ' obj.name])
-            system([ea_conda_env.conda_path ' env create -f ' environment_file]);
+            disp(['Creating environment ' obj.name '...'])
+            [status, cmdout] = system([ea_conda_env.conda_path ' env create -f ' environment_file]);
+            if ~status
+                fprintf('%s', strtrim(cmdout));
+            end
         end
 
         function run_script(obj, script_path)
@@ -58,7 +61,6 @@ classdef ea_conda_env
             end
             system([setup_command command]);
         end
-
     end
 
     methods (Static, Access = private)
@@ -70,8 +72,6 @@ classdef ea_conda_env
             end
             command = [command(1:first_space-1) '.exe' command(first_space:end)];
         end
-
     end
-
 end
 

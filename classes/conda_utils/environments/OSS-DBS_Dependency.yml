@@ -1,5 +1,6 @@
-name: test
+name: ossdbs
 channels:
   - conda-forge
 dependencies:
-  - python=3.6
+  - pyqt=5
+  - h5py
