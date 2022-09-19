@@ -1,15 +1,13 @@
 classdef ea_conda_env
 
     properties
+        yml;
         name;
+        path;
     end
 
     properties (Dependent)
         is_created;
-    end
-
-    properties (Access = private)
-        path;
     end
 
     properties (Access = private, Constant)
@@ -18,9 +16,10 @@ classdef ea_conda_env
 
     methods
 
-        function obj = ea_conda_env(name)
-            obj.name = name;
-            obj.path = fullfile(ea_conda.install_path, 'envs', name);
+        function obj = ea_conda_env(ymlname)
+            obj.yml = fullfile(fileparts(mfilename('fullpath')), 'environments', [ymlname '.yml']);
+            obj.name = regexp(fgetl(fopen(obj.yml)), '(?<=name:\s+).*', 'match', 'once');
+            obj.path = fullfile(ea_conda.install_path, 'envs', obj.name);
         end
 
         function b = get.is_created(obj)
@@ -37,9 +36,8 @@ classdef ea_conda_env
         end
 
         function create(obj)
-            environment_file = fullfile(fileparts(mfilename('fullpath')), 'environments', [obj.name '.yml']);
             disp(['Creating environment ' obj.name '...'])
-            [status, cmdout] = system([ea_conda_env.conda_path ' env create -f ' environment_file]);
+            [status, cmdout] = system([ea_conda_env.conda_path ' env create -f ' obj.yml]);
             if status
                 fprintf('%s\n', strtrim(cmdout));
                 ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name)
