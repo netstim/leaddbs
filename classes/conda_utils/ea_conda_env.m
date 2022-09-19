@@ -40,8 +40,9 @@ classdef ea_conda_env
             environment_file = fullfile(fileparts(mfilename('fullpath')), 'environments', [obj.name '.yml']);
             disp(['Creating environment ' obj.name '...'])
             [status, cmdout] = system([ea_conda_env.conda_path ' env create -f ' environment_file]);
-            if ~status
-                fprintf('%s', strtrim(cmdout));
+            if status
+                fprintf('%s\n', strtrim(cmdout));
+                ea_cprintf('CmdWinErrors', 'Failed to create environment %s! Please check the log above.\n', obj.name)
             end
         end
 
