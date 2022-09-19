@@ -9,7 +9,9 @@ function ea_legacy2bids(source,dest,isdicom,dicom_source,doDcmConv,doOnlyRaw)
 %% iv) dicom_source: to be specified only if isdicom is true. Else, specify as an empty string
 %% v)  doDcmConv: Boolean, 1 if your dataset only contains DICOM folders, else 0
 %% vi) doOnlyRaw: Boolean, 1 if your dataset only contains RAW nifti files, else 0
-
+if ~iscell(source)
+    source = {source};
+end
 for j=1:length(source)
     if ~exist(source{j},'dir')
         warndlg("The source directory you have specified does not exist")
@@ -81,11 +83,11 @@ for patients = 1:length(source)
     modes = {'anat','func','dwi'};
     sessions = {'ses-preop','ses-postop'};
     if  doDcmConv && ~doOnlyRaw
-        subfolder_cell = {'sourcedata','legacy_rawdata','derivatives'};
+        subfolder_cell = {'sourcedata','legacy','derivatives'};
     elseif doOnlyRaw && ~doDcmConv
         subfolder_cell = {'rawdata'};
     elseif  doOnlyRaw && doDcmConv
-        subfolder_cell = {'legacy_rawdata'};
+        subfolder_cell = {'legacy'};
     elseif ~doOnlyRaw && ~doDcmConv
         if isempty(dir(fullfile(source_patient,'*.nii'))) && isempty(dir(fullfile(source_patient,'*.nii.gz')))
             subfolder_cell = {'derivatives'};
@@ -104,7 +106,7 @@ for patients = 1:length(source)
     [~,patient_name,~] = fileparts(source_patient);
     if ~startsWith(patient_name,'sub-')
         patient_name = ['sub-', regexprep(patient_name, '[\W_]', '')];
-    elseif startsWith(patient_name,'sub')
+    elseif startsWith(patient_name,'sub') && ~contains(patient_name,'sub-')
         patient_name = strrep(patient_name,'sub','sub-');
     end
     spaces_in_pat_name = isspace(patient_name);
@@ -613,91 +615,96 @@ for patients = 1:length(source)
                 
 
 
+                if ~isempty(matching_files_preop) || ~isempty(matching_files_postop)
+                    for i= 1:length(modes)
+                        for j=1:length(sessions)
+                            if strcmp(subfolder_cell{subfolders},'legacy')
+                                new_path = fullfile(dest,'rawdata',subfolder_cell{subfolders},patient_name,sessions{j},modes{i});
+                            else
+                                new_path = fullfile(dest,subfolder_cell{subfolders},patient_name,sessions{j},modes{i});
+                            end
+                            if ~exist(new_path,'dir')
+                                mkdir(new_path)
+                            end
+                            if strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-preop')
+                                tmp_path = fullfile(new_path,'tmp');
+                                if ~exist(tmp_path,'dir')
+                                    mkdir(tmp_path)
+                                end
+                                disp("Migrating pre operative session data...")
+                                %files to be moved into pre-op:raw_anat_*.nii
+                                for matching_files = 1:length(matching_files_preop)
+                                    if exist(fullfile(source_patient,matching_files_preop{matching_files}),'file')
+                                        to_match = matching_files_preop{matching_files};
+                                        bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
 
-                for i= 1:length(modes)
-                    for j=1:length(sessions)
-                        new_path = fullfile(dest,subfolder_cell{subfolders},patient_name,sessions{j},modes{i});
-                        if ~exist(new_path,'dir')
-                            mkdir(new_path)
-                        end
-                        if strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-preop')
-                            tmp_path = fullfile(new_path,'tmp');
-                            if ~exist(tmp_path,'dir')
-                                mkdir(tmp_path)
-                            end
-                            disp("Migrating pre operative session data...")
-                            %files to be moved into pre-op:raw_anat_*.nii
-                            for matching_files = 1:length(matching_files_preop)
-                                if exist(fullfile(source_patient,matching_files_preop{matching_files}),'file')
-                                    to_match = matching_files_preop{matching_files};
-                                    bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
-                               
-                                    indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
-                                    unique_indx = find(indx);
-                                    if length(unique_indx) > 1
-                                        indx = unique_indx(1);
-                                    end
-                                    tag = tag_cell{indx};
-                                    try_bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,'_',bids_mod,'.nii.gz'];     
-                                    %support for multiple modalities. If a
-                                    %file already exists with that name (i.e., tag & mod are the same)
-                                    %we rename the old file and append a
-                                    %1,2,or 3 to the acq tag of the new
-                                    %file.
-                                    bids_name = CheckifAlreadyExists(new_path,try_bids_name);
-                                    which_file = matching_files_preop{matching_files};
-                                    derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
-                                    derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-                                    move_raw2bids(source_patient,new_path,which_file,bids_name)
-                                end
-                            end
-                        elseif strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-postop')
-                            tmp_path = fullfile(new_path,'tmp');
-                            if ~exist(tmp_path,'dir')
-                                mkdir(tmp_path)
-                            end
-                            disp("Migrating post operative session data...")
-                            for matching_files = 1:length(matching_files_postop)
-                                if contains(matching_files_postop{matching_files},'ct','IgnoreCase',true)
-                                    postop_modality = 'CT';
-                                else
-                                    postop_modality = 'MRI';
-                                end
-                                if exist(fullfile(source_patient,matching_files_postop{matching_files}),'file')
-                                    to_match = matching_files_postop{matching_files};
-                                    bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
-                                    bids_name = [patient_name,'_',sessions{j},'_',bids_mod,'.nii.gz'];
-                                    which_file = matching_files_postop{matching_files};
-                                    derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
-                                    derivatives_cell{end,2} = fullfile(new_path,bids_name);
-                                    move_raw2bids(source_patient,new_path,which_file,bids_name)
-                                end
-                            end
-                        elseif strcmp(modes{i},'dwi') && strcmp(sessions{j},'ses-preop')
-                            disp("Migrating dwi data...")
-                            for files = 1:length(files_to_move)
-                                if ~isempty(regexp(files_to_move{files},'^dti.[bval,bvec,nii]'))
-                                    if exist(fullfile(source_patient,files_to_move{files}),'file')
-                                        modality_str = strsplit(files_to_move{files},'_');
-                                        modality_str = lower(modality_str{end});
-                                        try
-                                            bids_name = [patient_name,'_',sessions{j},'_',rawdata_containers(modality_str)];
-                                        catch
-                                           modality_str = strsplit(modality_str,'.');
-                                           modality_str = upper(modality_str{1});
-                                           bids_name = [patient_name,'_',sessions{j},'_',modality_str,'.nii.gz'];
+                                        indx = cellfun(@(x)isequal(x,bids_mod),mod_cell);
+                                        unique_indx = find(indx);
+                                        if length(unique_indx) > 1
+                                            indx = unique_indx(1);
                                         end
-                                        which_file = files_to_move{files};
+                                        tag = tag_cell{indx};
+                                        try_bids_name = [patient_name,'_',sessions{j},'_','acq-',tag,'_',bids_mod,'.nii.gz'];
+                                        %support for multiple modalities. If a
+                                        %file already exists with that name (i.e., tag & mod are the same)
+                                        %we rename the old file and append a
+                                        %1,2,or 3 to the acq tag of the new
+                                        %file.
+                                        bids_name = CheckifAlreadyExists(new_path,try_bids_name);
+                                        which_file = matching_files_preop{matching_files};
+                                        derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
+                                        derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
+                                        move_raw2bids(source_patient,new_path,which_file,bids_name)
+                                    end
+                                end
+                            elseif strcmp(modes{i},'anat') && strcmp(sessions{j},'ses-postop')
+                                tmp_path = fullfile(new_path,'tmp');
+                                if ~exist(tmp_path,'dir')
+                                    mkdir(tmp_path)
+                                end
+                                disp("Migrating post operative session data...")
+                                for matching_files = 1:length(matching_files_postop)
+                                    if contains(matching_files_postop{matching_files},'ct','IgnoreCase',true)
+                                        postop_modality = 'CT';
+                                    else
+                                        postop_modality = 'MRI';
+                                    end
+                                    if exist(fullfile(source_patient,matching_files_postop{matching_files}),'file')
+                                        to_match = matching_files_postop{matching_files};
+                                        bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
+                                        bids_name = [patient_name,'_',sessions{j},'_',bids_mod,'.nii.gz'];
+                                        which_file = matching_files_postop{matching_files};
                                         derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
                                         derivatives_cell{end,2} = fullfile(new_path,bids_name);
                                         move_raw2bids(source_patient,new_path,which_file,bids_name)
-                                       
+                                    end
+                                end
+                            elseif strcmp(modes{i},'dwi') && strcmp(sessions{j},'ses-preop')
+                                disp("Migrating dwi data...")
+                                for files = 1:length(files_to_move)
+                                    if ~isempty(regexp(files_to_move{files},'^dti.[bval,bvec,nii]'))
+                                        if exist(fullfile(source_patient,files_to_move{files}),'file')
+                                            modality_str = strsplit(files_to_move{files},'_');
+                                            modality_str = lower(modality_str{end});
+                                            try
+                                                bids_name = [patient_name,'_',sessions{j},'_',rawdata_containers(modality_str)];
+                                            catch
+                                                modality_str = strsplit(modality_str,'.');
+                                                modality_str = upper(modality_str{1});
+                                                bids_name = [patient_name,'_',sessions{j},'_',modality_str,'.nii.gz'];
+                                            end
+                                            which_file = files_to_move{files};
+                                            derivatives_cell{end+1,1} = fullfile(source_patient,which_file);
+                                            derivatives_cell{end,2} = fullfile(new_path,bids_name);
+                                            move_raw2bids(source_patient,new_path,which_file,bids_name)
+
+                                        end
                                     end
                                 end
                             end
-                        end
-                        if exist(tmp_path,'dir')
-                            ea_delete(tmp_path);
+                            if exist(tmp_path,'dir')
+                                ea_delete(tmp_path);
+                            end
                         end
                         
                     end
@@ -875,7 +882,7 @@ function generate_rawImagejson(patient_name,dest)
     opt.FileName = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
     %special_case
     
-    preop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-preop','anat'));
+    preop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-preop','anat','*.nii.gz'));
     preop_files = {preop_files.name};
     preop_modalities = {};
     for comparing_files = 1:length(preop_files)
@@ -934,7 +941,7 @@ function generate_rawImagejson(patient_name,dest)
         end
     end
     
-    postop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-postop','anat'));
+    postop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-postop','anat','*.nii.gz'));
     postop_files = {postop_files.name};
     postop_modalities = {};
     for comparing_files = 1:length(postop_files)
