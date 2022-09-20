@@ -18,6 +18,12 @@ prefs.pp.do=0; % use parallel processing if available.
 prefs.pp.csize=4; % specify how many clusters to recruit.
 prefs.pp.profile='local'; % specify parallel processing profile.
 
+%% Migrate settings:
+prefs.migrate.doDicomConversion = 1;
+prefs.migrate.DicomConversionTool = 'dcm2niix'; %TODOspecify other options here
+prefs.migrate.interactive = 0;
+
+
 %% general file handling:
 prefs.niiFileExt = '.nii';
 
