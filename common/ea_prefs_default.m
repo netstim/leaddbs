@@ -20,7 +20,7 @@ prefs.pp.profile='local'; % specify parallel processing profile.
 
 %% Migrate settings:
 prefs.migrate.doDicomConversion = 1;
-prefs.migrate.DicomConversionTool = 'dcm2niix'; %TODOspecify other options here
+prefs.migrate.DicomConversionTool = 'dcm2niix'; % Other options: 'dicm2nii', 'SPM'
 prefs.migrate.interactive = 0;
 
 
