@@ -281,8 +281,8 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw,dicom_source_folder] = ena
                     flag = 'onlyMigrate';
                 end
             else
-                results = 'fail';
-                warning("Only dicom files found for this patient, but your preference suggests to ignore dicom conversion. Skipping for now...reset prefs to include this patient");
+                %results = 'fail';
+                warning("Only dicom files found for this patient, your preferences are overridden for this patient.");
             end
         end
     end

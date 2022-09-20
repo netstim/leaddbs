@@ -19,9 +19,9 @@ prefs.pp.csize=4; % specify how many clusters to recruit.
 prefs.pp.profile='local'; % specify parallel processing profile.
 
 %% Migrate settings:
-prefs.migrate.doDicomConversion = 0;
-prefs.migrate.DicomConversionTool = 'dcm2niix';
-prefs.migrate.interactive = 1;
+prefs.migrate.doDicomConversion = 1;
+prefs.migrate.DicomConversionTool = 'dcm2niix'; %TODOspecify other options here
+prefs.migrate.interactive = 0;
 
 
 %% general file handling:
