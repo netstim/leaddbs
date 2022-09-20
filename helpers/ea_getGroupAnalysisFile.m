@@ -15,7 +15,7 @@ if ~isempty(analysisFile)
     % Choose one if multiple found
     if length(analysisFile) > 1
         [~, guid] = fileparts(fileparts(analysisFile));
-        index = listdlg('PromptString', 'Select Group Analysis', 'ListString', guid, 'SelectionMode', 'single');
+        index = listdlg('PromptString', 'Select Group Analysis', 'ListString', guid, 'SelectionMode', 'single', 'CancelString', 'New Analysis');
         if isempty(index)
             analysisFile = [];
             return;

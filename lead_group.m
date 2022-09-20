@@ -217,8 +217,6 @@ if strcmp(target, 'groupDir')
         ea_refresh_lg(handles);
         M = getappdata(handles.leadfigure,'M');
 
-
-
         disp('Saving data to disk...');
         try
             save(ea_getGroupAnalysisFile(handles.groupdir_choosebox.String),'M','-v7.3');
