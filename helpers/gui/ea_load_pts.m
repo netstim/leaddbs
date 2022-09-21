@@ -139,10 +139,7 @@ if length(uipatdir) == 1 % Single folder
             case 'legacy_patient_folder'
                 setappdata(handles.leadfigure,'BIDSRoot',{});
                 options.prefs = ea_prefs;
-                msg = sprintf('Old dataset  with legacy files detected,\n would you like to migrate it to BIDS?');
-                %could also try to keep the waitfor inside a try and catch
-                %if you don't want to setappdata to a empty dataset (line
-                %140). 
+                msg = sprintf('Old dataset with legacy files detected,\n would you like to migrate it to BIDS?');
                 waitfor(ea_selectdataset(msg,handles.leadfigure));
                 dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
                 if ~isempty(dest_folder)
@@ -164,15 +161,12 @@ if length(uipatdir) == 1 % Single folder
             case  'patient_folder_dicom_folder'
                 setappdata(handles.leadfigure,'BIDSRoot',{});
                 options.prefs = ea_prefs;
-                msg = sprintf('Old dataset with DICOM folder found,\n should we run DICOM to NIfTI conversion?');
+                msg = sprintf('DICOM folder found,\n should we run DICOM to NIfTI conversion?');
                 waitfor(ea_selectdataset(msg,handles.leadfigure));
                 dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
-%                 opts.Interpreter = 'tex';
-%                 opts.WindowStyle = 'modal';
-%                 waitfor(msgbox(msg, '', 'help', opts));
                 if ~isempty(dest_folder)
                     if options.prefs.migrate.interactive
-                        waitfor(lead_import(uipatdir, options, handles,dest_folder));
+                        waitfor(lead_import(uipatdir, options, handles, dest_folder));
                     else
                         ea_lead_import(uipatdir,options,handles,dest_folder);
                     end
@@ -192,17 +186,7 @@ if length(uipatdir) == 1 % Single folder
                 msg = sprintf('Raw dataset with Nifti files [only] detected,\n would you like to migrate it to BIDS?');
                 waitfor(ea_selectdataset(msg,handles.leadfigure));
                 dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
-%                 msg = {'{\bfRaw dataset with Nifti files [only] detected, would you like to migrate it to BIDS?}';
-%                     ['Thank you for your interest in Lead-DBS! Since version 2.6, we have re-organized the way Lead-DBS acesses and stores data.' ,...
-%                     'This implies changes to the organization of your input and output data. The main objective to set standards for data organization was to promote' ,...
-%                     'data sharing and open science initiatives. For more information and details on specific changes, please refer to our manual [insert url]. ' ,...
-%                     'lead-import is a tool developed to automatically assist you in moving your dataset from the classic lead-dbs to the bidsified version. ',...
-%                     '{\bfIf you wish to run BIDS import tool, please click on ''Yes''. Otherwise, you will not be able to use Lead-DBS.}']};
-%                 opts.Default = 'Cancel';
-%                 opts.Interpreter = 'tex';
-%                 choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
-%                if strcmp(choice, 'Yes')
-                 if ~isempty(dest_folder)   
+                if ~isempty(dest_folder)
                     if options.prefs.migrate.interactive
                         waitfor(lead_import(uipatdir, options, handles));
                     else
@@ -212,7 +196,7 @@ if length(uipatdir) == 1 % Single folder
                         end
                         ea_lead_import(uipatdir,options,handles,dest_folder);
                     end
-                    %
+
                     BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                     subjId = getappdata(handles.leadfigure,'subjID');
                     if ~isempty(BIDSRoot) && ~isempty(subjId)
@@ -220,7 +204,7 @@ if length(uipatdir) == 1 % Single folder
                     else
                         return
                     end
-                 else %user pressed cancel in ea_selectdatasets
+                else %user pressed cancel in ea_selectdatasets
                     return;
                 end
             otherwise
