@@ -137,7 +137,6 @@ if length(uipatdir) == 1 % Single folder
         
         switch folder_type
             case 'legacy_patient_folder'
-                setappdata(handles.leadfigure,'BIDSRoot',{});
                 options.prefs = ea_prefs;
                 msg = sprintf('Old dataset with legacy files detected,\n would you like to migrate it to BIDS?');
                 waitfor(ea_selectdataset(msg,handles.leadfigure));
@@ -159,7 +158,6 @@ if length(uipatdir) == 1 % Single folder
                     return;
                 end
             case  'patient_folder_dicom_folder'
-                setappdata(handles.leadfigure,'BIDSRoot',{});
                 options.prefs = ea_prefs;
                 msg = sprintf('DICOM folder found,\n should we run DICOM to NIfTI conversion?');
                 waitfor(ea_selectdataset(msg,handles.leadfigure));
@@ -181,7 +179,6 @@ if length(uipatdir) == 1 % Single folder
                     return
                 end
             case 'patient_folder_raw_nifti'
-                setappdata(handles.leadfigure,'BIDSRoot',{});
                 options.prefs = ea_prefs;
                 msg = sprintf('Raw dataset with Nifti files [only] detected,\n would you like to migrate it to BIDS?');
                 waitfor(ea_selectdataset(msg,handles.leadfigure));
@@ -252,7 +249,6 @@ if length(uipatdir) == 1 % Single folder
 else % Multiple patient folders, suppose dataset has already been migrated to BIDS
     BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives\', filesep, 'leaddbs)'], 'match', 'once');
     if isempty(BIDSRoot)
-        setappdata(handles.leadfigure,'BIDSRoot',{});
         options.prefs = ea_prefs;
         msg = sprintf('Multiple datasets detected,\n would you like to migrate it to BIDS?');
         waitfor(ea_selectdataset(msg,handles.leadfigure));
