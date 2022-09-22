@@ -157,6 +157,10 @@ prefs.d3.fiber_damaged_color = [0.5 0 0.5];
 prefs.d3.fiber_csf_color = [0 0 1];
 prefs.d3.fiber_outside_color = [0 1 0];
 prefs.d3.pointcloudstyle = 'plain'; % Show 'plain' or '3d' point cloud
+prefs.d3.camlightcolor = [0.8, 0.8, 1]; % bluish '#CCCCFF'
+prefs.d3.ceilinglightcolor = [1, 0.9, 0.9]; % pinkish '#FFE6E6'
+prefs.d3.rightlightcolor = [1, 0.9, 0.7]; % yellowish '#FFE6B3'
+prefs.d3.leftlightcolor = [0.9, 0.9, 1]; % bluish '#E6E6FF'
 
 %% Video export
 prefs.video.path=[-90,10
