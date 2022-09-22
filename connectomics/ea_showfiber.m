@@ -16,7 +16,7 @@ if ismember(ea_getspace, {'Waxholm_Space_Atlas_SD_Rat_Brain'})
 else
     sampleFactor = 5; % Reduce the points along the fiber by a factor of 5
     prefs = ea_prefs;
-    tubeWidth = prefs.d3.fiberdiameter*2; % Larger tube width
+    tubeWidth = prefs.d3.fiberwidth; % Larger tube width
     reduceFactor = 0.1; % Set patch reduce factor
 end
 

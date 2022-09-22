@@ -1205,7 +1205,7 @@ classdef ea_disctract < handle
                     % Plot fibers if any survived
                     if ~isempty(fibcell{group,side})
                         prefs = ea_prefs;
-                        obj.drawobject{group,side} = streamtube(fibcell{group,side}, prefs.d3.fiberdiameter*2);
+                        obj.drawobject{group,side} = streamtube(fibcell{group,side}, prefs.d3.fiberwidth);
                         nones=repmat({'none'},size(fibcell{group,side}));
                         [obj.drawobject{group,side}.EdgeColor]=nones{:};
 
