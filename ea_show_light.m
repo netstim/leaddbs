@@ -9,21 +9,6 @@ end
 set(0,'CurrentFigure',resultfig);
 
 prefs = ea_prefs;
-if ischar(prefs.d3.camlightcolor)
-    prefs.d3.camlightcolor = ea_hex2rgb(prefs.d3.camlightcolor);
-end
-
-if ischar(prefs.d3.ceilinglightcolor)
-    prefs.d3.ceilinglightcolor = ea_hex2rgb(prefs.d3.ceilinglightcolor);
-end
-
-if ischar(prefs.d3.rightlightcolor)
-    prefs.d3.rightlightcolor = ea_hex2rgb(prefs.d3.rightlightcolor);
-end
-
-if ischar(prefs.d3.leftlightcolor)
-    prefs.d3.leftlightcolor = ea_hex2rgb(prefs.d3.leftlightcolor);
-end
 
 CamLight=light('style','infinite','Color',prefs.d3.camlightcolor); % not modifiable, infinite light.
 %set(cam_lamp,'Color',[1,1,1]);
