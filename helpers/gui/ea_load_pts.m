@@ -133,21 +133,20 @@ if length(uipatdir) == 1 % Single folder
                 folder_type = 'patient_folder_dicom_folder';
             end
         end
-
+       
+        
         switch folder_type
             case 'legacy_patient_folder'
-                msg = {'{\bfOld dataset detected, would you like to migrate it to BIDS?}';
-                    ['Thank you for your interest in Lead-DBS! Since version 2.6, we have re-organized the way Lead-DBS acesses and stores data.' ,...
-                    'This implies changes to the organization of your input and output data. The main objective to set standards for data organization was to promote' ,...
-                    'data sharing and open science initiatives. For more information and details on specific changes, please refer to our manual [insert url]. ' ,...
-                    'lead-import is a tool developed to automatically assist you in moving your dataset from the classic lead-dbs to the bidsified version. ',...
-                    '{\bfIf you wish to run BIDS import tool, please click on ''Yes''. Otherwise, you will not be able to use Lead-DBS.}']};
-                opts.Default = 'Cancel';
-                opts.Interpreter = 'tex';
-                choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
-                if strcmp(choice, 'Yes')
-                    options.prefs = ea_prefs;
-                    waitfor(lead_import(uipatdir, options, handles));
+                options.prefs = ea_prefs;
+                msg = sprintf('Old dataset with legacy files detected,\n would you like to migrate it to BIDS?');
+                waitfor(ea_selectdataset(msg,handles.leadfigure));
+                dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
+                if ~isempty(dest_folder)
+                    if options.prefs.migrate.interactive
+                        waitfor(lead_import(uipatdir, options, handles,dest_folder));
+                    else
+                        ea_lead_import(uipatdir,options,handles,dest_folder)
+                    end
                     BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                     subjId = getappdata(handles.leadfigure,'subjID');
                     if ~isempty(BIDSRoot) && ~isempty(subjId)
@@ -155,36 +154,20 @@ if length(uipatdir) == 1 % Single folder
                     else
                         return
                     end
-                else
+                else %user pressed cancel in ea_selectdatasets
                     return;
                 end
             case  'patient_folder_dicom_folder'
-                msg = {'{\bfDICOM folder found, will run DICOM to NIfTI conversion!}'};
-                opts.Interpreter = 'tex';
-                opts.WindowStyle = 'modal';
-                waitfor(msgbox(msg, '', 'help', opts));
                 options.prefs = ea_prefs;
-                waitfor(lead_import(uipatdir, options, handles));
-                BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
-                subjId = getappdata(handles.leadfigure,'subjID');
-                if ~isempty(BIDSRoot) && ~isempty(subjId)
-                    uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-                else
-                    return
-                end
-            case 'patient_folder_raw_nifti'
-                msg = {'{\bfRaw dataset with Nifti files [only] detected, would you like to migrate it to BIDS?}';
-                    ['Thank you for your interest in Lead-DBS! Since version 2.6, we have re-organized the way Lead-DBS acesses and stores data.' ,...
-                    'This implies changes to the organization of your input and output data. The main objective to set standards for data organization was to promote' ,...
-                    'data sharing and open science initiatives. For more information and details on specific changes, please refer to our manual [insert url]. ' ,...
-                    'lead-import is a tool developed to automatically assist you in moving your dataset from the classic lead-dbs to the bidsified version. ',...
-                    '{\bfIf you wish to run BIDS import tool, please click on ''Yes''. Otherwise, you will not be able to use Lead-DBS.}']};
-                opts.Default = 'Cancel';
-                opts.Interpreter = 'tex';
-                choice = questdlg(msg, '', 'Yes', 'Cancel', opts);
-                if strcmp(choice, 'Yes')
-                    options.prefs = ea_prefs;
-                    waitfor(lead_import(uipatdir, options, handles));
+                msg = sprintf('DICOM folder found,\n should we run DICOM to NIfTI conversion?');
+                waitfor(ea_selectdataset(msg,handles.leadfigure));
+                dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
+                if ~isempty(dest_folder)
+                    if options.prefs.migrate.interactive
+                        waitfor(lead_import(uipatdir, options, handles, dest_folder));
+                    else
+                        ea_lead_import(uipatdir,options,handles,dest_folder);
+                    end
                     BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
                     subjId = getappdata(handles.leadfigure,'subjID');
                     if ~isempty(BIDSRoot) && ~isempty(subjId)
@@ -192,7 +175,33 @@ if length(uipatdir) == 1 % Single folder
                     else
                         return
                     end
-                else
+                else %user pressed cancel in ea_selectdatasets
+                    return
+                end
+            case 'patient_folder_raw_nifti'
+                options.prefs = ea_prefs;
+                msg = sprintf('Raw dataset with Nifti files [only] detected,\n would you like to migrate it to BIDS?');
+                waitfor(ea_selectdataset(msg,handles.leadfigure));
+                dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
+                if ~isempty(dest_folder)
+                    if options.prefs.migrate.interactive
+                        waitfor(lead_import(uipatdir, options, handles));
+                    else
+                        dest_folder = ea_uigetdir('*','Select BIDS Dataset folder');
+                        if isempty(dest_folder) %user pressed cancel
+                            return
+                        end
+                        ea_lead_import(uipatdir,options,handles,dest_folder);
+                    end
+
+                    BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
+                    subjId = getappdata(handles.leadfigure,'subjID');
+                    if ~isempty(BIDSRoot) && ~isempty(subjId)
+                        uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+                    else
+                        return
+                    end
+                else %user pressed cancel in ea_selectdatasets
                     return;
                 end
             otherwise
@@ -224,7 +233,13 @@ if length(uipatdir) == 1 % Single folder
             opts.WindowStyle = 'modal';
             waitfor(msgbox(msg, '', 'help', opts));
             options.prefs = ea_prefs;
-            waitfor(lead_import(sourceData, options, handles));
+            dest_folder = BIDSRoot; %source and dest are same
+            if options.prefs.migrate.interactive
+                waitfor(lead_import(sourceData, options, handles));
+            else
+                ea_lead_import(uipatdir,options,handles,dest_folder)
+            end
+            %
             uipatdir = strrep(sourceData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
 
         else
@@ -234,10 +249,42 @@ if length(uipatdir) == 1 % Single folder
 else % Multiple patient folders, suppose dataset has already been migrated to BIDS
     BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives\', filesep, 'leaddbs)'], 'match', 'once');
     if isempty(BIDSRoot)
-        error('Please select patient folders under DATASET/derivatives/leaddbs or migrate the dataset to BIDS format first!');
+        options.prefs = ea_prefs;
+        msg = sprintf('Multiple datasets detected,\n would you like to migrate it to BIDS?');
+        waitfor(ea_selectdataset(msg,handles.leadfigure));
+        dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
+        if ~isempty(dest_folder)
+            if options.prefs.migrate.interactive
+                waitfor(lead_import(uipatdir, options, handles,dest_folder))
+            else
+                ea_lead_import(uipatdir,options,handles,dest_folder)
+            end
+            BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
+            subjId = getappdata(handles.leadfigure,'subjID');
+            derivatives_folder = fullfile(BIDSRoot,'derivatives');
+            sourcedata_folder = fullfile(BIDSRoot,'sourcedata');
+            rawdata_folder = fullfile(BIDSRoot,'rawdata');
+            if isfolder(derivatives_folder)
+                uipatdir = fullfile(BIDSRoot,'derivatives','leaddbs',subjId);
+            elseif isfolder(sourcedata_folder)
+                uipatdir = fullfile(BIDSRoot,'sourcedata',subjId);
+            elseif isfolder(rawdata_folder)
+                uipatdir = fullfile(BIDSRoot,'rawdata',subjId);
+
+            else
+                warning('Something went wrong! Consider migrating the dataset using lead import alone');
+                return
+            end
+            isBIDSRoot = 1;
+        else %user pressed cancel in ea_selectdatasets
+            return
+        end
+        %subjId = regexp(uipatdir, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
+         %error('Please select patient folders under DATASET/derivatives/leaddbs or migrate the dataset to BIDS format first!');
     else
         subjId = regexp(uipatdir, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
     end
+
 end
 
 
@@ -269,6 +316,16 @@ end
 
 % Initialize BIDS class
 bids = BIDSFetcher(BIDSRoot);
+
+if ~any(ismember(subjId, bids.subjId))
+    % Return when import for all subjs cancelled or failed
+    ea_cprintf('CmdWinWarnings', 'Import for sub-%s didn''t go through!\n', subjId{:})
+    return;
+elseif ~all(ismember(subjId, bids.subjId))
+    % Warn if import for some subjs cancelled or failed
+    warnSubjId = subjId(~ismember(subjId, bids.subjId));
+    ea_cprintf('CmdWinWarnings', 'Import for sub-%s didn''t go through!\n', warnSubjId{:})
+end
 
 % store patient directories in figure
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);

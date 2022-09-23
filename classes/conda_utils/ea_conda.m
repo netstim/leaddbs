@@ -1,7 +1,7 @@
 classdef (Abstract) ea_conda
 
     properties (Constant)
-        install_path = fullfile(ea_getearoot, 'ext_libs', 'miniconda');
+        install_path = fullfile(ea_getearoot, 'ext_libs', 'mambaforge');
     end
 
     methods (Static)
@@ -14,7 +14,7 @@ classdef (Abstract) ea_conda
                 bin_folder = 'condabin';
                 ext = '.bat';
             end
-            out = fullfile(ea_conda.install_path, bin_folder, ['conda' ext]);
+            out = fullfile(ea_conda.install_path, bin_folder, ['mamba' ext]);
         end
 
         function b = is_installed
@@ -30,32 +30,36 @@ classdef (Abstract) ea_conda
             mkdir(ea_conda.install_path);
 
             if ismac
-                os_name = 'MacOSX';
+                [~, arch] = system('uname -a');
+                if contains(arch, 'arm64', 'IgnoreCase', true)
+                    osarch = 'MacOSX-arm64';
+                else
+                    osarch = 'MacOSX-x86_64';
+                end
             elseif ispc
-                os_name = 'Windows';
+                osarch = 'Windows-x86_64';
             else
-                os_name = 'Linux';
+                osarch = 'Linux-x86_64';
             end
 
-            miniconda_installer_url =  ['https://repo.anaconda.com/miniconda/Miniconda3-latest-' os_name '-x86_64'];
-            installer_file = fullfile(ea_conda.install_path, 'miniconda');
+            mambaforge_installer_url =  ['https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-' osarch];
+            installer_file = fullfile(ea_conda.install_path, 'mambaforge');
 
             if isunix
-                miniconda_installer_url = [miniconda_installer_url '.sh'];
+                mambaforge_installer_url = [mambaforge_installer_url '.sh'];
                 installer_file = [installer_file '.sh'];
                 install_call = ['bash ' installer_file ' -b -f -p ' ea_conda.install_path];
             else
-                miniconda_installer_url = [miniconda_installer_url '.exe'];
+                mambaforge_installer_url = [mambaforge_installer_url '.exe'];
                 installer_file = [installer_file '.exe'];
                 install_call = ['start /wait "" ' installer_file ' /InstallationType=JustMe /RegisterPython=0 /S /D=' ea_conda.install_path];
             end
 
-            ea_conda.websave_verbose(installer_file, miniconda_installer_url);
+            ea_conda.websave_verbose(installer_file, mambaforge_installer_url);
             ea_conda.run_install_call(install_call)
 
             delete(installer_file);
-            disp('Miniconda installed')
-
+            disp('mambaforge installed')
         end
     end
 
@@ -71,14 +75,11 @@ classdef (Abstract) ea_conda
         end
 
         function run_install_call(install_call)
-            disp('Installing miniconda...')
+            disp('Installing mambaforge...')
             [status,~] = system(install_call);
             if status
-                error('Failed to install miniconda');
+                error('Failed to install mambaforge');
             end
         end
-
     end
-
-
 end

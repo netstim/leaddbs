@@ -1,4 +1,4 @@
-name: lead
+name: leaddbs
 channels:
   - conda-forge
 dependencies:

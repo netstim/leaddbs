@@ -552,7 +552,7 @@ for nativemni=nm % switch between native and mni space atlases.
                     end
 
                     % Plot fibers
-                    h = streamtube(fibcell{fibside},0.2);
+                    h = streamtube(fibcell{fibside}, options.prefs.d3.fiberwidth);
 
                     for fib=1:length(h)
                         if vals{fibside}(fib)>0

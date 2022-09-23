@@ -60,3 +60,4 @@ Thumbs.db
 
 /ext_libs/SlicerCustom*
 /ext_libs/miniconda
+/ext_libs/mambaforge

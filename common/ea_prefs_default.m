@@ -18,6 +18,12 @@ prefs.pp.do=0; % use parallel processing if available.
 prefs.pp.csize=4; % specify how many clusters to recruit.
 prefs.pp.profile='local'; % specify parallel processing profile.
 
+%% Migrate settings:
+prefs.migrate.doDicomConversion = 1;
+prefs.migrate.DicomConversionTool = 'dcm2niix'; % Other options: 'dicm2nii', 'SPM'
+prefs.migrate.interactive = 0;
+
+
 %% general file handling:
 prefs.niiFileExt = '.nii';
 
@@ -141,7 +147,7 @@ prefs.d2.isovolsepcomb='combined'; % set to 'combined' to use the lr-combined is
 
 %% 3D-Visualization:
 prefs.d3.fiberstyle='tube'; % set to 'line' to show thin fibers
-prefs.d3.fiberdiameter=0.1; % diameter of fibers ? only works in all ML versions with style==tube
+prefs.d3.fiberwidth=0.2; % diameter of fibers, used when fiberstyle is tube
 prefs.d3.maxfibers=200; % set to inf to show all fibers (but this could lead to crashes).
 prefs.d3.colorjitter=0; % set to 0 to show no color jitter at all.
 prefs.d3.showdirarrows = 0;
@@ -151,6 +157,10 @@ prefs.d3.fiber_damaged_color = [0.5 0 0.5];
 prefs.d3.fiber_csf_color = [0 0 1];
 prefs.d3.fiber_outside_color = [0 1 0];
 prefs.d3.pointcloudstyle = 'plain'; % Show 'plain' or '3d' point cloud
+prefs.d3.camlightcolor = [0.8, 0.8, 1]; % bluish '#CCCCFF'
+prefs.d3.ceilinglightcolor = [1, 0.9, 0.9]; % pinkish '#FFE6E6'
+prefs.d3.rightlightcolor = [1, 0.9, 0.7]; % yellowish '#FFE6B3'
+prefs.d3.leftlightcolor = [0.9, 0.9, 1]; % bluish '#E6E6FF'
 
 %% Video export
 prefs.video.path=[-90,10
@@ -194,8 +204,9 @@ prefs.d3.cortexcolor=[0.65 0.65 0.65]; % default color is gray
 prefs.d3.cortexalpha=0.5; % default alpha is 0.5
 prefs.d3.cortex_defaultatlas='DKT'; % Currently supports 'DKT','DKT_aseg','a2009'
 
-%% Freesurfer Preferences
+%% FreeSurfer Preferences
 prefs.d3.fs.dev=0;
+prefs.fs.dir = '';
 prefs.fs.reconall.do=1;
 prefs.fs.subcorticalseg.do=1;
 prefs.fs.subcorticalseg.thalamus=1;
@@ -203,6 +214,8 @@ prefs.fs.subcorticalseg.hippo_amygdala=0;
 prefs.fs.subcorticalseg.brainstem=0;
 prefs.fs.samseg.do=0;
 
+% 3D Slicer Prefs
+prefs.slicer.dir = '';
 
 %% DICOM files:
 prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs at pt/DICOM folder after conversion.

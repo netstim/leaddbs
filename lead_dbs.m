@@ -22,7 +22,7 @@ function varargout = lead_dbs(varargin)
 
 % Edit the above text to modify the response to help lead_dbs
 
-% Last Modified by GUIDE v2.5 25-Jan-2019 09:22:24
+% Last Modified by GUIDE v2.5 16-Sep-2022 19:45:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1855,6 +1855,11 @@ function surfacemethod_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns surfacemethod contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from surfacemethod
+if strcmpi(hObject.String{hObject.Value}, 'FreeSurfer')
+    handles.surfsettings.Visible = 'on';
+else
+    handles.surfsettings.Visible = 'off';
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1877,3 +1882,11 @@ function refinefit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of refinefit
+
+
+% --- Executes on button press in surfsettings.
+function surfsettings_Callback(hObject, eventdata, handles)
+% hObject    handle to surfsettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ea_freesurfersetting;

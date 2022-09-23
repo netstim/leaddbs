@@ -226,8 +226,8 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
                    if options.overwriteapproved
                        % for now still ask user to confirm recalculation
                        % since fs takes so long.
-                       answ=questdlg('Existing Freesurfer output folder found. Are you sure you want to recalculate results & overwrite?', ...
-                          'Freesurfer output found','Recalculate & Overwrite','Skip','Skip');
+                       answ=questdlg('Existing FreeSurfer output folder found. Are you sure you want to recalculate results & overwrite?', ...
+                          'FreeSurfer output found','Recalculate & Overwrite','Skip','Skip');
 
                        switch lower(answ)
                            case 'recalculate & overwrite'

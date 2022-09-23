@@ -6,14 +6,14 @@ if options.prefs.fs.subcorticalseg.thalamus
 
     temp=ea_getleadtempdir;
 
-    system([options.prefs.fspath,filesep,'bin',filesep,...
+    system([options.prefs.fs.dir,filesep,'bin',filesep,...
         'mri_convert',...
         ' ',ea_path_helper(fullfile(options.subj.freesurferDir,['sub-',options.subj.subjId],'mri','ThalamicNuclei.mgz')),...
         ' ',ea_path_helper(fullfile(temp,'thalamic.nii'))]);
 
     thalnii=ea_load_nii(fullfile(temp,'thalamic.nii'));
 
-    outdir=fullfile(options.subj.atlasDir,'Freesurfer_Segmentations');
+    outdir=fullfile(options.subj.atlasDir,'FreeSurfer_Segmentations');
     ea_mkdir(fullfile(outdir,'lh'));
     ea_mkdir(fullfile(outdir,'rh'));
     ea_mkdir(fullfile(outdir,'midline'));
@@ -46,14 +46,14 @@ if options.prefs.fs.subcorticalseg.hippo_amygdala
 
     temp=ea_getleadtempdir;
 
-    system([options.prefs.fspath,filesep,'bin',filesep,...
+    system([options.prefs.fs.dir,filesep,'bin',filesep,...
         'mri_convert',...
         ' ',ea_path_helper(fullfile(options.subj.freesurferDir,['sub-',options.subj.subjId],'mri','rh.hippoAmygLabels.mgz')),...
         ' ',ea_path_helper(fullfile(temp,'rh_hippo.nii'))]);
 
     rhippnii=ea_load_nii(fullfile(temp,'rh_hippo.nii'));
 
-    system([options.prefs.fspath,filesep,'bin',filesep,...
+    system([options.prefs.fs.dir,filesep,'bin',filesep,...
         'mri_convert',...
         ' ',ea_path_helper(fullfile(options.subj.freesurferDir,['sub-',options.subj.subjId],'mri','lh.hippoAmygLabels.mgz')),...
         ' ',ea_path_helper(fullfile(temp,'lh_hippo.nii'))]);
@@ -61,7 +61,7 @@ if options.prefs.fs.subcorticalseg.hippo_amygdala
     lhippnii=ea_load_nii(fullfile(temp,'lh_hippo.nii'));
 
 
-    outdir=fullfile(options.subj.atlasDir,'Freesurfer_Segmentations');
+    outdir=fullfile(options.subj.atlasDir,'FreeSurfer_Segmentations');
     ea_mkdir(fullfile(outdir,'lh'));
     ea_mkdir(fullfile(outdir,'rh'));
 
@@ -96,14 +96,14 @@ if options.prefs.fs.subcorticalseg.brainstem
 
     temp=ea_getleadtempdir;
 
-    system([options.prefs.fspath,filesep,'bin',filesep,...
+    system([options.prefs.fs.dir,filesep,'bin',filesep,...
         'mri_convert',...
         ' ',ea_path_helper(fullfile(options.subj.freesurferDir,['sub-',options.subj.subjId],'mri','brainstemSsLabels.mgz')),...
         ' ',ea_path_helper(fullfile(temp,'brainstem.nii'))]);
 
     bsnii=ea_load_nii(fullfile(temp,'brainstem.nii'));
 
-    outdir=fullfile(options.subj.atlasDir,'Freesurfer_Segmentations');
+    outdir=fullfile(options.subj.atlasDir,'FreeSurfer_Segmentations');
     ea_mkdir(fullfile(outdir,'lh'));
     ea_mkdir(fullfile(outdir,'rh'));
 
