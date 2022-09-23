@@ -676,11 +676,15 @@ classdef ea_disctract < handle
 
                     %subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
                     %[coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
-                    % if 1
-                    %     for pcc=1:obj.numpcs
-                    %         ea_corrplot(Ihat(:,pcc),obj.subscore.pcavars{pcc}(obj.patientselection),{['PC ',num2str(pcc)],'Estimate','Actual'});
-                    %     end
-                    % end
+                   
+                    % show predictions for PC scores 
+                    for pcc=1:obj.numpcs
+                        ea_corrplot(obj.subscore.pcavars{pcc}(obj.patientselection),Ihat(:,pcc),...
+                            {['Disc. Fiber prediction for PC ',num2str(pcc)],'PC score (Empirical)','PC score (Predicted)'},...
+                            'pearson', [], [], [], obj.subscore.pcacolors(pcc, :));
+                        % sum(obj.subscore.pcavars{pcc}(obj.patientselection) - score(:,pcc)) % quick check
+                    end
+
                     % data is zscored, such as mu is 0 (+ some computer rounding error)
                     % then adding mean is not required 
                     % also, we want to take scores of the chosen PCs ONLY,
