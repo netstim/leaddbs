@@ -1078,11 +1078,11 @@ classdef ea_disctract < handle
                     if domultitract
                         if obj.subscore.special_case
                            if obj.posvisible && obj.negvisible
-                                tick{group} = [1, length(fibcmap{group})];
+                                tick{group} = [1, floor(length(fibcmap{group})/2-40), ceil(length(fibcmap{group})/2+40), length(fibcmap{group})];
                                 poscbvals = sort(allvals(allvals>0));
                                 negcbvals = sort(allvals(allvals<0));
                                 if ~isempty(negcbvals) && ~isempty(poscbvals)
-                                    ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                                    ticklabel{group} = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
                                     ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                                 else
                                     continue
@@ -1100,10 +1100,10 @@ classdef ea_disctract < handle
                             end
                         else
                             if obj.subscore.posvisible(group) && obj.subscore.negvisible(group)
-                                tick{group} = [1, length(fibcmap{group})];
+                                tick{group} = [1, floor(length(fibcmap{group})/2-40), ceil(length(fibcmap{group})/2+40), length(fibcmap{group})];
                                 poscbvals = sort(allvals(allvals>0));
                                 negcbvals = sort(allvals(allvals<0));
-                                ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                                ticklabel{group} = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
                                 ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                             elseif obj.subscore.posvisible(group)
                                 tick{group} = [1, length(fibcmap{group})];
@@ -1119,10 +1119,10 @@ classdef ea_disctract < handle
                         end
                     else
                         if obj.posvisible && obj.negvisible
-                            tick{group} = [1, length(fibcmap{group})];
+                            tick{group} = [1, floor(length(fibcmap{group})/2-40), ceil(length(fibcmap{group})/2+40), length(fibcmap{group})];
                             poscbvals = sort(allvals(allvals>0));
                             negcbvals = sort(allvals(allvals<0));
-                            ticklabel{group} = [negcbvals(1), poscbvals(end)];
+                            ticklabel{group} = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
                             ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                         elseif obj.posvisible
                             tick{group} = [1, length(fibcmap{group})];
