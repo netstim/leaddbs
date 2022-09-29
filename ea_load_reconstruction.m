@@ -29,7 +29,7 @@ try
     % Load Reconstruction
     load(options.subj.recon.recon, 'reco');
 catch
-    ea_cprintf('CmdWinWarnings', 'Failed to load reconstruction for %s!\n', options.patientname);
+    ea_cprintf('CmdWinWarnings', 'Failed to load reconstruction for %s!\n', options.subj.subjId);
 end
 
 if ~isfield(reco,'native') && isfield(reco,'mni') && options.native

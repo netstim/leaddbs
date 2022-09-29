@@ -7,7 +7,7 @@ options.native=0; % MNI space only
 options.root=[options.root,filesep];
 
 if isfile([directory,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'])
-    load([[directory,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'],'reco');
+    load([directory,filesep,'reconstruction',filesep,options.patientname,'_desc-reconstruction.mat'],'reco');
     options.elmodel=ea_get_first_notempty_elmodel(reco.props);
 end
 
