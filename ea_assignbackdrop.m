@@ -152,13 +152,10 @@ if native
                 Vsag = Vtra;
             end
         case 2 % CT
-            Vtra = spm_vol(options.subj.coreg.anat.postop.CT);
+            Vtra = spm_vol(options.subj.coreg.anat.postop.tonemapCT);
             Vcor = Vtra;
             Vsag = Vtra;
     end
-
-
-
 else
     switch options.modality
         case 1 % MR
