@@ -23,7 +23,8 @@ if ~nargin
         'AdTech RD08R-SP05X', 'AdTech RD10R-SP03X', 'AdTech RD10R-SP05X', 'AdTech RD10R-SP06X', 'AdTech RD10R-SP07X', 'AdTech RD10R-SP08X', ...
         'AdTech SD06R-SP26X', 'AdTech SD08R-SP05X', 'AdTech SD10R-SP05X', 'AdTech SD10R-SP05X Choi', 'AdTech SD14R-SP05X', ...
         'ELAINE Rat Electrode', 'FHC WU Rat Electrode', 'NuMed Mini Lead', ...
-        'Aleva directSTIM Directed'}';
+        'Aleva directSTIM Directed', ...
+        'SmartFlow Cannula NGS-NC-06'}';
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', 'medtronic_b33005', 'medtronic_b33015', ...
         'boston_vercise', 'boston_vercise_directed', ...
         'boston_vercise_cartesia_hx', 'boston_vercise_cartesia_x', ...
@@ -40,7 +41,8 @@ if ~nargin
         'adtech_rd08r_sp05x', 'adtech_rd10r_sp03x', 'adtech_rd10r_sp05x', 'adtech_rd10r_sp06x', 'adtech_rd10r_sp07x', 'adtech_rd10r_sp08x', ...
         'adtech_sd08r_sp26x', 'adtech_sd08r_sp05x',  'adtech_sd10r_sp05x', 'adtech_sd10r_sp05x_choi', 'adtech_sd14r_sp05x', ...
         'elaine_rat_electrode', 'fhc_wu_rat_electrode', 'numed_minilead', ...
-        'aleva_directstim_directed'}';
+        'aleva_directstim_directed', ...
+        'smartflow_ngs-nc-06'}';
     return
 else
     options=varargin{1};
@@ -1292,6 +1294,25 @@ switch elmodel
         elspec.etagenames{2}={'K13-15 (L)','K16-18 (L)','K19-21 (L)','K22-24 (L)'};
         elspec.etageidx={1:3,4:6,7:9,10:12};
         elspec.forstimulation=1;
+    case 'SmartFlow Cannula NGS-NC-06'
+        elspec.matfname='smartflow_ngs-nc-06';
+        elspec.lead_diameter=1.65;
+        elspec.lead_color=0.7;
+        elspec.contact_length=10;
+        elspec.contact_diameter=0.27;
+        elspec.contact_color=0.3;
+        elspec.tip_diameter=0.2;
+        elspec.tip_color=0.7;
+        elspec.tip_length=3;
+        elspec.contact_spacing=0;
+        elspec.numel=2;
+        elspec.tipiscontact=1;
+        elspec.contactnames={'K0 (R)','K1 (R)','K3 (L)','K4 (L)'};
+        elspec.isdirected=0;
+        elspec.etagenames{1}=elspec.contactnames(1:length(elspec.contactnames)/2);
+        elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
+        elspec.etageidx=num2cell(1:elspec.numel);
+        elspec.forstimulation=0;
 end
 
 if ~isfield(elspec,'eldist') && numel(elspec.contact_spacing)>1
