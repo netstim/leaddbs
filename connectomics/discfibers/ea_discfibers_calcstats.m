@@ -32,33 +32,56 @@ if ~isempty(obj.covars)
 end
 
 if strcmp(obj.multitractmode,'Split & Color By PCA')
-    % prep PCA:
-    %here, you will not select a predefined set of patient scores yet since
-    %this happpens later on.
-    subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
-    %standardize subscore stage
-    %try
+    % prep PCA: here, we need to get scores for all the patients. But PCA should
+    % remain based on the patients selected for analysis 
+    
+    % variables for the selected patients 
+    for i=1:length(obj.subscore.vars)
+        selected_subscores{i} = obj.subscore.vars{i}(obj.patientselection);
+    end
+    selected_subscores = cell2mat(selected_subscores);
+    subvars=ea_nanzscore(selected_subscores);
+    
+    % PCA - get PC scores for selected patients
     [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','complete');
-        % [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
-    %catch %can fail due to presence of NaN/INF TODO
-        % pca failed, likely not enough variables selected.
-    %    score=nan(length(obj.responsevar),obj.numpcs);
-    %end
+    % [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise'); %pca
     
     if isempty(score) || ea_isnan(score,'any')
         score=nan(length(obj.responsevar),obj.numpcs);
     end
 
-    %if score is empty
     obj.subscore.pcavars=cell(obj.numpcs,1);
-    %end
 
     for pc=1:obj.numpcs
-        obj.subscore.pcavars{pc}=score(:,pc); %pca variables -> pca components, location of first subscore is replaced by first pc
+        obj.subscore.pcavars{pc}(obj.patientselection,1)=score(:,pc); %pca variables -> pca components, location of first subscore is replaced by first pc
     end
     if ~isfield(obj.subscore,'pcacolors')
         obj.subscore.pcacolors=ea_color_wes('all'); % assign some random colors.
     end
+
+    % now use PCA weights to get PC scores for the non-selected patients 
+    patientnonsel = logical(ones(1, length(obj.allpatients)));
+    patientnonsel(obj.patientselection) = 0; 
+
+    for i=1:length(obj.subscore.vars)
+        nonsel_subscores{i} = obj.subscore.vars{i}(patientnonsel);
+    end
+    nonsel_subscores = cell2mat(nonsel_subscores);
+    % pseudo zscore - use mean and sd of selected patients to keep same "scale"
+    for ci = 1:size(selected_subscores, 2)
+        datawonan = selected_subscores(:, ci);
+        datawonan = datawonan(~isnan(datawonan));
+        datamean(ci) = mean(datawonan);
+        datasd(ci) = std(datawonan);
+    end
+    nonsel_subvars = ( nonsel_subscores - repmat(datamean, size(nonsel_subscores, 1), 1) ) ...
+        ./ repmat(datasd, size(nonsel_subscores, 1), 1);
+    
+    % multiply clinical scores by weights
+    for pc=1:obj.numpcs
+        obj.subscore.pcavars{pc}(patientnonsel,1)= nonsel_subvars*coeff(:,pc);
+    end
+
 end
 
 switch obj.multitractmode
