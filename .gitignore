@@ -16,6 +16,8 @@
 *.mat.bids
 *.mat.dev
 *.mat.classic
+*.tmp
+*.temp
 .idea
 __pycache__
 CMakeLists.txt
