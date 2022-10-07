@@ -158,7 +158,9 @@ if options.elspec.numel > 1
               'Medtronic B33015'
               'Boston Scientific Vercise Directed'
               'St. Jude Directed 6172 (short)'
-              'St. Jude Directed 6173 (long)'}
+              'St. Jude Directed 6173 (long)'
+              'Abbott Directed 6172 (short)'
+              'Abbott Directed 6173 (long)'}
             for side=options.sides
                 coords_temp{side}(1,:) = coords_mm{side}(1,:);
                 coords_temp{side}(2,:) = mean(coords_mm{side}(2:4,:));

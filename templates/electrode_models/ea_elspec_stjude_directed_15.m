@@ -34,7 +34,7 @@ for k = 1:numCon
 end
 
 %% other specifications
-options.elmodel = 'St. Jude Directed 6173 (long)';
+options.elmodel = 'Abbott Directed 6173 (long)';
 options = ea_resolve_elspec(options);
 elspec = options.elspec;
 
@@ -76,10 +76,6 @@ if nargin
 else
     vizz=1;
 end
-
-options.elmodel = 'St. Jude Directed 6173 (long)';
-options = ea_resolve_elspec(options);
-elspec = options.elspec;
 
 if vizz
     X = eye(4);

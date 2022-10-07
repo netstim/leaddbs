@@ -8,7 +8,7 @@ function electrode=ea_elspec_stjude_activetip_2mm(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-options.elmodel='St. Jude ActiveTip (6146-6149)';
+options.elmodel='Abbott ActiveTip (6146-6149)';
 
 if nargin
     vizz=0;
@@ -294,7 +294,7 @@ for comp=1:elspec.numel*2
     cnt=cnt+1;
 
 
-    if (comp>1 && comp<elspec.numel+2) % these are the CONTACTS + Tip in this specific case (St. Jude activetip)
+    if (comp>1 && comp<elspec.numel+2) % these are the CONTACTS + Tip in this specific case (Abbott activetip)
         electrode.contacts(cntcnt).vertices=cyl.Vertices;
         electrode.contacts(cntcnt).faces=cyl.Faces;
         electrode.contacts(cntcnt).facevertexcdata=cyl.FaceVertexCData;

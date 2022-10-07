@@ -27,7 +27,9 @@ if redomarkers
                   'Medtronic B33015'
                   'Boston Scientific Vercise Directed'
                   'St. Jude Directed 6172 (short)'
-                  'St. Jude Directed 6173 (long)'}
+                  'St. Jude Directed 6173 (long)'
+                  'Abbott Directed 6172 (short)'
+                  'Abbott Directed 6173 (long)'}
                 elstruct.markers(side).tail=elstruct.coords_mm{side}(8,:);
             case {'Boston Scientific Vercise Cartesia HX'
                   'Boston Scientific Vercise Cartesia X'}

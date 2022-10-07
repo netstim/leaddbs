@@ -27,7 +27,9 @@ for side=1:length(markers) %valid for unilateral support
                   'Medtronic B33015'
                   'Boston Scientific Vercise Directed'
                   'St. Jude Directed 6172 (short)'
-                  'St. Jude Directed 6173 (long)'}
+                  'St. Jude Directed 6173 (long)'
+                  'Abbott Directed 6172 (short)'
+                  'Abbott Directed 6173 (long)'}
                 coords_temp(1,:) = electrode.coords_mm(1,:);
                 coords_temp(2,:) = mean(electrode.coords_mm(2:4,:));
                 coords_temp(3,:) = mean(electrode.coords_mm(5:7,:));
