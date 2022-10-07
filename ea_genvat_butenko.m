@@ -80,9 +80,9 @@ else
     c3File = [ea_space, 'c3mask.nii'];
     if ~isfile(c1File) || ~isfile(c2File) || ~isfile(c3File)
         ea_newseg(fullfile(ea_space, [options.primarytemplate, '.nii']), 0, 1);
-        movefile([ea_space, 'c1', options.primarytemplate, 'nii'], c1File);
-        movefile([ea_space, 'c2', options.primarytemplate, 'nii'], c2File);
-        movefile([ea_space, 'c3', options.primarytemplate, 'nii'], c3File);
+        movefile([ea_space, 'c1', options.primarytemplate, '.nii'], c1File);
+        movefile([ea_space, 'c2', options.primarytemplate, '.nii'], c2File);
+        movefile([ea_space, 'c3', options.primarytemplate, '.nii'], c3File);
     end
 
     segMaskPath = [ea_space, segmaskName];
