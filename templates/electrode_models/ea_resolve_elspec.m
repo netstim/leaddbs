@@ -243,7 +243,7 @@ switch elmodel
         elspec.etagenames{2}={'K1-3 (L)','K4-6 (L)','K7-9 (L)','K10-12 (L)','K13-15 (L)','K16 (L)'};
         elspec.etageidx={1:3,4:6,7:9,10:12,13:15,16};
         elspec.forstimulation=1;
-    case {'St. Jude ActiveTip (6146-6149)', 'Abbott ActiveTip (6146-6149)'}
+    case 'Abbott ActiveTip (6146-6149)'
         elspec.matfname='abbott_activetip_2mm';
         elspec.lead_diameter=1.4;
         elspec.lead_color=0.7;
@@ -262,7 +262,7 @@ switch elmodel
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
         elspec.forstimulation=1;
-    case {'St. Jude ActiveTip (6142-6145)', 'Abbott ActiveTip (6142-6145)'}
+    case 'Abbott ActiveTip (6142-6145)'
         elspec.matfname='abbott_activetip_3mm';
         elspec.lead_diameter=1.4;
         elspec.lead_color=0.7;
@@ -281,7 +281,7 @@ switch elmodel
         elspec.etagenames{2}=elspec.contactnames((length(elspec.contactnames)/2)+1:end);
         elspec.etageidx=num2cell(1:elspec.numel);
         elspec.forstimulation=1;
-    case {'St. Jude Directed 6172 (short)', 'Abbott Directed 6172 (short)'}
+    case 'Abbott Directed 6172 (short)'
         elspec.matfname='abbott_directed_05';
         elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
@@ -302,7 +302,7 @@ switch elmodel
         elspec.etagenames{2}={'K1 (L)','K2 (L)','K3 (L)','K4 (L)'};
         elspec.etageidx={1,2:4,5:7,8};
         elspec.forstimulation=1;
-    case {'St. Jude Directed 6173 (long)', 'Abbott Directed 6173 (long)'}
+    case 'Abbott Directed 6173 (long)'
         elspec.matfname='abbott_directed_15';
         elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;

@@ -82,6 +82,8 @@ end
 try
     manually_corrected=reco.props(options.elside).manually_corrected;
     elmodel=reco.props(options.elside).elmodel;
+    % Fix Abbott lead name
+    elmodel = strrep(elmodel, 'St. Jude', 'Abbott');
 catch % legacy
     [elmodel,first_notempty_side]=ea_get_first_notempty_elmodel(reco.props);
     manually_corrected=reco.props(first_notempty_side).manually_corrected;
