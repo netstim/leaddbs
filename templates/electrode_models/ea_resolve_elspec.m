@@ -27,8 +27,8 @@ if ~nargin
     varargout{2}={'medtronic_3389', 'medtronic_3387', 'medtronic_3391', 'medtronic_b33005', 'medtronic_b33015', ...
         'boston_vercise', 'boston_vercise_directed', ...
         'boston_vercise_cartesia_hx', 'boston_vercise_cartesia_x', ...
-        'stjude_activetip_2mm','stjude_activetip_3mm', ...
-        'stjude_directed_05','stjude_directed_15', ...
+        'abbott_activetip_2mm','abbott_activetip_3mm', ...
+        'abbott_directed_05','abbott_directed_15', ...
         'pins_l301', 'pins_l302', 'pins_l303', ...
         'sceneray_sr1200', 'sceneray_sr1210', 'sceneray_sr1211', 'sceneray_sr1242', ...
         'sde_08_s8_legacy', 'sde_08_s10_legacy', 'sde_08_s12_legacy', 'sde_08_s16_legacy',...
@@ -244,7 +244,7 @@ switch elmodel
         elspec.etageidx={1:3,4:6,7:9,10:12,13:15,16};
         elspec.forstimulation=1;
     case {'St. Jude ActiveTip (6146-6149)', 'Abbott ActiveTip (6146-6149)'}
-        elspec.matfname='stjude_activetip_2mm';
+        elspec.matfname='abbott_activetip_2mm';
         elspec.lead_diameter=1.4;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
@@ -263,7 +263,7 @@ switch elmodel
         elspec.etageidx=num2cell(1:elspec.numel);
         elspec.forstimulation=1;
     case {'St. Jude ActiveTip (6142-6145)', 'Abbott ActiveTip (6142-6145)'}
-        elspec.matfname='stjude_activetip_3mm';
+        elspec.matfname='abbott_activetip_3mm';
         elspec.lead_diameter=1.4;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
@@ -282,7 +282,7 @@ switch elmodel
         elspec.etageidx=num2cell(1:elspec.numel);
         elspec.forstimulation=1;
     case {'St. Jude Directed 6172 (short)', 'Abbott Directed 6172 (short)'}
-        elspec.matfname='stjude_directed_05';
+        elspec.matfname='abbott_directed_05';
         elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;
@@ -303,7 +303,7 @@ switch elmodel
         elspec.etageidx={1,2:4,5:7,8};
         elspec.forstimulation=1;
     case {'St. Jude Directed 6173 (long)', 'Abbott Directed 6173 (long)'}
-        elspec.matfname='stjude_directed_15';
+        elspec.matfname='abbott_directed_15';
         elspec.lead_diameter=1.27;
         elspec.lead_color=0.7;
         elspec.contact_length=1.5;

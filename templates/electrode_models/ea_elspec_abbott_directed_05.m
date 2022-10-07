@@ -1,16 +1,16 @@
-function electrode=ea_elspec_stjude_directed_15(varargin)
+function electrode=ea_elspec_abbott_directed_05(varargin)
 
-% This function creates the electrode specification for the short SJM directed lead.
+% This function creates the electrode specification for the short Abbott directed lead.
 % In contrast to other electrode generation functions, it is based on an
 % externally generated FEM-compatible model, stored in the
-% StJude_Directed_05 subfolder.
+% Abbott_Directed_05 subfolder.
 % __________________________________________________________________________________
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
 % Set folder
 elemodelPath = fileparts(mfilename('fullpath'));
-modelFolder = 'StJude_Directed_15';
+modelFolder = 'Abbott_Directed_05';
 
 % Get insulation and contact numbers
 numIns = numel(ea_regexpdir([elemodelPath, filesep, modelFolder,filesep, 'Insulations'], '.*\.smesh$'));
@@ -18,7 +18,7 @@ numCon = numel(ea_regexpdir([elemodelPath, filesep, modelFolder,filesep, 'Contac
 
 %% import insulations and contacts from subfolder
 for k = 1:numIns
-    filename = [elemodelPath,filesep,modelFolder,filesep,'Insulations',filesep,'ins', num2str(k),'.1'];
+    filename = [elemodelPath,filesep,modelFolder,filesep,'Insulations',filesep,'ins',num2str(k),'.1'];
     [node,~,face]=readtetgen(filename);
     electrode.insulation(k).vertices = node;
     electrode.insulation(k).faces = face(:,1:3);
@@ -34,13 +34,13 @@ for k = 1:numCon
 end
 
 %% other specifications
-options.elmodel = 'Abbott Directed 6173 (long)';
+options.elmodel = 'Abbott Directed 6172 (short)';
 options = ea_resolve_elspec(options);
 elspec = options.elspec;
 
 electrode.electrode_model = options.elmodel;
 electrode.head_position = [0 0 1.75];
-electrode.tail_position = [0 0 10.75];
+electrode.tail_position = [0 0 7.75];
 electrode.x_position = [elspec.lead_diameter/2 0 1.75];
 electrode.y_position = [0 elspec.lead_diameter/2 1.75];
 electrode.numel = 8;
@@ -51,23 +51,23 @@ cx = elspec.lead_diameter/2*cos(pi/6);
 cy = elspec.lead_diameter/2*sin(pi/6);
 
 electrode.coords_mm(1,:)=[0 0 1.75];
-electrode.coords_mm(2,:)=[0 0 4.75]+[0, elspec.lead_diameter/2, 0];
-electrode.coords_mm(3,:)=[0 0 4.75]+[cx, -cy, 0];
-electrode.coords_mm(4,:)=[0 0 4.75]+[-cx, -cy, 0];
-electrode.coords_mm(5,:)=[0 0 7.75]+[0, elspec.lead_diameter/2, 0];
-electrode.coords_mm(6,:)=[0 0 7.75]+[cx, -cy, 0];
-electrode.coords_mm(7,:)=[0 0 7.75]+[-cx, -cy, 0];
-electrode.coords_mm(8,:)=[0 0 10.75];
+electrode.coords_mm(2,:)=[0 0 3.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(3,:)=[0 0 3.75]+[cx, -cy, 0];
+electrode.coords_mm(4,:)=[0 0 3.75]+[-cx, -cy, 0];
+electrode.coords_mm(5,:)=[0 0 5.75]+[0, elspec.lead_diameter/2, 0];
+electrode.coords_mm(6,:)=[0 0 5.75]+[cx, -cy, 0];
+electrode.coords_mm(7,:)=[0 0 5.75]+[-cx, -cy, 0];
+electrode.coords_mm(8,:)=[0 0 7.75];
 
 electrode.isdirected = 1;
 
 %% saving electrode struct
-save([elemodelPath,filesep,'stjude_directed_15.mat'],'electrode');
+save([elemodelPath,filesep,'abbott_directed_05.mat'],'electrode');
 
 %% create and save _vol file
 filename = [elemodelPath,filesep,modelFolder,filesep,'final.1'];
 [node,~,face]=readtetgen(filename);
-save([elemodelPath,filesep,'stjude_directed_15_vol.mat'],'face','node')
+save([elemodelPath,filesep,'abbott_directed_05_vol.mat'],'face','node')
 clear node face
 
 %% visualize
