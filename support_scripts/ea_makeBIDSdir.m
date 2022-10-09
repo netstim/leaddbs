@@ -28,6 +28,9 @@ new_dirname = fieldnames(bidsdir.other);
 for i=1:length(new_dirname)
     if ~exist(bidsdir.other.(new_dirname{i}),'dir')
         mkdir(bidsdir.other.(new_dirname{i}))
+        if strcmp(new_dirname{i},'preproDir')
+            mkdir(bidsdir.other.(new_dirname{i}),'anat')
+        end
     end
 end
 

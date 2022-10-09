@@ -159,7 +159,7 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw,dicom_source_folder] = ena
         flag = 'onlyMigrate';
         % both dicom & derivatives available. Requires special
         % handling in the migrate code.
-    elseif any(ismember(subfolder,'ea_ui.mat')) && checkIfOneExist(subfolder,'^glanat*.nii$') && checkIfOneExist(subfolder,'dicom||.*.dcm')
+    elseif checkIfOneExist(subfolder,'^glanat*.nii$') && checkIfOneExist(subfolder,'dicom||.*.dcm')
         doMigrate = 1;
         dicom_conv = 1;
         doOnlyRaw = 0;
@@ -177,7 +177,7 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw,dicom_source_folder] = ena
             end
         end
         dicom_source_folder{1} = fullfile(selection,'DICOM');
-    elseif any(ismember(subfolder,'ea_ui.mat')) && checkIfOneExist(subfolder,'[^anat]*.nii$')
+    elseif checkIfOneExist(subfolder,'[^anat]*.nii$') && checkIfNoneExist(subfolder,'dicom||.*.dcm')
         doMigrate = 1;
         dicom_conv = 0;
         doOnlyRaw = 1;
