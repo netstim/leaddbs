@@ -81,21 +81,35 @@ opt.FileName = fname_out;
          if ischar(input_mat.(modality_field))
              input_mat.(modality_field) = {input_mat.(modality_field)};
          end
-         if strcmp(input_mat.(modality_field){end},'ANTs') || contains(input_mat.(modality_field){end},'_ants')
+         if strcmp(input_mat.(modality_field){end},'ea_normalize_apply_normalization')
+             j = length(input_mat.(modality_field));
+             for i=1:length(input_mat.(modality_field))
+                 if ~strcmp(input_mat.(modality_field){j},'ea_normalize_apply_normalization')
+                     modField = input_mat.(modality_field){j};
+                     %need to get the first entry thats not
+                     %ea_normalize_apply_normalization
+                     break
+                 end
+                 j = j-1;
+             end
+         else
+             modField = input_mat.(modality_field){end};
+         end
+         if strcmp(modField,'ANTs') || contains(modField,'_ants')
              method_used = ea_normalize_ants('promt');
-         elseif strcmp(input_mat.(modality_field){end},'BRAINSFit')
+         elseif strcmp(modField,'BRAINSFit')
              method_used = 'BRAINSFit (Johnson 2007)';
-         elseif strcmp(input_mat.(modality_field){end},'FLIRT')
+         elseif strcmp(modField,'FLIRT')
              method_used = 'FLIRT (Jenkinson 2001 & 2002)';
-         elseif strcmp(input_mat.(modality_field){end},'BBR')
+         elseif strcmp(modField,'BBR')
              method_used = 'FLIRT BBR (Greve and Fischl 2009)';
-         elseif strcmp(input_mat.(modality_field){end},'Hybrid SPM & ANTs')
+         elseif strcmp(modField,'Hybrid SPM & ANTs')
              method_used = 'Hybrid SPM & ANTs';
-         elseif strcmp(input_mat.(modality_field){end},'Hybrid SPM & BRAINSFIT')
+         elseif strcmp(modField,'Hybrid SPM & BRAINSFIT')
              method_used = 'Hybrid SPM & BRAINSFIT';
-         elseif strcmp(input_mat.(modality_field){end},'SPM') || contains(input_mat.(modality_field){end},'_spm')
+         elseif strcmp(modField,'SPM') || contains(modField,'_spm')
              method_used = 'SPM (Friston 2007)';
-         elseif strcmp(input_mat.(modality_field){end},'Hybrid SPM & FLIRT')
+         elseif strcmp(modField,'Hybrid SPM & FLIRT')
              method_used = 'Hybrid SPM & FLIRT';
          else
              method_used = '';
