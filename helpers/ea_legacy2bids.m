@@ -132,7 +132,7 @@ for patients = 1:length(source)
                     if any(regexpi(files_to_move{j},'raw_anat_.*.nii')) || any(regexpi(files_to_move{j},'^anat_.*.nii'))  %we already know their tags in the case of cor,tra,sag
                         to_match = files_to_move{j};
                         bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
-                        tag = check_acq(fullfile(source_patient,files_to_move{j})); %function for modalities, use of fslHD
+                        tag = ea_checkacq(fullfile(source_patient,files_to_move{j})); %function for modalities, use of fslHD
                         tag_cell{end+1} = tag;
                         mod_cell{end+1} = bids_mod;
                     end
@@ -412,7 +412,7 @@ for patients = 1:length(source)
                         bids_mod = add_mod(which_file,legacy_modalities,rawdata_containers);
                         if ~isempty(bids_mod)
                             try
-                                tag = check_acq(fullfile(source_path,which_file));
+                                tag = ea_checkacq(fullfile(source_path,which_file));
                                 bids_name = [patient_name,'_','desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
                             catch
                                 try_bids_name = [patient_name,'_','desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
@@ -448,7 +448,7 @@ for patients = 1:length(source)
                               copyfile(fullfile(source_path,which_file),op_dir);
                           else
                               try
-                                  tag = check_acq(fullfile(source_path,which_file));
+                                  tag = ea_checkacq(fullfile(source_path,which_file));
                                   bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
                               catch
                                   try_bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
@@ -498,7 +498,7 @@ for patients = 1:length(source)
                         end
                         bids_mod = add_mod(which_file,legacy_modalities,rawdata_containers);
                         try
-                            tag = check_acq(fullfile(source_path,which_file));
+                            tag = ea_checkacq(fullfile(source_path,which_file));
                             bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
                         catch
                             try_bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
@@ -987,34 +987,7 @@ function generate_rawImagejson(patient_name,dest)
         end
     end
     savejson('',anat_files_selected,opt);
-    
-    
-    
-function tag = check_acq(filename)
-    hd_struct = ea_fslhd(filename);
-    pixdim = [hd_struct.pixdim1, hd_struct.pixdim2, hd_struct.pixdim3];
-    [C,~, ic] = unique(pixdim);
-    if numel(C) == 1
-        tag = 'iso';
-    else
-        if numel(C) == 2
-            count = accumarray(ic, 1);
-            flag = find(pixdim == C(count==1));
-        else
-            multi = [pixdim(2)*pixdim(3), pixdim(1)*pixdim(3), pixdim(1)*pixdim(2)];
-            flag = find(multi == min(multi));
-        end
-        
-        switch flag
-            case 1
-                tag = 'sag';
-            case 2
-                tag = 'cor';
-            case 3
-                tag = 'ax';
-        end
-    end
-    return
+
 function bids_name = add_tag(try_bids_name,mod_cell,tag_cell)
     bids_mod = strsplit(try_bids_name,'_');
     [~,bids_mod,~] = fileparts(bids_mod{end});

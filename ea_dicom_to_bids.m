@@ -400,18 +400,7 @@ for rowIdx = 1:height(table)
 
     % prepopulate acq tag by resolution for preop MRIs (just anat)
     if  ~strcmp(string(table_preallocated.Session(rowIdx)), 'postop') && ~strcmp(string(table_preallocated.Type(rowIdx)), 'func') && ~strcmp(string(table_preallocated.Type(rowIdx)), 'dwi')
-
-        resolution = imgs_resolution{rowIdx};
-
-        % is isometric resolution
-        acq_tags = {'sag', 'cor', 'ax'};
-        if range(resolution) < 0.05
-            table_preallocated.Acquisition(rowIdx) = "iso";
-            % is not isometric resolution
-        else
-            [~, idx] = max(resolution);
-            table_preallocated.Acquisition(rowIdx) = string(acq_tags{idx});
-        end
+        table_preallocated.Acquisition(rowIdx) = ea_checkacq(imgs_resolution{rowIdx});
     end
 
 end
