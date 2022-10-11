@@ -51,4 +51,4 @@ uipatdir={'./BER_MDST_Reprocessed_VTAs_Jan2021/All_MDST/01_MDST'
     };
 
 output_save_filepath = 'parallelized_v2_output_17.mat';
-ea_mass_convert_acpc2mni(mass_convert_config, "annals_reproc_first_acpc.xlsx", uipatdir, output_save_filepath)
+ea_mass_convert_acpc2mni(mass_convert_config, "sample_mass_convert_coordinates.xlsx", uipatdir, output_save_filepath)
