@@ -126,64 +126,63 @@
 % Script test_corr_perm.m found this function to have accurate false postitive
 % rates
 
-function [pval, corr_obs, crit_corr, est_alpha, seed_state]=mult_comp_perm_corr(dataX,dataY,n_perm,tail,alpha_level,stat,reports,seed_state)
+function [corr_obs, pval, crit_corr, est_alpha, seed_state]=ea_permcorr(dataX,dataY,stat,n_perm,tail,alpha_level,reports,seed_state)
 
 if nargin<2
     error('You need to provide two sets of data.');
 end
 
 if nargin<3
-    n_perm=5000;
+    stat='rank';
+end
+
+if ~ismember(lower(stat), {'linear', 'pearson', 'rank', 'spearman'})
+    error('Argument ''stat'' needs to be ''linear'' or ''rank''');
 end
 
 if nargin<4
+    n_perm=1000;
+end
+
+if nargin<5
     tail=0;
 elseif (tail~=0) && (tail~=1) && (tail~=-1)
     error('Argument ''tail'' needs to be 0,1, or -1.');
 end
 
-if nargin<5
+if nargin<6
     alpha_level=0.05;
 elseif (alpha_level>=1) || (alpha_level<=0)
    error('Argument ''alpha_level'' needs to be a number between 0 and 1.');
-end
-
-if nargin<6
-    stat='linear';
 end
 
 if nargin<7
     reports=1;
 end
 
-%Get random # generator state
-try
-    defaultStream=RandStream.getGlobalStream;
-    if (nargin<8) || isempty(seed_state)
-        %Store state of random number generator
-        seed_state=defaultStream.State;
-    else
-        defaultStream.State=seed_state; %reset random number generator to saved state
-    end
-catch
-    if reports
-        fprintf('Sorry, unable to set or return random number generator state with your version of Matlab.\n');
-    end
-    seed_state=NaN;
+% Get random # generator state
+defaultStream=RandStream.getGlobalStream;
+if (nargin<8) || isempty(seed_state)
+    % Store state of random number generator
+    seed_state=defaultStream.State;
+else
+    defaultStream.State=seed_state; % Reset random number generator to saved state
 end
 
-
-[n_obsX n_varX]=size(dataX);
+[n_obsX, n_varX]=size(dataX);
 if n_obsX<2
     error('You need data from at least two observations in data set X to perform a hypothesis test.')
 end
-[n_obsY n_varY]=size(dataY);
+
+[n_obsY, n_varY]=size(dataY);
 if n_obsY<2
     error('You need data from at least two observations in data set Y to perform a hypothesis test.')
 end
+
 if n_obsY~=n_obsX
    error('You need to have the same number of observations in data set X and Y');
 end
+
 if n_varY~=n_varX
    error('You need to have the same number of variables in data set X and Y');
 end
@@ -202,19 +201,17 @@ if reports
     fprintf('mult_comp_perm_corr: Number of observations: %d\n',n_obsX);
 end
 
-if strcmpi(stat,'rank')
-    %convert values to ranks
+if ismember(lower(stat), {'rank', 'spearman'})
+    % Convert values to ranks
     for a=1:n_varX
         dataX(:,a)=vals2ranks(dataX(:,a));
         dataY(:,a)=vals2ranks(dataY(:,a));
     end
-elseif ~strcmpi(stat,'linear')
-   error('Argument ''stat'' needs to be ''linear'' or ''rank''');
 end
 
 %% Set up permutation test
 if n_obsX<=7
-    n_perm=factorial(n_obsX); %total number of possible permutations
+    n_perm=factorial(n_obsX); % Total number of possible permutations
     exact=1;
     seed_state='exact';
     if reports
@@ -229,17 +226,16 @@ if reports
     fprintf('Permutations completed: ');
 end
 
-
 %% Compute permutations
 
-%Constant factors for computing correlations
+% Constant factors for computing correlations
 ssX=sum(dataX.^2)-(sum(dataX).^2)/n_obsX;
 ssY=sum(dataY.^2)-(sum(dataY).^2)/n_obsX;
 sum_dataX=sum(dataX);
 sum_dataY=sum(dataY);
 sqrt_ssYssX=sqrt(ssY.*ssX);
 constant=sum_dataX.*sum_dataY/n_obsX;
-%ssXY=sum(dataX.*dataY)-sum(dataX).*sum(dataY)/n_obsX;
+% ssXY=sum(dataX.*dataY)-sum(dataX).*sum(dataY)/n_obsX;
 ssXY=sum(dataX.*dataY)-constant;
 
 %% Computes t-scores of observations at all variables and time points
@@ -247,7 +243,7 @@ corr_obs=ssXY./sqrt_ssYssX;
 
 %%
 if exact
-    %Use all possible permutations
+    % Use all possible permutations
     all_perms=perms(1:n_obsX);
     mx_corr=zeros(1,n_perm);
     for perm=1:n_perm
@@ -263,22 +259,22 @@ if exact
                 end
             end
         end
-        %randomly set order of dataX
+        % Randomly set order of dataX
         ssXY=sum(dataX(all_perms(perm,:),:).*dataY)-constant;
         r_perm=ssXY./sqrt_ssYssX;
 
-        %get most extreme correlation
+        % Get most extreme correlation
         if tail==1
             mx_corr(perm)=max(r_perm);
         elseif tail==-1
             mx_corr(perm)=min(r_perm);
         else
             [mx_corr(perm) id]=max(abs(r_perm));
-            mx_corr(perm)=mx_corr(perm)*sign(r_perm(id)); %add sign back
+            mx_corr(perm)=mx_corr(perm)*sign(r_perm(id)); % Add sign back
         end
     end
 else
-    %Use random permutations
+    % Use random permutations
     mx_corr=zeros(1,n_perm);
     for perm=1:n_perm
         if ~rem(perm,100)
@@ -293,28 +289,27 @@ else
                 end
             end
         end
-        %randomly set order of dataX
+        % Randomly set order of dataX
         orderX=randperm(n_obsX);
         ssXY=sum(dataX(orderX,:).*dataY)-constant;
         r_perm=ssXY./sqrt_ssYssX;
 
-        %get most extreme correlation
+        % Get most extreme correlation
         if tail==1
             mx_corr(perm)=max(r_perm);
         elseif tail==-1
             mx_corr(perm)=min(r_perm);
         else
-            [mx_corr(perm) id]=max(abs(r_perm));
-            mx_corr(perm)=mx_corr(perm)*sign(r_perm(id)); %add sign back
+            [mx_corr(perm), id]=max(abs(r_perm));
+            mx_corr(perm)=mx_corr(perm)*sign(r_perm(id)); % Add sign back
         end
     end
 end
 
-%End permutations completed line
+% End permutations completed line
 if reports && rem(perm,1000)
     fprintf('\n');
 end
-
 
 %% Compute p-values
 pval=zeros(1,n_varX);
@@ -380,6 +375,7 @@ uni=unique(vals);
 if size(uni,1)>1
    uni=uni';
 end
+
 ct=0;
 for a=uni
    ids=find(vals==a);
