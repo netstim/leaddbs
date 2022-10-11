@@ -20,7 +20,7 @@ for pt = 1:length(source_folder)
         end
 
         %detect dataset type
-        [results,flag,dicom_conv,doMigrate,doOnlyRaw,dicom_source_folder] = enablerules(source_folder{pt},options);
+        [results,flag,dicom_conv,doMigrate,doOnlyRaw] = enablerules(source_folder{pt},options);
 
         if strcmp(results,'fail')
             if length(source_folder) == 1
@@ -49,7 +49,6 @@ for pt = 1:length(source_folder)
         end
     end
     run_prop.source = source_folder{pt};
-    run_prop.dicom_source = dicom_source_folder;
     run_prop.dest = dest_folder;
     run_prop.convert_using = options.prefs.migrate.DicomConversionTool;
     run_prop.flag = flag;
@@ -65,7 +64,6 @@ ea_busyaction('off',handles.leadfigure,'dbs');
 
 function runImport(run_prop)
     source_dir = run_prop.source;
-    dicom_source_folder = run_prop.dicom_source;
     dest_folder = run_prop.dest;
     convert_using = run_prop.convert_using;
     flag = run_prop.flag;
@@ -74,24 +72,25 @@ function runImport(run_prop)
     doOnlyRaw = run_prop.doOnlyRaw;
     if strcmp(flag,'onlyMigrate')
         disp('Migrating dataset...');
-        if dicom_conv && ~isempty(dicom_source_folder) && ~doOnlyRaw
-            ea_legacy2bids(source_dir,dest_folder,1,dicom_source_folder,1,0);
+        if dicom_conv && ~doOnlyRaw
+            ea_legacy2bids(source_dir,dest_folder,1,0);
         elseif ~dicom_conv && doMigrate && doOnlyRaw
-            ea_legacy2bids(source_dir,dest_folder,0,'',0,1);
+            ea_legacy2bids(source_dir,dest_folder,0,1);
         elseif doMigrate && ~dicom_conv && ~doOnlyRaw
-            ea_legacy2bids(source_dir,dest_folder,0,'',0,0);
+            ea_legacy2bids(source_dir,dest_folder,0,0);
         end
     end
     if strcmp(flag,'MigrateDCMconv')
         disp('Migrating dataset...')
+        ea_dataset_import(source_dir,dest_folder,convert_using, 1);
         %app.dicom_source: parent dicom,
         %implement checkpoint if folder is not empty
         if doOnlyRaw && dicom_conv
-            ea_legacy2bids(source_dir,dest_folder,1,dicom_source_folder,1,1);
+            ea_legacy2bids(source_dir,dest_folder,1,1);
         elseif dicom_conv && ~doOnlyRaw
-            ea_legacy2bids(source_dir,dest_folder,1,dicom_source_folder,1,0)
+            ea_legacy2bids(source_dir,dest_folder,1,0)
         end
-        ea_dataset_import(source_dir,dest_folder,convert_using, 1);
+        
     end
     % only DICOM conversion, no migration
     if strcmp(flag,'onlyDCMconv')
@@ -121,13 +120,12 @@ function count = checkValidity(folders)
    % end
 
 
-function [results,flag,dicom_conv,doMigrate,doOnlyRaw,dicom_source_folder] = enablerules(selection,options)
+function [results,flag,dicom_conv,doMigrate,doOnlyRaw] = enablerules(selection,options)
     [filepath,subject_name,~] = fileparts(selection);
     
     subfolder = dir_without_dots(selection);
     subfolder = {subfolder.name};
     results = 'pass';
-    dicom_source_folder = {};
     % detection function: if the patient has derivatives and
     % raw data, but not in BIDS format then it should be migrated.
     if endsWith(filepath, 'sourcedata')
@@ -135,7 +133,6 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw,dicom_source_folder] = ena
         dicom_conv = 1;
         doMigrate = 0;
         doOnlyRaw = 0;
-        dicom_source_folder{1} = selection;
         flag = 'onlyDCMconv';
     
         % BIDS Compliant raw data nifti files are available! in this case,
@@ -164,19 +161,7 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw,dicom_source_folder] = ena
         dicom_conv = 1;
         doOnlyRaw = 0;
         flag = 'MigrateDCMconv';
-        if isfolder(fullfile(selection,'DICOM'))
-            dicom_source_folder{1} = fullfile(selection,'DICOM');
-        else
-            if ~exist(fullfile(selection,'DICOM'),'dir')
-                mkdir(fullfile(selection,'DICOM'))
-            end
-            for i=1:length(subfolder)
-                if regexp(subfolder{i},'.*.dcm')
-                    movefile(fullfile(selection,subfolder{i}),fullfile(selection,'DICOM'))
-                end
-            end
-        end
-        dicom_source_folder{1} = fullfile(selection,'DICOM');
+        
     elseif checkIfOneExist(subfolder,'[^anat]*.nii$') && checkIfNoneExist(subfolder,'dicom||.*.dcm')
         doMigrate = 1;
         dicom_conv = 0;
@@ -188,59 +173,15 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw,dicom_source_folder] = ena
         dicom_conv = 1;
         doOnlyRaw = 1;
         flag = 'MigrateDCMconv';
-        if isfolder(fullfile(selection,'DICOM'))
-            dicom_source_folder{1} = fullfile(selection,'DICOM');
-        else
-            if ~exist(fullfile(selection,'DICOM'),'dir')
-                mkdir(fullfile(selection,'DICOM'))
-            end
-            for i=1:length(subfolder)
-                if regexp(subfolder{i},'.*.dcm')
-                    movefile(fullfile(selection,subfolder{i}),fullfile(selection,'DICOM'))
-                end
-            end
-            dicom_source_folder{1} = fullfile(selection,'DICOM');
-        end
+        
     
         % only DICOM files available
-    elseif checkIfOneExist(subfolder,'dicom*||.*.dcm')
+    elseif checkIfOnlyExist(subfolder,'dicom*||.*.dcm')
         %todo: remove support for .dcm files inside
         flag = 'onlyDCMconv';
         doMigrate = 0;
         dicom_conv = 1;
         doOnlyRaw = 0;
-        if ~isempty(ea_regexpdir(selection, 'DICOM', 0, 'd'))
-            dcm_folder = ea_regexpdir(selection, 'DICOM', 0, 'd');
-            [~,dicom_folder,~] = fileparts(dcm_folder);
-            if ~strcmp(dicom_folder,'DICOM')
-    
-                dicom_conv = 1;
-                doOnlyRaw = 0;
-                folders_inside = dir_without_dots(dcm_folder);
-                subfolders_inside = folders_inside([folders_inside.isdir]); %only get the folders, since they have to be moved to DICOM]
-    
-                if ~exist(fullfile(selection,'DICOM'),'dir')
-                    mkdir(fullfile(selection,'DICOM'))
-                end
-                subfolder_names = {subfolders_inside.name};
-                for i=1:length(subfolder_names)
-                    movefile(fullfile(selection,dicom_folder,subfolder_names{i}), fullfile(selection,'DICOM',subfolder_names{i}))
-                end
-                dicom_source_folder{1} = fullfile(selection,'DICOM');
-    
-            else
-                if ~exist(fullfile(selection,'DICOM'),'dir')
-                    mkdir(fullfile(selection,'DICOM'))
-                end
-                for i=1:length(subfolder)
-                    if regexp(subfolder{i},'.*.dcm')
-                        movefile(fullfile(selection,subfolder{i}),fullfile(selection,'DICOM'))
-                    end
-                end
-                dicom_source_folder{1} = fullfile(selection,'DICOM');
-            end
-        end
-    
     elseif checkIfOneExist(subfolder,'^ea_.*.mat$') || ea_ismember(subfolder,"current_headmodel") || ea_ismember(subfolder,"stimulation") % for detached files only, experimental
         dicom_conv = 0;
         doMigrate = 1;
@@ -249,28 +190,13 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw,dicom_source_folder] = ena
         % additional check for subfolders of dicom. Not just
         % folders inside which there might be dicom files.
     elseif ~isfolder(fullfile(selection,'DICOM')) && ~isfolder(fullfile(selection,'dicom'))
-        is_dicom_inside = dir(fullfile(selection,'**/*.dcm'));
-        if ~isempty(is_dicom_inside)
+            %todo: test whether there are actually dicom files inside
             dicom_conv = 1;
             doOnlyRaw = 0;
-            folders_inside = dir_without_dots(selection);
-            subfolders_inside = folders_inside([folders_inside.isdir]); %only get the folders, since they have to be moved to DICOM]
-            if ~exist(fullfile(selection,'DICOM'),'dir')
-                mkdir(fullfile(selection,'DICOM'))
-            end
-            subfolder_names = {subfolders_inside.name};
-            for i=1:length(subfolder_names)
-                movefile(fullfile(selection,subfolder_names{i}), fullfile(selection,'DICOM',subfolder_names{i}))
-            end
-            dicom_source_folder{1} = fullfile(selection,'DICOM');
             flag = 'onlyDCMconv';
-        else
-            ea_warndlg('%s: unable to detect the type of processing required, skipping for now', subject_name{1});
-            results = 'skip';
-        end
-    
     else
-        results = 'fail';%case not handled
+        ea_warndlg('%s: unable to detect the type of processing required, skipping for now', subject_name{1});
+        results = 'skip';
     end
     %compare the results with the user defined prefs:
     if  ~options.prefs.migrate.doDicomConversion

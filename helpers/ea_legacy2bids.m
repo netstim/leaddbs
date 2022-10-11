@@ -1,12 +1,10 @@
-function ea_legacy2bids(source,dest,isdicom,dicom_source,doDcmConv,doOnlyRaw)
+function ea_legacy2bids(source,dest,doDcmConv,doOnlyRaw)
 %%This function migrates a classic LEAD-DBS dataset, whether fully
 %%processed or raw into a BIDS-STYLE dataset.The BIDSified version is
 %%integral for the future releases of BIDS.
 %% Parameters:
 %% i)  source: full path of the source dataset (classic lead-dbs), as a cell structure. Multiple entries may be provided
 %% ii) dest:   full path of the destination dataset (BIDSified lead-dbs), as a cell structure. One overarching directory should be specified
-%% iii)isdicom: Boolean value for whether the classic dataset contains dicom files, present inside a folder called "DICOM"
-%% iv) dicom_source: to be specified only if isdicom is true. Else, specify as an empty string
 %% v)  doDcmConv: Boolean, 1 if your dataset only contains DICOM folders, else 0
 %% vi) doOnlyRaw: Boolean, 1 if your dataset only contains RAW nifti files, else 0
 if ~iscell(source)
@@ -37,17 +35,10 @@ else
 end
 
 
-%if you have dicom files and have not provided a dicom source directory
-%(this can also just be source directory,so refactor this) then throw
-%an error
-if isdicom && ~exist('dicom_source','var')
-    warndlg("You have specified that you want dicom import, but have not specified a dicom source file. Please specific your dicom source directory!")
-end
-
 %define names of the new directorey structure
 
 pipelines = {'brainshift','coregistration','normalization','reconstruction','preprocessing','prefs','log','export','stimulations','headmodel','miscellaneous','ftracking'};
-
+fmri_keywords = {'(Yeo 2011)','HCP 612','HCP 1200','PPMI 74','Depression 38'};
 
 %mapping will allow quick reference of the files to move: also, certain
 %modalities have specific bids naming.
@@ -83,7 +74,7 @@ for patients = 1:length(source)
     modes = {'anat','func','dwi'};
     sessions = {'ses-preop','ses-postop'};
     if  doDcmConv && ~doOnlyRaw
-        subfolder_cell = {'sourcedata','legacy','derivatives'};
+        subfolder_cell = {'derivatives','legacy'};
     elseif doOnlyRaw && ~doDcmConv
         subfolder_cell = {'rawdata'};
     elseif  doOnlyRaw && doDcmConv
@@ -96,11 +87,7 @@ for patients = 1:length(source)
         end
     end
 
-    %dest directory is already specified
-    if isdicom
-        dicom_patient = dicom_source{patients};
-    end
-    
+
     %get and refactor patient names. specially, don't allow
     %'_' or '-'
     [~,patient_name,~] = fileparts(source_patient);
@@ -129,7 +116,7 @@ for patients = 1:length(source)
                continue
             else
                 if ~any(contains(files_to_move{j},'\w*(ct|tra|cor|sag)\w*')) %find a mapping between tags and modalities (for e.g., tag for T1w is ax, therefore tag = {'T1w.nii'}, mod = {'ax'})
-                    if any(regexpi(files_to_move{j},'raw_anat_.*.nii')) || any(regexpi(files_to_move{j},'^anat_.*.nii'))  %we already know their tags in the case of cor,tra,sag
+                    if any(regexpi(files_to_move{j},'raw_anat_.*.nii')) || any(regexpi(files_to_move{j},'^anat_.*.nii')) || doOnlyRaw  %we already know their tags in the case of cor,tra,sag
                         to_match = files_to_move{j};
                         bids_mod = add_mod(to_match,legacy_modalities,rawdata_containers);
                         tag = ea_checkacq(fullfile(source_patient,files_to_move{j})); %function for modalities, use of fslHD
@@ -191,12 +178,14 @@ for patients = 1:length(source)
             end
             dir_names{j} = '';
         elseif strcmp(dir_names{j},'DICOM')
-            if ~exist(fullfile(dest,'sourcedata',patient_name,'DICOM'),'dir')
-                mkdir(fullfile(dest,'sourcedata',patient_name,'DICOM'))
+            if ~doDcmConv
+                if ~exist(fullfile(dest,'sourcedata',patient_name,'DICOM'),'dir')
+                    mkdir(fullfile(dest,'sourcedata',patient_name,'DICOM'))
+                end
+
+                copyfile(fullfile(source_patient,'DICOM'),fullfile(dest,'sourcedata',patient_name,'DICOM'));
+                dir_names{j} = '';
             end
-            
-            copyfile(fullfile(source_patient,'DICOM'),fullfile(dest,'sourcedata',patient_name,'DICOM'));
-            dir_names{j} = '';
             
             %handle brainshift copy and rename: we already do this because
             %some of the filenames are similar to the coreg filenames and
@@ -269,22 +258,7 @@ for patients = 1:length(source)
     %handle raw,
     for subfolders = 1:length(subfolder_cell)
         switch subfolder_cell{subfolders}
-            case 'sourcedata'
-                new_path = fullfile(dest,subfolder_cell{subfolders},patient_name);
-                if ~exist(new_path,'dir')
-                    mkdir(new_path)
-                end
-                if ~isdicom
-                    disp("There are no dicom images, source data folder will be empty")
-                else
-                    if exist(dicom_patient, 'dir')
-                        disp("Copying DICOM folder...");
-                        copyfile(dicom_patient,new_path)
-                    elseif exist(fullfile(source_patient,'dicom'),'dir')
-                        disp("Copying dicom folder...");
-                        copyfile(fullfile(source_patient,'dicom'),new_path)
-                    end
-                end
+          
             case 'derivatives'
                 disp("Migrating Derivatives folder...");
                 new_path = fullfile(dest,subfolder_cell{subfolders},'leaddbs',patient_name);
@@ -552,13 +526,13 @@ for patients = 1:length(source)
                                     is_it_aconnectome = ea_regexpdir(leadMapper_folder{k},'.*vat_seed_compound_[df]MRI.*',0,'f');
                                     if ~isempty(is_it_aconnectome)
                                         [~,connectome_filename,ext] = fileparts(leadMapper_folder{k});
-                                        if ~contains(connectome_filename, '_') % Structural connectome
-                                            bids_connectome_name = ea_getConnLabel(connectome_filename);
-                                        else % Functional connectome, subset in the name
+                                        if cellfun(@(x)contains(x,connectome_filename),fmri_keywords)% Structural connectome
                                             connectome_filename = strsplit(connectome_filename, '_');
                                             connectome = connectome_filename{1};
                                             subset = connectome_filename{2};
-                                            bids_connectome_name = ea_getConnLabel(connectome, subset);
+                                            bids_connectome_name = ea_getConnLabel(connectome, subset);                                            
+                                        else % Functional connectome, subset in the name
+                                            bids_connectome_name = ea_getConnLabel(connectome_filename);
                                         end
                                         model_name = add_model(all_gs_folders{i});
                                         stimulation_folder = all_gs_folders{i};
@@ -568,7 +542,7 @@ for patients = 1:length(source)
                                         tag_struct.subjID = patient_name;
                                         tag_struct.modeltag = model_name;
                                         tag_struct.conntag = bids_connectome_name;
-                                        generate_bidsConnectome_name(stimulation_folder,connectome_folder,lead_mapper,tag_struct)
+                                        generate_bidsConnectome_name(stimulation_folder,connectome_folder,lead_mapper,stimulations,tag_struct)
                                     end
                                 end
                             end
@@ -709,18 +683,8 @@ for patients = 1:length(source)
                         
                     end
                 end
-                raw_path = fullfile(dest,subfolder_cell{subfolders});
-                if ~isempty(dir_without_dots(raw_path))
-                    if exist('postop_modality','var')
-                        ea_generate_datasetDescription(raw_path,'raw',postop_modality);
-                    else
-                        ea_generate_datasetDescription(raw_path,'raw')
-                    end
-                    if ~isdicom
-                        %generate raw image json in the raw data folder
-                        generate_rawImagejson(patient_name,dest)
-                    end
-                end
+                
+                generate_rawImagejson(patient_name,dest,doDcmConv)
         end
     end
     
@@ -870,19 +834,24 @@ function move_mni2bids(mni_files,native_files,~,headmodel,which_pipeline,patient
         
     end
     
-function generate_rawImagejson(patient_name,dest)
+function generate_rawImagejson(patient_name,dest,doDcmConv)
     output_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs');
     if ~exist(output_dir,'dir')
         mkdir(output_dir)
     end
+    if doDcmConv
+        raw_data_path = fullfile(dest,'rawdata','legacy',patient_name);
+    else
+        raw_data_path = fullfile(dest,'rawdata',patient_name);
+    end
     coreg_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat');
-    raw_preop_dir = fullfile(dest,'rawdata',patient_name,'ses-preop','anat');
-    raw_postop_dir = fullfile(dest,'rawdata',patient_name,'ses-postop','anat');
+    raw_preop_dir = fullfile(raw_data_path,'ses-preop','anat');
+    raw_postop_dir = fullfile(raw_data_path,'ses-postop','anat');
     preprocessing_dir = fullfile(dest,'derivatives','leaddbs',patient_name,'preprocessing','anat');
     opt.FileName = fullfile(dest,'derivatives','leaddbs',patient_name,'prefs',[patient_name,'_','desc-rawimages.json']);
     %special_case
     
-    preop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-preop','anat','*.nii.gz'));
+    preop_files = dir_without_dots(fullfile(raw_preop_dir,'*.nii.gz'));
     preop_files = {preop_files.name};
     preop_modalities = {};
     for comparing_files = 1:length(preop_files)
@@ -891,8 +860,8 @@ function generate_rawImagejson(patient_name,dest)
         preop_mod = preop_mod{end};
         preop_modalities{end+1} = preop_mod;
     end
-    coreg_t1 = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_ses-preop_space-anchorNative_*_acq-*_T1w.nii'));
-    rawdata_t1 = dir(fullfile(dest,'rawdata',patient_name,'ses-preop','anat','sub-*_ses-preop_acq-*_T1w.nii'));
+    coreg_t1 = dir(fullfile(coreg_dir,'sub-*_ses-preop_space-anchorNative_*_acq-*_T1w.nii'));
+    rawdata_t1 = dir(fullfile(raw_preop_dir,'sub-*_ses-preop_acq-*_T1w.nii'));
     if ~isempty(coreg_t1) && isempty(rawdata_t1)
         transfer_t1 = 1;
     else
@@ -900,7 +869,7 @@ function generate_rawImagejson(patient_name,dest)
     end
     if isempty(preop_files) || transfer_t1
         %other preop files
-        coreg_preop_files = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_ses-preop_space-anchorNative_*_acq-*.nii'));
+        coreg_preop_files = dir(fullfile(coreg_dir,'sub-*_ses-preop_space-anchorNative_*_acq-*.nii'));
         coreg_preop_files = {coreg_preop_files.name};
         for coreg_files = 1:length(coreg_preop_files)
             coreg_file = regexprep(coreg_preop_files{coreg_files}, '(.nii)|(.gz)', '');
@@ -941,7 +910,7 @@ function generate_rawImagejson(patient_name,dest)
         end
     end
     
-    postop_files = dir_without_dots(fullfile(dest,'rawdata',patient_name,'ses-postop','anat','*.nii.gz'));
+    postop_files = dir_without_dots(fullfile(raw_postop_dir,'*.nii.gz'));
     postop_files = {postop_files.name};
     postop_modalities = {};
     for comparing_files = 1:length(postop_files)
@@ -951,7 +920,7 @@ function generate_rawImagejson(patient_name,dest)
         postop_modalities{end+1} = postop_mod;
     end
     if isempty(postop_files)
-        coreg_postop_files = dir(fullfile(dest,'derivatives','leaddbs',patient_name,'coregistration','anat','sub-*_ses-postop_space-anchorNative_desc-preproc_*.nii'));
+        coreg_postop_files = dir(fullfile(coreg_dir,'sub-*_ses-postop_space-anchorNative_desc-preproc_*.nii'));
         coreg_postop_files = {coreg_postop_files.name};
         for coreg_files = 1:length(coreg_postop_files)
             coreg_file = regexprep(coreg_postop_files{coreg_files}, '(.nii)|(.gz)', '');
@@ -987,6 +956,8 @@ function generate_rawImagejson(patient_name,dest)
         end
     end
     savejson('',anat_files_selected,opt);
+    
+    
 
 function bids_name = add_tag(try_bids_name,mod_cell,tag_cell)
     bids_mod = strsplit(try_bids_name,'_');
@@ -1095,7 +1066,7 @@ function model_name = add_model(stimFolder)
         model_name = 'simbio';
     end
 return
-function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,tag_struct)
+function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,stimulations,tag_struct)
    %connectome_folder should be the full path of the connectome files,
    %mni_folder =
    %fullfile(new_path,pipeline,'MNI152NLinAsym','stimulations',stimulation
@@ -1104,9 +1075,9 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
    mapper_output_files = {mapper_output_files(~[mapper_output_files.isdir]).name};
    
    for mapper_file = 1:length(mapper_output_files)
-       matching_file = regexprep(mapper_output_files{mapper_file},'(fl_|efield_|efield_gauss)', '');
-       matching_file = ['_' matching_file];
-       if ismember(matching_file,lead_mapper{:,1})
+       matching_stim_file = regexprep(mapper_output_files{mapper_file},'(fl_|efield_|efield_gauss)', '');
+       matching_lm_file = ['_' matching_stim_file];
+       if ismember(matching_lm_file,lead_mapper{:,1})
            if contains(mapper_output_files{mapper_file},'efield')
                tag_struct.simtag = 'efield';
            elseif contains(mapper_output_files{mapper_file},'efield_gauss')
@@ -1116,7 +1087,7 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
            end
            extract_old_hemisdesc_str = strsplit(mapper_output_files{mapper_file},'_');
            
-           indx = cellfun(@(x)strcmp(x,matching_file),lead_mapper{:,1});
+           indx = cellfun(@(x)strcmp(x,matching_lm_file),lead_mapper{:,1});
            bids_name = lead_mapper{1,2}{indx};
            %replace hemidesc tag
            if strcmp(extract_old_hemisdesc_str{1},'fl')
@@ -1134,6 +1105,33 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,t
            movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
            fprintf('Renaming file %s as %s.\n',mapper_output_files{mapper_file},[tag_struct.subjID,'_',bids_name]);
            
+       elseif ismember(matching_stim_file,stimulations{:,1})
+            if contains(mapper_output_files{mapper_file},'efield')
+               tag_struct.simtag = 'efield';
+           elseif contains(mapper_output_files{mapper_file},'efield_gauss')
+               tag_struct.simtag = 'efieldgauss';
+           else %doesn't contain either
+               tag_struct.simtag = 'binary';
+           end
+           extract_old_hemisdesc_str = strsplit(mapper_output_files{mapper_file},'_');
+           
+           indx = cellfun(@(x)strcmp(x,matching_stim_file),stimulations{:,1});
+           bids_name = stimulations{1,2}{indx};
+           %replace hemidesc tag
+           if strcmp(extract_old_hemisdesc_str{1},'fl')
+               bids_name = strrep(bids_name,'flippedTag','flipped');
+           else
+               bids_name = strrep(bids_name,'_hemidesc-flippedTag','');
+           end
+           %replace sim tag
+           bids_name = strrep(bids_name,'simTag',tag_struct.simtag);
+           %replace model tag
+           bids_name = strrep(bids_name,'modelTag',tag_struct.modeltag);
+           %replace connectome tag
+           bids_name = strrep(bids_name,'conTag',tag_struct.conntag);
+           copyfile(fullfile(connectome_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,mapper_output_files{mapper_file}));
+           movefile(fullfile(mni_folder,mapper_output_files{mapper_file}),fullfile(mni_folder,[tag_struct.subjID,'_',bids_name]));
+           fprintf('Renaming file %s as %s.\n',mapper_output_files{mapper_file},[tag_struct.subjID,'_',bids_name]);
        else
            evalin('base','WARNINGSILENT=1;');
            ea_warning(sprintf('BIDS tag could not be assigned for %s. Please rename manually',mapper_output_files{mapper_file}));
