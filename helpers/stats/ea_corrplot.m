@@ -1,4 +1,4 @@
-function [h,R,p,g]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm,colors,markers)
+function [h,R,p,g]=ea_corrplot(X,Y,permutation,labels,group1,group2,colors,markers)
 % Wrapper for gramm to produce a simple correlation plot.
 % Group1 denotes colors, Group2 Markers.
 % Can also specify custom colors
@@ -19,23 +19,34 @@ function [h,R,p,g]=ea_corrplot(X,Y,labels,corrtype,group1,group2,pperm,colors,ma
 % group2.idx=group2cell(ceil(rand(100,1)*2));
 % group2.tag='Disease';
 %
-% ea_corrplot(X,Y,{'Example Correlation','Age','Disease Duration'},'spearman',group1,group2)
+% ea_corrplot(X,Y,1000,{'Example Correlation','Age','Disease Duration'},group1,group2)
 
-if ~exist('labels','var')
-    labels={'','X','Y'};
+if isrow(X)
+    X = X';
 end
 
-if length(labels) < 3 % assume only title provided
+if isrow(Y)
+    Y = Y';
+end
+
+if ~exist('permutation', 'var')
+    permutation = 0;
+end
+
+if ~exist('labels', 'var')
+    labels={'', 'X', 'Y'};
+end
+
+if length(labels) < 2
     labels{2} = 'X';
+end
+
+if length(labels) < 3
     labels{3} = 'Y';
 end
 
 if length(labels) < 4
-    labels{4} = 'Default plot';
-end
-
-if ~exist('corrtype','var')
-    corrtype='Pearson';
+    labels{4} = 'Default corrplot';
 end
 
 if ~exist('group1','var')
@@ -87,92 +98,54 @@ else
     markers = {'o' 's' 'd' '^' 'v' '>' '<' 'p' 'h' '*' '+' 'x'};
 end
 
-switch corrtype
-    case {'permutation_spearman','permutation'}
-        for tries=1:3
-            try
-                [R,p]=ea_permcorr(X,Y,'spearman');
-            end
-            if exist('R','var')
-                break
-            end
-        end
-    case 'permutation_pearson'
-        for tries=1:3
-            try
-                [R,p]=ea_permcorr(X,Y,'pearson');
-            end
-
-            if exist('R','var')
-                break
-            end
-        end
-    otherwise
-        [R,p]=corr(X,Y,'rows','pairwise','type',corrtype);
-end
-
 if contains(labels{4}, 'nested LOO', 'IgnoreCase', true)
-    g=gramm('x',X,'y',Y,'color',group1.idx);
+    g = gramm('x', X, 'y', Y, 'color', group1.idx);
 else
-    g=gramm('x',X,'y',Y);
+    g = gramm('x', X, 'y', Y);
     if isempty(group1) && isempty(group2)
         g.geom_point();
         g.set_color_options(colorOptions{:});
     else
-        g.set_color_options('chroma',0,'lightness',30);
+        g.set_color_options('chroma', 0, 'lightness', 30);
     end
 end
 
 g.set_point_options('markers', markers, 'base_size', 7);
 g.stat_glm();
 
-pv=p;
-pstr='p';
-if exist('pperm','var') && ~isempty(pperm)
-    pv=pperm;
-    pstr='p(perm)';
-end
-
-if pv >= 0.001 % Show p = 0.XXX when p >= 0.001
-    pstr = [pstr, ' = ', sprintf('%.3f',pv)];
-else
-    % pstr = [pstr, ' = ', sprintf('%.1e',pv)]; % Show p = X.Xe-X
-    signCheck=zeros(1,16);
-    for i=1:length(signCheck)
-        signCheck(i) = eval(['pv<1e-',num2str(i),';']);
-    end
-    if all(signCheck)
-        pstr = [pstr, ' < 1e-16']; % Show p < 1e-16
+if isnumeric(permutation)
+    if ~permutation
+        [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
+        [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
+        pstr_linear = getPstr(p_linear, 'p');
+        pstr_rank = getPstr(p_rank, 'p');
     else
-        pstr = [pstr, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
+        [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson', permutation);
+        [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman', permutation);
+        pstr_linear = getPstr(p_linear, 'p (perm)');
+        pstr_rank = getPstr(p_rank, 'p (perm)');
     end
-end
-
-[R_pear,p_pear]=ea_permcorr(X,Y,'pearson');
-pv_pear=p_pear;
-pstr_pear='p';
-
-if pv_pear >= 0.001 % Show p = 0.XXX when p >= 0.001
-    pstr_pear = [pstr_pear, ' = ', sprintf('%.3f',pv_pear)];
-else
-    % pstr = [pstr, ' = ', sprintf('%.1e',pv)]; % Show p = X.Xe-X
-    signCheck=zeros(1,16);
-    for i=1:length(signCheck)
-        signCheck(i) = eval(['pv<1e-',num2str(i),';']);
-    end
-    if all(signCheck)
-        pstr_pear = [pstr_pear, ' < 1e-16']; % Show p < 1e-16
-    else
-        pstr_pear = [pstr_pear, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
+elseif ischar(permutation)
+    switch permutation
+        case {'no', 'noperm', 'nopermutation'}
+            [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
+            [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
+            pstr_linear = getPstr(p_linear, 'p');
+            pstr_rank = getPstr(p_rank, 'p');
+        case {'yes', 'perm', 'permutation'}
+            [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson');
+            [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
+            pstr_linear = getPstr(p_linear, 'p (perm)');
+            pstr_rank = getPstr(p_rank, 'p (perm)');
     end
 end
 
 if contains(labels{4}, 'nested LOO', 'IgnoreCase', true)
     g.set_title({'Mean and STD of linear models from nested LOO', ['Slope: ',labels{5}], ['Intercept: ',labels{6}]})
+elseif length(labels) == 4
+    g.set_title({[labels{1}], ['Spearman: [R = ', sprintf('%.2f',R_rank), '; ', pstr_rank, ']'], ['Pearson: [R = ', sprintf('%.2f',R_linear), '; ', pstr_linear, ']']});
 elseif length(labels) > 4
-    g.set_title({[labels{1}], ['Spearman: [r = ', sprintf('%.2f',R), '; ', pstr, ']'], ['Pearson: [r = ', sprintf('%.2f',R_pear), '; ', pstr_pear, ']'], [labels{5}, '; ',labels{6}, '; ',labels{7}]});
-else
-    g.set_title({[labels{1}], ['Spearman: [r = ', sprintf('%.2f',R), '; ', pstr, ']'], ['Pearson: [r = ', sprintf('%.2f',R_pear), '; ', pstr_pear, ']']});
+    g.set_title({[labels{1}], ['Spearman: [R = ', sprintf('%.2f',R_rank), '; ', pstr_rank, ']'], ['Pearson: [R = ', sprintf('%.2f',R_linear), '; ', pstr_linear, ']'], [labels{5}, '; ',labels{6}, '; ',labels{7}]});
 end
 
 
@@ -236,3 +209,21 @@ end
 set(h,'Position',[100 100 Width Height]);
 set([g.results.geom_point_handle],'MarkerSize',7);
 set([g.results.geom_point_handle],'MarkerEdgeColor','w');
+
+
+function pstr = getPstr(p, prefix)
+
+if p >= 0.001 % Show p = 0.XXX when p >= 0.001
+    pstr = [prefix, ' = ', sprintf('%.3f',p)];
+else
+    % pstr = [pstr, ' = ', sprintf('%.1e',pv)]; % Show p = X.Xe-X
+    signCheck=zeros(1,16);
+    for i=1:length(signCheck)
+        signCheck(i) = eval(['p < 1e-',num2str(i),';']);
+    end
+    if all(signCheck)
+        pstr = [prefix, ' < 1e-16']; % Show p < 1e-16
+    else
+        pstr = [prefix, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
+    end
+end
