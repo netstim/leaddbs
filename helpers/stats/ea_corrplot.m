@@ -140,27 +140,21 @@ elseif ischar(permutation)
     end
 end
 
+label_linear = ['Pearson: [R = ', sprintf('%.2f',R_linear), '; ', pstr_linear, ']'];
+label_rank = ['Spearman: [R = ', sprintf('%.2f',R_rank), '; ', pstr_rank, ']'];
+
+titleFontSize = 14;
+
 if contains(labels{4}, 'nested LOO', 'IgnoreCase', true)
-    g.set_title({'Mean and STD of linear models from nested LOO', ['Slope: ',labels{5}], ['Intercept: ',labels{6}]})
+    g.set_title({'Mean and STD of linear models from nested LOO', ['Slope: ',labels{5}], ['Intercept: ',labels{6}]}, 'FontSize', titleFontSize)
 elseif length(labels) == 4
-    g.set_title({[labels{1}], ['Spearman: [R = ', sprintf('%.2f',R_rank), '; ', pstr_rank, ']'], ['Pearson: [R = ', sprintf('%.2f',R_linear), '; ', pstr_linear, ']']});
+    g.set_title({labels{1}, label_rank, label_linear}, 'FontSize', titleFontSize);
 elseif length(labels) > 4
-    g.set_title({[labels{1}], ['Spearman: [R = ', sprintf('%.2f',R_rank), '; ', pstr_rank, ']'], ['Pearson: [R = ', sprintf('%.2f',R_linear), '; ', pstr_linear, ']'], [labels{5}, '; ',labels{6}, '; ',labels{7}]});
+    g.set_title({labels{1}, label_rank, label_linear, strjoin(labels(5:end), '; ')}, 'FontSize', titleFontSize);
 end
 
-
-fs=3 * (25/length(labels{1}));
-if fs>30
-    fs=40;
-end
-% g.set_title([labels{1}, ' [R = ', sprintf('%.2f',R), '; ', pstr, ']'], 'FontSize', fs);
-
-g.set_names('x',labels{2},'y',labels{3});
-fs=2*(35/max(cellfun(@length,labels(2:3))));
-if fs>30
-    fs=40;
-end
-% g.set_text_options('base_size',fs);
+baseFontSize = 12;
+g.set_text_options('base_size', baseFontSize);
 
 g.no_legend();
 
@@ -176,7 +170,7 @@ gtitle.Units = 'pixels';
 if gtitle.Extent(3) > Width
     % Shift the title a bit
     if isempty(group2) && isempty(group1)
-        gtitle.Position(1) = 376;
+        gtitle.Position(1) = 286;
     else
         gtitle.Position(1) = 246;
     end
