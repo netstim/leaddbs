@@ -189,6 +189,8 @@ elseif length(labels) > 4
     g.set_title({labels{1}, label_rank, label_linear, strjoin(labels(5:end), '; ')}, 'FontSize', titleFontSize);
 end
 
+g.set_names('x', labels{2}, 'y', labels{3});
+
 baseFontSize = 12;
 g.set_text_options('base_size', baseFontSize);
 
