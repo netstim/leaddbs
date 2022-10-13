@@ -76,6 +76,6 @@ if exist('Rperm','var') % permutation test
         p_predict_perm=sum(~RlargerRperm)./size(Rperm,1); % calculate final permutation based p value
         disp(['Permutation based p for overall prediction = ',num2str(p_predict_perm),'.']);
 
-        h=ea_corrplot(regressor,Ihat',{'Empirical vs. Predicted','Empirical','Predicted'},corrtype,[],[],p_predict_perm);
+        h=ea_corrplot(regressor,Ihat',p_predict_perm,{'Empirical vs. Predicted','Empirical','Predicted'});
     end
 end

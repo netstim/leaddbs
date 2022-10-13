@@ -55,4 +55,4 @@ if strcmpi(side, 'both')
     score = sum([score(1:length(score)/2), score(length(score)/2+1:end)], 2);
 end
 
-ea_corrplot(improvement, score, {'Discfiber Prediction', 'Empirical', 'Fiber T-scores'}, 'pearson');
+ea_corrplot(improvement, score, 'noperm', {'Discfiber Prediction', 'Empirical', 'Fiber T-scores'});

@@ -516,8 +516,8 @@ classdef ea_disctract < handle
             end
 
             if obj.nestedLOO
-                %cvs = 'L-O-O-O';
-                %h=ea_corrbox(Improvement,(Predicted_dif_models),{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel},'permutation_spearman',[],[],[],[]);
+                % cvs = 'L-O-O-O';
+                % h = ea_corrbox(Improvement,Predicted_dif_models,'permutation',{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel});
                 LM_values_slope = [num2str(mean(Slope)) ' ' char(177) ' ' num2str(std(Slope))];
                 LM_values_intercept = [num2str(mean(Intercept)) ' ' char(177) ' ' num2str(std(Intercept))];
                 disp('Mean and STD for slopes and intercepts of LMs')
@@ -534,7 +534,7 @@ classdef ea_disctract < handle
                     plotName = 'Fitting of linear models for K-folds using nested LOO';
                     empiricallabel = 'Empirical score';
                     pred_label = 'Predicted score';
-                    h=ea_corrbox(Improvement,(Predicted_scores),{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, LM_values_slope, LM_values_intercept},'permutation_spearman',groups_nested,[],[],[]);
+                    h=ea_corrbox(Improvement,Predicted_scores,'permutation',{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, LM_values_slope, LM_values_intercept},groups_nested);
                 end
             end
 
@@ -614,8 +614,8 @@ classdef ea_disctract < handle
 
                     empiricallabel = 'Empirical score';
                     pred_label = 'Predicted score';
-                    h=ea_corrbox(useI(test),(Ihat_voters_prediction(test,side,1)),{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, R2_label, RMS_label, MAD_label},'permutation_spearman',[],[],[],[]);
-                    %h2=ea_corrbox(-1*useI(test),(Ihat_voters_prediction(test,side,1)),{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, R2_label, RMS_label, MAD_label},'permutation_spearman',[],[],[],[]);
+                    h = ea_corrbox(useI(test),Ihat_voters_prediction(test,side,1),'permutation',{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, R2_label, RMS_label, MAD_label});
+                    % h2 = ea_corrbox(-1*useI(test),Ihat_voters_prediction(test,side,1),'permutation',{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, R2_label, RMS_label, MAD_label});
                 end
 
                 Ihat=Ihat_voters_prediction; % replace with actual response variables.
@@ -679,9 +679,9 @@ classdef ea_disctract < handle
                    
                     % show predictions for PC scores 
                     for pcc=1:obj.numpcs
-                        ea_corrplot(obj.subscore.pcavars{pcc}(obj.patientselection),Ihat(:,pcc),...
+                        ea_corrplot(obj.subscore.pcavars{pcc}(obj.patientselection),Ihat(:,pcc), 'noperm', ...
                             {['Disc. Fiber prediction for PC ',num2str(pcc)],'PC score (Empirical)','PC score (Predicted)'},...
-                            'pearson', [], [], [], obj.subscore.pcacolors(pcc, :));
+                            [], [], obj.subscore.pcacolors(pcc, :));
                         % sum(obj.subscore.pcavars{pcc}(obj.patientselection) - score(:,pcc)) % quick check
                     end
 
