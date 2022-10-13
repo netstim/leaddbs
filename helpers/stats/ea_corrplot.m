@@ -114,16 +114,23 @@ g.set_point_options('markers', markers, 'base_size', 7);
 g.stat_glm();
 
 if isnumeric(permutation)
-    if ~permutation
+    if ~permutation % no permutation
         [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
         [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
         pstr_linear = getPstr(p_linear, 'p');
         pstr_rank = getPstr(p_rank, 'p');
-    else
+    elseif mod(permutation, 1) == 0 % integer, number of permutation
         [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson', permutation);
         [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman', permutation);
         pstr_linear = getPstr(p_linear, 'p (perm)');
         pstr_rank = getPstr(p_rank, 'p (perm)');
+    else % external p-value provided (e.g., based on permuted R-Map or fiber tracts)
+        [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson');
+        [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
+        pstr_linear = getPstr(p_linear, 'p (perm)');
+        pstr_rank = getPstr(p_rank, 'p (perm)');
+        pstr_permmodel = getPstr(permutation, 'p (external)');
+        labels = [labels, pstr_permmodel];
     end
 elseif ischar(permutation)
     switch permutation
