@@ -56,6 +56,7 @@ function lead_or_OpeningFcn(hObject, eventdata, handles, varargin)
 earoot=ea_getearoot;
 
 handles.prod = 'or';
+handles.callingfunction = 'lead_or';
 
 % add recent patients...
 ea_initrecent(handles, 'patients');

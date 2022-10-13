@@ -53,6 +53,7 @@ function lead_group_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to lead_group (see VARARGIN)
 
 handles.prod='group';
+handles.callingfunction='lead_group';
 
 % add recent groups...
 ea_initrecent(handles, 'groups');

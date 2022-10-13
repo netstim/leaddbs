@@ -1,7 +1,5 @@
 function ea_menu_initmenu(handles,cmd,prefs)
 
-callingfunction=dbstack;
-callingfunction=callingfunction(4).name;
 menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
     % tools menu  & edit prefs present in all apps.
@@ -137,7 +135,7 @@ if isempty(menuprobe)
 
 
     if ismember('transfer',cmd)
-       ea_menu_addtransfer(handles,callingfunction,prefs);
+       ea_menu_addtransfer(handles,prefs);
     end
 
     if ismember('vats',cmd)

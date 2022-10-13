@@ -53,6 +53,7 @@ function lead_predict_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   predictmetric line arguments to lead_predict (see VARARGIN)
 
 handles.prod = 'predict';
+handles.callingfunction = 'lead_predict';
 
 earoot=ea_getearoot;
 im=imread([earoot,'icons',filesep,'logo_lead_predict.png']);

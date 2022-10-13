@@ -53,6 +53,7 @@ function lead_anatomy_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to lead_anatomy (see VARARGIN)
 
 handles.prod = 'anatomy';
+handles.callingfunction = 'lead_anatomy';
 
 % add recent patients...
 ea_initrecent(handles, 'patients');

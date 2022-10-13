@@ -128,6 +128,8 @@ if isindependent
 else
     handles.prod='dbs_connectome';
 end
+handles.callingfunction='lead_connectome';
+
 
 if isindependent
     %% add tools menu

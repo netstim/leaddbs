@@ -116,6 +116,8 @@ setappdata(gcf,'M',M);
 ea_refresh_lg_connectome(handles);
 
 handles.prod='group';
+handles.callingfunction='lead_group_connectome';
+
 ea_firstrun(handles,options);
 
 ea_menu_initmenu(handles,{'prefs','transfer'},options.prefs);
