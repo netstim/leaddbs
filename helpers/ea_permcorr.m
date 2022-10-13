@@ -126,7 +126,7 @@
 % Script test_corr_perm.m found this function to have accurate false postitive
 % rates
 
-function [corr_obs, pval, crit_corr, est_alpha, seed_state]=ea_permcorr(dataX,dataY,stat,n_perm,tail,alpha_level,reports,seed_state)
+function [corr_obs, pval, crit_corr, est_alpha, seed_state] = ea_permcorr(dataX,dataY,stat,n_perm,tail,alpha_level,reports,seed_state)
 
 if nargin<2
     error('You need to provide two sets of data.');

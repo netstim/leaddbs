@@ -1,7 +1,28 @@
 function [h,R,p,g]=ea_corrplot(X,Y,permutation,labels,group1,group2,colors,markers)
-% Wrapper for gramm to produce a simple correlation plot.
-% Group1 denotes colors, Group2 Markers.
-% Can also specify custom colors
+% Wrapper for gramm to create a correlation plot while showing stats based
+% on [permuted] rank and linear corrlation in the title.
+%
+%   permutation can be:
+%       numeric: 0 for no permutation, integer for number of permutation,
+%                or float for external provided p value (for example, p
+%                value can be calculated externally based on permuted R-Map
+%                or fiber tracts).
+%       char:    'no', 'noperm', or 'nopermutation' for no permutation.
+%                'yes', 'perm', or 'permutation' for permutation (default
+%                number of permutation is 1000 as defined in ea_permcorr).
+%
+%   labels: labels{1} for figure title
+%           labels{2} for xlabel
+%           labels{3} for ylabel
+%           labels{4} for figure name
+%           labels{5:end} for other info appended to the figure title
+%
+%   group1: group for colors
+%
+%   group2: group for markers.
+%
+%   Can also specify custom 'colors' and 'markers'
+%
 % (c) Andreas Horn 2019 Charite Berlin
 
 % Example usage:
@@ -133,13 +154,13 @@ if isnumeric(permutation)
         labels = [labels, pstr_permmodel];
     end
 elseif ischar(permutation)
-    switch permutation
+    switch permutation % no permutation
         case {'no', 'noperm', 'nopermutation'}
             [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
             [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
             pstr_linear = getPstr(p_linear, 'p');
             pstr_rank = getPstr(p_rank, 'p');
-        case {'yes', 'perm', 'permutation'}
+        case {'yes', 'perm', 'permutation'} % default number of permutation defined in ea_permcorr
             [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson');
             [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
             pstr_linear = getPstr(p_linear, 'p (perm)');
@@ -168,7 +189,7 @@ g.no_legend();
 ratio = 7/8;
 Width = 550;
 Height = Width*ratio;
-h=figure('Name',labels{4},'NumberTitle','off','Position',[100 100 Width Height]);
+h = figure('Name', labels{4}, 'NumberTitle', 'off', 'Position', [100 100 Width Height]);
 g.draw();
 
 gtitle = g.title_axe_handle.Children;
@@ -188,32 +209,31 @@ if gtitle.Extent(3) > Width
 end
 
 if ~isempty(group2) && ~isempty(group1)
-    g.update('marker',group2.idx,'color',group1.idx);
+    g.update('marker', group2.idx, 'color', group1.idx);
     g.set_color_options(colorOptions{:});
-    g.set_names('marker',group2.tag,'color',group1.tag,'x',labels{2},'y',labels{3});
+    g.set_names('marker', group2.tag, 'color', group1.tag, 'x', labels{2}, 'y', labels{3});
     g.geom_point();
     g.draw();
 elseif ~isempty(group2) && isempty(group1)
-    g.update('marker',group2.idx);
+    g.update('marker', group2.idx);
     g.set_color_options();
-    g.set_names('marker',group2.tag,'x',labels{2},'y',labels{3});
+    g.set_names('marker', group2.tag, 'x', labels{2}, 'y', labels{3});
     g.geom_point();
     g.draw();
 elseif isempty(group2) && ~isempty(group1)
-    g.update('color',group1.idx);
+    g.update('color', group1.idx);
     g.set_color_options(colorOptions{:});
-    g.set_names('color',group1.tag,'x',labels{2},'y',labels{3});
+    g.set_names('color', group1.tag, 'x', labels{2}, 'y', labels{3});
     g.geom_point();
     g.draw();
 end
 
-set(h,'Position',[100 100 Width Height]);
-set([g.results.geom_point_handle],'MarkerSize',7);
-set([g.results.geom_point_handle],'MarkerEdgeColor','w');
+set(h,'Position', [100 100 Width Height]);
+set([g.results.geom_point_handle], 'MarkerSize', 7);
+set([g.results.geom_point_handle], 'MarkerEdgeColor', 'w');
 
 
 function pstr = getPstr(p, prefix)
-
 if p >= 0.001 % Show p = 0.XXX when p >= 0.001
     pstr = [prefix, ' = ', sprintf('%.3f',p)];
 else
