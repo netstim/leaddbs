@@ -311,15 +311,17 @@ classdef ea_sweetspot < handle
                     if ~isempty(vals{1,side})
                         switch obj.statlevel % also differentiate between methods in the prediction part.
                             case 'VTAs'
+                                efield = obj.results.efield{side}(patientsel(test),:)';
+                                efield(~isnan(efield)) = efield(~isnan(efield)) > obj.efieldthreshold;
                                 switch lower(obj.basepredictionon)
                                     case 'mean of scores'
-                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)',1);
+                                        Ihat(test,side) = ea_nanmean(vals{1,side}.*efield,1);
                                     case 'sum of scores'
-                                        Ihat(test,side) = ea_nansum(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)',1);
+                                        Ihat(test,side) = ea_nansum(vals{1,side}.*efield,1);
                                     case 'peak of scores'
-                                        Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)', obj.posvisible, obj.negvisible, 'peak');
+                                        Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*efield, obj.posvisible, obj.negvisible, 'peak');
                                     case 'peak 5% of scores'
-                                        Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*obj.results.efield{side}(patientsel(test),:)', obj.posvisible, obj.negvisible, 'peak5');
+                                        Ihat(test,side) = ea_discfibers_getpeak(vals{1,side}.*efield, obj.posvisible, obj.negvisible, 'peak5');
                                 end
                             case 'E-Fields'
                                 switch lower(obj.basepredictionon)
