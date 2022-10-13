@@ -150,8 +150,8 @@ if isnumeric(permutation)
         [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
         pstr_linear = getPstr(p_linear, 'p (perm)');
         pstr_rank = getPstr(p_rank, 'p (perm)');
-        pstr_permmodel = getPstr(permutation, 'p (external)');
-        labels = [labels, pstr_permmodel];
+        p_external = permutation;
+        labels = [labels, getPstr(p_external, 'p (external)')];
     end
 elseif ischar(permutation)
     switch permutation % no permutation
@@ -166,6 +166,14 @@ elseif ischar(permutation)
             pstr_linear = getPstr(p_linear, 'p (perm)');
             pstr_rank = getPstr(p_rank, 'p (perm)');
     end
+end
+
+R.spearman = R_rank;
+R.pearson = R_linear;
+p.spearman = p_rank;
+p.pearson = p_linear;
+if exist('p_external', 'var')
+    p.external = p_external;
 end
 
 label_linear = ['Pearson: [R = ', sprintf('%.2f',R_linear), '; ', pstr_linear, ']'];

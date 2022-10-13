@@ -1,4 +1,4 @@
-function [h,pv,Rsquared,F,mdl,bb,dev,allstats]=ea_glmplot(X,Y,distribution,labels,group1,group2,colors,markers,switchxy)
+function [h,Rsquared,pv,g,F,mdl,bb,dev,allstats]=ea_glmplot(X,Y,distribution,labels,group1,group2,colors,markers,switchxy)
 
 if iscell(Y) % model provided
     priormodel=Y{1};
