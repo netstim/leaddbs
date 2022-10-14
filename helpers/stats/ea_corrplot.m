@@ -1,4 +1,4 @@
-function [h,R,p,g]=ea_corrplot(X,Y,permutation,labels,group1,group2,colors,markers,plottype,h)
+function [h,R,p,g] = ea_corrplot(X,Y,permutation,labels,group1,group2,colors,markers,plottype,h)
 % Wrapper for gramm to create a correlation plot while showing stats based
 % on [permuted] rank and linear corrlation in the title.
 %
@@ -17,13 +17,17 @@ function [h,R,p,g]=ea_corrplot(X,Y,permutation,labels,group1,group2,colors,marke
 %           labels{4} for figure name
 %           labels{5:end} for other info appended to the figure title
 %
-%   group1: group for colors
+%   group1: color group
 %
-%   group2: group for markers.
+%   group2: marker group
 %
-%   Can also specify custom 'colors' and 'markers'
+%   colors: custom colors
 %
-% (c) Andreas Horn 2019 Charite Berlin
+%   markers: custom markers
+%
+%   plottype: 'linear' (default) or 'rank' plot
+%
+%   (c) Andreas Horn 2019 Charite Berlin
 
 % Example usage:
 % ---------------
