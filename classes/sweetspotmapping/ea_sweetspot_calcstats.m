@@ -164,6 +164,7 @@ for group=groups
                         else
                             [~,ps,~,stats]=ttest(thisvals(:,~nanidx),H0);
                         end
+                        stats.tstat(isinf(stats.tstat))=nan;
 
                         if obj.showsignificantonly
                             stats.tstat=ea_corrsignan(stats.tstat',ps',obj);
