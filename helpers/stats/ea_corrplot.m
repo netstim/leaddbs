@@ -1,4 +1,4 @@
-function [h,R,p,g]=ea_corrplot(X,Y,permutation,labels,group1,group2,colors,markers)
+function [h,R,p,g]=ea_corrplot(X,Y,permutation,labels,group1,group2,colors,markers,plottype,h)
 % Wrapper for gramm to create a correlation plot while showing stats based
 % on [permuted] rank and linear corrlation in the title.
 %
@@ -67,28 +67,28 @@ if length(labels) < 3
 end
 
 if length(labels) < 4
-    labels{4} = 'Default corrplot';
+    labels{4} = 'corrplot';
 end
 
 if ~exist('group1','var')
-    group1=[];
+    group1 = [];
 else
     if ~isempty(group1) && ~isstruct(group1)
-        group1s.idx=group1;
-        group1s.tag='group';
+        group1s.idx = group1;
+        group1s.tag = 'group';
         clear group1
-        group1=group1s;
+        group1 = group1s;
     end
 end
 
 if ~exist('group2','var')
-    group2=[];
+    group2 = [];
 else
     if ~isempty(group2) && ~isstruct(group2)
-        group2s.idx=group2;
-        group2s.tag='type';
+        group2s.idx = group2;
+        group2s.tag = 'type';
         clear group2
-        group2=group2s;
+        group2 = group2s;
     end
 end
 
@@ -119,10 +119,47 @@ else
     markers = {'o' 's' 'd' '^' 'v' '>' '<' 'p' 'h' '*' '+' 'x'};
 end
 
-if contains(labels{4}, 'nested LOO', 'IgnoreCase', true)
-    g = gramm('x', X, 'y', Y, 'color', group1.idx);
+if ~exist('plottype', 'var')
+    plottype = 'linear';
 else
-    g = gramm('x', X, 'y', Y);
+    switch lower(plottype)
+        case {'linear', 'pearson'}
+            plottype = 'linear';
+        case {'rank', 'spearman'}
+            plottype = 'rank';
+    end
+end
+
+ratio = 7/8;
+Width = 550;
+Height = Width*ratio;
+if ~exist('h', 'var')
+    h = figure('Name', [labels{4}, ' (', plottype, ')'] , 'NumberTitle', 'off', 'Position', [100 100 Width Height]);
+    inputData = {X, Y, permutation, labels, group1, group2, map, markers};
+    setappdata(h, 'inputData', inputData);
+    setappdata(h, 'plottype', plottype);
+    toolbar = findall(h, 'Tag', 'FigureToolBar');
+    uipushtool(toolbar, 'Tag', 'TogglePlot', 'CData', ea_get_icn('corrplot'), 'ClickedCallback', {@(src, evt) toggleplot(h)});
+end
+
+toggle = findall(h, 'Tag', 'TogglePlot');
+plottype = getappdata(h, 'plottype');
+if strcmp(plottype, 'rank')
+    Xplot = ea_vec2rank(X);
+    Yplot = ea_vec2rank(Y);
+    h.Name = strrep(h.Name, '(linear)', '(rank)');
+    toggle.Tooltip = 'Switch to Linear Plot';
+else
+    Xplot = X;
+    Yplot = Y;
+    h.Name = strrep(h.Name, '(rank)', '(linear)');
+    toggle.Tooltip = 'Switch to Rank Plot';
+end
+
+if contains(labels{4}, 'nested LOO', 'IgnoreCase', true)
+    g = gramm('x', Xplot, 'y', Yplot, 'color', group1.idx);
+else
+    g = gramm('x', Xplot, 'y', Yplot);
     if isempty(group1) && isempty(group2)
         g.geom_point();
         g.set_color_options(colorOptions{:});
@@ -132,40 +169,65 @@ else
 end
 
 g.set_point_options('markers', markers, 'base_size', 7);
+
 g.stat_glm();
 
-if isnumeric(permutation)
-    if ~permutation % no permutation
-        [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
-        [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
-        pstr_linear = getPstr(p_linear, 'p');
-        pstr_rank = getPstr(p_rank, 'p');
-    elseif mod(permutation, 1) == 0 % integer, number of permutation
-        [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson', permutation);
-        [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman', permutation);
-        pstr_linear = getPstr(p_linear, 'p (perm)');
-        pstr_rank = getPstr(p_rank, 'p (perm)');
-    else % external p-value provided (e.g., based on permuted R-Map or fiber tracts)
-        [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson');
-        [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
-        pstr_linear = getPstr(p_linear, 'p (perm)');
-        pstr_rank = getPstr(p_rank, 'p (perm)');
-        p_external = permutation;
-        labels = [labels, getPstr(p_external, 'p (external)')];
-    end
-elseif ischar(permutation)
-    switch permutation % no permutation
-        case {'no', 'noperm', 'nopermutation'}
+g.set_names('x', labels{2}, 'y', labels{3});
+
+baseFontSize = 12;
+g.set_text_options('base_size', baseFontSize);
+
+R_linear = getappdata(h, 'R_linear');
+p_linear = getappdata(h, 'p_linear');
+pstr_linear = getappdata(h, 'pstr_linear');
+R_rank = getappdata(h, 'R_rank');
+p_rank = getappdata(h, 'p_rank');
+pstr_rank = getappdata(h, 'pstr_rank');
+
+if isempty(R_linear)
+    if isnumeric(permutation)
+        if ~permutation % no permutation
             [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
             [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
             pstr_linear = getPstr(p_linear, 'p');
             pstr_rank = getPstr(p_rank, 'p');
-        case {'yes', 'perm', 'permutation'} % default number of permutation defined in ea_permcorr
+        elseif mod(permutation, 1) == 0 % integer, number of permutation
+            [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson', permutation);
+            [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman', permutation);
+            pstr_linear = getPstr(p_linear, 'p (perm)');
+            pstr_rank = getPstr(p_rank, 'p (perm)');
+        else % external p-value provided (e.g., based on permuted R-Map or fiber tracts)
             [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson');
             [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
             pstr_linear = getPstr(p_linear, 'p (perm)');
             pstr_rank = getPstr(p_rank, 'p (perm)');
+        end
+    elseif ischar(permutation)
+        switch permutation % no permutation
+            case {'no', 'noperm', 'nopermutation'}
+                [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
+                [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
+                pstr_linear = getPstr(p_linear, 'p');
+                pstr_rank = getPstr(p_rank, 'p');
+            case {'yes', 'perm', 'permutation'} % default number of permutation defined in ea_permcorr
+                [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson');
+                [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
+                pstr_linear = getPstr(p_linear, 'p (perm)');
+                pstr_rank = getPstr(p_rank, 'p (perm)');
+        end
     end
+    setappdata(h, 'R_linear', R_linear);
+    setappdata(h, 'p_linear', p_linear);
+    setappdata(h, 'pstr_linear', pstr_linear);
+    setappdata(h, 'R_rank', R_rank);
+    setappdata(h, 'p_rank', p_rank);
+    setappdata(h, 'pstr_rank', pstr_rank);
+end
+
+% external p-value provided (e.g., based on permuted R-Map or fiber tracts)
+if isnumeric(permutation) && mod(permutation, 1) ~= 0
+    p_external = permutation;
+    labels = [labels, getPstr(p_external, 'p (external)')];
 end
 
 R.spearman = R_rank;
@@ -189,17 +251,8 @@ elseif length(labels) > 4
     g.set_title({labels{1}, label_rank, label_linear, strjoin(labels(5:end), '; ')}, 'FontSize', titleFontSize);
 end
 
-g.set_names('x', labels{2}, 'y', labels{3});
-
-baseFontSize = 12;
-g.set_text_options('base_size', baseFontSize);
-
 g.no_legend();
 
-ratio = 7/8;
-Width = 550;
-Height = Width*ratio;
-h = figure('Name', labels{4}, 'NumberTitle', 'off', 'Position', [100 100 Width Height]);
 g.draw();
 
 gtitle = g.title_axe_handle.Children;
@@ -239,7 +292,7 @@ elseif isempty(group2) && ~isempty(group1)
 end
 
 set(h,'Position', [100 100 Width Height]);
-set([g.results.geom_point_handle], 'MarkerSize', 7);
+set([g.results.geom_point_handle], 'MarkerSize', 20);
 set([g.results.geom_point_handle], 'MarkerEdgeColor', 'w');
 
 
@@ -258,3 +311,16 @@ else
         pstr = [prefix, ' < 1e-', num2str(find(diff(signCheck),1))]; % Show p < 1e-X
     end
 end
+
+
+function toggleplot(h)
+clf(h);
+inputData = getappdata(h, 'inputData');
+plottype = getappdata(h, 'plottype');
+if strcmp(plottype, 'linear')
+    setappdata(h, 'plottype', 'rank');
+elseif strcmp(plottype, 'rank')
+    setappdata(h, 'plottype', 'linear');
+end
+
+ea_corrplot(inputData{:}, plottype, h);
