@@ -13,9 +13,9 @@ I = varargin{1}(~isnan(varargin{1}));
 Ihat = varargin{2}(~isnan(varargin{2}));
 if ea_isbinary(I) || ea_isbinary(Ihat)
     if ea_isbinary(I)
-        [h,R,p,g] = ea_raincloud(varargin{1}, varargin{2}, varargin{4});
+        [h,R,p,g] = ea_raincloud(I, Ihat, varargin{4});
     elseif ea_isbinary(Ihat)
-        [h,R,p,g] = ea_raincloud(varargin{2}, varargin{1}, varargin{4});
+        [h,R,p,g] = ea_raincloud(Ihat, I, varargin{4});
     end
 else
     [h,R,p,g] = ea_corrplot(varargin{:});
