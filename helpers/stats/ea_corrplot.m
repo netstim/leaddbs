@@ -292,7 +292,7 @@ elseif isempty(group2) && ~isempty(group1)
 end
 
 set(h,'Position', [100 100 Width Height]);
-set([g.results.geom_point_handle], 'MarkerSize', 20);
+set([g.results.geom_point_handle], 'MarkerSize', 7);
 set([g.results.geom_point_handle], 'MarkerEdgeColor', 'w');
 
 
