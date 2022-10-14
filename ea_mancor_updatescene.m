@@ -198,7 +198,7 @@ if isempty(elplot) % first time plot electrode contacts
     mplot(1,1)=plot3(markers(options.elside).head(1),markers(options.elside).head(2),markers(options.elside).head(3),'*','MarkerEdgeColor',[0.9 0.2 0.2],'MarkerFaceColor','none','MarkerSize',25);
     mplot(2,1)=plot3(markers(options.elside).tail(1),markers(options.elside).tail(2),markers(options.elside).tail(3),'*','MarkerEdgeColor',[0.2 0.9 0.2],'MarkerFaceColor','none','MarkerSize',25);
     for el=1:size(coords_mm{options.elside},1)
-        elplot(cnt)=plot3(coords_mm{options.elside}(el,1),coords_mm{options.elside}(el,2),coords_mm{options.elside}(el,3),'O','MarkerEdgeColor',[0.9 0.9 0.9],'MarkerFaceColor','none','MarkerSize',25);
+        elplot(cnt)=plot3(coords_mm{options.elside}(el,1),coords_mm{options.elside}(el,2),coords_mm{options.elside}(el,3),'O','MarkerEdgeColor',[0.8 0 1],'MarkerFaceColor','none','MarkerSize',25);
         cnt=cnt+1;
     end
 
