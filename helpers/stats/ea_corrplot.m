@@ -262,17 +262,15 @@ g.draw();
 gtitle = g.title_axe_handle.Children;
 gtitle.Units = 'pixels';
 
+% Adapt figure size when title is oversized
 if gtitle.Extent(3) > Width
-    % Shift the title a bit
-    if isempty(group2) && isempty(group1)
-        gtitle.Position(1) = 286;
-    else
-        gtitle.Position(1) = 246;
-    end
-
     % Calculate new figure size
-    Width = gtitle.Extent(3)+100;
+    Width = gtitle.Extent(3) + 100;
     Height = Width*ratio;
+    % Make sure to set height first and then width, so the figure is
+    % enlarged proportionally with the title position shifted accordingly.
+    h.Position(4) = Height;
+    h.Position(3) = Width;
 end
 
 if ~isempty(group2) && ~isempty(group1)
@@ -295,9 +293,8 @@ elseif isempty(group2) && ~isempty(group1)
     g.draw();
 end
 
-set(h,'Position', [100 100 Width Height]);
-set([g.results.geom_point_handle], 'MarkerSize', 7);
-set([g.results.geom_point_handle], 'MarkerEdgeColor', 'w');
+set(g.results.geom_point_handle, 'MarkerSize', 7);
+set(g.results.geom_point_handle, 'MarkerEdgeColor', 'w');
 
 
 function pstr = getPstr(p, prefix)
