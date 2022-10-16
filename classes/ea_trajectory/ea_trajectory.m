@@ -183,6 +183,7 @@ classdef ea_trajectory < handle
                 addlistener(obj, 'showPlanning', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'hasPlanning', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'elmodel', 'PostSet', @ea_trajectory.changeevent);
+                addlistener(obj, 'elstruct', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'showMacro', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'showMicro', 'PostSet', @ea_trajectory.changeevent);
                 addlistener(obj, 'relateMicro', 'PostSet', @ea_trajectory.changeevent);
@@ -318,7 +319,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         return
     end
 
-    if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model','electrodeRelativeToPlan','color'}) % need to redraw planning fiducials:
+    if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model','electrodeRelativeToPlan','color','elstruct'}) % need to redraw planning fiducials:
         % planning fiducial
         if obj.showPlanning
             coords=ea_convertfiducials(obj,[obj.target.target;obj.target.entry]);
@@ -394,7 +395,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         end
     end
 
-    if ismember(evtnm,{'all','elmodel','colorMacroContacts'})
+    if ismember(evtnm,{'all','elmodel','colorMacroContacts','elstruct'})
         if obj.showMacro
             try
                 delete(obj.elpatch);
@@ -406,7 +407,9 @@ function obj=update_trajectory(obj,evtnm) % update ROI
             poptions.sides=obj.side;
             poptions.colorMacroContacts=obj.colorMacroContacts;
             el_render=getappdata(obj.plotFigureH,'el_render');
-
+            if strcmp(evtnm,'elstruct')
+                poptions.nowrite=1; % prevent from writing reconstruction to disk.
+            end
             [obj.elpatch,obj.ellabel,obj.eltype]=ea_showelectrode(obj,'dbs',poptions);
             if isempty(el_render)
                 clear el_render

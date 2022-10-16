@@ -68,6 +68,11 @@ for side=options.sides
         err=1;
         for tries=1:2
             [X,electrode,err]=ea_mapelmodel2reco(options,elspec,elstruct,side,resultfig);
+            if isfield(options,'nowrite')
+                if options.nowrite % means elstruct was manually manipulated after it had been plotted, we dont want to save that to disk.
+                    err = 0;
+                end
+            end
             if ~err
                 break
             elseif ~options.d3.mirrorsides
