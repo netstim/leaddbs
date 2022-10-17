@@ -7,9 +7,9 @@ analysisFile = GetFullPath(analysisFile);
 dataset = regexp(analysisFile, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', 'match', 'once');
 analysis = regexp(analysisFile, '(?<=dataset-.+_analysis-)(.+)(?=\.mat$)', 'match', 'once');
 if isfolder(fullfile(fileparts(analysisFile), dataset))
-    dataset = inputdlg(sprintf('Folder ''%s'' already exists.\nPlease input a new dataset name:', dataset), 'New Dataset Name', [1 35], {[dataset, '1']});
+    dataset = inputdlg(sprintf('Folder ''%s'' already exists.\nPlease specify a new dataset name:', dataset), 'New Dataset Name', [1 35], {[dataset, '1']});
     if isempty(dataset)
-        error('Please input a new dataset name!');
+        error('Please specify a new dataset name!');
     else
         dataset = dataset{1};
         movefile(analysisFile, regexprep(analysisFile, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', dataset));
