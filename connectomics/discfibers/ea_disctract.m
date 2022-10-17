@@ -670,7 +670,6 @@ classdef ea_disctract < handle
                     end
 
                     %subvars=ea_nanzscore(cell2mat(app.tractset.subscore.vars'));
-                    %try
                     [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'Rows','complete');
 
 
@@ -679,10 +678,12 @@ classdef ea_disctract < handle
                    
                     % show predictions for PC scores 
                     for pcc=1:obj.numpcs
-                        ea_corrplot(obj.subscore.pcavars{pcc}(obj.patientselection),Ihat(:,pcc), 'noperm', ...
+                        if obj.subscore.posvisible(pcc)==1 || obj.subscore.negvisible(pcc)==1 % don't try to plot if not showing any fibers for this PC
+                            ea_corrplot(obj.subscore.pcavars{pcc}(obj.patientselection),Ihat(:,pcc), 'noperm', ...
                             {['Disc. Fiber prediction for PC ',num2str(pcc)],'PC score (Empirical)','PC score (Predicted)'},...
                             [], [], obj.subscore.pcacolors(pcc, :));
                         % sum(obj.subscore.pcavars{pcc}(obj.patientselection) - score(:,pcc)) % quick check
+                        end 
                     end
 
                     % data is zscored, such as mu is 0 (+ some computer rounding error)
