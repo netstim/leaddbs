@@ -413,6 +413,61 @@ groupdir = uigetdir;
 if ~groupdir % user pressed cancel
     return
 else
+    if ~contains(groupdir, ['derivatives', filesep, 'leadgroup', filesep]) && ~isfolder(fullfile(groupdir, 'derivatives'))
+        analysisFile = ea_regexpdir(groupdir, '^dataset-[^\W_]+_analysis-[^\W_]+\.mat$', 0);
+        if ~isempty(analysisFile)
+            % Orphan group analysis file, will create proper dataset folder
+            dataset = regexp(analysisFile{1}, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', 'match', 'once');
+            analysis = regexp(analysisFile{1}, '(?<=dataset-.+_analysis-)(.+)(?=\.mat$)', 'match', 'once');
+            if isfolder(fullfile(fileparts(analysisFile{1}), dataset))
+                dataset = inputdlg(sprintf('Folder ''%s'' already exists.\nPlease input a new dataset name:', dataset), 'New Dataset Name', [1 35], {[dataset, '1']});
+                if isempty(dataset)
+                    error('Please input a new dataset name!');
+                else
+                    dataset = dataset{1};
+                    movefile(analysisFile{1}, regexprep(analysisFile{1}, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', dataset));
+                    analysisFile{1} = regexprep(analysisFile{1}, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', dataset);
+                end
+            end
+
+            ea_cprintf('CmdWinWarnings', 'Creating new dataset folder: %s\n', fullfile(fileparts(analysisFile{1}), dataset));
+            groupdir = fullfile(fileparts(analysisFile{1}), dataset, 'derivatives', 'leadgroup', analysis, filesep);
+
+            leaddbsFolder = fullfile(fileparts(analysisFile{1}), dataset, 'derivatives', 'leaddbs');
+            ea_mkdir(groupdir);
+            ea_mkdir(leaddbsFolder);
+            fclose(fopen(fullfile(leaddbsFolder, 'Miniset_flag.json'), 'w'));
+
+            load(analysisFile{1}, 'M');
+            M.ui.groupdir = groupdir;
+            M.root = M.ui.groupdir;
+            for p=1:length(M.patient.list)
+                [oldPatientFolder, patientTag] = fileparts(M.patient.list{p});
+                M.patient.list{p} = strrep(M.patient.list{p}, oldPatientFolder, leaddbsFolder);
+                if isfield(M, 'stats')
+                    ea_mkdir(fullfile(leaddbsFolder, patientTag));
+                    ea_stats = M.stats(p).ea_stats;
+                    save(fullfile(leaddbsFolder, patientTag, [patientTag, '_desc-stats.mat']), 'ea_stats');
+                end
+
+                if isfield(M, 'elstruct')
+                    ea_mkdir(fullfile(leaddbsFolder, patientTag, 'reconstruction'));
+                    for e=1:length(M.elstruct(p).coords_mm)
+                        reco.props(e).elmodel = M.elstruct(p).elmodel;
+                        reco.props(e).manually_corrected = 1;
+                        reco.mni.coords_mm(e) = M.elstruct(p).coords_mm(e);
+                        reco.mni.markers(e) = M.elstruct(p).markers(e);
+                        reco.mni.trajectory(e) = M.elstruct(p).trajectory(e);
+                        reco.electrode(e).dbs.elmodel = M.elstruct(p).elmodel;
+                    end
+                    save(fullfile(leaddbsFolder, patientTag, 'reconstruction', [patientTag, '_desc-reconstruction.mat']), 'reco');
+                end
+            end
+            movefile(analysisFile{1}, groupdir);
+            analysisFile{1} = ea_getGroupAnalysisFile(groupdir);
+            save(analysisFile{1}, 'M');
+        end
+    end
     analysisFile = ea_getGroupAnalysisFile(groupdir);
     if isempty(analysisFile) % Create new analysis file in case not found
         analysisFile = ea_genGroupAnalysisFile(groupdir);
