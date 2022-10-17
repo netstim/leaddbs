@@ -30,6 +30,7 @@ M_mini.root = fullfile(min_dataset_dir, 'derivatives', 'leadgroup', M.guid, file
 
 for i = 1 : size(M.patient.list, 1)
     [~, patient_tag] = fileparts(M.patient.list{i});
+    fprintf('Subject %d/%d: %s ...\n', i, size(M.patient.list, 1), patient_tag);
 
     newPatientFolder = fullfile(min_dataset_dir, 'derivatives', 'leaddbs', patient_tag);
     mkdir(newPatientFolder);
@@ -52,10 +53,11 @@ for i = 1 : size(M.patient.list, 1)
     end
 
     % check if VATs were already computed 
-    myVATs = dir(fullfile(M.patient.list{i}, 'stimulations', ea_getspace, M.S(i).label, [patient_tag,'_sim-efield_model*'])); %gets all mat files in struct
+    myVATs = dir(fullfile(M.patient.list{i}, 'stimulations', ea_getspace, M.S(i).label, [patient_tag,'_sim-*'])); %gets all mat files in struct
     % do not copy flipped VATs, they might be outdated!
-    myVATs = myVATs(~endsWith({myVATs.name}, 'lippedFromLeft.nii'));
-    myVATs = myVATs(~endsWith({myVATs.name}, 'lippedFromRight.nii'));
+    myVATs = myVATs(~contains({myVATs.name}, 'flippedFrom', 'IgnoreCase', true));
+    % Ignore mapper results
+    myVATs = myVATs(~contains({myVATs.name}, '_seed-'));
 
     if isempty(myVATs)
         ea_cprintf('CmdWinWarnings','No VATs were found for patient %s! Calculate them in Lead-Group', patient_tag);
@@ -63,20 +65,7 @@ for i = 1 : size(M.patient.list, 1)
         for k = 1:length(myVATs)
             VAT_to_copy = fullfile(myVATs(k).folder, myVATs(k).name);
             copyfile(VAT_to_copy, newStimFolder);
-        end
-        
-        % flip VTAs
-        if length(myVATs) == 2 % flipped will be overwritten
-            % this order because L comes before R
-            ea_genflippedjointnii([newStimFolder, filesep, myVATs(2).name], [newStimFolder, filesep, myVATs(1).name]);     
-        elseif length(myVATs) == 1 && contains(myVATs(k).name, 'hemi-R')
-            ea_genflippedjointnii([newStimFolder, filesep, myVATs(2).name], 'no_VAT'); 
-        elseif length(myVATs) == 1 && contains(myVATs(k).name, 'hemi-L')
-            ea_genflippedjointnii('no_VAT', [newStimFolder, filesep, myVATs(1).name]);
-        else
-            waitfor(msgbox('Wrong files were copied?'));
         end       
-        
     end 
 
     % check if clinical scores are available
