@@ -319,7 +319,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         return
     end
 
-    if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model','electrodeRelativeToPlan','color','elstruct'}) % need to redraw planning fiducials:
+    if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model','electrodeRelativeToPlan','color'}) % need to redraw planning fiducials:
         % planning fiducial
         if obj.showPlanning
             coords=ea_convertfiducials(obj,[obj.target.target;obj.target.entry]);

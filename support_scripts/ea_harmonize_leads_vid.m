@@ -68,11 +68,13 @@ for el=1:length(h)
 end
 
 % apply vectors to electrodes:
-Nsteps=500;
-steps=exp([Nsteps:-1:1]);
+Nsteps=100;
+steps=exp(-0.05*[1:Nsteps]);
 steps=steps/sum(steps); % together 1 step
 open(daObj);
-
+for initframes=1:100
+        writeVideo(daObj,getframe(resultfig)); %use figure, since axis changes size based on view
+end
 ea_dispercent(0,'Writing video');
 for iter=1:Nsteps
     writeVideo(daObj,getframe(resultfig)); %use figure, since axis changes size based on view
@@ -104,6 +106,8 @@ for iter=1:Nsteps
     drawnow
     ea_dispercent(iter/Nsteps);
 end
+    writeVideo(daObj,getframe(resultfig)); %use figure, since axis changes size based on view
+
 ea_dispercent(1,'end');
 
 close(daObj);
