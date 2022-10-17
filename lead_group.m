@@ -229,26 +229,76 @@ if strcmp(target, 'groupDir')
     end
 
     % Multiple folder dragged or not a proper BIDS folder
-    if length(folders) > 1 || ...
-            ~contains(folders{1}, ['derivatives', filesep, 'leadgroup', filesep]) && ~isfolder(fullfile(folders{1}, 'derivatives'))
+    if length(folders) > 1
         ea_error('Please drag either a dataset root folder or a group analysis folder into Lead Group!', 'Error', dbstack);
     end
 
     if isfile(folders{1}) % Group analysis mat file dragged
-        if ~isempty(regexp(folders{1}, ['\', filesep, 'dataset-.+_analysis-.+\.mat$'], 'match', 'once'))
+        if ~isempty(regexp(folders{1}, ['derivatives\', filesep, 'leadgroup\', filesep, '.+\', filesep, 'dataset-.+_analysis-.+\.mat$'], 'match', 'once'))
+            % Group analysis file within dataset folder
             groupdir = [fileparts(folders{1}), filesep];
             load(folders{1}, 'M');
 
             derivative_folder = split(groupdir,'leadgroup');
             if isfile([derivative_folder{1}, 'leaddbs', filesep, 'Miniset_flag.json'])            
-                for i = 1:size(M.patient.list,1)
-                    [~, patient_tag] = fileparts(M.patient.list{i});
-                    M.patient.list{i} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];
+                for p = 1:size(M.patient.list,1)
+                    [~, patient_tag] = fileparts(M.patient.list{p});
+                    M.patient.list{p} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];
                 end
                 M.root = groupdir;
                 save(folders{1}, 'M')
             end
+        elseif ~isempty(regexp(folders{1}, ['\', filesep, 'dataset-.+_analysis-.+\.mat$'], 'match', 'once'))
+            % Orphan group analysis file, will create proper dataset folder
+            dataset = regexp(folders{1}, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', 'match', 'once');
+            analysis = regexp(folders{1}, '(?<=dataset-.+_analysis-)(.+)(?=\.mat$)', 'match', 'once');
+            if isfolder(fullfile(fileparts(folders{1}), dataset))
+                dataset = inputdlg(sprintf('Folder ''%s'' already exists.\nPlease input a new dataset name:', dataset), 'New Dataset Name', [1 35], {[dataset, '1']});
+                if isempty(dataset)
+                    error('Please input a new dataset name!');
+                else
+                    dataset = dataset{1};
+                    movefile(folders{1}, regexprep(folders{1}, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', dataset));
+                    folders{1} = regexprep(folders{1}, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', dataset);
+                end
+            end
 
+            ea_cprintf('CmdWinWarnings', 'Creating new dataset folder: %s\n', fullfile(fileparts(folders{1}), dataset));
+            groupdir = fullfile(fileparts(folders{1}), dataset, 'derivatives', 'leadgroup', analysis, filesep);
+
+            leaddbsFolder = fullfile(fileparts(folders{1}), dataset, 'derivatives', 'leaddbs');
+            ea_mkdir(groupdir);
+            ea_mkdir(leaddbsFolder);
+            fclose(fopen(fullfile(leaddbsFolder, 'Miniset_flag.json'), 'w'));
+
+            load(folders{1}, 'M');
+            M.ui.groupdir = groupdir;
+            M.root = M.ui.groupdir;
+            for p=1:length(M.patient.list)
+                [oldPatientFolder, patientTag] = fileparts(M.patient.list{p});
+                M.patient.list{p} = strrep(M.patient.list{p}, oldPatientFolder, leaddbsFolder);
+                if isfield(M, 'stats')
+                    ea_mkdir(fullfile(leaddbsFolder, patientTag));
+                    ea_stats = M.stats(p).ea_stats;
+                    save(fullfile(leaddbsFolder, patientTag, [patientTag, '_desc-stats.mat']), 'ea_stats');
+                end
+
+                if isfield(M, 'elstruct')
+                    ea_mkdir(fullfile(leaddbsFolder, patientTag, 'reconstruction'));
+                    for e=1:length(M.elstruct(p).coords_mm)
+                        reco.props(e).elmodel = M.elstruct(p).elmodel;
+                        reco.props(e).manually_corrected = 1;
+                        reco.mni.coords_mm(e) = M.elstruct(p).coords_mm(e);
+                        reco.mni.markers(e) = M.elstruct(p).markers(e);
+                        reco.mni.trajectory(e) = M.elstruct(p).trajectory(e);
+                        reco.electrode(e).dbs.elmodel = M.elstruct(p).elmodel;
+                    end
+                    save(fullfile(leaddbsFolder, patientTag, 'reconstruction', [patientTag, '_desc-reconstruction.mat']), 'reco');
+                end
+            end
+            movefile(folders{1}, groupdir);
+            folders{1} = ea_getGroupAnalysisFile(groupdir);
+            save(folders{1}, 'M');
         else
             ea_error('Not a Lead Group Analysis file!', 'Error', dbstack);
         end
@@ -262,9 +312,9 @@ if strcmp(target, 'groupDir')
 
         derivative_folder = split(groupdir, 'leadgroup');
         if isfile([derivative_folder{1}, 'leaddbs', filesep, 'Miniset_flag.json'])
-            for i = 1:size(M.patient.list,1)
-                [~, patient_tag] = fileparts(M.patient.list{i});
-                M.patient.list{i} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];
+            for p = 1:size(M.patient.list,1)
+                [~, patient_tag] = fileparts(M.patient.list{p});
+                M.patient.list{p} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];
             end
             M.root = groupdir;
             save(analysisFile, 'M')
