@@ -41,6 +41,9 @@ classdef BIDSFetcher
         function subjFolderNames = readSubjects(obj)
             % Find subject folders: sub-*
             subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'rawdata'], '^sub-.*', 0, 'dir');
+            if isempty(subjDirs)
+                subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'derivatives', filesep, 'leaddbs'], '^sub-.*', 0, 'dir');
+            end
             [~, subjFolderNames] = fileparts(subjDirs);
         end
 
