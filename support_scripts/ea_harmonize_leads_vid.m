@@ -112,3 +112,31 @@ ea_dispercent(1,'end');
 
 close(daObj);
 
+
+% reset to original place:
+lcnt=1; rcnt=1;
+for el=1:length(h)
+    switch h(el).side
+        case 1
+            h(el).elstruct.markers(h(el).side).head=h(el).elstruct.markers(h(el).side).head-...
+                vec.head.r(rcnt,:);
+            h(el).elstruct.markers(h(el).side).tail=h(el).elstruct.markers(h(el).side).tail-...
+                vec.tail.r(rcnt,:);
+            h(el).elstruct.markers(h(el).side).x=h(el).elstruct.markers(h(el).side).x-...
+                vec.x.r(rcnt,:);
+            h(el).elstruct.markers(h(el).side).y=h(el).elstruct.markers(h(el).side).y-...
+                vec.y.r(rcnt,:);
+            rcnt=rcnt+1;
+        case 2
+            h(el).elstruct.markers(h(el).side).head=h(el).elstruct.markers(h(el).side).head-...
+                vec.head.l(lcnt,:);
+            h(el).elstruct.markers(h(el).side).tail=h(el).elstruct.markers(h(el).side).tail-...
+                vec.tail.l(lcnt,:);
+            h(el).elstruct.markers(h(el).side).x=h(el).elstruct.markers(h(el).side).x-...
+                vec.x.l(lcnt,:);
+            h(el).elstruct.markers(h(el).side).y=h(el).elstruct.markers(h(el).side).y-...
+                vec.y.l(lcnt,:);
+            lcnt=lcnt+1;
+    end
+end
+

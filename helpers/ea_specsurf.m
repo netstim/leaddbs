@@ -42,19 +42,19 @@ end
 if nargin>3
     switch varargin{4} % material
         case 'metal'
-            set(surfc,'AmbientStrength',0.2); %0.1;
-            set(surfc,'DiffuseStrength',0.3); %0.2;
-            set(surfc,'SpecularColorReflectance',0.1);
-            set(surfc,'SpecularExponent',20);
+            set(surfc,'AmbientStrength',0.17); %0.1;
+            set(surfc,'DiffuseStrength',0.4); %0.2;
+            set(surfc,'SpecularColorReflectance',0);
+            set(surfc,'SpecularExponent',6);
             set(surfc,'SpecularStrength',1.0);
             % met=load([ea_getearoot,'icons',filesep,'metal.mat']);
             % ea_patchtexture(surfc,met.X);
         case 'insulation'
-            set(surfc,'AmbientStrength',0.4);
-            set(surfc,'DiffuseStrength',0.35);
+            set(surfc,'AmbientStrength',0.17);
+            set(surfc,'DiffuseStrength',0.4);
             set(surfc,'SpecularColorReflectance',1.0);
-            set(surfc,'SpecularExponent',3);
-            set(surfc,'SpecularStrength',0.21);
+            set(surfc,'SpecularExponent',6);
+            set(surfc,'SpecularStrength',0.2);
     end
 else % default
     set(surfc,'AmbientStrength',0.3);
