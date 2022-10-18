@@ -8,6 +8,6 @@ end
 
 if ~acq % Skip plane label
     modality = regexp(BIDSFilePath, '(?<=_)([^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
-    modality = regexp(BIDSFilePath, '(?<=_acq-)((ax|sag|cor|iso)_[^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
 else % Keep plane label
+    modality = regexp(BIDSFilePath, '(?<=_acq-)((ax|sag|cor|iso)\d*_[^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
 end
