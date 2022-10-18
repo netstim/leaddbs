@@ -1,9 +1,13 @@
-function modality = ea_getmodality(BIDSFilePath)
-% Extract image modality from BIDS file path and keep [ax|cor|sag] label
-% for post-op MRI
+function modality = ea_getmodality(BIDSFilePath, acq)
+% Extract image modality from BIDS file path
 
-if isempty(regexp(BIDSFilePath, '_acq-(ax|cor|sag|iso)_', 'once'))
+% Keep acq label by default
+if ~exist('acq', 'var')
+    acq = 1;
+end
+
+if ~acq % Skip plane label
     modality = regexp(BIDSFilePath, '(?<=_)([^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
-else % Keep plane label for post-op MRI
     modality = regexp(BIDSFilePath, '(?<=_acq-)((ax|sag|cor|iso)_[^\W_]+)(?=\.nii(\.gz)?$)', 'match', 'once');
+else % Keep plane label
 end
