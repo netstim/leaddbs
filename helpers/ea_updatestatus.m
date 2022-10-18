@@ -26,11 +26,13 @@ elseif strcmp(subj.postopModality, 'None')
     statusone = 'No post-op images found.';
 end
 
-fields = fieldnames(subj.preopAnat);
-if isfile(subj.preopAnat.(fields{1}).norm) ...
-        && ~isempty(dir([subj.norm.transform.forwardBaseName, '*'])) ...
-        && ~isempty(dir([subj.norm.transform.inverseBaseName, '*']))
-    statusone = 'Normalization has been done.';
+if isfield(subj, 'preopAnat')
+    fields = fieldnames(subj.preopAnat);
+    if isfile(subj.preopAnat.(fields{1}).norm) ...
+            && ~isempty(dir([subj.norm.transform.forwardBaseName, '*'])) ...
+            && ~isempty(dir([subj.norm.transform.inverseBaseName, '*']))
+        statusone = 'Normalization has been done.';
+    end
 end
 
 set(handles.statusone, 'String', statusone);

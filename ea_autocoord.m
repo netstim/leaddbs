@@ -39,12 +39,10 @@ end
 % only 3D-rendering viewer can be opened if no patient is selected.
 if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patientname)
     % Copy post-op images to preprocessing folder, no preproc is done for now
-    if isfile([options.root, 'Miniset_flag.json'])
+    if isfile([options.root, 'Miniset_flag.json']) || ~isfield(options.subj, 'postopAnat')
         fields = {};
-    elseif isfield(options.subj, 'postopAnat')
-        fields = fieldnames(options.subj.postopAnat);
     else
-        fields = {};
+        fields = fieldnames(options.subj.postopAnat);
     end
 
     for i=1:length(fields)
@@ -63,10 +61,16 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
 
     % Preprocessing pre-op images
     preprocessing = 0;
-    fields = fieldnames(options.subj.preopAnat);
+    if isfield(options.subj, 'preopAnat')
+        fields = fieldnames(options.subj.preopAnat);
+    else
+        fields = {};
+    end
+
     if isfile([options.root, 'Miniset_flag.json'])
         fields = {};
     end
+
     for i=1:length(fields)
         if ~isfile(options.subj.preopAnat.(fields{i}).preproc)
             % Copy files
@@ -110,7 +114,7 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
     end
 
     % Pre-coregister pre-op anchor image
-    if ~isfile([options.root, 'Miniset_flag.json'])
+    if ~isfile([options.root, 'Miniset_flag.json']) && isfield(options.subj, 'preopAnat')
         if ~isfile(options.subj.preopAnat.(fields{1}).coreg)
             ea_precoreg(options.subj.preopAnat.(fields{1}).preproc, ... % Input anchor image
                 options.primarytemplate, ... % Template to use
