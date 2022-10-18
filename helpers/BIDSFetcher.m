@@ -167,7 +167,11 @@ classdef BIDSFetcher
             end
 
             % Set pre-op anchor modality
-            subj.AnchorModality = preopFields{1};
+            if ~isempty(preopFields)
+                subj.AnchorModality = preopFields{1};
+            else
+                subj.AnchorModality = obj.settings.prenii_order{1};
+            end
 
             % Set post-op anat field
             if preferMRCT ~= 3
@@ -191,69 +195,73 @@ classdef BIDSFetcher
             subj.bothMRCTPresent = bothMRCTPresent;
 
             % Set pipeline fields
-            subj.preproc.anat = obj.getPreprocAnat(subjId, preferMRCT);
-            subj.coreg.anat = obj.getCoregAnat(subjId, preferMRCT);
-            subj.coreg.transform = obj.getCoregTransform(subjId, preferMRCT);
-            subj.coreg.log = obj.getCoregLog(subjId);
-            subj.coreg.checkreg = obj.getCoregCheckreg(subjId, preferMRCT);
-
-            if preferMRCT ~= 3
-                subj.brainshift.anat = obj.getBrainshiftAnat(subjId, preferMRCT);
-                subj.brainshift.transform = obj.getBrainshiftTransform(subjId);
-                subj.brainshift.log = obj.getBrainshiftLog(subjId);
-                subj.brainshift.checkreg = obj.getBrainshiftCheckreg(subjId, preferMRCT);
-            end
-
-            subj.norm.anat = obj.getNormAnat(subjId, preferMRCT);
-            subj.norm.transform = obj.getNormTransform(subjId);
-            subj.norm.log = obj.getNormLog(subjId);
-            subj.norm.checkreg = obj.getNormCheckreg(subjId, preferMRCT);
-
-            % Set pre-op preprocessed images
-            for i=1:length(preopFields)
-                subj.preopAnat.(preopFields{i}).preproc = subj.preproc.anat.preop.(preopFields{i});
-            end
-
-            % Set pre-op coregistered images
-            for i=1:length(preopFields)
-                subj.preopAnat.(preopFields{i}).coreg = subj.coreg.anat.preop.(preopFields{i});
-            end
-
-            % Set pre-op normalized images
-            subj.preopAnat.(preopFields{1}).norm = subj.norm.anat.preop.(preopFields{1});
-
-            if preferMRCT ~= 3
-                % Set post-op preprocessed images
-                for i=1:length(postopFields)
-                    subj.postopAnat.(postopFields{i}).preproc = subj.preproc.anat.postop.(postopFields{i});
-                end
-
-                % Set post-op coregistered images
-                for i=1:length(postopFields)
-                    subj.postopAnat.(postopFields{i}).coreg = subj.coreg.anat.postop.(postopFields{i});
+            if ~isempty(preopFields)
+                subj.preproc.anat = obj.getPreprocAnat(subjId, preferMRCT);
+                subj.coreg.anat = obj.getCoregAnat(subjId, preferMRCT);
+                subj.coreg.transform = obj.getCoregTransform(subjId, preferMRCT);
+                subj.coreg.log = obj.getCoregLog(subjId);
+                subj.coreg.checkreg = obj.getCoregCheckreg(subjId, preferMRCT);
+    
+                if preferMRCT ~= 3
+                    subj.brainshift.anat = obj.getBrainshiftAnat(subjId, preferMRCT);
+                    subj.brainshift.transform = obj.getBrainshiftTransform(subjId);
+                    subj.brainshift.log = obj.getBrainshiftLog(subjId);
+                    subj.brainshift.checkreg = obj.getBrainshiftCheckreg(subjId, preferMRCT);
                 end
     
-                % Set post-op coregistered tone-mapped CT
-                if ismember('CT', postopFields)
-                    subj.postopAnat.CT.coregTonemap = subj.coreg.anat.postop.tonemapCT;
+                subj.norm.anat = obj.getNormAnat(subjId, preferMRCT);
+                subj.norm.transform = obj.getNormTransform(subjId);
+                subj.norm.log = obj.getNormLog(subjId);
+                subj.norm.checkreg = obj.getNormCheckreg(subjId, preferMRCT);
+    
+                % Set pre-op preprocessed images
+                for i=1:length(preopFields)
+                    subj.preopAnat.(preopFields{i}).preproc = subj.preproc.anat.preop.(preopFields{i});
                 end
     
-                % Set post-op normalized images
-                for i=1:length(postopFields)
-                    subj.postopAnat.(postopFields{i}).norm = subj.norm.anat.postop.(postopFields{i});
+                % Set pre-op coregistered images
+                for i=1:length(preopFields)
+                    subj.preopAnat.(preopFields{i}).coreg = subj.coreg.anat.preop.(preopFields{i});
                 end
     
-                % Set post-op normalized tone-mapped CT
-                if ismember('CT', postopFields)
-                    subj.postopAnat.CT.normTonemap = subj.norm.anat.postop.tonemapCT;
-                end
-    
-                % Set reconstruction
-                subj.recon = obj.getRecon(subjId, preferMRCT);
-
-                % Set stats
-                subj.stats = obj.getStats(subjId);
+                % Set pre-op normalized images
+                subj.preopAnat.(preopFields{1}).norm = subj.norm.anat.preop.(preopFields{1});
             end
+
+            if preferMRCT ~= 3 && ~isempty(postopFields)
+                if preferMRCT ~= 3
+                    % Set post-op preprocessed images
+                    for i=1:length(postopFields)
+                        subj.postopAnat.(postopFields{i}).preproc = subj.preproc.anat.postop.(postopFields{i});
+                    end
+    
+                    % Set post-op coregistered images
+                    for i=1:length(postopFields)
+                        subj.postopAnat.(postopFields{i}).coreg = subj.coreg.anat.postop.(postopFields{i});
+                    end
+        
+                    % Set post-op coregistered tone-mapped CT
+                    if ismember('CT', postopFields)
+                        subj.postopAnat.CT.coregTonemap = subj.coreg.anat.postop.tonemapCT;
+                    end
+        
+                    % Set post-op normalized images
+                    for i=1:length(postopFields)
+                        subj.postopAnat.(postopFields{i}).norm = subj.norm.anat.postop.(postopFields{i});
+                    end
+        
+                    % Set post-op normalized tone-mapped CT
+                    if ismember('CT', postopFields)
+                        subj.postopAnat.CT.normTonemap = subj.norm.anat.postop.tonemapCT;
+                    end
+                end
+            end
+
+            % Set reconstruction
+            subj.recon = obj.getRecon(subjId, preferMRCT);
+
+            % Set stats
+            subj.stats = obj.getStats(subjId);
         end
 
         function preopAnat = getPreopAnat(obj, subjId)
@@ -262,6 +270,12 @@ classdef BIDSFetcher
 
             % Get raw images struct
             rawImages = obj.getRawImages(subjId);
+
+            % Return in case not found
+            if isempty(rawImages)
+                preopAnat = struct;
+                return;
+            end
 
             % Get images and modalities
             images = fullfile(rawDataDir, 'ses-preop', 'anat', append(struct2cell(rawImages.preop.anat), obj.settings.niiFileExt));
@@ -311,6 +325,12 @@ classdef BIDSFetcher
 
             % Get raw images struct
             rawImages = obj.getRawImages(subjId);
+
+            % Return in case not found
+            if isempty(rawImages)
+                postopAnat = struct;
+                return;
+            end
 
             % Get images and modalities
             images = fullfile(rawDataDir, 'ses-postop', 'anat', append(struct2cell(rawImages.postop.anat), obj.settings.niiFileExt));
