@@ -31,18 +31,40 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
     end
 
     % Set subj BIDS struct
-    options.subj = bids.getSubj(subjId, options.modality);
+    try
+        options.subj = bids.getSubj(subjId, options.modality);
+    
+        % Set primary template
+        subjAnchor = regexprep(options.subj.AnchorModality, '[^\W_]+_', '');
+        if ismember(subjAnchor, fieldnames(bids.spacedef.norm_mapping))
+            options.primarytemplate = bids.spacedef.norm_mapping.(subjAnchor);
+        else
+            options.primarytemplate = bids.spacedef.misfit_template;
+        end
+    
+        % Set elmodel and elspec
+        recon = bids.getRecon(subjId);
+    catch
+        options.subj.subjId = subjId;
+        options.subj.subjDir = directory;
 
-    % Set primary template
-    subjAnchor = regexprep(options.subj.AnchorModality, '[^\W_]+_', '');
-    if ismember(subjAnchor, fieldnames(bids.spacedef.norm_mapping))
-        options.primarytemplate = bids.spacedef.norm_mapping.(subjAnchor);
-    else
-        options.primarytemplate = bids.spacedef.misfit_template;
+        reconFile = ea_regexpdir(fullfile(directory, 'reconstruction'), '_desc-reconstruction\.mat$', 0);
+        if ~isempty(reconFile)
+            recon.recon = reconFile{1};
+            options.subj.recon = recon;
+        else
+            recon.recon = '';
+        end
+
+        options.subj.stimDir = fullfile(directory, 'stimulations');
+
+        statsFile = ea_regexpdir(directory, '_desc-stats\.mat$', 0);
+        if ~isempty(statsFile)
+            options.subj.stats = statsFile{1};
+        end
     end
 
     % Set elmodel and elspec
-    recon = bids.getRecon(subjId);
     if isfile(recon.recon)
         load(recon.recon);
         try
@@ -54,7 +76,6 @@ if contains(directory, ['derivatives', filesep, 'leaddbs'])
     end
 
     options.bids=bids; % store bidsfetcher obj within options.
-
 else
     error('Not a BIDS dataset!')
 end

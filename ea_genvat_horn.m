@@ -86,7 +86,7 @@ filePrefix = ['sub-', options.subj.subjId, '_desc-'];
 hmchanged=ea_headmodel_changed(options,side,elstruct); % can only use this test once.
 assignin('caller','hmchanged',hmchanged);
 if hmchanged
-    ea_dispt('Headmodel needs to be re-calculated. This may take a while...');
+    disp('Headmodel needs to be re-calculated. This may take a while...');
 
     cnt=1;
     mesh.tet=[];
