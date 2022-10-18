@@ -239,11 +239,11 @@ if strcmp(target, 'groupDir')
             groupdir = [fileparts(folders{1}), filesep];
             load(folders{1}, 'M');
 
-            derivative_folder = split(groupdir,'leadgroup');
-            if isfile([fileparts(derivative_folder{1}), filesep, 'miniset.json'])
+            datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
+            if isfile(fullfile(datasetFolder, 'miniset.json'))
                 for p = 1:size(M.patient.list,1)
                     [~, patient_tag] = fileparts(M.patient.list{p});
-                    M.patient.list{p} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];
+                    M.patient.list{p} = fullfile(datasetFolder, 'derivatives', 'leaddbs', patient_tag);
                 end
                 M.root = groupdir;
                 save(folders{1}, 'M')
@@ -269,11 +269,11 @@ if strcmp(target, 'groupDir')
         groupdir = [fileparts(analysisFile), filesep];
         load(analysisFile, 'M');
 
-        derivative_folder = split(groupdir, 'leadgroup');
-        if isfile([fileparts(derivative_folder{1}), filesep, 'miniset.json'])
+        datasetFolder = regexp(groupdir, ['(.*)(?=\', filesep, 'derivatives\', filesep, 'leadgroup)'], 'match', 'once');
+        if isfile(fullfile(datasetFolder, 'miniset.json'))
             for p = 1:size(M.patient.list,1)
                 [~, patient_tag] = fileparts(M.patient.list{p});
-                M.patient.list{p} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];
+                M.patient.list{p} = fullfile(datasetFolder, 'derivatives', 'leaddbs', patient_tag);
             end
             M.root = groupdir;
             save(analysisFile, 'M')
