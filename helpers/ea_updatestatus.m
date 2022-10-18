@@ -1,11 +1,14 @@
 function ea_updatestatus(handles, subj)
 % subj is the struct returned by BIDSFetcher.getSubj(subjId)
 
-[leaddbs_dir,~,~] = fileparts(subj.subjDir);
-Miniset_flag = [leaddbs_dir, filesep, 'Miniset_flag.json'];
+if isfile(fileparts(fileparts(fileparts(subj.subjDir))), filesep, 'miniset.json')
+    isMiniset = 1;
+else
+    isMiniset = 0;
+end
 
 if strcmp(subj.postopModality, 'CT')
-    if isfile(Miniset_flag)
+    if isfile(isMiniset)
         statusone = 'Miniset is used.';
     elseif isfile(subj.postopAnat.CT.coreg)
         statusone = 'Coregistered post-op CT found. Please run normalization.';
@@ -15,7 +18,7 @@ if strcmp(subj.postopModality, 'CT')
 elseif strcmp(subj.postopModality, 'MRI')
     fields = fieldnames(subj.postopAnat);
 
-    if isfile(Miniset_flag)
+    if isfile(isMiniset)
         statusone = 'Miniset is used.';
     elseif isfile(subj.postopAnat.(fields{1}).coreg)
         statusone = 'Coregistered post-op MRI found. Please run normalization.';

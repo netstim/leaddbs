@@ -12,7 +12,7 @@ end
 load(analysisFile, 'M');
 
 derivative_folder = split(groupdir, 'leadgroup');
-if isfile([derivative_folder{1}, 'leaddbs', filesep, 'Miniset_flag.json'])
+if isfile([fileparts(derivative_folder{1}), filesep, 'miniset.json'])
     for i = 1:size(M.patient.list,1)
         [~, patient_tag] = fileparts(M.patient.list{i});
         M.patient.list{i} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];

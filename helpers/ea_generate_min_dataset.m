@@ -21,8 +21,14 @@ mkdir(fullfile(min_dataset_dir, 'derivatives', 'leaddbs'));
 mkdir(fullfile(min_dataset_dir, 'derivatives', 'leadgroup', M.guid));
 
 % add the miniset flag
-fid = fopen(fullfile(min_dataset_dir, 'derivatives', 'leaddbs', 'Miniset_flag.json'), 'w');
-fclose(fid);
+[~, minisetName] = fileparts(min_dataset_dir);
+miniset.name = minisetName;
+miniset.numSubj = length(M.patient.list);
+miniset.recon = 1;
+miniset.vta = 0;
+miniset.stats = 0;
+miniset.groupAnalysis = M.guid;
+miniset.timeStamp = char(datetime('now', 'Format', 'yyyy-MM-dd HH:mm:ss'));
 
 % the leadgroup will be also stored, but detached
 M_mini = M;
@@ -50,6 +56,7 @@ for i = 1 : size(M.patient.list, 1)
     copyfile(fullfile(M.patient.list{i}, 'prefs', [patient_tag, '_desc-uiprefs.mat']), newPrefsFolder);
     copyfile(fullfile(M.patient.list{i}, 'reconstruction', [patient_tag, '_desc-reconstruction.mat']), newReconstFolder);  
     if isfile(fullfile(M.patient.list{i}, [patient_tag, '_desc-stats.mat']))
+        miniset.stats = 1;
         copyfile(fullfile(M.patient.list{i}, [patient_tag, '_desc-stats.mat']), M_mini.patient.list{i});
     end
 
@@ -63,6 +70,7 @@ for i = 1 : size(M.patient.list, 1)
     if isempty(myVATs)
         ea_cprintf('CmdWinWarnings','No VATs were found for patient %s! Calculate them in Lead-Group', patient_tag);
     else
+        miniset.vta = 1;
         for k = 1:length(myVATs)
             VAT_to_copy = fullfile(myVATs(k).folder, myVATs(k).name);
             copyfile(VAT_to_copy, newStimFolder);
@@ -74,6 +82,9 @@ end
 
 % save the updated lead-group file
 M = M_mini;
-[~, miniset_name] = fileparts(min_dataset_dir);
-save(fullfile(M_mini.root, ['dataset-', miniset_name, '_analysis-', M_mini.guid, '.mat']), 'M')
+save(fullfile(M_mini.root, ['dataset-', minisetName, '_analysis-', M_mini.guid, '.mat']), 'M')
+
+% Save miniset json
+savejson('', miniset, fullfile(min_dataset_dir, 'miniset.json'));
+
 disp('Done')

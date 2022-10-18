@@ -240,7 +240,7 @@ if strcmp(target, 'groupDir')
             load(folders{1}, 'M');
 
             derivative_folder = split(groupdir,'leadgroup');
-            if isfile([derivative_folder{1}, 'leaddbs', filesep, 'Miniset_flag.json'])            
+            if isfile([fileparts(derivative_folder{1}), filesep, 'miniset.json'])
                 for p = 1:size(M.patient.list,1)
                     [~, patient_tag] = fileparts(M.patient.list{p});
                     M.patient.list{p} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];
@@ -270,7 +270,7 @@ if strcmp(target, 'groupDir')
         load(analysisFile, 'M');
 
         derivative_folder = split(groupdir, 'leadgroup');
-        if isfile([derivative_folder{1}, 'leaddbs', filesep, 'Miniset_flag.json'])
+        if isfile([fileparts(derivative_folder{1}), filesep, 'miniset.json'])
             for p = 1:size(M.patient.list,1)
                 [~, patient_tag] = fileparts(M.patient.list{p});
                 M.patient.list{p} = [derivative_folder{1}, 'leaddbs', filesep, patient_tag];

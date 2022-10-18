@@ -24,25 +24,36 @@ end
 
 ea_cprintf('CmdWinWarnings', 'Creating new dataset folder: %s\n', fullfile(fileparts(analysisFile), dataset));
 groupdir = fullfile(fileparts(analysisFile), dataset, 'derivatives', 'leadgroup', analysis, filesep);
-
 leaddbsFolder = fullfile(fileparts(analysisFile), dataset, 'derivatives', 'leaddbs');
+datasetFolder = fullfile(fileparts(analysisFile), dataset);
+
 ea_mkdir(groupdir);
 ea_mkdir(leaddbsFolder);
-fclose(fopen(fullfile(leaddbsFolder, 'Miniset_flag.json'), 'w'));
 
 load(analysisFile, 'M');
 M.ui.groupdir = groupdir;
 M.root = M.ui.groupdir;
+
+miniset.name = dataset;
+miniset.numSubj = length(M.patient.list);
+miniset.recon = 0;
+miniset.vta = 0;
+miniset.stats = 0;
+miniset.groupAnalysis = analysis;
+miniset.timeStamp = char(datetime('now', 'Format', 'yyyy-MM-dd HH:mm:ss'));
+
 for p=1:length(M.patient.list)
     [oldPatientFolder, patientTag] = fileparts(M.patient.list{p});
     M.patient.list{p} = strrep(M.patient.list{p}, oldPatientFolder, leaddbsFolder);
     if isfield(M, 'stats')
+        miniset.stats = 1;
         ea_mkdir(fullfile(leaddbsFolder, patientTag));
         ea_stats = M.stats(p).ea_stats;
         save(fullfile(leaddbsFolder, patientTag, [patientTag, '_desc-stats.mat']), 'ea_stats');
     end
 
     if isfield(M, 'elstruct')
+        miniset.recon = 1;
         ea_mkdir(fullfile(leaddbsFolder, patientTag, 'reconstruction'));
         for e=1:length(M.elstruct(p).coords_mm)
             reco.props(e).elmodel = M.elstruct(p).elmodel;
@@ -55,6 +66,9 @@ for p=1:length(M.patient.list)
         save(fullfile(leaddbsFolder, patientTag, 'reconstruction', [patientTag, '_desc-reconstruction.mat']), 'reco');
     end
 end
+
 movefile(analysisFile, groupdir);
 analysisFile = ea_getGroupAnalysisFile(groupdir);
 save(analysisFile, 'M');
+
+savejson('', miniset, fullfile(datasetFolder, 'miniset.json'));
