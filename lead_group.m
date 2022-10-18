@@ -1031,8 +1031,11 @@ for pt=selection
 
     resultfig=ea_elvis(options,M.elstruct(pt));
 
-    if isempty(dir([options.subj.norm.transform.inverseBaseName,'*']))
-        warning(['Tranformation not found for ', options.subj.subjId, '!']);
+    if ~isfield(options.subj, 'norm')
+        ea_cprintf('CmdWinWarnings', 'Running in Miniset mode: %s...\n', options.subj.subjId);
+        volumespresent=0;
+    elseif isempty(dir([options.subj.norm.transform.inverseBaseName, '*']))
+        ea_cprintf('CmdWinWarnings', 'Tranformation not found for %s...\n', options.subj.subjId);
         volumespresent=0;
     else
         volumespresent=1;
@@ -1060,7 +1063,7 @@ for pt=selection
         options.orignative=options.native; % backup
         options.native=~ea_getprefs('vatsettings.estimateInTemplate'); % see whether VTAs should be directly estimated in template space or not
         if options.native && ~volumespresent
-            warning(['You chose to process VTAs in native space but patient-data cannot be found for ',M.patient.list{pt},'. Proceeding with VTA calculation directly in template space.']);
+            ea_cprintf('CmdWinWarnings', 'Calculating VTA in template space since patient folder %s is incomplete.\n', options.subj.subjId);
             options.native=0;
         end
 
