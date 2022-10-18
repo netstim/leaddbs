@@ -7,7 +7,12 @@ analysisFile = GetFullPath(analysisFile);
 dataset = regexp(analysisFile, '(?<=dataset-)(.+)(?=_analysis-.+\.mat$)', 'match', 'once');
 analysis = regexp(analysisFile, '(?<=dataset-.+_analysis-)(.+)(?=\.mat$)', 'match', 'once');
 if isfolder(fullfile(fileparts(analysisFile), dataset))
-    dataset = inputdlg(sprintf('Folder ''%s'' already exists.\nPlease specify a new dataset name:', dataset), 'New Dataset Name', [1 35], {[dataset, '1']});
+    for i=1:20
+        if ~isfolder(fullfile(fileparts(analysisFile), [dataset, num2str(i)]))
+            dataset = inputdlg(sprintf('Folder ''%s'' already exists.\nPlease specify a new dataset name:', dataset), 'New Dataset Name', [1 35], {[dataset, num2str(i)]});
+            break;
+        end
+    end
     if isempty(dataset)
         error('Please specify a new dataset name!');
     else
