@@ -2,8 +2,6 @@ function rawImages = ea_genrawimagesjson(BIDSRoot, subjId)
 % [Re-]generate rawimages json file in case it's not present in subject's
 % derivatives folder
 
-ea_cprintf('CmdWinWarnings', 'Generating rawimages.json for "sub-%s":\n', subjId);
-
 % Get all images
 rawdataFolder = fullfile(GetFullPath(BIDSRoot), 'rawdata', ['sub-', subjId]);
 preopNiftiFiles = ea_regexpdir([rawdataFolder, filesep, 'ses-preop'], '.*\.nii(\.gz)?$', 1, 'f');
@@ -28,6 +26,16 @@ end
 if isfield(rawImages, 'postop')
     rawImages = orderfields(rawImages, {'preop', 'postop'}); % Re-order
 end
+
+if isempty(fieldnames(rawImages))
+    % Warn in case it's not a miniset
+    if ~isfile(fullfile(GetFullPath(BIDSRoot), 'miniset.json'))
+        ea_cprintf('CmdWinWarnings', 'No raw images found for "sub-%s":\n', subjId);
+    end
+    return;
+end
+
+ea_cprintf('CmdWinWarnings', 'Generating rawimages.json for "sub-%s":\n', subjId);
 
 % Get prefs folder
 prefsFolder = fullfile(GetFullPath(BIDSRoot), 'derivatives', 'leaddbs', ['sub-', subjId], 'prefs');
