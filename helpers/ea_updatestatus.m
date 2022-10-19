@@ -8,7 +8,7 @@ else
 end
 
 if strcmp(subj.postopModality, 'CT')
-    if isfile(isMiniset)
+    if isMiniset
         statusone = 'Miniset is used.';
     elseif isfile(subj.postopAnat.CT.coreg)
         statusone = 'Coregistered post-op CT found. Please run normalization.';
@@ -18,7 +18,7 @@ if strcmp(subj.postopModality, 'CT')
 elseif strcmp(subj.postopModality, 'MRI')
     fields = fieldnames(subj.postopAnat);
 
-    if isfile(isMiniset)
+    if isMiniset
         statusone = 'Miniset is used.';
     elseif isfile(subj.postopAnat.(fields{1}).coreg)
         statusone = 'Coregistered post-op MRI found. Please run normalization.';
