@@ -1,6 +1,12 @@
 % Example-script to create a video that iteratively migrates electrodes of a lead
 % group scene to a common target.
 % (c) 2022 Andreas Horn, BWH / HMS
+%
+% Example usage with a custom target (if no target is supplied it will
+% use the average location of all leads):
+% target.l=[-9.1,23.4,-8.5]; % some coordinate of choice
+% target.r=ea_flip_lr_nonlinear(target.l); % mirror the same one (or supply a different one)
+% ea_harmonize_leads_vid; % call script
 
 daObj=VideoWriter('lg_video.mp4','MPEG-4'); % preferred profile
 
@@ -49,8 +55,8 @@ if ismember('target',{W.name}) % check whether a variable called target (.r and 
     lavg=mean([avghead.l;avgtail.l]);
     ravg=mean([avghead.r;avgtail.r]);
     target=evalin('base','target');
-    addvector.r=ravg-target.r;
-    addvector.l=lavg-target.l;
+    addvector.r=target.r-ravg;
+    addvector.l=target.l-lavg;
 
     % add this shift to targets:
 
