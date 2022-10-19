@@ -272,7 +272,7 @@ classdef BIDSFetcher
             rawImages = obj.getRawImages(subjId);
 
             % Return in case not found
-            if isempty(rawImages)
+            if ~isfield(rawImages, 'preop')
                 preopAnat = struct;
                 return;
             end
@@ -327,7 +327,7 @@ classdef BIDSFetcher
             rawImages = obj.getRawImages(subjId);
 
             % Return in case not found
-            if isempty(rawImages)
+            if ~isfield(rawImages, 'postop')
                 postopAnat = struct;
                 return;
             end
