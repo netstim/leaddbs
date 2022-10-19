@@ -1090,6 +1090,7 @@ S = ea_activecontacts(S);
 
 options = getappdata(resultfig,'options'); % selected atlas could have refreshed.
 options.orignative = options.native;
+
 if strcmp('on',get(handles.estimateInTemplate,'Visible')) % only allowed for specific VTA functions
     switch get(handles.estimateInTemplate,'Value')
         case 0
@@ -1098,6 +1099,11 @@ if strcmp('on',get(handles.estimateInTemplate,'Visible')) % only allowed for spe
         case 1
             S.template = 'direct';
     end
+end
+
+if ~isfield(options.subj, 'norm') && options.native
+    ea_cprintf('CmdWinWarnings', 'Calculating VTA in template space since patient folder %s is incomplete.\n', options.subj.subjId);
+    options.native = 0;
 end
 
 ea_savestimulation(S,options);
