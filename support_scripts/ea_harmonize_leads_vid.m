@@ -42,6 +42,28 @@ avgx.r=mean(x.r);
 avgy.l=mean(y.l);
 avgy.r=mean(y.r);
 
+W = evalin('base','whos');
+
+if ismember('target',{W.name}) % check whether a variable called target (.r and .l) exists in base workspace
+    % if so, migrate leads to these coordinates:
+    lavg=mean([avghead.l;avgtail.l]);
+    ravg=mean([avghead.r;avgtail.r]);
+    target=evalin('base','target');
+    addvector.r=ravg-target.r;
+    addvector.l=lavg-target.l;
+
+    % add this shift to targets:
+
+    avghead.l=avghead.l+addvector.l;
+    avghead.r=avghead.r+addvector.r;
+    avgtail.l=avgtail.l+addvector.l;
+    avgtail.r=avgtail.r+addvector.r;
+    avgx.l=avgx.l+addvector.l;
+    avgx.r=avgx.r+addvector.r;
+    avgy.l=avgy.l+addvector.l;
+    avgy.r=avgy.r+addvector.r;
+end
+
 
 % compute vectors to apply in each iter
 lcnt=1; rcnt=1;
@@ -68,13 +90,13 @@ for el=1:length(h)
 end
 
 % apply vectors to electrodes:
-Nsteps=100;
+Nsteps=1;
 steps=exp(-0.05*[1:Nsteps]);
 steps=steps/sum(steps); % together 1 step
 open(daObj);
-for initframes=1:100
-        writeVideo(daObj,getframe(resultfig)); %use figure, since axis changes size based on view
-end
+% for initframes=1:100
+%         writeVideo(daObj,getframe(resultfig)); %use figure, since axis changes size based on view
+% end
 ea_dispercent(0,'Writing video');
 for iter=1:Nsteps
     writeVideo(daObj,getframe(resultfig)); %use figure, since axis changes size based on view
