@@ -14,7 +14,9 @@ end
 if isfile(prefsPath)
     % Load UI prefs
     options = load(prefsPath);
-
-    % Update UI
-    ea_options2handles(options, handles);
+else
+    options = struct;
 end
+
+% Update UI
+ea_options2handles(options, handles);
