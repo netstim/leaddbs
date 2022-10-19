@@ -218,7 +218,7 @@ if length(uipatdir) == 1 % Single folder
         sourceData = regexprep(sourceData, ['\', filesep, '$'], '');
 
         if ~isempty(derivativesData)
-            uipatdir = fileparts(derivativesData);
+            uipatdir = derivativesData;
             subjId = regexp(derivativesData, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
         elseif ~isempty(rawData) % rawdata folder already exists
             uipatdir = strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs']);
