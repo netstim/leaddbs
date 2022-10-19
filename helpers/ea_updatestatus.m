@@ -1,7 +1,7 @@
 function ea_updatestatus(handles, subj)
 % subj is the struct returned by BIDSFetcher.getSubj(subjId)
 
-if isfile(fileparts(fileparts(fileparts(subj.subjDir))), filesep, 'miniset.json')
+if isfile(fullfile(fileparts(fileparts(fileparts(subj.subjDir))), 'miniset.json'))
     isMiniset = 1;
 else
     isMiniset = 0;
