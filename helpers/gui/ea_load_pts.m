@@ -336,13 +336,14 @@ setappdata(handles.leadfigure, 'uipatdir', uipatdir);
 setappdata(handles.leadfigure, 'bids', bids);
 setappdata(handles.leadfigure, 'subjId', subjId);
 
+% Update ui from patient
+if ~ismember(handles.prod, {'mapper'})
+    ea_getui(handles);
+end
+
 % Set up MR/CT popupmenu and status text
 if isfield(handles, 'MRCT')
     ea_switchctmr(handles);
-end
-
-if ~ismember(handles.prod, {'mapper'})
-    ea_getui(handles); % update ui from patient
 end
 
 ea_storeui(handles); % save in pt folder
