@@ -96,7 +96,7 @@ for el=1:length(h)
 end
 
 % apply vectors to electrodes:
-Nsteps=1;
+Nsteps=100;
 steps=exp(-0.05*[1:Nsteps]);
 steps=steps/sum(steps); % together 1 step
 open(daObj);
