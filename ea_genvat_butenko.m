@@ -663,6 +663,10 @@ for side=0:1
 
                 if options.native % Generate fiber activation file in MNI space
                     fprintf('Restore connectome in MNI space: %s ...\n\n', settings.connectome);
+                    
+                    % load the pathway in MNI
+                    [atlas_folder,~] = fileparts(tract);
+                    originalFib = load([atlas_folder,filesep,tractName]);
                     conn.fibers = originalFib;
 
                     fprintf('Convert fiber activation result into MNI space...\n\n');
