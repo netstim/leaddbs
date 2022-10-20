@@ -43,7 +43,7 @@ catch
     M.isomatrix_name={};
 end
 
-M.ui.groupdir = [handles.groupdir_choosebox.String,filesep];
+M.ui.groupdir = fullfile(handles.groupdir_choosebox.String,filesep);
 
 disp('Refreshing selections on VI / FC Lists...');
 
