@@ -524,27 +524,6 @@ set(findobj(ax.Children,'Type','surface'),'HitTest','off');
 ea_mouse_camera(resultfig);
 
 
-function ea_readjustlight(resultfig,event)
-prefs=ea_prefs;
-% get light handles
-RightLight=getappdata(resultfig,'RightLight');
-LeftLight=getappdata(resultfig,'LeftLight');
-CeilingLight=getappdata(resultfig,'CeilingLight');
-CamLight=getappdata(resultfig,'CamLight');
-
-try
-camlight(CamLight,'headlight'); % move light object.
-end
-try
-set(CeilingLight,'Position',[0 0 10],'style','local','Color',prefs.d3.ceilinglightcolor); % not modifiable, infinite light.
-end
-try
-set(RightLight,'Position',[-100 0 0],'style','infinite','Color',prefs.d3.rightlightcolor); % not modifiable, infinite light.
-end
-try
-set(LeftLight,'Position',[100 0 0],'style','infinite','Color',prefs.d3.leftlightcolor); % not modifiable, infinite light.
-end
-
 function ea_launch_setlighting(~,~,resultfig)
 ea_set_lighting(resultfig);
 
@@ -945,7 +924,7 @@ if length(self.K) == 1
 end
 
 %% Capture current figure in high resolution
-if ~strcmp(self.figmode,'lazyupdate');
+if ~strcmp(self.figmode,'lazyupdate')
     tempfile = 'lead_temp_screendump.png';
     self.source_fig = gcf;
     current_paperpositionmode = get(self.source_fig,'PaperPositionMode');

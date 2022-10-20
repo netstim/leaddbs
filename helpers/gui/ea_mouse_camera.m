@@ -14,9 +14,9 @@ orbitFactor = 7;
 
 set(hfig, 'WindowButtonDownFcn', @down_fcn);
 set(hfig, 'WindowButtonUpFcn', @up_fcn);
-set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
+set(hfig, 'WindowScrollWheelFcn', {@(src, evt) zoom_fcn(evt)});
 
-    function [] = zoom_fcn(hfig, evt)
+    function [] = zoom_fcn(evt)
         if evt.VerticalScrollCount > 0
             camzoom(1 + evt.VerticalScrollCount / zoomFactor)
         else
@@ -26,9 +26,8 @@ set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
 
 
     function [] = down_fcn(hfig, evt)
-        
         clickType = evt.Source.SelectionType;
-        set(hfig, 'WindowButtonMotionFcn',{@motion_callback,clickType});
+        set(hfig, 'WindowButtonMotionFcn',{@(src, evt) motion_callback(src, clickType)});
         
         % set cursor type
         switch clickType
@@ -41,8 +40,7 @@ set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
             case 'open'
                 try
                     set_defaultview;
-                end
-                
+                end  
         end
     end
 
@@ -55,10 +53,8 @@ set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
         ea_defaultview(v,togglestates);
     end
 
-
-    function [] = motion_callback(hfig, evt, clickType)
+    function [] = motion_callback(hfig, clickType)
         % from matlab's CameraToolBarManager.m
-        
         currpt = get(hfig,'CurrentPoint');
         try
             pt = matlab.graphics.interaction.internal.getPointInPixels(hfig,currpt(1:2));
@@ -183,6 +179,10 @@ set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
     end
 
     function [] = up_fcn(hfig, evt)
+        % Adjust light after rotating
+        if strcmp(evt.Source.SelectionType, 'normal')
+            ea_readjustlight(hfig);
+        end
         % reset motion and cursor
         set(hfig,'WindowButtonMotionFcn',[]);
         figLastPoint = [];
@@ -195,4 +195,26 @@ set(hfig, 'WindowScrollWheelFcn', @zoom_fcn);
         c(3) = b(2)*a(1) - b(1)*a(2);
     end
 
+    function ea_readjustlight(hfig)
+        % get light handles
+        RightLight = getappdata(hfig, 'RightLight');
+        LeftLight = getappdata(hfig, 'LeftLight');
+        CeilingLight = getappdata(hfig, 'CeilingLight');
+        CamLight = getappdata(hfig, 'CamLight');
+
+        prefs=ea_prefs;
+
+        try
+            camlight(CamLight, 'headlight'); % move light object.
+        end
+        try
+            set(CeilingLight, 'Position', [0 0 10], 'style', 'local', 'Color', prefs.d3.ceilinglightcolor); % not modifiable, infinite light.
+        end
+        try
+            set(RightLight, 'Position', [-100 0 0], 'style', 'infinite', 'Color', prefs.d3.rightlightcolor); % not modifiable, infinite light.
+        end
+        try
+            set(LeftLight, 'Position', [100 0 0], 'style', 'infinite', 'Color', prefs.d3.leftlightcolor); % not modifiable, infinite light.
+        end
+    end
 end
