@@ -5,11 +5,13 @@ if ~isfield(options, 'modality') ||  options.modality == 3
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.surfacereconpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.reconpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.connpanel.Children);
+    set(handles.overwriteapproved, 'Enable', 'off');
 else
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.surfacereconpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.reconpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.connpanel.Children);
+    set(handles.overwriteapproved, 'Enable', 'on');
 end
 
 if isfield(options, 'coregct')
