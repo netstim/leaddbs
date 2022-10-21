@@ -9,10 +9,6 @@ import salome
 import os
 
 salome.salome_init()
-theStudy = salome.myStudy
-
-import salome_notebook
-notebook = salome_notebook.NoteBook(theStudy)
 sys.path.insert( 0, "r'"+os.getcwd())
 
 ###
@@ -90,6 +86,8 @@ r_lead=0.1125
 ####################################################
 ##       Begin of NoteBook variables section      ##
 ####################################################
+import salome_notebook
+notebook = salome_notebook.notebook
 notebook.set("r_lead", r_lead)
 notebook.set("encap_thickness", encap_thickness)
 notebook.set("ROI_radial", ROI_radial)
@@ -107,7 +105,7 @@ notebook.set("c_semi", c_semi)
 ####################################################
 ##        End of NoteBook variables section       ##
 ####################################################
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -342,7 +340,7 @@ from salome.smesh import smeshBuilder
 anode_mesh_max=0.005
 cathode_mesh_max=1.0
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Partition_profile)
 NETGEN_1D_2D_3D = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D)
 NETGEN_3D_Parameters_1 = NETGEN_1D_2D_3D.Parameters()
@@ -456,8 +454,8 @@ smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
 smesh.SetName(Sub_mesh_4, 'Sub-mesh_4')
 
 #Mesh_1.ExportMED('opt/patient/Meshes/Mesh_unref.med')
-Mesh_1.ExportMED('Mesh_unref.med')
-Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med')
+#Mesh_1.ExportMED('Mesh_unref.med')
+Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_unref.med', 0, 33)
 
 print("Mesh was saved\n")
 print(os.getcwd())
