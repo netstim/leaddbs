@@ -348,7 +348,7 @@ def mark_cell_loc_J(ext_ground,subdomains_imp,j_real,j_im,j_real_new,j_im_new,me
     else:
         threshold_current_in_element=0.25
 
-    logging.critical("threshold_current_in_element: {}".format(threshold_current_in_element))
+    #logging.critical("threshold_current_in_element: {}".format(threshold_current_in_element))
 
     int_cell_ref= MeshFunction('bool',mesh_old,3)       #cell marker for mesh_old
     int_cell_ref.set_all(False)
@@ -404,7 +404,7 @@ def mark_cell_loc_J(ext_ground,subdomains_imp,j_real,j_im,j_real_new,j_im_new,me
 def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initial,MRI_param,DTI_param,Domains,d,cc_multicontact,num_proc,anisotropy,Field_calc_param,previous_results):
 
     logging.critical("----- Conducting refinement in {} -----".format(region))
-    start_adapt_region=time_lib.clock()
+    start_adapt_region=time_lib.time()
 
     save_mesh('initial_for_the_step',mesh_initial,boundaries_initial,subdomains_assigned_initial)
 
@@ -444,8 +444,8 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
     elif region == 'it_on_contact':
         ref_mode = 1
         current_checked=0           #always check current when refining around contacts
-        if d["current_control"]==0:     #in this case we need to check current convergence
-            d["rel_div_current"]=0.012
+        if d["current_control"] == 0:     #in this case we need to check current convergence
+            d["rel_div_current"] = 0.012
             logging.critical("Although VC mode is used, current convergence will be checked during refinement around contacts with 1.2% rel. deviation. You can change the threshold in Mesh_adaption_hybrid.py")
 
         if d["rel_div"]>=0.01:
@@ -733,8 +733,8 @@ def adapt_mesh(region,mesh_initial,boundaries_initial,subdomains_assigned_initia
                 save_mesh('adapt',mesh_new,boundaries_new,subdomains_assigned_new)
                 [mesh_new,boundaries_new,subdomains_assigned_new]=mesh_refiner(mesh_new,boundaries_new,subdomains_assigned_new,cells_ref,Domains,cc_multicontact)
 
-    minutes=int((time_lib.clock() - start_adapt_region)/60)
-    secnds=int(time_lib.clock() - start_adapt_region)-minutes*60
+    minutes=int((time_lib.time() - start_adapt_region)/60)
+    secnds=int(time_lib.time() - start_adapt_region)-minutes*60
     logging.critical("----- Mesh in {} was adapted in {} min {} sec -----\n".format(region,minutes, secnds))
 
     status=1        #for now always 1
@@ -750,9 +750,9 @@ def mesh_refiner(mesh_old,boundaries,subdomains_assigned,cell_markers,Domains,cc
     facets_old = MeshFunction('size_t',mesh_old,2)
     facets_old.set_all(0)
 
-    facets_old.array()[boundaries.array() == Domains.Contacts[0]]=1
+    facets_old.array()[boundaries.array() == Domains.Active_contacts[0]]=1
 
-    if cc_multicontact==True and Domains.fi[0]!=0.0:            #because ground contact is always subtracted from the mesh
+    if cc_multicontact==True and Domains.Amp_vector[0]!=0.0:            #because ground contact is always subtracted from the mesh
         dsSSS=Measure("dS",domain=mesh_old,subdomain_data=facets_old)
         An_surface_size_old=assemble(1.0*dsSSS(1))
     else:
@@ -765,10 +765,10 @@ def mesh_refiner(mesh_old,boundaries,subdomains_assigned,cell_markers,Domains,cc
 
     facets = MeshFunction('size_t',mesh_new,2)
     facets.set_all(0)
-    facets.array()[boundaries_new.array()==Domains.Contacts[0]]=1
-    #facets.array()[boundaries_new.array()==Domains.Contacts[1]]=2
+    facets.array()[boundaries_new.array()== Domains.Active_contacts[0]]=1
+    #facets.array()[boundaries_new.array()==Domains.Active_contacts[1]]=2
 
-    if cc_multicontact==True and Domains.fi[0]!=0.0:
+    if cc_multicontact==True and Domains.Amp_vector[0]!=0.0:
         dsS_new=Measure("dS",domain=mesh_new,subdomain_data=facets)
         An_surface_size_new=assemble(1.0*dsS_new(1))
     else:
@@ -806,11 +806,11 @@ def stupid_prerefiner(mesh_old,boundaries,subdomains_assigned):
 
 def mesh_adapter(MRI_param,DTI_param,Scaling,Domains,d,anisotropy,cc_multicontact,ref_freqs):
     logging.critical("----- Conducting mesh convergence study -----")
-    start_adapt=time_lib.clock()
+    start_adapt=time_lib.time()
 
     for i in range(len(ref_freqs)):     # go over the refinement frequencies
         logging.critical("At frequency: {} Hz".format(ref_freqs[i]))
-        if i==0:    # load mesh after the CSF refinement
+        if i == 0:    # load mesh after the CSF refinement
             mesh = Mesh(os.environ['PATIENTDIR']+'/CSF_ref/mesh_adapt_CSF'+str(Scaling)+'.xml.gz')
             boundaries = MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/CSF_ref/boundaries_adapt_CSF'+str(Scaling)+'.xml')
             subdomains_assigned = MeshFunction('size_t',mesh,os.environ['PATIENTDIR']+'/CSF_ref/subdomains_assigned_adapt_CSF'+str(Scaling)+'.xml')
@@ -848,8 +848,8 @@ def mesh_adapter(MRI_param,DTI_param,Scaling,Domains,d,anisotropy,cc_multicontac
     file=File(os.environ['PATIENTDIR']+'/Results_adaptive/Adapted_Field_real.pvd')
     file<<Field_real
 
-    minutes=int((time_lib.clock() - start_adapt)/60)
-    secnds=int(time_lib.clock() - start_adapt)-minutes*60
+    minutes=int((time_lib.time() - start_adapt)/60)
+    secnds=int(time_lib.time() - start_adapt)-minutes*60
     logging.critical("----- Mesh adaptation took {} min {} sec -----\n".format(minutes, secnds))
 
     return previous_results[-2]     #Ampl of the potential on the neuron compartments

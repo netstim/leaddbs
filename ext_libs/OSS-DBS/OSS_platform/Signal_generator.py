@@ -2,323 +2,276 @@
 """
 Created on Sat Sep 29 22:50:08 2018
 
-@author: trieu, butenko
+@author: Konstantin and Trieu
+
+Stim_pulse class contains methods necessary to describe a DBS signal in both time and frequency domains
+Charged balancing is supported
+To include new signals, you need to add their Fourier series expansion to define_signals_in_freq_domain(...)
 """
 import matplotlib.pyplot as plt
 import numpy as np
 import time as time_lib
 import os
-
+import pickle
 import logging
 
 from multiprocessing import Pool #  Process pool
 from multiprocessing import sharedctypes
 from functools import partial
 
-#generate_signal is the manager function (called in Launcher)
+def get_vector_in_time(Hf_zero, Hf_signal, w0, Num_freqs, signal_shift, t_step, num_tsteps, t_ind):
 
-def pick_refinement_freqs(Fr_vect,Xs_vect_unscaled,num_freqs,A):
-
-    Xs_vect=Xs_vect_unscaled[:]/A    #scale back to unit if necessary
-
-    Xs_vect_magn=np.absolute(Xs_vect)
-
-    ref_freqs=np.zeros((num_freqs),float)
-    ref_Xs=(1+1j)*np.zeros((num_freqs),float)
-
-    freq_i=1
-    last_index=0
-    loc_index=0
-
-
-    while (freq_i-1) < num_freqs:
-        Xs_sum_fraction=freq_i*np.sum(Xs_vect_magn)/(num_freqs+1)
-        el_sum=np.sum(np.absolute(Xs_vect[:last_index]))
-        while el_sum<Xs_sum_fraction:
-            el_sum += abs(Xs_vect[loc_index])
-            loc_index=loc_index+1
-
-        ref_freqs[freq_i-1]=Fr_vect[loc_index-1]
-        ref_Xs[freq_i-1]=Xs_vect[loc_index-1]
-
-        freq_i=freq_i+1
-        last_index=loc_index
-
-    logging.critical("Refinement frequencies: {} \n".format(' '.join(map(str, ref_freqs))))
-
-    return ref_freqs,ref_Xs
-
-def my_generate_signal(T,A,signal_freq,phi,freq_max,t_step,simulation_time):        #only positive ampl?
-    #import numpy as np
-    FR_vector_signal=np.arange(signal_freq,freq_max,signal_freq)
-    #print FR_vector_signal.shape[0]
-    #t_step=10e-7
-    t_vector=np.arange(0,simulation_time,t_step)
-
-    #T=6.0e-5
-    #A=0.0002
-    #phi=T/2
-
-    Xs_signal=[]
-    for i in FR_vector_signal:
-        res=A*T*np.sinc(T*i)*np.exp(-2j*np.pi*i*phi)
-        Xs_signal.append(res)
-
-    Xs_signal=np.array(Xs_signal)
-
-    #        Out_arr=zeros((FR_vector_signal.shape[0],1),float)
-    Signal_t=(1/(2*np.pi))*np.sum([Xs_signal[int((i-signal_freq)/signal_freq)]*np.exp(2j*np.pi*i*t_vector) for i in FR_vector_signal],axis=0)
-
-    #plt.figure(0)
-    #plt.plot(t_vector,Signal_t)
-    #plt.xlim(0.0,0.0002)
-
-    koefff=max(Signal_t.real)
-
-    Xs_signal_normalized=(A/koefff)*np.array(Xs_signal)
-    #print Xs_signal_normalized
-    #print type(Xs_signal_normalized)
-    Signal_t_normalized=(1/(2*np.pi))*np.sum([Xs_signal_normalized[int((i-signal_freq)/signal_freq)]*np.exp(2j*np.pi*i*t_vector) for i in FR_vector_signal],axis=0)
-    plt.figure(1123123123)
-    plt.plot(t_vector,Signal_t_normalized)
-
-    plt.xlim(0.000,T*5)
-    plt.grid(True)
-    plt.xlabel('t, sec')
-    plt.ylabel('Signal amplitude (A or V)')
-    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_regenerated.png', format='png', dpi=750)
-
-    return t_vector,Signal_t_normalized,Xs_signal_normalized,FR_vector_signal
-
-def numpy_analog_digit_converter(t_vect,signal_t_vect,freq,freq_spect_size,T):
-
-    # as in the numpy example for np.fft.fft
-    cutoff = int(np.ceil((t_vect.shape[0]+1)/2.))
-
-    sp = np.fft.fft(signal_t_vect)
-    sp_cut=sp[:cutoff]
-
-    fr_vector=freq*np.arange(0, cutoff, 1)
-
-    '''if we want to rebuild the signal'''
-    if np.mod(t_vect.shape[0], 2):  # if the FT vector is odd
-        fv_conj = np.conjugate(sp_cut[-1:0:-1])
-    else:  # if the FT vector is even
-        fv_conj = np.conjugate(sp_cut[-2:0:-1])
-
-    Y = np.concatenate((sp_cut, fv_conj), axis=0)
-
-    signal_t_rebuilt=np.fft.ifft(Y).real
-    #plt.show()
-    plt.figure(11111232111)
-    plt.plot(t_vect,signal_t_rebuilt)
-    plt.xlim(0.000,T*5)
-    plt.grid(True)
-    plt.xlabel('t, sec')
-    plt.ylabel('Signal amplitude (A or V)')
-    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_recovered_shape.png', format='png', dpi=750)
-
-    return fr_vector,sp_cut
-
-
-def manual_signal_out_generator(d,t,A):
-    signal_out=np.zeros(len(t),float)
-    num_steps_signal=int(d["T"]/d["t_step"])
-    num_steps_shift=int(d["phi"]/d["t_step"])
-
-    for signal_step in np.arange(num_steps_shift,num_steps_signal+num_steps_shift):
-        if (d["Signal_type"] == 'Rectangle'):# Increase Ram
-            signal_out[signal_step]=A
-        elif (d["Signal_type"] == 'Increasing Ramp'):# Increase Ram
-            signal_out[signal_step]=(A/num_steps_signal)*(signal_step-num_steps_shift)
-        elif (d["Signal_type"] == 'Decreasing Ramp'):# Increase Ram
-            signal_out[signal_step]=-1*(A/num_steps_signal)*(signal_step-num_steps_shift-num_steps_signal)
-        elif(d["Signal_type"] == 'Central Triangle'):# Central Triangular
-            if signal_step>int(num_steps_signal/2)+num_steps_shift:
-                signal_out[signal_step]=-2*(A/num_steps_signal)*(signal_step-num_steps_shift-num_steps_signal)
-            else:
-                signal_out[signal_step]=2*(A/num_steps_signal)*(signal_step-num_steps_shift)
-
-    return signal_out
-
-def get_vector_in_time(Hf_zero,Hf_signal,w0,Nmax,phi,t_step,n_time_max,t_ind):
+    """ parallelized transformation of the signal from the frequency to the time domain """
 
     tmp = np.ctypeslib.as_array(shared_array)
-    t = [t_step*x for x in range(n_time_max)]
+    t = [t_step*x for x in range(num_tsteps)]
 
-    Ht = Hf_zero + np.sum (Hf_signal[k]*np.exp(-1j*w0*(k+1)*(t[t_ind]-phi)) for k in range (0,Nmax-2))  #Nmax-2
-    tmp[t_ind]=np.real(Ht)
+    Ht = Hf_zero + np.sum(Hf_signal[k]*np.exp(-1j*w0*(k+1)*(t[t_ind]-signal_shift)) for k in range(0, Num_freqs - 2))
+    tmp[t_ind] = np.real(Ht)
 
+class Stim_pulse(object):
+    def __init__(self, inp_dict, cc_multi):
 
+        self.Sim_time = 1.0/inp_dict["freq"]                             #  always one pulse per simulation
+        self.num_tsteps = int(self.Sim_time/inp_dict["t_step"])          #  number of time steps
+        self.t_vector = [inp_dict["t_step"]*x for x in range(self.num_tsteps)]  #  time vector, in seconds
 
-def generate_signal(d,A,amp_max,cc_multi):
+        self.freq_max = inp_dict["freq"] * self.Sim_time / inp_dict["t_step"]  # the last frequency in the Fourier Transform
+        self.FR_vector_signal = np.arange(0.0, self.freq_max, inp_dict["freq"])
+        self.num_freqs = self.FR_vector_signal.shape[0]
+        # logging.critical("Max frequency in the spectrum: {}".format(freq_max/2.0))
 
-    start_signal_generation=time_lib.clock()
+        # to generate the signal using analytical formulation (by Trieu)
+        self.signal_shift = inp_dict["phi"]      #  in sec
+        self.w0 = 2 * np.pi * inp_dict["freq"]   #  angular frequency
+        self.pw = inp_dict["T"]                  #  pulse width in sec
+        self.rep_rate = inp_dict["freq"]         #  repetition rate of the DBS signal (usually 130-184 Hz)
 
-    logging.critical("{} with repetition rate {} Hz and {} ms pulse width".format(d["Signal_type"],d["freq"],np.round(d["T"]*1000,8)))
-    Sim_time=1.0/d["freq"]      # always one pulse per simulation
-    freq_max=d["freq"]*Sim_time/d["t_step"]
-    logging.critical("Max frequency in the spectrum: {}".format(freq_max/2.0))
+        # now we don't need None values (floating potentials), Contacts contain only the active ones
+        pulse_amp = [x for x in inp_dict["Pulse_amp"] if x is not None]
 
-    FR_vector_signal=np.arange(0.0,freq_max,d["freq"])
-    n_time_max = int (Sim_time/d["t_step"])
-    t = [d["t_step"]*x for x in range(n_time_max)]
-
-    # to generate the signal with its analytical formulation (by Trieu)
-    II = np.pi
-    phi = d["phi"] # signal shift in sec
-    w0 = 2*II*d["freq"]
-    pw = d["T"] #pulse width
-    Nmax=FR_vector_signal.shape[0]
-
-    #signal_out = []
-    #Hf_signal = []
-
-    signal_out=np.ctypeslib.as_ctypes(np.zeros(len(t),float))
-    global shared_array
-    shared_array = sharedctypes.RawArray(signal_out._type_, signal_out)
-
-    Hf_signal=np.complex(0,0)*np.zeros(Nmax-1,float)
-
-    for k in range (1,Nmax):
-        if (d["Signal_type"] == 'Increasing Ramp'):# Ascending Ramp
-            Hf_zero = A*pw/2/Sim_time # Hf1 at k=0
-            #Hf1 = 2*A/(Sim_time*pw)*(pw*np.exp(1j*w0*k*pw)/(1j*w0*k) + (np.exp(1j*w0*k*pw)-1)/(w0*k)**2)
-            #Hf_signal.append(Hf1)
-            Hf_signal[k-1]=2*A/(Sim_time*pw)*(pw*np.exp(1j*w0*k*pw)/(1j*w0*k) + (np.exp(1j*w0*k*pw)-1)/(w0*k)**2)
-        elif(d["Signal_type"] == 'Decreasing Ramp'): # Descending Ramp
-            Hf_zero = A*pw/2/Sim_time # Hf2 at k=0
-            #Hf2 = -2*A/(Sim_time*pw)*(pw/(1j*w0*k) + (np.exp(1j*w0*k*pw)-1)/(w0*k)**2)
-            #Hf_signal.append(Hf2)
-            Hf_signal[k-1]=-2*A/(Sim_time*pw)*(pw/(1j*w0*k) + (np.exp(1j*w0*k*pw)-1)/(w0*k)**2)
-        elif(d["Signal_type"] == 'Central Triangle'):# Central Triangular
-            Hf_zero = A*pw/2/Sim_time # Hf3 at k=0
-            #Hf3 = 4*A/(Sim_time*pw)*(( 2*np.exp(1j*w0*k*pw/2) - np.exp(1j*w0*k*pw)-1 )/(w0*k)**2)
-            #Hf_signal.append(Hf3)
-            Hf_signal[k-1]=4*A/(Sim_time*pw)*(( 2*np.exp(1j*w0*k*pw/2) - np.exp(1j*w0*k*pw)-1 )/(w0*k)**2)
-        elif(d["Signal_type"] == 'Rectangle'):# Rectangular
-            Hf_zero = A*pw/Sim_time # Hf4 at k=0
-            #Hf4 = 2*A/(Sim_time*1j*w0*k)*( np.exp(1j*w0*k*pw) -1 )
-            #Hf_signal.append(Hf4)
-            Hf_signal[k-1]=2*A/(Sim_time*1j*w0*k)*( np.exp(1j*w0*k*pw) -1 )
+        self.cc_multi = cc_multi
+        # For monopolar current-controlled stimulation, the DBS pulse is assigned the actual amplitude!
+        # (The field will be initially computed for the unit current, and then scaled during cross-correlation and IFFT)
+        if inp_dict["current_control"] == 1 and self.cc_multi == False:
+            self.A = max(pulse_amp[:], key=abs)  # Here we should have only one non-zero value. Negative if cathodes
+        else:
+            self.A = 1.0  #  Use the unit signal for voltage-controlled and miltipolar current-controlled
+                     #  Because the electric field will be scaled before the cross-correlation and IFFT
+            self.Amp_max = max(pulse_amp[:], key=abs)    #  This variable is used for plotting
 
 
-    p = Pool()
-    time_ind=np.arange(len(t))
-    res = p.map(partial(get_vector_in_time, Hf_zero,Hf_signal,w0,Nmax,phi,d["t_step"],n_time_max),time_ind)
-    signal_out = np.ctypeslib.as_array(shared_array)
-    p.terminate()
+    def create_pulse(self, d):
 
-    #signal_out=np.asarray(signal_out)
-    del Hf_signal
-    signal_out_real=signal_out.real
+        start_signal_generation = time_lib.time()
+        logging.critical("{} with repetition rate {} Hz and {} ms pulse width".format(d["Signal_type"], d["freq"], np.round(d["T"]*1000, 8)))
 
-    ## to construct the signal manually (quick approach but the signal is almost "untruncatable")
-    #signal_out_real=manual_signal_out_generator(d,t,A)
+        # analyt. definition in the frequency domain
+        Hf_zero, Hf_signal = self.define_signals_in_freq_domain(d["Signal_type"])
 
-    if d['Charge_balancing'] == True:
-
-        phi2 = d["phi"] + pw  # signal shift + shift by pulse width
-        if d['Balancing_type'] == 'Symmetric':
-            A2 = -1.0 * A
-            pw2 = d["T"]
-            Signal_type_counter = d["Signal_type"]
-        elif d['Balancing_type'] == 'Low_amplitude':
-            pw2 = Sim_time - d["T"]
-            if d["Signal_type"] == 'Rectangle':
-                A2 = -1.0 * A * d["T"] / pw2
-            else:
-                A2 = -0.5 * A * d["T"] / pw2
-            Signal_type_counter = 'Rectangle'
-
-        signal_out2 = np.ctypeslib.as_ctypes(np.zeros(len(t), float))
-        # global shared_array
-        shared_array = sharedctypes.RawArray(signal_out2._type_, signal_out2)
-
-        Hf_signal = np.complex(0, 0) * np.zeros(Nmax - 1, float)
-
-        k = np.arange(1, Nmax)
-        if (Signal_type_counter == 'Increasing Ramp'):  # Ascending Ramp
-            Hf_zero = A2 * pw2 / 2 / Sim_time  # Hf1 at k=0
-            Hf_signal = 2 * A2 / (Sim_time * pw2) * (
-                        pw2 * np.exp(1j * w0 * k * pw2) / (1j * w0 * k) + (np.exp(1j * w0 * k * pw2) - 1) / (w0 * k) ** 2)
-        elif (Signal_type_counter == 'Decreasing Ramp'):  # Descending Ramp
-            Hf_zero = A2 * pw2 / 2 / Sim_time  # Hf2 at k=0
-            Hf_signal = -2 * A2 / (Sim_time * pw2) * (pw2 / (1j * w0 * k) + (np.exp(1j * w0 * k * pw2) - 1) / (w0 * k) ** 2)
-        elif (Signal_type_counter == 'Central Triangle'):  # Central Triangular
-            Hf_zero = A2 * pw2 / 2 / Sim_time  # Hf3 at k=0
-            Hf_signal = 4 * A2 / (Sim_time * pw2) * (
-                        (2 * np.exp(1j * w0 * k * pw2 / 2) - np.exp(1j * w0 * k * pw2) - 1) / (w0 * k) ** 2)
-        elif (Signal_type_counter == 'Rectangle'):  # Rectangular
-            Hf_zero = A2 * pw2 / Sim_time  # Hf4 at k=0
-            Hf_signal = 2 * A2 / (Sim_time * 1j * w0 * k) * (np.exp(1j * w0 * k * pw2) - 1)
-
+        #  for parallel array processing in Pool
+        signal_out = np.ctypeslib.as_ctypes(np.zeros(len(self.t_vector), float))
+        global shared_array
+        shared_array = sharedctypes.RawArray(signal_out._type_, signal_out)
         p = Pool()
-        time_ind = np.arange(len(t))
-        t = d["t_step"] * time_ind
-        res = p.map(partial(get_vector_in_time, Hf_zero, Hf_signal, w0, Nmax, phi2, d["t_step"], n_time_max), time_ind)
-        signal_out2 = np.ctypeslib.as_array(shared_array)
+
+        # convert signal to the time domain using parallel processing of time steps
+        time_ind = np.arange(len(self.t_vector))
+        res = p.map(partial(get_vector_in_time, Hf_zero, Hf_signal, self.w0, self.num_freqs, self.signal_shift, d["t_step"], self.num_tsteps), time_ind)
+        signal_out = np.ctypeslib.as_array(shared_array)
         p.terminate()
 
         del Hf_signal
-        signal_out_real2 = signal_out2.real
 
-        signal_out_real_sum = signal_out_real2 + signal_out_real
-    else:
-        signal_out_real_sum = signal_out_real
+        if d['Charge_balancing'] == True:   #  in this case we add another signal
+            true_parameters = [self.A, self.pw, self.signal_shift]
+
+            self.signal_shift2 = self.signal_shift + self.pw  # signal shift (in sec) + shift by pulse width
+            if d['Balancing_type'] == 'Symmetric':
+                self.A2 = -1.0 * self.A
+                self.pw2 = self.pw
+                Signal_type_counter = d["Signal_type"]
+            elif d['Balancing_type'] == 'Low_amplitude':
+                self.pw2 = self.Sim_time - self.pw
+                if d["Signal_type"] == 'Rectangle':
+                    self.A2 = -1.0 * self.A * self.pw / self.pw2
+                else:
+                    self.A2 = -0.5 * self.A * self.pw / self.pw2
+                Signal_type_counter = 'Rectangle'
+
+            self.A, self.pw, self.signal_shift = (self.A2, self.pw2, self.signal_shift2)   #  just temporary
+
+            # analyt. definition in the frequency domain
+            Hf_zero2, Hf_signal2 = self.define_signals_in_freq_domain(Signal_type_counter)
+
+            self.A, self.pw, self.signal_shift = true_parameters[:]  #  restore true parameters
+
+            signal_out2 = np.ctypeslib.as_ctypes(np.zeros(len(self.t_vector), float))
+            shared_array = sharedctypes.RawArray(signal_out2._type_, signal_out2)
+
+            p = Pool()
+            time_ind = np.arange(len(self.t_vector))
+            t = d["t_step"] * time_ind
+            res = p.map(partial(get_vector_in_time, Hf_zero2, Hf_signal2, self.w0, self.num_freqs, self.signal_shift2, d["t_step"], self.num_tsteps), time_ind)
+            signal_out2 = np.ctypeslib.as_array(shared_array)
+            p.terminate()
+
+            del Hf_signal2
+
+            signal_out_real_sum = signal_out2.real + signal_out.real
+        else:
+            signal_out_real_sum = signal_out.real
+
+
+        plt.figure(11111231)
+        if d["current_control"]==1 and self.cc_multi == False:
+            plt.plot(self.t_vector, signal_out_real_sum)
+        else:
+            signal_out_scaled=[i * self.Amp_max for i in signal_out_real_sum]
+            plt.plot(self.t_vector, signal_out_scaled)
+        plt.xlim(0.000, self.pw * 5) # don't show the whole signal (1.0/freq), just 5 pulse widths
+        plt.grid(True)
+        plt.xlabel('t, sec')
+        plt.ylabel('Signal amplitude (A or V)')
+        plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal.png', format='png', dpi=750)
+        self.t_vector = np.asarray(self.t_vector)
+
+        # get a Fourier transformation of the signal with np.fft.fft and recover to check with np.fft.ifft
+        self.numpy_analog_digit_converter(signal_out_real_sum)
+
+        #=============================== Plots =========================================#
+
+        # these take time to generate
+
+        # plt.figure(11)
+        # plt.stem(self.FR_vector_signal, np.real(self.Xs_signal_norm), markerfmt=" ")
+        # plt.xscale("log")
+        # plt.xlabel('Frequency, Hz')
+        # plt.ylabel('Real part')
+        # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        # plt.savefig(os.environ['PATIENTDIR']+'/Images/FT_real.png', format='png', dpi=1000)
+
+        # plt.figure(12)
+        # plt.stem(self.FR_vector_signal, np.imag(self.Xs_signal_norm, markerfmt=" ")
+        # plt.xscale("log")
+        # plt.xlabel('Frequency, Hz')
+        # plt.ylabel('Imaginary part')
+        # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        # plt.savefig(os.environ['PATIENTDIR']+'/Images/FT_imag.png', format='png', dpi=1000)
+
+        # plt.figure(111342)
+        # plt.stem(self.FR_vector_signal, np.absolute(self.Xs_signal_norm), markerfmt=" ",linefmt='C0',basefmt="C0-")
+        # plt.xscale("log")
+        # plt.xlabel('Frequency, Hz')
+        # plt.ylabel('Amplitude')
+        # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        # plt.savefig(os.environ['PATIENTDIR']+'/Images/FT_full_ampl.png', format='png', dpi=750)
+
+        minutes=int((time_lib.time() - start_signal_generation)/60)
+        secnds=int(time_lib.time() - start_signal_generation)-minutes*60
+        logging.critical("----- Signal generation took {} min {} sec -----\n".format(minutes, secnds))
+
+        return True
+
+
+    def define_signals_in_freq_domain(self, Signal_type):
+        """ signals definitions should be added in this function """
+
+        Hf_signal = np.complex(0, 0) * np.zeros(self.num_freqs - 1, float)
+        k = np.arange(1, self.num_freqs)
+
+        if (Signal_type== 'Increasing Ramp'):  # Ascending Ramp
+            Hf_zero = self.A * self.pw / 2 / self.Sim_time
+            Hf_signal[k - 1] = 2 * self.A / (self.Sim_time * self.pw) * (
+                    self.pw * np.exp(1j * self.w0 * k * self.pw) / (1j * self.w0 * k) + (np.exp(1j * self.w0 * k * self.pw) - 1) / (
+                    self.w0 * k) ** 2)
+
+        elif (Signal_type == 'Decreasing Ramp'):  # Descending Ramp
+            Hf_zero = self.A * self.pw / 2 / self.Sim_time
+            Hf_signal[k - 1] = -2 * self.A / (self.Sim_time * self.pw) * (
+                    self.pw / (1j * self.w0 * k) + (np.exp(1j * self.w0 * k * self.pw) - 1) / (self.w0 * k) ** 2)
+
+        elif (Signal_type == 'Central Triangle'):  # Central Triangular
+            Hf_zero = self.A * self.pw / 2 / self.Sim_time
+            Hf_signal[k - 1] = 4 * self.A / (self.Sim_time * self.pw) * (
+                    (2 * np.exp(1j * self.w0 * k * self.pw / 2) - np.exp(1j * self.w0 * k * self.pw) - 1) / (self.w0 * k) ** 2)
+
+        elif (Signal_type == 'Rectangle'):  # Rectangular
+            Hf_zero = self.A * self.pw / self.Sim_time
+            Hf_signal[k - 1] = 2 * self.A / (self.Sim_time * 1j * self.w0 * k) * (np.exp(1j * self.w0 * k * self.pw) - 1)
+
+        else:
+            logging.critical("\nThe signal type is not implemented")
+            logging.critical("Check available signals in Signal_generator.py")
+            raise SystemExit
+
+        return Hf_zero, Hf_signal
+
+    def numpy_analog_digit_converter(self, signal_t_vect):
+
+        # as in the numpy example for np.fft.fft
+        cutoff = int(np.ceil((self.t_vector.shape[0] + 1) / 2.))
+        sp = np.fft.fft(signal_t_vect)
+        self.Xs_signal_norm = sp[:cutoff]
+        self.FR_vector_signal = self.rep_rate*np.arange(0, cutoff, 1)
+
+        '''if we want to rebuild the signal (just shape, the amplitude may differ)'''
+        if np.mod(self.t_vector.shape[0], 2):  # if the FT vector is odd
+            fv_conj = np.conjugate(self.Xs_signal_norm[-1:0:-1])
+        else:  # if the FT vector is even
+            fv_conj = np.conjugate(self.Xs_signal_norm[-2:0:-1])
+
+        Y = np.concatenate((self.Xs_signal_norm, fv_conj), axis=0)
+        signal_t_rebuilt = np.fft.ifft(Y).real
+        #plt.show()
+        plt.figure(11111232111)
+        plt.plot(self.t_vector, signal_t_rebuilt)
+        plt.xlim(0.000, self.pw*5)
+        plt.grid(True)
+        plt.xlabel('t, sec')
+        plt.ylabel('Signal amplitude (A or V)')
+        plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal_Shape_recovered.png', format='png', dpi=750)
+
+        return True
 
 
 
-    plt.figure(11111231)
-    if d["current_control"]==1 and cc_multi==False:
-        plt.plot(t,signal_out_real_sum)
-    else:
-        signal_out_scaled=[i * amp_max for i in signal_out_real_sum]
-        plt.plot(t,signal_out_scaled)
-    plt.xlim(0.000,d["T"]*5)
-    plt.grid(True)
-    plt.xlabel('t, sec')
-    plt.ylabel('Signal amplitude (A or V)')
-    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig(os.environ['PATIENTDIR']+'/Images/Signal.png', format='png', dpi=750)
-    t=np.asarray(t)
+def pick_refinement_freqs(Fr_vect, Xs_vect, num_freqs):
+    """ This function chooses frequencies (as many as num_freqs) for mesh refinement
+        depending on the DBS power spectrum """
 
-    # get a Fourier transformation of the signal with np.fft.fft and recover to check with np.fft.ifft
-    Fr_vect,Xs_vect=numpy_analog_digit_converter(t,signal_out_real_sum,d["freq"],FR_vector_signal.shape[0],d["T"])
+    Xs_vect_magn = np.absolute(Xs_vect)
 
-    #==========Plots==========================================================#
+    ref_freqs = np.zeros(num_freqs, float)
+    ref_Xs = (1+1j)*np.zeros(num_freqs, float)
 
-    # these take time to generate
+    freq_i = 1
+    last_index = 0
+    loc_index = 0
 
-    # plt.figure(11)
-    # plt.stem(Fr_vect, np.real(Xs_vect), markerfmt=" ")
-    # plt.xscale("log")
-    # plt.xlabel('Frequency, Hz')
-    # plt.ylabel('Real part')
-    # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    # plt.savefig('Images/FT_real.png', format='png', dpi=1000)
+    while (freq_i - 1) < num_freqs:
+        Xs_sum_fraction = freq_i * np.sum(Xs_vect_magn) / (num_freqs + 1)
+        el_sum = np.sum(np.absolute(Xs_vect[:last_index]))
+        while el_sum < Xs_sum_fraction:
+            el_sum += abs(Xs_vect[loc_index])
+            loc_index += 1
 
-    # plt.figure(12)
-    # plt.stem(Fr_vect, np.imag(Xs_vect), markerfmt=" ")
-    # plt.xscale("log")
-    # plt.xlabel('Frequency, Hz')
-    # plt.ylabel('Imaginary part')
-    # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    # plt.savefig('Images/FT_imag.png', format='png', dpi=1000)
+        ref_freqs[freq_i-1] = Fr_vect[loc_index-1]
+        ref_Xs[freq_i-1] = Xs_vect[loc_index-1]
 
-    # '''Maybe we want to use less freq'''
-    # plt.figure(111342)
-    # plt.stem(Fr_vect, np.absolute(Xs_vect), markerfmt=" ",linefmt='C0',basefmt="C0-")
-    # plt.xscale("log")
-    # plt.xlabel('Frequency, Hz')
-    # plt.ylabel('Amplitude')
-    # plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    # plt.savefig('Images/FT_full_ampl.eps', format='eps', dpi=1000)
+        freq_i += 1
+        last_index = loc_index
 
-    minutes=int((time_lib.clock() - start_signal_generation)/60)
-    secnds=int(time_lib.clock() - start_signal_generation)-minutes*60
-    logging.critical("----- Signal generation took {} min {} sec -----\n".format(minutes, secnds))
+    logging.critical("Refinement frequencies: {} \n".format(' '.join(map(str, ref_freqs))))
 
-    return t,signal_out_real_sum,Xs_vect,Fr_vect
+    return ref_freqs
+
+
+
+
+
+
+
+

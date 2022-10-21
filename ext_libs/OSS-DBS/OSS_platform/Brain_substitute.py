@@ -8,10 +8,6 @@ import sys
 import salome
 import os
 salome.salome_init()
-theStudy = salome.myStudy
-
-import salome_notebook
-notebook = salome_notebook.NoteBook(theStudy)
 sys.path.insert( 0, "r'"+os.getcwd())
 
 ###
@@ -33,8 +29,8 @@ Y_tip=-14.7114212603611
 Z_tip=-9.62969801365702
 
 ##################
-geompy = geomBuilder.New(theStudy)
-print"brain modle file is saved at"+ os.getcwd()+"/Brain_substitute.brep"
+geompy = geomBuilder.New()
+print("brain model file is saved at"+ os.getcwd()+"/Brain_substitute.brep")
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
 OY = geompy.MakeVectorDXDYDZ(0, 1, 0)
@@ -66,7 +62,7 @@ geompy.addToStudy( Brain_model_ROI, 'Brain_model_ROI' )
 import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Brain_model_ROI)
 NETGEN_1D_2D_3D = Mesh_1.Tetrahedron(algo=smeshBuilder.NETGEN_1D2D3D)
 NETGEN_3D_Parameters_1 = NETGEN_1D_2D_3D.Parameters()
@@ -81,7 +77,7 @@ NETGEN_3D_Parameters_1.SetQuadAllowed( 0 )
 isDone = Mesh_1.Compute()
 smesh.SetName(Mesh_1, 'Mesh_1')
 
-Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.med')
+Mesh_1.ExportMED(os.environ['PATIENTDIR']+'/Meshes/Mesh_brain_substitute_max_ROI.med', 0, 33)
 
 smesh.SetName(NETGEN_1D_2D_3D.GetAlgorithm(), 'NETGEN 1D-2D-3D')
 smesh.SetName(NETGEN_3D_Parameters_1, 'NETGEN 3D Parameters_1')

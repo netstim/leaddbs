@@ -6,13 +6,10 @@ Created on Fri May 29 12:11:41 2020
 """
 
 import os
-#from nibabel.testing import data_path
 import nibabel as nib
 import matplotlib.pyplot as plt
 
-
-from multiprocessing import Pool #  Process pool
-from multiprocessing import sharedctypes,cpu_count
+from multiprocessing import sharedctypes,cpu_count,Pool
 from functools import partial
 
 import numpy as np
@@ -181,7 +178,7 @@ def main_part(tensor_order,scaling_method):
     normalized_DTI = np.ctypeslib.as_array(shared_array)
 
 
-def scale_tensor_data(tensor_data_name,scaling_method='Norm_mapping',tensor_order='NIFTI'):
+def scale_tensor_data(tensor_data_name,scaling_method='NormMapping',tensor_order='NIFTI'):
 
     global DTI_data
     #DTI_data=np.zeros((18,21,18,6),float)

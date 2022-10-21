@@ -20,14 +20,14 @@ class Dictionary(Functionalities):
 
     def output_dict(self):
         output_dict = {
-            'voxel_arr_MRI': self.corrector(1, self.ui.checkBox_Voxel_orr_MRI.checkState()),
-            'voxel_arr_DTI': self.corrector(0, self.ui.checkBox_Voxel_orr_DTI.checkState()),
+            'Segm_MRI_processed': self.corrector(1, self.ui.checkBox_Voxel_orr_MRI.checkState()),
+            'DTI_processed': self.corrector(0, self.ui.checkBox_Voxel_orr_DTI.checkState()),
             'Init_neuron_model_ready': self.corrector(1, self.ui.checkBox_Init_Neuron_Model_Ready.checkState()),
             'Init_mesh_ready': self.corrector(1, self.ui.checkBox_Init_Mesh_Ready.checkState()),
             'Adjusted_neuron_model_ready': self.corrector(1, self.ui.checkBox_Adjusted_Neuron_Model_Ready.checkState()),
             'CSF_mesh_ready': self.corrector(1, self.ui.checkBox_CSF_Mesh_Ready.checkState()),
             'Adapted_mesh_ready': self.corrector(0, self.ui.checkBox_Adapted_Mesh_Ready.checkState()),
-            'signal_generation_ready': self.corrector(0, self.ui.checkBox_Signal_Generation_Ready.checkState()),
+            'Signal_generated': self.corrector(0, self.ui.checkBox_Signal_Generation_Ready.checkState()),
             'Parallel_comp_ready': self.corrector(0, self.ui.checkBox_Parallel_Computing_Ready.checkState()),
             'Parallel_comp_interrupted': self.corrector(0,
                                                         self.ui.checkBox_Parallel_Computing_Interrupted.checkState()),
@@ -72,7 +72,7 @@ class Dictionary(Functionalities):
             'number_of_processors': self.set_default_values(0, self.ui.spinBox_Number_Of_Processors.value()),
             'FEniCS_MPI': self.corrector(0, self.ui.checkBox_FEniCS_MPI.checkState()),
             'current_control': self.corrector(0, self.ui.checkBox_Current_Control.checkState()),
-            'Phi_vector': self.set_default_values([0], self.ui.lineEdit_Phi_Vector.text()),
+            'Pulse_amp': self.set_default_values([0], self.ui.lineEdit_Phi_Vector.text()),
             'Solver_Type': self.set_default_text("MUMPS", self.ui.comboBox_Solver_Type.currentText()),
             'freq': self.set_default_values(130.0, self.ui.doubleSpinBox_Frequency.value()),
             'T': self.set_default_values(10.0e-5, self.ui.doubleSpinBox_T.value()),
@@ -81,7 +81,7 @@ class Dictionary(Functionalities):
             'Signal_type': self.set_default_text("Rectangle", self.ui.comboBox_Signal_Type.currentText()),
             'Ampl_scale': self.set_default_values(1.0, self.ui.doubleSpinBox_Amplitude_Scale.value()),
             'CPE_activ': self.corrector(0, self.ui.checkBox_CPE_Active.checkState()),
-            'Full_Field_IFFT': self.corrector(0, self.ui.checkBox_Full_Field_IFFT.checkState()),
+            'VTA_approx': self.corrector(0, self.ui.checkBox_Full_Field_IFFT.checkState()),
             'spectrum_trunc_method': self.set_default_text("No Truncation",
                                                            self.ui.comboBox_Spectrum_Truncation_Method.currentText()),
 
