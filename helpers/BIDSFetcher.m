@@ -53,6 +53,15 @@ classdef BIDSFetcher
             else
                 rawImages = ea_genrawimagesjson(obj.datasetDir, subjId);
             end
+
+            if isfield(rawImages, 'preop')
+                preopAnat = struct2cell(rawImages.preop.anat);
+                if ~startsWith(preopAnat{1}, ['sub-', subjId, '_'])
+                    wrongSubjId = regexp(preopAnat{1}, '(?<=^sub-)[^\W_]+(?=_)', 'match', 'once');
+                    ea_cprintf('CmdWinWarnings', 'Mismatched subjId "%s" found in the rawimages.json! Should be "%s".\n', wrongSubjId, subjId);
+                    rawImages = ea_genrawimagesjson(obj.datasetDir, subjId);
+                end
+            end
         end
 
         function LeadDBSDirs = getLeadDBSDirs(obj, subjId)

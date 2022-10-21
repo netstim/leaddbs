@@ -30,12 +30,12 @@ end
 if isempty(fieldnames(rawImages))
     % Warn in case it's not a miniset
     if ~isfile(fullfile(GetFullPath(BIDSRoot), 'miniset.json'))
-        ea_cprintf('CmdWinWarnings', 'No raw images found for "sub-%s":\n', subjId);
+        ea_cprintf('CmdWinWarnings', 'No raw images found for "%s":\n', subjId);
     end
     return;
 end
 
-ea_cprintf('CmdWinWarnings', 'Generating rawimages.json for "sub-%s":\n', subjId);
+ea_cprintf('CmdWinWarnings', 'Generating rawimages.json for "%s":\n', subjId);
 
 % Get prefs folder
 prefsFolder = fullfile(GetFullPath(BIDSRoot), 'derivatives', 'leaddbs', ['sub-', subjId], 'prefs');
