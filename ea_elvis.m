@@ -804,7 +804,6 @@ end
 
 
 function ea_keyrelease(resultfig,event)
-ea_readjustlight(resultfig,event);
 setappdata(resultfig,'altpressed',0);
 setappdata(resultfig,'shiftpressed',0);
 setappdata(resultfig,'cmdpressed',0);
