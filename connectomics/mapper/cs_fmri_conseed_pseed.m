@@ -24,11 +24,9 @@ else
 end
 
 disp(['Connectome dataset: ',cname,'.']);
-ocname=cname;
-if ismember('>',cname)
-    delim=strfind(cname,'>');
-    subset=cname(delim+1:end);
-    cname=cname(1:delim-1);
+if contains(cname, '>')
+    subset = regexprep(cname, '.*> *', '');
+    cname = regexprep(cname, ' *>.*', '');
 end
 
 if exist('subset', 'var')
