@@ -1,6 +1,12 @@
 function label = ea_getConnLabel(connectome, subset)
 % Return a label for specific connectome
 
+% fMRI connectome with subset in the 'connectome' parameter
+if contains(connectome, '>')
+    subset = regexprep(connectome, '.*> *', ''); % override 'subset' parameter
+    connectome = regexprep(connectome, ' *>.*', '');
+end
+
 connBaseFolder = ea_getconnectomebase;
 connFolder = fullfile(connBaseFolder, {'dMRI', 'fMRI', 'dmri_multitract'}', connectome);
 connFolder = connFolder(isfolder(connFolder));
