@@ -9,6 +9,8 @@ uipatdir = GetFullPath(uipatdir);
 isSubjFolder = 0;
 isBIDSRoot = 0;
 
+isDICOMFolder = 0; % Will be true in case a 'DICOM' folder dragged in, will then only do dcm conversion, subjId will be the parent folder name
+
 if length(uipatdir) == 1 % Single folder
     if contains(uipatdir{1}, ['derivatives', filesep, 'leaddbs']) % Is patient folder under derivatives
         isSubjFolder = 1;
@@ -64,6 +66,7 @@ if length(uipatdir) == 1 % Single folder
         % DICOM folder detected
         elseif endsWith(uipatdir{1}, 'dicom', 'IgnoreCase',true)
             uipatdir = {fileparts(uipatdir{1})};
+            isDICOMFolder = 1;
             folder_type = 'patient_folder_dicom_folder';
 
         % DICOM folder detected inside the folder
@@ -159,6 +162,7 @@ if length(uipatdir) == 1 % Single folder
                 end
             case  'patient_folder_dicom_folder'
                 options.prefs = ea_prefs;
+                options.isDICOMFolder = isDICOMFolder;
                 msg = sprintf('DICOM folder found,\n should we run DICOM to NIfTI conversion?');
                 waitfor(ea_selectdataset(msg,handles.leadfigure));
                 dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');

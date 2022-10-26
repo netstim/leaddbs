@@ -128,7 +128,12 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw] = enablerules(selection,o
     results = 'pass';
     % detection function: if the patient has derivatives and
     % raw data, but not in BIDS format then it should be migrated.
-    if endsWith(filepath, 'sourcedata')
+    if options.isDICOMFolder
+        dicom_conv = 1;
+        doMigrate = 0;
+        doOnlyRaw = 0;
+        flag = 'onlyDCMconv';
+    elseif endsWith(filepath, 'sourcedata')
         % Input is sourcedata folder under a bids dataset
         dicom_conv = 1;
         doMigrate = 0;
@@ -192,6 +197,7 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw] = enablerules(selection,o
     elseif ~isfolder(fullfile(selection,'DICOM')) && ~isfolder(fullfile(selection,'dicom'))
             %todo: test whether there are actually dicom files inside
             dicom_conv = 1;
+            doMigrate = 0;
             doOnlyRaw = 0;
             flag = 'onlyDCMconv';
     else
