@@ -392,8 +392,7 @@ classdef ea_sweetspot < handle
             R1 = R(1);
             R0 = sort(abs(R(2:end)),'descend');
             Rp95 = R0(round(0.05*numPerm));
-            v = ea_searchclosest(R0, R1);
-            pperm = v/numPerm;
+            pperm = mean(abs(R0)>=abs(R1));
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
 
             % Return only selected I

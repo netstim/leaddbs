@@ -757,16 +757,8 @@ classdef ea_disctract < handle
             % generate null distribution
             R1 = R(1);
             R0 = sort((R(2:end)),'descend');
-
             Rp95 = R0(round(0.05*numPerm));
-            higherR0=R0>(R1);
-            pperm=sum(higherR0)/numel(higherR0);
-
-            % old method below, using the one above to be consistent with
-            % ea_plothistperm.
-
-            %v = ea_searchclosest(R0, R1);
-            %pperm = v/numPerm;
+            pperm = mean(abs(R0)>=abs(R1));
             disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
 
             % Return only selected I
