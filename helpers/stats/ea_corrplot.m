@@ -3,13 +3,16 @@ function [h,R,p,g] = ea_corrplot(X,Y,permutation,labels,group1,group2,colors,mar
 % on [permuted] rank and linear corrlation in the title.
 %
 %   permutation can be:
-%       numeric: 0 for no permutation, integer for number of permutation,
-%                or float for external provided p value (for example, p
+%       numeric: integer (larger than 1) for number of permutation
+%                float for external provided p value (for example, p
 %                value can be calculated externally based on permuted R-Map
 %                or fiber tracts).
 %       char:    'no', 'noperm', or 'nopermutation' for no permutation.
 %                'yes', 'perm', or 'permutation' for permutation (default
 %                number of permutation is 1000 as defined in ea_permcorr).
+%       logical: false for no permutation
+%                true for permutation (default number of permutation is
+%                1000 as defined in ea_permcorr)
 %
 %   labels: labels{1} for figure title
 %           labels{2} for xlabel
@@ -190,12 +193,7 @@ pstr_rank = getappdata(h, 'pstr_rank');
 
 if isempty(R_linear)
     if isnumeric(permutation)
-        if ~permutation % no permutation
-            [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
-            [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
-            pstr_linear = getPstr(p_linear, 'p');
-            pstr_rank = getPstr(p_rank, 'p');
-        elseif mod(permutation, 1) == 0 % integer, number of permutation
+        if permutation > 1 && mod(permutation, 1) == 0 % integer, number of permutation
             [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson', permutation);
             [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman', permutation);
             pstr_linear = getPstr(p_linear, 'p (perm)');
@@ -206,14 +204,14 @@ if isempty(R_linear)
             pstr_linear = getPstr(p_linear, 'p (perm)');
             pstr_rank = getPstr(p_rank, 'p (perm)');
         end
-    elseif ischar(permutation)
+    elseif ischar(permutation) || islogical(permutation)
         switch permutation % no permutation
-            case {'no', 'noperm', 'nopermutation'}
+            case {'no', 'noperm', 'nopermutation', false}
                 [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
                 [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
                 pstr_linear = getPstr(p_linear, 'p');
                 pstr_rank = getPstr(p_rank, 'p');
-            case {'yes', 'perm', 'permutation'} % default number of permutation defined in ea_permcorr
+            case {'yes', 'perm', 'permutation', true} % default number of permutation defined in ea_permcorr
                 [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson');
                 [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
                 pstr_linear = getPstr(p_linear, 'p (perm)');
@@ -229,7 +227,7 @@ if isempty(R_linear)
 end
 
 % external p-value provided (e.g., based on permuted R-Map or fiber tracts)
-if isnumeric(permutation) && mod(permutation, 1) ~= 0
+if isnumeric(permutation) && permutation <= 1
     p_external = permutation;
     labels = [labels, getPstr(p_external, 'p (external)')];
 end
