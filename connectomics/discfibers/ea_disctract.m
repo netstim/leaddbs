@@ -738,7 +738,7 @@ classdef ea_disctract < handle
 
             R = zeros(numPerm+1, 1);
 
-            parfor perm=1:numPerm+1
+            for perm=1:numPerm+1
                 if perm==1
                     fprintf('Calculating without permutation\n\n');
                     [~, Ihat{perm}] = lno(obj);
