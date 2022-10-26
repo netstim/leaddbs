@@ -16,7 +16,7 @@ classdef ea_sweetspot < handle
         statimpthreshold = 0;
         statNthreshold = 0;
         statamplitudecorrection = 'None';
-        statnormalization = 'van Albada 2017';
+        statnormalization = 'None';
         corrtype = 'Spearman' % correlation strategy in case of using E-Fields.
         coverthreshold = 20; % of vtas needed to cover a single voxel to be considered
         posBaseColor = [1,1,1] % positive main color
