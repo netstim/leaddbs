@@ -74,9 +74,9 @@ else
             || ~isfile([ea_space, 'c2mask.nii']) ...
             || ~isfile([ea_space, 'c3mask.nii'])
         ea_newseg(ea_space, [options.primarytemplate, '.nii'], 0, options, 1);
-        movefile([ea_space, 'c1', options.primarytemplate, 'nii'], [ea_space, 'c1mask.nii']);
-        movefile([ea_space, 'c2', options.primarytemplate, 'nii'], [ea_space, 'c2mask.nii']);
-        movefile([ea_space, 'c3', options.primarytemplate, 'nii'], [ea_space, 'c3mask.nii']);
+        movefile([ea_space, 'c1', options.primarytemplate, '.nii'], [ea_space, 'c1mask.nii']);
+        movefile([ea_space, 'c2', options.primarytemplate, '.nii'], [ea_space, 'c2mask.nii']);
+        movefile([ea_space, 'c3', options.primarytemplate, '.nii'], [ea_space, 'c3mask.nii']);
     end
 
     segMaskDir = ea_space;
