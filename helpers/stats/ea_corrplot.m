@@ -9,10 +9,10 @@ function [h,R,p,g] = ea_corrplot(X,Y,permutation,labels,group1,group2,colors,mar
 %                or fiber tracts).
 %       char:    'no', 'noperm', or 'nopermutation' for no permutation.
 %                'yes', 'perm', or 'permutation' for permutation (default
-%                number of permutation is 1000 as defined in ea_permcorr).
+%                number of permutation is 5000 as defined in ea_permcorr).
 %       logical: false for no permutation
 %                true for permutation (default number of permutation is
-%                1000 as defined in ea_permcorr)
+%                5000 as defined in ea_permcorr)
 %
 %   labels: labels{1} for figure title
 %           labels{2} for xlabel
@@ -47,7 +47,7 @@ function [h,R,p,g] = ea_corrplot(X,Y,permutation,labels,group1,group2,colors,mar
 % group2.idx=group2cell(ceil(rand(100,1)*2));
 % group2.tag='Disease';
 %
-% ea_corrplot(X,Y,1000,{'Example Correlation','Age','Disease Duration'},group1,group2)
+% ea_corrplot(X,Y,5000,{'Example Correlation','Age','Disease Duration'},group1,group2)
 
 if isrow(X)
     X = X';

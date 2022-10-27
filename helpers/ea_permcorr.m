@@ -141,7 +141,7 @@ if ~ismember(lower(stat), {'linear', 'pearson', 'rank', 'spearman'})
 end
 
 if nargin<4
-    n_perm=1000;
+    n_perm=5000;
 end
 
 if nargin<5
