@@ -128,7 +128,7 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw] = enablerules(selection,o
     results = 'pass';
     % detection function: if the patient has derivatives and
     % raw data, but not in BIDS format then it should be migrated.
-    if options.isDICOMFolder
+    if isfield(options, 'isDICOMFolder') && options.isDICOMFolder
         dicom_conv = 1;
         doMigrate = 0;
         doOnlyRaw = 0;
@@ -195,13 +195,28 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw] = enablerules(selection,o
         % additional check for subfolders of dicom. Not just
         % folders inside which there might be dicom files.
     elseif ~isfolder(fullfile(selection,'DICOM')) && ~isfolder(fullfile(selection,'dicom'))
-            %todo: test whether there are actually dicom files inside
-            dicom_conv = 1;
-            doMigrate = 0;
-            doOnlyRaw = 0;
-            flag = 'onlyDCMconv';
+            % For now, move the contents into DICOM subfolder
+            if ea_dcmquery(selection) > 0
+                movefile(fullfile(selection,'*'), fullfile(selection,'DICOM'));
+
+                dicom_conv = 1;
+                doMigrate = 0;
+                doOnlyRaw = 0;
+                flag = 'onlyDCMconv';
+            else
+                ea_warndlg('%s: no proper nifti or DICOM images found, skipping for now', subject_name);
+                dicom_conv = 0;
+                doMigrate = 0;
+                doOnlyRaw = 0;
+                flag = '';
+                results = 'fail';
+            end
     else
         ea_warndlg('%s: unable to detect the type of processing required, skipping for now', subject_name{1});
+        dicom_conv = 0;
+        doMigrate = 0;
+        doOnlyRaw = 0;
+        flag = '';
         results = 'skip';
     end
     %compare the results with the user defined prefs:

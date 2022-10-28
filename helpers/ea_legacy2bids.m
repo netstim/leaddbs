@@ -18,7 +18,6 @@ for j=1:length(source)
     end
 end
 
-
 %SANITY for dest directories
 if ~exist('dest','var')
     disp("Please select output directory")

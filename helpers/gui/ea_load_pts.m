@@ -279,7 +279,6 @@ else % Multiple patient folders, suppose dataset has already been migrated to BI
                 uipatdir = fullfile(BIDSRoot,'sourcedata',subjId);
             elseif isfolder(rawdata_folder)
                 uipatdir = fullfile(BIDSRoot,'rawdata',subjId);
-
             else
                 warning('Something went wrong! Consider migrating the dataset using lead import alone');
                 return
