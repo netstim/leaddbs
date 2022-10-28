@@ -178,8 +178,7 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw] = enablerules(selection,o
         dicom_conv = 1;
         doOnlyRaw = 1;
         flag = 'MigrateDCMconv';
-        
-    
+
         % only DICOM files available
     elseif checkIfOnlyExist(subfolder,'dicom*||.*.dcm')
         %todo: remove support for .dcm files inside
@@ -187,11 +186,19 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw] = enablerules(selection,o
         doMigrate = 0;
         dicom_conv = 1;
         doOnlyRaw = 0;
+    elseif checkIfOneExist(subfolder,'dicom*||.*.dcm')
+        %todo: remove support for .dcm files inside
+        flag = 'onlyDCMconv';
+        doMigrate = 1;
+        dicom_conv = 1;
+        doOnlyRaw = 0;
+
     elseif checkIfOneExist(subfolder,'^ea_.*.mat$') || ea_ismember(subfolder,"current_headmodel") || ea_ismember(subfolder,"stimulation") % for detached files only, experimental
         dicom_conv = 0;
         doMigrate = 1;
         doOnlyRaw = 0;
         flag = 'onlyMigrate';
+
         % additional check for subfolders of dicom. Not just
         % folders inside which there might be dicom files.
     elseif ~isfolder(fullfile(selection,'DICOM')) && ~isfolder(fullfile(selection,'dicom'))
@@ -212,7 +219,7 @@ function [results,flag,dicom_conv,doMigrate,doOnlyRaw] = enablerules(selection,o
                 results = 'fail';
             end
     else
-        ea_warndlg('%s: unable to detect the type of processing required, skipping for now', subject_name{1});
+        ea_warndlg('%s: unable to detect the type of processing required, skipping for now', subject_name);
         dicom_conv = 0;
         doMigrate = 0;
         doOnlyRaw = 0;

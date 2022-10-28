@@ -83,6 +83,15 @@ if length(uipatdir) == 1 % Single folder
                 % if .dcm file is inside subfolder, just move the folder
                 movefile(from{f}, to);
             end
+
+            subFolders = fullfile({folder_list.folder}', {folder_list.name}');
+            for f=1:length(subFolders)
+                if isempty(ea_regexpdir(subFolders{f}, '.*', 1, 'f'))
+                    ea_delete(subFolders{f});
+                end
+            end
+            ea_delete(fullfile(uipatdir{1}, 'DICOMDIR'));
+
             folder_type = 'patient_folder_dicom_folder';
 
         % .dcm files are found inside one of the subfolders
@@ -92,6 +101,13 @@ if length(uipatdir) == 1 % Single folder
             ea_mkdir(to);
             parfor f=1:length(dcm_in_subfolder_list)
                 movefile(from{f}, to{f});
+            end
+
+            subFolders = fullfile({folder_list.folder}', {folder_list.name}');
+            for f=1:length(subFolders)
+                if isempty(ea_regexpdir(subFolders{f}, '.*', 1, 'f'))
+                    ea_delete(subFolders{f});
+                end
             end
 
             folder_type = 'patient_folder_dicom_folder';
