@@ -4,6 +4,8 @@ function [numDICOM, fileList, isCompressed] = ea_dcmquery(inputFolder, queryOpti
 % queryOption can be 'y' (only show number of DICOMs found) or 'l'(show
 % number of DICOMs found and list of DICOMs)
 
+inputFolder = GetFullPath(inputFolder);
+
 if ~exist('queryOption', 'var')
     queryOption = 'y';
 end
