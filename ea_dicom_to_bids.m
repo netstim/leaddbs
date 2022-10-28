@@ -668,7 +668,7 @@ if ~isempty(img_idx)
     setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
     uiapp.axes_sag.DataAspectRatioMode = 'manual';
     uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-    set(uiapp.axes_sag, 'view', [90, -90]);
+    set(uiapp.axes_sag, 'view', [-90, 90]);
 end
 end
 
