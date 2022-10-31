@@ -178,9 +178,7 @@ for patients = 1:length(source)
             dir_names{j} = '';
         elseif strcmp(dir_names{j},'DICOM')
             if ~doDcmConv
-                if ~exist(fullfile(dest,'sourcedata',patient_name,'DICOM'),'dir')
-                    mkdir(fullfile(dest,'sourcedata',patient_name,'DICOM'))
-                end
+                ea_mkdir(fullfile(dest,'sourcedata',patient_name,'DICOM'))
 
                 copyfile(fullfile(source_patient,'DICOM'),fullfile(dest,'sourcedata',patient_name,'DICOM'));
                 dir_names{j} = '';

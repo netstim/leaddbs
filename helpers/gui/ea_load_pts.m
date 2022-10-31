@@ -122,7 +122,7 @@ if length(uipatdir) == 1 % Single folder
             warning('trying to load as DICOM folder...');
             warning('on', 'backtrace');
             movefile(uipatdir{1}, [uipatdir{1}, '_ORIG']);
-            mkdir(fullfile(uipatdir{1}, 'DICOM'));
+            ea_mkdir(fullfile(uipatdir{1}, 'DICOM'));
             movefile([uipatdir{1}, '_ORIG'], fullfile(uipatdir{1}, 'ORIG'));
 
             if ispc
