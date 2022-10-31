@@ -366,7 +366,8 @@ image_types = fieldnames(lookup_table);
 % filenames
 for rowIdx = 1:height(table)
 
-    fname = table.Filename{rowIdx};
+    % Remove folder name from file name when populating the table
+    fname = regexprep(table.Filename{rowIdx}, '^sub-[^\W_]+_', '');
 
     % image types (anat, func, ...)
     for img_type_idx = 1:length(image_types)
