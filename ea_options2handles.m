@@ -1,16 +1,20 @@
 function ea_options2handles(options,handles)
 
-if ~isfield(options, 'modality') ||  options.modality == 3
-    if strcmpi(handles.patdir_choosebox.String, 'Choose Patient Directory')
-        arrayfun(@(x) set(x, 'Enable', 'off'), handles.registrationpanel.Children);
-    else
-        set(handles.coregctmethod, 'Enable', 'off');
-        set(handles.scrf, 'Enable', 'off');
-    end
+if  strcmpi(handles.patdir_choosebox.String, 'Choose Patient Directory') || ~isfield(options, 'modality')
+    arrayfun(@(x) set(x, 'Enable', 'off'), handles.registrationpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.surfacereconpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.reconpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.connpanel.Children);
     set(handles.overwriteapproved, 'Enable', 'off');
+elseif options.modality == 3
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationpanel.Children);
+    set(handles.coregctmethod, 'Enable', 'off');
+    set(handles.scrf, 'Enable', 'off');
+    set(handles.scrfmask, 'Enable', 'off');
+    arrayfun(@(x) set(x, 'Enable', 'off'), handles.surfacereconpanel.Children);
+    arrayfun(@(x) set(x, 'Enable', 'off'), handles.reconpanel.Children);
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.connpanel.Children);
+    set(handles.overwriteapproved, 'Enable', 'on');
 else
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.surfacereconpanel.Children);
