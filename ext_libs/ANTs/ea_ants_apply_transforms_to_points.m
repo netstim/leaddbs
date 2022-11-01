@@ -36,14 +36,14 @@ end
 
 uuid = ea_generate_uuid;
 
-input_file = ea_path_helper([tempdir, 'tmpin_', uuid, '.csv']);
-output_file = ea_path_helper([tempdir, 'tmpout_', uuid, '.csv']);
+input_file = [tempdir, 'tmpin_', uuid, '.csv'];
+output_file = [tempdir, 'tmpout_', uuid, '.csv'];
 
 cmd = [applyTransformsToPoints, ...
     ' --dimensionality 3' ...   % dimensionality
     ' --precision 0' ...    % single precision
-    ' --input ',  input_file ...  % input csv file with x,y,z,t (at least) as the column header
-    ' --output ', output_file ...    % warped output csv file
+    ' --input ',  ea_path_helper(input_file) ...  % input csv file with x,y,z,t (at least) as the column header
+    ' --output ', ea_path_helper(output_file) ...    % warped output csv file
     tstring];
 
 ea_writecsv(input_file, input);

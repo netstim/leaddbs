@@ -43,18 +43,20 @@ fixedinit = fullfile(fileparts(fileparts(fileparts(cfg.moving))), 'masks', 'mask
 if ~isfile(fixedinit)
     fixedinit = cfg.fixed;
 end
+fixedinit = ea_path_helper(fixedinit);
 
 movinginit = fullfile(fileparts(fileparts(fileparts(cfg.moving))), 'masks', 'mask_anatomy.nii');
 if ~isfile(movinginit)
     movinginit = cfg.moving;
 end
+movinginit = ea_path_helper(movinginit);
 
 if refinewarp
     writecomposite = '0';
     forward_idx = cellfun(@(x) ~isempty(regexp(x, '.*from-anchorNative.*', 'once')), {ants_transforms.name});
     cfg.initial_transform = fullfile(ants_transforms(forward_idx).folder, ants_transforms(forward_idx).name);
     cfg.initial_inv_transform = fullfile(ants_transforms(~forward_idx).folder, ants_transforms(~forward_idx).name);
-    initreg = [' --initial-moving-transform ', cfg.initial_transform];
+    initreg = [' --initial-moving-transform ', ea_path_helper(cfg.initial_transform)];
 else
     writecomposite = '1';
     if isfield(cfg, 'initializationFeature') && ~isempty(cfg.initializationFeature)
@@ -82,7 +84,7 @@ cmd = [cfg.ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
     ' --float 1',...
     ' --write-composite-transform ', writecomposite, ...
-    ' --output [',ea_path_helper(cfg.outputbase), ',', cfg.outputimage, ']', ...
+    ' --output [',ea_path_helper(cfg.outputbase), ',', ea_path_helper(cfg.outputimage), ']', ...
     ' --interpolation Linear', ...
     ' --use-histogram-matching ', histogrammatching, ...
     winsorize, ...

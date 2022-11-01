@@ -95,7 +95,7 @@ if slab_present
     mnii.fname = fullfile(tmaskdir, 'slabmask.nii');
     ea_write_nii(mnii);
     disp('Slabs found. Separating slabs to form an additional SyN stage.');
-    slab_movingmask = mnii.fname;
+    slab_movingmask = ea_path_helper(mnii.fname);
 else
     disp('No slabs found.');
     slab_movingmask = '';
@@ -118,24 +118,24 @@ metrics_prefix_suffix = cell(length(fixedimage),2);
 [metrics_prefix_suffix{is_segmentation,2}] = deal(ccpref.metricsuffix);
 
 for fi = 1:length(fixedimage)
-    fixedimage{fi} = ea_path_helper(ea_niigz(fixedimage{fi}));
+    fixedimage{fi} = ea_niigz(fixedimage{fi});
 end
 for fi = 1:length(movingimage)
-    movingimage{fi} = ea_path_helper(ea_niigz(movingimage{fi}));
+    movingimage{fi} = ea_niigz(movingimage{fi});
 end
 
 if length(fixedimage) ~= length(movingimage)
     ea_error('Please supply pairs of moving and fixed images (can be repetitive).');
 end
 
-outputimage = ea_path_helper(ea_niigz(outputimage));
+outputimage = ea_niigz(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
 if ispc
     ANTS = ea_path_helper([basedir, 'antsRegistration.exe']);
 else
-    ANTS = [basedir, 'antsRegistration.', computer('arch')];
+    ANTS = ea_path_helper([basedir, 'antsRegistration.', computer('arch')]);
 end
 
 rigidconvergence = apref.convergence.rigid;
@@ -157,7 +157,9 @@ else
 end
 
 movingmask = fullfile(fileparts(fileparts(fileparts(movingimage{end}))), 'masks', 'mask_anatomy.nii');
-if ~isfile(movingmask)
+if isfile(movingmask)
+    movingmask = ea_path_helper(movingmask);
+else
     movingmask = 'NULL';
 end
 
@@ -261,4 +263,4 @@ end
 
 
 function out = get_metric_command(fixed_image, moving_image, weight, metric_prefix_sufix)
-    out = [' --metric ' metric_prefix_sufix{1} '[' fixed_image ',' moving_image ',' num2str(weight) metric_prefix_sufix{2} ']'];
+    out = [' --metric ' metric_prefix_sufix{1} '[' ea_path_helper(fixed_image) ',' ea_path_helper(moving_image) ',' num2str(weight) metric_prefix_sufix{2} ']'];
