@@ -14,7 +14,7 @@ basedir=[ea_getearoot,'ext_libs',filesep,'fsl',filesep];
 if ispc
     SLICER = ea_path_helper([basedir, 'slicer.exe']);
 else
-    SLICER = [basedir, 'slicer.', computer('arch')];
+    SLICER = ea_path_helper([basedir, 'slicer.', computer('arch')]);
 end
 
 uuid=ea_generate_uuid;

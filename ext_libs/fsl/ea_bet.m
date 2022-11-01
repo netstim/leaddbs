@@ -23,23 +23,19 @@ end
 
 fprintf('\n\nRunning FSL BET2: %s\n\n', inputimage);
 
-inputimage = ea_path_helper(ea_niigz(inputimage));
-[outputimage,ext] = (ea_niigz(outputimage));
-outputimage=ea_path_helper(outputimage);
-
-% Remove the '.nii' or '.nii.gz' ext
-outputimage = ea_niifileparts(outputimage);
+inputimage = ea_niifileparts(inputimage);
+[outputimage, ~, ext] = ea_niifileparts(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     BET = ea_path_helper([basedir, 'bet2.exe']);
 else
-    BET = [basedir, 'bet2.', computer('arch')];
+    BET = ea_path_helper([basedir, 'bet2.', computer('arch')]);
 end
 
 cmd = [BET, ...
-       ' ', inputimage, ...
-       ' ', outputimage, ...
+       ' ', ea_path_helper(inputimage), ...
+       ' ', ea_path_helper(outputimage), ...
        ' --verbose'];
 
 if outputmask

@@ -25,7 +25,7 @@ basedir = [options.earoot, 'ext_libs',filesep,'dsi_studio',filesep];
 if ispc
     DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.exe']);
 else
-    DSISTUDIO = [basedir, 'dsi_studio.', computer('arch')];
+    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.', computer('arch')]);
 end
 
 if options.lc.struc.ft.upsample.how==1 % internal upsampling used

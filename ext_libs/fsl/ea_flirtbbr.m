@@ -57,10 +57,10 @@ if ispc
     FLIRT = ea_path_helper([basedir, 'flirt.exe']);
     COVERT_XFM = ea_path_helper([basedir, 'convert_xfm.exe']);
 else
-    FAST = [basedir, 'fast.', computer('arch')];
-    FSLMATHS = [basedir, 'fslmaths.', computer('arch')];
-    FLIRT = [basedir, 'flirt.', computer('arch')];
-    COVERT_XFM = [basedir, 'convert_xfm.', computer('arch')];
+    FAST = ea_path_helper([basedir, 'fast.', computer('arch')]);
+    FSLMATHS = ea_path_helper([basedir, 'fslmaths.', computer('arch')]);
+    FLIRT = ea_path_helper([basedir, 'flirt.', computer('arch')]);
+    COVERT_XFM = ea_path_helper([basedir, 'convert_xfm.', computer('arch')]);
 end
 
 fixedimage_fast = [fixedPath, '_fslfast'];

@@ -135,7 +135,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 else
-    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.', computer('arch')]);
 end
 
 for i = 1:length(input)

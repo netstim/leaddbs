@@ -5,7 +5,7 @@ basedir = [ea_getearoot, 'ext_libs',filesep,'dsi_studio',filesep];
 if ispc
     DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.exe']);
 else
-    DSISTUDIO = [basedir, 'dsi_studio.', computer('arch')];
+    DSISTUDIO = ea_path_helper([basedir, 'dsi_studio.', computer('arch')]);
 end
 
 exportcmd = [DSISTUDIO, ' --action=exp --source=', ea_path_helper(GetFullPath(fibgz)), ' --export=', data];

@@ -44,7 +44,7 @@ basedir=[ea_getearoot,'ext_libs',filesep,'ANTs',filesep];
 if ispc
     ResampleImageBySpacing = ea_path_helper([basedir, 'ResampleImageBySpacing.exe']);
 else
-    ResampleImageBySpacing = [basedir, 'ResampleImageBySpacing.', computer('arch')];
+    ResampleImageBySpacing = ea_path_helper([basedir, 'ResampleImageBySpacing.', computer('arch')]);
 end
 
 cmd = [ResampleImageBySpacing,' ',dimension, ...

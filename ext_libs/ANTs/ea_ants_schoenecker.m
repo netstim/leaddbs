@@ -63,8 +63,8 @@ if slabsupport
     if length(sums)>1 % multispectral warp
         slabs=sums(1:end-1)<(sums(end)*0.7);
         if any(slabs) % one image is smaller than 70% of last (dominant) image, a slab is prevalent.
-            slabmovingimage=movingimage(slabs); % move slabs to new cell slabimage
-            slabfixedimage=fixedimage(slabs);
+            slabmovingimage=ea_path_helper(movingimage(slabs)); % move slabs to new cell slabimage
+            slabfixedimage=ea_path_helper(fixedimage(slabs));
             movingimage(slabs)=[]; % remove slabs from movingimage
             fixedimage(slabs)=[]; % remove slabs from fixedimage
 
@@ -81,6 +81,7 @@ if slabsupport
             mnii.fname=[tmaskdir,filesep,'slabmask.nii'];
             ea_write_nii(mnii);
             disp('Slabs found. Separating slabs to form an additional SyN stage.');
+            % slabmovingimage = mnii.fname;
         else
             disp('No slabs found.');
         end
@@ -102,7 +103,7 @@ if length(fixedimage)~=length(movingimage)
     ea_error('Please supply pairs of moving and fixed images (can be repetitive).');
 end
 
-outputimage = ea_path_helper(ea_niigz(outputimage));
+outputimage = ea_niigz(outputimage);
 
 basedir = [fileparts(mfilename('fullpath')), filesep];
 
@@ -112,9 +113,9 @@ if ispc
     applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
 
 else
-    HEADER = [basedir, 'PrintHeader.', computer('arch')];
-    ANTS = [basedir, 'antsRegistration.', computer('arch')];
-    applyTransforms = [basedir, 'antsApplyTransforms.', computer('arch')];
+    HEADER = ea_path_helper([basedir, 'PrintHeader.', computer('arch')]);
+    ANTS = ea_path_helper([basedir, 'antsRegistration.', computer('arch')]);
+    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.', computer('arch')]);
 
 end
 
@@ -244,7 +245,7 @@ ea_libs_helper;
 
 cmd = [ANTS, ' --verbose 1', ...
     ' --dimensionality 3', ...
-    ' --output [',ea_path_helper(outputbase), ',', outputimage, ']', ...
+    ' --output [',ea_path_helper(outputbase), ',', ea_path_helper(outputimage), ']', ...
     ' --interpolation Linear', ...
     ' --use-histogram-matching 1', ...
     ' --float 1',...
@@ -253,7 +254,7 @@ cmd = [ANTS, ' --verbose 1', ...
 
 invcmd = [applyTransforms, ' --verbose 1' ...
     ' --dimensionality 3 --float 1' ...
-    ' --reference-image ', ea_path_helper(movingimage{end}), ...
+    ' --reference-image ', movingimage{end}, ...
     ' --transform [', ea_path_helper([outputbase, '0GenericAffine.mat']),',1]' ...
     ' --output Linear[', ea_path_helper([outputbase, 'Inverse0GenericAffine.mat']),']'];
 

@@ -5,7 +5,7 @@ ea_dispt(['Denoising: ',input]);
 if ispc
     UNLM = ea_path_helper([basedir, 'UnbiasedNonLocalMeans.exe']);
 else
-    UNLM = [basedir, 'UnbiasedNonLocalMeans.', computer('arch')];
+    UNLM = ea_path_helper([basedir, 'UnbiasedNonLocalMeans.', computer('arch')]);
 end
 
 if ~exist('sigma','var')

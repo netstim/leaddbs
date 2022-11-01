@@ -58,7 +58,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     APPLYWARP = ea_path_helper([basedir, 'applywarp.exe']);
 else
-    APPLYWARP = [basedir, 'applywarp.', computer('arch')];
+    APPLYWARP = ea_path_helper([basedir, 'applywarp.', computer('arch')]);
 end
 
 for i = 1:length(input)

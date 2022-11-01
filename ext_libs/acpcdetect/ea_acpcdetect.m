@@ -16,7 +16,7 @@ basedir = fileparts(mfilename('fullpath'));
 if ispc
     ACPCDETECT = ea_path_helper([basedir, filesep, 'acpcdetect.exe']);
 else
-    ACPCDETECT = [basedir, filesep, 'acpcdetect.', computer('arch')];
+    ACPCDETECT = ea_path_helper([basedir, filesep, 'acpcdetect.', computer('arch')]);
 end
 
 cmd = [ACPCDETECT, ' -v -no-tilt-correction -noppm -nopng -notxt -i ', ea_path_helper(inputimage)];

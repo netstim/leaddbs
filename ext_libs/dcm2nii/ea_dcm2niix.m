@@ -16,7 +16,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     dcm2niix = ea_path_helper([basedir, 'dcm2niix.exe']);
 else
-    dcm2niix = [basedir, 'dcm2niix.', computer('arch')];
+    dcm2niix = ea_path_helper([basedir, 'dcm2niix.', computer('arch')]);
 end
 
 if strcmp(outdir(end),filesep)

@@ -17,7 +17,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     dcm2nii = ea_path_helper([basedir, 'dcm2nii.exe']);
 else
-    dcm2nii = [basedir, 'dcm2nii.', computer('arch')];
+    dcm2nii = ea_path_helper([basedir, 'dcm2nii.', computer('arch')]);
 end
 
 cmd=[dcm2nii, ' -g n -x y ', ea_path_helper(inputimage)];

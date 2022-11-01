@@ -102,7 +102,7 @@ elseif tool==2 % Use FSL
     if ispc
         FLIRT = ea_path_helper([basedir, 'flirt.exe']);
     else
-        FLIRT = [basedir, 'flirt.', computer('arch')];
+        FLIRT = ea_path_helper([basedir, 'flirt.', computer('arch')]);
     end
     flirtcmd=[FLIRT,' -in ',old_fn,' -ref ',old_fn,' -out ',new_fn,' -nosearch -applyisoxfm ',num2str(mean(voxel_size)),' -interp ',ea_fslinterps(interp)];
     setenv('FSLOUTPUTTYPE','NIFTI');

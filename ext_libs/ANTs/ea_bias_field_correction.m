@@ -8,7 +8,7 @@ basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     N4BiasFieldCorrection = ea_path_helper([basedir, 'N4BiasFieldCorrection.exe']);
 else
-    N4BiasFieldCorrection = [basedir, 'N4BiasFieldCorrection.', computer('arch')];
+    N4BiasFieldCorrection = ea_path_helper([basedir, 'N4BiasFieldCorrection.', computer('arch')]);
 end
 
 cmd=[N4BiasFieldCorrection, ...

@@ -12,16 +12,14 @@ if ~isfile(input)
     error('%s not found!', input);
 end
 
-input = ea_path_helper(input);
-
 basedir = [fileparts(mfilename('fullpath')), filesep];
 if ispc
     FSLHD = ea_path_helper([basedir, 'fslhd.exe']);
 else
-    FSLHD = [basedir, 'fslhd.', computer('arch')];
+    FSLHD = ea_path_helper([basedir, 'fslhd.', computer('arch')]);
 end
 
-cmd = [FSLHD, ' ', xmlarg, ' ', input, ];
+cmd = [FSLHD, ' ', xmlarg, ' ', ea_path_helper(input), ];
 
 if ~ispc
     [status, cmdout] = system(['bash -c "', cmd, '"']);
