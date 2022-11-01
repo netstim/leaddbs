@@ -1,7 +1,12 @@
 function ea_options2handles(options,handles)
 
 if ~isfield(options, 'modality') ||  options.modality == 3
-    arrayfun(@(x) set(x, 'Enable', 'off'), handles.registrationpanel.Children);
+    if strcmpi(handles.patdir_choosebox.String, 'Choose Patient Directory')
+        arrayfun(@(x) set(x, 'Enable', 'off'), handles.registrationpanel.Children);
+    else
+        set(handles.coregctmethod, 'Enable', 'off');
+        set(handles.scrf, 'Enable', 'off');
+    end
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.surfacereconpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.reconpanel.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.connpanel.Children);
