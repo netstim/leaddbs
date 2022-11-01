@@ -207,10 +207,6 @@ if length(uipatdir) == 1 % Single folder
                     if options.prefs.migrate.interactive
                         waitfor(lead_import(uipatdir, options, handles));
                     else
-                        dest_folder = ea_uigetdir('*','Select BIDS Dataset folder');
-                        if isempty(dest_folder) %user pressed cancel
-                            return
-                        end
                         ea_lead_import(uipatdir,options,handles,dest_folder);
                     end
 
