@@ -170,7 +170,6 @@ def solve_parallel_NEURON(d, last_point, N_index_glob, N_index, n_segments, fib_
                             V_art_temp[k,:] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"] * S_vector[contact_i] # convert to mV
 
 
-                        scaling_counter = 0
                         # now interpolate to the rest
                         list_interp = [[1, 2], [4, 5, 6, 7], [9, 10]]  # local indices of interpolated segments
                         for interv in range(len(list_interp)):
@@ -193,7 +192,7 @@ def solve_parallel_NEURON(d, last_point, N_index_glob, N_index, n_segments, fib_
                         # fill out nodes first
                         for k in np.arange(0, n_segments_true, 8):
                             z = int(k / 8) * 2
-                            V_art[k, :] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d[
+                            V_art[k, :] = V_art[k, :] + axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d[
                                 "Ampl_scale"] * S_vector[contact_i]  # convert to mV
                                 
                             V_art_temp[k,:] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"] * S_vector[contact_i] # convert to mV
@@ -201,7 +200,7 @@ def solve_parallel_NEURON(d, last_point, N_index_glob, N_index, n_segments, fib_
                         # now the center between nodes
                         for k in np.arange(4, n_segments_true, 8):
                             z = int(k / 8) * 2 + 1
-                            V_art[k, :] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d[
+                            V_art[k, :] = V_art[k, :] + axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d[
                                 "Ampl_scale"] * S_vector[contact_i]  # convert to mV
                                 
                             V_art_temp[k,:] = axon_in_time[z, :d["t_steps_trunc"]] * (1000) * d["Ampl_scale"] * S_vector[contact_i] # convert to mV
