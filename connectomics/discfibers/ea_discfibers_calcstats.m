@@ -122,7 +122,7 @@ for group=groups
         gpatsel=patsel;
     end
     if obj.mirrorsides
-        gpatsel=[gpatsel,gpatsel+length(obj.allpatients)];
+        gpatsel=[gpatsel;gpatsel];
     end
     if dosubscores
         switch obj.multitractmode
