@@ -15,8 +15,12 @@ end
 switch control.Style
     case 'listbox'
         jScrollPane = findjobj_fast(control);
-        jScrollPane.getViewport.getView.setCellRenderer(ListBoxRenderer);
+        if ~isempty(jScrollPane)
+            jScrollPane.getViewport.getView.setCellRenderer(ListBoxRenderer);
+        end
     case 'popupmenu'
         jComboBox = findjobj_fast(control);
-        jComboBox.setRenderer(ListBoxRenderer);
+        if ~isempty(jComboBox)
+            jComboBox.setRenderer(ListBoxRenderer);
+        end
 end
