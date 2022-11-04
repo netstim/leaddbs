@@ -98,36 +98,35 @@ if nargin == 1
     input{1} = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
     output{1} = options.subj.norm.anat.preop.(options.subj.AnchorModality);
 
-    switch options.modality
-        case 1 % MR
-            if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
-                fn=fieldnames(options.subj.coreg.anat.postop);
-                for postopfile=1:length(fn)
-                    uuid=ea_generate_uuid;
-                    copyfile(options.subj.coreg.anat.postop.(fn{postopfile}),[ea_getleadtempdir,uuid,'.nii']);
-                    nii=ea_load_nii([ea_getleadtempdir,uuid,'.nii']);
-                    scrf=load(options.subj.brainshift.transform.scrf);
-                    nii.mat=scrf.mat*nii.mat;
-                    ea_write_nii(nii);
-                    input = [input; [ea_getleadtempdir,uuid,'.nii']];
-                end
-            else
-                input = [input; struct2cell(options.subj.coreg.anat.postop)];
-            end
-            output = [output; struct2cell(options.subj.norm.anat.postop)];
-        case 2 % CT
-            if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
+    if strcmp(options.subj.postopModality, 'MRI')
+        if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
+            fn=fieldnames(options.subj.coreg.anat.postop);
+            for postopfile=1:length(fn)
                 uuid=ea_generate_uuid;
-                copyfile(options.subj.coreg.anat.postop.CT,[ea_getleadtempdir,uuid,'.nii']);
+                copyfile(options.subj.coreg.anat.postop.(fn{postopfile}),[ea_getleadtempdir,uuid,'.nii']);
                 nii=ea_load_nii([ea_getleadtempdir,uuid,'.nii']);
                 scrf=load(options.subj.brainshift.transform.scrf);
                 nii.mat=scrf.mat*nii.mat;
                 ea_write_nii(nii);
                 input = [input; [ea_getleadtempdir,uuid,'.nii']];
-            else
-                input = [input; options.subj.coreg.anat.postop.CT];
             end
-            output = [output; options.subj.norm.anat.postop.CT];
+        else
+            input = [input; struct2cell(options.subj.coreg.anat.postop)];
+        end
+        output = [output; struct2cell(options.subj.norm.anat.postop)];
+    elseif strcmp(options.subj.postopModality, 'CT')
+        if exist(options.subj.brainshift.transform.scrf,'file') % apply brainshift correction to postop files on the fly.
+            uuid=ea_generate_uuid;
+            copyfile(options.subj.coreg.anat.postop.CT,[ea_getleadtempdir,uuid,'.nii']);
+            nii=ea_load_nii([ea_getleadtempdir,uuid,'.nii']);
+            scrf=load(options.subj.brainshift.transform.scrf);
+            nii.mat=scrf.mat*nii.mat;
+            ea_write_nii(nii);
+            input = [input; [ea_getleadtempdir,uuid,'.nii']];
+        else
+            input = [input; options.subj.coreg.anat.postop.CT];
+        end
+        output = [output; options.subj.norm.anat.postop.CT];
     end
 end
 
