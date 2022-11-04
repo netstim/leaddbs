@@ -384,9 +384,9 @@ for patients = 1:length(source)
                         if ~isempty(bids_mod)
                             try
                                 tag = ea_checkacq(fullfile(source_path,which_file));
-                                bids_name = [patient_name,'_','desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
+                                bids_name = [patient_name,'_',sess_tag,'_','desc-preproc_','acq-',tag,'_',bids_mod,ext];
                             catch
-                                try_bids_name = [patient_name,'_','desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
+                                try_bids_name = [patient_name,'_',sess_tag,'_','desc-preproc_','acqTag','_',bids_mod,ext];
                                 bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
                             end
                             bids_name = CheckifAlreadyExists(op_dir,bids_name);
@@ -420,9 +420,9 @@ for patients = 1:length(source)
                           else
                               try
                                   tag = ea_checkacq(fullfile(source_path,which_file));
-                                  bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
+                                  bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_','acq-',tag,'_',bids_mod,ext];
                               catch
-                                  try_bids_name = [patient_name,'_','space-anchorNative_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
+                                  try_bids_name = [patient_name,'_',sess_tag,'_','space-anchorNative_desc-preproc_','acqTag','_',bids_mod,ext];
                                   bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
                               end
                               bids_name = CheckifAlreadyExists(op_dir,bids_name);
@@ -470,9 +470,9 @@ for patients = 1:length(source)
                         bids_mod = add_mod(which_file,legacy_modalities,rawdata_containers);
                         try
                             tag = ea_checkacq(fullfile(source_path,which_file));
-                            bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',sess_tag,'_','acq-',tag,'_',bids_mod,ext];
+                            bids_name = [patient_name,'_',sess_tag,'_','space-MNI152NLin2009bAsym_desc-preproc_','acq-',tag,'_',bids_mod,ext];
                         catch
-                            try_bids_name = [patient_name,'_','space-MNI152NLin2009bAsym_desc-preproc_',sess_tag,'_','acqTag','_',bids_mod,ext];
+                            try_bids_name = [patient_name,'_',sess_tag,'_','space-MNI152NLin2009bAsym_desc-preproc_','acqTag','_',bids_mod,ext];
                             bids_name = add_tag(try_bids_name,mod_cell,tag_cell);
                         end
                         bids_name = CheckifAlreadyExists(op_dir,bids_name);
