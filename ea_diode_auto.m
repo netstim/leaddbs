@@ -314,10 +314,10 @@ Yslice = ([-extract_width:samplingres:extract_width] .* unitvector_mm(2)) + ([-e
 Zslice = ea_diode_perpendicularplane(xvec_mm,marker_mm,Xslice,Yslice);
 finalslice = interp3(Xmm,Ymm,Zmm,Vnew,Xslice,Yslice,Zslice);
 finalslice = finalslice';
-
-if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
-    finalslice = flipdim(finalslice,2);
-end
+finalslice = flipdim(finalslice,2);
+% if rad2deg(angle(peak(1))) < 90 || rad2deg(angle(peak(1))) > 270
+%     finalslice = flipdim(finalslice,2);
+% end
 %% darkstar method
 checkslices = [-2:0.5:2]; % check neighboring slices for marker
 
@@ -577,7 +577,7 @@ set(ax2,'yticklabel',{[]})
 
 ax3 = subplot(3,3,3);
 hold on
-title(ax3,'Sagittal View','FontWeight','normal')
+title(ax3,'Sagittal View','FontWeight','bold')
 
 imagesc(finalslice)
 axis equal
