@@ -59,6 +59,9 @@ if get(handles.MRCT,'Value') ~= postopModality
 end
 
 if  ~strcmp(handles.prod, 'anatomy')
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.surfacereconpanel.Children);
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.connpanel.Children);
+    set(handles.overwriteapproved, 'Enable', 'on');
     switch postopModality
         case 1 % MR
             arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationpanel.Children);
