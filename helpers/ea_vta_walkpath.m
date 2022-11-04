@@ -84,7 +84,7 @@ function model_name = add_model(stimFolder)
     load(stimParams{1},'S')
     model_name = ea_simModel2Label(S.model);
   else
-      ea_warndlg('Missing stimparameters under %s\nSet to SimBio model by default, please check manually.', stimFolder);
+      ea_cprintf('CmdWinWarnings', 'Missing stimparameters under %s\nSet to SimBio model by default, please check manually.\n', stimFolder);
       model_name = 'simbio';
   end
   return
