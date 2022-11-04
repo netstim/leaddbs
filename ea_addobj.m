@@ -34,10 +34,16 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
         warndlg('Unsupported file(s) found!');
     end
 else  % uigetfile, 'obj' is the type of the files to be selected
+    if ~isfield(options, 'root')
+        startPath = ea_gethome;
+    else
+        startPath = [options.root,options.patientname,filesep];
+    end
+
     switch obj
         case 'tract'
             % open dialog
-            [tractName,tractPath]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            [tractName,tractPath]=uigetfile({'*.mat;*.trk', 'Fiber Files (*.mat,*.trk)'},'Choose Fibertract to add to scene...',startPath,'MultiSelect','on');
             if isnumeric(tractName) % User pressed cancel, tractName is 0
                 return
             else
@@ -51,7 +57,7 @@ else  % uigetfile, 'obj' is the type of the files to be selected
             end
         case 'roi' % atlas
             % open dialog
-            [roiName, roiPath] = uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','on');
+            [roiName, roiPath] = uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',startPath,'MultiSelect','on');
             if isnumeric(roiName) % User pressed cancel, roiName is 0
                 return
             else
@@ -67,11 +73,11 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                 end
             end
         case 'tractmap'
-            [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
-            [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',[options.root,options.patientname,filesep],'MultiSelect','off');
+            [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',startPath,'MultiSelect','off');
+            [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',startPath,'MultiSelect','off');
             addtractweighted([tpana,tfina],[rpana,rfina],resultfig,addht,options)
         case 'fiberactivation'
-            [fileName,filePath]=uigetfile('*.mat','Choose fiber activation to add to scene...',[options.root,options.patientname,filesep],'MultiSelect','off');
+            [fileName,filePath]=uigetfile('*.mat','Choose fiber activation to add to scene...',startPath,'MultiSelect','off');
             ea_fiberactivation_viz([filePath,fileName],resultfig)
     end
 end
