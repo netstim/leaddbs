@@ -523,12 +523,12 @@ for patients = 1:length(source)
                                     is_it_aconnectome = ea_regexpdir(leadMapper_folder{k},'.*vat_seed_compound_[df]MRI.*',0,'f');
                                     if ~isempty(is_it_aconnectome)
                                         [~,connectome_filename,ext] = fileparts(leadMapper_folder{k});
-                                        if cellfun(@(x)contains(x,connectome_filename),fmri_keywords)% Structural connectome
+                                        if contains(connectome_filename, fmri_keywords) % Functional connectome, subset in the name
                                             connectome_filename = strsplit(connectome_filename, '_');
                                             connectome = connectome_filename{1};
                                             subset = connectome_filename{2};
                                             bids_connectome_name = ea_getConnLabel(connectome, subset);                                            
-                                        else % Functional connectome, subset in the name
+                                        else % Structural connectome
                                             bids_connectome_name = ea_getConnLabel(connectome_filename);
                                         end
                                         model_name = add_model(all_gs_folders{i});
