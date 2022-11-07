@@ -264,6 +264,7 @@ classdef ea_disctract < handle
                 [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell] = ea_discfibers_calcvals_cleartune(Efields, fibcell, obj.calcthreshold);
 
                 obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('ttests').fibsval = fibsvalBin;
+                obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin; % should be used instead of ttests
                 obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
                 obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('spearman_mean').fibsval = fibsvalMean;
                 obj.cleartuneresults.(ea_conn2connid(obj.connectome)).('spearman_peak').fibsval = fibsvalPeak;
@@ -568,11 +569,12 @@ classdef ea_disctract < handle
                         % these predictors are defined within the same ff model
                         % of iteration 'c'
 %                         % do not get rid of the first dimension when it has size of 1
-%                         predictor_training = reshape(ea_nanmean(Ihat_train_global,3), ...
-%                             size(ea_nanmean(Ihat_train_global,3),1),...
-%                             size(ea_nanmean(Ihat_train_global,3),2),...
-%                             size(ea_nanmean(Ihat_train_global,3),4) );
-                        predictor_training = squeeze(ea_nanmean(Ihat_train_global,3));
+                        Ihat_train_global_av_sides = ea_nanmean(Ihat_train_global,3);
+                        predictor_training = reshape(Ihat_train_global_av_sides, ...
+                            size(Ihat_train_global_av_sides,1),...
+                            size(Ihat_train_global_av_sides,2),...
+                            size(Ihat_train_global_av_sides,4));
+                            
                         predictor_test = squeeze(ea_nanmean(Ihat,2));
                         %predictor=squeeze(ea_nanmean(Ihat_voters,2));
 
