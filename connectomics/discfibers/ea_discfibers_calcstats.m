@@ -288,10 +288,10 @@ for group=groups
                     ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
                     % restore nans
                     ImpBinary(isnan(I(gpatsel,side)))=nan;
-                    suminvals=full(sum(invals(logical(ImpBinary),:),1));
-                    Ninvals=sum(logical(ImpBinary),1);
-                    sumoutvals=full(sum(invals(~logical(ImpBinary),:),1));
-                    Noutvals=sum(~logical(ImpBinary),1);
+                    suminvals=full(sum(invals(ImpBinary == 1,:),1));
+                    Ninvals=sum(ImpBinary == 1,1);
+                    sumoutvals=full(sum(invals(ImpBinary == 0,:),1));
+                    Noutvals=sum(ImpBinary == 0,1);
 
                     prop=zeros(size(invals,2),1); % 
                     outps=prop; % 
