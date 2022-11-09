@@ -726,12 +726,19 @@ class MainWindow(Functionalities):
 
         filename, _ = QFileDialog.getOpenFileName(None, "Load State", "",
                                                   "All Files (*);;Text Files (*.txt)", options=options)
+                                                  
+        if sys.platform == 'win32':
+            filename.replace("\\","/")
+                                                              
         if filename:
             with open(filename, 'r') as f:
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d = ast.literal_eval(content.strip())
+                if sys.platform == 'win32':
+                    d = eval(content)
+                else:
+                    d = ast.literal_eval(content.strip())
                 self.set_load_state(d)
 
             self.info("Run", "{} has been loaded successfully.".format(filename))
@@ -740,12 +747,19 @@ class MainWindow(Functionalities):
         os.chdir(self.oss_plat_cont)
 
     def reset_state(self):
+    
+        if sys.platform == 'win32':
+            self.rel_folder.replace("\\","/")
+    
         filename = "{}/GUI_tree_files/default_dict.py".format(self.rel_folder)
         with open(filename, 'r') as f:
             num = f.read().find('{')
             f.seek(num)
             content = f.read()
-            d = ast.literal_eval(content.strip())
+            if sys.platform == 'win32':
+                d = eval(content)
+            else:
+                d = ast.literal_eval(content.strip())
             self.set_load_state(d)
         # self.set_current_file_name(filename)
 
@@ -772,12 +786,19 @@ class MainWindow(Functionalities):
         #print('I am here', os.getcwd())
 
         filename = "{}/GUI_tree_files/default_dict.py".format(self.rel_folder)
+        if sys.platform == 'win32':
+            filename.replace("\\","/")
+            self.path_to_patient.replace(os.sep,"/")
+            self.rel_folder.replace("\\","/")
 
         with open(filename, 'r') as f:
             num = f.read().find('{')
             f.seek(num)
             content = f.read()
-            d = ast.literal_eval(content.strip())
+            if sys.platform == 'win32':
+                d = eval(content)
+            else:
+                d = ast.literal_eval(content.strip())
 
         try:
             filename = "GUI_inp_dict.py"
@@ -785,14 +806,20 @@ class MainWindow(Functionalities):
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d_modified = ast.literal_eval(content.strip())
+                if sys.platform == 'win32':
+                    d_modified = eval(content)
+                else:
+                    d_modified = ast.literal_eval(content.strip())
         except:
             filename = "GUI_inp_dict_base.py"
             with open(filename, 'r') as f:
                 num = f.read().find('{')
                 f.seek(num)
                 content = f.read()
-                d_modified = ast.literal_eval(content.strip())
+                if sys.platform == 'win32':
+                    d_modified = eval(content)
+                else:
+                    d_modified = ast.literal_eval(content.strip())
 
         d.update(d_modified)    # maybe te ordering of updating should be changed
 
