@@ -225,14 +225,13 @@ classdef ea_roi < handle
                 obj.patchH=patch;
             end
             if ismember(evtnm,{'all','threshold','smooth','hullsimplify','usesolidcolor'}) % need to recalc fv here:
-                bb = [1,1,1;size(obj.nii.img)];
-                bb = ea_vox2mm(bb, obj.nii.mat);
-                gv=cell(3,1);
-                for dim=1:3
-                    gv{dim}=linspace(bb(1,dim),bb(2,dim),size(obj.nii.img,dim));
-                end
-                [X,Y,Z]=meshgrid(gv{1},gv{2},gv{3});
-
+                img_size = size(obj.nii.img);
+                [X_vox, Y_vox, Z_vox] = meshgrid(1:img_size(1), 1:img_size(2), 1:img_size(3));
+                XYZ_mm = ea_vox2mm([X_vox(:), Y_vox(:), Z_vox(:)], obj.nii.mat);
+                X = reshape(XYZ_mm(:,1), size(X_vox));
+                Y = reshape(XYZ_mm(:,2), size(Y_vox));
+                Z = reshape(XYZ_mm(:,3), size(Z_vox));
+                
                 obj.fv=isosurface(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 fvc=isocaps(X,Y,Z,permute(obj.nii.img,[2,1,3]),obj.threshold);
                 obj.fv.faces=[obj.fv.faces;fvc.faces+size(obj.fv.vertices,1)];
