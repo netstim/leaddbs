@@ -1,12 +1,47 @@
 function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
+
+%     obj.useExternalModel = true;
+%     if obj.useExternalModel == true
+%         % this won't work, because the obj.M.root is different in
+%         % the original cohort.
+%         S = load([obj.M.root,'vals_all_model.mat']);
+%         if ~strcmp(S.connectome,ea_conn2connid(obj.connectome))
+%             waitfor(msgbox('The chosen fibfilt model was computed for another connectome! See terminal'));
+%             disp('Model for connectome: ')
+%             disp(S.connectome)
+%             return
+%         end
+% 
+%         vals_connected = cell(size(S.vals_all));
+%         for voter = 1:size(vals_connected,1)
+%             for side=1:size(vals_connected,2)
+%                 switch obj.connectivity_type
+%                     case 2
+%                         vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side});
+%                     otherwise
+%                         vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side});
+%                 end
+%             end
+%         end
+%     end
+        
+
     if ~exist('Iperm', 'var')
         if obj.cvlivevisualize
-            [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+            if obj.useExternalModel == true
+                [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
+            else
+                [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+            end
             obj.draw(vals,fibcell,usedidx)
             %obj.draw(vals,fibcell);
             drawnow;
         else
-            [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+            if obj.useExternalModel == true
+                [vals,~,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
+            else
+                [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+            end
         end
     else
         if obj.cvlivevisualize

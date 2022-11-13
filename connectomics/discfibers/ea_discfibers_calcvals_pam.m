@@ -1,4 +1,4 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam(pamlist, obj, cfile)
 % Extract fiber connection values from OSS-DBS results (for a particular connectome)
 
 disp('Load Connectome...');
@@ -16,6 +16,8 @@ fibsval5Peak = cell(1, numSide);
 
 fibcell = cell(1, numSide);
 connFiberInd = cell(1, numSide);
+
+totalFibers = length(idx); % total number of fibers in the connectome to work with global indices
 
 for side = 1:numSide
     fibsvalBin{side} = zeros(length(idx), numPatient);

@@ -69,6 +69,7 @@ classdef ea_disctract < handle
         connectome % redundancy protocol only, name of underlying connectome
         colorbar % colorbar information
         groupcolors = ea_color_wes('all');
+        useExternalModel = false
         % stats: (how many fibers available and shown etc for GUI)
         modelNormalization='None';
         numBins=15;
@@ -231,18 +232,20 @@ classdef ea_disctract < handle
             switch obj.connectivity_type
                 case 2    % if PAM, then just extracts activation states from fiberActivation.mat
                     pamlist = ea_discfibers_getpams(obj);
-                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals_pam(pamlist, obj, cfile);
                     obj.results.(ea_conn2connid(obj.connectome)).('PAM_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM = connFiberInd;
+                    obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
                 otherwise     % check fiber recruitment via intersection with VTA
                     if isfield(obj.M,'pseudoM')
                         vatlist = obj.M.ROI.list;
                     else
                         vatlist = ea_discfibers_getvats(obj);
                     end
-                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell,  connFiberInd] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
+                    [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
                     obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
+                    obj.results.(ea_conn2connid(obj.connectome)).totalFibers = totalFibers; % total number of fibers in the connectome to work with global indices
             end
 
             obj.results.(ea_conn2connid(obj.connectome)).('spearman_sum').fibsval = fibsvalSum;
@@ -427,6 +430,22 @@ classdef ea_disctract < handle
                 Ihat = nan(length(patientsel),2,length(obj.subscore.vars));
                 Ihat_train_global = nan(cvp.NumTestSets,length(patientsel),2,length(obj.subscore.vars));
             end
+
+%             if obj.useExternalModel == true
+%                 % this won't work, because the obj.M.root is different in
+%                 % the original cohort
+%             
+%                 S = load([obj.M.root,'vals_all_model.mat']);
+%                 if ~strcmp(ea_method2methodid(obj),ftr.fibsvalType)
+%                     waitfor(msgbox('Changing the Model Setup! See terminal'));
+%                     disp('The loaded model uses: ')
+%                     disp(ftr.fibsvalType)
+%                 end
+%                 % not sure this will work, because ea_method2methodid(obj)
+%                 % still returns the old value
+%                 fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ftr.fibsvalType).fibsval);
+%             else
+%                 fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
 
             fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
 
@@ -622,6 +641,12 @@ classdef ea_disctract < handle
 
                 Ihat=Ihat_voters_prediction; % replace with actual response variables.
             end
+
+%             % offer to save the model if just one training model
+%             if cvp.NumTestSets == 1
+%                 % offer to save the model in GUI
+%                 ea_save_fibscore_model(obj, patientsel, training)
+%             end
 
             switch obj.multitractmode
                 case 'Split & Color By Subscore'
@@ -826,6 +851,8 @@ classdef ea_disctract < handle
                 load(cfile, 'fibers', 'idx');
                 %disp('Conn. Type:')
                 %disp(ea_method2methodid(obj))
+                obj.results.(ea_conn2connid(obj.connectome)).totalFibers = length(idx);
+
                 try
                     for side = 1:2
                         if obj.connectivity_type == 2
@@ -843,7 +870,48 @@ classdef ea_disctract < handle
                     disp("Recalculate or stay with the same model (VAT or PAM)")
                     disp("====================================================")
                 end
+            else
+                % legacy support
+                if ~isfield(obj.results.(ea_conn2connid(obj.connectome)),'totalFibers')
+                    if obj.multi_pathways == 1
+                        [filepath,~,~] = fileparts(obj.leadgroup);
+                        cfile = [filepath,filesep,'merged_pathways.mat'];
+                    else
+                        cfile = [ea_getconnectomebase('dMRI'), obj.connectome, filesep, 'data.mat'];
+                    end
+                    load(cfile, 'fibers', 'idx');
+                    obj.results.(ea_conn2connid(obj.connectome)).totalFibers = length(idx);
+                end
             end
+
+%             if obj.useExternalModel == true
+%                 % this won't work, because the obj.M.root is different in
+%                 % the original cohort
+% 
+%                 S = load([obj.M.root,'vals_all_model.mat']);
+%                 if ~strcmp(S.connectome,ea_conn2connid(obj.connectome))
+%                     waitfor(msgbox('The chosen fibfilt model was computed for another connectome! See terminal'));
+%                     disp('Model for connectome: ')
+%                     disp(S.connectome)
+%                     return
+%                 end
+% 
+%                 vals_connected = cell(size(S.vals_all));
+%                 for voter = 1:size(vals_connected,1)
+%                     for side=1:size(vals_connected,2)
+%                         switch obj.connectivity_type
+%                             case 2
+%                                 vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side});
+%                             otherwise
+%                                 vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side});
+%                         end
+%                     end
+%                 end
+%                 
+%                 [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
+%             elseif ~exist('vals','var')
+%                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
+%             end
 
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);

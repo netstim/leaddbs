@@ -1,4 +1,4 @@
-function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd] = ea_discfibers_calcvals(vatlist, cfile, thresh)
+function [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell, connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, thresh)
 % Calculate fiber connection values based on the VATs and the connectome
 
 disp('Load Connectome...');
@@ -18,6 +18,8 @@ fibsval5Peak = cell(1, numSide);
 
 fibcell = cell(1, numSide);
 connFiberInd = cell(1, numSide);
+
+totalFibers = length(idx); % total number of fibers in the connectome to work with global indices
 
 for side = 1:numSide
     fibsvalBin{side} = zeros(length(idx), numPatient);
