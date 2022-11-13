@@ -34,10 +34,6 @@ else
 end
 
 if ~isempty(options) && isfield(options, 'subj') && isfield(options.subj, 'methodLog')
-    if ischar(options)
-        options = ea_getptopts(options);
-    end
-
     ea_mkdir(fileparts(options.subj.methodLog));
     methodfile = fopen(options.subj.methodLog, 'a');
     fprintf(methodfile, expstr);
