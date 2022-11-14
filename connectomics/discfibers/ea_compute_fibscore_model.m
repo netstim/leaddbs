@@ -28,20 +28,22 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
 
     if ~exist('Iperm', 'var')
         if obj.cvlivevisualize
-            if obj.useExternalModel == true
-                [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
-            else
-                [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
-            end
+            %if obj.useExternalModel == true
+            %    [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
+            %else
+            %    [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+            %end
+            [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
             obj.draw(vals,fibcell,usedidx)
             %obj.draw(vals,fibcell);
             drawnow;
         else
-            if obj.useExternalModel == true
-                [vals,~,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
-            else
-                [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
-            end
+            %if obj.useExternalModel == true
+            %    [vals,~,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
+            %else
+            %    [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
+            %end
+            [vals,~,usedidx] = ea_discfibers_calcstats(obj, patientsel(training));
         end
     else
         if obj.cvlivevisualize
