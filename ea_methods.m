@@ -16,10 +16,7 @@ expstr = [expstr,[char(datetime('now')),': ',callingfunction,'\n','-------------
 
 if exist('refs','var') % add refs
     expstr = [expstr,'\n\nReferences:\n','--------------------------\n'];
-
-    for r=1:length(refs)
-        expstr = [expstr,[num2str(r),') ',refs{r},'\n']];
-    end
+    expstr = [expstr, strjoin(strcat(num2str((1:numel(refs))'), {') '}, refs), '\n')];
 end
 
 expstr=[expstr,'\n***\n\n'];
