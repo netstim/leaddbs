@@ -269,7 +269,7 @@ else
 end
 
 fid = fopen(antsCMDFile, 'a');
-fprintf(fid, '%s:\n%s\n\n', datestr(datetime('now')), cmd);
+fprintf(fid, '%s:\n%s\n\n', char(datetime('now')), cmd);
 fclose(fid);
 
 if ~ispc
