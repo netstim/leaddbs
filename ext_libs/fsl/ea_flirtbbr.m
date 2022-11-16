@@ -186,6 +186,4 @@ cits={
     'D.N. Greve and B. Fischl, Accurate and robust brain image alignment using boundary-based registration, NeuroImage, 48(1):63-72, 2009.'
 };
 
-%recon options for ea_methods
-options_recon = ea_getptopts(volumedir);
-ea_methods(options_recon,[ea_path_escape(movname),' was linearly co-registered to ',ea_path_escape(fixname),' using FLIRT BBR as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],cits);
+ea_methods(volumedir,[ea_path_escape(movname),' was linearly co-registered to ',ea_path_escape(fixname),' using FLIRT BBR as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],cits);

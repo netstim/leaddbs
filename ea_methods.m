@@ -33,9 +33,21 @@ else
     fprintf(expstr);
 end
 
-if ~isempty(options) && isfield(options, 'subj') && isfield(options.subj, 'methodLog')
-    ea_mkdir(fileparts(options.subj.methodLog));
-    methodfile = fopen(options.subj.methodLog, 'a');
+if ~isempty(options)
+    % 'options' is a directory in BIDS dataset
+    if ischar(options) && contains(options, ['derivatives', filesep, 'leaddbs'])
+        options = ea_getptopts(options);
+    end
+
+    if ~isstruct(options) && isfield(options, 'subj') && isfield(options.subj, 'methodLog')
+        % Get methodLog path in BIDS subj folder
+        ea_mkdir(fileparts(options.subj.methodLog));
+        methodfile = fopen(options.subj.methodLog, 'a');
+    elseif ischar(options)
+        % options is a directory outside of BIDS dataset
+        methodfile = fopen(fullfile(options, 'methods.txt'), 'a');
+    end
+
     fprintf(methodfile, expstr);
     fclose(methodfile);
 end

@@ -28,9 +28,7 @@ cits={
 };
 
 
-%recon options for ea_methods
-options_recon = ea_getptopts(pth);
-ea_methods(options_recon,[ea_path_escape(inputfname),' was denoised using an unbiased nonlocal means filtering approach (Tristan-Vega et al. 2011; https://www.nitrc.org/projects/unlmeans/)'],...
+ea_methods(pth,[ea_path_escape(inputfname),' was denoised using an unbiased nonlocal means filtering approach (Tristan-Vega et al. 2011; https://www.nitrc.org/projects/unlmeans/)'],...
     cits);
 ea_dispt([]);
 
