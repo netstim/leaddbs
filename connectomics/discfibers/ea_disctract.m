@@ -363,11 +363,68 @@ classdef ea_disctract < handle
                 cvp = cvpartition(length(obj.patientselection),'KFold',obj.kfold);
                 [I,Ihat] = crossval(obj,cvp);
             else
+                % plot some statistics over shuffles
+                r_over_iter = zeros(iter,1);
+                p_over_iter = zeros(iter,1);
                 for i=1:iter
                     cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
                     fprintf("Iterating fold set: %d",i)
-                    [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp);
+                    [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp, [], 1);
+                    switch obj.multitractmode
+                        case 'Split & Color By PCA'
+                            disp("Fold Agreement is not evaluated for PCA")
+                        otherwise
+                            [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i},Ihat_iter{i},'spearman');
+                    end
                 end
+
+                % check model agreement over shuffles using Sequential Rank Agreement
+                % disabled for PCA
+                switch obj.multitractmode
+                    case 'Split & Color By PCA'
+                        disp("Fold Agreement is not evaluated for PCA")
+                    otherwise
+                        r_Ihat = zeros(size(Ihat_iter,2));
+                        for i = 1:size(r_Ihat,1)
+                            for j = 1:size(r_Ihat,1)
+                                [r_Ihat(i,j),~]=ea_permcorr(Ihat_iter{i},Ihat_iter{j},'spearman');
+                            end
+                        end
+        
+                        % plot correlation matrix 
+                        figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
+                        imagesc(triu(r_Ihat)); 
+                        title('Patient scores'' correlations over K-fold shuffles', 'FontSize', 16); % set title
+                        colormap('bone');
+                        cb = colorbar;
+                        set(cb)
+                             
+                        % plot r-vals over shuffles
+                        p_above_05 = p_over_iter(find(p_over_iter>0.05),:);
+                        p_above_01 = p_over_iter(find(p_over_iter>0.01),:);
+                        h = figure('Name','Over-fold analysis','Color','w','NumberTitle','off');
+                        g = ea_raincloud_plot(r_over_iter,'box_on',1);
+                        a1=gca;
+                        set(a1,'ytick',[])
+                        a1.XLabel.String='Spearman''s R of model and clinical scores';
+        
+                        if min(r_over_iter) >= -0.9
+                            r_lower_lim = min(r_over_iter) - 0.1;
+                        else
+                            r_lower_lim = -1.0;
+                        end
+                        if max(r_over_iter) <= 0.9
+                            r_upper_lim = max(r_over_iter) + 0.1;
+                        else
+                            r_upper_lim = 1.0;
+                        end
+        
+                        a1.XLim=([r_lower_lim r_upper_lim]);  
+                        text(0.25,0.9,['N(p>0.05) = ',sprintf('%0.2f',length(p_above_05))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized'); 
+                        text(0.25,0.83,['N(p>0.01) = ',sprintf('%0.2f',length(p_above_01))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
+                end
+
+                % we should think about this part
                 I_iter = cell2mat(I_iter);
                 Ihat_iter = cell2mat(Ihat_iter);
                 I = mean(I_iter,2,'omitnan');
@@ -378,14 +435,14 @@ classdef ea_disctract < handle
         function [I, Ihat] = lno(obj, Iperm)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
-            if ~exist('Iperm', 'var')
+            if ~exist('Iperm', 'var') || isempty(Iperm)
                 [I, Ihat] = crossval(obj, cvp);
             else
                 [I, Ihat] = crossval(obj, cvp, Iperm);
             end
         end
 
-        function [Improvement, Ihat, actualimprovs] = crossval(obj, cvp, Iperm)
+        function [Improvement, Ihat, actualimprovs] = crossval(obj, cvp, Iperm, shuffle)
             if isnumeric(cvp) % cvp is crossvalind
                 cvIndices = cvp;
                 cvID = unique(cvIndices);
@@ -501,7 +558,7 @@ classdef ea_disctract < handle
                         test_inner(test_i) = logical(training(test_i));
 
                         % updates Ihat_inner(test_inner)
-                        if ~exist('Iperm', 'var')
+                        if ~exist('Iperm', 'var') || isempty(Iperm)
                             [Ihat_inner, ~, ~,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat_inner, Ihat_train_global_inner, patientsel, training_inner, test_inner);
                         else
                             [Ihat_inner, ~, ~,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat_inner, Ihat_train_global_inner, patientsel, training_inner, test_inner,Iperm);
@@ -518,7 +575,7 @@ classdef ea_disctract < handle
 
                 % now compute Ihat for the true 'test' left out
                 % updates Ihat(test)
-                if ~exist('Iperm', 'var')
+                if ~exist('Iperm', 'var') || isempty(Iperm)
                     [Ihat, Ihat_train_global, vals,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test);
                 else
                     [Ihat, Ihat_train_global, vals,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test,Iperm);
@@ -533,6 +590,44 @@ classdef ea_disctract < handle
                     Predicted_scores(test) = Ihat_voters_prediction(1:end,1); % only one value here atm
                 end
 
+            end
+
+            % plot patient score correlation matrix over folds
+            if ~exist('shuffle', 'var') || shuffle == 0
+                if cvp.NumTestSets ~= 1 && (strcmp(obj.multitractmode,'Single Tract Analysis') || strcmp(obj.multitractmode,'Single Tract Analysis Button'))
+
+                    % put training and test scores together
+                    Ihat_combined = cell(1,cvp.NumTestSets);
+                    %Ihat_combined = Ihat_train_global;
+                    for c=1:cvp.NumTestSets
+                        if isobject(cvp)
+                            training = cvp.training(c);
+                            test = cvp.test(c);
+                        elseif isstruct(cvp)
+                            training = cvp.training{c};
+                            test = cvp.test{c};
+                        end
+    
+                        Ihat_combined{c}(training,1) = Ihat_train_global(c,training,1)';
+                        Ihat_combined{c}(test,1) = Ihat(test,1);
+                    end
+
+                    r_Ihat = zeros(size(Ihat_combined,2));
+
+                    for i = 1:size(r_Ihat,1)
+                        for j = 1:size(r_Ihat,1)
+                            [r_Ihat(i,j),~]=ea_permcorr(Ihat_combined{i},Ihat_combined{j},'spearman');
+                        end
+                    end
+
+                    figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
+                    imagesc(triu(r_Ihat)); % Display correlation matrix as an image
+                    title('Patient scores'' correlations over folds', 'FontSize', 16); % set title
+                    colormap('bone'); 
+                    cb = colorbar;
+                    set(cb) 
+
+                end
             end
 
             if obj.nestedLOO
@@ -557,7 +652,7 @@ classdef ea_disctract < handle
                     h=ea_corrbox(Improvement,Predicted_scores,'permutation',{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, LM_values_slope, LM_values_intercept},groups_nested);
                 end
             end
-
+            
             if obj.doactualprediction % repeat loops partly to fit to actual response variables:
 
                 Ihat_voters_prediction=nan(size(Ihat));
