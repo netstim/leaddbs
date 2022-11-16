@@ -11,7 +11,7 @@ catch
 end
 
 expstr = '\n\n';
-expstr = [expstr,[datestr(datetime('now')),': ',callingfunction,'\n','--------------------------\n',...
+expstr = [expstr,[char(datetime('now')),': ',callingfunction,'\n','--------------------------\n',...
     parsestr]];
 
 if exist('refs','var') % add refs
