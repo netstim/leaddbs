@@ -134,6 +134,5 @@ cits={
     'Johnson, H., Harris, G., & Williams, K. (2007). BRAINSFit: mutual information rigid registrations of whole-brain 3D images, using the insight toolkit. Insight J.'
 };
 
-
 ea_methods(volumedir,[mov,' was linearly co-registered to ',fix,' using BRAINSFit software (Johnson 2007; https://www.nitrc.org/projects/multimodereg/)'],...
     cits);
