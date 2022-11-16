@@ -5,16 +5,14 @@ function [pth]=ea_path_escape(pth)
 
     if iscell(pth)
         %assume cell array of string paths
-        for str_i=1:numel(pth)
-            pth{str_i}=escape_path_str(pth{str_i});
-        end
+        pth = cellfun(@escape_path_str, pth, 'UniformOutput', false);
     else
         %assume single path
-        pth=escape_path_str(pth);
+        pth = escape_path_str(pth);
     end
 end
 
 function strpth=escape_path_str(strpth)
-    strpth=strrep(strpth,'\','\\');%backslash
-    %strpth=strrep(strpth,'%','%%');%percent (percent is not used in a path, DO NOTHING for this)
+    strpth = strrep(strpth, '\', '\\'); % backslash
+    % strpth = strrep(strpth, '%', '%%'); % percent (percent is not used in a path, DO NOTHING for this)
 end
