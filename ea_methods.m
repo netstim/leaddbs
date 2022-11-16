@@ -39,7 +39,7 @@ if ~isempty(options)
         options = ea_getptopts(options);
     end
 
-    if ~isstruct(options) && isfield(options, 'subj') && isfield(options.subj, 'methodLog')
+    if isstruct(options) && isfield(options, 'subj') && isfield(options.subj, 'methodLog')
         % Get methodLog path in BIDS subj folder
         ea_mkdir(fileparts(options.subj.methodLog));
         methodfile = fopen(options.subj.methodLog, 'a');
