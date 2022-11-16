@@ -28,7 +28,7 @@ cits={
 };
 
 
-ea_methods(pth,[ea_path_escape(inputfname),' was denoised using an unbiased nonlocal means filtering approach (Tristan-Vega et al. 2011; https://www.nitrc.org/projects/unlmeans/)'],...
+ea_methods(pth,[inputfname,' was denoised using an unbiased nonlocal means filtering approach (Tristan-Vega et al. 2011; https://www.nitrc.org/projects/unlmeans/)'],...
     cits);
 ea_dispt([]);
 

@@ -248,5 +248,5 @@ cits={
 };
 
 
-ea_methods(volumedir,[ea_path_escape(mov),' was co-registered to ',ea_path_escape(fix),' using a two-stage linear registration (rigid followed by affine) as implemented in Advanced Normlization Tools (Avants 2008; http://stnava.github.io/ANTs/)'],...
+ea_methods(volumedir,[mov,' was co-registered to ',fix,' using a two-stage linear registration (rigid followed by affine) as implemented in Advanced Normlization Tools (Avants 2008; http://stnava.github.io/ANTs/)'],...
     cits);

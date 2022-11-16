@@ -165,5 +165,5 @@ cits={
     'M. Jenkinson, P.R. Bannister, J.M. Brady, and S.M. Smith. Improved optimisation for the robust and accurate linear registration and motion correction of brain images. NeuroImage, 17(2):825-841, 2002.'
 };
 
-ea_methods(pth,[ea_path_escape(mov),' was linearly co-registered to ',ea_path_escape(fix),' using FLIRT as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],cits);
+ea_methods(pth,[mov,' was linearly co-registered to ',fix,' using FLIRT as implemented in FSL (Jenkinson 2001; Jenkinson 2002; https://fsl.fmrib.ox.ac.uk/)'],cits);
 

@@ -135,5 +135,5 @@ cits={
 };
 
 
-ea_methods(volumedir,[ea_path_escape(mov),' was linearly co-registered to ',ea_path_escape(fix),' using BRAINSFit software (Johnson 2007; https://www.nitrc.org/projects/multimodereg/)'],...
+ea_methods(volumedir,[mov,' was linearly co-registered to ',fix,' using BRAINSFit software (Johnson 2007; https://www.nitrc.org/projects/multimodereg/)'],...
     cits);
