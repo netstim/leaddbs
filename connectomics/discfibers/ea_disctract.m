@@ -824,9 +824,13 @@ classdef ea_disctract < handle
                 end
                 allvals = full(vertcat(vals{group,:}));
 
-                if isempty(allvals)
+                if isempty(allvals) || all(isnan(allvals))
+                    ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!');
                     continue;
+                else
+                    allvals(isnan(allvals)) = 0;
                 end
+
                 if strcmp(obj.multitractmode,'Split & Color By Subscore') || strcmp(obj.multitractmode,'Split & Color By PCA')
                     if obj.subscore.special_case
                         %basicaly in the mixed fiber case, since the tabs

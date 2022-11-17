@@ -526,8 +526,11 @@ classdef ea_networkmapping < handle
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).
                 % Horzvat all values for colorbar construction
                 allvals = horzcat(vals{group,:})';
-                if isempty(allvals)
+                if isempty(allvals) || all(isnan(allvals))
+                    ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!');
                     continue;
+                else
+                    allvals(isnan(allvals)) = 0;
                 end
 
                 if obj.posvisible && all(allvals<0)
