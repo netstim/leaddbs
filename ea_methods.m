@@ -51,11 +51,13 @@ if ~isempty(options)
         % Get methodLog path in BIDS subj folder
         ea_mkdir(fileparts(options.subj.methodLog));
         methodfile = fopen(options.subj.methodLog, 'a');
-    elseif ischar(options)
+    elseif ischar(options) && isfolder(options)
         % options is a directory outside of BIDS dataset
         methodfile = fopen(fullfile(options, 'methods.txt'), 'a');
     end
 
-    fprintf(methodfile, expstr);
-    fclose(methodfile);
+    if exist('methodfile', 'var')
+        fprintf(methodfile, expstr);
+        fclose(methodfile);
+    end
 end
