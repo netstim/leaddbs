@@ -23,6 +23,9 @@ expstr = '\n\n';
 expstr = [expstr, char(datetime('now')), ': ', callingfunction, '\n', '--------------------------\n', parsestr];
 
 if exist('refs','var') % add refs
+    if isrow(refs)
+        refs = refs';
+    end
     expstr = [expstr, '\n\nReferences:\n', '--------------------------\n'];
     expstr = [expstr, strjoin(strcat(num2str((1:numel(refs))'), {') '}, refs), '\n')];
 end
