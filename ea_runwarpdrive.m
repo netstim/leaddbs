@@ -40,49 +40,12 @@ if isempty(warpdrive_subs) % all subjects approved
 end
 
 %
-% Check slicer install
+% Set-up Custom Slicer
 %
 
-slicer_path = ea_runslicer(options, 5);
-
-
-%
-% Check warpdrive install
-%
-
-if ~isfield(options.prefs, 'slicer_netstim_path') || strcmp(options.prefs.slicer_netstim_path,'') || ~isfolder(options.prefs.slicer_netstim_path)
-    cmd = ['"' slicer_path '"' ...
-        ' --no-splash' ...
-        ' --no-main-window' ...
-        ' --ignore-slicerrc'...
-        ' --python-script ' fullfile(ea_getearoot, 'support_scripts', 'install_warpdrive.py')];
-    disp('Installing WarpDrive...')
-    [status,result] = system(cmd);
-    info = regexp(result,'.*os:(?<os>\w+).*rev:(?<rev>\d+).*extensionsInstallPath:(?<extensionsInstallPath>[^\n]+).*slicerMajorVersion:(?<slicerMajorVersion>\d+).*','names');
-    if info.slicerMajorVersion < 5
-        fprintf('Installed Slicer version is %d. This might couse some issues. We recommend to update to Slicer 5.\n <a href = "%s">%s</a>\n', info.slicerMajorVersion, 'https://download.slicer.org/', 'https://download.slicer.org/');
-    end
-    switch status
-        case 0
-            d = dir(fullfile(info.extensionsInstallPath,'**','SlicerNetstim'));
-            slicer_netstim_path = d(1).folder;
-            ea_injectprefstring('slicer_netstim_path', slicer_netstim_path);
-            options.prefs.slicer_netstim_path = slicer_netstim_path;
-            disp('WarpDrive installed!');
-        case 1
-            warndlg('WarpDrive could not be installed automatically, probably because of a network related issue. See the command window output for options on how to install manually.', 'Warning');
-            if regexp(result,'.*Execution of PAC script at.*proxy.*') && startsWith(computer('arch'),'mac')
-                slicer_opt_page = 'https://github.com/simonoxen/SlicerForMacWithProxy/releases/tag/v5.0.2';
-                fprintf('Looks like you are using MacOS under a proxy. You can download a Slicer version that fixes a proxy-related bug here:\n<a href = "%s">%s</a>\n',slicer_opt_page,slicer_opt_page);
-            else
-                download_page = ['https://extensions.slicer.org/view/SlicerNetstim/' info.rev '/' info.os];
-                extenstions_manager_page = 'https://slicer.readthedocs.io/en/latest/user_guide/extensions_manager.html#install-downloaded-extension-packages';
-                fprintf(['You can manually download the extension from here:\n<a href = "%s">%s</a>\n' ...
-                    'And intall it through the extensions manager:\n<a href = "%s">%s</a>\n'], download_page, download_page, extenstions_manager_page, extenstions_manager_page);
-            end
-            disp('If this error persists contact us via our user slack channel');
-            return
-    end
+s4l = ea_slicer_for_lead;
+if ~s4l.is_installed()
+    s4l.install();
 end
 
 %
@@ -117,8 +80,7 @@ fclose(fid);
 % Set up commands and run warpdrive
 %
 
-slicer_netstim_modules = dir(fullfile(options.prefs.slicer_netstim_path,'**','cli-modules'));
-slicer_netstim_modules = unique({slicer_netstim_modules.folder}');
+slicer_netstim_modules = {};
 slicer_netstim_modules{end+1} = fullfile(ea_getearoot, 'ext_libs', 'SlicerNetstim', 'ImportAtlas');
 slicer_netstim_modules{end+1} = fullfile(ea_getearoot, 'ext_libs', 'SlicerNetstim', 'NetstimPreferences');
 slicer_netstim_modules{end+1} = fullfile(ea_getearoot, 'ext_libs', 'SlicerNetstim', 'WarpDrive');
@@ -128,7 +90,6 @@ python_commands = [strcat("slicer.app.settings().setValue('NetstimPreferences/le
                     "slicer.app.settings().setValue('MainWindow/DontConfirmExit','1024')";...
                     "slicer.app.settings().setValue('MainWindow/DontConfirmRestart','1024')";...
                     "import json, os, sys";...
-                    "list(map(lambda p: sys.path.insert(0,sys.path.pop(sys.path.index(p))), [p for p in sys.path if p.find('leaddbs')>0]))";...
                     "import WarpDrive";...
                     strcat("WarpDrive.WarpDriveLogic().getParameterNode().SetParameter('LeadSubjects',json.dumps(json.load(open(r'", tmp_file, "'))))");...
                     strcat("WarpDrive.WarpDriveLogic().getParameterNode().SetParameter('MNIPath',r'", remove_last_filesep(ea_space), "')");...
@@ -136,17 +97,15 @@ python_commands = [strcat("slicer.app.settings().setValue('NetstimPreferences/le
                     strcat("os.remove(r'", tmp_file, "')");...
                     "slicer.util.selectModule('WarpDrive')"];
                    
-command = ['"' slicer_path '"' ...
-           ' --no-splash'...
-           ' --disable-settings'...
+command = [' --no-splash'...
            ' --ignore-slicerrc'...
            ' --additional-module-paths "' char(strjoin(string(slicer_netstim_modules),'" "')) '"'...
            ' --python-code "' char(strjoin(python_commands,";")) '"'];
 
 save_log = [' >> "' fullfile(warpdrive_subs(1).logDir, ['warpdrive_' char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt']) '"'];
        
-system([command save_log ' &']); % with & return control to Matlab
-disp('Running WarpDrive in Slicer');
+s4l.run([command save_log ' &']); % with & return control to Matlab
+disp('Running WarpDrive in Custom Slicer');
 
 end
 
