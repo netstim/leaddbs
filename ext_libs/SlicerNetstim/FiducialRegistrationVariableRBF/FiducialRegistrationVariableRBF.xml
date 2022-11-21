@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<executable>
+  <category>Utilities</category>
+  <title>FiducialRegistrationVariableRBF</title>
+  <description><![CDATA[This is a CLI module that can be bundled in an extension]]></description>
+  <version>0.0.1</version>
+  <documentation-url>https://github.com/username/project</documentation-url>
+  <license>Slicer</license>
+  <contributor>FirstName LastName (Institution), FirstName LastName (Institution)</contributor>
+  <acknowledgements>This work was partially funded by NIH grant NXNNXXNNNNNN-NNXN</acknowledgements>
+  <parameters>
+    <image>
+      <name>referenceVolume</name>
+      <label>Reference volume</label>
+      <channel>input</channel>
+      <index>0</index>
+      <default>None</default>
+      <description>Reference volume</description>
+    </image>
+    <point coordinateSystem="lps" multiple="true">
+      <name>fixedFiducials</name>
+      <label>Fixed Fiducials</label>
+      <channel>input</channel>
+      <description>Fixed fiducials</description>
+      <default>0,0,0</default>
+      <longflag>fixedFiducials</longflag>
+    </point>
+    <point coordinateSystem="lps" multiple="true">
+      <name>movingFiducials</name>
+      <label>Moving fiducials</label>
+      <channel>input</channel>
+      <description>Moving Fiducials</description>
+      <default>0,0,0</default>
+      <longflag>movingFiducials</longflag>
+    </point>
+    <float-vector>
+     <name>RBFRadius</name>
+     <label>RBF radius</label>
+     <longflag>rbfradius</longflag>
+     <default>50.0</default>
+     <description>Radius of the radial basis function. If more than one value is specified then these are used as fiducial specific RBF radius. Therefore, the number of radius must be one or the same as the number of fiducials.</description>
+    </float-vector>
+    <transform fileExtensions=".nrrd" type="nonlinear">
+      <name>outputDisplacementField</name>
+      <longflag>--outputDisplacementField</longflag>
+      <description>Deformation field created by registration</description>
+      <label>Output displacement field</label>
+      <default>None</default>
+      <channel>output</channel>
+    </transform>
+    <float>
+     <name>stiffness</name>
+     <label>Stiffness</label>
+     <longflag>stiffness</longflag>
+     <default>0.0</default>
+     <description>Regularization factor</description>
+    </float>
+  </parameters>
+</executable>

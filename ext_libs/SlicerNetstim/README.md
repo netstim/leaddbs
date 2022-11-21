@@ -10,17 +10,13 @@ Follow the [quick start guide](./Documentation/QuickStartGuide/README.md) to ins
 
 ## Modules
 
-- AlphaOmega
+- Lead-OR
 
-This module implements an interface with the NeuroOmega device from the AlphaOmega company. It can query information about micro electrodes in real time. This module is disabled in the Slicer Extension given that uses a proprietary SDK. To build this extension follow the [Slicer development guidelines](https://slicer.readthedocs.io/en/latest/developer_guide/extensions.html).
+The Lead-OR module provides an interface for setting micro electrodes configuration in space. We are developing a new interface with OpenEphys (see [OpenEphysLeadOR](https://github.com/netstim/OpenEphysLeadOR) and [OpenEhpysNeuroOmega](https://github.com/netstim/OpenEphysNeuroOmega)) to integrate micro electrode processing.
 
 - Import Atlas
 
 The import atlas module implements a routine to import [Lead-DBS atlases](https://www.lead-dbs.org/helpsupport/knowledge-base/atlasesresources/atlases/). A [Lead-DBS installation](https://www.lead-dbs.org/download/) is needed so the path to the atlas can be provided. Atlases are imported into a model hierarchy in Slicer. [Atlases can also be loaded by drag-and-dropping the atlas_index.mat files](https://github.com/netstim/SlicerNetstim/pull/1).
-
-- Lead-OR
-
-The Lead-OR module provides an interface for setting micro electrodes configuration in space. It takes trajectories created from the AlphaOmega module and the output transform from the StereotacticPlan to create a live update of the scene.
 
 - StereotacticPlan
 

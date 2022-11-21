@@ -4,7 +4,7 @@
 
 ## Slicer Installation 
 
-To install the SlicerNetstim Extension it is first necessary to install Slicer. Slicer can be downloaded from their [downloads page](https://download.slicer.org/). We recommend to use the 4.11 stable version, 4.13 nightly (and upcoming) versions should work as well.
+To install the SlicerNetstim Extension it is first necessary to install Slicer. Slicer can be downloaded from their [downloads page](https://download.slicer.org/). We recommend to use the 5.0.3 stable version, preview versions (>5) should work as well.
 
 Once Slicer is installed, open it and go to the Extensions Manager clicking it's icon in the toolbar (see picture below).
 
