@@ -368,10 +368,16 @@ for group=groups
             pvals{group,side}=pvals{group,side}(usedidx{group,side}); % final weights for surviving fibers
         end
 
-        allvals = vertcat(vals{group,:});
-        posvals = sort(allvals(allvals>0),'descend');
-        negvals = sort(allvals(allvals<0),'ascend');
-        
+
+        switch threshstrategy
+            case 'Fixed Amount' % here we want to create threshs for each side separately.
+                posvals = sort(vals{group,side}(vals{group,side}>0),'descend');
+                negvals = sort(vals{group,side}(vals{group,side}<0),'ascend');
+            otherwise % in other cases, we want to apply the same thresh to both sides.
+                allvals = vertcat(vals{group,:});
+                posvals = sort(allvals(allvals>0),'descend');
+                negvals = sort(allvals(allvals<0),'ascend');
+        end
         % positive thresholds
         if dosubscores || dogroups
             if obj.subscore.special_case
