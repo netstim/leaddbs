@@ -18,13 +18,15 @@ class LeadDBSSubject():
   def __init__(self, subjectPath, leaddbsPath=None):
     if not os.path.exists(subjectPath):
       raise RuntimeError(subjectPath + ' Invalid input subject path')
-    self.path = subjectPath
+    self.subjectPath = subjectPath
+    self.subject = os.path.basename(subjectPath)
+    self.leadORPath = os.path.join(self.subjectPath,'leador')
     self.stereotaxyReports = self.getStereotaxyReports()
     self.leaddbsPath = leaddbsPath
 
   def getStereotaxyReports(self, patientID=None, maxOutput=2):
     out = []
-    for possiblePath in self.getPossibleStereotaxyReportPaths(rootPath=self.path):
+    for possiblePath in self.getPossibleStereotaxyReportPaths(rootPath=self.leadORPath):
       stereotaxyReport = StereotaxyReport(possiblePath)
       if  (patientID is None) or stereotaxyReport.hasPatientID(patientID):
         out.append(stereotaxyReport)
@@ -36,12 +38,12 @@ class LeadDBSSubject():
     return glob.glob(os.path.join(rootPath, 'StereotaxyReport*.pdf'))
 
   def createORScene(self):
-    anatVolumeNode = slicer.util.loadVolume(os.path.join(self.path, 'anat_t2.nii'))
-    anatToframeTransformNode =  slicer.util.loadTransform(os.path.join(self.path, 'anatToFrame.txt'))
-    glanatInverseTransformNode = slicer.util.loadTransform(os.path.join(self.path, 'glanatInverseComposite.nii.gz'))
+    anatVolumeNode = self.getAnatVolumeNode()
+    anatToframeTransformNode =  slicer.util.loadTransform(os.path.join(self.leadORPath, 'anatToFrame.txt'))
+    glanatInverseTransformNode = self.getInverseNormalizationNode()
 
     import ImportAtlas
-    atlasPath = os.path.join(self.leaddbsPath,'templates','space','MNI_ICBM_2009b_NLIN_ASYM','atlases','DISTAL Nano (Ewert 2017)','atlas_index.mat')
+    atlasPath = os.path.join(self.leaddbsPath,'templates','space','MNI152NLin2009bAsym','atlases','DISTAL Nano (Ewert 2017)','atlas_index.mat')
     ImportAtlas.ImportAtlasLogic().readAtlas(atlasPath)
 
     anatVolumeNode.ApplyTransform(anatToframeTransformNode.GetTransformToParent())
@@ -70,9 +72,8 @@ class LeadDBSSubject():
         np.array(planningDictionary['Headring Coordinates'].split(','), dtype=float), 
         planningDictionary['Mounting'])
 
-    sceneSaveFilename = os.path.join(self.path, 'ORScene.mrb')
+    sceneSaveFilename = os.path.join(self.leadORPath, 'ORScene.mrb')
     slicer.util.saveScene(sceneSaveFilename)
-
 
   def createAnatToFrameTransform(self):
     # frame fiducials
@@ -94,14 +95,14 @@ class LeadDBSSubject():
     parameters['saveTransform']   = anatToFrameTransformNode.GetID()
     parameters['transformType']   = 'Rigid'
     cli = slicer.cli.run(slicer.modules.fiducialregistration, None, parameters, wait_for_completion=True, update_display=False)
-    slicer.util.saveNode(anatToFrameTransformNode, os.path.join(self.path,'anatToFrame.txt'))
+    slicer.util.saveNode(anatToFrameTransformNode, os.path.join(self.leadORPath,'anatToFrame.txt'))
 
   def getRawAnatToAnatTransform(self):
     dcmInfo = self.stereotaxyReports[0].getDICOMInformation()
     modality = self.getModalityFromSeriesDescription(dcmInfo['SeriesDescription'])
     # define nodes
     rawAnatVolumeNode = self.getImageFromDICOMInformation(dcmInfo)
-    anatVolumeNode 	  = slicer.util.loadVolume(os.path.join(self.path, 'anat_' + modality + '.nii'))
+    anatVolumeNode 	  = self.getAnatVolumeNode(modality)
     outTransformNode  = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLinearTransformNode')
     # registration
     parameters = {}
@@ -113,12 +114,26 @@ class LeadDBSSubject():
     parameters['useRigid'] 				        = True
     parameters['costMetric'] 			        = 'MMI'
     cli = slicer.cli.run(slicer.modules.brainsfit, None, parameters, wait_for_completion=True, update_display=False)
-    slicer.util.saveNode(outTransformNode, os.path.join(self.path, rawAnatVolumeNode.GetName().split(' ')[-1] + 'ToAnat.txt'))
+    slicer.util.saveNode(outTransformNode, os.path.join(self.leadORPath, rawAnatVolumeNode.GetName().split(' ')[-1] + 'ToAnat.txt'))
     return outTransformNode
 
+  def getInverseNormalizationNode(self):
+    g = glob.glob(os.path.join(self.subjectPath, 'normalization', 'transformations', '*from-MNI152NLin2009bAsym*-ants.nii.gz'))
+    if g:
+      return slicer.util.loadTransform(g[0])
+    raise RuntimeError('Unable to find inverse normalization : ' + self.subjectPath)
+
+  def getAnatVolumeNode(self, modality=None):
+    modalities = [modality] if modality is not None else ['T2','T1']
+    for m in modalities:
+      g = glob.glob(os.path.join(self.subjectPath, 'coregistration', 'anat', '*' + m.upper() + 'w.nii'))
+      if g:
+        return slicer.util.loadVolume(g[0])
+    raise RuntimeError('Unable to find anat volume : ' + self.subjectPath)
+
   def getModalityFromSeriesDescription(self, seriesDescription):
-    for g in glob.glob(os.path.join(self.path, 'anat_*.nii')):
-      modality = re.search(r'(?<=anat_)\w+', g).group(0)
+    for g in glob.glob(os.path.join(self.subjectPath, 'coregistration', 'anat', '*preop*w.nii')):
+      modality = re.search(r'\w+(?=w.nii)', g).group(0)
       if modality.lower() in seriesDescription.lower():
         return modality
     return 't1'
@@ -126,7 +141,7 @@ class LeadDBSSubject():
   def getImageFromDICOMInformation(self, dcmInfo):
     loadedNodeIDs = []
     with DICOMUtils.TemporaryDICOMDatabase() as database:
-      DICOMUtils.importDicom(os.path.join(self.path, 'DICOM'), database)
+      DICOMUtils.importDicom(os.path.join(self.subjectPath,'..','..','..','sourcedata',self.subject), database)
       series = SlicerDICOMDatabase().geSeriestMatchingDescriptionAndDateTime(dcmInfo['SeriesDescription'], dcmInfo['AcquisitionDateTime'])
       loadedNodeIDs.extend(DICOMUtils.loadSeriesByUID([series]))
 
@@ -135,7 +150,7 @@ class LeadDBSSubject():
       if re.search('.*' + dcmInfo['SeriesDescription'] + '.*', volumeNode.GetName()):
         return volumeNode
 
-    raise RuntimeError('Unable to find image in DICOM: ' + self.path)
+    raise RuntimeError('Unable to find image in DICOM: ' + self.subjectPath)
 
 #------------------------------------------------------------------------------------------
 class SlicerDICOMDatabase():
@@ -209,5 +224,5 @@ class NORASubject(LeadDBSSubject):
       aquisitionDateTime = SlicerDICOMDatabase.DICOMDateTimeStringToDateTime(seriesMetaData['AcquisitionDate'] + seriesMetaData['AcquisitionTime'])
       dateTimeMatch = SlicerDICOMDatabase.seriesDateTimeMatch(aquisitionDateTime, dcmInfo['AcquisitionDateTime'])
       if descriptionMatch and dateTimeMatch:
-        return slicer.util.loadVolume(os.path.join(self.path, '..', seriesKey + '.nii'))
-    raise RuntimeError('Could not find matching DICOM for: ' + self.path)
+        return slicer.util.loadVolume(os.path.join(self.subjectPath, '..', seriesKey + '.nii'))
+    raise RuntimeError('Could not find matching DICOM for: ' + self.subjectPath)

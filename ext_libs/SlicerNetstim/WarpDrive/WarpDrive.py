@@ -7,9 +7,9 @@ from slicer.util import VTKObservationMixin
 
 import numpy as np
 
-from WarpDriveLibLocal.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool
-from WarpDriveLibLocal.Helpers import GridNodeHelper, LeadDBSCall
-from WarpDriveLibLocal.Widgets import Tables, Toolbar
+from WarpDriveLib.Tools import NoneTool, SmudgeTool, DrawTool, PointToPointTool
+from WarpDriveLib.Helpers import GridNodeHelper, LeadDBSCall
+from WarpDriveLib.Widgets import Tables, Toolbar
 
 #
 # WarpDrive
@@ -24,7 +24,7 @@ class WarpDrive(ScriptedLoadableModule):
     ScriptedLoadableModule.__init__(self, parent)
     self.parent.title = "WarpDrive" 
     self.parent.categories = ["Netstim"]
-    self.parent.dependencies = ["fiducialRegistrationVariableRBF"]
+    self.parent.dependencies = ["FiducialRegistrationVariableRBF"]
     self.parent.contributors = ["Simon Oxenford (Netstim Berlin)"]
     self.parent.helpText = """
 This module provides tools to manually fix misalignments after non linear registration
@@ -123,22 +123,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Initial GUI update
     self.updateGUIFromParameterNode()
 
-    # Lead-DBS call
-    self.initializeParameterNode()
-    if self._parameterNode.GetParameter("LeadSubjects"): # was called from command line
-      self.showSingleModule()
-      # put all toolbars in same row
-      slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
-      for tb in slicer.util.mainWindow().findChildren('QToolBar'):
-        slicer.util.mainWindow().removeToolBarBreak(tb)
-      # customize mouse mode
-      mouseModeToolBar = slicer.util.mainWindow().findChild('QToolBar', 'MouseModeToolBar')
-      mouseModeToolBar.setVisible(1)
-      for a in mouseModeToolBar.actions():
-        if a.text in ["Fiducial", "Toggle Markups Toolbar"]:
-          mouseModeToolBar.removeAction(a)
-
-  def showSingleModule(self):
+  def initializeCustomUI(self):
     
     # toolbars
     slicer.util.setToolbarsVisible(False, [])
@@ -165,8 +150,6 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # inputs area
     self.ui.IOCollapsibleButton.setVisible(False)
-    if self.developerMode:
-      self.reloadCollapsibleButton.setVisible(False)
 
     # data probe
     for i in range(slicer.mrmlScene.GetNumberOfNodesByClass("vtkMRMLScriptedModuleNode")):
@@ -193,6 +176,8 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # start-up view
     for color,name in zip(['Red','Green','Yellow'],['Axial','Coronal','Sagittal']):
       sliceWidget = slicer.app.layoutManager().sliceWidget(color)
+      if not sliceWidget:
+        continue
       sliceWidget.mrmlSliceNode().SetName(name)
       fov = sliceWidget.mrmlSliceNode().GetFieldOfView()
       sliceWidget.mrmlSliceNode().SetFieldOfView(fov[0]/4,fov[1]/4,fov[2])
@@ -202,8 +187,19 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTabbedSliceView)
 
-    qt.QApplication.processEvents()
+    # Add custom ToolBar
+    slicer.util.mainWindow().addToolBar(Toolbar.reducedToolbar())
+    # Put all toolbars in same row
+    for tb in slicer.util.mainWindow().findChildren('QToolBar'):
+      slicer.util.mainWindow().removeToolBarBreak(tb)
+    # Customize mouse mode
+    mouseModeToolBar = slicer.util.mainWindow().findChild('QToolBar', 'MouseModeToolBar')
+    mouseModeToolBar.setVisible(1)
+    for a in mouseModeToolBar.actions():
+      if a.text in ["Fiducial", "Toggle Markups Toolbar"]:
+        mouseModeToolBar.removeAction(a)
 
+    qt.QApplication.processEvents()
 
   def cleanup(self):
     """
@@ -281,6 +277,9 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Initial GUI update
     self.updateGUIFromParameterNode()
 
+  def customUIWasInitialized(self):
+    return len(list(filter(lambda x: isinstance(x,qt.QToolBar) and x.windowTitle=='LeadDBS', slicer.util.mainWindow().children())))
+
   def updateGUIFromParameterNode(self, caller=None, event=None):
     """
     This method is called whenever parameter node is changed.
@@ -292,6 +291,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # Make sure GUI changes do not call updateParameterNodeFromGUI (it could cause infinite loop)
     self._updatingGUIFromParameterNode = True
+
+    # Set up toolbar for LeadDBS call
+    if self._parameterNode.GetParameter("LeadSubjects") and not self.customUIWasInitialized():
+      self.initializeCustomUI()
 
     # Update each widget from parameter node
     # Need to temporarily block signals to prevent infinite recursion (MRML node update triggers
@@ -461,17 +464,17 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
   def __init__(self):
     ScriptedLoadableModuleLogic.__init__(self)
     if slicer.util.settingsValue('Developer/DeveloperMode', False, converter=slicer.util.toBool):
-      import WarpDriveLibLocal
+      import WarpDriveLib
       import importlib
       import glob
       warpDrivePath = os.path.split(__file__)[0]
-      G = glob.glob(os.path.join(warpDrivePath, 'WarpDriveLibLocal','**','*.py'))
+      G = glob.glob(os.path.join(warpDrivePath, 'WarpDriveLib','**','*.py'))
       for g in G:
         relativePath = os.path.relpath(g, warpDrivePath) # relative path
         relativePath = os.path.splitext(relativePath)[0] # get rid of .py
         moduleParts = relativePath.split(os.path.sep) # separate
         importlib.import_module('.'.join(moduleParts)) # import module
-        module = WarpDriveLibLocal
+        module = WarpDriveLib
         for i in range(1,len(moduleParts)): # iterate over parts in order to load subpkgs
           module = getattr(module, moduleParts[i])
         importlib.reload(module) # reload
@@ -506,7 +509,7 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
 
   def computeWarp(self, referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness):
 
-    # Compute the warp with fiducialRegistrationVariableRBF
+    # Compute the warp with FiducialRegistrationVariableRBF
     cliParams = {
       "referenceVolume" : referenceVolume.GetID(),
       "fixedFiducials" : targetFiducial.GetID(),
@@ -566,6 +569,9 @@ class WarpDriveTest(ScriptedLoadableModuleTest):
     """ Do whatever is needed to reset the state - typically a scene clear will be enough.
     """
     slicer.mrmlScene.Clear(0)
+    import WarpDrive
+    WarpDrive.WarpDriveLogic().getParameterNode().SetParameter('LeadSubjects','')
+
 
   def runTest(self):
     """Run as few or as many tests as needed here.
@@ -587,37 +593,19 @@ class WarpDriveTest(ScriptedLoadableModuleTest):
 
     self.delayDisplay("Starting the test")
 
-    # Get/create input data
+    json_txt = '[{"id":"leadDCM","warpdrive_path":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/warpdrive","normlog_file":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/log/sub-leadDCM_desc-normmethod.json","anat_files":{"iso_T1w":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/coregistration/anat/sub-leadDCM_ses-preop_space-anchorNative_desc-preproc_acq-iso_T1w.nii"},"forward_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz","inverse_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz"},{"id":"leadDCM","warpdrive_path":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/warpdrive","normlog_file":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/log/sub-leadDCM_desc-normmethod.json","anat_files":{"iso_T1w":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/coregistration/anat/sub-leadDCM_ses-preop_space-anchorNative_desc-preproc_acq-iso_T1w.nii"},"forward_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz","inverse_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz"}]'
+    # json_txt = '{"id":"leadDCM","warpdrive_path":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/warpdrive","normlog_file":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/log/sub-leadDCM_desc-normmethod.json","anat_files":{"iso_T1w":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/coregistration/anat/sub-leadDCM_ses-preop_space-anchorNative_desc-preproc_acq-iso_T1w.nii"},"forward_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-anchorNative_to-MNI152NLin2009bAsym_desc-ants.nii.gz","inverse_transform":"/Users/simon/Documents/leadDS/derivatives/leaddbs/sub-leadDCM/normalization/transformations/sub-leadDCM_from-MNI152NLin2009bAsym_to-anchorNative_desc-ants.nii.gz"}'
+    
+    # import json
+    # json_txt = json.dumps(json.load(open("C:\\Users\\simon\\Desktop\\.warpdrive_tmp.json")))
+    # json_txt = json.dumps(json.load(open("C:\\Users\\simon\\Desktop\\.warpdrive_tmp2.json")))
 
-    import SampleData
-    InputNode = SampleData.downloadFromURL(
-      nodeNames='MRHead',
-      fileNames='MR-Head.nrrd',
-      uris='https://github.com/Slicer/SlicerTestingData/releases/download/MD5/39b01631b7b38232a220007230624c8e',
-      checksums='MD5:39b01631b7b38232a220007230624c8e')[0]
-    self.delayDisplay('Finished with download and loading')
-
-    inputScalarRange = InputNode.GetImageData().GetScalarRange()
-    self.assertEqual(inputScalarRange[0], 0)
-    self.assertEqual(inputScalarRange[1], 279)
-
-    OutputGridTransform = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
-    threshold = 50
-
-    # Test the module logic
-
-    logic = WarpDriveLogic()
-
-    # Test algorithm with non-inverted threshold
-    logic.run(InputNode, OutputGridTransform, threshold, True)
-    outputScalarRange = OutputGridTransform.GetImageData().GetScalarRange()
-    self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-    self.assertEqual(outputScalarRange[1], threshold)
-
-    # Test algorithm with inverted threshold
-    logic.run(InputNode, OutputGridTransform, threshold, False)
-    outputScalarRange = OutputGridTransform.GetImageData().GetScalarRange()
-    self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-    self.assertEqual(outputScalarRange[1], inputScalarRange[1])
+    import WarpDrive
+    parameterNode = WarpDrive.WarpDriveLogic().getParameterNode()
+    wasModified = parameterNode.StartModify()
+    parameterNode.SetParameter('CurrentSubject','')
+    parameterNode.SetParameter('LeadSubjects',json_txt)
+    parameterNode.SetParameter('MNIPath','/Users/simon/repo/leaddbs/templates/space/MNI152NLin2009bAsym/')
+    parameterNode.EndModify(wasModified)
 
     self.delayDisplay('Test passed')

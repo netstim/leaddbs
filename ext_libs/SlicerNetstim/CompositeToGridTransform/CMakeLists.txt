@@ -1,6 +1,6 @@
 
 #-----------------------------------------------------------------------------
-set(MODULE_NAME FiducialRegistrationVariableRBF)
+set(MODULE_NAME CompositeToGridTransform)
 
 #-----------------------------------------------------------------------------
 
@@ -10,22 +10,9 @@ set(MODULE_NAME FiducialRegistrationVariableRBF)
 find_package(SlicerExecutionModel REQUIRED)
 include(${SlicerExecutionModel_USE_FILE})
 
-#
-# ITK
-#
-set(${PROJECT_NAME}_ITK_COMPONENTS
-  ITKIOImageBase
-  ITKCommon
-  ITKIOTransformBase
-  ITKTransform
-  )
-find_package(ITK 4.6 COMPONENTS ${${PROJECT_NAME}_ITK_COMPONENTS} REQUIRED)
-find_package(SimpleITK)
-set(ITK_NO_IO_FACTORY_REGISTER_MANAGER 1) # See Libs/ITKFactoryRegistration/CMakeLists.txt
-include(${ITK_USE_FILE})
-
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
+  ${MRMLCore_INCLUDE_DIRS}
   )
 
 set(MODULE_SRCS
@@ -33,7 +20,8 @@ set(MODULE_SRCS
 
 set(MODULE_TARGET_LIBRARIES
   ${ITK_LIBRARIES}
-  ${SimpleITK_LIBRARIES}
+  ${VTK_LIBRARIES}
+  MRMLCore
   )
 
 #-----------------------------------------------------------------------------
