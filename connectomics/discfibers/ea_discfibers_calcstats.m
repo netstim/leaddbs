@@ -369,7 +369,7 @@ for group=groups
         end
 
 
-        switch threshstrategy
+        switch obj.threshstrategy
             case 'Fixed Amount' % here we want to create threshs for each side separately.
                 posvals = sort(vals{group,side}(vals{group,side}>0),'descend');
                 negvals = sort(vals{group,side}(vals{group,side}<0),'ascend');
