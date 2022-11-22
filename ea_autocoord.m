@@ -251,6 +251,10 @@ if ~strcmp(options.patientname,'No Patient Selected') && ~isempty(options.patien
         poptions = ea_checkmanapproved(options);
         ea_mkdir(options.subj.reconDir);
         if ~isempty(poptions.sides)
+            if numel(options.uipatdirs) > 1
+                % Override recon method in multiple patients case
+                options.reconmethod = options.prefs.reco.method.(options.subj.postopModality);
+            end
             switch options.reconmethod
                 case 'Refined TRAC/CORE' % refined TRAC/CORE
                     [coords_mm,trajectory,markers]=ea_runtraccore(poptions);
