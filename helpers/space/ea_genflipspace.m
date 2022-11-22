@@ -8,7 +8,7 @@ if isempty(ea_regexpdir(fliplrDir, 'Composite\.nii\.gz$', 0))
         case 'Cancel'
             ea_error('User pressed cancel.');
         case 'Install'
-            ea_checkinstall('nlinflip');
+            ea_checkinstall('fliplr');
             return
         otherwise
             ea_dispt('Generating nonlinear warp between hemispheres. This may take a while...');
