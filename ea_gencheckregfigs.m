@@ -18,9 +18,9 @@ if ismember('coreg', type)
     preop = rmfield(options.subj.coreg.anat.preop, options.subj.AnchorModality);
 
     % Remove CT from subj.coreg.anat.postop struct, will use tone-mapped image
-    if options.modality == 2
+    if strcmp(options.subj.postopModality, 'CT')
         postop = rmfield(options.subj.coreg.anat.postop, 'CT');
-    elseif options.modality == 1
+    elseif strcmp(options.subj.postopModality, 'MRI')
         postop = options.subj.coreg.anat.postop;
     else
         postop = struct;
