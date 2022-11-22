@@ -72,9 +72,9 @@ if  ~strcmp(handles.prod, 'anatomy')
             % default TRAC/CORE:
             set(handles.reconmethod,'Enable','on');
             if ismember(ea_getspace,{'Waxholm_Space_Atlas_SD_Rat_Brain','MNI_Macaque'})
-                set(handles.reconmethod,'Value',2);
+                set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, 'Manual')));
             else
-                set(handles.reconmethod,'Value',1); % set to TRAC/CORE algorithm.
+                set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, bids.settings.reco.method.MRI))); % set to TRAC/CORE algorithm.
             end
             set(handles.targetpopup,'Enable','on');
             set(handles.maskwindow_txt,'Enable','on');
@@ -86,9 +86,9 @@ if  ~strcmp(handles.prod, 'anatomy')
             % default PaCER:
             set(handles.reconmethod,'Enable','on');
             if ismember(ea_getspace,{'Waxholm_Space_Atlas_SD_Rat_Brain','MNI_Macaque'})
-                set(handles.reconmethod,'Value',4);
+                set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, 'Manual')));
             else
-                set(handles.reconmethod,'Value',3); % set to PaCER algorithm.
+                set(handles.reconmethod, 'Value', find(ismember(handles.reconmethod.String, bids.settings.reco.method.CT))); % set to PaCER algorithm.
             end
             set(handles.targetpopup,'Enable','off');
             set(handles.maskwindow_txt,'Enable','off');
