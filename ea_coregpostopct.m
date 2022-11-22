@@ -32,7 +32,7 @@ if ~ea_reglocked(options, options.subj.postopAnat.CT.coreg)
     ea_dumpmethod(options, 'coreg', 'CT');
 
     % Compute tone-mapped coregistered CT
-    if options.modality == 2
+    if strcmp(options.subj.postopModality, 'CT')
         ea_tonemapct(options, 'native');
     end
 

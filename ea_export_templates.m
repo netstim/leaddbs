@@ -3,14 +3,14 @@ function [goodx,goody,goodz]=ea_export_templates(coords,trajectory,patientname,o
 % electrode tips and is originaly based on ea_sample_cuboid.
 % uses map_coords authored by Ged Ridgway
 
-switch options.modality
-    case 1 % MR
+switch options.subj.postopModality
+    case 'MRI'
         if isfield(options.subj.coreg.anat.postop,'cor_MRI') && isfile(options.subj.coreg.anat.postop.cor_MRI)
             niifn=options.subj.coreg.anat.postop.cor_MRI;
         else
             niifn=isfile(options.subj.coreg.anat.postop.ax_MRI);
         end
-    case 2 % CT
+    case 'CT'
         niifn=options.subj.coreg.anat.postop.CT;
 end
 
@@ -67,10 +67,10 @@ end
 imat(sub2ind(size(imat),coord2write(:,1),coord2write(:,2),coord2write(:,3)))=spm_sample_vol(V,coord2extract(:,1),coord2extract(:,2),coord2extract(:,3),3);
 
 % save templates.
-switch options.modality
-    case 1 % MR
+switch options.subj.postopModality
+    case 'MRI'
         mrstr='mr';
-    case 2 % CT
+    case 'CT'
         mrstr='ct';
 end
 

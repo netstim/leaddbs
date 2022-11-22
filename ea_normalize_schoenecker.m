@@ -47,11 +47,11 @@ if options.prefs.machine.normsettings.schoenecker_movim==1 % Based on pre-op ima
     disp(['Pre-op ', strjoin(fieldnames(options.subj.coreg.anat.preop), ', '), ' images included for normalization']);
     imagePresent = flip(struct2cell(options.subj.coreg.anat.preop)); % Flip the order so anchor will be the last one
 elseif options.prefs.machine.normsettings.schoenecker_movim==2 % Based on post-op images
-    switch options.modality
-        case 1 % MRI
+    switch options.subj.postopModality
+        case 'MRI'
             disp('Post-op MRI included for normalization');
             imagePresent = options.subj.coreg.anat.postop.ax_MRI;
-        case 2 % CT
+        case 'CT'
             disp('Post-op CT included for normalization');
             imagePresent = options.subj.coreg.anat.postop.CT;
     end

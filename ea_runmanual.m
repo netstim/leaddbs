@@ -4,10 +4,10 @@ load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec
 
 normdist = pdist([electrode.head_position;electrode.tail_position]);
 
-switch options.modality
-    case 1 % MRI
+switch options.subj.postopModality
+    case 'MRI'
         vol = spm_vol(options.subj.coreg.anat.postop.ax_MRI);
-    case 2 % CT
+    case 'CT'
         vol = spm_vol(options.subj.coreg.anat.postop.CT);
 end
 

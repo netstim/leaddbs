@@ -2,27 +2,27 @@ function ea_segment_electrode(~,~,options,resultfig,onoff)
 
 directory=[options.root,options.patientname,filesep];
 if options.native
-    switch options.modality
-        case 1
+    switch options.subj.postopModality
+        case 'MRI'
             elnii = options.subj.coreg.anat.postop.ax_MRI;
-        case 2
+        case 'CT'
             elnii = options.subj.coreg.anat.postop.CT;
     end
     elssubf='native';
 else
-    switch options.modality
-        case 1
+    switch options.subj.postopModality
+        case 'MRI'
             elnii=options.subj.norm.anat.postop.ax_MRI;
-        case 2
+        case 'CT'
             elnii=options.subj.norm.anat.postop.CT;
     end
     elssubf='template';
 end
 
-switch options.modality
-    case 1
+switch options.subj.postopModality
+    case 'MRI'
         tval=-50;
-    case 2
+    case 'CT'
         tval=2500;
 end
 
@@ -43,7 +43,7 @@ switch onoff
                 end
             end
 
-            if options.modality==1 % not yet implemented for MR.
+            if strcmp(options.subj.postopModality, 'MRI') % not yet implemented for MR.
                 nii.img=-nii.img;
             end
 

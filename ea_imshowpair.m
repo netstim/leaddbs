@@ -341,8 +341,8 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         ea_busyaction('on',gcf,'normcheck');
 
-        switch options.modality
-            case 1 % MR
+        switch options.subj.postopModality
+            case 'MRI'
                 try
                     switch View
                         case 'A'
@@ -363,7 +363,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                         ea_error('Normalized post-op image seems not available.');
                     end
                 end
-            case 2 % CT
+            case 'CT'
                 try
                     pt=ea_load_nii(options.subj.norm.anat.postop.tonemapCT);
                     PostOpLoaded={'A','C','S'};
@@ -377,7 +377,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
                 end
         end
 
-        if options.modality==2 % only do windowing for MR
+        if strcmp(options.subj.postopModality, 'CT') % only do windowing for CT
             pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
             pt.img(pt.img>0.5) = 0.5;
             pt.img=(pt.img-min(pt.img(:)))/(max(pt.img(:)));
@@ -417,10 +417,10 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         SwitchTemplateMod('2') % set to T2 if available.
 
-        switch options.modality
-            case 1
+        switch options.subj.postopModality
+            case 'MRI'
                 set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', 'Postoperative MRI'));
-            case 2
+            case 'CT'
                 set(gcf, 'Name', regexprep(get(gcf, 'Name'),'(?<=& ).*', 'Postoperative (tonemapped) CT'));
         end
 
@@ -582,7 +582,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
         showhelptext(callingfunction, helptext);
 
         caxis([Rmin Rmax])
-        if PostOpView && options.modality==1
+        if PostOpView && strcmp(options.subj.postopModality, 'MRI')
             SwitchPostop('update');
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))
@@ -622,7 +622,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         caxis([Rmin Rmax])
 
-        if PostOpView && options.modality==1
+        if PostOpView && strcmp(options.subj.postopModality, 'MRI')
             SwitchPostop('update');
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)));
@@ -662,7 +662,7 @@ set(gcf,'KeyPressFcn', @KeyPressCallback);
 
         caxis([Rmin Rmax])
 
-        if PostOpView && options.modality==1
+        if PostOpView && strcmp(options.subj.postopModality, 'MRI')
             SwitchPostop('update');
         else
             set(ImHndl,'cdata',squeeze(Img(XImage,YImage,S,MainImage)))

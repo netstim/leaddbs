@@ -42,11 +42,11 @@ function [coords_mm,trajectory,markers] = ea_refinecoords(options)
     options.loadnativereco = 1; % Load native reco intead of scrf
     [coords_mm,trajectory,markers,elmodel,~]=ea_load_reconstruction(options);
 
-    switch options.modality
-        case 1 % MR
+    switch options.subj.postopModality
+        case 'MRI'
             disp('ea_refinecoords not implemented yet for MRI. Skipping...');
             return;
-        case 2 % CT
+        case 'CT'
             V = spm_vol(options.subj.coreg.anat.postop.CT);
     end
 

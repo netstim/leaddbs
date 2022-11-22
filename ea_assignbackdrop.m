@@ -138,8 +138,8 @@ end
 
 function [Vtra,Vcor,Vsag] = assignpatspecific(options, native)
 if native
-    switch options.modality
-        case 1 % MR
+    switch options.subj.postopModality
+        case 'MRI'
             Vtra = spm_vol(options.subj.coreg.anat.postop.ax_MRI);
             if isfield(options.subj.coreg.anat.postop, 'cor_MRI') && isfile(options.subj.coreg.anat.postop.cor_MRI)
                 Vcor = spm_vol(options.subj.coreg.anat.postop.cor_MRI);
@@ -151,14 +151,14 @@ if native
             else
                 Vsag = Vtra;
             end
-        case 2 % CT
+        case 'CT'
             Vtra = spm_vol(options.subj.coreg.anat.postop.tonemapCT);
             Vcor = Vtra;
             Vsag = Vtra;
     end
 else
-    switch options.modality
-        case 1 % MR
+    switch options.subj.postopModality
+        case 'MRI'
             Vtra = spm_vol(options.subj.norm.anat.postop.ax_MRI);
             if isfield(options.subj.norm.anat.postop, 'cor_MRI') && isfile(options.subj.norm.anat.postop.cor_MRI)
                 Vcor = spm_vol(options.subj.norm.anat.postop.cor_MRI);
@@ -170,7 +170,7 @@ else
             else
                 Vsag = Vtra;
             end
-        case 2 % CT
+        case 'CT'
             Vtra = spm_vol(options.subj.norm.anat.postop.tonemapCT);
             Vcor = Vtra;
             Vsag = Vtra;

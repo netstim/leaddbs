@@ -2,7 +2,7 @@ function [roll_out] = ea_diode_manual_main(options)
 %% Determine Orientation for BSCI directed leads from postoperative CT
 % has an unsupervised and a supervised version
 
-if  options.modality == 1 % check for electrode type and postoperative imaging
+if  strcmp(options.subj.postopModality, 'MRI') % check for electrode type and postoperative imaging
     msg = sprintf(['Rotation detection works only for post-op CT images.']);
     choice = questdlg(msg,'No post-op CT!','Abort','Abort');
     roll_out = [];

@@ -12,14 +12,14 @@ if vizz
     hold on
 end
     
-switch options.modality
-    case 1 % MR
+switch options.subj.postopModality
+    case 'MRI'
         if isfield(options.subj.coreg.anat.postop, 'cor_MRI') && isfile(options.subj.coreg.anat.postop.cor_MRI)
             niifn = options.subj.coreg.anat.postop.cor_MRI;
         else
             niifn = options.subj.coreg.anat.postop.ax_MRI;
         end
-    case 2 % CT
+    case 'CT'
         niifn = options.subj.coreg.anat.postop.CT;
 end
 

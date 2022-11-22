@@ -39,7 +39,7 @@ if ~ea_reglocked(options, options.subj.preopAnat.(options.subj.AnchorModality).n
     end
 
     % Compute tone-mapped normalized CT
-    if options.modality == 2
+    if strcmp(options.subj.postopModality, 'CT')
         ea_tonemapct(options, 'norm');
     end
 

@@ -3,7 +3,7 @@ function [trajectory,trajvector]=ea_reconstruct_trajectory(priortrajectory,tra_n
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-if options.modality==2 % CT support
+if strcmp(options.subj.postopModality, 'CT') % CT support
     tra_nii.img=tra_nii.img*-1;
 else
     if strcmp(options.entrypoint,'Auto')

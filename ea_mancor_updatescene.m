@@ -324,8 +324,8 @@ for doxx=0:1
 
     if ~getappdata(mcfig,'planecset') % initially and once set contrast based on image data.
 
-        if options.modality==1 % MR
-        elseif options.modality==2 % CT
+        if strcmp(options.subj.postopModality, 'MRI') % MR
+        elseif strcmp(options.subj.postopModality, 'CT') % CT
             lthresh=800; % initial guesses for CT
             uthresh=2800;
             try % try estimating a better guess..
@@ -434,10 +434,10 @@ for subpl=getsuplots(1)
         slice=ea_sample_slice(Vtra,'tra',wsize,'vox',mks,subpl);
     end
     slice=ea_contrast(slice,contrast,offset);
-    switch options.modality
-        case 1 % MR
+    switch options.subj.postopModality
+        case 'MRI'
             [~,minix]=min(slice(:));
-        case 2 % CT
+        case 'CT'
             [~,minix]=max(slice(:));
     end
     [optxx,optyy]=ind2sub(size(slice),minix);
@@ -581,8 +581,8 @@ else
     type='norm';
 end
 
-switch options.modality
-    case 1 % MR
+switch options.subj.postopModality
+    case 'MRI'
         V=getappdata(mcfig,[ID,type]);
 
         if isempty(V)
@@ -611,7 +611,7 @@ switch options.modality
             end
         end
         setappdata(mcfig,[ID,type],V);
-    case 2 % CT - ignore wishes, always feed out V as CT.
+    case 'CT' % Always feed out V as CT.
         if options.native
             V=getappdata(mcfig,'VCTnative');
             if isempty(V)

@@ -11,15 +11,15 @@ end
 
 % build lfile
 fis={[ea_space,'bb.nii']};
-switch options.modality
-    case 1 % MR
+switch options.subj.postopModality
+    case 'MRI'
         if isfile(options.subj.norm.anat.postop.ax_MRI)
             fis = [fis; {options.subj.norm.anat.postop.ax_MRI}];
         end
         if isfield(options.subj.norm.anat.postop,'cor_MRI') && isfile(options.subj.norm.anat.postop.cor_MRI)
             fis = [fis; {options.subj.norm.anat.postop.cor_MRI}];
         end
-    case 2 % CT
+    case 'CT'
         fis = [fis; {options.subj.norm.anat.postop.CT}];
 end
 

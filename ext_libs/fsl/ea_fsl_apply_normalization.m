@@ -44,11 +44,11 @@ if nargin == 1
     input{1} = options.subj.coreg.anat.preop.(options.subj.AnchorModality);
     output{1} = options.subj.norm.anat.preop.(options.subj.AnchorModality);
 
-    switch options.modality
-        case 1 % MR
+    switch options.subj.postopModality
+        case 'MRI'
             input = [input; struct2cell(options.subj.coreg.anat.postop)];
             output = [output; struct2cell(options.subj.norm.anat.postop)];
-        case 2 % CT
+        case 'CT'
             input = [input; options.subj.coreg.anat.postop.CT];
             output = [output; options.subj.norm.anat.postop.CT];
     end

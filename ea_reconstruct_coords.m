@@ -4,10 +4,10 @@ function [coords,goodz]=ea_reconstruct_coords(trajectory,trajvector,options)
 
 vizz=0;
 
-switch options.modality
-    case 1
+switch options.subj.postopModality
+    case 'MRI'
         headtemp=ea_load_nii(fullfile(ea_getearoot,'templates',filesep,'electrode_contacts','mr','template.nii'));
-    case 2
+    case 'CT'
         headtemp=ea_load_nii(fullfile(ea_getearoot,'templates',filesep,'electrode_contacts','ct','template.nii'));
 end
 

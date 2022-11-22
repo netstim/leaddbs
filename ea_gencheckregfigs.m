@@ -75,9 +75,9 @@ if ismember('norm', type)
     templateImage = [ea_space, options.primarytemplate, '.nii'];
 
     % Remove CT from subj.norm.anat.postop struct, will use tone-mapped image
-    if options.modality == 2
+    if strcmp(options.subj.postopModality, 'CT')
         postop = rmfield(options.subj.norm.anat.postop, 'CT');
-    elseif options.modality == 1
+    elseif strcmp(options.subj.postopModality, 'MRI')
         postop = options.subj.norm.anat.postop;
     else
         postop = struct;
