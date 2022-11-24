@@ -210,6 +210,30 @@ for group=groups
                         vals{group,side}=nan(size(thisvals,2),1);
 %                         vals{group,side}(~nanidx)=meanvals;
                         vals{group,side}(~nanidx)=logpvals;
+                    case 'Proportion Test (Binary Var)'
+                        
+                        gval{side} = double(gval{side});
+                        %gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
+
+                        thisinvals=((gval{side}(gpatsel,:)==1).*repmat((I(gpatsel,side)==1),1,size(gval{side}(gpatsel,:),2)));
+                        thisoutvals=((gval{side}(gpatsel,:)==0).*repmat((I(gpatsel,side)==0),1,size(gval{side}(gpatsel,:),2)));
+
+                        Nmap=nansum(gval{side}(gpatsel,:));
+                        nanidx=Nmap<round(size(thisinvals,1)*(obj.coverthreshold/100));
+                        thisinvals(:,nanidx)=nan;
+
+                        non_nan=~nanidx;
+                        prop=nan(size(gval{side},2),1); %
+                        outps=prop; %
+                        for vox=find(non_nan)                 
+                            [h,outps(vox), prop(vox)]  = ea_prop_test([ea_nansum(thisinvals(:,vox)),ea_nansum(thisoutvals(:,vox))],[sum(gval{side}(gpatsel,vox)==1),sum(gval{side}(gpatsel,vox)==0)],1);
+                        end
+
+                        if obj.showsignificantonly
+                            prop=ea_corrsignan(prop',outps',obj);
+                        end
+                        vals{group,side}=prop';
+
                 end
 
             case 'E-Fields'

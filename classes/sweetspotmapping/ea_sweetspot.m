@@ -66,7 +66,7 @@ classdef ea_sweetspot < handle
     end
 
     methods
-        function obj=ea_disctract(analysispath) % class constructor
+        function obj=ea_sweetspot(analysispath) % class constructor
             if exist('analysispath', 'var') && ~isempty(analysispath)
                 obj.analysispath = analysispath;
                 [~, ID] = fileparts(obj.analysispath);
