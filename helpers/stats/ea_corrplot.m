@@ -191,29 +191,31 @@ R_rank = getappdata(h, 'R_rank');
 p_rank = getappdata(h, 'p_rank');
 pstr_rank = getappdata(h, 'pstr_rank');
 
+inx_nnan = find(isnan(X) ~= 1);
+
 if isempty(R_linear)
     if isnumeric(permutation)
         if permutation > 1 && mod(permutation, 1) == 0 % integer, number of permutation
-            [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson', permutation);
-            [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman', permutation);
+            [R_linear, p_linear] = ea_permcorr(X(inx_nnan), Y(inx_nnan), 'Pearson', permutation);
+            [R_rank, p_rank] = ea_permcorr(X(inx_nnan), Y(inx_nnan), 'Spearman', permutation);
             pstr_linear = getPstr(p_linear, 'p (perm)');
             pstr_rank = getPstr(p_rank, 'p (perm)');
         else % external p-value provided (e.g., based on permuted R-Map or fiber tracts)
-            [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson');
-            [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
+            [R_linear, p_linear] = ea_permcorr(X(inx_nnan), Y(inx_nnan), 'Pearson');
+            [R_rank, p_rank] = ea_permcorr(X(inx_nnan), Y(inx_nnan), 'Spearman');
             pstr_linear = getPstr(p_linear, 'p (perm)');
             pstr_rank = getPstr(p_rank, 'p (perm)');
         end
     elseif ischar(permutation) || islogical(permutation)
         switch permutation % no permutation
             case {'no', 'noperm', 'nopermutation', false}
-                [R_linear, p_linear] = corr(X, Y, 'rows', 'pairwise', 'type', 'Pearson');
-                [R_rank, p_rank] = corr(X, Y, 'rows', 'pairwise', 'type', 'Spearman');
+                [R_linear, p_linear] = corr(X(inx_nnan), Y(inx_nnan), 'rows', 'pairwise', 'type', 'Pearson');
+                [R_rank, p_rank] = corr(X(inx_nnan), Y(inx_nnan), 'rows', 'pairwise', 'type', 'Spearman');
                 pstr_linear = getPstr(p_linear, 'p');
                 pstr_rank = getPstr(p_rank, 'p');
             case {'yes', 'perm', 'permutation', true} % default number of permutation defined in ea_permcorr
-                [R_linear, p_linear] = ea_permcorr(X, Y, 'Pearson');
-                [R_rank, p_rank] = ea_permcorr(X, Y, 'Spearman');
+                [R_linear, p_linear] = ea_permcorr(X(inx_nnan), Y(inx_nnan), 'Pearson');
+                [R_rank, p_rank] = ea_permcorr(X(inx_nnan), Y(inx_nnan), 'Spearman');
                 pstr_linear = getPstr(p_linear, 'p (perm)');
                 pstr_rank = getPstr(p_rank, 'p (perm)');
         end
@@ -225,6 +227,8 @@ if isempty(R_linear)
     setappdata(h, 'p_rank', p_rank);
     setappdata(h, 'pstr_rank', pstr_rank);
 end
+
+
 
 % external p-value provided (e.g., based on permuted R-Map or fiber tracts)
 if isnumeric(permutation) && permutation <= 1
