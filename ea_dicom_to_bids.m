@@ -651,7 +651,7 @@ if ~isempty(img_idx)
     setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
     uiapp.axes_axi.DataAspectRatioMode = 'manual';
     uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
-    set(uiapp.axes_axi, 'view', [90, -90]);
+    set(uiapp.axes_axi, 'view', [-90, 90]);
 
     % coronal
     cut_slice = round(img.dim(2)/2);
@@ -660,7 +660,7 @@ if ~isempty(img_idx)
     setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
     uiapp.axes_cor.DataAspectRatioMode = 'manual';
     uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-    set(uiapp.axes_cor, 'view', [90, -90]);
+    set(uiapp.axes_cor, 'view', [-90, 90]);
 
     % sagittal
     cut_slice = round(img.dim(1)/2);
