@@ -124,6 +124,7 @@ uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp)
 
 % looup table behaviour
 uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
+
 waitfor(uiapp.UIFigure);
 
 try
@@ -646,7 +647,7 @@ if ~isempty(img_idx)
 
     % coronal
     cut_slice = round(img.dim(2)/2);
-    imagesc(uiapp.axes_cor, rot90(squeeze(img.p.nii.img(:, cut_slice, :, 1))));
+    imagesc(uiapp.axes_cor, rot90(squeeze(img.p.nii.img(:, cut_slice, :, 1))), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
     uiapp.axes_cor.Colormap = gray(128);
     setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
     uiapp.axes_cor.DataAspectRatioMode = 'manual';
@@ -654,7 +655,7 @@ if ~isempty(img_idx)
 
     % sagittal
     cut_slice = round(img.dim(1)/2);
-    imagesc(uiapp.axes_sag, rot90(squeeze(img.p.nii.img(cut_slice, :, :, 1))));
+    imagesc(uiapp.axes_sag, rot90(squeeze(img.p.nii.img(cut_slice, :, :, 1))), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
     uiapp.axes_sag.Colormap = gray(128);
     setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
     uiapp.axes_sag.DataAspectRatioMode = 'manual';
@@ -662,7 +663,7 @@ if ~isempty(img_idx)
 
     % axial
     cut_slice = round(img.dim(3)/2);
-    imagesc(uiapp.axes_axi, rot90(img.p.nii.img(:, :, cut_slice)));
+    imagesc(uiapp.axes_axi, rot90(img.p.nii.img(:, :, cut_slice)), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
     uiapp.axes_axi.Colormap = gray(128);
     setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
     uiapp.axes_axi.DataAspectRatioMode = 'manual';
@@ -675,12 +676,15 @@ end
 %% scroll images
 function scroll_nii(uiapp, event)
 
-hAxes = checkMousePointer(uiapp.UIFigure, uiapp.RightPanel);
+axesTag = getMousePointerAxes(uiapp.UIFigure, uiapp.RightPanel);
 img = getappdata(uiapp.UIFigure, 'img');
 dim = img.dim;
 
-if ~isempty(hAxes)
-    switch hAxes.Tag
+if ~isempty(axesTag)
+    sliceUpdated.cor = 0;
+    sliceUpdated.sag = 0;
+    sliceUpdated.axi = 0;
+    switch axesTag
         case 'axi'
             sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_axi');
             if event.VerticalScrollCount == -1 % up scroll
@@ -693,8 +697,9 @@ if ~isempty(hAxes)
                 end
 
             end
-            imagesc(uiapp.axes_axi, rot90(img.p.nii.img(:, :, sliceNr)));
+            imagesc(uiapp.axes_axi, rot90(img.p.nii.img(:, :, sliceNr)), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
             setappdata(uiapp.UIFigure, 'cut_slice_axi', sliceNr);
+            sliceUpdated.axi = 1;
         case 'cor'
             sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_cor');
             if event.VerticalScrollCount == -1 % up scroll
@@ -707,8 +712,9 @@ if ~isempty(hAxes)
                 end
 
             end
-            imagesc(uiapp.axes_cor, rot90(squeeze(img.p.nii.img(:, sliceNr, :, 1))));
+            imagesc(uiapp.axes_cor, rot90(squeeze(img.p.nii.img(:, sliceNr, :, 1))), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
             setappdata(uiapp.UIFigure, 'cut_slice_cor', sliceNr);
+            sliceUpdated.cor = 1;
         case 'sag'
             sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_sag');
             if event.VerticalScrollCount == -1 % up scroll
@@ -721,67 +727,115 @@ if ~isempty(hAxes)
                 end
 
             end
-            imagesc(uiapp.axes_sag, rot90(squeeze(img.p.nii.img(sliceNr, :, :, 1))));
+            imagesc(uiapp.axes_sag, rot90(squeeze(img.p.nii.img(sliceNr, :, :, 1))), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
             setappdata(uiapp.UIFigure, 'cut_slice_sag', sliceNr);
+            sliceUpdated.sag = 1;
     end
-    update_crosschairs(uiapp, dim, hAxes.Tag);
+    update_crosschairs(uiapp, dim, sliceUpdated);
 end
 
 end
 
 %% update cross
-function update_crosschairs(uiapp, dim, axesTag)
+function update_crosschairs(uiapp, dim, sliceUpdated)
     corSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_cor'); % y, dim(2)
     sagSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_sag'); % x, dim(1)
     axiSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_axi'); % z, dim(3)
-
-    horz_line_cor = findobj(uiapp.axes_cor, 'Type', 'Line', 'Tag', 'horz_line');
-    if isempty(horz_line_cor)
-        horz_line_cor = line(uiapp.axes_cor, [1, dim(1)], [dim(3)-axiSliceNr, dim(3)-axiSliceNr], 'Color', 'b', 'LineWidth', 2, 'Tag', 'horz_line');
+    
+    if ~exist('sliceUpdated', 'var')
+        sliceUpdated.cor = 0;
+        sliceUpdated.sag = 0;
+        sliceUpdated.axi = 0;
     end
 
-    vert_line_cor = findobj(uiapp.axes_cor, 'Type', 'Line', 'Tag', 'vert_line');
-    if isempty(vert_line_cor)
-        vert_line_cor = line(uiapp.axes_cor, [sagSliceNr, sagSliceNr], [1, dim(3)], 'Color', 'b', 'LineWidth', 2, 'Tag', 'vert_line');
-    end
-
-    horz_line_sag = findobj(uiapp.axes_sag, 'Type', 'Line', 'Tag', 'horz_line');
-    if isempty(horz_line_sag)
-        horz_line_sag = line(uiapp.axes_sag, [1, dim(2)], [dim(3)-axiSliceNr, dim(3)-axiSliceNr], 'Color', 'b', 'LineWidth', 2, 'Tag', 'horz_line');
-    end
-
-    vert_line_sag = findobj(uiapp.axes_sag, 'Type', 'Line', 'Tag', 'vert_line');
-    if isempty(vert_line_sag)
-        vert_line_sag = line(uiapp.axes_sag, [corSliceNr, corSliceNr], [1, dim(3)], 'Color', 'b', 'LineWidth', 2, 'Tag', 'vert_line');
-    end
-
-    horz_line_axi = findobj(uiapp.axes_axi, 'Type', 'Line', 'Tag', 'horz_line');
-    if isempty(horz_line_axi)
-        horz_line_axi = line(uiapp.axes_axi, [1, dim(1)], [dim(2)-corSliceNr, dim(2)-corSliceNr], 'Color', 'b', 'LineWidth', 2, 'Tag', 'horz_line');
-    end
-
-    vert_line_axi = findobj(uiapp.axes_axi, 'Type', 'Line', 'Tag', 'vert_line');
-    if isempty(vert_line_axi)
-        vert_line_axi = line(uiapp.axes_axi, [sagSliceNr, sagSliceNr], [1, dim(2)], 'Color', 'b', 'LineWidth', 2, 'Tag', 'vert_line');
-    end
-
-    if exist('axesTag', 'var') % Update crosschairs
-        switch axesTag
-            case 'cor'
-                vert_line_sag.XData = [corSliceNr, corSliceNr];
-                horz_line_axi.YData = [dim(2)-corSliceNr, dim(2)-corSliceNr];
-            case 'sag'
-                vert_line_cor.XData = [sagSliceNr, sagSliceNr];
-                vert_line_axi.XData = [sagSliceNr, sagSliceNr];
-            case 'axi'
-                horz_line_cor.YData = [dim(3)-axiSliceNr, dim(3)-axiSliceNr];
-                horz_line_sag.YData = [dim(3)-axiSliceNr, dim(3)-axiSliceNr];
+    corAxesHorzLine = findobj(uiapp.axes_cor, 'Type', 'Line', 'Tag', 'HorzLine'); % horz line is axi slice
+    if isempty(corAxesHorzLine) || sliceUpdated.axi
+        if sliceUpdated.axi
+            delete(corAxesHorzLine);
         end
+        line(uiapp.axes_cor, [1, dim(1)], [dim(3)-axiSliceNr, dim(3)-axiSliceNr], 'Color', 'b', 'LineWidth', 1, 'Tag', 'HorzLine');
+    end
+
+    corAxesVertLine = findobj(uiapp.axes_cor, 'Type', 'Line', 'Tag', 'VertLine'); % vert line is sag slice
+    if isempty(corAxesVertLine) || sliceUpdated.sag
+        if sliceUpdated.sag
+            delete(corAxesVertLine);
+        end
+        line(uiapp.axes_cor, [sagSliceNr, sagSliceNr], [1, dim(3)], 'Color', 'b', 'LineWidth', 1, 'Tag', 'VertLine');
+    end
+
+    sagAxesHorzLine = findobj(uiapp.axes_sag, 'Type', 'Line', 'Tag', 'HorzLine'); % horz line is axi slice
+    if isempty(sagAxesHorzLine) || sliceUpdated.axi
+        if sliceUpdated.axi
+            delete(sagAxesHorzLine);
+        end
+        line(uiapp.axes_sag, [1, dim(2)], [dim(3)-axiSliceNr, dim(3)-axiSliceNr], 'Color', 'b', 'LineWidth', 1, 'Tag', 'HorzLine');
+    end
+
+    sagAxesVertLine = findobj(uiapp.axes_sag, 'Type', 'Line', 'Tag', 'VertLine'); % vert line is cor slice
+    if isempty(sagAxesVertLine) || sliceUpdated.cor
+        if sliceUpdated.cor
+            delete(sagAxesVertLine);
+        end
+        line(uiapp.axes_sag, [corSliceNr, corSliceNr], [1, dim(3)], 'Color', 'b', 'LineWidth', 1, 'Tag', 'VertLine');
+    end
+
+    axiAxesHorzLine = findobj(uiapp.axes_axi, 'Type', 'Line', 'Tag', 'HorzLine'); % horz line is cor slice
+    if isempty(axiAxesHorzLine) || sliceUpdated.cor
+        if sliceUpdated.cor
+            delete(axiAxesHorzLine);
+        end
+        line(uiapp.axes_axi, [1, dim(1)], [dim(2)-corSliceNr, dim(2)-corSliceNr], 'Color', 'b', 'LineWidth', 1, 'Tag', 'HorzLine');
+    end
+
+    axiAxesVertLine = findobj(uiapp.axes_axi, 'Type', 'Line', 'Tag', 'VertLine'); % vert line is sag slice
+    if isempty(axiAxesVertLine) || sliceUpdated.sag
+        if sliceUpdated.sag
+            delete(axiAxesVertLine);
+        end
+        line(uiapp.axes_axi, [sagSliceNr, sagSliceNr], [1, dim(2)], 'Color', 'b', 'LineWidth', 1, 'Tag', 'VertLine');
+    end
+end
+
+%% Button down on axes
+function sliceButtonDownFunc(uiapp, event)
+    img = getappdata(uiapp.UIFigure, 'img');
+    dim = img.dim;
+    if ~isempty(img)
+        x = round(event.IntersectionPoint(1));
+        y = round(event.IntersectionPoint(2));
+        sliceUpdated.cor = 0;
+        sliceUpdated.sag = 0;
+        sliceUpdated.axi = 0;
+        switch event.Source.Parent.Tag
+            case 'cor'
+                imagesc(uiapp.axes_sag, rot90(squeeze(img.p.nii.img(x, :, :))), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
+                setappdata(uiapp.UIFigure, 'cut_slice_sag', x);
+                sliceUpdated.sag = 1;
+                imagesc(uiapp.axes_axi, rot90(img.p.nii.img(:, :, dim(3)-y)), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
+                setappdata(uiapp.UIFigure, 'cut_slice_axi', dim(3)-y);
+                sliceUpdated.axi = 1;
+            case 'sag'
+                imagesc(uiapp.axes_cor, rot90(squeeze(img.p.nii.img(:, x, :))), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
+                setappdata(uiapp.UIFigure, 'cut_slice_cor', x);
+                sliceUpdated.cor = 1;
+                imagesc(uiapp.axes_axi, rot90(img.p.nii.img(:, :, dim(3)-y)), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
+                setappdata(uiapp.UIFigure, 'cut_slice_axi', dim(3)-y);
+                sliceUpdated.axi = 1;
+            case 'axi'
+                imagesc(uiapp.axes_sag, rot90(squeeze(img.p.nii.img(x, :, :))), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
+                setappdata(uiapp.UIFigure, 'cut_slice_sag', x);
+                sliceUpdated.sag = 1;
+                imagesc(uiapp.axes_cor, rot90(squeeze(img.p.nii.img(:, dim(2)-y, :))), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
+                setappdata(uiapp.UIFigure, 'cut_slice_cor', dim(2)-y);
+                sliceUpdated.cor = 1;
+        end
+        update_crosschairs(uiapp, dim, sliceUpdated);
     end
 end
 
 %% check where the mouse pointer is
-function h = checkMousePointer(fig, panel)
+function axesTag = getMousePointerAxes(fig, panel)
 
 oldUnits = get(0,'units');
 set(0,'units','pixels');
@@ -810,10 +864,11 @@ for h = c'
     % If descendant contains the mouse pointer position, exit
 
     if (p(1) > x_lower) && (p(1) < x_upper) && (p(2) > y_lower) && (p(2) < y_upper)
+        axesTag = h.Tag;
         return
     end
 end
-h = [];
+axesTag = [];
 end
 
 function [p, frm, rg, dim] = read_nii(fname, ask_code, reOri)
