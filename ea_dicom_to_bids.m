@@ -644,32 +644,31 @@ if ~isempty(img_idx)
     % plot images
     setappdata(uiapp.UIFigure, 'img', img);
 
-    % axial
-    cut_slice = round(img.dim(3)/2);
-    imagesc(uiapp.axes_axi, img.p.nii.img(:, :, cut_slice));
-    uiapp.axes_axi.Colormap = gray(128);
-    setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
-    uiapp.axes_axi.DataAspectRatioMode = 'manual';
-    uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
-    set(uiapp.axes_axi, 'view', [-90, 90]);
-
     % coronal
     cut_slice = round(img.dim(2)/2);
-    imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, cut_slice, :, 1)));
+    imagesc(uiapp.axes_cor, rot90(squeeze(img.p.nii.img(:, cut_slice, :, 1))));
     uiapp.axes_cor.Colormap = gray(128);
     setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
     uiapp.axes_cor.DataAspectRatioMode = 'manual';
     uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-    set(uiapp.axes_cor, 'view', [-90, 90]);
 
     % sagittal
     cut_slice = round(img.dim(1)/2);
-    imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(cut_slice, :, :, 1)));
+    imagesc(uiapp.axes_sag, rot90(squeeze(img.p.nii.img(cut_slice, :, :, 1))));
     uiapp.axes_sag.Colormap = gray(128);
     setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
     uiapp.axes_sag.DataAspectRatioMode = 'manual';
     uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
-    set(uiapp.axes_sag, 'view', [-90, 90]);
+
+    % axial
+    cut_slice = round(img.dim(3)/2);
+    imagesc(uiapp.axes_axi, rot90(img.p.nii.img(:, :, cut_slice)));
+    uiapp.axes_axi.Colormap = gray(128);
+    setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
+    uiapp.axes_axi.DataAspectRatioMode = 'manual';
+    uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+
+    update_crosschairs(uiapp, img.dim);
 end
 end
 
@@ -694,7 +693,7 @@ if ~isempty(hAxes)
                 end
 
             end
-            imagesc(uiapp.axes_axi, img.p.nii.img(:, :, sliceNr));
+            imagesc(uiapp.axes_axi, rot90(img.p.nii.img(:, :, sliceNr)));
             setappdata(uiapp.UIFigure, 'cut_slice_axi', sliceNr);
         case 'cor'
             sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_cor');
@@ -708,7 +707,7 @@ if ~isempty(hAxes)
                 end
 
             end
-            imagesc(uiapp.axes_cor, squeeze(img.p.nii.img(:, sliceNr, :, 1)));
+            imagesc(uiapp.axes_cor, rot90(squeeze(img.p.nii.img(:, sliceNr, :, 1))));
             setappdata(uiapp.UIFigure, 'cut_slice_cor', sliceNr);
         case 'sag'
             sliceNr = getappdata(uiapp.UIFigure, 'cut_slice_sag');
@@ -722,13 +721,63 @@ if ~isempty(hAxes)
                 end
 
             end
-            imagesc(uiapp.axes_sag, squeeze(img.p.nii.img(sliceNr, :, :, 1)));
+            imagesc(uiapp.axes_sag, rot90(squeeze(img.p.nii.img(sliceNr, :, :, 1))));
             setappdata(uiapp.UIFigure, 'cut_slice_sag', sliceNr);
-        otherwise
-
     end
+    update_crosschairs(uiapp, dim, hAxes.Tag);
 end
 
+end
+
+%% update cross
+function update_crosschairs(uiapp, dim, axesTag)
+    corSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_cor'); % y, dim(2)
+    sagSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_sag'); % x, dim(1)
+    axiSliceNr = getappdata(uiapp.UIFigure, 'cut_slice_axi'); % z, dim(3)
+
+    horz_line_cor = findobj(uiapp.axes_cor, 'Type', 'Line', 'Tag', 'horz_line');
+    if isempty(horz_line_cor)
+        horz_line_cor = line(uiapp.axes_cor, [1, dim(1)], [dim(3)-axiSliceNr, dim(3)-axiSliceNr], 'Color', 'b', 'LineWidth', 2, 'Tag', 'horz_line');
+    end
+
+    vert_line_cor = findobj(uiapp.axes_cor, 'Type', 'Line', 'Tag', 'vert_line');
+    if isempty(vert_line_cor)
+        vert_line_cor = line(uiapp.axes_cor, [sagSliceNr, sagSliceNr], [1, dim(3)], 'Color', 'b', 'LineWidth', 2, 'Tag', 'vert_line');
+    end
+
+    horz_line_sag = findobj(uiapp.axes_sag, 'Type', 'Line', 'Tag', 'horz_line');
+    if isempty(horz_line_sag)
+        horz_line_sag = line(uiapp.axes_sag, [1, dim(2)], [dim(3)-axiSliceNr, dim(3)-axiSliceNr], 'Color', 'b', 'LineWidth', 2, 'Tag', 'horz_line');
+    end
+
+    vert_line_sag = findobj(uiapp.axes_sag, 'Type', 'Line', 'Tag', 'vert_line');
+    if isempty(vert_line_sag)
+        vert_line_sag = line(uiapp.axes_sag, [corSliceNr, corSliceNr], [1, dim(3)], 'Color', 'b', 'LineWidth', 2, 'Tag', 'vert_line');
+    end
+
+    horz_line_axi = findobj(uiapp.axes_axi, 'Type', 'Line', 'Tag', 'horz_line');
+    if isempty(horz_line_axi)
+        horz_line_axi = line(uiapp.axes_axi, [1, dim(1)], [dim(2)-corSliceNr, dim(2)-corSliceNr], 'Color', 'b', 'LineWidth', 2, 'Tag', 'horz_line');
+    end
+
+    vert_line_axi = findobj(uiapp.axes_axi, 'Type', 'Line', 'Tag', 'vert_line');
+    if isempty(vert_line_axi)
+        vert_line_axi = line(uiapp.axes_axi, [sagSliceNr, sagSliceNr], [1, dim(2)], 'Color', 'b', 'LineWidth', 2, 'Tag', 'vert_line');
+    end
+
+    if exist('axesTag', 'var') % Update crosschairs
+        switch axesTag
+            case 'cor'
+                vert_line_sag.XData = [corSliceNr, corSliceNr];
+                horz_line_axi.YData = [dim(2)-corSliceNr, dim(2)-corSliceNr];
+            case 'sag'
+                vert_line_cor.XData = [sagSliceNr, sagSliceNr];
+                vert_line_axi.XData = [sagSliceNr, sagSliceNr];
+            case 'axi'
+                horz_line_cor.YData = [dim(3)-axiSliceNr, dim(3)-axiSliceNr];
+                horz_line_sag.YData = [dim(3)-axiSliceNr, dim(3)-axiSliceNr];
+        end
+    end
 end
 
 %% check where the mouse pointer is
