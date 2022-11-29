@@ -653,6 +653,16 @@ if ~isempty(img_idx)
     uiapp.axes_cor.DataAspectRatioMode = 'manual';
     uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
 
+    uiapp.axes_cor.YLabel.String = 'L';
+    uiapp.axes_cor.YLabel.Color = 'w';
+    uiapp.axes_cor.YLabel.Rotation = 0;
+    uiapp.axes_cor.YLabel.Position(2) = img.dim(3)/2 + uiapp.axes_cor.YLabel.Extent(4)/2;
+    uiapp.axes_cor.YLabel.Position(1) = -3;
+
+    uiapp.axes_cor.Title.String = 'S';
+    uiapp.axes_cor.Title.Color = 'w';
+    uiapp.axes_cor.Title.Position(1:2) = [img.dim(1)/2, 0];
+
     % sagittal
     cut_slice = round(img.dim(1)/2);
     imagesc(uiapp.axes_sag, rot90(squeeze(img.p.nii.img(cut_slice, :, :, 1))), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
@@ -661,6 +671,16 @@ if ~isempty(img_idx)
     uiapp.axes_sag.DataAspectRatioMode = 'manual';
     uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
 
+    uiapp.axes_sag.YLabel.String = 'P';
+    uiapp.axes_sag.YLabel.Color = 'w';
+    uiapp.axes_sag.YLabel.Rotation = 0;
+    uiapp.axes_sag.YLabel.Position(2) = img.dim(3)/2 + uiapp.axes_sag.YLabel.Extent(4)/2;
+    uiapp.axes_sag.YLabel.Position(1) = -3;
+
+    uiapp.axes_sag.Title.String = 'S';
+    uiapp.axes_sag.Title.Color = 'w';
+    uiapp.axes_sag.Title.Position(1:2) = [img.dim(2)/2, 0];
+
     % axial
     cut_slice = round(img.dim(3)/2);
     imagesc(uiapp.axes_axi, rot90(img.p.nii.img(:, :, cut_slice)), 'ButtonDownFcn', @(src, event) sliceButtonDownFunc(uiapp, event));
@@ -668,6 +688,16 @@ if ~isempty(img_idx)
     setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
     uiapp.axes_axi.DataAspectRatioMode = 'manual';
     uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+
+    uiapp.axes_axi.YLabel.String = 'L';
+    uiapp.axes_axi.YLabel.Color = 'w';
+    uiapp.axes_axi.YLabel.Rotation = 0;
+    uiapp.axes_axi.YLabel.Position(2) = img.dim(2)/2 + uiapp.axes_axi.YLabel.Extent(4)/2;
+    uiapp.axes_axi.YLabel.Position(1) = -3;
+
+    uiapp.axes_axi.Title.String = 'S';
+    uiapp.axes_axi.Title.Color = 'w';
+    uiapp.axes_axi.Title.Position(1:2) = [img.dim(1)/2, 0];
 
     update_crosschairs(uiapp, img.dim);
 end
