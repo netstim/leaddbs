@@ -107,6 +107,8 @@ uiapp.previewtree_subj.Text = subjID;
 expand(uiapp.Tree, 'all');
 
 preview_nii(uiapp, imgs, []); % set initial image to the first one
+uiapp.niiFileTable.SelectionType = 'row';
+uiapp.niiFileTable.Selection = 1;
 
 %% set callbacks of main GUI
 cell_change_callback(uiapp, subjID, imgs, anat_modalities, postop_modalities, postop_acq_tags, []) % call preview tree updater to get preallocated changes
@@ -594,8 +596,6 @@ function preview_nii(uiapp, imgs, event)
 if isempty(event)
     img_idx = 1;
 elseif isempty(event.Indices)
-    img_idx = [];
-elseif event.Indices(2) ~= 2
     img_idx = [];
 else
     img_idx = event.Indices(1);
