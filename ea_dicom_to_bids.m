@@ -657,7 +657,7 @@ if ~isempty(img_idx)
     uiapp.axes_cor.Colormap = gray(128);
     setappdata(uiapp.UIFigure, 'cut_slice_cor', cut_slice); % save current cut slice for scrolling
     uiapp.axes_cor.DataAspectRatioMode = 'manual';
-    uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+    uiapp.axes_cor.DataAspectRatio = [img.p.pixdim(3), img.p.pixdim(1), 1];
 
     uiapp.axes_cor.YLabel.String = 'L';
     uiapp.axes_cor.YLabel.Color = 'w';
@@ -675,7 +675,7 @@ if ~isempty(img_idx)
     uiapp.axes_sag.Colormap = gray(128);
     setappdata(uiapp.UIFigure, 'cut_slice_sag', cut_slice); % save current cut slice for scrolling
     uiapp.axes_sag.DataAspectRatioMode = 'manual';
-    uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(3), 1];
+    uiapp.axes_sag.DataAspectRatio = [img.p.pixdim(3), img.p.pixdim(2), 1];
 
     uiapp.axes_sag.YLabel.String = 'P';
     uiapp.axes_sag.YLabel.Color = 'w';
@@ -693,7 +693,7 @@ if ~isempty(img_idx)
     uiapp.axes_axi.Colormap = gray(128);
     setappdata(uiapp.UIFigure, 'cut_slice_axi', cut_slice); % save current cut slice for scrolling
     uiapp.axes_axi.DataAspectRatioMode = 'manual';
-    uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(1), img.p.pixdim(2), 1];
+    uiapp.axes_axi.DataAspectRatio = [img.p.pixdim(2), img.p.pixdim(1), 1];
 
     uiapp.axes_axi.YLabel.String = 'L';
     uiapp.axes_axi.YLabel.Color = 'w';
