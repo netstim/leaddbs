@@ -126,7 +126,7 @@
 % Script test_corr_perm.m found this function to have accurate false postitive
 % rates
 
-function [corr_obs, pval, crit_corr, est_alpha, seed_state] = ea_permcorr(dataX,dataY,stat,n_perm,tail,alpha_level,reports,seed_state)
+function [corr_obs, pval, crit_corr, est_alpha, seed_state] = ea_permcorr(dataX,dataY,stat,n_perm,tail,alpha_level,rows,reports,seed_state)
 
 if nargin<2
     error('You need to provide two sets of data.');
@@ -157,12 +157,26 @@ elseif (alpha_level>=1) || (alpha_level<=0)
 end
 
 if nargin<7
+    rows = 'complete';
+end
+
+% Only use rows without NaN values
+if strcmpi(rows, 'complete')
+    ind = ~any(isnan(dataX),2) & ~any(isnan(dataY),2);
+    if ~all(ind)
+        ea_cprintf('CmdWinWarnings', 'X or Y is missing values, using only rows without NaNs.\n');
+        dataX = dataX(ind);
+        dataY = dataY(ind);
+    end
+end
+
+if nargin<8
     reports=1;
 end
 
 % Get random # generator state
 defaultStream=RandStream.getGlobalStream;
-if (nargin<8) || isempty(seed_state)
+if nargin<9 || isempty(seed_state)
     % Store state of random number generator
     seed_state=defaultStream.State;
 else
