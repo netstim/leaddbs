@@ -36,9 +36,10 @@
 %                number of possible permutations, the exact desired family-wise
 %                alpha may not be possible. Thus, the closest approximation
 %                is used and output as est_alpha. {default: .05}
-%  stat        - 'linear' or 'rank'.  If 'linear', then Pearson's r will be
-%                the correlation coefficient used.  If 'rank', Spearman's
-%                rho will be used. {default: 'linear'}
+%  stat        - 'linear', 'rank' or 'rankit'.  If 'linear', then Pearson's
+%                r will be the correlation coefficient used.  If 'rank',
+%                Spearman's rho will be used. If 'rankit', Bliss's rankit
+%                correlation coefficient will be used. {default: 'linear'}
 %  reports     - [0 or 1] If 0, function proceeds with no command line
 %                reports. Otherwise, function reports what it is doing to
 %                the command line. {default: 1}
@@ -136,8 +137,8 @@ if nargin<3
     stat='rank';
 end
 
-if ~ismember(lower(stat), {'linear', 'pearson', 'rank', 'spearman'})
-    error('Argument ''stat'' needs to be ''linear'' or ''rank''');
+if ~ismember(lower(stat), {'linear', 'pearson', 'rank', 'spearman', 'rankit'})
+    error('Argument ''stat'' needs to be ''linear'', ''pearson'', ''rank'', ''spearman'' or ''rankit''');
 end
 
 if nargin<4
@@ -219,6 +220,13 @@ if ismember(lower(stat), {'rank', 'spearman'})
     % Convert values to ranks
     dataX = ea_vec2rank(dataX);
     dataY = ea_vec2rank(dataY);
+elseif strcmpi(stats, 'rankit') % https://doi.org/10.1177/0013164414557639
+    % Convert values to ranks
+    dataX = ea_vec2rank(dataX);
+    dataY = ea_vec2rank(dataY);
+    % Normalizing transformation
+    dataX = norminv((dataX-0.5)/n_obsX);
+    dataY = norminv((dataY-0.5)/n_obsX);
 end
 
 %% Set up permutation test
