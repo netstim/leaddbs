@@ -217,10 +217,8 @@ end
 
 if ismember(lower(stat), {'rank', 'spearman'})
     % Convert values to ranks
-    for a=1:n_varX
-        dataX(:,a)=vals2ranks(dataX(:,a));
-        dataY(:,a)=vals2ranks(dataY(:,a));
-    end
+    dataX = ea_vec2rank(dataX);
+    dataY = ea_vec2rank(dataY);
 end
 
 %% Set up permutation test
@@ -371,31 +369,3 @@ disp(' ');
 disp('****************** Warning ******************');
 disp(msg);
 disp(' ');
-
-
-function ranks=vals2ranks(vals)
-%function ranks=vals2ranks(vals)
-
-if ~isvector(vals)
-   error('vals needs to be a vector');
-end
-
-ranks=zeros(size(vals));
-uni=unique(vals);
-if size(uni,1)>1
-   uni=uni';
-end
-
-ct=0;
-for a=uni
-   ids=find(vals==a);
-   n_rep=length(ids);
-   if n_rep>1
-       mn_rnk=mean(ct+1:ct+n_rep);
-       ranks(ids)=mn_rnk;
-       ct=ct+n_rep;
-   else
-      ct=ct+1;
-      ranks(ids)=ct;
-   end
-end
