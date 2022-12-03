@@ -220,7 +220,7 @@ if ismember(lower(stat), {'rank', 'spearman'})
     % Convert values to ranks
     dataX = ea_vec2rank(dataX);
     dataY = ea_vec2rank(dataY);
-elseif strcmpi(stats, 'rankit') % https://doi.org/10.1177/0013164414557639
+elseif strcmpi(stat, 'rankit') % https://doi.org/10.1177/0013164414557639
     % Convert values to ranks
     dataX = ea_vec2rank(dataX);
     dataY = ea_vec2rank(dataY);
