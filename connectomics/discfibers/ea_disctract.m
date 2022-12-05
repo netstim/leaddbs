@@ -466,7 +466,7 @@ classdef ea_disctract < handle
                     if ~exist('Iperm', 'var') || isempty(Iperm)
                         %Improvement = obj.subscore.vars;
                         for i=1:length(obj.subscore.vars)
-                            Improvement{i} = obj.subscore.vars{i}(obj.patientselection);
+                            Improvement{i} = obj.subscore.vars{i}(patientsel);
                         end           
                     else
                         ea_error('Permutation based test not yet coded in for PCA mode.');
@@ -625,7 +625,7 @@ classdef ea_disctract < handle
                     title('Patient scores'' correlations over folds', 'FontSize', 16); % set title
                     colormap('bone'); 
                     cb = colorbar;
-                    set(cb) 
+                    % set(cb) 
 
                 end
             end
@@ -669,11 +669,11 @@ classdef ea_disctract < handle
                     for voter=1:size(vals,1)
                         switch obj.multitractmode
                             case 'Split & Color By Subscore'
-                                useI=obj.subscore.vars{voter};
+                                useI=obj.subscore.vars{voter}(patientsel);
                             case 'Split & Color By PCA'
-                                useI=obj.subscore.pcavars{voter};
+                                useI=obj.subscore.pcavars{voter}(patientsel);
                             otherwise
-                                useI=obj.responsevar;
+                                useI=obj.responsevar(patientsel);
                         end
 
                         if size(useI,2)>1
@@ -682,7 +682,7 @@ classdef ea_disctract < handle
 
                         % these predictors are defined within the same ff model
                         % of iteration 'c'
-%                         % do not get rid of the first dimension when it has size of 1
+                        % do not get rid of the first dimension when it has size of 1
                         Ihat_train_global_av_sides = ea_nanmean(Ihat_train_global,3);
                         predictor_training = reshape(Ihat_train_global_av_sides, ...
                             size(Ihat_train_global_av_sides,1),...
@@ -694,10 +694,10 @@ classdef ea_disctract < handle
 
                         covariates=[];
                         for cv = 1:length(obj.covars)
-                            covariates = [covariates,obj.covars{cv}];
+                            covariates = [covariates,obj.covars{cv}(patientsel)];
                         end
                         if ~isempty(covariates)
-                            mdl=fitglm([predictor_training(c,training,voter),covariates(training,:)],useI(training),lower(obj.predictionmodel));
+                            mdl=fitglm([predictor_training(c,training,voter)',covariates(training,:)],useI(training),lower(obj.predictionmodel));
                         else
                             mdl=fitglm([predictor_training(c,training,voter)],useI(training),lower(obj.predictionmodel));
                         end
@@ -714,7 +714,7 @@ classdef ea_disctract < handle
                 end
 
                 % quantify the prediction accuracy (if Train-Test)
-                if cvp.NumTestSets == 1 && voter == 1 && size(obj.responsevar,2) == 1
+                if cvp.NumTestSets == 1 && voter == 1 && size(obj.responsevar,2) == 1 && (~exist('Iperm', 'var') || isempty(Iperm))
                     side = 1;
                     SS_tot = var(useI(test)) * (length(useI(test)) - 1); % just a trick to use one line
                     SS_res = sum((Ihat_voters_prediction(test,side,1) - useI(test)).^2);
@@ -784,7 +784,7 @@ classdef ea_disctract < handle
 
                     % map back to PCA:
                     for i=1:length(obj.subscore.vars)
-                        selected_subscores{i} = obj.subscore.vars{i}(obj.patientselection);
+                        selected_subscores{i} = obj.subscore.vars{i}(patientsel);
                     end
                     subvars=ea_nanzscore(cell2mat(selected_subscores));
                     if size(subvars,2) <= 2
@@ -801,7 +801,7 @@ classdef ea_disctract < handle
                     % show predictions for PC scores 
                     for pcc=1:obj.numpcs
                         if obj.subscore.posvisible(pcc)==1 || obj.subscore.negvisible(pcc)==1 % don't try to plot if not showing any fibers for this PC
-                            ea_corrplot(obj.subscore.pcavars{pcc}(obj.patientselection),Ihat(:,pcc), 'noperm', ...
+                            ea_corrplot(obj.subscore.pcavars{pcc}(patientsel),Ihat(:,pcc), 'noperm', ...
                             {['Disc. Fiber prediction for PC ',num2str(pcc)],'PC score (Empirical)','PC score (Predicted)'},...
                             [], [], obj.subscore.pcacolors(pcc, :));
                         % sum(obj.subscore.pcavars{pcc}(obj.patientselection) - score(:,pcc)) % quick check
