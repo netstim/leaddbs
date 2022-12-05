@@ -31,6 +31,15 @@ This module provides tools to manually fix misalignments after non linear regist
 """
     self.parent.helpText += self.getDefaultModuleDocumentationLink()  # TODO: verify that the default URL is correct or change it to the actual documentation
     self.parent.acknowledgementText = "" 
+    slicer.app.connect("startupCompleted()", setUpSliceNames)
+
+def setUpSliceNames():
+  if slicer.app.mainApplicationName == 'SlicerForLeadDBS':
+    for color,name in zip(['Red','Green','Yellow'],['Axial','Coronal','Sagittal']):
+      sliceWidget = slicer.app.layoutManager().sliceWidget(color)
+      if not sliceWidget:
+        continue
+      sliceWidget.mrmlSliceNode().SetName(name)
 
 #
 # WarpDriveWidget
@@ -174,11 +183,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       sliceCompositeNode.SetLinkedControl(True)
 
     # start-up view
-    for color,name in zip(['Red','Green','Yellow'],['Axial','Coronal','Sagittal']):
-      sliceWidget = slicer.app.layoutManager().sliceWidget(color)
+    for name in ['Axial','Coronal','Sagittal']:
+      sliceWidget = slicer.app.layoutManager().sliceWidget(name)
       if not sliceWidget:
         continue
-      sliceWidget.mrmlSliceNode().SetName(name)
       fov = sliceWidget.mrmlSliceNode().GetFieldOfView()
       sliceWidget.mrmlSliceNode().SetFieldOfView(fov[0]/4,fov[1]/4,fov[2])
       if name == 'Axial':
