@@ -33,8 +33,8 @@ if isnan(mask)
 end
 
 if dok
-    nanix=n.img(mask);
-    nanix=ixs(~isnan(nanix));
+    nanix=(mask);
+    nanix(isnan(n.img(nanix)))=0;
     n.img(nanix)=ea_normal(n.img(nanix));
     ea_write_nii(n);
 end
