@@ -22,6 +22,13 @@ json_mat = struct();
                     new_fieldname = [split_fieldname{1},'_',split_fieldname{2}];
                     if ismember(new_fieldname,legacy_modalities)
                         modality = rawdata_containers(new_fieldname);
+                    elseif contains(new_fieldname, legacy_modalities)
+                        %try again because the coreg filename and .json
+                        %should be similar
+                        match_idx = find(cellfun(@(x) contains(new_fieldname, x), legacy_modalities));
+                        if length(match_idx) == 1
+                            modality = bids_modalities{match_idx};
+                        end
                     else
                         if isvarname(upper(split_fieldname{end}))
                             modality = upper(split_fieldname{end});
@@ -29,17 +36,25 @@ json_mat = struct();
                             modality = upper(split_fieldname{end-1});
                         end
                     end
-                    flag = 'approval';
-                    [modality,json_mat] = add_mod(modality,json_mat,flag);
+                    
                 else
                     if ismember(coreg_fieldnames{i},legacy_modalities)
                         modality = rawdata_containers(coreg_fieldnames{i});
+                   elseif contains(coreg_fieldnames{i}, legacy_modalities)
+                        %try again because the coreg filename and .json
+                        %should be similar
+                        match_idx = find(cellfun(@(x) contains(coreg_fieldnames{i}, x), legacy_modalities));
+                        if length(match_idx) == 1
+                            modality = bids_modalities{match_idx};
+                        end
                     else
                         modality = strsplit(coreg_fieldnames{i},'_');
                         modality = upper(modality{end});
                     end
                     
                 end
+                flag = 'approval';
+                [modality,json_mat] = add_mod(modality,json_mat,flag);
                 json_mat.approval.(modality) = input_mat.(coreg_fieldnames{i});
             end
             if exist(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'),'file')
@@ -62,6 +77,13 @@ json_mat = struct();
                             new_fieldname = [split_fieldname{1},'_',split_fieldname{2}];
                             if ismember(new_fieldname,legacy_modalities)
                                 modality = rawdata_containers(new_fieldname);
+                            elseif contains(new_fieldname, legacy_modalities)
+                                %try again because the coreg filename and .json
+                                %should be similar
+                                match_idx = find(cellfun(@(x) contains(new_fieldname, x), legacy_modalities));
+                                if length(match_idx) == 1
+                                    modality = bids_modalities{match_idx};
+                                end
                             else
                                 if isvarname(upper(split_fieldname{end}))
                                     modality = upper(split_fieldname{end});
@@ -69,11 +91,16 @@ json_mat = struct();
                                     modality = upper(split_fieldname{end-1});
                                 end
                             end
-                            flag = 'method';
-                            [modality,json_mat] = add_mod(modality,json_mat,flag);
                         else
                             if ismember(temp_fieldname{j},legacy_modalities)
                                 modality = rawdata_containers(temp_fieldname{j});
+                            elseif contains(temp_fieldname{j}, legacy_modalities)
+                                %try again because the coreg filename and .json
+                                %should be similar
+                                match_idx = find(cellfun(@(x) contains(temp_fieldname{j}, x), legacy_modalities));
+                                if length(match_idx) == 1
+                                    modality = bids_modalities{match_idx};
+                                end
                             else
                                 modality = strsplit(temp_fieldname{j},'_');
                                 modality = upper(modality{end});
@@ -81,6 +108,8 @@ json_mat = struct();
 
                         end
                     end
+                    flag = 'method';
+                    [modality,json_mat] = add_mod(modality,json_mat,flag);
                     json_mat.method.(modality) = temp_mat.(temp_fieldname{j});
                 end
             end
@@ -158,21 +187,24 @@ json_mat = struct();
      end
      return
 function [new_mod,json_mat] = add_mod(modality,json_mat,flag)
-
-if isfield(json_mat.(flag),modality)
-    replaced_old_modality = [modality,num2str(1)];
-    %replace old modality name with the new
-    json_mat.(flag).(replaced_old_modality) = json_mat.(flag).(modality);
-    json_mat.(flag) = rmfield(json_mat.(flag),modality);
-    new_mod = [modality,num2str(2)];
-elseif isfield(json_mat.(flag),[modality,num2str(1)])
-    suffix = 2;
-    modality_to_check = [modality,num2str(suffix)];
-    while isfield(json_mat.(flag),modality_to_check)
-        suffix = suffix + 1;
+if ~isempty(fieldnames(json_mat))
+    if isfield(json_mat.(flag),modality)
+        replaced_old_modality = [modality,num2str(1)];
+        %replace old modality name with the new
+        json_mat.(flag).(replaced_old_modality) = json_mat.(flag).(modality);
+        json_mat.(flag) = rmfield(json_mat.(flag),modality);
+        new_mod = [modality,num2str(2)];
+    elseif isfield(json_mat.(flag),[modality,num2str(1)])
+        suffix = 2;
         modality_to_check = [modality,num2str(suffix)];
+        while isfield(json_mat.(flag),modality_to_check)
+            suffix = suffix + 1;
+            modality_to_check = [modality,num2str(suffix)];
+        end
+        new_mod = modality_to_check;
+    else
+        new_mod = modality;
     end
-    new_mod = modality_to_check;
 else
     new_mod = modality;
 end
