@@ -522,7 +522,7 @@ classdef ea_networkmapping < handle
                 % Horzvat all values for colorbar construction
                 allvals = horzcat(vals{group,:})';
                 if isempty(allvals) || all(isnan(allvals))
-                    ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!');
+                    ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!\n');
                     continue;
                 else
                     allvals(isnan(allvals)) = 0;

@@ -455,7 +455,7 @@ classdef ea_sweetspot < handle
                 % Vertcat all values for colorbar construction
                 allvals = vertcat(vals{group,:});
                 if isempty(allvals) || all(isnan(allvals))
-                    ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!');
+                    ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!\n');
                     continue;
                 else
                     allvals(isnan(allvals)) = 0;
