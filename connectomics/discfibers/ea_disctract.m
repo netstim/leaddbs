@@ -20,6 +20,7 @@ classdef ea_disctract < handle
         pathway_list % list that contains names of pathways (relevant when multi_pathways = 1
         connFiberInd_PAM % list of indices of activated (connected) fibers using PAM
         connFiberInd_VAT % list of indices of activated (connected) fibers using VAT
+        connFiberInd % legacy
         connectivity_type = 1 % 1 - VAT, 2 - PAM
         switch_connectivity = 0 % flag if connectivity type was changed in the GUI
         nestedLOO = false       % if true, will conducted LOO in the training set
@@ -70,6 +71,7 @@ classdef ea_disctract < handle
         colorbar % colorbar information
         groupcolors = ea_color_wes('all');
         useExternalModel = false
+        ExternalModelFile = 'None'
         % stats: (how many fibers available and shown etc for GUI)
         modelNormalization='None';
         numBins=15;
@@ -374,7 +376,8 @@ classdef ea_disctract < handle
                         case 'Split & Color By PCA'
                             disp("Fold Agreement is not evaluated for PCA")
                         otherwise
-                            [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i},Ihat_iter{i},'spearman');
+                            inx_nnan = find(isnan(I_iter{i}) ~= 1);
+                            [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i}(inx_nnan),Ihat_iter{i}(inx_nnan),'spearman');
                     end
                 end
 
@@ -488,23 +491,20 @@ classdef ea_disctract < handle
                 Ihat_train_global = nan(cvp.NumTestSets,length(patientsel),2,length(obj.subscore.vars));
             end
 
-%             if obj.useExternalModel == true
-%                 % this won't work, because the obj.M.root is different in
-%                 % the original cohort
-%             
-%                 S = load([obj.M.root,'vals_all_model.mat']);
-%                 if ~strcmp(ea_method2methodid(obj),ftr.fibsvalType)
-%                     waitfor(msgbox('Changing the Model Setup! See terminal'));
-%                     disp('The loaded model uses: ')
-%                     disp(ftr.fibsvalType)
-%                 end
-%                 % not sure this will work, because ea_method2methodid(obj)
-%                 % still returns the old value
-%                 fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ftr.fibsvalType).fibsval);
-%             else
-%                 fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
+            if obj.useExternalModel == true
+                S = load(obj.ExternalModelFile);
+                if ~strcmp(ea_method2methodid(obj),S.fibsvalType)
+                    waitfor(msgbox('Change the Model Setup! See terminal'));
+                    disp('The loaded model uses: ')
+                    disp(S.fibsvalType)
+                end
 
-            fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
+                fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(S.fibsvalType).fibsval);
+            else
+                fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
+            end
+
+            %fibsval = full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval);
 
             % for nested LOO, store some statistics
             if obj.nestedLOO
@@ -737,12 +737,6 @@ classdef ea_disctract < handle
                 Ihat=Ihat_voters_prediction; % replace with actual response variables.
             end
 
-%             % offer to save the model if just one training model
-%             if cvp.NumTestSets == 1
-%                 % offer to save the model in GUI
-%                 ea_save_fibscore_model(obj, patientsel, training)
-%             end
-
             switch obj.multitractmode
                 case 'Split & Color By Subscore'
                     % here we map back to the single response variable using a
@@ -907,6 +901,8 @@ classdef ea_disctract < handle
                 end
             end
 
+            tractset.useExternalModel = false;
+            tractset.ExternalModelFile = 'None'; % do not store imported models
             tractset.resultfig=[]; % rm figure handle before saving.
             tractset.drawobject=[]; % rm drawobject.
             save(tractset.analysispath,'tractset','-v7.3');
@@ -979,34 +975,44 @@ classdef ea_disctract < handle
                 end
             end
 
-%             if obj.useExternalModel == true
-%                 % this won't work, because the obj.M.root is different in
-%                 % the original cohort
-% 
-%                 S = load([obj.M.root,'vals_all_model.mat']);
-%                 if ~strcmp(S.connectome,ea_conn2connid(obj.connectome))
-%                     waitfor(msgbox('The chosen fibfilt model was computed for another connectome! See terminal'));
-%                     disp('Model for connectome: ')
-%                     disp(S.connectome)
-%                     return
-%                 end
-% 
-%                 vals_connected = cell(size(S.vals_all));
-%                 for voter = 1:size(vals_connected,1)
-%                     for side=1:size(vals_connected,2)
-%                         switch obj.connectivity_type
-%                             case 2
-%                                 vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side});
-%                             otherwise
-%                                 vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side});
-%                         end
-%                     end
-%                 end
-%                 
-%                 [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
-%             elseif ~exist('vals','var')
-%                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
-%             end
+            if obj.useExternalModel == true
+
+                S = load(obj.ExternalModelFile);
+                if ~strcmp(S.connectome,ea_conn2connid(obj.connectome))
+                    waitfor(msgbox('The chosen fibfilt model was computed for another connectome! See terminal'));
+                    disp('Model for connectome: ')
+                    disp(S.connectome)
+                    return
+                end
+
+                if obj.connectivity_type ~= S.conn_type
+                    waitfor(msgbox('The connectivity methods of imported and current model are different! See terminal'));
+                    disp('Connectivity type of imported model: ')
+                    disp(obj.connectivity_type)
+                    return     
+                end
+ 
+                vals_connected = cell(size(S.vals_all));
+                for voter = 1:size(vals_connected,1)
+                    for side=1:size(vals_connected,2)
+                        try
+                            switch obj.connectivity_type
+                                case 2
+                                    vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side});
+                                otherwise
+                                    vals_connected{voter,side} = S.vals_all{voter,side}(obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side});
+                            end
+                        catch
+                            ea_warndlg("Connectivity indices were not stored. Please recalculate.");
+                            return
+                        end
+                    end
+                end
+                
+                [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
+            elseif ~exist('vals','var')
+                [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
+            end
 
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
