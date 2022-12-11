@@ -16,6 +16,7 @@
 *.mat.bids
 *.mat.dev
 *.mat.classic
+*.tmp
 .idea
 __pycache__
 CMakeLists.txt
@@ -62,3 +63,4 @@ Thumbs.db
 /slicer.py
 
 /ext_libs/SlicerCustom*
+/ext_libs/SlicerForLeadDBS*
