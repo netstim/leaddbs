@@ -24,6 +24,7 @@ bidsdir.other.preproDir = fullfile(BIDSdir,'preprocessing');
 bidsdir.other.logdir = fullfile(BIDSdir,'log');
 %prefs dir
 bidsdir.other.prefdir = fullfile(BIDSdir,'prefs');
+bidsdir.other.miscdir = fullfile(BIDSdir,'miscellaneous');
 new_dirname = fieldnames(bidsdir.other);
 for i=1:length(new_dirname)
     if ~exist(bidsdir.other.(new_dirname{i}),'dir')
