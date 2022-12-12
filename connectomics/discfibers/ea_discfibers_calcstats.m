@@ -142,11 +142,11 @@ for group=groups
     for side=1:numel(gfibsval)
         % check connthreshold
         switch obj.statmetric
-            case {1,3,4}
+            case {1,3,4,5}
                 sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
-            case {2,5}
+            case {2,6}
                 sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
-            case 6
+            case 7
                 sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
@@ -154,7 +154,7 @@ for group=groups
         gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),gpatsel)=0;
         % only in case of VTAs (given two-sample-t-test statistic) do we
         % need to also exclude if tract is connected to too many VTAs:
-        if ismember(obj.statmetric,[1,4])
+        if ~(obj.statmetric==2)
             gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),gpatsel)=0;
         end
         % init outputvars
@@ -306,8 +306,29 @@ for group=groups
                         pvals{group,side}(nonempty)=outps;
                     end
                 end
+            case 5 % Binomial Tests / VTAs (binary vars)
+                nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
+                invals=gfibsval{side}(nonempty,gpatsel)';
+                if ~isempty(invals)
 
-            case 5 % Reverse t-tests with efields for binary variables
+                    ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                    % restore nans
+                    ImpBinary(isnan(I(gpatsel,side)))=nan;
+                    suminvals=full(sum(invals(ImpBinary == 1,:),1));
+                    Ninvals=sum(ImpBinary == 1,1);
+                    sumoutvals=full(sum(invals(ImpBinary == 0,:),1));
+                    Noutvals=sum(ImpBinary == 0,1);
+
+                    y=zeros(size(invals,2),1); %
+
+                    for fib=1:size(invals,2)
+                        y = binopdf(suminvals(fib),sumoutvals(fib)+suminvals(fib),sum(ImpBinary)/length(gpatsel));
+                    end
+
+                    vals{group,side}(nonempty)=y;
+
+                end
+            case 6 % Reverse t-tests with efields for binary variables
                 nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
                 invals=gfibsval{side}(nonempty,gpatsel)';
                 if ~isempty(invals)
@@ -332,7 +353,7 @@ for group=groups
                     end
                 end
 
-            case 6 % Plain Connection
+            case 7 % Plain Connection
                 vals{group,side} = sumgfibsval/length(gpatsel);
                 vals{group,side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)))=nan;
                 if obj.showsignificantonly
