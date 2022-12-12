@@ -83,6 +83,29 @@ uimenu(f,'Label','Export Plan as Reconstruction...','Callback',{@ea_plan2reconst
 
 h=uimenu(f,'Label','Common DBS targets');
 
+% Custom targets:
+cu=uimenu(h,'Label','Custom Targets');
+cu1=uimenu(cu,'Label','STN, Parkinson''s Disease');
+uimenu(cu1,'Label','Left Hemisphere','Callback',{@ea_getlittarget_custom,'STNPD_lh',handles,obj});
+uimenu(cu1,'Label','Right Hemisphere','Callback',{@ea_getlittarget_custom,'STNPD_rh',handles,obj});
+
+cu2=uimenu(cu,'Label','GPi, Parkinson''s Disease');
+uimenu(cu2,'Label','Left Hemisphere','Callback',{@ea_getlittarget_custom,'GPIPD_lh',handles,obj});
+uimenu(cu2,'Label','Right Hemisphere','Callback',{@ea_getlittarget_custom,'GPIPD_rh',handles,obj});
+
+cu3=uimenu(cu,'Label','GPi, Cervical Dystonia');
+uimenu(cu3,'Label','Left Hemisphere','Callback',{@ea_getlittarget_custom,'GPICD_lh',handles,obj});
+uimenu(cu3,'Label','Right Hemisphere','Callback',{@ea_getlittarget_custom,'GPICD_rh',handles,obj});
+
+cu4=uimenu(cu,'Label','GPi, Cervical Dystonia');
+uimenu(cu4,'Label','Left Hemisphere','Callback',{@ea_getlittarget_custom,'GPIGD_lh',handles,obj});
+uimenu(cu4,'Label','Right Hemisphere','Callback',{@ea_getlittarget_custom,'GPIGD_rh',handles,obj});
+
+cu5=uimenu(cu,'Label','VIM, Essential Tremor');
+uimenu(cu5,'Label','Left Hemisphere','Callback',{@ea_getlittarget_custom,'VIMET_lh',handles,obj});
+uimenu(cu5,'Label','Right Hemisphere','Callback',{@ea_getlittarget_custom,'VIMET_rh',handles,obj});
+
+
 % Horn et al. ACPC based:
 ho=uimenu(h,'Label','Horn et al. 2017 NeuroImage, ACPC Coordinates');
 ho1=uimenu(ho,'Label','STN, Parkinson''s Disease, Active Contacts (Caire 2013)');
@@ -221,6 +244,61 @@ setappdata(obj.plotFigureH,'trajcontrolfig',handles.trajectorycontrol);
 setappdata(handles.trajectorycontrol,'obj',obj);
 set(handles.trajectorycontrol,'name','Edit Trajectory');
 ea_synctrajectoryhandles(handles,obj)
+
+function ea_getlittarget_custom(~,~,code,handles,obj)
+
+switch code
+    case 'STNPD_lh'
+        mnitarget=[-12.58,-13.41,-5.87];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+    case 'STNPD_rh'
+        mnitarget=[12.58,-13.41,-5.87];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+    case 'GPIPD_lh'
+        mnitarget=[-22.37,-5.57,-4.97];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+    case 'GPIPD_rh'
+        mnitarget=[22.37,-5.57,-4.97];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+    case 'GPICD_lh'
+        mnitarget=[-22.71,-5.74,-3.46];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+    case 'GPICD_rh'
+        mnitarget=[22.71,-5.74,-3.46];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+    case 'VIMET_lh' % done
+        t.target=[-12.993,-17.5054,-3.9984];
+        t.entry=[-40.9497,20.8681,70.5318];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+    case 'VIMET_rh' % done
+        t.target=[12.5785,-17.006,-3.9974];
+        t.entry=[40.9635,22.4245,67.7584];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+end
+set(handles.space,'value',3);
+set(handles.right,'value',1); set(handles.left,'value',0);
+set(handles.anterior,'value',1); set(handles.posterior,'value',0);
+set(handles.ventral,'value',1); set(handles.dorsal,'value',0);
+
+
+
+set(handles.targetX,'String',num2str(t.target(1)));
+set(handles.targetY,'String',num2str(t.target(2)));
+set(handles.targetZ,'String',num2str(t.target(3)));
+
+set(handles.entryX,'String',num2str(t.entry(1)));
+set(handles.entryY,'String',num2str(t.entry(2)));
+set(handles.entryZ,'String',num2str(t.entry(3)));
+
+obj.target=t;
 
 
 function ea_getlittarget_horn(~,~,code,handles,obj)
