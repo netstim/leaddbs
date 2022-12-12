@@ -233,7 +233,24 @@ for group=groups
                             prop=ea_corrsignan(prop',outps',obj);
                         end
                         vals{group,side}=prop';
+                    case 'Binomial Test (Binary Var)'
+                        
+                        gval{side} = double(gval{side});
+                        %gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
 
+                        coverage_createeffect=((gval{side}(gpatsel,:)==1).*repmat((I(gpatsel,side)==1),1,size(gval{side}(gpatsel,:),2)));
+                        coverage=((gval{side}(gpatsel,:)==1));
+
+                        Nmap=ea_nansum(gval{side}(gpatsel,:));
+                        nanidx=Nmap<round(size(coverage_createeffect,1)*(obj.coverthreshold/100));
+                        coverage_createeffect(:,nanidx)=nan;
+
+                        non_nan=~nanidx;
+                        y=nan(size(gval{side},2),1); %
+                        for vox=find(non_nan)                 
+                            y(vox) = binopdf(ea_nansum(coverage_createeffect(:,vox)),ea_nansum(coverage(:,vox)),ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
+                        end
+                        vals{group,side}=y';
                 end
 
             case 'E-Fields'
