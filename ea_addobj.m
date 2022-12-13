@@ -20,7 +20,7 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
                 str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(32);');
                 eval(str2eval)
             else
-                str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(',num2str(length(roiName)),');');
+                str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(',num2str(length(obj)),');');
                 eval(str2eval)
             end
             options.d3.roi.colormap = c;
