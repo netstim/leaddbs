@@ -256,32 +256,68 @@ switch code
         mnitarget=[12.58,-13.41,-5.87];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
-    case 'GPIPD_lh'
-        mnitarget=[-22.37,-5.57,-4.97];
+    case 'GPIPD_lh' % done
+        t.target=[-22.3059 -8.1294 -1.3541];
+        t.entry=[-27.9376 33.1036 68.1642];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
-    case 'GPIPD_rh'
-        mnitarget=[22.37,-5.57,-4.97];
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Medtronic 3387'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
+
+    case 'GPIPD_rh' % done
+        t.target=[21.985,-7.0027,-1.4983];
+        t.entry=[27.8585,33.9462,68.1159];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Medtronic 3387'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
+
     case 'GPICD_lh'
-        mnitarget=[-22.71,-5.74,-3.46];
+        t.target=[-22.3059 -8.1294 -1.3541];
+        t.entry=[-27.9376 33.1036 68.1642];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Medtronic 3387'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
     case 'GPICD_rh'
-        mnitarget=[22.71,-5.74,-3.46];
+        t.target=[21.985,-7.0027,-1.4983];
+        t.entry=[27.8585,33.9462,68.1159];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Medtronic 3387'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
+    case 'GPIGD_lh'
+        t.target=[-22.3059 -8.1294 -1.3541];
+        t.entry=[-27.9376 33.1036 68.1642];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Medtronic 3387'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
+    case 'GPIGD_rh'
+        t.target=[21.985,-7.0027,-1.4983];
+        t.entry=[27.8585,33.9462,68.1159];
+        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        obj.planRelative=[2,1,1,1,3];
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Medtronic 3387'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
     case 'VIMET_lh' % done
         t.target=[-12.993,-17.5054,-3.9984];
         t.entry=[-40.9497,20.8681,70.5318];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
+        obj.electrodeRelativeToPlan=2;
     case 'VIMET_rh' % done
         t.target=[12.5785,-17.006,-3.9974];
         t.entry=[40.9635,22.4245,67.7584];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
+        obj.electrodeRelativeToPlan=2;
 end
 set(handles.space,'value',3);
 set(handles.right,'value',1); set(handles.left,'value',0);
