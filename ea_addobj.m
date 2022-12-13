@@ -7,17 +7,45 @@ if isempty(addht)
 end
 
 if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
-    if all(cellfun(@numel, regexp(obj, '(\.mat|\.trk)$', 'match', 'once')))
+    if all(cellfun(@numel, regexp(obj, '(\.mat|\.trk)$', 'match', 'once'))) %tract
         for i=1:length(obj)
             addfibertract(obj{i}, resultfig, addht, [], 0, options);
         end
-    elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once')))
+    
+    elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once'))) %roi
         pobj.plotFigureH = resultfig;
         pobj.htH = addht;
-        for i=1:length(obj)
-            pobj.color = ea_uisetcolor;
-            ea_roi(obj{i}, pobj);
-        end
+         if options.d3.roi.autofillcolor && length(obj)>1 % i.e. multiple roi's selected
+            if length(obj)<=32
+                str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(32);');
+                eval(str2eval)
+            else
+                str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(',num2str(length(roiName)),');');
+                eval(str2eval)
+            end
+            options.d3.roi.colormap = c;
+            for i=1:length(obj)
+                pobj.color = options.d3.roi.colormap(i,:);
+                ea_roi(obj{i}, pobj);
+            end
+        elseif options.d3.roi.autofillcolor && length(obj)==1
+            for i=1:length(obj)
+                pobj.color = ea_uisetcolor;
+                ea_roi(obj{i}, pobj);
+            end
+         else
+             for i=1:length(obj)
+                 pobj.color = ea_uisetcolor;
+                 ea_roi(obj{i}, pobj);
+             end
+         end
+
+
+
+        
+
+
+
     elseif all(cellfun(@numel, regexp(obj, '(\.fibfilt)$', 'match', 'once')))
         for i=1:length(obj)
             ea_discfiberexplorer(obj{i}, resultfig);
@@ -58,20 +86,42 @@ else  % uigetfile, 'obj' is the type of the files to be selected
         case 'roi' % atlas
             % open dialog
             [roiName, roiPath] = uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to add to scene...',startPath,'MultiSelect','on');
+            
             if isnumeric(roiName) % User pressed cancel, roiName is 0
                 return
             else
                 if ischar(roiName)
                     roiName = {roiName};
                 end
-
+                
                 pobj.plotFigureH = resultfig;
                 pobj.htH = addht;
-                for fi=1:length(roiName)
-                    pobj.color = ea_uisetcolor;
-                    ea_roi([roiPath, roiName{fi}], pobj);
+                if options.d3.roi.autofillcolor && length(roiName)>1 % i.e. multiple roi's selected
+                    if length(obj)<=32
+                        str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(32);');
+                        eval(str2eval)
+                    else
+                        str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(',num2str(length(roiName)),');');
+                        eval(str2eval)
+                    end
+                    options.d3.roi.colormap = c;
+                    for fi=1:length(roiName)
+                        pobj.color = options.d3.roi.colormap(fi,:);
+                        ea_roi([roiPath, roiName{fi}], pobj);
+                    end
+                elseif options.d3.roi.autofillcolor && length(roiName)==1
+                    for fi=1:length(roiName)
+                        pobj.color = ea_uisetcolor;
+                        ea_roi([roiPath, roiName{fi}], pobj);
+                    end
+                else
+                    for fi=1:length(roiName)
+                        pobj.color = ea_uisetcolor;
+                        ea_roi([roiPath, roiName{fi}], pobj);
+                    end
                 end
             end
+
         case 'tractmap'
             [tfina,tpana]=uigetfile('*.mat','Choose Fibertract to add to scene...',startPath,'MultiSelect','off');
             [rfina,rpana]=uigetfile({'*.nii';'*.nii.gz'},'Choose .nii image to colorcode tracts...',startPath,'MultiSelect','off');

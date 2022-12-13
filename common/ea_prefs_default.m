@@ -164,6 +164,10 @@ prefs.d3.ceilinglightcolor = [1, 0.9, 0.9]; % pinkish '#FFE6E6'
 prefs.d3.rightlightcolor = [1, 0.9, 0.7]; % yellowish '#FFE6B3'
 prefs.d3.leftlightcolor = [0.9, 0.9, 1]; % bluish '#E6E6FF'
 
+% Loading ROIs to resultfig
+prefs.d3.roi.autofillcolor = 1; % 1 to autofill color 
+prefs.d3.roi.defaultcolormap = 'turbo'; % default colormap is turbo, see help graph3d for other options
+
 %% Video export
 prefs.video.path=[-90,10
                   -110,10

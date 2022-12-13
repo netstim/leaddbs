@@ -16,6 +16,8 @@ ea_zoomcenter(resultfig.CurrentAxes, [0,0,0], 3);
 
 
 function options=getoptslocal
+prefs = ea_prefs; % load ea_prefs
+
 options.patientname='No Patient Selected';
 options.endtolerance = 10;
 options.sprungwert = 4;
@@ -70,6 +72,7 @@ options.d3.mirrorsides = 0;
 options.d3.autoserver = 0;
 options.d3.expdf = 0;
 options.d3.writeatlases = 1;
+options.d3.roi = prefs.d3.roi; % get roi options from ea_prefs
 options.numcontacts = 4;
 options.entrypoint = 'STN, GPi or ViM';
 options.entrypointn = 1;
