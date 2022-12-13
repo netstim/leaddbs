@@ -1,6 +1,7 @@
 function ea_addobj(resultfig, obj, options)
 
 addht = getappdata(resultfig,'addht');
+prefs = ea_prefs;
 if isempty(addht)
     addht = uitoolbar(resultfig);
     setappdata(resultfig, 'addht', addht);
@@ -15,20 +16,20 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
     elseif all(cellfun(@numel, regexp(obj, '(\.nii|\.nii\.gz)$', 'match', 'once'))) %roi
         pobj.plotFigureH = resultfig;
         pobj.htH = addht;
-         if options.d3.roi.autofillcolor && length(obj)>1 % i.e. multiple roi's selected
+         if prefs.d3.roi.autofillcolor && length(obj)>1 % i.e. multiple roi's selected
             if length(obj)<=32
-                str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(32);');
+                str2eval = strcat('c = ',prefs.d3.roi.defaultcolormap,'(32);');
                 eval(str2eval)
             else
-                str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(',num2str(length(obj)),');');
+                str2eval = strcat('c = ',prefs.d3.roi.defaultcolormap,'(',num2str(length(obj)),');');
                 eval(str2eval)
             end
-            options.d3.roi.colormap = c;
+            prefs.d3.roi.colormap = c;
             for i=1:length(obj)
-                pobj.color = options.d3.roi.colormap(i,:);
+                pobj.color = prefs.d3.roi.colormap(i,:);
                 ea_roi(obj{i}, pobj);
             end
-        elseif options.d3.roi.autofillcolor && length(obj)==1
+        elseif prefs.d3.roi.autofillcolor && length(obj)==1
             for i=1:length(obj)
                 pobj.color = ea_uisetcolor;
                 ea_roi(obj{i}, pobj);
@@ -96,20 +97,20 @@ else  % uigetfile, 'obj' is the type of the files to be selected
                 
                 pobj.plotFigureH = resultfig;
                 pobj.htH = addht;
-                if options.d3.roi.autofillcolor && length(roiName)>1 % i.e. multiple roi's selected
+                if prefs.d3.roi.autofillcolor && length(roiName)>1 % i.e. multiple roi's selected
                     if length(obj)<=32
-                        str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(32);');
+                        str2eval = strcat('c = ',prefs.d3.roi.defaultcolormap,'(32);');
                         eval(str2eval)
                     else
-                        str2eval = strcat('c = ',options.d3.roi.defaultcolormap,'(',num2str(length(roiName)),');');
+                        str2eval = strcat('c = ',prefs.d3.roi.defaultcolormap,'(',num2str(length(roiName)),');');
                         eval(str2eval)
                     end
-                    options.d3.roi.colormap = c;
+                    prefs.d3.roi.colormap = c;
                     for fi=1:length(roiName)
-                        pobj.color = options.d3.roi.colormap(fi,:);
+                        pobj.color = prefs.d3.roi.colormap(fi,:);
                         ea_roi([roiPath, roiName{fi}], pobj);
                     end
-                elseif options.d3.roi.autofillcolor && length(roiName)==1
+                elseif prefs.d3.roi.autofillcolor && length(roiName)==1
                     for fi=1:length(roiName)
                         pobj.color = ea_uisetcolor;
                         ea_roi([roiPath, roiName{fi}], pobj);
