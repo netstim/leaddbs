@@ -144,8 +144,12 @@ for group=groups
                         vals{group,side} = ea_nanmean(thisvals)';
                         vals{group,side}(vals{group,side} < obj.statimpthreshold) = NaN;
                     case 'N-Image'
-                        tmpind = find(I(gpatsel,side) > obj.statimpthreshold);
-                        Nmap=ea_nansum(double(gval{side}(tmpind,:)));
+                        if ~ea_isbinary(I(gpatsel,side))
+                            tmpind = find(I(gpatsel,side) > obj.statimpthreshold);
+                        else
+                            tmpind = 1:length(gpatsel);
+                        end
+                        Nmap=ea_nansum(double(gval{side}(gpatsel(tmpind),:)));
                         vals{group,side} = Nmap';
                         vals{group,side}(vals{group,side} < round(numel(tmpind)*(obj.statNthreshold/100))) = NaN;
                     case 'T-Test'
@@ -246,11 +250,18 @@ for group=groups
                         coverage_createeffect(:,nanidx)=nan;
 
                         non_nan=~nanidx;
-                        y=nan(size(gval{side},2),1); %
-                        for vox=find(non_nan)                 
-                            y(vox) = binopdf(ea_nansum(coverage_createeffect(:,vox)),ea_nansum(coverage(:,vox)),ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
+
+                        ps=nan(size(gval{side},2),1); %
+                        thisvals = nan(size(gval{side},2),1);
+                        for vox=find(non_nan)
+                            ps(vox) = binopdf(ea_nansum(coverage_createeffect(:,vox)),ea_nansum(coverage(:,vox)),ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
+                            thisvals(vox) = (ea_nansum(coverage_createeffect(:,vox))./ea_nansum(coverage(:,vox))) - (ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
                         end
-                        vals{group,side}=y';
+                        if obj.showsignificantonly
+                            thisvals=ea_corrsignan(thisvals',ps',obj);
+                        end
+                        vals{group,side}=thisvals';
+
                 end
 
             case 'E-Fields'
