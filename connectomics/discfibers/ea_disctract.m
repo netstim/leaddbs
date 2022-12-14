@@ -472,7 +472,9 @@ classdef ea_disctract < handle
                             Improvement{i} = obj.subscore.vars{i}(patientsel);
                         end           
                     else
-                        ea_error('Permutation based test not yet coded in for PCA mode.');
+                        for i=1:length(obj.subscore.vars)
+                            Improvement{i} = Iperm(patientsel,i);
+                        end  
                     end
                 otherwise
                     if ~exist('Iperm', 'var') || isempty(Iperm)
@@ -785,21 +787,20 @@ classdef ea_disctract < handle
                         ea_warndlg("You may not have enough subscores & this might result in errors. Please consider selecting more subscores.")
                     end
 
-                    %subvars=ea_nanzscore(cell2mat(app.tractset.subscore.vars'));
-                    [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'Rows','complete');
+                    % [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'Rows','complete');
+                    % use saved weights to ensure consistency
+                    coeff = obj.subscore.pcacoeff; 
 
-
-                    %subvars=ea_nanzscore(cell2mat(obj.subscore.vars'));
-                    %[coeff,score,latent,tsquared,explained,mu]=pca(subvars,'rows','pairwise');
-                   
                     % show predictions for PC scores 
-                    for pcc=1:obj.numpcs
-                        if obj.subscore.posvisible(pcc)==1 || obj.subscore.negvisible(pcc)==1 % don't try to plot if not showing any fibers for this PC
-                            ea_corrplot(obj.subscore.pcavars{pcc}(patientsel),Ihat(:,pcc), 'noperm', ...
-                            {['Disc. Fiber prediction for PC ',num2str(pcc)],'PC score (Empirical)','PC score (Predicted)'},...
-                            [], [], obj.subscore.pcacolors(pcc, :));
-                        % sum(obj.subscore.pcavars{pcc}(obj.patientselection) - score(:,pcc)) % quick check
-                        end 
+                    if ~exist('Iperm', 'var') || isempty(Iperm) % avoid plotting for each permutation if using permutations!
+                        for pcc=1:obj.numpcs
+                            if obj.subscore.posvisible(pcc)==1 || obj.subscore.negvisible(pcc)==1 % don't try to plot if not showing any fibers for this PC
+                                ea_corrplot(obj.subscore.pcavars{pcc}(patientsel),Ihat(:,pcc), 'noperm', ...
+                                {['Disc. Fiber prediction for PC ',num2str(pcc)],'PC score (Empirical)','PC score (Predicted)'},...
+                                [], [], obj.subscore.pcacolors(pcc, :));
+                            % sum(obj.subscore.pcavars{pcc}(obj.patientselection) - score(:,pcc)) % quick check
+                            end 
+                        end
                     end
 
                     % data is zscored, such as mu is 0 (+ some computer rounding error)
@@ -811,10 +812,7 @@ classdef ea_disctract < handle
                     %Ihatout = Ihat*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
                     %Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
 
-                    Ihat=cell(1); % export in cell format as the Improvement itself.
-                    for subsc=1:size(Ihatout,2)
-                        Ihat{subsc}=Ihatout(:,subsc);
-                    end
+                    Ihat = mat2cell(Ihatout, size(Ihatout,1), ones(1,length(obj.subscore.vars))); 
 
                 otherwise
                     Ihat=squeeze(Ihat);
@@ -847,38 +845,77 @@ classdef ea_disctract < handle
             end
 
             numPerm = obj.Nperm;
+            
+            if strcmp(obj.multitractmode,'Split & Color By PCA')
+                Iperm = ea_shuffle(cell2mat(obj.subscore.vars'), numPerm, obj.patientselection, obj.rngseed);
+                Iperm(2:numPerm+1,:,:) = Iperm; 
+                Iperm(1,:,:) = cell2mat(obj.subscore.vars');
+                Ihat = cell(numPerm+1,1);
+                
+                R = zeros(numPerm+1, length(obj.subscore.vars));
 
-            Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection, obj.rngseed)';
-            Iperm = [obj.responsevar, Iperm];
-            Ihat = cell(numPerm+1, 1);
+                for perm=1:numPerm+1
+                    if perm==1
+                        fprintf('Calculating without permutation\n\n');
+                        [~, Ihat{perm}] = lno(obj);
+                    else
+                        fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
+                        [~, Ihat{perm}] = lno(obj, squeeze(Iperm(perm,:,:)));
+                    end
 
-            R = zeros(numPerm+1, 1);
+                    for subvar = 1:length(obj.subscore.vars)
+                        R(perm,subvar) = corr(Iperm(perm, obj.patientselection, subvar)',...
+                            Ihat{perm}{subvar},'type',corrType,'rows','pairwise');
+                    end
+                end 
 
-            for perm=1:numPerm+1
-                if perm==1
-                    fprintf('Calculating without permutation\n\n');
-                    [~, Ihat{perm}] = lno(obj);
-                else
-                    fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
-                    [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
+                R(isnan(R)) = 0.00001; % do not get rid of Nans 
+                
+                % generate null distribution
+                R1 = R(1,:);
+                for subvar = 1:length(obj.subscore.vars)
+                    R0(:,subvar) = sort(R(2:end,subvar), 'descend'); 
+                    Rp95(subvar) = R0(round(0.05*numPerm),subvar);
+                    pperm(subvar) = mean(abs(R0(:,subvar))>=abs(R1(subvar)));
+                    fprintf(['Permuted p for ' obj.subscore.labels{subvar} ' = ' num2str(pperm(subvar)) '.\n']);
+                end
+                
+                % Return only selected I
+                Iperm = Iperm(:,obj.patientselection,:);
+
+            else % any mode excepted PCA
+                Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection, obj.rngseed)';
+                Iperm = [obj.responsevar, Iperm];
+                Ihat = cell(numPerm+1, 1);
+    
+                R = zeros(numPerm+1, 1);
+    
+                for perm=1:numPerm+1
+                    if perm==1
+                        fprintf('Calculating without permutation\n\n');
+                        [~, Ihat{perm}] = lno(obj);
+                    else
+                        fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
+                        [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
+                    end
+    
+                    R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
+                    % do not kick out NaN scores
+                    if isnan(R(perm))
+                        R(perm) = 0.00001;
+                    end
                 end
 
-                R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
-                % do not kick out NaN scores
-                if isnan(R(perm))
-                    R(perm) = 0.00001;
-                end
+                % generate null distribution
+                R1 = R(1);
+                R0 = sort((R(2:end)),'descend');
+                Rp95 = R0(round(0.05*numPerm));
+                pperm = mean(abs(R0)>=abs(R1));
+                disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
+    
+                % Return only selected I
+                Iperm = Iperm(obj.patientselection,:);
             end
-
-            % generate null distribution
-            R1 = R(1);
-            R0 = sort((R(2:end)),'descend');
-            Rp95 = R0(round(0.05*numPerm));
-            pperm = mean(abs(R0)>=abs(R1));
-            disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
-
-            % Return only selected I
-            Iperm = Iperm(obj.patientselection,:);
         end
 
         function save(obj)
