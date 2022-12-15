@@ -18,8 +18,6 @@ classdef ea_disctract < handle
         multi_pathways = 0 % if structural connectome is devided into pathways (multiple .mat in dMRI_MultiTract)
         map_list % list that contains global indices of the first fibers in each pathway (relevant when multi_pathways = 1)
         pathway_list % list that contains names of pathways (relevant when multi_pathways = 1
-        connFiberInd_PAM % list of indices of activated (connected) fibers using PAM
-        connFiberInd_VAT % list of indices of activated (connected) fibers using VAT
         connFiberInd % legacy
         connectivity_type = 1 % 1 - VAT, 2 - PAM
         switch_connectivity = 0 % flag if connectivity type was changed in the GUI
