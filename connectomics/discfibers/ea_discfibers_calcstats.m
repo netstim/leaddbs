@@ -1,5 +1,6 @@
 function [vals,fibcell,usedidx] = ea_discfibers_calcstats(obj,patsel,Iperm)
 
+% NB: for PCA, we are going to reassign I later in the function
 if ~exist('Iperm','var')
     I=obj.responsevar;
 else % used in permutation based statistics - in this case the real improvement can be substituted with permuted variables.
@@ -82,6 +83,9 @@ if strcmp(obj.multitractmode,'Split & Color By PCA')
         obj.subscore.pcavars{pc}(patientnonsel,1)= nonsel_subvars*coeff(:,pc);
     end
 
+    % save the PCA coefficients for later 
+    obj.subscore.pcacoeff = coeff; 
+
 end
 
 switch obj.multitractmode
@@ -129,7 +133,17 @@ for group=groups
             case 'Split & Color By Subscore'
                 I = obj.subscore.vars{group};
             case 'Split & Color By PCA'
-                I = obj.subscore.pcavars{group};
+                if ~exist('Iperm','var')
+                    I = obj.subscore.pcavars{group};
+                else 
+                    % recompute permuted PC scores based on permuted
+                    % clinical vars - keep right dimensions for I but use
+                    % only selected patients for zscores - patientsel
+                    % applied to I later
+                    I = nan(size(Iperm)); 
+                    I(obj.patientselection,:) = ea_nanzscore(Iperm(obj.patientselection,:))*coeff; 
+                    I = I(:, group); 
+                end    
         end
         if size(I,2)==1 % 1 entry per patient, not per electrode
             I=[I,I]; % both sides the same;
