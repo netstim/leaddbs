@@ -71,7 +71,7 @@ classdef ea_disctract < handle
         useExternalModel = false
         ExternalModelFile = 'None'
         % stats: (how many fibers available and shown etc for GUI)
-        modelNormalization='None';
+        modelNormalization = 'None';
         numBins=15;
         stats
         % additional settings:
@@ -491,7 +491,7 @@ classdef ea_disctract < handle
                 Ihat_train_global = nan(cvp.NumTestSets,length(patientsel),2,length(obj.subscore.vars));
             end
 
-            if obj.useExternalModel == true
+            if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None')
                 S = load(obj.ExternalModelFile);
                 if ~strcmp(ea_method2methodid(obj),S.fibsvalType)
                     waitfor(msgbox('Change the Model Setup! See terminal'));
@@ -1010,8 +1010,7 @@ classdef ea_disctract < handle
                 end
             end
 
-            if obj.useExternalModel == true
-
+            if obj.useExternalModel == true && ~strcmp(obj.ExternalModelFile, 'None')
                 S = load(obj.ExternalModelFile);
                 if ~strcmp(S.connectome,ea_conn2connid(obj.connectome))
                     waitfor(msgbox('The chosen fibfilt model was computed for another connectome! See terminal'));
