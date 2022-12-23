@@ -155,13 +155,16 @@ for group=groups
 
     for side=1:numel(gfibsval)
         % check connthreshold
-        switch obj.statmetric
-            case {1,3,4,5}
-                sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
-            case {2,6}
-                sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
-            case 7 
-                sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
+        if obj.runwhite || obj.statmetric == 7 % plain connections
+            sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
+        else
+            switch obj.statmetric
+                case {1,3,4,5}
+                    sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
+                case {2,6}
+                    sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
+                case 7 % dealt w above
+            end
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
         % to too many VTAs (connthreshold slider)
@@ -182,8 +185,11 @@ for group=groups
         if obj.runwhite || obj.statmetric == 7 % plain connections
 
             vals{group,side} = sumgfibsval/length(gpatsel);
+       
             if ~obj.runwhite % the white fibers will always show connection to any single vta/roi.
                 vals{group,side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)))=nan;
+            else
+                vals{group,side}(vals{group,side}==0)=nan;
             end
             if (obj.statmetric == 7) && obj.showsignificantonly
                 ea_error('Calculating significance does not make sense (plain connections mode)');
@@ -230,6 +236,7 @@ for group=groups
                         % no covariates exist:
                         allvals=repmat(I(gpatsel,side)',size(gfibsval{side}(:,gpatsel),1),1); % improvement values (taken from Lead group file or specified in line 12).
                         fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
+                        fibsimpval=double(fibsimpval); % in case entered logical
                         fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
                         nfibsimpval=allvals; % Make a copy to denote improvements of unconnected fibers
                         nfibsimpval(logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all connected values

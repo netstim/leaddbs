@@ -125,18 +125,18 @@ classdef ea_roi < handle
                 catch
                     % load nifti
                     obj.nii=ea_load_nii(obj.niftiFilename);
-                    obj.nii.img(obj.nii.img==0) = nan;
-                    obj.nii.img(isinf(obj.nii.img)) = nan;
-
-                    if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
-                        obj.binary=1;
-                    else
-                        obj.nii.img=obj.nii.img-ea_nanmin(obj.nii.img(:)); % set min to zero
-                        obj.binary=0;
-                    end
-                    obj.nii.img(isnan(obj.nii.img)) = 0;
-                    obj.nii.img(isinf(obj.nii.img)) = 0;
                 end
+                obj.nii.img(obj.nii.img==0) = nan;
+                obj.nii.img(isinf(obj.nii.img)) = nan;
+
+                if length(unique(obj.nii.img(~isnan(obj.nii.img))))==1
+                    obj.binary=1;
+                else
+                    obj.nii.img=obj.nii.img-ea_nanmin(obj.nii.img(:)); % set min to zero
+                    obj.binary=0;
+                end
+                obj.nii.img(isnan(obj.nii.img)) = 0;
+                obj.nii.img(isinf(obj.nii.img)) = 0;
                 options.prefs=ea_prefs;
 
                 obj.max=ea_nanmax(obj.nii.img(~(obj.nii.img==0)));

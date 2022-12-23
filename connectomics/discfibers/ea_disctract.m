@@ -57,6 +57,9 @@ classdef ea_disctract < handle
         drawobject % actual streamtube handle
         connfiberdrawn % struct contains white connected fibers
         conndrawobject % actial streamtube handle for the latter
+        roidrawobject % actual patch handle for ROI/VTAs
+        roidata % data used for ROIs (nifti file cell usually w/ Efields
+        roiprotocol % protocol for drawing rois used to check if need to be redrawn.
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
         setlabels={};
         setselections={};
@@ -248,6 +251,8 @@ classdef ea_disctract < handle
                     else
                         vatlist = ea_discfibers_getvats(obj);
                     end
+                    ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
+
                     [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
                     obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
@@ -924,9 +929,11 @@ classdef ea_disctract < handle
 
         function save(obj)
             tractset=obj;
-            pth = fileparts(tractset.leadgroup);
-            tractset.analysispath=[pth,filesep,'fiberfiltering',filesep,obj.ID,'.fibfilt'];
-            ea_mkdir([pth,filesep,'fiberfiltering']);
+            if isempty(tractset.analysispath)
+                pth = fileparts(tractset.leadgroup);
+                tractset.analysispath=[pth,filesep,'fiberfiltering',filesep,obj.ID,'.fibfilt'];
+                ea_mkdir([pth,filesep,'fiberfiltering']);
+            end
             rf=obj.resultfig; % need to stash fig handle for saving.
             rd=obj.drawobject; % need to stash handle of drawing before saving.
             try % could be figure is already closed.
@@ -1057,10 +1064,15 @@ classdef ea_disctract < handle
                     end
                 end
                 
+
+
                 [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
             elseif ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
             end
+
+                ea_discfibers_showroi(obj);
+
 
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
@@ -1070,8 +1082,12 @@ classdef ea_disctract < handle
             obj.fiberdrawn.usedidx = usedidx;
 
             % if show connected (white) fibers, also calculate those
-            for side=1:size(obj.connfiberdrawn.vals,2)
-                delete(obj.conndrawobject{side});
+            if ~isempty(obj.connfiberdrawn)
+                for side=1:size(obj.connfiberdrawn.fibcell,2)
+                    try
+                    delete(obj.conndrawobject{side});
+                    end
+                end
             end
 
             if obj.connfibvisible
@@ -1083,7 +1099,7 @@ classdef ea_disctract < handle
                 %obj.connfiberdrawn.usedidx = cusedidx;
 
                 prefs = ea_prefs;
-                for side=1:size(obj.connfiberdrawn.vals,2)
+                for side=1:size(obj.connfiberdrawn.fibcell,2)
                     l=length(obj.connfiberdrawn.fibcell{side});
                     % thin out to prefs.fibfilt.maxwhite max
                     if ~isinf(prefs.fibfilt.connfibs.showmax)
