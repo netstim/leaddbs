@@ -9,6 +9,8 @@ classdef ea_disctract < handle
         calcthreshold % initial hard threshold to impose on (absolute) nifti files only when calculating the data
         posvisible = 1 % pos tract visible
         negvisible = 0 % neg tract visible
+        roivisible = 0 % show ROI (usually VTAs)
+        connfibvisible = 0 % show all connected tracts in white
         showposamount = [25 25] % two entries for right and left
         shownegamount = [25 25] % two entries for right and left
         connthreshold = 20
@@ -53,6 +55,11 @@ classdef ea_disctract < handle
         basepredictionon = 'Mean of Scores';
         fiberdrawn % struct contains fibercell and vals drawn in the resultfig
         drawobject % actual streamtube handle
+        connfiberdrawn % struct contains white connected fibers
+        conndrawobject % actial streamtube handle for the latter
+        roidrawobject % actual patch handle for ROI/VTAs
+        roidata % data used for ROIs (nifti file cell usually w/ Efields
+        roiprotocol % protocol for drawing rois used to check if need to be redrawn.
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
         setlabels={};
         setselections={};
@@ -81,6 +88,8 @@ classdef ea_disctract < handle
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
         kIter = 1;
+        % misc
+        runwhite = 0; % flag to calculate connected tracts instead of stat tracts 
     end
 
     properties (Access = private)
@@ -242,6 +251,8 @@ classdef ea_disctract < handle
                     else
                         vatlist = ea_discfibers_getvats(obj);
                     end
+                    ea_discfibers_roi_collect(obj); % integrate ROI into .fibfilt file
+
                     [fibsvalBin, fibsvalSum, fibsvalMean, fibsvalPeak, fibsval5Peak, fibcell,  connFiberInd, totalFibers] = ea_discfibers_calcvals(vatlist, cfile, obj.calcthreshold);
                     obj.results.(ea_conn2connid(obj.connectome)).('VAT_Ttest').fibsval = fibsvalBin;
                     obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT = connFiberInd; % old ff files do not have these data and will fail when using pathway atlases
@@ -918,9 +929,11 @@ classdef ea_disctract < handle
 
         function save(obj)
             tractset=obj;
-            pth = fileparts(tractset.leadgroup);
-            tractset.analysispath=[pth,filesep,'fiberfiltering',filesep,obj.ID,'.fibfilt'];
-            ea_mkdir([pth,filesep,'fiberfiltering']);
+            if isempty(tractset.analysispath)
+                pth = fileparts(tractset.leadgroup);
+                tractset.analysispath=[pth,filesep,'fiberfiltering',filesep,obj.ID,'.fibfilt'];
+                ea_mkdir([pth,filesep,'fiberfiltering']);
+            end
             rf=obj.resultfig; % need to stash fig handle for saving.
             rd=obj.drawobject; % need to stash handle of drawing before saving.
             try % could be figure is already closed.
@@ -1051,10 +1064,15 @@ classdef ea_disctract < handle
                     end
                 end
                 
+
+
                 [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
             elseif ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
             end
+
+                ea_discfibers_showroi(obj);
+
 
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
@@ -1062,6 +1080,47 @@ classdef ea_disctract < handle
             obj.fiberdrawn.fibcell = fibcell;
             obj.fiberdrawn.vals = vals;
             obj.fiberdrawn.usedidx = usedidx;
+
+            % if show connected (white) fibers, also calculate those
+            if ~isempty(obj.connfiberdrawn)
+                for side=1:size(obj.connfiberdrawn.fibcell,2)
+                    try
+                    delete(obj.conndrawobject{side});
+                    end
+                end
+            end
+
+            if obj.connfibvisible
+                obj.runwhite=1;
+                [~,cfibcell,~]=ea_discfibers_calcstats(obj);
+                obj.runwhite=0;
+                obj.connfiberdrawn.fibcell = cfibcell;
+                %obj.connfiberdrawn.vals = cvals;
+                %obj.connfiberdrawn.usedidx = cusedidx;
+
+                prefs = ea_prefs;
+                for side=1:size(obj.connfiberdrawn.fibcell,2)
+                    l=length(obj.connfiberdrawn.fibcell{side});
+                    % thin out to prefs.fibfilt.maxwhite max
+                    if ~isinf(prefs.fibfilt.connfibs.showmax)
+                        obj.connfiberdrawn.fibcell{side}=obj.connfiberdrawn.fibcell{side}(1:round(l/prefs.fibfilt.connfibs.showmax):end);
+                    end
+                    obj.connfiberdrawn.fibcell{side}=ea_discfibers_addjitter(obj.connfiberdrawn.fibcell{side},0.03);
+
+
+                    obj.conndrawobject{side} = streamtube(obj.connfiberdrawn.fibcell{side}, prefs.fibfilt.connfibs.fiberwidth);
+                    nones=repmat({'none'},size(obj.connfiberdrawn.fibcell{side}));
+                    [obj.conndrawobject{side}.EdgeColor]=nones{:};
+
+                    % Calulate fiber colors alpha values
+                    fibcolor = repmat({prefs.fibfilt.connfibs.color},size(obj.connfiberdrawn.fibcell{side}));
+                    fibalpha = repmat({prefs.fibfilt.connfibs.alpha},size(obj.connfiberdrawn.fibcell{side}));
+
+                    % Set fiber colors and alphas
+                    [obj.conndrawobject{side}.FaceColor]=fibcolor{:};
+                    [obj.conndrawobject{side}.FaceAlpha]=fibalpha{:};
+                end
+            end
 
             % print number of significant displayed fibers per pathway (atm only for binary metrics)
             if obj.multi_pathways == 1 && (isequal(ea_method2methodid(obj),'VAT_Ttest') || isequal(ea_method2methodid(obj),'PAM_Ttest') || isequal(ea_method2methodid(obj),'plainconn'))% at the moment, obj.connFiberInd is defined only for OSS-DBS

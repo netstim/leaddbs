@@ -216,7 +216,7 @@ prefs.fs.subcorticalseg.hippo_amygdala=0;
 prefs.fs.subcorticalseg.brainstem=0;
 prefs.fs.samseg.do=0;
 
-% 3D Slicer Prefs
+%% 3D Slicer Prefs
 prefs.slicer.dir = '';
 
 %% DICOM files:
@@ -224,8 +224,15 @@ prefs.dicom.dicomfiles=0; % 1: delete DICOMs after conversion, 0: Leave DICOMs a
 prefs.dicom.tool='dcm2niix'; % switch to 'dicm2nii' to use the Matlab based converter.
 
 %% fibers:
-
 prefs.addfibers={}; % additional fibers to show.
+
+%% fiberfiltering
+prefs.fibfilt.connfibs.showmax=5000; % set to inf to show all connected streamlines
+prefs.fibfilt.connfibs.fiberwidth=prefs.d3.fiberwidth/5; % usually sensible to show these streamlines in less thickly
+prefs.fibfilt.connfibs.alpha=0.4; % alpha of connected tracts
+prefs.fibfilt.connfibs.color=[1,0.99,0.91]; % color of connected tracts
+prefs.fibfilt.roi.alpha=0.5; % alpha of ROI / VTAs
+prefs.fibfilt.roi.color=[1,0.99,0.91]; % color of ROI / VTAs
 
 %% native-space:
 prefs.native.warp='inverse'; % set to 'tpm' in case you wish to create a atlas-specific tpm to warp atlases, set to 'inverse' to apply the inverse transform of your normalization.
