@@ -1,4 +1,4 @@
 function D=ea_minmax(D)
 
-D(:)=D(:)-(min(D(:)));
-D(:)=D(:)./max(D(:));
+D(~isnan(D(:)))=D(~isnan(D(:)))-(min(D(~isnan(D(:)))));
+D(~isnan(D(:)))=D(~isnan(D(:)))./max(D(~isnan(D(:))));

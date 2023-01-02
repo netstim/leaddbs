@@ -1,4 +1,4 @@
-function afv=ea_concatfv(fv,usecork,reduce)
+function afv=ea_concatfv(fv,usecork,reduce,verbose)
 
 if ~exist('reduce','var')
     reduce=0;
@@ -6,6 +6,10 @@ end
 if ~exist('usecork','var')
     usecork=0;
 end
+if ~exist('verbose','var')
+    verbose=1;
+end
+
 if strcmp(class(fv),'matlab.graphics.primitive.Surface')
     for f=1:length(fv)
         nfv(f)=surf2patch(fv(f),'triangles');
@@ -14,15 +18,21 @@ if strcmp(class(fv),'matlab.graphics.primitive.Surface')
     clear nfv
 end
 if reduce
+    if verbose
     ea_dispercent(0,'Reducing patch');
+    end
     for f=1:length(fv)
         kfv=reducepatch(fv(f),reduce,'fast');
         [~,ic]=ismember(kfv.vertices,fv(f).vertices,'rows');
         kfv.facevertexcdata=fv(f).facevertexcdata(ic,:);
         fv(f)=kfv;
-        ea_dispercent(f/length(fv));
+        if verbose
+            ea_dispercent(f/length(fv));
+        end
     end
-    ea_dispercent(1,'end');
+    if verbose
+        ea_dispercent(1,'end');
+    end
 end
 
 if ~usecork
@@ -38,7 +48,9 @@ if ~usecork
     fcoffset=1;
 
     % fprintf('\n\n');
-    ea_dispercent(0,'Concatenating patch');
+    if verbose
+        ea_dispercent(0,'Concatenating patch');
+    end
     for f=1:length(fv)
         fsize=size(fv(f).faces,1);
         vsize=size(fv(f).vertices,1);
@@ -66,9 +78,13 @@ if ~usecork
 
             fcoffset=fcoffset+fcsize;
         end
-        ea_dispercent(f/length(fv));
+        if verbose
+            ea_dispercent(f/length(fv));
+        end
     end
-    ea_dispercent(1,'end');
+    if verbose
+        ea_dispercent(1,'end');
+    end
 else
     for f=1:length(fv)
         if f==1

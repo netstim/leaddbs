@@ -74,7 +74,7 @@ end
 if isfield(OptionZ,'FrameRate')
     daObj.FrameRate=OptionZ.FrameRate;
 end
-% Durration (if frame rate not set, based on default)
+% Duration (if frame rate not set, based on default)
 if isfield(OptionZ,'Duration') %space out view angles
     temp_n=round(OptionZ.Duration*daObj.FrameRate); % number frames
     temp_p=(temp_n-1)/(size(ViewZ,1)-1); % length of each interval
