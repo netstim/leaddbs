@@ -40,7 +40,7 @@ classdef ea_trajectory < handle
     end
 
     properties (Access = private)
-        switchedFromSpace=3 % if switching space, this will protocol where from
+        switchedFromSpace=[] % if switching space, this will protocol where from
     end
 
     methods
@@ -69,6 +69,9 @@ classdef ea_trajectory < handle
                 obj.elstruct=pobj.elstruct;
             catch
                 obj.elstruct=struct;
+            end
+            try 
+                obj.planRelative=pobj.planRelative;
             end
 
             if ~exist('pobj','var') % create blank trajectory with planning fiducial only
@@ -105,12 +108,25 @@ classdef ea_trajectory < handle
             else
                 obj.target=struct;
             end
+            try
+                obj.switchedFromSpace=obj.planRelative(5);
+            end
 
             try % patchFiducial
                 obj.patchPlanning=pobj.patchPlanning;
             catch
                 obj.patchPlanning=patch('Visible','off');
             end
+            try
+                obj.planningAppearance=pobj.planningAppearance;
+            end
+            try
+                obj.plan2elstruct=pobj.plan2elstruct;
+            end
+            try
+                obj.plan2elstruct_model=pobj.plan2elstruct_model;
+            end
+
 
             try % patchMacro
                 obj.patchMacro=pobj.patchMacro;
@@ -318,7 +334,7 @@ function obj=update_trajectory(obj,evtnm) % update ROI
         return
     end
 
-    if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','planningAppearance','plan2elstruct_model','electrodeRelativeToPlan','color'}) % need to redraw planning fiducials:
+    if ismember(evtnm,{'all','target','reco','hasPlanning','showMicro','relateMicro','a','plan2elstruct_model','electrodeRelativeToPlan','color'}) % need to redraw planning fiducials:
         % planning fiducial
         if obj.showPlanning
             coords=ea_convertfiducials(obj,[obj.target.target;obj.target.entry]);

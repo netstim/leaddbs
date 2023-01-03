@@ -19,6 +19,9 @@ d.reco.electrode(obj.side).dbs.elmodel=obj.elmodel;
 d.reco.electrode(obj.side).plan.color=obj.color;
 d.reco.electrode(obj.side).plan.planRelative=obj.planRelative;
 d.reco.electrode(obj.side).plan.target=obj.target;
+d.reco.electrode(obj.side).plan.planningAppearance=obj.planningAppearance;
+d.reco.electrode(obj.side).plan.plan2elstruct=obj.plan2elstruct;
+d.reco.electrode(obj.side).plan.plan2elstruct_model=obj.plan2elstruct_model;
 
 d.reco.electrode(obj.side).micro.relateMicro=obj.relateMicro;
 save([obj.options.root,obj.options.patientname,filesep,'ea_reconstruction.mat'],'-struct','d');
