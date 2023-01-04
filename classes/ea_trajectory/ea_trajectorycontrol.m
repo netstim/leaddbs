@@ -307,17 +307,21 @@ switch code
         obj.plan2elstruct_model='Medtronic 3387'; % electrode model of pseudo reconstruction of stereotactical plan
         obj.planningAppearance='electrode';
     case 'VIMET_lh' % done
-        t.target=[-12.993,-17.5054,-3.9984];
+        t.target=[-12.993,-17.5054,-2];
         t.entry=[-40.9497,20.8681,70.5318];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
-        obj.electrodeRelativeToPlan=2;
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Medtronic 3389'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
     case 'VIMET_rh' % done
-        t.target=[12.5785,-17.006,-3.9974];
+        t.target=[13,-16,-2];
         t.entry=[40.9635,22.4245,67.7584];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
-        obj.electrodeRelativeToPlan=2;
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Medtronic 3389'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
 end
 set(handles.space,'value',3);
 set(handles.right,'value',1); set(handles.left,'value',0);
