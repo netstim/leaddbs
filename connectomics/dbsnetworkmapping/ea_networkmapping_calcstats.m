@@ -6,7 +6,8 @@ else % used in permutation based statistics - in this case the real improvement 
     I=Iperm;
 end
 
-AllX = (obj.results.(ea_conn2connid(obj.connectome)).connval);
+AllX = ea_get_AllX(obj);
+
 
 % quickly recalc stats:
 if ~exist('patsel','var') % patsel can be supplied directly (in this case, obj.patientselection is ignored), e.g. for cross-validations.
@@ -113,3 +114,23 @@ switch lower(obj.multcompstrategy)
 end
 ps(~nnanidx)=1;
 vals(ps>obj.alphalevel)=nan; % delete everything nonsignificant.
+
+
+function AllX=ea_get_AllX(obj)
+addchar='';
+if obj.smooth_fp
+    addchar=[addchar,'s'];
+end
+if obj.normalize_fp
+    addchar=[addchar,'k'];
+end
+if isempty(addchar) % no s, no k
+        AllX=obj.results.(ea_conn2connid(obj.connectome)).connval;
+return
+end
+try
+    AllX=obj.results.(ea_conn2connid(obj.connectome)).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval;
+catch
+    [AllX] = ea_networkmapping_recalcvals_sk(obj,addchar);
+    obj.results.(ea_conn2connid(obj.connectome)).(ea_conn2connid(lower(obj.cvmask))).(addchar).connval=AllX;
+end

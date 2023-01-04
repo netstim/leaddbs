@@ -14,7 +14,8 @@ classdef ea_networkmapping < handle
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
         posBaseColor = [1,1,1] % positive main color
         posPeakColor = [0.9176,0.2000,0.1373] % positive peak color
-
+        smooth_fp = 0; % run smoothing
+        normalize_fp = 0; % run ea_normal / van Albada method to Gaussianize fingerprints
         negBaseColor = [1,1,1] % negative main color
         negPeakColor = [0.2824,0.6157,0.9725] % negative peak color
         showsignificantonly = 0
@@ -109,7 +110,6 @@ classdef ea_networkmapping < handle
                     end
                 end
                 clear D
-                keyboard
             else
                 ea_error('You have opened a file of unknown type.')
                 return
@@ -344,17 +344,17 @@ classdef ea_networkmapping < handle
                         end
                     end
                 end
-
+                usemask=ea_getobjmask(obj,vals{1});
                 switch lower(obj.basepredictionon)
                     case 'spatial correlations (spearman)'
-                        Ihat(test) = corr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
-                            connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))','rows','pairwise','type','Spearman');
+                        Ihat(test) = corr(vals{1}(usemask)',...
+                            connval(patientsel(test),usemask)','rows','pairwise','type','Spearman');
                     case 'spatial correlations (pearson)'
-                        Ihat(test) = corr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
-                            connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))','rows','pairwise','type','Pearson');
+                        Ihat(test) = corr(vals{1}(usemask)',...
+                            connval(patientsel(test),usemask)','rows','pairwise','type','Pearson');
                     case 'spatial correlations (bend)'
-                        Ihat(test) = ea_bendcorr(vals{1}(ea_getmask(ea_mask2maskn(obj)))',...
-                            connval(patientsel(test),ea_getmask(ea_mask2maskn(obj)))');
+                        Ihat(test) = ea_bendcorr(vals{1}(usemask)',...
+                            connval(patientsel(test),usemask)');
                 end
             end
 
@@ -375,56 +375,8 @@ classdef ea_networkmapping < handle
                 Ihat = ea_nanmean(Ihat,2); % compare bodyscores (patient wise)
             end
         end
-
-        function maskn=ea_mask2maskn(obj)
-            switch obj.cvmask
-                case 'Gray Matter'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='gray';
-                        case '111'
-                            maskn='gray_hd';
-                        case '555'
-                            maskn='gray_5';
-                    end
-                case 'Brain'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='brain';
-                        case '111'
-                            maskn='brain_hd';
-                        case '555'
-                            maskn='brain_5';
-                    end
-                case 'Cortex & Cerebellum'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='cortexcb';
-                        case '111'
-                            maskn='cortexcb_hd';
-                        case '555'
-                            ea_error('Cortex & Cerebellum Mask not supported for 0.5 mm resolution space');
-                    end
-                case 'Cortex'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='cortex';
-                        case '111'
-                            maskn='cortex_hd';
-                        case '555'
-                            maskn='cortex_5';
-                    end
-                case 'Cerebellum'
-                    switch obj.outputspace
-                        case '222'
-                            maskn='cb';
-                        case '111'
-                            maskn='cb_hd';
-                        case '555'
-                            ea_error('Cerebellum Mask not supported for 0.5 mm resolution space');
-                    end
-            end
-        end
+        
+        
 
         function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
             if ~exist('corrType', 'var')
