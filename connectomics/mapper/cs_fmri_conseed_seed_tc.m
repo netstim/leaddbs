@@ -108,7 +108,7 @@ for s=1:size(sfile,1)
             seed{s,lr}.fname=oseedfname; % restore original filename if even unneccessary at present.
         end
 
-        [~,seedfn{s,lr}]=fileparts(sfile{s,lr});
+        [~, seedfn{s,lr}]=fileparts(sfile{s,lr});
         if dealingwithsurface
             sweights=seed{s,lr}.img(:);
         else
@@ -148,7 +148,6 @@ if exist('options','var')
 end
 
 disp([num2str(numseed),' seeds, command = ',cmd,'.']);
-
 
 pixdim=length(dataset.vol.outidx);
 
@@ -412,79 +411,86 @@ for s=1:size(seedfn,1) % subtract 1 in case of pmap command
     % export T
     try
         [~,~,~,tstat]=ttest(fX{s}');
-    catch
-        warning(strcat(seedfn{s}, ' failed. Please run this channel again and adjust parameters. Moving on to next channel.'));
-        continue
-    end
-    tmap=dataset.vol.space;
-    tmap.img(:)=0;
-    tmap.dt(1) = 16;
-    tmap.img=single(tmap.img);
-    tmap.img(omaskidx)=tstat.tstat;
+        tmap=dataset.vol.space;
+        tmap.img(:)=0;
+        tmap.dt(1) = 16;
+        tmap.img=single(tmap.img);
+        tmap.img(omaskidx)=tstat.tstat;
 
-    if ~isempty(outputfolder)
-        tmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-T_funcmap.nii']);
-    else
-        if ~isBIDSFileName(sfile{s})
-            tmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-T_funcmap.nii']);
+        if ~isempty(outputfolder)
+            tmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_desc-T_funcmap.nii']);
         else
-            tmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'T', 'suffix', 'funcmap');
+            if ~isBIDSFileName(sfile{s})
+                tmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_desc-T_funcmap.nii']);
+            else
+                tmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'desc', 'T', 'suffix', 'funcmap');
+            end
         end
-    end
 
-    spm_write_vol(tmap,tmap.img);
-    if usegzip
-        gzip(tmap.fname);
-        delete(tmap.fname);
+        spm_write_vol(tmap,tmap.img);
+        if usegzip
+            gzip(tmap.fname);
+            delete(tmap.fname);
+        end
+    catch
+        ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map for seed:\n%s\n', sfile{s});
     end
 
     if isfield(dataset,'surf') && prefs.lcm.includesurf
-        % lh surf
-        [~,~,~,ltstat]=ttest(lhfX{s}');
-        lmmap=dataset.surf.l.space;
-        lmmap.dt(1) = 16;
-        lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
-        lmmap.img=single(lmmap.img);
-        lmmap.img(:)=ltstat.tstat(:);
+        try
+            % lh surf
+            [~,~,~,ltstat]=ttest(lhfX{s}');
+            lmmap=dataset.surf.l.space;
+            lmmap.dt(1) = 16;
+            lmmap.img=zeros([size(lmmap.img,1),size(lmmap.img,2),size(lmmap.img,3)]);
+            lmmap.img=single(lmmap.img);
+            lmmap.img(:)=ltstat.tstat(:);
 
-        if ~isempty(outputfolder)
-            lmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-L_desc-T_funcmapsurf.nii']);
-        else
-            if ~isBIDSFileName(sfile{s})
-                lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-T_funcmapsurf.nii']);
+            if ~isempty(outputfolder)
+                lmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-L_desc-T_funcmapsurf.nii']);
             else
-                lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'T', 'suffix', 'funcmapsurf');
+                if ~isBIDSFileName(sfile{s})
+                    lmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-L_desc-T_funcmapsurf.nii']);
+                else
+                    lmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'L', 'desc', 'T', 'suffix', 'funcmapsurf');
+                end
             end
+
+            ea_write_nii(lmmap);
+            if usegzip
+                gzip(lmmap.fname);
+                delete(lmmap.fname);
+            end
+        catch
+            ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map (lh surf) for seed:\n%s\n', sfile{s});
         end
 
-        ea_write_nii(lmmap);
-        if usegzip
-            gzip(lmmap.fname);
-            delete(lmmap.fname);
-        end
+        try
+            % rh surf
+            [~,~,~,rtstat]=ttest(rhfX{s}');
+            rmmap=dataset.surf.r.space;
+            rmmap.dt(1) = 16;
+            rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
+            rmmap.img=single(rmmap.img);
+            rmmap.img(:)=rtstat.tstat(:);
 
-        % rh surf
-        [~,~,~,rtstat]=ttest(rhfX{s}');
-        rmmap=dataset.surf.r.space;
-        rmmap.dt(1) = 16;
-        rmmap.img=zeros([size(rmmap.img,1),size(rmmap.img,2),size(rmmap.img,3)]);
-        rmmap.img=single(rmmap.img);
-        rmmap.img(:)=rtstat.tstat(:);
-
-        if ~isempty(outputfolder)
-            rmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-R_desc-T_funcmapsurf.nii']);
-        else
-            if ~isBIDSFileName(sfile{s})
-                rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-T_funcmapsurf.nii']);
+            if ~isempty(outputfolder)
+                rmmap.fname = fullfile(outputfolder, [seedfn{s}, '_conn-', connLabel, '_hemi-R_desc-T_funcmapsurf.nii']);
             else
-                rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'T', 'suffix', 'funcmapsurf');
+                if ~isBIDSFileName(sfile{s})
+                    rmmap.fname = strrep(sfile{s}, '.nii', ['_conn-', connLabel, '_hemi-R_desc-T_funcmapsurf.nii']);
+                else
+                    rmmap.fname = setBIDSEntity(sfile{s}, 'conn', connLabel, 'hemi', 'R', 'desc', 'T', 'suffix', 'funcmapsurf');
+                end
             end
-        end
 
-        ea_write_nii(rmmap);
-        if usegzip
-            gzip(rmmap.fname);
-            delete(rmmap.fname);
+            ea_write_nii(rmmap);
+            if usegzip
+                gzip(rmmap.fname);
+                delete(rmmap.fname);
+            end
+        catch
+            ea_cprintf('CmdWinWarnings', 'Failed to run connectivity map (rh surf) for seed:\n%s\n', sfile{s});
         end
     end
 end
