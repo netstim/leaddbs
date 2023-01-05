@@ -17,12 +17,14 @@ dmachine = load([ea_getearoot, 'common', filesep, 'ea_prefs_default.mat']);
 
 % check user prefs
 home = ea_gethome;
-try
-    eval(strcat(dprefs.d3.roi.defaultcolormap,';'))
-catch
-    error(strcat('Error in ea_prefs_default.m    prefs.d3.roi.defaultcolormap    ',prefs.d3.roi.defaultcolormap,'   is not a real colormap. See help graph3d for options.'))
-end
 
+% Check default auto colormap setting
+try
+    eval([dprefs.d3.roi.defaultcolormap, ';'])
+catch
+    ea_cprintf('CmdWinWarnings', 'Default auto colormap was not set properly, fallback to ''turbo'' now.\n');
+    ea_setprefs('d3.roi.defaultcolormap', 'turbo', 'user');
+end
 
 % if isdeployed
 %     disp(['Running Lead-DBS in compiled mode, CTFROOT=', ea_getearoot, '; HOME=', home, '.']);
