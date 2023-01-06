@@ -74,7 +74,6 @@ classdef ea_disctract < handle
         leadgroup % redundancy protocol only, path to original lead group project
         connectome % redundancy protocol only, name of underlying connectome
         colorbar % colorbar information
-        groupcolors = ea_color_wes('all');
         useExternalModel = false
         ExternalModelFile = 'None'
         % stats: (how many fibers available and shown etc for GUI)
@@ -1088,8 +1087,7 @@ classdef ea_disctract < handle
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
             end
 
-                ea_discfibers_showroi(obj);
-
+            ea_discfibers_showroi(obj);
 
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
@@ -1102,7 +1100,7 @@ classdef ea_disctract < handle
             if ~isempty(obj.connfiberdrawn)
                 for side=1:size(obj.connfiberdrawn.fibcell,2)
                     try
-                    delete(obj.conndrawobject{side});
+                        delete(obj.conndrawobject{side});
                     end
                 end
             end
@@ -1222,6 +1220,7 @@ classdef ea_disctract < handle
                 obj.M.groups.group=1;
                 obj.M.groups.color=ea_color_wes('all');
             end
+
             switch obj.multitractmode
                 case 'Split & Color By Group'
                     linecols=obj.M.groups.color;
@@ -1229,8 +1228,8 @@ classdef ea_disctract < handle
                     linecols = obj.subscore.colors;
                 case 'Split & Color By PCA'
                     linecols = obj.subscore.pcacolors;
-
             end
+
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
             end
