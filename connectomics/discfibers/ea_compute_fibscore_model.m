@@ -137,7 +137,7 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
 
             if ~isempty(vals{voter,side})
                 switch obj.statmetric % also differentiate between methods in the prediction part.
-                    case {1,3,4,6} % ttests / OSS-DBS / reverse t-tests
+                    case {1,3,4,5} % VTAs
                         switch lower(obj.basepredictionon)
                             case 'mean of scores'
                                 if lateral_score == false
@@ -267,10 +267,9 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
                                     end
                                 end
                         end
-                    case {2,5} % efields
+                    case {2,6} % efields
                         switch lower(obj.basepredictionon)
                             case 'profile of scores: spearman'
-
                                 if lateral_score == false
                                     Ihat_all = corr(vals_flat,fibsval_usedidx_flat,'rows','pairwise','type','spearman');
                                     Ihat(test,1, voter) = Ihat_all(test);

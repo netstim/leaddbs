@@ -163,7 +163,6 @@ for group=groups
                     sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
                 case {2,6}
                     sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
-                case 7 % dealt w above
             end
         end
         % remove fibers that are not connected to enough VTAs/Efields or connected
@@ -183,7 +182,6 @@ for group=groups
             pvals{group,side}=vals{group,side};
         end
         if obj.runwhite || obj.statmetric == 7 % plain connections
-
             vals{group,side} = sumgfibsval/length(gpatsel);
        
             if ~obj.runwhite % the white fibers will always show connection to any single vta/roi.
@@ -191,6 +189,7 @@ for group=groups
             else
                 vals{group,side}(vals{group,side}==0)=nan;
             end
+
             if (obj.statmetric == 7) && obj.showsignificantonly
                 ea_error('Calculating significance does not make sense (plain connections mode)');
             end

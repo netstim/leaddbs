@@ -5,18 +5,18 @@ end
 switch obj.connectivity_type
     case 2 % PAM
         switch obj.statmetric
-            case {1,3,4}  % both refer to T-test atm
+            case {1,3,4,5}  % both refer to T-test atm
                 id = 'PAM_Ttest'; 
-            case 6
+            case 7
                 id = 'plainconn';
             otherwise
                 disp('The metric is not supported by PAM')
         end
-    otherwise % E-field based
+    otherwise
         switch obj.statmetric
-            case {1,3,4}
+            case {1,3,4,5}  % VTAs
                 id = 'VAT_Ttest';
-            case {2,5}
+            case {2,6}  % E-fields
                 id='spearman';
                 switch efm
                     case 'Mean'
@@ -28,7 +28,7 @@ switch obj.connectivity_type
                     case 'Peak 5%'
                         id=[id,'_5peak'];
                 end
-            case 6 % do we even need an extra results entry for these?
+            case 7 % do we even need an extra results entry for these?
                 id = 'plainconn';
         end
 end
