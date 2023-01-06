@@ -1240,7 +1240,8 @@ classdef ea_disctract < handle
                     delete(obj.drawobject{tract});
                 end
             end
-           if strcmp(obj.multitractmode,'Single Tract Analysis') || obj.subscore.special_case
+
+            if strcmp(obj.multitractmode,'Single Tract Analysis') || obj.subscore.special_case
                 % reset colorbar
                 obj.colorbar=[];
                 if ~any([obj.posvisible,obj.negvisible])
@@ -1270,7 +1271,7 @@ classdef ea_disctract < handle
                 allvals = full(vertcat(vals{group,:}));
 
                 if isempty(allvals) || all(isnan(allvals))
-                    ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!\n');
+                    % ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!\n');
                     continue;
                 else
                     allvals(isnan(allvals)) = 0;
