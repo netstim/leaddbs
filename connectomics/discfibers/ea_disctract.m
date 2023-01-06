@@ -15,7 +15,7 @@ classdef ea_disctract < handle
         shownegamount = [25 25] % two entries for right and left
         connthreshold = 20
         efieldthreshold = 200
-        statmetric = 1 % stats metric to use, 1 = ttest, 2 = correlations, 3 = vacant (OSS DBS pathway activations), 4 = Dice Coeff / VTAs for binary variables, 5 = reverse t-tests & e-fields for binary variables, 6 = show plain connections (no stats)
+        statmetric = 1 % stats metric to use, 1 = t-test, 2 = correlations, 3 = PAM, 4 = proportion Test (Chi-Square) / VTAs (binary vars) 5 = binomial Tests / VTAs (binary vars), 6 = reverse t-tests with efields for binary variables, 7 = plain connections (no stats)
         threshstrategy = 'Percentage Relative to Peak'; % can be 'Relative to Amount' or 'Fixed Amount'
         multi_pathways = 0 % if structural connectome is devided into pathways (multiple .mat in dMRI_MultiTract)
         map_list % list that contains global indices of the first fibers in each pathway (relevant when multi_pathways = 1)

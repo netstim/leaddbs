@@ -1,4 +1,4 @@
-function ea_discfibers_collectroi(obj)
+function ea_discfibers_roi_collect(obj)
 % subroutine to load in rois and create an N-image for Lead-DBS
 % fiberfiltering projects.
 
