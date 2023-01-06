@@ -5,18 +5,17 @@ function ea_discfibers_showroi(obj)
 
 
 if ~obj.roivisible
-    if isempty(obj.roidata)
-        try ea_discfibers_roi_collect(obj); end
-    end
-    try
-    for side=1:length(obj.roidata.nimage)
-        try delete(obj.roidrawobject{side}.toggleH); end
-        try delete(obj.roidrawobject{side}); end
-    end
+    if ~isempty(obj.roidata)
+        try
+            for side=1:length(obj.roidata.nimage)
+                try delete(obj.roidrawobject{side}.toggleH); end
+                try delete(obj.roidrawobject{side}); end
+            end
+        end
     end
     obj.roiprotocol.drawn=0;
     return
-end    
+end
 if ea_ddf_sr_need_redraw(obj)
     prefs=ea_prefs;
     if ea_ddf_sr_need_recalcN(obj)

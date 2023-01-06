@@ -590,7 +590,7 @@ npts=length(uipatdirs);
 if options.prefs.env.dev && get(handles.mercheck,'Value')
     filename=fullfile(options.root,options.patientname,'ea_groupvisdata.mat');
     if exist(filename,'file')
-       choice = ea_questdlg(sprintf('Group Data Found. Would you like to load %s now?',filename),...
+       choice = questdlg(sprintf('Group Data Found. Would you like to load %s now?',filename),...
            'Yes','No');
     end
 

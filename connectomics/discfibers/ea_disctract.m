@@ -365,25 +365,32 @@ classdef ea_disctract < handle
             [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
         end
 
-        function [I, Ihat] = kfoldcv(obj)
+        function [I, Ihat] = kfoldcv(obj,silent)
+            if ~exist('silent','var')
+                silent=0;
+            end
             I_iter = {};
             Ihat_iter = {};
             rng(obj.rngseed);
             iter = obj.kIter;
             if iter == 1
                 cvp = cvpartition(length(obj.patientselection),'KFold',obj.kfold);
-                [I,Ihat] = crossval(obj,cvp);
+                [I,Ihat] = crossval(obj,cvp,[],0,silent);
             else
                 % plot some statistics over shuffles
                 r_over_iter = zeros(iter,1);
                 p_over_iter = zeros(iter,1);
                 for i=1:iter
                     cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
-                    fprintf("Iterating fold set: %d",i)
+                    if ~silent
+                        fprintf("Iterating fold set: %d",i)
+                    end
                     [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp, [], 1);
                     switch obj.multitractmode
                         case 'Split & Color By PCA'
-                            disp("Fold Agreement is not evaluated for PCA")
+                            if ~silent
+                                disp("Fold Agreement is not evaluated for PCA")
+                            end
                         otherwise
                             inx_nnan = find(isnan(I_iter{i}) ~= 1);
                             [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i}(inx_nnan),Ihat_iter{i}(inx_nnan),'spearman');
@@ -394,7 +401,9 @@ classdef ea_disctract < handle
                 % disabled for PCA
                 switch obj.multitractmode
                     case 'Split & Color By PCA'
-                        disp("Fold Agreement is not evaluated for PCA")
+                        if ~silent
+                            disp("Fold Agreement is not evaluated for PCA")
+                        end
                     otherwise
                         r_Ihat = zeros(size(Ihat_iter,2));
                         for i = 1:size(r_Ihat,1)
@@ -402,38 +411,39 @@ classdef ea_disctract < handle
                                 [r_Ihat(i,j),~]=ea_permcorr(Ihat_iter{i},Ihat_iter{j},'spearman');
                             end
                         end
-        
-                        % plot correlation matrix 
-                        figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
-                        imagesc(triu(r_Ihat)); 
-                        title('Patient scores'' correlations over K-fold shuffles', 'FontSize', 16); % set title
-                        colormap('bone');
-                        cb = colorbar;
-                        set(cb)
-                             
-                        % plot r-vals over shuffles
-                        p_above_05 = p_over_iter(find(p_over_iter>0.05),:);
-                        p_above_01 = p_over_iter(find(p_over_iter>0.01),:);
-                        h = figure('Name','Over-fold analysis','Color','w','NumberTitle','off');
-                        g = ea_raincloud_plot(r_over_iter,'box_on',1);
-                        a1=gca;
-                        set(a1,'ytick',[])
-                        a1.XLabel.String='Spearman''s R of model and clinical scores';
-        
-                        if min(r_over_iter) >= -0.9
-                            r_lower_lim = min(r_over_iter) - 0.1;
-                        else
-                            r_lower_lim = -1.0;
+                        if ~silent
+                            % plot correlation matrix
+                            figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
+                            imagesc(triu(r_Ihat));
+                            title('Patient scores'' correlations over K-fold shuffles', 'FontSize', 16); % set title
+                            colormap('bone');
+                            cb = colorbar;
+                            set(cb)
+
+                            % plot r-vals over shuffles
+                            p_above_05 = p_over_iter(find(p_over_iter>0.05),:);
+                            p_above_01 = p_over_iter(find(p_over_iter>0.01),:);
+                            h = figure('Name','Over-fold analysis','Color','w','NumberTitle','off');
+                            g = ea_raincloud_plot(r_over_iter,'box_on',1);
+                            a1=gca;
+                            set(a1,'ytick',[])
+                            a1.XLabel.String='Spearman''s R of model and clinical scores';
+
+                            if min(r_over_iter) >= -0.9
+                                r_lower_lim = min(r_over_iter) - 0.1;
+                            else
+                                r_lower_lim = -1.0;
+                            end
+                            if max(r_over_iter) <= 0.9
+                                r_upper_lim = max(r_over_iter) + 0.1;
+                            else
+                                r_upper_lim = 1.0;
+                            end
+
+                            a1.XLim=([r_lower_lim r_upper_lim]);
+                            text(0.25,0.9,['N(p>0.05) = ',sprintf('%0.2f',length(p_above_05))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
+                            text(0.25,0.83,['N(p>0.01) = ',sprintf('%0.2f',length(p_above_01))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
                         end
-                        if max(r_over_iter) <= 0.9
-                            r_upper_lim = max(r_over_iter) + 0.1;
-                        else
-                            r_upper_lim = 1.0;
-                        end
-        
-                        a1.XLim=([r_lower_lim r_upper_lim]);  
-                        text(0.25,0.9,['N(p>0.05) = ',sprintf('%0.2f',length(p_above_05))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized'); 
-                        text(0.25,0.83,['N(p>0.01) = ',sprintf('%0.2f',length(p_above_01))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
                 end
 
                 % we should think about this part
@@ -454,7 +464,7 @@ classdef ea_disctract < handle
             end
         end
 
-        function [Improvement, Ihat, actualimprovs] = crossval(obj, cvp, Iperm, shuffle)
+        function [Improvement, Ihat, actualimprovs] = crossval(obj, cvp, Iperm, shuffle, silent)
             if isnumeric(cvp) % cvp is crossvalind
                 cvIndices = cvp;
                 cvID = unique(cvIndices);
@@ -533,7 +543,9 @@ classdef ea_disctract < handle
             obj.adj_scaler = 0.0;
             for c=1:cvp.NumTestSets
                 if cvp.NumTestSets ~= 1
-                    fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
+                    if ~silent
+                        fprintf(['\nIterating set: %0',num2str(numel(num2str(cvp.NumTestSets))),'d/%d\n'], c, cvp.NumTestSets);
+                    end
                 end
 
                 if isobject(cvp)
@@ -800,15 +812,20 @@ classdef ea_disctract < handle
                     % use saved weights to ensure consistency
                     coeff = obj.subscore.pcacoeff; 
 
-                    % show predictions for PC scores 
-                    if ~exist('Iperm', 'var') || isempty(Iperm) % avoid plotting for each permutation if using permutations!
-                        for pcc=1:obj.numpcs
-                            if obj.subscore.posvisible(pcc)==1 || obj.subscore.negvisible(pcc)==1 % don't try to plot if not showing any fibers for this PC
-                                ea_corrplot(obj.subscore.pcavars{pcc}(patientsel),Ihat(:,pcc), 'noperm', ...
-                                {['Disc. Fiber prediction for PC ',num2str(pcc)],'PC score (Empirical)','PC score (Predicted)'},...
-                                [], [], obj.subscore.pcacolors(pcc, :));
-                            % sum(obj.subscore.pcavars{pcc}(obj.patientselection) - score(:,pcc)) % quick check
-                            end 
+                    if ~exist('silent','var')
+                        silent=0;
+                    end
+                    if ~silent
+                        % show predictions for PC scores
+                        if ~exist('Iperm', 'var') || isempty(Iperm) % avoid plotting for each permutation if using permutations!
+                            for pcc=1:obj.numpcs
+                                if obj.subscore.posvisible(pcc)==1 || obj.subscore.negvisible(pcc)==1 % don't try to plot if not showing any fibers for this PC
+                                    ea_corrplot(obj.subscore.pcavars{pcc}(patientsel),Ihat(:,pcc), 'noperm', ...
+                                        {['Disc. Fiber prediction for PC ',num2str(pcc)],'PC score (Empirical)','PC score (Predicted)'},...
+                                        [], [], obj.subscore.pcacolors(pcc, :));
+                                    % sum(obj.subscore.pcavars{pcc}(obj.patientselection) - score(:,pcc)) % quick check
+                                end
+                            end
                         end
                     end
 
