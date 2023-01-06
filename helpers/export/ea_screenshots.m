@@ -17,6 +17,23 @@ options.d3.hlactivecontacts=0;
 options.d3.writeatlases=1;
 options.d3.showisovolume=0;
 viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']);
+if target=="VIM"
+    viewsets.VIM.atlas='Essential Tremor Hypointensity (Neudorfer 2022)';
+    viewsets.VIM.views(1).structures={'VIM','DRTT','Hypointensity'};
+    viewsets.VIM.views(2).structures={'VIM','DRTT','Hypointensity'};
+    viewsets.VIM.views(3).structures={'VIM','DRTT','Hypointensity'};
+    viewsets.VIM.views(4).structures={'VIM','DRTT','Hypointensity'};
+elseif target=="GPi"
+    viewsets.GPi.views(1).structures={'GPi'};
+    viewsets.GPi.views(2).structures={'GPi'};
+    viewsets.GPi.views(3).structures={'GPi'};
+    viewsets.GPi.views(4).structures={'GPi'};
+elseif target=="STN"
+    viewsets.STN.views(1).structures={'STN'};
+    viewsets.STN.views(2).structures={'STN'};
+    viewsets.STN.views(3).structures={'STN'};
+    viewsets.STN.views(4).structures={'STN'};
+end
 options.atlasset=viewsets.(target).atlas;
 options.sidecolor=1;
 options.writeoutstats=0;
@@ -28,9 +45,19 @@ if ~exist(fullfile(options.subj.subjDir, 'export', 'views'),'dir')
 end
 
 views=viewsets.(target).views;
+for hh=1:length(views)
+    views(hh).v.camva=0.7; %changing zoom
+end 
+
+
 for view=1:length(views)
     set(0,'CurrentFigure',resultfig);
-    ea_keepatlaslabels( views(view).structures{:});
+    if target=="VIM"
+        ea_keepatlaslabels(views(view).structures{1,2:3});
+        ea_meshatlaslabels(views(view).structures{1,1});
+    else 
+        ea_keepatlaslabels(views(view).structures{:});
+    end
     set(0,'CurrentFigure',resultfig);
     ea_setplanes(views(view).planes.x,views(view).planes.y,views(view).planes.z);
     set(0,'CurrentFigure',resultfig);
