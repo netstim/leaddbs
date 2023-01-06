@@ -5,7 +5,13 @@ if ~exist('reference', 'var') || isempty(reference)
     reference = [ea_space, 't1.nii'];
 end
 
+% 'prefix' can be empty to overwrite the input image,
+% or a prefix to prefix to input image (like in SPM, default is 'r'),
+% or the real path of the desired output image.
 if ~exist('prefix', 'var')
+    prefix = 'r';
+elseif endsWith(prefix, {'.nii', '.nii.gz'}) % 'prefix' is the real path of the output image
+    outputImage = prefix;
     prefix = 'r';
 end
 
@@ -70,6 +76,24 @@ clear matlabbatch
 
 if nargout == 1
     nii = ea_load_nii([fileparts(fpath), filesep, prefix, fname, '.nii']);
+end
+
+if exist('outputImage', 'var')
+    if endsWith(outputImage, '.nii')
+        movefile([fileparts(fpath), filesep, prefix, fname, '.nii'], outputImage);
+    elseif endsWith(outputImage, '.nii.gz')
+        outputImage = regexprep(outputImage, '\.nii\.gz$', '\.nii');
+        movefile([fileparts(fpath), filesep, prefix, fname, '.nii'], outputImage);
+        gzip(outputImage);
+        delete(outputImage);
+    end
+else
+    outputImage = [fileparts(fpath), filesep, prefix, fname, '.nii'];
+    if gzinput
+        gzip(outputImage);
+    else
+        delete(outputImage);
+    end
 end
 
 if gzinput
