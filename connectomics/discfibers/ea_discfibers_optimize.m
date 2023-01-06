@@ -86,27 +86,27 @@ ip=augmentips(ip);
 options=optimoptions('surrogateopt',...
     'MaxFunctionEvaluations',240,...
     'ObjectiveLimit',-0.95,... % optimal solution with average correlations of R~0.95 (rare to happen)
-    'UseParallel',false,...
+    'UseParallel',true,...
     'InitialPoints',ip,...
-    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
     'PlotFcn','surrogateoptplot',... 
     'Display','iter');
+%    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
 
 % Solve problem
 objconstr=@(x)struct('Fval',nestedfun(x));
-if exist(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),'file')
-    choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file?','Resume optimization?','Yes','Start from scratch','Yes');
-    switch choice
-        case 'Start from scratch'
-            [XOptim,fval,exitflag,output]=surrogateopt(objconstr,lb,ub,find(intcon),options);
-        case 'Yes'
-            keyboard
-            [XOptim,fval,exitflag,output]=surrogateopt(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),options);
-    end
-else
-    [XOptim,fval,exitflag,output]=surrogateopt(objconstr,lb,ub,find(intcon),options);
-end
+% if exist(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),'file')
+%     choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file?','Resume optimization?','Yes','Start from scratch','Yes');
+%     switch choice
+%         case 'Start from scratch'
+%             [XOptim,fval,exitflag,output]=surrogateopt(objconstr,lb,ub,find(intcon),options);
+%         case 'Yes'
+%             keyboard
+%             [XOptim,fval,exitflag,output]=surrogateopt(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),options);
+%     end
+% else
+     [XOptim,fval,exitflag,output]=surrogateopt(objconstr,lb,ub,find(intcon),options);
+% end
 
 
 % resolve integer vars:
