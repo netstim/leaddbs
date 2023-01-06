@@ -1,4 +1,4 @@
-function nii = ea_imcalc(input, reference, prefix, interp, expr)
+function nii = ea_imcalc(input, reference, prefix, interp, expr, maskFlag)
 % warpper of SPM ImCalc
 
 if ~exist('reference', 'var') || isempty(reference)
@@ -15,6 +15,19 @@ end
 
 if ~exist('expr', 'var')
     expr = 'i2';
+end
+
+if contains(expr, 'X')  % X
+    dmtxFlag = 1;
+else   % i1, i2, i3, ...
+    dmtxFlag = 0;
+end
+
+if ~exist('maskFlag', 'var')
+    % 0:  non implicit zero mask
+    % 1:  implicit zero mask
+    % -1: NaNs should be zeroed
+    maskFlag = 0;
 end
 
 if strcmp(input(end-2:end),'.gz')
@@ -47,8 +60,8 @@ matlabbatch{1}.spm.util.imcalc.output = [prefix, fname];
 matlabbatch{1}.spm.util.imcalc.outdir = {fileparts(fpath)};
 matlabbatch{1}.spm.util.imcalc.expression = expr;
 matlabbatch{1}.spm.util.imcalc.var = struct('name', {}, 'value', {});
-matlabbatch{1}.spm.util.imcalc.options.dmtx = 0;
-matlabbatch{1}.spm.util.imcalc.options.mask = 0;
+matlabbatch{1}.spm.util.imcalc.options.dmtx = dmtxFlag;
+matlabbatch{1}.spm.util.imcalc.options.mask = maskFlag;
 matlabbatch{1}.spm.util.imcalc.options.interp = interp;
 matlabbatch{1}.spm.util.imcalc.options.dtype = 4;
 
