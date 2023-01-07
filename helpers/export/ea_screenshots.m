@@ -46,7 +46,7 @@ end
 
 views=viewsets.(target).views;
 for hh=1:length(views)
-    views(hh).v.camva=0.7; %changing zoom
+    views(hh).v.camva=0.83; %changing zoom
 end 
 
 
