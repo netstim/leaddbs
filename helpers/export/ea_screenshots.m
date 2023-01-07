@@ -63,6 +63,9 @@ for view=1:length(views)
     set(0,'CurrentFigure',resultfig);
     ea_view(views(view).v,resultfig);
     set(0,'CurrentFigure',resultfig);
-    ea_screenshot(fullfile(options.subj.subjDir, 'export', 'views', ['view_',sprintf('%03.0f',view),'.png']),'ld', resultfig);
+    png_path=fullfile(options.subj.subjDir, 'export', 'views', ['view_',sprintf('%03.0f',view),'.png']);
+    ea_screenshot(png_path,,'ld', resultfig);
+    J = imresize(imread(png_path),0.3,"triangle");
+    imwrite(J,png_path);
 end
 close(resultfig);
