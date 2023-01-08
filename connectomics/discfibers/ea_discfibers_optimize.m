@@ -23,16 +23,21 @@ function [tractset]=ea_discfibers_optimize(tractset,app)
 % Evaluated points — All points at which the objective function value is known. These points include initial points, Construct Surrogate points, and Search for Minimum points at which the solver evaluates the objective function.
 % Sample points. Pseudorandom points where the solver evaluates the merit function during the Search for Minimum phase. These points are not points at which the solver evaluates the objective function, except as described in Search for Minimum Details.
 
+toolboxes_installed=ver;
+if ~ismember('Global Optimization Toolbox',{toolboxes_installed.Name})
+    ea_error('You need to install the Matlab Global Optimization Toolbox to use this functionality');
+end
 
+useparallel=0;
 
 warning off
-ks=[2,7]; %[2,7,10];
+ks=[7,10]; %[2,7,10];
 tractset.kIter=1; % make sure to run only 1 iteration.
 
 % lower bounds for list of vars to optimize:
 params=[1,  3,      1,  resolve_threshstrategy(tractset.threshstrategy)         % threshstrategy
     1,  3,      1,  resolve_corrtype(tractset.corrtype)                     % corrtype
-    1,  5,      1,  resolve_efieldmetric(tractset.efieldmetric)             % efieldmetric
+    1,  4,      1,  resolve_efieldmetric(tractset.efieldmetric)             % efieldmetric
     1,  7,      1,  resolve_basepredictionon(tractset.basepredictionon)     % basepredictionon
     0,  100,    0,  mean(tractset.showposamount)                            % showposamount % will be multiplied by 10 for fixed amount
     0,  100,    0,  mean(tractset.shownegamount)                            % shownegamount % will be multiplied by 10 for fixed amount
@@ -85,12 +90,19 @@ ip=augmentips(ip);
 
 options=optimoptions('surrogateopt',...
     'MaxFunctionEvaluations',240,...
-    'ObjectiveLimit',-0.95,... % optimal solution with average correlations of R~0.95 (rare to happen)
-    'UseParallel',true,...
+    'ObjectiveLimit',0.02,... % optimal solution with average correlations of R~0.95 (rare to happen), lowest theoretical point is zero with an R of 1
     'InitialPoints',ip,...
     'PlotFcn','surrogateoptplot',... 
     'Display','iter');
 %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
+
+% check for parallel processing toolbox
+
+
+if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
+    options.UseParallel=true;
+    parpool('Processes',2);
+end
 
 
 % Solve problem
@@ -109,26 +121,30 @@ objconstr=@(x)struct('Fval',nestedfun(x));
 % end
 
 
-% resolve integer vars:
-tractset.threshstrategy=resolve_threshstrategy(XOptim(1));
-tractset.corrtype=resolve_corrtype(XOptim(2));
-tractset.efieldmetric=resolve_efieldmetric(XOptim(3));
-tractset.basepredictionon=resolve_basepredictionon(XOptim(4));
-
-tractset.showposamount=repmat(XOptim(5),1,2);
-tractset.shownegamount=repmat(XOptim(6),1,2);
-tractset.connthreshold=XOptim(7);
-tractset.efieldthreshold=XOptim(8);
+tractset=updatetractset(tractset,XOptim);
 
 disp(['Optimal solution: Average R = ',num2str(fval),'.']);
 warning on
-keyboard
 
+if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
+    poolobj = gcp('nocreate'); delete(poolobj);
+end
 
+tractset.save;
 
 % Nested function that computes the objective function
     function Fval = nestedfun(X)
 
+       tractset=updatetractset(tractset,X);
+
+        if exist('app','var') % could be cool to update the state of the app GUI live.
+            %updateapp(app,X);
+        end
+
+        Fval=getR(tractset);
+    end
+
+    function tractset=updatetractset(tractset,X)
         % resolve integer vars:
         tractset.threshstrategy=resolve_threshstrategy(X(1));
         tractset.corrtype=resolve_corrtype(X(2));
@@ -159,13 +175,6 @@ keyboard
                 maxval = 5;
         end
         tractset.efieldthreshold=(X(8)+offset)/(offset+1)*maxval;
-
-
-        if exist('app','var') % could be cool to update the state of the app GUI live.
-            %updateapp(app,X);
-        end
-
-        Fval=getR(tractset);
     end
 
     function R=getR(tractset)
@@ -180,9 +189,9 @@ keyboard
                     for entry=1:length(I)
                         Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
                     end
-                    R(k)=-ea_robustmean(Rsub);
+                    R(k)=ea_robustmean(Rsub);
                 else
-                    R(k)=-corr(I,Ihat,'rows','pairwise');
+                    R(k)=corr(I,Ihat,'rows','pairwise');
                 end
             catch
                 R(k)=nan;
@@ -190,8 +199,13 @@ keyboard
         end
         R=ea_robustmean(R);
         if isnan(R) % out of bound settings
-            R=1; % maximal possible value
+            R=-1; % minimal possible value
         end
+
+        % map [-1:1] to a suitable gradient that downweights anything below 0 
+        % (since cross-validations are used):
+        zeropoint=1/(1+exp(5*(1-0.5)));
+        R=(1/(1+exp(5*(R-0.5))))-zeropoint;
     end
 
 
