@@ -31,7 +31,7 @@ end
 useparallel=0;
 
 warning off
-ks=[7,10]; %[2,7,10];
+ks=[1,7,10]; %[2,7,10];
 tractset.kIter=1; % make sure to run only 1 iteration.
 
 % lower bounds for list of vars to optimize:
@@ -81,17 +81,16 @@ ub=params(:,2);
 intcon=params(:,3);
 
 % set up initial points with some good heuristics:
-ip=params(:,4)'; % first initial point is whatever the user tried
+ip.X=params(:,4)'; % first initial point is whatever the user tried
 
-ip=augmentips(ip);
+ip.X=augmentips(ip.X);
 
 %ip=repmat(ip',10,1);
 %ip(2:end,1:4)=ip(2:end,1:4).*(1+(0.1*randn(size(ip(2:end,1:4)))));
 
 options=optimoptions('surrogateopt',...
-    'MaxFunctionEvaluations',240,...
-    'ObjectiveLimit',0.02,... % optimal solution with average correlations of R~0.95 (rare to happen), lowest theoretical point is zero with an R of 1
-    'InitialPoints',ip,...
+    'ObjectiveLimit',-0.9,... % optimal solution with average correlations of R~0.8 (rare to happen), lowest theoretical point is zero with an R of 1
+    'MinSurrogatePoints',120,...
     'PlotFcn','surrogateoptplot',... 
     'Display','iter');
 %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
@@ -107,23 +106,41 @@ end
 
 % Solve problem
 objconstr=@(x)struct('Fval',nestedfun(x));
-% if exist(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),'file')
-%     choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file?','Resume optimization?','Yes','Start from scratch','Yes');
-%     switch choice
-%         case 'Start from scratch'
-%             [XOptim,fval,exitflag,output]=surrogateopt(objconstr,lb,ub,find(intcon),options);
-%         case 'Yes'
-%             keyboard
-%             [XOptim,fval,exitflag,output]=surrogateopt(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),options);
-%     end
-% else
-     [XOptim,fval,exitflag,output]=surrogateopt(objconstr,lb,ub,find(intcon),options);
-% end
+if exist(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),'file')
+    choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file?','Resume optimization?','Yes','Start from scratch','Yes');
+    switch choice
+        case 'Start from scratch'
+        case 'Yes'
+            priorstate=load(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'));
+            ip=priorstate.ip;
+    end
+else
+end
 
-
+choice='y';
+numIters=120;
+while 1
+    switch choice
+        case 'y'
+                options.InitialPoints=ip;
+            if ~exist('numIters','var')
+                numIters = input(sprintf('%s\n\n','Great, let us continue. How many trials do you want to run (enter amount)'),'s');
+                numIters = str2double(numIters);
+            end
+            options.MaxFunctionEvaluations=numIters;
+            [XOptim,fval,exitflag,output,ip]=surrogateopt(objconstr,lb,ub,find(intcon),options);
+            save(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),'ip');
+        otherwise
+            break
+    end
+    choice = input(sprintf('%s\n\n',['Optimal solution: Average R = ',num2str(-fval),'. Do you wish to continue optimizing? (y/n)']),'s');
+    clear numIters
+end
 tractset=updatetractset(tractset,XOptim);
 
-disp(['Optimal solution: Average R = ',num2str(fval),'.']);
+
+
+disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
 warning on
 
 if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
@@ -146,10 +163,17 @@ tractset.save;
 
     function tractset=updatetractset(tractset,X)
         % resolve integer vars:
+        disp('Parameters applied: ');
+
         tractset.threshstrategy=resolve_threshstrategy(X(1));
         tractset.corrtype=resolve_corrtype(X(2));
         tractset.efieldmetric=resolve_efieldmetric(X(3));
         tractset.basepredictionon=resolve_basepredictionon(X(4));
+
+        fprintf('%s: %s\n','Threshold strategy',tractset.threshstrategy);
+        fprintf('%s: %s\n','Correlation type',tractset.corrtype);
+        fprintf('%s: %s\n','Efield metric',tractset.efieldmetric);
+        fprintf('%s: %s\n','Base prediction on',tractset.basepredictionon);
 
         % set continuous vars:
         switch tractset.threshstrategy
@@ -160,8 +184,12 @@ tractset.save;
                 tractset.showposamount=repmat(X(5),1,2);
                 tractset.shownegamount=repmat(X(6),1,2);
         end
+        fprintf('%s: %01.1f \n','Show Positive Amount',tractset.showposamount);
+        fprintf('%s: %01.1f \n','Show Negative Amount',tractset.shownegamount);
+
 
         tractset.connthreshold=X(7);
+        fprintf('%s: %01.1f \n','Connectivity Threshold',tractset.connthreshold);
 
         switch tractset.efieldmetric % depending on efieldmetric, efieldthresholds should be scaled - input goes from 0 to 1
             case 'Sum'
@@ -175,6 +203,8 @@ tractset.save;
                 maxval = 5;
         end
         tractset.efieldthreshold=(X(8)+offset)/(offset+1)*maxval;
+        fprintf('%s: %01.1f \n','E-Field Threshold',tractset.efieldthreshold);
+
     end
 
     function R=getR(tractset)
@@ -182,30 +212,57 @@ tractset.save;
         tractset.customselection = [];
         tractset.useExternalModel = false;
         for k=1:length(ks)
-            tractset.kfold = ks(k);
-            try
-                [I,Ihat]=tractset.kfoldcv(1); % 1 = silent mode
-                if iscell(I)
-                    for entry=1:length(I)
-                        Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+            if ks(k)==1 % circular
+                tractset.customselection=tractset.patientselection;
+                cvp.training{1}=ones(1,length(tractset.customselection));
+                cvp.test{1}=ones(1,length(tractset.customselection));
+                cvp.NumTestSets=1;
+                try
+                    [I, Ihat]=app.tractset.crossval(cvp,[],0,1);
+                    if iscell(I)
+                        for entry=1:length(I)
+                            Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                        end
+                        R(R<0)=-1; % anything negative is the same in cross-validations
+                        R(k)=ea_nanmean(Rsub);
+                    else
+                        R(k)=corr(I,Ihat,'rows','pairwise');
                     end
-                    R(k)=ea_robustmean(Rsub);
-                else
-                    R(k)=corr(I,Ihat,'rows','pairwise');
+                catch
+                    R(k)=nan;
                 end
-            catch
-                R(k)=nan;
+            else
+                tractset.customselection=[];
+                tractset.kfold = ks(k);
+                try
+                    [I,Ihat]=tractset.kfoldcv(1); % 1 = silent mode
+                    if iscell(I)
+                        for entry=1:length(I)
+                            Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                        end
+                        R(R<0)=-1; % anything negative is the same in cross-validations
+                        R(k)=ea_nanmean(Rsub);
+                    else
+                        R(k)=corr(I,Ihat,'rows','pairwise');
+                    end
+                catch
+                    R(k)=nan;
+                end
             end
         end
-        R=ea_robustmean(R);
+        R(R<0)=-1; % anything negative is the same in cross-validations
+        R=ea_nanmean(R);
         if isnan(R) % out of bound settings
             R=-1; % minimal possible value
         end
+        fprintf('%s: %01.0f\n','Average Correlation:',R);
 
-        % map [-1:1] to a suitable gradient that downweights anything below 0 
-        % (since cross-validations are used):
-        zeropoint=1/(1+exp(5*(1-0.5)));
-        R=(1/(1+exp(5*(R-0.5))))-zeropoint;
+        R=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
+
+%         % map [-1:1] to a suitable gradient that downweights anything below 0 
+%         % (since cross-validations are used):
+%         zeropoint=1/(1+exp(5*(1-0.5)));
+%         R=(1/(1+exp(5*(R-0.5))))-zeropoint;
     end
 
 
