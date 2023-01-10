@@ -81,7 +81,7 @@ if isempty(transform)
     if isfield(json, 'custom') && json.custom
         % Custom full path of the transformation supplied.
         warpSuffix = '';
-    elseif contains(json.method, 'affine')
+    elseif contains(json.method, 'affine', 'IgnoreCase', true)
         % Three-step affine normalization (Schonecker 2009) used
         warpSuffix = 'ants.mat';
     else
