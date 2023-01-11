@@ -464,6 +464,9 @@ classdef ea_disctract < handle
         end
 
         function [Improvement, Ihat, actualimprovs] = crossval(obj, cvp, Iperm, shuffle, silent)
+            if ~exist('silent','var')
+                silent=0;
+            end
             if isnumeric(cvp) % cvp is crossvalind
                 cvIndices = cvp;
                 cvID = unique(cvIndices);
