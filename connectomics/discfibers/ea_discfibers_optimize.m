@@ -34,7 +34,7 @@ warning off
 ks=[1,7,10]; %[2,7,10];
 tractset.kIter=1; % make sure to run only 1 iteration.
 
-% lower bounds for list of vars to optimize:
+% list of vars to optimize:
 params=[1,  3,      1,  resolve_threshstrategy(tractset.threshstrategy)         % threshstrategy
     1,  3,      1,  resolve_corrtype(tractset.corrtype)                     % corrtype
     1,  4,      1,  resolve_efieldmetric(tractset.efieldmetric)             % efieldmetric
@@ -162,6 +162,9 @@ tractset.save;
     end
 
     function tractset=updatetractset(tractset,X)
+        tractset.posvisible=1; % hard coded to always set on - we will alternate the amounts though.
+        tractset.negvisible=1;
+        
         % resolve integer vars:
         disp('Parameters applied: ');
 
@@ -251,11 +254,11 @@ tractset.save;
             end
         end
         R(R<0)=-1; % anything negative is the same in cross-validations
-        R=ea_nanmean(R);
+        R=ea_nanmean(R(:));
         if isnan(R) % out of bound settings
             R=-1; % minimal possible value
         end
-        fprintf('%s: %01.0f\n','Average Correlation:',R);
+        fprintf('%s: %01.0f\n','Average Correlation',R);
 
         R=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
 

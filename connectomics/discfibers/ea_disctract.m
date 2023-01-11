@@ -385,14 +385,14 @@ classdef ea_disctract < handle
                         fprintf("Iterating fold set: %d",i)
                     end
                     [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp, [], 1);
-                    switch obj.multitractmode
-                        case 'Split & Color By PCA'
-                            if ~silent
-                                disp("Fold Agreement is not evaluated for PCA")
-                            end
-                        otherwise
-                            inx_nnan = find(isnan(I_iter{i}) ~= 1);
-                            [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i}(inx_nnan),Ihat_iter{i}(inx_nnan),'spearman');
+                    if ~silent
+                        switch obj.multitractmode
+                            case 'Split & Color By PCA'
+                                    disp("Fold Agreement is not evaluated for PCA")
+                            otherwise
+                                inx_nnan = find(isnan(I_iter{i}) ~= 1);
+                                [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i}(inx_nnan),Ihat_iter{i}(inx_nnan),'spearman');
+                        end
                     end
                 end
 
@@ -404,13 +404,13 @@ classdef ea_disctract < handle
                             disp("Fold Agreement is not evaluated for PCA")
                         end
                     otherwise
+                        if ~silent
                         r_Ihat = zeros(size(Ihat_iter,2));
                         for i = 1:size(r_Ihat,1)
                             for j = 1:size(r_Ihat,1)
                                 [r_Ihat(i,j),~]=ea_permcorr(Ihat_iter{i},Ihat_iter{j},'spearman');
                             end
                         end
-                        if ~silent
                             % plot correlation matrix
                             figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
                             imagesc(triu(r_Ihat));
@@ -616,45 +616,45 @@ classdef ea_disctract < handle
                 end
 
             end
+            if ~silent
+                % plot patient score correlation matrix over folds
+                if ~exist('shuffle', 'var') || shuffle == 0
+                    if cvp.NumTestSets ~= 1 && (strcmp(obj.multitractmode,'Single Tract Analysis') || strcmp(obj.multitractmode,'Single Tract Analysis Button'))
 
-            % plot patient score correlation matrix over folds
-            if ~exist('shuffle', 'var') || shuffle == 0
-                if cvp.NumTestSets ~= 1 && (strcmp(obj.multitractmode,'Single Tract Analysis') || strcmp(obj.multitractmode,'Single Tract Analysis Button'))
+                        % put training and test scores together
+                        Ihat_combined = cell(1,cvp.NumTestSets);
+                        %Ihat_combined = Ihat_train_global;
+                        for c=1:cvp.NumTestSets
+                            if isobject(cvp)
+                                training = cvp.training(c);
+                                test = cvp.test(c);
+                            elseif isstruct(cvp)
+                                training = cvp.training{c};
+                                test = cvp.test{c};
+                            end
 
-                    % put training and test scores together
-                    Ihat_combined = cell(1,cvp.NumTestSets);
-                    %Ihat_combined = Ihat_train_global;
-                    for c=1:cvp.NumTestSets
-                        if isobject(cvp)
-                            training = cvp.training(c);
-                            test = cvp.test(c);
-                        elseif isstruct(cvp)
-                            training = cvp.training{c};
-                            test = cvp.test{c};
+                            Ihat_combined{c}(training,1) = Ihat_train_global(c,training,1)';
+                            Ihat_combined{c}(test,1) = Ihat(test,1);
                         end
-    
-                        Ihat_combined{c}(training,1) = Ihat_train_global(c,training,1)';
-                        Ihat_combined{c}(test,1) = Ihat(test,1);
-                    end
 
-                    r_Ihat = zeros(size(Ihat_combined,2));
+                        r_Ihat = zeros(size(Ihat_combined,2));
 
-                    for i = 1:size(r_Ihat,1)
-                        for j = 1:size(r_Ihat,1)
-                            [r_Ihat(i,j),~]=ea_permcorr(Ihat_combined{i},Ihat_combined{j},'spearman');
+                        for i = 1:size(r_Ihat,1)
+                            for j = 1:size(r_Ihat,1)
+                                [r_Ihat(i,j),~]=ea_permcorr(Ihat_combined{i},Ihat_combined{j},'spearman');
+                            end
                         end
+
+                        figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
+                        imagesc(triu(r_Ihat)); % Display correlation matrix as an image
+                        title('Patient scores'' correlations over folds', 'FontSize', 16); % set title
+                        colormap('bone');
+                        cb = colorbar;
+                        % set(cb)
+
                     end
-
-                    figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
-                    imagesc(triu(r_Ihat)); % Display correlation matrix as an image
-                    title('Patient scores'' correlations over folds', 'FontSize', 16); % set title
-                    colormap('bone'); 
-                    cb = colorbar;
-                    % set(cb) 
-
                 end
             end
-
             if obj.nestedLOO
                 % cvs = 'L-O-O-O';
                 % h = ea_corrbox(Improvement,Predicted_dif_models,'permutation',{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel});
