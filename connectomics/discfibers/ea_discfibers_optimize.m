@@ -184,8 +184,8 @@ tractset.save;
                 tractset.showposamount=repmat(X(5),1,2);
                 tractset.shownegamount=repmat(X(6),1,2);
         end
-        fprintf('%s: %01.1f \n','Show Positive Amount',tractset.showposamount);
-        fprintf('%s: %01.1f \n','Show Negative Amount',tractset.shownegamount);
+        fprintf('%s: %01.1f \n','Show Positive Amount',mean(tractset.showposamount));
+        fprintf('%s: %01.1f \n','Show Negative Amount',mean(tractset.shownegamount));
 
 
         tractset.connthreshold=X(7);
