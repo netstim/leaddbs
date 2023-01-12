@@ -227,7 +227,7 @@ tractset.save;
                             Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
                         end
                         %R(R<0)=-1; % anything negative is the same in cross-validations
-                        R(k)=ea_nanmean(Rsub);
+                        R(k)=ea_nanmean(Rsub(:));
                     else
                         R(k)=corr(I,Ihat,'rows','pairwise');
                     end
@@ -244,7 +244,7 @@ tractset.save;
                             Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
                         end
                         %R(R<0)=-1; % anything negative is the same in cross-validations
-                        R(k)=ea_nanmean(Rsub);
+                        R(k)=ea_nanmean(Rsub(:));
                     else
                         R(k)=corr(I,Ihat,'rows','pairwise');
                     end
@@ -253,12 +253,12 @@ tractset.save;
                 end
             end
         end
-        R(R<0)=-1; % anything negative is the same in cross-validations
+        %R(R<0)=-1; % anything negative is the same in cross-validations
         R=ea_nanmean(R(:));
         if isnan(R) % out of bound settings
             R=-1; % minimal possible value
         end
-        fprintf('%s: %01.0f\n','Average Correlation',R);
+        fprintf('%s: %01.0f\n','=> Average Correlation',R);
 
         R=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
 
