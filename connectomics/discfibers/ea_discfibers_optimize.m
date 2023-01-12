@@ -226,7 +226,7 @@ tractset.save;
                         for entry=1:length(I)
                             Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
                         end
-                        R(R<0)=-1; % anything negative is the same in cross-validations
+                        %R(R<0)=-1; % anything negative is the same in cross-validations
                         R(k)=ea_nanmean(Rsub);
                     else
                         R(k)=corr(I,Ihat,'rows','pairwise');
@@ -243,7 +243,7 @@ tractset.save;
                         for entry=1:length(I)
                             Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
                         end
-                        R(R<0)=-1; % anything negative is the same in cross-validations
+                        %R(R<0)=-1; % anything negative is the same in cross-validations
                         R(k)=ea_nanmean(Rsub);
                     else
                         R(k)=corr(I,Ihat,'rows','pairwise');
