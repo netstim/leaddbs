@@ -1,4 +1,4 @@
-function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
+function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore_model(numTestIt,adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm)
 
     if obj.useExternalModel == true
         S = load(obj.ExternalModelFile);
@@ -490,6 +490,9 @@ function [Ihat,Ihat_train_global,vals,actualimprovs] = ea_compute_fibscore_model
             actualimprovs{voter,side}=predict(mdl,Ihat(test,side,voter));
         end
     end
+    val_struct.vals=vals;
+    val_struct.usedidx=usedidx;
+try    val_struct.fibcell=fibcell; end % fibcell not always supplied.
 
 
 

@@ -364,7 +364,7 @@ classdef ea_disctract < handle
             [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
         end
 
-        function [I, Ihat] = kfoldcv(obj,silent)
+        function [I, Ihat, val_struct] = kfoldcv(obj,silent)
             if ~exist('silent','var')
                 silent=0;
             end
@@ -374,7 +374,7 @@ classdef ea_disctract < handle
             iter = obj.kIter;
             if iter == 1
                 cvp = cvpartition(length(obj.patientselection),'KFold',obj.kfold);
-                [I,Ihat] = crossval(obj,cvp,[],0,silent);
+                [I,Ihat, ~, val_struct] = crossval(obj,cvp,[],0,silent);
             else
                 % plot some statistics over shuffles
                 r_over_iter = zeros(iter,1);
@@ -453,17 +453,17 @@ classdef ea_disctract < handle
             end
         end
 
-        function [I, Ihat] = lno(obj, Iperm)
+        function [I, Ihat, val_struct] = lno(obj, Iperm, silent)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
             if ~exist('Iperm', 'var') || isempty(Iperm)
-                [I, Ihat] = crossval(obj, cvp);
+                [I, Ihat, ~, val_struct] = crossval(obj, cvp, [], [], silent);
             else
-                [I, Ihat] = crossval(obj, cvp, Iperm);
+                [I, Ihat, ~, val_struct] = crossval(obj, cvp, Iperm, [], silent);
             end
         end
 
-        function [Improvement, Ihat, actualimprovs] = crossval(obj, cvp, Iperm, shuffle, silent)
+        function [Improvement, Ihat, actualimprovs, val_struct] = crossval(obj, cvp, Iperm, shuffle, silent)
             if ~exist('silent','var')
                 silent=0;
             end
@@ -601,9 +601,9 @@ classdef ea_disctract < handle
                 % now compute Ihat for the true 'test' left out
                 % updates Ihat(test)
                 if ~exist('Iperm', 'var') || isempty(Iperm)
-                    [Ihat, Ihat_train_global, vals,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test);
+                    [Ihat, Ihat_train_global, val_struct{c}, actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test);
                 else
-                    [Ihat, Ihat_train_global, vals,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test,Iperm);
+                    [Ihat, Ihat_train_global, val_struct{c}, actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm);
                 end
 
                 % predict the improvement in the left-out patient (fold) of
@@ -691,7 +691,7 @@ classdef ea_disctract < handle
                         training = cvp.training{c};
                         test = cvp.test{c};
                     end
-                    for voter=1:size(vals,1)
+                    for voter=1:size(val_struct{c}.vals,1)
                         switch obj.multitractmode
                             case 'Split & Color By Subscore'
                                 useI=obj.subscore.vars{voter}(patientsel);
@@ -867,7 +867,7 @@ classdef ea_disctract < handle
         end
 
 
-        function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
+        function [Iperm, Ihat, R0, R1, pperm, Rp95, val_struct] = lnopb(obj, corrType, silent)
             if ~exist('corrType', 'var')
                 corrType = 'Spearman';
             end
@@ -884,13 +884,13 @@ classdef ea_disctract < handle
 
                 for perm=1:numPerm+1
                     if perm==1
-                        fprintf('Calculating without permutation\n\n');
-                        [~, Ihat{perm}] = lno(obj);
+                        if ~silent; fprintf('Calculating without permutation\n\n'); end
+                        [~, Ihat{perm},thisval_struct] = lno(obj, [], silent);
                     else
-                        fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
-                        [~, Ihat{perm}] = lno(obj, squeeze(Iperm(perm,:,:)));
+                        if ~silent; fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm); end
+                        [~, Ihat{perm},thisval_struct] = lno(obj, squeeze(Iperm(perm,:,:)), silent);
                     end
-
+                    val_struct{perm}=thisval_struct{1};
                     for subvar = 1:length(obj.subscore.vars)
                         R(perm,subvar) = corr(Iperm(perm, obj.patientselection, subvar)',...
                             Ihat{perm}{subvar},'type',corrType,'rows','pairwise');
@@ -921,10 +921,10 @@ classdef ea_disctract < handle
                 for perm=1:numPerm+1
                     if perm==1
                         fprintf('Calculating without permutation\n\n');
-                        [~, Ihat{perm}] = lno(obj);
+                        [~, Ihat{perm},val_struct{perm}] = lno(obj);
                     else
                         fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
-                        [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
+                        [~, Ihat{perm},val_struct{perm}] = lno(obj, Iperm(:, perm));
                     end
     
                     R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');

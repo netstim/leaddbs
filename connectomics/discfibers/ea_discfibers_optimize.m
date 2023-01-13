@@ -1,4 +1,4 @@
-function [tractset]=ea_discfibers_optimize(tractset,app)
+function [tractset]=ea_discfibers_optimize(tractset,app,command)
 % Function to optimize parameters for fiber filtering using a Surrogate
 % Optimization Algorithm. The app input is optional but can be used to
 % live-view tuning of parameters.
@@ -23,6 +23,10 @@ function [tractset]=ea_discfibers_optimize(tractset,app)
 % Evaluated points — All points at which the objective function value is known. These points include initial points, Construct Surrogate points, and Search for Minimum points at which the solver evaluates the objective function.
 % Sample points. Pseudorandom points where the solver evaluates the merit function during the Search for Minimum phase. These points are not points at which the solver evaluates the objective function, except as described in Search for Minimum Details.
 
+if ~exist('command','var')
+    command='cv';
+end
+
 toolboxes_installed=ver;
 if ~ismember('Global Optimization Toolbox',{toolboxes_installed.Name})
     ea_error('You need to install the Matlab Global Optimization Toolbox to use this functionality');
@@ -31,7 +35,8 @@ end
 useparallel=0;
 
 warning off
-ks=[1,7,10]; %[2,7,10];
+ks=[1,5,10]; %[1,2,7,10]; 1 being circular
+numperm=20; % number of iterations for permutation-based dissimilarity score.
 tractset.kIter=1; % make sure to run only 1 iteration.
 
 % list of vars to optimize:
@@ -91,7 +96,7 @@ ip.X=augmentips(ip.X);
 options=optimoptions('surrogateopt',...
     'ObjectiveLimit',-0.9,... % optimal solution with average correlations of R~0.8 (rare to happen), lowest theoretical point is zero with an R of 1
     'MinSurrogatePoints',120,...
-    'PlotFcn','surrogateoptplot',... 
+    'PlotFcn','surrogateoptplot',...
     'Display','iter');
 %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
@@ -106,12 +111,12 @@ end
 
 % Solve problem
 objconstr=@(x)struct('Fval',nestedfun(x));
-if exist(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),'file')
-    choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file?','Resume optimization?','Yes','Start from scratch','Yes');
+if exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'file')
+    choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file? Only do so if the prior combination used the same general setup & patient selection, etc.','Resume optimization?','Yes','Start from scratch','Yes');
     switch choice
         case 'Start from scratch'
         case 'Yes'
-            priorstate=load(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'));
+            priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
             ip=priorstate.ip;
     end
 else
@@ -122,7 +127,7 @@ numIters=120;
 while 1
     switch choice
         case 'y'
-                options.InitialPoints=ip;
+            options.InitialPoints=ip;
             if ~exist('numIters','var')
                 numIters = input(sprintf('%s\n\n','Great, let us continue. How many trials do you want to run (enter amount)'),'s');
                 numIters = str2double(numIters);
@@ -152,19 +157,25 @@ tractset.save;
 % Nested function that computes the objective function
     function Fval = nestedfun(X)
 
-       tractset=updatetractset(tractset,X);
+        tractset=updatetractset(tractset,X);
 
         if exist('app','var') % could be cool to update the state of the app GUI live.
             %updateapp(app,X);
         end
-
-        Fval=getR(tractset);
+        switch command
+            case 'cv'
+                Fval=getFval_cv(tractset);
+            case 'sim'
+                Fval=getFval_sim(tractset);
+            case 'comb'
+                Fval=getFval_comb(tractset);
+        end
     end
 
     function tractset=updatetractset(tractset,X)
         tractset.posvisible=1; % hard coded to always set on - we will alternate the amounts though.
         tractset.negvisible=1;
-        
+
         % resolve integer vars:
         disp('Parameters applied: ');
 
@@ -210,7 +221,7 @@ tractset.save;
 
     end
 
-    function R=getR(tractset)
+    function Fval=getFval_cv(tractset)
 
         tractset.customselection = [];
         tractset.useExternalModel = false;
@@ -260,16 +271,138 @@ tractset.save;
         end
         fprintf('%s: %01.0f\n','=> Average Correlation',R);
 
-        R=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
+        Fval=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
 
-%         % map [-1:1] to a suitable gradient that downweights anything below 0 
-%         % (since cross-validations are used):
-%         zeropoint=1/(1+exp(5*(1-0.5)));
-%         R=(1/(1+exp(5*(R-0.5))))-zeropoint;
+        %         % map [-1:1] to a suitable gradient that downweights anything below 0
+        %         % (since cross-validations are used):
+        %         zeropoint=1/(1+exp(5*(1-0.5)));
+        %         R=(1/(1+exp(5*(R-0.5))))-zeropoint;
+    end
+
+    function Fval=getFval_sim(tractset)
+
+
+        tractset.customselection = [];
+        tractset.useExternalModel = false;
+        cnt=1;
+        for k=1:length(ks)
+            if ks(k)~=1 % skip circular
+                tractset.customselection=[];
+                tractset.kfold = ks(k);
+                [~,~,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
+                sim(cnt)=ea_compute_sim_val_struct(val_struct);
+                cnt=cnt+1;
+            end
+        end
+        sim=ea_nanmean(sim);
+
+        tractset.Nperm=numperm;
+        [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
+        dissim=ea_compute_sim_val_struct(val_struct);
+
+        Fval=-(sim/dissim);
+
+    end
+
+
+    function sim=ea_compute_sim_val_struct(val_struct)
+        numfold=length(val_struct);
+        numvoter=size(val_struct{1}.vals,1);
+        numside=size(val_struct{1}.vals,2);
+        % determine size to set up similarity matrix:
+        maxusedidx=1;
+        for fold=1:numfold
+            for entry=1:numel(val_struct{fold}.usedidx)
+                thismaxusedidx=max(val_struct{fold}.usedidx{entry});
+                if thismaxusedidx>maxusedidx
+                    maxusedidx=thismaxusedidx;
+                end
+            end
+        end
+        Adj=nan(numfold,numvoter,numside,maxusedidx,'single');
+        % fill matrix:
+        for fold=1:numfold
+            for voter=1:numvoter
+                for side=1:numside
+                    Adj(fold,voter,side,val_struct{fold}.usedidx{voter,side})=val_struct{fold}.vals{voter,side};
+                end
+            end
+        end
+        Adj=reshape(Adj,[numfold,numvoter*numside*maxusedidx]);
+        sim=corr(Adj','rows','pairwise');
+        sim=ea_nanmean(sim(logical(triu(ones(numfold),1)))); % take average of upper triangle
     end
 
 
 
+    function Fval=getFval_comb(tractset)
+
+        tractset.customselection = [];
+        tractset.useExternalModel = false;
+        cnt=1;
+        for k=1:length(ks)
+            if ks(k)==1 % circular
+                tractset.customselection=tractset.patientselection;
+                cvp.training{1}=ones(1,length(tractset.customselection));
+                cvp.test{1}=ones(1,length(tractset.customselection));
+                cvp.NumTestSets=1;
+                try
+                    [I, Ihat]=app.tractset.crossval(cvp,[],0,1);
+                    if iscell(I)
+                        for entry=1:length(I)
+                            Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                        end
+                        %R(R<0)=-1; % anything negative is the same in cross-validations
+                        R(k)=ea_nanmean(Rsub(:));
+                    else
+                        R(k)=corr(I,Ihat,'rows','pairwise');
+                    end
+                catch
+                    R(k)=nan;
+                end
+            else
+                tractset.customselection=[];
+                tractset.kfold = ks(k);
+                try
+                    [I,Ihat,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
+                    % calc similarity index:
+                    sim(cnt)=ea_compute_sim_val_struct(val_struct);
+                    cnt=cnt+1;
+                    % calc cross-val indices
+                    if iscell(I)
+                        for entry=1:length(I)
+                            Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                        end
+                        %R(R<0)=-1; % anything negative is the same in cross-validations
+                        R(k)=ea_nanmean(Rsub(:));
+                    else
+                        R(k)=corr(I,Ihat,'rows','pairwise');
+                    end
+                catch
+                    R(k)=nan;
+                end
+            end
+        end
+        % similarities part:
+        sim=ea_nanmean(sim(:));
+
+        tractset.Nperm=numperm;
+        [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
+        dissim=ea_compute_sim_val_struct(val_struct);
+
+        Fval_sim=ea_nanmean([-sim;dissim]);
+
+        % crossval part:
+        R=ea_nanmean(R(:));
+        if isnan(R) % out of bound settings
+            R=-1; % minimal possible value
+        end
+        fprintf('%s: %01.0f\n','=> Average Correlation',R);
+
+        Fval_cv=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
+        Fval=ea_nanmean([Fval_sim;Fval_cv]);
+
+    end
 
 
     function ip=augmentips(ip)
