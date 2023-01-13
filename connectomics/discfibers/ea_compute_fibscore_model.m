@@ -84,6 +84,11 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
                 Ihat_train_global(numTestIt,training,side,voter) = 42;
             end
         end
+
+        val_struct.vals=vals;
+        val_struct.usedidx=usedidx;
+        try    val_struct.fibcell=fibcell; end % fibcell not always supplied.
+
         return
     end
 
