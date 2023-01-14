@@ -287,18 +287,24 @@ tractset.save;
         cnt=1;
         for k=1:length(ks)
             if ks(k)~=1 % skip circular
-                tractset.customselection=[];
-                tractset.kfold = ks(k);
-                [~,~,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
-                sim(cnt)=ea_compute_sim_val_struct(val_struct);
-                cnt=cnt+1;
+                sim=nan; % initi
+                try
+                    tractset.customselection=[];
+                    tractset.kfold = ks(k);
+                    [~,~,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
+                    sim(cnt)=ea_compute_sim_val_struct(val_struct);
+                    cnt=cnt+1;
+                end
             end
         end
         sim=ea_nanmean(sim);
 
         tractset.Nperm=numperm;
-        [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
-        dissim=ea_compute_sim_val_struct(val_struct);
+        dissim=1;
+        try
+            [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
+            dissim=ea_compute_sim_val_struct(val_struct);
+        end
 
         Fval=-(sim/dissim);
 
@@ -363,6 +369,7 @@ tractset.save;
             else
                 tractset.customselection=[];
                 tractset.kfold = ks(k);
+                sim=nan; % initialize it.
                 try
                     [I,Ihat,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
                     % calc similarity index:
@@ -387,8 +394,12 @@ tractset.save;
         sim=ea_nanmean(sim(:));
 
         tractset.Nperm=numperm;
-        [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
-        dissim=ea_compute_sim_val_struct(val_struct);
+        dissim=nan;
+        try
+
+            [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
+            dissim=ea_compute_sim_val_struct(val_struct);
+        end
 
         Fval_sim=ea_nanmean([-sim;dissim]);
 
