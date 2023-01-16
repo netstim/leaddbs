@@ -42,7 +42,7 @@
 %                correlation coefficient will be used. {default: 'linear'}
 %  reports     - [0 or 1] If 0, function proceeds with no command line
 %                reports. Otherwise, function reports what it is doing to
-%                the command line. {default: 1}
+%                the command line. {default: 0}
 %  seed_state  - The initial state of the random number generating stream
 %                (see MATLAB documentation for "randstream"). If you pass
 %                a value from a previous run of this function, it should
@@ -172,7 +172,7 @@ if strcmpi(rows, 'complete')
 end
 
 if nargin<8
-    reports=1;
+    reports = 0;
 end
 
 % Get random # generator state
