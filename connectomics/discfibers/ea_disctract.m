@@ -871,7 +871,9 @@ classdef ea_disctract < handle
             if ~exist('corrType', 'var')
                 corrType = 'Spearman';
             end
-
+            if ~exist('silent','var')
+                silent=0;
+            end
             numPerm = obj.Nperm;
             
             if strcmp(obj.multitractmode,'Split & Color By PCA')
