@@ -467,6 +467,9 @@ classdef ea_disctract < handle
             if ~exist('silent','var')
                 silent=0;
             end
+            if ~exist('shuffle','var') || isempty(shuffle)
+                shuffle=0;
+            end
             if isnumeric(cvp) % cvp is crossvalind
                 cvIndices = cvp;
                 cvID = unique(cvIndices);
@@ -618,7 +621,7 @@ classdef ea_disctract < handle
             end
             if ~silent
                 % plot patient score correlation matrix over folds
-                if ~exist('shuffle', 'var') || shuffle == 0
+                if (~exist('shuffle', 'var')) || shuffle == 0 || isempty(shuffle)
                     if cvp.NumTestSets ~= 1 && (strcmp(obj.multitractmode,'Single Tract Analysis') || strcmp(obj.multitractmode,'Single Tract Analysis Button'))
 
                         % put training and test scores together
