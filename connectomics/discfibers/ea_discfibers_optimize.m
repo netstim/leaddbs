@@ -40,13 +40,13 @@ numperm=20; % number of iterations for permutation-based dissimilarity score.
 tractset.kIter=1; % make sure to run only 1 iteration.
 
 % list of vars to optimize:
-params=[1,  3,      1,  resolve_threshstrategy(tractset.threshstrategy)         % threshstrategy
+params=[3,  3,      1,  resolve_threshstrategy(tractset.threshstrategy)         % threshstrategy - currently fixed to absolute amounts
     1,  3,      1,  resolve_corrtype(tractset.corrtype)                     % corrtype
     1,  4,      1,  resolve_efieldmetric(tractset.efieldmetric)             % efieldmetric
     1,  7,      1,  resolve_basepredictionon(tractset.basepredictionon)     % basepredictionon
-    0,  100,    0,  mean(tractset.showposamount)                            % showposamount % will be multiplied by 10 for fixed amount
-    0,  100,    0,  mean(tractset.shownegamount)                            % shownegamount % will be multiplied by 10 for fixed amount
-    0,  100,    0,  tractset.connthreshold                                  % connthreshold
+    1,  100,    0,  mean(tractset.showposamount)                            % showposamount % will be multiplied by 10 for fixed amount
+    1,  100,    0,  mean(tractset.shownegamount)                            % shownegamount % will be multiplied by 10 for fixed amount
+    0,  30,     0,  tractset.connthreshold                                  % connthreshold
     1,  1,      0,  tractset.efieldthreshold];                              % efieldthreshold % will be scaled depending on efieldmetric
 
 switch tractset.statmetric
@@ -100,26 +100,39 @@ options=optimoptions('surrogateopt',...
     'Display','iter');
 %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
-% check for parallel processing toolbox
 
-
-if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
-    options.UseParallel=true;
-    parpool('Processes',2);
-end
 
 
 % Solve problem
 objconstr=@(x)struct('Fval',nestedfun(x));
 if exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'file')
-    choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file? Only do so if the prior combination used the same general setup & patient selection, etc.','Resume optimization?','Yes','Start from scratch','Yes');
+    choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file? Only do so if the prior combination used the same general setup & patient selection, etc.','Resume optimization?','Resume Optimization','Load saved optimum and stop','Start from scratch','Yes');
     switch choice
         case 'Start from scratch'
-        case 'Yes'
+            outcopy=fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'_',ea_generate_uuid,'.mat']);
+            copyfile(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),outcopy)
+            disp(['Starting from scratch. Backed up prior state to ',outcopy,'.']);
+        case 'Load saved optimum and stop'
+            priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
+            [fval,ix]=max(priorstate.ip.Fval);
+            XOptim=priorstate.ip.X(ix,:);
+            tractset=updatetractset(tractset,XOptim);
+            disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
+            warning on
+            tractset.save;
+            return
+        case 'Resume Optimization'
             priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
             ip=priorstate.ip;
     end
 else
+end
+
+
+% check for parallel processing toolbox
+if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
+    options.UseParallel=true;
+    parpool('Processes',2);
 end
 
 choice='y';
@@ -134,7 +147,7 @@ while 1
             end
             options.MaxFunctionEvaluations=numIters;
             [XOptim,fval,exitflag,output,ip]=surrogateopt(objconstr,lb,ub,find(intcon),options);
-            save(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),'ip');
+            save(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'ip');
         otherwise
             break
     end
@@ -164,11 +177,11 @@ tractset.save;
         end
         switch command
             case 'cv'
-                Fval=getFval_cv(tractset);
+                Fval=getFval(tractset,1,0);
             case 'sim'
-                Fval=getFval_sim(tractset);
+                Fval=getFval(tractset,0,1);
             case 'comb'
-                Fval=getFval_comb(tractset);
+                Fval=getFval(tractset,1,1);
         end
     end
 
@@ -192,8 +205,8 @@ tractset.save;
         % set continuous vars:
         switch tractset.threshstrategy
             case 'Fixed Amount'
-                tractset.showposamount=repmat(round(X(5))*10,1,2);
-                tractset.shownegamount=repmat(round(X(6))*10,1,2);
+                tractset.showposamount=repmat(round(X(5))*50,1,2);
+                tractset.shownegamount=repmat(round(X(6))*50,1,2);
             otherwise % percentages
                 tractset.showposamount=repmat(X(5),1,2);
                 tractset.shownegamount=repmat(X(6),1,2);
@@ -208,105 +221,16 @@ tractset.save;
         switch tractset.efieldmetric % depending on efieldmetric, efieldthresholds should be scaled - input goes from 0 to 1
             case 'Sum'
                 offset = 0.5;
-                maxval = 5;
+                maxval = 3.5;
             case 'Mean'
                 offset = 2.5;
-                maxval = 1000;
+                maxval = 350;
             case {'Peak','Peak 5%'}
                 offset = 0.05;
-                maxval = 5;
+                maxval = 2;
         end
         tractset.efieldthreshold=(X(8)+offset)/(offset+1)*maxval;
         fprintf('%s: %01.1f \n','E-Field Threshold',tractset.efieldthreshold);
-
-    end
-
-    function Fval=getFval_cv(tractset)
-
-        tractset.customselection = [];
-        tractset.useExternalModel = false;
-        for k=1:length(ks)
-            if ks(k)==1 % circular
-                tractset.customselection=tractset.patientselection;
-                cvp.training{1}=ones(1,length(tractset.customselection));
-                cvp.test{1}=ones(1,length(tractset.customselection));
-                cvp.NumTestSets=1;
-                try
-                    [I, Ihat]=app.tractset.crossval(cvp,[],0,1);
-                    if iscell(I)
-                        for entry=1:length(I)
-                            Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
-                        end
-                        %R(R<0)=-1; % anything negative is the same in cross-validations
-                        R(k)=ea_nanmean(Rsub(:));
-                    else
-                        R(k)=corr(I,Ihat,'rows','pairwise');
-                    end
-                catch
-                    R(k)=nan;
-                end
-            else
-                tractset.customselection=[];
-                tractset.kfold = ks(k);
-                try
-                    [I,Ihat]=tractset.kfoldcv(1); % 1 = silent mode
-                    if iscell(I)
-                        for entry=1:length(I)
-                            Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
-                        end
-                        %R(R<0)=-1; % anything negative is the same in cross-validations
-                        R(k)=ea_nanmean(Rsub(:));
-                    else
-                        R(k)=corr(I,Ihat,'rows','pairwise');
-                    end
-                catch
-                    R(k)=nan;
-                end
-            end
-        end
-        %R(R<0)=-1; % anything negative is the same in cross-validations
-        R=ea_nanmean(R(:));
-        if isnan(R) % out of bound settings
-            R=-1; % minimal possible value
-        end
-        fprintf('%s: %01.0f\n','=> Average Correlation',R);
-
-        Fval=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
-
-        %         % map [-1:1] to a suitable gradient that downweights anything below 0
-        %         % (since cross-validations are used):
-        %         zeropoint=1/(1+exp(5*(1-0.5)));
-        %         R=(1/(1+exp(5*(R-0.5))))-zeropoint;
-    end
-
-    function Fval=getFval_sim(tractset)
-
-
-        tractset.customselection = [];
-        tractset.useExternalModel = false;
-        cnt=1;
-        for k=1:length(ks)
-            if ks(k)~=1 % skip circular
-                sim=nan; % initi
-                try
-                    tractset.customselection=[];
-                    tractset.kfold = ks(k);
-                    [~,~,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
-                    sim(cnt)=ea_compute_sim_val_struct(val_struct);
-                    cnt=cnt+1;
-                end
-            end
-        end
-        sim=ea_nanmean(sim);
-
-        tractset.Nperm=numperm;
-        dissim=1;
-        try
-            [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
-            dissim=ea_compute_sim_val_struct(val_struct);
-        end
-
-        Fval=-(sim/dissim);
 
     end
 
@@ -341,30 +265,33 @@ tractset.save;
 
 
 
-    function Fval=getFval_comb(tractset)
+    function Fval=getFval(tractset,cv,sd)
 
         tractset.customselection = [];
         tractset.useExternalModel = false;
         cnt=1;
+        R=nan(length(ks),1);
         for k=1:length(ks)
             if ks(k)==1 % circular
-                tractset.customselection=tractset.patientselection;
-                cvp.training{1}=ones(1,length(tractset.customselection));
-                cvp.test{1}=ones(1,length(tractset.customselection));
-                cvp.NumTestSets=1;
-                try
-                    [I, Ihat]=app.tractset.crossval(cvp,[],0,1);
-                    if iscell(I)
-                        for entry=1:length(I)
-                            Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                if cv
+                    tractset.customselection=tractset.patientselection;
+                    cvp.training{1}=ones(1,length(tractset.customselection));
+                    cvp.test{1}=ones(1,length(tractset.customselection));
+                    cvp.NumTestSets=1;
+                    try
+                        [I, Ihat]=tractset.crossval(cvp,[],0,1);
+                        if iscell(I)
+                            for entry=1:length(I)
+                                Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                            end
+                            %R(R<0)=-1; % anything negative is the same in cross-validations
+                            R(k)=ea_nanmean(Rsub(:));
+                        else
+                            R(k)=corr(I,Ihat,'rows','pairwise');
                         end
-                        %R(R<0)=-1; % anything negative is the same in cross-validations
-                        R(k)=ea_nanmean(Rsub(:));
-                    else
-                        R(k)=corr(I,Ihat,'rows','pairwise');
+                    catch
+                        R(k)=nan;
                     end
-                catch
-                    R(k)=nan;
                 end
             else
                 tractset.customselection=[];
@@ -372,45 +299,66 @@ tractset.save;
                 sim=nan; % initialize it.
                 try
                     [I,Ihat,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
-                    % calc similarity index:
-                    sim(cnt)=ea_compute_sim_val_struct(val_struct);
-                    cnt=cnt+1;
-                    % calc cross-val indices
-                    if iscell(I)
-                        for entry=1:length(I)
-                            Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                    if ea_nanmean(ea_nanmean(cellfun(@length,val_struct{2}.vals)')')<100 % Not too many fibers survive, solution not anatomically meaningful. Checking this in first fold since will be similar in the others
+                        Fval=1;
+                        return
+                    end
+                    if sd
+                        % calc similarity index:
+                        sim(cnt)=ea_compute_sim_val_struct(val_struct);
+                        cnt=cnt+1;
+                    end
+                    if cv
+                        % calc cross-val indices
+                        if iscell(I)
+                            for entry=1:length(I)
+                                Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                            end
+                            %R(R<0)=-1; % anything negative is the same in cross-validations
+                            R(k)=ea_nanmean(Rsub(:));
+                        else
+                            R(k)=corr(I,Ihat,'rows','pairwise');
                         end
-                        %R(R<0)=-1; % anything negative is the same in cross-validations
-                        R(k)=ea_nanmean(Rsub(:));
-                    else
-                        R(k)=corr(I,Ihat,'rows','pairwise');
                     end
                 catch
-                    R(k)=nan;
+                    if sd
+                        sim(cnt)=nan;
+                        cnt=cnt+1;
+                    end
+                    if cv
+                        R(k)=nan;
+                    end
                 end
             end
         end
-        % similarities part:
-        sim=ea_nanmean(sim(:));
+        if sd
+            % similarities part:
+            sim=ea_nanmean(sim(:));
 
-        tractset.Nperm=numperm;
-        dissim=nan;
-        try
+            tractset.Nperm=numperm;
+            dissim=nan;
+            try
 
-            [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
-            dissim=ea_compute_sim_val_struct(val_struct);
+                [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
+                dissim=ea_compute_sim_val_struct(val_struct);
+            end
+
+            Fval_sim=ea_nanmean([-sim;dissim]);
+        else
+            Fval_sim=nan;
         end
+        if cv
+            % crossval part:
+            R=ea_nanmean(R(:));
+            if isnan(R) % out of bound settings
+                R=-1; % minimal possible value
+            end
+            fprintf('%s: %01.0f\n','=> Average Correlation',R);
 
-        Fval_sim=ea_nanmean([-sim;dissim]);
-
-        % crossval part:
-        R=ea_nanmean(R(:));
-        if isnan(R) % out of bound settings
-            R=-1; % minimal possible value
+            Fval_cv=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
+        else
+            Fval_cv=nan;
         end
-        fprintf('%s: %01.0f\n','=> Average Correlation',R);
-
-        Fval_cv=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
         Fval=ea_nanmean([Fval_sim;Fval_cv]);
 
     end
