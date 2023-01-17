@@ -588,6 +588,20 @@ end
 ea_storeui(handles);
 
 
+% --- Executes on selection change in MRCT.
+function MRCT_Callback(hObject, eventdata, handles)
+% hObject    handle to MRCT (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns MRCT contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from MRCT
+
+ea_switchctmr(handles, get(hObject,'Value'));
+
+ea_storeui(handles);
+
+
 % --- Executes during object creation, after setting all properties.
 function MRCT_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to MRCT (see GCBO)
