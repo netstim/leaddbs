@@ -552,9 +552,11 @@ end
 function ea_stats=ea_rmssstimulations(ea_stats,M)
 % function that will remove all stimulations not labeled 'gs'
 todel=[];
-for s=1:length(ea_stats.stimulation)
-    if ~strcmp(ea_stats.stimulation(s).label,['gs_',M.guid])
-        todel=[todel,s];
+if isfield(ea_stats, 'stimulation')
+    for s=1:length(ea_stats.stimulation)
+        if ~strcmp(ea_stats.stimulation(s).label,['gs_',M.guid])
+            todel=[todel,s];
+        end
     end
+    ea_stats.stimulation(todel)=[];
 end
-ea_stats.stimulation(todel)=[];
