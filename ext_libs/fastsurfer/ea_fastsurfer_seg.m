@@ -32,19 +32,21 @@ fastsurferFolder = fullfile(ea_getearoot, 'ext_libs', 'fastsurfer');
 % Check Conda environment
 condaenv = ea_conda_env('FastSurfer');
 if ~condaenv.is_created
-    ea_cprintf('CmdWinWarnings', 'Initializing FastSurfer reconsurf environment ...\n')
+    ea_cprintf('CmdWinWarnings', 'Initializing FastSurfer reconsurf environment...\n')
     condaenv.create;
+    ea_cprintf('CmdWinWarnings', 'FastSurfer conda environment initialized.\n')
 end
 
 % Check FastSurfer
 runner = fullfile(fastsurferFolder, 'upstream', 'run_fastsurfer.sh');
 if ~isfile(runner)
-    ea_cprintf('CmdWinWarnings', 'Downloading FastSurfer ...\n')
+    ea_cprintf('CmdWinWarnings', 'Downloading FastSurfer...\n')
     downloadFile = fullfile(fastsurferFolder, 'FastSurfer.zip');
     websave(downloadFile, 'https://github.com/Deep-MI/FastSurfer/archive/refs/heads/stable.zip');
     unzip(downloadFile, fastsurferFolder);
     movefile(fullfile(fastsurferFolder, 'FastSurfer-stable'), fullfile(fastsurferFolder, 'upstream'));
     delete(downloadFile);
+    ea_cprintf('CmdWinWarnings', 'FastSurfer downloaded.\n')
 end
 
 segcmd = ['export FASTSURFER_HOME=', fullfile(fastsurferFolder, 'upstream'), ';', ...
