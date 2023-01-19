@@ -60,7 +60,7 @@ if ~ea_conda.is_installed
 end
 
 % Check OSS-DBS_Dependency installation
-condaenv = ea_conda_env('OSS-DBS_Dependency');
+condaenv = ea_conda_env('OSS-DBS');
 if ~condaenv.is_created
     condaenv.create;
 end

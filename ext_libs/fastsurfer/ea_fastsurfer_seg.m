@@ -30,7 +30,7 @@ end
 fastsurferFolder = fullfile(ea_getearoot, 'ext_libs', 'fastsurfer');
 
 % Check Conda environment
-condaenv = ea_conda_env('fastsurfer_reconsurf');
+condaenv = ea_conda_env('FastSurfer');
 if ~condaenv.is_created
     ea_cprintf('CmdWinWarnings', 'Initializing FastSurfer reconsurf environment ...\n')
     condaenv.create;
