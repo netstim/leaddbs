@@ -2,6 +2,7 @@ name: fastsurfer
 
 channels:
   - conda-forge
+  - defaults
 
 dependencies:
   - h5py=3.7.0
