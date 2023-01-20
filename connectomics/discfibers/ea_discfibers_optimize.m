@@ -50,7 +50,7 @@ params=[3,  3,      1,  resolve_threshstrategy(tractset.threshstrategy)         
     1,  1,      0,  tractset.efieldthreshold];                              % efieldthreshold % will be scaled depending on efieldmetric
 
 switch tractset.statmetric
-    case {1,3,4,5} % t-tests, OSS-DBS, proportion tests, binomial tests
+    case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'} % t-tests, OSS-DBS, proportion tests, binomial tests
         paramidx=logical([1 % threshstrategy
             0 % corrtype
             0 % efieldmetric
@@ -62,7 +62,20 @@ switch tractset.statmetric
         params(4,2)=4; % upper bound change: baseprediction on does not allow profile of scores ideas for t-tests
         params(7,1:2)=[1,49]; % boundary change: connthreshold only allows 1-49% for t-tests
         params=params(paramidx,:);
-    case {2,6,7} % e-fields, reverse-t-tests for binary & efields
+    case 'One-Sample Tests / VTAs / PAM (OSS-DBS)'
+        paramidx=logical([1 % threshstrategy
+            1 % ttest vs wilcoxon
+            0 % efieldmetric
+            1 % basepredictionon
+            1 % showposamount
+            1 % shownegamount
+            1 % connthreshold
+            0]); % efieldthreshold
+        params(2,2)=2; % upper bound change: "corrtype" in this case codes for t-test vs. wilcoxon test.
+        params(4,2)=4; % upper bound change: baseprediction on does not allow profile of scores ideas for t-tests
+        params(7,1:2)=[5,50]; % at least be connected to 5 - 50% of fibers
+        params=params(paramidx,:);
+    case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)','Plain Connections'} % e-fields, reverse-t-tests for binary & efields
         paramidx=logical([1 % threshstrategy
             1 % corrtype
             1 % efieldmetric
@@ -366,7 +379,7 @@ tractset.save;
 
     function ip=augmentips(ip)
         switch tractset.statmetric
-            case {1,3,4,5} % t-tests, OSS-DBS, proportion tests, binomial tests
+            case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'} % t-tests, OSS-DBS, proportion tests, binomial tests
                 %% general heuristic 1: 20 % coverage
                 ip=[ip
                     [3 % thresh strategy: fixed amount
@@ -431,7 +444,7 @@ tractset.save;
                     0 % shownegamount: 0 on each side = 0 fibers
                     30]' % connthreshold: 30% connected sites
                     ];
-            case {2,6,7} % e-fields, reverse-t-tests for binary & efields
+            case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)','Plain Connections'} % e-fields, reverse-t-tests for binary & efields
                 %% general heuristic 1: high tract impact, low % coverage
                 ip=[ip
                     [3 % thresh strategy: fixed amount
@@ -727,16 +740,16 @@ tractset.save;
     function out=resolve_corrtype(out)
         if ischar(out)
             switch out
-                case 'Pearson'
+                case {'Pearson','T-Tests'}
                     out=1;
-                case 'Spearman'
+                case {'Spearman','Wilcoxon Signed Rank Tests'}
                     out=2;
                 case 'Bend'
                     out=3;
             end
         else
             switch out
-                case 1
+                case 1 % need to check t-tests vs pearson here:
                     out='Pearson';
                 case 2
                     out='Spearman';
