@@ -915,7 +915,7 @@ def addCustomLayout():
   except:
     mainWindow = None
 
-  if mainWindow and not layoutNode.GetLayoutDescription(customLayoutId):
+  if mainWindow and not layoutNode.IsLayoutDescription(customLayoutId):
     layoutNode.AddLayoutDescription(customLayoutId, customLayout)                                         
     viewToolBar = mainWindow.findChild("QToolBar", "ViewToolBar")
     layoutMenu = viewToolBar.widgetForAction(viewToolBar.actions()[0]).menu()
