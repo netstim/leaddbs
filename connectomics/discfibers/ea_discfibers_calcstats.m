@@ -155,13 +155,13 @@ for group=groups
 
     for side=1:numel(gfibsval)
         % check connthreshold
-        if obj.runwhite || obj.statmetric == 7 % plain connections
+        if obj.runwhite || strcmp(obj.statmetric,'Plain Connections')
             sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
         else
             switch obj.statmetric
-                case {1,3,4,5}
+                case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','One-Sample Tests / VTAs / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'}
                     sumgfibsval=sum(gfibsval{side}(:,gpatsel),2);
-                case {2,6}
+                case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)'}
                     sumgfibsval=sum((gfibsval{side}(:,gpatsel)>obj.efieldthreshold),2);
             end
         end
@@ -169,7 +169,7 @@ for group=groups
         % to too many VTAs (connthreshold slider)
         if ~obj.runwhite
             gfibsval{side}(sumgfibsval<((obj.connthreshold/100)*length(gpatsel)),gpatsel)=0;
-            if ~(ismember(obj.statmetric,[2,6])) % efields & reverse t-tests for binary vars cases
+            if ~(ismember(obj.statmetric,{'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)'})) % efields & reverse t-tests for binary vars cases
                 % only in case of VTAs (given two-sample-t-test statistic) do we
                 % need to also exclude if tract is connected to too many VTAs:
                 gfibsval{side}(sumgfibsval>((1-(obj.connthreshold/100))*length(gpatsel)),gpatsel)=0;
@@ -181,7 +181,7 @@ for group=groups
         if obj.showsignificantonly
             pvals{group,side}=vals{group,side};
         end
-        if obj.runwhite || obj.statmetric == 7 % plain connections
+        if obj.runwhite || strcmp(obj.statmetric,'Plain Connections')
             vals{group,side} = sumgfibsval/length(gpatsel);
        
             if ~obj.runwhite % the white fibers will always show connection to any single vta/roi.
@@ -190,12 +190,12 @@ for group=groups
                 vals{group,side}(vals{group,side}==0)=nan;
             end
 
-            if (obj.statmetric == 7) && obj.showsignificantonly
+            if strcmp(obj.statmetric,'Plain Connections') && obj.showsignificantonly
                 ea_error('Calculating significance does not make sense (plain connections mode)');
             end
         else
             switch obj.statmetric
-                case {1,3} % t-tests
+                case 'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)' % two-sample t-tests / OSS-DBS
                     % check if covariates exist:
                     if exist('covars', 'var')
                         % they do:
@@ -247,7 +247,34 @@ for group=groups
 
                         %vals{group,side}(p>0.5)=nan; % discard noisy fibers (optional or could be adapted)
                     end
-                case 2 % correlations
+                case 'One-Sample Tests / VTAs / PAM (OSS-DBS)'
+                    switch obj.corrtype
+                        case 'T-Tests'
+                            if exist('covars', 'var')
+                                ea_error('Covariates not implemented for One-Sample T-Tests.')
+                            else
+                                % no covariates exist:
+                                allvals=repmat(I(gpatsel,side)',size(gfibsval{side}(:,gpatsel),1),1); % improvement values (taken from Lead group file or specified in line 12).
+                                fibsimpval=allvals; % Make a copy to denote improvements of connected fibers
+                                fibsimpval=double(fibsimpval); % in case entered logical
+                                fibsimpval(~logical(gfibsval{side}(:,gpatsel)))=nan; % Delete all unconnected values
+                                [~,ps,~,stats]=ttest(fibsimpval'); % Run one-sample t-test across connected / unconnected values
+                                vals{group,side}=stats.tstat';
+                                if obj.showsignificantonly
+                                    pvals{group,side}=ps';
+                                end
+                            end
+                    
+                        case 'Wicoxon Signed Rank Tests'
+                            if exist('covars', 'var')
+                                ea_error('Covariates not implemented for Wilcoxon Tests.')
+                            else
+                                ea_error('Wilcoxon Tests not yet implemented.')
+                            end
+
+                    end
+                    
+                case 'Correlations / E-fields (Irmen 2020)'
                     if ismember(lower(obj.corrtype),{'pearson','spearman'})
                         conventionalcorr=1;
                     else
@@ -312,7 +339,7 @@ for group=groups
                             pvals{group,side}(nonempty)=outps;
                         end
                     end
-                case 4 % Proportion Test (Chi-Square) / VTAs (binary vars)
+                case 'Proportion Test (Chi-Square) / VTAs (binary vars)'
 
                     nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
                     invals=gfibsval{side}(nonempty,gpatsel)';
@@ -339,40 +366,29 @@ for group=groups
                             pvals{group,side}(nonempty)=outps;
                         end
                     end
-                case 5 % Binomial Tests / VTAs (binary vars)
-                    nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
+                case 'Binomial Tests / VTAs (binary vars)'
+                    nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0; % number of connected tracts
                     invals=gfibsval{side}(nonempty,gpatsel)';
                     if ~isempty(invals)
 
                         ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
                         % restore nans
                         ImpBinary(isnan(I(gpatsel,side)))=nan;
-                        suminvals=full(sum(invals(ImpBinary == 1,:),1));
-                        Ninvals=sum(ImpBinary == 1,1);
-                        sumoutvals=full(sum(invals(ImpBinary == 0,:),1));
-                        Noutvals=sum(ImpBinary == 0,1);
+                        sum_coverage_createeffect=full(sum(invals(ImpBinary == 1,:),1)); % sum of coverage that creates the effect for all tracts
+                        sum_coverage_noeffect=full(sum(invals(ImpBinary == 0,:),1)); % sum of coverage that does not create the effect for all tracts
 
-                        y=zeros(size(invals,2),1); %
-                        outps=y; %
-
-                        for fib=1:size(invals,2)
-                            sum_coverage_createeffect=suminvals(fib);
-                            sum_coverage=sumoutvals(fib)+suminvals(fib);
-                            prob_createeffect=sum(ImpBinary)/length(gpatsel);
-
-                            if obj.showsignificantonly
-                                outps(fib) = binopdf(sum_coverage_createeffect,sum_coverage,prob_createeffect);
-                            end
-                            thisvals(fib) = (sum_coverage_createeffect./sum_coverage) - (prob_createeffect);
-                        end
-
+                        prob_createeffect=ea_nansum(ImpBinary)/sum(~isnan(ImpBinary));
+                        sum_coverage=sum_coverage_noeffect+sum_coverage_createeffect;
+                        outps = binopdf(sum_coverage_createeffect,sum_coverage_noeffect+sum_coverage_createeffect,ea_nansum(ImpBinary)/sum(~isnan(ImpBinary)));
+                        thisvals = (sum_coverage_createeffect./(sum_coverage)) - prob_createeffect;
+                        
                         vals{group,side}(nonempty)=thisvals;
                         if exist('outps','var') % only calculated if testing for significance.
                             pvals{group,side}(nonempty)=outps;
                         end
 
                     end
-                case 6 % Reverse t-tests with efields for binary variables
+                case 'Reverse T-Tests / E-Fields (binary vars)'
                     nonempty=full(sum(gfibsval{side}(:,gpatsel),2))>0;
                     invals=gfibsval{side}(nonempty,gpatsel)';
                     if ~isempty(invals)
