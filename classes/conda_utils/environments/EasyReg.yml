@@ -5,13 +5,13 @@ channels:
   - defaults
 
 dependencies:
-- keras=2.11.0
-- nibabel=5.0.0
-- numpy=1.23.1
-- python=3.8
-- pytorch=1.13.1
-- scipy=1.10.0
-- tensorflow=2.11.0
-- pip:
-  - surfa==0.3.7
-  - voxelmorph==0.2
+  - keras=2.11.0
+  - nibabel=5.0.0
+  - numpy=1.23.1
+  - python=3.8
+  - pytorch=1.13.1
+  - scipy=1.10.0
+  - tensorflow=2.11.0
+  - pip:
+    - surfa==0.3.7
+    - voxelmorph==0.2
