@@ -29,6 +29,11 @@ end
 
 fastsurferFolder = fullfile(ea_getearoot, 'ext_libs', 'fastsurfer');
 
+% Check Conda installation
+if ~ea_conda.is_installed
+    ea_conda.install;
+end
+
 % Check Conda environment
 condaenv = ea_conda_env('FastSurfer');
 if ~condaenv.is_created
