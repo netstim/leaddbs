@@ -426,9 +426,15 @@ lightbulbbutton=uipushtool(ht,'CData',ea_get_icn('lightbulb'),...
 %     'OffCallback',{@objinvisible,getappdata(resultfig,'right_lamp')},'State','on');
 
 if options.prefs.env.dev
-    setBackgroundButton = uipushtool(ht,'CData',ea_get_icn('BG'),...
-        'TooltipString','Set background to Black or White',...
-        'ClickedCallback',{@ea_setElvisBackground,resultfig});
+    setBlackBackgroundButton = uipushtool(ht,'CData',ea_get_icn('BGB'),...
+        'TooltipString','Set background to Black',...
+        'ClickedCallback',@(~, ~) ea_setElvisBlackBackground(resultfig));
+    setWhiteBackgroundButton = uipushtool(ht,'CData',ea_get_icn('BGW'),...
+        'TooltipString','Set background to White',...
+        'ClickedCallback',@(~, ~) ea_setElvisWhiteBackground(resultfig));
+    setTransparentBackgroundButton = uipushtool(ht,'CData',ea_get_icn('BGT'),...
+        'TooltipString','Set background to Transparent',...
+        'ClickedCallback',@(~, ~) ea_setElvisTransparentBackground(resultfig));
 end
 
 % Initialize HD-Export button
@@ -600,31 +606,53 @@ ea_defaultview_transition(v,togglestates);
 ea_defaultview(v,togglestates);
 
 
-function ea_setElvisBackground(source,eventdata,resultfig)
-bg = get(resultfig, 'Color');
+function ea_setElvisBlackBackground(resultfig)
 cmap = gray;
-if all(bg==[0 0 0]) % Black, default background
-    % Get volume data
-    V = getappdata(resultfig, 'V');
-    if isa(V{1}, 'nifti')
-        V = V{1}.dat; % Memory mapped nifti struct
-    else
-        V = V{1}.img; % Standard nifti struct
-    end
+set(resultfig, 'Color', 'k', 'Colormap', cmap);
 
-    % Take the middle z slice
-    zslice = V(:,:,round(size(V,3)/2));
 
-    % Check if background (1st voxel) is dark or bright
-    if zslice(1,1) < mean(zslice(:))
-        % Flip black to white in colormap in case background is dark
-        cmap(1,:) = [1 1 1];
-    end
-
-    set(resultfig, 'Color', 'w', 'Colormap', cmap);
-elseif all(bg==[1 1 1]) % Already toggled to white
-    set(resultfig, 'Color', 'k', 'Colormap', cmap);
+function ea_setElvisWhiteBackground(resultfig)
+cmap = gray;
+% Get volume data
+V = getappdata(resultfig, 'V');
+if isa(V{1}, 'nifti')
+    V = V{1}.dat; % Memory mapped nifti struct
+else
+    V = V{1}.img; % Standard nifti struct
 end
+
+% Take the middle z slice
+zslice = V(:,:,round(size(V,3)/2));
+
+% Check if background (1st voxel) is dark or bright
+if zslice(1,1) < mean(zslice(:))
+    % Flip black to white in colormap in case background is dark
+    cmap(1,:) = [1 1 1];
+end
+
+set(resultfig, 'Color', 'w', 'Colormap', cmap);
+
+
+function ea_setElvisTransparentBackground(resultfig)
+cmap = gray;
+% Get volume data
+V = getappdata(resultfig, 'V');
+if isa(V{1}, 'nifti')
+    V = V{1}.dat; % Memory mapped nifti struct
+else
+    V = V{1}.img; % Standard nifti struct
+end
+
+% Take the middle z slice
+zslice = V(:,:,round(size(V,3)/2));
+
+% Check if background (1st voxel) is dark or bright
+if zslice(1,1) < mean(zslice(:))
+    % Flip black to white in colormap in case background is dark
+    cmap(1,:) = [1 1 1];
+end
+
+set(resultfig, 'Color', 'none', 'Colormap', cmap);
 
 
 function export_video(hobj,ev,options)
