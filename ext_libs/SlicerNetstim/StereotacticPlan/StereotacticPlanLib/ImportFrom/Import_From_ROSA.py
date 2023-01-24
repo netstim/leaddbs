@@ -49,9 +49,11 @@ class Importer():
             targetCoordinatesForComputation = np.fromstring(rosa_trajectory['target'], dtype=float, sep=',') 
             entryCoordinatesForComputation = np.fromstring(rosa_trajectory['entry'], dtype=float, sep=',') 
             if importInFrameSpace:
-                transform = slicer.util.array(self.getReferenceToFrameTransform().GetID())
+                transformNode = self.getReferenceToFrameTransform()
+                transform = slicer.util.array(transformNode.GetID())
                 targetCoordinatesForComputation = np.dot(transform, np.append(targetCoordinatesForComputation, 1))[:3]
                 entryCoordinatesForComputation = np.dot(transform, np.append(entryCoordinatesForComputation, 1))[:3]
+                slicer.mrmlScene.RemoveNode(transformNode)
             self.logic.computeTrajectoryFromTargetEntryRoll(trajectoryTransform,
                                 targetCoordinatesForComputation,
                                 entryCoordinatesForComputation,
@@ -64,7 +66,8 @@ class Importer():
             DICOMUtils.importDicom(DICOMDir, database)
             rosa_reference_node_ID = DICOMUtils.loadSeriesByUID([first_series_uid])[0]
         slicer.modules.volumes.logic().CenterVolume(slicer.util.getNode(rosa_reference_node_ID))
-        slicer.util.resetSliceViews()
+        if slicer.app.layoutManager():
+            slicer.app.layoutManager().resetSliceViews()
         return slicer.util.getNode(rosa_reference_node_ID)
 class ROSAManager:
     def __init__(self, ros_file_path):
