@@ -244,8 +244,23 @@ class WarpDriveCorrectionsTable(baseTable):
     self.targetVisibleButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
     self.targetVisibleButton.toggled.connect(self.onTargetVisibleToggled)
 
+    effectPixmap = qt.QPixmap(os.path.join(os.path.split(WarpDrive.__file__)[0], 'Resources', 'Icons', 'SlicerUndo.png'))
+    effectIcon = qt.QIcon(effectPixmap)
+    self.undoButton = qt.QToolButton()
+    self.undoButton.setToolButtonStyle(qt.Qt.ToolButtonTextUnderIcon)
+    self.undoButton.setIcon(effectIcon)
+    self.undoButton.setIconSize(effectPixmap.rect().size())
+    self.undoButton.setText('Undo')
+    self.undoButton.setToolTip('Undo last correction')    
+    self.undoButton.setCheckable(False)
+    self.undoButton.setChecked(False)
+    self.undoButton.setEnabled(True)
+    self.undoButton.setSizePolicy(qt.QSizePolicy.MinimumExpanding,qt.QSizePolicy.Maximum)
+    self.undoButton.clicked.connect(self.onUndoClicked)
+
     self.buttonsFrame.layout().addWidget(self.sourceVisibleButton,1)
     self.buttonsFrame.layout().addWidget(self.targetVisibleButton,1)
+    self.buttonsFrame.layout().addWidget(self.undoButton,1)
 
     self.addButton.setText('Fixed point')
     self.addButton.setToolTip('Add fixed point')
@@ -261,6 +276,9 @@ class WarpDriveCorrectionsTable(baseTable):
     pass
 
   def onSelectionChanged(self):
+    pass
+
+  def onUndoClicked(self):
     pass
 
   def clearTable(self):
@@ -403,6 +421,16 @@ class WarpDriveCorrectionsManager(VTKObservationMixin, WarpDriveCorrectionsTable
     correctionName = self.getSelectedCorrectionName()
     if correctionName is None:
       return
+    self.removeCorrectionByName(correctionName)
+
+  def onUndoClicked(self):
+    if self.model.rowCount() == 0:
+      return
+    index = self.model.index(self.model.rowCount()-1, 1)
+    correctionName = self.model.itemData(index)[0]
+    self.removeCorrectionByName(correctionName)
+
+  def removeCorrectionByName(self, correctionName):
     targetFiducialNode = slicer.mrmlScene.GetNodeByID(self.targetFiducialNodeID)
     sourceFiducialNode = slicer.mrmlScene.GetNodeByID(self.sourceFiducialNodeID)
     for i in range(targetFiducialNode.GetNumberOfControlPoints()-1,-1,-1):

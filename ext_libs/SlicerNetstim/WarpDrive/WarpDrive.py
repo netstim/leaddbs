@@ -365,7 +365,7 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self._parameterNode.SetParameter("Stiffness", str(self.ui.stiffnessSpinBox.value))
     # spacing
     if self.ui.spacingSameAsInputCheckBox.checked:
-      size,origin,spacing = GridNodeHelper.getGridDefinition(currentInputNode)
+      size,origin,spacing,directionMatrix = GridNodeHelper.getGridDefinition(currentInputNode)
     else:
       spacing = [self.ui.spacingSpinBox.value]
     self._parameterNode.SetParameter("Spacing", str(spacing[0])) 
@@ -397,10 +397,10 @@ class WarpDriveWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     sourceFiducial = self._parameterNode.GetNodeReference("SourceFiducial")
     targetFiducial = self._parameterNode.GetNodeReference("TargetFiducial")
     # reference
-    size,origin,spacing = GridNodeHelper.getGridDefinition(self._parameterNode.GetNodeReference("InputNode"))
-    userSpacing = [float(self._parameterNode.GetParameter("Spacing"))] * 3
-    size = np.array(size) * (np.array(spacing) / np.array(userSpacing))
-    auxVolumeNode = GridNodeHelper.emptyVolume([int(s) for s in size], origin, userSpacing)
+    size,origin,spacing,directionMatrix = GridNodeHelper.getGridDefinition(self._parameterNode.GetNodeReference("InputNode"))
+    userSpacing = np.ones(3) * float(self._parameterNode.GetParameter("Spacing"))
+    size = size * (spacing / userSpacing)
+    auxVolumeNode = GridNodeHelper.emptyVolume(size.astype(int), origin, userSpacing, directionMatrix)
     # output
     outputNode = self._parameterNode.GetNodeReference("OutputGridTransform")
     # params
@@ -511,7 +511,8 @@ class WarpDriveLogic(ScriptedLoadableModuleLogic):
     if RBFRadius != "":
       cliNode = self.computeWarp(referenceVolume, outputNode, sourceFiducial, targetFiducial, RBFRadius, stiffness)
     else:
-      GridNodeHelper.emptyGridTransform(referenceVolume.GetImageData().GetDimensions(), referenceVolume.GetOrigin(), referenceVolume.GetSpacing(), outputNode)
+      size, origin, spacing, directionMatrix = GridNodeHelper.getGridDefinition(referenceVolume)
+      GridNodeHelper.emptyGridTransform(size, origin, spacing, directionMatrix, outputNode)
       return
     return cliNode
 
