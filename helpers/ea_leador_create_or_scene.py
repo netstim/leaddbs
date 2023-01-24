@@ -112,4 +112,4 @@ slicer.mrmlScene.RemoveNode(referenceVolumeNode)
 sceneSaveFilename = os.path.join(subjectLeadORFolder, 'ORScene.mrb')
 slicer.util.saveScene(sceneSaveFilename)
 
-# slicer.util.exit()
+slicer.util.exit()
