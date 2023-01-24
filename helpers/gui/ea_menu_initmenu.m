@@ -62,6 +62,11 @@ if isempty(menuprobe)
         
     uimenu(f,'Label','Read in stimulation settings from move.base','Callback',{@ea_import_movebase_stimsettings,handles});
 
+    if ismember('leador',cmd)
+        dbs=uimenu(f,'Label','Lead-OR');
+        uimenu(dbs,'Label','Create OR Scene','Callback',{@ea_leador_create_or_scene,handles});
+    end
+    
     if ismember('dbs',cmd)
         dbs=uimenu(f,'Label','DBS');
         uimenu(dbs,'Label','Recalculate DBS reconstruction in template space','Callback',{@ea_recalc_reco,handles});
