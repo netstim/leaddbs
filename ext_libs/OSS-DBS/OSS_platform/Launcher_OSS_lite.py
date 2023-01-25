@@ -486,6 +486,8 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
             Truncated_pulse.get_freqs_for_calc()
             with open(os.environ['PATIENTDIR'] + '/Stim_Signal/Truncated_pulse_'+str(d['trunc_param']*1.0)+'.file', "wb") as f:
                 pickle.dump(Truncated_pulse, f, pickle.HIGHEST_PROTOCOL)
+                
+        d["trunc_param"] = Truncated_pulse.trunc_param   # only changed when using one_sample_10kHz
 
 
     # ==========Calculate freq in parallel and rearrange field array===============#
