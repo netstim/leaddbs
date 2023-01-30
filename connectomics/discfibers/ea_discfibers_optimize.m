@@ -47,7 +47,7 @@ params=[3,  3,      1,  resolve_threshstrategy(tractset.threshstrategy)         
     1,  100,    0,  mean(tractset.showposamount)                            % showposamount % will be multiplied by 10 for fixed amount
     1,  100,    0,  mean(tractset.shownegamount)                            % shownegamount % will be multiplied by 10 for fixed amount
     0,  30,     0,  tractset.connthreshold                                  % connthreshold
-    1,  1,      0,  tractset.efieldthreshold];                              % efieldthreshold % will be scaled depending on efieldmetric
+    0,  1,      0,  tractset.efieldthreshold];                              % efieldthreshold % will be scaled depending on efieldmetric
 
 switch tractset.statmetric
     case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'} % t-tests, OSS-DBS, proportion tests, binomial tests
@@ -86,7 +86,7 @@ switch tractset.statmetric
             1]); % efieldthreshold
         params=params(paramidx,:);
 end
-if tractset.statmetric==7
+if strcmp(tractset.statmetric,'Plain Connections')
     choice=questdlg({'In many (but not all) cases, optimization in plain connections mode does not make too much sense, conceptually. Do you still want to proceed?'},'Plain Connections','Yes','No','No');
     if strcmp(choice,'No')
         return
@@ -248,7 +248,8 @@ tractset.save;
     end
 
 
-    function sim=ea_compute_sim_val_struct(val_struct)
+  
+  function sim=ea_compute_sim_val_struct(val_struct)
         numfold=length(val_struct);
         numvoter=size(val_struct{1}.vals,1);
         numside=size(val_struct{1}.vals,2);
@@ -275,7 +276,6 @@ tractset.save;
         sim=corr(Adj','rows','pairwise');
         sim=ea_nanmean(sim(logical(triu(ones(numfold),1)))); % take average of upper triangle
     end
-
 
 
     function Fval=getFval(tractset,cv,sd)
