@@ -80,6 +80,7 @@ ea_ants_schoenecker(template, moving, options.subj.norm.anat.preop.(options.subj
 
 % Move transformation file
 [directory, fileName] = fileparts(options.subj.norm.anat.preop.(options.subj.AnchorModality));
+ea_mkdir(fileparts(options.subj.norm.transform.forwardBaseName));
 movefile([directory, filesep, fileName, '0GenericAffine.mat'], [options.subj.norm.transform.forwardBaseName, 'ants.mat']);
 movefile([directory, filesep, fileName, 'Inverse0GenericAffine.mat'], [options.subj.norm.transform.inverseBaseName, 'ants.mat']);
 

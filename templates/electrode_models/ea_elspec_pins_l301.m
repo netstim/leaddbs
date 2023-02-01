@@ -8,7 +8,7 @@ function electrode=ea_elspec_pins_l301(varargin)
 % Copyright (C) 2015 Charite University Medicine Berlin, Movement Disorders Unit
 % Andreas Horn
 
-options.elmodel='PINS L301';
+options.elmodel='PINS Medical L301';
 
 if nargin
     vizz=0;

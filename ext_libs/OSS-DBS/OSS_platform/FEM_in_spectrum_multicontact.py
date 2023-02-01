@@ -492,6 +492,8 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
     #####    com=np.vstack((coordinat[0:10,0],coordinat[0:10,1],coordinat[0:10,2],real_par[0:10],image_par[0:10],fre_vector[0:10])).T
         comb=np.vstack((Phi_ROI[:,0],Phi_ROI[:,1],Phi_ROI[:,2],Phi_ROI[:,3],Phi_ROI[:,4],fre_vector)).T
 
+        if int(Sim_setup.sine_freq) == int(Sim_setup.signal_freq):
+            np.savetxt('Phi_real_on_Axons_' + str(Sim_setup.signal_freq) + '_PO.csv', Phi_ROI[:, :4], delimiter=' ')
 
         f = h5py.File(os.environ['PATIENTDIR']+'/Field_solutions/sol_cor'+str(core)+'.h5','a')
         f.create_dataset(str(Sim_setup.sine_freq), data=comb)

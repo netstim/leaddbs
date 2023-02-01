@@ -50,6 +50,7 @@ if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'d
 end
 
 views=viewsets.(target).views;
+
 % Adjusting Dorsal View
 views(4).v.az=180;
 views(4).v.el=74.08;

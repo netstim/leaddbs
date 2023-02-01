@@ -448,7 +448,7 @@ classdef ea_sweetspot < handle
             % reset colorbar
             obj.colorbar=[];
             if ~any([obj.posvisible,obj.negvisible])
-                return
+                export=nan;
             end
 
             for group=1:size(vals,1) % vals will have 1x2 in case of bipolar drawing and Nx2 in case of group-based drawings (where only positives are shown).

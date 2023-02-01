@@ -102,7 +102,7 @@ ea_init_normpopup(handles, options.prefs.normalize.default);
 ea_processguiargs(handles,varargin)
 
 %% add tools menu
-ea_menu_initmenu(handles,{'import','acpc','export','applynorm','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
+ea_menu_initmenu(handles,{'import','acpc','export','applynorm','leador','dbs','cluster','prefs','vatcon','transfer','checkregfigs','space','surfice','methods'},options.prefs);
 
 ea_firstrun(handles,options);
 ea_getui(handles);
@@ -584,6 +584,20 @@ else
     set(handles.maskwindow_txt,'Enable','off');
     set(handles.targetpopup,'Enable','off');
 end
+
+ea_storeui(handles);
+
+
+% --- Executes on selection change in MRCT.
+function MRCT_Callback(hObject, eventdata, handles)
+% hObject    handle to MRCT (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns MRCT contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from MRCT
+
+ea_switchctmr(handles, get(hObject,'Value'));
 
 ea_storeui(handles);
 

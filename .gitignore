@@ -64,3 +64,4 @@ Thumbs.db
 /ext_libs/SlicerForLeadDBS*
 /ext_libs/miniconda
 /ext_libs/mambaforge
+/ext_libs/fastsurfer/upstream

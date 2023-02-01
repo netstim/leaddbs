@@ -20,7 +20,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>Input displacement field:</string>
+         <string>Input:</string>
         </property>
        </widget>
       </item>
@@ -30,12 +30,13 @@
          <bool>true</bool>
         </property>
         <property name="toolTip">
-         <string>Pick the input to the algorithm.</string>
+         <string>Input can be a grid transform to be refined, or a volume to be transformed. In case of using a transform, it should be applied to a volume in order to see the edits.</string>
         </property>
         <property name="nodeTypes">
          <stringlist>
-          <string>vtkMRMLTransformNode</string>
+          <string>vtkMRMLScalarVolumeNode</string>
           <string>vtkMRMLGridTransformNode</string>
+          <string>vtkMRMLTransformNode</string>
          </stringlist>
         </property>
         <property name="showChildNodeTypes">
@@ -433,17 +434,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>qMRMLNodeComboBox</class>
-   <extends>QWidget</extends>
-   <header>qMRMLNodeComboBox.h</header>
-  </customwidget>
-  <customwidget>
-   <class>qMRMLWidget</class>
-   <extends>QWidget</extends>
-   <header>qMRMLWidget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>ctkCollapsibleButton</class>
    <extends>QWidget</extends>
    <header>ctkCollapsibleButton.h</header>
@@ -453,6 +443,17 @@
    <class>ctkSliderWidget</class>
    <extends>QWidget</extends>
    <header>ctkSliderWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLNodeComboBox</class>
+   <extends>QWidget</extends>
+   <header>qMRMLNodeComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLWidget</class>
+   <extends>QWidget</extends>
+   <header>qMRMLWidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -15,7 +15,14 @@ classdef ea_disctract < handle
         shownegamount = [25 25] % two entries for right and left
         connthreshold = 20
         efieldthreshold = 200
-        statmetric = 1 % stats metric to use, 1 = t-test, 2 = correlations, 3 = PAM, 4 = proportion Test (Chi-Square) / VTAs (binary vars) 5 = binomial Tests / VTAs (binary vars), 6 = reverse t-tests with efields for binary variables, 7 = plain connections (no stats)
+        statmetric = 'Correlations / E-fields (Irmen 2020)' % the following stat metric are available:
+        % ’Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)’
+        % ’One-Sample Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)’
+        % ‘Correlations / E-fields (Irmen 2020)’
+        % ‘Proportion Test (Chi-Square) / VTAs (binary vars)’
+        % ‘Binomial Tests / VTAs (binary vars)’
+        % ‘Reverse T-Tests / E-Fields (binary vars)’
+        % ‘Plain Connections’
         threshstrategy = 'Percentage Relative to Peak'; % can be 'Relative to Amount' or 'Fixed Amount'
         multi_pathways = 0 % if structural connectome is devided into pathways (multiple .mat in dMRI_MultiTract)
         map_list % list that contains global indices of the first fibers in each pathway (relevant when multi_pathways = 1)
@@ -27,8 +34,8 @@ classdef ea_disctract < handle
         use_adjacency = false   % if true, 'smoothes' the fiber model by addings scores of fibers next to the pivotal ones
         ADJ = false             % contains the large but sparse adjacency matrix
         adj_scaler = 0.025 % coefficient that determines the degree of smoothing. Atm, hardwired, but could adaptive
-        corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
-        efieldmetric = 'Peak' % if statmetric == 2, efieldmetric can calculate sum, mean or peak along tracts
+        corrtype = 'Spearman' % correlation strategy in case of statmetric ==  Correlations / E-fields (Irmen 2020). In case of one-sample tests used for 'T-Tests' vs 'Wicoxon Signed Rank Tests'.
+        efieldmetric = 'Peak' % if statmetric == ‘Correlations / E-fields (Irmen 2020)’, efieldmetric can calculate sum, mean or peak along tracts
         poscolor = [0.9176,0.2000,0.1373] % positive main color
         negcolor = [0.2824,0.6157,0.9725] % negative main color
         multitractmode = 'Single Tract Analysis' % multi mode now coded by this value
@@ -74,7 +81,6 @@ classdef ea_disctract < handle
         leadgroup % redundancy protocol only, path to original lead group project
         connectome % redundancy protocol only, name of underlying connectome
         colorbar % colorbar information
-        groupcolors = ea_color_wes('all');
         useExternalModel = false
         ExternalModelFile = 'None'
         % stats: (how many fibers available and shown etc for GUI)
@@ -89,7 +95,7 @@ classdef ea_disctract < handle
         adjustforgroups = 1 % adjust correlations for group effects
         kIter = 1;
         % misc
-        runwhite = 0; % flag to calculate connected tracts instead of stat tracts 
+        runwhite = 0; % flag to calculate connected tracts instead of stat tracts
     end
 
     properties (Access = private)
@@ -106,6 +112,7 @@ classdef ea_disctract < handle
         end
 
         function initialize(obj,datapath,resultfig)
+
             datapath = GetFullPath(datapath);
             D = load(datapath, '-mat');
             if isfield(D, 'M') % Lead Group analysis path loaded
@@ -163,6 +170,7 @@ classdef ea_disctract < handle
                 ea_error('You have opened a file of unknown type.')
                 return
             end
+            obj.compat_statmetric; % check and resolve for old statmetric code (which used to be integers)
 
             addlistener(obj,'activateby','PostSet',@activatebychange);
 
@@ -175,6 +183,24 @@ classdef ea_disctract < handle
         end
 
 
+        function compat_statmetric(obj)
+            if ~ischar(obj.statmetric) % old language used:
+                switch obj.statmetric % 3 was never used
+                    case 1
+                        obj.statmetric='Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)';
+                    case 2
+                        obj.statmetric='Correlations / E-fields (Irmen 2020)';
+                    case 4
+                        obj.statmetric='Proportion Test (Chi-Square) / VTAs (binary vars)';
+                    case 5
+                        obj.statmetric='Binomial Tests / VTAs (binary vars)';
+                    case 6
+                        obj.statmetric='Reverse T-Tests / E-Fields (binary vars)';
+                    case 7
+                        obj.statmetric='Plain Connections';
+                end
+            end
+        end
         function calculate(obj)
 
             switch obj.connectivity_type
@@ -365,7 +391,7 @@ classdef ea_disctract < handle
             [I, Ihat] = crossval(obj, obj.M.patient.group(obj.patientselection));
         end
 
-        function [I, Ihat] = kfoldcv(obj,silent)
+        function [I, Ihat, val_struct] = kfoldcv(obj,silent)
             if ~exist('silent','var')
                 silent=0;
             end
@@ -375,7 +401,7 @@ classdef ea_disctract < handle
             iter = obj.kIter;
             if iter == 1
                 cvp = cvpartition(length(obj.patientselection),'KFold',obj.kfold);
-                [I,Ihat] = crossval(obj,cvp,[],0,silent);
+                [I,Ihat, ~, val_struct] = crossval(obj,cvp,[],0,silent);
             else
                 % plot some statistics over shuffles
                 r_over_iter = zeros(iter,1);
@@ -386,14 +412,14 @@ classdef ea_disctract < handle
                         fprintf("Iterating fold set: %d",i)
                     end
                     [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp, [], 1);
-                    switch obj.multitractmode
-                        case 'Split & Color By PCA'
-                            if ~silent
+                    if ~silent
+                        switch obj.multitractmode
+                            case 'Split & Color By PCA'
                                 disp("Fold Agreement is not evaluated for PCA")
-                            end
-                        otherwise
-                            inx_nnan = find(isnan(I_iter{i}) ~= 1);
-                            [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i}(inx_nnan),Ihat_iter{i}(inx_nnan),'spearman');
+                            otherwise
+                                inx_nnan = find(isnan(I_iter{i}) ~= 1);
+                                [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i}(inx_nnan),Ihat_iter{i}(inx_nnan),'spearman');
+                        end
                     end
                 end
 
@@ -405,13 +431,13 @@ classdef ea_disctract < handle
                             disp("Fold Agreement is not evaluated for PCA")
                         end
                     otherwise
-                        r_Ihat = zeros(size(Ihat_iter,2));
-                        for i = 1:size(r_Ihat,1)
-                            for j = 1:size(r_Ihat,1)
-                                [r_Ihat(i,j),~]=ea_permcorr(Ihat_iter{i},Ihat_iter{j},'spearman');
-                            end
-                        end
                         if ~silent
+                            r_Ihat = zeros(size(Ihat_iter,2));
+                            for i = 1:size(r_Ihat,1)
+                                for j = 1:size(r_Ihat,1)
+                                    [r_Ihat(i,j),~]=ea_permcorr(Ihat_iter{i},Ihat_iter{j},'spearman');
+                                end
+                            end
                             % plot correlation matrix
                             figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
                             imagesc(triu(r_Ihat));
@@ -454,17 +480,23 @@ classdef ea_disctract < handle
             end
         end
 
-        function [I, Ihat] = lno(obj, Iperm)
+        function [I, Ihat, val_struct] = lno(obj, Iperm, silent)
             rng(obj.rngseed);
             cvp = cvpartition(length(obj.patientselection), 'resubstitution');
             if ~exist('Iperm', 'var') || isempty(Iperm)
-                [I, Ihat] = crossval(obj, cvp);
+                [I, Ihat, ~, val_struct] = crossval(obj, cvp, [], [], silent);
             else
-                [I, Ihat] = crossval(obj, cvp, Iperm);
+                [I, Ihat, ~, val_struct] = crossval(obj, cvp, Iperm, [], silent);
             end
         end
 
-        function [Improvement, Ihat, actualimprovs] = crossval(obj, cvp, Iperm, shuffle, silent)
+        function [Improvement, Ihat, actualimprovs, val_struct] = crossval(obj, cvp, Iperm, shuffle, silent)
+            if ~exist('silent','var')
+                silent=0;
+            end
+            if ~exist('shuffle','var') || isempty(shuffle)
+                shuffle=0;
+            end
             if isnumeric(cvp) % cvp is crossvalind
                 cvIndices = cvp;
                 cvID = unique(cvIndices);
@@ -489,11 +521,11 @@ classdef ea_disctract < handle
                         %Improvement = obj.subscore.vars;
                         for i=1:length(obj.subscore.vars)
                             Improvement{i} = obj.subscore.vars{i}(patientsel);
-                        end           
+                        end
                     else
                         for i=1:length(obj.subscore.vars)
                             Improvement{i} = Iperm(patientsel,i);
-                        end  
+                        end
                     end
                 otherwise
                     if ~exist('Iperm', 'var') || isempty(Iperm)
@@ -599,9 +631,9 @@ classdef ea_disctract < handle
                 % now compute Ihat for the true 'test' left out
                 % updates Ihat(test)
                 if ~exist('Iperm', 'var') || isempty(Iperm)
-                    [Ihat, Ihat_train_global, vals,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test);
+                    [Ihat, Ihat_train_global, val_struct{c}, actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test);
                 else
-                    [Ihat, Ihat_train_global, vals,actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test,Iperm);
+                    [Ihat, Ihat_train_global, val_struct{c}, actualimprovs] = ea_compute_fibscore_model(c, obj.adj_scaler, obj, fibsval, Ihat, Ihat_train_global, patientsel, training, test, Iperm);
                 end
 
                 % predict the improvement in the left-out patient (fold) of
@@ -614,45 +646,45 @@ classdef ea_disctract < handle
                 end
 
             end
+            if ~silent
+                % plot patient score correlation matrix over folds
+                if (~exist('shuffle', 'var')) || shuffle == 0 || isempty(shuffle)
+                    if cvp.NumTestSets ~= 1 && (strcmp(obj.multitractmode,'Single Tract Analysis') || strcmp(obj.multitractmode,'Single Tract Analysis Button'))
 
-            % plot patient score correlation matrix over folds
-            if ~exist('shuffle', 'var') || shuffle == 0
-                if cvp.NumTestSets ~= 1 && (strcmp(obj.multitractmode,'Single Tract Analysis') || strcmp(obj.multitractmode,'Single Tract Analysis Button'))
+                        % put training and test scores together
+                        Ihat_combined = cell(1,cvp.NumTestSets);
+                        %Ihat_combined = Ihat_train_global;
+                        for c=1:cvp.NumTestSets
+                            if isobject(cvp)
+                                training = cvp.training(c);
+                                test = cvp.test(c);
+                            elseif isstruct(cvp)
+                                training = cvp.training{c};
+                                test = cvp.test{c};
+                            end
 
-                    % put training and test scores together
-                    Ihat_combined = cell(1,cvp.NumTestSets);
-                    %Ihat_combined = Ihat_train_global;
-                    for c=1:cvp.NumTestSets
-                        if isobject(cvp)
-                            training = cvp.training(c);
-                            test = cvp.test(c);
-                        elseif isstruct(cvp)
-                            training = cvp.training{c};
-                            test = cvp.test{c};
+                            Ihat_combined{c}(training,1) = Ihat_train_global(c,training,1)';
+                            Ihat_combined{c}(test,1) = Ihat(test,1);
                         end
-    
-                        Ihat_combined{c}(training,1) = Ihat_train_global(c,training,1)';
-                        Ihat_combined{c}(test,1) = Ihat(test,1);
-                    end
 
-                    r_Ihat = zeros(size(Ihat_combined,2));
+                        r_Ihat = zeros(size(Ihat_combined,2));
 
-                    for i = 1:size(r_Ihat,1)
-                        for j = 1:size(r_Ihat,1)
-                            [r_Ihat(i,j),~]=ea_permcorr(Ihat_combined{i},Ihat_combined{j},'spearman');
+                        for i = 1:size(r_Ihat,1)
+                            for j = 1:size(r_Ihat,1)
+                                [r_Ihat(i,j),~]=ea_permcorr(Ihat_combined{i},Ihat_combined{j},'spearman');
+                            end
                         end
+
+                        figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
+                        imagesc(triu(r_Ihat)); % Display correlation matrix as an image
+                        title('Patient scores'' correlations over folds', 'FontSize', 16); % set title
+                        colormap('bone');
+                        cb = colorbar;
+                        % set(cb)
+
                     end
-
-                    figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
-                    imagesc(triu(r_Ihat)); % Display correlation matrix as an image
-                    title('Patient scores'' correlations over folds', 'FontSize', 16); % set title
-                    colormap('bone'); 
-                    cb = colorbar;
-                    % set(cb) 
-
                 end
             end
-
             if obj.nestedLOO
                 % cvs = 'L-O-O-O';
                 % h = ea_corrbox(Improvement,Predicted_dif_models,'permutation',{['Disc. Fiber prediction ',upper(cvs)],empiricallabel,fibscorelabel});
@@ -675,7 +707,7 @@ classdef ea_disctract < handle
                     h=ea_corrbox(Improvement,Predicted_scores,'permutation',{['Disc. Fiber prediction ',plotName],empiricallabel,pred_label, plotName, LM_values_slope, LM_values_intercept},groups_nested);
                 end
             end
-            
+
             if obj.doactualprediction % repeat loops partly to fit to actual response variables:
 
                 Ihat_voters_prediction=nan(size(Ihat));
@@ -689,7 +721,7 @@ classdef ea_disctract < handle
                         training = cvp.training{c};
                         test = cvp.test{c};
                     end
-                    for voter=1:size(vals,1)
+                    for voter=1:size(val_struct{c}.vals,1)
                         switch obj.multitractmode
                             case 'Split & Color By Subscore'
                                 useI=obj.subscore.vars{voter}(patientsel);
@@ -711,7 +743,7 @@ classdef ea_disctract < handle
                             size(Ihat_train_global_av_sides,1),...
                             size(Ihat_train_global_av_sides,2),...
                             size(Ihat_train_global_av_sides,4));
-                            
+
                         predictor_test = squeeze(ea_nanmean(Ihat,2));
                         %predictor=squeeze(ea_nanmean(Ihat_voters,2));
 
@@ -787,8 +819,8 @@ classdef ea_disctract < handle
 
                     for xx=1:size(Ihat,1) % make sure voter weights sum up to 1
                         for yy=1:size(Ihat,2)
-                    %                     for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
-                    %                         for yy=1:size(Ihat_voters,2)
+                            %                     for xx=1:size(Ihat_voters,1) % make sure voter weights sum up to 1
+                            %                         for yy=1:size(Ihat_voters,2)
                             weightmatrix(xx,yy,:)=weightmatrix(xx,yy,:)./ea_nansum(weightmatrix(xx,yy,:));
                         end
                     end
@@ -810,7 +842,7 @@ classdef ea_disctract < handle
 
                     % [coeff,score,latent,tsquared,explained,mu]=pca(subvars,'Rows','complete');
                     % use saved weights to ensure consistency
-                    coeff = obj.subscore.pcacoeff; 
+                    coeff = obj.subscore.pcacoeff;
 
                     if ~exist('silent','var')
                         silent=0;
@@ -830,7 +862,7 @@ classdef ea_disctract < handle
                     end
 
                     % data is zscored, such as mu is 0 (+ some computer rounding error)
-                    % then adding mean is not required 
+                    % then adding mean is not required
                     % also, we want to take scores of the chosen PCs ONLY,
                     % and multiply by coeff of these PCs (= how they map to
                     % the variables) to get estimated clinical scores
@@ -838,7 +870,7 @@ classdef ea_disctract < handle
                     %Ihatout = Ihat*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
                     %Ihatout = Ihat_voters*coeff(:,1:obj.numpcs)' + repmat(mu,size(score,1),1);
 
-                    Ihat = mat2cell(Ihatout, size(Ihatout,1), ones(1,length(obj.subscore.vars))); 
+                    Ihat = mat2cell(Ihatout, size(Ihatout,1), ones(1,length(obj.subscore.vars)));
 
                 otherwise
                     Ihat=squeeze(Ihat);
@@ -865,47 +897,49 @@ classdef ea_disctract < handle
         end
 
 
-        function [Iperm, Ihat, R0, R1, pperm, Rp95] = lnopb(obj, corrType)
+        function [Iperm, Ihat, R0, R1, pperm, Rp95, val_struct] = lnopb(obj, corrType, silent)
             if ~exist('corrType', 'var')
                 corrType = 'Spearman';
             end
-
+            if ~exist('silent','var')
+                silent=0;
+            end
             numPerm = obj.Nperm;
-            
+
             if strcmp(obj.multitractmode,'Split & Color By PCA')
                 Iperm = ea_shuffle(cell2mat(obj.subscore.vars'), numPerm, obj.patientselection, obj.rngseed);
-                Iperm(2:numPerm+1,:,:) = Iperm; 
+                Iperm(2:numPerm+1,:,:) = Iperm;
                 Iperm(1,:,:) = cell2mat(obj.subscore.vars');
                 Ihat = cell(numPerm+1,1);
-                
+
                 R = zeros(numPerm+1, length(obj.subscore.vars));
 
                 for perm=1:numPerm+1
                     if perm==1
-                        fprintf('Calculating without permutation\n\n');
-                        [~, Ihat{perm}] = lno(obj);
+                        if ~silent; fprintf('Calculating without permutation\n\n'); end
+                        [~, Ihat{perm},thisval_struct] = lno(obj, [], silent);
                     else
-                        fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
-                        [~, Ihat{perm}] = lno(obj, squeeze(Iperm(perm,:,:)));
+                        if ~silent; fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm); end
+                        [~, Ihat{perm},thisval_struct] = lno(obj, squeeze(Iperm(perm,:,:)), silent);
                     end
-
+                    val_struct{perm}=thisval_struct{1};
                     for subvar = 1:length(obj.subscore.vars)
                         R(perm,subvar) = corr(Iperm(perm, obj.patientselection, subvar)',...
                             Ihat{perm}{subvar},'type',corrType,'rows','pairwise');
                     end
-                end 
+                end
 
-                R(isnan(R)) = 0.00001; % do not get rid of Nans 
-                
+                R(isnan(R)) = 0.00001; % do not get rid of Nans
+
                 % generate null distribution
                 R1 = R(1,:);
                 for subvar = 1:length(obj.subscore.vars)
-                    R0(:,subvar) = sort(R(2:end,subvar), 'descend'); 
+                    R0(:,subvar) = sort(R(2:end,subvar), 'descend');
                     Rp95(subvar) = R0(round(0.05*numPerm),subvar);
                     pperm(subvar) = mean(abs(R0(:,subvar))>=abs(R1(subvar)));
                     fprintf(['Permuted p for ' obj.subscore.labels{subvar} ' = ' num2str(pperm(subvar)) '.\n']);
                 end
-                
+
                 % Return only selected I
                 Iperm = Iperm(:,obj.patientselection,:);
 
@@ -913,18 +947,18 @@ classdef ea_disctract < handle
                 Iperm = ea_shuffle(obj.responsevar, numPerm, obj.patientselection, obj.rngseed)';
                 Iperm = [obj.responsevar, Iperm];
                 Ihat = cell(numPerm+1, 1);
-    
+
                 R = zeros(numPerm+1, 1);
-    
+
                 for perm=1:numPerm+1
                     if perm==1
                         fprintf('Calculating without permutation\n\n');
-                        [~, Ihat{perm}] = lno(obj);
+                        [~, Ihat{perm},val_struct{perm}] = lno(obj);
                     else
                         fprintf('Calculating permutation: %d/%d\n\n', perm-1, numPerm);
-                        [~, Ihat{perm}] = lno(obj, Iperm(:, perm));
+                        [~, Ihat{perm},val_struct{perm}] = lno(obj, Iperm(:, perm));
                     end
-    
+
                     R(perm) = corr(Iperm(obj.patientselection,perm),Ihat{perm},'type',corrType,'rows','pairwise');
                     % do not kick out NaN scores
                     if isnan(R(perm))
@@ -938,7 +972,7 @@ classdef ea_disctract < handle
                 Rp95 = R0(round(0.05*numPerm));
                 pperm = mean(abs(R0)>=abs(R1));
                 disp(['Permuted p = ',sprintf('%0.2f',pperm),'.']);
-    
+
                 % Return only selected I
                 Iperm = Iperm(obj.patientselection,:);
             end
@@ -976,7 +1010,7 @@ classdef ea_disctract < handle
         end
 
         function draw(obj,vals,fibcell,usedidx) %for cv live visualize
-        %function draw(obj,vals,fibcell)
+            %function draw(obj,vals,fibcell)
 
             % re-define plainconn (since we do not store it)
             try
@@ -1053,9 +1087,9 @@ classdef ea_disctract < handle
                     waitfor(msgbox('The connectivity methods of imported and current model are different! See terminal'));
                     disp('Connectivity type of imported model: ')
                     disp(obj.connectivity_type)
-                    return     
+                    return
                 end
- 
+
                 vals_connected = cell(size(S.vals_all,1),2); % always iterate both sides
                 for voter = 1:size(vals_connected,1)
                     for side=1:size(vals_connected,2)
@@ -1080,7 +1114,7 @@ classdef ea_disctract < handle
                         end
                     end
                 end
-                
+
 
 
                 [vals,fibcell,usedidx]=ea_discfibers_loadModel_calcstats(obj, vals_connected);
@@ -1088,8 +1122,7 @@ classdef ea_disctract < handle
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
             end
 
-                ea_discfibers_showroi(obj);
-
+            ea_discfibers_showroi(obj);
 
             if ~exist('vals','var')
                 [vals,fibcell,usedidx]=ea_discfibers_calcstats(obj);
@@ -1102,7 +1135,7 @@ classdef ea_disctract < handle
             if ~isempty(obj.connfiberdrawn)
                 for side=1:size(obj.connfiberdrawn.fibcell,2)
                     try
-                    delete(obj.conndrawobject{side});
+                        delete(obj.conndrawobject{side});
                     end
                 end
             end
@@ -1156,12 +1189,12 @@ classdef ea_disctract < handle
                             if obj.connectivity_type == 2
                                 [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx))));
                                 if (obj.map_list(ix)-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_PAM{side}(usedidx{side}(inx))) > 0
-                                   ix = ix - 1;
+                                    ix = ix - 1;
                                 end
                             else
                                 [d, ix] = min(abs(obj.map_list-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx))));
                                 if (obj.map_list(ix)-obj.results.(ea_conn2connid(obj.connectome)).connFiberInd_VAT{side}(usedidx{side}(inx))) > 0
-                                   ix = ix - 1;
+                                    ix = ix - 1;
                                 end
                             end
                             num_per_path{side}(ix) = num_per_path{side}(ix)+1;
@@ -1222,6 +1255,7 @@ classdef ea_disctract < handle
                 obj.M.groups.group=1;
                 obj.M.groups.color=ea_color_wes('all');
             end
+
             switch obj.multitractmode
                 case 'Split & Color By Group'
                     linecols=obj.M.groups.color;
@@ -1229,8 +1263,8 @@ classdef ea_disctract < handle
                     linecols = obj.subscore.colors;
                 case 'Split & Color By PCA'
                     linecols = obj.subscore.pcacolors;
-
             end
+
             if isempty(obj.drawobject) % check if prior object has been stored
                 obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
             end
@@ -1241,7 +1275,8 @@ classdef ea_disctract < handle
                     delete(obj.drawobject{tract});
                 end
             end
-           if strcmp(obj.multitractmode,'Single Tract Analysis') || obj.subscore.special_case
+
+            if strcmp(obj.multitractmode,'Single Tract Analysis') || obj.subscore.special_case
                 % reset colorbar
                 obj.colorbar=[];
                 if ~any([obj.posvisible,obj.negvisible])
@@ -1271,7 +1306,7 @@ classdef ea_disctract < handle
                 allvals = full(vertcat(vals{group,:}));
 
                 if isempty(allvals) || all(isnan(allvals))
-                    ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!\n');
+                    % ea_cprintf('CmdWinWarnings', 'Empty or all-nan value found!\n');
                     continue;
                 else
                     allvals(isnan(allvals)) = 0;
@@ -1528,7 +1563,7 @@ classdef ea_disctract < handle
                 if ~isempty(allvals)
                     if domultitract
                         if obj.subscore.special_case
-                           if obj.posvisible && obj.negvisible
+                            if obj.posvisible && obj.negvisible
                                 tick{group} = [1, floor(length(fibcmap{group})/2-40), ceil(length(fibcmap{group})/2+40), length(fibcmap{group})];
                                 poscbvals = sort(allvals(allvals>0));
                                 negcbvals = sort(allvals(allvals<0));
@@ -1601,48 +1636,48 @@ classdef ea_disctract < handle
 
         function activate_tractset(obj)
             if ~isempty(obj.activateby)
-            for entry=1:length(obj.activateby)
-                thisentry=obj.activateby{entry};
-                weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
+                for entry=1:length(obj.activateby)
+                    thisentry=obj.activateby{entry};
+                    weights={ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{1},1),1),...
                         ones(size(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell{2},1),1)};
-                if strfind(thisentry,'cleartune')
-                    thisentry=strrep(thisentry,'cleartune','');
-                    k=strfind(thisentry,'_');
-                    ctentry=str2double(thisentry(1:k-1));
-                    ctside=str2double(thisentry(k+1:end));
-                    weights{ctside}=weights{ctside}+...
-                        full(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
-                elseif strfind(thisentry,'results')
-                    thisentry=strrep(thisentry,'results','');
-                    k=strfind(thisentry,'_');
-                    ctentry=str2double(thisentry(1:k-1));
-                    ctside=str2double(thisentry(k+1:end));
-                    weights{ctside}=weights{ctside}+...
-                        full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
-                else % manual entry - this could be used to weight a tractset based on a (set of) nifti files.
-                    % ignore for now
-                end
-            end
-
-            for side=1:size(obj.drawobject,2)
-                if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
-                    weights{side}=ea_minmax(ea_contrast(weights{side},5))*0.5; % enhance constrast a bit
-                end
-                for entry=1:size(obj.drawobject,1)
-                    dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
-                    dweights=mat2cell(dweights,1,ones(1,length(dweights)));
-                    if ~isempty(dweights)
-                        [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                    if strfind(thisentry,'cleartune')
+                        thisentry=strrep(thisentry,'cleartune','');
+                        k=strfind(thisentry,'_');
+                        ctentry=str2double(thisentry(1:k-1));
+                        ctside=str2double(thisentry(k+1:end));
+                        weights{ctside}=weights{ctside}+...
+                            full(obj.cleartuneresults.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
+                    elseif strfind(thisentry,'results')
+                        thisentry=strrep(thisentry,'results','');
+                        k=strfind(thisentry,'_');
+                        ctentry=str2double(thisentry(1:k-1));
+                        ctside=str2double(thisentry(k+1:end));
+                        weights{ctside}=weights{ctside}+...
+                            full(obj.results.(ea_conn2connid(obj.connectome)).(ea_method2methodid(obj)).fibsval{ctside}(:,ctentry));
+                    else % manual entry - this could be used to weight a tractset based on a (set of) nifti files.
+                        % ignore for now
                     end
                 end
-            end
+
+                for side=1:size(obj.drawobject,2)
+                    if ~(ea_nanmax(weights{side})==1 && ea_nanmin(weights{side})==1)
+                        weights{side}=ea_minmax(ea_contrast(weights{side},5))*0.5; % enhance constrast a bit
+                    end
+                    for entry=1:size(obj.drawobject,1)
+                        dweights=weights{side}(obj.fiberdrawn.usedidx{entry,side})';
+                        dweights=mat2cell(dweights,1,ones(1,length(dweights)));
+                        if ~isempty(dweights)
+                            [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                        end
+                    end
+                end
             else
                 for side=1:size(obj.drawobject,2)
                     for entry=1:size(obj.drawobject,1)
                         dweights=ones(1,length(obj.drawobject{entry,side}));
                         dweights=mat2cell(dweights,1,ones(1,length(dweights)));
                         try
-                        [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
+                            [obj.drawobject{entry,side}.FaceAlpha]=dweights{:};
                         end
                     end
                 end
@@ -1670,5 +1705,5 @@ end
 
 
 function activatebychange(~,event)
-    activate_tractset();
+activate_tractset();
 end

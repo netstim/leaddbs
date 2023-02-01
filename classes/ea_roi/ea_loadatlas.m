@@ -10,6 +10,10 @@ if ischar(atlases) % Input is not atlases struct itself
 end
 
 if isfield(atlases, 'roi')
+    if isstruct(atlases.roi)
+        atlases.roi = arrayfun(@(x) {x}, atlases.roi);
+    end
+
     if ~exist('resultfig','var')
         resultfig=gcf;
     end

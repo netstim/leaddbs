@@ -1,4 +1,4 @@
-function [tractset]=ea_discfibers_optimize(tractset,app)
+function [tractset]=ea_discfibers_optimize(tractset,app,command)
 % Function to optimize parameters for fiber filtering using a Surrogate
 % Optimization Algorithm. The app input is optional but can be used to
 % live-view tuning of parameters.
@@ -23,24 +23,34 @@ function [tractset]=ea_discfibers_optimize(tractset,app)
 % Evaluated points — All points at which the objective function value is known. These points include initial points, Construct Surrogate points, and Search for Minimum points at which the solver evaluates the objective function.
 % Sample points. Pseudorandom points where the solver evaluates the merit function during the Search for Minimum phase. These points are not points at which the solver evaluates the objective function, except as described in Search for Minimum Details.
 
+if ~exist('command','var')
+    command='cv';
+end
 
+toolboxes_installed=ver;
+if ~ismember('Global Optimization Toolbox',{toolboxes_installed.Name})
+    ea_error('You need to install the Matlab Global Optimization Toolbox to use this functionality');
+end
+
+useparallel=0;
 
 warning off
-ks=[2,7]; %[2,7,10];
+ks=[1,5,10]; %[1,2,7,10]; 1 being circular
+numperm=20; % number of iterations for permutation-based dissimilarity score.
 tractset.kIter=1; % make sure to run only 1 iteration.
 
-% lower bounds for list of vars to optimize:
-params=[1,  3,      1,  resolve_threshstrategy(tractset.threshstrategy)         % threshstrategy
+% list of vars to optimize:
+params=[3,  3,      1,  resolve_threshstrategy(tractset.threshstrategy)         % threshstrategy - currently fixed to absolute amounts
     1,  3,      1,  resolve_corrtype(tractset.corrtype)                     % corrtype
-    1,  5,      1,  resolve_efieldmetric(tractset.efieldmetric)             % efieldmetric
+    1,  4,      1,  resolve_efieldmetric(tractset.efieldmetric)             % efieldmetric
     1,  7,      1,  resolve_basepredictionon(tractset.basepredictionon)     % basepredictionon
-    0,  100,    0,  mean(tractset.showposamount)                            % showposamount % will be multiplied by 10 for fixed amount
-    0,  100,    0,  mean(tractset.shownegamount)                            % shownegamount % will be multiplied by 10 for fixed amount
-    0,  100,    0,  tractset.connthreshold                                  % connthreshold
-    1,  1,      0,  tractset.efieldthreshold];                              % efieldthreshold % will be scaled depending on efieldmetric
+    1,  100,    0,  mean(tractset.showposamount)                            % showposamount % will be multiplied by 10 for fixed amount
+    1,  100,    0,  mean(tractset.shownegamount)                            % shownegamount % will be multiplied by 10 for fixed amount
+    0,  30,     0,  tractset.connthreshold                                  % connthreshold
+    0,  1,      0,  tractset.efieldthreshold];                              % efieldthreshold % will be scaled depending on efieldmetric
 
 switch tractset.statmetric
-    case {1,3,4,5} % t-tests, OSS-DBS, proportion tests, binomial tests
+    case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'} % t-tests, OSS-DBS, proportion tests, binomial tests
         paramidx=logical([1 % threshstrategy
             0 % corrtype
             0 % efieldmetric
@@ -52,7 +62,20 @@ switch tractset.statmetric
         params(4,2)=4; % upper bound change: baseprediction on does not allow profile of scores ideas for t-tests
         params(7,1:2)=[1,49]; % boundary change: connthreshold only allows 1-49% for t-tests
         params=params(paramidx,:);
-    case {2,6,7} % e-fields, reverse-t-tests for binary & efields
+    case 'One-Sample Tests / VTAs / PAM (OSS-DBS)'
+        paramidx=logical([1 % threshstrategy
+            1 % ttest vs wilcoxon
+            0 % efieldmetric
+            1 % basepredictionon
+            1 % showposamount
+            1 % shownegamount
+            1 % connthreshold
+            0]); % efieldthreshold
+        params(2,2)=2; % upper bound change: "corrtype" in this case codes for t-test vs. wilcoxon test.
+        params(4,2)=4; % upper bound change: baseprediction on does not allow profile of scores ideas for t-tests
+        params(7,1:2)=[5,50]; % at least be connected to 5 - 50% of fibers
+        params=params(paramidx,:);
+    case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)','Plain Connections'} % e-fields, reverse-t-tests for binary & efields
         paramidx=logical([1 % threshstrategy
             1 % corrtype
             1 % efieldmetric
@@ -63,7 +86,7 @@ switch tractset.statmetric
             1]); % efieldthreshold
         params=params(paramidx,:);
 end
-if tractset.statmetric==7
+if strcmp(tractset.statmetric,'Plain Connections')
     choice=questdlg({'In many (but not all) cases, optimization in plain connections mode does not make too much sense, conceptually. Do you still want to proceed?'},'Plain Connections','Yes','No','No');
     if strcmp(choice,'No')
         return
@@ -76,131 +99,287 @@ ub=params(:,2);
 intcon=params(:,3);
 
 % set up initial points with some good heuristics:
-ip=params(:,4)'; % first initial point is whatever the user tried
+ip.X=params(:,4)'; % first initial point is whatever the user tried
 
-ip=augmentips(ip);
+ip.X=augmentips(ip.X);
 
 %ip=repmat(ip',10,1);
 %ip(2:end,1:4)=ip(2:end,1:4).*(1+(0.1*randn(size(ip(2:end,1:4)))));
 
 options=optimoptions('surrogateopt',...
-    'MaxFunctionEvaluations',240,...
-    'ObjectiveLimit',-0.95,... % optimal solution with average correlations of R~0.95 (rare to happen)
-    'UseParallel',true,...
-    'InitialPoints',ip,...
-    'PlotFcn','surrogateoptplot',... 
+    'ObjectiveLimit',-0.9,... % optimal solution with average correlations of R~0.8 (rare to happen), lowest theoretical point is zero with an R of 1
+    'MinSurrogatePoints',120,...
+    'PlotFcn','surrogateoptplot',...
     'Display','iter');
 %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
 
+
+
 % Solve problem
 objconstr=@(x)struct('Fval',nestedfun(x));
-% if exist(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),'file')
-%     choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file?','Resume optimization?','Yes','Start from scratch','Yes');
-%     switch choice
-%         case 'Start from scratch'
-%             [XOptim,fval,exitflag,output]=surrogateopt(objconstr,lb,ub,find(intcon),options);
-%         case 'Yes'
-%             keyboard
-%             [XOptim,fval,exitflag,output]=surrogateopt(fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),options);
-%     end
-% else
-     [XOptim,fval,exitflag,output]=surrogateopt(objconstr,lb,ub,find(intcon),options);
-% end
+if exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'file')
+    choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file? Only do so if the prior combination used the same general setup & patient selection, etc.','Resume optimization?','Resume Optimization','Load saved optimum and stop','Start from scratch','Yes');
+    switch choice
+        case 'Start from scratch'
+            outcopy=fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'_',ea_generate_uuid,'.mat']);
+            copyfile(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),outcopy)
+            disp(['Starting from scratch. Backed up prior state to ',outcopy,'.']);
+        case 'Load saved optimum and stop'
+            priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
+            [fval,ix]=max(priorstate.ip.Fval);
+            XOptim=priorstate.ip.X(ix,:);
+            tractset=updatetractset(tractset,XOptim);
+            disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
+            warning on
+            tractset.save;
+            return
+        case 'Resume Optimization'
+            priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
+            ip=priorstate.ip;
+    end
+else
+end
 
 
-% resolve integer vars:
-tractset.threshstrategy=resolve_threshstrategy(XOptim(1));
-tractset.corrtype=resolve_corrtype(XOptim(2));
-tractset.efieldmetric=resolve_efieldmetric(XOptim(3));
-tractset.basepredictionon=resolve_basepredictionon(XOptim(4));
+% check for parallel processing toolbox
+if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
+    options.UseParallel=true;
+    parpool('Processes',2);
+end
 
-tractset.showposamount=repmat(XOptim(5),1,2);
-tractset.shownegamount=repmat(XOptim(6),1,2);
-tractset.connthreshold=XOptim(7);
-tractset.efieldthreshold=XOptim(8);
+choice='y';
+numIters=120;
+while 1
+    switch choice
+        case 'y'
+            options.InitialPoints=ip;
+            if ~exist('numIters','var')
+                numIters = input(sprintf('%s\n\n','Great, let us continue. How many trials do you want to run (enter amount)'),'s');
+                numIters = str2double(numIters);
+            end
+            options.MaxFunctionEvaluations=numIters;
+            [XOptim,fval,exitflag,output,ip]=surrogateopt(objconstr,lb,ub,find(intcon),options);
+            save(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'ip');
+        otherwise
+            break
+    end
+    choice = input(sprintf('%s\n\n',['Optimal solution: Average R = ',num2str(-fval),'. Do you wish to continue optimizing? (y/n)']),'s');
+    clear numIters
+end
+tractset=updatetractset(tractset,XOptim);
 
-disp(['Optimal solution: Average R = ',num2str(fval),'.']);
+
+
+disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
 warning on
-keyboard
 
+if ismember('Parallel Computing Toolbox',{toolboxes_installed.Name}) && useparallel
+    poolobj = gcp('nocreate'); delete(poolobj);
+end
 
+tractset.save;
 
 % Nested function that computes the objective function
     function Fval = nestedfun(X)
 
+        tractset=updatetractset(tractset,X);
+
+        if exist('app','var') % could be cool to update the state of the app GUI live.
+            %updateapp(app,X);
+        end
+        switch command
+            case 'cv'
+                Fval=getFval(tractset,1,0);
+            case 'sim'
+                Fval=getFval(tractset,0,1);
+            case 'comb'
+                Fval=getFval(tractset,1,1);
+        end
+    end
+
+    function tractset=updatetractset(tractset,X)
+        tractset.posvisible=1; % hard coded to always set on - we will alternate the amounts though.
+        tractset.negvisible=1;
+
         % resolve integer vars:
+        disp('Parameters applied: ');
+
         tractset.threshstrategy=resolve_threshstrategy(X(1));
         tractset.corrtype=resolve_corrtype(X(2));
         tractset.efieldmetric=resolve_efieldmetric(X(3));
         tractset.basepredictionon=resolve_basepredictionon(X(4));
 
+        fprintf('%s: %s\n','Threshold strategy',tractset.threshstrategy);
+        fprintf('%s: %s\n','Correlation type',tractset.corrtype);
+        fprintf('%s: %s\n','Efield metric',tractset.efieldmetric);
+        fprintf('%s: %s\n','Base prediction on',tractset.basepredictionon);
+
         % set continuous vars:
         switch tractset.threshstrategy
             case 'Fixed Amount'
-                tractset.showposamount=repmat(round(X(5))*10,1,2);
-                tractset.shownegamount=repmat(round(X(6))*10,1,2);
+                tractset.showposamount=repmat(round(X(5))*50,1,2);
+                tractset.shownegamount=repmat(round(X(6))*50,1,2);
             otherwise % percentages
                 tractset.showposamount=repmat(X(5),1,2);
                 tractset.shownegamount=repmat(X(6),1,2);
         end
+        fprintf('%s: %01.1f \n','Show Positive Amount',mean(tractset.showposamount));
+        fprintf('%s: %01.1f \n','Show Negative Amount',mean(tractset.shownegamount));
+
 
         tractset.connthreshold=X(7);
+        fprintf('%s: %01.1f \n','Connectivity Threshold',tractset.connthreshold);
 
         switch tractset.efieldmetric % depending on efieldmetric, efieldthresholds should be scaled - input goes from 0 to 1
             case 'Sum'
                 offset = 0.5;
-                maxval = 5;
+                maxval = 3.5;
             case 'Mean'
                 offset = 2.5;
-                maxval = 1000;
+                maxval = 350;
             case {'Peak','Peak 5%'}
                 offset = 0.05;
-                maxval = 5;
+                maxval = 2;
         end
         tractset.efieldthreshold=(X(8)+offset)/(offset+1)*maxval;
+        fprintf('%s: %01.1f \n','E-Field Threshold',tractset.efieldthreshold);
 
-
-        if exist('app','var') % could be cool to update the state of the app GUI live.
-            %updateapp(app,X);
-        end
-
-        Fval=getR(tractset);
     end
 
-    function R=getR(tractset)
+
+  
+  function sim=ea_compute_sim_val_struct(val_struct)
+        numfold=length(val_struct);
+        numvoter=size(val_struct{1}.vals,1);
+        numside=size(val_struct{1}.vals,2);
+        % determine size to set up similarity matrix:
+        maxusedidx=1;
+        for fold=1:numfold
+            for entry=1:numel(val_struct{fold}.usedidx)
+                thismaxusedidx=max(val_struct{fold}.usedidx{entry});
+                if thismaxusedidx>maxusedidx
+                    maxusedidx=thismaxusedidx;
+                end
+            end
+        end
+        Adj=nan(numfold,numvoter,numside,maxusedidx,'single');
+        % fill matrix:
+        for fold=1:numfold
+            for voter=1:numvoter
+                for side=1:numside
+                    Adj(fold,voter,side,val_struct{fold}.usedidx{voter,side})=val_struct{fold}.vals{voter,side};
+                end
+            end
+        end
+        Adj=reshape(Adj,[numfold,numvoter*numside*maxusedidx]);
+        sim=corr(Adj','rows','pairwise');
+        sim=ea_nanmean(sim(logical(triu(ones(numfold),1)))); % take average of upper triangle
+    end
+
+
+    function Fval=getFval(tractset,cv,sd)
 
         tractset.customselection = [];
         tractset.useExternalModel = false;
+        cnt=1;
+        R=nan(length(ks),1);
         for k=1:length(ks)
-            tractset.kfold = ks(k);
-            try
-                [I,Ihat]=tractset.kfoldcv(1); % 1 = silent mode
-                if iscell(I)
-                    for entry=1:length(I)
-                        Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+            if ks(k)==1 % circular
+                if cv
+                    tractset.customselection=tractset.patientselection;
+                    cvp.training{1}=ones(1,length(tractset.customselection));
+                    cvp.test{1}=ones(1,length(tractset.customselection));
+                    cvp.NumTestSets=1;
+                    try
+                        [I, Ihat]=tractset.crossval(cvp,[],0,1);
+                        if iscell(I)
+                            for entry=1:length(I)
+                                Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                            end
+                            %R(R<0)=-1; % anything negative is the same in cross-validations
+                            R(k)=ea_nanmean(Rsub(:));
+                        else
+                            R(k)=corr(I,Ihat,'rows','pairwise');
+                        end
+                    catch
+                        R(k)=nan;
                     end
-                    R(k)=-ea_robustmean(Rsub);
-                else
-                    R(k)=-corr(I,Ihat,'rows','pairwise');
                 end
-            catch
-                R(k)=nan;
+            else
+                tractset.customselection=[];
+                tractset.kfold = ks(k);
+                sim=nan; % initialize it.
+                try
+                    [I,Ihat,val_struct]=tractset.kfoldcv(1); % 1 = silent mode
+                    if ea_nanmean(ea_nanmean(cellfun(@length,val_struct{2}.vals)')')<100 % Not too many fibers survive, solution not anatomically meaningful. Checking this in first fold since will be similar in the others
+                        Fval=1;
+                        return
+                    end
+                    if sd
+                        % calc similarity index:
+                        sim(cnt)=ea_compute_sim_val_struct(val_struct);
+                        cnt=cnt+1;
+                    end
+                    if cv
+                        % calc cross-val indices
+                        if iscell(I)
+                            for entry=1:length(I)
+                                Rsub(entry)=corr(I{entry},Ihat{entry},'rows','pairwise');
+                            end
+                            %R(R<0)=-1; % anything negative is the same in cross-validations
+                            R(k)=ea_nanmean(Rsub(:));
+                        else
+                            R(k)=corr(I,Ihat,'rows','pairwise');
+                        end
+                    end
+                catch
+                    if sd
+                        sim(cnt)=nan;
+                        cnt=cnt+1;
+                    end
+                    if cv
+                        R(k)=nan;
+                    end
+                end
             end
         end
-        R=ea_robustmean(R);
-        if isnan(R) % out of bound settings
-            R=1; % maximal possible value
+        if sd
+            % similarities part:
+            sim=ea_nanmean(sim(:));
+
+            tractset.Nperm=numperm;
+            dissim=nan;
+            try
+
+                [~,~,~,~,~,~,val_struct]=tractset.lnopb('Pearson',1);
+                dissim=ea_compute_sim_val_struct(val_struct);
+            end
+
+            Fval_sim=ea_nanmean([-sim;dissim]);
+        else
+            Fval_sim=nan;
         end
+        if cv
+            % crossval part:
+            R=ea_nanmean(R(:));
+            if isnan(R) % out of bound settings
+                R=-1; % minimal possible value
+            end
+            fprintf('%s: %01.0f\n','=> Average Correlation',R);
+
+            Fval_cv=-R; % finally, flip, since we are minimizing. / could think instead to do R=1/exp(R) but less readible.
+        else
+            Fval_cv=nan;
+        end
+        Fval=ea_nanmean([Fval_sim;Fval_cv]);
+
     end
-
-
-
 
 
     function ip=augmentips(ip)
         switch tractset.statmetric
-            case {1,3,4,5} % t-tests, OSS-DBS, proportion tests, binomial tests
+            case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)','Proportion Test (Chi-Square) / VTAs (binary vars)','Binomial Tests / VTAs (binary vars)'} % t-tests, OSS-DBS, proportion tests, binomial tests
                 %% general heuristic 1: 20 % coverage
                 ip=[ip
                     [3 % thresh strategy: fixed amount
@@ -265,7 +444,7 @@ keyboard
                     0 % shownegamount: 0 on each side = 0 fibers
                     30]' % connthreshold: 30% connected sites
                     ];
-            case {2,6,7} % e-fields, reverse-t-tests for binary & efields
+            case {'Correlations / E-fields (Irmen 2020)','Reverse T-Tests / E-Fields (binary vars)','Plain Connections'} % e-fields, reverse-t-tests for binary & efields
                 %% general heuristic 1: high tract impact, low % coverage
                 ip=[ip
                     [3 % thresh strategy: fixed amount
@@ -561,16 +740,16 @@ keyboard
     function out=resolve_corrtype(out)
         if ischar(out)
             switch out
-                case 'Pearson'
+                case {'Pearson','T-Tests'}
                     out=1;
-                case 'Spearman'
+                case {'Spearman','Wilcoxon Signed Rank Tests'}
                     out=2;
                 case 'Bend'
                     out=3;
             end
         else
             switch out
-                case 1
+                case 1 % need to check t-tests vs pearson here:
                     out='Pearson';
                 case 2
                     out='Spearman';
