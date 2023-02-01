@@ -52,11 +52,11 @@ end
 views=viewsets.(target).views;
 % Adjusting Dorsal View
 views(4).v.az=180;
-views(4).v.el=80.7666;
+views(4).v.el=74.08;
 views(4).v.camva=1.0197;
 views(4).v.camup=[0 0 -1];
 views(4).v.camtarget=[-0.2429 -8.1055 -8.0924];
-views(4).v.campos=[-0.2036 593.1549 2.0125e+03];
+views(4).v.campos=[-0.1791 967.6553 1.8607e+03];
 views(4).planes.y=-100;
 
 % Adding Left Oblique View
