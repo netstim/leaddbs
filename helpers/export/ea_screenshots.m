@@ -22,6 +22,9 @@ viewsets=load([ea_getearoot,'helpers',filesep,'export',filesep,'ea_exportviews']
 options.atlasset=viewsets.(target).atlas;
 options.sidecolor=1;
 options.writeoutstats=0;
+
+[options.root,options.patientname]=fileparts(options.subj.subjDir);
+options.root=[options.root,filesep];
 resultfig=ea_elvis(options);
 
 if ~exist([options.root,options.patientname,filesep,'export',filesep,'views'],'dir')
