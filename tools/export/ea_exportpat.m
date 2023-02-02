@@ -7,7 +7,7 @@ if strcmp(uipatdir{1},'No Patient Selected')
 end
 disp('Exporting Results...');
 for pt=1:length(uipatdir)
-    try
+    %try
         if ~exist([uipatdir{pt}, filesep, 'export', filesep, lower(exptype)],'dir')
             mkdir([uipatdir{pt}, filesep, 'export', filesep, lower(exptype)]);
         end
@@ -47,8 +47,8 @@ for pt=1:length(uipatdir)
                     warndlg('Upload failed.','Upload error.');
                 end
         end
-    catch
-        keyboard
-        msgbox(['Export for pt: ',uipatdir{pt},' failed.']);
-    end
+    %catch
+    %    keyboard
+    %    msgbox(['Export for pt: ',uipatdir{pt},' failed.']);
+    %end
 end
