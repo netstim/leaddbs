@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Oct 28 08:34:11 2018
-@author: trieu,butenko
-"""
-import numpy as np
-
-'''Those are not all parameters. If you have doubts, use OSS-DBS GUI'''
-
 d = {
     # Simulation statuses
     'Segm_MRI_processed': 0,
