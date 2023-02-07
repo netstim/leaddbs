@@ -490,7 +490,7 @@ def solve_Laplace_multicontact(Sim_setup,Solver_type,Vertices_array,Domains,core
         fre_vector=[Sim_setup.sine_freq]*Phi_ROI.shape[0]
 
         if int(Sim_setup.sine_freq) == int(Sim_setup.signal_freq):
-            np.savetxt('Phi_real_on_Axons_' + str(Sim_setup.signal_freq) + '_PO.csv', Phi_ROI[:, :4], delimiter=' ')
+            np.savetxt(os.environ['PATIENTDIR']+'/Phi_real_on_Axons_' + str(Sim_setup.signal_freq) + '_PO.csv', Phi_ROI[:, :4], delimiter=' ')
 
     ###    freq_vector=[frequenc]*coordinates.shape[0]
     #####    com=np.vstack((coordinat[0:10,0],coordinat[0:10,1],coordinat[0:10,2],real_par[0:10],image_par[0:10],fre_vector[0:10])).T
