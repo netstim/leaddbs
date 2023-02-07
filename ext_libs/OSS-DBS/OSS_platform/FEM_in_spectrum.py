@@ -770,7 +770,7 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
         #J_ground=get_current(Sim_setup.mesh,Sim_setup.boundaries,Sim_setup.element_order,Sim_setup.Laplace_eq,Domains.Active_contacts,kappa,Cond_tensor,phi_r_check,phi_i_check,ground_index)
         if Sim_setup.sine_freq == Sim_setup.signal_freq:
 
-            np.savetxt('Phi_real_on_Axons_'+str(Sim_setup.signal_freq)+'_PO.csv', Phi_ROI[:, :4], delimiter=' ')
+            np.savetxt(os.environ['PATIENTDIR']+'/Phi_real_on_Axons_'+str(Sim_setup.signal_freq)+'_PO.csv', Phi_ROI[:, :4], delimiter=' ')
 
             if Sim_setup.c_c==1:
                 logging.critical("Current through the ground after normalizing to 1 A at the signal freq.: {}".format(J_ground))
