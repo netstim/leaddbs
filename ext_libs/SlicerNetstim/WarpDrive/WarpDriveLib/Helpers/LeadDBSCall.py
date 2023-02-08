@@ -83,18 +83,19 @@ def applyChanges(inputNode, imageNode, forwardWarpPath, inverseWarpPath, subject
     elif platform.system() == 'Windows':
       slicerPath = os.path.join(slicerInstallPath, 'Slicer.exe')
     
-    slicerNetstimModule = glob.glob(os.path.join(slicerInstallPath,'**','SlicerNetstim','**','cli-modules'),recursive=True)[0]
-    
     commands = [slicerPath, 
                 '--ignore-slicerrc', 
                 '--no-main-window', 
                 '--disable-settings',
-                '--additional-module-paths', slicerNetstimModule,
                 '--python-code', 'import os, shutil, ctk;\
                                   loadScene(r\''+os.path.join(tmpScenePath,'tmpScene.mrml')+'\');\
                                   forwardCliNode = slicer.mrmlScene.GetFirstNodeByName(\'forwardCompositeToGrid\');\
                                   inverseCliNode = slicer.mrmlScene.GetFirstNodeByName(\'inverseCompositeToGrid\');'\
                                   + python_commands]
+    
+    if slicer.app.mainApplicationName != 'SlicerForLeadDBS':
+      slicerNetstimModule = glob.glob(os.path.join(slicerInstallPath,'**','SlicerNetstim','**','cli-modules'),recursive=True)[0]
+      commands += ['--additional-module-paths', slicerNetstimModule]
 
     import subprocess
     subprocess.Popen(commands, env=slicer.util.startupEnvironment())
