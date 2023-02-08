@@ -77,11 +77,11 @@ def applyChanges(inputNode, imageNode, forwardWarpPath, inverseWarpPath, subject
 
     slicerInstallPath = os.path.dirname(os.path.dirname(sys.executable))
     if platform.system() == 'Darwin':
-      slicerPath = os.path.join(slicerInstallPath, 'MacOS', 'Slicer')
+      slicerPath = os.path.join(slicerInstallPath, 'MacOS', slicer.app.mainApplicationName)
     elif platform.system() == 'Linux':
-      slicerPath = os.path.join(slicerInstallPath, 'Slicer')
+      slicerPath = os.path.join(slicerInstallPath, slicer.app.mainApplicationName)
     elif platform.system() == 'Windows':
-      slicerPath = os.path.join(slicerInstallPath, 'Slicer.exe')
+      slicerPath = os.path.join(slicerInstallPath, slicer.app.mainApplicationName + '.exe')
     
     commands = [slicerPath, 
                 '--ignore-slicerrc', 
