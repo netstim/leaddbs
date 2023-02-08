@@ -42,7 +42,8 @@ def applyChanges(inputNode, imageNode, forwardWarpPath, inverseWarpPath, subject
 
   subName = os.path.basename(os.path.dirname(subjectWarpDrivePath))
   tmpScenePath = os.path.join(subjectWarpDrivePath, 'tmpScene')
-  python_commands = 'w = slicer.modules.compositetogridtransform.createNewWidgetRepresentation();\
+  python_commands = 'slicer.util.mainWindow().hide();\
+                    w = slicer.modules.compositetogridtransform.createNewWidgetRepresentation();\
                     w.show();\
                     w.setWindowTitle(\'WarpDrive\');\
                     w.children()[2].hide();\
@@ -58,7 +59,7 @@ def applyChanges(inputNode, imageNode, forwardWarpPath, inverseWarpPath, subject
                     qt.QApplication.processEvents();\
                     forwardCliNode.AddObserver(\'ModifiedEvent\', lambda c,e,w=w,icli=inverseCliNode: [slicer.util.getNode(c.GetParameterAsString(\'inputTransform2Node\')).Inverse(), w.setCurrentCommandLineModuleNode(icli), slicer.cli.run(slicer.modules.compositetogridtransform, icli)] if (c.GetStatus() == c.Completed) else None);\
                     inverseCliNode.AddObserver(\'ModifiedEvent\', lambda c,e,w=w,: [shutil.rmtree(r\''+tmpScenePath+'\') if os.path.isdir(r\''+tmpScenePath+'\') else None, w.close(), slicer.util.exit(0)] if (c.GetStatus() == c.Completed) else None);\
-                    slicer.cli.run(slicer.modules.compositetogridtransform, forwardCliNode)'
+                    slicer.cli.run(slicer.modules.compositetogridtransform, forwardCliNode);'
 
   if useExternalInstance:
 
@@ -75,6 +76,14 @@ def applyChanges(inputNode, imageNode, forwardWarpPath, inverseWarpPath, subject
     tmpScene.Clear()
     del tmpScene
 
+    tmpScriptPath = os.path.join(subjectWarpDrivePath, 'tmpScript.py')
+    with open(tmpScriptPath, 'w') as f:
+      f.write('import os, shutil, ctk;\
+                loadScene(r\''+os.path.join(tmpScenePath,'tmpScene.mrml')+'\');\
+                forwardCliNode = slicer.mrmlScene.GetFirstNodeByName(\'forwardCompositeToGrid\');\
+                inverseCliNode = slicer.mrmlScene.GetFirstNodeByName(\'inverseCompositeToGrid\');'\
+                + python_commands + 'os.remove(r\''+tmpScriptPath+'\')')
+
     slicerInstallPath = os.path.dirname(os.path.dirname(sys.executable))
     if platform.system() == 'Darwin':
       slicerPath = os.path.join(slicerInstallPath, 'MacOS', slicer.app.mainApplicationName)
@@ -85,24 +94,18 @@ def applyChanges(inputNode, imageNode, forwardWarpPath, inverseWarpPath, subject
     
     commands = [slicerPath, 
                 '--ignore-slicerrc', 
-                '--no-main-window', 
-                '--disable-settings',
-                '--python-code', 'import os, shutil, ctk;\
-                                  loadScene(r\''+os.path.join(tmpScenePath,'tmpScene.mrml')+'\');\
-                                  forwardCliNode = slicer.mrmlScene.GetFirstNodeByName(\'forwardCompositeToGrid\');\
-                                  inverseCliNode = slicer.mrmlScene.GetFirstNodeByName(\'inverseCompositeToGrid\');'\
-                                  + python_commands]
+                '--no-splash',
+                '--python-script', tmpScriptPath]
     
     if slicer.app.mainApplicationName != 'SlicerForLeadDBS':
       slicerNetstimModule = glob.glob(os.path.join(slicerInstallPath,'**','SlicerNetstim','**','cli-modules'),recursive=True)[0]
-      commands += ['--additional-module-paths', slicerNetstimModule]
+      commands += ['--disable-settings', '--additional-module-paths', slicerNetstimModule]
 
     import subprocess
     subprocess.Popen(commands, env=slicer.util.startupEnvironment())
   
   else:
     exec(python_commands)
-    slicer.util.mainWindow().hide()
 
 
 def saveSourceTarget(warpDriveSavePath, sourceNode, targetNode):
