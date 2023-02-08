@@ -511,8 +511,23 @@ class LeadORWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.rightTrajectoryLabel.text = 'Lateral' if guessRightSide else 'Medial' 
 
   def setDefaultResliceDriver(self):
-    import StereotacticPlan
-    StereotacticPlan.StereotacticPlanLib.util.setDefaultResliceDriver(self._parameterNode.GetNodeReferenceID("DistanceToTargetTransform"))
+    # Get Reslice Driver Logic
+    try:    
+        logic = slicer.modules.volumereslicedriver.logic()
+    except:
+        qt.QMessageBox.warning(qt.QWidget(),'','Reslice Driver Module not Found')
+        return
+    transformNodeID = self._parameterNode.GetNodeReferenceID("DistanceToTargetTransform")
+    # Settings
+    redSettings    = {'node':slicer.util.getNode('vtkMRMLSliceNodeRed'),    'mode':6, 'angle':90 , 'flip':True}
+    yellowSettings = {'node':slicer.util.getNode('vtkMRMLSliceNodeYellow'), 'mode':5, 'angle':180, 'flip':False}
+    greenSettings  = {'node':slicer.util.getNode('vtkMRMLSliceNodeGreen'),  'mode':4, 'angle':180, 'flip':False}
+    # Set
+    for settings in [redSettings, yellowSettings, greenSettings]:
+        logic.SetDriverForSlice(    transformNodeID,    settings['node'])
+        logic.SetModeForSlice(      settings['mode'],   settings['node'])
+        logic.SetRotationForSlice(  settings['angle'],  settings['node'])
+        logic.SetFlipForSlice(      settings['flip'],   settings['node'])
 
   def setUpSequenzeRecording(self):
     browserNode = self._parameterNode.GetNodeReference("browserNode")
@@ -805,7 +820,11 @@ class LeadORTest(ScriptedLoadableModuleTest):
     # Currently use local data.
     # This is sensitive data recorded during surgery.
     # TODO: see how to share an example dataset for other users.
-    test_dir = "C:\\Users\\simon\\Desktop\\143UA53-test"
+    from sys import platform
+    if platform == "win32":
+      test_dir = "C:\\Users\\simon\\Desktop\\143UA53-test"
+    elif platform == "darwin":
+      test_dir = "/Users/simon/Desktop/143UA53-test"
     if not os.path.isdir(test_dir):
       return
 
@@ -819,22 +838,37 @@ class LeadORTest(ScriptedLoadableModuleTest):
 
     # Open Open-ephys instance with test config, connect to igtl and start aquisition
 
-    import subprocess
-    open_ephys_exe = "C:\\Users\\simon\\repo\\plugin-GUI\\Build\\Release\\open-ephys.exe"
+    if platform == "win32":
+      open_ephys_exe = "C:\\Users\\simon\\repo\\plugin-GUI\\Build\\Release\\open-ephys.exe"
+    elif platform == "darwin":
+      open_ephys_exe = '/Users/simon/repo/plugin-GUI/Build/Release/open-ephys.app/Contents/MacOS/open-ephys'
     open_ephys_config = os.path.join(test_dir, "LeadORConfig.xml")
+    import subprocess
     subprocess.Popen([open_ephys_exe, open_ephys_config])
 
     import requests
     url = "http://localhost:37497/api/"
     r = None
     while (r == None) or (r.json()['mode'] != 'IDLE'):
-      r = requests.get(url + "status")
+      try:
+        r = requests.get(url + "status")
+        break
+      except:
+        import time
+        time.sleep(0.5)
+
+    r = None
+    while (r == None) or (r.json()['info'] != 'Connected!'):
+      try:
+        r = requests.put(url + "processors/103/config", json={"text" : "LOR IGTLCONNECT 18944"})
+        break
+      except:
+        import time
+        time.sleep(0.5)
     
-    r = requests.put(url + "processors/103/config", json={"text" : "LOR IGTLCONNECT 18944"})
     self.assertEqual(r.json()['info'], 'Connected!')
 
     r = requests.put(url + "status", json={"mode" : "ACQUIRE"})
-
     self.delayDisplay('Test passed')
 
 #
