@@ -143,7 +143,7 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
             if ~isempty(vals{voter,side})
                 switch obj.statmetric % also differentiate between methods in the prediction part.
                     case {'Two-Sample T-Tests / VTAs (Baldermann 2019) / PAM (OSS-DBS)', 'Proportion Test (Chi-Square) / VTAs (binary vars)'...
-                            'Binomial Tests / VTAs (binary vars)'} % VTAs
+                            'Binomial Tests / VTAs (binary vars)', 'Plain Connections'} % VTAs
                         switch lower(obj.basepredictionon)
                             case 'mean of scores'
                                 if lateral_score == false
