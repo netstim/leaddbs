@@ -57,7 +57,7 @@ for group=groups
     end
 
     switch obj.statmetric
-        case 'Correlations (R-map)'
+        case 'Correlations (Horn 2017)'
             disp(['Correlation type: ', obj.corrtype, '. Calculating R-map...'])
             % no covariates exist:
             if obj.showsignificantonly
@@ -66,11 +66,11 @@ for group=groups
             else
                 [vals{group}]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
             end
-        case 'Weighted Average (A-map)' % check
+        case 'Weighted Average (Horn 2017)' % check
             disp('Calculating A-map...')
             % no covariates exist:
             [vals{group}]=ea_nansum(AllX(gpatsel,:).*repmat(I(gpatsel),1,size(AllX(gpatsel,:),2)),1);
-        case 'Combined (C-map)'
+        case 'Combined Map (Horn 2017)'
             disp(['Correlation type: ', obj.corrtype, '. Calculating C-map...'])
             if obj.showsignificantonly
                 [R,ps]=ea_corr(I(gpatsel),(AllX(gpatsel,:)),obj.corrtype); % improvement values (taken from Lead group file or specified in line 12).
@@ -86,6 +86,32 @@ for group=groups
                 A(~bidir)=nan;
                 vals{group}=A;
             end
+        case 'Thresholded N-map (Boes 2015)'
+            if obj.posvisible
+                posN=ea_nansum(AllX(gpatsel,:)>obj.statthresh);
+            else % if not shown better also not to calculate since brain areas between positive and negative could overlap in this setting and could cancel each other out.
+                posN=zeros(1,size(AllX,2));
+            end
+            if obj.negvisible
+                negN=ea_nansum(AllX(gpatsel,:)<(-obj.statthresh));
+            else % if not shown better also not to calculate since brain areas between positive and negative could overlap in this setting and could cancel each other out.
+                negN=zeros(1,size(AllX,2));
+            end
+            vals{group}=posN-negN;
+        case 'One Sample T-Test'
+            [h,ps,ci,stats]=ttest((AllX(gpatsel,:)));
+            vals{group}=stats.tstat;
+            if obj.showsignificantonly
+                vals{group}=ea_corrsignan(vals{group},ps',obj);
+            end
+        case 'Two Sample T-Test'
+            [h,ps,ci,stats]=ttest2(AllX(gpatsel,:),AllX(obj.testagainst_patientselection,:));
+            vals{group}=stats.tstat;
+            if obj.showsignificantonly
+                vals{group}=ea_corrsignan(vals{group},ps',obj);
+            end
+        case 'Database Lookup'
+           vals{group}=AllX(gpatsel,:);
     end
 
     obj.stats.pos.available=sum(vals{1}>0); % only collected for first group (positives)
