@@ -349,16 +349,21 @@ classdef ea_networkmapping < handle
                     end
                 end
                 usemask=ea_getobjmask(obj,vals{1});
-                switch lower(obj.basepredictionon)
-                    case 'spatial correlations (spearman)'
-                        Ihat(test) = corr(vals{1}(usemask)',...
-                            connval(patientsel(test),usemask)','rows','pairwise','type','Spearman');
-                    case 'spatial correlations (pearson)'
-                        Ihat(test) = corr(vals{1}(usemask)',...
-                            connval(patientsel(test),usemask)','rows','pairwise','type','Pearson');
-                    case 'spatial correlations (bend)'
-                        Ihat(test) = ea_bendcorr(vals{1}(usemask)',...
-                            connval(patientsel(test),usemask)');
+                switch obj.statmetric
+                    case 'Database Lookup'
+                        Ihat(test)=ea_ihat_databaselookup_netmap(obj,vals,connval,patientsel,test,training,usemask);
+                    otherwise
+                        switch lower(obj.basepredictionon)
+                            case 'spatial correlations (spearman)'
+                                Ihat(test) = corr(vals{1}(usemask)',...
+                                    connval(patientsel(test),usemask)','rows','pairwise','type','Spearman');
+                            case 'spatial correlations (pearson)'
+                                Ihat(test) = corr(vals{1}(usemask)',...
+                                    connval(patientsel(test),usemask)','rows','pairwise','type','Pearson');
+                            case 'spatial correlations (bend)'
+                                Ihat(test) = ea_bendcorr(vals{1}(usemask)',...
+                                    connval(patientsel(test),usemask)');
+                        end
                 end
             end
 
@@ -433,6 +438,23 @@ classdef ea_networkmapping < handle
         end
 
         function res=draw(obj,vals)
+            % cleanup
+            if isempty(obj.drawobject) % check if prior object has been stored
+                obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
+            end
+            for s=1:numel(obj.drawobject)
+                for ins=1:numel(obj.drawobject{s})
+                    try delete(obj.drawobject{s}{ins}.toggleH); end
+                    try delete(obj.drawobject{s}{ins}.patchH); end
+                    try delete(obj.drawobject{s}{ins}); end
+                end
+            end
+            obj.drawobject={};
+
+            if strcmp(obj.statmetric,'Database Lookup') % output not viable to plot
+                return
+            end
+
             if ~exist('vals','var')
                 [vals]=ea_networkmapping_calcstats(obj);
             end
@@ -449,17 +471,7 @@ classdef ea_networkmapping < handle
                 obj.M.groups.color=ea_color_wes('all');
             end
             linecols=obj.M.groups.color;
-            if isempty(obj.drawobject) % check if prior object has been stored
-                obj.drawobject=getappdata(obj.resultfig,['dt_',obj.ID]); % store handle of tract to figure.
-            end
-            for s=1:numel(obj.drawobject)
-                for ins=1:numel(obj.drawobject{s})
-                    try delete(obj.drawobject{s}{ins}.toggleH); end
-                    try delete(obj.drawobject{s}{ins}.patchH); end
-                    try delete(obj.drawobject{s}{ins}); end
-                end
-            end
-            obj.drawobject={};
+           
 
             % reset colorbar
             obj.colorbar=[];
