@@ -10,8 +10,9 @@ classdef ea_networkmapping < handle
         negvisible = 0 % neg voxels visible
         showposamount = [25 25] % two entries for right and left
         shownegamount = [25 25] % two entries for right and left
-        statmetric = 'Correlations (R-map)' % Statistical model to use
+        statmetric = 'Correlations (Horn 2017)' % Statistical model to use
         corrtype = 'Spearman' % correlation strategy in case of statmetric == 2.
+        statthresh = 0.2; % t-threshold for N-maps (typically referred to as sensitivity maps in lesion network mapping)
         posBaseColor = [1,1,1] % positive main color
         posPeakColor = [0.9176,0.2000,0.1373] % positive peak color
         smooth_fp = 0; % run smoothing
@@ -35,6 +36,7 @@ classdef ea_networkmapping < handle
         drawobject % handle to surface drawn on figure
         exportmodelsAsNifti=0 % export models during cross-validation into the lg directory
         patientselection % selected patients to include. Note that connected fibers are always sampled from all (& mirrored) VTAs of the lead group file
+        testagainst_patientselection % selected patients to test against (in two-sample t-test, typically resulting in a specificity map in the lesion network mapping context).
         setlabels={};
         setselections={};
         customselection % selected patients in the custom test list
@@ -42,6 +44,8 @@ classdef ea_networkmapping < handle
         mirrorsides = 0 % flag to mirror VTAs / Efields to contralateral sides using ea_flip_lr_nonlinear()
         responsevar % response variable
         responsevarlabel % label of response variable
+        certainvar % certainty variable
+        certainvarlabel = 'None' % label of certainty variable
         covars = {} % covariates
         covarlabels = {} % covariate labels
         cvmask = 'Gray Matter';
@@ -675,16 +679,28 @@ classdef ea_networkmapping < handle
                         tick{group} = [1, gradientLevel/2-10, gradientLevel/2+11, length(voxcmap{group})];
                         poscbvals = sort(allvals(allvals>0));
                         negcbvals = sort(allvals(allvals<0));
+                        if isempty(negcbvals)
+                            negcbvals=nan;
+                        end
+                        if isempty(poscbvals)
+                            poscbvals=nan;
+                        end
                         ticklabel{group} = [negcbvals(1), negcbvals(end), poscbvals(1), poscbvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     elseif obj.posvisible
                         tick{group} = [1, length(voxcmap{group})];
                         posvals = sort(allvals(allvals>0));
+                        if isempty(posvals)
+                            posvals=nan;
+                        end
                         ticklabel{group} = [posvals(1), posvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     elseif obj.negvisible
                         tick{group} = [1, length(voxcmap{group})];
                         negvals = sort(allvals(allvals<0));
+                        if isempty(negvals)
+                            negvals=nan;
+                        end
                         ticklabel{group} = [negvals(1), negvals(end)];
                         ticklabel{group} = arrayfun(@(x) num2str(x,'%.2f'), ticklabel{group}, 'Uni', 0);
                     end
