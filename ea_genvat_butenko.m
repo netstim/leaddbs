@@ -437,6 +437,7 @@ if prepFiles_cluster == 1
     % Restore working directory and environment variables
     setenv('LD_LIBRARY_PATH', libpath);
     setenv('PATH', binPath);
+    return
 end
 
 % Iterate sides, index side: 0 - rh , 1 - lh
