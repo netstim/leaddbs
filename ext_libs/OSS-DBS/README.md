@@ -4,7 +4,7 @@
 An open-source package that comprises
 CAD and CAE tools for highly automated
 evaluation of electric field distribution and neural activation during Deep Brain
-Stimulation (DBS). Details can be found in (the upcoming publication).
+Stimulation (DBS). Details can be found in "Butenko K, Bahls C, Schroeder M, Koehling R, van Rienen U (2020) 'OSS-DBS: Open-source simulation platform for deep brain stimulation with a comprehensive automated modeling.' PLoS Comput Biol 16(7): e1008023. https://doi.org/10.1371/journal.pcbi.1008023."
 
 ### Getting Started
 
