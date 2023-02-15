@@ -249,13 +249,20 @@ function ea_getlittarget_custom(~,~,code,handles,obj)
 
 switch code
     case 'STNPD_lh'
-        mnitarget=[-12.58,-13.41,-5.87];
+        t.target=[-13,-13.41,-5.87];
+        t.entry=[-35,30,49.13];
         set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
         obj.planRelative=[2,1,1,1,3];
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Boston Scientific Vercise Directed'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
     case 'STNPD_rh'
-        mnitarget=[12.58,-13.41,-5.87];
-        set(handles.MCP,'value',1); set(handles.AC,'value',0); set(handles.PC,'value',0);
+        t.target=[13,-13,-6.4];
+        t.entry=[37,30,49.13];
         obj.planRelative=[2,1,1,1,3];
+        obj.electrodeRelativeToPlan=3;
+        obj.plan2elstruct_model='Boston Scientific Vercise Directed'; % electrode model of pseudo reconstruction of stereotactical plan
+        obj.planningAppearance='electrode';
     case 'GPIPD_lh' % done
         t.target=[-22.3059 -8.1294 -1.3541];
         t.entry=[-27.9376 33.1036 68.1642];
