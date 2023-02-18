@@ -449,7 +449,13 @@ ea_delete([outputDir, filesep, 'skip_lh.txt']);
 
 if prepFiles_cluster == 1
     % Restore working directory and environment variables
+    runStatus = [0 0];
+    varargout{1} = runStatus;
+    varargout{2} = struct(); % empty for stimparameters
+
+    % Restore working directory and environment variables
     setenv('LD_LIBRARY_PATH', libpath);
+    setenv('PATH', binPath);
     return
 end
 
