@@ -80,6 +80,10 @@ class Truncated_spectrum(object):
         self.Fr_octave_vector = []  #  this vector will contain octave bands defined by DBS repetition rate
         inx = 0
 
+        one_sample_10kHz = False
+        if one_sample_10kHz == True:
+            self.trunc_param = 1.0
+
         for fr in self.FR_vector_signal:
 
             if fr <= self.trunc_param:  # include all frequencies before self.trunc_param (defines the start of the octaves)
@@ -91,13 +95,25 @@ class Truncated_spectrum(object):
                 while (base_octaves + (self.rep_rate * octave_scale) / np.sqrt(2.0)) < self.FR_vector_signal[-1]:
                     Octave_freq = base_octaves + (self.rep_rate * octave_scale / np.sqrt(2.0))  # compute the octave center frequency
                     Fr_in_octave = []
-                    for fr_init in self.FR_vector_signal:
-                        # check which/if the original frequencies are in the octave
-                        if fr_init >= base_octaves + np.round((Octave_freq - base_octaves) / np.sqrt(2), 2) and fr_init < base_octaves + np.round((Octave_freq - base_octaves) * np.sqrt(2),2):
-                            Fr_in_octave.append(fr_init)
-                            self.FR_vector_signal_new[inx] = Octave_freq  # only use those octave frequencies, which contain the original ones
-                            if Octave_freq not in self.Fr_octave_vector:
-                                self.Fr_octave_vector.append(Octave_freq)
+                    # dirty implementation
+                    if one_sample_10kHz == True and Octave_freq < 10000.0:
+                        Octave_freq = 5000.0
+                        for fr_init in self.FR_vector_signal:
+                            if fr_init < 10000.0:
+                                Fr_in_octave.append(fr_init)
+                                if Octave_freq not in self.Fr_octave_vector:
+                                    self.Fr_octave_vector.append(Octave_freq)
+
+                        if ~np.isin(5000.0,self.FR_vector_signal_new):
+                            self.FR_vector_signal_new[inx] = Octave_freq
+                    else:
+                        for fr_init in self.FR_vector_signal:
+                            # check which/if the original frequencies are in the octave
+                            if fr_init >= base_octaves + np.round((Octave_freq - base_octaves) / np.sqrt(2), 2) and fr_init < base_octaves + np.round((Octave_freq - base_octaves) * np.sqrt(2),2):
+                                Fr_in_octave.append(fr_init)
+                                self.FR_vector_signal_new[inx] = Octave_freq  # only use those octave frequencies, which contain the original ones
+                                if Octave_freq not in self.Fr_octave_vector:
+                                    self.Fr_octave_vector.append(Octave_freq)
 
                     inx += 1
 
