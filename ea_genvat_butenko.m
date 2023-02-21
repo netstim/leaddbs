@@ -391,7 +391,11 @@ if settings.calcAxonActivation
             end
 
             % Filter fibers based on the spherical ROI
-            fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2);
+            if options.native
+        	    fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, preopAnchor);
+            else
+                fiberFiltered = ea_filterfiber_stim(conn, coords_mm, stimProtocol, 'kuncel', 2, [ea_space, options.primarytemplate, '.nii']);
+            end
 
             % Filter fibers based on the minimal length
             fiberFiltered = ea_filterfiber_len(fiberFiltered, settings.axonLength(t));
