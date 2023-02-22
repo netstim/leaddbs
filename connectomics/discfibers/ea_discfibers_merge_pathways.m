@@ -43,9 +43,13 @@ ftr = fiber_file; % just initialization
 ftr.fibers = cat(1, C{:});
 ftr.idx = cat(1, C_idx{:});
 
-if obj.M.ui.detached
-    pthprefix = [fileparts(obj.leadgroup),filesep];
-else
+if isprop(obj.M, 'pseudoM')
+    if obj.M.pseudoM == 1
+        pthprefix = [fileparts(obj.leadgroup),filesep];
+    else
+        pthprefix = '';
+    end
+else    
     pthprefix = '';
 end
 
