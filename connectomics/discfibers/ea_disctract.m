@@ -467,8 +467,8 @@ classdef ea_disctract < handle
                             end
 
                             a1.XLim=([r_lower_lim r_upper_lim]);
-                            text(0.25,0.9,['N(p>0.05) = ',sprintf('%0.2f',length(p_above_05))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
-                            text(0.25,0.83,['N(p>0.01) = ',sprintf('%0.2f',length(p_above_01))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
+                            text(0.25,0.9,['N(p>0.05) = ',sprintf('%d',length(p_above_05))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
+                            text(0.25,0.83,['N(p>0.01) = ',sprintf('%d',length(p_above_01))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
                         end
                 end
 
