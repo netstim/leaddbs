@@ -14,7 +14,9 @@ if strcmp(['No recent ' type ' found'], recentfolders)
    return
 end
 
-if strcmp(type, 'patients')
+if strcmp(type, 'datasets')
+    ea_load_pts(handles, recentfolders);
+elseif strcmp(type, 'patients')
     ea_load_pts(handles, recentfolders);
 elseif strcmp(type, 'groups')
     ea_load_group(handles, recentfolders{1});

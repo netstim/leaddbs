@@ -316,13 +316,8 @@ if ~iscell(subjId)
 end
 
 if isBIDSRoot && length(uipatdir) > 1 % Multiple patients found
-    index = listdlg('PromptString','Select Patient', 'ListString', subjId);
-    if isempty(index)
-        return;
-    else
-        uipatdir = uipatdir(index);
-        subjId = subjId(index);
-    end
+    uipatdir = uipatdir(1);
+    subjId = subjId(1);
 end
 
 % Initialize BIDS class
