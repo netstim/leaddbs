@@ -83,6 +83,7 @@ classdef BIDSFetcher
             LeadDBSDirs.reconDir = fullfile(subjDir, 'reconstruction');
             LeadDBSDirs.stimDir = fullfile(subjDir, 'stimulations');
             LeadDBSDirs.warpdriveDir = fullfile(subjDir, 'warpdrive');
+            LeadDBSDirs.acpcDir = fullfile(subjDir, 'acpc');
             LeadDBSDirs.freesurferDir = fullfile(fileparts(fileparts(subjDir)),'freesurfer');
         end
 
@@ -271,6 +272,10 @@ classdef BIDSFetcher
 
             % Set stats
             subj.stats = obj.getStats(subjId);
+            
+            % Set acpc autodetect
+            subj.acpc.acpcAutodetect = fullfile(subj.acpcDir, ['sub-' subj.subjId '_desc-acpcautodetect.mat']);
+            subj.acpc.acpcManual     = fullfile(subj.acpcDir, ['sub-' subj.subjId '_desc-acpcmanual.fcsv']);
         end
 
         function preopAnat = getPreopAnat(obj, subjId)
