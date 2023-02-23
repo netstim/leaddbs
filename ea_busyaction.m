@@ -12,6 +12,7 @@ if isa(varargin{2}, 'matlab.ui.control.Image')
             varargin{2}.ImageSource = fullfile(ea_getearoot, 'icons', 'idle.png');
             varargin{2}.Tooltip = 'Idle';
     end
+    drawnow;
     return;
 end
 
