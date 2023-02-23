@@ -5,7 +5,7 @@ subjId = getappdata(handles.leadfigure,'subjId');
 
 if ~isempty(bids)
     % Determine prefs path
-    if strcmp(handles.patdir_choosebox.String, 'Choose Patient Directory') || length(subjId) > 1
+    if isempty(handles.patientlistbox.String) || sum(handles.patientlistbox.Value) == 0
     	% prefsPath = fullfile(ea_getearoot, 'ea_ui.mat');
         prefsPath = '';
     else

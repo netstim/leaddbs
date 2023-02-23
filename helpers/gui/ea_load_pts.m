@@ -325,16 +325,12 @@ if isBIDSRoot && length(uipatdir) > 1 % Multiple patients found
     end
 end
 
-if length(uipatdir) == 1 % Only one patient selected
-    set(handles.patdir_choosebox,'String',uipatdir{1});
-    set(handles.patdir_choosebox,'TooltipString',uipatdir{1});
-else % Multiple patients mode
-    set(handles.patdir_choosebox,'String',['Multiple (',num2str(length(uipatdir)),')']);
-    set(handles.patdir_choosebox,'TooltipString',ea_strjoin(uipatdir,'\n'));
-end
-
 % Initialize BIDS class
 bids = BIDSFetcher(BIDSRoot);
+
+handles.datasetselect.String = BIDSRoot;
+handles.patientlistbox.String = bids.subjId;
+handles.patientlistbox.Value = find(ismember(handles.patientlistbox.String, subjId));
 
 if ~any(ismember(subjId, bids.subjId))
     % Return when import for all subjs cancelled or failed
@@ -363,6 +359,7 @@ end
 
 ea_storeui(handles); % save in pt folder
 
+ea_addrecent(handles, {BIDSRoot}, 'datasets');
 ea_addrecent(handles, uipatdir, 'patients');
 
 % check if reconstruction is present and assign side-toggles accordingly:

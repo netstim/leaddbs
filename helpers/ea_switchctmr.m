@@ -59,12 +59,11 @@ if get(handles.MRCT,'Value') ~= postopModality
 end
 
 if  ~strcmp(handles.prod, 'anatomy')
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.surfacereconpanel.Children);
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.connpanel.Children);
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.optionaltab.Children);
     set(handles.overwriteapproved, 'Enable', 'on');
     switch postopModality
         case 1 % MR
-            arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationpanel.Children);
+            arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
             set(handles.coregctmethod,'Enable','off');
             set(handles.doreconstruction_checkbox,'Enable','on');
             set(handles.manualheight_checkbox,'Enable','on');
@@ -79,7 +78,7 @@ if  ~strcmp(handles.prod, 'anatomy')
             set(handles.targetpopup,'Enable','on');
             set(handles.maskwindow_txt,'Enable','on');
         case 2 % CT
-            arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationpanel.Children);
+            arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
             set(handles.doreconstruction_checkbox,'Enable','on');
             set(handles.manualheight_checkbox,'Enable','on');
             set(handles.reconmethod,'String',{'Refined TRAC/CORE','TRAC/CORE (Horn 2015)','PaCER (Husch 2017)','Manual', 'Slicer (Manual)'});
@@ -93,7 +92,7 @@ if  ~strcmp(handles.prod, 'anatomy')
             set(handles.targetpopup,'Enable','off');
             set(handles.maskwindow_txt,'Enable','off');
         case 3 % None
-            arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationpanel.Children);
+            arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
             set(handles.coregctmethod,'Enable','off');
             set(handles.scrf,'Enable','off');
             set(handles.scrf,'Value',0);

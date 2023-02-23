@@ -22,7 +22,7 @@ function varargout = lead_group(varargin)
 
 % Edit the above text to modify the response to help lead_group
 
-% Last Modified by GUIDE v2.5 08-Aug-2022 23:55:43
+% Last Modified by GUIDE v2.5 23-Feb-2023 11:08:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,7 @@ function lead_group_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.prod='group';
 handles.callingfunction='lead_group';
 
-% add recent groups...
+% add recentgroups groups...
 ea_initrecent(handles, 'groups');
 
 % Choose default command line output for lead_group
@@ -185,7 +185,7 @@ ea_bind_dragndrop(handles.leadfigure, ...
     @(obj,evt) DropFcn(obj,evt,handles), ...
     @(obj,evt) DropFcn(obj,evt,handles));
 
-ea_ListBoxRenderer(handles.recent);
+ea_ListBoxRenderer(handles.recentgroups);
 ea_ListBoxRenderer(handles.atlassetpopup);
 ea_ListBoxRenderer(handles.labelpopup);
 ea_ListBoxRenderer(handles.fiberspopup);
@@ -1720,21 +1720,21 @@ options.native=0;
 ea_spec2dwrite(options);
 
 
-% --- Executes on selection change in recent.
-function recent_Callback(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+% --- Executes on selection change in recentgroups.
+function recentgroups_Callback(hObject, eventdata, handles)
+% hObject    handle to recentgroups (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recent
+% Hints: contents = cellstr(get(hObject,'String')) returns recentgroups contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentgroups
 ea_busyaction('on',handles.leadfigure,'group');
 ea_recentcallback(handles, 'groups');
 ea_busyaction('off',handles.leadfigure,'group');
 
 
 % --- Executes during object creation, after setting all properties.
-function recent_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+function recentgroups_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentgroups (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

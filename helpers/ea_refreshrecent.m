@@ -19,5 +19,5 @@ end
 recentfolders = [['Recent ', type, ':']; recentfolders];
 
 % Refresh recent popupmenu, always set the value to 1
-handles.recent.String = recentfolders;
-handles.recent.Value = 1;
+handles.(['recent', type]).String = recentfolders;
+handles.(['recent', type]).Value = 1;
