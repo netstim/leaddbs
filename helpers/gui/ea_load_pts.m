@@ -264,7 +264,10 @@ if length(uipatdir) == 1 % Single folder
             uipatdir = strrep(sourceData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
 
         else
-            error('BIDS dataset detected but both sourcedata and rawdata folders are empty!');
+            handles.datasetselect.String = BIDSRoot;
+            ea_addrecent(handles, {BIDSRoot}, 'datasets');
+            ea_cprintf('CmdWinWarnings', 'BIDS dataset detected but both sourcedata and rawdata folders are empty!\n');
+            return;
         end
     end
 else % Multiple patient folders, suppose dataset has already been migrated to BIDS
@@ -296,15 +299,12 @@ else % Multiple patient folders, suppose dataset has already been migrated to BI
                 return
             end
             isBIDSRoot = 1;
-        else %user pressed cancel in ea_selectdatasets
+        else % user pressed cancel in ea_selectdatasets
             return
         end
-        %subjId = regexp(uipatdir, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
-         %error('Please select patient folders under DATASET/derivatives/leaddbs or migrate the dataset to BIDS format first!');
     else
         subjId = regexp(uipatdir, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
     end
-
 end
 
 if ~iscell(uipatdir)
@@ -324,6 +324,8 @@ end
 bids = BIDSFetcher(BIDSRoot);
 
 handles.datasetselect.String = BIDSRoot;
+
+% Set patient listbox
 handles.patientlistbox.String = bids.subjId;
 handles.patientlistbox.Value = find(ismember(handles.patientlistbox.String, subjId));
 

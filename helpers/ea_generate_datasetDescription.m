@@ -1,4 +1,3 @@
-
 function ea_generate_datasetDescription(dest_filepath,flag,postop_modality)
 
     [parent_dir,parent_file,ext] = fileparts(dest_filepath);
@@ -24,14 +23,15 @@ function ea_generate_datasetDescription(dest_filepath,flag,postop_modality)
     if strcmp(flag,'root_folder')
         generate_bidsIgnore(parent_dir,parent_file);
     end
-    %     if exist('flag','var') && strcmp(flag,'derivatives')
+
+%     if exist('flag','var') && strcmp(flag,'derivatives')
 %         [filepath,filename,ext] = fileparts(dest_filepath);
 %         description = generate_pipelineDescription(filename);
 %         dataset_description.DatasetType = 'derivatives'; 
 %         dataset_description.GeneratedBy.Name = filename;
 %         dataset_description.GeneratedBy.Description = description{1};
 %         dataset_description.HowToAcknowledge = '';
-%     else
+%     end
     
     
 function description = generate_pipelineDescription(which_pipeline)
