@@ -43,17 +43,20 @@ for pt=1:length(uidir)
     else
         directory = uidir{pt};
     end
+    
+    options = ea_getptopts(directory);
+    coreg_files = cellfun(@(x) options.subj.coreg.anat.preop.(x), fieldnames(options.subj.coreg.anat.preop), 'uni', 0);
 
     if nargin>5 % determine whether to use manually or automatically defined AC/PC
         automan=varargin{6};
     else
-        if exist([directory,'ACPC.fcsv'],'file') % manual AC/PC definition present
+        if exist(options.subj.acpc.acpcManual,'file') % manual AC/PC definition present
             automan='manual';
         else
             automan='auto';
         end
     end
-
+    
     if nargin>2
         whichnormmethod=varargin{3};
         template=varargin{4};
@@ -63,16 +66,15 @@ for pt=1:length(uidir)
 
     fidpoints_vox=ea_getfidpoints(fidpoints_mm,template);
 
-    [options.root,options.patientname]=fileparts(uidir{pt});
-    options.root=[options.root,filesep];
-    options.prefs=ea_prefs(options.patientname);
-    options=ea_assignpretra(options,1);
-
     switch automan
         case 'auto' % auto AC/PC detection
-            if ~exist([directory,'ACPC_autodetect.mat'],'file')
+            if ~exist(options.subj.acpc.acpcAutodetect,'file')
                 % warp into patient space
-                [fpinsub_mm] = ea_map_coords(fidpoints_vox', template, [directory,'forwardTransform'], [directory,options.prefs.prenii_unnormalized],whichnormmethod);
+                [fpinsub_mm] = ea_map_coords(fidpoints_vox', ...
+                                            template,...
+                                            [options.subj.subjDir,filesep,'forwardTransform'],...
+                                            coreg_files{1},...
+                                            whichnormmethod);
 
                 fpinsub_mm=fpinsub_mm';
 
@@ -85,17 +87,20 @@ for pt=1:length(uidir)
                 fid(pt).PC=fpinsub_mm(2,:);
                 fid(pt).MSP=fpinsub_mm(3,:);
                 acpc_fiducials=fid(pt); % save for later use
-                save([directory,'ACPC_autodetect.mat'],'-struct','acpc_fiducials'); clear acpc_fiducials
+                if ~isfolder(options.subj.acpcDir)
+                    mkdir(options.subj.acpcDir);
+                end
+                save(options.subj.acpc.acpcAutodetect,'-struct','acpc_fiducials'); clear acpc_fiducials
             else
-                tmp=load([directory,'ACPC_autodetect.mat']);
+                tmp=load(options.subj.acpc.acpcAutodetect);
                 fid(pt).AC=tmp.AC;
                 fid(pt).PC=tmp.PC;
                 fid(pt).MSP=tmp.MSP;
             end
 
         case {'manual'} % manual AC/PC definition, assume F.fcsv file inside pt folder
-            copyfile([directory,'ACPC.fcsv'],[directory,'ACPC.dat'])
-            Ct=readtable([directory,'ACPC.dat']);
+            copyfile(options.subj.acpc.acpcManual,strrep(options.subj.acpc.acpcManual,'.fcsv','.dat'))
+            Ct=readtable(strrep(options.subj.acpc.acpcManual,'.fcsv','.dat'));
 
             % AC
             cnt=1;
@@ -153,7 +158,7 @@ for pt=1:length(uidir)
             warpcoord_mm=fid(pt).PC+acpc(1)*xvec+acpc(2)*yvec+acpc(3)*zvec;
     end
 
-    anat=ea_load_nii([directory,options.prefs.prenii_unnormalized]);
+    anat=ea_load_nii(coreg_files{1});
     warpcoord_mm=[warpcoord_mm';1];
     warpcoord_vox=anat.mat\warpcoord_mm;
     warpcoord_vox=warpcoord_vox(1:3);
@@ -165,7 +170,11 @@ for pt=1:length(uidir)
             case 'mnidirect'
                 fid(pt).WarpedPointMNI=warpcoord_mm(1:3)';
             otherwise
-                [warpinmni_mm] = ea_map_coords(warpcoord_vox, [directory,options.prefs.prenii_unnormalized], [directory,'inverseTransform'], template,whichnormmethod);
+                [warpinmni_mm] = ea_map_coords(warpcoord_vox,...
+                                 coreg_files{1},...
+                                 [options.subj.subjDir,filesep,'inverseTransform'],...
+                                 template,...
+                                 whichnormmethod);
                 try
                     warppts(pt,:)=warpinmni_mm';
                 catch
@@ -178,19 +187,19 @@ for pt=1:length(uidir)
     if cfg.mapmethod==2
         anat.img(:)=0;
         anat.img(round(warpcoord_vox(1)),round(warpcoord_vox(2)),round(warpcoord_vox(3)))=1;
-        anat.fname=[directory,'ACPCquerypoint.nii'];
+        anat.fname=[options.subj.acpcDir,'ACPCquerypoint.nii'];
         spm_write_vol(anat,anat.img);
 
         % warp into nativespace
-        matlabbatch{1}.spm.util.defs.comp{1}.def = {[directory,'y_ea_normparams.nii']};
-        matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[directory,'ACPCquerypoint.nii']};
-        matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {directory};
+        matlabbatch{1}.spm.util.defs.comp{1}.def = {[options.subj.norm.transform.forwardBaseName, 'spm.nii']};
+        matlabbatch{1}.spm.util.defs.out{1}.pull.fnames = {[options.subj.acpcDir,'ACPCquerypoint.nii']};
+        matlabbatch{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {options.subj.acpcDir};
         matlabbatch{1}.spm.util.defs.out{1}.pull.interp = 4;
         matlabbatch{1}.spm.util.defs.out{1}.pull.mask = 1;
         matlabbatch{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];
         spm_jobman('run',{matlabbatch});
         clear matlabbatch
-        wfis{pt}=[directory,'wACPCquerypoint.nii'];
+        wfis{pt}=[options.subj.acpcDir,'wACPCquerypoint.nii'];
     end
 end
 
