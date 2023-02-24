@@ -326,8 +326,8 @@ bids = BIDSFetcher(BIDSRoot);
 handles.datasetselect.String = BIDSRoot;
 
 % Set patient listbox
-handles.patientlistbox.String = bids.subjId;
-handles.patientlistbox.Value = find(ismember(handles.patientlistbox.String, subjId));
+handles.patientlist.Data = cell2table(bids.subjId, 'VariableNames', {'subjId'});
+handles.patientlist.Selection = find(ismember(bids.subjId, subjId));
 
 if ~any(ismember(subjId, bids.subjId))
     % Return when import for all subjs cancelled or failed

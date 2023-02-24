@@ -1,6 +1,6 @@
 function ea_options2handles(options,handles)
 
-if  isempty(handles.patientlistbox.String) || sum(handles.patientlistbox.Value) == 0 || ~isfield(options, 'modality')
+if  isempty(handles.patientlist.Data) || isempty(handles.patientlist.Selection) || ~isfield(options, 'modality')
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.registrationtab.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.recontab.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.optionaltab.Children);
