@@ -19,6 +19,10 @@ if ~all(ismember(oldSubjId, bids.subjId))
     error('Not all the old subjID exist in the BIDS dataset!');
 end
 
+if numel(oldSubjId) ~= numel(unique(oldSubjId)) || numel(newSubjId) ~= numel(unique(newSubjId))
+    error('Duplicated subjID found!');
+end
+
 if any(ismember(newSubjId, bids.subjId))
     error('New subjID conflicts with existing subjID in the BIDS dataset!');
 end
