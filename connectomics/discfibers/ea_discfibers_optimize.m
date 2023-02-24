@@ -44,8 +44,8 @@ params=[3,  3,      1,  resolve_threshstrategy(tractset.threshstrategy)         
     1,  3,      1,  resolve_corrtype(tractset.corrtype)                     % corrtype
     1,  4,      1,  resolve_efieldmetric(tractset.efieldmetric)             % efieldmetric
     1,  7,      1,  resolve_basepredictionon(tractset.basepredictionon)     % basepredictionon
-    1,  100,    0,  mean(tractset.showposamount)                            % showposamount % will be multiplied by 10 for fixed amount
-    1,  100,    0,  mean(tractset.shownegamount)                            % shownegamount % will be multiplied by 10 for fixed amount
+    1,  100,    0,  mean(tractset.showposamount)                            % showposamount % will be multiplied by 50 for fixed amount
+    1,  100,    0,  mean(tractset.shownegamount)                            % shownegamount % will be multiplied by 50 for fixed amount
     0,  30,     0,  tractset.connthreshold                                  % connthreshold
     0,  1,      0,  tractset.efieldthreshold];                              % efieldthreshold % will be scaled depending on efieldmetric
 
@@ -127,7 +127,7 @@ if exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.ma
             disp(['Starting from scratch. Backed up prior state to ',outcopy,'.']);
         case 'Load saved optimum and stop'
             priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
-            [fval,ix]=max(priorstate.ip.Fval);
+            [fval,ix]=min(priorstate.ip.Fval);
             XOptim=priorstate.ip.X(ix,:);
             tractset=updatetractset(tractset,XOptim);
             disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
