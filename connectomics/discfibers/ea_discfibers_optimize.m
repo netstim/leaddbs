@@ -1,4 +1,4 @@
-function [tractset]=ea_discfibers_optimize(tractset,app,command)
+function [tractset]=ea_discfibers_optimize(tractset, app, command, optFile)
 % Function to optimize parameters for fiber filtering using a Surrogate
 % Optimization Algorithm. The app input is optional but can be used to
 % live-view tuning of parameters.
@@ -23,8 +23,8 @@ function [tractset]=ea_discfibers_optimize(tractset,app,command)
 % Evaluated points — All points at which the objective function value is known. These points include initial points, Construct Surrogate points, and Search for Minimum points at which the solver evaluates the objective function.
 % Sample points. Pseudorandom points where the solver evaluates the merit function during the Search for Minimum phase. These points are not points at which the solver evaluates the objective function, except as described in Search for Minimum Details.
 
-if ~exist('command','var')
-    command='cv';
+if ~exist('command','var') || ~isempty(command)
+    command = 'cv';
 end
 
 toolboxes_installed=ver;
@@ -113,12 +113,19 @@ options=optimoptions('surrogateopt',...
     'Display','iter');
 %    'CheckpointFile',fullfile(fileparts(tractset.leadgroup),'optimize_status.mat'),...
 
-
-
-
 % Solve problem
 objconstr=@(x)struct('Fval',nestedfun(x));
-if exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'file')
+if exist('optFile', 'var') && ~isempty(optFile)
+    cprintf('CmdWinWarnings', 'Prior optimization loaded: %s ...', optFile);
+    priorstate=load(optFile);
+    [fval,ix]=min(priorstate.ip.Fval);
+    XOptim=priorstate.ip.X(ix,:);
+    tractset=updatetractset(tractset,XOptim);
+    disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
+    warning on
+    tractset.save;
+    return
+elseif exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'file')
     choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file? Only do so if the prior combination used the same general setup & patient selection, etc.','Resume optimization?','Resume Optimization','Load saved optimum and stop','Start from scratch','Yes');
     switch choice
         case 'Start from scratch'
@@ -138,7 +145,6 @@ if exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.ma
             priorstate=load(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']));
             ip=priorstate.ip;
     end
-else
 end
 
 
@@ -160,7 +166,7 @@ while 1
             end
             options.MaxFunctionEvaluations=numIters;
             [XOptim,fval,exitflag,output,ip]=surrogateopt(objconstr,lb,ub,find(intcon),options);
-            save(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'ip');
+            save(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'ip','command');
         otherwise
             break
     end
