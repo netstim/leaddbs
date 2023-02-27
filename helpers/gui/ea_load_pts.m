@@ -15,6 +15,12 @@ if length(uipatdir) == 1 % Single folder
     if contains(uipatdir{1}, ['derivatives', filesep, 'leaddbs']) % Is patient folder under derivatives
         isSubjFolder = 1;
         BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives)'], 'match', 'once');
+        if endsWith(uipatdir{1}, 'leaddbs') % 'derivatives/leaddbs' instead of subj folder loaded
+            uipatdir = ea_regexpdir(uipatdir{1}, '^sub-', 0, 'd');
+            if ~isempty(uipatdir)
+                uipatdir = uipatdir(1);
+            end
+        end
         subjId = regexp(uipatdir{1}, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match');
     elseif contains(uipatdir{1}, {['rawdata', filesep, 'sub-'], ['sourcedata', filesep, 'sub-']}) % rawdata folder has been selected
         isSubjFolder = 1;
@@ -152,7 +158,6 @@ if length(uipatdir) == 1 % Single folder
                 folder_type = 'patient_folder_dicom_folder';
             end
         end
-       
         
         switch folder_type
             case 'legacy_patient_folder'
