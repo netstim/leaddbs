@@ -274,6 +274,33 @@ if length(uipatdir) == 1 % Single folder
             ea_cprintf('CmdWinWarnings', 'BIDS dataset detected but both sourcedata and rawdata folders are empty!\n');
             return;
         end
+    elseif isSubjFolder && ~ismember(handles.datasetselect.String, {BIDSRoot, 'Choose Dataset Directory'})
+        stack = dbstack;
+        if any(contains({stack.name}, 'AddPatientButtonPushed'))
+            answer = uiconfirm(handles.leadfigure,...
+                'Selected patient is from another dataset. What would you like to do?',...
+                'Add Patient',...
+                 'Options', {'Copy the selected patient to the current dataset', 'Switch to the selected dataset', 'Cancel'},...
+                'DefaultOption', 2, 'CancelOption', 3);
+            switch answer
+                case 'Copy the selected patient to the current dataset'
+                    if ismember(subjId{1}, handles.patientlist.Data.subjId)
+                        errordlg('Patient with the same ID already exists in the current dataset!', 'Error Adding Patient');
+                        return;
+                    else
+                        src = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])
+                            fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}])
+                            fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{1}])};
+                        dst = {fullfile(handles.datasetselect.String, 'derivatives', 'leaddbs', ['sub-', subjId{1}])
+                            fullfile(handles.datasetselect.String, 'rawdata', ['sub-', subjId{1}])
+                            fullfile(handles.datasetselect.String, 'sourcedata', ['sub-', subjId{1}])};
+                        cellfun(@(x, y) isfolder(x) && copyfile(x,y), src, dst, 'Uni', 0);
+                        BIDSRoot = handles.datasetselect.String;
+                    end
+                case 'Cancel'
+                    return;
+            end
+        end
     end
 else % Multiple patient folders, suppose dataset has already been migrated to BIDS
     BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives\', filesep, 'leaddbs)'], 'match', 'once');
@@ -309,6 +336,35 @@ else % Multiple patient folders, suppose dataset has already been migrated to BI
         end
     else
         subjId = regexp(uipatdir, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
+
+        stack = dbstack;
+        if any(contains({stack.name}, 'AddPatientButtonPushed')) && ~any(contains(uipatdir, {handles.datasetselect.String, 'Choose Dataset Directory'}))
+            answer = uiconfirm(handles.leadfigure,...
+                'Selected patients are from another dataset. What would you like to do?',...
+                'Add Patients',...
+                 'Options', {'Copy the selected patients to the current dataset', 'Switch to the selected dataset', 'Cancel'},...
+                'DefaultOption', 2, 'CancelOption', 3);
+            switch answer
+                case 'Copy the selected patients to the current dataset'
+                    if any(ismember(subjId, handles.patientlist.Data.subjId))
+                        errordlg('Patient with the same ID already exists in the current dataset!', 'Error Adding Patient');
+                        return;
+                    else
+                        for i=1:length(subjId)
+                            src = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{i}])
+                                fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{i}])
+                                fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{i}])};
+                            dst = {fullfile(handles.datasetselect.String, 'derivatives', 'leaddbs', ['sub-', subjId{i}])
+                                fullfile(handles.datasetselect.String, 'rawdata', ['sub-', subjId{i}])
+                                fullfile(handles.datasetselect.String, 'sourcedata', ['sub-', subjId{i}])};
+                            cellfun(@(x, y) isfolder(x) && copyfile(x,y), src, dst, 'Uni', 0);
+                        end
+                        BIDSRoot = handles.datasetselect.String;
+                    end
+                case 'Cancel'
+                    return;
+            end
+        end
     end
 end
 
