@@ -45,6 +45,9 @@ classdef BIDSFetcher
                 subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'derivatives', filesep, 'leaddbs'], '^sub-.*', 0, 'dir');
             end
             [~, subjFolderNames] = fileparts(subjDirs);
+            if ischar(subjFolderNames)
+                subjFolderNames = {subjFolderNames};
+            end
         end
 
         function rawImages = getRawImages(obj, subjId)
