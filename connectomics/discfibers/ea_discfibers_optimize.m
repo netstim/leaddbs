@@ -23,12 +23,12 @@ function [tractset]=ea_discfibers_optimize(tractset, app, command, optFile, mode
 % Evaluated points — All points at which the objective function value is known. These points include initial points, Construct Surrogate points, and Search for Minimum points at which the solver evaluates the objective function.
 % Sample points. Pseudorandom points where the solver evaluates the merit function during the Search for Minimum phase. These points are not points at which the solver evaluates the objective function, except as described in Search for Minimum Details.
 
-if ~exist('command','var') || ~isempty(command)
+if ~exist('command','var') || isempty(command)
     command = 'cv';
 end
 
 % When loading prior optimization, load and stop by default
-if ~exist('mode','var') || ~isempty(mode)
+if ~exist('mode','var') || isempty(mode)
     mode = 'stop';
 end
 
