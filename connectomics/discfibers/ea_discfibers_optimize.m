@@ -116,7 +116,7 @@ options=optimoptions('surrogateopt',...
 % Solve problem
 objconstr=@(x)struct('Fval',nestedfun(x));
 if exist('optFile', 'var') && ~isempty(optFile)
-    cprintf('CmdWinWarnings', 'Prior optimization loaded: %s ...', optFile);
+    ea_cprintf('CmdWinWarnings', 'Prior optimization loaded: %s ...', optFile);
     priorstate=load(optFile);
     [fval,ix]=min(priorstate.ip.Fval);
     XOptim=priorstate.ip.X(ix,:);
