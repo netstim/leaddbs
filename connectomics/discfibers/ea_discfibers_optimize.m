@@ -123,6 +123,7 @@ objconstr=@(x)struct('Fval',nestedfun(x));
 if exist('optFile', 'var') && ~isempty(optFile)
     ea_cprintf('CmdWinWarnings', 'Prior optimization loaded: %s ...', optFile);
     priorstate = load(optFile);
+    command = regexp(optFile, '(?<=optimize_status_)(cv|sim|comb)(?=[_.])', 'match', 'once');
     switch mode
         case 'stop'
             [fval,ix]=min(priorstate.ip.Fval);
@@ -135,7 +136,6 @@ if exist('optFile', 'var') && ~isempty(optFile)
         case 'resume'
             ip=priorstate.ip;
     end
-
 elseif exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'file')
     choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file? Only do so if the prior combination used the same general setup & patient selection, etc.','Resume optimization?','Resume Optimization','Load saved optimum and stop','Start from scratch','Yes');
     switch choice
@@ -177,7 +177,7 @@ while 1
             end
             options.MaxFunctionEvaluations=numIters;
             [XOptim,fval,exitflag,output,ip]=surrogateopt(objconstr,lb,ub,find(intcon),options);
-            save(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'ip','command');
+            save(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'ip');
         otherwise
             break
     end
