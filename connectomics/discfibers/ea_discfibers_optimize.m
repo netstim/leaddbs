@@ -241,14 +241,18 @@ tractset.save;
             case 'Sum'
                 offset = 0.5;
                 maxval = 3.5;
+                mult = 1;
             case 'Mean'
                 offset = 2.5;
                 maxval = 350;
+                mult = 1000;
             case {'Peak','Peak 5%'}
                 offset = 0.05;
                 maxval = 2;
+                mult = 1;
         end
         tractset.efieldthreshold=(X(8)+offset)/(offset+1)*maxval;
+        tractset.efieldthreshold=tractset.efieldthreshold*1000;
         fprintf('%s: %01.1f \n','E-Field Threshold',tractset.efieldthreshold);
 
     end
