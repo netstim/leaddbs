@@ -2,7 +2,7 @@ function ea_options2handles(options,handles)
 
 if  isempty(handles.patientlist.Data) || isempty(handles.patientlist.Selection) || ~isfield(options, 'modality')
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.registrationtab.Children);
-    arrayfun(@(x) set(x, 'Enable', 'off'), handles.recontab.Children);
+    arrayfun(@(x) set(x, 'Enable', 'off'), handles.localizationtab.Children);
     arrayfun(@(x) set(x, 'Enable', 'off'), handles.optionaltab.Children);
     set(handles.overwriteapproved, 'Enable', 'off');
 elseif options.modality == 3
@@ -10,12 +10,12 @@ elseif options.modality == 3
     set(handles.coregctmethod, 'Enable', 'off');
     set(handles.scrf, 'Enable', 'off');
     set(handles.scrfmask, 'Enable', 'off');
-    arrayfun(@(x) set(x, 'Enable', 'off'), handles.recontab.Children);
+    arrayfun(@(x) set(x, 'Enable', 'off'), handles.localizationtab.Children);
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.optionaltab.Children);
     set(handles.overwriteapproved, 'Enable', 'on');
 else
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.recontab.Children);
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.localizationtab.Children);
     arrayfun(@(x) set(x, 'Enable', 'on'), handles.optionaltab.Children);
     set(handles.overwriteapproved, 'Enable', 'on');
 end
