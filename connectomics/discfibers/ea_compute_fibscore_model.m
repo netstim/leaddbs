@@ -466,7 +466,7 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
 
                                     break % both sides are already filled out!
                                 else
-                                    ihatvals=vals{1,side}.*fibsval{1,side}(usedidx{voter,side},patientsel);
+                                    ihatvals=vals{voter,side}.*fibsval{1,side}(usedidx{voter,side},patientsel);
                                     Ihat(test,side,voter) = ea_discfibers_getpeak(ihatvals(test), obj.posvisible, obj.negvisible, 'peak5');
 
                                     Ihat_train_global(numTestIt,training,side,voter) = ea_discfibers_getpeak(ihatvals(training), obj.posvisible, obj.negvisible, 'peak5');
