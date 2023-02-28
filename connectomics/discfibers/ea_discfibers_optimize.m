@@ -1,4 +1,4 @@
-function [tractset]=ea_discfibers_optimize(tractset, app, command, optFile)
+function [tractset]=ea_discfibers_optimize(tractset, app, command, optFile, mode)
 % Function to optimize parameters for fiber filtering using a Surrogate
 % Optimization Algorithm. The app input is optional but can be used to
 % live-view tuning of parameters.
@@ -25,6 +25,11 @@ function [tractset]=ea_discfibers_optimize(tractset, app, command, optFile)
 
 if ~exist('command','var') || ~isempty(command)
     command = 'cv';
+end
+
+% When loading prior optimization, load and stop by default
+if ~exist('mode','var') || ~isempty(mode)
+    mode = 'stop';
 end
 
 toolboxes_installed=ver;
@@ -117,14 +122,20 @@ options=optimoptions('surrogateopt',...
 objconstr=@(x)struct('Fval',nestedfun(x));
 if exist('optFile', 'var') && ~isempty(optFile)
     ea_cprintf('CmdWinWarnings', 'Prior optimization loaded: %s ...', optFile);
-    priorstate=load(optFile);
-    [fval,ix]=min(priorstate.ip.Fval);
-    XOptim=priorstate.ip.X(ix,:);
-    tractset=updatetractset(tractset,XOptim);
-    disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
-    warning on
-    tractset.save;
-    return
+    priorstate = load(optFile);
+    switch mode
+        case 'stop'
+            [fval,ix]=min(priorstate.ip.Fval);
+            XOptim=priorstate.ip.X(ix,:);
+            tractset=updatetractset(tractset,XOptim);
+            disp(['Optimal solution: Average R = ',num2str(-fval),'.']);
+            warning on
+            tractset.save;
+            return
+        case 'resume'
+            ip=priorstate.ip;
+    end
+
 elseif exist(fullfile(fileparts(tractset.leadgroup),['optimize_status_',command,'.mat']),'file')
     choice=questdlg('Prior optimization has been done. Do you wish to continue on the same file? Only do so if the prior combination used the same general setup & patient selection, etc.','Resume optimization?','Resume Optimization','Load saved optimum and stop','Start from scratch','Yes');
     switch choice
