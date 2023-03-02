@@ -22,7 +22,7 @@ function varargout = lead_predict(varargin)
 
 % Edit the above text to modify the response to help lead_predict
 
-% Last Modified by GUIDE v2.5 11-Dec-2017 14:51:52
+% Last Modified by GUIDE v2.5 02-Mar-2023 19:11:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,7 +65,7 @@ set(handles.leadfigure,'name','Lead Predict','color','w');
 % homedir=ea_gethome;
 %setappdata(handles.leadfigure,'uipatdir',{homedir(1:end-1)});
 
-% add recent patients...
+% add recentpatients patients...
 ea_initrecent(handles, 'patients');
 
 ea_processguiargs(handles,varargin)
@@ -405,22 +405,22 @@ options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
 ea_busyaction('off',handles.leadfigure,'predict');
 
-% --- Executes on selection change in recent.
-function recent_Callback(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+% --- Executes on selection change in recentpatients.
+function recentpatients_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recent
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpatients contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpatients
 ea_busyaction('on',handles.leadfigure,'predict');
 ea_recentcallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'predict');
 
 
 % --- Executes during object creation, after setting all properties.
-function recent_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+function recentpatients_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

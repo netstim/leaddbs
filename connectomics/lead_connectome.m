@@ -22,7 +22,7 @@ function varargout = lead_connectome(varargin)
 
 % Edit the above text to modify the response to help leadfigure
 
-% Last Modified by GUIDE v2.5 03-Sep-2021 19:59:38
+% Last Modified by GUIDE v2.5 02-Mar-2023 19:11:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -98,7 +98,7 @@ set(handles.ftmethod,'String',ftMethods);
 % Initialize norm methods popupmenu
 ea_init_normpopup(handles, options.prefs.normalize.default);
 
-% add recent patients...
+% add recentpatients patients...
 ea_initrecent(handles, 'patients');
 
 % update UI:
@@ -658,22 +658,22 @@ options.prefs=ea_prefs('');
 ea_getpatients(options,handles);
 ea_busyaction('off',handles.leadfigure,'connectome');
 
-% --- Executes on selection change in recent.
-function recent_Callback(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+% --- Executes on selection change in recentpatients.
+function recentpatients_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recent
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpatients contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpatients
 ea_busyaction('on',handles.leadfigure,'connectome');
 ea_recentcallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'connectome');
 
 
 % --- Executes during object creation, after setting all properties.
-function recent_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+function recentpatients_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -873,7 +873,7 @@ uipatdir=getappdata(handles.leadfigure,'uipatdir');
 if length(uipatdir)>1 % still works
     %  ea_error('Selecting the next patient in folder only works if a single patient was selected.');
 elseif isempty(uipatdir)
-    % load recent patient then.
+    % load recentpatients patient then.
 
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
     if iscell(recentfolders)
