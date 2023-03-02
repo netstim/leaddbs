@@ -24,6 +24,23 @@ if isfield(options, 'leadfigure')
     end
 end
 
+if options.importnii.do
+    unsortedFiles = ea_regexpdir(fullfile(options.subj.rawdataDir, 'unsorted'), '.*\.nii(\.gz)?');
+    if ~isempty(unsortedFiles)
+        ea_nifti_to_bids(unsortedFiles, bids.datasetDir, ['sub-', options.subj.subjId]);
+        ea_delete(fullfile(options.subj.rawdataDir, 'unsorted'));
+    else
+        ea_cprintf('CmdWinWarnings', 'No unsorted raw images found for "%s"!\n', options.subj.subjId);
+    end
+    return;
+end
+
+if options.importdcm.do
+    ea_dataset_import(options.subj.sourcedataDir, bids.datasetDir, options.importdcm.tool, 1);
+    ea_delete(fullfile(options.subj.sourcedataDir, 'tmp'));
+    return;
+end
+
 % get accurate electrode specifications and save it in options.
 options = ea_resolve_elspec(options);
 

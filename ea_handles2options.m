@@ -11,6 +11,23 @@ options.cor_stdfactor=1.0; % Default: 1.0 - the higher this factor, the lower th
 
 %% set options
 options.earoot = ea_getearoot;
+
+try
+    options.importdcm.do = handles.dicom2bidscheckbox.Value;
+catch
+    options.importdcm.do = 0;
+end
+
+try
+    options.importdcm.tool = handles.dcm2niitool.Value;
+end
+
+try
+    options.importnii.do = handles.nifti2bidscheckbox.Value;
+catch
+    options.importnii.do = 0;
+end
+
 try % not working when calling from lead_anatomy
     options.normalize.do=(get(handles.normalize_checkbox,'Value') == get(handles.normalize_checkbox,'Max'));
     options.normalize.settings=getappdata(handles.normsettings,'settings');

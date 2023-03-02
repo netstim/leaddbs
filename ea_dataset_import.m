@@ -44,7 +44,7 @@ end
 %% import directly from BIDS
 if ~dicomimport
 
-    % TODO: also use dicom_to_bids gui?
+    % TODO: also use nifti_to_bids gui?
 
     if ~contains(source_dir{1}, 'sub-') % root dataset folder has been passed
         rawdata_dir = fullfile(source_dir{1}, 'rawdata');
@@ -198,11 +198,11 @@ else
         dicom_dir = fullfile(sourcedata_dir_subj, subj_ids(subj_idx).name);
 
         h_wait = waitbar(0, 'Please wait while DICOM files are converted to NIFTI images...');
-        niiFiles = ea_dcm_to_nii(method, dicom_dir);     % convert DICOMS to .nii files and get list of files
+        niiFiles = ea_dcm_to_nii(dicom_dir, fullfile(dicom_dir, 'tmp'), method); % convert DICOM to NIfTI and get list of files
         close(h_wait);
 
         % call GUI to select which files should be loaded
-        anat_files_selected = ea_dicom_to_bids(subj_ids(subj_idx).name, niiFiles, root_dataset_dir_subj);
+        anat_files_selected = ea_nifti_to_bids(niiFiles, root_dataset_dir_subj, subj_ids(subj_idx).name);
 
         if ~isempty(anat_files_selected)
             % write into json file

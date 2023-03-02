@@ -9,7 +9,7 @@ uipatdir = GetFullPath(uipatdir);
 isSubjFolder = 0;
 isBIDSRoot = 0;
 
-isDICOMFolder = 0; % Will be true in case a 'DICOM' folder dragged in, will then only do dcm conversion, subjId will be the parent folder name
+isDICOMFolder = 0; % In case a 'DICOM' folder dragged in, subjId will be the parent folder name
 
 if length(uipatdir) == 1 % Single folder
     if contains(uipatdir{1}, ['derivatives', filesep, 'leaddbs']) % Is patient folder under derivatives
@@ -62,101 +62,32 @@ if length(uipatdir) == 1 % Single folder
     if ~isSubjFolder && ~isBIDSRoot
         % try to find out what kind of folder structure was passed
         folder_list = dir_without_dots(uipatdir{1});         % do a listing of the immediate directory first
-        dcm_in_subfolder_list = dir(fullfile(uipatdir{1}, '**/*.dcm'));     % find out any .dcm files in any subdir
         raw_nifti_in_subfolder_list = {folder_list.name};
         raw_nifti_filter = {'.nii', '.nii.gz'};
-        % Old dataset detected
-        if isfile(fullfile(uipatdir{1}, 'ea_ui.mat'))
+
+        % legacy dataset detected
+        if isfile(fullfile(uipatdir{1}, 'ea_ui.mat')) || isfile(fullfile(uipatdir{1}, 'ea_reconstruction.mat'))
             folder_type = 'legacy_patient_folder';
 
-        % DICOM folder detected
-        elseif endsWith(uipatdir{1}, 'dicom', 'IgnoreCase',true)
-            uipatdir = {fileparts(uipatdir{1})};
+        % NIfTI folder detected
+        elseif ~isempty(raw_nifti_in_subfolder_list) && all(endsWith(raw_nifti_in_subfolder_list, raw_nifti_filter))
+            [~, subjId] = fileparts(uipatdir{1});
+            subjId = {subjId};
+            folder_type = 'patient_folder_raw_nifti';
+
+        % DICOM folder detected, use parent folder name as subjId
+        elseif endsWith(uipatdir{1}, 'dicom', 'IgnoreCase', true)
+            [~, subjId] = fileparts(fileparts(uipatdir{1}));
+            subjId = {subjId};
             isDICOMFolder = 1;
             folder_type = 'patient_folder_dicom_folder';
 
-        % DICOM folder detected inside the folder
-        elseif ~isempty(ea_regexpdir(uipatdir{1}, 'DICOM', 0, 'd'))
-            folder_type = 'patient_folder_dicom_folder';
-
-        % if DICOMDIR file inside, assume dicoms are present in one of the folders on this level
-        elseif any(strcmp('DICOMDIR', {folder_list.name}))
-            folder_list(~[folder_list.isdir]' | startsWith({folder_list.name}', {'.', '..'})) = [];
-            from = fullfile(uipatdir{1}, {folder_list.name}');
-            to = fullfile(uipatdir{1}, 'DICOM');
-            ea_mkdir(to);
-            parfor f = 1:length(from)
-                % if .dcm file is inside subfolder, just move the folder
-                movefile(from{f}, to);
-            end
-
-            subFolders = fullfile({folder_list.folder}', {folder_list.name}');
-            for f=1:length(subFolders)
-                if isempty(ea_regexpdir(subFolders{f}, '.*', 1, 'f'))
-                    ea_delete(subFolders{f});
-                end
-            end
-            ea_delete(fullfile(uipatdir{1}, 'DICOMDIR'));
-
-            folder_type = 'patient_folder_dicom_folder';
-
-        % .dcm files are found inside one of the subfolders
-        elseif ~isempty(dcm_in_subfolder_list)  %
-            from = fullfile({dcm_in_subfolder_list.folder}', {dcm_in_subfolder_list.name}');
-            to = strrep({dcm_in_subfolder_list.folder}', uipatdir{1}, fullfile(uipatdir{1}, 'DICOM'));
-            ea_mkdir(to);
-            parfor f=1:length(dcm_in_subfolder_list)
-                movefile(from{f}, to{f});
-            end
-
-            subFolders = fullfile({folder_list.folder}', {folder_list.name}');
-            for f=1:length(subFolders)
-                if isempty(ea_regexpdir(subFolders{f}, '.*', 1, 'f'))
-                    ea_delete(subFolders{f});
-                end
-            end
-
-            folder_type = 'patient_folder_dicom_folder';
-
-        % does not have ea_ui.mat, only has niftis
-        elseif ~isempty(raw_nifti_in_subfolder_list) && all(endsWith(raw_nifti_in_subfolder_list, raw_nifti_filter))
-            folder_type = 'patient_folder_raw_nifti';
-
-        % Otherwise, look for DICOMs
+        % Otherwise, treat as DICOM folder
         else
-            warning('off', 'backtrace');
-            warning('trying to load as DICOM folder...');
-            warning('on', 'backtrace');
-            movefile(uipatdir{1}, [uipatdir{1}, '_ORIG']);
-            ea_mkdir(fullfile(uipatdir{1}, 'DICOM'));
-            movefile([uipatdir{1}, '_ORIG'], fullfile(uipatdir{1}, 'ORIG'));
-
-            if ispc
-                dcm2niix = fullfile(ea_getearoot, 'ext_libs', 'dcm2nii', 'dcm2niix.exe');
-            else
-                dcm2niix = fullfile(ea_getearoot, 'ext_libs', 'dcm2nii', ['dcm2niix.', computer('arch')]);
-            end
-
-            cmd = [dcm2niix, ' -r y', ' -o ', ea_path_helper(fullfile(uipatdir{1}, 'DICOM')), ' ', ea_path_helper(fullfile(uipatdir{1}, 'ORIG'))];
-
-            % Search for DICOM files and rename to *.dcm
-            if ~ispc
-                [~, cmdout] = system(['bash -c "', cmd, '"']);
-            else
-                [~, cmdout] = system(cmd);
-            end
-
-            numDICOMs = regexp(cmdout, '(?<=Converted )\d+(?= DICOMs)', 'match', 'once');
-            if strcmp(numDICOMs, '0')
-                warning('off', 'backtrace');
-                warning('%s DICOMs found!', numDICOMs);
-                warning('on', 'backtrace');
-                folder_type = '';
-            else
-                fprintf('%s DICOMs found!\n', numDICOMs);
-                ea_delete(fullfile(uipatdir{1}, 'ORIG'));
-                folder_type = 'patient_folder_dicom_folder';
-            end
+            [~, subjId] = fileparts(uipatdir{1});
+            subjId = {subjId};
+            isDICOMFolder = 1;
+            folder_type = 'patient_folder_dicom_folder';
         end
         
         switch folder_type
@@ -181,50 +112,48 @@ if length(uipatdir) == 1 % Single folder
                 else %user pressed cancel in ea_selectdatasets
                     return;
                 end
+            case 'patient_folder_raw_nifti'
+                options.prefs = ea_prefs;
+                if strcmp(handles.datasetselect.String, 'Choose Dataset Directory')
+                    BIDSRoot = ea_getdataset(options, handles);
+                    if ~BIDSRoot
+                        return;
+                    end
+                end
+
+                BIDSRoot = handles.datasetselect.String;
+                derivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}]);
+                ea_mkdir(derivativesFolder);
+                rawFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}]);
+                ea_mkdir(rawFolder);
+
+                movefile(uipatdir{1}, fullfile(rawFolder, 'unsorted'));
+
+                uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
             case  'patient_folder_dicom_folder'
                 options.prefs = ea_prefs;
                 options.isDICOMFolder = isDICOMFolder;
-                msg = sprintf('DICOM folder found,\n should we run DICOM to NIfTI conversion?');
-                waitfor(ea_selectdataset(msg,handles.leadfigure));
-                dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
-                if ~isempty(dest_folder)
-                    if options.prefs.migrate.interactive
-                        waitfor(lead_import(uipatdir, options, handles, dest_folder));
-                    else
-                        ea_lead_import(uipatdir,options,handles,dest_folder);
+                if strcmp(handles.datasetselect.String, 'Choose Dataset Directory')
+                    BIDSRoot = ea_getdataset(options, handles);
+                    if ~BIDSRoot
+                        return;
                     end
-                    BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
-                    subjId = getappdata(handles.leadfigure,'subjID');
-                    if ~isempty(BIDSRoot) && ~isempty(subjId)
-                        uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-                    else
-                        return
-                    end
-                else %user pressed cancel in ea_selectdatasets
-                    return
                 end
-            case 'patient_folder_raw_nifti'
-                options.prefs = ea_prefs;
-                msg = sprintf('Raw dataset with Nifti files [only] detected,\n would you like to migrate it to BIDS?');
-                waitfor(ea_selectdataset(msg,handles.leadfigure));
-                dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
-                if ~isempty(dest_folder)
-                    if options.prefs.migrate.interactive
-                        waitfor(lead_import(uipatdir, options, handles));
-                    else
-                        ea_lead_import(uipatdir,options,handles,dest_folder);
-                    end
 
-                    BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
-                    subjId = getappdata(handles.leadfigure,'subjID');
-                    if ~isempty(BIDSRoot) && ~isempty(subjId)
-                        uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-                    else
-                        return
-                    end
-                else %user pressed cancel in ea_selectdatasets
-                    return;
+                BIDSRoot = handles.datasetselect.String;
+                derivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}]);
+                ea_mkdir(derivativesFolder);
+                rawFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}]);
+                ea_mkdir(rawFolder);
+                sourceFolder = fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{1}]);
+                ea_mkdir(sourceFolder);
+                if endsWith(uipatdir{1}, 'dicom', 'IgnoreCase', true)
+                    movefile(uipatdir{1}, sourceFolder);
+                else
+                    movefile(uipatdir{1}, fullfile(sourceFolder, 'DICOM'));
                 end
+                uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
+
             otherwise
                 error('No compatible files/folders (BIDS dataset/NIfTIs/DICOMs) found!');
         end
@@ -404,6 +333,23 @@ end
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
 setappdata(handles.leadfigure, 'bids', bids);
 setappdata(handles.leadfigure, 'subjId', subjId);
+
+subjDataOverview = bids.subjDataOverview(subjId, :);
+if isDICOMFolder || ~all(subjDataOverview.hasRawimageJson)
+    handles.processtabgroup.SelectedTab = handles.importtab;
+    arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.registrationtab, 'Type', 'uicheckbox'));
+    arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.localizationtab, 'Type', 'uicheckbox'));
+    arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.optionaltab, 'Type', 'uicheckbox'))
+    handles.dicom2niicheckbox.Value = 1;
+    handles.statusone.String = 'DICOM folder found, please run Import.';
+    handles.statustwo.String = '';
+    return;
+else
+    handles.processtabgroup.SelectedTab = handles.registrationtab;
+    handles.dicom2niicheckbox.Value = 0;
+    handles.statusone.String = '';
+    handles.statustwo.String = '';
+end
 
 % Update ui from patient
 if ~ismember(handles.prod, {'mapper'})
