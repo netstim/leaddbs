@@ -88,6 +88,10 @@ def get_input_from_LeadDBS(settings_location, index_side, cluster_run=False):  #
     for i in range(len(Pulse_amp)):
         if math.isnan(Pulse_amp[i]):
             Pulse_amp[i] = None
+        # Fix of VC random grounding bug for Lead-DBS stim settings
+        elif Pulse_amp[i] == 0.0 and input_dict['current_control'] == 0:
+            Pulse_amp[i] == None  # this is allowed only for this case since we can't set contact to 0 V in Lead-DBS
+            print("swapped 0V contact to None in VC")
 
     StimSets = int(file['settings']['stimSetMode'][0][0])
     input_dict['StimSets'] = StimSets
