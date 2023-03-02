@@ -211,6 +211,8 @@ classdef BIDSFetcher
             subj.subjId = subjId;
             subj.uiprefs = obj.getPrefs(subjId, 'uiprefs', 'mat');
             subj.methodLog = obj.getLog(subjId, 'methods');
+            subj.rawdataDir = fullfile(obj.datasetDir, 'rawdata', ['sub-', subjId]);
+            subj.sourcedataDir = fullfile(obj.datasetDir, 'sourcedata', ['sub-', subjId]);
 
             % Set pre-op anat field
             preopAnat = obj.getPreopAnat(subjId);

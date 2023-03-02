@@ -30,7 +30,7 @@ end
 if isempty(fieldnames(rawImages))
     % Warn in case it's not a miniset
     if ~isfile(fullfile(GetFullPath(BIDSRoot), 'miniset.json'))
-        ea_cprintf('CmdWinWarnings', 'No raw images found for "%s":\n', subjId);
+        ea_cprintf('CmdWinWarnings', 'No raw images found for "%s"!\n', subjId);
     end
     return;
 end
