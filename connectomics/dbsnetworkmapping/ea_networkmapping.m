@@ -59,6 +59,7 @@ classdef ea_networkmapping < handle
         rngseed = 'default';
         Nperm = 1000 % how many permutations in leave-nothing-out permtest strategy
         kfold = 5 % divide into k sets when doing k-fold CV
+        kiter = 1
         Nsets = 5 % divide into N sets when doing Custom (random) set test
         adjustforgroups = 1 % adjust correlations for group effects
     end
@@ -226,9 +227,65 @@ classdef ea_networkmapping < handle
         end
 
         function [I, Ihat] = kfoldcv(obj)
-            rng(obj.rngseed);
-            cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
-            [I, Ihat] = crossval(obj, cvp);
+            if obj.kiter == 1
+                rng(obj.rngseed);
+                cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
+                [I, Ihat] = crossval(obj, cvp);
+            else
+                r_over_iter = zeros(obj.kiter,1);
+                p_over_iter = zeros(obj.kiter,1);
+                for i=1:obj.kiter
+                    cvp = cvpartition(length(obj.patientselection), 'KFold', obj.kfold);
+                    fprintf("Iterating fold set: %d",i)
+                    [I_iter{i}, Ihat_iter{i}] = crossval(obj, cvp);
+                    inx_nnan = find(isnan(I_iter{i}) ~= 1);
+                    [r_over_iter(i),p_over_iter(i)]=ea_permcorr(I_iter{i}(inx_nnan),Ihat_iter{i}(inx_nnan),'spearman');
+                end
+                
+                r_Ihat = zeros(size(Ihat_iter,2));
+                for i = 1:size(r_Ihat,1)
+                    for j = 1:size(r_Ihat,1)
+                        [r_Ihat(i,j),~]=ea_permcorr(Ihat_iter{i},Ihat_iter{j},'spearman');
+                    end
+                end
+                % plot correlation matrix
+                figure('Name','Patient scores'' correlations','Color','w','NumberTitle','off')
+                imagesc(triu(r_Ihat));
+                title('Patient scores'' correlations over K-fold shuffles', 'FontSize', 16); % set title
+                colormap('bone');
+                cb = colorbar;
+                set(cb)
+
+                % plot r-vals over shuffles
+                p_above_05 = p_over_iter(find(p_over_iter>0.05),:);
+                p_above_01 = p_over_iter(find(p_over_iter>0.01),:);
+                h = figure('Name','Over-fold analysis','Color','w','NumberTitle','off');
+                g = ea_raincloud_plot(r_over_iter,'box_on',1);
+                a1=gca;
+                set(a1,'ytick',[])
+                a1.XLabel.String='Spearman''s R of model and clinical scores';
+
+                if min(r_over_iter) >= -0.9
+                    r_lower_lim = min(r_over_iter) - 0.1;
+                else
+                    r_lower_lim = -1.0;
+                end
+                if max(r_over_iter) <= 0.9
+                    r_upper_lim = max(r_over_iter) + 0.1;
+                else
+                    r_upper_lim = 1.0;
+                end
+
+                a1.XLim=([r_lower_lim r_upper_lim]);
+                text(0.25,0.9,['N(p>0.05) = ',sprintf('%d',length(p_above_05))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
+                text(0.25,0.83,['N(p>0.01) = ',sprintf('%d',length(p_above_01))],'FontWeight','bold','FontSize',14,'HorizontalAlignment','right','Units','normalized');
+                % we should think about this part
+                I_iter = cell2mat(I_iter);
+                Ihat_iter = cell2mat(Ihat_iter);
+                I = mean(I_iter,2,'omitnan');
+                Ihat = mean(Ihat_iter,2,'omitnan');
+            end
+
         end
 
         function [I, Ihat] = lno(obj, Iperm)
