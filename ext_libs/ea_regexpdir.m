@@ -10,12 +10,12 @@ if ~exist('type','var')
     type = 'file';
 end
 
-% Fix to use '^STR' pattern recursively
-if recursive && startsWith(expstr, '^')
+% Rewrite pattern when '^STR$' used
+if startsWith(expstr, '^')
     if endsWith(expstr, '$')
-        expstr = ['(^|.+[/\\])', expstr(2:end)];
+        expstr = ['(^|.+\', filesep, ')', expstr(2:end-1), '\', filesep, '?$'];
     else
-        expstr = ['(^|.+[/\\])', expstr(2:end), '[^/\\]*$'];
+        expstr = ['(^|.+\', filesep, ')', expstr(2:end)];
     end
 end
 
