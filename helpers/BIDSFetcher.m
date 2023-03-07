@@ -31,6 +31,12 @@ classdef BIDSFetcher
             obj.subjId = obj.getSubjId;
             obj.subjDataOverview = obj.getSubjDataOverview;
 
+            % Check dataset description file
+            if ~isfile(fullfile(obj.datasetDir, 'dataset_description.json'))
+                ea_cprintf('CmdWinWarnings', 'Could not find dataset description file, generating one now...\n');
+                ea_generate_datasetDescription(obj.datasetDir, 'root_folder');
+            end
+
             % TODO: BIDS validation
 
             % Verbose
@@ -44,11 +50,20 @@ classdef BIDSFetcher
         %% Data fetching functions
         function subjId = getSubjId(obj)
             % Find subject folders: sub-*
-            subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'rawdata'], '^sub-.*', 0, 'dir');
-            if isempty(subjDirs)
-                subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'derivatives', filesep, 'leaddbs'], '^sub-.*', 0, 'dir');
+            subjSourceDirs = ea_regexpdir([obj.datasetDir, filesep, 'sourcedata'], '^sub-[^\W_]+$', 0, 'dir');
+            if ~isempty(subjSourceDirs)
+                ea_mkdir(strrep(subjSourceDirs, 'sourcedata', 'rawdata'));
+                ea_mkdir(strrep(subjSourceDirs, 'sourcedata', ['derivatives', filesep, 'leaddbs']));
             end
-            subjId = regexp(subjDirs, ['(?<=\', filesep, 'sub-).*'], 'match', 'once');
+
+            subjRawDirs = ea_regexpdir([obj.datasetDir, filesep, 'rawdata'], '^sub-[^\W_]+$', 0, 'dir');
+            if ~isempty(subjRawDirs)
+                ea_mkdir(strrep(subjRawDirs, 'rawdata', ['derivatives', filesep, 'leaddbs']));
+            end
+
+            subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'derivatives', filesep, 'leaddbs'], '^sub-[^\W_]+$', 0, 'dir');
+
+            subjId = regexp(subjDirs, ['(?<=\', filesep, 'sub-)[^\W_]+'], 'match', 'once');
         end
 
         function subjDataOverview = getSubjDataOverview(obj, subjId)
@@ -87,7 +102,7 @@ classdef BIDSFetcher
                 end
             end
 
-            subjDataOverview = array2table(subjDataOverview, 'VariableNames', {'hasRawimageJson', 'hasRawdata', 'hasUnsortedRawdata', 'hasSourcedata'}, 'RowNames', subjId);
+            subjDataOverview = array2table(subjDataOverview, 'VariableNames', {'hasRawimagesJson', 'hasRawdata', 'hasUnsortedRawdata', 'hasSourcedata'}, 'RowNames', subjId);
         end
 
         function rawImages = getRawImages(obj, subjId)
