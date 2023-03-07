@@ -133,16 +133,9 @@ if strcmp(handles.prod, 'dbs')
         handles.patientlist.Data = cell2table(bids.subjId, 'VariableNames', {'subjId'});
         handles.patientlist.Selection = find(ismember(bids.subjId', subjId));
 
-        % Check rawimages.json
-        for i=1:length(subjId)
-            if ~bids.subjDataOverview(subjId, :).hasRawimagesJson && bids.subjDataOverview(subjId, :).hasRawdata
-                ea_genrawimagesjson(BIDSRoot, subjId{i});
-            end
-        end
-
+        % Check if there are patients not imported yet
         subjDataOverview = bids.subjDataOverview;
-        subjNotImported = subjDataOverview(~subjDataOverview.hasRawimagesJson, :);
-        subjNotImported = subjNotImported.Row(subjNotImported.hasUnsortedRawdata | subjNotImported.hasSourcedata);
+        subjNotImported = subjDataOverview.Row(~subjDataOverview.hasRawimagesJson & (subjDataOverview.hasUnsortedRawdata | subjDataOverview.hasSourcedata));
         if ~isempty(subjNotImported)
             handles.patientlist.Selection = find(ismember(bids.subjId', subjNotImported));
             handles.processtabgroup.SelectedTab = handles.importtab;

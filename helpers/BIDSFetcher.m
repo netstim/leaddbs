@@ -28,13 +28,27 @@ classdef BIDSFetcher
             obj.settings = obj.leadPrefs('m');
             obj.spacedef = ea_getspacedef;
             obj.datasetDir = GetFullPath(datasetDir);
-            obj.subjId = obj.getSubjId;
-            obj.subjDataOverview = obj.getSubjDataOverview;
 
             % Check dataset description file
             if ~isfile(fullfile(obj.datasetDir, 'dataset_description.json'))
                 ea_cprintf('CmdWinWarnings', 'Could not find dataset description file, generating one now...\n');
                 ea_generate_datasetDescription(obj.datasetDir, 'root_folder');
+            end
+
+            obj.subjId = obj.getSubjId;
+            obj.subjDataOverview = obj.getSubjDataOverview;
+
+            % Check rawimages.json
+            if isempty(obj.subjId)
+                ea_cprintf('CmdWinWarnings', 'No subj found in the dataset: %s\n', obj.datasetDir);
+            else
+                subjWithoutRawimagesJson = obj.subjDataOverview.Row(~obj.subjDataOverview.hasRawimagesJson & obj.subjDataOverview.hasRawdata);
+                if ~isempty(subjWithoutRawimagesJson)
+                    for i=1:length(subjWithoutRawimagesJson)
+                        ea_genrawimagesjson(obj.datasetDir, subjWithoutRawimagesJson{i});
+                    end
+                    obj.subjDataOverview = obj.getSubjDataOverview;
+                end
             end
 
             % TODO: BIDS validation
