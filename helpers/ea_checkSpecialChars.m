@@ -25,10 +25,10 @@ end
 
 warntxt = '';
 for i = find(~cellfun(@isempty, special_characters))
-    warntxt = [warntxt sprintf('The folder: %s\ncontains the unsopported characters (or space): ''%s''.\n\n', paths{i}, special_characters{i})];
+    warntxt = [warntxt sprintf('The folder path: %s\nmight contain the unsopported characters (or space): ''%s''.\n\n', paths{i}, special_characters{i})];
 end
 
 if ~isempty(warntxt)
     found = 1;
-    uigetpref('LeadDBS','SpecialCharShowWarningHint','Unsupported Characters',[warntxt 'This is not recommended. Please rename and try again.'],'Ok');
+    uigetpref('LeadDBS','SpecialCharShowWarningHint','Unsupported Characters',[warntxt sprintf('It''s recommended to only use letters, numbers, underscore and dash.\nPlease consider to rename and try again.')],'Ok');
 end

@@ -23,7 +23,7 @@ if isempty(menuprobe)
     end
 
     if ismember('import',cmd)
-        uimenu(f,'Label','Import DICOM or Migrate Dataset to BIDS','Callback',{@(src, evt) lead_import});
+        uimenu(f,'Label','Import Legacy Folder to BIDS Dataset','Callback',{@(src, evt) lead_import});
     end
 
     if ismember('checkregfigs',cmd)

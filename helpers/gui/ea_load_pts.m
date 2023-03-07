@@ -1,4 +1,4 @@
-function ea_load_pts(handles,uipatdir)
+function ea_load_pts(handles, uipatdir)
 
 if ~iscell(uipatdir)
     uipatdir = {uipatdir};
@@ -6,279 +6,51 @@ end
 
 uipatdir = GetFullPath(uipatdir);
 
-isSubjFolder = 0;
-isBIDSRoot = 0;
+if isLegacyFolder(uipatdir{1})
+    % Input folder is legacy patient folder
+    opts.WindowStyle = 'modal';
+    opts.Interpreter = 'tex';
+    msgbox('Please run \bf''lead import''\rm or \bfImport Legacy Folder to BIDS Dataset\rm from the \bfTools\rm menu.', 'Legacy Patient Folder Detected', 'help', opts);
+    return;
+elseif isBIDSFolder(uipatdir{1})
+    % Input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder 
+    [~, BIDSRoot, subjId] = isBIDSFolder(uipatdir{1});
+elseif isBIDSSubjFolder(uipatdir{1})
+    % Input folder is BIDS subj folder
+    [~, BIDSRoot, subjId] = isBIDSSubjFolder(uipatdir);
 
-isDICOMFolder = 0; % In case a 'DICOM' folder dragged in, subjId will be the parent folder name
-
-if length(uipatdir) == 1 % Single folder
-    if contains(uipatdir{1}, ['derivatives', filesep, 'leaddbs']) % Is patient folder under derivatives
-        isSubjFolder = 1;
-        BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives)'], 'match', 'once');
-        if endsWith(uipatdir{1}, 'leaddbs') % 'derivatives/leaddbs' instead of subj folder loaded
-            uipatdir = ea_regexpdir(uipatdir{1}, '^sub-', 0, 'd');
-            if ~isempty(uipatdir)
-                uipatdir = uipatdir(1);
-            end
-        end
-        subjId = regexp(uipatdir{1}, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match');
-    elseif contains(uipatdir{1}, {['rawdata', filesep, 'sub-'], ['sourcedata', filesep, 'sub-']}) % rawdata folder has been selected
-        isSubjFolder = 1;
-        BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, '(rawdata|sourcedata))'], 'match', 'once');
-        subjId = regexp(uipatdir{1}, ['(?<=(rawdata|sourcedata)\', filesep, 'sub-).*'], 'match');
-
-        subjDerivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}]);
-        subjRawdataFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}]);
-        subjSourcedataFolder = fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{1}]);
-
-        % now check if derivatives/sub-xx exists
-        if isfile(fullfile(subjDerivativesFolder, 'prefs', ['sub-', subjId{1}, '_desc-rawimages.json']))
-            ea_cprintf('CmdWinWarnings', 'rawimages.json detected for "sub-%s":\n', subjId{1});
-            uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-        elseif ~isempty(ea_regexpdir(subjRawdataFolder, '.*\.nii(\.gz)$', 1, 'f')) % rawimages.json missing, but images exist in rawdata folder
-            ea_cprintf('CmdWinWarnings', 'rawdata exists but rawimages.json is not present!\n');
-            ea_genrawimagesjson(BIDSRoot, subjId{1});
-            uipatdir = {subjDerivativesFolder};
-        elseif isfolder(subjSourcedataFolder) && ~isempty(ea_regexpdir(subjSourcedataFolder, '.*', 1, 'f'))
-            ea_cprintf('CmdWinErrors', 'rawdata folder is empty! Will try to import data from sourcedata folder...\n');
-            options.prefs = ea_prefs;
-            waitfor(lead_import(subjSourcedataFolder, options, handles, BIDSRoot));
-            uipatdir = {subjDerivativesFolder};
-        end
-
-    else % Check if it's BIDS root folder
-        folders = dir(uipatdir{1});
-        folders = {folders.name};
-        if ismember('sourcedata', folders) || ismember('rawdata', folders) || ismember('derivatives', folders)
-            isBIDSRoot = 1;
-            BIDSRoot = uipatdir{1};
-            if ~ismember(folders,'dataset_description.json')
-                disp("could not find dataset description file, generating one now...");
-                ea_generate_datasetDescription(uipatdir{1}, 'root_folder');
-            end
-        end
-    end
-
-    if ~isSubjFolder && ~isBIDSRoot
-        % try to find out what kind of folder structure was passed
-        folder_list = dir_without_dots(uipatdir{1});         % do a listing of the immediate directory first
-        raw_nifti_in_subfolder_list = {folder_list.name};
-        raw_nifti_filter = {'.nii', '.nii.gz'};
-
-        % legacy dataset detected
-        if isfile(fullfile(uipatdir{1}, 'ea_ui.mat')) || isfile(fullfile(uipatdir{1}, 'ea_reconstruction.mat'))
-            folder_type = 'legacy_patient_folder';
-
-        % NIfTI folder detected
-        elseif ~isempty(raw_nifti_in_subfolder_list) && all(endsWith(raw_nifti_in_subfolder_list, raw_nifti_filter))
-            [~, subjId] = fileparts(uipatdir{1});
-            subjId = {subjId};
-            folder_type = 'patient_folder_raw_nifti';
-
-        % DICOM folder detected, use parent folder name as subjId
-        elseif endsWith(uipatdir{1}, 'dicom', 'IgnoreCase', true)
-            [~, subjId] = fileparts(fileparts(uipatdir{1}));
-            subjId = {subjId};
-            isDICOMFolder = 1;
-            folder_type = 'patient_folder_dicom_folder';
-
-        % Otherwise, treat as DICOM folder
-        else
-            [~, subjId] = fileparts(uipatdir{1});
-            subjId = {subjId};
-            isDICOMFolder = 1;
-            folder_type = 'patient_folder_dicom_folder';
-        end
-        
-        switch folder_type
-            case 'legacy_patient_folder'
-                options.prefs = ea_prefs;
-                msg = sprintf('Old dataset with legacy files detected,\n would you like to migrate it to BIDS?');
-                waitfor(ea_selectdataset(msg,handles.leadfigure));
-                dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
-                if ~isempty(dest_folder)
-                    if options.prefs.migrate.interactive
-                        waitfor(lead_import(uipatdir, options, handles,dest_folder));
-                    else
-                        ea_lead_import(uipatdir,options,handles,dest_folder)
-                    end
-                    BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
-                    subjId = getappdata(handles.leadfigure,'subjID');
-                    if ~isempty(BIDSRoot) && ~isempty(subjId)
-                        uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-                    else
-                        return
-                    end
-                else %user pressed cancel in ea_selectdatasets
-                    return;
-                end
-            case 'patient_folder_raw_nifti'
-                options.prefs = ea_prefs;
-                if strcmp(handles.datasetselect.String, 'Choose Dataset Directory')
-                    BIDSRoot = ea_getdataset(options, handles);
-                    if ~BIDSRoot
-                        return;
-                    end
-                end
-
-                BIDSRoot = handles.datasetselect.String;
-                derivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}]);
-                ea_mkdir(derivativesFolder);
-                rawFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}]);
-                ea_mkdir(rawFolder);
-
-                movefile(uipatdir{1}, fullfile(rawFolder, 'unsorted'));
-
-                uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-            case  'patient_folder_dicom_folder'
-                options.prefs = ea_prefs;
-                options.isDICOMFolder = isDICOMFolder;
-                if strcmp(handles.datasetselect.String, 'Choose Dataset Directory')
-                    BIDSRoot = ea_getdataset(options, handles);
-                    if ~BIDSRoot
-                        return;
-                    end
-                end
-
-                BIDSRoot = handles.datasetselect.String;
-                derivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}]);
-                ea_mkdir(derivativesFolder);
-                rawFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}]);
-                ea_mkdir(rawFolder);
-                sourceFolder = fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{1}]);
-                ea_mkdir(sourceFolder);
-                if endsWith(uipatdir{1}, 'dicom', 'IgnoreCase', true)
-                    movefile(uipatdir{1}, sourceFolder);
-                else
-                    movefile(uipatdir{1}, fullfile(sourceFolder, 'DICOM'));
-                end
-                uipatdir = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])};
-
-            otherwise
-                error('No compatible files/folders (BIDS dataset/NIfTIs/DICOMs) found!');
-        end
-    elseif isBIDSRoot % Is BIDS root folder
-        BIDSRoot = uipatdir{1};
-        ea_checkSpecialChars(BIDSRoot);
-        derivativesData = ea_regexpdir([uipatdir{1}, filesep, 'derivatives', filesep, 'leaddbs'], 'sub-', 0, 'dir');
-        derivativesData = regexprep(derivativesData, ['\', filesep, '$'], '');
-        rawData = ea_regexpdir([uipatdir{1}, filesep, 'rawdata'], 'sub-', 0, 'dir');
-        rawData = regexprep(rawData, ['\', filesep, '$'], '');
-        sourceData = ea_regexpdir([uipatdir{1}, filesep, 'sourcedata'], 'sub-', 0, 'dir');
-        sourceData = regexprep(sourceData, ['\', filesep, '$'], '');
-
-        if ~isempty(derivativesData)
-            uipatdir = derivativesData;
-            subjId = regexp(derivativesData, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
-        elseif ~isempty(rawData) % rawdata folder already exists
-            uipatdir = strrep(rawData, 'rawdata', ['derivatives', filesep, 'leaddbs']);
-            subjId = regexp(rawData, ['(?<=rawdata\', filesep, 'sub-).*'], 'match', 'once');
-        elseif ~isempty(sourceData) % sourcedata folder exists
-            % in the case of a BIDS dataset root folder as input and sourcedata available for one or more patients
-            % trigger DICOM->nii conversion
-
-            % BIDSRoot is the selected folder
-            BIDSRoot = uipatdir{1};
-            setappdata(handles.leadfigure, 'BIDSRoot', BIDSRoot);
-
-            subjId = regexp(sourceData, ['(?<=sourcedata\', filesep, 'sub-).*'], 'match', 'once');
-            % call lead_migrate
-            msg = {'{\bfBIDS dataset with sourcedata found, will run DICOM to NIfTI conversion!}'};
-            opts.Interpreter = 'tex';
-            opts.WindowStyle = 'modal';
-            waitfor(msgbox(msg, '', 'help', opts));
-            options.prefs = ea_prefs;
-            dest_folder = BIDSRoot; %source and dest are same
-            if options.prefs.migrate.interactive
-                waitfor(lead_import(sourceData, options, handles));
-            else
-                ea_lead_import(uipatdir,options,handles,dest_folder)
-            end
-            %
-            uipatdir = strrep(sourceData, 'sourcedata', ['derivatives', filesep, 'leaddbs']);
-
-        else
-            handles.datasetselect.String = BIDSRoot;
-            ea_addrecent(handles, {BIDSRoot}, 'datasets');
-            ea_cprintf('CmdWinWarnings', 'BIDS dataset detected but both sourcedata and rawdata folders are empty!\n');
-            return;
-        end
-    elseif isSubjFolder && ~ismember(handles.datasetselect.String, {BIDSRoot, 'Choose Dataset Directory'})
+    % Patient from another dataset loaded
+    if strcmp(handles.prod, 'dbs') && ~ismember(handles.datasetselect.String, {BIDSRoot, 'Choose Dataset Directory'})
         stack = dbstack;
         if any(contains({stack.name}, 'AddPatientButtonPushed'))
             answer = uiconfirm(handles.leadfigure,...
-                'Selected patient is from another dataset. What would you like to do?',...
-                'Add Patient',...
-                 'Options', {'Copy the selected patient to the current dataset', 'Switch to the selected dataset', 'Cancel'},...
-                'DefaultOption', 2, 'CancelOption', 3);
-            switch answer
-                case 'Copy the selected patient to the current dataset'
-                    if ismember(subjId{1}, handles.patientlist.Data.subjId)
-                        errordlg('Patient with the same ID already exists in the current dataset!', 'Error Adding Patient');
-                        return;
-                    else
-                        src = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{1}])
-                            fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{1}])
-                            fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{1}])};
-                        dst = {fullfile(handles.datasetselect.String, 'derivatives', 'leaddbs', ['sub-', subjId{1}])
-                            fullfile(handles.datasetselect.String, 'rawdata', ['sub-', subjId{1}])
-                            fullfile(handles.datasetselect.String, 'sourcedata', ['sub-', subjId{1}])};
-                        cellfun(@(x, y) isfolder(x) && copyfile(x,y), src, dst, 'Uni', 0);
-                        BIDSRoot = handles.datasetselect.String;
-                    end
-                case 'Cancel'
-                    return;
-            end
-        end
-    end
-else % Multiple patient folders, suppose dataset has already been migrated to BIDS
-    BIDSRoot = regexp(uipatdir{1}, ['^.*(?=\', filesep, 'derivatives\', filesep, 'leaddbs)'], 'match', 'once');
-    if isempty(BIDSRoot)
-        options.prefs = ea_prefs;
-        msg = sprintf('Multiple datasets detected,\n would you like to migrate it to BIDS?');
-        waitfor(ea_selectdataset(msg,handles.leadfigure));
-        dest_folder = getappdata(handles.leadfigure, 'BIDSRoot');
-        if ~isempty(dest_folder)
-            if options.prefs.migrate.interactive
-                waitfor(lead_import(uipatdir, options, handles,dest_folder))
-            else
-                ea_lead_import(uipatdir,options,handles,dest_folder)
-            end
-            BIDSRoot = getappdata(handles.leadfigure,'BIDSRoot');
-            subjId = getappdata(handles.leadfigure,'subjID');
-            derivatives_folder = fullfile(BIDSRoot,'derivatives');
-            sourcedata_folder = fullfile(BIDSRoot,'sourcedata');
-            rawdata_folder = fullfile(BIDSRoot,'rawdata');
-            if isfolder(derivatives_folder)
-                uipatdir = fullfile(BIDSRoot,'derivatives','leaddbs',subjId);
-            elseif isfolder(sourcedata_folder)
-                uipatdir = fullfile(BIDSRoot,'sourcedata',subjId);
-            elseif isfolder(rawdata_folder)
-                uipatdir = fullfile(BIDSRoot,'rawdata',subjId);
-            else
-                warning('Something went wrong! Consider migrating the dataset using lead import alone');
-                return
-            end
-            isBIDSRoot = 1;
-        else % user pressed cancel in ea_selectdatasets
-            return
-        end
-    else
-        subjId = regexp(uipatdir, ['(?<=leaddbs\', filesep, 'sub-).*'], 'match', 'once');
-
-        stack = dbstack;
-        if any(contains({stack.name}, 'AddPatientButtonPushed')) && ~any(contains(uipatdir, {handles.datasetselect.String, 'Choose Dataset Directory'}))
-            answer = uiconfirm(handles.leadfigure,...
                 'Selected patients are from another dataset. What would you like to do?',...
-                'Add Patients',...
+                'Add Patient',...
                  'Options', {'Copy the selected patients to the current dataset', 'Switch to the selected dataset', 'Cancel'},...
                 'DefaultOption', 2, 'CancelOption', 3);
             switch answer
                 case 'Copy the selected patients to the current dataset'
-                    if any(ismember(subjId, handles.patientlist.Data.subjId))
-                        errordlg('Patient with the same ID already exists in the current dataset!', 'Error Adding Patient');
-                        return;
-                    else
+                    existedSubjId = subjId(ismember(subjId, handles.patientlist.Data.subjId));
+                    if ~isempty(existedSubjId)
+                        answer = uiconfirm(handles.leadfigure,...
+                            {'These patient IDs already exist in the current dataset:', strjoin(existedSubjId, ', ')}, 'Copying Patients Data...', ...
+                             'Options', {'Skip', 'Overwrite', 'Cancel'},...
+                            'DefaultOption', 1, 'CancelOption', 3);
+                        switch answer
+                            case 'Skip'
+                                subjId = subjId(~ismember(subjId, handles.patientlist.Data.subjId));
+                            case 'Overwrite'
+                                ea_cprintf('CmdWinWarnings', 'Deleting existing patient folders...\n');
+                                ea_delete([fullfile(handles.datasetselect.String, 'derivatives', 'leaddbs', strcat('sub-', existedSubjId))
+                                    fullfile(handles.datasetselect.String, 'rawdata', strcat('sub-', existedSubjId))
+                                    fullfile(handles.datasetselect.String, 'sourcedata', strcat('sub-', existedSubjId))]);
+                            case 'Cancel'
+                                return;
+                        end
+                    end
+
+                    if ~isempty(subjId)
+                        ea_cprintf('CmdWinWarnings', 'Copying patient folders...\n');
                         for i=1:length(subjId)
                             src = {fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{i}])
                                 fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{i}])
@@ -288,67 +60,104 @@ else % Multiple patient folders, suppose dataset has already been migrated to BI
                                 fullfile(handles.datasetselect.String, 'sourcedata', ['sub-', subjId{i}])};
                             cellfun(@(x, y) isfolder(x) && copyfile(x,y), src, dst, 'Uni', 0);
                         end
-                        BIDSRoot = handles.datasetselect.String;
                     end
+
+                    BIDSRoot = handles.datasetselect.String;
                 case 'Cancel'
                     return;
             end
         end
     end
+else % NIfTI or DICOM folder
+    % Check if dataset has already been loaded
+    if strcmp(handles.prod, 'dbs')
+        if  strcmp(handles.datasetselect.String, 'Choose Dataset Directory')
+            options.prefs = ea_prefs;
+            BIDSRoot = ea_getdataset(options, handles);
+            if ~BIDSRoot
+                return;
+            end
+        end
+
+        BIDSRoot = handles.datasetselect.String;
+    
+        subjId = cell(length(uipatdir) ,1);
+        for i = 1:length(uipatdir)
+            if isNIfTIFolder(uipatdir{i})
+                [~, subjId{i}] = isNIfTIFolder(uipatdir{i});
+                derivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{i}]);
+                rawFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{i}]);
+                ea_mkdir({derivativesFolder; rawFolder});
+    
+                copyfile(uipatdir{i}, fullfile(rawFolder, 'unsorted'));
+            else
+                [checkFlag, subjId{i}] = isDICOMFolder(uipatdir{i});
+                if checkFlag
+                    derivativesFolder = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', subjId{i}]);
+                    rawFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{i}]);
+                    sourceFolder = fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{i}]);
+                    ea_mkdir({derivativesFolder; rawFolder; sourceFolder});
+        
+                    if endsWith(uipatdir{i}, 'dicom', 'IgnoreCase', true)
+                        copyfile(uipatdir{i}, sourceFolder);
+                    else
+                        copyfile(uipatdir{i}, fullfile(sourceFolder, 'DICOM'));
+                    end
+                else
+                    ea_cprintf('CmdWinWarnings', 'Incompatible folder: %s\n', uipatdir{i});
+                end
+            end
+        end
+        subjId = subjId(~cellfun(@isempty, subjId));
+    end
 end
 
-if ~iscell(uipatdir)
-    uipatdir = {uipatdir};
-end
-
-if ~iscell(subjId)
-    subjId = {subjId};
-end
-
-if isBIDSRoot && length(uipatdir) > 1 % Multiple patients found
-    uipatdir = uipatdir(1);
-    subjId = subjId(1);
-end
-
-% Initialize BIDS class
-bids = BIDSFetcher(BIDSRoot);
-
-handles.datasetselect.String = BIDSRoot;
-
-% Set patient listbox
-handles.patientlist.Data = cell2table(bids.subjId, 'VariableNames', {'subjId'});
-handles.patientlist.Selection = find(ismember(bids.subjId', subjId));
-
-if ~any(ismember(subjId, bids.subjId))
-    % Return when import for all subjs cancelled or failed
-    ea_cprintf('CmdWinWarnings', 'Import for sub-%s didn''t go through!\n', subjId{:})
-    return;
-elseif ~all(ismember(subjId, bids.subjId))
-    % Warn if import for some subjs cancelled or failed
-    warnSubjId = subjId(~ismember(subjId, bids.subjId));
-    ea_cprintf('CmdWinWarnings', 'Import for sub-%s didn''t go through!\n', warnSubjId{:})
-end
-
-% store patient directories in figure
+uipatdir = fullfile(BIDSRoot, 'derivatives', 'leaddbs', strcat('sub-', subjId));
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
-setappdata(handles.leadfigure, 'bids', bids);
-setappdata(handles.leadfigure, 'subjId', subjId);
 
-subjDataOverview = bids.subjDataOverview(subjId, :);
-if isDICOMFolder || ~all(subjDataOverview.hasRawimageJson)
-    handles.processtabgroup.SelectedTab = handles.importtab;
-    arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.registrationtab, 'Type', 'uicheckbox'));
-    arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.localizationtab, 'Type', 'uicheckbox'));
-    arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.optionaltab, 'Type', 'uicheckbox'))
-    handles.dicom2niicheckbox.Value = 1;
-    handles.statusone.String = 'DICOM folder found, please run Import.';
-    handles.statustwo.String = '';
-    return;
-else
-    handles.processtabgroup.SelectedTab = handles.registrationtab;
-    handles.dicom2niicheckbox.Value = 0;
-    handles.statusone.String = '';
-    handles.statustwo.String = '';
+ea_checkSpecialChars(BIDSRoot);
+
+if strcmp(handles.prod, 'dbs')
+    handles.datasetselect.String = BIDSRoot;
+    ea_addrecent(handles, {BIDSRoot}, 'datasets');
+
+    % Initialize BIDS class
+    bids = BIDSFetcher(BIDSRoot);
+    setappdata(handles.leadfigure, 'bids', bids);
+    setappdata(handles.leadfigure, 'subjId', subjId);
+    if isempty(bids.subjId)
+        ea_cprintf('CmdWinWarnings', 'Empty BIDS dataset found!\n');
+        return;
+    else
+        % Set patient listbox
+        handles.patientlist.Data = cell2table(bids.subjId, 'VariableNames', {'subjId'});
+        handles.patientlist.Selection = find(ismember(bids.subjId', subjId));
+
+        % Check rawimages.json
+        for i=1:length(subjId)
+            if ~bids.subjDataOverview(subjId, :).hasRawimagesJson && bids.subjDataOverview(subjId, :).hasRawdata
+                ea_genrawimagesjson(BIDSRoot, subjId{i});
+            end
+        end
+
+        subjDataOverview = bids.subjDataOverview;
+        subjNotImported = subjDataOverview(~subjDataOverview.hasRawimagesJson, :);
+        subjNotImported = subjNotImported.Row(subjNotImported.hasUnsortedRawdata | subjNotImported.hasSourcedata);
+        if ~isempty(subjNotImported)
+            handles.patientlist.Selection = find(ismember(bids.subjId', subjNotImported));
+            handles.processtabgroup.SelectedTab = handles.importtab;
+            arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.registrationtab, 'Type', 'uicheckbox'));
+            arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.localizationtab, 'Type', 'uicheckbox'));
+            arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.optionaltab, 'Type', 'uicheckbox'))
+            handles.statusone.String = 'Unsorted NIfTI/DICOM folder found, please run Import.';
+            handles.statustwo.String = '';
+            return;
+        else
+            handles.processtabgroup.SelectedTab = handles.registrationtab;
+            handles.statusone.String = '';
+            handles.statustwo.String = '';
+        end
+    end
 end
 
 % Update ui from patient
@@ -429,5 +238,91 @@ if isfield(handles,'seeddefpopup')
         options.prefs = bids.settings;
         [mdl,sf] = ea_genmodlist(directory, selectedparc, options);
         ea_updatemodpopups(mdl, sf, handles);
+    end
+end
+
+
+function checkFlag = isLegacyFolder(inputFolder)
+
+checkFlag = isfile(fullfile(inputFolder, 'ea_ui.mat')) || isfile(fullfile(inputFolder, 'ea_reconstruction.mat'));
+
+
+function [checkFlag, BIDSRoot, subjId] = isBIDSFolder(inputFolder)
+% Check if input folder is BIDS dataset root folder, derivatives folder, rawdata folder or sourcedata folder 
+
+inputFolder = erase(inputFolder, filesep + lineBoundary('end'));
+
+isBIDSSubfolder = endsWith(inputFolder, {'derivatives', ['derivatives', filesep, 'leaddbs'], 'rawdata', 'sourcedata'});
+isBIDSRootfolder = ~isempty(ea_regexpdir(inputFolder, '^(derivatives|rawdata|sourcedata)$', 0, 'd'));
+
+checkFlag = isBIDSSubfolder || isBIDSRootfolder;
+
+BIDSRoot = '';
+subjId = {''};
+
+if checkFlag
+    if nargout > 1
+        if isBIDSRootfolder
+            BIDSRoot = inputFolder;
+        elseif isBIDSSubfolder
+            BIDSRoot = regexp(inputFolder, ['.*(?=\',filesep,'(derivatives|derivatives\',filesep,'leaddbs|rawdata|sourcedata))'], 'match', 'once');
+        end
+
+        % Select the first subjId by default
+        bids = BIDSFetcher(BIDSRoot);
+        if ~isempty(bids.subjId)
+            subjId = bids.subjId(1);
+        end
+    end
+end
+
+
+function [checkFlag, BIDSRoot, subjId] = isBIDSSubjFolder(inputFolder)
+% Check if input folder is subj folder with in BIDS derivatives folder, rawdata folder or sourcedata folder 
+
+if ischar(inputFolder)
+    inputFolder = {inputFolder};
+end
+
+inputFolder = erase(inputFolder, filesep + lineBoundary('end'));
+
+checkFlag = false;
+subjId = {''};
+
+% Extract BIDS root folder. Suppose folders are from the same dataset in case of cell input.
+BIDSRoot = regexp(inputFolder{1}, ['.*(?=\', filesep, '(derivatives\', filesep, 'leaddbs|rawdata|sourcedata)\', filesep, 'sub-[^\W_]+$)'], 'match', 'once');
+
+if ~isempty(BIDSRoot)
+    checkFlag = true;
+    subjId = regexp(inputFolder, '(?<=sub-)[^\W_]+$', 'match', 'once');
+end
+
+
+function [checkFlag, subjId] = isNIfTIFolder(inputFolder)
+% Check if input folder is NIfTI folder
+
+inputFolder = erase(inputFolder, filesep + lineBoundary('end'));
+
+checkFlag = ~isempty(ea_regexpdir(inputFolder, '.*\.nii(\.gz)?$', 0, 'f'));
+
+[~, subjId] = fileparts(inputFolder);
+
+
+function [checkFlag, subjId] = isDICOMFolder(inputFolder)
+% Check if input folder is NIfTI folder
+
+inputFolder = erase(inputFolder, filesep + lineBoundary('end'));
+
+checkFlag = false;
+subjId = '';
+
+if ea_dcmquery(inputFolder) > 0
+    checkFlag = true;
+    if endsWith(inputFolder, 'dicom', 'IgnoreCase', true)
+        % 'DICOM' folder detected, use parent folder name as subjId
+        [~, subjId] = fileparts(fileparts(inputFolder));
+    else
+        % Use folder name as subjId
+        [~, subjId] = fileparts(inputFolder);
     end
 end

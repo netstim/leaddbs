@@ -1,28 +1,28 @@
 function ea_generate_datasetDescription(dest_filepath,flag,postop_modality)
+[parent_dir,parent_file] = fileparts(dest_filepath);
+dataset_description.Name = parent_file;
+dataset_description.BIDSVersion = '1.6.0';
+dataset_description.LEADVersion = '2.6';
+dataset_description.DatasetType = 'raw'; %for backwards compatibility, as suggested by BIDS (by default)
 
-    [parent_dir,parent_file,ext] = fileparts(dest_filepath);
-    dataset_description.Name = parent_file;
-    dataset_description.BIDSVersion = '1.6.0';
-    dataset_description.LEADVersion = '2.6';
-    dataset_description.DatasetType = 'raw'; %for backwards compatibility, as suggested by BIDS (by default)
-    if exist('flag','var') && strcmp(flag,'raw')
-       dataset_description.DatasetType = 'rawdata';
-       dataset_description.Sessions = {'ses-preop','ses-postop'};
-       dataset_description.preop_modality = 'MRI';
-       if exist('postop_modality','var')
-           dataset_description.postop_modality = postop_modality;
-           dataset_description.HowToAcknowledge = '';
-       end
-        
-    end
-    output_file = fullfile(parent_dir,parent_file,'dataset_description.json');
-    json_fid = fopen(output_file,'w');
-    encodejson = savejson('',dataset_description);
-    fprintf(json_fid,encodejson);
-   
-    if strcmp(flag,'root_folder')
-        generate_bidsIgnore(parent_dir,parent_file);
-    end
+if exist('flag', 'var') && strcmp(flag, 'raw')
+   dataset_description.DatasetType = 'rawdata';
+   dataset_description.Sessions = {'ses-preop','ses-postop'};
+   dataset_description.preop_modality = 'MRI';
+   if exist('postop_modality','var')
+       dataset_description.postop_modality = postop_modality;
+       dataset_description.HowToAcknowledge = '';
+   end
+end
+
+output_file = fullfile(parent_dir,parent_file,'dataset_description.json');
+json_fid = fopen(output_file,'w');
+encodejson = savejson('',dataset_description);
+fprintf(json_fid,encodejson);
+
+if strcmp(flag,'root_folder')
+    generate_bidsIgnore(parent_dir,parent_file);
+end
 
 %     if exist('flag','var') && strcmp(flag,'derivatives')
 %         [filepath,filename,ext] = fileparts(dest_filepath);
@@ -58,7 +58,8 @@ elseif strcmp(which_pipeline,'headmodel')
 else
     description = {''};
 end
-return
+
+
 function generate_bidsIgnore(parent_dir,parent_file)
 output_file_ignore = fullfile(parent_dir,parent_file,'.bidsignore');
 opfile_ignore_fid = fopen(output_file_ignore,'w');
