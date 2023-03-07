@@ -127,22 +127,25 @@ def get_VTA(d,vox_along_axis,Max_signal_for_point,shift_to_MRI_space):
 
 
 
-    affine_info=np.eye(4)
-    affine_info[0,0]=VTA_res   # always isotropic voxels for VTA array
-    affine_info[1,1]=VTA_res
-    affine_info[2,2]=VTA_res
+    affine_info = img.affine
     affine_info[0,3]=VTA_affected_MRI_space[0,0]
     affine_info[1,3]=VTA_affected_MRI_space[0,1]
     affine_info[2,3]=VTA_affected_MRI_space[0,2]
+    
+    scale_factors = [VTA_res / img.header.get_zooms()[0], VTA_res / img.header.get_zooms()[1], VTA_res / img.header.get_zooms()[2]]
+    scaling_MX = np.array([[scale_factors[0],0,0,0],[0,scale_factors[1],0,0],[0,0,scale_factors[2],0],[0,0,0,1]])
+    new_affine = np.matmul(affine_info,scaling_MX)
+    
+    img.header.set_zooms((VTA_res, VTA_res, VTA_res))
+    img.header.set_data_dtype(np.double)
 
-
-    img3 = nib.Nifti1Image(VTA_nifti, affine_info,img.header)
+    img3 = nib.Nifti1Image(VTA_nifti, new_affine,img.header)
     if d['Stim_side']==0:
         nib.save(img3, os.environ['PATIENTDIR']+'/Results_rh/VTA_solution.nii')
     else:
         nib.save(img3, os.environ['PATIENTDIR']+'/Results_lh/VTA_solution.nii')
 
-    img4 = nib.Nifti1Image(E_field_nifti, affine_info,img.header)
+    img4 = nib.Nifti1Image(E_field_nifti, new_affine,img.header)
     if d['Stim_side']==0:
         nib.save(img4, os.environ['PATIENTDIR']+'/Results_rh/E_field_solution.nii')
     else:
