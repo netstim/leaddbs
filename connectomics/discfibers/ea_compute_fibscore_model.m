@@ -16,7 +16,7 @@ function [Ihat,Ihat_train_global,val_struct,actualimprovs] = ea_compute_fibscore
             return     
         end
 
-        vals_connected = cell(size(S.vals_all,1),2);
+        vals_connected = cell(size(S.vals_all,1),size(S.vals_all,2));
         for voter = 1:size(vals_connected,1)
             for side=1:size(vals_connected,2)
                 try
