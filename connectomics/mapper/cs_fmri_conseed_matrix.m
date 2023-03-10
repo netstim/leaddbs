@@ -199,6 +199,7 @@ for mcfi=usesubjects % iterate across subjects
                 X=partialcorr(stc');
         end
         thiscorr(:,run)=X(:);
+        clear stc
     end
     
     thiscorr=mean(thiscorr,2);
