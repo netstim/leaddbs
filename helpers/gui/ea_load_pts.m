@@ -97,8 +97,13 @@ else % NIfTI or DICOM folder
                     rawFolder = fullfile(BIDSRoot, 'rawdata', ['sub-', subjId{i}]);
                     sourceFolder = fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{i}]);
                     ea_mkdir({derivativesFolder; rawFolder; sourceFolder});
-        
-                    copyfile(uipatdir{i}, fullfile(sourceFolder, 'DICOM'));
+
+                    if endsWith(uipatdir{i}, 'dicom', 'IgnoreCase', true)
+                        ea_mkdir(fullfile(sourceFolder, 'DICOM'));
+                        copyfile(fullfile(uipatdir{i}, '*'), fullfile(sourceFolder, 'DICOM'));
+                    else
+                        copyfile(uipatdir{i}, fullfile(sourceFolder, 'DICOM'));
+                    end
                 else
                     ea_cprintf('CmdWinWarnings', 'Incompatible folder: %s\n', uipatdir{i});
                 end
@@ -128,6 +133,8 @@ if strcmp(handles.prod, 'dbs')
         % Set patient listbox
         handles.patientlist.Data = cell2table(bids.subjId, 'VariableNames', {'subjId'});
         handles.patientlist.Selection = find(ismember(bids.subjId', subjId));
+        handles.AddDICOMsMenu.Visible = 'on';
+        handles.AddNIfTIsMenu.Visible = 'on';
 
         % Check if there are patients not imported yet
         subjDataOverview = bids.subjDataOverview;

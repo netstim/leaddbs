@@ -7,6 +7,8 @@ if ~exist('output_dir', 'var') || isempty(output_dir)
     output_dir = fullfile(dicom_dir, 'tmp');
 end
 
+ea_mkdir(output_dir);
+
 % catch the case where method is a string
 if isnumeric(tool)
     switch tool
