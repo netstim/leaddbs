@@ -98,11 +98,7 @@ else % NIfTI or DICOM folder
                     sourceFolder = fullfile(BIDSRoot, 'sourcedata', ['sub-', subjId{i}]);
                     ea_mkdir({derivativesFolder; rawFolder; sourceFolder});
         
-                    if endsWith(uipatdir{i}, 'dicom', 'IgnoreCase', true)
-                        copyfile(uipatdir{i}, sourceFolder);
-                    else
-                        copyfile(uipatdir{i}, fullfile(sourceFolder, 'DICOM'));
-                    end
+                    copyfile(uipatdir{i}, fullfile(sourceFolder, 'DICOM'));
                 else
                     ea_cprintf('CmdWinWarnings', 'Incompatible folder: %s\n', uipatdir{i});
                 end
