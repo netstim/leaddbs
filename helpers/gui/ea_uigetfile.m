@@ -28,7 +28,9 @@ if status == JFileChooser.APPROVE_OPTION
     end
 
 elseif status == JFileChooser.CANCEL_OPTION
+    filename = [];
     pathname = [];
+    extension = [];
 else
     error('Error occured while picking file.');
 end

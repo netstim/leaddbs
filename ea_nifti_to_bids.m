@@ -1,4 +1,4 @@
-function sortedFiles = ea_nifti_to_bids(niiFiles, dataset_folder, subjID, preset)
+function [sortedFiles, returnCode] = ea_nifti_to_bids(niiFiles, dataset_folder, subjID, preset)
 
 % Function creates a GUI in order to select which files should be used to create a BIDS compliant dataset and
 % which files should be used by lead-dbs. After selection, a rawdata folder will be created and selected files will be
@@ -12,6 +12,7 @@ function sortedFiles = ea_nifti_to_bids(niiFiles, dataset_folder, subjID, preset
 % output
 %   sortedFiles (struct): struct with preop and postop session fields, inside each session field there are fields for every modality
 %                                 those fields have strings with the filenames that are selected and to be used by lead-dbs
+%   returnCode: 'okay', 'cancel' or 'close'
 % __________________________________________________________________________________
 % Copyright (C) 2021 Charite University Medicine Berlin, Movement Disorders Unit
 % Johannes Achtzehn
@@ -148,13 +149,13 @@ uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp)
 % looup table behaviour
 uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
 
+setappdata(groot, 'sortedFiles', []);
+setappdata(groot, 'returnCode', 'close');
+
 waitfor(uiapp.UIFigure);
 
-try
-    sortedFiles = getappdata(groot, 'sortedFiles');
-catch
-    sortedFiles = [];
-end
+sortedFiles = getappdata(groot, 'sortedFiles');
+returnCode = getappdata(groot, 'returnCode');
 
 if ~isempty(sortedFiles)
     field_names = fieldnames(sortedFiles);
@@ -440,6 +441,7 @@ switch s
     case 'Yes'
         sortedFiles = [];
         setappdata(groot, 'sortedFiles', sortedFiles);
+        setappdata(groot, 'returnCode', 'cancel');
         delete(uiapp);
 end
 end
@@ -605,6 +607,7 @@ for i = find(uiapp.niiFileTable.Data.Include)'
 end
 
 setappdata(groot, 'sortedFiles', sortedFiles);
+setappdata(groot, 'returnCode', 'okay');
 delete(uiapp);      % close window
 
 end
