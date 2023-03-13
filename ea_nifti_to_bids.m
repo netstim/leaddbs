@@ -1,4 +1,4 @@
-function anat_files = ea_nifti_to_bids(niiFiles, dataset_folder, subjID)
+function anat_files = ea_nifti_to_bids(niiFiles, dataset_folder, subjID, preset)
 
 % Function creates a GUI in order to select which files should be used to create a BIDS compliant dataset and
 % which files should be used by lead-dbs. After selection, a rawdata folder will be created and selected files will be
@@ -89,7 +89,11 @@ table_options.Type = {'anat', 'func', 'dwi'};
 table_options.Modality = [anat_modalities, func_dwi_modalities, postop_modalities];
 
 nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
-nifti_table.Include = false(N_fnames,1);
+if ~exist('preset', 'var')
+    nifti_table.Include = false(N_fnames,1);
+else
+    nifti_table.Include = logical(preset);
+end
 [~, nifti_table.Filename] = cellfun(@ea_niifileparts, niiFiles, 'Uni', 0);
 nifti_table.Acquisition = repmat("-", [N_fnames,1]);
 nifti_table.Run = repmat("-", [N_fnames,1]);
