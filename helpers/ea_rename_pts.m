@@ -47,13 +47,13 @@ for i = 1:numel(oldSubjId)
     end
 
     oldFiles = ea_regexpdir(BIDSRoot, ['^sub-', old, '_']);
-    newFiles = strrep(oldFiles, [filesep, 'sub-', old], [filesep, 'sub-', new]);
+    newFiles = strrep(oldFiles, [filesep, 'sub-', old, '_'], [filesep, 'sub-', new, '_']);
     cellfun(@(src, dst) movefile(src, dst), oldFiles, newFiles);
 
     rawImageJson = fullfile(BIDSRoot, 'derivatives', 'leaddbs', ['sub-', new], 'prefs', ['sub-', new, '_desc-rawimages.json']);
     if isfile(rawImageJson)
         json = fread(fopen(rawImageJson, 'rt'));
-        json = strrep(char(json'), ['sub-', old], ['sub-', new]);
+        json = strrep(char(json'), ['sub-', old, '_'], ['sub-', new, '_']);
         fwrite(fopen(rawImageJson, 'wt'), json);
     end
 
