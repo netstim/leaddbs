@@ -1,4 +1,4 @@
-function anat_files = ea_nifti_to_bids(niiFiles, dataset_folder, subjID, preset)
+function sortedFiles = ea_nifti_to_bids(niiFiles, dataset_folder, subjID, preset)
 
 % Function creates a GUI in order to select which files should be used to create a BIDS compliant dataset and
 % which files should be used by lead-dbs. After selection, a rawdata folder will be created and selected files will be
@@ -10,7 +10,7 @@ function anat_files = ea_nifti_to_bids(niiFiles, dataset_folder, subjID, preset)
 %   subjID (string): subjID, including the 'sub' tag
 %
 % output
-%   anat_files (struct): struct with preop and postop session fields, inside each session field there are fields for every modality
+%   sortedFiles (struct): struct with preop and postop session fields, inside each session field there are fields for every modality
 %                                 those fields have strings with the filenames that are selected and to be used by lead-dbs
 % __________________________________________________________________________________
 % Copyright (C) 2021 Charite University Medicine Berlin, Movement Disorders Unit
@@ -151,16 +151,16 @@ uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, 
 waitfor(uiapp.UIFigure);
 
 try
-    anat_files = getappdata(groot, 'anat_files');
+    sortedFiles = getappdata(groot, 'sortedFiles');
 catch
-    anat_files = [];
+    sortedFiles = [];
 end
 
-if ~isempty(anat_files)
-    field_names = fieldnames(anat_files);
-    empty_fields = cellfun(@(x) isempty(anat_files.(x)), field_names);
+if ~isempty(sortedFiles)
+    field_names = fieldnames(sortedFiles);
+    empty_fields = cellfun(@(x) isempty(sortedFiles.(x)), field_names);
     remove_fields = field_names(empty_fields);
-    anat_files = rmfield(anat_files, remove_fields);
+    sortedFiles = rmfield(sortedFiles, remove_fields);
 end
 
 end
@@ -438,8 +438,8 @@ s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'C
 
 switch s
     case 'Yes'
-        anat_files = [];
-        setappdata(groot, 'anat_files', anat_files);
+        sortedFiles = [];
+        setappdata(groot, 'sortedFiles', sortedFiles);
         delete(uiapp);
 end
 end
@@ -550,7 +550,7 @@ if ~(nopostop_set == 1) && postop_mri_found == 1
     end
 end
 
-anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
+sortedFiles = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
 
 for i = find(uiapp.niiFileTable.Data.Include)'
 
@@ -595,16 +595,16 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         acq_mod = [desc, '_', modality];
     end
 
-    % add file to anat_files
-    if ~isfield(anat_files.(session), type) || ~isfield(anat_files.(session).(type), acq_mod) % if no other filename exists for this combination
-        anat_files.(session).(type).(acq_mod) = {fname}; % set output struct
+    % add file to sortedFiles
+    if ~isfield(sortedFiles.(session), type) || ~isfield(sortedFiles.(session).(type), acq_mod) % if no other filename exists for this combination
+        sortedFiles.(session).(type).(acq_mod) = {fname}; % set output struct
     else % otherwise, append
-        anat_files.(session).(type).(acq_mod){end+1} = fname;
+        sortedFiles.(session).(type).(acq_mod){end+1} = fname;
     end
 
 end
 
-setappdata(groot, 'anat_files', anat_files);
+setappdata(groot, 'sortedFiles', sortedFiles);
 delete(uiapp);      % close window
 
 end
