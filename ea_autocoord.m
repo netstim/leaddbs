@@ -28,6 +28,7 @@ if options.importdcm.do && bids.subjDataOverview.hasSourcedata(options.subj.subj
     niftis = ea_dcm_to_nii(options.subj.sourcedataDir, fullfile(options.subj.rawdataDir, 'unsorted'), options.importdcm.tool);
     if isempty(niftis)
         ea_cprintf('CmdWinWarnings', 'No output found from DICOM to NIfTI conversion for "%s"!\n', options.subj.subjId);
+        options.leadfigure.focus;
         return;
     end
 end
@@ -41,6 +42,8 @@ if options.importdcm.do || options.importnii.do
     else
         ea_cprintf('CmdWinWarnings', 'No unsorted raw images found for "%s"!\n', options.subj.subjId);
     end
+
+    options.leadfigure.focus;
     return;
 end
 
