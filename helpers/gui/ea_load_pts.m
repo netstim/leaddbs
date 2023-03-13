@@ -113,19 +113,20 @@ else % NIfTI or DICOM folder
     end
 end
 
+ea_checkSpecialChars(BIDSRoot);
+
+ % Initialize BIDS class
+bids = BIDSFetcher(BIDSRoot);
+setappdata(handles.leadfigure, 'bids', bids);
+setappdata(handles.leadfigure, 'subjId', subjId);
+
 uipatdir = fullfile(BIDSRoot, 'derivatives', 'leaddbs', strcat('sub-', subjId));
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
-
-ea_checkSpecialChars(BIDSRoot);
 
 if strcmp(handles.prod, 'dbs')
     handles.datasetselect.String = BIDSRoot;
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
 
-    % Initialize BIDS class
-    bids = BIDSFetcher(BIDSRoot);
-    setappdata(handles.leadfigure, 'bids', bids);
-    setappdata(handles.leadfigure, 'subjId', subjId);
     if isempty(bids.subjId)
         ea_cprintf('CmdWinWarnings', 'Empty BIDS dataset found!\n');
         return;
@@ -140,15 +141,34 @@ if strcmp(handles.prod, 'dbs')
         subjDataOverview = bids.subjDataOverview;
         subjNotImported = subjDataOverview.Row(~subjDataOverview.hasRawimagesJson & (subjDataOverview.hasUnsortedRawdata | subjDataOverview.hasSourcedata));
         if ~isempty(subjNotImported)
+            setappdata(handles.leadfigure, 'subjId', subjNotImported);
+            uipatdir = fullfile(BIDSRoot, 'derivatives', 'leaddbs', strcat('sub-', subjNotImported));
+            setappdata(handles.leadfigure, 'uipatdir', uipatdir);
+
             handles.patientlist.Selection = find(ismember(bids.subjId', subjNotImported));
-            handles.processtabgroup.SelectedTab = handles.importtab;
+
             arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.registrationtab, 'Type', 'uicheckbox'));
             arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.localizationtab, 'Type', 'uicheckbox'));
             arrayfun(@(x) set(x, 'Value', 0) , findobj(handles.optionaltab, 'Type', 'uicheckbox'))
+
+            handles.processtabgroup.SelectedTab = handles.importtab;
+            if any(subjDataOverview.hasSourcedata(subjNotImported))
+                handles.dicom2bidscheckbox.Value = 1;
+            else
+                handles.dicom2bidscheckbox.Value = 0;
+            end
+            if any(subjDataOverview.hasUnsortedRawdata(subjNotImported))
+                handles.nifti2bidscheckbox.Value = 1;
+            else
+                handles.nifti2bidscheckbox.Value = 0;
+            end
+
             handles.statusone.String = 'Unsorted NIfTI/DICOM folder found, please run Import.';
             handles.statustwo.String = '';
             return;
         else
+            handles.dicom2bidscheckbox.Value = 0;
+            handles.nifti2bidscheckbox.Value = 0;
             handles.processtabgroup.SelectedTab = handles.registrationtab;
             handles.statusone.String = '';
             handles.statustwo.String = '';
