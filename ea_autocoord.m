@@ -24,8 +24,12 @@ if isfield(options, 'leadfigure')
     end
 end
 
-if options.importdcm.do
-    ea_dcm_to_nii(options.subj.sourcedataDir, fullfile(options.subj.rawdataDir, 'unsorted'), options.importdcm.tool);
+if options.importdcm.do && bids.subjDataOverview.hasSourcedata(options.subj.subjId)
+    niftis = ea_dcm_to_nii(options.subj.sourcedataDir, fullfile(options.subj.rawdataDir, 'unsorted'), options.importdcm.tool);
+    if isempty(niftis)
+        ea_cprintf('CmdWinWarnings', 'No output found from DICOM to NIfTI conversion for "%s"!\n', options.subj.subjId);
+        return;
+    end
 end
 
 if options.importdcm.do || options.importnii.do
@@ -33,6 +37,7 @@ if options.importdcm.do || options.importnii.do
     if ~isempty(unsortedFiles)
         ea_nifti_to_bids(unsortedFiles, bids.datasetDir, ['sub-', options.subj.subjId]);
         ea_delete(fullfile(options.subj.rawdataDir, 'unsorted'));
+        ea_genrawimagesjson(bids.datasetDir, options.subj.subjId);
     else
         ea_cprintf('CmdWinWarnings', 'No unsorted raw images found for "%s"!\n', options.subj.subjId);
     end
