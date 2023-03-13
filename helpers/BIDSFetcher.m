@@ -100,12 +100,12 @@ classdef BIDSFetcher
                     subjDataOverview(i, 1) = true;
                 end
 
-                bidsRawFiles = ea_regexpdir(subjRawdataDir, 'ses-(pre|post)op.*\.nii\.gz');
+                bidsRawFiles = ea_regexpdir(subjRawdataDir, 'ses-(pre|post)op.*\.nii\.gz$');
                 if ~isempty(bidsRawFiles)
                     subjDataOverview(i, 2) = true;
                 end
 
-                unsortedRawFiles = ea_regexpdir(fullfile(subjRawdataDir, 'unsorted'), '.*\.nii\.gz');
+                unsortedRawFiles = ea_regexpdir(fullfile(subjRawdataDir, 'unsorted'), '.*\.nii(\.gz)?$');
                 if ~isempty(unsortedRawFiles)
                     subjDataOverview(i, 3) = true;
                 end
