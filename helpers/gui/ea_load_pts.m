@@ -134,8 +134,6 @@ if strcmp(handles.prod, 'dbs')
         % Set patient listbox
         handles.patientlist.Data = cell2table(bids.subjId, 'VariableNames', {'subjId'});
         handles.patientlist.Selection = find(ismember(bids.subjId', subjId));
-        handles.AddDICOMsMenu.Visible = 'on';
-        handles.AddNIfTIsMenu.Visible = 'on';
 
         % Check if there are patients not imported yet
         subjDataOverview = bids.subjDataOverview;
@@ -165,13 +163,30 @@ if strcmp(handles.prod, 'dbs')
 
             handles.statusone.String = 'Unsorted NIfTI/DICOM folder found, please run Import.';
             handles.statustwo.String = '';
-            return;
         else
             handles.dicom2bidscheckbox.Value = 0;
             handles.nifti2bidscheckbox.Value = 0;
             handles.processtabgroup.SelectedTab = handles.registrationtab;
             handles.statusone.String = '';
             handles.statustwo.String = '';
+        end
+
+        % Set Add DICOMs/NIfTIs Menu/Button Visibility
+        if length(handles.patientlist.Selection) == 1
+            handles.AddDICOMsButton.Visible = 'on';
+            handles.AddNIfTIsButton.Visible = 'on';
+            handles.AddDICOMsMenu.Visible = 'on';
+            handles.AddNIfTIsMenu.Visible = 'on';
+        else
+            handles.AddDICOMsButton.Visible = 'off';
+            handles.AddNIfTIsButton.Visible = 'off';
+            handles.AddDICOMsMenu.Visible = 'off';
+            handles.AddNIfTIsMenu.Visible = 'off';
+        end
+
+        % Return when there are patients not imported yet
+        if ~isempty(subjNotImported)
+            return;
         end
     end
 end
