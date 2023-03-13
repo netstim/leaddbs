@@ -128,6 +128,7 @@ if strcmp(handles.prod, 'dbs')
     ea_addrecent(handles, {BIDSRoot}, 'datasets');
 
     if isempty(bids.subjId)
+        handles.patientlist.Data = [];
         ea_cprintf('CmdWinWarnings', 'Empty BIDS dataset found!\n');
         return;
     else
@@ -161,7 +162,7 @@ if strcmp(handles.prod, 'dbs')
                 handles.nifti2bidscheckbox.Value = 0;
             end
 
-            handles.statusone.String = 'Unsorted NIfTI/DICOM folder found, please run Import.';
+            handles.statusone.String = 'Unsorted NIfTI/DICOM folder found, please run Import first.';
             handles.statustwo.String = '';
         else
             handles.dicom2bidscheckbox.Value = 0;
