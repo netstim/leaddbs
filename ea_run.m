@@ -99,6 +99,11 @@ else
                     ea_autocoord(options);
                 end
             end
+
+            % Refresh GUI after all process is done
+            if strcmp(options.leadprod, 'dbs')
+                ea_load_pts(getappdata(options.leadfigure, 'handles'), getappdata(options.leadfigure, 'uipatdir'));
+            end
     end
 end
 
