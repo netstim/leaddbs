@@ -5,8 +5,8 @@ classdef BIDSFetcher
         settings
         spacedef
         datasetDir
-        subjFolderNames
         subjId
+        subjDataOverview
     end
     
     properties (Access = private, Constant)
@@ -20,12 +20,36 @@ classdef BIDSFetcher
                 verbose = 0;
             end
 
+            if ~isfolder(datasetDir)
+                error('Specified dataset folder doesn''t exist!');
+            end
+
             % Set up properties
             obj.settings = obj.leadPrefs('m');
             obj.spacedef = ea_getspacedef;
             obj.datasetDir = GetFullPath(datasetDir);
-            obj.subjFolderNames = obj.readSubjects;
-            obj.subjId = strrep(obj.subjFolderNames, 'sub-', '');
+
+            % Check dataset description file
+            if ~isfile(fullfile(obj.datasetDir, 'dataset_description.json'))
+                ea_cprintf('CmdWinWarnings', 'Could not find dataset description file, generating one now...\n');
+                ea_generate_datasetDescription(obj.datasetDir, 'root_folder');
+            end
+
+            obj.subjId = obj.getSubjId;
+            obj.subjDataOverview = obj.getSubjDataOverview;
+
+            % Check rawimages.json
+            if isempty(obj.subjId)
+                ea_cprintf('CmdWinWarnings', 'No subj found in the dataset: %s\n', obj.datasetDir);
+            else
+                subjWithoutRawimagesJson = obj.subjDataOverview.Row(~obj.subjDataOverview.hasRawimagesJson & obj.subjDataOverview.hasRawdata);
+                if ~isempty(subjWithoutRawimagesJson)
+                    for i=1:length(subjWithoutRawimagesJson)
+                        ea_genrawimagesjson(obj.datasetDir, subjWithoutRawimagesJson{i});
+                    end
+                    obj.subjDataOverview = obj.getSubjDataOverview;
+                end
+            end
 
             % TODO: BIDS validation
 
@@ -38,13 +62,61 @@ classdef BIDSFetcher
         end
 
         %% Data fetching functions
-        function subjFolderNames = readSubjects(obj)
+        function subjId = getSubjId(obj)
             % Find subject folders: sub-*
-            subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'rawdata'], '^sub-.*', 0, 'dir');
-            if isempty(subjDirs)
-                subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'derivatives', filesep, 'leaddbs'], '^sub-.*', 0, 'dir');
+            subjSourceDirs = ea_regexpdir([obj.datasetDir, filesep, 'sourcedata'], '^sub-[^\W_]+$', 0, 'dir');
+            if ~isempty(subjSourceDirs)
+                ea_mkdir(strrep(subjSourceDirs, 'sourcedata', 'rawdata'));
+                ea_mkdir(strrep(subjSourceDirs, 'sourcedata', ['derivatives', filesep, 'leaddbs']));
             end
-            [~, subjFolderNames] = fileparts(subjDirs);
+
+            subjRawDirs = ea_regexpdir([obj.datasetDir, filesep, 'rawdata'], '^sub-[^\W_]+$', 0, 'dir');
+            if ~isempty(subjRawDirs)
+                ea_mkdir(strrep(subjRawDirs, 'rawdata', ['derivatives', filesep, 'leaddbs']));
+            end
+
+            subjDirs = ea_regexpdir([obj.datasetDir, filesep, 'derivatives', filesep, 'leaddbs'], '^sub-[^\W_]+$', 0, 'dir');
+
+            subjId = regexp(subjDirs, ['(?<=\', filesep, 'sub-)[^\W_]+'], 'match', 'once');
+        end
+
+        function subjDataOverview = getSubjDataOverview(obj, subjId)
+            if ~exist('subjId', 'var')
+                subjId = obj.subjId;
+            end
+
+            if ischar(subjId)
+                subjId = {subjId};
+            end
+
+            subjDataOverview = false(numel(subjId), 4);
+
+            for i=1:numel(subjId)
+                subjDerivativesDir = fullfile(obj.datasetDir, 'derivatives', 'leaddbs', ['sub-', subjId{i}]);
+                subjRawdataDir = fullfile(obj.datasetDir, 'rawdata', ['sub-', subjId{i}]);
+                subjSourcedataDir = fullfile(obj.datasetDir, 'sourcedata', ['sub-', subjId{i}]);
+
+                if isfile(fullfile(subjDerivativesDir, 'prefs', ['sub-', subjId{i}, '_desc-rawimages.json']))
+                    subjDataOverview(i, 1) = true;
+                end
+
+                bidsRawFiles = ea_regexpdir(subjRawdataDir, 'ses-(pre|post)op.*\.nii\.gz$');
+                if ~isempty(bidsRawFiles)
+                    subjDataOverview(i, 2) = true;
+                end
+
+                unsortedRawFiles = ea_regexpdir(fullfile(subjRawdataDir, 'unsorted'), '.*\.nii(\.gz)?$');
+                if ~isempty(unsortedRawFiles)
+                    subjDataOverview(i, 3) = true;
+                end
+
+                souceFiles = ea_regexpdir(subjSourcedataDir, '.*', 0, 'a');
+                if ~isempty(souceFiles)
+                    subjDataOverview(i, 4) = true;
+                end
+            end
+
+            subjDataOverview = array2table(subjDataOverview, 'VariableNames', {'hasRawimagesJson', 'hasRawdata', 'hasUnsortedRawdata', 'hasSourcedata'}, 'RowNames', subjId);
         end
 
         function rawImages = getRawImages(obj, subjId)
@@ -168,6 +240,8 @@ classdef BIDSFetcher
             subj.subjId = subjId;
             subj.uiprefs = obj.getPrefs(subjId, 'uiprefs', 'mat');
             subj.methodLog = obj.getLog(subjId, 'methods');
+            subj.rawdataDir = fullfile(obj.datasetDir, 'rawdata', ['sub-', subjId]);
+            subj.sourcedataDir = fullfile(obj.datasetDir, 'sourcedata', ['sub-', subjId]);
 
             % Set pre-op anat field
             preopAnat = obj.getPreopAnat(subjId);

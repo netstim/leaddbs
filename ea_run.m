@@ -58,10 +58,9 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~
 
     opts = cell(1, length(uipatdirs));
     for pat = 1:length(opts)
-
         % set patient specific options
         opts{pat} = options;
-        opts{pat}.root = [fileparts(uipatdirs{pat}),filesep];
+        opts{pat}.root = [fileparts(uipatdirs{pat}), filesep];
         [~, opts{pat}.patientname] = fileparts(uipatdirs{pat});
     end
 
@@ -72,6 +71,11 @@ if length(uipatdirs)>1 && ~isempty(which('parpool')) && options.prefs.pp.do && ~
         catch
             warning([opts{pat}.patientname,' failed. Please run this patient again and adjust parameters. Moving on to next patient.']);
         end
+    end
+
+    % Refresh GUI after all process is done
+    if strcmp(options.leadprod, 'dbs')
+        ea_load_pts(getappdata(options.leadfigure, 'handles'), getappdata(options.leadfigure, 'uipatdir'));
     end
 
     delete(pp);
@@ -98,6 +102,11 @@ else
                 else
                     ea_autocoord(options);
                 end
+            end
+
+            % Refresh GUI after all process is done
+            if strcmp(options.leadprod, 'dbs')
+                ea_load_pts(getappdata(options.leadfigure, 'handles'), getappdata(options.leadfigure, 'uipatdir'));
             end
     end
 end

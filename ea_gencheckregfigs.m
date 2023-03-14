@@ -100,3 +100,5 @@ if ismember('norm', type)
         end
     end
 end
+
+fprintf('Done.\n');

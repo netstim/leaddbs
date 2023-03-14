@@ -12,7 +12,7 @@ fullFileName = [fileName, fileExt];
 pattern = '^sub-[^\W_]+(_[^\W_]+-[^\W_]+){1,}(_[^\W_]+)?(\.[^\W_]+){1,}$';
 
 if isempty(regexp(fullFileName, pattern, 'once'))
-    flag = 0;
+    flag = false;
 else
-    flag = 1;
+    flag = true;
 end

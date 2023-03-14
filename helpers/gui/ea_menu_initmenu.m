@@ -1,7 +1,5 @@
 function ea_menu_initmenu(handles,cmd,prefs)
 
-callingfunction=dbstack;
-callingfunction=callingfunction(4).name;
 menuprobe=getappdata(handles.leadfigure,'menuprobe');
 if isempty(menuprobe)
     % tools menu  & edit prefs present in all apps.
@@ -25,7 +23,7 @@ if isempty(menuprobe)
     end
 
     if ismember('import',cmd)
-        uimenu(f,'Label','Import DICOM or Migrate Dataset to BIDS','Callback',{@(src, evt) lead_import});
+        uimenu(f,'Label','Import Legacy Folder to BIDS Dataset','Callback',{@(src, evt) lead_import});
     end
 
     if ismember('checkregfigs',cmd)
@@ -137,7 +135,7 @@ if isempty(menuprobe)
 
 
     if ismember('transfer',cmd)
-       ea_menu_addtransfer(handles,callingfunction,prefs);
+       ea_menu_addtransfer(handles,prefs);
     end
 
     if ismember('vats',cmd)

@@ -1,19 +1,18 @@
-function anat_files = ea_dicom_to_bids(subjID, fnames, dataset_folder)
+function [sortedFiles, returnCode] = ea_nifti_to_bids(niiFiles, dataset_folder, subjID, preset)
 
 % Function creates a GUI in order to select which files should be used to create a BIDS compliant dataset and
 % which files should be used by lead-dbs. After selection, a rawdata folder will be created and selected files will be
 % copy/pasted to the appropriate locations
 %
 % input
+%   niiFiles (string/cell): folder/files to be loaded (files should be in the same directory)
+%   dataset_folder (string): BIDS dataset folder
 %   subjID (string): subjID, including the 'sub' tag
-%   fnames (cell): cell of filenames to be loaded
-%   dataset_folder (string): root folder of BIDS-like dataset
-%
-% The script expects a sourcedata/subjID/ folder with DICOM files to be present under the dataset_folder path
 %
 % output
-%   anat_files (struct): struct with preop and postop session fields, inside each session field there are fields for every modality
+%   sortedFiles (struct): struct with preop and postop session fields, inside each session field there are fields for every modality
 %                                 those fields have strings with the filenames that are selected and to be used by lead-dbs
+%   returnCode: 'okay', 'cancel' or 'close'
 % __________________________________________________________________________________
 % Copyright (C) 2021 Charite University Medicine Berlin, Movement Disorders Unit
 % Johannes Achtzehn
@@ -28,15 +27,33 @@ else
     lookup_table = getpref('dcm2bids', 'lookuptable');
 end
 
-nii_folder = fullfile(dataset_folder, 'sourcedata', subjID, 'tmp');    % where are the nifti files located?
-N_fnames = length(fnames);
+% nii folder instead of nii files provided
+if isfolder(niiFiles)
+    niiFiles = ea_regexpdir(niiFiles, '\.nii(\.gz)$', 0);
+    if isempty(niiFiles)
+        ea_cprintf('CmdWinWarnings', 'NIfTI not found in the specified folder!\n')
+        return;
+    end
+end
+
+% gzip *.nii
+for i=1:length(niiFiles)
+    if endsWith(niiFiles{i}, '.nii')
+        gzip(niiFiles{i});
+        delete(niiFiles{i});
+        niiFiles{i} = [niiFiles{i}, '.gz'];
+    end
+end
+
+jsonFiles = regexprep(niiFiles, '\.nii(\.gz)?$', '.json');
+N_fnames = length(niiFiles);
 
 imgs = cell(N_fnames,1);
 imgs_resolution = cell(N_fnames,1);
-h_wait = waitbar(0, 'Please wait while Niftii images are being loaded');
+h_wait = waitbar(0, 'Please wait while NIfTI images are being loaded');
 for image_idx = 1:N_fnames
     imgs{image_idx} = struct();
-    [imgs{image_idx}.p, imgs{image_idx}.frm, imgs{image_idx}.rg, imgs{image_idx}.dim] = read_nii(fullfile(nii_folder, [fnames{image_idx}, '.nii.gz']), [], 0);
+    [imgs{image_idx}.p, imgs{image_idx}.frm, imgs{image_idx}.rg, imgs{image_idx}.dim] = read_nii(niiFiles{image_idx}, [], 0);
     imgs{image_idx}.percentile = prctile(imgs{image_idx}.p.nii.img(:), 95, 'all');
     imgs{image_idx}.img_thresholded = imgs{image_idx}.p.nii.img(:);
     imgs{image_idx}.img_thresholded(imgs{image_idx}.img_thresholded > imgs{image_idx}.percentile) = nan;
@@ -45,19 +62,19 @@ for image_idx = 1:N_fnames
     imgs_resolution{image_idx} = [imgs{image_idx}.p.pixdim(1), imgs{image_idx}.p.pixdim(2), imgs{image_idx}.p.pixdim(3)];
 
     % get .json and read it if possible
-    if isfile(fullfile(nii_folder, [fnames{image_idx}, '.json']))
+    if isfile(jsonFiles{image_idx})
         try
-            imgs{image_idx}.json_sidecar = loadjson(fullfile(nii_folder, [fnames{image_idx}, '.json']));
+            imgs{image_idx}.json_sidecar = loadjson(jsonFiles{image_idx});
             imgs{image_idx}.json_found = 1;
         catch
-            warning('There was a problem while loading the .json file at %s, please ensure correct .json format.', fullfile(nii_folder, [fnames{image_idx}, '.json']))
+            warning('There was a problem while loading the .json file at %s, please ensure correct .json format.', jsonFiles{image_idx})
             imgs{image_idx}.json_found = 0;
         end
     else
         imgs{image_idx}.json_found = 0;
     end
 
-    waitbar(image_idx / N_fnames, h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(fnames)));
+    waitbar(image_idx / N_fnames, h_wait, sprintf('Please wait while Niftii images are being loaded (%i/%i)', image_idx, length(niiFiles)));
 end
 close(h_wait);
 
@@ -73,8 +90,12 @@ table_options.Type = {'anat', 'func', 'dwi'};
 table_options.Modality = [anat_modalities, func_dwi_modalities, postop_modalities];
 
 nifti_table = structfun(@(x) categorical(repmat({'-'}, [N_fnames,1]), ['-' x]), table_options, 'uni', 0);
-nifti_table.Include = false(N_fnames,1);
-nifti_table.Filename = fnames;
+if ~exist('preset', 'var')
+    nifti_table.Include = false(N_fnames,1);
+else
+    nifti_table.Include = logical(preset);
+end
+[~, nifti_table.Filename] = cellfun(@ea_niifileparts, niiFiles, 'Uni', 0);
 nifti_table.Acquisition = repmat("-", [N_fnames,1]);
 nifti_table.Run = repmat("-", [N_fnames,1]);
 nifti_table.Task = repmat("-", [N_fnames,1]);
@@ -90,7 +111,8 @@ catch
 end
 
 % create GUI
-uiapp = dicom_to_bids;
+uiapp = nifti_to_bids;
+setappdata(uiapp.UIFigure, 'niiFolder', fileparts(niiFiles{1}));
 
 % populate table
 uiapp.niiFileTable.Data = nifti_table_preallocated;
@@ -119,7 +141,7 @@ uiapp.niiFileTable.CellEditCallback = @(src,event) cell_change_callback(uiapp, s
 uiapp.UIFigure.WindowScrollWheelFcn = @(src, event) scroll_nii(uiapp, event);     % callback for scrolling images
 
 % OK button behaviour
-uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities, postop_acq_tags);
+uiapp.OKButton.ButtonPushedFcn = @(btn,event) ok_button_function(uiapp, table_options, dataset_folder, subjID, postop_modalities, postop_acq_tags);
 
 % cancel button behaviour
 uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp);
@@ -127,19 +149,19 @@ uiapp.CancelButton.ButtonPushedFcn =  @(btn,event) cancel_button_function(uiapp)
 % looup table behaviour
 uiapp.LookupButton.ButtonPushedFcn = @(btn,event) lookup_button_function(uiapp, imgs, imgs_resolution, table_options, subjID, anat_modalities, postop_modalities);
 
+setappdata(groot, 'sortedFiles', []);
+setappdata(groot, 'returnCode', 'close');
+
 waitfor(uiapp.UIFigure);
 
-try
-    anat_files = getappdata(groot, 'anat_files');
-catch
-    anat_files = [];
-end
+sortedFiles = getappdata(groot, 'sortedFiles');
+returnCode = getappdata(groot, 'returnCode');
 
-if ~isempty(anat_files)
-    field_names = fieldnames(anat_files);
-    empty_fields = cellfun(@(x) isempty(anat_files.(x)), field_names);
+if ~isempty(sortedFiles)
+    field_names = fieldnames(sortedFiles);
+    empty_fields = cellfun(@(x) isempty(sortedFiles.(x)), field_names);
     remove_fields = field_names(empty_fields);
-    anat_files = rmfield(anat_files, remove_fields);
+    sortedFiles = rmfield(sortedFiles, remove_fields);
 end
 
 end
@@ -296,9 +318,7 @@ for i = find(~uiapp.niiFileTable.Data.Include)'
             uiapp.niiFileTable.Data.Include(i) = true;
         end
     end
-
 end
-
 
 % finally, go through all the files that have been selected to include and update them in the uitree
 for i = find(uiapp.niiFileTable.Data.Include)'
@@ -419,14 +439,15 @@ s = uiconfirm(uiapp.UIFigure, 'Do you really want to cancel file selection?', 'C
 
 switch s
     case 'Yes'
-        anat_files = [];
-        setappdata(groot, 'anat_files', anat_files);
+        sortedFiles = [];
+        setappdata(groot, 'sortedFiles', sortedFiles);
+        setappdata(groot, 'returnCode', 'cancel');
         delete(uiapp);
 end
 end
 
 %% ok button
-function ok_button_function(uiapp, table_options, dataset_folder, nii_folder, subjID, postop_modalities, postop_acq_tags)
+function ok_button_function(uiapp, table_options, dataset_folder, subjID, postop_modalities, postop_acq_tags)
 
 % sanity checks first
 % if preop is empty
@@ -531,7 +552,7 @@ if ~(nopostop_set == 1) && postop_mri_found == 1
     end
 end
 
-anat_files = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
+sortedFiles = cell2struct(cell(1,N_sessions), table_options.Session, N_sessions);
 
 for i = find(uiapp.niiFileTable.Data.Include)'
 
@@ -558,14 +579,14 @@ for i = find(uiapp.niiFileTable.Data.Include)'
     end
 
     destin_no_ext = fullfile(export_folder, fname);
-    source_no_ext = fullfile(nii_folder, uiapp.niiFileTable.Data.Filename{i});
+    source_no_ext = fullfile(getappdata(uiapp.UIFigure, 'niiFolder'), uiapp.niiFileTable.Data.Filename{i});
 
     for j = 1:length(extensions)
         source = [source_no_ext extensions{j}];
         if isfile(source)
             copyfile(source, [destin_no_ext, extensions{j}])
         else
-            warning('Selected file %s cannot be found and was not copied! Please copy/paste manually.\n', source);
+            ea_cprintf('CmdWinWarnings', 'File %s not found!\n', source);
         end
     end
 
@@ -576,16 +597,17 @@ for i = find(uiapp.niiFileTable.Data.Include)'
         acq_mod = [desc, '_', modality];
     end
 
-    % add file to anat_files
-    if ~isfield(anat_files.(session), type) || ~isfield(anat_files.(session).(type), acq_mod) % if no other filename exists for this combination
-        anat_files.(session).(type).(acq_mod) = {fname}; % set output struct
+    % add file to sortedFiles
+    if ~isfield(sortedFiles.(session), type) || ~isfield(sortedFiles.(session).(type), acq_mod) % if no other filename exists for this combination
+        sortedFiles.(session).(type).(acq_mod) = {fname}; % set output struct
     else % otherwise, append
-        anat_files.(session).(type).(acq_mod){end+1} = fname;
+        sortedFiles.(session).(type).(acq_mod){end+1} = fname;
     end
 
 end
 
-setappdata(groot, 'anat_files', anat_files);
+setappdata(groot, 'sortedFiles', sortedFiles);
+setappdata(groot, 'returnCode', 'okay');
 delete(uiapp);      % close window
 
 end

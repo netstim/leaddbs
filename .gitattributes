@@ -18,3 +18,5 @@
 *.ply binary
 *.stl binary
 *.mz3 binary
+
+*.svg binary

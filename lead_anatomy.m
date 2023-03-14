@@ -22,7 +22,7 @@ function varargout = lead_anatomy(varargin)
 
 % Edit the above text to modify the response to help lead_anatomy
 
-% Last Modified by GUIDE v2.5 03-Sep-2021 19:51:05
+% Last Modified by GUIDE v2.5 02-Mar-2023 19:13:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,8 +53,9 @@ function lead_anatomy_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to lead_anatomy (see VARARGIN)
 
 handles.prod = 'anatomy';
+handles.callingfunction = 'lead_anatomy';
 
-% add recent patients...
+% add recentpatients patients...
 ea_initrecent(handles, 'patients');
 earoot=ea_getearoot;
 if ~isdeployed
@@ -247,14 +248,14 @@ list=ea_assignbackdrop('list',options,'Patient');
 set(handles.tdbackdrop,'String',list);
 
 
-% --- Executes on selection change in recent.
-function recent_Callback(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+% --- Executes on selection change in recentpatients.
+function recentpatients_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recent
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpatients contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpatients
 ea_recentcallback(handles, 'patients');
 options.prefs=ea_prefs('');
 [options.root,options.patientname]=fileparts(get(handles.patdir_choosebox,'String'));
@@ -264,8 +265,8 @@ set(handles.tdbackdrop,'String',list);
 
 
 % --- Executes during object creation, after setting all properties.
-function recent_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+function recentpatients_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

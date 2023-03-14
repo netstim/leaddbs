@@ -22,7 +22,7 @@ function varargout = lead_or(varargin)
 
 % Edit the above text to modify the response to help lead_or
 
-% Last Modified by GUIDE v2.5 30-Sep-2021 14:53:21
+% Last Modified by GUIDE v2.5 02-Mar-2023 19:10:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -56,8 +56,9 @@ function lead_or_OpeningFcn(hObject, eventdata, handles, varargin)
 earoot=ea_getearoot;
 
 handles.prod = 'or';
+handles.callingfunction = 'lead_or';
 
-% add recent patients...
+% add recentpatients patients...
 ea_initrecent(handles, 'patients');
 
 set(handles.vizspacepopup,'String',{[ea_underscore2space(ea_getspace), ' Space'];'Native Patient Space'});
@@ -1091,22 +1092,22 @@ position=[63,542,160,16];
 ea_hyperlink_label(label, url, position);
 
 
-% --- Executes on selection change in recent.
-function recent_Callback(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+% --- Executes on selection change in recentpatients.
+function recentpatients_Callback(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns recent contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from recent
+% Hints: contents = cellstr(get(hObject,'String')) returns recentpatients contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from recentpatients
 ea_busyaction('on',handles.leadfigure,'or');
 ea_recentcallback(handles, 'patients');
 ea_busyaction('off',handles.leadfigure,'or');
 
 
 % --- Executes during object creation, after setting all properties.
-function recent_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+function recentpatients_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1248,9 +1249,9 @@ ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over recent.
-function recent_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to recent (see GCBO)
+% --- Otherwise, executes on mouse press in 5 pixel border or over recentpatients.
+function recentpatients_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to recentpatients (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ea_gethelp(get(handles.leadfigure,'SelectionType'),hObject);
@@ -1521,7 +1522,7 @@ uipatdir=getappdata(handles.leadfigure,'uipatdir');
 if length(uipatdir)>1 % still works
     %  ea_error('Selecting the next patient in folder only works if a single patient was selected.');
 elseif isempty(uipatdir)
-    % load recent patient then.
+    % load recentpatients patient then.
 
     load([ea_getearoot,'common',filesep,'ea_recentpatients.mat']);
     if iscell(recentfolders)

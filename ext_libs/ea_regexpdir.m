@@ -10,12 +10,12 @@ if ~exist('type','var')
     type = 'file';
 end
 
-% Fix to use '^STR' pattern recursively
-if recursive && startsWith(expstr, '^')
+% Rewrite pattern when '^STR$' used
+if startsWith(expstr, '^')
     if endsWith(expstr, '$')
-        expstr = ['(^|.+[/\\])', expstr(2:end)];
+        expstr = ['(^|.+\', filesep, ')', expstr(2:end-1), '\', filesep, '?$'];
     else
-        expstr = ['(^|.+[/\\])', expstr(2:end), '[^/\\]*$'];
+        expstr = ['(^|.+\', filesep, ')', expstr(2:end)];
     end
 end
 
@@ -32,7 +32,7 @@ switch type
         isdir = 1;
     case {'a', 'all'}
         % Remove filesep from the end of the folder path
-        list(isfolder(list)) = fileparts(list(isfolder(list)));
+        list(isfolder(list)) = erase(list(isfolder(list)), filesep + lineBoundary('end'));
         isdir = zeros(size(list));
         isdir(isfolder(list)) = 1;
 end

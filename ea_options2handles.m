@@ -1,25 +1,22 @@
 function ea_options2handles(options,handles)
 
-if  strcmpi(handles.patdir_choosebox.String, 'Choose Patient Directory') || ~isfield(options, 'modality')
-    arrayfun(@(x) set(x, 'Enable', 'off'), handles.registrationpanel.Children);
-    arrayfun(@(x) set(x, 'Enable', 'off'), handles.surfacereconpanel.Children);
-    arrayfun(@(x) set(x, 'Enable', 'off'), handles.reconpanel.Children);
-    arrayfun(@(x) set(x, 'Enable', 'off'), handles.connpanel.Children);
+if  isempty(handles.patientlist.Data) || isempty(handles.patientlist.Selection) || ~isfield(options, 'modality')
+    arrayfun(@(x) set(x, 'Enable', 'off'), handles.registrationtab.Children);
+    arrayfun(@(x) set(x, 'Enable', 'off'), handles.localizationtab.Children);
+    arrayfun(@(x) set(x, 'Enable', 'off'), handles.optionaltab.Children);
     set(handles.overwriteapproved, 'Enable', 'off');
 elseif options.modality == 3
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationpanel.Children);
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
     set(handles.coregctmethod, 'Enable', 'off');
     set(handles.scrf, 'Enable', 'off');
     set(handles.scrfmask, 'Enable', 'off');
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.surfacereconpanel.Children);
-    arrayfun(@(x) set(x, 'Enable', 'off'), handles.reconpanel.Children);
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.connpanel.Children);
+    arrayfun(@(x) set(x, 'Enable', 'off'), handles.localizationtab.Children);
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.optionaltab.Children);
     set(handles.overwriteapproved, 'Enable', 'on');
 else
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationpanel.Children);
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.surfacereconpanel.Children);
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.reconpanel.Children);
-    arrayfun(@(x) set(x, 'Enable', 'on'), handles.connpanel.Children);
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.registrationtab.Children);
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.localizationtab.Children);
+    arrayfun(@(x) set(x, 'Enable', 'on'), handles.optionaltab.Children);
     set(handles.overwriteapproved, 'Enable', 'on');
 end
 
