@@ -5,12 +5,10 @@ if ~isempty(addht) % sweep nonempty atlases toolbar
     % delete(addht.Children(:));
 else
     addht=uitoolbar(resultfig);
-end
-
-if ~exist('labelbutton','var')
     labelbutton=uitoggletool(addht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
     labelcolorbutton=uipushtool(addht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
 end
+
 setappdata(resultfig,'addht',addht)
 
 
