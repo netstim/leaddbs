@@ -623,40 +623,6 @@ end
 
 % Take the middle z slice
 zslice = V(:,:,round(size(V,3)/2));
-<<<<<<< Updated upstream
-
-% Check if background (1st voxel) is dark or bright
-if zslice(1,1) < mean(zslice(:))
-    % Flip black to white in colormap in case background is dark
-    cmap(1,:) = [1 1 1];
-end
-
-set(resultfig, 'Color', 'w', 'Colormap', cmap);
-
-
-function ea_setElvisTransparentBackground(resultfig)
-cmap = gray;
-% Get volume data
-V = getappdata(resultfig, 'V');
-if isa(V{1}, 'nifti')
-    V = V{1}.dat; % Memory mapped nifti struct
-else
-    V = V{1}.img; % Standard nifti struct
-end
-
-% Take the middle z slice
-zslice = V(:,:,round(size(V,3)/2));
-
-% Check if background (1st voxel) is dark or bright
-if zslice(1,1) < mean(zslice(:))
-    % Flip black to white in colormap in case background is dark
-    cmap(1,:) = [1 1 1];
-end
-
-set(resultfig, 'Color', 'none', 'Colormap', cmap);
-
-=======
->>>>>>> Stashed changes
 
 % Check if background (1st voxel) is dark or bright
 if zslice(1,1) < mean(zslice(:))
