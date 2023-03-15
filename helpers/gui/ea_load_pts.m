@@ -120,7 +120,11 @@ bids = BIDSFetcher(BIDSRoot);
 setappdata(handles.leadfigure, 'bids', bids);
 setappdata(handles.leadfigure, 'subjId', subjId);
 
-uipatdir = fullfile(BIDSRoot, 'derivatives', 'leaddbs', strcat('sub-', subjId));
+if ~isempty(bids.subjId)
+    uipatdir = fullfile(BIDSRoot, 'derivatives', 'leaddbs', strcat('sub-', subjId));
+else
+    uipatdir = {'No Patient Selected'};
+end
 setappdata(handles.leadfigure, 'uipatdir', uipatdir);
 
 if strcmp(handles.prod, 'dbs')
