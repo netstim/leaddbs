@@ -449,7 +449,7 @@ dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth'),...
 
 % Initialize Video-Export button
 videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video'),...
-    'TooltipString','Save video','ClickedCallback',{@export_video,resultfig,options});
+    'TooltipString','Save video','ClickedCallback',{@export_video,options});
 
 % Init hard_electrode_view button
 if isfield(options,'modality') && options.modality==2
@@ -655,15 +655,11 @@ end
 set(resultfig, 'Color', 'none', 'Colormap', cmap);
 
 
-% % Live edits tag here
-% function export_video(hobj,ev,options)
-% % Set up recording parameters (optional), and record
-% [FileName,PathName] = uiputfile('LEAD_Scene.mp4','Save file name for video');
-% ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.video.opts);
-function export_video(hobj,ev,resultfig,options)
+function export_video(hobj,ev,options)
 % Set up recording parameters (optional), and record
 [FileName,PathName] = uiputfile('LEAD_Scene.mp4','Save file name for video');
-ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName], resultfig, options.prefs.video.opts);
+ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.video.opts);
+
 
 function export_hd(hobj,ev)
 set(gca, 'Color', 'none');
