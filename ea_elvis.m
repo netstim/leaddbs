@@ -449,7 +449,7 @@ dofsavebutton=uipushtool(ht,'CData',ea_get_icn('save_depth'),...
 
 % Initialize Video-Export button
 videoexportbutton=uipushtool(ht,'CData',ea_get_icn('video'),...
-    'TooltipString','Save video','ClickedCallback',{@export_video,options});
+    'TooltipString','Save video','ClickedCallback',{@export_video,resultfig,options});
 
 % Init hard_electrode_view button
 if isfield(options,'modality') && options.modality==2
@@ -623,6 +623,40 @@ end
 
 % Take the middle z slice
 zslice = V(:,:,round(size(V,3)/2));
+<<<<<<< Updated upstream
+
+% Check if background (1st voxel) is dark or bright
+if zslice(1,1) < mean(zslice(:))
+    % Flip black to white in colormap in case background is dark
+    cmap(1,:) = [1 1 1];
+end
+
+set(resultfig, 'Color', 'w', 'Colormap', cmap);
+
+
+function ea_setElvisTransparentBackground(resultfig)
+cmap = gray;
+% Get volume data
+V = getappdata(resultfig, 'V');
+if isa(V{1}, 'nifti')
+    V = V{1}.dat; % Memory mapped nifti struct
+else
+    V = V{1}.img; % Standard nifti struct
+end
+
+% Take the middle z slice
+zslice = V(:,:,round(size(V,3)/2));
+
+% Check if background (1st voxel) is dark or bright
+if zslice(1,1) < mean(zslice(:))
+    % Flip black to white in colormap in case background is dark
+    cmap(1,:) = [1 1 1];
+end
+
+set(resultfig, 'Color', 'none', 'Colormap', cmap);
+
+=======
+>>>>>>> Stashed changes
 
 % Check if background (1st voxel) is dark or bright
 if zslice(1,1) < mean(zslice(:))
@@ -655,11 +689,15 @@ end
 set(resultfig, 'Color', 'none', 'Colormap', cmap);
 
 
-function export_video(hobj,ev,options)
+% % Live edits tag here
+% function export_video(hobj,ev,options)
+% % Set up recording parameters (optional), and record
+% [FileName,PathName] = uiputfile('LEAD_Scene.mp4','Save file name for video');
+% ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.video.opts);
+function export_video(hobj,ev,resultfig,options)
 % Set up recording parameters (optional), and record
 [FileName,PathName] = uiputfile('LEAD_Scene.mp4','Save file name for video');
-ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName],options.prefs.video.opts);
-
+ea_CaptureFigVid(options.prefs.video.path, [PathName,FileName], resultfig, options.prefs.video.opts);
 
 function export_hd(hobj,ev)
 set(gca, 'Color', 'none');

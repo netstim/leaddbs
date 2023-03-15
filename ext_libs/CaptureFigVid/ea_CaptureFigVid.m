@@ -1,4 +1,4 @@
-function ea_CaptureFigVid(ViewZ, FileName,OptionZ)
+function ea_CaptureFigVid(ViewZ, FileName, resultfig, OptionZ)
 % CaptureFigVid(ViewZ, FileName,OptionZ) 
 % Captures a video of the 3D plot in the current axis as it rotates based
 % on ViewZ and saves it as 'FileName.mpg'. Option can be specified.
@@ -51,7 +51,7 @@ function ea_CaptureFigVid(ViewZ, FileName,OptionZ)
 %% preliminaries 
 
 % initialize optional argument
-if nargin<3;     OptionZ=struct([]); end
+if nargin<4;     OptionZ=struct([]); end
 
 % check orientation of ViewZ, should be two columns and >=2 rows
 if size(ViewZ,2)>size(ViewZ,1); ViewZ=ViewZ.'; end
@@ -100,6 +100,17 @@ ViewZ=ViewZ(1:(end-1),:); %remove last sample
 end
 % open object, preparatory to making the video
 open(daObj);
+
+% if template is: '7T Ex Vivo 100um Brain Atlas (Edlow 2019)')
+% set camva: 4.1036
+% Note: pass resultfig on button press would be more durable
+view(ViewZ(1,:)); drawnow;
+appdata = getappdata(resultfig);
+if strcmp(appdata.templateused,'7T Ex Vivo 100um Brain Atlas (Edlow 2019)')
+    v=ea_view;
+    v.camva=4.1036;
+    ea_view(v)
+end
 
 %% rotate the axis and capture the video
 for kathy=1:size(ViewZ,1)
