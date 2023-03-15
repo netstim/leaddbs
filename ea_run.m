@@ -105,7 +105,7 @@ else
             end
 
             % Refresh GUI after all process is done
-            if strcmp(options.leadprod, 'dbs')
+            if strcmp(options.leadprod, 'dbs') && ~isempty(options.uipatdirs)
                 ea_load_pts(getappdata(options.leadfigure, 'handles'), getappdata(options.leadfigure, 'uipatdir'));
             end
     end
