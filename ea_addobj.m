@@ -1,10 +1,18 @@
 function ea_addobj(resultfig, obj, options)
 
 addht = getappdata(resultfig,'addht');
-if isempty(addht)
-    addht = uitoolbar(resultfig);
-    setappdata(resultfig, 'addht', addht);
+if ~isempty(addht) % sweep nonempty atlases toolbar
+    % delete(addht.Children(:));
+else
+    addht=uitoolbar(resultfig);
 end
+
+if ~exist('labelbutton','var')
+    labelbutton=uitoggletool(addht,'CData',ea_get_icn('labels'),'Tag','Labels','TooltipString','Labels');
+    labelcolorbutton=uipushtool(addht,'CData',ea_get_icn('colors'),'Tag','Label Color','TooltipString','Label Color');
+end
+setappdata(resultfig,'addht',addht)
+
 
 if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
     if all(cellfun(@numel, regexp(obj, '(\.mat|\.trk)$', 'match', 'once'))) %tract
@@ -25,6 +33,7 @@ if iscell(obj) % dragndrop for tract and roi, 'obj' is a cell of the files
             eval(str2eval);
             for i=1:length(obj)
                 pobj.color = cmap(i,:);
+                pobj.Tag = 'roi';
                 ea_roi(obj{i}, pobj);
             end
          else
@@ -351,8 +360,9 @@ if ~isempty(AL.FTS) % only build fibertracking menu if there is at least one fib
 end
 
 axis fill
-% store in figure.
 
+% store in figure.
+setappdata(resultfig,'addht',addht)
 setappdata(resultfig,'AL',AL);
 
 
