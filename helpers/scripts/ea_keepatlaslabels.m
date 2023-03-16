@@ -62,11 +62,14 @@ try
     for i=1:length(addht.Children)
         if strcmp(addht.Children(i).Tag,'roi')
             idx(i) = 1;
+        elseif strcmp(addht.Children(i).Tag,'')
+            idx(i) = 2;
         else
             idx(i)=0;
         end
     end
-    objects = addht.Children(logical(idx));
+    rois = addht.Children(idx==1);
+    objects = addht.Children(idx==2);
 
 
     % parse type and toggle
@@ -88,9 +91,9 @@ try
                         end
                     end
                     atlassurfs = atlassurfs(idx);
-                    % objects
-                    for i = 1:length(objects)
-                        objects(i).State='on';
+                    % rois
+                    for i = 1:length(rois)
+                        rois(i).State='on';
                     end
                 case 'off'
                     % atlassurfs
@@ -98,9 +101,9 @@ try
                         atlassurfs{i}.Visible = 'off';
                         colorbuttons(i).State = 'off';
                     end
-                    % objects
-                    for i = 1:length(objects)
-                        objects(i).State='off';
+                    % rois
+                    for i = 1:length(rois)
+                        rois(i).State='off';
                     end
             end
 
@@ -132,12 +135,12 @@ try
         case {'object','objects','roi','rois'}
             switch toggle
                 case 'on'
-                    for i = 1:length(objects)
-                        objects(i).State='on';
+                    for i = 1:length(rois)
+                        rois(i).State='on';
                     end
                 case 'off'
-                    for i = 1:length(objects)
-                        objects(i).State='off';
+                    for i = 1:length(rois)
+                        rois(i).State='off';
                     end
             end
 
