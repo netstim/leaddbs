@@ -78,7 +78,7 @@ classdef ea_roi < handle
                 try
                     obj.Tag = pobj.Tag;
                 catch
-                    obj.Tag = 'Tag';
+                    obj.Tag = obj.name;
                 end
 
                 try
