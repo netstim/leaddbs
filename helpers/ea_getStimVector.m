@@ -44,7 +44,7 @@ for i=1:eleNum
 end
 
 %  For VC, check all sources
-if current_control(1) == 0  % both hemisphere MUST have the same mode
+if (current_control(1) == 0 && current_control(2) == 0) || (isnan(current_control(1)) && current_control(2) == 0) || (current_control(1) == 0 && isnan(current_control(2)))% both hemisphere MUST have the same mode
     numSources = 4;
     amp = nan(eleNum,numSources);   % 4 - number of sources
     for i=1:eleNum
