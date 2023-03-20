@@ -59,7 +59,7 @@ if ~opts.negvisible
 end
 
 [pth,niiname]=fileparts(res.fname);
-
+h = {};
 if ismember(1,sides)
     ic=isocolors(X,Y,Z,permute(res.img,[2,1,3]),rh.vertices);
     if any(~isnan(ic))
@@ -69,9 +69,9 @@ if ismember(1,sides)
     else
         rhCData = repmat(defaultColor, size(rh.vertices,1), 1);
     end
-    h{2}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',rhCData,...
+    h{1}=patch('Faces',rh.faces,'Vertices',rh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',rhCData,...
         'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
-    h{2}.Tag=[niiname,'_right'];
+    h{1}.Tag=[niiname,'_right'];
 end
 
 if ismember(2,sides)
@@ -83,8 +83,8 @@ if ismember(2,sides)
     else
         lhCData = repmat(defaultColor, size(lh.vertices,1), 1);
     end
-    h{1}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',lhCData,...
+    h{2}=patch('Faces',lh.faces,'Vertices',lh.vertices,'FaceColor','interp','EdgeColor','none','FaceVertexCData',lhCData,...
         'SpecularStrength',0.35,'SpecularExponent',30,'SpecularColorReflectance',0,'AmbientStrength',0.07,'DiffuseStrength',0.45,'FaceLighting','gouraud');
-    h{1}.Tag=[niiname,'_left'];
+    h{2}.Tag=[niiname,'_left'];
 end
 
