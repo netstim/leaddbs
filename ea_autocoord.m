@@ -24,8 +24,9 @@ if isfield(options, 'leadfigure')
             options.subj = bids.getSubj(subjId{options.pat}, options.modality);
         end
     end
+end
 
-
+if strcmp(options.leadprod, 'dbs')
     if options.importdcm.do && bids.subjDataOverview.hasSourcedata(options.subj.subjId)
         niftis = ea_dcm_to_nii(options.subj.sourcedataDir, fullfile(options.subj.rawdataDir, 'unsorted'), options.importdcm.tool);
         if isempty(niftis)
@@ -49,6 +50,7 @@ if isfield(options, 'leadfigure')
         return;
     end
 end
+
 % get accurate electrode specifications and save it in options.
 options = ea_resolve_elspec(options);
 
