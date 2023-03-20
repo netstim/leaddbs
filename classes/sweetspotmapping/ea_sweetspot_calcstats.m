@@ -297,7 +297,7 @@ switch lower(obj.multcompstrategy)
     case 'fdr'
         pnnan=ps(nnanidx);
         [psort,idx]=sort(pnnan);
-        pranks=zeros(length(psort),1);
+        pranks=zeros(1,length(psort));
         for rank=1:length(pranks)
             pranks(idx(rank))=rank;
         end
