@@ -219,49 +219,67 @@ for group=groups
                         gval{side} = double(gval{side});
                         %gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
 
-                        thisinvals=((gval{side}(gpatsel,:)==1).*repmat((I(gpatsel,side)==1),1,size(gval{side}(gpatsel,:),2)));
-                        thisoutvals=((gval{side}(gpatsel,:)==0).*repmat((I(gpatsel,side)==0),1,size(gval{side}(gpatsel,:),2)));
-
+                        %nonempty=sum(gval{side}(gpatsel,:),1)>0;
                         Nmap=nansum(gval{side}(gpatsel,:));
-                        nanidx=Nmap<round(size(thisinvals,1)*(obj.coverthreshold/100));
-                        thisinvals(:,nanidx)=nan;
+                        nonempty=Nmap>round(size(gpatsel,2)*(obj.coverthreshold/100));
 
-                        non_nan=~nanidx;
-                        prop=nan(size(gval{side},2),1); %
-                        outps=prop; %
-                        for vox=find(non_nan)                 
-                            [h,outps(vox), prop(vox)]  = ea_prop_test([ea_nansum(thisinvals(:,vox)),ea_nansum(thisoutvals(:,vox))],[sum(gval{side}(gpatsel,vox)==1),sum(gval{side}(gpatsel,vox)==0)],1);
-                        end
+                        invals=gval{side}(gpatsel,nonempty);
+                        vals{group,side}=nan(size(gval{side},2),1);
 
-                        if obj.showsignificantonly
-                            prop=ea_corrsignan(prop',outps',obj);
+                        if ~isempty(invals)
+
+                            ImpBinary=double((I(gpatsel,side))>0); % make sure variable is actually binary
+                            % restore nans
+                            ImpBinary(isnan(I(gpatsel,side)))=nan;
+
+
+                            suminvals=sum(invals(ImpBinary == 1,:),1); % for each voxel, how many vtas cover it of patients that also had the effect (binary outcome)
+                            Ninvals=sum(ImpBinary == 1,1);
+                            sumoutvals=sum(invals(ImpBinary == 0,:),1); % for each voxel, how many vtas cover it of patients that did not have the effect (binary var)
+                            Noutvals=sum(ImpBinary == 0,1);
+
+                            prop=zeros(size(invals,2),1); %
+                            outps=prop; %
+
+                            for vox=1:size(invals,2)
+                                [h,outps(vox), prop(vox)] = ea_prop_test([suminvals(vox),sumoutvals(vox)],[Ninvals,Noutvals],1);
+                            end
+                            if obj.showsignificantonly
+                                prop=ea_corrsignan(prop',outps',obj);
+                            end
+                            vals{group,side}(nonempty)=prop;
                         end
-                        vals{group,side}=prop';
                     case 'Binomial Test (Binary Var)'
                         
                         gval{side} = double(gval{side});
                         %gval{side}(gval{side} == 0) = NaN; % set VTAs to NaN/1 instead of 0/1
+                        Nmap=nansum(gval{side}(gpatsel,:));
+                        nonempty=Nmap>round(size(gpatsel,2)*(obj.coverthreshold/100));
 
-                        coverage_createeffect=((gval{side}(gpatsel,:)==1).*repmat((I(gpatsel,side)==1),1,size(gval{side}(gpatsel,:),2)));
-                        coverage=((gval{side}(gpatsel,:)==1));
+                        invals=gval{side}(gpatsel,nonempty);
+                        vals{group,side}=nan(size(gval{side},2),1);
 
-                        Nmap=ea_nansum(gval{side}(gpatsel,:));
-                        nanidx=Nmap<round(size(coverage_createeffect,1)*(obj.coverthreshold/100));
-                        coverage_createeffect(:,nanidx)=nan;
+                        if ~isempty(invals)
+                            coverage_createeffect=((invals==1).*repmat((I(gpatsel,side)==1),1,size(invals,2)));
+                            coverage=((invals==1));
 
-                        non_nan=~nanidx;
+                            Nmap=ea_nansum(invals);
+                            nanidx=Nmap<round(size(coverage_createeffect,1)*(obj.coverthreshold/100));
+                            coverage_createeffect(:,nanidx)=nan;
 
-                        ps=nan(size(gval{side},2),1); %
-                        thisvals = nan(size(gval{side},2),1);
-                        for vox=find(non_nan)
-                            ps(vox) = binopdf(ea_nansum(coverage_createeffect(:,vox)),ea_nansum(coverage(:,vox)),ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
-                            thisvals(vox) = (ea_nansum(coverage_createeffect(:,vox))./ea_nansum(coverage(:,vox))) - (ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
+                            non_nan=~nanidx;
+
+                            ps=nan(size(invals,2),1); %
+                            thisvals = nan(size(invals,2),1);
+                            for vox=find(non_nan)
+                                ps(vox) = binopdf(ea_nansum(coverage_createeffect(:,vox)),ea_nansum(coverage(:,vox)),ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
+                                thisvals(vox) = (ea_nansum(coverage_createeffect(:,vox))./ea_nansum(coverage(:,vox))) - (ea_nansum(I(gpatsel,side)==1)/length(gpatsel));
+                            end
+                            if obj.showsignificantonly
+                                thisvals=ea_corrsignan(thisvals',ps',obj);
+                            end
+                            vals{group,side}(nonempty)=thisvals';
                         end
-                        if obj.showsignificantonly
-                            thisvals=ea_corrsignan(thisvals',ps',obj);
-                        end
-                        vals{group,side}=thisvals';
-
                 end
 
             case 'E-Fields'
