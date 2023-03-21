@@ -557,32 +557,38 @@ for side=0:1
         fprintf('\nOSS-DBS calculation succeeded!\n\n')
         % Copy VAT files
         if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'])
+            % IMPORTANT: you can't use the transformation on the E_field_solution.nii computed in native
             copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'E_field_solution.nii'], ...
                      [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'])
+
             if options.native % Transform to MNI space
-                ea_apply_normalization_tofile(options,...
-                    [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'],... % from
-                    [templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'],... % to
-                    0, ... % useinverse is 0
-                    1, ... % linear interpolation
-                    [ea_space, options.primarytemplate, '.nii']);
-                ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']);
+                ea_get_MNI_field_from_csv(options, [outputDir, filesep, 'Results_', sideCode, filesep,'E_field_MRI_space.csv'], settings.Activation_threshold_VTA, sideLabel, templateOutputBasePath)
+%                 ea_apply_normalization_tofile(options,...
+%                     [outputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'],... % from
+%                     [templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii'],... % to
+%                     0, ... % useinverse is 0
+%                     1, ... % linear interpolation
+%                     [ea_space, options.primarytemplate, '.nii']);
+%                 ea_autocrop([templateOutputBasePath, 'efield_model-ossdbs_hemi-', sideLabel, '.nii']);
             end
         end
 
         if isfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'])
+            % IMPORTANT: you can't use the transformation on the VTA_solution.nii computed in native
             copyfile([outputDir, filesep, 'Results_', sideCode, filesep, 'VTA_solution.nii'], ...
                      [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'])
 
             vatToViz = [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
             if options.native % Transform to MNI space
-                ea_apply_normalization_tofile(options,...
-                    [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'],... % from
-                    [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'],... % to
-                    0, ... % useinverse is 0
-                    0, ... % nn interpolation
-                    [ea_space, options.primarytemplate, '.nii']);
-                ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']);
+
+                % do not need this any more, VAT is computed and warped in ea_get_MNI_field_from_csv
+%                 ea_apply_normalization_tofile(options,...
+%                     [outputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'],... % from
+%                     [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'],... % to
+%                     0, ... % useinverse is 0
+%                     0, ... % nn interpolation
+%                     [ea_space, options.primarytemplate, '.nii']);
+%                 ea_autocrop([templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii']);
 
                 if ~options.orignative % Visualize MNI space VTA
                     vatToViz = [templateOutputBasePath, 'binary_model-ossdbs_hemi-', sideLabel, '.nii'];
