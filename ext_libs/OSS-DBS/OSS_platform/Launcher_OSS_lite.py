@@ -242,19 +242,19 @@ def run_full_model(master_dict):        # master_dict can be used for customizat
     if d["VTA_approx"] == 1:  # for this case, we use a neuron array that matches the VTA array in dimensions
         d['Axon_Model_Type'] = 'Reilly2016'
         d['diam_fib'] = 5.0
-        d['x_steps'], d['y_steps'], d['z_steps'] = (20, 0, 20)  # we assume that Z-axis is ventra-dorsal in the MRI
+        d['x_steps'], d['y_steps'], d['z_steps'] = (4, 4, 4)  # we assume that Z-axis is ventra-dorsal in the MRI
         d['Global_rot'] = 1
         d['alpha_array_glob'], d['beta_array_glob'], d['gamma_array_glob'] = ([0], [0], [0])
         d["Neuron_model_array_prepared"] = 0
         if d['rodent_electrode'] == True:  # rodent VTA
             d['x_seed'], d['y_seed'], d['z_seed'] = (d['Implantation_coordinate_X'], d['Implantation_coordinate_Y'], d['Implantation_coordinate_Z'])  # rodent electrodes have only 1 or 2 contacts
             d['n_Ranvier'] = 3
-            d['x_step'], d['y_step'], d['z_step'] = (0.1, 0.1, 0.1)
+            d['x_step'], d['y_step'], d['z_step'] = (0.5, 0.5, 0.5)
         else:
             d['x_seed'], d['y_seed'], d['z_seed'] = (
             d['Implantation_coordinate_X'], d['Implantation_coordinate_Y'] + 3.0, d['Implantation_coordinate_Z'] + 5.0)     # it makes sense to shift it a bit from the tip
             d['n_Ranvier'] = 22
-            d['x_step'], d['y_step'], d['z_step'] = (1.0, 1.0, 1.0)
+            d['x_step'], d['y_step'], d['z_step'] = (5.0, 5.0, 5.0)
 
     #============================ Check simulation setup and state, load the corresponding data =======================#
 

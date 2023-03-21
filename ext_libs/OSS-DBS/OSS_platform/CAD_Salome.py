@@ -149,7 +149,7 @@ def build_final_geometry(d, MRI_param, ROI_radius, cc_multicontact):
 
     direct = os.environ['PATIENTDIR'] # there was a glitch with paths, so I assign it to a variable
 
-    logging.critical("----- Creating final geometry in SALOME -----")
+    logging.critical("\n----- Creating final geometry in SALOME -----")
     # Make a subprocess call to the salome executable and store the used port in a text file:
     with open(os.devnull, 'w') as FNULL: subprocess.call('salome -t python3 '+ position_script_name +' --ns-port-log='+direct+'/salomePort.txt', shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     #kill_SALOME_port()  # terminate SALOME
