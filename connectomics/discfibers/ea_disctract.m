@@ -46,6 +46,7 @@ classdef ea_disctract < handle
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
         subscore
+        currentune
         results
         % Subfields:
         % results.(connectomename).fibcell: cell of all fibers connected, sorted by side
