@@ -46,6 +46,7 @@ classdef ea_disctract < handle
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
         subscore
+        currentune
         results
         % Subfields:
         % results.(connectomename).fibcell: cell of all fibers connected, sorted by side
@@ -1176,7 +1177,7 @@ classdef ea_disctract < handle
             if obj.multi_pathways == 1 && (isequal(ea_method2methodid(obj),'VAT_Ttest') || isequal(ea_method2methodid(obj),'PAM_Ttest') || isequal(ea_method2methodid(obj),'plainconn'))% at the moment, obj.connFiberInd is defined only for OSS-DBS
                 %disp("number of drawn fibers per pathway")
                 num_per_path = cell(1, 2); % with obj.map_list, rates can be computed
-                for side = 1:2
+                for side = 1:length(usedidx)
                     num_per_path{side} = zeros(1,length(obj.map_list));
                     if length(usedidx{side})
                         for inx = 1:length(usedidx{side})
