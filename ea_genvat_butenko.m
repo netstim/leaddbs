@@ -685,7 +685,7 @@ for side=0:1
                         [atlas_folder,~] = fileparts(tract);
                         originalFib = load([atlas_folder,filesep,tractName]);
                     end
-                    conn.fibers = originalFib;
+                    conn = originalFib;
 
                     fprintf('Convert fiber activation result into MNI space...\n\n');
                     conn.fibers = conn.fibers(ismember(conn.fibers(:,4), connFibID), :);
