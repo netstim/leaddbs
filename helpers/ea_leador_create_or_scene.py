@@ -26,6 +26,8 @@ def getImporterData(folder):
 
 subjectLeadORFolder = os.path.dirname(__file__)
 subjectFolder = os.path.dirname(subjectLeadORFolder)
+subjectID = os.path.basename(subjectFolder)
+savePrefix = subjectID + '_desc-'
 
 #
 # Load planning information
@@ -45,13 +47,13 @@ for i,file in enumerate(planningFiles):
     loadedNodeIDs = importer.getTrajectoryTransforms(importInFrameSpace=True)
     for nodeID in loadedNodeIDs:
         node = slicer.util.getNode(nodeID)
-        slicer.util.saveNode(node, os.path.join(subjectLeadORFolder,'Planning ' + node.GetName() + '.txt'))
+        slicer.util.saveNode(node, os.path.join(subjectLeadORFolder, savePrefix + 'planning' + node.GetName().replace(' ','') + '.txt'))
     if not referenceLoaded:
         try:
             referenceToFrameTransformNode = importer.getReferenceToFrameTransform()
             referenceVolumeNode = importer.getReferenceVolumeFromDICOM(subjectDICOMFolder)
-            slicer.util.saveNode(referenceToFrameTransformNode, os.path.join(subjectLeadORFolder, 'referenceToFrame.txt'))
-            slicer.util.saveNode(referenceVolumeNode, os.path.join(subjectLeadORFolder, 'reference.nii'))
+            slicer.util.saveNode(referenceToFrameTransformNode, os.path.join(subjectLeadORFolder, savePrefix + 'referenceToFrame.txt'))
+            slicer.util.saveNode(referenceVolumeNode, os.path.join(subjectLeadORFolder, savePrefix + 'reference.nii'))
             referenceLoaded = True
         except:
             referenceLoaded = False
@@ -76,7 +78,7 @@ parameters['initializeTransformMode'] = 'useMomentsAlign'
 parameters['useRigid'] 				  = True
 parameters['costMetric'] 			  = 'MMI'
 cli = slicer.cli.run(slicer.modules.brainsfit, None, parameters, wait_for_completion=True, update_display=False)
-slicer.util.saveNode(anchorNativeToReferenceTransformNode, os.path.join(subjectLeadORFolder, 'anchorNativeToReference.txt'))
+slicer.util.saveNode(anchorNativeToReferenceTransformNode, os.path.join(subjectLeadORFolder, savePrefix + 'anchorNativeToReference.txt'))
 
 for node in subjectAnatNodes:
     node.ApplyTransform(anchorNativeToReferenceTransformNode.GetTransformToParent())
@@ -109,7 +111,7 @@ slicer.mrmlScene.RemoveNode(anchorNativeToReferenceTransformNode)
 slicer.mrmlScene.RemoveNode(referenceToFrameTransformNode)
 slicer.mrmlScene.RemoveNode(referenceVolumeNode)
 
-sceneSaveFilename = os.path.join(subjectLeadORFolder, 'ORScene.mrb')
+sceneSaveFilename = os.path.join(subjectLeadORFolder, savePrefix + 'ORScene.mrb')
 slicer.util.saveScene(sceneSaveFilename)
 
 slicer.util.exit()

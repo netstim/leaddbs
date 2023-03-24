@@ -638,7 +638,9 @@ classdef ea_networkmapping < handle
                         res.img(:)=vals{group};
                     case 'Surface (Elvis)'
                         sides=1:2;
-                        keep=[obj.modelRH,obj.modelLH]; sides=sides(keep);
+                        keep=[obj.modelRH,obj.modelLH]; 
+                        sides = keep.*sides;
+                        %sides=sides(keep);
                          % Check cmap
                         if exist('voxcmap','var') && ~isempty(voxcmap{group})
                             defaultColor = [1 1 1]; % Default color for nan values
@@ -648,12 +650,15 @@ classdef ea_networkmapping < handle
                             return
                         end
                         res.img(:)=vals{group};
+                        
                         h=ea_heatmap2surface(res,obj.model,sides,cmap,obj);
-                        if obj.modelRH
-                            obj.drawobject{group}{1}=h{1};
-                        end
-                        if obj.modelLH
-                            obj.drawobject{group}{2}=h{2};
+                        if obj.modelRH && obj.modelLH
+                            obj.drawobject{group}{1} = h{1};
+                            obj.drawobject{group}{2} = h{2};
+                        elseif obj.modelRH
+                            obj.drawobject{group}{1} = h{1};
+                        elseif obj.modelLH
+                            obj.drawobject{group}{2} = h{2};
                         end
                     case 'Surface (Surfice)'
                         res.img(:)=vals{group};

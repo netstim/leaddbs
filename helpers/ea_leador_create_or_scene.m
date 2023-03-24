@@ -47,12 +47,12 @@ for i = 1:length(uipatdirs)
            ' --additional-module-paths "' char(strjoin(string(slicer_netstim_modules),'" "')) '"'...
            ' --python-script "' script_to_run '"'];
 
-    save_log = [' >> "' fullfile(uipatdirs{i}, 'leador', ['CreateORScene_' char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt']) '"'];
+    save_log = [' >> "' fullfile(uipatdirs{i}, 'leador', ['sub-' pt_options.subj.subjId '_desc-createORScene' char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss.SSS')) '.txt']) '"'];
 
     s4l.run([command save_log]);
     delete(script_to_run)
-    if ~isfile(fullfile(uipatdirs{i}, 'leador', 'ORScene.mrb'))
-        display(['Apparently something went wrong and the Scene file was not created. See the log file in the leador subject folder: ' uipatdirs{i}]);
+    if ~isfile(fullfile(uipatdirs{i}, 'leador', ['sub-' pt_options.subj.subjId '_desc-ORScene.mrb']))
+        warning(['Apparently something went wrong and the Scene file was not created. See the log file in the leador subject folder: ' uipatdirs{i}]);
     else
         display(['Finished sub: ' uipatdirs{i}]);
     end

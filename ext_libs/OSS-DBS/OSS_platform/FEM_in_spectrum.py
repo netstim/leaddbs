@@ -566,7 +566,7 @@ def solve_Laplace(Sim_setup,Solver_type,Vertices_array,Domains,core,VTA_IFFT,out
             V_max=max(Domains.Amp_vector[:], key=abs)
         V_across=V_max-V_min   # this can be negative
 
-        Z_tissue = V_across/J_ground                   # Tissue impedance
+        Z_tissue = V_across / J_ground                   # Tissue impedance
         if int(Sim_setup.sine_freq)==int(Sim_setup.signal_freq):
             logging.critical("Tissue impedance at the signal freq.: {}".format(Z_tissue))
 

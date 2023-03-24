@@ -80,7 +80,7 @@ function ea_fillpresetpopups(handles)
 
 condv={'Conductivity Presets:',nan,nan
     'General Heuristic (e.g. Buzsaki 2006)',0.33,0.14
-    'Frequency Adapted (80 kHz cf. itis.ethz.ch)',0.132,0.0804};
+    'Frequency Adapted (10 kHz adj. cf. itis.ethz.ch)',0.1365,0.09104};  % adjusted for 1 kOhm at 10 kHz for 0.1 mm GM encap (no EDL)
 set(handles.condpresets,'String',condv(:,1));
 setappdata(handles.condpresets,'data',condv);
 

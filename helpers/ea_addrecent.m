@@ -3,7 +3,12 @@ function ea_addrecent(handles, uidir, type)
 
 earoot = ea_getearoot;
 
-load([earoot,'common',filesep,'ea_recent',type,'.mat'], 'recentfolders');
+try
+    load([earoot,'common',filesep,'ea_recent',type,'.mat'], 'recentfolders');
+catch
+    recentfolders = {};
+end
+
 if ismember(['No recent ', type, ' found'], recentfolders)
     recentfolders = {};
 end
