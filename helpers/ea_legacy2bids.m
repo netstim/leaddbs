@@ -494,23 +494,27 @@ for patients = 1:length(source)
                                     is_it_aconnectome = ea_regexpdir(leadMapper_folder{k},'.*vat_seed_compound_[df]MRI.*',0,'f');
                                     if ~isempty(is_it_aconnectome)
                                         [~,connectome_filename,ext] = fileparts(leadMapper_folder{k});
-                                        if contains(connectome_filename, fmri_keywords) % Functional connectome, subset in the name
-                                            connectome_filename = strsplit(connectome_filename, '_');
-                                            connectome = connectome_filename{1};
-                                            subset = connectome_filename{2};
-                                            bids_connectome_name = ea_getConnLabel(connectome, subset);                                            
-                                        else % Structural connectome
-                                            bids_connectome_name = ea_getConnLabel(connectome_filename);
+                                        try
+                                            if contains(connectome_filename, fmri_keywords) % Functional connectome, subset in the name
+                                                connectome_filename = strsplit(connectome_filename, '_');
+                                                connectome = connectome_filename{1};
+                                                subset = connectome_filename{2};
+                                                bids_connectome_name = ea_getConnLabel(connectome, subset);                                            
+                                            else % Structural connectome
+                                                bids_connectome_name = ea_getConnLabel(connectome_filename);
+                                            end
+                                            model_name = add_model(all_gs_folders{i});
+                                            stimulation_folder = all_gs_folders{i};
+                                            connectome_folder = fullfile(leadMapper_folder{k});
+                                            %create a struct of all the properties
+                                            %associated with this file
+                                            tag_struct.subjID = patient_name;
+                                            tag_struct.modeltag = model_name;
+                                            tag_struct.conntag = bids_connectome_name;
+                                            generate_bidsConnectome_name(stimulation_folder,connectome_folder,lead_mapper,stimulations,tag_struct)
+                                        catch
+                                            warning("Connectome name may not updated. See error report for further details..")
                                         end
-                                        model_name = add_model(all_gs_folders{i});
-                                        stimulation_folder = all_gs_folders{i};
-                                        connectome_folder = fullfile(leadMapper_folder{k});
-                                        %create a struct of all the properties
-                                        %associated with this file
-                                        tag_struct.subjID = patient_name;
-                                        tag_struct.modeltag = model_name;
-                                        tag_struct.conntag = bids_connectome_name;
-                                        generate_bidsConnectome_name(stimulation_folder,connectome_folder,lead_mapper,stimulations,tag_struct)
                                     end
                                 end
                             end
@@ -756,7 +760,7 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             %then rename%
             if endsWith(which_file,'.h5') %already renames
                 bids_name = [patient_name,'_',bids_name];
-                hfive2niigz(fullfile(new_path,which_file),fullfile(new_path,bids_name));
+                ea_h5toniigz(fullfile(new_path,which_file),fullfile(new_path,bids_name));
             else
                 disp(['Renaming file ' which_file ' to ' bids_name]);
                 rename_path = fullfile(new_path,which_file);
@@ -1113,28 +1117,7 @@ function generate_bidsConnectome_name(mni_folder,connectome_folder,lead_mapper,s
    %evalin('base','WARNINGSILENT=1;');
    %ea_warning(sprintf('Deleting old copy of connectome folder %s. You can find it in the source patient folder if you need.',connectome_folder));
    %ea_delete(fullfile(connectome_folder));
-function hfive2niigz(h5file,output_file)
-ea_libs_helper;
-basedir = [fullfile(ea_getearoot,'ext_libs','ANTs'), filesep];
-if ispc
-    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.exe']);
-else
-    applyTransforms = ea_path_helper([basedir, 'antsApplyTransforms.', computer('arch')]);
-end
-mnifile = fullfile(ea_space,'t1.nii');
-%antsApplyTransforms -t glanatInverseComposite.h5 -r anat_t2.nii -o [glanatInverseComposite.nii.gz,1] --float -v 1
-cmd = [applyTransforms, ...
-       ' -t ', h5file ...
-       ' -r ', mnifile ...
-       ' -o [', output_file ...
-       ',1]' ...
-       ' --float 1'...
-       ' -v 1'];
-if ~ispc
-    system(['bash -c "', cmd, '"']);
-else
-    system(cmd);
-end
+
 function files_to_move = reorderfiles(files_to_move)
 newfiles={};
 k=1;

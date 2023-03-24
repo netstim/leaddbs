@@ -4,7 +4,7 @@ legacy_modalities = {'anat_t1','anat_t2','anat_pd','postop_ct','postop_tra','pos
 bids_modalities = {'T1w','T2w','PDw','CT','ax_MRI','cor_MRI','sag_MRI','FGATIR','fa','dwi','dwi.bval','dwi.bvec','T2starw','SWI'};
 rawdata_containers = containers.Map(bids_modalities,legacy_modalities);
 opt.FileName = fname_out;
-[~,filename,~] = fileparts(fname_in);
+[filepath,filename,~] = fileparts(fname_in);
 json_mat = struct();
 %function to convert mat files and text
     if endsWith(fname_in,'.mat')
@@ -12,6 +12,7 @@ json_mat = struct();
         %read the input mat
         %dealing with coregistration
         if strcmp(filename,'ea_coreg_approved')
+            [coreg_filepath,~,~] = fileparts(fname_in);
             [coregDir,~,~] = fileparts(fname_out);
             coregDir = strrep(coregDir,'log','anat');
             input_mat = load(fname_in);
@@ -22,7 +23,7 @@ json_mat = struct();
                 if contains(coregdir_filenames{i},'acq-')
                     tmpmod = strsplit(coregdir_filenames{i},'acq-');
                     mod = strrep(tmpmod{end},'.nii','');
-                    tmpmod = regexprep(mod,'(iso|sag|ax|cor|\d+)_','');
+                    tmpmod = regexprep(mod, '(_)?(iso|sag|tra|cor)\d?(_)?', '');
                     try
                         %now find this in the coregapproved file
                         if contains(mod,'_MRI')
@@ -53,6 +54,77 @@ json_mat = struct();
                 end
             end
             savejson('',json_mat,'approval',json_mat.approval,opt);   
+            if exist(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'),'file')
+                temp_mat = load(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'));
+                method_used = generateMethod(temp_mat,'coregct_method_applied');
+                modality = 'CT';
+                json_mat.method.(modality) = method_used;
+            end
+            if exist(fullfile(coreg_filepath,'ea_coregmrmethod_applied.mat'),'file')
+                temp_mat = load(fullfile(coreg_filepath,'ea_coregmrmethod_applied.mat'));
+                method_used = generateMethod(temp_mat,'coregmr_method_applied');
+                modality = 'MR';
+                json_mat.method.(modality) = method_used;
+            end
+%                 temp_fieldname = fieldnames(temp_mat);
+%                 for j=1:length(temp_fieldname)
+%                     if ~strcmp(temp_fieldname{j},'coregmr_method_applied')
+%                         no_of_fieldnames = length(strsplit(temp_fieldname{j},'_'));
+%                         if no_of_fieldnames > 2
+%                             split_fieldname = strsplit(temp_fieldname{j},'_');
+%                             new_fieldname = [split_fieldname{1},'_',split_fieldname{2}];
+%                             if ismember(new_fieldname,legacy_modalities)
+%                                 modality = rawdata_containers(new_fieldname);
+%                             elseif contains(new_fieldname, legacy_modalities)
+%                                 %try again because the coreg filename and .json
+%                                 %should be similar
+%                                 match_idx = find(cellfun(@(x) contains(new_fieldname, x), legacy_modalities));
+%                                 if length(match_idx) == 1
+%                                     modality = bids_modalities{match_idx};
+%                                 end
+%                             else
+%                                 if isvarname(upper(split_fieldname{end}))
+%                                     modality = upper(split_fieldname{end});
+%                                 else
+%                                     modality = upper(split_fieldname{end-1});
+%                                 end
+%                             end
+%                         else
+%                             if ismember(temp_fieldname{j},legacy_modalities)
+%                                 modality = rawdata_containers(temp_fieldname{j});
+%                             elseif contains(temp_fieldname{j}, legacy_modalities)
+%                                 %try again because the coreg filename and .json
+%                                 %should be similar
+%                                 match_idx = find(cellfun(@(x) contains(temp_fieldname{j}, x), legacy_modalities));
+%                                 if length(match_idx) == 1
+%                                     modality = bids_modalities{match_idx};
+%                                 end
+%                             else
+%                                 modality = strsplit(temp_fieldname{j},'_');
+%                                 modality = upper(modality{end});
+%                             end
+% 
+%                         end
+%                     end
+%                     flag = 'method';
+%                     [modality,json_mat] = add_mod(modality,json_mat,flag);
+%                     json_mat.method.(modality) = temp_mat.(temp_fieldname{j});
+%                 end
+%             end
+        savejson('',json_mat,'method',json_mat.method,opt);
+        elseif strcmp(filename,'ea_coregctmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
+          input_mat = load(fname_in);  
+          method_used = generateMethod(input_mat,'coregct_method_applied');
+          modality = 'CT';
+          json_mat.method.(modality) = method_used;
+          savejson('',json_mat,opt);
+        elseif strcmp(filename,'ea_coregmrmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
+          input_mat = load(fname_in);  
+          method_used = generateMethod(input_mat,'coregmr_method_applied');
+          modality = 'MR';
+          json_mat.method.(modality) = method_used;
+          savejson('',json_mat,opt);
+        %dealing with normalization
         %dealing with normalization
         elseif strcmp(filename,'ea_normmethod_applied')
             input_mat = load(fname_in);
