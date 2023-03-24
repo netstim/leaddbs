@@ -12,6 +12,8 @@ json_mat = struct();
         %read the input mat
         %dealing with coregistration
         if strcmp(filename,'ea_coreg_approved')
+            modKey = {};
+            valueKey = {};
             [coreg_filepath,~,~] = fileparts(fname_in);
             [coregDir,~,~] = fileparts(fname_out);
             coregDir = strrep(coregDir,'log','anat');
@@ -43,13 +45,25 @@ json_mat = struct();
                     if ~isempty(find(idx,1))
                         if length(find(idx)) > 1
                             digit = regexp(mod,'\d','match');
-                            digit = digit{1};
                             if ~isempty(digit)
+                                digit = digit{1};
                                 corridx = find(idx);
                                 idx = corridx(str2double(digit));
+                            elseif ismember(mod,modKey)
+                                idx = valueKey;
+                            else
+                                matching_idx = find(idx);
+                                modKey{end+1} = repelem(mod,length(matching_idx)-1);
+                                valueKey{end+1} = matching_idx(2);
+                                modIdxDict = containers.Map(modKey,valueKey);
+                                %this will remember the idx and therefore
+                                %if it meets it again it can add it
+                                idx = matching_idx(1);
                             end
                         end
                         json_mat.approval.(mod) = input_mat.(coreg_fieldnames{idx});
+                    else
+                        json_mat.approval.(mod) = 0;
                     end
                 end
             end
@@ -66,51 +80,6 @@ json_mat = struct();
                 modality = 'MR';
                 json_mat.method.(modality) = method_used;
             end
-%                 temp_fieldname = fieldnames(temp_mat);
-%                 for j=1:length(temp_fieldname)
-%                     if ~strcmp(temp_fieldname{j},'coregmr_method_applied')
-%                         no_of_fieldnames = length(strsplit(temp_fieldname{j},'_'));
-%                         if no_of_fieldnames > 2
-%                             split_fieldname = strsplit(temp_fieldname{j},'_');
-%                             new_fieldname = [split_fieldname{1},'_',split_fieldname{2}];
-%                             if ismember(new_fieldname,legacy_modalities)
-%                                 modality = rawdata_containers(new_fieldname);
-%                             elseif contains(new_fieldname, legacy_modalities)
-%                                 %try again because the coreg filename and .json
-%                                 %should be similar
-%                                 match_idx = find(cellfun(@(x) contains(new_fieldname, x), legacy_modalities));
-%                                 if length(match_idx) == 1
-%                                     modality = bids_modalities{match_idx};
-%                                 end
-%                             else
-%                                 if isvarname(upper(split_fieldname{end}))
-%                                     modality = upper(split_fieldname{end});
-%                                 else
-%                                     modality = upper(split_fieldname{end-1});
-%                                 end
-%                             end
-%                         else
-%                             if ismember(temp_fieldname{j},legacy_modalities)
-%                                 modality = rawdata_containers(temp_fieldname{j});
-%                             elseif contains(temp_fieldname{j}, legacy_modalities)
-%                                 %try again because the coreg filename and .json
-%                                 %should be similar
-%                                 match_idx = find(cellfun(@(x) contains(temp_fieldname{j}, x), legacy_modalities));
-%                                 if length(match_idx) == 1
-%                                     modality = bids_modalities{match_idx};
-%                                 end
-%                             else
-%                                 modality = strsplit(temp_fieldname{j},'_');
-%                                 modality = upper(modality{end});
-%                             end
-% 
-%                         end
-%                     end
-%                     flag = 'method';
-%                     [modality,json_mat] = add_mod(modality,json_mat,flag);
-%                     json_mat.method.(modality) = temp_mat.(temp_fieldname{j});
-%                 end
-%             end
         savejson('',json_mat,'method',json_mat.method,opt);
         elseif strcmp(filename,'ea_coregctmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
           input_mat = load(fname_in);  
