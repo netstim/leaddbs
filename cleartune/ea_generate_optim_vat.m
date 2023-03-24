@@ -1,12 +1,17 @@
 function [Efields,S]=ea_generate_optim_vat(varargin)
 
 patselect = varargin{1};
-ampselect = varargin{2};
-allvals = varargin{3}; %source values
-constcurr = varargin{4};
+ampselectR = varargin{2};
+ampselectL = varargin{3};
+allvalsR = varargin{4};
+allvalsL = varargin{5};
+constcurr = varargin{6};
+
 %va = constcurr;
-concvals = allvals(1:end-1);
-caseval = allvals(end);
+concvalR = allvalsR(1:end-1);
+concvalL = allvalsL(1:end-1);
+casevalR = allvalsR(end);
+casevalL = allvalsL(end);
 %% Load and define options
 options = ea_setopts_local;
 options.native = 0;
@@ -65,14 +70,21 @@ for pt=1:length(patselect)
     %runs = 1:numel(allstims{1});
     t=load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname '.mat']); % defines electrode variable
     elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
-    stimtmp = [ampselect,concvals];
-    whichContact = find(concvals);
-    if whichContact > 1
-        whichContact = [num2str(whichContact(1:end))];
+    stimtmpR = [ampselectR,concvalR];
+    stimtmpL = [ampselectL,concvalL];
+    whichContactR = find(concvalR);
+    if length(whichContactR) > 1
+        whichContactR = [num2str(whichContactR(1:end))];
+        whichContactR = whichContactR(~isspace(whichContactR));
+    end
+    whichContactL = find(concvalL);
+    if length(whichContactL) > 1
+        whichContactL = [num2str(whichContactL(1:end))];
+        whichContactL = whichContactL(~isspace(whichContactL));
     end
     S = ea_initializeS(options);
-    S = ea_cleartune_generateMfile(stimtmp,stimtmp,S,va);
-    S.label = ['c',num2str(ampselect,'%02d'),'_a',num2str(whichContact,'%02d')];
+    S = ea_cleartune_generateMfile(stimtmpR,stimtmpL,S,va);
+    S.label = ['amp_R_L_',num2str(ampselectR,'%.2f'),'_',num2str(ampselectL,'%.2f'),'_contactR_L_',num2str(whichContactR,'%d'),'_',num2str(whichContactL,'%d')];
 
     % Define the name of the folder for the nii to be saved in
     if va == 0
