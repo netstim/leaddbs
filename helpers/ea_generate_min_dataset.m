@@ -68,7 +68,7 @@ for i = 1 : size(M.patient.list, 1)
     myVATs = myVATs(~contains({myVATs.name}, '_seed-'));
 
     if isempty(myVATs)
-        ea_cprintf('CmdWinWarnings','No VATs were found for patient %s! Calculate them in Lead-Group', patient_tag);
+        ea_cprintf('CmdWinWarnings','No VATs were found for patient %s! Calculate them in Lead-Group \n', patient_tag);
     else
         miniset.vta = 1;
         for k = 1:length(myVATs)
