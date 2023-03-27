@@ -320,6 +320,10 @@ switch lower(obj.multcompstrategy)
             pranks(idx(rank))=rank;
         end
         pnnan=pnnan.*numtests;
+
+        if ~isequal(size(pranks),size(pnnan))
+            pranks=pranks';
+        end
         pnnan=pnnan./pranks;
         ps(nnanidx)=pnnan;
     case 'bonferroni'
