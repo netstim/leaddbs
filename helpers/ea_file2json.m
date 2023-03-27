@@ -25,7 +25,7 @@ json_mat = struct();
                 if contains(coregdir_filenames{i},'acq-')
                     tmpmod = strsplit(coregdir_filenames{i},'acq-');
                     mod = strrep(tmpmod{end},'.nii','');
-                    tmpmod = regexprep(mod, '(_)?(iso|sag|tra|cor)\d?(_)?', '');
+                    tmpmod = regexprep(mod, '(_)?(iso|sag|ax|cor)\d?(_)?', '');
                     try
                         %now find this in the coregapproved file
                         if contains(mod,'_MRI')
@@ -49,21 +49,19 @@ json_mat = struct();
                                 digit = digit{1};
                                 corridx = find(idx);
                                 idx = corridx(str2double(digit));
-                            elseif ismember(mod,modKey)
-                                idx = valueKey;
+                                json_mat.approval.(mod) = input_mat.(coreg_fieldnames{idx});
                             else
-                                matching_idx = find(idx);
-                                modKey{end+1} = repelem(mod,length(matching_idx)-1);
-                                valueKey{end+1} = matching_idx(2);
-                                modIdxDict = containers.Map(modKey,valueKey);
-                                %this will remember the idx and therefore
-                                %if it meets it again it can add it
-                                idx = matching_idx(1);
-                            end
+                                %quite difficult to find extreme cases. for
+                                %now, make their approval 0
+                                json_mat.approval.(mod) = 0;
+                                warning("One or more elements of the coreg fieldname were not transformed. Please review your desc_coregmethod.json file inside the derivatives/leaddbs/coregistration/log directory...")
+                            end                        
+                        else
+                            json_mat.approval.(mod) = input_mat.(coreg_fieldnames{idx});
                         end
-                        json_mat.approval.(mod) = input_mat.(coreg_fieldnames{idx});
                     else
                         json_mat.approval.(mod) = 0;
+                        warning("One or more elements of the coreg fieldname were not transformed. Please review your desc_coregmethod.json file inside the derivatives/leaddbs/coregistration/log directory...")
                     end
                 end
             end
