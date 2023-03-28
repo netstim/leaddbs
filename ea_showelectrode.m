@@ -1,4 +1,4 @@
-function [elrender,ellabel,eltype]=ea_showelectrode(obj,cmd,options)
+function [elrender,ellabel,eltype,eltext]=ea_showelectrode(obj,cmd,options)
 % This function renders the electrode as defined by options.elspec and coords_mm.
 % _______________________________________________________________________________
 % Copyright (C) 2014 Charite University Medicine Berlin, Movement Disorders Unit
@@ -151,10 +151,45 @@ for side=options.sides
             cnt=cnt+1;
         end
 
+        eltext=getappdata(resultfig,'eltext');
+        for con=1:size(coords_mm{side},1)
+            % add text:
+            centroid=coords_mm{side}(con,:)+0.01;
+            [contactnames,directional]=ea_getelcontactnames(elstruct.elmodel,side);
+
+            % find intersection point S on line defined by tail and head
+            Xpt = centroid;
+            Ppt = elstruct.markers(side).head;
+            Qpt = elstruct.markers(side).tail;
+
+            % Calculate the unit vector for the line segment PQ
+            u = (Qpt - Ppt) / norm(Qpt - Ppt);
+
+            % Calculate the vector from P to Xpt
+            v = Xpt - Ppt;
+
+            % Calculate the distance from Xpt to the line segment PQ
+            d = norm(v - dot(v,u)*u);
+
+            % Calculate the point X on the line segment PQ that is closest to Y
+            Spt = Ppt + dot(v,u)*u;
+
+            normv=norm(centroid-Spt);
+            if directional(con)
+                pointfortext=centroid+0.9*((centroid-Spt)/normv);
+            else
+                pointfortext=centroid+1.8*((centroid-Spt)/normv);
+            end
+            eltext(side,con)=text(pointfortext(1),pointfortext(2),pointfortext(3),contactnames{con},'FontWeight','bold','FontSize',14,'Color',[0,0,0],'HorizontalAlignment','center','VerticalAlignment','middle');
+            set(eltext(side,con), 'Visible','off');
+        end
+        setappdata(resultfig,'eltext',eltext);
+
         for con=1:length(electrode.contacts)
             electrode.contacts(con).vertices=X*[electrode.contacts(con).vertices,ones(size(electrode.contacts(con).vertices,1),1)]';
             electrode.contacts(con).vertices=electrode.contacts(con).vertices(1:3,:)';
             elrender(cnt)=patch(electrode.contacts(con));
+            
 
 
 
