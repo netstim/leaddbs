@@ -753,23 +753,16 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
             mkdir(transformations_dir)
         end
         old_path = fullfile(source_patient_path,which_file);
-        new_path = transformations_dir;
+        new_path = fullfile(transformations_dir,[patient_name,'_',bids_name]);
         if exist(old_path,'file')
-            %first move%
-            copyfile(old_path,new_path);
-            %then rename%
-            if endsWith(which_file,'.h5') %already renames
-                bids_name = [patient_name,'_',bids_name];
-                ea_h5toniigz(fullfile(new_path,which_file),fullfile(new_path,bids_name));
+            disp(['Renaming file ' which_file ' to ' bids_name]);
+            if endsWith(which_file,'.h5') 
+                ea_h5toniigz(old_path, new_path); % convert and rename
             else
-                disp(['Renaming file ' which_file ' to ' bids_name]);
-                rename_path = fullfile(new_path,which_file);
-                derivatives_cell{end+1,1} = fullfile(old_path);
-                derivatives_cell{end,2} = fullfile(new_path,[patient_name,'_',bids_name]);
-                movefile(rename_path,fullfile(new_path,[patient_name,'_',bids_name]));
+                copyfile(old_path, new_path); % copy and rename
             end
-            
-            
+            derivatives_cell{end+1,1} = fullfile(old_path);
+            derivatives_cell{end,2} = fullfile(new_path);
         end
     end
     
