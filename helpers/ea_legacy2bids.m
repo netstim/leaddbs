@@ -82,9 +82,10 @@ for patients = 1:length(source)
     %get and refactor patient names. specially, don't allow
     %'_' or '-'
     [~,patient_name,~] = fileparts(source_patient);
-    if ~startsWith(patient_name,'sub-')
+    if ~startsWith(patient_name,'sub-') && ~startsWith(patient_name,'sub')
         patient_name = ['sub-', regexprep(patient_name, '[\W_]', '')];
-    elseif startsWith(patient_name,'sub') && ~contains(patient_name,'sub-')
+    else
+        patient_name = regexprep(patient_name, '[\W_]', '');
         patient_name = strrep(patient_name,'sub','sub-');
     end
     spaces_in_pat_name = isspace(patient_name);
@@ -263,7 +264,6 @@ for patients = 1:length(source)
                         if exist(fullfile(source_patient,which_file),'file')
                             copyfile(fullfile(source_patient,which_file),fullfile(new_path,pipelines{2},'log'));
                         end
-                        
                         
                     elseif ismember(which_file,normalization{:,1})
                         %corresponding index of the new pat
@@ -754,13 +754,27 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
         end
         old_path = fullfile(source_patient_path,which_file);
         new_path = transformations_dir;
+        coregDir = strrep(transformations_dir,'normalization/transformations','coregistration/anat');
         if exist(old_path,'file')
             %first move%
             copyfile(old_path,new_path);
             %then rename%
             if endsWith(which_file,'.h5') %already renames
                 bids_name = [patient_name,'_',bids_name];
-                ea_h5toniigz(fullfile(new_path,which_file),fullfile(new_path,bids_name));
+                if contains(which_file,'glanatComposite.h5')
+                    reference = fullfile(ea_space,'t1.nii');
+                elseif contains(which_file,'glanatInverseComposite.h5')
+                    coregfiles = dir(fullfile(coregDir,'sub-*_ses-preop*'));
+                    if isempty(coregfiles)
+                       coregfiles = dir(fullfile(old_path,'*anat_*'));
+                       
+                    end
+                    reference = fullfile(coregfiles(1).folder,coregfiles(1).name);
+                end
+                ea_conv_antswarps(fullfile(new_path,which_file), reference);
+                outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
+                movefile(outfile,fullfile(new_path,bids_name));
+                %ea_h5toniigz(fullfile(new_path,which_file),fullfile(new_path,bids_name));
             else
                 disp(['Renaming file ' which_file ' to ' bids_name]);
                 rename_path = fullfile(new_path,which_file);
