@@ -72,7 +72,11 @@ json_mat = struct();
                     end
                 end
             end
-            savejson('',json_mat,'approval',json_mat.approval,opt);   
+            if isfield(json_mat,'approval')
+                savejson('',json_mat,'approval',json_mat.approval,opt);   
+            else 
+                warning("Coregistration files were not transformed. Please review your BIDSified folders with caution")
+            end
             if exist(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'),'file')
                 temp_mat = load(fullfile(coreg_filepath,'ea_coregctmethod_applied.mat'));
                 method_used = generateMethod(temp_mat,'coregct_method_applied');
@@ -85,7 +89,9 @@ json_mat = struct();
                 modality = 'MR';
                 json_mat.method.(modality) = method_used;
             end
-        savejson('',json_mat,'method',json_mat.method,opt);
+            if isfield(json_mat,'method')    
+                savejson('',json_mat,'method',json_mat.method,opt);
+            end
         elseif strcmp(filename,'ea_coregctmethod_applied') && ~exist(fullfile(filepath,'ea_coreg_approved.mat'),'file')
           input_mat = load(fname_in);  
           method_used = generateMethod(input_mat,'coregct_method_applied');
