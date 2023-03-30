@@ -66,7 +66,6 @@ end
 
 if useinverse % from template space to [untouched] achor space
     for pt=1:length(uipatdir)
-        
         options = ea_getptopts(uipatdir{pt});
         presentfiles = fieldnames(options.subj.preopAnat);
         options.coregmr.method = get_coregmr_method;
@@ -117,19 +116,25 @@ if useinverse % from template space to [untouched] achor space
     end
     
 else % from [untouched] achor space to template space
-    
-    options = ea_getptopts(path);
+    options = ea_getptopts(uipatdir{1});
     presentfiles = fieldnames(options.subj.preopAnat);
     options.coregmr.method = get_coregmr_method;
 
-    to = cellfun(@(x) setBIDSEntity(fullfile(path,x),'space',ea_getspace), fis, 'uni', 0);
-    from = cellfun(@(x) fullfile(path,x), fis, 'uni', 0);
+    to = cell(length(fis), 1);
+    for i=1:length(fis)
+        if isBIDSFileName(fis{i})
+            to{i} = setBIDSEntity(fullfile(path, fis{i}), 'space', ea_getspace);
+        else
+            to{i} = strrep(fis{i}, '.nii', ['_space-', ea_getspace, '.nii']);
+        end
+        copyfile(fullfile(path, fis{i}), to{i});
+    end
 
     if untouchedanchor % map from untouched anchor to anchor first
-        tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'preproc','tmp');
+        tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'desc-preproc','desc-tmp');
         ea_coregimages(options, options.subj.preproc.anat.preop.(presentfiles{1}),...
             options.subj.coreg.anat.preop.(presentfiles{1}),...
-            tmp_file, from);
+            tmp_file, to);
         ea_delete(tmp_file);
     end
 
@@ -152,15 +157,13 @@ else % from [untouched] achor space to template space
         refim=ea_niigz([ea_space,options.primarytemplate]);
     end
 
-    ea_apply_normalization_tofile(options, from, to, useinverse, interp, refim);
+    ea_apply_normalization_tofile(options, to, to, useinverse, interp, refim);
 end
 
-end
 
 function coregmr_method = get_coregmr_method(handles)
 try
     coregmr_method = handles.coregctmethod.String{handles.coregmrmethod.Value};
 catch
     coregmr_method = 'SPM (Friston 2007)';
-end
 end
