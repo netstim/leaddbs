@@ -1,33 +1,35 @@
 function ea_applynormtofile_menu(~, ~, handles, useinverse, untouchedanchor, asoverlay, expdicom, fname, templateresolution)
 if ~exist('untouchedanchor','var')
-    untouchedanchor=0;
+    untouchedanchor = 0;
 end
+
 if ~exist('templateresolution','var')
-    templateresolution=0;
+    templateresolution = 0;
 end
+
 if templateresolution
-   res=inputdlg('Specify voxel resolution of template space to warp into.','Template resolution',1,{'0.5'});
-   templateresolution=str2double(res);
+    res = inputdlg('Specify voxel resolution of template space to warp into.','Template resolution',1,{'0.5'});
+    templateresolution = str2double(res);
 end
 
 if untouchedanchor
-    interp=0;
+    interp = 0;
 else
-    interp=4;
+    interp = 4;
 end
 
 if ~exist('expdicom','var')
-    expdicom=0;
+    expdicom = 0;
 end
 
 if ~exist('asoverlay','var')
-    asoverlay=0;
+    asoverlay = 0;
 end
 
 if ~iscell(handles)
-    uipatdir=getappdata(handles.leadfigure,'uipatdir');
+    uipatdir = getappdata(handles.leadfigure,'uipatdir');
 else
-    uipatdir=handles; % direct supply of cell string.
+    uipatdir = handles; % direct supply of cell string.
 end
 
 if ~exist('fname','var') || isempty(fname)
@@ -51,13 +53,13 @@ if ~exist('fname','var') || isempty(fname)
         end
     end
 else
-    [path,fis,ext]=fileparts(fname);
+    [path, fis, ext] = fileparts(fname);
     if ~isempty(path)
-        path=[path, filesep];
+        path = fullfile(path, filesep);
     else % local file
-        path=['.', filesep];
+        path = fullfile('.', filesep);
     end
-    fis=[fis,ext];
+    fis = [fis, ext];
 end
 
 if ischar(fis)
@@ -70,16 +72,30 @@ if useinverse % from template space to [untouched] achor space
         presentfiles = fieldnames(options.subj.preopAnat);
         options.coregmr.method = get_coregmr_method;
 
-        from = cellfun(@(x) fullfile(path,x), fis, 'uni', 0);
-        to = cellfun(@(x) fullfile(uipatdir{pt},['from' ea_getspace],x), fis, 'uni', 0);
-        
-        mkdir(fileparts(to{1}));
+        from = cell(length(fis), 1);
+        to = cell(length(fis), 1);
+
+        if untouchedanchor
+            spaceTag = [options.subj.subjId, 'Native'];
+        else
+            spaceTag = [options.subj.subjId, 'anchorNative'];
+        end
+
+        for i=1:length(fis)
+            if isBIDSFileName(fis{i})
+                to{i} = setBIDSEntity(fullfile(path, fis{i}), 'space', spaceTag);
+            else
+                to{i} = strrep(fis{i}, '.nii', ['_space-', spaceTag, '.nii']);
+            end
+            from{i} = fullfile(path, fis{i});
+        end
 
         ea_apply_normalization_tofile(options, from, to, useinverse, interp);
 
         if untouchedanchor % map from anchor to untouched anchor
-            tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'preproc','tmp');
-            ea_coregimages(options,options.subj.coreg.anat.preop.(presentfiles{1}),...
+            tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'desc-preproc','desc-tmp');
+            ea_coregimages(options,...
+                options.subj.coreg.anat.preop.(presentfiles{1}),...
                 options.subj.preproc.anat.preop.(presentfiles{1}),...
                 tmp_file, to,[],[],interp);
             ea_delete(tmp_file);
@@ -132,7 +148,8 @@ else % from [untouched] achor space to template space
 
     if untouchedanchor % map from untouched anchor to anchor first
         tmp_file = strrep(options.subj.preproc.anat.preop.(presentfiles{1}),'desc-preproc','desc-tmp');
-        ea_coregimages(options, options.subj.preproc.anat.preop.(presentfiles{1}),...
+        ea_coregimages(options,...
+            options.subj.preproc.anat.preop.(presentfiles{1}),...
             options.subj.coreg.anat.preop.(presentfiles{1}),...
             tmp_file, to);
         ea_delete(tmp_file);
