@@ -1,6 +1,6 @@
 function ea_storeui(handles)
 
-if ~isfield(handles, 'patdir_choosebox')
+if ~isfield(handles, 'patdir_choosebox') && ~isfield(handles, 'datasetselect')
     return;
 end
 
@@ -8,7 +8,9 @@ bids = getappdata(handles.leadfigure,'bids');
 subjId = getappdata(handles.leadfigure,'subjId');
 
 % Determine prefs path
-if strcmp(handles.patdir_choosebox.String, 'Choose Patient Directory') || length(subjId) > 1
+if length(subjId) > 1 || ...
+        isfield(handles, 'datasetselect') && strcmp(handles.datasetselect.String, 'Choose Dataset Directory') || ...
+        isfield(handles, 'patdir_choosebox') && strcmp(handles.patdir_choosebox.String, 'Choose Patient Directory')
 	prefsPath = fullfile(ea_getearoot, 'ea_ui.mat');
 else
 	prefsPath = bids.getPrefs(subjId{1}, 'uiprefs', 'mat');
