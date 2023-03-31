@@ -774,7 +774,6 @@ function derivatives_cell = move_derivatives2bids(source_patient_path,new_path,w
                 ea_conv_antswarps(fullfile(new_path,which_file), reference);
                 outfile = strrep(fullfile(new_path,which_file),'.h5','.nii.gz');
                 movefile(outfile,fullfile(new_path,bids_name));
-                %ea_h5toniigz(fullfile(new_path,which_file),fullfile(new_path,bids_name));
             else
                 disp(['Renaming file ' which_file ' to ' bids_name]);
                 rename_path = fullfile(new_path,which_file);
