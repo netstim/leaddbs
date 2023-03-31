@@ -100,14 +100,16 @@ if isfield(options, 'manualheightcorrection')
     set(handles.manualheight_checkbox,'Value',options.manualheightcorrection);
 end
 
-if isfield(options, 'entrypointn')
-    set(handles.targetpopup,'Value',options.entrypointn);
+if isfield(options, 'entrypoint')
+    set(handles.targetpopup, 'Value', find(ismember(handles.targetpopup.String, options.entrypoint)));
+else
+    set(handles.targetpopup, 'Value', 1);
 end
 
-if isfield(options, 'elmodeln')
-    set(handles.electrode_model_popup,'Value',options.elmodeln);
+if isfield(options, 'elmodel')
+    set(handles.electrode_model_popup, 'Value', find(ismember(handles.electrode_model_popup.String, options.elmodel)));
 end
 
-if isfield(options, 'atlassetn')
-    set(handles.atlassetpopup,'Value',options.atlassetn);
+if isfield(options, 'atlasset')
+    set(handles.atlassetpopup, 'Value',  find(ismember(handles.atlassetpopup.String, options.atlasset)));
 end
