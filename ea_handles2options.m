@@ -69,7 +69,7 @@ catch
 end
 
 try
-    options.overwriteapproved=get(handles.overwriteapproved,'Value');
+    options.overwriteapproved = handles.overwriteapproved.Value;
 end
 
 try
