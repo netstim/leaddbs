@@ -651,7 +651,7 @@ classdef ea_disctract < handle
             end
 
             % check if binary variable
-            if all(all(ismember(Improvement(:,1), [0,1]))) && size(val_struct{c}.vals,1) == 1
+            if all(ismember(Improvement(:,1), [0,1])) && size(val_struct{c}.vals,1) == 1
                 % average across sides. This might be wrong for capsular response.
                 Ihat_av_sides = ea_nanmean(Ihat,2);
 
