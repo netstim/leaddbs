@@ -46,7 +46,6 @@ classdef ea_disctract < handle
         alphalevel = 0.05
         multcompstrategy = 'FDR'; % could be 'Bonferroni'
         subscore
-        currentune
         results
         % Subfields:
         % results.(connectomename).fibcell: cell of all fibers connected, sorted by side
@@ -58,6 +57,8 @@ classdef ea_disctract < handle
         cleartuneresults % copy of results for auto tuning functions
         cleartuneefields % efields used to calc results
         cleartuneinjected % status to report file has injected values
+        cleartunevars = {};
+        CleartuneOptim
         activateby={}; % entry to use to show fiber activations
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
         basepredictionon = 'Mean of Scores';
@@ -314,7 +315,8 @@ classdef ea_disctract < handle
                 obj.cleartuneresults.(ea_conn2connid(obj.connectome)).fibcell = fibcell;
             end
         end
-
+       
+            
         function Amps = getstimamp(obj)
             Amps=zeros(length(obj.M.patient.list),2);
             for pt=1:length(obj.M.patient.list)
@@ -647,23 +649,6 @@ classdef ea_disctract < handle
                 end
 
             end
-
-            % check if binary variable
-            if all(ismember(Improvement, [0,1])) && size(val_struct{c}.vals,1) == 1
-                % average across sides. This might be wrong for capsular response.
-                Ihat_av_sides = ea_nanmean(Ihat,2);
-
-                if isobject(cvp)
-                    % In-sample
-                    AUC = ea_logit_regression(0 ,Ihat_av_sides, Improvement, 1:size(Improvement,1), 1:size(Improvement,1));
-                elseif isstruct(cvp)
-                    % actual training and test
-                    Ihat_train_global_av_sides = ea_nanmean(Ihat_train_global,3); % in this case, dimens is (1, N, sides)
-                    AUC = ea_logit_regression(Ihat_train_global_av_sides(training)', Ihat_av_sides, Improvement, training, test);
-                end
-
-            end
-
             if ~silent
                 % plot patient score correlation matrix over folds
                 if (~exist('shuffle', 'var')) || shuffle == 0 || isempty(shuffle)
@@ -844,6 +829,8 @@ classdef ea_disctract < handle
                     end
 
                     Ihat=ea_nansum(Ihat.*weightmatrix,3);
+
+
                 case 'Split & Color By PCA'
 
                     Ihat=squeeze(ea_nanmean(Ihat,2));
