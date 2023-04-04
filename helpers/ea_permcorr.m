@@ -335,11 +335,11 @@ end
 pval=zeros(1,n_varX);
 for t=1:n_varX
     if tail==0
-        pval(t)=mean(abs(mx_corr)>=abs(corr_obs(t)));
+        pval(t)= ( sum( abs(mx_corr) > abs(corr_obs(t)) ) + 1 ) / (n_perm + 1);
     elseif tail==1
-        pval(t)=mean(mx_corr>=corr_obs(t));
+        pval(t)= ( sum( mx_corr > corr_obs(t) ) + 1 ) / (n_perm + 1);
     elseif tail==-1
-        pval(t)=mean(mx_corr<=corr_obs(t));
+        pval(t)= ( sum( mx_corr < corr_obs(t) ) + 1 ) / (n_perm + 1);
     end
 end
 
