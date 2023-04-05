@@ -39,29 +39,31 @@ if __name__ == '__main__':
         # a) if all or all but one fixed, we should consider running current optimizer directly in OSS-DBS / Cleartune
 
     print(sys.argv[1:])
-    raise SystemExit
+    #raise SystemExit
 
     ''' User Input '''
 
-    # Training - Test parameters
-    sample_size = 12000  # half training, half testing (compare with 4 contacts systems)
-    segm_threshold = 2.0  # in mA
-    conc_threshold = 4.0
-    one_pol_current_threshold = 8.0  # in mA
-    total_current_threshold = 8.0
-    SE_err_threshold = 0.10  # Side-effect thresh, refuse if any error > 10% or if 1% of errors > 10% / 2
-    Err_threshold = 0.15     # refuse if any error > 15% or if 1% of errors > 15% / 2
+    lead_dbs_folder = sys.argv[1]
+    os.environ['OSSDIR'] = lead_dbs_folder + 'ext_libs/OSS-DBS'
+    netblend_dict_file = sys.argv[2]
+    side = sys.argv[3]
+    os.environ['STIMDIR'] = sys.argv[4]
+
+
+    # hardwired for now
     check_trivial = False  # if True, will check additional monopolar and bipolar protocols
 
-    # pass directly from Lead-DBS (not oss-dbs_parameters.mat!)
-    #os.environ['OSSDIR'] = '/home/cerebellum/Documents/leaddbs-develop/ext_libs/OSS-DBS'
-    #os.environ['STIMDIR'] = '/home/cerebellum/Documents/Data/NetBlend'
-    os.environ['STIMDIR'] = '/home/konstantin/Documents/example_pt/5/stimulations/MNI_ICBM_2009b_NLIN_ASYM/20230313191938'
-
+    with open(netblend_dict_file, 'r') as fp:
+        netblend_dict = json.load(fp)
+    fp.close()
+    netblend_dict['similiarity_metric'] = 'Canberra'  # or Bray-Curtis, Euclidean, etc
+    netblend_dict['optim_alg'] = 'dual_annealing'  # or PSO
+    netblend_dict['num_iterations_ANN'] = 100  # number of ANN iterations to optimize current at the given electrode position
 
     # "hardwired" parameters
-    os.environ['OSSDIR'] = lead_dbs_folder + 'ext_libs/OSS-DBS'
-    FF_dict = True
+    one_pol_current_threshold = 8.0  # in mA
+    total_current_threshold = 8.0
+    FF_dict = True  # always called from FF
     if sys.platform == 'linux':
         docker_image = 'ningfei/oss-dbs:custom'
     elif sys.platform == 'darwin' or sys.platform == 'win32':
@@ -70,53 +72,50 @@ if __name__ == '__main__':
         print("The system's OS does not support the OSS-DBS docker image")
 
 
-    Electrode_model = 'Boston Scientific Vercise Directed'
-    side = 0  # 1 for lh
-    FF_dict_path = '/home/konstantin/Documents/Nando.json'
-
-    create_NB_dictionaries(os.environ['STIMDIR'], side, FF_dict_path, disease='PD')
-
-    ## prepare Training - Test protocols
-    #from TrainTest_Generator import create_Training_Test_sets
-    #create_Training_Test_sets(os.environ['STIMDIR'], Electrode_model, conc_threshold, segm_threshold, side)
-
-    """ call docker with Launcher_MARS, pass sample sizes for splitting  """
-    # # stores activations, simulated pathways and errors (actual - predicted)
-    # output = subprocess.run(
-    #     ['docker', 'run', '-e', 'PATIENTDIR', '-e', 'TZ', '--volume', OSS_DBS_folder + ':/opt/OSS-DBS',
-    #      '--volume', path_to_stim_folder + ':/opt/Patient',
-    #      '-it', '--rm', docker_image, 'python3', 'Launcher_MARS.py', trainSize_actual, testSize_actual])  #
+    from Improvement4Protocol import create_NB_dictionaries
+    create_NB_dictionaries(os.environ['STIMDIR'], side, netblend_dict['FF_dictionary'])
 
 
-    # # alternatively, just compute activations
+    # run OSS-DBS as just for StimSets (the folder should be preproced in lead-dbs as "prepare for cluster", but in this case you need to call Axon_allocation and run as cluster)
+    # call Axon_allocation.py, then Integrator (see how you run it on ERIS)
 
+    # we can also just run it directly from Lead-DBS
     #output = subprocess.run(
     #    ['docker', 'run', '-e', 'PATIENTDIR', '-e', 'TZ', '--volume', os.environ['OSSDIR'] + ':/opt/OSS-DBS',
     #     '--volume', os.environ['STIMDIR'] + ':/opt/Patient',
     #      '--rm', docker_image, 'python3', 'Launcher_OSS_lite.py', '1'])  #
 
 
+    # load StimSets_parameters (were created by Train_Test_Generator.py)
+    with open(os.environ['STIMDIR'] + '/StimSets_info.json', 'r') as fp:
+        StimSets_info = json.load(fp)
+    fp.close()
 
-
+    # load fixed symptoms
+    try:
+        with open(os.environ['STIMDIR'] + '/Fixed_symptoms.json', 'r') as fp:
+            fixed_symptom_weights = json.load(fp)
+        fp.close()
+    except:
+        print("Either no symptoms were fixed or the file is missing, proceeding...")
+        fixed_symptom_weights = {}
 
     """ Train and check ANN model, also stores it in STIMDIR/NB_side/ """
     from ANN_module import train_test_ANN
 
-    # those names will be actually hardcoded according to the OSS-DBS notation
-    TrainTest_currents_file = "/home/cerebellum/Documents/Data/NetBlend/Current_protocols_8615.csv"
-    TrainTest_activation_file = "/home/cerebellum/Documents/Data/NetBlend/Activations_over_iterations_8615.csv"
-    trainSize_actual = 4898  # this is defined above
-    #approx_pathways = ['ACC_cp_right', 'M1_cf_face_right', 'M1_cf_lowerex_right', 'M1_cf_upperex_right', 'PreMotor_cf_right', 'R_ACC_hdp_right', 'R_M1_hdp_face_right', 'R_M1_hdp_lowerex_right', 'R_M1_hdp_upperex_right', 'R_PreMotor_hdp_right', 'R_SMA_hdp_right', 'R_dlPFC_hdp_right', 'R_vmPFC_hdp_right', 'SMA_cf_right', 'ansa_lenticularis_right', 'cerebellothalamic_right', 'dlPFC_cp_right', 'dmPFC_cp_right', 'gpe2stn_ass_right', 'gpe2stn_sm_right', 'lenticular_fasciculus_right', 'vlPFC_cp_right', 'vmPFC_cp_right']
+    # those names will be actually hardcoded according to the OSS-DBS notation,
+    # but we could also pass them with the json
+    TrainTest_currents_file = os.environ['STIMDIR'] + "/Current_protocols.csv"
+    TrainTest_activation_file = os.environ['STIMDIR'] + "/Activations_over_iterations.csv"
 
-    approx_pathways = train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, trainSize_actual, Err_threshold, SE_err_threshold, side, check_trivial)
+    approx_pathways = train_test_ANN(TrainTest_currents_file, TrainTest_activation_file, StimSets_info['trainSize_actual'], netblend_dict['Err_threshold'], netblend_dict['SE_err_threshold'], side, check_trivial)
 
     # at this point we need to make a decision whether pathways NOT in approx_pathways can be just set to 0
-
 
     """ Run the optimization """
 
     from NB_outline import launch_weight_optimizer
-    launch_weight_optimizer(Electrode_model, fixed_symptom_weights, side, approx_pathways)
+    launch_weight_optimizer(netblend_dict, fixed_symptom_weights, side, approx_pathways)
 
     """ BELOW IS THE MARS BLOCK, NOT RELEVANT ATM """
     #
