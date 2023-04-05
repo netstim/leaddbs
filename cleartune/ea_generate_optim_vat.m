@@ -29,81 +29,81 @@ va = constcurr; % 0 for constant curr
 resultfig=figure('visible','off');
 
 %% Start iterating through patients
-for pt=1:length(patselect)
-    options = ea_getptopts(patselect{pt}, options);
 
-    fprintf('\nProcessing sub-%s...\n\n', options.subj.subjId);
+options = ea_getptopts(patselect, options);
 
-    [coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
-    elstruct(pt).coords_mm=coords_mm;
-    elstruct(pt).coords_acpc=coords_acpc;
-    elstruct(pt).trajectory=trajectory;
-    elstruct(pt).name = ['sub-', options.subj.subjId];
-    elstruct(pt).markers=markers;
+fprintf('\nProcessing sub-%s...\n\n', options.subj.subjId);
 
-    options.numcontacts=size(coords_mm{1},1);
-    options.d3.verbose='off';
-    options.d3.elrendering=1;	% hard code to viz electrodes in this setting.
-    options.d3.exportBB=0;	% don't export brainbrowser struct by default
-    options.d3.colorpointcloud=0;
-    options.d3.hlactivecontacts=1;
-    options.d3.showactivecontacts =1;
-    options.d3.showpassivecontacts=1;
-    options.d3.exportBB=0;
-    options.expstatvat.do=0;
-    options.leadprod = 'group';
-    options.patient_list=patselect;
-    options.d3.mirrorsides=0;
-    options.atlasset = options.prefs.machine.vatsettings.horn_atlasset;
+[coords_mm,trajectory,markers,elmodel,manually_corrected,coords_acpc]=ea_load_reconstruction(options);
+elstruct(1).coords_mm=coords_mm;
+elstruct(1).coords_acpc=coords_acpc;
+elstruct(1).trajectory=trajectory;
+elstruct(1).name = ['sub-', options.subj.subjId];
+elstruct(1).markers=markers;
 
-    setappdata(resultfig,'elstruct',elstruct);
-    setappdata(resultfig,'options',options);
-    setappdata(resultfig,'elspec',options.elspec);
-    setappdata(resultfig,'resultfig',resultfig);
+options.numcontacts=size(coords_mm{1},1);
+options.d3.verbose='off';
+options.d3.elrendering=1;	% hard code to viz electrodes in this setting.
+options.d3.exportBB=0;	% don't export brainbrowser struct by default
+options.d3.colorpointcloud=0;
+options.d3.hlactivecontacts=1;
+options.d3.showactivecontacts =1;
+options.d3.showpassivecontacts=1;
+options.d3.exportBB=0;
+options.expstatvat.do=0;
+options.leadprod = 'group';
+options.patient_list=patselect;
+options.d3.mirrorsides=0;
+options.atlasset = options.prefs.machine.vatsettings.horn_atlasset;
 
-    %% Define stimulation settings
-    ncnttmp = options.numcontacts;
+setappdata(resultfig,'elstruct',elstruct);
+setappdata(resultfig,'options',options);
+setappdata(resultfig,'elspec',options.elspec);
+setappdata(resultfig,'resultfig',resultfig);
 
-    %allstims{1} = repmat(((1:ncnttmp)-1)',1,size(amps.min:amps.stepsize:amps.max,2));
-    %allstims{2} = repmat(amps.min:amps.stepsize:amps.max,ncnttmp,1);
+%% Define stimulation settings
+ncnttmp = options.numcontacts;
 
-    %runs = 1:numel(allstims{1});
-    t=load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname '.mat']); % defines electrode variable
-    elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
-    stimtmpR = [ampselectR,concvalR];
-    stimtmpL = [ampselectL,concvalL];
-    whichContactR = find(concvalR);
-    if length(whichContactR) > 1
-        whichContactR = [num2str(whichContactR(1:end))];
-        whichContactR = whichContactR(~isspace(whichContactR));
-    end
-    whichContactL = find(concvalL);
-    if length(whichContactL) > 1
-        whichContactL = [num2str(whichContactL(1:end))];
-        whichContactL = whichContactL(~isspace(whichContactL));
-    end
-    S = ea_initializeS(options);
-    S = ea_cleartune_generateMfile(stimtmpR,stimtmpL,S,va);
-    S.label = ['amp_R_L_',num2str(ampselectR,'%.2f'),'_',num2str(ampselectL,'%.2f'),'_contactR_L_',num2str(whichContactR,'%d'),'_',num2str(whichContactL,'%d')];
+%allstims{1} = repmat(((1:ncnttmp)-1)',1,size(amps.min:amps.stepsize:amps.max,2));
+%allstims{2} = repmat(amps.min:amps.stepsize:amps.max,ncnttmp,1);
 
-    % Define the name of the folder for the nii to be saved in
-    if va == 0
-        volcur = 'mA';
-    elseif va == 1
-        volcur = 'V';
-    else
-        volcur = '??';
-    end
-    fname = [volcur, '_', num2str(round(options.prefs.machine.vatsettings.horn_cgm*100),'%02d'), '_', num2str(round(options.prefs.machine.vatsettings.horn_cwm*100),'%02d')];
-
-    for side=1:2
-        disp([' ', newline, 'Patient ', patselect{pt}, newline,'Simulating efield: ', fname, ' side ', num2str(side),' | ', S.label])
-        setappdata(resultfig,'elstruct',elstruct(pt));
-        setappdata(resultfig,'elspec',options.elspec);
-        Efields(side)=ea_genvat_cleartune_fastfield(S,side,options,fname,resultfig,t.electrode,elt);
-        ea_write_nii(Efields(side))
-    end
+%runs = 1:numel(allstims{1});
+t=load([ea_getearoot,'templates',filesep,'electrode_models',filesep,options.elspec.matfname '.mat']); % defines electrode variable
+elt=load([ea_getearoot,'templates',filesep,'standard_efields' filesep 'standard_efield_' options.elspec.matfname '.mat']);
+stimtmpR = [ampselectR,concvalR];
+stimtmpL = [ampselectL,concvalL];
+whichContactR = find(concvalR);
+if length(whichContactR) > 1
+    whichContactR = [num2str(whichContactR(1:end))];
+    whichContactR = whichContactR(~isspace(whichContactR));
 end
+whichContactL = find(concvalL);
+if length(whichContactL) > 1
+    whichContactL = [num2str(whichContactL(1:end))];
+    whichContactL = whichContactL(~isspace(whichContactL));
+end
+S = ea_initializeS(options);
+S = ea_cleartune_generateMfile(stimtmpR,stimtmpL,S,va);
+S.label = ['amp_R_L_',num2str(ampselectR,'%.2f'),'_',num2str(ampselectL,'%.2f'),'_contactR_L_',num2str(whichContactR,'%d'),'_',num2str(whichContactL,'%d')];
+
+% Define the name of the folder for the nii to be saved in
+if va == 0
+    volcur = 'mA';
+elseif va == 1
+    volcur = 'V';
+else
+    volcur = '??';
+end
+fname = [volcur, '_', num2str(round(options.prefs.machine.vatsettings.horn_cgm*100),'%02d'), '_', num2str(round(options.prefs.machine.vatsettings.horn_cwm*100),'%02d')];
+
+for side=1:2
+    disp([' ', newline, 'Patient ', patselect, newline,'Simulating efield: ', fname, ' side ', num2str(side),' | ', S.label])
+    setappdata(resultfig,'elstruct',elstruct(1));
+    setappdata(resultfig,'elspec',options.elspec);
+    Efields(side)=ea_genvat_cleartune_fastfield(S,side,options,fname,resultfig,t.electrode,elt);
+    ea_write_nii(Efields(side))
+end
+
 
 close(resultfig);
 

@@ -58,6 +58,8 @@ classdef ea_disctract < handle
         cleartuneresults % copy of results for auto tuning functions
         cleartuneefields % efields used to calc results
         cleartuneinjected % status to report file has injected values
+        CleartuneOptim = 0;
+        cleartunevars
         activateby={}; % entry to use to show fiber activations
         cvlivevisualize = 0; % if set to 1 shows crossvalidation results during processing.
         basepredictionon = 'Mean of Scores';
@@ -649,7 +651,7 @@ classdef ea_disctract < handle
             end
 
             % check if binary variable
-            if all(ismember(Improvement, [0,1])) && size(val_struct{c}.vals,1) == 1
+            if all(all(ismember(Improvement(:,1), [0,1]))) && size(val_struct{c}.vals,1) == 1
                 % average across sides. This might be wrong for capsular response.
                 Ihat_av_sides = ea_nanmean(Ihat,2);
 

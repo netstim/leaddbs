@@ -45,7 +45,7 @@ warning off
 
 
 
-params = [0.5,  5, 0, 0.5  % voltage, currently its only in mA
+params = [0.5,  5, 0, 1  % voltage, currently its only in mA
             -100, 100, 0, 0 %activation in k0
             -100, 100, 0, 0 %activation in k1
             -100, 100, 0, 0 %activation in k2
@@ -81,10 +81,10 @@ params = [0.5,  5, 0, 0.5  % voltage, currently its only in mA
 lb=[params(:,1),params(:,1)];
 ub=[params(:,2),params(:,2)];
 intergCond=[params(:,3),params(:,3)];
-%max 3 contacts activated
+%max 8 contacts activated
 
 A = [0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 0;0 0 0 0 0 0 0 0 0 -1 -1 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0 0 0 0 0 -1 -1 -1 -1 -1 -1 -1 -1 0];
-b = [3;-1];
+b = [8;-1];
 Aeq = [];
 beq = [];
 
@@ -123,6 +123,7 @@ while 1
             options.MaxFunctionEvaluations=numIters;
             options.MinSampleDistance = 0.05;
             [XOptim,fval,exitflag,output,ip]=surrogateopt(objconstr,lb,ub,find(intergCond),A,b,Aeq,beq,options);
+            
             save(fullfile(fileparts(tractsetclone.leadgroup),'optimize_status.mat'),'ip');
         otherwise
             break
@@ -213,8 +214,8 @@ function tractsetclone=updateStim(tractsetclone,X_left,X_right)
     fprintf('Amplitude L:%d\n',X_left(1));
     whichContactR = find(X_right(10:17));
     whichContactL = find(X_left(10:17));
-    fprintf('Active contact R: k0%d\n',whichContactR)
-    fprintf('Active contact L: k0%d\n',whichContactL)
+    fprintf('Active contact R: k0%d\n',whichContactR-1)
+    fprintf('Active contact L: k0%d\n',whichContactL-1)
     fprintf('Percentage activation R: %d\n',X_right(2:10));
     fprintf('Percentage activation L: %d\n',X_left(2:10));
 
@@ -230,7 +231,7 @@ function Fval=getFval(X_left,X_right,patlist,constCurr,tractsetclone)
         ampsel_l = X_left(1);
         concsel_r = [X_right(2:9),X_right(end)];
         concsel_l = [X_left(2:9),X_left(end)];
-        inputs = {patlist,ampsel_r,ampsel_l,concsel_r,concsel_l,constCurr};
+        inputs = {patlist{i},ampsel_r,ampsel_l,concsel_r,concsel_l,constCurr};
         [Efields,allS]=ea_generate_optim_vat(inputs{:});
         app.protocol{i}.inputs=inputs;
         app.protocol{i}.Efields=Efields;
@@ -251,17 +252,8 @@ end
 function preFval = calculateFval(tractsetclone,Ihat,actualimprovs)
     weightmatrix=zeros(size(actualimprovs,1),1); % in cleartune case always the same weights for any side and "patient" (which is VTA)
     for voter=1:length(weightmatrix)
-        if ~isnan(tractsetclone.subscore.weights(voter)) % same weight for all subjects in that voter (slider was used)
-            weightmatrix(voter)=tractsetclone.subscore.weights(voter);
-        else % if the weight value is nan, this means we will need to derive a weight from the variable of choice
-            weightmatrix(voter)=(tractsetclone.cleartunevars.weightvars{voter});
-            % *) e.g. in case one symptom - bradykinesia -
-            % has a max of 20, while a second - tremor -
-            % will have a max of 5, we want to equilize
-            % those. We use minmax() in the line above to
-            % get rid of negative values and use
-            % ./ea_nansum below to take the average.
-        end
+         % same weight for all subjects in that voter (slider was used)
+            weightmatrix(voter)=tractsetclone.cleartunevars.weights(voter);
     end
     weightmatrix_sum = ea_nansum(weightmatrix);
     for xx=1:size(weightmatrix,1) % make sure voter weights sum up to 1
