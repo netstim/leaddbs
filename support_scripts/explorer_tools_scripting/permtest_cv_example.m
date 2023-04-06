@@ -4,7 +4,7 @@ load('path/to/fibfilt.fibfilt','-mat'); % change to your fibfilt name
 
 nperm=1000; % number of permutations
 corrtype='Spearman'; % correlation type
-
+silent=1;
 
 
 % k-fold
@@ -18,7 +18,7 @@ for kfold=[5,10] % run it for 5 fold and 10-fold crossvalidations
     R=zeros(nperm+1,1);
     for perm=0:nperm
         if perm % actual permutation run
-            tractset.responsevar=tractset.responsevar(randpermute(length(tractset.responsevar))); % permute improvements
+            tractset.responsevar=tractset.responsevar(randperm(length(tractset.responsevar))); % permute improvements
             [I,Ihat] = crossval(tractset,cvp,[],0,silent);
             R(perm+1)=corr(I,Ihat,'rows','pairwise','type',corrtype);
             ea_dispercent(0/nperm);
@@ -41,7 +41,7 @@ cvp = cvpartition(length(obj.patientselection), 'LeaveOut');
     R=zeros(nperm+1,1);
     for perm=0:nperm
         if perm % actual permutation run
-            tractset.responsevar=tractset.responsevar(randpermute(length(tractset.responsevar))); % permute improvements
+            tractset.responsevar=tractset.responsevar(randperm(length(tractset.responsevar))); % permute improvements
             [I,Ihat] = crossval(tractset,cvp,[],0,silent);
             R(perm+1)=corr(I,Ihat,'rows','pairwise','type',corrtype);
             ea_dispercent(0/nperm);
