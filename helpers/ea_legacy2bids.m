@@ -1176,7 +1176,7 @@ if endsWith(fname_in,'.mat')
         coreg_fieldnames = fieldnames(input_mat);
         %determine files inside the coreg files
         for i=1:length(coreg_fieldnames)
-            if ~strcmp(coreg_fieldnames{i},'brainshift') && ~strcmp(coreg_fieldnames{i},'glanat')
+            if startsWith(coreg_fieldnames{i},'anat') || ~isempty(regexp(coreg_fieldnames{i},('_tra|_sag|_cor')))
                 if ismember(fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii']),old)
                     indx = cellfun(@(x)strcmp(x,fullfile(coreg_filepath,[coreg_fieldnames{i},'.nii'])),old);
                     try_bids_name = new{indx};
@@ -1188,9 +1188,9 @@ if endsWith(fname_in,'.mat')
                     bids_name = [pt_name,'_ses-preop_space-anchorNative_desc-preproc_acq-',tag,'_',bids_mod,'.nii'];
                     bids_name = CheckifAlreadyExists(op_dir,bids_name);
                 end
-                    field_name = strsplit(bids_name,'acq-');
-                    mod = regexprep(field_name{end},'.nii','');
-                    json_mat.approval.(mod) = input_mat.(coreg_fieldnames{i});
+                field_name = strsplit(bids_name,'acq-');
+                mod = regexprep(field_name{end},'.nii','');
+                json_mat.approval.(mod) = input_mat.(coreg_fieldnames{i});
             end
         end
         if isfield(json_mat,'approval')
@@ -1279,13 +1279,15 @@ if isfield(input_mat,modality_field)
         method_used = 'Three-step affine normalization (ANTs; Schonecker 2009)';
     else
         method_used = '';
-        warning("We could not identify the normalization method used. Please edit it manually.\n" + ...
-            " You will find the file under derivatives/leaddbs/normalization/log!");
+        warning("We could not identify the method used. Please take a closer look manually." + ...
+            " You will find the file under derivatives/leaddbs/normalization/log!" + ...
+            " or under derivatives/leaddbs/coregistration/transformation/");
     end
 else
     method_used = '';
-    warning("We could not identify the normalization method used. Please edit it manually.\n" + ...
-        " You will find the file under derivatives/leaddbs/normalization/log!");
+    warning("We could not identify the method used. Please take a closer look manually." + ...
+        " You will find the file under derivatives/leaddbs/normalization/log!" + ...
+        " or under derivatives/leaddbs/coregistration/transformation/");
 end
 return
 
