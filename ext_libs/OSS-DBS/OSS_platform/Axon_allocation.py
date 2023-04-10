@@ -505,8 +505,8 @@ if __name__ == '__main__':
         for i in range(len(file_inp['settings']['connectomeTractNames'][0])):
             ext_string = file_inp[file_inp['settings']['connectomeTractNames'][0][i]]
             list_ascii = []
-            for i in range(ext_string.shape[0]):
-                list_ascii.append(ext_string[i][0])
+            for j in range(ext_string.shape[0]):
+                list_ascii.append(ext_string[j][0])
             # list_ascii = map(lambda s: s.strip(), list_ascii)
             projection_name = ''.join(chr(i) for i in list_ascii)
             # print(projection_name)

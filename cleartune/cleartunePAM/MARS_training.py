@@ -137,7 +137,7 @@ activation_profile, Pathways = load_AP_from_LeadDBS(side, inters_as_stim=False)
 
 # get symptom-wise difference between activation and target profiles
 from Optim_strategies import get_symptom_distances
-[__, symptom_diff] = get_symptom_distances(activation_profile, profile_dict, Soft_SE_dict,
+[__, symptom_diff, symptoms_list] = get_symptom_distances(activation_profile, profile_dict, Soft_SE_dict,
                                                 fixed_symptom_weights, Pathways, side, score_symptom_metric='Canberra')
 # symptom_diff is in the symptom space, not pathway! So it might have a smaller dimensionality
 
@@ -146,7 +146,7 @@ current_protocol = get_current_protocol(side)
 
 from RoutinesForResults import get_activation_prediction
 get_activation_prediction(current_protocol, activation_profile, Pathways, symptom_diff, profile_dict,
-                          Soft_SE_dict, side, score_symptom_metric='Canberra')
+                          Soft_SE_dict, side, plot_results=True, score_symptom_metric='Canberra')
 
 
 """ Train and check ANN model, also stores it in STIMDIR/NB_side/ """
